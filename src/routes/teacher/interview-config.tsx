@@ -5,9 +5,12 @@ import {
   ArrowLeft,
   ArrowRight,
   Brain,
+  Check,
   CheckCircle2,
   HelpCircle,
   Loader2,
+  Pencil,
+  Plus,
   Save,
   Sparkles,
   Trash2,
@@ -22,22 +25,35 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
+  useArchiveInterviewConfig,
+  useCreateInterviewOutcome,
+  useCreateInterviewQuestion,
   useDeleteInterviewConfig,
+  useDeleteInterviewOutcome,
+  useDeleteInterviewQuestion,
   useGenerateInterviewQuestions,
-  useInterviewConfig,
+  useInterviewForAuthoring,
   useInterviewGenerationRun,
   usePublishInterviewConfig,
+  useUnarchiveInterviewConfig,
   useUpdateInterviewConfig,
+  useUpdateInterviewOutcome,
+  useUpdateInterviewQuestion,
 } from "@/lib/api/hooks/interviews";
 import {
   useTeacherCourseById,
   useTeacherCourseContent,
 } from "@/lib/api/hooks/teacher-courses";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/api/query-keys";
 import type {
   InterviewConfigAuthoring,
   InterviewConfigUpdate,
   InterviewGenerationRequest,
+  InterviewOutcomeAuthoring,
+  InterviewQuestionAuthoring,
 } from "@/lib/api/types";
+import { InterviewSessionsList } from "@/routes/teacher/interview-sessions-list";
 import { cn } from "@/lib/utils";
 
 type SupportedMode = NonNullable<InterviewConfigUpdate["supported_modes"]>;
@@ -93,16 +109,27 @@ export default function InterviewConfigPage() {
 
   const { data: course } = useTeacherCourseById(courseId);
   const { data: content } = useTeacherCourseContent(courseId);
-  const { data: config, isLoading: configLoading } =
-    useInterviewConfig(configId);
+  const { data: authoring, isLoading: configLoading } =
+    useInterviewForAuthoring(configId);
+  const config = authoring?.config;
+  const questions = authoring?.questions;
+  const outcomes = authoring?.outcomes;
 
   const courseModule = useMemo(
     () => content?.modules.find((m) => m.id === config?.module_id),
     [content, config?.module_id],
   );
 
+  const draftCount = questions?.length ?? config?.draft_question_count ?? 0;
+  const approvedCount = useMemo(
+    () => (questions ?? []).filter((q) => q.review_status === "approved").length,
+    [questions],
+  );
+
   const updateConfig = useUpdateInterviewConfig(configId);
   const publishConfig = usePublishInterviewConfig(configId);
+  const archiveConfig = useArchiveInterviewConfig(configId);
+  const unarchiveConfig = useUnarchiveInterviewConfig(configId);
   const deleteConfig = useDeleteInterviewConfig(configId);
 
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
@@ -154,9 +181,8 @@ export default function InterviewConfigPage() {
 
   const isPublished = config.status === "published";
   const isArchived = config.status === "archived";
-  const draftCount = config.draft_question_count ?? 0;
   const publishDisabled =
-    publishConfig.isPending || isPublished || draftCount === 0;
+    publishConfig.isPending || isPublished || approvedCount === 0;
 
   function returnToCourse() {
     void navigate({
@@ -201,8 +227,8 @@ export default function InterviewConfigPage() {
     } catch (err: unknown) {
       const message = (err as Error).message || "";
       if (
-        draftCount === 0 ||
-        /question|insufficient|empty/i.test(message)
+        approvedCount === 0 ||
+        /interview_no_approved_questions|question|insufficient|empty/i.test(message)
       ) {
         toast.error(t("teacher_interview_config.errors.questions_required"));
       } else {
@@ -215,12 +241,24 @@ export default function InterviewConfigPage() {
 
   async function handleArchive() {
     try {
-      await updateConfig.mutateAsync({ status: "archived" });
+      await archiveConfig.mutateAsync();
       toast.success(t("teacher_interview_config.toasts.archived"));
     } catch (err: unknown) {
       toast.error(
         (err as Error).message ||
           t("teacher_interview_config.toasts.archive_failed"),
+      );
+    }
+  }
+
+  async function handleUnarchive() {
+    try {
+      await unarchiveConfig.mutateAsync();
+      toast.success(t("teacher_interview_config.toasts.unarchived"));
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_interview_config.toasts.unarchive_failed"),
       );
     }
   }
@@ -319,7 +357,7 @@ export default function InterviewConfigPage() {
                 : "bg-m3-primary text-white hover:bg-m3-primary/90",
             )}
             title={
-              draftCount === 0
+              approvedCount === 0
                 ? t("teacher_interview_config.errors.questions_required")
                 : isPublished
                   ? t("teacher_interview_config.status.published")
@@ -343,9 +381,28 @@ export default function InterviewConfigPage() {
               variant="outline"
               className="gap-2"
               onClick={handleArchive}
-              disabled={updateConfig.isPending}
+              disabled={archiveConfig.isPending}
             >
+              {archiveConfig.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
               {t("teacher_interview_config.actions.archive")}
+            </Button>
+          )}
+          {isArchived && (
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2"
+              onClick={handleUnarchive}
+              disabled={unarchiveConfig.isPending}
+            >
+              {unarchiveConfig.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4 rotate-180" />
+              )}
+              {t("teacher_interview_config.actions.unarchive")}
             </Button>
           )}
           <Button
@@ -363,7 +420,7 @@ export default function InterviewConfigPage() {
       </div>
 
       <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 lg:col-span-8">
+        <div className="col-span-12 lg:col-span-8 space-y-6">
           {draft && (
             <SettingsForm
               draft={draft}
@@ -372,12 +429,19 @@ export default function InterviewConfigPage() {
               saving={updateConfig.isPending}
             />
           )}
+          <OutcomeList configId={configId} outcomes={outcomes ?? []} />
+          <QuestionList
+            configId={configId}
+            questions={questions ?? []}
+          />
+          <InterviewSessionsList configId={configId} />
         </div>
 
         <div className="col-span-12 lg:col-span-4">
           <div className="lg:sticky lg:top-6 space-y-4">
             <QuestionsSummaryCard
               draftCount={draftCount}
+              approvedCount={approvedCount}
               importanceWeight={config.total_importance_weight}
               onGenerate={() => setGenerationOpen(true)}
             />
@@ -614,14 +678,17 @@ function SettingsForm({
 
 function QuestionsSummaryCard({
   draftCount,
+  approvedCount,
   importanceWeight,
   onGenerate,
 }: {
   draftCount: number;
+  approvedCount: number;
   importanceWeight: number | null | undefined;
   onGenerate: () => void;
 }) {
   const { t } = useTranslation();
+  const pendingCount = Math.max(0, draftCount - approvedCount);
   return (
     <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-5 shadow-glass space-y-4">
       <div className="flex items-center gap-2">
@@ -638,13 +705,21 @@ function QuestionsSummaryCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 text-center">
+      <div className="grid grid-cols-3 gap-3 text-center">
         <div className="rounded-xl bg-m3-surface-container-low p-3">
           <p className="text-[10px] uppercase font-bold text-m3-on-surface-variant tracking-widest">
             {t("teacher_interview_config.questions.count_label")}
           </p>
           <p className="text-2xl font-extrabold font-headline text-m3-primary mt-1">
             {draftCount}
+          </p>
+        </div>
+        <div className="rounded-xl bg-emerald-50 p-3">
+          <p className="text-[10px] uppercase font-bold text-emerald-700 tracking-widest">
+            {t("teacher_interview_config.questions.approved_label")}
+          </p>
+          <p className="text-2xl font-extrabold font-headline text-emerald-700 mt-1">
+            {approvedCount}
           </p>
         </div>
         <div className="rounded-xl bg-m3-surface-container-low p-3">
@@ -673,6 +748,16 @@ function QuestionsSummaryCard({
           {t("teacher_interview_config.questions.empty")}
         </p>
       )}
+      {draftCount > 0 && approvedCount === 0 && (
+        <p className="text-[11px] text-amber-800 bg-amber-50 rounded-xl px-3 py-2 leading-relaxed">
+          {t("teacher_interview_config.questions.none_approved")}
+        </p>
+      )}
+      {pendingCount > 0 && (
+        <p className="text-[11px] text-m3-on-surface-variant bg-m3-surface-container-low rounded-xl px-3 py-2 leading-relaxed">
+          {t("teacher_interview_config.questions.pending_hint", { count: pendingCount })}
+        </p>
+      )}
     </div>
   );
 }
@@ -693,8 +778,17 @@ function GenerationModal({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const qc = useQueryClient();
   const generate = useGenerateInterviewQuestions(configId);
   const { data: run } = useInterviewGenerationRun(configId, activeRunId);
+
+  useEffect(() => {
+    if (run?.status === "completed") {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.interviews.configAuthoring(configId),
+      });
+    }
+  }, [run?.status, configId, qc]);
 
   const [form, setForm] = useState({
     mode: "outcome-based" as GenerationMode,
@@ -723,6 +817,10 @@ function GenerationModal({
 
   async function handleGenerate(event: React.FormEvent) {
     event.preventDefault();
+    if (!Number.isInteger(form.question_count) || form.question_count < 1) {
+      toast.error(t("teacher_interview_config.errors.question_count_min"));
+      return;
+    }
     try {
       const result = await generate.mutateAsync({
         mode: form.mode,
@@ -802,12 +900,15 @@ function GenerationModal({
               <Input
                 type="number"
                 min={1}
-                max={20}
+                max={50}
                 value={form.question_count}
                 onChange={(e) =>
                   setForm((f) => ({
                     ...f,
-                    question_count: Math.max(1, Number(e.target.value) || 1),
+                    // Keep the raw numeric value (0 allowed transiently) so the
+                    // submit-time guard can surface a "must be > 0" error rather
+                    // than silently coercing the teacher's input.
+                    question_count: Math.floor(Number(e.target.value)) || 0,
                   }))
                 }
                 className="bg-m3-surface-container-low text-sm"
@@ -939,6 +1040,542 @@ function GenerationModal({
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+const _OUTCOME_TYPES = ["knowledge", "skill", "attitude"] as const;
+
+function OutcomeList({
+  configId,
+  outcomes,
+}: {
+  configId: string;
+  outcomes: InterviewOutcomeAuthoring[];
+}) {
+  const { t } = useTranslation();
+  const createOutcome = useCreateInterviewOutcome(configId);
+  const updateOutcome = useUpdateInterviewOutcome(configId);
+  const deleteOutcome = useDeleteInterviewOutcome(configId);
+  const [adding, setAdding] = useState(false);
+  const [newText, setNewText] = useState("");
+  const [newType, setNewType] =
+    useState<InterviewOutcomeAuthoring["outcome_type"]>("knowledge");
+  const [newWeight, setNewWeight] = useState(3);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
+  const sorted = useMemo(
+    () => [...outcomes].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
+    [outcomes],
+  );
+
+  async function handleAdd() {
+    if (!newText.trim()) return;
+    try {
+      await createOutcome.mutateAsync({
+        position: sorted.length + 1,
+        outcome_text: newText.trim(),
+        outcome_type: newType,
+        importance_weight: newWeight,
+      });
+      setNewText("");
+      setNewType("knowledge");
+      setNewWeight(3);
+      setAdding(false);
+      toast.success(t("teacher_interview_config.outcomes.added"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  async function handleSaveEdit() {
+    if (!editingId || !editingText.trim()) return;
+    try {
+      await updateOutcome.mutateAsync({
+        outcomeId: editingId,
+        patch: { outcome_text: editingText.trim() },
+      });
+      setEditingId(null);
+      setEditingText("");
+      toast.success(t("teacher_interview_config.outcomes.saved"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  async function handleDelete(o: InterviewOutcomeAuthoring) {
+    try {
+      await deleteOutcome.mutateAsync(o.id);
+      toast.success(t("teacher_interview_config.outcomes.deleted"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  return (
+    <div className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl p-6 lg:p-8 space-y-4 shadow-glass">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
+            {t("teacher_interview_config.outcomes.list_title")}
+          </h3>
+          <p className="text-xs text-m3-on-surface-variant mt-0.5">
+            {t("teacher_interview_config.outcomes.list_description")}
+          </p>
+        </div>
+        {!adding && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setAdding(true)}
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            {t("teacher_interview_config.outcomes.add")}
+          </Button>
+        )}
+      </div>
+
+      {adding && (
+        <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-2">
+          <textarea
+            value={newText}
+            onChange={(e) => setNewText(e.target.value)}
+            rows={2}
+            placeholder={t("teacher_interview_config.outcomes.add_placeholder")}
+            className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={newType}
+              onChange={(e) =>
+                setNewType(
+                  e.target.value as InterviewOutcomeAuthoring["outcome_type"],
+                )
+              }
+              className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+            >
+              {_OUTCOME_TYPES.map((tp) => (
+                <option key={tp} value={tp}>
+                  {t(`teacher_interview_config.outcomes.type_${tp}`)}
+                </option>
+              ))}
+            </select>
+            <label className="flex items-center gap-1.5 text-xs text-m3-on-surface-variant">
+              {t("teacher_interview_config.outcomes.weight_label")}
+              <input
+                type="number"
+                min={1}
+                max={5}
+                value={newWeight}
+                onChange={(e) =>
+                  setNewWeight(
+                    Math.min(5, Math.max(1, Math.floor(Number(e.target.value)) || 1)),
+                  )
+                }
+                className="w-16 rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+              />
+            </label>
+            <div className="flex justify-end gap-2 ml-auto">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setAdding(false);
+                  setNewText("");
+                }}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                type="button"
+                disabled={createOutcome.isPending || !newText.trim()}
+                onClick={() => void handleAdd()}
+                className="gap-2"
+              >
+                {createOutcome.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                {t("teacher_interview_config.outcomes.add_save")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {sorted.length === 0 ? (
+        <p className="text-[11px] text-amber-700 bg-amber-50 rounded-xl px-3 py-2 leading-relaxed">
+          {t("teacher_interview_config.outcomes.empty")}
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {sorted.map((o) => {
+            const isEditing = editingId === o.id;
+            return (
+              <li
+                key={o.id}
+                className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3"
+              >
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={editingText}
+                      onChange={(e) => setEditingText(e.target.value)}
+                      rows={2}
+                      className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingId(null);
+                          setEditingText("");
+                        }}
+                      >
+                        {t("common.cancel")}
+                      </Button>
+                      <Button
+                        type="button"
+                        disabled={updateOutcome.isPending || !editingText.trim()}
+                        onClick={() => void handleSaveEdit()}
+                        className="gap-2"
+                      >
+                        {updateOutcome.isPending && (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        )}
+                        <Save className="h-4 w-4" />
+                        {t("common.save")}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <p className="text-sm text-m3-on-surface leading-relaxed">
+                        {o.outcome_text}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className="border-0 bg-m3-surface-container text-m3-on-surface-variant text-[10px] font-bold rounded-full px-2 py-0.5">
+                          {t(
+                            `teacher_interview_config.outcomes.type_${o.outcome_type}`,
+                          )}
+                        </Badge>
+                        <span className="text-[10px] text-m3-on-surface-variant">
+                          {t("teacher_interview_config.outcomes.weight_badge", {
+                            weight: o.importance_weight,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          setEditingId(o.id);
+                          setEditingText(o.outcome_text);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-600"
+                        disabled={deleteOutcome.isPending}
+                        onClick={() => void handleDelete(o)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function QuestionList({
+  configId,
+  questions,
+}: {
+  configId: string;
+  questions: InterviewQuestionAuthoring[];
+}) {
+  const { t } = useTranslation();
+  const updateQuestion = useUpdateInterviewQuestion(configId);
+  const deleteQuestion = useDeleteInterviewQuestion(configId);
+  const createQuestion = useCreateInterviewQuestion(configId);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [newText, setNewText] = useState("");
+  const sorted = useMemo(
+    () => [...questions].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
+    [questions],
+  );
+
+  async function handleApprove(q: InterviewQuestionAuthoring) {
+    try {
+      await updateQuestion.mutateAsync({
+        questionId: q.id,
+        patch: { review_status: "approved" },
+      });
+      toast.success(t("teacher_interview_config.toasts.question_approved"));
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_interview_config.toasts.question_approve_failed"),
+      );
+    }
+  }
+
+  async function handleReject(q: InterviewQuestionAuthoring) {
+    try {
+      await updateQuestion.mutateAsync({
+        questionId: q.id,
+        patch: { review_status: "rejected" },
+      });
+      toast.success(t("teacher_interview_config.toasts.question_rejected"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  async function handleSaveEdit() {
+    if (!editingId || !editingText.trim()) return;
+    try {
+      await updateQuestion.mutateAsync({
+        questionId: editingId,
+        patch: { prompt_text: editingText.trim() },
+      });
+      setEditingId(null);
+      setEditingText("");
+      toast.success(t("teacher_interview_config.toasts.question_saved"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  async function handleDelete(q: InterviewQuestionAuthoring) {
+    try {
+      await deleteQuestion.mutateAsync(q.id);
+      toast.success(t("teacher_interview_config.toasts.question_deleted"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  async function handleAdd() {
+    if (!newText.trim()) return;
+    try {
+      await createQuestion.mutateAsync({
+        prompt_text: newText.trim(),
+        question_type: "conceptual",
+      });
+      setNewText("");
+      setAdding(false);
+      toast.success(t("teacher_interview_config.toasts.question_added"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  return (
+    <div className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl p-6 lg:p-8 space-y-4 shadow-glass">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
+            {t("teacher_interview_config.questions.list_title")}
+          </h3>
+          <p className="text-xs text-m3-on-surface-variant mt-0.5">
+            {t("teacher_interview_config.questions.list_description")}
+          </p>
+        </div>
+        {!adding && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setAdding(true)}
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            {t("teacher_interview_config.questions.add_manual")}
+          </Button>
+        )}
+      </div>
+
+      {adding && (
+        <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-2">
+          <textarea
+            value={newText}
+            onChange={(e) => setNewText(e.target.value)}
+            rows={3}
+            placeholder={t(
+              "teacher_interview_config.questions.add_placeholder",
+            )}
+            className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setAdding(false);
+                setNewText("");
+              }}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              type="button"
+              disabled={createQuestion.isPending || !newText.trim()}
+              onClick={() => void handleAdd()}
+              className="gap-2"
+            >
+              {createQuestion.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
+              {t("teacher_interview_config.questions.add_save")}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {sorted.length === 0 ? (
+        <p className="text-[11px] text-amber-700 bg-amber-50 rounded-xl px-3 py-2 leading-relaxed">
+          {t("teacher_interview_config.questions.empty")}
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {sorted.map((q) => {
+            const isEditing = editingId === q.id;
+            const badgeClass =
+              q.review_status === "approved"
+                ? "bg-emerald-100 text-emerald-700"
+                : q.review_status === "rejected"
+                  ? "bg-red-100 text-red-700"
+                  : "bg-amber-50 text-amber-700";
+            return (
+              <li
+                key={q.id}
+                className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface p-3 space-y-2"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  {isEditing ? (
+                    <textarea
+                      value={editingText}
+                      onChange={(e) => setEditingText(e.target.value)}
+                      rows={3}
+                      className="flex-1 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+                    />
+                  ) : (
+                    <p className="text-sm text-m3-on-surface flex-1 whitespace-pre-wrap leading-relaxed">
+                      {q.prompt_text}
+                    </p>
+                  )}
+                  <Badge
+                    className={cn(
+                      "border-0 text-[10px] font-bold uppercase tracking-widest shrink-0",
+                      badgeClass,
+                    )}
+                  >
+                    {t(`teacher_interview_config.review_status.${q.review_status}`)}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-end gap-1 flex-wrap">
+                  {isEditing ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingId(null);
+                          setEditingText("");
+                        }}
+                      >
+                        {t("common.cancel")}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={updateQuestion.isPending || !editingText.trim()}
+                        onClick={() => void handleSaveEdit()}
+                        className="gap-1.5"
+                      >
+                        <Save className="h-3.5 w-3.5" />
+                        {t("common.save")}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {q.review_status !== "approved" && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={updateQuestion.isPending}
+                          onClick={() => void handleApprove(q)}
+                          className="gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                          {t("teacher_interview_config.questions.approve")}
+                        </Button>
+                      )}
+                      {q.review_status === "approved" && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={updateQuestion.isPending}
+                          onClick={() => void handleReject(q)}
+                          className="gap-1.5"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                          {t("teacher_interview_config.questions.reject")}
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingId(q.id);
+                          setEditingText(q.prompt_text);
+                        }}
+                        className="gap-1.5"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        {t("common.edit")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={deleteQuestion.isPending}
+                        onClick={() => void handleDelete(q)}
+                        className="gap-1.5 text-red-700 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        {t("common.delete")}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

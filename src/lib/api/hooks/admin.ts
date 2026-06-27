@@ -25,8 +25,10 @@ import type {
   ProcessingJobOut,
   ProcessingJobRow,
   ProcessingQueueDepth,
+  HttpAuditRow,
   RoleAssignmentCreate,
   RoleAssignmentRead,
+  RoleChangeRow,
   RoleWithPermissionsRead,
   User,
   UserListPage,
@@ -481,5 +483,33 @@ export function useAddOrgMember(orgId: string) {
         queryKey: queryKeys.admin.orgMemberships(orgId),
       });
     },
+  });
+}
+
+/** FR-6.7 — role-assignment changes since a timestamp (admin audit). */
+export function useAuditRoleChanges(sinceIso: string) {
+  return useQuery({
+    queryKey: queryKeys.admin.auditRoleChanges(sinceIso),
+    queryFn: () =>
+      apiFetch<RoleChangeRow[]>(
+        `/admin/audit/role-changes?since=${encodeURIComponent(sinceIso)}&limit=200`,
+      ),
+    enabled: Boolean(sinceIso),
+    staleTime: 1000 * 30,
+  });
+}
+
+/** FR-6.7 — HTTP request audit scan (admin audit). */
+export function useAuditHttp(sinceIso: string, path?: string, userId?: string) {
+  return useQuery({
+    queryKey: queryKeys.admin.auditHttp(sinceIso, path, userId),
+    queryFn: () => {
+      const params = new URLSearchParams({ since: sinceIso, limit: "200" });
+      if (path) params.set("path_pattern", path);
+      if (userId) params.set("user_id", userId);
+      return apiFetch<HttpAuditRow[]>(`/admin/audit/http?${params.toString()}`);
+    },
+    enabled: Boolean(sinceIso),
+    staleTime: 1000 * 30,
   });
 }

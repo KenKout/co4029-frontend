@@ -1,29 +1,38 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiDelete, apiFetch, apiPatch, apiPost } from "../client";
+import { ApiError, apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import type {
   GapReportAuthoringRead,
   GapReportRead,
+  IntegrityEventsRequest,
+  IntegrityEventsResponse,
   InterviewConfigAuthoring,
   InterviewConfigCreate,
-  InterviewConfigPublic,
   InterviewConfigUpdate,
+  InterviewForAuthoringPublic,
   InterviewForTakingPublic,
   InterviewGenerationRequest,
   InterviewGenerationRunPublic,
+  InterviewOutcomeAuthoring,
+  InterviewOutcomeCreate,
+  InterviewQuestionAuthoring,
+  InterviewQuestionCreate,
   InterviewSessionFinishResponse,
   InterviewSessionPublic,
   InterviewSessionStartRequest,
   InterviewSessionStartResponse,
+  InterviewSessionSummary,
   InterviewSubmitAnswerRequest,
   InterviewSubmitAnswerResponse,
+  InterviewTranscriptRead,
+  RealtimeTokenResponse,
 } from "../types";
 
 export function useInterviewForTaking(configId: string | null | undefined) {
   return useQuery({
     queryKey: queryKeys.interviews.detail(configId ?? ""),
     queryFn: () =>
-      apiFetch<InterviewConfigPublic>(`/interview-configs/${configId}`),
+      apiFetch<InterviewForTakingPublic>(`/interview-configs/${configId}`),
     enabled: !!configId,
   });
 }
@@ -44,12 +53,18 @@ export function useStartInterviewSession(configId: string | null | undefined) {
   });
 }
 
-export function useInterviewSession(sessionId: string | null | undefined) {
+export function useInterviewSession(
+  sessionId: string | null | undefined,
+  options?: { refetchInterval?: number },
+) {
   return useQuery({
     queryKey: queryKeys.interviews.session(sessionId ?? ""),
     queryFn: () =>
       apiFetch<InterviewSessionPublic>(`/interview-sessions/${sessionId}`),
     enabled: !!sessionId,
+    // Used by the voice-completion flow to poll until the server marks the
+    // session terminal (TanStack Query does NOT poll by default).
+    refetchInterval: options?.refetchInterval,
   });
 }
 
@@ -100,6 +115,14 @@ export function useGapReport(sessionId: string | null | undefined) {
     queryFn: () =>
       apiFetch<GapReportRead>(`/interview-sessions/${sessionId}/gap-report`),
     enabled: !!sessionId,
+    // Post-session evaluation runs async in a worker (~1-2 min). Until it
+    // finishes the report 404s — keep polling instead of giving up, and keep
+    // retrying the 404 so a transient miss doesn't strand the result screen.
+    retry: (failureCount, error) =>
+      error instanceof ApiError && error.status === 404 && failureCount < 60,
+    retryDelay: 3000,
+    refetchInterval: (query) =>
+      query.state.data === undefined ? 3000 : false,
   });
 }
 
@@ -112,6 +135,17 @@ export function useMyInterviewSessions() {
 }
 
 /* ───────────────── Teacher-side (W5.4) ───────────────── */
+
+export function useInterviewForAuthoring(configId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.interviews.configAuthoring(configId ?? ""),
+    queryFn: () =>
+      apiFetch<InterviewForAuthoringPublic>(
+        `/teacher/interview-configs/${configId}`,
+      ),
+    enabled: !!configId,
+  });
+}
 
 /**
  * POST /teacher/courses/{course_id}/interview-configs — create a draft config.
@@ -140,6 +174,7 @@ export function useCreateInterviewConfig(courseId: string | undefined) {
 /**
  * GET /teacher/interview-configs/{config_id} — authoring projection (full schema,
  * status widened to draft|published|archived).
+ * @deprecated Use useInterviewForAuthoring instead for access to questions & outcomes.
  */
 export function useInterviewConfig(configId: string | null | undefined) {
   return useQuery({
@@ -200,6 +235,48 @@ export function usePublishInterviewConfig(configId: string | null | undefined) {
 }
 
 /**
+ * POST /teacher/interview-configs/{config_id}/archive — flip status to archived.
+ */
+export function useArchiveInterviewConfig(configId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiPost<InterviewConfigAuthoring>(
+        `/teacher/interview-configs/${configId}/archive`,
+      ),
+    onSuccess: (config) => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.interviews.configAuthoring(config.id),
+      });
+      void qc.invalidateQueries({
+        queryKey: ["teacher", "courses", config.course_id, "content"],
+      });
+    },
+  });
+}
+
+/**
+ * POST /teacher/interview-configs/{config_id}/unarchive — flip status back to draft.
+ */
+export function useUnarchiveInterviewConfig(configId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiPost<InterviewConfigAuthoring>(
+        `/teacher/interview-configs/${configId}/unarchive`,
+      ),
+    onSuccess: (config) => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.interviews.configAuthoring(config.id),
+      });
+      void qc.invalidateQueries({
+        queryKey: ["teacher", "courses", config.course_id, "content"],
+      });
+    },
+  });
+}
+
+/**
  * DELETE /teacher/interview-configs/{config_id} — soft-delete.
  */
 export function useDeleteInterviewConfig(configId: string | null | undefined) {
@@ -210,6 +287,162 @@ export function useDeleteInterviewConfig(configId: string | null | undefined) {
     onSuccess: () => {
       if (configId) {
         qc.removeQueries({
+          queryKey: queryKeys.interviews.configAuthoring(configId),
+        });
+      }
+    },
+  });
+}
+
+/**
+ * POST /teacher/interview-configs/{config_id}/questions — manual create.
+ * New questions are stored with review_status='approved' (the service-layer
+ * default for teacher-authored questions).
+ */
+export function useCreateInterviewQuestion(configId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: InterviewQuestionCreate) =>
+      apiPost<InterviewQuestionAuthoring>(
+        `/teacher/interview-configs/${configId}/questions`,
+        payload,
+      ),
+    onSuccess: () => {
+      if (configId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.interviews.configAuthoring(configId),
+        });
+      }
+    },
+  });
+}
+
+/**
+ * PATCH /teacher/interview-configs/{config_id}/questions/{question_id} —
+ * partial update (used to flip review_status: 'pending' → 'approved' and to
+ * edit prompt_text / question_type / difficulty / position).
+ */
+export function useUpdateInterviewQuestion(configId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      questionId,
+      patch,
+    }: {
+      questionId: string;
+      patch: Partial<{
+        prompt_text: string;
+        question_type: InterviewQuestionAuthoring["question_type"];
+        difficulty: InterviewQuestionAuthoring["difficulty"];
+        review_status: InterviewQuestionAuthoring["review_status"];
+        linked_outcome_id: string | null;
+        position: number;
+      }>;
+    }) =>
+      apiPatch<InterviewQuestionAuthoring>(
+        `/teacher/interview-configs/${configId}/questions/${questionId}`,
+        patch,
+      ),
+    onSuccess: () => {
+      if (configId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.interviews.configAuthoring(configId),
+        });
+      }
+    },
+  });
+}
+
+/**
+ * DELETE /teacher/interview-configs/{config_id}/questions/{question_id} —
+ * soft-delete a single question.
+ */
+export function useDeleteInterviewQuestion(configId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (questionId: string) =>
+      apiDelete(
+        `/teacher/interview-configs/${configId}/questions/${questionId}`,
+      ),
+    onSuccess: () => {
+      if (configId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.interviews.configAuthoring(configId),
+        });
+      }
+    },
+  });
+}
+
+/**
+ * POST /teacher/interview-configs/{config_id}/outcomes — add a learning
+ * outcome (the §4.3 criteria the AI judges student answers against).
+ */
+export function useCreateInterviewOutcome(configId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: InterviewOutcomeCreate) =>
+      apiPost<InterviewOutcomeAuthoring>(
+        `/teacher/interview-configs/${configId}/outcomes`,
+        payload,
+      ),
+    onSuccess: () => {
+      if (configId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.interviews.configAuthoring(configId),
+        });
+      }
+    },
+  });
+}
+
+/**
+ * PATCH /teacher/interview-configs/{config_id}/outcomes/{outcome_id} —
+ * edit an outcome's text / type / importance / position.
+ */
+export function useUpdateInterviewOutcome(configId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      outcomeId,
+      patch,
+    }: {
+      outcomeId: string;
+      patch: Partial<{
+        outcome_text: string;
+        outcome_type: InterviewOutcomeAuthoring["outcome_type"];
+        importance_weight: number;
+        position: number;
+      }>;
+    }) =>
+      apiPatch<InterviewOutcomeAuthoring>(
+        `/teacher/interview-configs/${configId}/outcomes/${outcomeId}`,
+        patch,
+      ),
+    onSuccess: () => {
+      if (configId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.interviews.configAuthoring(configId),
+        });
+      }
+    },
+  });
+}
+
+/**
+ * DELETE /teacher/interview-configs/{config_id}/outcomes/{outcome_id} —
+ * soft-delete a single outcome.
+ */
+export function useDeleteInterviewOutcome(configId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (outcomeId: string) =>
+      apiDelete(
+        `/teacher/interview-configs/${configId}/outcomes/${outcomeId}`,
+      ),
+    onSuccess: () => {
+      if (configId) {
+        void qc.invalidateQueries({
           queryKey: queryKeys.interviews.configAuthoring(configId),
         });
       }
@@ -288,6 +521,38 @@ export function useTeacherGapReport(sessionId: string | null | undefined) {
 }
 
 /**
+ * GET /teacher/interview-configs/{config_id}/sessions — all student attempts
+ * for one interview config (teacher review list).
+ */
+export function useInterviewSessionsForConfig(
+  configId: string | null | undefined,
+) {
+  return useQuery({
+    queryKey: queryKeys.interviews.configSessions(configId ?? ""),
+    queryFn: () =>
+      apiFetch<InterviewSessionSummary[]>(
+        `/teacher/interview-configs/${configId}/sessions`,
+      ),
+    enabled: !!configId,
+  });
+}
+
+/**
+ * GET /teacher/interview-sessions/{session_id}/transcript — full ordered Q&A
+ * transcript for teacher remediation review.
+ */
+export function useInterviewTranscript(sessionId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.interviews.transcript(sessionId ?? ""),
+    queryFn: () =>
+      apiFetch<InterviewTranscriptRead>(
+        `/teacher/interview-sessions/${sessionId}/transcript`,
+      ),
+    enabled: !!sessionId,
+  });
+}
+
+/**
  * GET /interview-sessions/{session_id} — read-only session detail.
  *
  * The backend only exposes a single session-detail endpoint; the teacher view
@@ -304,6 +569,35 @@ export function useTeacherInterviewSession(
         `/interview-sessions/${sessionId}`,
       ),
     enabled: !!sessionId,
+  });
+}
+
+/**
+ * POST /interview-sessions/{session_id}/realtime-token
+ * Fetches a short-lived LiveKit participant token for voice mode.
+ * Errors: 503 voice disabled, 409 wrong mode/status, 403/404 ownership/missing.
+ */
+export function useInterviewRealtimeToken(sessionId: string | null | undefined) {
+  return useMutation({
+    mutationFn: () =>
+      apiPost<RealtimeTokenResponse>(
+        `/interview-sessions/${sessionId}/realtime-token`,
+      ),
+  });
+}
+
+/**
+ * POST /interview-sessions/{session_id}/integrity-events
+ * Batch-posts proctoring/integrity signals. Max 50 events per call.
+ * Never throws into the UI — errors are silently swallowed at the call site.
+ */
+export function useReportIntegrityEvents(sessionId: string | null | undefined) {
+  return useMutation({
+    mutationFn: (body: IntegrityEventsRequest) =>
+      apiPost<IntegrityEventsResponse>(
+        `/interview-sessions/${sessionId}/integrity-events`,
+        body,
+      ),
   });
 }
 

@@ -11,6 +11,7 @@ import type {
   MaterialUploadInit,
   MaterialUploadInitOut,
   MaterialAuthoring,
+  MaterialVersionAuthoring,
   MultipartAbortIn,
   MultipartCompleteIn,
   MultipartPartsOut,
@@ -286,6 +287,37 @@ export function useReprocessMaterial(materialId: string) {
     mutationFn: () =>
       apiPost<ReprocessOut>(`/teacher/materials/${materialId}/reprocess`),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.materials.detail(materialId) });
+      qc.invalidateQueries({ queryKey: queryKeys.materials.processing(materialId) });
+      qc.invalidateQueries({ queryKey: ["teacher", "lessons"] });
+      qc.invalidateQueries({ queryKey: ["teacher", "materials", materialId] });
+    },
+  });
+}
+
+/** FR-3.4 — version history (newest first) with per-version processing state. */
+export function useMaterialVersions(materialId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.materials.versions(materialId ?? ""),
+    queryFn: () =>
+      apiFetch<MaterialVersionAuthoring[]>(
+        `/teacher/materials/${materialId}/versions`,
+      ),
+    enabled: !!materialId,
+    staleTime: 1000 * 30,
+  });
+}
+
+/** FR-3.4 — pointer-swap rollback to a prior ready version. */
+export function useRollbackMaterialVersion(materialId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (versionId: string) =>
+      apiPost<MaterialVersionAuthoring>(
+        `/teacher/materials/${materialId}/versions/${versionId}/rollback`,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.materials.versions(materialId) });
       qc.invalidateQueries({ queryKey: queryKeys.materials.detail(materialId) });
       qc.invalidateQueries({ queryKey: queryKeys.materials.processing(materialId) });
       qc.invalidateQueries({ queryKey: ["teacher", "lessons"] });

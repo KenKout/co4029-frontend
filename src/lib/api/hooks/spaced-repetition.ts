@@ -25,7 +25,7 @@ export type UseCardsDueOptions = {
 export function useCardsDue(opts: UseCardsDueOptions = {}) {
   const { lessonId, limit = 20, enabled } = opts;
   return useInfinitePage<CardDue>({
-    queryKey: queryKeys.sr.cardsDue(lessonId),
+    queryKey: queryKeys.sr.cardsDue(lessonId, limit),
     fetch: async (cursor, lim = limit) => {
       const params = new URLSearchParams();
       if (lessonId) params.set("lesson_id", lessonId);

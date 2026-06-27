@@ -5,6 +5,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
+    "edit": "Edit",
     "confirm": "Confirm",
     "back": "Back",
     "next": "Next",
@@ -22,6 +23,7 @@
     "courses": "Courses",
     "progress": "Progress",
     "career_paths": "Career Paths",
+    "my_interviews": "My Interviews",
     "overview": "Overview",
     "my_courses": "My Courses",
     "department_courses": "Department Courses",
@@ -30,6 +32,7 @@
     "users": "Users",
     "processing": "Processing",
     "ai_costs": "AI Costs",
+    "audit_logs": "Audit Logs",
     "health": "Health",
     "settings": "Settings",
     "profile": "Profile",
@@ -174,6 +177,8 @@
   "course_learn": {
     "lesson_unavailable_title": "Lesson unavailable",
     "lesson_unavailable_body": "This lesson's content isn't open yet.",
+    "lesson_locked_title": "Lesson locked",
+    "lesson_locked_body": "Complete the prerequisite lessons and review your due cards to unlock this lesson.",
     "resource_unavailable": "Resource unavailable",
     "download": "Download",
     "reading_lesson": "Reading",
@@ -192,6 +197,20 @@
     "settings": "Settings",
     "quiz": "Quiz",
     "interview": "AI mock interview"
+  },
+  "progress_page": {
+    "title": "My progress",
+    "subtitle": "Course completion and spaced-repetition reviews at a glance.",
+    "cards_due": "cards due for review",
+    "review_now": "Review now",
+    "sr_dashboard": "Review dashboard",
+    "courses_heading": "Course completion",
+    "no_courses": "You are not enrolled in any courses yet.",
+    "load_failed": "Could not load your courses. Please try again.",
+    "browse_courses": "Browse courses",
+    "lessons_done": "{{completed}}/{{total}} lessons completed",
+    "time_spent": "{{hours}} h studied",
+    "continue": "Continue"
   },
   "teacher_interview_config_new": {
     "title": "New AI interview",
@@ -326,8 +345,7 @@
     "errors": {
       "challenge_failed": "Couldn't start two-factor verification. Please try again.",
       "session_not_ready": "Verification session not ready. Please wait a moment.",
-      "invalid_code": "Invalid code",
-      "challenge_expired": "Verification session expired. A new challenge has been created, please try again."
+      "invalid_code": "Invalid code"
     },
     "success": "Verification successful"
   },
@@ -348,6 +366,27 @@
       "active": "Active",
       "completed": "Completed",
       "dropped": "Dropped"
+    }
+  },
+  "me_interviews": {
+    "title": "My interviews",
+    "subtitle": "Your past mock-interview attempts and their results.",
+    "section_title": "Attempts",
+    "n_sessions": "{{count}} attempt",
+    "n_sessions_plural": "{{count}} attempts",
+    "load_failed_title": "Couldn't load your interviews",
+    "load_failed_body": "Please try again in a few minutes.",
+    "retry": "Retry",
+    "empty_title": "No interview attempts yet",
+    "empty_body": "Start a mock interview from one of your courses to see results here.",
+    "empty_cta": "Browse courses →",
+    "untitled": "Interview",
+    "attempt": "Attempt {{n}}",
+    "state": {
+      "passed": "Passed",
+      "not_passed": "Not passed",
+      "evaluating": "Evaluating…",
+      "in_progress": "In progress"
     }
   },
   "career_path_detail": {
@@ -700,6 +739,34 @@
     "ai_chip": "AI-powered"
   },
   "admin": {
+    "audit": {
+      "title": "Audit logs",
+      "subtitle": "Immutable record of role changes and HTTP requests.",
+      "since_days": "Last N days",
+      "tabs": {
+        "role_changes": "Role changes",
+        "http": "HTTP requests"
+      },
+      "cols": {
+        "when": "When",
+        "role": "Role",
+        "scope": "Scope",
+        "user": "User",
+        "granted_by": "Granted by",
+        "status": "Status",
+        "method": "Method",
+        "path": "Path",
+        "code": "Code",
+        "latency": "Latency",
+        "ip": "IP"
+      },
+      "system": "system",
+      "active": "Active",
+      "revoked": "Revoked",
+      "empty": "No audit entries in this window.",
+      "load_failed": "Could not load audit entries. You may not have access, or the service is unavailable.",
+      "path_filter_placeholder": "Filter by path prefix, e.g. /api/v1/admin"
+    },
     "health": {
       "title": "System status",
       "subtitle": "Check backend health and readiness.",
@@ -1119,6 +1186,16 @@
     "admin": "Admin"
   },
   "teacher_interview_gap_report": {
+    "transcript": {
+      "title": "Interview transcript",
+      "empty": "No transcript recorded for this session.",
+      "audio_only": "(voice answer — no text transcription)",
+      "role": {
+        "user": "Student",
+        "ai": "Interviewer",
+        "system": "System"
+      }
+    },
     "empty_states": {
       "no_report": "No gap report yet",
       "no_overview": "AI hasn't generated an overview yet.",
@@ -1262,6 +1339,7 @@
   "course_interview": {
     "sections": {
       "gap_report": "Gap report",
+      "gap_report_pending": "Preparing your personalized gap report… this can take a minute.",
       "study_plan": "Study plan",
       "follow_up": "Follow-up"
     },
@@ -1308,7 +1386,8 @@
       "start_failed": "Failed to start interview",
       "answer_required": "Please enter an answer",
       "send_failed": "Failed to send answer",
-      "finish_failed": "Failed to finish interview"
+      "finish_failed": "Failed to finish interview",
+      "no_question_available": "This interview has no approved questions yet. Please contact your teacher."
     },
     "empty_states": {
       "no_interview_found": "Interview not found",
@@ -1317,8 +1396,10 @@
     "results": {
       "passed": "Passed",
       "completed": "Interview completed",
-      "total_score": "Total score: {{score}}",
-      "summary_loading": "The system is compiling your results."
+      "evaluating": "Evaluating your answers…",
+      "evaluating_summary": "Our AI is grading your responses against the learning outcomes. This usually takes a minute — the result will appear here automatically.",
+      "pass_summary": "You met enough of the learning outcomes to pass this interview.",
+      "fail_summary": "You did not meet enough learning outcomes this time. Review the material and try again."
     },
     "intro": {
       "description": "AI interview grades by module criteria. Answer one by one and review the final feedback."
@@ -1398,8 +1479,10 @@
     },
     "sections": {
       "add_course": "Add course",
-      "register_student": "Register student"
+      "register_student": "Register student",
+      "readiness_snapshot": "Average career readiness"
     },
+    "readiness_students_counted": "from the latest snapshots of {{count}} enrolled students",
     "empty_states": {
       "no_courses": "No courses in the path yet.",
       "no_students": "No students registered yet.",
@@ -1701,7 +1784,8 @@
       "not_found_body": "Interview question set could not be loaded for this course.",
       "back_to_course": "Back to course",
       "title_required": "Title cannot be empty",
-      "questions_required": "Generate questions before publishing"
+      "questions_required": "Generate questions before publishing",
+      "question_count_min": "Number of questions must be greater than 0"
     },
     "toasts": {
       "config_saved": "Configuration saved",
@@ -1713,7 +1797,13 @@
       "deleted": "Interview deleted",
       "delete_failed": "Delete failed",
       "generation_started": "Generating questions...",
-      "generation_failed": "Could not start generation"
+      "generation_failed": "Could not start generation",
+      "question_approved": "Question approved",
+      "question_approve_failed": "Could not approve question",
+      "question_rejected": "Question rejected",
+      "question_saved": "Question updated",
+      "question_deleted": "Question deleted",
+      "question_added": "Question added"
     },
     "actions": {
       "back_tooltip": "Back to course",
@@ -1763,13 +1853,57 @@
       "supplementary_label": "Supplementary instructions",
       "supplementary_placeholder": "e.g. Focus on real scenarios, avoid rote-memorization questions…"
     },
+    "outcomes": {
+      "list_title": "Learning outcomes",
+      "list_description": "What a student must demonstrate to pass. The AI judges each answer against these.",
+      "add": "Add outcome",
+      "add_save": "Add",
+      "add_placeholder": "e.g. Explain how recursion works and identify its base case",
+      "empty": "No outcomes yet. Add at least one — without outcomes the interview cannot be published and every student is auto-failed.",
+      "weight_label": "Weight",
+      "weight_badge": "Weight {{weight}}/5",
+      "type_knowledge": "Knowledge",
+      "type_skill": "Skill",
+      "type_attitude": "Attitude",
+      "added": "Outcome added",
+      "saved": "Outcome saved",
+      "deleted": "Outcome deleted"
+    },
+    "sessions": {
+      "list_title": "Student attempts",
+      "list_description": "Review each student's attempt — transcript and per-outcome verdicts.",
+      "empty": "No student has attempted this interview yet.",
+      "attempt": "Attempt {{n}}",
+      "state": {
+        "passed": "Passed",
+        "not_passed": "Not passed",
+        "evaluating": "Evaluating…",
+        "in_progress": "In progress"
+      }
+    },
     "questions": {
       "section_title": "Questions & rubric",
       "section_description": "Bulk-generate from course materials with AI.",
       "count_label": "Questions",
+      "approved_label": "Approved",
       "weight_total": "Total weight",
       "open_generator": "Open AI generator",
-      "empty": "No questions yet. Create some before publishing the interview."
+      "empty": "No questions yet. Create some before publishing the interview.",
+      "none_approved": "AI-generated questions need to be approved before students can take the interview.",
+      "pending_hint": "{{count}} pending question(s) waiting for review.",
+      "list_title": "Question bank",
+      "list_description": "Review AI-generated drafts; approve, edit, or remove individual questions.",
+      "add_manual": "Add manually",
+      "add_placeholder": "Enter the prompt for the new question",
+      "add_save": "Save question",
+      "approve": "Approve",
+      "reject": "Reject"
+    },
+    "review_status": {
+      "pending": "Pending review",
+      "approved": "Approved",
+      "edited": "Edited",
+      "rejected": "Rejected"
     },
     "generate_modal": {
       "description": "AI will generate interview questions from the module rubric."
@@ -1796,6 +1930,16 @@
     }
   },
   "teacher_lesson_materials": {
+    "versions": {
+      "toggle": "Version history",
+      "title": "Version history",
+      "empty": "No versions yet.",
+      "current": "Current",
+      "rollback": "Roll back",
+      "not_ready": "Only fully-processed versions can be restored",
+      "rollback_success": "Material rolled back to the selected version.",
+      "rollback_rejected": "This version cannot be restored (not ready or already current)."
+    },
     "proc_status": {
       "not_queued": "Not queued",
       "pending": "Pending",

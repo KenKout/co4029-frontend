@@ -144,7 +144,7 @@ export function useLesson(lessonId: string | undefined) {
     queryFn: () => apiFetch<LessonPublic>(`/lessons/${lessonId}`),
     enabled: !!lessonId,
     retry: (failureCount, error) => {
-      if (error instanceof ApiError && error.status === 404) return false;
+      if (error instanceof ApiError && (error.status === 404 || error.status === 403)) return false;
       return failureCount < 3;
     },
   });

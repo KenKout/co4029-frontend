@@ -11,6 +11,7 @@ import type {
   CareerPathPublic,
   CareerPathUpdate,
   MyCareerEnrollmentRead,
+  PathReadinessOverview,
   StudentPathProgressAuthoring,
 } from "../types";
 
@@ -314,6 +315,19 @@ export function useTeacherCareerPathProgress(careerPathId: string | undefined) {
     queryFn: () =>
       apiFetch<StudentPathProgressAuthoring[]>(
         `/teacher/career-paths/${careerPathId}/students/progress`,
+      ),
+    enabled: !!careerPathId,
+    staleTime: 1000 * 60,
+  });
+}
+
+/** FR-6.8 — latest readiness snapshots aggregate (manager view). */
+export function usePathReadinessOverview(careerPathId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.careerPaths.readiness(careerPathId ?? ""),
+    queryFn: () =>
+      apiFetch<PathReadinessOverview>(
+        `/management/career-paths/${careerPathId}/readiness`,
       ),
     enabled: !!careerPathId,
     staleTime: 1000 * 60,

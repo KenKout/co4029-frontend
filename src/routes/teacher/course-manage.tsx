@@ -279,6 +279,14 @@ function AddLessonPills({
     }
   }
 
+  function handleAddInterview() {
+    void navigate({
+      to: "/teacher/courses/$courseId/interview-configs/new",
+      params: { courseId },
+      search: { moduleId },
+    });
+  }
+
   return (
     <div className="flex flex-wrap gap-2 mt-1 pt-2 border-t border-m3-outline-variant/10">
       {Object.entries(LESSON_TYPE_CONFIG).map(([type, cfg]) => {
@@ -306,6 +314,16 @@ function AddLessonPills({
         <HelpCircle className="h-3.5 w-3.5" />
         <Plus className="h-3 w-3 -ml-0.5" />
         Quiz
+      </button>
+      <button
+        type="button"
+        disabled={adding}
+        onClick={handleAddInterview}
+        className={ADD_PILL_CLS}
+      >
+        <Mic className="h-3.5 w-3.5" />
+        <Plus className="h-3 w-3 -ml-0.5" />
+        Interview
       </button>
     </div>
   );

@@ -1871,6 +1871,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teacher/materials/{material_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Material Versions
+         * @description Version history (newest first) with per-version processing state (FR-3.4/3.5).
+         */
+        get: operations["list_material_versions_api_v1_teacher_materials__material_id__versions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/materials/{material_id}/versions/{version_id}/rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rollback Material Version
+         * @description FR-3.4 — flip the current version back to a prior ``ready`` one.
+         *
+         *     Pointer swap only (chunks are version-scoped); 409 when the target
+         *     is already current or never finished processing.
+         */
+        post: operations["rollback_material_version_api_v1_teacher_materials__material_id__versions__version_id__rollback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/materials/upload-url": {
         parameters: {
             query?: never;
@@ -2340,6 +2383,57 @@ export interface paths {
         put?: never;
         /** Start Session */
         post: operations["start_session_api_v1_interview_configs__config_id__sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/interview-sessions/{session_id}/realtime-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Realtime Token
+         * @description Mint a LiveKit join token (+ agent dispatch) for a voice session.
+         *
+         *     Ownership + existence are enforced by ``_REQUIRE_SESSION_OWNER``. Here we
+         *     additionally gate on the voice feature flag and the session's
+         *     mode/status, persist the room name on first call (idempotent), and return
+         *     a short-lived participant token. Phase 3's agent worker is dispatched by
+         *     the token's room-config when the room is first created.
+         */
+        post: operations["realtime_token_api_v1_interview_sessions__session_id__realtime_token_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/interview-sessions/{session_id}/integrity-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Integrity Events
+         * @description Best-effort ingest of browser integrity signals for a live session.
+         *
+         *     Owner/existence enforced by the dep. Events are recorded only while the
+         *     session is ``in_progress`` (late events for finished sessions are silently
+         *     dropped — this never blocks the interview). Post-session / teacher review
+         *     only; never surfaced to the student.
+         */
+        post: operations["record_integrity_events_api_v1_interview_sessions__session_id__integrity_events_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2984,6 +3078,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/career-enrollments/{career_path_id}/readiness-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Readiness History
+         * @description Most-recent-first readiness snapshots for the calling student (FR-6.8).
+         */
+        get: operations["get_my_readiness_history_api_v1_me_career_enrollments__career_path_id__readiness_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/management/career-paths": {
         parameters: {
             query?: never;
@@ -3143,6 +3257,32 @@ export interface paths {
         put?: never;
         /** Archive Path */
         post: operations["archive_path_api_v1_management_career_paths__career_path_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/career-paths/{career_path_id}/readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Path Readiness Overview
+         * @description Readiness aggregate (FR-6.8): latest snapshot per actively-enrolled
+         *     student + path average. Rubric details are never included.
+         *
+         *     Permission gate matches the roster read — which is permission-level
+         *     only, NOT org-membership-scoped (pre-existing across the management
+         *     surface; FR-2.6 enforcement lands with the phase-07 multi-tenant
+         *     validation alongside ``list_path_roster_progress``).
+         */
+        get: operations["get_path_readiness_overview_api_v1_management_career_paths__career_path_id__readiness_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4260,6 +4400,19 @@ export interface components {
             description?: string | null;
         };
         /**
+         * CareerReadinessSnapshotRead
+         * @description One historical readiness point for the calling student (FR-6.8).
+         */
+        CareerReadinessSnapshotRead: {
+            /** Readiness Score */
+            readiness_score: number;
+            /**
+             * Captured At
+             * Format: date-time
+             */
+            captured_at: string;
+        };
+        /**
          * CheckStatus
          * @description Per-dependency probe result.
          */
@@ -5109,6 +5262,29 @@ export interface components {
             /** Headline */
             headline?: string | null;
         };
+        /** IntegrityEventBatchRequest */
+        IntegrityEventBatchRequest: {
+            /** Events */
+            events: components["schemas"]["IntegrityEventItem"][];
+        };
+        /** IntegrityEventItem */
+        IntegrityEventItem: {
+            /**
+             * Event Type
+             * @enum {string}
+             */
+            event_type: "focus_lost" | "tab_switch" | "fullscreen_exit" | "warning_issued" | "reconnect" | "disconnect";
+            /**
+             * Severity
+             * @default info
+             * @enum {string}
+             */
+            severity: "info" | "warning" | "critical";
+            /** Metadata */
+            metadata?: {
+                [key: string]: string | number | boolean;
+            };
+        };
         /**
          * InterviewConfigAuthoring
          * @description Authoring projection of :class:`InterviewConfig`.
@@ -5696,6 +5872,13 @@ export interface components {
              * Format: uuid
              */
             interview_config_id: string;
+            /** Interview Title */
+            interview_title?: string | null;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id?: string | null;
             /**
              * Status
              * @enum {string}
@@ -5809,6 +5992,25 @@ export interface components {
             ai_followup_text?: string | null;
             /** Time Remaining Seconds */
             time_remaining_seconds?: number | null;
+        };
+        /**
+         * InterviewSummaryPublic
+         * @description Slim interview-config projection embedded inside
+         *     :class:`ModuleItemPublic.target`.
+         *
+         *     Mirrors :class:`QuizSummaryPublic` (``id`` + ``title``) so frontend
+         *     code can address ``item.target.{id,title}`` polymorphically; lives
+         *     in the courses schema package so the cross-feature import-linter
+         *     contract stays intact.
+         */
+        InterviewSummaryPublic: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
         };
         /** InvitationCodeAuthoring */
         InvitationCodeAuthoring: {
@@ -6061,6 +6263,11 @@ export interface components {
             kr_estimate: number;
             /** Due Count */
             due_count: number;
+            /**
+             * Eligible
+             * @default true
+             */
+            eligible: boolean;
         };
         /**
          * LessonProcessingSummary
@@ -6957,10 +7164,12 @@ export interface components {
          *     * ``LessonPublic`` — Phase 3 (T3.2) baseline.
          *     * ``QuizSummaryPublic`` — Phase 5 (FR-5); slim shape mirroring
          *       :class:`abridgeai.features.quizzes.schemas.public.QuizPublic`.
-         *     * Phase 6 will add ``InterviewPublic``.
+         *     * ``InterviewSummaryPublic`` — Phase 6 (FR-6); slim interview-config
+         *       shape with the same ``{id, title}`` surface.
          *
-         *     Pydantic v2 discriminates dict-shape on a best-fit basis; both
-         *     branches share ``{id, title}`` so tagging is unambiguous.
+         *     Pydantic v2 discriminates dict-shape on a best-fit basis; the
+         *     branches share ``{id, title}`` so ``item_type`` is the effective
+         *     discriminator for consumers.
          */
         ModuleItemPublic: {
             /**
@@ -6981,7 +7190,7 @@ export interface components {
             /** Position */
             position: number;
             /** Target */
-            target?: components["schemas"]["LessonPublic"] | components["schemas"]["QuizSummaryPublic"] | null;
+            target?: components["schemas"]["LessonPublic"] | components["schemas"]["QuizSummaryPublic"] | components["schemas"]["InterviewSummaryPublic"] | null;
         };
         /**
          * ModuleItemReorder
@@ -7478,6 +7687,23 @@ export interface components {
             total_materials: number;
             /** Total Quiz Attempts */
             total_quiz_attempts: number;
+        };
+        /**
+         * PathReadinessOverview
+         * @description Org-scoped readiness aggregate for one career path (FR-6.8).
+         */
+        PathReadinessOverview: {
+            /**
+             * Career Path Id
+             * Format: uuid
+             */
+            career_path_id: string;
+            /** Average Score */
+            average_score?: number | null;
+            /** Student Count */
+            student_count: number;
+            /** Students */
+            students: components["schemas"]["StudentReadinessRead"][];
         };
         /** PermissionRead */
         PermissionRead: {
@@ -8399,6 +8625,33 @@ export interface components {
             /** Title */
             title: string;
         };
+        /**
+         * RealtimeTokenResponse
+         * @description Client payload for joining the LiveKit voice-interview room.
+         *
+         *     ``url`` is the public WS endpoint (LiveKit Cloud), ``token`` is a
+         *     short-lived, room-scoped participant JWT (it also dispatches the AI
+         *     interview agent), and ``room_name`` is the deterministic per-session
+         *     room. The server-side API secret is never returned — only the signed
+         *     token derived from it.
+         */
+        RealtimeTokenResponse: {
+            /**
+             * Url
+             * @description LiveKit WS URL, e.g. wss://<project>.livekit.cloud
+             */
+            url: string;
+            /**
+             * Token
+             * @description Short-lived room-scoped participant JWT
+             */
+            token: string;
+            /**
+             * Room Name
+             * @description Deterministic per-session room name
+             */
+            room_name: string;
+        };
         /** RecentCallOut */
         RecentCallOut: {
             /**
@@ -8761,6 +9014,29 @@ export interface components {
             completion_percent: string;
             /** Total Time Seconds */
             total_time_seconds: number;
+        };
+        /**
+         * StudentReadinessRead
+         * @description Per-student latest readiness snapshot — manager drill-down row.
+         *
+         *     Carries score + identity only; per-interview rubric details are
+         *     intentionally excluded (FR-6.8 / FR-5.7).
+         */
+        StudentReadinessRead: {
+            /**
+             * Student Id
+             * Format: uuid
+             */
+            student_id: string;
+            /** Student Email */
+            student_email: string;
+            /** Readiness Score */
+            readiness_score: number;
+            /**
+             * Captured At
+             * Format: date-time
+             */
+            captured_at: string;
         };
         /** StudentSrDetailLessonRead */
         StudentSrDetailLessonRead: {
@@ -9214,6 +9490,240 @@ export interface components {
     headers: never;
     pathItems: never;
 }
+export type SchemaActiveUsersOut = components['schemas']['ActiveUsersOut'];
+export type SchemaAdminCoursePage = components['schemas']['AdminCoursePage'];
+export type SchemaAssignTeacherRequest = components['schemas']['AssignTeacherRequest'];
+export type SchemaAtRiskListRead = components['schemas']['AtRiskListRead'];
+export type SchemaAtRiskReason = components['schemas']['AtRiskReason'];
+export type SchemaAtRiskStudent = components['schemas']['AtRiskStudent'];
+export type SchemaAtRiskStudentRead = components['schemas']['AtRiskStudentRead'];
+export type SchemaBulkEnrollFailure = components['schemas']['BulkEnrollFailure'];
+export type SchemaBulkEnrollRequest = components['schemas']['BulkEnrollRequest'];
+export type SchemaBulkEnrollResult = components['schemas']['BulkEnrollResult'];
+export type SchemaBulkSetExpectedTimeRequest = components['schemas']['BulkSetExpectedTimeRequest'];
+export type SchemaBulkSetExpectedTimeResponse = components['schemas']['BulkSetExpectedTimeResponse'];
+export type SchemaBulkSetItem = components['schemas']['BulkSetItem'];
+export type SchemaCsvImportFailure = components['schemas']['CSVImportFailure'];
+export type SchemaCsvImportPayload = components['schemas']['CSVImportPayload'];
+export type SchemaCsvImportResult = components['schemas']['CSVImportResult'];
+export type SchemaCardsDueItem = components['schemas']['CardsDueItem'];
+export type SchemaCardsDuePage = components['schemas']['CardsDuePage'];
+export type SchemaCareerPathAuthoring = components['schemas']['CareerPathAuthoring'];
+export type SchemaCareerPathCourseAdd = components['schemas']['CareerPathCourseAdd'];
+export type SchemaCareerPathCourseAuthoring = components['schemas']['CareerPathCourseAuthoring'];
+export type SchemaCareerPathCoursePublic = components['schemas']['CareerPathCoursePublic'];
+export type SchemaCareerPathCourseReorder = components['schemas']['CareerPathCourseReorder'];
+export type SchemaCareerPathCreate = components['schemas']['CareerPathCreate'];
+export type SchemaCareerPathListPage = components['schemas']['CareerPathListPage'];
+export type SchemaCareerPathProgressRead = components['schemas']['CareerPathProgressRead'];
+export type SchemaCareerPathPublic = components['schemas']['CareerPathPublic'];
+export type SchemaCareerPathStudentEnroll = components['schemas']['CareerPathStudentEnroll'];
+export type SchemaCareerPathUpdate = components['schemas']['CareerPathUpdate'];
+export type SchemaCareerReadinessSnapshotRead = components['schemas']['CareerReadinessSnapshotRead'];
+export type SchemaCheckStatus = components['schemas']['CheckStatus'];
+export type SchemaChunkPreview = components['schemas']['ChunkPreview'];
+export type SchemaClassKrDistributionRead = components['schemas']['ClassKRDistributionRead'];
+export type SchemaContentOut = components['schemas']['ContentOut'];
+export type SchemaCostTotals = components['schemas']['CostTotals'];
+export type SchemaCourseAuthoring = components['schemas']['CourseAuthoring'];
+export type SchemaCourseContentAuthoring = components['schemas']['CourseContentAuthoring'];
+export type SchemaCourseContentPublic = components['schemas']['CourseContentPublic'];
+export type SchemaCourseCreate = components['schemas']['CourseCreate'];
+export type SchemaCourseLearningOutcomeAuthoring = components['schemas']['CourseLearningOutcomeAuthoring'];
+export type SchemaCourseLearningOutcomePublic = components['schemas']['CourseLearningOutcomePublic'];
+export type SchemaCoursePage = components['schemas']['CoursePage'];
+export type SchemaCourseProcessingAudit = components['schemas']['CourseProcessingAudit'];
+export type SchemaCourseProgressSummary = components['schemas']['CourseProgressSummary'];
+export type SchemaCoursePublic = components['schemas']['CoursePublic'];
+export type SchemaCourseStats = components['schemas']['CourseStats'];
+export type SchemaCourseStatusCount = components['schemas']['CourseStatusCount'];
+export type SchemaCourseUpdate = components['schemas']['CourseUpdate'];
+export type SchemaCoverageOptions = components['schemas']['CoverageOptions'];
+export type SchemaDeepHealthOut = components['schemas']['DeepHealthOut'];
+export type SchemaDifficultCardRead = components['schemas']['DifficultCardRead'];
+export type SchemaDisableUserOut = components['schemas']['DisableUserOut'];
+export type SchemaEnableUserOut = components['schemas']['EnableUserOut'];
+export type SchemaEnrollmentAuthoring = components['schemas']['EnrollmentAuthoring'];
+export type SchemaEnrollmentPatch = components['schemas']['EnrollmentPatch'];
+export type SchemaEnrollmentRead = components['schemas']['EnrollmentRead'];
+export type SchemaGapReportAuthoringRead = components['schemas']['GapReportAuthoringRead'];
+export type SchemaGapReportRead = components['schemas']['GapReportRead'];
+export type SchemaGoogleLoginResponse = components['schemas']['GoogleLoginResponse'];
+export type SchemaGrantCreate = components['schemas']['GrantCreate'];
+export type SchemaGrantRead = components['schemas']['GrantRead'];
+export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
+export type SchemaHealthOut = components['schemas']['HealthOut'];
+export type SchemaHistogramBucket = components['schemas']['HistogramBucket'];
+export type SchemaHttpAuditRow = components['schemas']['HttpAuditRow'];
+export type SchemaInstructorAuthoring = components['schemas']['InstructorAuthoring'];
+export type SchemaInstructorRead = components['schemas']['InstructorRead'];
+export type SchemaIntegrityEventBatchRequest = components['schemas']['IntegrityEventBatchRequest'];
+export type SchemaIntegrityEventItem = components['schemas']['IntegrityEventItem'];
+export type SchemaInterviewConfigAuthoring = components['schemas']['InterviewConfigAuthoring'];
+export type SchemaInterviewConfigCreate = components['schemas']['InterviewConfigCreate'];
+export type SchemaInterviewConfigPublic = components['schemas']['InterviewConfigPublic'];
+export type SchemaInterviewConfigUpdate = components['schemas']['InterviewConfigUpdate'];
+export type SchemaInterviewForTakingPublic = components['schemas']['InterviewForTakingPublic'];
+export type SchemaInterviewGenerationRequest = components['schemas']['InterviewGenerationRequest'];
+export type SchemaInterviewGenerationRunPublic = components['schemas']['InterviewGenerationRunPublic'];
+export type SchemaInterviewOutcomeAuthoring = components['schemas']['InterviewOutcomeAuthoring'];
+export type SchemaInterviewOutcomeCreate = components['schemas']['InterviewOutcomeCreate'];
+export type SchemaInterviewOutcomePublic = components['schemas']['InterviewOutcomePublic'];
+export type SchemaInterviewQuestionAuthoring = components['schemas']['InterviewQuestionAuthoring'];
+export type SchemaInterviewQuestionCreate = components['schemas']['InterviewQuestionCreate'];
+export type SchemaInterviewQuestionPublic = components['schemas']['InterviewQuestionPublic'];
+export type SchemaInterviewRubricScore = components['schemas']['InterviewRubricScore'];
+export type SchemaInterviewSessionFinishResponse = components['schemas']['InterviewSessionFinishResponse'];
+export type SchemaInterviewSessionPublic = components['schemas']['InterviewSessionPublic'];
+export type SchemaInterviewSessionStartRequest = components['schemas']['InterviewSessionStartRequest'];
+export type SchemaInterviewSessionStartResponse = components['schemas']['InterviewSessionStartResponse'];
+export type SchemaInterviewSubmitAnswerRequest = components['schemas']['InterviewSubmitAnswerRequest'];
+export type SchemaInterviewSubmitAnswerResponse = components['schemas']['InterviewSubmitAnswerResponse'];
+export type SchemaInterviewSummaryPublic = components['schemas']['InterviewSummaryPublic'];
+export type SchemaInvitationCodeAuthoring = components['schemas']['InvitationCodeAuthoring'];
+export type SchemaInvitationCodeCreate = components['schemas']['InvitationCodeCreate'];
+export type SchemaInvitationCodePatch = components['schemas']['InvitationCodePatch'];
+export type SchemaLessonAuthoring = components['schemas']['LessonAuthoring'];
+export type SchemaLessonCreate = components['schemas']['LessonCreate'];
+export type SchemaLessonOutline = components['schemas']['LessonOutline'];
+export type SchemaLessonOverviewItem = components['schemas']['LessonOverviewItem'];
+export type SchemaLessonProcessingSummary = components['schemas']['LessonProcessingSummary'];
+export type SchemaLessonProgressPublic = components['schemas']['LessonProgressPublic'];
+export type SchemaLessonProgressSummary = components['schemas']['LessonProgressSummary'];
+export type SchemaLessonPublic = components['schemas']['LessonPublic'];
+export type SchemaLessonResourceAuthoring = components['schemas']['LessonResourceAuthoring'];
+export type SchemaLessonResourceCreate = components['schemas']['LessonResourceCreate'];
+export type SchemaLessonResourcePublic = components['schemas']['LessonResourcePublic'];
+export type SchemaLessonUpdate = components['schemas']['LessonUpdate'];
+export type SchemaMaterialAuthoring = components['schemas']['MaterialAuthoring'];
+export type SchemaMaterialEngagementCreate = components['schemas']['MaterialEngagementCreate'];
+export type SchemaMaterialEngagementPublic = components['schemas']['MaterialEngagementPublic'];
+export type SchemaMaterialLinkExisting = components['schemas']['MaterialLinkExisting'];
+export type SchemaMaterialPublic = components['schemas']['MaterialPublic'];
+export type SchemaMaterialStreamUrl = components['schemas']['MaterialStreamUrl'];
+export type SchemaMaterialUpdate = components['schemas']['MaterialUpdate'];
+export type SchemaMaterialUploadComplete = components['schemas']['MaterialUploadComplete'];
+export type SchemaMaterialUploadInit = components['schemas']['MaterialUploadInit'];
+export type SchemaMaterialUploadInitOut = components['schemas']['MaterialUploadInitOut'];
+export type SchemaMaterialVersionAuthoring = components['schemas']['MaterialVersionAuthoring'];
+export type SchemaMembershipCreate = components['schemas']['MembershipCreate'];
+export type SchemaMembershipPatch = components['schemas']['MembershipPatch'];
+export type SchemaMembershipRead = components['schemas']['MembershipRead'];
+export type SchemaMfaChallengeResponse = components['schemas']['MfaChallengeResponse'];
+export type SchemaMfaDisableRequest = components['schemas']['MfaDisableRequest'];
+export type SchemaMfaEnrollResponse = components['schemas']['MfaEnrollResponse'];
+export type SchemaMfaRecoveryCodesResponse = components['schemas']['MfaRecoveryCodesResponse'];
+export type SchemaMfaStatusResponse = components['schemas']['MfaStatusResponse'];
+export type SchemaMfaTotpVerifyRequest = components['schemas']['MfaTotpVerifyRequest'];
+export type SchemaMfaVerifyRequest = components['schemas']['MfaVerifyRequest'];
+export type SchemaModuleAuthoring = components['schemas']['ModuleAuthoring'];
+export type SchemaModuleCreate = components['schemas']['ModuleCreate'];
+export type SchemaModuleItemAuthoring = components['schemas']['ModuleItemAuthoring'];
+export type SchemaModuleItemPublic = components['schemas']['ModuleItemPublic'];
+export type SchemaModuleItemReorder = components['schemas']['ModuleItemReorder'];
+export type SchemaModuleItemTarget = components['schemas']['ModuleItemTarget'];
+export type SchemaModuleItemUpdate = components['schemas']['ModuleItemUpdate'];
+export type SchemaModulePrerequisiteSet = components['schemas']['ModulePrerequisiteSet'];
+export type SchemaModulePublic = components['schemas']['ModulePublic'];
+export type SchemaModuleUpdate = components['schemas']['ModuleUpdate'];
+export type SchemaMultipartAbortIn = components['schemas']['MultipartAbortIn'];
+export type SchemaMultipartCompleteIn = components['schemas']['MultipartCompleteIn'];
+export type SchemaMultipartPartsOut = components['schemas']['MultipartPartsOut'];
+export type SchemaMyCareerEnrollmentRead = components['schemas']['MyCareerEnrollmentRead'];
+export type SchemaMyCourseProgressSummary = components['schemas']['MyCourseProgressSummary'];
+export type SchemaNotificationPreferenceRead = components['schemas']['NotificationPreferenceRead'];
+export type SchemaNotificationPreferenceUpdate = components['schemas']['NotificationPreferenceUpdate'];
+export type SchemaNotificationRead = components['schemas']['NotificationRead'];
+export type SchemaOrgUnitCreate = components['schemas']['OrgUnitCreate'];
+export type SchemaOrgUnitPatch = components['schemas']['OrgUnitPatch'];
+export type SchemaOrgUnitRead = components['schemas']['OrgUnitRead'];
+export type SchemaOrganizationCreate = components['schemas']['OrganizationCreate'];
+export type SchemaOrganizationDomainCreate = components['schemas']['OrganizationDomainCreate'];
+export type SchemaOrganizationDomainPatch = components['schemas']['OrganizationDomainPatch'];
+export type SchemaOrganizationDomainRead = components['schemas']['OrganizationDomainRead'];
+export type SchemaOrganizationListPage = components['schemas']['OrganizationListPage'];
+export type SchemaOrganizationPatch = components['schemas']['OrganizationPatch'];
+export type SchemaOrganizationRead = components['schemas']['OrganizationRead'];
+export type SchemaOutlineSection = components['schemas']['OutlineSection'];
+export type SchemaOverviewOut = components['schemas']['OverviewOut'];
+export type SchemaPathReadinessOverview = components['schemas']['PathReadinessOverview'];
+export type SchemaPermissionRead = components['schemas']['PermissionRead'];
+export type SchemaPipelineSpendOut = components['schemas']['PipelineSpendOut'];
+export type SchemaPipelineStage = components['schemas']['PipelineStage'];
+export type SchemaProcessingJobOut = components['schemas']['ProcessingJobOut'];
+export type SchemaProcessingJobRow = components['schemas']['ProcessingJobRow'];
+export type SchemaProcessingProgress = components['schemas']['ProcessingProgress'];
+export type SchemaQuestionBankEntry = components['schemas']['QuestionBankEntry'];
+export type SchemaQuestionBankImportRequest = components['schemas']['QuestionBankImportRequest'];
+export type SchemaQuestionBankPage = components['schemas']['QuestionBankPage'];
+export type SchemaQueueDepthOut = components['schemas']['QueueDepthOut'];
+export type SchemaQuizAttemptAnswerInput = components['schemas']['QuizAttemptAnswerInput'];
+export type SchemaQuizAttemptAnswerRead = components['schemas']['QuizAttemptAnswerRead'];
+export type SchemaQuizAttemptRead = components['schemas']['QuizAttemptRead'];
+export type SchemaQuizAttemptReviewOption = components['schemas']['QuizAttemptReviewOption'];
+export type SchemaQuizAttemptReviewQuestion = components['schemas']['QuizAttemptReviewQuestion'];
+export type SchemaQuizAttemptReviewRead = components['schemas']['QuizAttemptReviewRead'];
+export type SchemaQuizAttemptStart = components['schemas']['QuizAttemptStart'];
+export type SchemaQuizAuthoring = components['schemas']['QuizAuthoring'];
+export type SchemaQuizForAuthoringPublic = components['schemas']['QuizForAuthoringPublic'];
+export type SchemaQuizForTakingPublic = components['schemas']['QuizForTakingPublic'];
+export type SchemaQuizGenerationRequest = components['schemas']['QuizGenerationRequest'];
+export type SchemaQuizGenerationRunRead = components['schemas']['QuizGenerationRunRead'];
+export type SchemaQuizPublic = components['schemas']['QuizPublic'];
+export type SchemaQuizQuestionAuthoring = components['schemas']['QuizQuestionAuthoring'];
+export type SchemaQuizQuestionOptionAuthoring = components['schemas']['QuizQuestionOptionAuthoring'];
+export type SchemaQuizQuestionOptionPublic = components['schemas']['QuizQuestionOptionPublic'];
+export type SchemaQuizQuestionPublic = components['schemas']['QuizQuestionPublic'];
+export type SchemaQuizSummaryPublic = components['schemas']['QuizSummaryPublic'];
+export type SchemaRealtimeTokenResponse = components['schemas']['RealtimeTokenResponse'];
+export type SchemaRecentCallOut = components['schemas']['RecentCallOut'];
+export type SchemaRefreshTokenRequest = components['schemas']['RefreshTokenRequest'];
+export type SchemaReprocessOut = components['schemas']['ReprocessOut'];
+export type SchemaResourceDownloadUrlResponse = components['schemas']['ResourceDownloadUrlResponse'];
+export type SchemaRoleAssignmentCreate = components['schemas']['RoleAssignmentCreate'];
+export type SchemaRoleAssignmentRead = components['schemas']['RoleAssignmentRead'];
+export type SchemaRoleBreakdown = components['schemas']['RoleBreakdown'];
+export type SchemaRoleChangeRow = components['schemas']['RoleChangeRow'];
+export type SchemaRoleRead = components['schemas']['RoleRead'];
+export type SchemaRoleWithPermissionsRead = components['schemas']['RoleWithPermissionsRead'];
+export type SchemaRosterEntry = components['schemas']['RosterEntry'];
+export type SchemaRosterProgressRead = components['schemas']['RosterProgressRead'];
+export type SchemaSlugAvailability = components['schemas']['SlugAvailability'];
+export type SchemaStageBreakdown = components['schemas']['StageBreakdown'];
+export type SchemaStreamUrlResponse = components['schemas']['StreamUrlResponse'];
+export type SchemaStudentCareerEnrollmentAuthoring = components['schemas']['StudentCareerEnrollmentAuthoring'];
+export type SchemaStudentLessonSummaryRead = components['schemas']['StudentLessonSummaryRead'];
+export type SchemaStudentPathProgressAuthoring = components['schemas']['StudentPathProgressAuthoring'];
+export type SchemaStudentProgressRow = components['schemas']['StudentProgressRow'];
+export type SchemaStudentReadinessRead = components['schemas']['StudentReadinessRead'];
+export type SchemaStudentSrDetailLessonRead = components['schemas']['StudentSrDetailLessonRead'];
+export type SchemaStudentSrDetailRead = components['schemas']['StudentSrDetailRead'];
+export type SchemaStudentSrDetailReviewRead = components['schemas']['StudentSrDetailReviewRead'];
+export type SchemaStudyPlanItem = components['schemas']['StudyPlanItem'];
+export type SchemaSummaryOut = components['schemas']['SummaryOut'];
+export type SchemaTagAuthoring = components['schemas']['TagAuthoring'];
+export type SchemaTagPublic = components['schemas']['TagPublic'];
+export type SchemaTeacherAssignmentCreated = components['schemas']['TeacherAssignmentCreated'];
+export type SchemaTeacherAssignmentRead = components['schemas']['TeacherAssignmentRead'];
+export type SchemaTimeBucket = components['schemas']['TimeBucket'];
+export type SchemaTokenResponse = components['schemas']['TokenResponse'];
+export type SchemaTopOwnerRow = components['schemas']['TopOwnerRow'];
+export type SchemaUnreadCount = components['schemas']['UnreadCount'];
+export type SchemaUploadCompleteOut = components['schemas']['UploadCompleteOut'];
+export type SchemaUserListRow = components['schemas']['UserListRow'];
+export type SchemaUserPermissionsRead = components['schemas']['UserPermissionsRead'];
+export type SchemaUserProfileRead = components['schemas']['UserProfileRead'];
+export type SchemaUserProfileUpdate = components['schemas']['UserProfileUpdate'];
+export type SchemaUserRead = components['schemas']['UserRead'];
+export type SchemaUserSpendOut = components['schemas']['UserSpendOut'];
+export type SchemaValidationError = components['schemas']['ValidationError'];
+export type SchemaCompletedPartIn = components['schemas']['_CompletedPartIn'];
+export type SchemaMultipartPartOut = components['schemas']['_MultipartPartOut'];
+export type SchemaUploadUrlRequest = components['schemas']['_UploadUrlRequest'];
+export type SchemaUploadUrlResponse = components['schemas']['_UploadUrlResponse'];
+export type SchemaUploadUrlStorageObject = components['schemas']['_UploadUrlStorageObject'];
+export type SchemaAbridgeaiFeaturesAdminRoutersUsersUserListPage = components['schemas']['abridgeai__features__admin__routers__users__UserListPage'];
+export type SchemaAbridgeaiFeaturesIdentitySchemasProfileUserListPage = components['schemas']['abridgeai__features__identity__schemas__profile__UserListPage'];
 export type $defs = Record<string, never>;
 export interface operations {
     google_login_api_v1_auth_google_login_get: {
@@ -12578,6 +13088,69 @@ export interface operations {
             };
         };
     };
+    list_material_versions_api_v1_teacher_materials__material_id__versions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                material_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialVersionAuthoring"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rollback_material_version_api_v1_teacher_materials__material_id__versions__version_id__rollback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                material_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialVersionAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     request_upload_url_api_v1_materials_upload_url_post: {
         parameters: {
             query?: never;
@@ -13401,6 +13974,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InterviewSessionStartResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    realtime_token_api_v1_interview_sessions__session_id__realtime_token_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RealtimeTokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_integrity_events_api_v1_interview_sessions__session_id__integrity_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntegrityEventBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -14709,6 +15350,37 @@ export interface operations {
             };
         };
     };
+    get_my_readiness_history_api_v1_me_career_enrollments__career_path_id__readiness_history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                career_path_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareerReadinessSnapshotRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_career_paths_api_v1_management_career_paths_get: {
         parameters: {
             query?: {
@@ -15085,6 +15757,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CareerPathAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_path_readiness_overview_api_v1_management_career_paths__career_path_id__readiness_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                career_path_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PathReadinessOverview"];
                 };
             };
             /** @description Validation Error */

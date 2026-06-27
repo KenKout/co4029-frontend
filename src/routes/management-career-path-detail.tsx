@@ -30,6 +30,7 @@ import {
   usePatchCareerPath,
   usePublishCareerPath,
   useRemoveCareerPathCourse,
+  usePathReadinessOverview,
   useRemoveCareerPathStudent,
   useReorderCareerPathCourses,
   useTeacherCareerPathProgress,
@@ -757,6 +758,7 @@ function StudentsTab({ id }: { id: string }) {
   const { t } = useTranslation();
   const add = useAddCareerPathStudent(id);
   const progress = useTeacherCareerPathProgress(id);
+  const readiness = usePathReadinessOverview(id);
   const [studentId, setStudentId] = useState("");
 
   function handleAdd(e: React.FormEvent) {
@@ -820,6 +822,24 @@ function StudentsTab({ id }: { id: string }) {
           </Button>
         </div>
       </form>
+
+      {readiness.data && readiness.data.student_count > 0 && (
+        <div className="rounded-xl bg-m3-surface-container-lowest ghost-border p-5 flex flex-wrap items-center gap-x-8 gap-y-2">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              {t("management_career_path_detail.sections.readiness_snapshot")}
+            </p>
+            <p className="text-2xl font-headline font-bold text-m3-on-surface">
+              {readiness.data.average_score?.toFixed(1) ?? "—"}%
+            </p>
+          </div>
+          <p className="text-sm text-m3-on-surface-variant">
+            {t("management_career_path_detail.readiness_students_counted", {
+              count: readiness.data.student_count,
+            })}
+          </p>
+        </div>
+      )}
 
       {progress.isLoading ? (
         <div className="space-y-2">

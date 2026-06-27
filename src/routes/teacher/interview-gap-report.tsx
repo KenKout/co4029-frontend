@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import {
+  useInterviewTranscript,
   useTeacherGapReport,
   useTeacherInterviewSession,
 } from "@/lib/api/hooks/interviews";
@@ -108,7 +109,56 @@ export default function InterviewGapReportPage() {
           <SourceLinksCard report={report} />
         </div>
       </div>
+
+      <TranscriptCard sessionId={sessionId} />
     </div>
+  );
+}
+
+function TranscriptCard({ sessionId }: { sessionId: string }) {
+  const { t } = useTranslation();
+  const { data, isLoading } = useInterviewTranscript(sessionId);
+  const turns = data?.turns ?? [];
+
+  return (
+    <GlassCard className="p-6 space-y-4">
+      <h3 className="font-headline font-bold text-m3-primary">
+        {t("teacher_interview_gap_report.transcript.title")}
+      </h3>
+      {isLoading && (
+        <p className="text-sm text-m3-on-surface-variant">{t("common.loading")}</p>
+      )}
+      {!isLoading && turns.length === 0 && (
+        <p className="text-sm text-m3-on-surface-variant">
+          {t("teacher_interview_gap_report.transcript.empty")}
+        </p>
+      )}
+      {turns.length > 0 && (
+        <ul className="space-y-3">
+          {turns.map((turn, idx) => (
+            <li
+              key={idx}
+              className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-1"
+            >
+              {turn.question_prompt && (
+                <p className="text-[11px] font-semibold text-m3-outline uppercase tracking-widest">
+                  {turn.question_prompt}
+                </p>
+              )}
+              <p className="text-sm text-m3-on-surface leading-relaxed">
+                <span className="font-bold mr-1.5">
+                  {t(`teacher_interview_gap_report.transcript.role.${turn.role}`)}:
+                </span>
+                {turn.content_text ??
+                  (turn.has_audio
+                    ? t("teacher_interview_gap_report.transcript.audio_only")
+                    : "—")}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </GlassCard>
   );
 }
 

@@ -6,8 +6,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Bot,
-  CheckCircle2,
   Clock,
+  Loader2,
   Mic,
   MicOff,
   Sparkles,
@@ -21,6 +21,7 @@ import {
   useGapReport,
   useInterviewForTaking,
   useInterviewRespond,
+  useInterviewSession,
   useStartInterviewSession,
 } from "@/lib/api/hooks/interviews";
 import { ApiError } from "@/lib/api/client";
@@ -30,6 +31,7 @@ import type {
   InterviewSessionStartResponse,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { VoiceRoom } from "@/components/interview/voice-room";
 
 interface ChatTurn {
   id: string;
@@ -56,10 +58,7 @@ function questionTypeLabel(type: string | null | undefined, t: (k: string) => st
   }
 }
 
-function makeAiTurn(
-  question: InterviewQuestionPublic,
-  isFollowUp = false,
-): ChatTurn {
+function makeAiTurn(question: InterviewQuestionPublic, isFollowUp = false): ChatTurn {
   return {
     id: `q-${question.id}-${isFollowUp ? "f" : "m"}`,
     role: "ai",
@@ -70,31 +69,26 @@ function makeAiTurn(
 }
 
 function makeFollowUpTurn(text: string, key: string): ChatTurn {
-  return {
-    id: `f-${key}`,
-    role: "ai",
-    text,
-    isFollowUp: true,
-  };
+  return { id: `f-${key}`, role: "ai", text, isFollowUp: true };
 }
 
 function makeUserTurn(text: string, key: string): ChatTurn {
-  return {
-    id: `a-${key}`,
-    role: "user",
-    text,
-  };
+  return { id: `a-${key}`, role: "user", text };
 }
 
 export default function CourseInterviewPage() {
   const { t } = useTranslation();
-  const { slug, configId } = useParams({ strict: false }) as {
+  // Route: /courses/$slug/interview/$moduleId
+  // $moduleId carries the interview_config_id (set by course-learn link)
+  const { slug, moduleId } = useParams({ strict: false }) as {
     slug: string;
-    configId: string;
+    moduleId: string;
   };
+  const configId = moduleId;
 
   const { data: course, isLoading: courseLoading } = useCourseBySlug(slug);
-  const { data: config, isLoading: configLoading } = useInterviewForTaking(configId);
+  const { data: takingPayload, isLoading: configLoading } = useInterviewForTaking(configId);
+  const config = takingPayload?.config;
 
   const startSession = useStartInterviewSession(configId);
 
@@ -104,13 +98,72 @@ export default function CourseInterviewPage() {
   const [answerText, setAnswerText] = useState("");
   const [finishResult, setFinishResult] = useState<InterviewSessionFinishResponse | null>(null);
   const [inputMode, setInputMode] = useState<"voice" | "text" | "hybrid">("text");
+  // true = voice session started and LiveKitRoom is active
+  const [voiceActive, setVoiceActive] = useState(false);
+  // polling active when voice session is completing
+  const [pollingCompletion, setPollingCompletion] = useState(false);
 
   const respond = useInterviewRespond(sessionId);
   const finish = useFinishInterview(sessionId);
-  const { data: gapReport } = useGapReport(finishResult ? sessionId : null);
+  const { data: gapReport, isPending: gapReportPending } = useGapReport(
+    finishResult ? sessionId : null,
+  );
+
+  // The pass/fail verdict is produced by an async worker (~1-2 min) AFTER
+  // /finish returns. At finish time pass_verdict is still null, so we must NOT
+  // render it as a fail. Poll the session until the verdict resolves, then stop.
+  const finishVerdict = finishResult?.pass_verdict ?? null;
+  const { data: verdictPoll } = useInterviewSession(
+    finishResult && finishVerdict === null ? sessionId : null,
+    { refetchInterval: 3000 },
+  );
+  // Live verdict: prefer the polled value once it lands, else the finish value.
+  const liveVerdict: boolean | null =
+    (verdictPoll?.pass_verdict ?? null) ?? finishVerdict;
+  const verdictPending = !!finishResult && liveVerdict === null;
+
+  // Once the polled verdict resolves, freeze it into finishResult so the poll's
+  // `enabled` flips to false (finishVerdict is otherwise the frozen null from
+  // the /finish response and would keep the poll running forever).
+  useEffect(() => {
+    const resolved = verdictPoll?.pass_verdict;
+    if (resolved !== null && resolved !== undefined) {
+      setFinishResult((prev) =>
+        prev && prev.pass_verdict === null
+          ? { ...prev, pass_verdict: resolved }
+          : prev,
+      );
+    }
+  }, [verdictPoll?.pass_verdict]);
+
+  // Poll session status (every 2s) when voice completes to detect the
+  // server-side finish. TanStack Query does not poll by default, so the
+  // refetchInterval is required — without it the status is fetched once and
+  // the user can hang forever if the commit lands a moment later.
+  const { data: sessionStatus } = useInterviewSession(
+    pollingCompletion ? sessionId : null,
+    { refetchInterval: 2000 },
+  );
+
+  // Stop polling on ANY terminal status (completed/timed_out/abandoned/failed)
+  // and surface the result. Scores/verdict are produced by the async
+  // evaluation and appear via the gap report (same as text mode).
+  useEffect(() => {
+    if (!pollingCompletion || !sessionStatus) return;
+    const terminal = ["completed", "timed_out", "abandoned", "failed"];
+    if (terminal.includes(sessionStatus.status)) {
+      setPollingCompletion(false);
+      setFinishResult({
+        session_id: sessionStatus.session_id,
+        status: sessionStatus.status,
+        pass_verdict: sessionStatus.pass_verdict ?? null,
+        total_score: null,
+        rubric_scores: [],
+      });
+    }
+  }, [pollingCompletion, sessionStatus]);
 
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
-
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [transcript]);
@@ -129,20 +182,64 @@ export default function CourseInterviewPage() {
   }, [config]);
 
   function handleStartSuccess(payload: InterviewSessionStartResponse) {
-    setSessionId(payload.session_id);
-    if (payload.first_question) {
-      setCurrentQuestion(payload.first_question);
-      setTranscript([makeAiTurn(payload.first_question)]);
-    } else {
+    if (!payload.first_question) {
+      toast.error(t("course_interview.errors.no_question_available"));
+      setSessionId(null);
       setCurrentQuestion(null);
       setTranscript([]);
+      return;
+    }
+    setSessionId(payload.session_id);
+    setCurrentQuestion(payload.first_question);
+    setTranscript([makeAiTurn(payload.first_question)]);
+  }
+
+  /** Request mic permission; returns true if granted, false otherwise */
+  async function checkMicPermission(): Promise<boolean> {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Release the test stream immediately — LiveKit will re-acquire
+      stream.getTracks().forEach((t) => t.stop());
+      return true;
+    } catch {
+      return false;
     }
   }
 
   async function handleStart() {
+    const isVoice = inputMode === "voice";
+
+    if (isVoice) {
+      const granted = await checkMicPermission();
+      if (!granted) {
+        toast.error("Microphone access denied. Falling back to text interview.");
+        setInputMode("text");
+        // Fall through to start a text session
+        try {
+          const payload = await startSession.mutateAsync({ input_mode: "text" });
+          handleStartSuccess(payload);
+        } catch (err) {
+          toast.error(
+            err instanceof ApiError && err.status === 429
+              ? t("course_interview.errors.rate_limited")
+              : t("course_interview.errors.start_failed"),
+          );
+        }
+        return;
+      }
+    }
+
     try {
       const payload = await startSession.mutateAsync({ input_mode: inputMode });
       handleStartSuccess(payload);
+      // Only enter voice mode when handleStartSuccess actually committed to a
+      // session — i.e. the backend returned a first question. When it didn't
+      // (e.g. config published with only pending questions), the toast in
+      // handleStartSuccess already informed the user; staying on the
+      // mode-selection screen lets them retry without joining an empty room.
+      if (isVoice && payload.first_question) {
+        setVoiceActive(true);
+      }
     } catch (err) {
       toast.error(
         err instanceof ApiError && err.status === 429
@@ -150,6 +247,25 @@ export default function CourseInterviewPage() {
           : t("course_interview.errors.start_failed"),
       );
     }
+  }
+
+  /** Called by VoiceRoom when the agent leaves or the user ends the call.
+   *
+   * Always fires `/finish` (idempotent: the backend `submit_session` returns
+   * early if the session is no longer in_progress). This finalizes a
+   * user-initiated "End interview" — disconnect alone is non-terminal — while
+   * staying harmless when the agent already finalized a natural completion.
+   * Then polls session status until terminal. */
+  function handleVoiceCompleted() {
+    setVoiceActive(false);
+    if (sessionId) {
+      finish.mutate(undefined, {
+        // Errors here are non-fatal — polling still detects the terminal
+        // status set by the agent's own submit_session.
+        onError: () => undefined,
+      });
+    }
+    setPollingCompletion(true);
   }
 
   async function handleRespond() {
@@ -192,9 +308,7 @@ export default function CourseInterviewPage() {
       if (err instanceof ApiError && err.status === 429) {
         toast.error(t("course_interview.errors.rate_limited"));
       } else {
-        toast.error(
-          (err as Error).message || t("course_interview.errors.send_failed"),
-        );
+        toast.error((err as Error).message || t("course_interview.errors.send_failed"));
       }
     }
   }
@@ -205,12 +319,11 @@ export default function CourseInterviewPage() {
       const result = await finish.mutateAsync();
       setFinishResult(result);
     } catch (err) {
-      toast.error(
-        (err as Error).message || t("course_interview.errors.finish_failed"),
-      );
+      toast.error((err as Error).message || t("course_interview.errors.finish_failed"));
     }
   }
 
+  // ── Loading state ──────────────────────────────────────────────────────────
   if (courseLoading || configLoading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-6">
@@ -245,6 +358,7 @@ export default function CourseInterviewPage() {
     );
   }
 
+  // ── Results screen (text mode finish OR voice mode completion) ─────────────
   if (finishResult) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 sm:p-8">
@@ -253,56 +367,35 @@ export default function CourseInterviewPage() {
             <div
               className={cn(
                 "w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl font-black font-headline shadow-lg",
-                finishResult.pass_verdict
-                  ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
-                  : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white",
+                verdictPending
+                  ? "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary"
+                  : liveVerdict
+                    ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
+                    : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white",
               )}
             >
-              {finishResult.pass_verdict ? "✓" : "—"}
+              {verdictPending ? (
+                <Loader2 className="h-10 w-10 animate-spin" />
+              ) : liveVerdict ? (
+                "✓"
+              ) : (
+                "—"
+              )}
             </div>
             <h2 className="font-headline font-extrabold text-2xl text-m3-primary mb-1">
-              {finishResult.pass_verdict
-                ? t("course_interview.results.passed")
-                : t("course_interview.results.completed")}
+              {verdictPending
+                ? t("course_interview.results.evaluating")
+                : liveVerdict
+                  ? t("course_interview.results.passed")
+                  : t("course_interview.results.completed")}
             </h2>
             <p className="text-m3-on-surface-variant text-sm mb-6">
-              {finishResult.total_score
-                ? t("course_interview.results.total_score", {
-                    score: finishResult.total_score,
-                  })
-                : t("course_interview.results.summary_loading")}
+              {verdictPending
+                ? t("course_interview.results.evaluating_summary")
+                : liveVerdict
+                  ? t("course_interview.results.pass_summary")
+                  : t("course_interview.results.fail_summary")}
             </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-left">
-              {finishResult.rubric_scores.map((rubric) => (
-                <div
-                  key={rubric.outcome_id}
-                  className={cn(
-                    "rounded-xl border p-4",
-                    rubric.verdict_met
-                      ? "border-emerald-200 bg-emerald-50"
-                      : "border-m3-outline-variant/30 bg-m3-surface-container-low",
-                  )}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <CheckCircle2
-                      className={cn(
-                        "h-4 w-4 shrink-0",
-                        rubric.verdict_met ? "text-emerald-600" : "text-m3-outline",
-                      )}
-                    />
-                    <span className="font-semibold text-sm text-m3-on-surface">
-                      {rubric.outcome_text}
-                    </span>
-                  </div>
-                  {rubric.evidence_excerpt && (
-                    <p className="text-xs text-m3-on-surface-variant pl-6 leading-relaxed">
-                      {rubric.evidence_excerpt}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
 
             <Link to="/courses/$slug/learn" params={{ slug }}>
               <Button variant="outline" className="rounded-xl ghost-border font-bold text-sm gap-2">
@@ -311,6 +404,14 @@ export default function CourseInterviewPage() {
               </Button>
             </Link>
           </GlassCard>
+
+          {finishResult && !gapReport && gapReportPending && (
+            <GlassCard className="p-6 text-center">
+              <p className="text-sm text-m3-on-surface-variant">
+                {t("course_interview.sections.gap_report_pending")}
+              </p>
+            </GlassCard>
+          )}
 
           {gapReport && (
             <GlassCard className="p-6">
@@ -351,6 +452,41 @@ export default function CourseInterviewPage() {
     );
   }
 
+  // ── Polling / waiting for voice session to complete ────────────────────────
+  if (pollingCompletion) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center p-8">
+        <GlassCard className="p-10 text-center max-w-md">
+          <Sparkles className="h-8 w-8 text-m3-primary mx-auto mb-4 animate-pulse" />
+          <p className="text-sm text-m3-on-surface-variant">
+            {t("course_interview.status.compiling_results")}
+          </p>
+        </GlassCard>
+      </div>
+    );
+  }
+
+  // ── Voice session active (LiveKit room) ────────────────────────────────────
+  if (voiceActive && sessionId) {
+    return (
+      <div className="min-h-[70vh] pb-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-m3-surface-container text-m3-primary font-bold text-sm">
+              <Mic className="h-4 w-4" />
+              {t("course_interview.labels.ai_interview")} — Voice
+            </div>
+          </div>
+          <h1 className="font-headline font-extrabold text-3xl text-m3-primary mb-6">
+            {config.title}
+          </h1>
+          <VoiceRoom sessionId={sessionId} onCompleted={handleVoiceCompleted} />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Pre-start screen (mode selection) ─────────────────────────────────────
   if (!sessionId) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4 sm:px-6 py-10">
@@ -426,7 +562,9 @@ export default function CourseInterviewPage() {
             >
               {startSession.isPending
                 ? t("course_interview.actions.starting")
-                : t("course_interview.actions.start")}
+                : inputMode === "voice"
+                  ? "Start voice interview"
+                  : t("course_interview.actions.start")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </GlassCard>
@@ -435,6 +573,7 @@ export default function CourseInterviewPage() {
     );
   }
 
+  // ── Text mode chat UI ──────────────────────────────────────────────────────
   return (
     <div className="min-h-[70vh] pb-20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -454,7 +593,6 @@ export default function CourseInterviewPage() {
               {course.title}
             </span>
           </div>
-
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-m3-surface-container text-m3-primary font-bold text-sm">
             <Sparkles className="h-4 w-4" />
             {t("course_interview.labels.ai_interview")}
@@ -521,9 +659,7 @@ export default function CourseInterviewPage() {
             />
             <div className="flex items-center justify-between mt-3 flex-wrap gap-3">
               <span className="text-xs text-m3-outline">
-                {t("course_interview.labels.character_count", {
-                  count: answerText.length,
-                })}
+                {t("course_interview.labels.character_count", { count: answerText.length })}
               </span>
               <div className="flex items-center gap-3 flex-wrap justify-end">
                 <Button

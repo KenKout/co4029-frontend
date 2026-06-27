@@ -57,6 +57,7 @@ export type ResourceDownloadUrlResponse = Schemas["ResourceDownloadUrlResponse"]
 export type Material = Schemas["MaterialPublic"];
 export type MaterialPublic = Schemas["MaterialPublic"];
 export type MaterialAuthoring = Schemas["MaterialAuthoring"];
+export type MaterialVersionAuthoring = Schemas["MaterialVersionAuthoring"];
 export type MaterialUpdate = Schemas["MaterialUpdate"];
 export type MaterialEngagement = Schemas["MaterialEngagementPublic"];
 export type MaterialEngagementPublic = Schemas["MaterialEngagementPublic"];
@@ -126,6 +127,37 @@ export type InterviewGenerationRequest = Schemas["InterviewGenerationRequest"];
 export type InterviewGenerationRunPublic = Schemas["InterviewGenerationRunPublic"];
 export type GapReportRead = Schemas["GapReportRead"];
 export type GapReportAuthoringRead = Schemas["GapReportAuthoringRead"];
+
+export interface InterviewForAuthoringPublic {
+  config: InterviewConfigAuthoring;
+  questions: InterviewQuestionAuthoring[];
+  outcomes: InterviewOutcomeAuthoring[];
+}
+
+export interface InterviewSessionSummary {
+  session_id: string;
+  student_id: string;
+  student_name: string | null;
+  attempt_number: number;
+  status: "in_progress" | "completed" | "timed_out" | "abandoned" | "failed";
+  input_mode: "voice" | "text" | "hybrid";
+  pass_verdict: boolean | null;
+  started_at: string;
+  ended_at: string | null;
+}
+
+export interface InterviewTranscriptTurn {
+  role: "user" | "ai" | "system";
+  question_prompt: string | null;
+  content_text: string | null;
+  has_audio: boolean;
+  created_at: string;
+}
+
+export interface InterviewTranscriptRead {
+  session_id: string;
+  turns: InterviewTranscriptTurn[];
+}
 export type StudyPlanItem = Schemas["StudyPlanItem"];
 
 export type Enrollment = Schemas["EnrollmentRead"];
@@ -219,6 +251,9 @@ export type CareerPathProgressRead = Schemas["CareerPathProgressRead"];
 export type MyCareerEnrollmentRead = Schemas["MyCareerEnrollmentRead"];
 export type StudentPathProgressAuthoring =
   Schemas["StudentPathProgressAuthoring"];
+export type PathReadinessOverview = Schemas["PathReadinessOverview"];
+export type CareerReadinessSnapshotRead =
+  Schemas["CareerReadinessSnapshotRead"];
 
 export type CardDueItem = Schemas["CardsDueItem"];
 export type CardDue = CardDueItem;
@@ -235,6 +270,16 @@ export type StudentSrDetailReview = Schemas["StudentSrDetailReviewRead"];
 export type Page<T> = { items: T[]; next_cursor: string | null };
 export type Paths = paths;
 
+// Hand-written types for voice interview (endpoints not in generated openapi-types)
+export type {
+  RealtimeTokenResponse,
+  IntegrityEventType,
+  IntegrityEventSeverity,
+  IntegrityEvent,
+  IntegrityEventsRequest,
+  IntegrityEventsResponse,
+} from "./types/interview-voice";
+
 export type PermissionRead = Schemas["PermissionRead"];
 export type RoleRead = Schemas["RoleRead"];
 export type RoleWithPermissionsRead = Schemas["RoleWithPermissionsRead"];
@@ -244,3 +289,5 @@ export type GrantRead = Schemas["GrantRead"];
 export type GrantCreate = Schemas["GrantCreate"];
 export type MembershipRead = Schemas["MembershipRead"];
 export type MembershipCreate = Schemas["MembershipCreate"];
+export type RoleChangeRow = Schemas["RoleChangeRow"];
+export type HttpAuditRow = Schemas["HttpAuditRow"];

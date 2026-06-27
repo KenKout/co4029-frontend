@@ -17,6 +17,8 @@ import {
   Download,
   Sparkles,
   HelpCircle,
+  XCircle,
+  // Lock,
 } from "lucide-react";
 import "@vidstack/react/player/styles/base.css";
 import "@vidstack/react/player/styles/default/theme.css";
@@ -34,6 +36,7 @@ import {
 } from "@/lib/api/hooks/courses";
 import { useStreamUrl } from "@/lib/api/hooks/materials";
 import { useMyCourseProgress, useMarkLessonComplete, useUnmarkLessonComplete } from "@/lib/api/hooks/progress";
+// import { useCourseSrOverview } from "@/lib/api/hooks/spaced-repetition";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
 import ReactMarkdown from "react-markdown";
 import { queryKeys } from "@/lib/api/query-keys";
@@ -46,7 +49,8 @@ import type {
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
-type LessonState = "active" | "completed" | "pending" | "locked";
+// type LessonState = "active" | "completed" | "pending" | "locked";
+type LessonState = "active" | "completed" | "pending";
 
 interface FlatItem {
   moduleId: string;
@@ -212,11 +216,67 @@ function CourseLearnLoaded({
   const [activeIdx, setActiveIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>("Lesson Notes");
 
+  // ── DEV: lock-bypass (commented out) ──
+  // const [devBypassLocks, setDevBypassLocks] = useState(
+  //   () => localStorage.getItem("dev_bypass_locks") === "1"
+  // );
+  // const { data: srOverview } = useCourseSrOverview(course.id);
+  // const lockedLessonIds = useMemo(() => {
+  //   if (devBypassLocks) return new Set<string>();
+  //   const set = new Set<string>();
+  //   for (const row of srOverview ?? []) {
+  //     if (row.eligible === false) set.add(row.lesson_id);
+  //   }
+  //   return set;
+  // }, [srOverview, devBypassLocks]);
+  // const activeLesson = devBypassLocks && !lessonQuery.data && activeEntry?.item.target
+  //   ? (activeEntry.item.target as LessonPublic)
+  //   : (lessonQuery.data ?? null);
+  // const lessonLocked =
+  //   !devBypassLocks &&
+  //   lessonQuery.isError &&
+  //   lessonQuery.error instanceof ApiError &&
+  //   lessonQuery.error.status === 403 &&
+  //   (lessonQuery.error.parsedBody as { detail?: { error?: string } } | null)?.detail?.error ===
+  //     "lesson_locked";
+  // const unlockDetail = (() => {
+  //   if (!lessonLocked) return null;
+  //   const err = lessonQuery.error as ApiError;
+  //   const body = err.parsedBody as {
+  //     detail?: {
+  //       error?: string;
+  //       prerequisites_met?: boolean;
+  //       current_ratio?: number;
+  //       required_ratio?: number;
+  //       total_cards?: number;
+  //       passing_cards?: number;
+  //       interview_pass_required?: boolean;
+  //       interview_passed?: boolean;
+  //       next_unlock_estimate?: string | null;
+  //     };
+  //   } | null;
+  //   const d = body?.detail;
+  //   if (!d) return null;
+  //   const prereqsMet = d.prerequisites_met ?? null;
+  //   const efRatio = d.current_ratio != null && d.required_ratio != null ? { current: d.current_ratio, required: d.required_ratio } : null;
+  //   const totalCards = d.total_cards ?? 0;
+  //   const passingCards = d.passing_cards ?? 0;
+  //   const interviewReq = d.interview_pass_required ?? false;
+  //   const interviewPassed = d.interview_passed ?? false;
+  //   const estimate = d.next_unlock_estimate ?? null;
+  //   return { prereqsMet, efRatio, totalCards, passingCards, interviewReq, interviewPassed, estimate };
+  // })();
+  // ───────────────────────────────────────
+
+  // Fallback: use sidebar metadata when API returns lesson_locked 403
   const activeEntry = lessonItems[activeIdx] ?? null;
   const activeLessonId = activeEntry?.item.target?.id;
-
   const lessonQuery = useLesson(activeLessonId);
-  const activeLesson = lessonQuery.data ?? null;
+  const activeLesson =
+    lessonQuery.data ??
+    (activeEntry?.item.target?.id && activeEntry?.item.target
+      ? (activeEntry.item.target as LessonPublic)
+      : null);
   const lessonUnavailable =
     lessonQuery.isError &&
     lessonQuery.error instanceof ApiError &&
@@ -304,8 +364,9 @@ function CourseLearnLoaded({
       return "active";
     }
     if (fi.item.item_type === "lesson" && fi.item.target?.id) {
-      const status = lessonStatusMap.get(fi.item.target.id);
-      if (status === "completed") return "completed";
+      const id = fi.item.target.id;
+      // if (lockedLessonIds.has(id)) return "locked"; // DEV: comment out to disable lock
+      if (lessonStatusMap.get(id) === "completed") return "completed";
     }
     return "pending";
   }
@@ -343,9 +404,94 @@ function CourseLearnLoaded({
           <span className="text-m3-on-surface font-medium truncate">Learn</span>
         </nav>
 
+        {/* ── DEV: lock-bypass toggle (commented out) ──
+        <div className="flex items-center justify-end mb-2">
+          <button
+            onClick={() => {
+              const next = !devBypassLocks;
+              setDevBypassLocks(next);
+              localStorage.setItem("dev_bypass_locks", next ? "1" : "0");
+            }}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono font-bold border transition-all",
+              devBypassLocks
+                ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 hover:opacity-90"
+                : "bg-m3-surface-container border-m3-outline text-m3-on-surface-variant hover:bg-primary/10 hover:border-primary/30 hover:text-primary hover:opacity-90"
+            )}
+          >
+            {devBypassLocks ? "🔒 DEV: Locking" : "🔓 DEV: Unlock All"}
+          </button>
+        </div>
+        ─────────────────────────────────────────────── */}
+
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           <div className="flex-1 min-w-0 flex flex-col gap-6">
 
+            {/* ── DEV: lock overlay (commented out) ──
+            {lessonLocked ? (
+              <GlassCard className="p-8">
+                <div className="flex items-start gap-4">
+                  <Lock className="h-8 w-8 text-m3-outline shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-headline font-bold text-xl text-m3-on-surface mb-4">
+                      {t("course_learn.lesson_locked_title")}
+                    </p>
+                    <div className="flex flex-col gap-2 text-sm text-m3-on-surface-variant text-left">
+                      {unlockDetail?.prereqsMet === false && (
+                        <div className="flex items-start gap-2">
+                          <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                          <span>{t("course_learn.gate_prerequisites")}</span>
+                        </div>
+                      )}
+                      {unlockDetail && unlockDetail.efRatio && unlockDetail.totalCards > 0 && (
+                        <div className="flex items-start gap-2">
+                          {unlockDetail.efRatio.current >= unlockDetail.efRatio.required ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                          )}
+                          <div>
+                            <span>
+                              {t("course_learn.gate_sr_ratio", {
+                                passing: unlockDetail.passingCards,
+                                total: unlockDetail.totalCards,
+                                required: Math.round(unlockDetail.efRatio.required * 100),
+                              })}
+                            </span>
+                            <div className="mt-1.5 w-full max-w-xs h-1.5 bg-m3-surface-variant rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all"
+                                style={{
+                                  width: `${Math.min(100, (unlockDetail.efRatio.current / unlockDetail.efRatio.required) * 100)}%`,
+                                  backgroundColor: unlockDetail.efRatio.current >= unlockDetail.efRatio.required
+                                    ? "#4caf50"
+                                    : "#f97316",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {unlockDetail?.interviewReq && (
+                        <div className="flex items-start gap-2">
+                          {unlockDetail.interviewPassed ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                          )}
+                          <span>{t("course_learn.gate_interview")}</span>
+                        </div>
+                      )}
+                      {unlockDetail?.estimate && (
+                        <p className="mt-3 pt-3 border-t border-m3-outline-variant text-m3-on-surface font-medium">
+                          {unlockDetail.estimate}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </GlassCard>
+            ) : */}
             {lessonUnavailable ? (
               <GlassCard className="p-10 text-center">
                 <p className="font-headline font-bold text-xl text-m3-on-surface mb-2">
@@ -853,14 +999,14 @@ function ModuleSection({
           "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
           state === "active" && "bg-m3-primary text-white shadow-md font-bold",
           state === "completed" && "bg-m3-surface-container-lowest text-m3-primary shadow-sm font-medium hover:bg-m3-surface-container",
-          state === "pending" && !isInterview && "text-m3-on-surface-variant hover:bg-white/50 font-medium",
-          state === "locked" && "opacity-40 cursor-not-allowed text-m3-outline",
-          isInterview && "opacity-60 cursor-default text-m3-on-surface-variant"
+          state === "pending" && "text-m3-on-surface-variant hover:bg-white/50 font-medium",
+          // state === "locked" && "opacity-40 cursor-not-allowed text-m3-outline", // DEV: comment out to disable lock
         );
 
         const inner = (
           <>
             {state === "completed" && <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500 fill-emerald-100" />}
+            {/* {state === "locked" && <Lock className="h-4 w-4 flex-shrink-0" />} */}{/* DEV: comment out to disable lock */}
             {state === "active" && <LessonIcon className="h-4 w-4 flex-shrink-0" />}
             {state === "pending" && !isQuiz && !isInterview && <LessonIcon className="h-4 w-4 flex-shrink-0 opacity-40" />}
             {state === "pending" && isQuiz && <HelpCircle className="h-4 w-4 flex-shrink-0 opacity-60" />}
@@ -885,11 +1031,24 @@ function ModuleSection({
           );
         }
 
+        if (isInterview && fi.item.target?.id) {
+          return (
+            <Link
+              key={fi.item.id}
+              to="/courses/$slug/interview/$moduleId"
+              params={{ slug, moduleId: fi.item.target.id }}
+              className={className}
+            >
+              {inner}
+            </Link>
+          );
+        }
+
         return (
           <button
             key={fi.item.id}
-            onClick={() => state !== "locked" && !isInterview && idx >= 0 && onSelect(idx)}
-            disabled={state === "locked" || isInterview || idx < 0}
+            onClick={() => idx >= 0 && onSelect(idx)}
+            disabled={idx < 0 /* || state === "locked" */} // DEV: uncomment state check to re-enable lock
             className={className}
           >
             {inner}

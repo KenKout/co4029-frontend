@@ -40,6 +40,7 @@ export const queryKeys = {
     chunksPreview: (id: string, limit?: number) =>
       ["materials", "chunks-preview", id, limit] as const,
     processing: (id: string) => ["materials", "processing", id] as const,
+    versions: (id: string) => ["materials", "versions", id] as const,
   },
 
   notifications: {
@@ -49,7 +50,8 @@ export const queryKeys = {
   },
 
   sr: {
-    cardsDue: (lessonId?: string) => ["sr", "cards-due", lessonId] as const,
+    cardsDue: (lessonId?: string, limit?: number) =>
+      ["sr", "cards-due", lessonId, limit] as const,
     lessonSummary: (lessonId: string) =>
       ["sr", "lesson-summary", lessonId] as const,
     courseOverview: (courseId: string) =>
@@ -91,6 +93,10 @@ export const queryKeys = {
       ["admin", "users", userId, "grants"] as const,
     orgMemberships: (orgId: string) =>
       ["admin", "organizations", orgId, "memberships"] as const,
+    auditRoleChanges: (since: string) =>
+      ["admin", "audit", "role-changes", since] as const,
+    auditHttp: (since: string, path?: string, userId?: string) =>
+      ["admin", "audit", "http", since, path, userId] as const,
     aiCosts: {
       summary: (period: string) =>
         ["admin", "ai-costs", "summary", period] as const,
@@ -195,6 +201,10 @@ export const queryKeys = {
       ["interviews", "generation-run", configId, runId] as const,
     teacherSession: (sessionId: string) =>
       ["interviews", "teacher-session", sessionId] as const,
+    configSessions: (configId: string) =>
+      ["interviews", "config-sessions", configId] as const,
+    transcript: (sessionId: string) =>
+      ["interviews", "transcript", sessionId] as const,
   },
 
   enrollments: {
@@ -233,5 +243,6 @@ export const queryKeys = {
       ["career-paths", "mgmt-courses", id] as const,
     teacherProgress: (id: string) =>
       ["career-paths", "teacher-progress", id] as const,
+    readiness: (id: string) => ["career-paths", "readiness", id] as const,
   },
 } as const;

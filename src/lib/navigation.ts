@@ -14,8 +14,10 @@ import {
   Activity,
   Cpu,
   DollarSign,
+  ScrollText,
   Briefcase,
   User,
+  Mic,
   type LucideIcon,
 } from "lucide-react";
 
@@ -31,6 +33,7 @@ export const studentNavItems: NavItem[] = [
   { label: "Dashboard", i18nKey: "nav.dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Courses", i18nKey: "nav.courses", href: "/courses", icon: BookOpen },
   { label: "Progress", i18nKey: "nav.progress", href: "/progress", icon: BarChart3 },
+  { label: "My Interviews", i18nKey: "nav.my_interviews", href: "/me/interviews", icon: Mic },
   { label: "Career Paths", i18nKey: "nav.career_paths", href: "/career-paths", icon: Briefcase },
 ];
 
@@ -55,6 +58,7 @@ export const adminNavItems: NavItem[] = [
   { label: "Courses", i18nKey: "nav.courses", href: "/admin/courses", icon: BookOpen },
   { label: "Processing", i18nKey: "nav.processing", href: "/admin/processing", icon: Cpu },
   { label: "AI Costs", i18nKey: "nav.ai_costs", href: "/admin/ai-costs", icon: DollarSign },
+  { label: "Audit Logs", i18nKey: "nav.audit_logs", href: "/admin/audit-logs", icon: ScrollText },
   { label: "Health", i18nKey: "nav.health", href: "/admin/health", icon: Shield },
 ];
 

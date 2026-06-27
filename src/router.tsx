@@ -28,7 +28,7 @@ import SettingsProfilePage from "@/routes/settings-profile";
 import SettingsSecurityPage from "@/routes/settings-security";
 import SettingsHubPage from "@/routes/settings";
 import ProfilePage from "@/routes/profile";
-import { ProgressPage, InterviewPage } from "@/routes/placeholder";
+import ProgressPage from "@/routes/progress";
 import CareerPathsPage from "@/routes/career-paths";
 import CareerPathDetailPage from "@/routes/career-path-detail";
 import MyCareerPathsPage from "@/routes/me-career-paths";
@@ -134,7 +134,7 @@ const courseQuizReviewRoute = createRoute({
 const courseInterviewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/courses/$slug/interview/$moduleId",
-  component: InterviewPage,
+  component: lazyRouteComponent(() => import("@/routes/course-interview")),
 });
 
 const progressRoute = createRoute({
@@ -232,6 +232,9 @@ const teacherQuizManageRoute = createRoute({
 const teacherInterviewConfigNewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/interview-configs/new",
+  validateSearch: (search: Record<string, unknown>) => ({
+    moduleId: typeof search.moduleId === "string" ? search.moduleId : undefined,
+  }),
   component: lazyRouteComponent(
     () => import("@/routes/teacher/interview-config-new"),
   ),
@@ -357,6 +360,12 @@ const adminAiCostsRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/admin/ai-costs")),
 });
 
+const adminAuditLogsRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/admin/audit-logs",
+  component: lazyRouteComponent(() => import("@/routes/admin/audit-logs")),
+});
+
 const deptCoursesRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/dept",
@@ -393,6 +402,12 @@ const myCareerPathsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/me/career-paths",
   component: MyCareerPathsPage,
+});
+
+const myInterviewsRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/me/interviews",
+  component: lazyRouteComponent(() => import("@/routes/me-interviews")),
 });
 
 const managementCareerPathsRoute = createRoute({
@@ -509,12 +524,14 @@ const routeTree = rootRoute.addChildren([
     adminProcessingRoute,
     adminProcessingJobRoute,
     adminAiCostsRoute,
+    adminAuditLogsRoute,
     deptCoursesRoute,
     deptCourseDetailRoute,
     managementCourseEnrollmentsRoute,
     careerPathsRoute,
     careerPathDetailRoute,
     myCareerPathsRoute,
+    myInterviewsRoute,
     managementCareerPathsRoute,
     managementCareerPathDetailRoute,
     srDashboardRoute,

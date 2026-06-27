@@ -5,6 +5,7 @@
     "save": "Lưu",
     "cancel": "Huỷ",
     "delete": "Xoá",
+    "edit": "Chỉnh sửa",
     "confirm": "Xác nhận",
     "back": "Quay lại",
     "next": "Tiếp",
@@ -22,6 +23,7 @@
     "courses": "Khoá học",
     "progress": "Tiến độ",
     "career_paths": "Lộ trình nghề nghiệp",
+    "my_interviews": "Phỏng vấn của tôi",
     "overview": "Tổng quan",
     "my_courses": "Khoá của tôi",
     "department_courses": "Khoá của khoa",
@@ -30,6 +32,7 @@
     "users": "Người dùng",
     "processing": "Đang xử lý",
     "ai_costs": "Chi phí AI",
+    "audit_logs": "Nhật ký kiểm toán",
     "health": "Tình trạng hệ thống",
     "settings": "Cài đặt",
     "profile": "Hồ sơ",
@@ -174,6 +177,8 @@
   "course_learn": {
     "lesson_unavailable_title": "Bài học không khả dụng",
     "lesson_unavailable_body": "Nội dung bài học này hiện chưa được mở.",
+    "lesson_locked_title": "Bài học đang khóa",
+    "lesson_locked_body": "Hoàn thành các bài học tiên quyết và ôn tập các thẻ đến hạn để mở khóa bài học này.",
     "resource_unavailable": "Tài nguyên không khả dụng",
     "download": "Download",
     "reading_lesson": "Bài đọc",
@@ -192,6 +197,20 @@
     "settings": "Cài đặt",
     "quiz": "Bài kiểm tra",
     "interview": "Phỏng vấn AI"
+  },
+  "progress_page": {
+    "title": "Tiến độ của tôi",
+    "subtitle": "Tổng quan hoàn thành khóa học và ôn tập ngắt quãng.",
+    "cards_due": "thẻ đến hạn ôn tập",
+    "review_now": "Ôn tập ngay",
+    "sr_dashboard": "Bảng ôn tập",
+    "courses_heading": "Hoàn thành khóa học",
+    "no_courses": "Bạn chưa đăng ký khóa học nào.",
+    "load_failed": "Không thể tải khóa học của bạn. Vui lòng thử lại.",
+    "browse_courses": "Khám phá khóa học",
+    "lessons_done": "Hoàn thành {{completed}}/{{total}} bài học",
+    "time_spent": "Đã học {{hours}} giờ",
+    "continue": "Tiếp tục"
   },
   "teacher_interview_config_new": {
     "title": "Tạo phỏng vấn AI mới",
@@ -326,8 +345,7 @@
     "errors": {
       "challenge_failed": "Không thể bắt đầu xác thực hai bước. Vui lòng thử lại.",
       "session_not_ready": "Phiên xác thực chưa sẵn sàng. Vui lòng đợi trong giây lát.",
-      "invalid_code": "Mã không hợp lệ",
-      "challenge_expired": "Phiên xác thực đã hết hạn. Phiên mới đã được tạo, vui lòng thử lại."
+      "invalid_code": "Mã không hợp lệ"
     },
     "success": "Xác thực thành công"
   },
@@ -348,6 +366,27 @@
       "active": "Đang học",
       "completed": "Hoàn thành",
       "dropped": "Đã bỏ"
+    }
+  },
+  "me_interviews": {
+    "title": "Phỏng vấn của tôi",
+    "subtitle": "Các lần phỏng vấn thử trước đây và kết quả của bạn.",
+    "section_title": "Các lần thử",
+    "n_sessions": "{{count}} lần",
+    "n_sessions_plural": "{{count}} lần",
+    "load_failed_title": "Không thể tải danh sách phỏng vấn",
+    "load_failed_body": "Vui lòng thử lại sau ít phút.",
+    "retry": "Thử lại",
+    "empty_title": "Chưa có lần phỏng vấn nào",
+    "empty_body": "Bắt đầu một buổi phỏng vấn thử từ khoá học của bạn để xem kết quả tại đây.",
+    "empty_cta": "Xem khoá học →",
+    "untitled": "Phỏng vấn",
+    "attempt": "Lần {{n}}",
+    "state": {
+      "passed": "Đạt",
+      "not_passed": "Chưa đạt",
+      "evaluating": "Đang chấm…",
+      "in_progress": "Đang diễn ra"
     }
   },
   "career_path_detail": {
@@ -690,6 +729,34 @@
     "ai_chip": "Hỗ trợ bởi AI"
   },
   "admin": {
+    "audit": {
+      "title": "Nhật ký kiểm toán",
+      "subtitle": "Bản ghi bất biến về thay đổi vai trò và yêu cầu HTTP.",
+      "since_days": "N ngày gần nhất",
+      "tabs": {
+        "role_changes": "Thay đổi vai trò",
+        "http": "Yêu cầu HTTP"
+      },
+      "cols": {
+        "when": "Thời điểm",
+        "role": "Vai trò",
+        "scope": "Phạm vi",
+        "user": "Người dùng",
+        "granted_by": "Cấp bởi",
+        "status": "Trạng thái",
+        "method": "Phương thức",
+        "path": "Đường dẫn",
+        "code": "Mã",
+        "latency": "Độ trễ",
+        "ip": "IP"
+      },
+      "system": "hệ thống",
+      "active": "Đang hiệu lực",
+      "revoked": "Đã thu hồi",
+      "empty": "Không có bản ghi kiểm toán trong khoảng thời gian này.",
+      "load_failed": "Không thể tải bản ghi kiểm toán. Bạn có thể không có quyền hoặc dịch vụ không khả dụng.",
+      "path_filter_placeholder": "Lọc theo tiền tố đường dẫn, ví dụ /api/v1/admin"
+    },
     "health": {
       "title": "Trạng thái hệ thống",
       "subtitle": "Kiểm tra sức khỏe và sẵn sàng của backend.",
@@ -1109,6 +1176,16 @@
     "admin": "Quản trị"
   },
   "teacher_interview_gap_report": {
+    "transcript": {
+      "title": "Bản ghi phỏng vấn",
+      "empty": "Không có bản ghi nào cho buổi phỏng vấn này.",
+      "audio_only": "(câu trả lời bằng giọng nói — chưa có bản chữ)",
+      "role": {
+        "user": "Sinh viên",
+        "ai": "Người phỏng vấn",
+        "system": "Hệ thống"
+      }
+    },
     "empty_states": {
       "no_report": "Chưa có báo cáo lỗ hổng",
       "no_overview": "AI chưa sinh phần tổng quan.",
@@ -1252,6 +1329,7 @@
   "course_interview": {
     "sections": {
       "gap_report": "Báo cáo lỗ hổng",
+      "gap_report_pending": "Đang chuẩn bị báo cáo lỗ hổng cá nhân hóa… có thể mất một phút.",
       "study_plan": "Kế hoạch học tập",
       "follow_up": "Tiếp theo"
     },
@@ -1298,7 +1376,8 @@
       "start_failed": "Không thể bắt đầu phỏng vấn",
       "answer_required": "Vui lòng nhập câu trả lời",
       "send_failed": "Không thể gửi câu trả lời",
-      "finish_failed": "Không thể kết thúc phỏng vấn"
+      "finish_failed": "Không thể kết thúc phỏng vấn",
+      "no_question_available": "Phỏng vấn này chưa có câu hỏi nào được duyệt. Vui lòng liên hệ giáo viên."
     },
     "empty_states": {
       "no_interview_found": "Không tìm thấy phỏng vấn",
@@ -1307,8 +1386,10 @@
     "results": {
       "passed": "Đạt yêu cầu",
       "completed": "Đã hoàn tất phỏng vấn",
-      "total_score": "Điểm tổng: {{score}}",
-      "summary_loading": "Hệ thống đang tổng hợp kết quả của bạn."
+      "evaluating": "Đang chấm câu trả lời của bạn…",
+      "evaluating_summary": "AI đang chấm câu trả lời của bạn theo các mục tiêu học tập. Quá trình này thường mất khoảng một phút — kết quả sẽ tự động hiển thị tại đây.",
+      "pass_summary": "Bạn đã đạt đủ số mục tiêu học tập để vượt qua buổi phỏng vấn này.",
+      "fail_summary": "Bạn chưa đạt đủ số mục tiêu học tập lần này. Hãy ôn lại nội dung và thử lại."
     },
     "intro": {
       "description": "Phỏng vấn AI chấm điểm theo các tiêu chí của module. Trả lời từng câu một và xem phản hồi cuối phiên."
@@ -1388,8 +1469,10 @@
     },
     "sections": {
       "add_course": "Thêm khóa học",
-      "register_student": "Đăng ký sinh viên"
+      "register_student": "Đăng ký sinh viên",
+      "readiness_snapshot": "Mức sẵn sàng nghề nghiệp trung bình"
     },
+    "readiness_students_counted": "từ ảnh chụp gần nhất của {{count}} sinh viên đã đăng ký",
     "empty_states": {
       "no_courses": "Chưa có khóa học nào trong lộ trình.",
       "no_students": "Chưa có sinh viên nào đăng ký.",
@@ -1691,7 +1774,8 @@
       "not_found_body": "Bộ câu hỏi phỏng vấn không tải được cho khoá học này.",
       "back_to_course": "Quay lại khoá học",
       "title_required": "Tiêu đề không được để trống",
-      "questions_required": "Tạo câu hỏi trước khi xuất bản"
+      "questions_required": "Tạo câu hỏi trước khi xuất bản",
+      "question_count_min": "Số câu hỏi phải lớn hơn 0"
     },
     "toasts": {
       "config_saved": "Đã lưu cấu hình",
@@ -1703,7 +1787,13 @@
       "deleted": "Đã xoá phỏng vấn",
       "delete_failed": "Xoá thất bại",
       "generation_started": "Đang tạo câu hỏi…",
-      "generation_failed": "Không thể bắt đầu sinh câu hỏi"
+      "generation_failed": "Không thể bắt đầu sinh câu hỏi",
+      "question_approved": "Đã duyệt câu hỏi",
+      "question_approve_failed": "Không thể duyệt câu hỏi",
+      "question_rejected": "Đã từ chối câu hỏi",
+      "question_saved": "Đã cập nhật câu hỏi",
+      "question_deleted": "Đã xoá câu hỏi",
+      "question_added": "Đã thêm câu hỏi"
     },
     "actions": {
       "back_tooltip": "Quay lại khoá học",
@@ -1753,13 +1843,57 @@
       "supplementary_label": "Hướng dẫn bổ sung",
       "supplementary_placeholder": "VD: Tập trung vào tình huống thực tế, tránh câu hỏi học thuộc lòng…"
     },
+    "outcomes": {
+      "list_title": "Chuẩn đầu ra",
+      "list_description": "Điều sinh viên phải thể hiện để đạt. AI chấm từng câu trả lời dựa trên các chuẩn này.",
+      "add": "Thêm chuẩn đầu ra",
+      "add_save": "Thêm",
+      "add_placeholder": "VD: Giải thích cách đệ quy hoạt động và xác định điều kiện dừng",
+      "empty": "Chưa có chuẩn đầu ra. Hãy thêm ít nhất một — nếu không có, không thể xuất bản và mọi sinh viên đều bị tự động trượt.",
+      "weight_label": "Trọng số",
+      "weight_badge": "Trọng số {{weight}}/5",
+      "type_knowledge": "Kiến thức",
+      "type_skill": "Kỹ năng",
+      "type_attitude": "Thái độ",
+      "added": "Đã thêm chuẩn đầu ra",
+      "saved": "Đã lưu chuẩn đầu ra",
+      "deleted": "Đã xoá chuẩn đầu ra"
+    },
+    "sessions": {
+      "list_title": "Lượt làm của sinh viên",
+      "list_description": "Xem từng lượt làm của sinh viên — bản ghi và kết quả theo từng chuẩn đầu ra.",
+      "empty": "Chưa có sinh viên nào làm bài phỏng vấn này.",
+      "attempt": "Lần {{n}}",
+      "state": {
+        "passed": "Đạt",
+        "not_passed": "Chưa đạt",
+        "evaluating": "Đang chấm…",
+        "in_progress": "Đang diễn ra"
+      }
+    },
     "questions": {
       "section_title": "Câu hỏi & Tiêu chí",
       "section_description": "Sinh hàng loạt từ tài liệu khoá học bằng AI.",
       "count_label": "Câu hỏi",
+      "approved_label": "Đã duyệt",
       "weight_total": "Tổng trọng số",
       "open_generator": "Mở trình tạo AI",
-      "empty": "Chưa có câu hỏi nào. Tạo câu hỏi trước khi xuất bản phỏng vấn."
+      "empty": "Chưa có câu hỏi nào. Tạo câu hỏi trước khi xuất bản phỏng vấn.",
+      "none_approved": "Câu hỏi do AI sinh cần được duyệt trước khi sinh viên có thể làm bài.",
+      "pending_hint": "Còn {{count}} câu hỏi chờ duyệt.",
+      "list_title": "Danh sách câu hỏi",
+      "list_description": "Duyệt các bản nháp AI; duyệt, chỉnh sửa hoặc xoá từng câu.",
+      "add_manual": "Thêm thủ công",
+      "add_placeholder": "Nhập nội dung câu hỏi mới",
+      "add_save": "Lưu câu hỏi",
+      "approve": "Duyệt",
+      "reject": "Từ chối"
+    },
+    "review_status": {
+      "pending": "Chờ duyệt",
+      "approved": "Đã duyệt",
+      "edited": "Đã chỉnh sửa",
+      "rejected": "Từ chối"
     },
     "generate_modal": {
       "description": "AI sẽ sinh câu hỏi phỏng vấn dựa trên tiêu chí của module."
@@ -1786,6 +1920,16 @@
     }
   },
   "teacher_lesson_materials": {
+    "versions": {
+      "toggle": "Lịch sử phiên bản",
+      "title": "Lịch sử phiên bản",
+      "empty": "Chưa có phiên bản nào.",
+      "current": "Hiện tại",
+      "rollback": "Khôi phục",
+      "not_ready": "Chỉ có thể khôi phục các phiên bản đã xử lý xong",
+      "rollback_success": "Đã khôi phục tài liệu về phiên bản đã chọn.",
+      "rollback_rejected": "Không thể khôi phục phiên bản này (chưa sẵn sàng hoặc đang là phiên bản hiện tại)."
+    },
     "proc_status": {
       "not_queued": "Chưa xếp hàng",
       "pending": "Đang chờ",

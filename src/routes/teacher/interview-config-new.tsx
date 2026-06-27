@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -17,6 +17,9 @@ export default function InterviewConfigNewPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
+  const { moduleId: preselectedModuleId } = useSearch({ strict: false }) as {
+    moduleId?: string;
+  };
 
   const { data: content, isLoading: contentLoading } =
     useTeacherCourseContent(courseId);
@@ -26,7 +29,7 @@ export default function InterviewConfigNewPage() {
 
   const [form, setForm] = useState({
     title: "",
-    module_id: "",
+    module_id: preselectedModuleId ?? "",
     persona: "neutral" as Persona,
     supported_modes: "hybrid" as SupportedMode,
     time_limit_minutes: "",
