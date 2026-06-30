@@ -132,6 +132,11 @@
   --animate-pulse-slow: pulse-slow 3s ease-in-out infinite;
   --animate-float: float 6s ease-in-out infinite;
   --animate-ai-pulse: ai-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-fade-in-up: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-in-left: slide-in-left 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-in-right: slide-in-right 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-scale-in: scale-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-shimmer: shimmer 8s linear infinite;
 }
 
 /* ── Light mode tokens ── */
@@ -272,6 +277,68 @@
   50% { opacity: 0.85; }
 }
 
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes progress-fill {
+  from { width: 0%; }
+}
+
+@keyframes counter-glow {
+  0%, 100% { text-shadow: 0 0 0 transparent; }
+  50% { text-shadow: 0 0 20px rgba(30, 64, 175, 0.3); }
+}
+
 /* ── Base styles ── */
 @layer base {
   * {
@@ -326,11 +393,41 @@
   .ai-pulse {
     animation: ai-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
+
+  /* Scroll-reveal base: hidden until IntersectionObserver triggers */
+  .reveal {
+    opacity: 0;
+    will-change: transform, opacity;
+  }
+  .reveal.visible {
+    animation: var(--reveal-animation, fade-in-up) var(--reveal-duration, 0.7s) cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--reveal-delay, 0s);
+  }
+  .reveal-up { --reveal-animation: fade-in-up; }
+  .reveal-left { --reveal-animation: slide-in-left; }
+  .reveal-right { --reveal-animation: slide-in-right; }
+  .reveal-scale { --reveal-animation: scale-in; }
+
+  .shimmer-line {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 8s linear infinite;
+  }
   .bridge-line {
     background: linear-gradient(90deg, transparent, rgba(30, 64, 175, 0.2), transparent);
     height: 1px;
     width: 100%;
   }
+
+  .hover-entity {
+    transition: all 0.25s ease-out;
+  }
+  .hover-entity:hover {
+    transform: translateY(-6px) scale(1.015);
+    box-shadow: 0 20px 40px -10px rgba(30, 64, 175, 0.15), 0 0 20px rgba(59, 130, 246, 0.15);
+    z-index: 10;
+  }
+  
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }

@@ -5,6 +5,10 @@ import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { SectionHeader } from "@/components/ui/section-header";
 import { BridgeLine } from "@/components/ui/bridge-line";
 import { GlassCard } from "@/components/ui/glass-card";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
+import { TrendingCarousel } from "@/components/ui/trending-carousel";
+import { AnimatedBentoRow } from "@/components/ui/animated-bento";
+import { useReveal } from "@/hooks/use-reveal";
 import TopNavBar from "@/components/layout/TopNavBar";
 import Footer from "@/components/layout/Footer";
 import {
@@ -65,11 +69,13 @@ const featuredCourses = [
 ];
 
 export default function LandingPage() {
+  const revealRef = useReveal<HTMLElement>();
+
   return (
     <>
       <TopNavBar />
 
-      <main className="pt-16">
+      <main ref={revealRef} className="pt-16">
         {/* 1. HERO */}
         <section className="relative overflow-hidden gradient-hero min-h-[92vh] flex items-center">
           <div className="absolute inset-0 pointer-events-none">
@@ -82,7 +88,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
               {/* Left copy */}
-              <div className="space-y-8">
+              <div className="space-y-8 reveal reveal-left">
                 <AIInsightChip>Next-Gen Learning Platform</AIInsightChip>
 
                 <div className="space-y-5">
@@ -103,7 +109,7 @@ export default function LandingPage() {
                   <Link to="/courses">
                     <Button
                       size="lg"
-                      className="gradient-secondary text-white border-0 gap-2 px-7 h-12 font-semibold shadow-lg hover:opacity-90 transition-opacity"
+                      className="gradient-secondary text-white border-0 gap-2 px-7 h-12 font-semibold shadow-lg transition-opacity hover-entity"
                     >
                       Start Your Path
                       <ArrowRight className="h-4 w-4" />
@@ -113,7 +119,7 @@ export default function LandingPage() {
                     <Button
                       size="lg"
                       variant="outline"
-                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 h-12 px-7 font-semibold"
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 h-12 px-7 font-semibold hover-entity"
                     >
                       View Courses
                     </Button>
@@ -144,7 +150,7 @@ export default function LandingPage() {
               </div>
 
               {/* Right visual */}
-              <div className="relative flex items-center justify-center">
+              <div className="relative flex items-center justify-center reveal reveal-right" style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
                 <div className="relative w-full max-w-md aspect-[4/3] rounded-xl overflow-hidden shadow-2xl">
                   <div className="absolute inset-0 bg-gradient-to-br from-[#172554] via-[#1e40af] to-[#3b82f6]" />
                   <div
@@ -178,7 +184,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Floating AI insight card */}
-                <div className="absolute -bottom-6 -left-4 sm:-left-10 z-10">
+                <div className="absolute -bottom-6 -left-4 sm:-left-10 z-10 animate-float hover-entity">
                   <GlassCard className="p-4 w-56 shadow-glass">
                     <div className="flex items-start gap-3">
                       <div className="w-9 h-9 rounded-xl gradient-secondary flex items-center justify-center shrink-0">
@@ -199,7 +205,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Top-right stat badge */}
-                <div className="absolute -top-4 -right-2 sm:right-0">
+                <div className="absolute -top-4 -right-2 sm:right-0 animate-float" style={{ animationDelay: '3s' }}>
                   <div className="glass ghost-border shadow-glass rounded-xl px-4 py-3 text-center">
                     <p className="text-2xl font-headline font-extrabold text-m3-primary">94%</p>
                     <p className="text-xs text-m3-on-surface-variant mt-0.5">Completion Rate</p>
@@ -215,10 +221,11 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4">
               {stats.map((stat, i) => (
-                <div key={i} className="text-center space-y-1.5">
-                  <p className="font-headline font-extrabold text-3xl sm:text-4xl text-gradient-primary">
-                    {stat.value}
-                  </p>
+                <div key={i} className="text-center space-y-1.5 reveal reveal-up" style={{ '--reveal-delay': `${i * 0.1}s` } as React.CSSProperties}>
+                  <AnimatedCounter
+                    value={stat.value}
+                    className="font-headline font-extrabold text-3xl sm:text-4xl text-gradient-primary inline-block"
+                  />
                   <p className="text-sm text-m3-on-surface-variant font-medium">{stat.label}</p>
                 </div>
               ))}
@@ -228,7 +235,7 @@ export default function LandingPage() {
 
         {/* 3. BENTO CATEGORIES */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="mb-10 space-y-3">
+          <div className="mb-10 space-y-3 reveal reveal-up">
             <AIInsightChip>Explore by Domain</AIInsightChip>
             <SectionHeader
               title="Core Knowledge Hubs"
@@ -236,93 +243,97 @@ export default function LandingPage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-[260px]">
-            {/* Software Engineering — 2-col */}
-            <div className="sm:col-span-2 relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a] via-[#1e40af] to-[#1d4ed8]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-              <div className="absolute top-7 right-7 space-y-2 opacity-25 group-hover:opacity-40 transition-opacity">
-                {[32, 20, 28, 16, 24].map((w, i) => (
-                  <div key={i} className="h-2 bg-white/60 rounded-full" style={{ width: `${w * 4}px`, marginLeft: i % 2 === 0 ? 0 : "1rem" }} />
-                ))}
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 p-7">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
-                        <Terminal className="w-4 h-4 text-white" />
+          <div className="flex flex-col gap-4">
+            <AnimatedBentoRow defaultFlex={[2, 1]}>
+              {/* Software Engineering */}
+              <div className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial reveal reveal-scale w-full h-full" style={{ '--reveal-delay': '0s' } as React.CSSProperties}>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a] via-[#1e40af] to-[#1d4ed8]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                <div className="absolute top-7 right-7 space-y-2 opacity-25 group-hover:opacity-40 transition-opacity">
+                  {[32, 20, 28, 16, 24].map((w, i) => (
+                    <div key={i} className="h-2 bg-white/60 rounded-full" style={{ width: `${w * 4}px`, marginLeft: i % 2 === 0 ? 0 : "1rem" }} />
+                  ))}
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-7">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
+                          <Terminal className="w-4 h-4 text-white" />
+                        </div>
+                        <Badge className="bg-white/15 text-white border-0 text-xs">2,400+ Courses</Badge>
                       </div>
-                      <Badge className="bg-white/15 text-white border-0 text-xs">2,400+ Courses</Badge>
+                      <h3 className="font-headline font-bold text-2xl text-white">Software Engineering</h3>
+                      <p className="text-white/60 text-sm mt-1 max-w-xs">From algorithms to system design — master the full engineering stack.</p>
                     </div>
-                    <h3 className="font-headline font-bold text-2xl text-white">Software Engineering</h3>
-                    <p className="text-white/60 text-sm mt-1 max-w-xs">From algorithms to system design — master the full engineering stack.</p>
-                  </div>
-                  <div className="shrink-0 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                    <ArrowRight className="w-4 h-4 text-white" />
+                    <div className="shrink-0 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                      <ArrowRight className="w-4 h-4 text-white" />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Creative Arts */}
-            <div className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#004a57] to-[#00796b]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
-                    <Palette className="w-4 h-4 text-white" />
+              {/* Creative Arts */}
+              <div className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial reveal reveal-scale w-full h-full" style={{ '--reveal-delay': '0.1s' } as React.CSSProperties}>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#004a57] to-[#00796b]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
+                      <Palette className="w-4 h-4 text-white" />
+                    </div>
+                    <Badge className="bg-white/15 text-white border-0 text-xs">820+ Courses</Badge>
                   </div>
-                  <Badge className="bg-white/15 text-white border-0 text-xs">820+ Courses</Badge>
+                  <h3 className="font-headline font-bold text-xl text-white">Creative Arts</h3>
+                  <p className="text-white/60 text-sm mt-1">Design, animation &amp; generative art.</p>
                 </div>
-                <h3 className="font-headline font-bold text-xl text-white">Creative Arts</h3>
-                <p className="text-white/60 text-sm mt-1">Design, animation &amp; generative art.</p>
               </div>
-            </div>
+            </AnimatedBentoRow>
 
-            {/* Digital Business */}
-            <div className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial bg-m3-primary-fixed">
-              <div className="absolute inset-0 bg-gradient-to-br from-m3-primary-fixed via-m3-secondary-fixed/40 to-m3-primary-fixed" />
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
-                    <BarChart3 className="w-4 h-4 text-white" />
+            <AnimatedBentoRow defaultFlex={[1, 2]}>
+              {/* Digital Business */}
+              <div className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial bg-m3-primary-fixed reveal reveal-scale w-full h-full" style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
+                <div className="absolute inset-0 bg-gradient-to-br from-m3-primary-fixed via-m3-secondary-fixed/40 to-m3-primary-fixed" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+                      <BarChart3 className="w-4 h-4 text-white" />
+                    </div>
+                    <Badge className="bg-m3-primary/10 text-m3-primary border-0 text-xs">1,100+ Courses</Badge>
                   </div>
-                  <Badge className="bg-m3-primary/10 text-m3-primary border-0 text-xs">1,100+ Courses</Badge>
+                  <h3 className="font-headline font-bold text-xl text-m3-on-surface">Digital Business</h3>
+                  <p className="text-m3-on-surface-variant text-sm mt-1">Marketing, growth &amp; entrepreneurship.</p>
                 </div>
-                <h3 className="font-headline font-bold text-xl text-m3-on-surface">Digital Business</h3>
-                <p className="text-m3-on-surface-variant text-sm mt-1">Marketing, growth &amp; entrepreneurship.</p>
               </div>
-            </div>
 
-            {/* Data Science — 2-col */}
-            <div className="sm:col-span-2 relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial">
-              <div className="absolute inset-0 gradient-secondary" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
-                        <FlaskConical className="w-4 h-4 text-white" />
+              {/* Data Science */}
+              <div className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial reveal reveal-scale w-full h-full" style={{ '--reveal-delay': '0.3s' } as React.CSSProperties}>
+                <div className="absolute inset-0 gradient-secondary" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
+                          <FlaskConical className="w-4 h-4 text-white" />
+                        </div>
+                        <Badge className="bg-white/15 text-white border-0 text-xs">3,200+ Courses</Badge>
                       </div>
-                      <Badge className="bg-white/15 text-white border-0 text-xs">3,200+ Courses</Badge>
+                      <h3 className="font-headline font-bold text-xl text-white">Data Science</h3>
+                      <p className="text-white/60 text-sm mt-1">ML, analytics, AI &amp; data engineering.</p>
                     </div>
-                    <h3 className="font-headline font-bold text-xl text-white">Data Science</h3>
-                    <p className="text-white/60 text-sm mt-1">ML, analytics, AI &amp; data engineering.</p>
-                  </div>
-                  <div className="shrink-0 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                    <ArrowRight className="w-4 h-4 text-white" />
+                    <div className="shrink-0 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                      <ArrowRight className="w-4 h-4 text-white" />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </AnimatedBentoRow>
           </div>
 
           <div className="mt-8 flex justify-center">
             <Link to="/courses">
-              <Button variant="outline" className="ghost-border gap-2 font-medium px-6">
+              <Button variant="outline" className="ghost-border gap-2 font-medium px-6 hover-entity">
                 Browse All Categories
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -333,10 +344,10 @@ export default function LandingPage() {
         {/* 4. FEATURED COURSES */}
         <section className="bg-m3-surface-container-low py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-2">
+            <div className="mb-2 reveal reveal-up">
               <AIInsightChip className="mb-4">AI-Curated Picks</AIInsightChip>
             </div>
-            <div className="flex items-center gap-4 mb-10">
+            <div className="flex items-center gap-4 mb-10 reveal reveal-up" style={{ '--reveal-delay': '0.1s' } as React.CSSProperties}>
               <h2 className="font-headline font-bold text-2xl lg:text-3xl text-m3-on-surface whitespace-nowrap">
                 Trending Now
               </h2>
@@ -348,41 +359,8 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredCourses.map((course, i) => (
-                <div
-                  key={i}
-                  className="bg-m3-surface-container-lowest rounded-xl overflow-hidden shadow-editorial hover:shadow-glass transition-shadow duration-300 group cursor-pointer"
-                >
-                  <div className="relative h-44 overflow-hidden">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${course.thumbFrom} ${course.thumbTo}`} />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <GraduationCap className="w-8 h-8 text-white" />
-                      </div>
-                    </div>
-                    <div className={`absolute inset-0 bg-gradient-to-t ${course.overlayFrom} ${course.overlayTo}`} />
-                    <div className="absolute top-3 left-3">
-                      <Badge className={`${course.tagColor} border-0 text-xs font-medium`}>{course.tag}</Badge>
-                    </div>
-                  </div>
-
-                  <div className="p-5 space-y-3">
-                    <h3 className="font-headline font-semibold text-m3-on-surface text-base leading-snug line-clamp-2 group-hover:text-m3-primary transition-colors">
-                      {course.title}
-                    </h3>
-                    <p className="text-sm text-m3-on-surface-variant">{course.instructor}</p>
-                    <div className="flex items-center gap-3 text-xs text-m3-on-surface-variant">
-                      <span className="flex items-center gap-1">
-                        <span className="text-yellow-500">★</span>
-                        <span className="font-semibold text-m3-on-surface">{course.rating}</span>
-                      </span>
-                      <span>·</span>
-                      <span>{course.students} students</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="reveal reveal-up" style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
+              <TrendingCarousel courses={featuredCourses} />
             </div>
           </div>
         </section>
@@ -396,7 +374,7 @@ export default function LandingPage() {
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-              <div className="space-y-8">
+              <div className="space-y-8 reveal reveal-left">
                 <div className="w-12 h-12 rounded-xl gradient-secondary flex items-center justify-center">
                   <Quote className="w-6 h-6 text-white" />
                 </div>
@@ -427,9 +405,9 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="relative flex justify-center lg:justify-end">
+              <div className="relative flex justify-center lg:justify-end reveal reveal-right" style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
                 <div className="relative">
-                  <div className="relative w-72 h-80 rounded-xl overflow-hidden shadow-2xl rotate-3">
+                  <div className="relative w-72 h-80 rounded-xl overflow-hidden shadow-2xl rotate-3 hover:rotate-1 transition-transform duration-500">
                     <div className="absolute inset-0 bg-gradient-to-br from-[#1e40af] via-[#1d4ed8] to-[#3b82f6]" />
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8">
                       <div className="w-20 h-20 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center">
@@ -451,7 +429,7 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <div className="absolute inset-0 w-72 h-80 rounded-xl bg-gradient-to-br from-[#1e3a8a]/50 to-[#3b82f6]/30 -rotate-3 -z-10 blur-sm" />
-                  <div className="absolute -top-4 -left-6">
+                  <div className="absolute -top-4 -left-6 animate-float">
                     <div className="glass-dark ghost-border rounded-xl px-4 py-2.5 text-center">
                       <p className="font-headline font-bold text-white text-lg">4.9</p>
                       <p className="text-xs text-white/50">Avg. rating</p>
@@ -465,7 +443,7 @@ export default function LandingPage() {
 
         {/* 6. INSTRUCTOR CTA */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="relative rounded-xl overflow-hidden shadow-editorial">
+          <div className="relative rounded-xl overflow-hidden shadow-editorial reveal reveal-scale">
             <div className="absolute inset-0 gradient-hero" />
             <div className="absolute inset-0 pointer-events-none">
               <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/5 blur-3xl" />
@@ -482,7 +460,7 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-wrap gap-3 justify-center pt-2">
                 <Link to="/login" search={{ next: undefined }}>
-                  <Button size="lg" className="bg-white text-m3-primary hover:bg-white/90 border-0 gap-2 px-8 h-12 font-semibold">
+                  <Button size="lg" className="bg-white text-m3-primary hover:bg-white/90 border-0 gap-2 px-8 h-12 font-semibold hover-entity">
                     Get Started
                     <ArrowRight className="h-4 w-4" />
                   </Button>
