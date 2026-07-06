@@ -8,6 +8,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { TrendingCarousel } from "@/components/ui/trending-carousel";
 import { AnimatedBentoRow } from "@/components/ui/animated-bento";
+import { Typewriter } from "@/components/ui/typewriter";
 import { useReveal } from "@/hooks/use-reveal";
 import TopNavBar from "@/components/layout/TopNavBar";
 import Footer from "@/components/layout/Footer";
@@ -92,17 +93,25 @@ export default function LandingPage() {
                 <AIInsightChip>Next-Gen Learning Platform</AIInsightChip>
 
                 <div className="space-y-5">
-                  <h1 className="font-headline font-extrabold text-4xl sm:text-5xl xl:text-6xl leading-[1.08] tracking-tight text-white">
-                    The Bridge to
+                  <h1 className="font-headline font-extrabold text-4xl sm:text-5xl xl:text-6xl leading-[1.08] tracking-tight text-white min-h-[90px] sm:min-h-[110px] xl:min-h-[130px]">
+                    <Typewriter text="The Bridge to" speed={45} delay={200} />
                     <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#bfdbfe] to-[#dbeafe]">
-                      Human Mastery
-                    </span>
+                    <Typewriter 
+                      text="Human Mastery" 
+                      speed={55} 
+                      delay={1000} 
+                      className="text-transparent bg-clip-text bg-gradient-to-r from-[#bfdbfe] to-[#dbeafe]" 
+                    />
                   </h1>
-                  <p className="text-lg text-white/70 max-w-md leading-relaxed font-body">
-                    Unlock your potential with AI-powered courses crafted by world-class instructors.
-                    Personalised learning paths that adapt to you — at every step of the journey.
-                  </p>
+                  <div className="min-h-[85px]">
+                    <Typewriter 
+                      text="Unlock your potential with AI-powered courses crafted by world-class instructors. Personalised learning paths that adapt to you — at every step of the journey." 
+                      speed={20} 
+                      delay={1800} 
+                      className="text-lg text-white/70 max-w-md leading-relaxed font-body"
+                      cursor={true}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-3">
