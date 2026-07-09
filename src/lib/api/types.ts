@@ -291,3 +291,40 @@ export type MembershipRead = Schemas["MembershipRead"];
 export type MembershipCreate = Schemas["MembershipCreate"];
 export type RoleChangeRow = Schemas["RoleChangeRow"];
 export type HttpAuditRow = Schemas["HttpAuditRow"];
+
+/**
+ * FR-6.7 — uniform data-change projection returned by
+ * `GET /admin/audit/data-changes`. The backend `DataChangeOut` model is
+ * `extra="allow"`, so entity-specific columns (slug / material_type /
+ * lesson_id / primary_email / scope_kind / subject_user_id) ride along as
+ * optional extras. Hand-written rather than codegen'd because the OpenAPI
+ * snapshot cannot express the open-ended extra keys.
+ */
+export type DataChangeRow = {
+  entity_id: string;
+  title: string;
+  status: string;
+  created_by?: string | null;
+  updated_by?: string | null;
+  deleted_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+  organization_id?: string | null;
+  // entity-specific extras (present depending on `table`)
+  slug?: string;
+  material_type?: string;
+  lesson_id?: string;
+  primary_email?: string;
+  scope_kind?: string;
+  subject_user_id?: string;
+};
+
+/** Tables accepted by the data-changes audit lookup (mirrors backend). */
+export const DATA_CHANGE_TABLES = [
+  "courses",
+  "materials",
+  "users",
+  "role_assignments",
+] as const;
+export type DataChangeTable = (typeof DATA_CHANGE_TABLES)[number];

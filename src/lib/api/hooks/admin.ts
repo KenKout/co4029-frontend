@@ -26,6 +26,7 @@ import type {
   ProcessingJobRow,
   ProcessingQueueDepth,
   HttpAuditRow,
+  DataChangeRow,
   RoleAssignmentCreate,
   RoleAssignmentRead,
   RoleChangeRow,
@@ -510,6 +511,25 @@ export function useAuditHttp(sinceIso: string, path?: string, userId?: string) {
       return apiFetch<HttpAuditRow[]>(`/admin/audit/http?${params.toString()}`);
     },
     enabled: Boolean(sinceIso),
+    staleTime: 1000 * 30,
+  });
+}
+
+/**
+ * FR-6.7 — data-change lookup for a single entity across the supported
+ * tables (courses / materials / users / role_assignments). Fires only once
+ * both `table` and a well-formed `entityId` are present so the on-demand
+ * lookup doesn't fire on an empty form.
+ */
+export function useAuditDataChanges(table: string, entityId: string) {
+  return useQuery({
+    queryKey: queryKeys.admin.auditDataChanges(table, entityId),
+    queryFn: () => {
+      const params = new URLSearchParams({ table, entity_id: entityId });
+      return apiFetch<DataChangeRow>(`/admin/audit/data-changes?${params.toString()}`);
+    },
+    enabled: Boolean(table) && Boolean(entityId),
+    retry: false,
     staleTime: 1000 * 30,
   });
 }
