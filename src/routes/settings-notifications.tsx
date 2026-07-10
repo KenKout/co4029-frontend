@@ -6,6 +6,14 @@ import { ArrowLeft, Bell, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   useNotificationPreferences,
   usePatchNotificationPreference,
 } from "@/lib/api/hooks/notifications";
@@ -160,33 +168,25 @@ export default function SettingsNotificationsPage() {
           ) : (
             <>
               <div className="hidden sm:block">
-                <table className="w-full text-sm">
-                  <thead className="bg-m3-surface-container-low">
-                    <tr>
-                      <th className="text-left text-xs font-semibold uppercase tracking-wide text-m3-on-surface-variant px-4 py-3">
-                        {t("settings_notifications.category_col")}
-                      </th>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-m3-surface-container-low">
+                      <TableHead>{t("settings_notifications.category_col")}</TableHead>
                       {CHANNEL_IDS.map((ch) => (
-                        <th
-                          key={ch}
-                          className="text-center text-xs font-semibold uppercase tracking-wide text-m3-on-surface-variant px-4 py-3 w-32"
-                        >
+                        <TableHead key={ch} className="text-center w-32">
                           {t(`settings_notifications.channel.${ch}`)}
-                        </th>
+                        </TableHead>
                       ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-m3-outline-variant/40">
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {matrix.map((row) => (
-                      <tr key={row.id}>
-                        <td className="px-4 py-4 text-m3-on-surface font-medium">
+                      <TableRow key={row.id}>
+                        <TableCell className="py-4 font-medium text-m3-on-surface">
                           {row.label}
-                        </td>
+                        </TableCell>
                         {row.cells.map((cell) => (
-                          <td
-                            key={cell.channel}
-                            className="px-4 py-4 text-center"
-                          >
+                          <TableCell key={cell.channel} className="py-4 text-center">
                             <div className="inline-flex">
                               <ToggleSwitch
                                 checked={cell.enabled}
@@ -199,12 +199,12 @@ export default function SettingsNotificationsPage() {
                                 )}`}
                               />
                             </div>
-                          </td>
+                          </TableCell>
                         ))}
-                      </tr>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
 
               <div className="sm:hidden divide-y divide-m3-outline-variant/40">

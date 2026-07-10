@@ -582,6 +582,8 @@
     },
     "empty_title": "No at-risk students",
     "empty_body": "Everyone is keeping up. Keep watching the class overview.",
+    "row_actions": "Row actions",
+    "view_detail": "View review detail",
     "flags": {
       "low_compliance_label": "Low compliance",
       "low_compliance_short": "Compliance",

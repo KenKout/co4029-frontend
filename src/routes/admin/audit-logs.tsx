@@ -1,21 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollText, ShieldCheck, Search } from "lucide-react";
+import { ScrollText, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  useAuditDataChanges,
-  useAuditHttp,
-  useAuditRoleChanges,
-} from "@/lib/api/hooks/admin";
-import { DATA_CHANGE_TABLES, type DataChangeTable } from "@/lib/api/types";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useAuditHttp, useAuditRoleChanges } from "@/lib/api/hooks/admin";
 import { cn } from "@/lib/utils";
 
-type TabKey = "role_changes" | "data_changes" | "http";
+type TabKey = "role_changes" | "http";
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+type RoleChangeRow = NonNullable<
+  ReturnType<typeof useAuditRoleChanges>["data"]
+>[number];
+type HttpAuditRow = NonNullable<ReturnType<typeof useAuditHttp>["data"]>[number];
 
 function daysAgoIso(days: number): string {
   const d = new Date();
@@ -56,8 +53,8 @@ export default function AdminAuditLogsPage() {
         </label>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        {(["role_changes", "data_changes", "http"] as TabKey[]).map((key) => (
+      <div className="flex gap-2">
+        {(["role_changes", "http"] as TabKey[]).map((key) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -75,167 +72,9 @@ export default function AdminAuditLogsPage() {
 
       {tab === "role_changes" ? (
         <RoleChangesTable sinceIso={sinceIso} />
-      ) : tab === "data_changes" ? (
-        <DataChangesPanel />
       ) : (
         <HttpAuditTable sinceIso={sinceIso} />
       )}
-    </div>
-  );
-}
-
-/**
- * FR-6.7 — on-demand data-change lookup. Unlike the time-windowed scans,
- * this is a by-PK lookup: pick an entity type, paste a UUID, and see who
- * created / last-updated / soft-deleted it. `sinceIso` is irrelevant here.
- */
-function DataChangesPanel() {
-  const { t } = useTranslation();
-  const [table, setTable] = useState<DataChangeTable>("courses");
-  const [idInput, setIdInput] = useState("");
-  const [submittedId, setSubmittedId] = useState("");
-
-  const trimmed = idInput.trim();
-  const invalid = trimmed.length > 0 && !UUID_RE.test(trimmed);
-
-  const submit = () => {
-    if (UUID_RE.test(trimmed)) setSubmittedId(trimmed);
-  };
-
-  const { data, isLoading, isError, error } = useAuditDataChanges(
-    table,
-    submittedId,
-  );
-  // A 404 surfaces as a thrown error from apiFetch; treat it as "not found".
-  const notFound =
-    isError && String((error as Error)?.message ?? "").includes("404");
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          {t("admin.audit.data_changes.table_label")}
-          <select
-            value={table}
-            onChange={(e) => {
-              setTable(e.target.value as DataChangeTable);
-              setSubmittedId("");
-            }}
-            className="h-9 rounded-lg border border-m3-outline-variant/40 bg-card px-3 text-sm font-normal normal-case text-m3-on-surface"
-          >
-            {DATA_CHANGE_TABLES.map((tbl) => (
-              <option key={tbl} value={tbl}>
-                {t(`admin.audit.data_changes.tables.${tbl}`)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-1 min-w-[16rem] flex-col gap-1 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          {t("admin.audit.data_changes.entity_id_label")}
-          <Input
-            value={idInput}
-            onChange={(e) => setIdInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") submit();
-            }}
-            placeholder={t("admin.audit.data_changes.entity_id_placeholder")}
-            className="h-9 font-mono text-xs font-normal normal-case"
-          />
-        </label>
-        <Button
-          onClick={submit}
-          disabled={!UUID_RE.test(trimmed)}
-          size="sm"
-          className="h-9 gap-2"
-        >
-          <Search className="h-4 w-4" />
-          {t("admin.audit.data_changes.lookup")}
-        </Button>
-      </div>
-
-      {invalid ? (
-        <p className="text-xs text-m3-error">
-          {t("admin.audit.data_changes.invalid_id")}
-        </p>
-      ) : null}
-
-      {!submittedId ? (
-        <EmptyState text={t("admin.audit.data_changes.hint")} />
-      ) : isLoading ? (
-        <TableSkeleton />
-      ) : notFound ? (
-        <EmptyState text={t("admin.audit.data_changes.not_found")} />
-      ) : isError ? (
-        <EmptyState text={t("admin.audit.load_failed")} error />
-      ) : data ? (
-        <DataChangeCard row={data} />
-      ) : null}
-    </div>
-  );
-}
-
-/** Renders a data-change row as a field/value grid, skipping empty extras. */
-function DataChangeCard({
-  row,
-}: {
-  row: Record<string, unknown>;
-}) {
-  const { t } = useTranslation();
-  // Stable field order: known common columns first, then entity-specific.
-  const order = [
-    "entity_id",
-    "title",
-    "status",
-    "organization_id",
-    "created_by",
-    "updated_by",
-    "deleted_by",
-    "created_at",
-    "updated_at",
-    "deleted_at",
-    "slug",
-    "material_type",
-    "lesson_id",
-    "primary_email",
-    "scope_kind",
-    "subject_user_id",
-  ];
-  const isTimestamp = (k: string) => k.endsWith("_at");
-  const entries = order
-    .filter((k) => row[k] !== undefined && row[k] !== null)
-    .map((k) => {
-      const raw = row[k];
-      const value = isTimestamp(k)
-        ? new Date(String(raw)).toLocaleString()
-        : String(raw);
-      return { key: k, value };
-    });
-
-  return (
-    <div className="overflow-x-auto rounded-xl ghost-border bg-card">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-[11px] uppercase tracking-widest text-m3-on-surface-variant border-b border-m3-outline-variant/20">
-            <th className="px-4 py-3">{t("admin.audit.cols.field")}</th>
-            <th className="px-4 py-3">{t("admin.audit.cols.value")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map(({ key, value }) => (
-            <tr
-              key={key}
-              className="border-b border-m3-outline-variant/10 last:border-0"
-            >
-              <td className="px-4 py-2.5 text-m3-on-surface-variant whitespace-nowrap">
-                {t(`admin.audit.data_changes.fields.${key}`, { defaultValue: key })}
-              </td>
-              <td className="px-4 py-2.5 font-mono text-xs break-all">
-                {value}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }
@@ -244,59 +83,74 @@ function RoleChangesTable({ sinceIso }: { sinceIso: string }) {
   const { t } = useTranslation();
   const { data: rows, isLoading, isError } = useAuditRoleChanges(sinceIso);
 
-  if (isLoading) return <TableSkeleton />;
-  if (isError) return <EmptyState text={t("admin.audit.load_failed")} error />;
-  if (!rows?.length) return <EmptyState text={t("admin.audit.empty")} />;
+  if (isError) return <ErrorPanel text={t("admin.audit.load_failed")} />;
+
+  const columns: DataTableColumn<RoleChangeRow>[] = [
+    {
+      id: "when",
+      header: t("admin.audit.cols.when"),
+      cell: (r) => (
+        <span className="whitespace-nowrap text-m3-on-surface-variant">
+          {new Date(r.created_at).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      id: "role",
+      header: t("admin.audit.cols.role"),
+      cell: (r) => (
+        <Badge className="text-[10px] border-0 bg-m3-primary/10 text-m3-primary flex items-center gap-1 w-fit">
+          <ShieldCheck className="h-3 w-3" />
+          {r.role_code}
+        </Badge>
+      ),
+    },
+    {
+      id: "scope",
+      header: t("admin.audit.cols.scope"),
+      cell: (r) => <span className="text-m3-on-surface-variant">{r.scope_kind}</span>,
+    },
+    {
+      id: "user",
+      header: t("admin.audit.cols.user"),
+      cell: (r) => <span className="font-mono text-xs">{r.user_id}</span>,
+    },
+    {
+      id: "granted_by",
+      header: t("admin.audit.cols.granted_by"),
+      cell: (r) => (
+        <span className="font-mono text-xs">
+          {r.granted_by ?? t("admin.audit.system")}
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      header: t("admin.audit.cols.status"),
+      cell: (r) =>
+        r.deleted_at ? (
+          <Badge className="text-[10px] border-0 bg-m3-error-container text-m3-on-error-container">
+            {t("admin.audit.revoked")}
+          </Badge>
+        ) : (
+          <Badge className="text-[10px] border-0 bg-emerald-100 text-emerald-700">
+            {t("admin.audit.active")}
+          </Badge>
+        ),
+    },
+  ];
 
   return (
-    <div className="overflow-x-auto rounded-xl ghost-border bg-card">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-[11px] uppercase tracking-widest text-m3-on-surface-variant border-b border-m3-outline-variant/20">
-            <th className="px-4 py-3">{t("admin.audit.cols.when")}</th>
-            <th className="px-4 py-3">{t("admin.audit.cols.role")}</th>
-            <th className="px-4 py-3">{t("admin.audit.cols.scope")}</th>
-            <th className="px-4 py-3">{t("admin.audit.cols.user")}</th>
-            <th className="px-4 py-3">{t("admin.audit.cols.granted_by")}</th>
-            <th className="px-4 py-3">{t("admin.audit.cols.status")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr
-              key={row.assignment_id}
-              className="border-b border-m3-outline-variant/10 last:border-0"
-            >
-              <td className="px-4 py-2.5 whitespace-nowrap text-m3-on-surface-variant">
-                {new Date(row.created_at).toLocaleString()}
-              </td>
-              <td className="px-4 py-2.5">
-                <Badge className="text-[10px] border-0 bg-m3-primary/10 text-m3-primary flex items-center gap-1 w-fit">
-                  <ShieldCheck className="h-3 w-3" />
-                  {row.role_code}
-                </Badge>
-              </td>
-              <td className="px-4 py-2.5 text-m3-on-surface-variant">{row.scope_kind}</td>
-              <td className="px-4 py-2.5 font-mono text-xs">{row.user_id}</td>
-              <td className="px-4 py-2.5 font-mono text-xs">
-                {row.granted_by ?? t("admin.audit.system")}
-              </td>
-              <td className="px-4 py-2.5">
-                {row.deleted_at ? (
-                  <Badge className="text-[10px] border-0 bg-m3-error-container text-m3-on-error-container">
-                    {t("admin.audit.revoked")}
-                  </Badge>
-                ) : (
-                  <Badge className="text-[10px] border-0 bg-emerald-100 text-emerald-700">
-                    {t("admin.audit.active")}
-                  </Badge>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      columns={columns}
+      data={rows ?? []}
+      getRowId={(r) => r.assignment_id}
+      loading={isLoading}
+      pagination
+      pageSize={15}
+      pageSizeOptions={[15, 30, 50]}
+      emptyState={t("admin.audit.empty")}
+    />
   );
 }
 
@@ -315,6 +169,67 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
     debouncedPath ? `${debouncedPath}%` : undefined,
   );
 
+  const columns: DataTableColumn<HttpAuditRow>[] = [
+    {
+      id: "when",
+      header: t("admin.audit.cols.when"),
+      cell: (r) => (
+        <span className="whitespace-nowrap text-m3-on-surface-variant">
+          {new Date(r.created_at).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      id: "method",
+      header: t("admin.audit.cols.method"),
+      cell: (r) => <span className="font-mono text-xs font-bold">{r.method}</span>,
+    },
+    {
+      id: "path",
+      header: t("admin.audit.cols.path"),
+      cell: (r) => (
+        <span className="font-mono text-xs max-w-xs truncate block">{r.path}</span>
+      ),
+    },
+    {
+      id: "code",
+      header: t("admin.audit.cols.code"),
+      cell: (r) => (
+        <span
+          className={cn(
+            "font-mono text-xs font-bold",
+            r.status_code >= 500
+              ? "text-m3-error"
+              : r.status_code >= 400
+                ? "text-amber-600"
+                : "text-emerald-600",
+          )}
+        >
+          {r.status_code}
+        </span>
+      ),
+    },
+    {
+      id: "latency",
+      header: t("admin.audit.cols.latency"),
+      cell: (r) => (
+        <span className="text-m3-on-surface-variant">
+          {r.latency_ms != null ? `${r.latency_ms} ms` : "—"}
+        </span>
+      ),
+    },
+    {
+      id: "user",
+      header: t("admin.audit.cols.user"),
+      cell: (r) => <span className="font-mono text-xs">{r.user_id ?? "—"}</span>,
+    },
+    {
+      id: "ip",
+      header: t("admin.audit.cols.ip"),
+      cell: (r) => <span className="font-mono text-xs">{r.ip_address ?? "—"}</span>,
+    },
+  ];
+
   return (
     <div className="space-y-3">
       <Input
@@ -323,78 +238,29 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
         placeholder={t("admin.audit.path_filter_placeholder")}
         className="max-w-md h-9 font-mono text-xs"
       />
-      {isLoading ? (
-        <TableSkeleton />
-      ) : isError ? (
-        <EmptyState text={t("admin.audit.load_failed")} error />
-      ) : !rows?.length ? (
-        <EmptyState text={t("admin.audit.empty")} />
+      {isError ? (
+        <ErrorPanel text={t("admin.audit.load_failed")} />
       ) : (
-        <div className="overflow-x-auto rounded-xl ghost-border bg-card">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-[11px] uppercase tracking-widest text-m3-on-surface-variant border-b border-m3-outline-variant/20">
-                <th className="px-4 py-3">{t("admin.audit.cols.when")}</th>
-                <th className="px-4 py-3">{t("admin.audit.cols.method")}</th>
-                <th className="px-4 py-3">{t("admin.audit.cols.path")}</th>
-                <th className="px-4 py-3">{t("admin.audit.cols.code")}</th>
-                <th className="px-4 py-3">{t("admin.audit.cols.latency")}</th>
-                <th className="px-4 py-3">{t("admin.audit.cols.user")}</th>
-                <th className="px-4 py-3">{t("admin.audit.cols.ip")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.id} className="border-b border-m3-outline-variant/10 last:border-0">
-                  <td className="px-4 py-2.5 whitespace-nowrap text-m3-on-surface-variant">
-                    {new Date(row.created_at).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-2.5 font-mono text-xs font-bold">{row.method}</td>
-                  <td className="px-4 py-2.5 font-mono text-xs max-w-xs truncate">{row.path}</td>
-                  <td className="px-4 py-2.5">
-                    <span
-                      className={cn(
-                        "font-mono text-xs font-bold",
-                        row.status_code >= 500
-                          ? "text-m3-error"
-                          : row.status_code >= 400
-                            ? "text-amber-600"
-                            : "text-emerald-600",
-                      )}
-                    >
-                      {row.status_code}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-m3-on-surface-variant">
-                    {row.latency_ms != null ? `${row.latency_ms} ms` : "—"}
-                  </td>
-                  <td className="px-4 py-2.5 font-mono text-xs">{row.user_id ?? "—"}</td>
-                  <td className="px-4 py-2.5 font-mono text-xs">{row.ip_address ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={columns}
+          data={rows ?? []}
+          getRowId={(r) => r.id}
+          loading={isLoading}
+          pagination
+          pageSize={15}
+          pageSizeOptions={[15, 30, 50]}
+          emptyState={t("admin.audit.empty")}
+        />
       )}
     </div>
   );
 }
 
-function TableSkeleton() {
-  return (
-    <div className="space-y-2">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="h-10 bg-m3-surface-container animate-pulse rounded-lg" />
-      ))}
-    </div>
-  );
-}
-
-function EmptyState({ text, error = false }: { text: string; error?: boolean }) {
+function ErrorPanel({ text }: { text: string }) {
   return (
     <div className="rounded-xl bg-m3-surface-container-lowest ghost-border p-10 text-center">
-      <ScrollText className={`h-8 w-8 mx-auto mb-3 ${error ? "text-m3-error" : "text-m3-outline"}`} />
-      <p className={`text-sm ${error ? "text-m3-error" : "text-m3-on-surface-variant"}`}>{text}</p>
+      <ScrollText className="h-8 w-8 mx-auto mb-3 text-m3-error" />
+      <p className="text-sm text-m3-error">{text}</p>
     </div>
   );
 }

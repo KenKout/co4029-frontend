@@ -572,6 +572,8 @@
     },
     "empty_title": "Không có sinh viên cần hỗ trợ",
     "empty_body": "Tất cả sinh viên đang theo kịp tiến độ. Tiếp tục theo dõi trên Tổng quan lớp.",
+    "row_actions": "Thao tác dòng",
+    "view_detail": "Xem chi tiết ôn tập",
     "flags": {
       "low_compliance_label": "Tỷ lệ tuân thủ thấp",
       "low_compliance_short": "Tuân thủ",

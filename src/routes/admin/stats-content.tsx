@@ -1,8 +1,10 @@
 import { BookOpen, FileText, Workflow } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useContentStats } from "@/lib/api/hooks/admin";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 type Bucket = { [key: string]: unknown };
+type BreakdownRow = { id: string; label: string; count: unknown };
 
 function useFormatCount() {
   const { i18n } = useTranslation();
@@ -39,6 +41,25 @@ function BreakdownTable({
 }) {
   const { t } = useTranslation();
   const formatCount = useFormatCount();
+  const rows: BreakdownRow[] = (buckets ?? []).map((bucket, idx) => ({
+    id: String(idx),
+    ...readBucket(bucket),
+  }));
+  const columns: DataTableColumn<BreakdownRow>[] = [
+    {
+      id: "label",
+      header: labelHeader,
+      cell: (r) => <span className="text-text-strong">{r.label}</span>,
+    },
+    {
+      id: "count",
+      header: t("admin.stats.labels.count"),
+      align: "right",
+      cell: (r) => (
+        <span className="font-medium text-text-strong">{formatCount(r.count)}</span>
+      ),
+    },
+  ];
   return (
     <div className="bg-surface-elev border border-border rounded-xl overflow-hidden">
       <div className="px-5 py-4 border-b border-border flex items-center gap-3">
@@ -49,38 +70,13 @@ function BreakdownTable({
           {title}
         </h2>
       </div>
-      {!buckets || buckets.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-text-muted">
-          {t("admin.stats.empty_in_scope")}
-        </div>
-      ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-surface-muted text-left text-xs uppercase tracking-wider text-text-muted">
-              <th className="px-5 py-3 font-semibold">{labelHeader}</th>
-              <th className="px-5 py-3 font-semibold text-right">{t("admin.stats.labels.count")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {buckets.map((bucket, idx) => {
-              const { label, count } = readBucket(bucket);
-              return (
-                <tr
-                  key={`${label}-${idx}`}
-                  className={
-                    idx === buckets.length - 1 ? "" : "border-b border-border"
-                  }
-                >
-                  <td className="px-5 py-3 text-text-strong">{label}</td>
-                  <td className="px-5 py-3 text-right font-medium text-text-strong">
-                    {formatCount(count)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
+      <DataTable
+        columns={columns}
+        data={rows}
+        getRowId={(r) => r.id}
+        bordered={false}
+        emptyState={t("admin.stats.empty_in_scope")}
+      />
     </div>
   );
 }

@@ -1,7 +1,16 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, Bot, Loader } from "lucide-react";
+import { AlertTriangle, Bot, Loader, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useStatsHealth } from "@/lib/api/hooks/admin";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+
+type MetricRow = {
+  key: string;
+  label: string;
+  desc: string;
+  value: number | undefined;
+  icon: LucideIcon;
+};
 
 type Window = "24h" | "7d" | "30d";
 
@@ -32,7 +41,7 @@ export default function AdminStatsHealthPage() {
 
   const { data, isLoading, isError } = useStatsHealth(since);
 
-  const rows = [
+  const rows: MetricRow[] = [
     {
       key: "failed_jobs",
       label: t("admin.stats.health.rows.failed_jobs_label"),
@@ -53,6 +62,39 @@ export default function AdminStatsHealthPage() {
       desc: t("admin.stats.health.rows.failed_ai_calls_desc"),
       value: data?.failed_ai_calls_count,
       icon: Bot,
+    },
+  ];
+
+  const columns: DataTableColumn<MetricRow>[] = [
+    {
+      id: "metric",
+      header: t("admin.stats.labels.metric"),
+      cell: (row) => {
+        const Icon = row.icon;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-m3-primary-fixed flex items-center justify-center">
+              <Icon className="h-4 w-4 text-m3-primary" />
+            </div>
+            <span className="font-medium text-text-strong">{row.label}</span>
+          </div>
+        );
+      },
+    },
+    {
+      id: "description",
+      header: t("admin.stats.labels.description"),
+      cell: (row) => <span className="text-text-muted">{row.desc}</span>,
+    },
+    {
+      id: "value",
+      header: t("admin.stats.labels.value"),
+      align: "right",
+      cell: (row) => (
+        <span className="font-heading font-semibold text-text-strong">
+          {formatCount(row.value)}
+        </span>
+      ),
     },
   ];
 
@@ -111,47 +153,7 @@ export default function AdminStatsHealthPage() {
           </p>
         </div>
       ) : (
-        <div className="bg-surface-elev border border-border rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-surface-muted text-left text-xs uppercase tracking-wider text-text-muted">
-                <th className="px-5 py-3 font-semibold">{t("admin.stats.labels.metric")}</th>
-                <th className="px-5 py-3 font-semibold">{t("admin.stats.labels.description")}</th>
-                <th className="px-5 py-3 font-semibold text-right">{t("admin.stats.labels.value")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, idx) => {
-                const Icon = row.icon;
-                return (
-                  <tr
-                    key={row.key}
-                    className={
-                      idx === rows.length - 1
-                        ? ""
-                        : "border-b border-border"
-                    }
-                  >
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-m3-primary-fixed flex items-center justify-center">
-                          <Icon className="h-4 w-4 text-m3-primary" />
-                        </div>
-                        <span className="font-medium text-text-strong">
-                          {row.label}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-text-muted">{row.desc}</td>
-                    <td className="px-5 py-4 text-right font-heading font-semibold text-text-strong">
-                      {formatCount(row.value)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <DataTable columns={columns} data={rows} getRowId={(row) => row.key} />
       )}
     </div>
   );

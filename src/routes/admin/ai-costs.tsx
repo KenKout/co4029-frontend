@@ -27,6 +27,7 @@ import {
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { StatCard } from "@/components/ui/stat-card";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type {
   AiCostsByPipeline as AiCostsByPipelineRow,
   AiCostsByUser as AiCostsByUserRow,
@@ -179,122 +180,173 @@ function StageBarChart({ data }: { data: AiCostsStageBreakdown[] }) {
 function TopUsersTable({ rows }: { rows: AiCostsByUserRow[] }) {
   const { t } = useTranslation();
   const fmt = useFormatters();
-  if (rows.length === 0) {
-    return (
-      <div className="bg-surface-elev border border-border rounded-lg p-8 text-center">
-        <p className="text-sm text-text-muted">{t("admin.ai_costs.empty.users")}</p>
-      </div>
-    );
-  }
+  const columns: DataTableColumn<AiCostsByUserRow>[] = [
+    {
+      id: "user",
+      header: t("admin.ai_costs.cols.user"),
+      cell: (r) => <span className="font-medium text-text-strong">{r.display_name}</span>,
+    },
+    {
+      id: "cost",
+      header: t("admin.ai_costs.cols.cost"),
+      align: "right",
+      cell: (r) => (
+        <span className="tabular-nums text-text-strong">{fmt.usd.format(r.total_usd ?? 0)}</span>
+      ),
+    },
+    {
+      id: "tokens",
+      header: t("admin.ai_costs.cols.tokens"),
+      align: "right",
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">{fmt.number.format(r.total_tokens ?? 0)}</span>
+      ),
+    },
+    {
+      id: "calls",
+      header: t("admin.ai_costs.cols.calls"),
+      align: "right",
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">{fmt.number.format(r.call_count ?? 0)}</span>
+      ),
+    },
+  ];
   return (
-    <div className="bg-surface-elev border border-border rounded-lg overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-surface-muted text-left">
-          <tr>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.ai_costs.cols.user")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted text-right">{t("admin.ai_costs.cols.cost")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted text-right">{t("admin.ai_costs.cols.tokens")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted text-right">{t("admin.ai_costs.cols.calls")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.user_id} className="border-t border-border hover:bg-surface-muted/50">
-              <td className="px-4 py-2 text-text-strong font-medium">{row.display_name}</td>
-              <td className="px-4 py-2 text-right text-text-strong tabular-nums">{fmt.usd.format(row.total_usd ?? 0)}</td>
-              <td className="px-4 py-2 text-right text-text-muted tabular-nums">{fmt.number.format(row.total_tokens ?? 0)}</td>
-              <td className="px-4 py-2 text-right text-text-muted tabular-nums">{fmt.number.format(row.call_count ?? 0)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      columns={columns}
+      data={rows}
+      getRowId={(r) => r.user_id}
+      pagination
+      pageSize={10}
+      pageSizeOptions={[10, 20, 50]}
+      emptyState={t("admin.ai_costs.empty.users")}
+    />
   );
 }
 
 function PipelineTable({ rows }: { rows: AiCostsByPipelineRow[] }) {
   const { t } = useTranslation();
   const fmt = useFormatters();
-  if (rows.length === 0) {
-    return (
-      <div className="bg-surface-elev border border-border rounded-lg p-8 text-center">
-        <p className="text-sm text-text-muted">{t("admin.ai_costs.empty.pipelines")}</p>
-      </div>
-    );
-  }
+  const columns: DataTableColumn<AiCostsByPipelineRow>[] = [
+    {
+      id: "pipeline",
+      header: t("admin.ai_costs.cols.pipeline"),
+      cell: (r) => (
+        <span className="font-mono text-xs text-text-strong">
+          {r.pipeline_run_id.slice(0, 8)}…
+        </span>
+      ),
+    },
+    {
+      id: "type",
+      header: t("admin.ai_costs.cols.type"),
+      cell: (r) => <span className="text-text-muted">{r.generation_type ?? "—"}</span>,
+    },
+    {
+      id: "calls",
+      header: t("admin.ai_costs.cols.calls"),
+      align: "right",
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">{fmt.number.format(r.call_count ?? 0)}</span>
+      ),
+    },
+    {
+      id: "tokens",
+      header: t("admin.ai_costs.cols.tokens"),
+      align: "right",
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">{fmt.number.format(r.total_tokens ?? 0)}</span>
+      ),
+    },
+    {
+      id: "cost",
+      header: t("admin.ai_costs.cols.cost"),
+      align: "right",
+      cell: (r) => (
+        <span className="tabular-nums text-text-strong">{fmt.usd.format(r.total_usd ?? 0)}</span>
+      ),
+    },
+  ];
   return (
-    <div className="bg-surface-elev border border-border rounded-lg overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-surface-muted text-left">
-          <tr>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.ai_costs.cols.pipeline")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.ai_costs.cols.type")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted text-right">{t("admin.ai_costs.cols.calls")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted text-right">{t("admin.ai_costs.cols.tokens")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted text-right">{t("admin.ai_costs.cols.cost")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.pipeline_run_id} className="border-t border-border hover:bg-surface-muted/50">
-              <td className="px-4 py-2 text-text-strong font-mono text-xs truncate max-w-[200px]">{row.pipeline_run_id.slice(0, 8)}…</td>
-              <td className="px-4 py-2 text-text-muted">{row.generation_type ?? "—"}</td>
-              <td className="px-4 py-2 text-right text-text-muted tabular-nums">{fmt.number.format(row.call_count ?? 0)}</td>
-              <td className="px-4 py-2 text-right text-text-muted tabular-nums">{fmt.number.format(row.total_tokens ?? 0)}</td>
-              <td className="px-4 py-2 text-right text-text-strong tabular-nums">{fmt.usd.format(row.total_usd ?? 0)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      columns={columns}
+      data={rows}
+      getRowId={(r) => r.pipeline_run_id}
+      pagination
+      pageSize={10}
+      pageSizeOptions={[10, 20, 50]}
+      emptyState={t("admin.ai_costs.empty.pipelines")}
+    />
   );
 }
 
 function RecentCallsTable({ rows }: { rows: AiCostsRecentCall[] }) {
   const { t } = useTranslation();
   const fmt = useFormatters();
-  if (rows.length === 0) {
-    return (
-      <div className="bg-surface-elev border border-border rounded-lg p-8 text-center">
-        <p className="text-sm text-text-muted">{t("admin.ai_costs.empty.recent")}</p>
-      </div>
-    );
-  }
+  const columns: DataTableColumn<AiCostsRecentCall>[] = [
+    {
+      id: "time",
+      header: t("admin.ai_costs.cols.time"),
+      cell: (r) => (
+        <span className="whitespace-nowrap text-xs text-text-muted">
+          {r.created_at ? fmt.datetime.format(new Date(r.created_at)) : "—"}
+        </span>
+      ),
+    },
+    {
+      id: "model",
+      header: t("admin.ai_costs.cols.model"),
+      cell: (r) => <span className="font-mono text-xs text-text-strong">{r.model ?? "—"}</span>,
+    },
+    {
+      id: "role",
+      header: t("admin.ai_costs.cols.role"),
+      cell: (r) => <span className="text-text-muted">{r.role ?? "—"}</span>,
+    },
+    {
+      id: "stage",
+      header: t("admin.ai_costs.cols.stage"),
+      cell: (r) => <span className="text-text-muted">{r.stage_name ?? "—"}</span>,
+    },
+    {
+      id: "latency",
+      header: t("admin.ai_costs.cols.latency"),
+      align: "right",
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">
+          {r.latency_ms !== null && r.latency_ms !== undefined
+            ? `${fmt.number.format(r.latency_ms)} ms`
+            : "—"}
+        </span>
+      ),
+    },
+    {
+      id: "tokens",
+      header: t("admin.ai_costs.cols.tokens_short"),
+      align: "right",
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">{fmt.number.format(r.tokens ?? 0)}</span>
+      ),
+    },
+    {
+      id: "cost",
+      header: t("admin.ai_costs.cols.cost_short"),
+      align: "right",
+      cell: (r) => (
+        <span className="tabular-nums text-text-strong">{fmt.usd.format(r.usd ?? 0)}</span>
+      ),
+    },
+  ];
   return (
-    <div className="bg-surface-elev border border-border rounded-lg overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-surface-muted text-left">
-          <tr>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.ai_costs.cols.time")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.ai_costs.cols.model")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.ai_costs.cols.role")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.ai_costs.cols.stage")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted text-right">{t("admin.ai_costs.cols.latency")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted text-right">{t("admin.ai_costs.cols.tokens_short")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted text-right">{t("admin.ai_costs.cols.cost_short")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.id} className="border-t border-border hover:bg-surface-muted/50">
-              <td className="px-4 py-2 text-text-muted text-xs whitespace-nowrap">
-                {row.created_at ? fmt.datetime.format(new Date(row.created_at)) : "—"}
-              </td>
-              <td className="px-4 py-2 text-text-strong text-xs font-mono">{row.model ?? "—"}</td>
-              <td className="px-4 py-2 text-text-muted">{row.role ?? "—"}</td>
-              <td className="px-4 py-2 text-text-muted">{row.stage_name ?? "—"}</td>
-              <td className="px-4 py-2 text-right text-text-muted tabular-nums">
-                {row.latency_ms !== null && row.latency_ms !== undefined
-                  ? `${fmt.number.format(row.latency_ms)} ms`
-                  : "—"}
-              </td>
-              <td className="px-4 py-2 text-right text-text-muted tabular-nums">{fmt.number.format(row.tokens ?? 0)}</td>
-              <td className="px-4 py-2 text-right text-text-strong tabular-nums">{fmt.usd.format(row.usd ?? 0)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      columns={columns}
+      data={rows}
+      getRowId={(r) => r.id}
+      pagination
+      pageSize={15}
+      pageSizeOptions={[15, 30, 50]}
+      emptyState={t("admin.ai_costs.empty.recent")}
+    />
   );
 }
 

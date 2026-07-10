@@ -1,11 +1,12 @@
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
-  ChevronRight,
   Clock,
+  Eye,
+  MoreVertical,
   Snowflake,
   TrendingDown,
   UserCog,
@@ -15,6 +16,13 @@ import { useAtRiskStudents } from "@/lib/api/hooks/spaced-repetition";
 import { useCourse } from "@/lib/api/hooks/courses";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { AtRiskStudent } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
@@ -64,9 +72,7 @@ function FlagCell({ active, label }: { active: boolean; label: string }) {
     <span
       className={cn(
         "inline-flex items-center justify-center gap-1 text-[11px] font-bold w-7 h-7 rounded-lg shrink-0",
-        active
-          ? "bg-red-100 text-red-700"
-          : "bg-emerald-50 text-emerald-600",
+        active ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-600",
       )}
       title={label}
       aria-label={label}
@@ -80,72 +86,83 @@ function FlagCell({ active, label }: { active: boolean; label: string }) {
   );
 }
 
-function StudentRow({
-  courseId,
-  student,
-}: {
-  courseId: string;
-  student: AtRiskStudent;
-}) {
-  const { t } = useTranslation();
-  const relDate = useRelDate();
-  const flagCount =
+function flagCountOf(student: AtRiskStudent): number {
+  return (
     Number(student.low_compliance) +
     Number(student.frozen_kr) +
-    Number(student.high_theory_practice_gap);
-
-  return (
-    <Link
-      to="/teacher/courses/$courseId/students/$studentId/sr"
-      params={{ courseId, studentId: student.student_id }}
-      className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 items-center px-5 py-4 hover:bg-m3-surface-container-low transition-colors group cursor-pointer"
-    >
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-m3-on-surface truncate">
-          {student.name}
-        </p>
-        <p className="text-xs text-m3-on-surface-variant inline-flex items-center gap-1.5 mt-0.5">
-          <Clock className="h-3 w-3" />
-          {relDate(student.last_active_at)}
-        </p>
-      </div>
-
-      <FlagCell
-        active={student.low_compliance}
-        label={t(FLAG_LABEL_KEYS.low_compliance.label)}
-      />
-      <FlagCell
-        active={student.frozen_kr}
-        label={t(FLAG_LABEL_KEYS.frozen_kr.label)}
-      />
-      <FlagCell
-        active={student.high_theory_practice_gap}
-        label={t(FLAG_LABEL_KEYS.high_theory_practice_gap.label)}
-      />
-
-      <span
-        className={cn(
-          "text-[10px] font-bold px-2 py-1 rounded-full shrink-0 hidden sm:inline-block",
-          flagCount >= 2
-            ? "bg-red-100 text-red-700"
-            : "bg-amber-100 text-amber-700",
-        )}
-      >
-        {t("teacher_sr_at_risk.flag_count", { count: flagCount })}
-      </span>
-
-      <ChevronRight className="h-4 w-4 text-m3-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity" />
-    </Link>
+    Number(student.high_theory_practice_gap)
   );
 }
 
 export default function TeacherSrAtRiskPage() {
   const { t } = useTranslation();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
+  const navigate = useNavigate();
+  const relDate = useRelDate();
   const { data: course } = useCourse(courseId);
   const { data: students, isLoading } = useAtRiskStudents(courseId);
 
   const atRiskList = students ?? [];
+
+  const detailTo = "/teacher/courses/$courseId/students/$studentId/sr" as const;
+  const goToDetail = (studentId: string) =>
+    void navigate({ to: detailTo, params: { courseId, studentId } });
+
+  const flagColumn = (
+    key: FlagKey,
+    colId: string,
+    labelKey: string,
+  ): DataTableColumn<AtRiskStudent> => ({
+    id: colId,
+    header: t(`teacher_sr_at_risk.cols.${colId}`),
+    headerTitle: t(labelKey),
+    align: "center",
+    cell: (s) => <FlagCell active={s[key]} label={t(labelKey)} />,
+  });
+
+  const columns: DataTableColumn<AtRiskStudent>[] = [
+    {
+      id: "student",
+      header: t("teacher_sr_at_risk.cols.student"),
+      cell: (s) => (
+        <div className="min-w-0">
+          <Link
+            to={detailTo}
+            params={{ courseId, studentId: s.student_id }}
+            onClick={(e) => e.stopPropagation()}
+            className="block max-w-[24ch] truncate text-sm font-semibold text-m3-on-surface hover:text-m3-primary hover:underline"
+          >
+            {s.name}
+          </Link>
+          <span className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-m3-on-surface-variant">
+            <Clock className="h-3 w-3" />
+            {relDate(s.last_active_at)}
+          </span>
+        </div>
+      ),
+    },
+    flagColumn("low_compliance", "compliance_short", "teacher_sr_at_risk.flags.low_compliance_label"),
+    flagColumn("frozen_kr", "kr_short", "teacher_sr_at_risk.flags.frozen_kr_label"),
+    flagColumn("high_theory_practice_gap", "tp_short", "teacher_sr_at_risk.flags.tp_gap_label"),
+    {
+      id: "total",
+      header: t("teacher_sr_at_risk.cols.total"),
+      align: "center",
+      cell: (s) => {
+        const count = flagCountOf(s);
+        return (
+          <span
+            className={cn(
+              "rounded-full px-2 py-1 text-[10px] font-bold whitespace-nowrap",
+              count >= 2 ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700",
+            )}
+          >
+            {t("teacher_sr_at_risk.flag_count", { count })}
+          </span>
+        );
+      },
+    },
+  ];
 
   return (
     <div className="min-h-screen pb-12">
@@ -206,46 +223,17 @@ export default function TeacherSrAtRiskPage() {
           })}
         </div>
 
-        <section className="bg-m3-surface-container-lowest rounded-xl ghost-border shadow-editorial overflow-hidden">
-          <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 px-5 py-3 border-b border-m3-outline-variant/10 bg-m3-surface-container-low">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t("teacher_sr_at_risk.cols.student")}
-            </span>
-            <span
-              className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant w-7 text-center"
-              title={t("teacher_sr_at_risk.flags.low_compliance_label")}
-            >
-              {t("teacher_sr_at_risk.cols.compliance_short")}
-            </span>
-            <span
-              className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant w-7 text-center"
-              title={t("teacher_sr_at_risk.flags.frozen_kr_label")}
-            >
-              {t("teacher_sr_at_risk.cols.kr_short")}
-            </span>
-            <span
-              className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant w-7 text-center"
-              title={t("teacher_sr_at_risk.flags.tp_gap_label")}
-            >
-              {t("teacher_sr_at_risk.cols.tp_short")}
-            </span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t("teacher_sr_at_risk.cols.total")}
-            </span>
-            <span />
-          </div>
-
-          {isLoading ? (
-            <div className="p-5 space-y-3">
-              {[0, 1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-14 rounded-xl bg-m3-surface-container-low animate-pulse"
-                />
-              ))}
-            </div>
-          ) : atRiskList.length === 0 ? (
-            <div className="px-6 py-12 flex flex-col items-center gap-3 text-center">
+        <DataTable
+          columns={columns}
+          data={atRiskList}
+          getRowId={(s) => s.student_id}
+          loading={isLoading}
+          onRowClick={(s) => goToDetail(s.student_id)}
+          pagination
+          pageSize={10}
+          pageSizeOptions={[10, 25, 50]}
+          emptyState={
+            <div className="flex flex-col items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
                 <UserCog className="h-6 w-6 text-emerald-600" />
               </div>
@@ -256,18 +244,25 @@ export default function TeacherSrAtRiskPage() {
                 {t("teacher_sr_at_risk.empty_body")}
               </p>
             </div>
-          ) : (
-            <div className="divide-y divide-m3-outline-variant/10">
-              {atRiskList.map((student) => (
-                <StudentRow
-                  key={student.student_id}
-                  courseId={courseId}
-                  student={student}
-                />
-              ))}
-            </div>
+          }
+          actions={(s) => (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                onClick={(e) => e.stopPropagation()}
+                aria-label={t("teacher_sr_at_risk.row_actions")}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high cursor-pointer"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => goToDetail(s.student_id)}>
+                  <Eye className="h-4 w-4" />
+                  {t("teacher_sr_at_risk.view_detail")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
-        </section>
+        />
       </div>
     </div>
   );

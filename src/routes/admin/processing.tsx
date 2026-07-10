@@ -19,6 +19,7 @@ import {
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import { ApiError } from "@/lib/api/client";
 import { StatCard } from "@/components/ui/stat-card";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ProcessingJobOut } from "@/lib/api/types";
 
 const STATUS_FILTERS = [
@@ -72,82 +73,87 @@ function JobsTable({
   retryingId: string | null;
 }) {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const locale = i18n.resolvedLanguage ?? i18n.language ?? "en";
 
-  if (jobs.length === 0) {
-    return (
-      <div className="bg-surface-elev border border-border rounded-lg p-8 text-center">
-        <Activity className="h-8 w-8 mx-auto mb-2 text-text-subtle" />
-        <p className="text-sm text-text-muted">
-          {t("admin.processing.no_jobs_match")}
-        </p>
-      </div>
-    );
-  }
+  const columns: DataTableColumn<ProcessingJobOut>[] = [
+    {
+      id: "job",
+      header: t("admin.processing.cols.job"),
+      cell: (job) => (
+        <Link
+          to="/admin/processing/$jobId"
+          params={{ jobId: job.id }}
+          onClick={(e) => e.stopPropagation()}
+          className="text-text-strong font-medium hover:underline"
+        >
+          {job.job_type}
+        </Link>
+      ),
+    },
+    {
+      id: "entity",
+      header: t("admin.processing.cols.entity"),
+      cell: (job) => (
+        <span className="font-mono text-xs text-text-muted">
+          {job.entity_type}/{job.entity_id.slice(0, 8)}…
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      header: t("admin.processing.cols.status"),
+      cell: (job) => <JobStatusBadge status={job.status} />,
+    },
+    {
+      id: "progress",
+      header: t("admin.processing.cols.progress"),
+      cell: (job) => <span className="text-text-strong">{job.progress_percent}%</span>,
+    },
+    {
+      id: "retries",
+      header: t("admin.processing.cols.retries"),
+      cell: (job) => <span className="text-text-muted">{job.retry_count}</span>,
+    },
+    {
+      id: "updated",
+      header: t("admin.processing.cols.updated"),
+      cell: (job) => (
+        <span className="text-xs text-text-muted">{formatDate(job.updated_at, locale)}</span>
+      ),
+    },
+  ];
+
   return (
-    <div className="bg-surface-elev border border-border rounded-lg overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-surface-muted text-left">
-          <tr>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.processing.cols.job")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.processing.cols.entity")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.processing.cols.status")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.processing.cols.progress")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.processing.cols.retries")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.processing.cols.updated")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted text-right">{t("admin.processing.cols.actions")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {jobs.map((job) => {
-            const isFailed = job.status === "failed";
-            const isRetrying = retryingId === job.id;
-            return (
-              <tr
-                key={job.id}
-                className="border-t border-border hover:bg-surface-muted/50"
-              >
-                <td className="px-4 py-2">
-                  <Link
-                    to="/admin/processing/$jobId"
-                    params={{ jobId: job.id }}
-                    className="text-text-strong font-medium hover:underline"
-                  >
-                    {job.job_type}
-                  </Link>
-                </td>
-                <td className="px-4 py-2 text-text-muted text-xs font-mono truncate max-w-[160px]">
-                  {job.entity_type}/{job.entity_id.slice(0, 8)}…
-                </td>
-                <td className="px-4 py-2">
-                  <JobStatusBadge status={job.status} />
-                </td>
-                <td className="px-4 py-2 text-text-strong">
-                  {job.progress_percent}%
-                </td>
-                <td className="px-4 py-2 text-text-muted">{job.retry_count}</td>
-                <td className="px-4 py-2 text-text-muted text-xs">
-                  {formatDate(job.updated_at, locale)}
-                </td>
-                <td className="px-4 py-2 text-right">
-                  {isFailed ? (
-                    <button
-                      type="button"
-                      onClick={() => onRetry(job.id)}
-                      disabled={isRetrying}
-                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md bg-m3-primary text-white hover:opacity-90 disabled:opacity-50"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                      {isRetrying ? "…" : t("admin.processing.retry")}
-                    </button>
-                  ) : null}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      columns={columns}
+      data={jobs}
+      getRowId={(job) => job.id}
+      onRowClick={(job) => void navigate({ to: "/admin/processing/$jobId", params: { jobId: job.id } })}
+      pagination
+      pageSize={15}
+      pageSizeOptions={[15, 30, 50]}
+      emptyState={
+        <div className="flex flex-col items-center gap-2">
+          <Activity className="h-8 w-8 text-text-subtle" />
+          <p className="text-sm text-text-muted">{t("admin.processing.no_jobs_match")}</p>
+        </div>
+      }
+      actionsHeader={t("admin.processing.cols.actions")}
+      actions={(job) =>
+        job.status === "failed" ? (
+          <button
+            type="button"
+            onClick={() => onRetry(job.id)}
+            disabled={retryingId === job.id}
+            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md bg-m3-primary text-white hover:opacity-90 disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw className="h-3 w-3" />
+            {retryingId === job.id ? "…" : t("admin.processing.retry")}
+          </button>
+        ) : null
+      }
+    />
   );
 }
 

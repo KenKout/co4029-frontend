@@ -18,6 +18,7 @@ import {
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import { StatCard } from "@/components/ui/stat-card";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ProcessingJobRow } from "@/lib/api/types";
 
 const JOB_STATUS_COLOR: Record<string, string> = {
@@ -69,43 +70,57 @@ function useFormatters() {
 function JobsTable({ jobs }: { jobs: ProcessingJobRow[] }) {
   const { t } = useTranslation();
   const { formatDate } = useFormatters();
-  if (jobs.length === 0) {
-    return (
-      <div className="bg-surface-elev border border-border rounded-lg p-8 text-center">
-        <ActivityIcon className="h-8 w-8 mx-auto mb-2 text-text-subtle" />
-        <p className="text-sm text-text-muted">{t("admin.course_detail.no_jobs")}</p>
-      </div>
-    );
-  }
+  const columns: DataTableColumn<ProcessingJobRow>[] = [
+    {
+      id: "job_type",
+      header: t("admin.course_detail.cols.job_type"),
+      cell: (job) => <span className="font-medium text-text-strong">{job.job_type}</span>,
+    },
+    {
+      id: "entity",
+      header: t("admin.course_detail.cols.entity"),
+      cell: (job) => (
+        <span className="font-mono text-xs text-text-muted">
+          {job.entity_type}/{job.entity_id.slice(0, 8)}…
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      header: t("admin.course_detail.cols.status"),
+      cell: (job) => <JobStatusBadge status={job.status} />,
+    },
+    {
+      id: "progress",
+      header: t("admin.course_detail.cols.progress"),
+      cell: (job) => <span className="text-text-strong">{job.progress_percent}%</span>,
+    },
+    {
+      id: "retries",
+      header: t("admin.course_detail.cols.retries"),
+      cell: (job) => <span className="text-text-muted">{job.retry_count}</span>,
+    },
+    {
+      id: "updated",
+      header: t("admin.course_detail.cols.updated"),
+      cell: (job) => <span className="text-xs text-text-muted">{formatDate(job.updated_at)}</span>,
+    },
+  ];
   return (
-    <div className="bg-surface-elev border border-border rounded-lg overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-surface-muted text-left">
-          <tr>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.course_detail.cols.job_type")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.course_detail.cols.entity")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.course_detail.cols.status")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.course_detail.cols.progress")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.course_detail.cols.retries")}</th>
-            <th className="px-4 py-2 text-xs font-semibold text-text-muted">{t("admin.course_detail.cols.updated")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {jobs.map((job) => (
-            <tr key={job.id} className="border-t border-border hover:bg-surface-muted/50">
-              <td className="px-4 py-2 text-text-strong font-medium">{job.job_type}</td>
-              <td className="px-4 py-2 text-text-muted text-xs font-mono truncate max-w-[160px]">
-                {job.entity_type}/{job.entity_id.slice(0, 8)}…
-              </td>
-              <td className="px-4 py-2"><JobStatusBadge status={job.status} /></td>
-              <td className="px-4 py-2 text-text-strong">{job.progress_percent}%</td>
-              <td className="px-4 py-2 text-text-muted">{job.retry_count}</td>
-              <td className="px-4 py-2 text-text-muted text-xs">{formatDate(job.updated_at)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      columns={columns}
+      data={jobs}
+      getRowId={(job) => job.id}
+      pagination
+      pageSize={10}
+      pageSizeOptions={[10, 20]}
+      emptyState={
+        <div className="flex flex-col items-center gap-2">
+          <ActivityIcon className="h-8 w-8 text-text-subtle" />
+          <p className="text-sm text-text-muted">{t("admin.course_detail.no_jobs")}</p>
+        </div>
+      }
+    />
   );
 }
 
