@@ -67,7 +67,7 @@
       "lessons_ready": "Bài học sẵn sàng",
       "lessons_ready_sub": "Mở khóa khi đạt KR ≥ 0.85",
       "cards_due": "Thẻ cần ôn",
-      "cards_due_sub": "Tải tổng quan để xem"
+      "cards_due_sub": "Sẵn sàng để ôn tập"
     },
     "section_title": "Tiến độ theo khóa học",
     "section_subtitle": "Bấm để xem chi tiết các bài học trong từng khóa",
@@ -1341,6 +1341,9 @@
       "rate_limited": "Quá nhiều yêu cầu, vui lòng thử lại sau",
       "start_failed": "Không thể bắt đầu bài quiz",
       "cooldown_active": "Câu hỏi đang trong thời gian chờ",
+      "max_attempts_reached": "Bạn đã dùng hết số lượt làm bài quiz này.",
+      "quiz_cooldown_active": "Bài quiz đang trong thời gian chờ. Vui lòng thử lại sau.",
+      "quiz_cooldown_active_at": "Bài quiz đang trong thời gian chờ đến {{time}}.",
       "save_answer_failed": "Không thể lưu câu trả lời",
       "auto_submitted_timeout": "Đã hết giờ. Bài quiz đã được nộp tự động.",
       "submit_failed": "Không thể nộp bài quiz"

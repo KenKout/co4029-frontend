@@ -67,7 +67,7 @@
       "lessons_ready": "Lessons ready",
       "lessons_ready_sub": "Unlock when KR ≥ 0.85",
       "cards_due": "Cards due",
-      "cards_due_sub": "Load overview to view"
+      "cards_due_sub": "Ready to review now"
     },
     "section_title": "Per-course progress",
     "section_subtitle": "Click to see lesson-level details",
@@ -1351,6 +1351,9 @@
       "rate_limited": "Too many requests, please try again later",
       "start_failed": "Failed to start quiz",
       "cooldown_active": "Question is in cooldown",
+      "max_attempts_reached": "You've used all your attempts for this quiz.",
+      "quiz_cooldown_active": "This quiz is in cooldown. Try again later.",
+      "quiz_cooldown_active_at": "This quiz is in cooldown until {{time}}.",
       "save_answer_failed": "Failed to save answer",
       "auto_submitted_timeout": "Time's up. Quiz was auto-submitted.",
       "submit_failed": "Failed to submit quiz"

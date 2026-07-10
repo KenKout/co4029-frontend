@@ -64,14 +64,18 @@ function questionState(idx: number, activeIdx: number, status: QuestionStatus): 
   return "pending";
 }
 
-function extractRetryAt(err: unknown): string | null {
+function extractDetailString(err: unknown, field: string): string | null {
   if (!(err instanceof ApiError)) return null;
   const parsed = err.parsedBody;
   if (!parsed || typeof parsed !== "object") return null;
   const detail = (parsed as { detail?: unknown }).detail;
   if (!detail || typeof detail !== "object") return null;
-  const retry = (detail as { retry_available_at?: unknown }).retry_available_at;
-  return typeof retry === "string" ? retry : null;
+  const value = (detail as Record<string, unknown>)[field];
+  return typeof value === "string" ? value : null;
+}
+
+function extractRetryAt(err: unknown): string | null {
+  return extractDetailString(err, "retry_available_at");
 }
 
 function QuizStudyModeCard({
@@ -426,11 +430,22 @@ export default function CourseQuizPage() {
       questionSeenAtRef.current = {};
       setPerQuestionCooldown({});
     } catch (err) {
-      toast.error(
-        err instanceof ApiError && err.status === 429
-          ? t("course_quiz.errors.rate_limited")
-          : t("course_quiz.errors.start_failed"),
-      );
+      // Server-side retake policy (FR-4.3): 409 = attempts exhausted,
+      // 429 = quiz/card cooldown still active (retry time in the body).
+      if (extractDetailString(err, "reason") === "max_attempts_reached") {
+        toast.error(t("course_quiz.errors.max_attempts_reached"));
+      } else if (err instanceof ApiError && err.status === 429) {
+        const retryAt = extractRetryAt(err);
+        toast.error(
+          retryAt
+            ? t("course_quiz.errors.quiz_cooldown_active_at", {
+                time: new Date(retryAt).toLocaleString(),
+              })
+            : t("course_quiz.errors.quiz_cooldown_active"),
+        );
+      } else {
+        toast.error(t("course_quiz.errors.start_failed"));
+      }
     }
   }
 

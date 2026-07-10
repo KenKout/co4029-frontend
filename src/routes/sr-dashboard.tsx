@@ -14,7 +14,11 @@ import {
   Target,
 } from "lucide-react";
 import { useMyCourses } from "@/lib/api/hooks/courses";
-import { useCourseSrOverview } from "@/lib/api/hooks/spaced-repetition";
+import {
+  useCardsDue,
+  useCourseSrOverview,
+  useCoursesSrOverviews,
+} from "@/lib/api/hooks/spaced-repetition";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StatCard } from "@/components/ui/stat-card";
@@ -169,6 +173,17 @@ function CourseSrCard({ course }: { course: Course }) {
 export default function SrDashboardPage() {
   const { t } = useTranslation();
   const { items: courses, isLoading: coursesLoading } = useMyCourses(20);
+  const cardsDue = useCardsDue({ limit: 50 });
+  const overviews = useCoursesSrOverviews(courses.map((c) => c.id));
+
+  const dueCount = cardsDue.items?.length ?? 0;
+  const dueLabel = cardsDue.hasNextPage ? `${dueCount}+` : String(dueCount);
+
+  const overviewsLoading = overviews.some((q) => q.isLoading);
+  const matureLessons = overviews.reduce(
+    (acc, q) => acc + (q.data?.filter((l) => l.status === "mature").length ?? 0),
+    0,
+  );
 
   return (
     <div className="min-h-screen pb-12">
@@ -196,14 +211,14 @@ export default function SrDashboardPage() {
           />
           <StatCard
             label={t("sr_dashboard.stats.lessons_ready")}
-            value="—"
+            value={coursesLoading || overviewsLoading ? "—" : matureLessons}
             sublabel={t("sr_dashboard.stats.lessons_ready_sub")}
             icon={Target}
             variant="surface"
           />
           <StatCard
             label={t("sr_dashboard.stats.cards_due")}
-            value="—"
+            value={cardsDue.isLoading ? "—" : dueLabel}
             sublabel={t("sr_dashboard.stats.cards_due_sub")}
             icon={Inbox}
             variant="surface"

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "../client";
 import { queryKeys } from "../query-keys";
 import { useInfinitePage } from "../use-infinite-page";
@@ -66,6 +66,20 @@ export function useCourseSrOverview(courseId: string | undefined) {
       ),
     enabled: !!courseId,
     staleTime: STALE_60S,
+  });
+}
+
+/**
+ * Fetch SR overviews for several courses at once
+ */
+export function useCoursesSrOverviews(courseIds: string[]) {
+  return useQueries({
+    queries: courseIds.map((courseId) => ({
+      queryKey: queryKeys.sr.courseOverview(courseId),
+      queryFn: () =>
+        apiFetch<LessonOverviewItem[]>(`/me/courses/${courseId}/sr-overview`),
+      staleTime: STALE_60S,
+    })),
   });
 }
 
