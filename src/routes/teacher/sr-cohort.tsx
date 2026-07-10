@@ -204,6 +204,14 @@ export default function TeacherSrCohortPage() {
             title={t("teacher_sr_cohort.title")}
             subtitle={t("teacher_sr_cohort.subtitle")}
           />
+          <Link
+            to="/teacher/courses/$courseId/at-risk"
+            params={{ courseId }}
+            className="ml-auto shrink-0 inline-flex items-center gap-2 rounded-xl bg-m3-surface-container-low hover:bg-m3-surface-container-high border border-m3-outline-variant/20 px-3 py-2 text-sm font-semibold text-m3-on-surface transition-colors cursor-pointer"
+          >
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <span className="hidden sm:inline">{t("teacher_sr_cohort.view_at_risk")}</span>
+          </Link>
         </div>
 
         <div className="bg-m3-surface-container-lowest rounded-xl ghost-border shadow-editorial p-5 space-y-3">
