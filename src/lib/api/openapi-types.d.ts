@@ -1977,6 +1977,12 @@ export interface paths {
          *     the quiz is still in SR cooldown — thesis UC-LEARN-01 Alt 1a) to
          *     HTTP 429 with a ``Retry-After`` header counting down to the earliest
          *     card's ``due_at``.
+         *
+         *     FR-4.3 quiz-level retake policy maps the same way:
+         *     :class:`CooldownActive` (inside ``cooldown_hours`` of the last
+         *     submission) → 429 + ``Retry-After``; :class:`MaxAttemptsReached`
+         *     (``max_attempts`` used up, or a retake with
+         *     ``allow_retakes=False``) → 409.
          */
         post: operations["start_attempt_api_v1_quizzes__quiz_id__attempts_post"];
         delete?: never;
@@ -1997,6 +2003,13 @@ export interface paths {
         /**
          * Record Answer
          * @description Record one answer for an in-flight attempt.
+         *
+         *     The service fires the SM-2 review inside the same transaction
+         *     (FR-4.4); any :class:`CardFailedEvent` comes back on
+         *     ``CardReviewResult.pending_events`` and is dispatched **after**
+         *     commit (caller-dispatches-after-commit pattern, T7.5.10 BUG-2) so a
+         *     rolled-back review can never trigger a ghost notification.
+         *     Remediation failures are logged and never surface to the student.
          */
         post: operations["record_answer_api_v1_attempts__attempt_id__answers_post"];
         delete?: never;
@@ -2578,6 +2591,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teacher/interview-configs/{config_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive Interview Config */
+        post: operations["archive_interview_config_api_v1_teacher_interview_configs__config_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/interview-configs/{config_id}/unarchive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unarchive Interview Config */
+        post: operations["unarchive_interview_config_api_v1_teacher_interview_configs__config_id__unarchive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teacher/interview-configs/{config_id}/generate": {
         parameters: {
             query?: never;
@@ -2691,11 +2738,52 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete Outcome */
+        delete: operations["delete_outcome_api_v1_teacher_interview_configs__config_id__outcomes__outcome_id__delete"];
         options?: never;
         head?: never;
         /** Update Outcome */
         patch: operations["update_outcome_api_v1_teacher_interview_configs__config_id__outcomes__outcome_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/teacher/interview-configs/{config_id}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Config Sessions
+         * @description Teacher's per-config attempts list (thesis p77 review surface).
+         */
+        get: operations["list_config_sessions_api_v1_teacher_interview_configs__config_id__sessions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/interview-sessions/{session_id}/transcript": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Session Transcript
+         * @description Full ordered Q&A transcript for teacher remediation review (thesis p77).
+         */
+        get: operations["get_session_transcript_api_v1_teacher_interview_sessions__session_id__transcript_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/teacher/interview-sessions/{session_id}/gap-report": {
@@ -3275,10 +3363,8 @@ export interface paths {
          * @description Readiness aggregate (FR-6.8): latest snapshot per actively-enrolled
          *     student + path average. Rubric details are never included.
          *
-         *     Permission gate matches the roster read — which is permission-level
-         *     only, NOT org-membership-scoped (pre-existing across the management
-         *     surface; FR-2.6 enforcement lands with the phase-07 multi-tenant
-         *     validation alongside ``list_path_roster_progress``).
+         *     Org-scoped (FR-2.6): caller must belong to the path's organization
+         *     or hold ``system.administer`` — same gate as the roster read.
          */
         get: operations["get_path_readiness_overview_api_v1_management_career_paths__career_path_id__readiness_get"];
         put?: never;
@@ -3517,7 +3603,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Data Changes */
+        /**
+         * Get Data Changes
+         * @description Who created / last-updated / soft-deleted a single entity (FR-6.7).
+         *
+         *     Extended in this pass beyond courses to also cover materials, users,
+         *     and role assignments. Each table projects the uniform
+         *     :class:`DataChangeOut` shape plus entity-specific columns.
+         */
         get: operations["get_data_changes_api_v1_admin_audit_data_changes_get"];
         put?: never;
         post?: never;
@@ -4861,6 +4954,53 @@ export interface components {
             max_attempts: number;
         };
         /**
+         * DataChangeOut
+         * @description Uniform data-change projection across every auditable entity kind.
+         *
+         *     The four supported tables (courses / materials / users /
+         *     role_assignments) each project this common shape. Entity-specific
+         *     columns (``slug`` for courses, ``material_type`` + ``lesson_id`` for
+         *     materials, ``primary_email`` for users, ``scope_kind`` +
+         *     ``subject_user_id`` for role assignments) ride along in ``extra`` so a
+         *     single response model serves all four without a per-table class.
+         *
+         *     ``organization_id`` is nullable because global entities (users) and,
+         *     depending on scope, role assignments carry no owning org.
+         */
+        DataChangeOut: {
+            /**
+             * Entity Id
+             * Format: uuid
+             */
+            entity_id: string;
+            /** Title */
+            title: string;
+            /** Status */
+            status: string;
+            /** Created By */
+            created_by?: string | null;
+            /** Updated By */
+            updated_by?: string | null;
+            /** Deleted By */
+            deleted_by?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Organization Id */
+            organization_id?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * DeepHealthOut
          * @description Composite payload returned by ``GET /healthz/deep``.
          */
@@ -5009,6 +5149,11 @@ export interface components {
          *
          *     Inherits the student-facing schema and re-introduces:
          *
+         *     * ``per_criterion_breakdown`` — criterion-level mean rubric scores
+         *       (e.g. ``technical_accuracy: 3.2``). Teacher-only per FR-5.7: the
+         *       student view exposes pass/fail + qualitative remediation only, so
+         *       numeric rubric detail is surfaced here rather than on
+         *       :class:`GapReportRead`.
          *     * ``raw_evaluation_json`` — per-response LLM verdicts (the
          *       backing :class:`~abridgeai.features.interviews.models.InterviewOutcomeEvaluation`
          *       rows joined into one payload).
@@ -5042,17 +5187,17 @@ export interface components {
              */
             study_plan: components["schemas"]["StudyPlanItem"][];
             /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /**
              * Per Criterion Breakdown
              * @default {}
              */
             per_criterion_breakdown: {
                 [key: string]: unknown;
             };
-            /**
-             * Generated At
-             * Format: date-time
-             */
-            generated_at: string;
             /**
              * Raw Evaluation Json
              * @default {}
@@ -5071,10 +5216,13 @@ export interface components {
          * GapReportRead
          * @description Student-facing projection of a ``GapReport`` row.
          *
-         *     Carries the human-readable discrepancy summary, the actionable
-         *     study plan, and a per-criterion breakdown (outcome → verdict).
-         *     Internal LLM rationale stays in
-         *     :class:`GapReportAuthoringRead`.
+         *     Carries the human-readable discrepancy summary and the actionable
+         *     study plan. FR-5.7 invariant: the student sees only the pass/fail
+         *     verdict plus qualitative remediation — NOT numeric rubric scores.
+         *     ``per_criterion_breakdown`` (criterion-level mean scores, e.g.
+         *     ``technical_accuracy: 3.2``) is therefore teacher-only and lives on
+         *     :class:`GapReportAuthoringRead`. Internal LLM rationale likewise
+         *     stays teacher-side.
          */
         GapReportRead: {
             /**
@@ -5101,13 +5249,6 @@ export interface components {
              * @default []
              */
             study_plan: components["schemas"]["StudyPlanItem"][];
-            /**
-             * Per Criterion Breakdown
-             * @default {}
-             */
-            per_criterion_breakdown: {
-                [key: string]: unknown;
-            };
             /**
              * Generated At
              * Format: date-time
@@ -5329,6 +5470,8 @@ export interface components {
             time_limit_minutes?: number | null;
             /** Max Attempts */
             max_attempts?: number | null;
+            /** Cooldown Hours */
+            cooldown_hours?: number | null;
             /** Lock Quiz Ef Until Pass */
             lock_quiz_ef_until_pass: boolean;
             /** Published At */
@@ -5391,6 +5534,8 @@ export interface components {
             time_limit_minutes?: number | null;
             /** Max Attempts */
             max_attempts?: number | null;
+            /** Cooldown Hours */
+            cooldown_hours?: number | null;
             /**
              * Lock Quiz Ef Until Pass
              * @default false
@@ -5451,6 +5596,8 @@ export interface components {
             time_limit_minutes?: number | null;
             /** Max Attempts */
             max_attempts?: number | null;
+            /** Cooldown Hours */
+            cooldown_hours?: number | null;
             /** Lock Quiz Ef Until Pass */
             lock_quiz_ef_until_pass: boolean;
             /** Published At */
@@ -5459,12 +5606,15 @@ export interface components {
         /**
          * InterviewConfigUpdate
          * @description Body for ``PATCH /teacher/interviews/{id}`` — partial fields.
+         *
+         *     ``status`` is intentionally omitted here — status transitions
+         *     (draft → published, published → archived, archived → draft) go
+         *     through dedicated endpoints (``/publish``, ``/archive``,
+         *     ``/unarchive``) so the service layer can enforce business rules.
          */
         InterviewConfigUpdate: {
             /** Title */
             title?: string | null;
-            /** Status */
-            status?: ("draft" | "published" | "archived") | null;
             /** Persona */
             persona?: ("strict" | "neutral" | "supportive") | null;
             /** Supported Modes */
@@ -5473,12 +5623,37 @@ export interface components {
             time_limit_minutes?: number | null;
             /** Max Attempts */
             max_attempts?: number | null;
+            /** Cooldown Hours */
+            cooldown_hours?: number | null;
             /** Min Outcomes To Pass */
             min_outcomes_to_pass?: number | null;
             /** Lock Quiz Ef Until Pass */
             lock_quiz_ef_until_pass?: boolean | null;
             /** Supplementary Instructions */
             supplementary_instructions?: string | null;
+        };
+        /**
+         * InterviewForAuthoringPublic
+         * @description Composed authoring tree — config + every outcome + every question.
+         *
+         *     Counterpart to
+         *     :class:`~abridgeai.features.interviews.schemas.public.InterviewForTakingPublic`
+         *     used by the teacher review screens. Carries every question
+         *     regardless of ``review_status`` and exposes the full authoring
+         *     projection (with ``difficulty`` and ``importance_weight``).
+         */
+        InterviewForAuthoringPublic: {
+            config: components["schemas"]["InterviewConfigAuthoring"];
+            /**
+             * Outcomes
+             * @default []
+             */
+            outcomes: components["schemas"]["InterviewOutcomeAuthoring"][];
+            /**
+             * Questions
+             * @default []
+             */
+            questions: components["schemas"]["InterviewQuestionAuthoring"][];
         };
         /**
          * InterviewForTakingPublic
@@ -5820,11 +5995,16 @@ export interface components {
          * InterviewSessionFinishResponse
          * @description Response shape for ``POST /interviews/sessions/{id}/finish``.
          *
-         *     The student's first glimpse of the rubric verdict. Per-outcome
-         *     ``verdict_met`` flags surface here (so the student knows which
-         *     outcomes they cleared) but the LLM ``hidden_reasoning`` from
-         *     :class:`~abridgeai.features.interviews.models.InterviewOutcomeEvaluation`
-         *     is NEVER returned — that's a teacher-side field.
+         *     Thesis §4.3: the student-facing result is **binary pass/fail ONLY** — no
+         *     score, no per-outcome breakdown, no rubric. ``pass_verdict`` is the single
+         *     meaningful signal here.
+         *
+         *     ``total_score`` and ``rubric_scores`` are retained in the schema for
+         *     backward compatibility but are ALWAYS ``None`` / empty on this learner
+         *     response; the rubric total + per-outcome ``verdict_met`` + LLM
+         *     ``hidden_reasoning`` are teacher-only and live in
+         *     ``InterviewSession.internal_summary_json`` /
+         *     :class:`~abridgeai.features.interviews.models.InterviewOutcomeEvaluation`.
          */
         InterviewSessionFinishResponse: {
             /**
@@ -5874,10 +6054,7 @@ export interface components {
             interview_config_id: string;
             /** Interview Title */
             interview_title?: string | null;
-            /**
-             * Course Id
-             * Format: uuid
-             */
+            /** Course Id */
             course_id?: string | null;
             /**
              * Status
@@ -5943,6 +6120,48 @@ export interface components {
             time_remaining_seconds?: number | null;
             /** Question Count Remaining */
             question_count_remaining?: number | null;
+        };
+        /**
+         * InterviewSessionSummary
+         * @description One row in the teacher's per-config attempts list.
+         *
+         *     Teacher-only: surfaces the student identity + binary verdict so a teacher
+         *     can pick an attempt to review (thesis p77 "Teachers can review…").
+         */
+        InterviewSessionSummary: {
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+            /**
+             * Student Id
+             * Format: uuid
+             */
+            student_id: string;
+            /** Student Name */
+            student_name?: string | null;
+            /** Attempt Number */
+            attempt_number: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "in_progress" | "completed" | "timed_out" | "abandoned" | "failed";
+            /**
+             * Input Mode
+             * @enum {string}
+             */
+            input_mode: "voice" | "text" | "hybrid";
+            /** Pass Verdict */
+            pass_verdict?: boolean | null;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Ended At */
+            ended_at?: string | null;
         };
         /**
          * InterviewSubmitAnswerRequest
@@ -6011,6 +6230,47 @@ export interface components {
             id: string;
             /** Title */
             title: string;
+        };
+        /**
+         * InterviewTranscriptRead
+         * @description Full ordered transcript of a session for teacher remediation review.
+         */
+        InterviewTranscriptRead: {
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+            /**
+             * Turns
+             * @default []
+             */
+            turns: components["schemas"]["InterviewTranscriptTurn"][];
+        };
+        /**
+         * InterviewTranscriptTurn
+         * @description One question/answer turn in a teacher-facing transcript view.
+         */
+        InterviewTranscriptTurn: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "ai" | "system";
+            /** Question Prompt */
+            question_prompt?: string | null;
+            /** Content Text */
+            content_text?: string | null;
+            /**
+             * Has Audio
+             * @default false
+             */
+            has_audio: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** InvitationCodeAuthoring */
         InvitationCodeAuthoring: {
@@ -9539,6 +9799,7 @@ export type SchemaCourseStats = components['schemas']['CourseStats'];
 export type SchemaCourseStatusCount = components['schemas']['CourseStatusCount'];
 export type SchemaCourseUpdate = components['schemas']['CourseUpdate'];
 export type SchemaCoverageOptions = components['schemas']['CoverageOptions'];
+export type SchemaDataChangeOut = components['schemas']['DataChangeOut'];
 export type SchemaDeepHealthOut = components['schemas']['DeepHealthOut'];
 export type SchemaDifficultCardRead = components['schemas']['DifficultCardRead'];
 export type SchemaDisableUserOut = components['schemas']['DisableUserOut'];
@@ -9563,6 +9824,7 @@ export type SchemaInterviewConfigAuthoring = components['schemas']['InterviewCon
 export type SchemaInterviewConfigCreate = components['schemas']['InterviewConfigCreate'];
 export type SchemaInterviewConfigPublic = components['schemas']['InterviewConfigPublic'];
 export type SchemaInterviewConfigUpdate = components['schemas']['InterviewConfigUpdate'];
+export type SchemaInterviewForAuthoringPublic = components['schemas']['InterviewForAuthoringPublic'];
 export type SchemaInterviewForTakingPublic = components['schemas']['InterviewForTakingPublic'];
 export type SchemaInterviewGenerationRequest = components['schemas']['InterviewGenerationRequest'];
 export type SchemaInterviewGenerationRunPublic = components['schemas']['InterviewGenerationRunPublic'];
@@ -9577,9 +9839,12 @@ export type SchemaInterviewSessionFinishResponse = components['schemas']['Interv
 export type SchemaInterviewSessionPublic = components['schemas']['InterviewSessionPublic'];
 export type SchemaInterviewSessionStartRequest = components['schemas']['InterviewSessionStartRequest'];
 export type SchemaInterviewSessionStartResponse = components['schemas']['InterviewSessionStartResponse'];
+export type SchemaInterviewSessionSummary = components['schemas']['InterviewSessionSummary'];
 export type SchemaInterviewSubmitAnswerRequest = components['schemas']['InterviewSubmitAnswerRequest'];
 export type SchemaInterviewSubmitAnswerResponse = components['schemas']['InterviewSubmitAnswerResponse'];
 export type SchemaInterviewSummaryPublic = components['schemas']['InterviewSummaryPublic'];
+export type SchemaInterviewTranscriptRead = components['schemas']['InterviewTranscriptRead'];
+export type SchemaInterviewTranscriptTurn = components['schemas']['InterviewTranscriptTurn'];
 export type SchemaInvitationCodeAuthoring = components['schemas']['InvitationCodeAuthoring'];
 export type SchemaInvitationCodeCreate = components['schemas']['InvitationCodeCreate'];
 export type SchemaInvitationCodePatch = components['schemas']['InvitationCodePatch'];
@@ -14255,7 +14520,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["InterviewConfigAuthoring"];
+                    "application/json": components["schemas"]["InterviewForAuthoringPublic"];
                 };
             };
             /** @description Validation Error */
@@ -14334,6 +14599,68 @@ export interface operations {
         };
     };
     publish_interview_config_api_v1_teacher_interview_configs__config_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                config_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewConfigAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_interview_config_api_v1_teacher_interview_configs__config_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                config_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewConfigAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unarchive_interview_config_api_v1_teacher_interview_configs__config_id__unarchive_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -14601,6 +14928,36 @@ export interface operations {
             };
         };
     };
+    delete_outcome_api_v1_teacher_interview_configs__config_id__outcomes__outcome_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                config_id: string;
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_outcome_api_v1_teacher_interview_configs__config_id__outcomes__outcome_id__patch: {
         parameters: {
             query?: never;
@@ -14626,6 +14983,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InterviewOutcomeAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_config_sessions_api_v1_teacher_interview_configs__config_id__sessions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                config_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewSessionSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session_transcript_api_v1_teacher_interview_sessions__session_id__transcript_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewTranscriptRead"];
                 };
             };
             /** @description Validation Error */
@@ -16149,7 +16568,7 @@ export interface operations {
     get_data_changes_api_v1_admin_audit_data_changes_get: {
         parameters: {
             query: {
-                /** @description Entity table; only 'courses' supported in T7.5. */
+                /** @description Entity table to audit. One of: courses, materials, users, role_assignments. */
                 table: string;
                 /** @description Target entity primary key. */
                 entity_id: string;
@@ -16166,9 +16585,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["DataChangeOut"];
                 };
             };
             /** @description Validation Error */

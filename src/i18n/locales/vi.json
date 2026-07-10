@@ -731,10 +731,11 @@
   "admin": {
     "audit": {
       "title": "Nhật ký kiểm toán",
-      "subtitle": "Bản ghi bất biến về thay đổi vai trò và yêu cầu HTTP.",
+      "subtitle": "Bản ghi bất biến về thay đổi vai trò, thay đổi dữ liệu và yêu cầu HTTP.",
       "since_days": "N ngày gần nhất",
       "tabs": {
         "role_changes": "Thay đổi vai trò",
+        "data_changes": "Thay đổi dữ liệu",
         "http": "Yêu cầu HTTP"
       },
       "cols": {
@@ -748,14 +749,49 @@
         "path": "Đường dẫn",
         "code": "Mã",
         "latency": "Độ trễ",
-        "ip": "IP"
+        "ip": "IP",
+        "field": "Trường",
+        "value": "Giá trị"
       },
       "system": "hệ thống",
       "active": "Đang hiệu lực",
       "revoked": "Đã thu hồi",
       "empty": "Không có bản ghi kiểm toán trong khoảng thời gian này.",
       "load_failed": "Không thể tải bản ghi kiểm toán. Bạn có thể không có quyền hoặc dịch vụ không khả dụng.",
-      "path_filter_placeholder": "Lọc theo tiền tố đường dẫn, ví dụ /api/v1/admin"
+      "path_filter_placeholder": "Lọc theo tiền tố đường dẫn, ví dụ /api/v1/admin",
+      "data_changes": {
+        "table_label": "Loại thực thể",
+        "entity_id_label": "ID thực thể",
+        "entity_id_placeholder": "Dán UUID và nhấn Enter",
+        "lookup": "Tra cứu",
+        "hint": "Nhập UUID của một thực thể để xem ai đã tạo, cập nhật gần nhất hoặc xóa nó.",
+        "not_found": "Không tìm thấy bản ghi cho ID này trong loại thực thể đã chọn.",
+        "invalid_id": "Đây không phải là UUID hợp lệ.",
+        "tables": {
+          "courses": "Khóa học",
+          "materials": "Tài liệu",
+          "users": "Người dùng",
+          "role_assignments": "Phân công vai trò"
+        },
+        "fields": {
+          "entity_id": "ID thực thể",
+          "title": "Tiêu đề",
+          "status": "Trạng thái",
+          "organization_id": "Tổ chức",
+          "created_by": "Tạo bởi",
+          "updated_by": "Cập nhật bởi",
+          "deleted_by": "Xóa bởi",
+          "created_at": "Tạo lúc",
+          "updated_at": "Cập nhật lúc",
+          "deleted_at": "Xóa lúc",
+          "slug": "Slug",
+          "material_type": "Loại tài liệu",
+          "lesson_id": "Bài học",
+          "primary_email": "Email",
+          "scope_kind": "Phạm vi",
+          "subject_user_id": "Người dùng liên quan"
+        }
+      }
     },
     "health": {
       "title": "Trạng thái hệ thống",

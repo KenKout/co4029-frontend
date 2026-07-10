@@ -741,10 +741,11 @@
   "admin": {
     "audit": {
       "title": "Audit logs",
-      "subtitle": "Immutable record of role changes and HTTP requests.",
+      "subtitle": "Immutable record of role changes, data changes, and HTTP requests.",
       "since_days": "Last N days",
       "tabs": {
         "role_changes": "Role changes",
+        "data_changes": "Data changes",
         "http": "HTTP requests"
       },
       "cols": {
@@ -758,14 +759,49 @@
         "path": "Path",
         "code": "Code",
         "latency": "Latency",
-        "ip": "IP"
+        "ip": "IP",
+        "field": "Field",
+        "value": "Value"
       },
       "system": "system",
       "active": "Active",
       "revoked": "Revoked",
       "empty": "No audit entries in this window.",
       "load_failed": "Could not load audit entries. You may not have access, or the service is unavailable.",
-      "path_filter_placeholder": "Filter by path prefix, e.g. /api/v1/admin"
+      "path_filter_placeholder": "Filter by path prefix, e.g. /api/v1/admin",
+      "data_changes": {
+        "table_label": "Entity type",
+        "entity_id_label": "Entity ID",
+        "entity_id_placeholder": "Paste a UUID and press Enter",
+        "lookup": "Look up",
+        "hint": "Enter an entity's UUID to see who created, last updated, or deleted it.",
+        "not_found": "No record found for that ID in the selected entity type.",
+        "invalid_id": "That doesn't look like a valid UUID.",
+        "tables": {
+          "courses": "Course",
+          "materials": "Material",
+          "users": "User",
+          "role_assignments": "Role assignment"
+        },
+        "fields": {
+          "entity_id": "Entity ID",
+          "title": "Title",
+          "status": "Status",
+          "organization_id": "Organization",
+          "created_by": "Created by",
+          "updated_by": "Updated by",
+          "deleted_by": "Deleted by",
+          "created_at": "Created at",
+          "updated_at": "Updated at",
+          "deleted_at": "Deleted at",
+          "slug": "Slug",
+          "material_type": "Material type",
+          "lesson_id": "Lesson",
+          "primary_email": "Email",
+          "scope_kind": "Scope",
+          "subject_user_id": "Subject user"
+        }
+      }
     },
     "health": {
       "title": "System status",
