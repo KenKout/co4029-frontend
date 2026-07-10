@@ -6,11 +6,14 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { clearAuthSession } from "@/lib/auth";
 import SideNavBar from "./SideNavBar";
 import ContentTopBar from "./ContentTopBar";
-import { type NavItem } from "@/lib/navigation";
+import { type NavGroup } from "@/lib/navigation";
+
+type SidebarRole = "student" | "teacher" | "admin";
 
 interface AppShellProps {
   children: React.ReactNode;
-  navItems: NavItem[];
+  navGroups: NavGroup[];
+  role: SidebarRole;
 }
 
 // If the auth check stalls (backend unreachable, network drop, etc.) we
@@ -18,7 +21,7 @@ interface AppShellProps {
 // leaving them on the "Checking your session..." spinner forever.
 const SESSION_CHECK_TIMEOUT_MS = 8_000;
 
-export default function AppShell({ children, navItems }: AppShellProps) {
+export default function AppShell({ children, navGroups, role }: AppShellProps) {
   const { status, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 768);
   const [stalled, setStalled] = useState(false);
@@ -92,7 +95,8 @@ export default function AppShell({ children, navItems }: AppShellProps) {
   return (
     <div className="min-h-screen bg-m3-surface">
       <SideNavBar
-        navItems={navItems}
+        navGroups={navGroups}
+        role={role}
         collapsed={collapsed}
         onToggle={() => setCollapsed((c) => !c)}
       />

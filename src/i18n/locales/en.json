@@ -159,6 +159,36 @@
       "regen_failed": "Couldn't regenerate recovery codes."
     }
   },
+  "teacher_dashboard": {
+    "title": "Teacher Dashboard",
+    "subtitle": "Manage your courses, materials, and AI generation.",
+    "new_course": "New Course",
+    "stats": {
+      "total_courses": "Total Courses",
+      "published": "Published",
+      "drafts": "Drafts",
+      "ai_enabled": "AI Enabled"
+    },
+    "your_courses": {
+      "title": "Your Courses",
+      "subtitle": "Click to manage modules, lessons, and materials",
+      "view_all": "View all",
+      "no_courses_yet": "No courses yet",
+      "create_first": "Create your first course to get started.",
+      "create_course": "Create Course",
+      "manage": "Manage"
+    },
+    "status": {
+      "published": "Published",
+      "draft": "Draft",
+      "archived": "Archived"
+    },
+    "level": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    }
+  },
   "teacher_courses_list": {
     "title": "My courses",
     "n_courses": "{{count}} course",
@@ -2146,5 +2176,15 @@
     "confirm": "Sign out",
     "confirming": "Signing out…",
     "cancel": "Cancel"
+  },
+   "nav_groups": {
+   "learning": "Learning",
+   "my_journey": "My Journey",
+   "overview": "Overview",
+   "content": "Content",
+   "pathways": "Pathways",
+   "analytics": "Analytics",
+   "management": "Management",
+   "system": "System"
   }
 }

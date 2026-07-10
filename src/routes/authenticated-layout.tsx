@@ -6,9 +6,9 @@ import AppShell from "@/components/layout/AppShell";
 import { DesktopOnlyBanner } from "@/components/ui/desktop-only-banner";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import {
-  adminNavItems,
-  studentNavItems,
-  teacherNavItems,
+  adminNavGroups,
+  studentNavGroups,
+  teacherNavGroups,
 } from "@/lib/navigation";
 
 const DESKTOP_FIRST_PREFIXES = [
@@ -67,12 +67,19 @@ export default function AuthenticatedLayout() {
   // Pick nav items based on permission, not just URL — a student who
   // somehow lands on /admin/* should see the student sidebar while the
   // redirect is in flight.
-  const navItems =
+  const navGroups =
     isAllowed && onAdminPath
-      ? adminNavItems
+      ? adminNavGroups
       : isAllowed && onTeacherPath
-        ? teacherNavItems
-        : studentNavItems;
+        ? teacherNavGroups
+        : studentNavGroups;
+
+  const role =
+    isAllowed && onAdminPath
+      ? ("admin" as const)
+      : isAllowed && onTeacherPath
+        ? ("teacher" as const)
+        : ("student" as const);
 
   const showDesktopBanner = DESKTOP_FIRST_PREFIXES.some((p) =>
     location.pathname.startsWith(p),
@@ -81,7 +88,7 @@ export default function AuthenticatedLayout() {
   const showGuardedSpinner = needsCheck && !isAllowed;
 
   return (
-    <AppShell navItems={navItems}>
+    <AppShell navGroups={navGroups} role={role}>
       {showDesktopBanner ? <DesktopOnlyBanner /> : null}
       {showGuardedSpinner ? (
         <div className="flex min-h-[40vh] items-center justify-center">

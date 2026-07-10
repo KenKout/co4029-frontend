@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { BookOpen, Users, FileText, Sparkles, Plus, ArrowRight, CheckCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function TeacherDashboard() {
+  const { t } = useTranslation();
   const { data: courses = [], isLoading } = useTeacherCourses();
 
   const published = courses.filter((c) => c.status === "published").length;
@@ -24,36 +26,36 @@ export default function TeacherDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-headline font-bold text-m3-on-surface">Teacher Dashboard</h1>
+          <h1 className="text-2xl font-headline font-bold text-m3-on-surface">{t("teacher_dashboard.title")}</h1>
           <p className="text-sm text-m3-on-surface-variant mt-1">
-            Manage your courses, materials, and AI generation.
+            {t("teacher_dashboard.subtitle")}
           </p>
         </div>
         <Link to="/teacher/courses/new">
           <Button size="sm" className="gap-2">
             <Plus className="h-4 w-4" />
-            New Course
+            {t("teacher_dashboard.new_course")}
           </Button>
         </Link>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total Courses" value={courses.length} icon={BookOpen} />
-        <StatCard label="Published" value={published} icon={CheckCircle} />
-        <StatCard label="Drafts" value={draft} icon={Clock} />
-        <StatCard label="AI Enabled" value={courses.length} icon={Sparkles} />
+        <StatCard label={t("teacher_dashboard.stats.total_courses")} value={courses.length} icon={BookOpen} />
+        <StatCard label={t("teacher_dashboard.stats.published")} value={published} icon={CheckCircle} />
+        <StatCard label={t("teacher_dashboard.stats.drafts")} value={draft} icon={Clock} />
+        <StatCard label={t("teacher_dashboard.stats.ai_enabled")} value={courses.length} icon={Sparkles} />
       </div>
 
       {/* Course list */}
       <div>
         <SectionHeader
-          title="Your Courses"
-          subtitle="Click to manage modules, lessons, and materials"
+          title={t("teacher_dashboard.your_courses.title")}
+          subtitle={t("teacher_dashboard.your_courses.subtitle")}
           action={
             <Link to="/teacher/courses">
               <Button variant="ghost" size="sm" className="gap-1.5 text-xs">
-                View all <ArrowRight className="h-3.5 w-3.5" />
+                {t("teacher_dashboard.your_courses.view_all")} <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </Link>
           }
@@ -68,12 +70,12 @@ export default function TeacherDashboard() {
         ) : courses.length === 0 ? (
           <div className="mt-8 text-center text-m3-on-surface-variant">
             <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-20" />
-            <p className="text-sm font-medium">No courses yet</p>
-            <p className="text-xs mt-1">Create your first course to get started.</p>
+            <p className="text-sm font-medium">{t("teacher_dashboard.your_courses.no_courses_yet")}</p>
+            <p className="text-xs mt-1">{t("teacher_dashboard.your_courses.create_first")}</p>
             <Link to="/teacher/courses/new">
               <Button size="sm" className="mt-4 gap-2">
                 <Plus className="h-4 w-4" />
-                Create Course
+                {t("teacher_dashboard.your_courses.create_course")}
               </Button>
             </Link>
           </div>
@@ -104,13 +106,13 @@ export default function TeacherDashboard() {
                         STATUS_COLORS[course.status] ?? "bg-slate-100 text-slate-500"
                       )}
                     >
-                      {course.status}
+                      {t(`teacher_dashboard.status.${course.status}`, { defaultValue: course.status })}
                     </Badge>
                   </div>
                   <div className="mt-3 flex items-center gap-2 text-[11px] text-m3-on-surface-variant">
                     {course.level && (
                       <span className="px-1.5 py-0.5 bg-m3-surface-container rounded-md font-medium">
-                        {course.level}
+                        {t(`teacher_dashboard.level.${course.level}`, { defaultValue: course.level })}
                       </span>
                     )}
                     {course.estimated_minutes && (
@@ -120,7 +122,7 @@ export default function TeacherDashboard() {
                       </span>
                     )}
                     <span className="ml-auto text-m3-primary font-medium group-hover:underline">
-                      Manage →
+                      {t("teacher_dashboard.your_courses.manage")} &rarr;
                     </span>
                   </div>
                 </div>

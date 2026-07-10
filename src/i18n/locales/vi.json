@@ -159,6 +159,36 @@
       "regen_failed": "Không thể tạo lại mã khôi phục."
     }
   },
+  "teacher_dashboard": {
+    "title": "Bảng điều khiển Giảng viên",
+    "subtitle": "Quản lý khóa học, tài liệu và tạo AI.",
+    "new_course": "Khóa học mới",
+    "stats": {
+      "total_courses": "Tổng số khóa học",
+      "published": "Đã xuất bản",
+      "drafts": "Bản nháp",
+      "ai_enabled": "Hỗ trợ AI"
+    },
+    "your_courses": {
+      "title": "Khóa học của bạn",
+      "subtitle": "Nhấn để quản lý học phần, bài học và tài liệu",
+      "view_all": "Xem tất cả",
+      "no_courses_yet": "Chưa có khóa học nào",
+      "create_first": "Tạo khóa học đầu tiên của bạn để bắt đầu.",
+      "create_course": "Tạo khóa học",
+      "manage": "Quản lý"
+    },
+    "status": {
+      "published": "Đã xuất bản",
+      "draft": "Bản nháp",
+      "archived": "Lưu trữ"
+    },
+    "level": {
+      "beginner": "Cơ bản",
+      "intermediate": "Trung cấp",
+      "advanced": "Nâng cao"
+    }
+  },
   "teacher_courses_list": {
     "title": "Khóa học của tôi",
     "n_courses": "{{count}} khóa học",
@@ -2136,5 +2166,15 @@
     "confirm": "Đăng xuất",
     "confirming": "Đang đăng xuất…",
     "cancel": "Huỷ"
+  },
+    "nav_groups": {
+    "learning": "Học tập",
+    "my_journey": "Hành trình của tôi",
+    "overview": "Tổng quan",
+    "content": "Nội dung",
+    "pathways": "Lộ trình",
+    "analytics": "Phân tích",
+    "management": "Quản lý",
+    "system": "Hệ thống"
   }
 }
