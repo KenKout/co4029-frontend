@@ -1,18 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollText, ShieldCheck } from "lucide-react";
+import { ScrollText, ShieldCheck, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { useAuditHttp, useAuditRoleChanges } from "@/lib/api/hooks/admin";
+import { useAuditHttp, useAuditRoleChanges, useAuditDataChanges } from "@/lib/api/hooks/admin";
+import { ApiError } from "@/lib/api/client";
+import { DATA_CHANGE_TABLES, type DataChangeTable } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
-type TabKey = "role_changes" | "http";
+type TabKey = "role_changes" | "http" | "data_changes";
 
 type RoleChangeRow = NonNullable<
   ReturnType<typeof useAuditRoleChanges>["data"]
 >[number];
 type HttpAuditRow = NonNullable<ReturnType<typeof useAuditHttp>["data"]>[number];
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function daysAgoIso(days: number): string {
   const d = new Date();
@@ -54,7 +60,7 @@ export default function AdminAuditLogsPage() {
       </div>
 
       <div className="flex gap-2">
-        {(["role_changes", "http"] as TabKey[]).map((key) => (
+        {(["role_changes", "http", "data_changes"] as TabKey[]).map((key) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -72,8 +78,10 @@ export default function AdminAuditLogsPage() {
 
       {tab === "role_changes" ? (
         <RoleChangesTable sinceIso={sinceIso} />
-      ) : (
+      ) : tab === "http" ? (
         <HttpAuditTable sinceIso={sinceIso} />
+      ) : (
+        <DataChangesPanel />
       )}
     </div>
   );
@@ -252,6 +260,113 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
           emptyState={t("admin.audit.empty")}
         />
       )}
+    </div>
+  );
+}
+
+/** FR-6.7 — on-demand lookup: pick an entity type, paste its UUID, see
+ * who created / updated / deleted it. Fires only once the ID looks like
+ * a well-formed UUID, so the query doesn't hammer the endpoint per
+ * keystroke.
+ */
+function DataChangesPanel() {
+  const { t } = useTranslation();
+  const [table, setTable] = useState<DataChangeTable>("courses");
+  const [entityIdInput, setEntityIdInput] = useState("");
+  const [submittedId, setSubmittedId] = useState("");
+
+  const trimmed = entityIdInput.trim();
+  const isValidUuid = trimmed.length === 0 || UUID_RE.test(trimmed);
+
+  const { data: row, isFetching, isError, error } = useAuditDataChanges(table, submittedId);
+
+  const submit = () => {
+    if (UUID_RE.test(trimmed)) setSubmittedId(trimmed);
+  };
+
+  const fields: Array<keyof NonNullable<typeof row>> = [
+    "entity_id",
+    "title",
+    "status",
+    "organization_id",
+    "created_by",
+    "created_at",
+    "updated_by",
+    "updated_at",
+    "deleted_by",
+    "deleted_at",
+    "slug",
+    "material_type",
+    "lesson_id",
+    "primary_email",
+    "scope_kind",
+    "subject_user_id",
+  ];
+
+  const isNotFound = isError && error instanceof ApiError && error.status === 404;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant flex flex-col gap-1">
+          {t("admin.audit.data_changes.table_label")}
+          <select
+            value={table}
+            onChange={(e) => {
+              setTable(e.target.value as DataChangeTable);
+              setSubmittedId("");
+            }}
+            className="h-9 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 text-sm font-normal normal-case"
+          >
+            {DATA_CHANGE_TABLES.map((tbl) => (
+              <option key={tbl} value={tbl}>
+                {t(`admin.audit.data_changes.tables.${tbl}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant flex flex-col gap-1 flex-1 min-w-[280px]">
+          {t("admin.audit.data_changes.entity_id_label")}
+          <Input
+            value={entityIdInput}
+            onChange={(e) => setEntityIdInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submit();
+            }}
+            placeholder={t("admin.audit.data_changes.entity_id_placeholder")}
+            className="h-9 font-mono text-xs normal-case"
+          />
+        </label>
+        <Button onClick={submit} disabled={!trimmed || !isValidUuid} className="h-9 gap-2">
+          <Search className="h-4 w-4" />
+          {t("admin.audit.data_changes.lookup")}
+        </Button>
+      </div>
+
+      {!isValidUuid ? (
+        <p className="text-sm text-m3-error">{t("admin.audit.data_changes.invalid_id")}</p>
+      ) : !submittedId ? (
+        <p className="text-sm text-m3-on-surface-variant">{t("admin.audit.data_changes.hint")}</p>
+      ) : isFetching ? (
+        <p className="text-sm text-m3-on-surface-variant">…</p>
+      ) : isNotFound ? (
+        <ErrorPanel text={t("admin.audit.data_changes.not_found")} />
+      ) : isError ? (
+        <ErrorPanel text={t("admin.audit.load_failed")} />
+      ) : row ? (
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl bg-m3-surface-container-lowest ghost-border p-4">
+          {fields
+            .filter((f) => row[f] !== undefined && row[f] !== null)
+            .map((f) => (
+              <div key={f} className="flex flex-col gap-0.5">
+                <dt className="text-[11px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t(`admin.audit.data_changes.fields.${f}`)}
+                </dt>
+                <dd className="text-sm font-mono break-all">{String(row[f])}</dd>
+              </div>
+            ))}
+        </dl>
+      ) : null}
     </div>
   );
 }
