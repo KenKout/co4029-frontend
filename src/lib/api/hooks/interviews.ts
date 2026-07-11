@@ -553,10 +553,11 @@ export function useInterviewTranscript(sessionId: string | null | undefined) {
 }
 
 /**
- * GET /interview-sessions/{session_id} — read-only session detail.
+ * GET /teacher/interview-sessions/{session_id} — read-only session detail,
+ * course-scoped teacher access (require_session_authoring_access).
  *
- * The backend only exposes a single session-detail endpoint; the teacher view
- * reuses it (subject to course-scope auth on the server). Surfaced under a
+ * The student-facing GET /interview-sessions/{id} is owner-only and 403s for
+ * a teacher — this hook used to call that one by mistake. Surfaced under a
  * separate query key so teacher invalidations don't churn learner caches.
  */
 export function useTeacherInterviewSession(
@@ -566,7 +567,7 @@ export function useTeacherInterviewSession(
     queryKey: queryKeys.interviews.teacherSession(sessionId ?? ""),
     queryFn: () =>
       apiFetch<InterviewSessionPublic>(
-        `/interview-sessions/${sessionId}`,
+        `/teacher/interview-sessions/${sessionId}`,
       ),
     enabled: !!sessionId,
   });
