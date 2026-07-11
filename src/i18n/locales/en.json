@@ -505,6 +505,8 @@
   "notifications": {
     "title": "Notifications",
     "subtitle": "Course updates, quiz reminders, and interview results.",
+    "bell_aria": "Notifications",
+    "bell_aria_unread": "Notifications, {{count}} unread",
     "mark_all_read": "Mark all read",
     "mark_read": "Mark read",
     "delete": "Delete notification",

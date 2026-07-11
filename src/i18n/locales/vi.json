@@ -502,6 +502,8 @@
   "notifications": {
     "title": "Thông báo",
     "subtitle": "Cập nhật khóa học, nhắc bài kiểm tra, kết quả phỏng vấn.",
+    "bell_aria": "Thông báo",
+    "bell_aria_unread": "Thông báo, {{count}} chưa đọc",
     "mark_all_read": "Đánh dấu tất cả đã đọc",
     "mark_read": "Đánh dấu đã đọc",
     "delete": "Xoá thông báo",

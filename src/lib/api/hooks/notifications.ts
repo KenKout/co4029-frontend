@@ -52,11 +52,12 @@ export function useNotifications(limit = 20) {
   });
 }
 
-export function useUnreadCount() {
+export function useUnreadCount(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.notifications.unreadCount(),
     queryFn: () => apiFetch<{ unread: number }>("/me/notifications/unread-count"),
     staleTime: 1000 * 30,
+    enabled: options?.enabled ?? true,
   });
 }
 

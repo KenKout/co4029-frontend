@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useUnreadCount } from "@/lib/api/hooks/notifications";
 import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
 import { topNavLinks } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,8 @@ export default function TopNavBar() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const location = useLocation();
   const displayName = getAuthDisplayName(user);
+  const { data: unread } = useUnreadCount({ enabled: isAuthenticated });
+  const unreadCount = unread?.unread ?? 0;
 
   async function handleConfirmLogout() {
     if (isLoggingOut) return;
@@ -67,13 +70,25 @@ export default function TopNavBar() {
             <div className="h-10 w-28 rounded-full bg-m3-primary-fixed/60 animate-pulse" />
           ) : isAuthenticated ? (
             <>
-              <button
+              <Link
+                to="/notifications"
                 className="relative text-m3-on-surface-variant cursor-pointer hover:bg-m3-primary-fixed p-2.5 rounded-full transition-colors"
-                aria-label="Notifications"
+                aria-label={
+                  unreadCount > 0
+                    ? t("notifications.bell_aria_unread", {
+                        count: unreadCount,
+                        defaultValue: "Notifications, {{count}} unread",
+                      })
+                    : t("notifications.bell_aria", { defaultValue: "Notifications" })
+                }
               >
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-m3-secondary ring-2 ring-white" />
-              </button>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-m3-secondary px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </Link>
 
               <DropdownMenu>
                 <DropdownMenuTrigger

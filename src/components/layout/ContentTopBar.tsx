@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useUnreadCount } from "@/lib/api/hooks/notifications";
 import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
 import LanguageSwitcher from "./LanguageSwitcher";
 import SectionSwitcher from "./SectionSwitcher";
@@ -23,6 +24,8 @@ export default function ContentTopBar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const displayName = getAuthDisplayName(user);
+  const { data: unread } = useUnreadCount();
+  const unreadCount = unread?.unread ?? 0;
 
   async function handleConfirmLogout() {
     if (isLoggingOut) return;
@@ -41,13 +44,25 @@ export default function ContentTopBar() {
       <div className="flex items-center gap-2 ml-auto">
         <LanguageSwitcher />
 
-        <button
+        <Link
+          to="/notifications"
           className="relative text-text-muted cursor-pointer hover:bg-surface-muted hover:text-primary p-2.5 rounded-md transition-colors"
-          aria-label="Notifications"
+          aria-label={
+            unreadCount > 0
+              ? t("notifications.bell_aria_unread", {
+                  count: unreadCount,
+                  defaultValue: "Notifications, {{count}} unread",
+                })
+              : t("notifications.bell_aria", { defaultValue: "Notifications" })
+          }
         >
           <Bell className="h-5 w-5" />
-          <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-accent ring-2 ring-surface" />
-        </button>
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold leading-none text-white ring-2 ring-surface">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </Link>
 
         <DropdownMenu>
           <DropdownMenuTrigger
