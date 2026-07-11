@@ -16,6 +16,7 @@ import type {
   QuizAttemptReviewRead,
   QuizAttemptStart,
   QuizAttemptSubmitAnswer,
+  QuizAttemptTeacherRead,
   QuizAuthoring,
   QuizForAuthoringPublic,
   QuizForTakingPublic,
@@ -35,6 +36,33 @@ export function useStudentQuiz(quizId: string | null | undefined) {
     queryKey: queryKeys.quizzes.detail(quizId ?? ""),
     queryFn: () => apiFetch<QuizPublic>(`/quizzes/${quizId}`),
     enabled: !!quizId,
+  });
+}
+
+/** Teacher: every quiz attempt across every quiz in a course. */
+export function useCourseQuizAttempts(courseId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.quizzes.courseAttempts(courseId ?? ""),
+    queryFn: () =>
+      apiFetch<QuizAttemptTeacherRead[]>(
+        `/teacher/courses/${courseId}/quiz-attempts`,
+      ),
+    enabled: !!courseId,
+  });
+}
+
+/** Teacher: one student's quiz attempts across a course's quizzes. */
+export function useStudentQuizAttempts(
+  courseId: string | null | undefined,
+  studentId: string | null | undefined,
+) {
+  return useQuery({
+    queryKey: queryKeys.quizzes.studentAttempts(courseId ?? "", studentId ?? ""),
+    queryFn: () =>
+      apiFetch<QuizAttemptTeacherRead[]>(
+        `/teacher/courses/${courseId}/students/${studentId}/quiz-attempts`,
+      ),
+    enabled: !!courseId && !!studentId,
   });
 }
 

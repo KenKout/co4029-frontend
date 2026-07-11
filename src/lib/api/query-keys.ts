@@ -185,6 +185,10 @@ export const queryKeys = {
         excludeQuizId?: string;
       },
     ) => ["quizzes", "bank", courseId, filters ?? {}] as const,
+    courseAttempts: (courseId: string) =>
+      ["quizzes", "course-attempts", courseId] as const,
+    studentAttempts: (courseId: string, studentId: string) =>
+      ["quizzes", "student-attempts", courseId, studentId] as const,
   },
 
   interviews: {
@@ -207,6 +211,10 @@ export const queryKeys = {
       ["interviews", "config-sessions", configId] as const,
     transcript: (sessionId: string) =>
       ["interviews", "transcript", sessionId] as const,
+    courseSessions: (courseId: string) =>
+      ["interviews", "course-sessions", courseId] as const,
+    studentSessions: (courseId: string, studentId: string) =>
+      ["interviews", "student-sessions", courseId, studentId] as const,
   },
 
   enrollments: {

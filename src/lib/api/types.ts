@@ -146,6 +146,9 @@ export interface InterviewSessionSummary {
   ended_at: string | null;
 }
 
+export type InterviewSessionTeacherRead = Schemas["InterviewSessionTeacherRead"];
+export type QuizAttemptTeacherRead = Schemas["QuizAttemptTeacherRead"];
+
 export interface InterviewTranscriptTurn {
   role: "user" | "ai" | "system";
   question_prompt: string | null;

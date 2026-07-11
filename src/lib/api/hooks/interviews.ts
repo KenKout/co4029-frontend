@@ -22,6 +22,7 @@ import type {
   InterviewSessionStartRequest,
   InterviewSessionStartResponse,
   InterviewSessionSummary,
+  InterviewSessionTeacherRead,
   InterviewSubmitAnswerRequest,
   InterviewSubmitAnswerResponse,
   InterviewTranscriptRead,
@@ -534,6 +535,39 @@ export function useInterviewSessionsForConfig(
         `/teacher/interview-configs/${configId}/sessions`,
       ),
     enabled: !!configId,
+  });
+}
+
+/**
+ * GET /teacher/courses/{course_id}/interview-sessions — every interview
+ * session (any student, any config) in a course. Course-wide Assessments tab.
+ */
+export function useCourseInterviewSessions(courseId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.interviews.courseSessions(courseId ?? ""),
+    queryFn: () =>
+      apiFetch<InterviewSessionTeacherRead[]>(
+        `/teacher/courses/${courseId}/interview-sessions`,
+      ),
+    enabled: !!courseId,
+  });
+}
+
+/**
+ * GET /teacher/courses/{course_id}/students/{student_id}/interview-sessions —
+ * one student's sessions across a course's interview configs.
+ */
+export function useStudentInterviewSessions(
+  courseId: string | null | undefined,
+  studentId: string | null | undefined,
+) {
+  return useQuery({
+    queryKey: queryKeys.interviews.studentSessions(courseId ?? "", studentId ?? ""),
+    queryFn: () =>
+      apiFetch<InterviewSessionTeacherRead[]>(
+        `/teacher/courses/${courseId}/students/${studentId}/interview-sessions`,
+      ),
+    enabled: !!courseId && !!studentId,
   });
 }
 

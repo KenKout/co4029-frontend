@@ -1,16 +1,19 @@
 import { useState } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft, ArrowRight, Mail, Calendar, Clock, TrendingUp,
   AlertTriangle, UserCheck, UserMinus, Loader2, CheckCircle2,
-  ChevronRight,
+  ChevronRight, ClipboardList, MessageSquare, XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { GradientProgress } from "@/components/ui/gradient-progress";
 import { useTeacherCourseById, useTeacherCourseRoster } from "@/lib/api/hooks/teacher-courses";
 import { useUpdateEnrollment } from "@/lib/api/hooks/admin";
+import { useStudentQuizAttempts } from "@/lib/api/hooks/quizzes";
+import { useStudentInterviewSessions } from "@/lib/api/hooks/interviews";
+import { QuizAttemptsTable, InterviewSessionsTable } from "@/routes/teacher/_components/assessment-tables";
 import { cn } from "@/lib/utils";
 
 /* ── Helpers ── */
@@ -70,8 +73,13 @@ export default function CourseStudentDetailPage() {
   const { t } = useTranslation();
   const { courseId, studentId } = useParams({ strict: false }) as { courseId: string; studentId: string };
 
+  const navigate = useNavigate();
   const { data: course } = useTeacherCourseById(courseId);
   const { data: roster, isLoading } = useTeacherCourseRoster(courseId);
+  const { data: quizAttempts, isLoading: quizAttemptsLoading } =
+    useStudentQuizAttempts(courseId, studentId);
+  const { data: interviewSessions, isLoading: interviewSessionsLoading } =
+    useStudentInterviewSessions(courseId, studentId);
 
   const student = roster?.students.find((s) => s.student_id === studentId);
   const updateEnrollment = useUpdateEnrollment(student?.enrollment_id ?? "", courseId);
@@ -210,6 +218,44 @@ export default function CourseStudentDetailPage() {
                   : `${Math.round(student.progress_percent)}% of course content completed.`}
               </p>
             </div>
+          </section>
+
+          {/* Quiz attempts */}
+          <section className="bg-m3-surface-container-lowest rounded-xl p-6 ghost-border shadow-editorial space-y-4">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-m3-secondary" />
+              <h2 className="font-headline font-bold text-lg text-m3-on-surface">Quiz Attempts</h2>
+            </div>
+            <QuizAttemptsTable
+              attempts={quizAttempts ?? []}
+              loading={quizAttemptsLoading}
+              showStudentColumn={false}
+              onRowClick={(a) =>
+                void navigate({
+                  to: "/teacher/courses/$courseId/quizzes/$quizId",
+                  params: { courseId, quizId: a.quiz_id },
+                })
+              }
+            />
+          </section>
+
+          {/* Interview attempts */}
+          <section className="bg-m3-surface-container-lowest rounded-xl p-6 ghost-border shadow-editorial space-y-4">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-m3-secondary" />
+              <h2 className="font-headline font-bold text-lg text-m3-on-surface">Interview Attempts</h2>
+            </div>
+            <InterviewSessionsTable
+              sessions={interviewSessions ?? []}
+              loading={interviewSessionsLoading}
+              showStudentColumn={false}
+              onRowClick={(s) =>
+                void navigate({
+                  to: "/teacher/interview-sessions/$sessionId/gap-report",
+                  params: { sessionId: s.session_id },
+                })
+              }
+            />
           </section>
 
           {/* Enrollment timeline */}

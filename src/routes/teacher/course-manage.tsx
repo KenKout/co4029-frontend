@@ -5,7 +5,7 @@ import {
   ArrowLeft, Plus, ChevronDown, ChevronRight,
   Video, BookOpen, GripVertical, HelpCircle, Mic,
   Pencil, Loader2, ArrowRight, Check, Users, UserPlus, Activity,
-  Settings, Save, ExternalLink, Brain,
+  Settings, Save, ExternalLink, Brain, ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -756,6 +756,12 @@ export default function CourseManagePage() {
           <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
             <Activity className="h-4 w-4 text-m3-secondary" />
             <span className="hidden sm:inline">Progress</span>
+          </Button>
+        </Link>
+        <Link to="/teacher/courses/$courseId/assessments" params={{ courseId }}>
+          <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+            <ClipboardList className="h-4 w-4 text-m3-secondary" />
+            <span className="hidden sm:inline">Assessments</span>
           </Button>
         </Link>
         <Link to="/teacher/courses/$courseId/sr-cohort" params={{ courseId }}>

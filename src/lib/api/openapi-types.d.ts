@@ -2152,6 +2152,50 @@ export interface paths {
         patch: operations["update_quiz_api_v1_teacher_quizzes__quiz_id__patch"];
         trace?: never;
     };
+    "/api/v1/teacher/courses/{course_id}/quiz-attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Course Quiz Attempts
+         * @description Every quiz attempt (any student, any quiz) in this course.
+         *
+         *     Powers the teacher's course-wide "Assessments" tab.
+         */
+        get: operations["list_course_quiz_attempts_api_v1_teacher_courses__course_id__quiz_attempts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/{course_id}/students/{student_id}/quiz-attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Student Quiz Attempts
+         * @description Every quiz attempt by one student across this course's quizzes.
+         *
+         *     Powers the teacher's per-student profile page.
+         */
+        get: operations["list_student_quiz_attempts_api_v1_teacher_courses__course_id__students__student_id__quiz_attempts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teacher/quizzes/{quiz_id}/publish": {
         parameters: {
             query?: never;
@@ -2555,6 +2599,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teacher/courses/{course_id}/interview-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Course Interview Sessions
+         * @description Every interview session (any student, any config) in this course.
+         *
+         *     Powers the teacher's course-wide "Assessments" tab.
+         */
+        get: operations["list_course_interview_sessions_api_v1_teacher_courses__course_id__interview_sessions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/{course_id}/students/{student_id}/interview-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Student Interview Sessions
+         * @description Every interview session by one student across this course's configs.
+         *
+         *     Powers the teacher's per-student profile page.
+         */
+        get: operations["list_student_interview_sessions_api_v1_teacher_courses__course_id__students__student_id__interview_sessions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teacher/interview-configs/{config_id}": {
         parameters: {
             query?: never;
@@ -2758,6 +2846,31 @@ export interface paths {
          * @description Teacher's per-config attempts list (thesis p77 review surface).
          */
         get: operations["list_config_sessions_api_v1_teacher_interview_configs__config_id__sessions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/interview-sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Session Authoring
+         * @description Teacher-scoped session detail (course-owner access via
+         *     ``require_session_authoring_access``).
+         *
+         *     Mirrors the learner-side ``GET /interview-sessions/{id}`` (student-
+         *     owner-only), which teachers cannot call. The frontend gap-report page
+         *     was hitting that student endpoint and getting a 403 on every load.
+         */
+        get: operations["get_session_authoring_api_v1_teacher_interview_sessions__session_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6164,6 +6277,58 @@ export interface components {
             ended_at?: string | null;
         };
         /**
+         * InterviewSessionTeacherRead
+         * @description One row in a teacher's cross-config / cross-student sessions list.
+         *
+         *     Widens :class:`InterviewSessionSummary` with the parent config's id +
+         *     title so a single row is self-describing across multiple interview
+         *     configs in the same course. Backs the course-wide "Assessments" tab
+         *     and the per-student profile's interview-attempts section
+         *     (student-dashboard brainstorm, 2026-07-11).
+         */
+        InterviewSessionTeacherRead: {
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+            /**
+             * Interview Config Id
+             * Format: uuid
+             */
+            interview_config_id: string;
+            /** Interview Config Title */
+            interview_config_title: string;
+            /**
+             * Student Id
+             * Format: uuid
+             */
+            student_id: string;
+            /** Student Name */
+            student_name?: string | null;
+            /** Attempt Number */
+            attempt_number: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "in_progress" | "completed" | "timed_out" | "abandoned" | "failed";
+            /**
+             * Input Mode
+             * @enum {string}
+             */
+            input_mode: "voice" | "text" | "hybrid";
+            /** Pass Verdict */
+            pass_verdict?: boolean | null;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Ended At */
+            ended_at?: string | null;
+        };
+        /**
          * InterviewSubmitAnswerRequest
          * @description Body for ``POST /interviews/sessions/{id}/respond``.
          *
@@ -8385,6 +8550,56 @@ export interface components {
             idempotency_key?: string | null;
         };
         /**
+         * QuizAttemptTeacherRead
+         * @description One row in a teacher's cross-quiz / cross-student attempts list.
+         *
+         *     Teacher-only: joins in ``quiz_id`` -> title and student identity so a
+         *     single row is self-describing without extra client-side lookups.
+         *     Backs the course-wide "Assessments" tab and the per-student profile's
+         *     quiz-attempts section (student-dashboard brainstorm, 2026-07-11).
+         */
+        QuizAttemptTeacherRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Quiz Id
+             * Format: uuid
+             */
+            quiz_id: string;
+            /** Quiz Title */
+            quiz_title: string;
+            /**
+             * Student Id
+             * Format: uuid
+             */
+            student_id: string;
+            /** Student Name */
+            student_name?: string | null;
+            /** Attempt Number */
+            attempt_number: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "in_progress" | "submitted" | "graded" | "abandoned" | "expired";
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Submitted At */
+            submitted_at?: string | null;
+            /** Time Taken Seconds */
+            time_taken_seconds?: number | null;
+            /** Score Percent */
+            score_percent?: string | null;
+            /** Passed */
+            passed?: boolean | null;
+        };
+        /**
          * QuizAuthoring
          * @description Authoring projection of :class:`Quiz`.
          *
@@ -9840,6 +10055,7 @@ export type SchemaInterviewSessionPublic = components['schemas']['InterviewSessi
 export type SchemaInterviewSessionStartRequest = components['schemas']['InterviewSessionStartRequest'];
 export type SchemaInterviewSessionStartResponse = components['schemas']['InterviewSessionStartResponse'];
 export type SchemaInterviewSessionSummary = components['schemas']['InterviewSessionSummary'];
+export type SchemaInterviewSessionTeacherRead = components['schemas']['InterviewSessionTeacherRead'];
 export type SchemaInterviewSubmitAnswerRequest = components['schemas']['InterviewSubmitAnswerRequest'];
 export type SchemaInterviewSubmitAnswerResponse = components['schemas']['InterviewSubmitAnswerResponse'];
 export type SchemaInterviewSummaryPublic = components['schemas']['InterviewSummaryPublic'];
@@ -9929,6 +10145,7 @@ export type SchemaQuizAttemptReviewOption = components['schemas']['QuizAttemptRe
 export type SchemaQuizAttemptReviewQuestion = components['schemas']['QuizAttemptReviewQuestion'];
 export type SchemaQuizAttemptReviewRead = components['schemas']['QuizAttemptReviewRead'];
 export type SchemaQuizAttemptStart = components['schemas']['QuizAttemptStart'];
+export type SchemaQuizAttemptTeacherRead = components['schemas']['QuizAttemptTeacherRead'];
 export type SchemaQuizAuthoring = components['schemas']['QuizAuthoring'];
 export type SchemaQuizForAuthoringPublic = components['schemas']['QuizForAuthoringPublic'];
 export type SchemaQuizForTakingPublic = components['schemas']['QuizForTakingPublic'];
@@ -13808,6 +14025,69 @@ export interface operations {
             };
         };
     };
+    list_course_quiz_attempts_api_v1_teacher_courses__course_id__quiz_attempts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizAttemptTeacherRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_student_quiz_attempts_api_v1_teacher_courses__course_id__students__student_id__quiz_attempts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                student_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizAttemptTeacherRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     publish_quiz_api_v1_teacher_quizzes__quiz_id__publish_post: {
         parameters: {
             query?: never;
@@ -14503,6 +14783,69 @@ export interface operations {
             };
         };
     };
+    list_course_interview_sessions_api_v1_teacher_courses__course_id__interview_sessions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewSessionTeacherRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_student_interview_sessions_api_v1_teacher_courses__course_id__students__student_id__interview_sessions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                student_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewSessionTeacherRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_interview_config_api_v1_teacher_interview_configs__config_id__get: {
         parameters: {
             query?: never;
@@ -15014,6 +15357,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InterviewSessionSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session_authoring_api_v1_teacher_interview_sessions__session_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewSessionPublic"];
                 };
             };
             /** @description Validation Error */

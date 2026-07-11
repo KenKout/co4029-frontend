@@ -458,6 +458,14 @@ const teacherCourseProgressRoute = createRoute({
   ),
 });
 
+const teacherCourseAssessmentsRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/teacher/courses/$courseId/assessments",
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/course-assessments"),
+  ),
+});
+
 const teacherSrStudentDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/students/$studentId/sr",
@@ -539,6 +547,7 @@ const routeTree = rootRoute.addChildren([
     teacherSrCohortRoute,
     teacherSrAtRiskRoute,
     teacherCourseProgressRoute,
+    teacherCourseAssessmentsRoute,
     teacherSrStudentDetailRoute,
   ]),
   callbackRoute,
