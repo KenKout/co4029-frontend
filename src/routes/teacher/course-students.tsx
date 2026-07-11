@@ -23,7 +23,7 @@ const ENROLL_META: Record<string, { label: string; badge: string }> = {
   active:    { label: "Active",    badge: "bg-emerald-100 text-emerald-700" },
   completed: { label: "Completed", badge: "bg-m3-primary-fixed text-m3-primary" },
   dropped:   { label: "Dropped",   badge: "bg-slate-100 text-slate-500"        },
-  waitlist:  { label: "Waitlist",  badge: "bg-amber-100 text-amber-700"         },
+  waitlisted: { label: "Waitlist", badge: "bg-amber-100 text-amber-700"         },
 };
 
 type StatusFilter = "all" | "active" | "completed" | "dropped" | "at_risk";

@@ -996,11 +996,14 @@ export interface paths {
         };
         /**
          * Get Authoring Course Roster
-         * @description Roster of enrolled students for the teacher's course view.
+         * @description Roster of enrolled students for the teacher's "Students" page.
          *
-         *     Same response shape as ``GET /dept/courses/{id}/roster`` (HOD-scope)
-         *     but gated on ``course.update`` so the course owner / assigned teacher
-         *     can read their own roster without HOD privileges.
+         *     Unlike ``GET /dept/courses/{id}/roster`` (HOD-scope, thin
+         *     ``RosterEntry`` shape), this endpoint returns the envelope +
+         *     progress/risk fields the SPA's ``RosterStudent`` type actually
+         *     expects (the SPA was previously calling this same path and silently
+         *     rendering an empty roster because the shapes didn't match — see
+         *     ``queries/sql/roster_with_progress.sql``).
          */
         get: operations["get_authoring_course_roster_api_v1_teacher_courses__course_id__roster_get"];
         put?: never;
@@ -4975,6 +4978,19 @@ export interface components {
             outcomes: components["schemas"]["CourseLearningOutcomePublic"][];
         };
         /**
+         * CourseRosterRead
+         * @description Envelope for the teacher "Students" page roster response.
+         */
+        CourseRosterRead: {
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Students */
+            students: components["schemas"]["RosterStudentRead"][];
+        };
+        /**
          * CourseStats
          * @description Org-wide aggregate counts for the admin dashboard.
          */
@@ -5217,6 +5233,10 @@ export interface components {
             created_by?: string | null;
             /** Updated By */
             updated_by?: string | null;
+            /** Primary Email */
+            primary_email?: string | null;
+            /** Display Name */
+            display_name?: string | null;
         };
         /**
          * EnrollmentPatch
@@ -9369,6 +9389,51 @@ export interface components {
             /** Students */
             students: components["schemas"]["StudentProgressRow"][];
         };
+        /**
+         * RosterStudentRead
+         * @description One student row for the teacher "Students" page.
+         *
+         *     Wider than :class:`RosterEntry` — adds ``progress_percent`` /
+         *     ``at_risk_level`` / ``last_activity_at`` computed from
+         *     ``lesson_progress`` (same aggregation the Progress page uses, see
+         *     ``queries/sql/roster_with_progress.sql``), and renames ``status`` to
+         *     ``enrollment_status`` to match the SPA's ``RosterStudent`` type.
+         */
+        RosterStudentRead: {
+            /**
+             * Enrollment Id
+             * Format: uuid
+             */
+            enrollment_id: string;
+            /**
+             * Student Id
+             * Format: uuid
+             */
+            student_id: string;
+            /** Display Name */
+            display_name?: string | null;
+            /** Primary Email */
+            primary_email: string;
+            /** Enrollment Status */
+            enrollment_status: string;
+            /**
+             * Enrolled At
+             * Format: date-time
+             */
+            enrolled_at: string;
+            /** Completed At */
+            completed_at?: string | null;
+            /** Dropped At */
+            dropped_at?: string | null;
+            /** Progress Percent */
+            progress_percent: number;
+            /** At Risk Level */
+            at_risk_level: string;
+            /** Last Activity At */
+            last_activity_at?: string | null;
+            /** Final Grade */
+            final_grade?: string | null;
+        };
         /** SlugAvailability */
         SlugAvailability: {
             /** Available */
@@ -10010,6 +10075,7 @@ export type SchemaCoursePage = components['schemas']['CoursePage'];
 export type SchemaCourseProcessingAudit = components['schemas']['CourseProcessingAudit'];
 export type SchemaCourseProgressSummary = components['schemas']['CourseProgressSummary'];
 export type SchemaCoursePublic = components['schemas']['CoursePublic'];
+export type SchemaCourseRosterRead = components['schemas']['CourseRosterRead'];
 export type SchemaCourseStats = components['schemas']['CourseStats'];
 export type SchemaCourseStatusCount = components['schemas']['CourseStatusCount'];
 export type SchemaCourseUpdate = components['schemas']['CourseUpdate'];
@@ -10170,6 +10236,7 @@ export type SchemaRoleRead = components['schemas']['RoleRead'];
 export type SchemaRoleWithPermissionsRead = components['schemas']['RoleWithPermissionsRead'];
 export type SchemaRosterEntry = components['schemas']['RosterEntry'];
 export type SchemaRosterProgressRead = components['schemas']['RosterProgressRead'];
+export type SchemaRosterStudentRead = components['schemas']['RosterStudentRead'];
 export type SchemaSlugAvailability = components['schemas']['SlugAvailability'];
 export type SchemaStageBreakdown = components['schemas']['StageBreakdown'];
 export type SchemaStreamUrlResponse = components['schemas']['StreamUrlResponse'];
@@ -12106,7 +12173,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RosterEntry"][];
+                    "application/json": components["schemas"]["CourseRosterRead"];
                 };
             };
             /** @description Validation Error */
