@@ -1,4 +1,4 @@
-import { Link, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, FileText, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -46,10 +46,35 @@ function formatDate(value: string): string {
 
 export default function InterviewGapReportPage() {
   const { t } = useTranslation();
+  const router = useRouter();
+  const navigate = useNavigate();
   const { sessionId } = useParams({ strict: false }) as { sessionId: string };
   const { data: report, isLoading, isError, error } =
     useTeacherGapReport(sessionId);
   const { data: session } = useTeacherInterviewSession(sessionId);
+
+  const configId = session?.interview_config_id;
+  const courseId = report?.course_id;
+
+  // Prefer real browser back (so a teacher who navigated here from the
+  // interview-config page lands back on it, scroll position and all).
+  // Direct deep-links / refreshes have no useful history entry, so fall
+  // back to the interview-config page itself when we know its ids, and
+  // only drop all the way to the course list when we don't.
+  function goBack() {
+    if (window.history.length > 1) {
+      router.history.back();
+      return;
+    }
+    if (courseId && configId) {
+      void navigate({
+        to: "/teacher/courses/$courseId/interview-configs/$configId",
+        params: { courseId, configId },
+      });
+      return;
+    }
+    void navigate({ to: "/teacher/courses" });
+  }
 
   if (isLoading) {
     return (
@@ -78,19 +103,17 @@ export default function InterviewGapReportPage() {
               )}
           </p>
         </div>
-        <Link to="/teacher/courses" className="inline-flex">
-          <Button variant="outline" className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            {t("common.back")}
-          </Button>
-        </Link>
+        <Button variant="outline" className="gap-2" onClick={goBack}>
+          <ArrowLeft className="h-4 w-4" />
+          {t("common.back")}
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-6 pb-12 max-w-[1100px] mx-auto">
-      <Header report={report} session={session ?? null} />
+      <Header report={report} session={session ?? null} onBack={goBack} />
 
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-7 space-y-4">
@@ -165,24 +188,25 @@ function TranscriptCard({ sessionId }: { sessionId: string }) {
 function Header({
   report,
   session,
+  onBack,
 }: {
   report: GapReportAuthoringRead;
   session: InterviewSessionPublic | null;
+  onBack: () => void;
 }) {
   const { t } = useTranslation();
   const configId = session?.interview_config_id;
   return (
     <div className="flex items-start gap-3">
-      <Link to="/teacher/courses">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 mt-1 shrink-0"
-          title={t("common.back")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-      </Link>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 mt-1 shrink-0"
+        title={t("common.back")}
+        onClick={onBack}
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </Button>
 
       <div className="space-y-1.5">
         <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
