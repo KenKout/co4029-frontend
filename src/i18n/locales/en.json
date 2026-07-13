@@ -1040,18 +1040,56 @@
         "period": "Period"
       },
       "sections": {
+        "trend": "Cost trend",
         "by_role": "Cost by role",
         "by_stage": "Cost by pipeline stage",
         "top_users": "Top spenders",
         "top_pipelines": "Top pipelines",
-        "recent_calls": "AI calls"
+        "recent_calls": "AI calls",
+        "pricing": "Model pricing"
       },
       "empty": {
+        "trend": "No cost data for this period yet.",
         "by_role": "No cost data by role yet.",
         "by_stage": "No cost data by stage yet.",
         "users": "No users have generated AI costs yet.",
         "pipelines": "No pipelines in this period yet.",
-        "recent": "No recent AI calls."
+        "recent": "No recent AI calls.",
+        "pricing": "No model pricing configured yet."
+      },
+      "trend_legend": {
+        "cost": "Cost (USD)",
+        "tokens": "Tokens"
+      },
+      "pricing": {
+        "subtitle": "Configure per-model USD rates used to estimate call cost. Changes apply to new calls within a few seconds.",
+        "add": "Add model",
+        "edit": "Edit pricing",
+        "add_title": "Add model pricing",
+        "edit_title": "Edit model pricing",
+        "delete_title": "Delete model pricing?",
+        "delete_description": "This removes the rate for \"{{model}}\". New calls for this model will record no cost until a rate is added again.",
+        "delete_confirm": "Delete",
+        "save": "Save",
+        "cancel": "Cancel",
+        "load_failed": "Couldn't load model pricing.",
+        "save_failed": "Couldn't save pricing.",
+        "delete_failed": "Couldn't delete pricing.",
+        "save_success": "Pricing saved.",
+        "delete_success": "Pricing deleted.",
+        "fields": {
+          "model_name": "Model name",
+          "input_rate": "Input $ / 1K tokens",
+          "output_rate": "Output $ / 1K tokens",
+          "notes": "Notes (optional)"
+        },
+        "cols": {
+          "model": "Model",
+          "input_rate": "Input / 1K",
+          "output_rate": "Output / 1K",
+          "updated": "Updated",
+          "actions": "Actions"
+        }
       },
       "cols": {
         "user": "User",

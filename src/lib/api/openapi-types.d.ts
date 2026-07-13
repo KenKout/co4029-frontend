@@ -4106,6 +4106,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/ai/pricing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Pricing */
+        get: operations["list_pricing_api_v1_admin_ai_pricing_get"];
+        put?: never;
+        /** Create Pricing */
+        post: operations["create_pricing_api_v1_admin_ai_pricing_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/ai/pricing/{pricing_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Pricing */
+        delete: operations["delete_pricing_api_v1_admin_ai_pricing__pricing_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Pricing */
+        patch: operations["update_pricing_api_v1_admin_ai_pricing__pricing_id__patch"];
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -7471,6 +7507,54 @@ export interface components {
             /** Recovery Code */
             recovery_code?: string | null;
         };
+        /** ModelPricingCreate */
+        ModelPricingCreate: {
+            /** Model Name */
+            model_name: string;
+            /** Input Usd Per 1K */
+            input_usd_per_1k: number;
+            /** Output Usd Per 1K */
+            output_usd_per_1k: number;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** ModelPricingOut */
+        ModelPricingOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Model Name */
+            model_name: string;
+            /** Input Usd Per 1K */
+            input_usd_per_1k: number;
+            /** Output Usd Per 1K */
+            output_usd_per_1k: number;
+            /** Notes */
+            notes?: string | null;
+            /** Updated By */
+            updated_by?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ModelPricingUpdate */
+        ModelPricingUpdate: {
+            /** Input Usd Per 1K */
+            input_usd_per_1k?: number | null;
+            /** Output Usd Per 1K */
+            output_usd_per_1k?: number | null;
+            /** Notes */
+            notes?: string | null;
+        };
         /** ModuleAuthoring */
         ModuleAuthoring: {
             /**
@@ -10163,6 +10247,9 @@ export type SchemaMfaRecoveryCodesResponse = components['schemas']['MfaRecoveryC
 export type SchemaMfaStatusResponse = components['schemas']['MfaStatusResponse'];
 export type SchemaMfaTotpVerifyRequest = components['schemas']['MfaTotpVerifyRequest'];
 export type SchemaMfaVerifyRequest = components['schemas']['MfaVerifyRequest'];
+export type SchemaModelPricingCreate = components['schemas']['ModelPricingCreate'];
+export type SchemaModelPricingOut = components['schemas']['ModelPricingOut'];
+export type SchemaModelPricingUpdate = components['schemas']['ModelPricingUpdate'];
 export type SchemaModuleAuthoring = components['schemas']['ModuleAuthoring'];
 export type SchemaModuleCreate = components['schemas']['ModuleCreate'];
 export type SchemaModuleItemAuthoring = components['schemas']['ModuleItemAuthoring'];
@@ -17667,6 +17754,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecentCallOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_pricing_api_v1_admin_ai_pricing_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelPricingOut"][];
+                };
+            };
+        };
+    };
+    create_pricing_api_v1_admin_ai_pricing_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModelPricingCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelPricingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_pricing_api_v1_admin_ai_pricing__pricing_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pricing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_pricing_api_v1_admin_ai_pricing__pricing_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pricing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModelPricingUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelPricingOut"];
                 };
             };
             /** @description Validation Error */

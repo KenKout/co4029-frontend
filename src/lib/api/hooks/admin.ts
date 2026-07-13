@@ -9,6 +9,7 @@ import type {
   AiCostsByUser,
   AiCostsRecentCall,
   AiCostsSummary,
+  AiModelPricing,
   ContentOut,
   CourseAuthoring,
   CourseProcessingAudit,
@@ -366,6 +367,56 @@ export function useRecentAiCalls(opts?: { limit?: number }) {
         `/admin/ai/costs/recent?limit=${limit}`,
       ),
     staleTime: 1000 * 30,
+  });
+}
+
+export function useAiModelPricing() {
+  return useQuery({
+    queryKey: queryKeys.admin.aiPricing(),
+    queryFn: () => apiFetch<AiModelPricing[]>("/admin/ai/pricing"),
+    staleTime: 1000 * 30,
+  });
+}
+
+export interface AiModelPricingInput {
+  model_name: string;
+  input_usd_per_1k: number;
+  output_usd_per_1k: number;
+  notes?: string | null;
+}
+
+export function useCreateAiModelPricing() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AiModelPricingInput) =>
+      apiPost<AiModelPricing>("/admin/ai/pricing", body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.admin.aiPricing() });
+    },
+  });
+}
+
+export function useUpdateAiModelPricing() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...body
+    }: Partial<Omit<AiModelPricingInput, "model_name">> & { id: string }) =>
+      apiPatch<AiModelPricing>(`/admin/ai/pricing/${id}`, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.admin.aiPricing() });
+    },
+  });
+}
+
+export function useDeleteAiModelPricing() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiDelete(`/admin/ai/pricing/${id}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.admin.aiPricing() });
+    },
   });
 }
 

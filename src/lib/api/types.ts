@@ -237,6 +237,7 @@ export type AiCostsStageBreakdown = Schemas["StageBreakdown"];
 export type AiCostsTimeBucket = Schemas["TimeBucket"];
 export type AiCostsByUser = Schemas["UserSpendOut"];
 export type AiCostsByPipeline = Schemas["PipelineSpendOut"];
+export type AiModelPricing = Schemas["ModelPricingOut"];
 export type AiCostsPipelineStage = Schemas["PipelineStage"];
 export type AiCostsRecentCall = Schemas["RecentCallOut"];
 export type AiCallRecord = Schemas["RecentCallOut"];

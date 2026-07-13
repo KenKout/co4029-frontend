@@ -8,11 +8,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SUPPORTED_LOCALES, type SupportedLocale } from "@/i18n";
 
-const FLAG: Record<SupportedLocale, string> = {
-  en: "EN",
-  vi: "VI",
-};
-
 export default function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
   const current = (i18n.resolvedLanguage ?? i18n.language ?? "en")
@@ -27,10 +22,9 @@ export default function LanguageSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={t("languages.switch", { defaultValue: "Language" })}
-        className="inline-flex items-center gap-1.5 px-2.5 h-9 rounded-md text-text-muted hover:bg-surface-muted hover:text-primary cursor-pointer transition-colors text-xs font-semibold uppercase tracking-wide outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        className="inline-flex items-center justify-center h-9 w-9 rounded-md text-text-muted hover:bg-surface-muted hover:text-primary cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       >
         <Globe className="h-4 w-4" />
-        <span>{FLAG[current] ?? FLAG.en}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"

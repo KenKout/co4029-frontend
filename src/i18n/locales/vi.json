@@ -1031,18 +1031,56 @@
         "period": "Khoảng thời gian"
       },
       "sections": {
+        "trend": "Xu hướng chi phí",
         "by_role": "Chi phí theo vai trò",
         "by_stage": "Chi phí theo bước xử lý",
         "top_users": "Người dùng tốn chi phí cao nhất",
         "top_pipelines": "Pipeline tốn chi phí cao nhất",
-        "recent_calls": "Lượt gọi AI"
+        "recent_calls": "Lượt gọi AI",
+        "pricing": "Cấu hình giá mô hình"
       },
       "empty": {
+        "trend": "Chưa có dữ liệu chi phí trong khoảng thời gian này.",
         "by_role": "Chưa có dữ liệu chi phí theo vai trò.",
         "by_stage": "Chưa có dữ liệu chi phí theo bước.",
         "users": "Chưa có người dùng nào phát sinh chi phí.",
         "pipelines": "Chưa có pipeline nào trong khoảng thời gian này.",
-        "recent": "Chưa có lượt gọi AI nào gần đây."
+        "recent": "Chưa có lượt gọi AI nào gần đây.",
+        "pricing": "Chưa cấu hình giá mô hình nào."
+      },
+      "trend_legend": {
+        "cost": "Chi phí (USD)",
+        "tokens": "Tokens"
+      },
+      "pricing": {
+        "subtitle": "Cấu hình giá USD theo từng mô hình để ước tính chi phí mỗi lượt gọi. Thay đổi áp dụng cho các lượt gọi mới sau vài giây.",
+        "add": "Thêm mô hình",
+        "edit": "Sửa giá",
+        "add_title": "Thêm giá mô hình",
+        "edit_title": "Sửa giá mô hình",
+        "delete_title": "Xoá giá mô hình?",
+        "delete_description": "Việc này sẽ xoá giá của \"{{model}}\". Các lượt gọi mới của mô hình này sẽ không ghi chi phí cho đến khi thêm lại giá.",
+        "delete_confirm": "Xoá",
+        "save": "Lưu",
+        "cancel": "Huỷ",
+        "load_failed": "Không thể tải cấu hình giá.",
+        "save_failed": "Không thể lưu giá.",
+        "delete_failed": "Không thể xoá giá.",
+        "save_success": "Đã lưu giá.",
+        "delete_success": "Đã xoá giá.",
+        "fields": {
+          "model_name": "Tên mô hình",
+          "input_rate": "Giá input $ / 1K tokens",
+          "output_rate": "Giá output $ / 1K tokens",
+          "notes": "Ghi chú (tùy chọn)"
+        },
+        "cols": {
+          "model": "Mô hình",
+          "input_rate": "Input / 1K",
+          "output_rate": "Output / 1K",
+          "updated": "Cập nhật",
+          "actions": "Hành động"
+        }
       },
       "cols": {
         "user": "Người dùng",

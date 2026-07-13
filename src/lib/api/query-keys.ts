@@ -109,6 +109,7 @@ export const queryKeys = {
       recent: (limit: number) =>
         ["admin", "ai-costs", "recent", limit] as const,
     },
+    aiPricing: () => ["admin", "ai-pricing"] as const,
     organizations: (
       includeDeleted?: boolean,
       orgStatus?: string,
