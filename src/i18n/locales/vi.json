@@ -32,6 +32,7 @@
     "users": "Người dùng",
     "processing": "Đang xử lý",
     "ai_costs": "Chi phí AI",
+    "organizations": "Tổ chức",
     "audit_logs": "Nhật ký kiểm toán",
     "health": "Tình trạng hệ thống",
     "settings": "Cài đặt",
@@ -1034,7 +1035,7 @@
         "by_stage": "Chi phí theo bước xử lý",
         "top_users": "Người dùng tốn chi phí cao nhất",
         "top_pipelines": "Pipeline tốn chi phí cao nhất",
-        "recent_calls": "Lượt gọi AI gần đây"
+        "recent_calls": "Lượt gọi AI"
       },
       "empty": {
         "by_role": "Chưa có dữ liệu chi phí theo vai trò.",

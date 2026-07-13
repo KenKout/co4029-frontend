@@ -1044,7 +1044,7 @@
         "by_stage": "Cost by pipeline stage",
         "top_users": "Top spenders",
         "top_pipelines": "Top pipelines",
-        "recent_calls": "Recent AI calls"
+        "recent_calls": "AI calls"
       },
       "empty": {
         "by_role": "No cost data by role yet.",
