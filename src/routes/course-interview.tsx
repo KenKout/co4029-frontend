@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -11,6 +11,8 @@ import {
   Mic,
   MicOff,
   Sparkles,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,10 @@ import type {
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { VoiceRoom } from "@/components/interview/voice-room";
+import { useSpeechDictation } from "@/lib/hooks/use-speech-dictation";
+import { type SpeechPersona } from "@/lib/hooks/use-speech-synthesis";
+import { useInterviewNarration } from "@/lib/hooks/use-interview-narration";
+import { AiTypingMessage } from "@/components/interview/ai-typing-message";
 
 interface ChatTurn {
   id: string;
@@ -76,8 +82,32 @@ function makeUserTurn(text: string, key: string): ChatTurn {
   return { id: `a-${key}`, role: "user", text };
 }
 
+/**
+ * How long to keep a closing message on screen + audible before transitioning
+ * to the evaluation screen (adaptive safeguard #6: the final AI utterance must
+ * be seen/heard, not blown away by is_finished). Scales with reading length
+ * (~15 chars/sec) plus headroom when narration is on, clamped to a sane range.
+ */
+function closingHoldMs(text: string, voiceOn: boolean): number {
+  const readMs = Math.ceil(text.length / 15) * 1000;
+  const base = Math.min(Math.max(readMs, 2000), 9000);
+  return voiceOn ? base + 1500 : base;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+/** A stable idempotency key for one answer submission (adaptive safeguard #1). */
+function newTurnKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `tk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export default function CourseInterviewPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // Route: /courses/$slug/interview/$moduleId
   // $moduleId carries the interview_config_id (set by course-learn link)
   const { slug, moduleId } = useParams({ strict: false }) as {
@@ -105,36 +135,57 @@ export default function CourseInterviewPage() {
 
   const respond = useInterviewRespond(sessionId);
   const finish = useFinishInterview(sessionId);
+  // Don't keep polling for a gap report that will never be generated once
+  // the evaluation has terminally failed (see evaluationFailed below) —
+  // the 404-retry loop would otherwise burn its full 60 attempts (~3 min)
+  // for nothing.
   const { data: gapReport, isPending: gapReportPending } = useGapReport(
-    finishResult ? sessionId : null,
+    finishResult && finishResult.status !== "failed" ? sessionId : null,
   );
 
   // The pass/fail verdict is produced by an async worker (~1-2 min) AFTER
   // /finish returns. At finish time pass_verdict is still null, so we must NOT
   // render it as a fail. Poll the session until the verdict resolves, then stop.
+  //
+  // The AI judge (LLM call) can fail outright (provider outage, malformed
+  // JSON after retries, quota exhausted, ...). The backend retries the job
+  // up to 3 times (ARQ max_tries), then stamps InterviewSession.status =
+  // 'failed' on the final attempt. Without checking for that terminal
+  // status here, this poll would keep asking for a pass_verdict that will
+  // never arrive and the student would wait forever.
   const finishVerdict = finishResult?.pass_verdict ?? null;
+  const evaluationTerminallyFailed =
+    finishResult?.status === "failed" || false;
   const { data: verdictPoll } = useInterviewSession(
-    finishResult && finishVerdict === null ? sessionId : null,
+    finishResult && finishVerdict === null && !evaluationTerminallyFailed
+      ? sessionId
+      : null,
     { refetchInterval: 3000 },
   );
   // Live verdict: prefer the polled value once it lands, else the finish value.
   const liveVerdict: boolean | null =
     (verdictPoll?.pass_verdict ?? null) ?? finishVerdict;
-  const verdictPending = !!finishResult && liveVerdict === null;
+  const evaluationFailed =
+    evaluationTerminallyFailed || verdictPoll?.status === "failed";
+  const verdictPending =
+    !!finishResult && liveVerdict === null && !evaluationFailed;
 
-  // Once the polled verdict resolves, freeze it into finishResult so the poll's
-  // `enabled` flips to false (finishVerdict is otherwise the frozen null from
-  // the /finish response and would keep the poll running forever).
+  // Once the polled verdict resolves OR the evaluation terminally fails,
+  // freeze it into finishResult so the poll's `enabled` flips to false
+  // (finishVerdict/status are otherwise the frozen values from the /finish
+  // response and would keep the poll running forever).
   useEffect(() => {
-    const resolved = verdictPoll?.pass_verdict;
-    if (resolved !== null && resolved !== undefined) {
+    if (!verdictPoll) return;
+    const resolved = verdictPoll.pass_verdict;
+    const failed = verdictPoll.status === "failed";
+    if ((resolved !== null && resolved !== undefined) || failed) {
       setFinishResult((prev) =>
-        prev && prev.pass_verdict === null
-          ? { ...prev, pass_verdict: resolved }
+        prev && prev.pass_verdict === null && prev.status !== "failed"
+          ? { ...prev, pass_verdict: resolved, status: verdictPoll.status }
           : prev,
       );
     }
-  }, [verdictPoll?.pass_verdict]);
+  }, [verdictPoll]);
 
   // Poll session status (every 2s) when voice completes to detect the
   // server-side finish. TanStack Query does not poll by default, so the
@@ -178,8 +229,68 @@ export default function CourseInterviewPage() {
     if (!config) return;
     if (config.supported_modes === "voice") setInputMode("voice");
     else if (config.supported_modes === "text") setInputMode("text");
-    else setInputMode("text");
+    else setInputMode("hybrid");
   }, [config]);
+
+  // A hybrid config runs a single text-driven session where each answer can be
+  // TYPED or SPOKEN (browser speech-to-text fills the answer, submitted via the
+  // same REST /respond path). This is distinct from the server-side LiveKit
+  // voice agent, which is only used when the student explicitly picks "voice".
+  const isHybrid = config?.supported_modes === "hybrid";
+
+  // Speech-to-text dictation for hybrid answers. Finalized chunks are appended
+  // to the current answer draft (with a separating space) so the student can
+  // dictate, then edit before sending.
+  const dictationLang = i18n.language?.startsWith("vi") ? "vi-VN" : "en-US";
+  const dictation = useSpeechDictation({
+    lang: dictationLang,
+    onResult: (finalText) =>
+      setAnswerText((prev) =>
+        prev.trim().length > 0 ? `${prev.trim()} ${finalText}` : finalText,
+      ),
+  });
+  // Stop dictation whenever the question changes or the answer is sent.
+  useEffect(() => {
+    if (dictation.listening) dictation.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestion?.id]);
+
+  // The AI "speaks" each question aloud while it types out on screen (see
+  // AiTypingMessage). Server-side TTS (same voice as the LiveKit agent) with a
+  // browser-TTS fallback. Student-toggleable so it can be silenced.
+  const [voiceOn, setVoiceOn] = useState(true);
+  const speakLang = i18n.language?.startsWith("vi") ? "vi-VN" : "en-US";
+  // Persona drives the voice selection (server-side) so a "strict" interview
+  // sounds firmer and a "supportive" one warmer. Falls back to neutral when
+  // the config has no persona set.
+  const speakPersona: SpeechPersona =
+    config?.persona === "strict" || config?.persona === "supportive"
+      ? config.persona
+      : "neutral";
+  const narration = useInterviewNarration({
+    sessionId,
+    persona: speakPersona,
+    lang: speakLang,
+  });
+  const speakIfOn = useCallback(
+    (text: string) => {
+      if (voiceOn) narration.narrate(text);
+    },
+    [voiceOn, narration],
+  );
+  // Silence any in-flight speech the moment the student mutes.
+  useEffect(() => {
+    if (!voiceOn) narration.cancel();
+  }, [voiceOn, narration]);
+
+  // Id of the most recently-added AI turn — only this one animates (types) and
+  // speaks. Earlier AI turns render their full text immediately and silently.
+  const lastAiTurnId = useMemo(() => {
+    for (let i = transcript.length - 1; i >= 0; i -= 1) {
+      if (transcript[i].role === "ai") return transcript[i].id;
+    }
+    return null;
+  }, [transcript]);
 
   function handleStartSuccess(payload: InterviewSessionStartResponse) {
     if (!payload.first_question) {
@@ -270,6 +381,7 @@ export default function CourseInterviewPage() {
 
   async function handleRespond() {
     if (!currentQuestion || !sessionId) return;
+    if (dictation.listening) dictation.stop();
     const trimmed = answerText.trim();
     if (!trimmed) {
       toast.error(t("course_interview.errors.answer_required"));
@@ -285,17 +397,44 @@ export default function CourseInterviewPage() {
         session_id: sessionId,
         session_question_id: currentQuestion.id,
         answer_text: trimmed,
+        // Idempotency key so a network retry never double-inserts the answer
+        // or re-runs the adaptive pipeline (adaptive safeguard #1). Legacy
+        // backend ignores it harmlessly.
+        turn_key: newTurnKey(),
       });
 
-      if (result.ai_followup_text) {
+      // ── Adaptive path (structured fields present) ────────────────────────
+      // On an ADVANCE the backend puts ONLY ack+transition in ai_followup_text
+      // and the question in next_question, so rendering both never doubles the
+      // question. On a NON-advance (probe/clarify/repeat/closing) the whole
+      // utterance is in ai_followup_text / ai_turn_text and next_question is
+      // null. We prefer ai_turn_text (the combined natural utterance) when the
+      // action is not an advance, else fall back to ai_followup_text.
+      const isAdvance = Boolean(result.next_question);
+      const standaloneText =
+        !isAdvance && (result.ai_turn_text || result.ai_followup_text)
+          ? result.ai_turn_text || result.ai_followup_text!
+          : result.ai_followup_text || null;
+
+      if (standaloneText) {
         setTranscript((prev) => [
           ...prev,
-          makeFollowUpTurn(result.ai_followup_text!, `${userTurnKey}-fu`),
+          makeFollowUpTurn(standaloneText, `${userTurnKey}-fu`),
         ]);
       }
 
-      if (result.is_finished) {
+      // should_finish is the adaptive signal; is_finished is the legacy one.
+      // Either means the interview is over.
+      const finished = Boolean(result.should_finish ?? result.is_finished);
+
+      if (finished) {
+        // Safeguard #6: keep the closing utterance on screen + let narration
+        // play before swapping to the evaluation screen. Never let the finish
+        // transition swallow the final AI message.
         setCurrentQuestion(null);
+        if (standaloneText) {
+          await sleep(closingHoldMs(standaloneText, voiceOn));
+        }
         await handleFinish();
         return;
       }
@@ -367,14 +506,18 @@ export default function CourseInterviewPage() {
             <div
               className={cn(
                 "w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl font-black font-headline shadow-lg",
-                verdictPending
-                  ? "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary"
-                  : liveVerdict
-                    ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
-                    : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white",
+                evaluationFailed
+                  ? "bg-gradient-to-br from-danger to-red-600 text-white"
+                  : verdictPending
+                    ? "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary"
+                    : liveVerdict
+                      ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
+                      : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white",
               )}
             >
-              {verdictPending ? (
+              {evaluationFailed ? (
+                "!"
+              ) : verdictPending ? (
                 <Loader2 className="h-10 w-10 animate-spin" />
               ) : liveVerdict ? (
                 "✓"
@@ -383,18 +526,22 @@ export default function CourseInterviewPage() {
               )}
             </div>
             <h2 className="font-headline font-extrabold text-2xl text-m3-primary mb-1">
-              {verdictPending
-                ? t("course_interview.results.evaluating")
-                : liveVerdict
-                  ? t("course_interview.results.passed")
-                  : t("course_interview.results.completed")}
+              {evaluationFailed
+                ? t("course_interview.results.evaluation_failed")
+                : verdictPending
+                  ? t("course_interview.results.evaluating")
+                  : liveVerdict
+                    ? t("course_interview.results.passed")
+                    : t("course_interview.results.completed")}
             </h2>
             <p className="text-m3-on-surface-variant text-sm mb-6">
-              {verdictPending
-                ? t("course_interview.results.evaluating_summary")
-                : liveVerdict
-                  ? t("course_interview.results.pass_summary")
-                  : t("course_interview.results.fail_summary")}
+              {evaluationFailed
+                ? t("course_interview.results.evaluation_failed_summary")
+                : verdictPending
+                  ? t("course_interview.results.evaluating_summary")
+                  : liveVerdict
+                    ? t("course_interview.results.pass_summary")
+                    : t("course_interview.results.fail_summary")}
             </p>
 
             <Link to="/courses/$slug/learn" params={{ slug }}>
@@ -405,7 +552,7 @@ export default function CourseInterviewPage() {
             </Link>
           </GlassCard>
 
-          {finishResult && !gapReport && gapReportPending && (
+          {finishResult && !gapReport && gapReportPending && !evaluationFailed && (
             <GlassCard className="p-6 text-center">
               <p className="text-sm text-m3-on-surface-variant">
                 {t("course_interview.sections.gap_report_pending")}
@@ -534,7 +681,14 @@ export default function CourseInterviewPage() {
               </div>
             </div>
 
-            {supportedModes.length > 1 && (
+            {isHybrid && (
+              <div className="flex items-center justify-center gap-2 mb-6 text-xs text-m3-on-surface-variant">
+                <Mic className="h-3.5 w-3.5 text-m3-primary" />
+                {t("course_interview.hybrid.prestart_hint")}
+              </div>
+            )}
+
+            {!isHybrid && supportedModes.length > 1 && (
               <div className="flex items-center justify-center gap-2 mb-6">
                 {supportedModes.map((mode) => (
                   <Button
@@ -576,7 +730,7 @@ export default function CourseInterviewPage() {
   // ── Text mode chat UI ──────────────────────────────────────────────────────
   return (
     <div className="min-h-[70vh] pb-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div className="flex items-center gap-3 flex-wrap">
             <Link to="/courses/$slug/learn" params={{ slug }}>
@@ -593,9 +747,40 @@ export default function CourseInterviewPage() {
               {course.title}
             </span>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-m3-surface-container text-m3-primary font-bold text-sm">
-            <Sparkles className="h-4 w-4" />
-            {t("course_interview.labels.ai_interview")}
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setVoiceOn((v) => !v)}
+              aria-pressed={voiceOn}
+              aria-label={
+                voiceOn
+                  ? t("course_interview.narration.mute")
+                  : t("course_interview.narration.unmute")
+              }
+              title={
+                voiceOn
+                  ? t("course_interview.narration.mute")
+                  : t("course_interview.narration.unmute")
+              }
+              className="rounded-xl text-m3-on-surface-variant hover:text-m3-primary gap-1.5 text-xs font-bold px-3"
+            >
+              {voiceOn ? (
+                <Volume2 className="h-4 w-4" />
+              ) : (
+                <VolumeX className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">
+                {voiceOn
+                  ? t("course_interview.narration.on")
+                  : t("course_interview.narration.off")}
+              </span>
+            </Button>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-m3-surface-container text-m3-primary font-bold text-sm">
+              <Sparkles className="h-4 w-4" />
+              {t("course_interview.labels.ai_interview")}
+            </div>
           </div>
         </div>
 
@@ -616,7 +801,7 @@ export default function CourseInterviewPage() {
               >
                 <div
                   className={cn(
-                    "rounded-xl px-5 py-4 max-w-[80%] shadow-sm",
+                    "rounded-xl px-6 py-5 max-w-[85%] shadow-sm",
                     turn.role === "ai"
                       ? "bg-surface-elev border border-m3-outline-variant/20"
                       : "bg-m3-primary text-white",
@@ -632,7 +817,22 @@ export default function CourseInterviewPage() {
                       {t("course_interview.sections.follow_up")}
                     </span>
                   )}
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{turn.text}</p>
+                  {turn.role === "ai" ? (
+                    <AiTypingMessage
+                      text={turn.text}
+                      animate={turn.id === lastAiTurnId}
+                      speak={speakIfOn}
+                      onTick={() =>
+                        transcriptEndRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                        })
+                      }
+                    />
+                  ) : (
+                    <p className="text-base leading-relaxed whitespace-pre-wrap">
+                      {turn.text}
+                    </p>
+                  )}
                 </div>
               </div>
             );
@@ -650,13 +850,49 @@ export default function CourseInterviewPage() {
             </label>
             <textarea
               id="answer"
-              value={answerText}
+              value={
+                dictation.listening && dictation.interim
+                  ? `${answerText}${answerText.trim().length > 0 ? " " : ""}${dictation.interim}`
+                  : answerText
+              }
               onChange={(e) => setAnswerText(e.target.value)}
-              rows={5}
+              rows={8}
               disabled={respond.isPending}
               placeholder={t("course_interview.placeholders.answer")}
-              className="w-full rounded-xl border border-m3-outline-variant/30 bg-surface-elev px-4 py-3 text-sm text-m3-on-surface resize-none focus:outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20"
+              className="w-full rounded-xl border border-m3-outline-variant/30 bg-surface-elev px-4 py-3 text-base text-m3-on-surface resize-y min-h-[10rem] focus:outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20"
             />
+            {isHybrid && dictation.supported && (
+              <div className="flex items-center gap-2 mt-2">
+                <Button
+                  type="button"
+                  variant={dictation.listening ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => dictation.toggle()}
+                  disabled={respond.isPending}
+                  className={cn(
+                    "rounded-xl font-bold text-xs gap-2",
+                    dictation.listening && "gradient-primary text-white animate-pulse",
+                  )}
+                >
+                  {dictation.listening ? (
+                    <Mic className="h-3.5 w-3.5" />
+                  ) : (
+                    <MicOff className="h-3.5 w-3.5" />
+                  )}
+                  {dictation.listening
+                    ? t("course_interview.hybrid.listening")
+                    : t("course_interview.hybrid.speak_answer")}
+                </Button>
+                <span className="text-[11px] text-m3-outline">
+                  {t("course_interview.hybrid.dictation_hint")}
+                </span>
+              </div>
+            )}
+            {isHybrid && !dictation.supported && (
+              <p className="text-[11px] text-m3-outline mt-2">
+                {t("course_interview.hybrid.unsupported")}
+              </p>
+            )}
             <div className="flex items-center justify-between mt-3 flex-wrap gap-3">
               <span className="text-xs text-m3-outline">
                 {t("course_interview.labels.character_count", { count: answerText.length })}

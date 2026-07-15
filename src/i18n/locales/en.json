@@ -18,6 +18,10 @@
     "breadcrumb_aria": "Breadcrumb",
     "unsaved_changes_warning": "You have unsaved changes. Leaving the page will discard them."
   },
+  "entity_select": {
+    "selected_count": "{{count}} selected",
+    "add_selected": "Add {{count}}"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "courses": "Courses",
@@ -243,36 +247,16 @@
     "continue": "Continue"
   },
   "teacher_interview_config_new": {
-    "title": "New AI interview",
-    "subtitle": "Basic config — you can fine-tune details and generate questions after creating the draft.",
+    "modal_title": "New AI interview",
+    "modal_description": "Give it a title now — you'll set persona, mode, duration, learning outcomes and generate questions on the next screen.",
     "fields": {
       "title": "Title",
-      "title_placeholder": "e.g., Data Structures module interview",
-      "module": "Module",
-      "module_placeholder": "— Select module —",
-      "no_modules": "This course has no modules yet. Add a module before creating an interview.",
-      "persona": "Persona",
-      "persona_neutral": "Neutral",
-      "persona_strict": "Strict",
-      "persona_supportive": "Supportive",
-      "modes": "Mode",
-      "mode_hybrid": "Text + voice",
-      "mode_text": "Text only",
-      "mode_voice": "Voice only",
-      "duration": "Duration (minutes)",
-      "duration_placeholder": "e.g., 30",
-      "max_attempts": "Max attempts",
-      "max_attempts_placeholder": "Leave empty = unlimited",
-      "supplementary": "Supplementary instructions (for AI question generation)",
-      "supplementary_placeholder": "e.g., Focus on real-world scenarios, avoid rote-memorization questions…",
-      "lock_quiz_ef": "Lock quiz EF advancement until passed",
-      "lock_quiz_ef_help": "Students must pass this interview before spaced repetition increases review intervals."
+      "title_placeholder": "e.g., Data Structures module interview"
     },
     "submit": "Create interview",
     "submitting": "Creating…",
     "errors": {
       "title_required": "Please enter a title",
-      "module_required": "Please select a module",
       "create_failed": "Couldn't create interview"
     },
     "success": {
@@ -281,7 +265,7 @@
   },
   "teacher_common": {
     "back_to_course": "Back to course",
-    "breadcrumb_teaching": "Teaching",
+    "breadcrumb_teaching": "My Courses",
     "breadcrumb_course": "Course",
     "lesson_fallback": "Lesson",
     "quiz_label": "Quiz",
@@ -626,7 +610,7 @@
     }
   },
   "teacher_sr_cohort": {
-    "breadcrumb_teaching": "Teaching",
+    "breadcrumb_teaching": "My Courses",
     "breadcrumb_course": "Course",
     "breadcrumb_overview": "Class overview",
     "back": "Back",
@@ -1418,7 +1402,9 @@
       "back_to_course": "Back to course",
       "unflag": "Unflag",
       "flag": "Flag",
-      "show_hint": "View hint"
+      "show_hint": "View hint",
+      "view_hint_again": "View hint again",
+      "close_hint": "Close"
     },
     "errors": {
       "rate_limited": "Too many requests, please try again later",
@@ -1449,6 +1435,19 @@
     }
   },
   "course_interview": {
+    "hybrid": {
+      "prestart_hint": "Hybrid interview — type your answers or speak them; you can mix both on any question.",
+      "speak_answer": "Speak answer",
+      "listening": "Listening… tap to stop",
+      "dictation_hint": "Your speech is transcribed into the answer box — edit before sending.",
+      "unsupported": "Voice input isn't supported in this browser — type your answer instead."
+    },
+    "narration": {
+      "on": "Voice on",
+      "off": "Voice off",
+      "mute": "Mute the AI's voice",
+      "unmute": "Let the AI read questions aloud"
+    },
     "sections": {
       "gap_report": "Gap report",
       "gap_report_pending": "Preparing your personalized gap report… this can take a minute.",
@@ -1511,7 +1510,9 @@
       "evaluating": "Evaluating your answers…",
       "evaluating_summary": "Our AI is grading your responses against the learning outcomes. This usually takes a minute — the result will appear here automatically.",
       "pass_summary": "You met enough of the learning outcomes to pass this interview.",
-      "fail_summary": "You did not meet enough learning outcomes this time. Review the material and try again."
+      "fail_summary": "You did not meet enough learning outcomes this time. Review the material and try again.",
+      "evaluation_failed": "Evaluation failed",
+      "evaluation_failed_summary": "Our AI grader hit an error while scoring your interview and couldn't produce a result after several attempts. This is not a reflection of your answers — please contact your teacher or try the interview again later."
     },
     "intro": {
       "description": "AI interview grades by module criteria. Answer one by one and review the final feedback."
@@ -1558,9 +1559,11 @@
       "archived": "Archived career path",
       "saved_changes": "Saved changes",
       "course_added": "Added course",
+      "courses_added": "Added {{count}} course(s)",
       "order_updated": "Order updated",
       "course_removed": "Removed course from path",
       "student_added": "Added student",
+      "students_added": "Registered {{count}} student(s)",
       "student_unregistered": "Unregistered"
     },
     "dialogs": {
@@ -1574,7 +1577,9 @@
       "move_up": "Move up",
       "move_down": "Move down",
       "save_order": "Save order",
-      "register": "Register"
+      "register": "Register",
+      "add_courses": "Add courses",
+      "register_students": "Add students"
     },
     "fields": {
       "name": "Name",
@@ -1591,8 +1596,22 @@
     },
     "sections": {
       "add_course": "Add course",
+      "add_course_hint": "Search the catalogue and pick one or more courses to attach.",
       "register_student": "Register student",
+      "register_student_hint": "Search by name or email and pick one or more students to enrol.",
       "readiness_snapshot": "Average career readiness"
+    },
+    "course_picker": {
+      "title": "Add courses to path",
+      "search_placeholder": "Search courses by name or code…",
+      "empty": "No courses found.",
+      "added": "Added"
+    },
+    "student_picker": {
+      "title": "Add students to path",
+      "search_placeholder": "Search students by name or email…",
+      "empty": "No students found.",
+      "added": "Enrolled"
     },
     "readiness_students_counted": "from the latest snapshots of {{count}} enrolled students",
     "empty_states": {
@@ -1771,6 +1790,10 @@
       "body": "This permanently deletes the quiz, its questions, attempts, and module entry. This cannot be undone."
     },
     "confirm_delete_question": "Delete this question? This cannot be undone.",
+    "combo_undo": {
+      "message": "Deleting {{count}} question(s)…",
+      "undo": "Undo ({{count}})"
+    },
     "banners": {
       "missing_expected_time": "{{count}} questions are missing an expected time. Set them before publishing.",
       "pending_review": "{{count}} questions are pending review. Approve them before publishing."
@@ -1799,6 +1822,9 @@
     },
     "editor": {
       "prompt_label": "Question",
+      "hint_label": "Hint (shown to learner on request)",
+      "hint_placeholder": "e.g. Think about which property distinguishes analytical storage from transactional storage.",
+      "hint_help": "Optional. Only shown to learners if \"Show hints\" is enabled in Quiz Settings. Must not reveal the answer.",
       "options_label": "Options",
       "explanation_label": "Explanation",
       "approve": "Approve",
@@ -1897,6 +1923,8 @@
       "back_to_course": "Back to course",
       "title_required": "Title cannot be empty",
       "questions_required": "Generate questions before publishing",
+      "outcomes_required": "Add at least one learning outcome before publishing",
+      "publish_blocked_archived": "Unarchive this interview before publishing",
       "question_count_min": "Number of questions must be greater than 0"
     },
     "toasts": {
@@ -1904,6 +1932,8 @@
       "save_failed": "Failed to save configuration",
       "published": "Interview published",
       "publish_failed": "Publish failed",
+      "unpublished": "Interview reverted to draft",
+      "unpublish_failed": "Unpublish failed",
       "archived": "Interview archived",
       "archive_failed": "Archive failed",
       "deleted": "Interview deleted",
@@ -1915,20 +1945,51 @@
       "question_rejected": "Question rejected",
       "question_saved": "Question updated",
       "question_deleted": "Question deleted",
-      "question_added": "Question added"
+      "question_added": "Question added",
+      "all_questions_approved": "Approved {{count}} question(s)",
+      "approve_all_partial": "Approved {{approved}}, failed {{failed}}",
+      "approve_all_failed": "Could not approve questions",
+      "question_reorder_failed": "Could not reorder question"
     },
     "actions": {
       "back_tooltip": "Back to course",
-      "generate_with_ai": "Generate questions with AI",
       "publish_label": "Publish interview",
       "publish_short": "Publish",
+      "unpublish_label": "Revert to draft — hides the interview from students",
+      "unpublish_short": "Unpublish",
       "archive": "Archive",
       "delete_tooltip": "Permanently delete this interview set",
-      "save_config": "Save settings"
+      "save_config": "Save settings",
+      "save_config_scope_hint": "Saves the general settings above only — does not start question generation."
+    },
+    "save_status": {
+      "saving": "Saving…",
+      "saved": "Saved",
+      "unsaved": "Unsaved changes"
     },
     "header": {
       "draft_count": "{{count}} questions",
       "chip_label": "AI interview"
+    },
+    "section_nav": {
+      "aria_label": "Interview sections",
+      "settings": "Settings",
+      "settings_short": "Settings",
+      "learning_outcomes": "Learning Outcomes",
+      "learning_outcomes_short": "Outcomes",
+      "generate": "Generate Questions",
+      "generate_short": "Generate",
+      "questions": "Question Bank",
+      "questions_short": "Questions",
+      "status": {
+        "completed": "Completed",
+        "settings_incomplete": "Add a title",
+        "not_added": "Not added",
+        "outcomes_count": "{{count}} added",
+        "generated_count": "{{count}} generated",
+        "approved_ratio": "{{approved}}/{{total}} approved",
+        "no_questions": "None yet"
+      }
     },
     "confirm_delete": {
       "title": "Delete this interview?",
@@ -1955,6 +2016,7 @@
       "title_placeholder": "Enter interview title…",
       "persona": "AI persona",
       "mode": "Response format",
+      "mode_hint": "Text = typed answers. Voice = live spoken interview. Text + voice = one text session where students can type or dictate each answer.",
       "duration_label": "Duration (minutes)",
       "duration_hint": "Blank = unlimited",
       "attempts_label": "Attempts",
@@ -1971,15 +2033,57 @@
       "add": "Add outcome",
       "add_save": "Add",
       "add_placeholder": "e.g. Explain how recursion works and identify its base case",
+      "samples_hint": "Or start from a sample — click to fill in:",
+      "samples": {
+        "explain_concept": "Explain the core concept clearly and accurately in their own words",
+        "apply_knowledge": "Apply the concept to solve a concrete, realistic problem",
+        "analyze_tradeoffs": "Compare approaches and justify trade-offs with sound reasoning",
+        "communicate_clearly": "Communicate ideas in a clear, structured, and confident way"
+      },
       "empty": "No outcomes yet. Add at least one — without outcomes the interview cannot be published and every student is auto-failed.",
       "weight_label": "Weight",
       "weight_badge": "Weight {{weight}}/5",
       "type_knowledge": "Knowledge",
       "type_skill": "Skill",
       "type_attitude": "Attitude",
+      "type_label": "Type",
       "added": "Outcome added",
       "saved": "Outcome saved",
-      "deleted": "Outcome deleted"
+      "deleted": "Outcome deleted",
+      "section_help": "Define what students must demonstrate to pass the interview. AI-generated questions and evaluation criteria are aligned with these outcomes.",
+      "statement_label": "Outcome statement",
+      "summary_outcomes": "{{count}} outcomes",
+      "summary_assigned": "{{count}} questions assigned",
+      "summary_uncovered": "{{count}} without questions",
+      "summary_all_covered": "All outcomes have questions",
+      "required_for_publishing": "Required for publishing",
+      "coverage_title": "Outcome coverage.",
+      "coverage_summary": "{{covered}} of {{total}} outcomes are covered by at least one question.",
+      "pass_threshold": "Students must satisfy at least {{required}} of the {{total}} outcomes to pass.",
+      "empty_title": "No learning outcomes yet",
+      "empty_body": "Learning outcomes define what students must demonstrate and help the AI generate relevant questions. Add at least one before publishing this interview.",
+      "templates_hint": "Quick templates — click to start from a suggested statement:",
+      "template_labels": {
+        "explain_concept": "Explain concepts",
+        "apply_knowledge": "Apply knowledge",
+        "analyze_tradeoffs": "Compare approaches",
+        "communicate_clearly": "Communicate clearly"
+      },
+      "templates": {
+        "explain_concept": "Explain the core concepts clearly and accurately in the student's own words.",
+        "apply_knowledge": "Apply the relevant concepts to solve a concrete and realistic problem.",
+        "analyze_tradeoffs": "Compare multiple approaches and justify the most appropriate choice using sound reasoning.",
+        "communicate_clearly": "Communicate ideas in a clear, structured, and confident manner."
+      },
+      "view_questions": "View questions",
+      "used_by": "Used by {{count}} questions",
+      "limited_coverage": "Limited coverage ({{count}} question)",
+      "no_questions": "No questions assigned",
+      "sr_moved": "Outcome moved to position {{position}}",
+      "delete_title": "Delete this outcome?",
+      "delete_unused_body": "This outcome has no assigned questions. This action can be undone.",
+      "delete_used_body": "This outcome is currently used by {{count}} question(s). Deleting it leaves those questions without a learning outcome. This action can be undone.",
+      "delete_confirm": "Delete outcome"
     },
     "sessions": {
       "list_title": "Student attempts",
@@ -1999,28 +2103,105 @@
       "count_label": "Questions",
       "approved_label": "Approved",
       "weight_total": "Total weight",
-      "open_generator": "Open AI generator",
       "empty": "No questions yet. Create some before publishing the interview.",
       "none_approved": "AI-generated questions need to be approved before students can take the interview.",
       "pending_hint": "{{count}} pending question(s) waiting for review.",
       "list_title": "Question bank",
       "list_description": "Review AI-generated drafts; approve, edit, or remove individual questions.",
       "add_manual": "Add manually",
+      "move_up": "Move up",
+      "move_down": "Move down",
       "add_placeholder": "Enter the prompt for the new question",
       "add_save": "Save question",
       "approve": "Approve",
-      "reject": "Reject"
+      "approve_all": "Approve all ({{count}})",
+      "reject": "Unapprove",
+      "model_answer_label": "Model answer",
+      "model_answer_missing": "No model answer generated for this question.",
+      "add_answer_placeholder": "Optional: reference answer for your own review (never shown to students)"
+    },
+    "difficulty": {
+      "junior": "Junior",
+      "mid_level": "Mid-level",
+      "senior": "Senior"
+    },
+    "question_type": {
+      "conceptual": "Conceptual",
+      "behavioral": "Behavioral",
+      "technical": "Technical",
+      "situational": "Situational",
+      "system_design": "System design"
+    },
+    "qbank": {
+      "search_placeholder": "Search questions, answers, outcomes…",
+      "collapse_all": "Collapse all",
+      "view_answer": "View answer",
+      "hide_answer": "Hide answer",
+      "more_actions": "More actions",
+      "assign_outcome": "Learning outcome",
+      "no_outcome_option": "No outcome",
+      "no_outcome_short": "No outcome",
+      "outcome_control_label": "Learning outcome: {{outcome}}. Change assignment",
+      "status_control_label": "Approval status: {{status}}. Change status",
+      "showing_all": "{{count}} questions · {{approved}} approved",
+      "showing_filtered": "Showing {{shown}} of {{total}} questions",
+      "active_filters": "Active filters:",
+      "clear_all": "Clear all",
+      "clear_filters": "Clear filters",
+      "empty_filtered": "No questions match the current filters.",
+      "unsaved_confirm": "You have unsaved changes. Discard them?",
+      "missing_lo": "Missing learning outcome",
+      "ai_generated": "AI-generated",
+      "manually_added": "Added manually",
+      "source_count": "{{count}} source",
+      "source_count_plural": "{{count}} sources",
+      "no_answer": "No model answer yet",
+      "move_to_top": "Move to top",
+      "move_to_bottom": "Move to bottom",
+      "duplicate_hint": "Duplicate is not available yet",
+      "status": {
+        "draft": "Draft",
+        "needs_review": "Needs review",
+        "approved": "Approved",
+        "has_issues": "Has issues"
+      },
+      "filter": {
+        "status": "Status",
+        "outcome": "Outcome",
+        "difficulty": "Difficulty",
+        "type": "Type",
+        "source": "Source",
+        "all": "All",
+        "no_outcome": "No outcome"
+      },
+      "source": {
+        "ai": "AI-generated",
+        "manual": "Manually added"
+      },
+      "quick": {
+        "missing_lo": "Missing outcome"
+      },
+      "toasts": {
+        "status_changed": "Status changed to {{status}}",
+        "outcome_changed": "Outcome set to {{outcome}}"
+      },
+      "sr": {
+        "status_changed": "Status changed to {{status}}",
+        "outcome_changed": "Outcome set to {{outcome}}",
+        "moved": "Question moved to position {{position}}"
+      }
     },
     "review_status": {
       "pending": "Pending review",
       "approved": "Approved",
       "edited": "Edited",
-      "rejected": "Rejected"
-    },
-    "generate_modal": {
-      "description": "AI will generate interview questions from the module rubric."
+      "rejected": "Pending review"
     },
     "generate": {
+      "section_title": "AI Question Generation",
+      "section_description": "Configure how AI should generate questions, then start generation when ready. Persona and supplementary instructions above are reused for this run.",
+      "reuses_settings_hint": "Persona and supplementary instructions from the sections above are used for this generation run.",
+      "independent_action_hint": "This starts generation right away — it does not save the settings above.",
       "mode_label": "Generation mode",
       "mode_outcome": "By rubric outcome",
       "mode_topic": "By topic",
@@ -2036,6 +2217,9 @@
       "in_progress": "Generating questions…",
       "failed": "Generation failed",
       "completed": "Completed",
+      "phase_generating": "Generating & grounding questions…",
+      "phase_saving": "Saving questions…",
+      "phase_done": "All questions generated",
       "success_body": "New questions were added to the draft set. Close to view them.",
       "processing": "Processing…",
       "start_button": "Start generation"

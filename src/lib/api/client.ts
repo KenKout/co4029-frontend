@@ -67,10 +67,14 @@ export function apiFetch<T>(path: string): Promise<T> {
   return apiJson<T>(path);
 }
 
-export function apiPost<T>(path: string, body?: unknown): Promise<T> {
+export function apiPost<T>(
+  path: string,
+  body?: unknown,
+  extraHeaders?: Record<string, string>,
+): Promise<T> {
   return apiJson<T>(path, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...extraHeaders },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 }
@@ -97,4 +101,23 @@ export async function apiDelete(path: string): Promise<void> {
   if (!res.ok && res.status !== 204) {
     throw await readError(res);
   }
+}
+
+/**
+ * POST that returns a binary Blob (e.g. synthesized audio) instead of JSON.
+ * Throws {@link ApiError} on non-2xx so callers can distinguish a real
+ * failure (503 → fall back to browser TTS) from a successful audio response.
+ */
+export async function apiPostBlob(path: string, body?: unknown): Promise<Blob> {
+  const res = await authenticatedFetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+
+  if (!res.ok) {
+    throw await readError(res);
+  }
+
+  return res.blob();
 }

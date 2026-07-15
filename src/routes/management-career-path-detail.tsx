@@ -19,8 +19,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import {
+  EntityMultiSelectDialog,
+  type SelectableEntity,
+} from "@/components/ui/entity-multi-select-dialog";
 import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { useCourseCatalogue } from "@/lib/api/hooks/courses";
+import { useAdminUsersSearch } from "@/lib/api/hooks/admin-organizations";
 import {
   useAddCareerPathCourse,
   useAddCareerPathStudent,
@@ -431,10 +437,12 @@ function CoursesTab({ id }: { id: string }) {
   const add = useAddCareerPathCourse(id);
   const reorder = useReorderCareerPathCourses(id);
 
-  const [courseIdInput, setCourseIdInput] = useState("");
-  const [position, setPosition] = useState("");
-  const [isRequired, setIsRequired] = useState(true);
   const [order, setOrder] = useState<CareerPathCourseAuthoring[] | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [courseQuery, setCourseQuery] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const catalogue = useCourseCatalogue(pickerOpen);
 
   const baseRows = useMemo(
     () => [...(list.data ?? [])].sort((a, b) => a.position - b.position),
@@ -446,33 +454,54 @@ function CoursesTab({ id }: { id: string }) {
     return order.some((row, i) => row.course_id !== baseRows[i]?.course_id);
   }, [order, baseRows]);
 
-  function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    if (!courseIdInput.trim()) {
-      toast.error(t("management_career_path_detail.errors.enter_course_uuid"));
-      return;
+  // Map the catalogue to the dialog shape and filter client-side by
+  // title/slug (the /courses endpoint has no q= param). Already-attached
+  // courses are passed separately so the dialog shows them checked+disabled.
+  const alreadyAddedCourseIds = useMemo(
+    () => new Set(baseRows.map((r) => r.course_id)),
+    [baseRows],
+  );
+  const courseCandidates: SelectableEntity[] = useMemo(() => {
+    const q = courseQuery.trim().toLowerCase();
+    return (catalogue.data?.items ?? [])
+      .filter(
+        (c) =>
+          !q ||
+          c.title.toLowerCase().includes(q) ||
+          c.slug.toLowerCase().includes(q),
+      )
+      .map((c) => ({
+        id: c.id,
+        primaryLabel: c.title,
+        secondaryLabel: c.slug,
+      }));
+  }, [catalogue.data, courseQuery]);
+
+  async function handleConfirmCourses(selected: SelectableEntity[]) {
+    setSubmitting(true);
+    let ok = 0;
+    // Backend has only a single-item add route; loop sequentially so each
+    // gets an append position and one failure doesn't abort the rest.
+    for (const entity of selected) {
+      try {
+        await add.mutateAsync({ course_id: entity.id, is_required: true });
+        ok += 1;
+      } catch (err) {
+        toast.error(
+          (err as Error).message ||
+            t("management_career_path_detail.errors.add_course_failed"),
+        );
+      }
     }
-    add.mutate(
-      {
-        course_id: courseIdInput.trim(),
-        position: position ? Number(position) : undefined,
-        is_required: isRequired,
-      },
-      {
-        onSuccess: () => {
-          toast.success(t("management_career_path_detail.toasts.course_added"));
-          setCourseIdInput("");
-          setPosition("");
-          setIsRequired(true);
-          setOrder(null);
-        },
-        onError: (err) =>
-          toast.error(
-            (err as Error).message ||
-              t("management_career_path_detail.errors.add_course_failed"),
-          ),
-      },
-    );
+    setSubmitting(false);
+    if (ok > 0) {
+      toast.success(
+        t("management_career_path_detail.toasts.courses_added", { count: ok }),
+      );
+      setOrder(null);
+    }
+    setPickerOpen(false);
+    setCourseQuery("");
   }
 
   function move(idx: number, delta: number) {
@@ -516,67 +545,47 @@ function CoursesTab({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
-      <form
-        onSubmit={handleAdd}
-        className="bg-m3-surface-container-lowest rounded-xl border border-m3-outline-variant/20 p-5 space-y-4"
-      >
-        <h3 className="text-sm font-bold text-m3-on-surface">
-          {t("management_career_path_detail.sections.add_course")}
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px_140px_auto] gap-3 items-end">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t("management_career_path_detail.fields.course_uuid")}
-            </label>
-            <Input
-              value={courseIdInput}
-              onChange={(e) => setCourseIdInput(e.target.value)}
-              placeholder="550e8400-e29b-41d4-a716-446655440000"
-              className="font-mono text-xs"
-              required
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t("management_career_path_detail.fields.position")}
-            </label>
-            <Input
-              type="number"
-              min={1}
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-              placeholder={t(
-                "management_career_path_detail.placeholders.position_end",
-              )}
-              className="text-sm"
-            />
-          </div>
-          <label className="inline-flex items-center gap-2 text-sm cursor-pointer h-9">
-            <input
-              type="checkbox"
-              checked={isRequired}
-              onChange={(e) => setIsRequired(e.target.checked)}
-              className="h-4 w-4 rounded border-m3-outline-variant accent-m3-primary"
-            />
-            <span className="font-medium text-m3-on-surface">
-              {t("management_career_path_detail.fields.required")}
-            </span>
-          </label>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={add.isPending}
-            className="gap-2"
-          >
-            {add.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-            {t("management_career_path_detail.actions.add")}
-          </Button>
+      <div className="flex items-center justify-between gap-3 bg-m3-surface-container-lowest rounded-xl border border-m3-outline-variant/20 p-5">
+        <div>
+          <h3 className="text-sm font-bold text-m3-on-surface">
+            {t("management_career_path_detail.sections.add_course")}
+          </h3>
+          <p className="text-xs text-m3-on-surface-variant mt-0.5">
+            {t("management_career_path_detail.sections.add_course_hint")}
+          </p>
         </div>
-      </form>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => setPickerOpen(true)}
+          className="gap-2 shrink-0"
+        >
+          <Plus className="h-4 w-4" />
+          {t("management_career_path_detail.actions.add_courses")}
+        </Button>
+      </div>
+
+      {pickerOpen && (
+        <EntityMultiSelectDialog
+          title={t("management_career_path_detail.course_picker.title")}
+          searchPlaceholder={t(
+            "management_career_path_detail.course_picker.search_placeholder",
+          )}
+          items={courseCandidates}
+          alreadySelectedIds={alreadyAddedCourseIds}
+          isLoading={catalogue.isLoading}
+          query={courseQuery}
+          onQueryChange={setCourseQuery}
+          onConfirm={handleConfirmCourses}
+          onClose={() => {
+            setPickerOpen(false);
+            setCourseQuery("");
+          }}
+          isSubmitting={submitting}
+          emptyText={t("management_career_path_detail.course_picker.empty")}
+          alreadyAddedLabel={t("management_career_path_detail.course_picker.added")}
+        />
+      )}
 
       {rows.length === 0 ? (
         <div className="rounded-xl bg-m3-surface-container-lowest ghost-border p-10 text-center">
@@ -759,69 +768,107 @@ function StudentsTab({ id }: { id: string }) {
   const add = useAddCareerPathStudent(id);
   const progress = useTeacherCareerPathProgress(id);
   const readiness = usePathReadinessOverview(id);
-  const [studentId, setStudentId] = useState("");
 
-  function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    if (!studentId.trim()) {
-      toast.error(t("management_career_path_detail.errors.enter_student_uuid"));
-      return;
-    }
-    add.mutate(
-      { student_id: studentId.trim() },
-      {
-        onSuccess: () => {
-          toast.success(t("management_career_path_detail.toasts.student_added"));
-          setStudentId("");
-        },
-        onError: (err) =>
-          toast.error(
-            (err as Error).message ||
-              t("management_career_path_detail.errors.add_student_failed"),
-          ),
-      },
-    );
-  }
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [studentQuery, setStudentQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // Debounce the search box so we don't fire /admin/users on every keystroke.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(studentQuery), 250);
+    return () => clearTimeout(timer);
+  }, [studentQuery]);
+
+  const search = useAdminUsersSearch(debouncedQuery, pickerOpen);
 
   const rows = progress.data ?? [];
 
+  // Students already enrolled in this path — shown checked+disabled.
+  const alreadyEnrolledIds = useMemo(
+    () => new Set(rows.map((r) => r.student_id)),
+    [rows],
+  );
+  const studentCandidates: SelectableEntity[] = useMemo(
+    () =>
+      (search.data ?? []).map((u) => ({
+        id: u.user_id,
+        primaryLabel: u.display_name?.trim() || u.primary_email,
+        secondaryLabel: u.primary_email,
+      })),
+    [search.data],
+  );
+
+  async function handleConfirmStudents(selected: SelectableEntity[]) {
+    setSubmitting(true);
+    let ok = 0;
+    // Single-item enroll route only; loop so one failure doesn't abort the rest.
+    for (const entity of selected) {
+      try {
+        await add.mutateAsync({ student_id: entity.id });
+        ok += 1;
+      } catch (err) {
+        toast.error(
+          (err as Error).message ||
+            t("management_career_path_detail.errors.add_student_failed"),
+        );
+      }
+    }
+    setSubmitting(false);
+    if (ok > 0) {
+      toast.success(
+        t("management_career_path_detail.toasts.students_added", { count: ok }),
+      );
+    }
+    setPickerOpen(false);
+    setStudentQuery("");
+  }
+
   return (
     <div className="space-y-6">
-      <form
-        onSubmit={handleAdd}
-        className="bg-m3-surface-container-lowest rounded-xl border border-m3-outline-variant/20 p-5 space-y-4"
-      >
-        <h3 className="text-sm font-bold text-m3-on-surface">
-          {t("management_career_path_detail.sections.register_student")}
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t("management_career_path_detail.fields.student_uuid")}
-            </label>
-            <Input
-              value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
-              placeholder="550e8400-e29b-41d4-a716-446655440000"
-              className="font-mono text-xs"
-              required
-            />
-          </div>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={add.isPending}
-            className="gap-2"
-          >
-            {add.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <UserPlus className="h-4 w-4" />
-            )}
-            {t("management_career_path_detail.actions.register")}
-          </Button>
+      <div className="flex items-center justify-between gap-3 bg-m3-surface-container-lowest rounded-xl border border-m3-outline-variant/20 p-5">
+        <div>
+          <h3 className="text-sm font-bold text-m3-on-surface">
+            {t("management_career_path_detail.sections.register_student")}
+          </h3>
+          <p className="text-xs text-m3-on-surface-variant mt-0.5">
+            {t("management_career_path_detail.sections.register_student_hint")}
+          </p>
         </div>
-      </form>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => setPickerOpen(true)}
+          className="gap-2 shrink-0"
+        >
+          <UserPlus className="h-4 w-4" />
+          {t("management_career_path_detail.actions.register_students")}
+        </Button>
+      </div>
+
+      {pickerOpen && (
+        <EntityMultiSelectDialog
+          title={t("management_career_path_detail.student_picker.title")}
+          searchPlaceholder={t(
+            "management_career_path_detail.student_picker.search_placeholder",
+          )}
+          items={studentCandidates}
+          alreadySelectedIds={alreadyEnrolledIds}
+          isLoading={search.isLoading}
+          query={studentQuery}
+          onQueryChange={setStudentQuery}
+          onConfirm={handleConfirmStudents}
+          onClose={() => {
+            setPickerOpen(false);
+            setStudentQuery("");
+          }}
+          isSubmitting={submitting}
+          emptyText={t("management_career_path_detail.student_picker.empty")}
+          alreadyAddedLabel={t(
+            "management_career_path_detail.student_picker.added",
+          )}
+        />
+      )}
 
       {readiness.data && readiness.data.student_count > 0 && (
         <div className="rounded-xl bg-m3-surface-container-lowest ghost-border p-5 flex flex-wrap items-center gap-x-8 gap-y-2">

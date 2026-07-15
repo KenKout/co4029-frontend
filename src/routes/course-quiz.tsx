@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import {
   ArrowLeft,
   ArrowRight,
@@ -9,8 +10,10 @@ import {
   Bot,
   Clock,
   Flag,
+  Lightbulb,
   Sparkles,
   Timer,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,6 +79,62 @@ function extractDetailString(err: unknown, field: string): string | null {
 
 function extractRetryAt(err: unknown): string | null {
   return extractDetailString(err, "retry_available_at");
+}
+
+function HintDialog({
+  open,
+  onOpenChange,
+  hintText,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  hintText: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Backdrop
+          className={cn(
+            "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm",
+            "transition-opacity duration-200",
+            "data-[starting-style]:opacity-0 data-[ending-style]:opacity-0",
+          )}
+        />
+        <DialogPrimitive.Popup
+          className={cn(
+            "fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2",
+            "rounded-2xl border border-m3-outline-variant/30 bg-m3-surface p-6 shadow-2xl",
+            "outline-none",
+            "transition-all duration-200",
+            "data-[starting-style]:opacity-0 data-[starting-style]:scale-95",
+            "data-[ending-style]:opacity-0 data-[ending-style]:scale-95",
+          )}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full gradient-primary flex items-center justify-center text-white shadow-ai-glow shrink-0">
+                <Lightbulb className="h-5 w-5" />
+              </div>
+              <DialogPrimitive.Title className="font-headline text-base font-bold text-m3-on-surface">
+                {t("course_quiz.actions.show_hint")}
+              </DialogPrimitive.Title>
+            </div>
+            <DialogPrimitive.Close
+              render={
+                <Button variant="ghost" size="icon-sm" aria-label={t("course_quiz.actions.close_hint", "Close")} />
+              }
+            >
+              <X className="h-4 w-4" />
+            </DialogPrimitive.Close>
+          </div>
+          <DialogPrimitive.Description className="mt-4 text-sm text-m3-on-surface-variant leading-relaxed">
+            {hintText}
+          </DialogPrimitive.Description>
+        </DialogPrimitive.Popup>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  );
 }
 
 function QuizStudyModeCard({
@@ -380,6 +439,11 @@ export default function CourseQuizPage() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [submittedSummary, setSubmittedSummary] = useState<QuizAttemptRead | null>(null);
   const [perQuestionCooldown, setPerQuestionCooldown] = useState<Record<string, string>>({});
+  const [hintDialogOpen, setHintDialogOpen] = useState(false);
+
+  useEffect(() => {
+    setHintDialogOpen(false);
+  }, [activeIdx]);
 
   const submitAnswer = useSubmitQuizAnswer(activeAttemptId);
   const submitAttempt = useSubmitQuizAttempt(activeAttemptId);
@@ -866,34 +930,35 @@ export default function CourseQuizPage() {
               </div>
 
               {quiz.show_hints && activeQuestion.hint_text ? (
-                activeStatus.hintViewed ? (
-                  <p className="text-sm text-m3-on-surface-variant leading-relaxed">
-                    <span className="text-m3-secondary font-bold">
-                      {t("course_quiz.labels.hint_prefix")}
-                    </span>
-                    {activeQuestion.hint_text}
-                  </p>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="w-full justify-center rounded-xl ghost-border font-semibold"
-                    onClick={() => {
-                      setStatuses((current) =>
-                        current.map((status, index) =>
-                          index === activeIdx ? { ...status, hintViewed: true } : status,
-                        ),
-                      );
-                    }}
-                  >
-                    {t("course_quiz.actions.show_hint")}
-                  </Button>
-                )
+                <Button
+                  variant="outline"
+                  className="w-full justify-center gap-2 rounded-xl ghost-border font-semibold"
+                  onClick={() => {
+                    setStatuses((current) =>
+                      current.map((status, index) =>
+                        index === activeIdx ? { ...status, hintViewed: true } : status,
+                      ),
+                    );
+                    setHintDialogOpen(true);
+                  }}
+                >
+                  <Lightbulb className="h-4 w-4" />
+                  {activeStatus.hintViewed
+                    ? t("course_quiz.actions.view_hint_again")
+                    : t("course_quiz.actions.show_hint")}
+                </Button>
               ) : (
                 <p className="text-sm text-m3-on-surface-variant leading-relaxed">
                   {t("course_quiz.instructions.choose_best")}
                 </p>
               )}
             </GlassCard>
+
+            <HintDialog
+              open={hintDialogOpen}
+              onOpenChange={setHintDialogOpen}
+              hintText={activeQuestion.hint_text ?? ""}
+            />
 
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-surface-elev rounded-xl p-4 shadow-sm">

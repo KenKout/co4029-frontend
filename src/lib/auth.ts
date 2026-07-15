@@ -27,6 +27,12 @@ export interface AuthUserProfile {
   display_name: string;
   avatar_object_id?: string | null;
   bio?: string | null;
+  // Preferred UI + notification language ('en' | 'vi'). NULL = not set;
+  // AuthProvider hydrates i18n from this on load, LanguageSwitcher
+  // persists it on change (drives server-side notification language).
+  // Typed as string to mirror the generated UserProfileRead.locale
+  // (the read side isn't enum-narrowed); AuthProvider guards the value.
+  locale?: string | null;
 }
 
 export interface AuthUser {

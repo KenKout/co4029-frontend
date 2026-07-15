@@ -4,7 +4,8 @@ import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ArrowRight,
-  Brain,
+  ArrowUp,
+  ArrowDown,
   Check,
   CheckCircle2,
   HelpCircle,
@@ -25,19 +26,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
+  SectionNav,
+  type SectionNavItem,
+  type SectionStatus,
+} from "@/components/ui/section-nav";
+import { QuestionBank } from "@/routes/teacher/_components/question-bank";
+import { LearningOutcomes } from "@/routes/teacher/_components/learning-outcomes";
+import {
   useArchiveInterviewConfig,
-  useCreateInterviewOutcome,
   useCreateInterviewQuestion,
   useDeleteInterviewConfig,
-  useDeleteInterviewOutcome,
   useDeleteInterviewQuestion,
   useGenerateInterviewQuestions,
   useInterviewForAuthoring,
   useInterviewGenerationRun,
   usePublishInterviewConfig,
   useUnarchiveInterviewConfig,
+  useUnpublishInterviewConfig,
   useUpdateInterviewConfig,
-  useUpdateInterviewOutcome,
   useUpdateInterviewQuestion,
 } from "@/lib/api/hooks/interviews";
 import {
@@ -50,15 +56,22 @@ import type {
   InterviewConfigAuthoring,
   InterviewConfigUpdate,
   InterviewGenerationRequest,
+  InterviewGenerationRunPublic,
   InterviewOutcomeAuthoring,
   InterviewQuestionAuthoring,
 } from "@/lib/api/types";
-import { InterviewSessionsList } from "@/routes/teacher/interview-sessions-list";
 import { cn } from "@/lib/utils";
 
 type SupportedMode = NonNullable<InterviewConfigUpdate["supported_modes"]>;
 type Persona = NonNullable<InterviewConfigUpdate["persona"]>;
 type GenerationMode = InterviewGenerationRequest["mode"];
+
+interface GenerationFormState {
+  mode: GenerationMode;
+  question_count: number;
+  focus_topics: string;
+  avoid_topics: string;
+}
 
 interface SettingsDraft {
   title: string;
@@ -107,6 +120,7 @@ export default function InterviewConfigPage() {
     configId: string;
   };
 
+  const qc = useQueryClient();
   const { data: course } = useTeacherCourseById(courseId);
   const { data: content } = useTeacherCourseContent(courseId);
   const { data: authoring, isLoading: configLoading } =
@@ -130,16 +144,164 @@ export default function InterviewConfigPage() {
   const publishConfig = usePublishInterviewConfig(configId);
   const archiveConfig = useArchiveInterviewConfig(configId);
   const unarchiveConfig = useUnarchiveInterviewConfig(configId);
+  const unpublishConfig = useUnpublishInterviewConfig(configId);
   const deleteConfig = useDeleteInterviewConfig(configId);
 
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
+  // Briefly true right after a successful settings save so the header can show
+  // a transient "Saved" confirmation (cleared once edits resume or the timer
+  // elapses).
+  const [justSaved, setJustSaved] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [generationOpen, setGenerationOpen] = useState(false);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
+  // "View questions" from a Learning Outcome sets this signal; the Question
+  // Bank reacts by filtering to that outcome. `nonce` lets the same outcome be
+  // re-requested (each click re-triggers the effect even if the id is unchanged).
+  const [outcomeFilterSignal, setOutcomeFilterSignal] = useState<{
+    id: string | "none";
+    nonce: number;
+  } | null>(null);
+  function handleViewOutcomeQuestions(outcomeId: string | "none") {
+    setOutcomeFilterSignal((prev) => ({
+      id: outcomeId,
+      nonce: (prev?.nonce ?? 0) + 1,
+    }));
+    const el = document.getElementById("questions");
+    if (el) {
+      const prefersReduced = window.matchMedia?.(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      const top =
+        el.getBoundingClientRect().top + window.scrollY - 128;
+      window.scrollTo({
+        top: Math.max(0, top),
+        behavior: prefersReduced ? "auto" : "smooth",
+      });
+    }
+  }
+  const [generationForm, setGenerationForm] = useState({
+    mode: "outcome-based" as GenerationMode,
+    question_count: 5,
+    focus_topics: "",
+    avoid_topics: "",
+  });
+  const generate = useGenerateInterviewQuestions(configId);
+
+  // Poll the generation run at the page level (not inside the generation
+  // form section) so tracking survives navigating away and back. Without
+  // this, leaving the page before the run finished left
+  // the questions cache permanently stale ("No questions yet" even though
+  // the backend had already persisted them).
+  const { data: activeRun } = useInterviewGenerationRun(configId, activeRunId);
+  useEffect(() => {
+    if (activeRun?.status === "completed" || activeRun?.status === "failed") {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.interviews.configAuthoring(configId),
+      });
+    }
+  }, [activeRun?.status, configId, qc]);
 
   useEffect(() => {
     if (config) setDraft(draftFromConfig(config));
   }, [config]);
+
+  // Whether the settings form has edits not yet persisted. Compares the live
+  // draft against the saved config (serialized the same way) so the header can
+  // show Saving… / Unsaved changes / Saved and the user never wonders whether
+  // they still need to press "Save settings".
+  const settingsDirty = useMemo(() => {
+    if (!draft || !config) return false;
+    const saved = draftFromConfig(config);
+    return JSON.stringify(draft) !== JSON.stringify(saved);
+  }, [draft, config]);
+
+  // ── Section-nav status derivation ──────────────────────────────────────────
+  // Pure read of existing state — no business logic added. Settings is
+  // "completed" once the single required field (title) is present; Learning
+  // Outcomes warns while empty; Generate reports how many questions exist;
+  // Question Bank reports approved / total.
+  //
+  // NOTE: this useMemo MUST sit above the early returns below (loading / not
+  // found) — placing a hook after a conditional return changes the hook call
+  // count between renders and triggers React error #310.
+  const outcomeCount = outcomes?.length ?? 0;
+  const settingsComplete = Boolean(draft?.title.trim());
+
+  const navItems: SectionNavItem[] = useMemo(() => {
+    const settingsStatus: SectionStatus = settingsComplete
+      ? {
+          kind: "completed",
+          label: t("teacher_interview_config.section_nav.status.completed"),
+        }
+      : {
+          kind: "warning",
+          label: t("teacher_interview_config.section_nav.status.settings_incomplete"),
+        };
+
+    const outcomesStatus: SectionStatus =
+      outcomeCount > 0
+        ? {
+            kind: "completed",
+            label: t("teacher_interview_config.section_nav.status.outcomes_count", {
+              count: outcomeCount,
+            }),
+          }
+        : {
+            kind: "warning",
+            label: t("teacher_interview_config.section_nav.status.not_added"),
+          };
+
+    const generateStatus: SectionStatus =
+      draftCount > 0
+        ? {
+            kind: "info",
+            label: t("teacher_interview_config.section_nav.status.generated_count", {
+              count: draftCount,
+            }),
+          }
+        : { kind: "none" };
+
+    const questionsStatus: SectionStatus =
+      draftCount > 0
+        ? {
+            kind: approvedCount === draftCount ? "completed" : "info",
+            label: t("teacher_interview_config.section_nav.status.approved_ratio", {
+              approved: approvedCount,
+              total: draftCount,
+            }),
+          }
+        : {
+            kind: "warning",
+            label: t("teacher_interview_config.section_nav.status.no_questions"),
+          };
+
+    return [
+      {
+        id: "settings",
+        label: t("teacher_interview_config.section_nav.settings"),
+        shortLabel: t("teacher_interview_config.section_nav.settings_short"),
+        status: settingsStatus,
+      },
+      {
+        id: "learning-outcomes",
+        label: t("teacher_interview_config.section_nav.learning_outcomes"),
+        shortLabel: t("teacher_interview_config.section_nav.learning_outcomes_short"),
+        status: outcomesStatus,
+      },
+      {
+        id: "generate",
+        label: t("teacher_interview_config.section_nav.generate"),
+        shortLabel: t("teacher_interview_config.section_nav.generate_short"),
+        status: generateStatus,
+      },
+      {
+        id: "questions",
+        label: t("teacher_interview_config.section_nav.questions"),
+        shortLabel: t("teacher_interview_config.section_nav.questions_short"),
+        status: questionsStatus,
+      },
+    ];
+  }, [t, settingsComplete, outcomeCount, draftCount, approvedCount]);
 
   if (configLoading) {
     return (
@@ -182,7 +344,7 @@ export default function InterviewConfigPage() {
   const isPublished = config.status === "published";
   const isArchived = config.status === "archived";
   const publishDisabled =
-    publishConfig.isPending || isPublished || approvedCount === 0;
+    publishConfig.isPending || isPublished || isArchived || approvedCount === 0;
 
   function returnToCourse() {
     void navigate({
@@ -210,6 +372,8 @@ export default function InterviewConfigPage() {
         supplementary_instructions:
           draft.supplementary_instructions.trim() || null,
       });
+      setJustSaved(true);
+      window.setTimeout(() => setJustSaved(false), 2500);
       toast.success(t("teacher_interview_config.toasts.config_saved"));
     } catch (err: unknown) {
       toast.error(
@@ -226,7 +390,11 @@ export default function InterviewConfigPage() {
       toast.success(t("teacher_interview_config.toasts.published"));
     } catch (err: unknown) {
       const message = (err as Error).message || "";
-      if (
+      if (isArchived || /archived/i.test(message)) {
+        toast.error(t("teacher_interview_config.errors.publish_blocked_archived"));
+      } else if (/interview_no_outcomes|outcome/i.test(message)) {
+        toast.error(t("teacher_interview_config.errors.outcomes_required"));
+      } else if (
         approvedCount === 0 ||
         /interview_no_approved_questions|question|insufficient|empty/i.test(message)
       ) {
@@ -259,6 +427,57 @@ export default function InterviewConfigPage() {
       toast.error(
         (err as Error).message ||
           t("teacher_interview_config.toasts.unarchive_failed"),
+      );
+    }
+  }
+
+  async function handleUnpublish() {
+    try {
+      await unpublishConfig.mutateAsync();
+      toast.success(t("teacher_interview_config.toasts.unpublished"));
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_interview_config.toasts.unpublish_failed"),
+      );
+    }
+  }
+
+  function splitTopics(value: string): string[] {
+    return value
+      .split(/[,\n]/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+
+  async function handleGenerate() {
+    if (!config) return;
+    if (
+      !Number.isInteger(generationForm.question_count) ||
+      generationForm.question_count < 1
+    ) {
+      toast.error(t("teacher_interview_config.errors.question_count_min"));
+      return;
+    }
+    try {
+      const result = await generate.mutateAsync({
+        mode: generationForm.mode,
+        course_id: courseId,
+        module_id: config.module_id,
+        question_count: generationForm.question_count,
+        focus_topics: splitTopics(generationForm.focus_topics),
+        avoid_topics: splitTopics(generationForm.avoid_topics),
+        source_lesson_ids: [],
+        persona: draft?.persona,
+        supplementary_instructions:
+          draft?.supplementary_instructions.trim() || null,
+      });
+      setActiveRunId(result.run_id);
+      toast.success(t("teacher_interview_config.toasts.generation_started"));
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_interview_config.toasts.generation_failed"),
       );
     }
   }
@@ -340,14 +559,6 @@ export default function InterviewConfigPage() {
         <div className="flex items-center gap-2 flex-wrap shrink-0">
           <Button
             type="button"
-            onClick={() => setGenerationOpen(true)}
-            className="gap-2 border-0 shadow-glass gradient-primary text-white hover:shadow-ai-glow"
-          >
-            <Sparkles className="h-4 w-4" />
-            {t("teacher_interview_config.actions.generate_with_ai")}
-          </Button>
-          <Button
-            type="button"
             disabled={publishDisabled}
             onClick={handlePublish}
             className={cn(
@@ -357,11 +568,13 @@ export default function InterviewConfigPage() {
                 : "bg-m3-primary text-white hover:bg-m3-primary/90",
             )}
             title={
-              approvedCount === 0
-                ? t("teacher_interview_config.errors.questions_required")
-                : isPublished
-                  ? t("teacher_interview_config.status.published")
-                  : t("teacher_interview_config.actions.publish_label")
+              isArchived
+                ? t("teacher_interview_config.errors.publish_blocked_archived")
+                : approvedCount === 0
+                  ? t("teacher_interview_config.errors.questions_required")
+                  : isPublished
+                    ? t("teacher_interview_config.status.published")
+                    : t("teacher_interview_config.actions.publish_label")
             }
           >
             {publishConfig.isPending ? (
@@ -375,6 +588,23 @@ export default function InterviewConfigPage() {
               ? t("teacher_interview_config.status.published")
               : t("teacher_interview_config.actions.publish_short")}
           </Button>
+          {isPublished && (
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
+              onClick={handleUnpublish}
+              disabled={unpublishConfig.isPending}
+              title={t("teacher_interview_config.actions.unpublish_label")}
+            >
+              {unpublishConfig.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4 rotate-180" />
+              )}
+              {t("teacher_interview_config.actions.unpublish_short")}
+            </Button>
+          )}
           {!isArchived && (
             <Button
               type="button"
@@ -419,46 +649,56 @@ export default function InterviewConfigPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 lg:col-span-8 space-y-6">
-          {draft && (
-            <SettingsForm
-              draft={draft}
-              setDraft={setDraft}
-              onSubmit={handleSaveSettings}
-              saving={updateConfig.isPending}
-            />
-          )}
-          <OutcomeList configId={configId} outcomes={outcomes ?? []} />
-          <QuestionList
-            configId={configId}
-            questions={questions ?? []}
-          />
-          <InterviewSessionsList configId={configId} />
-        </div>
+      <SectionNav
+        items={navItems}
+        ariaLabel={t("teacher_interview_config.section_nav.aria_label")}
+      />
 
-        <div className="col-span-12 lg:col-span-4">
-          <div className="lg:sticky lg:top-6 space-y-4">
-            <QuestionsSummaryCard
-              draftCount={draftCount}
-              approvedCount={approvedCount}
-              importanceWeight={config.total_importance_weight}
-              onGenerate={() => setGenerationOpen(true)}
-            />
-          </div>
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-12 space-y-6">
+          {draft && (
+            <>
+              <section id="settings" className="scroll-mt-32">
+                <SettingsForm
+                  draft={draft}
+                  setDraft={setDraft}
+                  onSubmit={handleSaveSettings}
+                  saving={updateConfig.isPending}
+                  dirty={settingsDirty}
+                  justSaved={justSaved}
+                />
+              </section>
+              <section id="learning-outcomes" className="scroll-mt-32">
+                <LearningOutcomes
+                  configId={configId}
+                  outcomes={outcomes ?? []}
+                  questions={questions ?? []}
+                  minOutcomesToPass={config.min_outcomes_to_pass ?? null}
+                  onViewQuestions={handleViewOutcomeQuestions}
+                />
+              </section>
+              <section id="generate" className="scroll-mt-32">
+                <GenerationSection
+                  generationForm={generationForm}
+                  setGenerationForm={setGenerationForm}
+                  onGenerate={handleGenerate}
+                  generating={generate.isPending}
+                  activeRunId={activeRunId}
+                  run={activeRun}
+                />
+              </section>
+              <section id="questions" className="scroll-mt-32">
+                <QuestionBank
+                  configId={configId}
+                  questions={questions ?? []}
+                  outcomes={outcomes ?? []}
+                  outcomeFilterSignal={outcomeFilterSignal}
+                />
+              </section>
+            </>
+          )}
         </div>
       </div>
-
-      {generationOpen && (
-        <GenerationModal
-          configId={configId}
-          courseId={courseId}
-          moduleId={config.module_id}
-          activeRunId={activeRunId}
-          setActiveRunId={setActiveRunId}
-          onClose={() => setGenerationOpen(false)}
-        />
-      )}
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -508,16 +748,78 @@ export default function InterviewConfigPage() {
   );
 }
 
+interface GenerationProgress {
+  phase: "generating" | "saving" | "completed";
+  accepted: number;
+  target: number;
+  percent: number;
+}
+
+/**
+ * Reads live generation progress the pipeline writes into
+ * `config_json.progress` ({ phase, accepted, target }) each backfill round.
+ * Once the run completes, falls back to the pipeline summary's
+ * `questions_persisted` / `question_count_requested` so the bar lands on 100%.
+ */
+function readGenerationProgress(
+  run: InterviewGenerationRunPublic | undefined,
+): GenerationProgress | null {
+  const cfg = run?.config_json as Record<string, unknown> | undefined;
+  if (!cfg) return null;
+
+  const toInt = (v: unknown): number | null =>
+    typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.floor(v)) : null;
+
+  // Completed summary takes precedence so the bar always finishes at target.
+  const pipeline = cfg.pipeline as Record<string, unknown> | undefined;
+  const gen = pipeline?.generation as Record<string, unknown> | undefined;
+  if (gen) {
+    const target = toInt(gen.question_count_requested);
+    const accepted = toInt(gen.questions_persisted);
+    if (target !== null && accepted !== null) {
+      return {
+        phase: "completed",
+        accepted,
+        target,
+        percent: target > 0 ? Math.round((Math.min(accepted, target) / target) * 100) : 100,
+      };
+    }
+  }
+
+  const live = cfg.progress as Record<string, unknown> | undefined;
+  if (live) {
+    const target = toInt(live.target);
+    const accepted = toInt(live.accepted);
+    const phaseRaw = live.phase;
+    const phase =
+      phaseRaw === "saving" || phaseRaw === "completed" ? phaseRaw : "generating";
+    if (target !== null && accepted !== null) {
+      return {
+        phase,
+        accepted,
+        target,
+        percent: target > 0 ? Math.round((Math.min(accepted, target) / target) * 100) : 0,
+      };
+    }
+  }
+
+  return null;
+}
+
 function SettingsForm({
   draft,
   setDraft,
   onSubmit,
   saving,
+  dirty,
+  justSaved,
 }: {
   draft: SettingsDraft;
   setDraft: React.Dispatch<React.SetStateAction<SettingsDraft | null>>;
   onSubmit: (event: React.FormEvent) => void;
   saving: boolean;
+  dirty: boolean;
+  justSaved: boolean;
 }) {
   const { t } = useTranslation();
   function update<K extends keyof SettingsDraft>(
@@ -565,7 +867,10 @@ function SettingsForm({
               ))}
             </select>
           </Field>
-          <Field label={t("teacher_interview_config.fields.mode")}>
+          <Field
+            label={t("teacher_interview_config.fields.mode")}
+            hint={t("teacher_interview_config.fields.mode_hint")}
+          >
             <select
               value={draft.supported_modes}
               onChange={(e) =>
@@ -595,7 +900,7 @@ function SettingsForm({
               max={180}
               value={draft.time_limit_minutes}
               onChange={(e) => update("time_limit_minutes", e.target.value)}
-              placeholder="VD: 30"
+              placeholder="e.g. 30"
               className="bg-m3-surface text-sm"
             />
           </Field>
@@ -608,7 +913,7 @@ function SettingsForm({
               min={1}
               value={draft.max_attempts}
               onChange={(e) => update("max_attempts", e.target.value)}
-              placeholder="VD: 3"
+              placeholder="e.g. 3"
               className="bg-m3-surface text-sm"
             />
           </Field>
@@ -621,7 +926,7 @@ function SettingsForm({
               min={1}
               value={draft.min_outcomes_to_pass}
               onChange={(e) => update("min_outcomes_to_pass", e.target.value)}
-              placeholder="VD: 2"
+              placeholder="e.g. 2"
               className="bg-m3-surface text-sm"
             />
           </Field>
@@ -653,154 +958,116 @@ function SettingsForm({
             placeholder={t(
               "teacher_interview_config.fields.supplementary_placeholder",
             )}
-            className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+            className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
           />
         </Field>
       </Section>
 
-      <div className="flex justify-end gap-2 pt-4 border-t border-m3-outline-variant/20">
-        <Button
-          type="submit"
-          disabled={saving}
-          className="gap-2 gradient-primary text-white border-0 hover:shadow-ai-glow"
-        >
-          {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
-          {t("teacher_interview_config.actions.save_config")}
-        </Button>
+      <div className="flex items-center justify-between gap-3 pt-4 border-t border-m3-outline-variant/20">
+        <p className="text-[11px] text-m3-on-surface-variant">
+          {t("teacher_interview_config.actions.save_config_scope_hint")}
+        </p>
+        <div className="flex items-center gap-3 shrink-0">
+          <SaveStatus saving={saving} dirty={dirty} justSaved={justSaved} />
+          <Button
+            type="submit"
+            disabled={saving || !dirty}
+            className="gap-2 gradient-primary text-white border-0 hover:shadow-ai-glow shrink-0"
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {t("teacher_interview_config.actions.save_config")}
+          </Button>
+        </div>
       </div>
     </form>
   );
 }
 
-function QuestionsSummaryCard({
-  draftCount,
-  approvedCount,
-  importanceWeight,
-  onGenerate,
+// Compact save-state indicator shown beside the Save button so the teacher
+// always knows whether their edits are persisted: Saving… while the request
+// is in flight, "Unsaved changes" (amber dot) when the draft differs from the
+// saved config, and a transient "Saved" (green check) right after a save.
+function SaveStatus({
+  saving,
+  dirty,
+  justSaved,
 }: {
-  draftCount: number;
-  approvedCount: number;
-  importanceWeight: number | null | undefined;
-  onGenerate: () => void;
+  saving: boolean;
+  dirty: boolean;
+  justSaved: boolean;
 }) {
   const { t } = useTranslation();
-  const pendingCount = Math.max(0, draftCount - approvedCount);
-  return (
-    <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-5 shadow-glass space-y-4">
-      <div className="flex items-center gap-2">
-        <div className="h-9 w-9 rounded-xl gradient-primary flex items-center justify-center shadow-ai-glow shrink-0">
-          <Brain className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <h3 className="font-headline font-bold text-sm text-m3-on-surface">
-            {t("teacher_interview_config.questions.section_title")}
-          </h3>
-          <p className="text-[11px] text-m3-on-surface-variant">
-            {t("teacher_interview_config.questions.section_description")}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="rounded-xl bg-m3-surface-container-low p-3">
-          <p className="text-[10px] uppercase font-bold text-m3-on-surface-variant tracking-widest">
-            {t("teacher_interview_config.questions.count_label")}
-          </p>
-          <p className="text-2xl font-extrabold font-headline text-m3-primary mt-1">
-            {draftCount}
-          </p>
-        </div>
-        <div className="rounded-xl bg-emerald-50 p-3">
-          <p className="text-[10px] uppercase font-bold text-emerald-700 tracking-widest">
-            {t("teacher_interview_config.questions.approved_label")}
-          </p>
-          <p className="text-2xl font-extrabold font-headline text-emerald-700 mt-1">
-            {approvedCount}
-          </p>
-        </div>
-        <div className="rounded-xl bg-m3-surface-container-low p-3">
-          <p className="text-[10px] uppercase font-bold text-m3-on-surface-variant tracking-widest">
-            {t("teacher_interview_config.questions.weight_total")}
-          </p>
-          <p className="text-2xl font-extrabold font-headline text-m3-on-surface mt-1">
-            {importanceWeight == null
-              ? "—"
-              : Number(importanceWeight).toFixed(1)}
-          </p>
-        </div>
-      </div>
-
-      <Button
-        type="button"
-        onClick={onGenerate}
-        className="w-full gap-2 gradient-primary text-white border-0 hover:shadow-ai-glow"
+  if (saving) {
+    return (
+      <span
+        role="status"
+        aria-live="polite"
+        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-m3-on-surface-variant"
       >
-        <Sparkles className="h-4 w-4" />
-        {t("teacher_interview_config.questions.open_generator")}
-      </Button>
-
-      {draftCount === 0 && (
-        <p className="text-[11px] text-amber-700 bg-amber-50 rounded-xl px-3 py-2 leading-relaxed">
-          {t("teacher_interview_config.questions.empty")}
-        </p>
-      )}
-      {draftCount > 0 && approvedCount === 0 && (
-        <p className="text-[11px] text-amber-800 bg-amber-50 rounded-xl px-3 py-2 leading-relaxed">
-          {t("teacher_interview_config.questions.none_approved")}
-        </p>
-      )}
-      {pendingCount > 0 && (
-        <p className="text-[11px] text-m3-on-surface-variant bg-m3-surface-container-low rounded-xl px-3 py-2 leading-relaxed">
-          {t("teacher_interview_config.questions.pending_hint", { count: pendingCount })}
-        </p>
-      )}
-    </div>
-  );
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        {t("teacher_interview_config.save_status.saving")}
+      </span>
+    );
+  }
+  if (dirty) {
+    return (
+      <span
+        role="status"
+        aria-live="polite"
+        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700"
+      >
+        <span
+          className="h-2 w-2 rounded-full bg-amber-500"
+          aria-hidden="true"
+        />
+        {t("teacher_interview_config.save_status.unsaved")}
+      </span>
+    );
+  }
+  if (justSaved) {
+    return (
+      <span
+        role="status"
+        aria-live="polite"
+        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600"
+      >
+        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+        {t("teacher_interview_config.save_status.saved")}
+      </span>
+    );
+  }
+  return null;
 }
 
-function GenerationModal({
-  configId,
-  courseId,
-  moduleId,
+function GenerationSection({
+  generationForm,
+  setGenerationForm,
+  onGenerate,
+  generating,
   activeRunId,
-  setActiveRunId,
-  onClose,
+  run,
 }: {
-  configId: string;
-  courseId: string;
-  moduleId: string;
+  generationForm: GenerationFormState;
+  setGenerationForm: React.Dispatch<React.SetStateAction<GenerationFormState>>;
+  onGenerate: () => void;
+  generating: boolean;
   activeRunId: string | null;
-  setActiveRunId: (runId: string | null) => void;
-  onClose: () => void;
+  run: InterviewGenerationRunPublic | undefined;
 }) {
   const { t } = useTranslation();
-  const qc = useQueryClient();
-  const generate = useGenerateInterviewQuestions(configId);
-  const { data: run } = useInterviewGenerationRun(configId, activeRunId);
-
-  useEffect(() => {
-    if (run?.status === "completed") {
-      void qc.invalidateQueries({
-        queryKey: queryKeys.interviews.configAuthoring(configId),
-      });
-    }
-  }, [run?.status, configId, qc]);
-
-  const [form, setForm] = useState({
-    mode: "outcome-based" as GenerationMode,
-    question_count: 5,
-    focus_topics: "",
-    avoid_topics: "",
-    persona: "neutral" as Persona,
-    supplementary_instructions: "",
-  });
+  function updateGeneration<K extends keyof GenerationFormState>(
+    key: K,
+    value: GenerationFormState[K],
+  ) {
+    setGenerationForm((current) => ({ ...current, [key]: value }));
+  }
 
   const inProgress =
-    generate.isPending ||
+    generating ||
     Boolean(
       activeRunId &&
         (!run || run.status === "pending" || run.status === "running"),
@@ -808,774 +1075,173 @@ function GenerationModal({
   const failed = run?.status === "failed";
   const completed = run?.status === "completed";
 
-  function splitTopics(value: string): string[] {
-    return value
-      .split(/[,\n]/)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-  }
-
-  async function handleGenerate(event: React.FormEvent) {
-    event.preventDefault();
-    if (!Number.isInteger(form.question_count) || form.question_count < 1) {
-      toast.error(t("teacher_interview_config.errors.question_count_min"));
-      return;
-    }
-    try {
-      const result = await generate.mutateAsync({
-        mode: form.mode,
-        course_id: courseId,
-        module_id: moduleId,
-        question_count: form.question_count,
-        focus_topics: splitTopics(form.focus_topics),
-        avoid_topics: splitTopics(form.avoid_topics),
-        source_lesson_ids: [],
-        persona: form.persona,
-        supplementary_instructions:
-          form.supplementary_instructions.trim() || null,
-      });
-      setActiveRunId(result.run_id);
-      toast.success(t("teacher_interview_config.toasts.generation_started"));
-    } catch (err: unknown) {
-      toast.error(
-        (err as Error).message ||
-          t("teacher_interview_config.toasts.generation_failed"),
-      );
-    }
-  }
+  // Live progress the pipeline writes into config_json.progress each round
+  // ({ phase, accepted, target }). Falls back to the completed summary's
+  // questions_persisted / question_count_requested once the run finishes.
+  const progress = readGenerationProgress(run);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-2xl rounded-xl bg-m3-surface shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-start justify-between gap-3 px-6 pt-6 pb-3 border-b border-m3-outline-variant/20">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl gradient-primary flex items-center justify-center shadow-ai-glow shrink-0">
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h2 className="font-headline font-bold text-base text-m3-on-surface">
-                {t("teacher_interview_config.actions.generate_with_ai")}
-              </h2>
-              <p className="text-xs text-m3-on-surface-variant">
-                {t("teacher_interview_config.generate_modal.description")}
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            type="button"
-            onClick={onClose}
-            className="h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <form onSubmit={handleGenerate} className="p-6 space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label={t("teacher_interview_config.generate.mode_label")}>
-              <select
-                value={form.mode}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    mode: e.target.value as GenerationMode,
-                  }))
-                }
-                className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-              >
-                <option value="outcome-based">
-                  {t("teacher_interview_config.generate.mode_outcome")}
-                </option>
-                <option value="topic">
-                  {t("teacher_interview_config.generate.mode_topic")}
-                </option>
-                <option value="coverage">
-                  {t("teacher_interview_config.generate.mode_coverage")}
-                </option>
-              </select>
-            </Field>
-            <Field label={t("teacher_interview_config.generate.count_label")}>
-              <Input
-                type="number"
-                min={1}
-                max={50}
-                value={form.question_count}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    // Keep the raw numeric value (0 allowed transiently) so the
-                    // submit-time guard can surface a "must be > 0" error rather
-                    // than silently coercing the teacher's input.
-                    question_count: Math.floor(Number(e.target.value)) || 0,
-                  }))
-                }
-                className="bg-m3-surface-container-low text-sm"
-              />
-            </Field>
-          </div>
-
-          <Field label={t("teacher_interview_config.fields.persona")}>
+    <div className="rounded-xl border-2 border-dashed border-m3-secondary/30 bg-m3-secondary/[0.03] p-6 lg:p-8 space-y-5">
+      <Section
+        title={t("teacher_interview_config.generate.section_title")}
+        description={t("teacher_interview_config.generate.section_description")}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label={t("teacher_interview_config.generate.mode_label")}>
             <select
-              value={form.persona}
+              value={generationForm.mode}
               onChange={(e) =>
-                setForm((f) => ({ ...f, persona: e.target.value as Persona }))
+                updateGeneration("mode", e.target.value as GenerationMode)
               }
-              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
             >
-              {PERSONA_KEYS.map((p) => (
-                <option key={p} value={p}>
-                  {t(`teacher_interview_config.persona.${p}`)}
-                </option>
-              ))}
+              <option value="outcome-based">
+                {t("teacher_interview_config.generate.mode_outcome")}
+              </option>
+              <option value="topic">
+                {t("teacher_interview_config.generate.mode_topic")}
+              </option>
+              <option value="coverage">
+                {t("teacher_interview_config.generate.mode_coverage")}
+              </option>
             </select>
           </Field>
-
-          <Field
-            label={t("teacher_interview_config.generate.focus_label")}
-            hint={t("teacher_interview_config.generate.focus_hint")}
-          >
+          <Field label={t("teacher_interview_config.generate.count_label")}>
             <Input
-              value={form.focus_topics}
+              type="number"
+              min={1}
+              max={50}
+              value={generationForm.question_count}
               onChange={(e) =>
-                setForm((f) => ({ ...f, focus_topics: e.target.value }))
-              }
-              placeholder={t(
-                "teacher_interview_config.generate.focus_placeholder",
-              )}
-              className="bg-m3-surface-container-low text-sm"
-            />
-          </Field>
-
-          <Field
-            label={t("teacher_interview_config.generate.avoid_label")}
-            hint={t("teacher_interview_config.generate.avoid_hint")}
-          >
-            <Input
-              value={form.avoid_topics}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, avoid_topics: e.target.value }))
-              }
-              placeholder={t(
-                "teacher_interview_config.generate.avoid_placeholder",
-              )}
-              className="bg-m3-surface-container-low text-sm"
-            />
-          </Field>
-
-          <Field
-            label={t("teacher_interview_config.fields.supplementary_label")}
-          >
-            <textarea
-              value={form.supplementary_instructions}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  supplementary_instructions: e.target.value,
-                }))
-              }
-              rows={3}
-              placeholder={t(
-                "teacher_interview_config.generate.supplementary_placeholder",
-              )}
-              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-            />
-          </Field>
-
-          {activeRunId && (
-            <div
-              className={cn(
-                "rounded-xl px-4 py-3 text-sm border",
-                failed
-                  ? "border-red-200 bg-red-50 text-red-800"
-                  : completed
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                    : "border-blue-200 bg-blue-50 text-blue-800",
-              )}
-            >
-              <div className="flex items-center gap-2 font-bold">
-                {inProgress ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : failed ? (
-                  <X className="h-4 w-4" />
-                ) : (
-                  <CheckCircle2 className="h-4 w-4" />
-                )}
-                {inProgress
-                  ? t("teacher_interview_config.generate.in_progress")
-                  : failed
-                    ? t("teacher_interview_config.generate.failed")
-                    : t("teacher_interview_config.generate.completed")}
-              </div>
-              {failed && run?.failure_message && (
-                <p className="mt-1 text-xs">{run.failure_message}</p>
-              )}
-              {completed && (
-                <p className="mt-1 text-xs">
-                  {t("teacher_interview_config.generate.success_body")}
-                </p>
-              )}
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2 pt-2 border-t border-m3-outline-variant/20">
-            <Button type="button" variant="outline" onClick={onClose}>
-              {t("common.close")}
-            </Button>
-            <Button
-              type="submit"
-              disabled={inProgress}
-              className="gap-2 gradient-primary text-white border-0 hover:shadow-ai-glow"
-            >
-              {inProgress ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4" />
-              )}
-              {inProgress
-                ? t("teacher_interview_config.generate.processing")
-                : t("teacher_interview_config.generate.start_button")}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-const _OUTCOME_TYPES = ["knowledge", "skill", "attitude"] as const;
-
-function OutcomeList({
-  configId,
-  outcomes,
-}: {
-  configId: string;
-  outcomes: InterviewOutcomeAuthoring[];
-}) {
-  const { t } = useTranslation();
-  const createOutcome = useCreateInterviewOutcome(configId);
-  const updateOutcome = useUpdateInterviewOutcome(configId);
-  const deleteOutcome = useDeleteInterviewOutcome(configId);
-  const [adding, setAdding] = useState(false);
-  const [newText, setNewText] = useState("");
-  const [newType, setNewType] =
-    useState<InterviewOutcomeAuthoring["outcome_type"]>("knowledge");
-  const [newWeight, setNewWeight] = useState(3);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingText, setEditingText] = useState("");
-  const sorted = useMemo(
-    () => [...outcomes].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
-    [outcomes],
-  );
-
-  async function handleAdd() {
-    if (!newText.trim()) return;
-    try {
-      await createOutcome.mutateAsync({
-        position: sorted.length + 1,
-        outcome_text: newText.trim(),
-        outcome_type: newType,
-        importance_weight: newWeight,
-      });
-      setNewText("");
-      setNewType("knowledge");
-      setNewWeight(3);
-      setAdding(false);
-      toast.success(t("teacher_interview_config.outcomes.added"));
-    } catch (err: unknown) {
-      toast.error((err as Error).message);
-    }
-  }
-
-  async function handleSaveEdit() {
-    if (!editingId || !editingText.trim()) return;
-    try {
-      await updateOutcome.mutateAsync({
-        outcomeId: editingId,
-        patch: { outcome_text: editingText.trim() },
-      });
-      setEditingId(null);
-      setEditingText("");
-      toast.success(t("teacher_interview_config.outcomes.saved"));
-    } catch (err: unknown) {
-      toast.error((err as Error).message);
-    }
-  }
-
-  async function handleDelete(o: InterviewOutcomeAuthoring) {
-    try {
-      await deleteOutcome.mutateAsync(o.id);
-      toast.success(t("teacher_interview_config.outcomes.deleted"));
-    } catch (err: unknown) {
-      toast.error((err as Error).message);
-    }
-  }
-
-  return (
-    <div className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl p-6 lg:p-8 space-y-4 shadow-glass">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
-            {t("teacher_interview_config.outcomes.list_title")}
-          </h3>
-          <p className="text-xs text-m3-on-surface-variant mt-0.5">
-            {t("teacher_interview_config.outcomes.list_description")}
-          </p>
-        </div>
-        {!adding && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setAdding(true)}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            {t("teacher_interview_config.outcomes.add")}
-          </Button>
-        )}
-      </div>
-
-      {adding && (
-        <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-2">
-          <textarea
-            value={newText}
-            onChange={(e) => setNewText(e.target.value)}
-            rows={2}
-            placeholder={t("teacher_interview_config.outcomes.add_placeholder")}
-            className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-          />
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={newType}
-              onChange={(e) =>
-                setNewType(
-                  e.target.value as InterviewOutcomeAuthoring["outcome_type"],
+                updateGeneration(
+                  "question_count",
+                  Math.floor(Number(e.target.value)) || 0,
                 )
               }
-              className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-            >
-              {_OUTCOME_TYPES.map((tp) => (
-                <option key={tp} value={tp}>
-                  {t(`teacher_interview_config.outcomes.type_${tp}`)}
-                </option>
-              ))}
-            </select>
-            <label className="flex items-center gap-1.5 text-xs text-m3-on-surface-variant">
-              {t("teacher_interview_config.outcomes.weight_label")}
-              <input
-                type="number"
-                min={1}
-                max={5}
-                value={newWeight}
-                onChange={(e) =>
-                  setNewWeight(
-                    Math.min(5, Math.max(1, Math.floor(Number(e.target.value)) || 1)),
-                  )
-                }
-                className="w-16 rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-              />
-            </label>
-            <div className="flex justify-end gap-2 ml-auto">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  setAdding(false);
-                  setNewText("");
-                }}
-              >
-                {t("common.cancel")}
-              </Button>
-              <Button
-                type="button"
-                disabled={createOutcome.isPending || !newText.trim()}
-                onClick={() => void handleAdd()}
-                className="gap-2"
-              >
-                {createOutcome.isPending && (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                )}
-                {t("teacher_interview_config.outcomes.add_save")}
-              </Button>
-            </div>
-          </div>
+              className="bg-m3-surface text-sm"
+            />
+          </Field>
         </div>
-      )}
 
-      {sorted.length === 0 ? (
-        <p className="text-[11px] text-amber-700 bg-amber-50 rounded-xl px-3 py-2 leading-relaxed">
-          {t("teacher_interview_config.outcomes.empty")}
+        <Field
+          label={t("teacher_interview_config.generate.focus_label")}
+          hint={t("teacher_interview_config.generate.focus_hint")}
+        >
+          <Input
+            value={generationForm.focus_topics}
+            onChange={(e) => updateGeneration("focus_topics", e.target.value)}
+            placeholder={t(
+              "teacher_interview_config.generate.focus_placeholder",
+            )}
+            className="bg-m3-surface text-sm"
+          />
+        </Field>
+
+        <Field
+          label={t("teacher_interview_config.generate.avoid_label")}
+          hint={t("teacher_interview_config.generate.avoid_hint")}
+        >
+          <Input
+            value={generationForm.avoid_topics}
+            onChange={(e) => updateGeneration("avoid_topics", e.target.value)}
+            placeholder={t(
+              "teacher_interview_config.generate.avoid_placeholder",
+            )}
+            className="bg-m3-surface text-sm"
+          />
+        </Field>
+
+        <p className="text-[11px] text-m3-on-surface-variant">
+          {t("teacher_interview_config.generate.reuses_settings_hint")}
         </p>
-      ) : (
-        <ul className="space-y-2">
-          {sorted.map((o) => {
-            const isEditing = editingId === o.id;
-            return (
-              <li
-                key={o.id}
-                className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3"
-              >
-                {isEditing ? (
-                  <div className="space-y-2">
-                    <textarea
-                      value={editingText}
-                      onChange={(e) => setEditingText(e.target.value)}
-                      rows={2}
-                      className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-                    />
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingId(null);
-                          setEditingText("");
-                        }}
-                      >
-                        {t("common.cancel")}
-                      </Button>
-                      <Button
-                        type="button"
-                        disabled={updateOutcome.isPending || !editingText.trim()}
-                        onClick={() => void handleSaveEdit()}
-                        className="gap-2"
-                      >
-                        {updateOutcome.isPending && (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        )}
-                        <Save className="h-4 w-4" />
-                        {t("common.save")}
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <p className="text-sm text-m3-on-surface leading-relaxed">
-                        {o.outcome_text}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge className="border-0 bg-m3-surface-container text-m3-on-surface-variant text-[10px] font-bold rounded-full px-2 py-0.5">
-                          {t(
-                            `teacher_interview_config.outcomes.type_${o.outcome_type}`,
-                          )}
-                        </Badge>
-                        <span className="text-[10px] text-m3-on-surface-variant">
-                          {t("teacher_interview_config.outcomes.weight_badge", {
-                            weight: o.importance_weight,
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => {
-                          setEditingId(o.id);
-                          setEditingText(o.outcome_text);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-600"
-                        disabled={deleteOutcome.isPending}
-                        onClick={() => void handleDelete(o)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-}
 
-function QuestionList({
-  configId,
-  questions,
-}: {
-  configId: string;
-  questions: InterviewQuestionAuthoring[];
-}) {
-  const { t } = useTranslation();
-  const updateQuestion = useUpdateInterviewQuestion(configId);
-  const deleteQuestion = useDeleteInterviewQuestion(configId);
-  const createQuestion = useCreateInterviewQuestion(configId);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingText, setEditingText] = useState("");
-  const [adding, setAdding] = useState(false);
-  const [newText, setNewText] = useState("");
-  const sorted = useMemo(
-    () => [...questions].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
-    [questions],
-  );
+        {activeRunId && (
+          <div
+            className={cn(
+              "rounded-xl px-4 py-3 text-sm border",
+              failed
+                ? "border-red-200 bg-red-50 text-red-800"
+                : completed
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                  : "border-blue-200 bg-blue-50 text-blue-800",
+            )}
+          >
+            <div className="flex items-center gap-2 font-bold">
+              {inProgress ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : failed ? (
+                <X className="h-4 w-4" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4" />
+              )}
+              {inProgress
+                ? t("teacher_interview_config.generate.in_progress")
+                : failed
+                  ? t("teacher_interview_config.generate.failed")
+                  : t("teacher_interview_config.generate.completed")}
+              {progress && !failed && (
+                <span className="ml-auto tabular-nums font-extrabold">
+                  {progress.accepted}/{progress.target}
+                </span>
+              )}
+            </div>
 
-  async function handleApprove(q: InterviewQuestionAuthoring) {
-    try {
-      await updateQuestion.mutateAsync({
-        questionId: q.id,
-        patch: { review_status: "approved" },
-      });
-      toast.success(t("teacher_interview_config.toasts.question_approved"));
-    } catch (err: unknown) {
-      toast.error(
-        (err as Error).message ||
-          t("teacher_interview_config.toasts.question_approve_failed"),
-      );
-    }
-  }
+            {progress && !failed && (
+              <div className="mt-2 space-y-1">
+                <div className="flex items-center justify-between text-xs font-medium">
+                  <span>
+                    {completed
+                      ? t("teacher_interview_config.generate.phase_done")
+                      : progress.phase === "saving"
+                        ? t("teacher_interview_config.generate.phase_saving")
+                        : t("teacher_interview_config.generate.phase_generating")}
+                  </span>
+                  <span className="tabular-nums">{progress.percent}%</span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-current/15">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-[width] duration-500 ease-out",
+                      completed ? "bg-emerald-500" : "bg-blue-500",
+                    )}
+                    style={{ width: `${Math.max(progress.percent, inProgress ? 6 : 0)}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
-  async function handleReject(q: InterviewQuestionAuthoring) {
-    try {
-      await updateQuestion.mutateAsync({
-        questionId: q.id,
-        patch: { review_status: "rejected" },
-      });
-      toast.success(t("teacher_interview_config.toasts.question_rejected"));
-    } catch (err: unknown) {
-      toast.error((err as Error).message);
-    }
-  }
+            {failed && run?.failure_message && (
+              <p className="mt-1 text-xs">{run.failure_message}</p>
+            )}
+            {completed && (
+              <p className="mt-1 text-xs">
+                {t("teacher_interview_config.generate.success_body")}
+              </p>
+            )}
+          </div>
+        )}
 
-  async function handleSaveEdit() {
-    if (!editingId || !editingText.trim()) return;
-    try {
-      await updateQuestion.mutateAsync({
-        questionId: editingId,
-        patch: { prompt_text: editingText.trim() },
-      });
-      setEditingId(null);
-      setEditingText("");
-      toast.success(t("teacher_interview_config.toasts.question_saved"));
-    } catch (err: unknown) {
-      toast.error((err as Error).message);
-    }
-  }
-
-  async function handleDelete(q: InterviewQuestionAuthoring) {
-    try {
-      await deleteQuestion.mutateAsync(q.id);
-      toast.success(t("teacher_interview_config.toasts.question_deleted"));
-    } catch (err: unknown) {
-      toast.error((err as Error).message);
-    }
-  }
-
-  async function handleAdd() {
-    if (!newText.trim()) return;
-    try {
-      await createQuestion.mutateAsync({
-        prompt_text: newText.trim(),
-        question_type: "conceptual",
-      });
-      setNewText("");
-      setAdding(false);
-      toast.success(t("teacher_interview_config.toasts.question_added"));
-    } catch (err: unknown) {
-      toast.error((err as Error).message);
-    }
-  }
-
-  return (
-    <div className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl p-6 lg:p-8 space-y-4 shadow-glass">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
-            {t("teacher_interview_config.questions.list_title")}
-          </h3>
-          <p className="text-xs text-m3-on-surface-variant mt-0.5">
-            {t("teacher_interview_config.questions.list_description")}
+        <div className="flex items-center justify-between gap-3 pt-3 border-t border-dashed border-m3-secondary/30">
+          <p className="text-[11px] text-m3-on-surface-variant">
+            {t("teacher_interview_config.generate.independent_action_hint")}
           </p>
-        </div>
-        {!adding && (
           <Button
             type="button"
-            variant="outline"
-            onClick={() => setAdding(true)}
-            className="gap-2"
+            onClick={onGenerate}
+            disabled={inProgress}
+            className="gap-2 gradient-primary text-white border-0 hover:shadow-ai-glow shrink-0"
           >
-            <Plus className="h-4 w-4" />
-            {t("teacher_interview_config.questions.add_manual")}
-          </Button>
-        )}
-      </div>
-
-      {adding && (
-        <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-2">
-          <textarea
-            value={newText}
-            onChange={(e) => setNewText(e.target.value)}
-            rows={3}
-            placeholder={t(
-              "teacher_interview_config.questions.add_placeholder",
+            {inProgress ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
             )}
-            className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-          />
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setAdding(false);
-                setNewText("");
-              }}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              type="button"
-              disabled={createQuestion.isPending || !newText.trim()}
-              onClick={() => void handleAdd()}
-              className="gap-2"
-            >
-              {createQuestion.isPending && (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              )}
-              {t("teacher_interview_config.questions.add_save")}
-            </Button>
-          </div>
+            {inProgress
+              ? t("teacher_interview_config.generate.processing")
+              : t("teacher_interview_config.generate.start_button")}
+          </Button>
         </div>
-      )}
-
-      {sorted.length === 0 ? (
-        <p className="text-[11px] text-amber-700 bg-amber-50 rounded-xl px-3 py-2 leading-relaxed">
-          {t("teacher_interview_config.questions.empty")}
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {sorted.map((q) => {
-            const isEditing = editingId === q.id;
-            const badgeClass =
-              q.review_status === "approved"
-                ? "bg-emerald-100 text-emerald-700"
-                : q.review_status === "rejected"
-                  ? "bg-red-100 text-red-700"
-                  : "bg-amber-50 text-amber-700";
-            return (
-              <li
-                key={q.id}
-                className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface p-3 space-y-2"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  {isEditing ? (
-                    <textarea
-                      value={editingText}
-                      onChange={(e) => setEditingText(e.target.value)}
-                      rows={3}
-                      className="flex-1 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-                    />
-                  ) : (
-                    <p className="text-sm text-m3-on-surface flex-1 whitespace-pre-wrap leading-relaxed">
-                      {q.prompt_text}
-                    </p>
-                  )}
-                  <Badge
-                    className={cn(
-                      "border-0 text-[10px] font-bold uppercase tracking-widest shrink-0",
-                      badgeClass,
-                    )}
-                  >
-                    {t(`teacher_interview_config.review_status.${q.review_status}`)}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-end gap-1 flex-wrap">
-                  {isEditing ? (
-                    <>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingId(null);
-                          setEditingText("");
-                        }}
-                      >
-                        {t("common.cancel")}
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        disabled={updateQuestion.isPending || !editingText.trim()}
-                        onClick={() => void handleSaveEdit()}
-                        className="gap-1.5"
-                      >
-                        <Save className="h-3.5 w-3.5" />
-                        {t("common.save")}
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      {q.review_status !== "approved" && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={updateQuestion.isPending}
-                          onClick={() => void handleApprove(q)}
-                          className="gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700"
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                          {t("teacher_interview_config.questions.approve")}
-                        </Button>
-                      )}
-                      {q.review_status === "approved" && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={updateQuestion.isPending}
-                          onClick={() => void handleReject(q)}
-                          className="gap-1.5"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                          {t("teacher_interview_config.questions.reject")}
-                        </Button>
-                      )}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingId(q.id);
-                          setEditingText(q.prompt_text);
-                        }}
-                        className="gap-1.5"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        {t("common.edit")}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={deleteQuestion.isPending}
-                        onClick={() => void handleDelete(q)}
-                        className="gap-1.5 text-red-700 hover:bg-red-50 hover:text-red-700"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        {t("common.delete")}
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      </Section>
     </div>
   );
 }

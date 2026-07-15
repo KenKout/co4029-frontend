@@ -2475,6 +2475,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/interview-sessions/{session_id}/narration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Narrate Session Text
+         * @description Synthesize an AI utterance to MP3 using the agent-quality gateway TTS.
+         *
+         *     Gives text/hybrid sessions the same *voice* as the LiveKit agent without
+         *     mounting a realtime room (which would race the REST loop for control of
+         *     the session). Persona → voice mapping is resolved from the session's
+         *     config. On any TTS failure returns 503 so the browser falls back to its
+         *     local speech synthesizer.
+         */
+        post: operations["narrate_session_text_api_v1_interview_sessions__session_id__narration_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/interview-sessions/{session_id}/integrity-events": {
         parameters: {
             query?: never;
@@ -2710,6 +2736,23 @@ export interface paths {
         put?: never;
         /** Unarchive Interview Config */
         post: operations["unarchive_interview_config_api_v1_teacher_interview_configs__config_id__unarchive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/interview-configs/{config_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unpublish Interview Config */
+        post: operations["unpublish_interview_config_api_v1_teacher_interview_configs__config_id__unpublish_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6058,6 +6101,8 @@ export interface components {
             position?: number | null;
             /** Difficulty */
             difficulty?: ("junior" | "mid_level" | "senior") | null;
+            /** Model Answer */
+            model_answer?: string | null;
             /**
              * Review Status
              * @enum {string}
@@ -6107,6 +6152,8 @@ export interface components {
             question_type: "conceptual" | "behavioral" | "technical" | "situational" | "system_design";
             /** Difficulty */
             difficulty?: ("junior" | "mid_level" | "senior") | null;
+            /** Model Answer */
+            model_answer?: string | null;
             /** Linked Outcome Id */
             linked_outcome_id?: string | null;
             /** Position */
@@ -6410,6 +6457,8 @@ export interface components {
             audio_object_id?: string | null;
             /** Latency Ms */
             latency_ms?: number | null;
+            /** Turn Key */
+            turn_key?: string | null;
         };
         /**
          * InterviewSubmitAnswerResponse
@@ -6432,6 +6481,30 @@ export interface components {
             ai_followup_text?: string | null;
             /** Time Remaining Seconds */
             time_remaining_seconds?: number | null;
+            /** Phase */
+            phase?: string | null;
+            /** Action */
+            action?: string | null;
+            /** Reason Code */
+            reason_code?: string | null;
+            /** Ai Turn Id */
+            ai_turn_id?: string | null;
+            /** Ai Turn Text */
+            ai_turn_text?: string | null;
+            /** Language */
+            language?: string | null;
+            /** Should Narrate */
+            should_narrate?: boolean | null;
+            /** Current Question Id */
+            current_question_id?: string | null;
+            /** Target Outcome Id */
+            target_outcome_id?: string | null;
+            /** Should Await Response */
+            should_await_response?: boolean | null;
+            /** Should Finish */
+            should_finish?: boolean | null;
+            /** State Version */
+            state_version?: number | null;
         };
         /**
          * InterviewSummaryPublic
@@ -7897,6 +7970,18 @@ export interface components {
             last_activity_at: string | null;
             /** Lessons */
             lessons: components["schemas"]["LessonProgressSummary"][];
+        };
+        /**
+         * NarrationRequest
+         * @description Body for ``POST /interview-sessions/{session_id}/narration``.
+         *
+         *     The client sends the exact AI utterance (question or follow-up) it is
+         *     rendering so the server can synthesize matching speech. Persona is derived
+         *     server-side from the session's config — the client never chooses the voice.
+         */
+        NarrationRequest: {
+            /** Text */
+            text: string;
         };
         /** NotificationPreferenceRead */
         NotificationPreferenceRead: {
@@ -9963,6 +10048,8 @@ export interface components {
             avatar_object_id?: string | null;
             /** Bio */
             bio?: string | null;
+            /** Locale */
+            locale?: string | null;
         };
         /** UserProfileUpdate */
         UserProfileUpdate: {
@@ -9974,6 +10061,8 @@ export interface components {
             display_name?: string | null;
             /** Bio */
             bio?: string | null;
+            /** Locale */
+            locale?: ("en" | "vi") | null;
         };
         /** UserRead */
         UserRead: {
@@ -10265,6 +10354,7 @@ export type SchemaMultipartCompleteIn = components['schemas']['MultipartComplete
 export type SchemaMultipartPartsOut = components['schemas']['MultipartPartsOut'];
 export type SchemaMyCareerEnrollmentRead = components['schemas']['MyCareerEnrollmentRead'];
 export type SchemaMyCourseProgressSummary = components['schemas']['MyCourseProgressSummary'];
+export type SchemaNarrationRequest = components['schemas']['NarrationRequest'];
 export type SchemaNotificationPreferenceRead = components['schemas']['NotificationPreferenceRead'];
 export type SchemaNotificationPreferenceUpdate = components['schemas']['NotificationPreferenceUpdate'];
 export type SchemaNotificationRead = components['schemas']['NotificationRead'];
@@ -14689,7 +14779,9 @@ export interface operations {
     realtime_token_api_v1_interview_sessions__session_id__realtime_token_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "accept-language"?: string | null;
+            };
             path: {
                 session_id: string;
             };
@@ -14704,6 +14796,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RealtimeTokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    narrate_session_text_api_v1_interview_sessions__session_id__narration_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NarrationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -14788,7 +14915,9 @@ export interface operations {
     respond_to_session_api_v1_interview_sessions__session_id__respond_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "accept-language"?: string | null;
+            };
             path: {
                 session_id: string;
             };
@@ -15158,6 +15287,37 @@ export interface operations {
         };
     };
     unarchive_interview_config_api_v1_teacher_interview_configs__config_id__unarchive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                config_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewConfigAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unpublish_interview_config_api_v1_teacher_interview_configs__config_id__unpublish_post: {
         parameters: {
             query?: never;
             header?: never;

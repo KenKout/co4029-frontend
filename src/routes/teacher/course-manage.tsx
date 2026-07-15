@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft, Plus, ChevronDown, ChevronRight,
+  ArrowLeft, Plus, ChevronDown,
   Video, BookOpen, GripVertical, HelpCircle, Mic,
   Pencil, Loader2, ArrowRight, Check, Users, UserPlus, Activity,
   Settings, Save, ExternalLink, Brain, ClipboardList,
@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { PromptDialog } from "@/components/ui/prompt-dialog";
 import {
   useTeacherCourseById,
   useTeacherCourseContent,
@@ -21,6 +22,7 @@ import {
   useReorderModuleItems,
 } from "@/lib/api/hooks/teacher-courses";
 import { useCreateQuiz } from "@/lib/api/hooks/quizzes";
+import { useCreateInterviewConfig } from "@/lib/api/hooks/interviews";
 import type { CourseContentItem, CourseContentModule } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
 
@@ -83,25 +85,44 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-m3-outline-variant/20 overflow-hidden">
+    <div
+      className={cn(
+        "rounded-xl border border-l-4 border-m3-outline-variant/20 overflow-hidden transition-colors",
+        open ? "border-l-m3-primary" : "border-l-m3-outline-variant"
+      )}
+    >
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-3 px-5 py-4 bg-m3-surface-container-low hover:bg-m3-surface-container transition-colors text-left cursor-pointer"
+        className={cn(
+          "group w-full flex items-center gap-3 px-5 py-4 text-left cursor-pointer transition-colors",
+          open
+            ? "bg-m3-surface-container-low hover:bg-m3-surface-container"
+            : "hover:bg-m3-primary/5"
+        )}
       >
         <Settings className="h-4 w-4 text-m3-secondary shrink-0" />
-        <span className="flex-1 text-sm font-bold text-m3-on-surface">Course Settings</span>
+        <span className="flex-1 text-sm font-bold text-m3-on-surface transition-colors group-hover:text-m3-primary">
+          Course Settings
+        </span>
         <span className="text-xs text-m3-on-surface-variant mr-2 hidden sm:block">
           {course?.status === "published" ? "Published" : "Draft"} · {course?.level ?? "No level"}
         </span>
-        {open ? (
-          <ChevronDown className="h-4 w-4 text-m3-on-surface-variant" />
-        ) : (
-          <ChevronRight className="h-4 w-4 text-m3-on-surface-variant" />
-        )}
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 text-m3-on-surface-variant transition-transform duration-300",
+            open ? "rotate-0" : "-rotate-90"
+          )}
+        />
       </button>
 
-      {open && (
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-300 ease-in-out",
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        )}
+      >
+        <div className="overflow-hidden min-h-0">
         <form onSubmit={handleSave} className="p-5 border-t border-m3-outline-variant/10 bg-m3-surface space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Title */}
@@ -214,7 +235,8 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
             </Button>
           </div>
         </form>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -230,10 +252,14 @@ function AddLessonPills({
   nextPosition: number;
   itemCount: number;
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const createLesson = useCreateLesson(moduleId, courseId);
   const createQuiz = useCreateQuiz(courseId);
+  const createInterview = useCreateInterviewConfig(courseId);
   const [adding, setAdding] = useState(false);
+  const [interviewModalOpen, setInterviewModalOpen] = useState(false);
+  const [interviewTitle, setInterviewTitle] = useState("");
 
   function slugify(title: string) {
     return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -280,11 +306,35 @@ function AddLessonPills({
   }
 
   function handleAddInterview() {
-    void navigate({
-      to: "/teacher/courses/$courseId/interview-configs/new",
-      params: { courseId },
-      search: { moduleId },
-    });
+    setInterviewTitle("");
+    setInterviewModalOpen(true);
+  }
+
+  async function handleCreateInterview() {
+    if (!interviewTitle.trim()) {
+      toast.error(t("teacher_interview_config_new.errors.title_required"));
+      return;
+    }
+    try {
+      const config = await createInterview.mutateAsync({
+        course_id: courseId,
+        module_id: moduleId,
+        title: interviewTitle.trim(),
+        supported_modes: "hybrid",
+        lock_quiz_ef_until_pass: false,
+      });
+      setInterviewModalOpen(false);
+      toast.success(t("teacher_interview_config_new.success.created"));
+      void navigate({
+        to: "/teacher/courses/$courseId/interview-configs/$configId",
+        params: { courseId, configId: config.id },
+      });
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_interview_config_new.errors.create_failed"),
+      );
+    }
   }
 
   return (
@@ -325,6 +375,41 @@ function AddLessonPills({
         <Plus className="h-3 w-3 -ml-0.5" />
         Interview
       </button>
+
+      <PromptDialog
+        open={interviewModalOpen}
+        onOpenChange={setInterviewModalOpen}
+        title={t("teacher_interview_config_new.modal_title")}
+        description={t("teacher_interview_config_new.modal_description")}
+        confirmLabel={
+          createInterview.isPending
+            ? t("teacher_interview_config_new.submitting")
+            : t("teacher_interview_config_new.submit")
+        }
+        isPending={createInterview.isPending}
+        onConfirm={handleCreateInterview}
+      >
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-m3-on-surface">
+            {t("teacher_interview_config_new.fields.title")} *
+          </label>
+          <Input
+            autoFocus
+            required
+            placeholder={t(
+              "teacher_interview_config_new.fields.title_placeholder",
+            )}
+            value={interviewTitle}
+            onChange={(e) => setInterviewTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void handleCreateInterview();
+              }
+            }}
+          />
+        </div>
+      </PromptDialog>
     </div>
   );
 }
@@ -537,9 +622,12 @@ function ModuleAccordion({
       {/* Header row */}
       <div
         className={cn(
-          "w-full flex items-center gap-3 p-4 text-left transition-colors",
-          open ? "bg-m3-surface-container-low" : "hover:bg-m3-surface-container-low/50"
+          "group w-full flex items-center gap-3 p-4 text-left cursor-pointer transition-colors",
+          open
+            ? "bg-m3-surface-container-low hover:bg-m3-surface-container"
+            : "hover:bg-m3-primary/5"
         )}
+        onClick={() => !editingTitle && setOpen((o) => !o)}
       >
         <GripVertical className="h-4 w-4 text-m3-outline-variant shrink-0 cursor-grab" />
 
@@ -559,10 +647,7 @@ function ModuleAccordion({
             className="flex-1 font-headline font-semibold text-sm text-m3-on-surface bg-transparent border-b border-m3-secondary outline-none py-0.5"
           />
         ) : (
-          <span
-            className="flex-1 font-headline font-semibold text-sm text-m3-on-surface group"
-            onClick={() => setOpen((o) => !o)}
-          >
+          <span className="flex-1 font-headline font-semibold text-sm text-m3-on-surface transition-colors group-hover:text-m3-primary">
             {updateModule.isPending && updateModule.variables && "title" in updateModule.variables
               ? (updateModule.variables as { title?: string }).title ?? module.title
               : module.title}
@@ -621,47 +706,55 @@ function ModuleAccordion({
           onClick={() => setOpen((o) => !o)}
           className="shrink-0"
         >
-          {open ? (
-            <ChevronDown className="h-4 w-4 text-m3-on-surface-variant transition-transform" />
-          ) : (
-            <ChevronRight className="h-4 w-4 text-m3-on-surface-variant" />
-          )}
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 text-m3-on-surface-variant transition-transform duration-300",
+              open ? "rotate-0" : "-rotate-90"
+            )}
+          />
         </button>
       </div>
 
-      {open && (
-        <div className="border-t border-m3-outline-variant bg-card">
-          <div className="p-4 flex flex-col gap-1">
-            {allItemsSorted.length === 0 && (
-              <p className="text-xs text-m3-on-surface-variant py-2 pl-1">No items yet.</p>
-            )}
-            {allItemsSorted.map((item, idx) => (
-              <ModuleItemRow
-                key={item.id}
-                item={item}
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-300 ease-in-out",
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        )}
+      >
+        <div className="overflow-hidden min-h-0">
+          <div className="border-t border-m3-outline-variant bg-card">
+            <div className="p-4 flex flex-col gap-1">
+              {allItemsSorted.length === 0 && (
+                <p className="text-xs text-m3-on-surface-variant py-2 pl-1">No items yet.</p>
+              )}
+              {allItemsSorted.map((item, idx) => (
+                <ModuleItemRow
+                  key={item.id}
+                  item={item}
+                  courseId={courseId}
+                  isDragOver={dragOverIdx === idx}
+                  isDragging={dragSourceIdx === idx}
+                  onDragStart={(e) => {
+                    setDragSourceIdx(idx);
+                    const el = e.currentTarget as HTMLElement;
+                    const rect = el.getBoundingClientRect();
+                    e.dataTransfer.setDragImage(el, e.clientX - rect.left, e.clientY - rect.top);
+                  }}
+                  onDragOver={(e) => { e.preventDefault(); setDragOverIdx(idx); }}
+                  onDrop={() => handleDrop(idx)}
+                  onDragEnd={() => { setDragSourceIdx(null); setDragOverIdx(null); }}
+                />
+              ))}
+              <AddLessonPills
+                moduleId={module.id}
                 courseId={courseId}
-                isDragOver={dragOverIdx === idx}
-                isDragging={dragSourceIdx === idx}
-                onDragStart={(e) => {
-                  setDragSourceIdx(idx);
-                  const el = e.currentTarget as HTMLElement;
-                  const rect = el.getBoundingClientRect();
-                  e.dataTransfer.setDragImage(el, e.clientX - rect.left, e.clientY - rect.top);
-                }}
-                onDragOver={(e) => { e.preventDefault(); setDragOverIdx(idx); }}
-                onDrop={() => handleDrop(idx)}
-                onDragEnd={() => { setDragSourceIdx(null); setDragOverIdx(null); }}
+                nextPosition={(module.items ?? []).length + 1}
+                itemCount={(module.items ?? []).length}
               />
-            ))}
-            <AddLessonPills
-              moduleId={module.id}
-              courseId={courseId}
-              nextPosition={(module.items ?? []).length + 1}
-              itemCount={(module.items ?? []).length}
-            />
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

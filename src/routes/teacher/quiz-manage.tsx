@@ -31,12 +31,13 @@ import {
   useAddQuizQuestion,
   useBulkSetExpectedTime,
   useDeleteQuiz,
-  useDeleteQuizQuestion,
   usePatchQuiz,
   usePublishQuiz,
   useQuizAuthoring,
   useRegenerateQuestion,
   useUpdateQuizQuestion,
+  usePendingQuestionDeletes,
+  type PendingQuestionDelete,
 } from "@/lib/api/hooks/quizzes";
 import {
   useTeacherCourseById,
@@ -128,7 +129,16 @@ export default function QuizManagePage() {
     useTeacherCourseContent(courseId);
 
   const quiz = authoring?.quiz;
-  const questions = useMemo(() => authoring?.questions ?? [], [authoring]);
+  const allQuestions = useMemo(() => authoring?.questions ?? [], [authoring]);
+
+  // Combo-undo: deletes are deferred 5s so rapid deletes stack into one
+  // batch that a single Undo can revert. Staged questions are hidden from
+  // the list immediately but only sent to the server when the timer expires.
+  const pendingDeletes = usePendingQuestionDeletes(quizId);
+  const questions = useMemo(
+    () => allQuestions.filter((q) => !pendingDeletes.pendingIds.has(q.id)),
+    [allQuestions, pendingDeletes.pendingIds],
+  );
 
   const courseModule = useMemo(
     () => content?.modules.find((entry) => entry.id === quiz?.module_id),
@@ -496,6 +506,10 @@ export default function QuizManagePage() {
           addPending={addQuestion.isPending}
           onOpenGenerator={() => setShowGenerateModal(true)}
           onOpenBank={() => setShowBankModal(true)}
+          onQueueDelete={pendingDeletes.queueDelete}
+          comboCount={pendingDeletes.comboCount}
+          comboSecondsLeft={pendingDeletes.secondsLeft}
+          onUndoDeletes={pendingDeletes.undo}
         />
       )}
 
@@ -589,6 +603,10 @@ function QuestionsTab({
   addPending,
   onOpenGenerator,
   onOpenBank,
+  onQueueDelete,
+  comboCount,
+  comboSecondsLeft,
+  onUndoDeletes,
 }: {
   quizId: string;
   questions: QuizQuestionAuthoring[];
@@ -602,6 +620,10 @@ function QuestionsTab({
   addPending: boolean;
   onOpenGenerator: () => void;
   onOpenBank: () => void;
+  onQueueDelete: (item: PendingQuestionDelete) => void;
+  comboCount: number;
+  comboSecondsLeft: number;
+  onUndoDeletes: () => void;
 }) {
   const { t } = useTranslation();
   const bulkSet = useBulkSetExpectedTime(quizId);
@@ -643,6 +665,60 @@ function QuestionsTab({
   return (
     <div className="grid grid-cols-12 gap-6">
       <div className="col-span-12 lg:col-span-8 space-y-4">
+        {/* Undo snackbar: fixed bottom-center so it's ALWAYS visible
+            regardless of scroll position. It must NOT be a sticky element
+            inside the list — a sticky banner would slide under the global
+            ContentTopBar (z-20 per frontend/AGENTS.md) and be invisible,
+            which is exactly what happened. z-30 keeps it above page
+            content and the top bar but below the sidebar (z-40). */}
+        {comboCount > 0 && (
+          <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 flex items-center gap-3 rounded-xl bg-m3-inverse-surface text-m3-inverse-on-surface px-4 py-3 shadow-lg max-w-[calc(100vw-2rem)]">
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center">
+              <svg className="absolute inset-0 h-8 w-8 -rotate-90" viewBox="0 0 32 32">
+                <circle
+                  cx="16"
+                  cy="16"
+                  r="14"
+                  fill="none"
+                  strokeWidth="3"
+                  className="stroke-white/20"
+                />
+                <circle
+                  cx="16"
+                  cy="16"
+                  r="14"
+                  fill="none"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  className="stroke-current text-m3-primary transition-[stroke-dashoffset] duration-300 ease-linear"
+                  strokeDasharray={2 * Math.PI * 14}
+                  strokeDashoffset={
+                    2 * Math.PI * 14 * (1 - comboSecondsLeft / 5)
+                  }
+                />
+              </svg>
+              <span className="text-sm font-bold tabular-nums">
+                {comboSecondsLeft}
+              </span>
+            </div>
+            <span className="flex-1 text-sm font-medium whitespace-nowrap">
+              {t("teacher_quiz_manage.combo_undo.message", {
+                count: comboCount,
+              })}
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={onUndoDeletes}
+              className="gap-2 border-white/30 bg-transparent text-m3-inverse-on-surface hover:bg-white/10 hover:text-m3-inverse-on-surface shrink-0"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              {t("teacher_quiz_manage.combo_undo.undo", { count: comboCount })}
+            </Button>
+          </div>
+        )}
+
         {questions.length > 0 && missingExpectedTimeCount > 0 && (
           <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2 text-xs text-amber-800">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
@@ -697,6 +773,7 @@ function QuestionsTab({
               question={question}
               selected={selectedIds.has(question.id)}
               onToggleSelect={() => onToggleSelect(question.id)}
+              onQueueDelete={onQueueDelete}
             />
           ))
         )}
@@ -849,19 +926,19 @@ function QuestionCard({
   question,
   selected,
   onToggleSelect,
+  onQueueDelete,
 }: {
   quizId: string;
   question: QuizQuestionAuthoring;
   selected: boolean;
   onToggleSelect: () => void;
+  onQueueDelete: (item: PendingQuestionDelete) => void;
 }) {
   const { t } = useTranslation();
   const updateQuestion = useUpdateQuizQuestion(quizId, question.id);
-  const deleteQuestion = useDeleteQuizQuestion(quizId, question.id);
   const regenerate = useRegenerateQuestion(quizId, question.id);
 
   const [draft, setDraft] = useState(() => buildQuestionDraft(question));
-  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     setDraft(buildQuestionDraft(question));
@@ -899,6 +976,7 @@ function QuestionCard({
     try {
       await updateQuestion.mutateAsync({
         prompt_text: draft.prompt_text.trim(),
+        hint_text: draft.hint_text.trim() || null,
         explanation: draft.explanation.trim() || null,
         difficulty: draft.difficulty,
         bloom_level: draft.bloom_level,
@@ -935,18 +1013,16 @@ function QuestionCard({
     }
   }
 
-  async function handleDelete() {
-    try {
-      await deleteQuestion.mutateAsync();
-      toast.success(t("teacher_quiz_manage.toasts.question_deleted"));
-    } catch (err: unknown) {
-      toast.error(
-        (err as Error).message ||
-          t("teacher_quiz_manage.toasts.delete_question_failed"),
-      );
-    } finally {
-      setConfirming(false);
-    }
+  function handleDelete() {
+    // Deferred: stage the delete (optimistically hidden by the parent) and
+    // start/refresh the 5s combo timer. The Undo banner can revert it; the
+    // real DELETE only fires when the combo commits. No confirm step needed
+    // — undo IS the safety net.
+    const prompt = (question.prompt_text ?? "").trim();
+    onQueueDelete({
+      id: question.id,
+      label: prompt.length > 60 ? `${prompt.slice(0, 60)}…` : prompt,
+    });
   }
 
   async function handleRegenerate() {
@@ -1031,6 +1107,30 @@ function QuestionCard({
           rows={3}
           className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
         />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+          {t("teacher_quiz_manage.editor.hint_label", "Hint (shown to learner on request)")}
+        </label>
+        <textarea
+          value={draft.hint_text}
+          onChange={(e) =>
+            setDraft((current) => ({ ...current, hint_text: e.target.value }))
+          }
+          rows={2}
+          placeholder={t(
+            "teacher_quiz_manage.editor.hint_placeholder",
+            "e.g. Think about which property distinguishes analytical storage from transactional storage.",
+          )}
+          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+        />
+        <p className="text-[11px] text-m3-on-surface-variant">
+          {t(
+            "teacher_quiz_manage.editor.hint_help",
+            "Optional. Only shown to learners if \"Show hints\" is enabled in Quiz Settings. Must not reveal the answer.",
+          )}
+        </p>
       </div>
 
       {hasOptions && (
@@ -1336,49 +1436,20 @@ function QuestionCard({
           type="button"
           size="sm"
           variant="outline"
-          onClick={() => setConfirming(true)}
-          disabled={deleteQuestion.isPending}
+          onClick={handleDelete}
           className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700 ml-auto"
         >
           <Trash2 className="h-3.5 w-3.5" />
           {t("common.delete")}
         </Button>
       </div>
-
-      {confirming && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-xs text-red-800 flex flex-wrap items-center gap-2">
-          <span>{t("teacher_quiz_manage.confirm_delete_question")}</span>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => setConfirming(false)}
-            disabled={deleteQuestion.isPending}
-          >
-            {t("common.cancel")}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleDelete}
-            disabled={deleteQuestion.isPending}
-            className="bg-red-600 text-white hover:bg-red-700 border-0 gap-2"
-          >
-            {deleteQuestion.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Trash2 className="h-3.5 w-3.5" />
-            )}
-            {t("common.delete")}
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
 
 interface QuestionDraft {
   prompt_text: string;
+  hint_text: string;
   explanation: string;
   difficulty: string;
   bloom_level: string;
@@ -1419,6 +1490,7 @@ function countBlanks(promptText: string): number {
 function buildQuestionDraft(question: QuizQuestionAuthoring): QuestionDraft {
   return {
     prompt_text: question.prompt_text ?? "",
+    hint_text: question.hint_text ?? "",
     explanation: question.explanation ?? "",
     difficulty: question.difficulty ?? "medium",
     bloom_level: question.bloom_level ?? "understand",

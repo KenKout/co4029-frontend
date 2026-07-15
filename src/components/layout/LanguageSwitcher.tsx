@@ -7,15 +7,28 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { SUPPORTED_LOCALES, type SupportedLocale } from "@/i18n";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useUpdateProfile } from "@/lib/api/hooks/auth";
 
 export default function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
+  const { isAuthenticated } = useAuth();
+  const updateProfile = useUpdateProfile();
   const current = (i18n.resolvedLanguage ?? i18n.language ?? "en")
     .split("-")[0]
     .toLowerCase() as SupportedLocale;
 
   const handleChange = (lng: SupportedLocale) => {
     void i18n.changeLanguage(lng);
+    // Persist server-side for signed-in users so the choice follows them
+    // across devices AND so backend notification dispatch can render
+    // title/body in this language. Fire-and-forget: i18next already
+    // switched the UI; a failed PATCH just means the server keeps the
+    // old preference (best-effort, no toast to avoid noise on a passive
+    // toggle). Skip entirely when unauthenticated — no profile to write.
+    if (isAuthenticated && lng !== current) {
+      updateProfile.mutate({ locale: lng });
+    }
   };
 
   return (

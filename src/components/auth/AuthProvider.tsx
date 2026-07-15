@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import i18n from "@/i18n";
 
 import {
   AUTH_CHANGED_EVENT,
@@ -144,6 +145,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener(AUTH_CHANGED_EVENT, syncFromStorage);
     };
   }, []);
+
+  // Hydrate the UI language from the user's saved profile locale. The
+  // language switch persists ``locale`` server-side (drives notification
+  // language too); on load we mirror it back into i18next so a user who
+  // picked Vietnamese on one device sees Vietnamese everywhere. Only
+  // override when the saved locale actually differs from the active one,
+  // so an unauthenticated visitor's localStorage/navigator choice stands.
+  useEffect(() => {
+    const locale = authState.user?.profile?.locale;
+    if (locale && i18n.resolvedLanguage !== locale) {
+      void i18n.changeLanguage(locale);
+    }
+  }, [authState.user?.profile?.locale]);
 
   async function refreshUser() {
     try {

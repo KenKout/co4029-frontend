@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ApiError, apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import type {
@@ -278,6 +279,28 @@ export function useUnarchiveInterviewConfig(configId: string | null | undefined)
 }
 
 /**
+ * POST /teacher/interview-configs/{config_id}/unpublish — flip a published
+ * config back to draft (hides it from students so it can be edited/regenerated).
+ */
+export function useUnpublishInterviewConfig(configId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiPost<InterviewConfigAuthoring>(
+        `/teacher/interview-configs/${configId}/unpublish`,
+      ),
+    onSuccess: (config) => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.interviews.configAuthoring(config.id),
+      });
+      void qc.invalidateQueries({
+        queryKey: ["teacher", "courses", config.course_id, "content"],
+      });
+    },
+  });
+}
+
+/**
  * DELETE /teacher/interview-configs/{config_id} — soft-delete.
  */
 export function useDeleteInterviewConfig(configId: string | null | undefined) {
@@ -338,6 +361,7 @@ export function useUpdateInterviewQuestion(configId: string | null | undefined) 
         review_status: InterviewQuestionAuthoring["review_status"];
         linked_outcome_id: string | null;
         position: number;
+        model_answer: string | null;
       }>;
     }) =>
       apiPatch<InterviewQuestionAuthoring>(
@@ -613,10 +637,16 @@ export function useTeacherInterviewSession(
  * Errors: 503 voice disabled, 409 wrong mode/status, 403/404 ownership/missing.
  */
 export function useInterviewRealtimeToken(sessionId: string | null | undefined) {
+  const { i18n } = useTranslation();
   return useMutation({
     mutationFn: () =>
       apiPost<RealtimeTokenResponse>(
         `/interview-sessions/${sessionId}/realtime-token`,
+        undefined,
+        // Send the in-app language so the voice agent's adaptive utterances
+        // match the UI locale (parity with the /respond REST path). The backend
+        // normalizes this Accept-Language header to "vi"/"en".
+        { "Accept-Language": i18n.language || "en" },
       ),
   });
 }

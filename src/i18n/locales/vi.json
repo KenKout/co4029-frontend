@@ -18,6 +18,10 @@
     "breadcrumb_aria": "Đường dẫn",
     "unsaved_changes_warning": "Bạn có thay đổi chưa được lưu. Rời khỏi trang sẽ làm mất các thay đổi này."
   },
+  "entity_select": {
+    "selected_count": "Đã chọn {{count}}",
+    "add_selected": "Thêm {{count}}"
+  },
   "nav": {
     "dashboard": "Bảng điều khiển",
     "courses": "Khoá học",
@@ -244,36 +248,16 @@
     "continue": "Tiếp tục"
   },
   "teacher_interview_config_new": {
-    "title": "Tạo phỏng vấn AI mới",
-    "subtitle": "Cấu hình cơ bản — bạn có thể chỉnh chi tiết và sinh câu hỏi sau khi tạo bản nháp.",
+    "modal_title": "Tạo phỏng vấn AI mới",
+    "modal_description": "Nhập tiêu đề trước — bạn sẽ chọn phong cách, hình thức, thời lượng, kết quả học tập và sinh câu hỏi ở màn hình kế tiếp.",
     "fields": {
       "title": "Tiêu đề",
-      "title_placeholder": "VD: Phỏng vấn module Cấu trúc dữ liệu",
-      "module": "Module",
-      "module_placeholder": "— Chọn module —",
-      "no_modules": "Khoá học chưa có module. Hãy thêm module trước khi tạo phỏng vấn.",
-      "persona": "Phong cách",
-      "persona_neutral": "Trung lập",
-      "persona_strict": "Nghiêm khắc",
-      "persona_supportive": "Hỗ trợ",
-      "modes": "Hình thức",
-      "mode_hybrid": "Văn bản + giọng nói",
-      "mode_text": "Chỉ văn bản",
-      "mode_voice": "Chỉ giọng nói",
-      "duration": "Thời lượng (phút)",
-      "duration_placeholder": "VD: 30",
-      "max_attempts": "Số lần thử tối đa",
-      "max_attempts_placeholder": "Để trống = không giới hạn",
-      "supplementary": "Hướng dẫn bổ sung (cho AI sinh câu hỏi)",
-      "supplementary_placeholder": "VD: Tập trung vào tình huống thực tế, tránh câu hỏi học thuộc lòng…",
-      "lock_quiz_ef": "Khoá nâng cấp EF của quiz cho đến khi đạt",
-      "lock_quiz_ef_help": "Học viên phải vượt phỏng vấn trước khi spaced repetition tăng khoảng cách ôn tập."
+      "title_placeholder": "VD: Phỏng vấn module Cấu trúc dữ liệu"
     },
     "submit": "Tạo phỏng vấn",
     "submitting": "Đang tạo…",
     "errors": {
       "title_required": "Vui lòng nhập tiêu đề",
-      "module_required": "Vui lòng chọn module",
       "create_failed": "Tạo phỏng vấn thất bại"
     },
     "success": {
@@ -282,7 +266,7 @@
   },
   "teacher_common": {
     "back_to_course": "Quay lại khóa học",
-    "breadcrumb_teaching": "Giảng dạy",
+    "breadcrumb_teaching": "Khoá của tôi",
     "breadcrumb_course": "Khóa học",
     "lesson_fallback": "Bài học",
     "quiz_label": "Bài kiểm tra",
@@ -617,7 +601,7 @@
     }
   },
   "teacher_sr_cohort": {
-    "breadcrumb_teaching": "Giảng dạy",
+    "breadcrumb_teaching": "Khoá của tôi",
     "breadcrumb_course": "Khóa học",
     "breadcrumb_overview": "Tổng quan lớp",
     "back": "Quay lại",
@@ -1409,7 +1393,9 @@
       "back_to_course": "Quay lại khoá học",
       "unflag": "Bỏ đánh dấu",
       "flag": "Đánh dấu",
-      "show_hint": "Xem gợi ý"
+      "show_hint": "Xem gợi ý",
+      "view_hint_again": "Xem lại gợi ý",
+      "close_hint": "Đóng"
     },
     "errors": {
       "rate_limited": "Quá nhiều yêu cầu, vui lòng thử lại sau",
@@ -1440,6 +1426,19 @@
     }
   },
   "course_interview": {
+    "hybrid": {
+      "prestart_hint": "Phỏng vấn kết hợp — bạn có thể gõ hoặc nói câu trả lời, và kết hợp cả hai ở bất kỳ câu hỏi nào.",
+      "speak_answer": "Nói câu trả lời",
+      "listening": "Đang nghe… chạm để dừng",
+      "dictation_hint": "Giọng nói của bạn được chuyển thành văn bản trong ô trả lời — hãy chỉnh sửa trước khi gửi.",
+      "unsupported": "Trình duyệt này không hỗ trợ nhập bằng giọng nói — vui lòng gõ câu trả lời."
+    },
+    "narration": {
+      "on": "Bật giọng nói",
+      "off": "Tắt giọng nói",
+      "mute": "Tắt giọng đọc của AI",
+      "unmute": "Cho AI đọc câu hỏi thành tiếng"
+    },
     "sections": {
       "gap_report": "Báo cáo lỗ hổng",
       "gap_report_pending": "Đang chuẩn bị báo cáo lỗ hổng cá nhân hóa… có thể mất một phút.",
@@ -1502,7 +1501,9 @@
       "evaluating": "Đang chấm câu trả lời của bạn…",
       "evaluating_summary": "AI đang chấm câu trả lời của bạn theo các mục tiêu học tập. Quá trình này thường mất khoảng một phút — kết quả sẽ tự động hiển thị tại đây.",
       "pass_summary": "Bạn đã đạt đủ số mục tiêu học tập để vượt qua buổi phỏng vấn này.",
-      "fail_summary": "Bạn chưa đạt đủ số mục tiêu học tập lần này. Hãy ôn lại nội dung và thử lại."
+      "fail_summary": "Bạn chưa đạt đủ số mục tiêu học tập lần này. Hãy ôn lại nội dung và thử lại.",
+      "evaluation_failed": "Chấm điểm gặp lỗi",
+      "evaluation_failed_summary": "Hệ thống AI gặp lỗi khi chấm bài phỏng vấn của bạn và không thể trả kết quả sau nhiều lần thử. Điều này không phản ánh chất lượng câu trả lời của bạn — vui lòng liên hệ giáo viên hoặc thử lại phỏng vấn sau."
     },
     "intro": {
       "description": "Phỏng vấn AI chấm điểm theo các tiêu chí của module. Trả lời từng câu một và xem phản hồi cuối phiên."
@@ -1549,9 +1550,11 @@
       "archived": "Đã lưu trữ lộ trình",
       "saved_changes": "Đã lưu thay đổi",
       "course_added": "Đã thêm khóa học",
+      "courses_added": "Đã thêm {{count}} khóa học",
       "order_updated": "Đã cập nhật thứ tự",
       "course_removed": "Đã xoá khóa học khỏi lộ trình",
       "student_added": "Đã thêm sinh viên",
+      "students_added": "Đã đăng ký {{count}} sinh viên",
       "student_unregistered": "Đã huỷ đăng ký"
     },
     "dialogs": {
@@ -1565,7 +1568,9 @@
       "move_up": "Chuyển lên",
       "move_down": "Chuyển xuống",
       "save_order": "Lưu thứ tự",
-      "register": "Đăng ký"
+      "register": "Đăng ký",
+      "add_courses": "Thêm khóa học",
+      "register_students": "Thêm sinh viên"
     },
     "fields": {
       "name": "Tên",
@@ -1582,8 +1587,22 @@
     },
     "sections": {
       "add_course": "Thêm khóa học",
+      "add_course_hint": "Tìm trong danh mục và chọn một hoặc nhiều khóa học để thêm.",
       "register_student": "Đăng ký sinh viên",
+      "register_student_hint": "Tìm theo tên hoặc email và chọn một hoặc nhiều sinh viên để đăng ký.",
       "readiness_snapshot": "Mức sẵn sàng nghề nghiệp trung bình"
+    },
+    "course_picker": {
+      "title": "Thêm khóa học vào lộ trình",
+      "search_placeholder": "Tìm khóa học theo tên hoặc mã…",
+      "empty": "Không tìm thấy khóa học.",
+      "added": "Đã thêm"
+    },
+    "student_picker": {
+      "title": "Thêm sinh viên vào lộ trình",
+      "search_placeholder": "Tìm sinh viên theo tên hoặc email…",
+      "empty": "Không tìm thấy sinh viên.",
+      "added": "Đã đăng ký"
     },
     "readiness_students_counted": "từ ảnh chụp gần nhất của {{count}} sinh viên đã đăng ký",
     "empty_states": {
@@ -1762,6 +1781,10 @@
       "body": "Hành động này sẽ xoá vĩnh viễn bài kiểm tra này, các câu hỏi, lượt làm bài và mục module liên quan. Không thể hoàn tác."
     },
     "confirm_delete_question": "Xoá câu hỏi này? Không thể hoàn tác.",
+    "combo_undo": {
+      "message": "Đang xoá {{count}} câu hỏi…",
+      "undo": "Hoàn tác ({{count}})"
+    },
     "banners": {
       "missing_expected_time": "{{count}} câu chưa có thời gian dự kiến. Cần đặt thời gian trước khi xuất bản.",
       "pending_review": "{{count}} câu hỏi đang chờ duyệt. Hãy duyệt trước khi xuất bản."
@@ -1790,6 +1813,9 @@
     },
     "editor": {
       "prompt_label": "Câu hỏi",
+      "hint_label": "Gợi ý (hiện cho học viên khi được yêu cầu)",
+      "hint_placeholder": "Ví dụ: Hãy nghĩ về đặc điểm phân biệt lưu trữ phân tích với lưu trữ giao dịch.",
+      "hint_help": "Không bắt buộc. Chỉ hiện cho học viên nếu \"Show hints\" được bật trong Cài đặt bài quiz. Không được để lộ đáp án.",
       "options_label": "Đáp án",
       "explanation_label": "Giải thích",
       "approve": "Duyệt",
@@ -1888,6 +1914,8 @@
       "back_to_course": "Quay lại khoá học",
       "title_required": "Tiêu đề không được để trống",
       "questions_required": "Tạo câu hỏi trước khi xuất bản",
+      "outcomes_required": "Thêm ít nhất một chuẩn đầu ra trước khi xuất bản",
+      "publish_blocked_archived": "Bỏ lưu trữ phỏng vấn này trước khi xuất bản",
       "question_count_min": "Số câu hỏi phải lớn hơn 0"
     },
     "toasts": {
@@ -1895,6 +1923,8 @@
       "save_failed": "Lưu cấu hình thất bại",
       "published": "Đã xuất bản phỏng vấn",
       "publish_failed": "Xuất bản thất bại",
+      "unpublished": "Đã chuyển phỏng vấn về bản nháp",
+      "unpublish_failed": "Huỷ xuất bản thất bại",
       "archived": "Đã lưu trữ phỏng vấn",
       "archive_failed": "Lưu trữ thất bại",
       "deleted": "Đã xoá phỏng vấn",
@@ -1906,20 +1936,51 @@
       "question_rejected": "Đã từ chối câu hỏi",
       "question_saved": "Đã cập nhật câu hỏi",
       "question_deleted": "Đã xoá câu hỏi",
-      "question_added": "Đã thêm câu hỏi"
+      "question_added": "Đã thêm câu hỏi",
+      "all_questions_approved": "Đã duyệt {{count}} câu hỏi",
+      "approve_all_partial": "Đã duyệt {{approved}}, thất bại {{failed}}",
+      "approve_all_failed": "Không thể duyệt câu hỏi",
+      "question_reorder_failed": "Không thể sắp xếp lại câu hỏi"
     },
     "actions": {
       "back_tooltip": "Quay lại khoá học",
-      "generate_with_ai": "Tạo câu hỏi bằng AI",
       "publish_label": "Xuất bản phỏng vấn",
       "publish_short": "Xuất bản",
+      "unpublish_label": "Chuyển về bản nháp — ẩn phỏng vấn khỏi sinh viên",
+      "unpublish_short": "Huỷ xuất bản",
       "archive": "Lưu trữ",
       "delete_tooltip": "Xoá vĩnh viễn bộ phỏng vấn này",
-      "save_config": "Lưu cấu hình"
+      "save_config": "Lưu cấu hình",
+      "save_config_scope_hint": "Chỉ lưu các cấu hình chung ở trên — không bắt đầu sinh câu hỏi."
+    },
+    "save_status": {
+      "saving": "Đang lưu…",
+      "saved": "Đã lưu",
+      "unsaved": "Có thay đổi chưa lưu"
     },
     "header": {
       "draft_count": "{{count}} câu hỏi",
       "chip_label": "Phỏng vấn AI"
+    },
+    "section_nav": {
+      "aria_label": "Các mục phỏng vấn",
+      "settings": "Cài đặt",
+      "settings_short": "Cài đặt",
+      "learning_outcomes": "Chuẩn đầu ra",
+      "learning_outcomes_short": "Chuẩn đầu ra",
+      "generate": "Tạo câu hỏi",
+      "generate_short": "Tạo",
+      "questions": "Ngân hàng câu hỏi",
+      "questions_short": "Câu hỏi",
+      "status": {
+        "completed": "Hoàn tất",
+        "settings_incomplete": "Thêm tiêu đề",
+        "not_added": "Chưa thêm",
+        "outcomes_count": "{{count}} mục",
+        "generated_count": "{{count}} câu",
+        "approved_ratio": "{{approved}}/{{total}} đã duyệt",
+        "no_questions": "Chưa có"
+      }
     },
     "confirm_delete": {
       "title": "Xoá phỏng vấn này?",
@@ -1946,6 +2007,7 @@
       "title_placeholder": "Nhập tiêu đề phỏng vấn…",
       "persona": "Phong cách AI",
       "mode": "Hình thức trả lời",
+      "mode_hint": "Văn bản = gõ câu trả lời. Giọng nói = phỏng vấn nói trực tiếp. Văn bản + giọng nói = một phiên văn bản, học viên có thể gõ hoặc đọc từng câu trả lời.",
       "duration_label": "Thời lượng (phút)",
       "duration_hint": "Để trống = không giới hạn",
       "attempts_label": "Số lần thử",
@@ -1962,15 +2024,57 @@
       "add": "Thêm chuẩn đầu ra",
       "add_save": "Thêm",
       "add_placeholder": "VD: Giải thích cách đệ quy hoạt động và xác định điều kiện dừng",
+      "samples_hint": "Hoặc bắt đầu từ mẫu — nhấn để điền sẵn:",
+      "samples": {
+        "explain_concept": "Giải thích rõ ràng, chính xác khái niệm cốt lõi bằng ngôn từ của mình",
+        "apply_knowledge": "Vận dụng khái niệm để giải quyết một bài toán thực tế cụ thể",
+        "analyze_tradeoffs": "So sánh các phương án và biện luận đánh đổi bằng lập luận hợp lý",
+        "communicate_clearly": "Trình bày ý tưởng rõ ràng, có cấu trúc và tự tin"
+      },
       "empty": "Chưa có chuẩn đầu ra. Hãy thêm ít nhất một — nếu không có, không thể xuất bản và mọi sinh viên đều bị tự động trượt.",
       "weight_label": "Trọng số",
       "weight_badge": "Trọng số {{weight}}/5",
       "type_knowledge": "Kiến thức",
       "type_skill": "Kỹ năng",
       "type_attitude": "Thái độ",
+      "type_label": "Loại",
       "added": "Đã thêm chuẩn đầu ra",
       "saved": "Đã lưu chuẩn đầu ra",
-      "deleted": "Đã xoá chuẩn đầu ra"
+      "deleted": "Đã xoá chuẩn đầu ra",
+      "section_help": "Xác định điều sinh viên phải thể hiện để đạt phỏng vấn. Câu hỏi do AI tạo và tiêu chí đánh giá được căn chỉnh theo các chuẩn đầu ra này.",
+      "statement_label": "Nội dung chuẩn đầu ra",
+      "summary_outcomes": "{{count}} chuẩn đầu ra",
+      "summary_assigned": "{{count}} câu hỏi được gán",
+      "summary_uncovered": "{{count}} chưa có câu hỏi",
+      "summary_all_covered": "Mọi chuẩn đầu ra đều có câu hỏi",
+      "required_for_publishing": "Bắt buộc để xuất bản",
+      "coverage_title": "Độ phủ chuẩn đầu ra.",
+      "coverage_summary": "{{covered}} trên {{total}} chuẩn đầu ra có ít nhất một câu hỏi.",
+      "pass_threshold": "Sinh viên phải đạt ít nhất {{required}} trên {{total}} chuẩn đầu ra để qua.",
+      "empty_title": "Chưa có chuẩn đầu ra",
+      "empty_body": "Chuẩn đầu ra xác định điều sinh viên phải thể hiện và giúp AI tạo câu hỏi phù hợp. Hãy thêm ít nhất một trước khi xuất bản phỏng vấn này.",
+      "templates_hint": "Mẫu nhanh — nhấn để bắt đầu từ một nội dung gợi ý:",
+      "template_labels": {
+        "explain_concept": "Giải thích khái niệm",
+        "apply_knowledge": "Vận dụng kiến thức",
+        "analyze_tradeoffs": "So sánh phương án",
+        "communicate_clearly": "Trình bày rõ ràng"
+      },
+      "templates": {
+        "explain_concept": "Giải thích rõ ràng và chính xác các khái niệm cốt lõi bằng ngôn từ của chính sinh viên.",
+        "apply_knowledge": "Vận dụng các khái niệm liên quan để giải quyết một bài toán thực tế cụ thể.",
+        "analyze_tradeoffs": "So sánh nhiều phương án và biện luận lựa chọn phù hợp nhất bằng lập luận hợp lý.",
+        "communicate_clearly": "Trình bày ý tưởng một cách rõ ràng, có cấu trúc và tự tin."
+      },
+      "view_questions": "Xem câu hỏi",
+      "used_by": "Được dùng bởi {{count}} câu hỏi",
+      "limited_coverage": "Độ phủ hạn chế ({{count}} câu hỏi)",
+      "no_questions": "Chưa gán câu hỏi",
+      "sr_moved": "Đã chuyển chuẩn đầu ra tới vị trí {{position}}",
+      "delete_title": "Xoá chuẩn đầu ra này?",
+      "delete_unused_body": "Chuẩn đầu ra này chưa gán câu hỏi nào. Hành động này có thể hoàn tác.",
+      "delete_used_body": "Chuẩn đầu ra này đang được dùng bởi {{count}} câu hỏi. Xoá nó sẽ khiến các câu hỏi đó không còn chuẩn đầu ra. Hành động này có thể hoàn tác.",
+      "delete_confirm": "Xoá chuẩn đầu ra"
     },
     "sessions": {
       "list_title": "Lượt làm của sinh viên",
@@ -1990,28 +2094,105 @@
       "count_label": "Câu hỏi",
       "approved_label": "Đã duyệt",
       "weight_total": "Tổng trọng số",
-      "open_generator": "Mở trình tạo AI",
       "empty": "Chưa có câu hỏi nào. Tạo câu hỏi trước khi xuất bản phỏng vấn.",
       "none_approved": "Câu hỏi do AI sinh cần được duyệt trước khi sinh viên có thể làm bài.",
       "pending_hint": "Còn {{count}} câu hỏi chờ duyệt.",
       "list_title": "Danh sách câu hỏi",
       "list_description": "Duyệt các bản nháp AI; duyệt, chỉnh sửa hoặc xoá từng câu.",
       "add_manual": "Thêm thủ công",
+      "move_up": "Di chuyển lên",
+      "move_down": "Di chuyển xuống",
       "add_placeholder": "Nhập nội dung câu hỏi mới",
       "add_save": "Lưu câu hỏi",
       "approve": "Duyệt",
-      "reject": "Từ chối"
+      "approve_all": "Duyệt tất cả ({{count}})",
+      "reject": "Bỏ duyệt",
+      "model_answer_label": "Câu trả lời mẫu",
+      "model_answer_missing": "Câu hỏi này chưa có câu trả lời mẫu.",
+      "add_answer_placeholder": "Không bắt buộc: câu trả lời mẫu để bạn tham khảo (không hiện cho sinh viên)"
+    },
+    "difficulty": {
+      "junior": "Cơ bản",
+      "mid_level": "Trung cấp",
+      "senior": "Nâng cao"
+    },
+    "question_type": {
+      "conceptual": "Khái niệm",
+      "behavioral": "Hành vi",
+      "technical": "Kỹ thuật",
+      "situational": "Tình huống",
+      "system_design": "Thiết kế hệ thống"
+    },
+    "qbank": {
+      "search_placeholder": "Tìm câu hỏi, câu trả lời, chuẩn đầu ra…",
+      "collapse_all": "Thu gọn tất cả",
+      "view_answer": "Xem câu trả lời",
+      "hide_answer": "Ẩn câu trả lời",
+      "more_actions": "Thêm hành động",
+      "assign_outcome": "Chuẩn đầu ra",
+      "no_outcome_option": "Chưa gán",
+      "no_outcome_short": "Chưa gán",
+      "outcome_control_label": "Chuẩn đầu ra: {{outcome}}. Đổi phân công",
+      "status_control_label": "Trạng thái duyệt: {{status}}. Đổi trạng thái",
+      "showing_all": "{{count}} câu hỏi · {{approved}} đã duyệt",
+      "showing_filtered": "Hiển thị {{shown}} trên {{total}} câu hỏi",
+      "active_filters": "Bộ lọc đang áp dụng:",
+      "clear_all": "Xoá tất cả",
+      "clear_filters": "Xoá bộ lọc",
+      "empty_filtered": "Không có câu hỏi nào khớp với bộ lọc hiện tại.",
+      "unsaved_confirm": "Bạn có thay đổi chưa lưu. Bỏ các thay đổi này?",
+      "missing_lo": "Thiếu chuẩn đầu ra",
+      "ai_generated": "Do AI tạo",
+      "manually_added": "Thêm thủ công",
+      "source_count": "{{count}} nguồn",
+      "source_count_plural": "{{count}} nguồn",
+      "no_answer": "Chưa có câu trả lời mẫu",
+      "move_to_top": "Chuyển lên đầu",
+      "move_to_bottom": "Chuyển xuống cuối",
+      "duplicate_hint": "Chưa hỗ trợ nhân bản",
+      "status": {
+        "draft": "Bản nháp",
+        "needs_review": "Chờ duyệt",
+        "approved": "Đã duyệt",
+        "has_issues": "Có vấn đề"
+      },
+      "filter": {
+        "status": "Trạng thái",
+        "outcome": "Chuẩn đầu ra",
+        "difficulty": "Độ khó",
+        "type": "Loại",
+        "source": "Nguồn",
+        "all": "Tất cả",
+        "no_outcome": "Chưa gán"
+      },
+      "source": {
+        "ai": "Do AI tạo",
+        "manual": "Thêm thủ công"
+      },
+      "quick": {
+        "missing_lo": "Thiếu chuẩn đầu ra"
+      },
+      "toasts": {
+        "status_changed": "Đã đổi trạng thái sang {{status}}",
+        "outcome_changed": "Đã gán chuẩn đầu ra: {{outcome}}"
+      },
+      "sr": {
+        "status_changed": "Đã đổi trạng thái sang {{status}}",
+        "outcome_changed": "Đã gán chuẩn đầu ra: {{outcome}}",
+        "moved": "Đã chuyển câu hỏi tới vị trí {{position}}"
+      }
     },
     "review_status": {
       "pending": "Chờ duyệt",
       "approved": "Đã duyệt",
       "edited": "Đã chỉnh sửa",
-      "rejected": "Từ chối"
-    },
-    "generate_modal": {
-      "description": "AI sẽ sinh câu hỏi phỏng vấn dựa trên tiêu chí của module."
+      "rejected": "Chờ duyệt"
     },
     "generate": {
+      "section_title": "Sinh câu hỏi bằng AI",
+      "section_description": "Cấu hình cách AI sinh câu hỏi, sau đó bắt đầu sinh khi đã sẵn sàng. Phong cách hỏi và hướng dẫn bổ sung ở trên sẽ được dùng lại cho lần sinh này.",
+      "reuses_settings_hint": "Phong cách hỏi và hướng dẫn bổ sung ở các mục trên sẽ được dùng cho lần sinh câu hỏi này.",
+      "independent_action_hint": "Nút này bắt đầu sinh câu hỏi ngay — không lưu các cấu hình ở trên.",
       "mode_label": "Chế độ sinh",
       "mode_outcome": "Theo tiêu chí (rubric)",
       "mode_topic": "Theo chủ đề",
@@ -2027,6 +2208,9 @@
       "in_progress": "Đang sinh câu hỏi…",
       "failed": "Sinh câu hỏi thất bại",
       "completed": "Hoàn thành",
+      "phase_generating": "Đang sinh & kiểm chứng câu hỏi…",
+      "phase_saving": "Đang lưu câu hỏi…",
+      "phase_done": "Đã sinh xong tất cả câu hỏi",
       "success_body": "Câu hỏi mới đã được thêm vào bộ nháp. Đóng cửa sổ để xem.",
       "processing": "Đang xử lý…",
       "start_button": "Bắt đầu sinh"

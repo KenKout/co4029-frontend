@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   PlayCircle,
   BookOpen,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Mic,
@@ -661,6 +662,7 @@ function CourseLearnLoaded({
                     itemState={itemState}
                     onSelect={(idx) => setActiveIdx(idx)}
                     slug={slug}
+                    isActiveModule={activeEntry?.moduleId === mod.id}
                   />
                 ))}
               </div>
@@ -969,6 +971,7 @@ function ModuleSection({
   itemState,
   onSelect,
   slug,
+  isActiveModule,
 }: {
   mod: ModulePublic;
   flatItems: FlatItem[];
@@ -976,18 +979,46 @@ function ModuleSection({
   itemState: (fi: FlatItem) => LessonState;
   onSelect: (idx: number) => void;
   slug: string;
+  isActiveModule: boolean;
 }) {
   const modItems = flatItems
     .map((fi) => ({ fi, idx: lessonItems.findIndex((lesson) => lesson.item.id === fi.item.id) }))
     .filter(({ fi }) => fi.moduleId === mod.id);
 
+  const [open, setOpen] = useState(isActiveModule);
+
+  // Keep the module containing the active lesson expanded even if the
+  // student navigates between modules without manually re-opening it.
+  useEffect(() => {
+    if (isActiveModule) setOpen(true);
+  }, [isActiveModule]);
+
   if (!modItems.length) return null;
 
   return (
     <div className="space-y-1">
-      <p className="text-[10px] font-bold text-m3-outline uppercase tracking-tight px-2 pb-1">
-        {mod.title}
-      </p>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-left transition-colors hover:bg-m3-primary/5 group cursor-pointer"
+      >
+        <ChevronDown
+          className={cn(
+            "h-3 w-3 text-m3-outline shrink-0 transition-transform duration-300 group-hover:text-m3-primary",
+            open ? "rotate-0" : "-rotate-90"
+          )}
+        />
+        <span className="text-[10px] font-bold text-m3-outline uppercase tracking-tight transition-colors group-hover:text-m3-primary">
+          {mod.title}
+        </span>
+      </button>
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-300 ease-in-out",
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        )}
+      >
+        <div className="overflow-hidden min-h-0 space-y-1">
       {modItems.map(({ fi, idx }) => {
         const state = itemState(fi);
         const isQuiz = fi.item.item_type === "quiz";
@@ -1055,6 +1086,8 @@ function ModuleSection({
           </button>
         );
       })}
+        </div>
+      </div>
     </div>
   );
 }

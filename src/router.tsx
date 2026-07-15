@@ -229,17 +229,6 @@ const teacherQuizManageRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/teacher/quiz-manage")),
 });
 
-const teacherInterviewConfigNewRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
-  path: "/teacher/courses/$courseId/interview-configs/new",
-  validateSearch: (search: Record<string, unknown>) => ({
-    moduleId: typeof search.moduleId === "string" ? search.moduleId : undefined,
-  }),
-  component: lazyRouteComponent(
-    () => import("@/routes/teacher/interview-config-new"),
-  ),
-});
-
 const teacherInterviewConfigRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/interview-configs/$configId",
@@ -513,7 +502,6 @@ const routeTree = rootRoute.addChildren([
     teacherLessonMaterialsRoute,
     teacherModuleManageRoute,
     teacherQuizManageRoute,
-    teacherInterviewConfigNewRoute,
     teacherInterviewConfigRoute,
     teacherInterviewGapReportRoute,
     teacherCourseStudentsRoute,

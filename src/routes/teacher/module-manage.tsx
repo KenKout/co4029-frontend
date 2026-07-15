@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { PromptDialog } from "@/components/ui/prompt-dialog";
 import {
   useTeacherCourseById,
   useTeacherCourseContent,
@@ -32,6 +33,7 @@ import {
   useDeleteModuleItem,
 } from "@/lib/api/hooks/teacher-courses";
 import { useCreateQuiz } from "@/lib/api/hooks/quizzes";
+import { useCreateInterviewConfig } from "@/lib/api/hooks/interviews";
 import type {
   CourseContentItem,
   CourseContentLesson,
@@ -244,10 +246,14 @@ function AddContentPills({
   courseId: string;
   itemCount: number;
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const createLesson = useCreateLesson(moduleId, courseId);
   const createQuiz = useCreateQuiz(courseId);
+  const createInterview = useCreateInterviewConfig(courseId);
   const [adding, setAdding] = useState(false);
+  const [interviewModalOpen, setInterviewModalOpen] = useState(false);
+  const [interviewTitle, setInterviewTitle] = useState("");
 
   function slugify(title: string) {
     return title
@@ -297,11 +303,35 @@ function AddContentPills({
   }
 
   function handleAddInterview() {
-    void navigate({
-      to: "/teacher/courses/$courseId/interview-configs/new",
-      params: { courseId },
-      search: { moduleId },
-    });
+    setInterviewTitle("");
+    setInterviewModalOpen(true);
+  }
+
+  async function handleCreateInterview() {
+    if (!interviewTitle.trim()) {
+      toast.error(t("teacher_interview_config_new.errors.title_required"));
+      return;
+    }
+    try {
+      const config = await createInterview.mutateAsync({
+        course_id: courseId,
+        module_id: moduleId,
+        title: interviewTitle.trim(),
+        supported_modes: "hybrid",
+        lock_quiz_ef_until_pass: false,
+      });
+      setInterviewModalOpen(false);
+      toast.success(t("teacher_interview_config_new.success.created"));
+      void navigate({
+        to: "/teacher/courses/$courseId/interview-configs/$configId",
+        params: { courseId, configId: config.id },
+      });
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_interview_config_new.errors.create_failed"),
+      );
+    }
   }
 
   return (
@@ -345,6 +375,41 @@ function AddContentPills({
         <Plus className="h-3 w-3 -ml-0.5" />
         Interview
       </button>
+
+      <PromptDialog
+        open={interviewModalOpen}
+        onOpenChange={setInterviewModalOpen}
+        title={t("teacher_interview_config_new.modal_title")}
+        description={t("teacher_interview_config_new.modal_description")}
+        confirmLabel={
+          createInterview.isPending
+            ? t("teacher_interview_config_new.submitting")
+            : t("teacher_interview_config_new.submit")
+        }
+        isPending={createInterview.isPending}
+        onConfirm={handleCreateInterview}
+      >
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-m3-on-surface">
+            {t("teacher_interview_config_new.fields.title")} *
+          </label>
+          <Input
+            autoFocus
+            required
+            placeholder={t(
+              "teacher_interview_config_new.fields.title_placeholder",
+            )}
+            value={interviewTitle}
+            onChange={(e) => setInterviewTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void handleCreateInterview();
+              }
+            }}
+          />
+        </div>
+      </PromptDialog>
     </div>
   );
 }

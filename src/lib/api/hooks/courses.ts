@@ -42,6 +42,22 @@ export function useMyCourses(limit = 20) {
   });
 }
 
+/**
+ * Load the published course catalogue for selector dialogs (career-path
+ * course picker). The `/courses` endpoint has no `q=` param, so we pull a
+ * generous first page and let the dialog filter client-side by title/slug.
+ * `enabled` gates the fetch until the picker actually opens.
+ */
+export function useCourseCatalogue(enabled = true, limit = 100) {
+  return useQuery({
+    queryKey: queryKeys.courses.list(`catalogue-${limit}`),
+    queryFn: () =>
+      apiFetch<Page<Course>>(buildPagedUrl("/courses", undefined, limit)),
+    enabled,
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
 export function useCourseBySlug(slug: string | undefined) {
   return useQuery({
     queryKey: queryKeys.courses.bySlug(slug ?? ""),

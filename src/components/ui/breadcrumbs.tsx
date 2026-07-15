@@ -32,7 +32,7 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
               <Link
                 to={item.to}
                 params={item.params ?? {}}
-                className="rounded-md px-1 hover:text-m3-primary hover:underline focus-visible:outline-2 focus-visible:outline-m3-primary transition-colors"
+                className="rounded-md px-1 hover:text-m3-primary focus-visible:outline-2 focus-visible:outline-m3-primary transition-colors"
               >
                 {item.label}
               </Link>
