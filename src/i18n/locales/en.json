@@ -376,6 +376,7 @@
     "empty_body": "Contact your training manager to be enrolled in a suitable path.",
     "view_paths": "Browse available paths →",
     "started": "Started: {{date}}",
+    "prepared": "Prepared",
     "status": {
       "active": "Active",
       "completed": "Completed",
@@ -411,6 +412,8 @@
     "completed_courses": "Completed {{completed}}/{{total}} courses",
     "overall_progress": "Overall progress",
     "continue_learning": "Continue learning",
+    "prepared_title": "You're career-ready!",
+    "prepared_body": "You've completed every course in this path. You're prepared for this career track.",
     "managed_enrollment_title": "Enrollment is managed",
     "managed_enrollment_body": "Contact your manager to be enrolled in this path.",
     "section_title": "Courses in this path",

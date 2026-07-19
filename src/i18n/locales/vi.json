@@ -377,6 +377,7 @@
     "empty_body": "Liên hệ quản lý đào tạo để được đăng ký vào lộ trình phù hợp.",
     "view_paths": "Xem các lộ trình hiện có →",
     "started": "Bắt đầu: {{date}}",
+    "prepared": "Sẵn sàng",
     "status": {
       "active": "Đang học",
       "completed": "Hoàn thành",
@@ -412,6 +413,8 @@
     "completed_courses": "Đã hoàn thành {{completed}}/{{total}} khóa học",
     "overall_progress": "Tổng tiến độ",
     "continue_learning": "Tiếp tục học",
+    "prepared_title": "Bạn đã sẵn sàng cho nghề nghiệp!",
+    "prepared_body": "Bạn đã hoàn thành mọi khóa học trong lộ trình này. Bạn đã sẵn sàng cho hướng nghề nghiệp này.",
     "managed_enrollment_title": "Đăng ký bởi quản lý",
     "managed_enrollment_body": "Liên hệ quản lý để được đăng ký vào lộ trình này.",
     "section_title": "Khóa học trong lộ trình",

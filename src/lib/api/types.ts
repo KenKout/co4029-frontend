@@ -270,7 +270,10 @@ export type CareerPathCourseAdd = Schemas["CareerPathCourseAdd"];
 export type CareerPathCourseReorder = Schemas["CareerPathCourseReorder"];
 export type CareerPathStudentEnroll = Schemas["CareerPathStudentEnroll"];
 export type CareerPathProgressRead = Schemas["CareerPathProgressRead"];
-export type MyCareerEnrollmentRead = Schemas["MyCareerEnrollmentRead"];
+export type MyCareerEnrollmentRead = Schemas["MyCareerEnrollmentRead"] & {
+  overall_percent?: number;
+  is_prepared?: boolean;
+};
 export type StudentPathProgressAuthoring =
   Schemas["StudentPathProgressAuthoring"];
 export type PathReadinessOverview = Schemas["PathReadinessOverview"];

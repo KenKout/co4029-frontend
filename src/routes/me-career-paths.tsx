@@ -32,6 +32,8 @@ function useFormatDate() {
 function EnrollmentRow({ item }: { item: MyCareerEnrollmentRead }) {
   const { t } = useTranslation();
   const formatDate = useFormatDate();
+  const percent = Math.round(Math.min(100, Math.max(0, item.overall_percent ?? 0)));
+  const prepared = item.is_prepared ?? item.status === "completed";
   return (
     <Link
       to="/career-paths/$slug"
@@ -47,12 +49,33 @@ function EnrollmentRow({ item }: { item: MyCareerEnrollmentRead }) {
             <h3 className="font-headline font-semibold text-sm text-m3-on-surface line-clamp-1 leading-snug flex-1">
               {item.name}
             </h3>
-            <span
-              className={`text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${STATUS_COLOR[item.status]}`}
-            >
-              {t(`me_career_paths.status.${item.status}`)}
+            {prepared ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 bg-emerald-100 text-emerald-700">
+                <CheckCircle2 className="h-3 w-3" />
+                {t("me_career_paths.prepared")}
+              </span>
+            ) : (
+              <span
+                className={`text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${STATUS_COLOR[item.status]}`}
+              >
+                {t(`me_career_paths.status.${item.status}`)}
+              </span>
+            )}
+          </div>
+
+          {/* Derived pathway completion */}
+          <div className="mt-2 flex items-center gap-2">
+            <div className="h-1.5 flex-1 rounded-full bg-m3-surface-container overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${prepared ? "bg-emerald-500" : "gradient-primary"}`}
+                style={{ width: `${percent}%` }}
+              />
+            </div>
+            <span className="text-[11px] font-semibold text-m3-on-surface-variant tabular-nums shrink-0">
+              {percent}%
             </span>
           </div>
+
           <div className="mt-1 flex items-center gap-3 text-[11px] text-m3-on-surface-variant">
             <span className="font-mono truncate">{item.slug}</span>
             <span>{t("me_career_paths.started", { date: formatDate(item.started_at) })}</span>
