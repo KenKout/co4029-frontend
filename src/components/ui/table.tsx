@@ -37,7 +37,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
     <thead
       data-slot="table-header"
       className={cn(
-        "[&_tr]:border-b [&_tr]:border-m3-outline-variant/20",
+        "[&_tr]:border-b [&_tr]:border-m3-outline-variant",
         className,
       )}
       {...props}
@@ -60,7 +60,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b border-m3-outline-variant/25 transition-colors data-[state=selected]:bg-m3-surface-container-low",
+        "border-b border-m3-outline-variant transition-colors data-[state=selected]:bg-m3-surface-container-low",
         className,
       )}
       {...props}
