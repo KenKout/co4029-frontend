@@ -322,6 +322,9 @@ function AddLessonPills({
         title: interviewTitle.trim(),
         supported_modes: "hybrid",
         lock_quiz_ef_until_pass: false,
+        security_response_policy: "warn_and_continue",
+        security_max_consecutive_attempts: 3,
+        security_incident_summary_enabled: true,
       });
       setInterviewModalOpen(false);
       toast.success(t("teacher_interview_config_new.success.created"));

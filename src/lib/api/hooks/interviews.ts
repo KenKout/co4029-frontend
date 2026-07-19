@@ -71,12 +71,17 @@ export function useInterviewSession(
 }
 
 export function useInterviewRespond(sessionId: string | null | undefined) {
+  const { i18n } = useTranslation();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: InterviewSubmitAnswerRequest) =>
       apiPost<InterviewSubmitAnswerResponse>(
         `/interview-sessions/${sessionId}/respond`,
         body,
+        {
+          "Accept-Language":
+            i18n.resolvedLanguage ?? i18n.language ?? "en",
+        },
       ),
     onSuccess: () => {
       if (sessionId) {

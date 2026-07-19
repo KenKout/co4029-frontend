@@ -1,18 +1,23 @@
 /**
- * Voice interview controls: mic mute/unmute, AI speaking/listening indicator,
- * elapsed timer, and "End interview" button.
- * Must be rendered inside a <LiveKitRoom> context.
+ * Voice interview call controls. Must be rendered inside LiveKitRoom.
  */
 import { useEffect, useRef, useState } from "react";
 import { useTrackToggle, useVoiceAssistant } from "@livekit/components-react";
 import { Track } from "livekit-client";
-import { Mic, MicOff, PhoneOff, Volume2 } from "lucide-react";
+import { Clock3, Mic, MicOff, PhoneOff } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  EndInterviewDialog,
+  VoiceStatusIndicator,
+  type InterviewAgentStatus,
+} from "./interview-workspace";
 
 interface VoiceControlsProps {
   onEndInterview: () => void;
   isEnding?: boolean;
+  elapsed?: string;
 }
 
 function useElapsedTimer() {
@@ -20,90 +25,86 @@ function useElapsedTimer() {
   const startRef = useRef(Date.now());
 
   useEffect(() => {
-    const id = setInterval(() => {
+    const id = window.setInterval(() => {
       setSeconds(Math.floor((Date.now() - startRef.current) / 1000));
     }, 1000);
-    return () => clearInterval(id);
+    return () => window.clearInterval(id);
   }, []);
 
-  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
-  const ss = String(seconds % 60).padStart(2, "0");
-  return `${mm}:${ss}`;
+  const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const remainingSeconds = String(seconds % 60).padStart(2, "0");
+  return `${minutes}:${remainingSeconds}`;
 }
 
-export function VoiceControls({ onEndInterview, isEnding = false }: VoiceControlsProps) {
+export function VoiceControls({
+  onEndInterview,
+  isEnding = false,
+  elapsed: elapsedProp,
+}: VoiceControlsProps) {
   const { buttonProps, enabled: micEnabled } = useTrackToggle({
     source: Track.Source.Microphone,
   });
   const { state: agentState } = useVoiceAssistant();
-  const elapsed = useElapsedTimer();
+  const fallbackElapsed = useElapsedTimer();
+  const elapsed = elapsedProp ?? fallbackElapsed;
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const isSpeaking = agentState === "speaking";
-  const isListening = agentState === "listening";
-  const isThinking = agentState === "thinking";
-
-  const agentLabel = isSpeaking
-    ? "AI is speaking…"
-    : isListening
-      ? "Listening…"
-      : isThinking
-        ? "AI is thinking…"
-        : "Connecting…";
+  const status: InterviewAgentStatus =
+    agentState === "speaking"
+      ? "speaking"
+      : agentState === "listening"
+        ? "listening"
+        : agentState === "thinking"
+          ? "processing"
+          : "idle";
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Agent status indicator */}
-      <div className="flex items-center justify-center gap-2 text-sm font-medium text-m3-on-surface-variant">
-        <span
-          className={cn(
-            "w-2.5 h-2.5 rounded-full shrink-0",
-            isSpeaking && "bg-m3-primary animate-pulse",
-            isListening && "bg-emerald-500 animate-pulse",
-            isThinking && "bg-amber-400 animate-pulse",
-            !isSpeaking && !isListening && !isThinking && "bg-m3-outline-variant",
-          )}
-        />
-        {isSpeaking && <Volume2 className="h-4 w-4 text-m3-primary" />}
-        <span>{agentLabel}</span>
-      </div>
-
-      {/* Controls row */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        {/* Elapsed timer */}
-        <span className="text-xs font-mono text-m3-outline tabular-nums">
-          {elapsed}
-        </span>
-
-        {/* Mic toggle */}
+    <>
+      <div className="flex items-center gap-2">
         <button
           {...buttonProps}
           className={cn(
-            "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all",
+            "inline-flex size-10 items-center justify-center rounded-lg border text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/60",
             micEnabled
-              ? "bg-m3-surface-container text-m3-on-surface hover:bg-m3-surface-container-high"
-              : "bg-red-100 text-red-600 hover:bg-red-200",
+              ? "border-primary/20 bg-primary-soft text-primary hover:bg-primary-soft-dim"
+              : "border-danger/20 bg-danger/10 text-danger hover:bg-danger/15",
           )}
+          aria-label={micEnabled ? "Mute microphone" : "Unmute microphone"}
+          aria-pressed={micEnabled}
           title={micEnabled ? "Mute microphone" : "Unmute microphone"}
         >
-          {micEnabled ? (
-            <Mic className="h-4 w-4" />
-          ) : (
-            <MicOff className="h-4 w-4" />
-          )}
-          {micEnabled ? "Mute" : "Unmuted"}
+          {micEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
         </button>
 
-        {/* End interview */}
+        <VoiceStatusIndicator status={status} className="min-w-0 flex-1" />
+
+        <span className="ml-auto inline-flex items-center gap-1.5 px-1 font-mono text-xs font-semibold tabular-nums text-text-muted sm:px-2">
+          <Clock3 className="hidden h-3.5 w-3.5 sm:block" />
+          {elapsed}
+        </span>
+
         <Button
-          variant="outline"
-          onClick={onEndInterview}
+          variant="destructive"
+          onClick={() => setConfirmOpen(true)}
           disabled={isEnding}
-          className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 font-bold gap-2 text-sm"
+          className="h-10 rounded-lg px-3 font-semibold text-danger hover:bg-danger/10"
+          aria-label="End interview"
+          title="End interview"
         >
           <PhoneOff className="h-4 w-4" />
-          {isEnding ? "Ending…" : "End interview"}
+          <span className="hidden sm:inline">{isEnding ? "Ending…" : "End interview"}</span>
         </Button>
       </div>
-    </div>
+
+      <EndInterviewDialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          if (isEnding && !open) return;
+          setConfirmOpen(open);
+        }}
+        onConfirm={onEndInterview}
+        isPending={isEnding}
+      />
+    </>
   );
 }

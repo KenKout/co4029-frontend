@@ -27,6 +27,16 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
   const [stalled, setStalled] = useState(false);
   const navigate = useNavigate();
   const routerLocation = useRouterState({ select: (s) => s.location });
+  const isInterviewWorkspace = /^\/courses\/[^/]+\/interview\/[^/]+/.test(
+    routerLocation.pathname,
+  );
+
+  useEffect(() => {
+    const collapseForInterview = () => setCollapsed(true);
+    window.addEventListener("abridge:interview-started", collapseForInterview);
+    return () =>
+      window.removeEventListener("abridge:interview-started", collapseForInterview);
+  }, []);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -116,9 +126,16 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
           !collapsed && "md:ml-64"
         )}
       >
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgb(0_0_0/0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgb(0_0_0/0.03)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
-        <ContentTopBar />
-        <div className="relative px-4 sm:px-6 lg:px-10 py-6">
+        {!isInterviewWorkspace && (
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgb(0_0_0/0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgb(0_0_0/0.03)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+        )}
+        {!isInterviewWorkspace && <ContentTopBar />}
+        <div
+          className={cn(
+            "relative",
+            isInterviewWorkspace ? "min-h-screen" : "px-4 py-6 sm:px-6 lg:px-10",
+          )}
+        >
           {children}
         </div>
       </main>

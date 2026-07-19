@@ -13,6 +13,7 @@ import {
   Pencil,
   Plus,
   Save,
+  ShieldCheck,
   Sparkles,
   Trash2,
   Upload,
@@ -62,8 +63,13 @@ import type {
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
+type SupportedMode = NonNullable<InterviewConfigUpdate["supported_modes"]>;
 type Persona = NonNullable<InterviewConfigUpdate["persona"]>;
 type GenerationMode = InterviewGenerationRequest["mode"];
+type SecurityResponsePolicy =
+  | "continue_and_log"
+  | "warn_and_continue"
+  | "end_and_flag";
 
 interface GenerationFormState {
   mode: GenerationMode;
@@ -75,17 +81,24 @@ interface GenerationFormState {
 interface SettingsDraft {
   title: string;
   persona: Persona;
+  supported_modes: SupportedMode;
   time_limit_minutes: string;
   max_attempts: string;
   min_outcomes_to_pass: string;
   lock_quiz_ef_until_pass: boolean;
   supplementary_instructions: string;
+  security_response_policy: SecurityResponsePolicy;
+  security_max_consecutive_attempts: string;
+  security_custom_refusal_en: string;
+  security_custom_refusal_vi: string;
+  security_incident_summary_enabled: boolean;
 }
 
 function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
   return {
     title: config.title ?? "",
     persona: (config.persona ?? "neutral") as Persona,
+    supported_modes: config.supported_modes,
     time_limit_minutes:
       config.time_limit_minutes == null ? "" : String(config.time_limit_minutes),
     max_attempts:
@@ -96,6 +109,15 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
         : String(config.min_outcomes_to_pass),
     lock_quiz_ef_until_pass: config.lock_quiz_ef_until_pass,
     supplementary_instructions: config.supplementary_instructions ?? "",
+    security_response_policy:
+      config.security_response_policy ?? "warn_and_continue",
+    security_max_consecutive_attempts: String(
+      config.security_max_consecutive_attempts ?? 3,
+    ),
+    security_custom_refusal_en: config.security_custom_refusal_en ?? "",
+    security_custom_refusal_vi: config.security_custom_refusal_vi ?? "",
+    security_incident_summary_enabled:
+      config.security_incident_summary_enabled ?? true,
   };
 }
 
@@ -107,6 +129,7 @@ function integerOrNull(value: string): number | null {
 }
 
 const PERSONA_KEYS: Persona[] = ["strict", "neutral", "supportive"];
+const MODE_KEYS: SupportedMode[] = ["hybrid", "text", "voice"];
 
 export default function InterviewConfigPage() {
   const { t } = useTranslation();
@@ -360,12 +383,22 @@ export default function InterviewConfigPage() {
       await updateConfig.mutateAsync({
         title: draft.title.trim(),
         persona: draft.persona,
+        supported_modes: draft.supported_modes,
         time_limit_minutes: integerOrNull(draft.time_limit_minutes),
         max_attempts: integerOrNull(draft.max_attempts),
         min_outcomes_to_pass: integerOrNull(draft.min_outcomes_to_pass),
         lock_quiz_ef_until_pass: draft.lock_quiz_ef_until_pass,
         supplementary_instructions:
           draft.supplementary_instructions.trim() || null,
+        security_response_policy: draft.security_response_policy,
+        security_max_consecutive_attempts:
+          integerOrNull(draft.security_max_consecutive_attempts) ?? 3,
+        security_custom_refusal_en:
+          draft.security_custom_refusal_en.trim() || null,
+        security_custom_refusal_vi:
+          draft.security_custom_refusal_vi.trim() || null,
+        security_incident_summary_enabled:
+          draft.security_incident_summary_enabled,
       });
       setJustSaved(true);
       window.setTimeout(() => setJustSaved(false), 2500);
@@ -862,6 +895,24 @@ function SettingsForm({
               ))}
             </select>
           </Field>
+          <Field
+            label={t("teacher_interview_config.fields.mode")}
+            hint={t("teacher_interview_config.fields.mode_hint")}
+          >
+            <select
+              value={draft.supported_modes}
+              onChange={(e) =>
+                update("supported_modes", e.target.value as SupportedMode)
+              }
+              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+            >
+              {MODE_KEYS.map((m) => (
+                <option key={m} value={m}>
+                  {t(`teacher_interview_config.mode.${m}`)}
+                </option>
+              ))}
+            </select>
+          </Field>
         </div>
       </Section>
 
@@ -939,6 +990,127 @@ function SettingsForm({
           />
         </Field>
       </Section>
+
+      <details className="group rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-4">
+        <summary className="flex cursor-pointer list-none items-center gap-3">
+          <span className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-500/10 text-emerald-700">
+            <ShieldCheck className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-extrabold text-m3-on-surface">
+              {t("teacher_interview_config.security.title")}
+            </span>
+            <span className="block text-xs text-m3-on-surface-variant">
+              {t("teacher_interview_config.security.description")}
+            </span>
+          </span>
+          <span className="text-xs font-bold text-emerald-700">
+            {t("teacher_interview_config.security.mandatory")}
+          </span>
+        </summary>
+
+        <div className="mt-5 space-y-5 border-t border-m3-outline-variant/20 pt-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              {t("teacher_interview_config.security.protected_by_platform")}
+            </p>
+            <ul className="mt-2 grid gap-2 text-sm text-m3-on-surface sm:grid-cols-2">
+              {["questions", "answers", "rubrics", "prompts", "state"].map(
+                (item) => (
+                  <li key={item} className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-emerald-600" />
+                    {t(`teacher_interview_config.security.protected.${item}`)}
+                  </li>
+                ),
+              )}
+            </ul>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={t("teacher_interview_config.security.response_policy")}>
+              <select
+                value={draft.security_response_policy}
+                onChange={(e) =>
+                  update(
+                    "security_response_policy",
+                    e.target.value as SecurityResponsePolicy,
+                  )
+                }
+                className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+              >
+                {[
+                  "continue_and_log",
+                  "warn_and_continue",
+                  "end_and_flag",
+                ].map((policy) => (
+                  <option key={policy} value={policy}>
+                    {t(`teacher_interview_config.security.policy.${policy}`)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label={t("teacher_interview_config.security.max_attempts")}>
+              <Input
+                type="number"
+                min={2}
+                max={20}
+                value={draft.security_max_consecutive_attempts}
+                onChange={(e) =>
+                  update("security_max_consecutive_attempts", e.target.value)
+                }
+                className="bg-m3-surface text-sm"
+              />
+            </Field>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Field label={t("teacher_interview_config.security.custom_en")}>
+              <textarea
+                rows={3}
+                maxLength={500}
+                value={draft.security_custom_refusal_en}
+                onChange={(e) =>
+                  update("security_custom_refusal_en", e.target.value)
+                }
+                className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+              />
+              <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
+                {draft.security_custom_refusal_en.trim() ||
+                  t("teacher_interview_config.security.preview_en")}
+              </p>
+            </Field>
+            <Field label={t("teacher_interview_config.security.custom_vi")}>
+              <textarea
+                rows={3}
+                maxLength={500}
+                value={draft.security_custom_refusal_vi}
+                onChange={(e) =>
+                  update("security_custom_refusal_vi", e.target.value)
+                }
+                className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+              />
+              <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
+                {draft.security_custom_refusal_vi.trim() ||
+                  t("teacher_interview_config.security.preview_vi")}
+              </p>
+            </Field>
+          </div>
+
+          <ToggleRow
+            label={t("teacher_interview_config.security.incident_summary")}
+            description={t(
+              "teacher_interview_config.security.incident_summary_description",
+            )}
+            value={draft.security_incident_summary_enabled}
+            onChange={(value) =>
+              update("security_incident_summary_enabled", value)
+            }
+          />
+          <p className="text-[11px] text-m3-on-surface-variant">
+            {t("teacher_interview_config.security.rules_hidden")}
+          </p>
+        </div>
+      </details>
 
       <div className="flex items-center justify-between gap-3 pt-4 border-t border-m3-outline-variant/20">
         <p className="text-[11px] text-m3-on-surface-variant">

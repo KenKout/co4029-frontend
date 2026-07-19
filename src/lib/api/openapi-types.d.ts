@@ -5692,6 +5692,26 @@ export interface components {
             supplementary_instructions?: string | null;
             /** Min Outcomes To Pass */
             min_outcomes_to_pass?: number | null;
+            /**
+             * Security Response Policy
+             * @default warn_and_continue
+             * @enum {string}
+             */
+            security_response_policy: "continue_and_log" | "warn_and_continue" | "end_and_flag";
+            /**
+             * Security Max Consecutive Attempts
+             * @default 3
+             */
+            security_max_consecutive_attempts: number;
+            /** Security Custom Refusal En */
+            security_custom_refusal_en?: string | null;
+            /** Security Custom Refusal Vi */
+            security_custom_refusal_vi?: string | null;
+            /**
+             * Security Incident Summary Enabled
+             * @default true
+             */
+            security_incident_summary_enabled: boolean;
             /** Generation Run Id */
             generation_run_id?: string | null;
             /** Draft Question Count */
@@ -5755,6 +5775,26 @@ export interface components {
             lock_quiz_ef_until_pass: boolean;
             /** Supplementary Instructions */
             supplementary_instructions?: string | null;
+            /**
+             * Security Response Policy
+             * @default warn_and_continue
+             * @enum {string}
+             */
+            security_response_policy: "continue_and_log" | "warn_and_continue" | "end_and_flag";
+            /**
+             * Security Max Consecutive Attempts
+             * @default 3
+             */
+            security_max_consecutive_attempts: number;
+            /** Security Custom Refusal En */
+            security_custom_refusal_en?: string | null;
+            /** Security Custom Refusal Vi */
+            security_custom_refusal_vi?: string | null;
+            /**
+             * Security Incident Summary Enabled
+             * @default true
+             */
+            security_incident_summary_enabled: boolean;
         };
         /**
          * InterviewConfigPublic
@@ -5770,8 +5810,7 @@ export interface components {
          *     * ``supplementary_instructions`` — author-only notes.
          *     * ``generation_run_id`` — pipeline linkage.
          *     * ``min_outcomes_to_pass`` — exposing the pass threshold lets a
-         *       student stop trying once they've cleared it; reveal it post-hoc
-         *       via the session-finish payload instead.
+         *       student stop trying once they've cleared it; it remains teacher-only.
          *     * Audit + soft-delete columns.
          */
         InterviewConfigPublic: {
@@ -5843,6 +5882,16 @@ export interface components {
             lock_quiz_ef_until_pass?: boolean | null;
             /** Supplementary Instructions */
             supplementary_instructions?: string | null;
+            /** Security Response Policy */
+            security_response_policy?: ("continue_and_log" | "warn_and_continue" | "end_and_flag") | null;
+            /** Security Max Consecutive Attempts */
+            security_max_consecutive_attempts?: number | null;
+            /** Security Custom Refusal En */
+            security_custom_refusal_en?: string | null;
+            /** Security Custom Refusal Vi */
+            security_custom_refusal_vi?: string | null;
+            /** Security Incident Summary Enabled */
+            security_incident_summary_enabled?: boolean | null;
         };
         /**
          * InterviewForAuthoringPublic
@@ -5871,9 +5920,9 @@ export interface components {
          * InterviewForTakingPublic
          * @description Composed take-interview start payload.
          *
-         *     Carries the published config, the rubric outcomes (so the student
-         *     knows what they're being evaluated on — without weights), and the
-         *     **first** question only. Subsequent questions are revealed via
+         *     Carries the published config and the **first** question only. Outcome and
+         *     coverage metadata are deliberately absent from the learner contract.
+         *     Subsequent questions are revealed via
          *     ``POST /interviews/sessions/{id}/respond`` per T6.12 session flow.
          *
          *     Plan §6.2 explicit MUST NOT: do not bake all questions into the
@@ -5882,11 +5931,6 @@ export interface components {
          */
         InterviewForTakingPublic: {
             config: components["schemas"]["InterviewConfigPublic"];
-            /**
-             * Outcomes
-             * @default []
-             */
-            outcomes: components["schemas"]["InterviewOutcomePublic"][];
             first_question?: components["schemas"]["InterviewQuestionPublic"] | null;
         };
         /**
@@ -6044,31 +6088,6 @@ export interface components {
              * @default 1
              */
             importance_weight: number;
-        };
-        /**
-         * InterviewOutcomePublic
-         * @description Student-facing projection of one ``InterviewOutcome`` row.
-         *
-         *     SECURITY INVARIANT: ``importance_weight`` MUST NOT appear here.
-         *     The student is told *what* outcomes are being evaluated (so the
-         *     interview feels transparent) but never *how heavily* each one
-         *     counts toward the verdict.
-         */
-        InterviewOutcomePublic: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Position */
-            position: number;
-            /** Outcome Text */
-            outcome_text: string;
-            /**
-             * Outcome Type
-             * @enum {string}
-             */
-            outcome_type: "knowledge" | "skill" | "attitude";
         };
         /**
          * InterviewQuestionAuthoring
@@ -6378,6 +6397,7 @@ export interface components {
             started_at: string;
             /** Ended At */
             ended_at?: string | null;
+            security_summary?: components["schemas"]["SecuritySessionSummary"] | null;
         };
         /**
          * InterviewSessionTeacherRead
@@ -6430,6 +6450,7 @@ export interface components {
             started_at: string;
             /** Ended At */
             ended_at?: string | null;
+            security_summary?: components["schemas"]["SecuritySessionSummary"] | null;
         };
         /**
          * InterviewSubmitAnswerRequest
@@ -6481,30 +6502,16 @@ export interface components {
             ai_followup_text?: string | null;
             /** Time Remaining Seconds */
             time_remaining_seconds?: number | null;
-            /** Phase */
-            phase?: string | null;
-            /** Action */
-            action?: string | null;
-            /** Reason Code */
-            reason_code?: string | null;
-            /** Ai Turn Id */
-            ai_turn_id?: string | null;
             /** Ai Turn Text */
             ai_turn_text?: string | null;
             /** Language */
             language?: string | null;
             /** Should Narrate */
             should_narrate?: boolean | null;
-            /** Current Question Id */
-            current_question_id?: string | null;
-            /** Target Outcome Id */
-            target_outcome_id?: string | null;
             /** Should Await Response */
             should_await_response?: boolean | null;
             /** Should Finish */
             should_finish?: boolean | null;
-            /** State Version */
-            state_version?: number | null;
         };
         /**
          * InterviewSummaryPublic
@@ -9603,6 +9610,44 @@ export interface components {
             /** Final Grade */
             final_grade?: string | null;
         };
+        /**
+         * SecuritySessionSummary
+         * @description Teacher-only redacted security metrics; no student response content.
+         */
+        SecuritySessionSummary: {
+            /**
+             * Assessment Count
+             * @default 0
+             */
+            assessment_count: number;
+            /**
+             * Blocked Attempt Count
+             * @default 0
+             */
+            blocked_attempt_count: number;
+            /**
+             * Repeated Attempt Count
+             * @default 0
+             */
+            repeated_attempt_count: number;
+            /**
+             * Output Leakage Prevented
+             * @default 0
+             */
+            output_leakage_prevented: number;
+            /**
+             * Security Fallback Rate
+             * @default 0
+             */
+            security_fallback_rate: number;
+            /** Average Classification Latency Ms */
+            average_classification_latency_ms?: number | null;
+            /**
+             * Session Flagged
+             * @default false
+             */
+            session_flagged: boolean;
+        };
         /** SlugAvailability */
         SlugAvailability: {
             /** Available */
@@ -10284,7 +10329,6 @@ export type SchemaInterviewGenerationRequest = components['schemas']['InterviewG
 export type SchemaInterviewGenerationRunPublic = components['schemas']['InterviewGenerationRunPublic'];
 export type SchemaInterviewOutcomeAuthoring = components['schemas']['InterviewOutcomeAuthoring'];
 export type SchemaInterviewOutcomeCreate = components['schemas']['InterviewOutcomeCreate'];
-export type SchemaInterviewOutcomePublic = components['schemas']['InterviewOutcomePublic'];
 export type SchemaInterviewQuestionAuthoring = components['schemas']['InterviewQuestionAuthoring'];
 export type SchemaInterviewQuestionCreate = components['schemas']['InterviewQuestionCreate'];
 export type SchemaInterviewQuestionPublic = components['schemas']['InterviewQuestionPublic'];
@@ -10414,6 +10458,7 @@ export type SchemaRoleWithPermissionsRead = components['schemas']['RoleWithPermi
 export type SchemaRosterEntry = components['schemas']['RosterEntry'];
 export type SchemaRosterProgressRead = components['schemas']['RosterProgressRead'];
 export type SchemaRosterStudentRead = components['schemas']['RosterStudentRead'];
+export type SchemaSecuritySessionSummary = components['schemas']['SecuritySessionSummary'];
 export type SchemaSlugAvailability = components['schemas']['SlugAvailability'];
 export type SchemaStageBreakdown = components['schemas']['StageBreakdown'];
 export type SchemaStreamUrlResponse = components['schemas']['StreamUrlResponse'];
@@ -14812,7 +14857,9 @@ export interface operations {
     narrate_session_text_api_v1_interview_sessions__session_id__narration_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Accept-Language"?: string | null;
+            };
             path: {
                 session_id: string;
             };

@@ -223,6 +223,20 @@ export default function CareerPathDetailPage() {
         </div>
       )}
 
+      {enrolled && progress.data && progress.data.overall_percent >= 100 && (
+        <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-5 flex items-start gap-3">
+          <CheckCircle2 className="h-5 w-5 text-emerald-700 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-emerald-900">
+              {t("career_path_detail.prepared_title")}
+            </p>
+            <p className="text-xs text-emerald-800 mt-1 leading-relaxed">
+              {t("career_path_detail.prepared_body")}
+            </p>
+          </div>
+        </div>
+      )}
+
       {!enrolled && (
         <div className="rounded-xl bg-amber-50 border border-amber-200 p-5 flex items-start gap-3">
           <Lock className="h-5 w-5 text-amber-700 shrink-0 mt-0.5" />

@@ -1,5 +1,8 @@
 import * as React from "react";
 import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -19,6 +22,11 @@ import {
 } from "@/components/ui/table";
 
 export type DataTableAlign = "left" | "center" | "right";
+export type SortDirection = "asc" | "desc" | null;
+export interface SortState {
+  columnId: string;
+  direction: SortDirection;
+}
 
 export interface DataTableColumn<T> {
   /** Stable key for the column. */
@@ -34,6 +42,10 @@ export interface DataTableColumn<T> {
   cellClassName?: string;
   /** `title` attribute on the header cell (tooltip for short labels). */
   headerTitle?: string;
+  /** Enable client-side sorting for this column. */
+  sortable?: boolean;
+  /** Value accessor for sorting. Required when `sortable` is true. */
+  sortValue?: (row: T) => string | number | Date;
 }
 
 export interface DataTableProps<T> {
@@ -52,10 +64,19 @@ export interface DataTableProps<T> {
   selectedIds?: Set<string>;
   onSelectedIdsChange?: (ids: Set<string>) => void;
 
-  // ── Pagination (client-side) ─────────────────────────────────────────────
+  // ── Pagination ───────────────────────────────────────────────────────────
   pagination?: boolean;
   pageSize?: number;
   pageSizeOptions?: number[];
+  /** Server-driven pagination: don't slice `data` (it's already the page),
+   *  derive page count from `rowCount`, and drive page/size via callbacks. */
+  manualPagination?: boolean;
+  /** Total server-side row count (required in manual mode for page count). */
+  rowCount?: number;
+  /** Controlled current page (0-indexed) — manual mode. */
+  page?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
 
   // ── Hierarchy (expand/collapse nested rows) ──────────────────────────────
   /** Return a row's children to make it expandable; omit for a flat table. */
@@ -65,6 +86,14 @@ export interface DataTableProps<T> {
   // ── Sticky right-hand action column ──────────────────────────────────────
   actions?: (row: T) => React.ReactNode;
   actionsHeader?: React.ReactNode;
+
+  // ── Sorting ─────────────────────────────────────────────────────────────
+  /** Controlled sort state. Omit for uncontrolled (internal) state. */
+  sort?: SortState | null;
+  onSortChange?: (sort: SortState | null) => void;
+  /** Server-driven sorting: header clicks emit `onSortChange` but the
+   *  component does NOT reorder `data` (the server returns it sorted). */
+  manualSorting?: boolean;
 
   // ── States ───────────────────────────────────────────────────────────────
   loading?: boolean;
@@ -76,6 +105,9 @@ export interface DataTableProps<T> {
   bordered?: boolean;
   className?: string;
   containerClassName?: string;
+
+  /** Optional toolbar rendered above the table. */
+  toolbar?: React.ReactNode;
 }
 
 const ALIGN_CLASS: Record<DataTableAlign, string> = {
@@ -121,35 +153,105 @@ export function DataTable<T>({
   pagination = false,
   pageSize = 10,
   pageSizeOptions,
+  manualPagination = false,
+  rowCount,
+  page: controlledPage,
+  onPageChange,
+  onPageSizeChange,
   getSubRows,
   defaultExpanded = false,
   actions,
   actionsHeader,
+  sort: controlledSort,
+  onSortChange,
+  manualSorting = false,
   loading = false,
   loadingRowCount = 5,
   emptyState,
   bordered = true,
   className,
   containerClassName,
+  toolbar,
 }: DataTableProps<T>) {
   const hasActions = Boolean(actions);
   const hierarchical = Boolean(getSubRows);
 
-  // ── Pagination state ───────────────────────────────────────────────────
-  const [size, setSize] = React.useState(pageSize);
-  const [page, setPage] = React.useState(0);
-  const total = data.length;
+  // ── Sort state ─────────────────────────────────────────────────────────
+  const [internalSort, setInternalSort] = React.useState<SortState | null>(null);
+  const activeSort = controlledSort !== undefined ? controlledSort : internalSort;
+  const setSort = React.useCallback(
+    (next: SortState | null) => {
+      onSortChange?.(next);
+      if (controlledSort === undefined) setInternalSort(next);
+    },
+    [onSortChange, controlledSort],
+  );
+
+  const handleHeaderSort = React.useCallback(
+    (colId: string) => {
+      if (!activeSort || activeSort.columnId !== colId) {
+        setSort({ columnId: colId, direction: "asc" });
+      } else if (activeSort.direction === "asc") {
+        setSort({ columnId: colId, direction: "desc" });
+      } else {
+        setSort(null);
+      }
+    },
+    [activeSort, setSort],
+  );
+
+  // ── Sorted data (skipped in manual/server mode) ──────────────────────────
+  const sortedData = React.useMemo(() => {
+    if (manualSorting) return data;
+    if (!activeSort || !activeSort.direction) return data;
+    const col = columns.find((c) => c.id === activeSort.columnId);
+    if (!col?.sortValue) return data;
+    const dir = activeSort.direction === "asc" ? 1 : -1;
+    return [...data].sort((a, b) => {
+      const va = col.sortValue!(a);
+      const vb = col.sortValue!(b);
+      if (va < vb) return -1 * dir;
+      if (va > vb) return 1 * dir;
+      return 0;
+    });
+  }, [data, activeSort, columns, manualSorting]);
+
+  // ── Pagination state (controlled in manual/server mode) ──────────────────
+  const [internalSize, setInternalSize] = React.useState(pageSize);
+  const [internalPage, setInternalPage] = React.useState(0);
+  const size = manualPagination ? pageSize : internalSize;
+  const page = manualPagination ? controlledPage ?? 0 : internalPage;
+  const total = manualPagination ? rowCount ?? sortedData.length : sortedData.length;
   const pageCount = pagination ? Math.max(1, Math.ceil(total / size)) : 1;
 
+  const setPage = React.useCallback(
+    (next: number) => {
+      if (manualPagination) onPageChange?.(next);
+      else setInternalPage(next);
+    },
+    [manualPagination, onPageChange],
+  );
+  const setSize = React.useCallback(
+    (next: number) => {
+      if (manualPagination) onPageSizeChange?.(next);
+      else {
+        setInternalSize(next);
+        setInternalPage(0);
+      }
+    },
+    [manualPagination, onPageSizeChange],
+  );
+
   React.useEffect(() => {
-    if (page > pageCount - 1) setPage(pageCount - 1);
-  }, [page, pageCount]);
+    if (!manualPagination && internalPage > pageCount - 1) setInternalPage(pageCount - 1);
+  }, [manualPagination, internalPage, pageCount]);
 
   const pageRows = React.useMemo(() => {
-    if (!pagination) return data;
+    // Server mode already hands us the current page; never slice.
+    if (!pagination || manualPagination) return sortedData;
     const start = page * size;
-    return data.slice(start, start + size);
-  }, [data, pagination, page, size]);
+    return sortedData.slice(start, start + size);
+  }, [sortedData, pagination, manualPagination, page, size]);
 
   // ── Expansion state ──────────────────────────────────────────────────────
   const [expanded, setExpanded] = React.useState<Set<string>>(() => {
@@ -225,6 +327,7 @@ export function DataTable<T>({
 
   return (
     <div className={cn("space-y-3", containerClassName)}>
+      {toolbar}
       <div
         className={cn(
           bordered &&
@@ -244,19 +347,40 @@ export function DataTable<T>({
                 />
               </TableHead>
             )}
-            {columns.map((col) => (
-              <TableHead
-                key={col.id}
-                title={col.headerTitle}
-                style={col.width ? { width: col.width } : undefined}
-                className={cn(
-                  col.align && ALIGN_CLASS[col.align],
-                  col.headerClassName,
-                )}
-              >
-                {col.header}
-              </TableHead>
-            ))}
+            {columns.map((col) => {
+              const isSorted = activeSort?.columnId === col.id;
+              const dir = isSorted ? activeSort?.direction : null;
+              return (
+                <TableHead
+                  key={col.id}
+                  title={col.headerTitle}
+                  style={col.width ? { width: col.width } : undefined}
+                  className={cn(
+                    col.align && ALIGN_CLASS[col.align],
+                    col.headerClassName,
+                    col.sortable && "cursor-pointer select-none",
+                  )}
+                  onClick={col.sortable ? () => handleHeaderSort(col.id) : undefined}
+                >
+                  {col.sortable ? (
+                    <span className="inline-flex items-center gap-1">
+                      {col.header}
+                      <span className={cn("inline-flex h-4 w-4 shrink-0 items-center justify-center", isSorted ? "text-m3-primary" : "text-m3-on-surface-variant/40")}>
+                        {dir === "asc" ? (
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        ) : dir === "desc" ? (
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3" />
+                        )}
+                      </span>
+                    </span>
+                  ) : (
+                    col.header
+                  )}
+                </TableHead>
+              );
+            })}
             {hasActions && (
               <TableHead
                 className={cn(

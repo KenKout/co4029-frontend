@@ -44,6 +44,8 @@ vi.mock("lucide-react", () => ({
   MicOff: () => <div data-testid="mic-off-icon" />,
   PhoneOff: () => <div data-testid="phone-off-icon" />,
   Volume2: () => <div data-testid="volume-icon" />,
+  Clock3: () => <div data-testid="clock-icon" />,
+  Loader2: () => <div data-testid="loader-icon" />,
 }));
 
 // Import after mocking

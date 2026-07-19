@@ -88,24 +88,6 @@ export type QuizAttemptReviewRead = Schemas["QuizAttemptReviewRead"];
 export type QuizAttemptReviewQuestion = Schemas["QuizAttemptReviewQuestion"];
 export type QuizAttemptReviewOption = Schemas["QuizAttemptReviewOption"];
 export type QuizAttemptStart = Schemas["QuizAttemptStart"];
-// Resume payload for an in-progress attempt. Defined manually (not yet in
-// the OpenAPI snapshot) — mirrors backend QuizAttemptProgressRead /
-// QuizAttemptProgressAnswer (no-leak: no is_correct / points_awarded).
-export interface QuizAttemptProgressAnswer {
-  question_id: string;
-  selected_option_id: string | null;
-  answer_text: string | null;
-  hint_used: boolean;
-  t_actual_ms: number | null;
-}
-export interface QuizAttemptProgressRead {
-  attempt_id: string;
-  quiz_id: string;
-  status: "in_progress" | "submitted" | "graded" | "abandoned" | "expired";
-  started_at: string;
-  take: QuizForTakingPublic;
-  answers: QuizAttemptProgressAnswer[];
-}
 export type QuizAttemptSubmitAnswer = Schemas["QuizAttemptAnswerInput"];
 export type QuizAttemptAnswerRead = Schemas["QuizAttemptAnswerRead"];
 export type QuizQuestion = Schemas["QuizQuestionPublic"];
@@ -138,7 +120,6 @@ export type InterviewSubmitAnswerResponse = Schemas["InterviewSubmitAnswerRespon
 export type InterviewQuestionPublic = Schemas["InterviewQuestionPublic"];
 export type InterviewQuestionAuthoring = Schemas["InterviewQuestionAuthoring"];
 export type InterviewQuestionCreate = Schemas["InterviewQuestionCreate"];
-export type InterviewOutcomePublic = Schemas["InterviewOutcomePublic"];
 export type InterviewOutcomeAuthoring = Schemas["InterviewOutcomeAuthoring"];
 export type InterviewOutcomeCreate = Schemas["InterviewOutcomeCreate"];
 export type InterviewGenerationRequest = Schemas["InterviewGenerationRequest"];
@@ -270,7 +251,10 @@ export type CareerPathCourseAdd = Schemas["CareerPathCourseAdd"];
 export type CareerPathCourseReorder = Schemas["CareerPathCourseReorder"];
 export type CareerPathStudentEnroll = Schemas["CareerPathStudentEnroll"];
 export type CareerPathProgressRead = Schemas["CareerPathProgressRead"];
-export type MyCareerEnrollmentRead = Schemas["MyCareerEnrollmentRead"];
+export type MyCareerEnrollmentRead = Schemas["MyCareerEnrollmentRead"] & {
+  overall_percent?: number;
+  is_prepared?: boolean;
+};
 export type StudentPathProgressAuthoring =
   Schemas["StudentPathProgressAuthoring"];
 export type PathReadinessOverview = Schemas["PathReadinessOverview"];

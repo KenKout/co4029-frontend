@@ -1,16 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { Building2, Plus, Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { InfiniteList } from "@/components/ui/InfiniteList";
-import {
-  useCreateOrganization,
-  useOrganizations,
-} from "@/lib/api/hooks/admin-organizations";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useServerTable } from "@/lib/api/use-server-table";
+import { useCreateOrganization } from "@/lib/api/hooks/admin-organizations";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import type {
   OrganizationRead,
@@ -35,31 +33,6 @@ function StatusBadge({ status }: { status: string }) {
     >
       {label}
     </span>
-  );
-}
-
-function OrgRow({ org }: { org: OrganizationRead }) {
-  return (
-    <Link
-      to="/admin/organizations/$orgId"
-      params={{ orgId: org.id }}
-      className="block bg-white rounded-xl border border-m3-outline-variant/40 p-4 hover:border-m3-primary/40 hover:shadow-sm transition-all duration-150"
-    >
-      <div className="flex items-center gap-4">
-        <div className="w-9 h-9 rounded-full bg-m3-primary-fixed flex items-center justify-center shrink-0">
-          <Building2 className="h-4 w-4 text-m3-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-text-strong truncate">
-            {org.name}
-          </p>
-          <p className="text-xs text-text-muted mt-0.5 font-mono truncate">
-            {org.slug}
-          </p>
-        </div>
-        <StatusBadge status={org.status} />
-      </div>
-    </Link>
   );
 }
 
@@ -192,9 +165,14 @@ export default function AdminOrganizationsPage() {
     );
   }, [permissions.data]);
 
-  const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
-  const orgs = useOrganizations({ limit: 50 });
+
+  // Server-side search + sort + page (whole dataset, not just loaded rows).
+  const table = useServerTable<OrganizationRead>({
+    queryKey: ["admin", "organizations", "search"],
+    path: "/admin/organizations/search",
+    pageSize: 25,
+  });
 
   useEffect(() => {
     if (permissions.isLoading) return;
@@ -204,14 +182,41 @@ export default function AdminOrganizationsPage() {
     }
   }, [permissions.isLoading, canManage, navigate, t]);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return orgs.items;
-    return orgs.items.filter(
-      (o) =>
-        o.name.toLowerCase().includes(q) || o.slug.toLowerCase().includes(q),
-    );
-  }, [orgs.items, search]);
+  const columns: DataTableColumn<OrganizationRead>[] = [
+    {
+      id: "name",
+      header: t("admin.organizations.fields.name"),
+      sortable: true,
+      cell: (o) => (
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-full bg-m3-primary-fixed flex items-center justify-center shrink-0">
+            <Building2 className="h-4 w-4 text-m3-primary" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-text-strong truncate">{o.name}</p>
+            <p className="text-xs text-text-muted font-mono truncate">{o.slug}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "status",
+      header: t("admin.organizations.fields.status"),
+      sortable: true,
+      cell: (o) => <StatusBadge status={o.status} />,
+    },
+    {
+      id: "created_at",
+      header: t("admin.organizations.cols.created", { defaultValue: "Created" }),
+      sortable: true,
+      align: "right",
+      cell: (o) => (
+        <span className="text-xs text-text-muted whitespace-nowrap">
+          {new Date(o.created_at).toLocaleDateString()}
+        </span>
+      ),
+    },
+  ];
 
   if (permissions.isLoading) {
     return (
@@ -236,78 +241,54 @@ export default function AdminOrganizationsPage() {
             {t("admin.organizations.list_subtitle")}
           </p>
         </div>
-        <Button
-          type="button"
-          onClick={() => setShowCreate(true)}
-          className="gap-2"
-        >
+        <Button type="button" onClick={() => setShowCreate(true)} className="gap-2">
           <Plus className="h-4 w-4" />
           {t("admin.organizations.create_button")}
         </Button>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-        <Input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("admin.organizations.search_placeholder")}
-          className="pl-10"
-        />
-      </div>
-
-      {orgs.isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-16 rounded-xl" />
-          ))}
-        </div>
-      ) : orgs.isError ? (
+      {table.isError ? (
         <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
-          {orgs.error instanceof Error
-            ? orgs.error.message
-            : "Failed to load organizations"}
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-m3-outline-variant/40 bg-white p-10 text-center">
-          <Building2 className="h-10 w-10 mx-auto mb-3 text-text-muted" />
-          <p className="text-sm text-text-muted">
-            {search
-              ? t("admin.organizations.empty_search")
-              : t("admin.organizations.empty_title")}
-          </p>
+          {t("admin.organizations.load_failed", { defaultValue: "Failed to load organizations" })}
         </div>
       ) : (
-        <div className="space-y-3">
-          <p className="text-xs text-text-muted">
-            {t("admin.organizations.count", { count: filtered.length })}
-            {orgs.hasNextPage ? " +" : ""}
-          </p>
-          {/* Search filters the local in-memory cache. When the user
-              hasn't typed anything we render the full infinite list with
-              a sentinel; when they're searching we show the filtered
-              subset only (no auto-fetch since cursor pagination is
-              server-side and the search filter is client-side). */}
-          {search.trim() ? (
-            <div className="space-y-2">
-              {filtered.map((org) => (
-                <OrgRow key={org.id} org={org} />
-              ))}
+        <DataTable
+          columns={columns}
+          data={table.rows}
+          getRowId={(o) => o.id}
+          loading={table.isLoading}
+          onRowClick={(o) =>
+            void navigate({ to: "/admin/organizations/$orgId", params: { orgId: o.id } })
+          }
+          pagination
+          manualPagination
+          manualSorting
+          rowCount={table.total}
+          page={table.page}
+          pageSize={table.pageSize}
+          onPageChange={table.setPage}
+          onPageSizeChange={table.setPageSize}
+          pageSizeOptions={[25, 50, 100]}
+          sort={table.sort}
+          onSortChange={table.setSort}
+          emptyState={
+            table.search
+              ? t("admin.organizations.empty_search")
+              : t("admin.organizations.empty_title")
+          }
+          toolbar={
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
+              <Input
+                type="text"
+                value={table.search}
+                onChange={(e) => table.setSearch(e.target.value)}
+                placeholder={t("admin.organizations.search_placeholder")}
+                className="pl-10"
+              />
             </div>
-          ) : (
-            <InfiniteList
-              items={orgs.items}
-              hasNextPage={orgs.hasNextPage}
-              fetchNextPage={orgs.fetchNextPage}
-              isFetchingNextPage={orgs.isFetchingNextPage}
-              isLoading={orgs.isLoading}
-              keyOf={(org) => org.id}
-              className="space-y-2"
-              renderItem={(org) => <OrgRow org={org} />}
-            />
-          )}
-        </div>
+          }
+        />
       )}
 
       {showCreate && <CreateOrgDialog onClose={() => setShowCreate(false)} />}
