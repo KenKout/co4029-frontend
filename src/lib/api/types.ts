@@ -88,6 +88,24 @@ export type QuizAttemptReviewRead = Schemas["QuizAttemptReviewRead"];
 export type QuizAttemptReviewQuestion = Schemas["QuizAttemptReviewQuestion"];
 export type QuizAttemptReviewOption = Schemas["QuizAttemptReviewOption"];
 export type QuizAttemptStart = Schemas["QuizAttemptStart"];
+// Resume payload for an in-progress attempt. Defined manually (not yet in
+// the OpenAPI snapshot) — mirrors backend QuizAttemptProgressRead /
+// QuizAttemptProgressAnswer (no-leak: no is_correct / points_awarded).
+export interface QuizAttemptProgressAnswer {
+  question_id: string;
+  selected_option_id: string | null;
+  answer_text: string | null;
+  hint_used: boolean;
+  t_actual_ms: number | null;
+}
+export interface QuizAttemptProgressRead {
+  attempt_id: string;
+  quiz_id: string;
+  status: "in_progress" | "submitted" | "graded" | "abandoned" | "expired";
+  started_at: string;
+  take: QuizForTakingPublic;
+  answers: QuizAttemptProgressAnswer[];
+}
 export type QuizAttemptSubmitAnswer = Schemas["QuizAttemptAnswerInput"];
 export type QuizAttemptAnswerRead = Schemas["QuizAttemptAnswerRead"];
 export type QuizQuestion = Schemas["QuizQuestionPublic"];

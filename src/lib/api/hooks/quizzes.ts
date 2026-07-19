@@ -13,6 +13,7 @@ import type {
   QuestionBankEntry,
   QuestionBankImportRequest,
   QuizAttemptAnswerRead,
+  QuizAttemptProgressRead,
   QuizAttemptRead,
   QuizAttemptReviewRead,
   QuizAttemptStart,
@@ -116,6 +117,26 @@ export function useQuizAttempt(attemptId: string | null | undefined) {
     queryKey: queryKeys.quizzes.attempt(attemptId ?? ""),
     queryFn: () => apiFetch<QuizAttemptRead>(`/attempts/${attemptId}`),
     enabled: !!attemptId,
+  });
+}
+
+/**
+ * Resume payload for an in-progress attempt. Returns the saved answers so
+ * the taking screen can rehydrate after an interruption (power-off, reload,
+ * critical notification) instead of wiping progress. 404s (via throwing in
+ * apiFetch) when there's no resumable attempt — callers gate with `enabled`
+ * and tolerate the query erroring. No-leak: never carries correctness.
+ */
+export function useQuizAttemptProgress(
+  attemptId: string | null | undefined,
+) {
+  return useQuery({
+    queryKey: queryKeys.quizzes.attemptProgress(attemptId ?? ""),
+    queryFn: () =>
+      apiFetch<QuizAttemptProgressRead>(`/attempts/${attemptId}/progress`),
+    enabled: !!attemptId,
+    staleTime: 0,
+    retry: false,
   });
 }
 

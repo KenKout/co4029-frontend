@@ -178,22 +178,45 @@ export function SectionNav({
       frame = 0;
       if (Date.now() < suppressSpyUntil.current) return;
       const line = scrollOffset() + 4;
-      let current = items[0]?.id ?? "";
-      for (const item of items) {
-        const el = document.getElementById(item.id);
-        if (!el) continue;
-        if (el.getBoundingClientRect().top - line <= 0) {
-          current = item.id;
+      const scrollY = window.scrollY;
+      const maxScroll = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight,
+      );
+
+      const entries = items
+        .map((item) => {
+          const el = document.getElementById(item.id);
+          if (!el) return null;
+          const top = el.getBoundingClientRect().top + scrollY;
+          return { id: item.id, activateAt: top - line };
+        })
+        .filter((e): e is { id: string; activateAt: number } => e !== null);
+      if (entries.length === 0) return;
+
+      // Primary pass: the last section whose top has scrolled above the line.
+      let current = entries[0].id;
+      for (const e of entries) {
+        if (e.activateAt <= scrollY) current = e.id;
+      }
+
+      const firstUnreachable = entries.findIndex((e) => e.activateAt > maxScroll);
+      if (firstUnreachable > 0 && maxScroll > 0) {
+        const zoneStart = Math.min(entries[firstUnreachable - 1].activateAt, maxScroll);
+        const span = maxScroll - zoneStart;
+        if (span > 0 && scrollY >= zoneStart) {
+          const tail = entries.slice(firstUnreachable - 1);
+          const progress = Math.min(1, Math.max(0, (scrollY - zoneStart) / span));
+          const step = Math.min(tail.length - 1, Math.floor(progress * tail.length));
+          current = tail[step].id;
         }
       }
-      // At the very bottom of the page, force the last section active so a
-      // short final section can still be selected by scrolling.
-      const atBottom =
-        window.innerHeight + window.scrollY >=
-        document.documentElement.scrollHeight - 2;
-      if (atBottom && items.length > 0) {
-        current = items[items.length - 1].id;
+
+      // Absolute bottom always resolves to the final section.
+      if (scrollY >= maxScroll - 2) {
+        current = entries[entries.length - 1].id;
       }
+
       if (current && current !== activeRef.current) {
         setActiveId(current);
         setHashWithoutScroll(current);

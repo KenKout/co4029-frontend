@@ -167,6 +167,8 @@ export const queryKeys = {
     attempt: (attemptId: string) => ["quizzes", "attempt", attemptId] as const,
     myAttempts: (quizId: string) =>
       ["quizzes", "my-attempts", quizId] as const,
+    attemptProgress: (attemptId: string) =>
+      ["quizzes", "attempt-progress", attemptId] as const,
     authoring: (quizId: string) => ["quizzes", "authoring", quizId] as const,
     questions: (quizId: string) => ["quizzes", "questions", quizId] as const,
     generationRun: (quizId: string, runId: string) =>

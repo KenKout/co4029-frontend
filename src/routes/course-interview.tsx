@@ -33,7 +33,6 @@ import type {
   InterviewSessionStartResponse,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
-import { VoiceRoom } from "@/components/interview/voice-room";
 import { useSpeechDictation } from "@/lib/hooks/use-speech-dictation";
 import { type SpeechPersona } from "@/lib/hooks/use-speech-synthesis";
 import { useInterviewNarration } from "@/lib/hooks/use-interview-narration";
@@ -127,10 +126,7 @@ export default function CourseInterviewPage() {
   const [transcript, setTranscript] = useState<ChatTurn[]>([]);
   const [answerText, setAnswerText] = useState("");
   const [finishResult, setFinishResult] = useState<InterviewSessionFinishResponse | null>(null);
-  const [inputMode, setInputMode] = useState<"voice" | "text" | "hybrid">("text");
-  // true = voice session started and LiveKitRoom is active
-  const [voiceActive, setVoiceActive] = useState(false);
-  // polling active when voice session is completing
+  // polling active when a session is completing
   const [pollingCompletion, setPollingCompletion] = useState(false);
 
   const respond = useInterviewRespond(sessionId);
@@ -219,24 +215,11 @@ export default function CourseInterviewPage() {
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [transcript]);
 
-  const supportedModes = useMemo(() => {
-    if (!config) return ["text" as const];
-    const mode = config.supported_modes;
-    return mode === "hybrid" ? (["text", "voice"] as const) : ([mode] as const);
-  }, [config]);
-
-  useEffect(() => {
-    if (!config) return;
-    if (config.supported_modes === "voice") setInputMode("voice");
-    else if (config.supported_modes === "text") setInputMode("text");
-    else setInputMode("hybrid");
-  }, [config]);
-
-  // A hybrid config runs a single text-driven session where each answer can be
-  // TYPED or SPOKEN (browser speech-to-text fills the answer, submitted via the
-  // same REST /respond path). This is distinct from the server-side LiveKit
-  // voice agent, which is only used when the student explicitly picks "voice".
-  const isHybrid = config?.supported_modes === "hybrid";
+  // Interviews are always HYBRID now: the AI speaks AND writes each question,
+  // and the student can TYPE or SPEAK each answer (browser speech-to-text fills
+  // the answer draft, submitted via the same REST /respond path). There is no
+  // longer a text-only / voice-only choice, so `isHybrid` is always true.
+  const isHybrid = true;
 
   // Speech-to-text dictation for hybrid answers. Finalized chunks are appended
   // to the current answer draft (with a separating space) so the student can
@@ -305,52 +288,13 @@ export default function CourseInterviewPage() {
     setTranscript([makeAiTurn(payload.first_question)]);
   }
 
-  /** Request mic permission; returns true if granted, false otherwise */
-  async function checkMicPermission(): Promise<boolean> {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Release the test stream immediately — LiveKit will re-acquire
-      stream.getTracks().forEach((t) => t.stop());
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   async function handleStart() {
-    const isVoice = inputMode === "voice";
-
-    if (isVoice) {
-      const granted = await checkMicPermission();
-      if (!granted) {
-        toast.error("Microphone access denied. Falling back to text interview.");
-        setInputMode("text");
-        // Fall through to start a text session
-        try {
-          const payload = await startSession.mutateAsync({ input_mode: "text" });
-          handleStartSuccess(payload);
-        } catch (err) {
-          toast.error(
-            err instanceof ApiError && err.status === 429
-              ? t("course_interview.errors.rate_limited")
-              : t("course_interview.errors.start_failed"),
-          );
-        }
-        return;
-      }
-    }
-
+    // Always a hybrid session: the AI speaks + writes each question, the student
+    // types or speaks each answer via the same REST /respond flow. No LiveKit
+    // voice-agent room and no mode choice anymore.
     try {
-      const payload = await startSession.mutateAsync({ input_mode: inputMode });
+      const payload = await startSession.mutateAsync({ input_mode: "hybrid" });
       handleStartSuccess(payload);
-      // Only enter voice mode when handleStartSuccess actually committed to a
-      // session — i.e. the backend returned a first question. When it didn't
-      // (e.g. config published with only pending questions), the toast in
-      // handleStartSuccess already informed the user; staying on the
-      // mode-selection screen lets them retry without joining an empty room.
-      if (isVoice && payload.first_question) {
-        setVoiceActive(true);
-      }
     } catch (err) {
       toast.error(
         err instanceof ApiError && err.status === 429
@@ -358,25 +302,6 @@ export default function CourseInterviewPage() {
           : t("course_interview.errors.start_failed"),
       );
     }
-  }
-
-  /** Called by VoiceRoom when the agent leaves or the user ends the call.
-   *
-   * Always fires `/finish` (idempotent: the backend `submit_session` returns
-   * early if the session is no longer in_progress). This finalizes a
-   * user-initiated "End interview" — disconnect alone is non-terminal — while
-   * staying harmless when the agent already finalized a natural completion.
-   * Then polls session status until terminal. */
-  function handleVoiceCompleted() {
-    setVoiceActive(false);
-    if (sessionId) {
-      finish.mutate(undefined, {
-        // Errors here are non-fatal — polling still detects the terminal
-        // status set by the agent's own submit_session.
-        onError: () => undefined,
-      });
-    }
-    setPollingCompletion(true);
   }
 
   async function handleRespond() {
@@ -613,27 +538,7 @@ export default function CourseInterviewPage() {
     );
   }
 
-  // ── Voice session active (LiveKit room) ────────────────────────────────────
-  if (voiceActive && sessionId) {
-    return (
-      <div className="min-h-[70vh] pb-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-m3-surface-container text-m3-primary font-bold text-sm">
-              <Mic className="h-4 w-4" />
-              {t("course_interview.labels.ai_interview")} — Voice
-            </div>
-          </div>
-          <h1 className="font-headline font-extrabold text-3xl text-m3-primary mb-6">
-            {config.title}
-          </h1>
-          <VoiceRoom sessionId={sessionId} onCompleted={handleVoiceCompleted} />
-        </div>
-      </div>
-    );
-  }
-
-  // ── Pre-start screen (mode selection) ─────────────────────────────────────
+  // ── Pre-start screen ──────────────────────────────────────────────────────
   if (!sessionId) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4 sm:px-6 py-10">
@@ -688,27 +593,6 @@ export default function CourseInterviewPage() {
               </div>
             )}
 
-            {!isHybrid && supportedModes.length > 1 && (
-              <div className="flex items-center justify-center gap-2 mb-6">
-                {supportedModes.map((mode) => (
-                  <Button
-                    key={mode}
-                    variant={inputMode === mode ? "default" : "outline"}
-                    onClick={() => setInputMode(mode)}
-                    className={cn(
-                      "rounded-xl font-bold text-xs gap-2",
-                      inputMode === mode && "gradient-primary text-white",
-                    )}
-                  >
-                    {mode === "voice" ? <Mic className="h-3 w-3" /> : <MicOff className="h-3 w-3" />}
-                    {mode === "voice"
-                      ? t("course_interview.values.mode.voice")
-                      : t("course_interview.values.mode.text")}
-                  </Button>
-                ))}
-              </div>
-            )}
-
             <Button
               onClick={() => void handleStart()}
               disabled={startSession.isPending}
@@ -716,9 +600,7 @@ export default function CourseInterviewPage() {
             >
               {startSession.isPending
                 ? t("course_interview.actions.starting")
-                : inputMode === "voice"
-                  ? "Start voice interview"
-                  : t("course_interview.actions.start")}
+                : t("course_interview.actions.start")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </GlassCard>

@@ -1352,6 +1352,9 @@
       "instructions": "Hướng dẫn",
       "question_overview": "Tổng quan câu hỏi"
     },
+    "summary": {
+      "title": "Tổng kết bài quiz"
+    },
     "labels": {
       "hint": "Gợi ý",
       "hint_prefix": "Gợi ý: ",
@@ -1379,7 +1382,9 @@
     },
     "messages": {
       "no_retakes": "Bài quiz này không cho phép làm lại.",
-      "max_attempts_reached": "Bạn đã sử dụng hết {{count}} lượt."
+      "max_attempts_reached": "Bạn đã sử dụng hết {{count}} lượt.",
+      "resuming": "Đang khôi phục bài làm của bạn...",
+      "resumed": "Chào mừng trở lại — tiến trình của bạn đã được khôi phục."
     },
     "actions": {
       "starting": "Đang khởi tạo...",

@@ -88,12 +88,17 @@ function buildFlatItems(
         moduleId: mod.id,
         moduleTitle: mod.title,
         item,
+        // Prefer the concrete title (e.g. "Ngan's Interview", "Chapter 1 Quiz")
+        // carried on item.target for every item type; fall back to the generic
+        // type label only when the target has no title (e.g. a draft the reader
+        // slimmed out).
         label:
-          item.item_type === "quiz"
+          item.target?.title ??
+          (item.item_type === "quiz"
             ? quizLabel
             : item.item_type === "interview"
               ? interviewLabel
-              : item.target?.title ?? lessonFallback,
+              : lessonFallback),
       }));
   });
 }

@@ -7,10 +7,10 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
-  Bot,
   Clock,
   Flag,
   Lightbulb,
+  Loader2,
   Sparkles,
   Timer,
   X,
@@ -24,6 +24,7 @@ import { ApiError } from "@/lib/api/client";
 import { useCourseBySlug } from "@/lib/api/hooks/courses";
 import {
   useMyQuizAttempts,
+  useQuizAttemptProgress,
   useStartQuizAttempt,
   useStudentQuiz,
   useSubmitQuizAnswer,
@@ -32,6 +33,15 @@ import {
 import { useCardCooldown } from "@/lib/api/cooldown";
 import { isApiErrorCode } from "@/lib/api/error-codes";
 import { QuestionRenderer } from "@/routes/_components/QuestionRenderer";
+import { useResponseTimers } from "@/lib/use-response-timers";
+import {
+  clearQuizDraft,
+  loadQuizDraft,
+  saveQuizDraft,
+  type QuizDraft,
+} from "@/lib/quiz-draft";
+import { QuizSummaryCard, type QuizSummaryItem } from "@/routes/_components/QuizSummaryCard";
+import { QuizConfigPopover } from "@/routes/_components/QuizConfigPopover";
 import type {
   QuizAttemptRead,
   QuizForTakingPublic,
@@ -48,6 +58,8 @@ interface QuestionStatus {
   flagged: boolean;
   hintViewed: boolean;
   savedToServer: boolean;
+  /** Answer changed since the last successful save — gates the API call. */
+  dirty: boolean;
 }
 
 function formatTime(seconds: number) {
@@ -360,7 +372,6 @@ function QuizIntroPanel({
 
 function QuestionSubmitButton({
   isLastQuestion,
-  isSavedAnswer,
   hasSelection,
   isSavingAnswer,
   isFinalSubmitting,
@@ -369,7 +380,6 @@ function QuestionSubmitButton({
   onFinalSubmit,
 }: {
   isLastQuestion: boolean;
-  isSavedAnswer: boolean;
   hasSelection: boolean;
   isSavingAnswer: boolean;
   isFinalSubmitting: boolean;
@@ -413,9 +423,7 @@ function QuestionSubmitButton({
       >
         {isSavingAnswer
           ? t("course_quiz.actions.saving")
-          : isSavedAnswer
-            ? t("course_quiz.actions.next")
-            : t("course_quiz.actions.save_and_continue")}
+          : t("course_quiz.actions.next")}
         <ArrowRight className="h-4 w-4" />
       </Button>
     </div>
@@ -433,6 +441,14 @@ export default function CourseQuizPage() {
   const startAttempt = useStartQuizAttempt(quizId);
 
   const [taking, setTaking] = useState<QuizForTakingPublic | null>(null);
+  // Resume support: find an interrupted (in_progress) attempt and, until the
+  // student has an active take session, fetch its saved progress so we can
+  // rehydrate instead of wiping. Gated to `!taking` so we don't refetch once
+  // a session (fresh or resumed) is live.
+  const inProgressAttempt = useMemo(
+    () => attempts.find((a) => a.status === "in_progress") ?? null,
+    [attempts],
+  );
   const [activeAttemptId, setActiveAttemptId] = useState<string | null>(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const [statuses, setStatuses] = useState<QuestionStatus[]>([]);
@@ -440,6 +456,9 @@ export default function CourseQuizPage() {
   const [submittedSummary, setSubmittedSummary] = useState<QuizAttemptRead | null>(null);
   const [perQuestionCooldown, setPerQuestionCooldown] = useState<Record<string, string>>({});
   const [hintDialogOpen, setHintDialogOpen] = useState(false);
+  // Debug-only tick: forces a re-render ~2x/sec so the on-screen response
+  // timer readout stays live (the timer state itself lives in a ref).
+  const [, setDebugTick] = useState(0);
 
   useEffect(() => {
     setHintDialogOpen(false);
@@ -448,8 +467,14 @@ export default function CourseQuizPage() {
   const submitAnswer = useSubmitQuizAnswer(activeAttemptId);
   const submitAttempt = useSubmitQuizAttempt(activeAttemptId);
 
+  // Resume payload for the interrupted attempt (saved answers + take payload),
+  // fetched only while there's no live take session yet.
+  const { data: progress } = useQuizAttemptProgress(
+    !taking && inProgressAttempt ? inProgressAttempt.id : null,
+  );
+
   const autoSubmitStartedRef = useRef(false);
-  const questionSeenAtRef = useRef<Record<string, number>>({});
+  const resumedAttemptRef = useRef<string | null>(null);
 
   const displayQuestions: QuizQuestionPublic[] = useMemo(
     () => (taking ? [...taking.questions].sort((a, b) => a.position - b.position) : []),
@@ -461,11 +486,20 @@ export default function CourseQuizPage() {
     statuses.length === displayQuestions.length &&
     displayQuestions.length > 0;
 
+  // Debug-only: drive the live on-screen response-timer readout.
   useEffect(() => {
-    const activeQuestionId = displayQuestions[activeIdx]?.id;
-    if (!activeQuestionId || questionSeenAtRef.current[activeQuestionId]) return;
-    questionSeenAtRef.current[activeQuestionId] = Date.now();
-  }, [activeIdx, displayQuestions]);
+    if (!sessionReady || submittedSummary) return;
+    const id = window.setInterval(() => setDebugTick((n) => n + 1), 500);
+    return () => window.clearInterval(id);
+  }, [sessionReady, submittedSummary]);
+
+  // Per-question response-time tracking. Only runs (accrues active time)
+  // once the take session is live and not yet submitted; it pauses
+  // automatically when a question is off-screen or the tab is hidden.
+  const timers = useResponseTimers(
+    displayQuestions[activeIdx]?.id,
+    sessionReady && !submittedSummary,
+  );
 
   useEffect(() => {
     if (!quiz?.time_limit_seconds || !sessionReady || submittedSummary) return;
@@ -486,12 +520,13 @@ export default function CourseQuizPage() {
           flagged: false,
           hintViewed: false,
           savedToServer: false,
+          dirty: false,
         })),
       );
       setActiveIdx(0);
       setTimeLeft(result.quiz.time_limit_seconds ?? 0);
       autoSubmitStartedRef.current = false;
-      questionSeenAtRef.current = {};
+      timers.reset();
       setPerQuestionCooldown({});
     } catch (err) {
       // Server-side retake policy (FR-4.3): 409 = attempts exhausted,
@@ -513,20 +548,111 @@ export default function CourseQuizPage() {
     }
   }
 
+  // Resume an interrupted attempt: once the progress payload arrives (saved
+  // answers + take payload), rehydrate the take session so the student picks
+  // up where they left off instead of seeing a blank "Start" screen. Runs
+  // once per attempt id (resumedAttemptRef guards re-entry). Saved answers
+  // are marked savedToServer + not dirty so no redundant re-save fires; the
+  // timer resumes from elapsed wall-clock (started_at), not from full.
   useEffect(() => {
-    if (!taking || activeAttemptId) return;
-    const inProgress = attempts.find((a) => a.status === "in_progress");
-    if (inProgress) setActiveAttemptId(inProgress.id);
-  }, [taking, attempts, activeAttemptId]);
+    if (taking || !progress) return;
+    if (resumedAttemptRef.current === progress.attempt_id) return;
+    resumedAttemptRef.current = progress.attempt_id;
+
+    const answerByQid = new Map(
+      progress.answers.map((a) => [a.question_id, a]),
+    );
+    const orderedQuestions = [...progress.take.questions].sort(
+      (a, b) => a.position - b.position,
+    );
+
+    // Same-device draft: carries flags (which have no server row) and any
+    // unsaved in-flight answer the student changed but didn't navigate away
+    // from before the interruption. Server answers are authoritative for
+    // committed state; the draft layers on top for the two local-only bits.
+    const draft = loadQuizDraft(progress.attempt_id);
+
+    setTaking(progress.take);
+    setActiveAttemptId(progress.attempt_id);
+    setStatuses(
+      orderedQuestions.map((q) => {
+        const saved = answerByQid.get(q.id);
+        const local = draft?.[q.id];
+        // A local dirty answer (never confirmed saved) wins over the server
+        // copy for this question; otherwise the server answer is truth.
+        const useLocalAnswer = local?.dirty === true;
+        return {
+          selectedOptionId: useLocalAnswer
+            ? local.selectedOptionId
+            : saved?.selected_option_id ?? null,
+          answerText: useLocalAnswer
+            ? local.answerText
+            : saved?.answer_text ?? null,
+          flagged: local?.flagged ?? false,
+          hintViewed: local?.hintViewed ?? saved?.hint_used ?? false,
+          savedToServer: saved != null && !useLocalAnswer,
+          dirty: useLocalAnswer,
+        };
+      }),
+    );
+    // Jump to the first unanswered question (best resume UX).
+    const firstUnanswered = orderedQuestions.findIndex(
+      (q) => !answerByQid.has(q.id),
+    );
+    setActiveIdx(firstUnanswered === -1 ? 0 : firstUnanswered);
+
+    // Resume the countdown from remaining wall-clock time, if timed.
+    const limit = progress.take.quiz.time_limit_seconds;
+    if (limit) {
+      const elapsedSec = Math.floor(
+        (Date.now() - new Date(progress.started_at).getTime()) / 1000,
+      );
+      setTimeLeft(Math.max(limit - elapsedSec, 0));
+    }
+    autoSubmitStartedRef.current = false;
+    timers.reset();
+    setPerQuestionCooldown({});
+    toast.info(t("course_quiz.messages.resumed"));
+  }, [taking, progress, timers, t]);
+
+  // Mirror per-question state to a same-device localStorage draft on every
+  // change. This is the ONLY place flags are persisted (the server holds no
+  // flag column) and it also captures a dirty answer the student changed but
+  // hasn't navigated away from yet — so a crash before the next save still
+  // recovers on resume. Best-effort; cleared on submit. Skipped until a live
+  // session exists so we never write an empty draft over a good one.
+  useEffect(() => {
+    if (!activeAttemptId || !sessionReady) return;
+    const draft: QuizDraft = {};
+    displayQuestions.forEach((q, idx) => {
+      const s = statuses[idx];
+      if (!s) return;
+      // Only store rows that carry local-only signal worth recovering:
+      // a flag, a viewed hint, or an unsaved (dirty) answer.
+      if (!s.flagged && !s.hintViewed && !s.dirty) return;
+      draft[q.id] = {
+        selectedOptionId: s.selectedOptionId,
+        answerText: s.answerText,
+        flagged: s.flagged,
+        hintViewed: s.hintViewed,
+        dirty: s.dirty,
+      };
+    });
+    saveQuizDraft(activeAttemptId, draft);
+  }, [activeAttemptId, sessionReady, statuses, displayQuestions]);
 
   async function persistAnswer(questionIdx: number): Promise<boolean> {
     const question = displayQuestions[questionIdx];
     const status = statuses[questionIdx];
     if (!question || !status || !activeAttemptId) return false;
     if (!hasAnswer(status)) return false;
-    if (status.savedToServer) return true;
-    const startedAt = questionSeenAtRef.current[question.id];
-    const tActualMs = startedAt ? Math.max(Date.now() - startedAt, 0) : null;
+    // Skip the network round-trip when the answer hasn't changed since the
+    // last successful save (spec: no API call on Next/swap for an unchanged
+    // answer). `savedToServer && !dirty` means the server is already current.
+    if (status.savedToServer && !status.dirty) return true;
+    // Response time = cumulative active on-screen time captured at the last
+    // answer change (pauses while off-screen / tab hidden).
+    const tActualMs = timers.getSnapshot(question.id);
 
     try {
       await submitAnswer.mutateAsync({
@@ -537,7 +663,9 @@ export default function CourseQuizPage() {
         t_actual_ms: tActualMs,
       });
       setStatuses((current) =>
-        current.map((s, i) => (i === questionIdx ? { ...s, savedToServer: true } : s)),
+        current.map((s, i) =>
+          i === questionIdx ? { ...s, savedToServer: true, dirty: false } : s,
+        ),
       );
       setPerQuestionCooldown((prev) => {
         if (!prev[question.id]) return prev;
@@ -564,11 +692,27 @@ export default function CourseQuizPage() {
     }
   }
 
-  async function handleSaveNext() {
-    const ok = await persistAnswer(activeIdx);
-    if (ok) {
-      setActiveIdx((current) => Math.min(displayQuestions.length - 1, current + 1));
+  // Navigate away from the current question, persisting its answer first.
+  // Spec: save on ANY move away (Next / Previous / jump via summary card),
+  // but only when the answer is dirty — persistAnswer no-ops otherwise, so
+  // an unchanged answer never triggers an API call. A failed save (e.g.
+  // cooldown) blocks the move so the student sees the error in context.
+  async function navigateTo(targetIdx: number) {
+    if (targetIdx === activeIdx) return;
+    const clamped = Math.min(
+      displayQuestions.length - 1,
+      Math.max(0, targetIdx),
+    );
+    const status = statuses[activeIdx];
+    if (status && hasAnswer(status) && status.dirty) {
+      const ok = await persistAnswer(activeIdx);
+      if (!ok) return;
     }
+    setActiveIdx(clamped);
+  }
+
+  async function handleSaveNext() {
+    await navigateTo(activeIdx + 1);
   }
 
   async function handleFinalSubmit(trigger: "manual" | "timeout") {
@@ -585,6 +729,9 @@ export default function CourseQuizPage() {
 
     try {
       const result = await submitAttempt.mutateAsync();
+      // Attempt is locked in — drop the local draft so a future fresh
+      // attempt on this device never resurrects stale flags/answers.
+      if (activeAttemptId) clearQuizDraft(activeAttemptId);
       setSubmittedSummary(result);
       if (trigger === "timeout") {
         toast.error(t("course_quiz.errors.auto_submitted_timeout"));
@@ -715,6 +862,21 @@ export default function CourseQuizPage() {
   }
 
   if (!taking) {
+    // An interrupted attempt exists — show a resuming spinner instead of the
+    // "Start" panel (which would let the student start a duplicate attempt)
+    // while the progress payload loads and the resume effect rehydrates.
+    if (inProgressAttempt) {
+      return (
+        <div className="min-h-[70vh] flex items-center justify-center px-6">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-m3-primary" />
+            <p className="text-sm font-medium text-m3-on-surface-variant">
+              {t("course_quiz.messages.resuming")}
+            </p>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10">
         <QuizIntroPanel
@@ -735,6 +897,7 @@ export default function CourseQuizPage() {
     flagged: false,
     hintViewed: false,
     savedToServer: false,
+    dirty: false,
   };
   const completedCount = statuses.filter(hasAnswer).length;
   const flaggedCount = statuses.filter((s) => s.flagged).length;
@@ -748,10 +911,38 @@ export default function CourseQuizPage() {
     ? perQuestionCooldown[activeQuestion.id] ?? null
     : null;
 
+  const summaryItems: QuizSummaryItem[] = displayQuestions.map(
+    (question, index) => {
+      const status = statuses[index] ?? {
+        selectedOptionId: null,
+        answerText: null,
+        flagged: false,
+        hintViewed: false,
+        savedToServer: false,
+        dirty: false,
+      };
+      return {
+        id: question.id,
+        index,
+        state: questionState(index, activeIdx, status),
+        onCooldown: !!perQuestionCooldown[question.id],
+      };
+    },
+  );
+
   return (
     <div className="min-h-[70vh] pb-20">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+        <div
+          className={cn(
+            "flex items-center justify-between mb-8 flex-wrap gap-4",
+            // Timed quizzes: pin the header so the countdown is always
+            // visible. Sits at top-16 (below the global ContentTopBar, h-16)
+            // at z-10 so it never slides under the bar (frontend/AGENTS.md).
+            quiz.time_limit_seconds &&
+              "sticky top-16 z-10 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 bg-m3-surface/80 backdrop-blur-md border-b border-m3-outline-variant/20",
+          )}
+        >
           <div className="flex items-center gap-3 flex-wrap -ml-3">
             <Link to="/courses/$slug/learn" params={{ slug }}>
               <Button variant="ghost" size="sm" className="rounded-xl text-m3-on-surface-variant hover:text-m3-primary gap-1.5 text-xs font-bold px-3">
@@ -765,6 +956,32 @@ export default function CourseQuizPage() {
           </div>
 
           <div className="flex items-center gap-3 flex-wrap justify-end">
+            {/* DEBUG: live response-timer readout for the active question.
+                Shows cumulative active on-screen time (pauses off-screen)
+                and the snapshot captured at the last answer change. Remove
+                before production. */}
+            {activeQuestion && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 text-amber-700 font-mono text-xs border border-amber-200">
+                <span className="font-bold uppercase tracking-wider">rt</span>
+                <span className="tabular-nums">
+                  live {(timers.getLiveActiveMs(activeQuestion.id) / 1000).toFixed(1)}s
+                </span>
+                <span className="text-amber-400">/</span>
+                <span className="tabular-nums">
+                  snap{" "}
+                  {(() => {
+                    const s = timers.getSnapshot(activeQuestion.id);
+                    return s == null ? "—" : `${(s / 1000).toFixed(1)}s`;
+                  })()}
+                </span>
+              </div>
+            )}
+            <QuizConfigPopover
+              allowRetakes={quiz.allow_retakes}
+              maxAttempts={quiz.max_attempts}
+              showHints={quiz.show_hints}
+              cooldownHours={quiz.cooldown_hours}
+            />
             {quiz.time_limit_seconds ? (
               <div
                 className={cn(
@@ -836,6 +1053,7 @@ export default function CourseQuizPage() {
                 answerText={activeStatus.answerText}
                 disabled={submitAnswer.isPending || submitAttempt.isPending}
                 onSelectOption={(optionId) => {
+                  timers.markAnswerChanged(activeQuestion.id);
                   setStatuses((current) =>
                     current.map((status, index) =>
                       index === activeIdx
@@ -843,12 +1061,14 @@ export default function CourseQuizPage() {
                             ...status,
                             selectedOptionId: optionId,
                             savedToServer: false,
+                            dirty: true,
                           }
                         : status,
                     ),
                   );
                 }}
                 onAnswerTextChange={(value) => {
+                  timers.markAnswerChanged(activeQuestion.id);
                   setStatuses((current) =>
                     current.map((status, index) =>
                       index === activeIdx
@@ -856,6 +1076,7 @@ export default function CourseQuizPage() {
                             ...status,
                             answerText: value,
                             savedToServer: false,
+                            dirty: true,
                           }
                         : status,
                     ),
@@ -867,7 +1088,7 @@ export default function CourseQuizPage() {
             <div className="flex items-center justify-between mt-6 flex-wrap gap-3">
               <Button
                 variant="ghost"
-                onClick={() => setActiveIdx((current) => Math.max(0, current - 1))}
+                onClick={() => void navigateTo(activeIdx - 1)}
                 disabled={activeIdx === 0 || submitAnswer.isPending || submitAttempt.isPending}
                 className="font-bold text-m3-primary hover:bg-m3-primary-fixed/30 rounded-xl gap-2"
               >
@@ -899,9 +1120,29 @@ export default function CourseQuizPage() {
                     : t("course_quiz.actions.flag")}
                 </Button>
 
+                {quiz.show_hints && activeQuestion.hint_text && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setStatuses((current) =>
+                        current.map((status, index) =>
+                          index === activeIdx ? { ...status, hintViewed: true } : status,
+                        ),
+                      );
+                      setHintDialogOpen(true);
+                    }}
+                    disabled={submitAnswer.isPending || submitAttempt.isPending}
+                    className="font-bold rounded-xl gap-2 text-sm text-m3-primary hover:bg-m3-primary-fixed/30"
+                  >
+                    <Lightbulb className="h-4 w-4" />
+                    {activeStatus.hintViewed
+                      ? t("course_quiz.actions.view_hint_again")
+                      : t("course_quiz.actions.show_hint")}
+                  </Button>
+                )}
+
                 <QuestionSubmitButton
                   isLastQuestion={isLastQuestion}
-                  isSavedAnswer={activeStatus.savedToServer}
                   hasSelection={hasAnswer(activeStatus)}
                   isSavingAnswer={submitAnswer.isPending}
                   isFinalSubmitting={submitAttempt.isPending}
@@ -914,127 +1155,20 @@ export default function CourseQuizPage() {
           </div>
 
           <div className="lg:col-span-4 space-y-5">
-            <GlassCard className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white shadow-ai-glow">
-                  <Bot className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="font-headline font-bold text-m3-primary text-sm">
-                    {t("course_quiz.sections.instructions")}
-                  </h4>
-                  <p className="text-[10px] text-m3-outline uppercase font-bold tracking-wider">
-                    {t("course_quiz.labels.student")}
-                  </p>
-                </div>
-              </div>
-
-              {quiz.show_hints && activeQuestion.hint_text ? (
-                <Button
-                  variant="outline"
-                  className="w-full justify-center gap-2 rounded-xl ghost-border font-semibold"
-                  onClick={() => {
-                    setStatuses((current) =>
-                      current.map((status, index) =>
-                        index === activeIdx ? { ...status, hintViewed: true } : status,
-                      ),
-                    );
-                    setHintDialogOpen(true);
-                  }}
-                >
-                  <Lightbulb className="h-4 w-4" />
-                  {activeStatus.hintViewed
-                    ? t("course_quiz.actions.view_hint_again")
-                    : t("course_quiz.actions.show_hint")}
-                </Button>
-              ) : (
-                <p className="text-sm text-m3-on-surface-variant leading-relaxed">
-                  {t("course_quiz.instructions.choose_best")}
-                </p>
-              )}
-            </GlassCard>
-
             <HintDialog
               open={hintDialogOpen}
               onOpenChange={setHintDialogOpen}
               hintText={activeQuestion.hint_text ?? ""}
             />
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-surface-elev rounded-xl p-4 shadow-sm">
-                <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-                  {t("course_quiz.labels.answered")}
-                </span>
-                <span className="text-xl font-black font-headline text-m3-primary">
-                  {completedCount}
-                  <span className="text-sm text-m3-outline-variant font-medium">
-                    /{displayQuestions.length}
-                  </span>
-                </span>
-              </div>
-              <div className="bg-surface-elev rounded-xl p-4 shadow-sm">
-                <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-                  {t("course_quiz.labels.flagged")}
-                </span>
-                <span className="text-xl font-black font-headline text-amber-500">{flaggedCount}</span>
-              </div>
-              <div className="bg-surface-elev rounded-xl p-4 shadow-sm col-span-2">
-                <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-                  {t("course_quiz.labels.passing_score")}
-                </span>
-                <span className="text-xl font-black font-headline text-m3-secondary">
-                  {passingScore}%
-                </span>
-              </div>
-            </div>
-
-            <QuizStudyModeCard
-              allowRetakes={quiz.allow_retakes}
-              maxAttempts={quiz.max_attempts}
-              showHints={quiz.show_hints}
-              cooldownHours={quiz.cooldown_hours}
+            <QuizSummaryCard
+              items={summaryItems}
+              answeredCount={completedCount}
+              flaggedCount={flaggedCount}
+              total={displayQuestions.length}
+              passingScore={passingScore}
+              onJump={(index) => void navigateTo(index)}
             />
-          </div>
-        </div>
-
-        <div className="mt-12 pt-8 border-t border-m3-outline-variant/15">
-          <h4 className="text-xs font-bold text-m3-outline uppercase tracking-widest mb-5 text-center">
-            {t("course_quiz.sections.question_overview")}
-          </h4>
-          <div className="flex flex-wrap justify-center gap-2.5">
-            {displayQuestions.map((question, index) => {
-              const status = statuses[index] ?? {
-                selectedOptionId: null,
-                answerText: null,
-                flagged: false,
-                hintViewed: false,
-                savedToServer: false,
-              };
-              const state = questionState(index, activeIdx, status);
-              const onCooldown = !!perQuestionCooldown[question.id];
-              return (
-                <button
-                  key={question.id}
-                  type="button"
-                  onClick={() => setActiveIdx(index)}
-                  className={cn(
-                    "w-10 h-10 rounded-xl font-bold text-sm transition-all duration-150 hover:scale-110 relative cursor-pointer",
-                    state === "completed" && "bg-m3-primary text-white shadow-md",
-                    state === "active" && "bg-surface-elev text-m3-primary ring-2 ring-m3-primary shadow-md",
-                    state === "flagged" && "bg-amber-100 text-amber-700 ring-2 ring-amber-400",
-                    state === "pending" && "bg-m3-surface-container-high text-m3-outline hover:bg-m3-surface-container-highest",
-                  )}
-                >
-                  {index + 1}
-                  {onCooldown && (
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full ring-2 ring-m3-surface" />
-                  )}
-                  {state === "flagged" && !onCooldown && (
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-m3-surface" />
-                  )}
-                </button>
-              );
-            })}
           </div>
         </div>
       </div>

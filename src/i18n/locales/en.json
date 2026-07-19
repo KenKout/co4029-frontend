@@ -1361,6 +1361,9 @@
       "instructions": "Instructions",
       "question_overview": "Question overview"
     },
+    "summary": {
+      "title": "Quiz summary"
+    },
     "labels": {
       "hint": "Hint",
       "hint_prefix": "Hint: ",
@@ -1388,7 +1391,9 @@
     },
     "messages": {
       "no_retakes": "This quiz does not allow retakes.",
-      "max_attempts_reached": "You have used all {{count}} attempts."
+      "max_attempts_reached": "You have used all {{count}} attempts.",
+      "resuming": "Resuming your attempt...",
+      "resumed": "Welcome back — your progress was restored."
     },
     "actions": {
       "starting": "Starting...",
