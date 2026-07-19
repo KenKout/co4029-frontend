@@ -6,13 +6,10 @@ import {
   ArrowLeft,
   ArrowRight,
   Bot,
-  Clock,
   Loader2,
   Mic,
   MicOff,
   Sparkles,
-  Volume2,
-  VolumeX,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -33,18 +30,19 @@ import type {
   InterviewSessionStartResponse,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { VoiceRoom } from "@/components/interview/voice-room";
 import { useSpeechDictation } from "@/lib/hooks/use-speech-dictation";
 import { type SpeechPersona } from "@/lib/hooks/use-speech-synthesis";
 import { useInterviewNarration } from "@/lib/hooks/use-interview-narration";
-import { AiTypingMessage } from "@/components/interview/ai-typing-message";
-
-interface ChatTurn {
-  id: string;
-  role: "ai" | "user";
-  text: string;
-  questionType?: string | null;
-  isFollowUp?: boolean;
-}
+import {
+  AnswerComposer,
+  EndInterviewDialog,
+  InterviewHeader,
+  InterviewStage,
+  type ConversationTurn,
+  type InterviewAgentStatus,
+  useInterviewTimer,
+} from "@/components/interview/interview-workspace";
 
 function questionTypeLabel(type: string | null | undefined, t: (k: string) => string) {
   switch (type) {
@@ -63,22 +61,35 @@ function questionTypeLabel(type: string | null | undefined, t: (k: string) => st
   }
 }
 
-function makeAiTurn(question: InterviewQuestionPublic, isFollowUp = false): ChatTurn {
+function makeAiTurn(
+  question: InterviewQuestionPublic,
+  isFollowUp = false,
+  elapsedSeconds = 0,
+): ConversationTurn {
   return {
     id: `q-${question.id}-${isFollowUp ? "f" : "m"}`,
     role: "ai",
     text: question.prompt_text,
+    elapsedSeconds,
     questionType: question.question_type,
     isFollowUp,
   };
 }
 
-function makeFollowUpTurn(text: string, key: string): ChatTurn {
-  return { id: `f-${key}`, role: "ai", text, isFollowUp: true };
+function makeFollowUpTurn(
+  text: string,
+  key: string,
+  elapsedSeconds: number,
+): ConversationTurn {
+  return { id: `f-${key}`, role: "ai", text, elapsedSeconds, isFollowUp: true };
 }
 
-function makeUserTurn(text: string, key: string): ChatTurn {
-  return { id: `a-${key}`, role: "user", text };
+function makeUserTurn(
+  text: string,
+  key: string,
+  elapsedSeconds: number,
+): ConversationTurn {
+  return { id: `a-${key}`, role: "user", text, elapsedSeconds };
 }
 
 /**
@@ -123,11 +134,23 @@ export default function CourseInterviewPage() {
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<InterviewQuestionPublic | null>(null);
-  const [transcript, setTranscript] = useState<ChatTurn[]>([]);
+  const [transcript, setTranscript] = useState<ConversationTurn[]>([]);
   const [answerText, setAnswerText] = useState("");
   const [finishResult, setFinishResult] = useState<InterviewSessionFinishResponse | null>(null);
-  // polling active when a session is completing
+  const [inputMode, setInputMode] = useState<"voice" | "text" | "hybrid">("text");
+  // true = voice session started and LiveKitRoom is active
+  const [voiceActive, setVoiceActive] = useState(false);
+  // polling active when voice session is completing
   const [pollingCompletion, setPollingCompletion] = useState(false);
+  const [endDialogOpen, setEndDialogOpen] = useState(false);
+  const [transcriptOpen, setTranscriptOpen] = useState(true);
+  const [aiSpeaking, setAiSpeaking] = useState(false);
+  const sessionStartedAtRef = useRef<number | null>(null);
+
+  const currentElapsedSeconds = () =>
+    sessionStartedAtRef.current === null
+      ? 0
+      : Math.max(0, Math.floor((Date.now() - sessionStartedAtRef.current) / 1000));
 
   const respond = useInterviewRespond(sessionId);
   const finish = useFinishInterview(sessionId);
@@ -210,16 +233,24 @@ export default function CourseInterviewPage() {
     }
   }, [pollingCompletion, sessionStatus]);
 
-  const transcriptEndRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [transcript]);
+  const supportedModes = useMemo(() => {
+    if (!config) return ["text" as const];
+    const mode = config.supported_modes;
+    return mode === "hybrid" ? (["text", "voice"] as const) : ([mode] as const);
+  }, [config]);
 
-  // Interviews are always HYBRID now: the AI speaks AND writes each question,
-  // and the student can TYPE or SPEAK each answer (browser speech-to-text fills
-  // the answer draft, submitted via the same REST /respond path). There is no
-  // longer a text-only / voice-only choice, so `isHybrid` is always true.
-  const isHybrid = true;
+  useEffect(() => {
+    if (!config) return;
+    if (config.supported_modes === "voice") setInputMode("voice");
+    else if (config.supported_modes === "text") setInputMode("text");
+    else setInputMode("hybrid");
+  }, [config]);
+
+  // A hybrid config runs a single text-driven session where each answer can be
+  // TYPED or SPOKEN (browser speech-to-text fills the answer, submitted via the
+  // same REST /respond path). This is distinct from the server-side LiveKit
+  // voice agent, which is only used when the student explicitly picks "voice".
+  const isHybrid = config?.supported_modes === "hybrid";
 
   // Speech-to-text dictation for hybrid answers. Finalized chunks are appended
   // to the current answer draft (with a separating space) so the student can
@@ -268,12 +299,16 @@ export default function CourseInterviewPage() {
 
   // Id of the most recently-added AI turn — only this one animates (types) and
   // speaks. Earlier AI turns render their full text immediately and silently.
-  const lastAiTurnId = useMemo(() => {
-    for (let i = transcript.length - 1; i >= 0; i -= 1) {
-      if (transcript[i].role === "ai") return transcript[i].id;
-    }
-    return null;
-  }, [transcript]);
+  const elapsed = useInterviewTimer(Boolean(sessionId) && !finishResult);
+  const agentStatus: InterviewAgentStatus = respond.isPending
+    ? "processing"
+    : aiSpeaking
+      ? "speaking"
+      : dictation.listening
+        ? "listening"
+        : answerText.trim().length > 0
+          ? "ready"
+          : "idle";
 
   function handleStartSuccess(payload: InterviewSessionStartResponse) {
     if (!payload.first_question) {
@@ -281,20 +316,63 @@ export default function CourseInterviewPage() {
       setSessionId(null);
       setCurrentQuestion(null);
       setTranscript([]);
+      sessionStartedAtRef.current = null;
       return;
     }
+    sessionStartedAtRef.current = Date.now();
+    setVoiceOn(true);
     setSessionId(payload.session_id);
     setCurrentQuestion(payload.first_question);
-    setTranscript([makeAiTurn(payload.first_question)]);
+    setTranscript([makeAiTurn(payload.first_question, false, 0)]);
+    window.dispatchEvent(new CustomEvent("abridge:interview-started"));
+  }
+
+  /** Request mic permission; returns true if granted, false otherwise */
+  async function checkMicPermission(): Promise<boolean> {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Release the test stream immediately — LiveKit will re-acquire
+      stream.getTracks().forEach((t) => t.stop());
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async function handleStart() {
-    // Always a hybrid session: the AI speaks + writes each question, the student
-    // types or speaks each answer via the same REST /respond flow. No LiveKit
-    // voice-agent room and no mode choice anymore.
+    const isVoice = inputMode === "voice";
+
+    if (isVoice) {
+      const granted = await checkMicPermission();
+      if (!granted) {
+        toast.error("Microphone access denied. Falling back to text interview.");
+        setInputMode("text");
+        // Fall through to start a text session
+        try {
+          const payload = await startSession.mutateAsync({ input_mode: "text" });
+          handleStartSuccess(payload);
+        } catch (err) {
+          toast.error(
+            err instanceof ApiError && err.status === 429
+              ? t("course_interview.errors.rate_limited")
+              : t("course_interview.errors.start_failed"),
+          );
+        }
+        return;
+      }
+    }
+
     try {
-      const payload = await startSession.mutateAsync({ input_mode: "hybrid" });
+      const payload = await startSession.mutateAsync({ input_mode: inputMode });
       handleStartSuccess(payload);
+      // Only enter voice mode when handleStartSuccess actually committed to a
+      // session — i.e. the backend returned a first question. When it didn't
+      // (e.g. config published with only pending questions), the toast in
+      // handleStartSuccess already informed the user; staying on the
+      // mode-selection screen lets them retry without joining an empty room.
+      if (isVoice && payload.first_question) {
+        setVoiceActive(true);
+      }
     } catch (err) {
       toast.error(
         err instanceof ApiError && err.status === 429
@@ -302,6 +380,25 @@ export default function CourseInterviewPage() {
           : t("course_interview.errors.start_failed"),
       );
     }
+  }
+
+  /** Called by VoiceRoom when the agent leaves or the user ends the call.
+   *
+   * Always fires `/finish` (idempotent: the backend `submit_session` returns
+   * early if the session is no longer in_progress). This finalizes a
+   * user-initiated "End interview" — disconnect alone is non-terminal — while
+   * staying harmless when the agent already finalized a natural completion.
+   * Then polls session status until terminal. */
+  function handleVoiceCompleted() {
+    setVoiceActive(false);
+    if (sessionId) {
+      finish.mutate(undefined, {
+        // Errors here are non-fatal — polling still detects the terminal
+        // status set by the agent's own submit_session.
+        onError: () => undefined,
+      });
+    }
+    setPollingCompletion(true);
   }
 
   async function handleRespond() {
@@ -314,7 +411,10 @@ export default function CourseInterviewPage() {
     }
 
     const userTurnKey = `${currentQuestion.id}-${Date.now()}`;
-    setTranscript((prev) => [...prev, makeUserTurn(trimmed, userTurnKey)]);
+    setTranscript((prev) => [
+      ...prev,
+      makeUserTurn(trimmed, userTurnKey, currentElapsedSeconds()),
+    ]);
     setAnswerText("");
 
     try {
@@ -344,7 +444,11 @@ export default function CourseInterviewPage() {
       if (standaloneText) {
         setTranscript((prev) => [
           ...prev,
-          makeFollowUpTurn(standaloneText, `${userTurnKey}-fu`),
+          makeFollowUpTurn(
+            standaloneText,
+            `${userTurnKey}-fu`,
+            currentElapsedSeconds(),
+          ),
         ]);
       }
 
@@ -366,7 +470,10 @@ export default function CourseInterviewPage() {
 
       if (result.next_question) {
         setCurrentQuestion(result.next_question);
-        setTranscript((prev) => [...prev, makeAiTurn(result.next_question!)]);
+        setTranscript((prev) => [
+          ...prev,
+          makeAiTurn(result.next_question!, false, currentElapsedSeconds()),
+        ]);
       }
     } catch (err) {
       if (err instanceof ApiError && err.status === 429) {
@@ -538,7 +645,29 @@ export default function CourseInterviewPage() {
     );
   }
 
-  // ── Pre-start screen ──────────────────────────────────────────────────────
+  // ── Voice session active (LiveKit room) ────────────────────────────────────
+  if (voiceActive && sessionId) {
+    return (
+      <div className="flex h-dvh min-h-[640px] flex-col overflow-hidden bg-white">
+        <InterviewHeader
+          slug={slug}
+          courseName={course.title}
+          interviewTitle={config.title}
+          elapsed={elapsed}
+          voiceOn={voiceOn}
+          onToggleVoice={() => setVoiceOn((current) => !current)}
+          showVoiceControl={false}
+        />
+        <VoiceRoom
+          sessionId={sessionId}
+          elapsed={elapsed}
+          onCompleted={handleVoiceCompleted}
+        />
+      </div>
+    );
+  }
+
+  // ── Pre-start screen (mode selection) ─────────────────────────────────────
   if (!sessionId) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4 sm:px-6 py-10">
@@ -593,6 +722,27 @@ export default function CourseInterviewPage() {
               </div>
             )}
 
+            {!isHybrid && supportedModes.length > 1 && (
+              <div className="flex items-center justify-center gap-2 mb-6">
+                {supportedModes.map((mode) => (
+                  <Button
+                    key={mode}
+                    variant={inputMode === mode ? "default" : "outline"}
+                    onClick={() => setInputMode(mode)}
+                    className={cn(
+                      "rounded-xl font-bold text-xs gap-2",
+                      inputMode === mode && "gradient-primary text-white",
+                    )}
+                  >
+                    {mode === "voice" ? <Mic className="h-3 w-3" /> : <MicOff className="h-3 w-3" />}
+                    {mode === "voice"
+                      ? t("course_interview.values.mode.voice")
+                      : t("course_interview.values.mode.text")}
+                  </Button>
+                ))}
+              </div>
+            )}
+
             <Button
               onClick={() => void handleStart()}
               disabled={startSession.isPending}
@@ -600,7 +750,9 @@ export default function CourseInterviewPage() {
             >
               {startSession.isPending
                 ? t("course_interview.actions.starting")
-                : t("course_interview.actions.start")}
+                : inputMode === "voice"
+                  ? "Start voice interview"
+                  : t("course_interview.actions.start")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </GlassCard>
@@ -611,205 +763,67 @@ export default function CourseInterviewPage() {
 
   // ── Text mode chat UI ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-[70vh] pb-20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <Link to="/courses/$slug/learn" params={{ slug }}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="rounded-xl text-m3-on-surface-variant hover:text-m3-primary gap-1.5 text-xs font-bold px-3"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {t("course_interview.actions.course")}
-              </Button>
-            </Link>
-            <span className="text-m3-on-surface-variant text-sm font-medium hidden sm:block">
-              {course.title}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setVoiceOn((v) => !v)}
-              aria-pressed={voiceOn}
-              aria-label={
-                voiceOn
-                  ? t("course_interview.narration.mute")
-                  : t("course_interview.narration.unmute")
-              }
-              title={
-                voiceOn
-                  ? t("course_interview.narration.mute")
-                  : t("course_interview.narration.unmute")
-              }
-              className="rounded-xl text-m3-on-surface-variant hover:text-m3-primary gap-1.5 text-xs font-bold px-3"
-            >
-              {voiceOn ? (
-                <Volume2 className="h-4 w-4" />
-              ) : (
-                <VolumeX className="h-4 w-4" />
-              )}
-              <span className="hidden sm:inline">
-                {voiceOn
-                  ? t("course_interview.narration.on")
-                  : t("course_interview.narration.off")}
-              </span>
-            </Button>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-m3-surface-container text-m3-primary font-bold text-sm">
-              <Sparkles className="h-4 w-4" />
-              {t("course_interview.labels.ai_interview")}
-            </div>
-          </div>
+    <div className="flex h-dvh min-h-[640px] flex-col overflow-hidden bg-white">
+      <InterviewHeader
+        slug={slug}
+        courseName={course.title}
+        interviewTitle={config.title}
+        elapsed={elapsed}
+        voiceOn={voiceOn}
+        onToggleVoice={() =>
+          setVoiceOn((current) => {
+            if (current) setAiSpeaking(false);
+            return !current;
+          })
+        }
+      />
+
+      <InterviewStage
+        transcript={transcript}
+        status={agentStatus}
+        transcriptOpen={transcriptOpen}
+        questionTypeLabel={(type) => questionTypeLabel(type, t)}
+        speak={speakIfOn}
+        onSpeakingChange={(speaking) => setAiSpeaking(voiceOn && speaking)}
+      />
+
+      {currentQuestion ? (
+        <AnswerComposer
+          value={
+            dictation.listening && dictation.interim
+              ? `${answerText}${answerText.trim().length > 0 ? " " : ""}${dictation.interim}`
+              : answerText
+          }
+          draftLength={answerText.length}
+          onChange={setAnswerText}
+          onSubmit={() => void handleRespond()}
+          sending={respond.isPending}
+          micAvailable={Boolean(isHybrid && dictation.supported)}
+          micActive={dictation.listening}
+          onMicToggle={dictation.toggle}
+          transcriptOpen={transcriptOpen}
+          onTranscriptToggle={() => setTranscriptOpen((open) => !open)}
+          elapsed={elapsed}
+          status={agentStatus}
+          onEndInterview={() => setEndDialogOpen(true)}
+        />
+      ) : (
+        <div className="shrink-0 border-t border-border bg-white px-4 py-6 text-center">
+          <p className="text-sm text-text-muted">
+            {t("course_interview.status.compiling_results")}
+          </p>
         </div>
+      )}
 
-        <h1 className="font-headline font-extrabold text-3xl text-m3-primary mb-6">
-          {config.title}
-        </h1>
-
-        <div className="space-y-4 mb-6">
-          {transcript.map((turn) => {
-            const label = questionTypeLabel(turn.questionType, t);
-            return (
-              <div
-                key={turn.id}
-                className={cn(
-                  "flex gap-3",
-                  turn.role === "user" ? "justify-end" : "justify-start",
-                )}
-              >
-                <div
-                  className={cn(
-                    "rounded-xl px-6 py-5 max-w-[85%] shadow-sm",
-                    turn.role === "ai"
-                      ? "bg-surface-elev border border-m3-outline-variant/20"
-                      : "bg-m3-primary text-white",
-                  )}
-                >
-                  {turn.role === "ai" && label && !turn.isFollowUp && (
-                    <span className="block text-[10px] uppercase tracking-widest font-bold text-m3-secondary mb-1">
-                      {label}
-                    </span>
-                  )}
-                  {turn.role === "ai" && turn.isFollowUp && (
-                    <span className="block text-[10px] uppercase tracking-widest font-bold text-m3-outline mb-1">
-                      {t("course_interview.sections.follow_up")}
-                    </span>
-                  )}
-                  {turn.role === "ai" ? (
-                    <AiTypingMessage
-                      text={turn.text}
-                      animate={turn.id === lastAiTurnId}
-                      speak={speakIfOn}
-                      onTick={() =>
-                        transcriptEndRef.current?.scrollIntoView({
-                          behavior: "smooth",
-                        })
-                      }
-                    />
-                  ) : (
-                    <p className="text-base leading-relaxed whitespace-pre-wrap">
-                      {turn.text}
-                    </p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-          <div ref={transcriptEndRef} />
-        </div>
-
-        {currentQuestion ? (
-          <GlassCard className="p-5">
-            <label
-              htmlFor="answer"
-              className="block text-xs font-bold text-m3-outline uppercase tracking-widest mb-2"
-            >
-              {t("course_interview.labels.answer")}
-            </label>
-            <textarea
-              id="answer"
-              value={
-                dictation.listening && dictation.interim
-                  ? `${answerText}${answerText.trim().length > 0 ? " " : ""}${dictation.interim}`
-                  : answerText
-              }
-              onChange={(e) => setAnswerText(e.target.value)}
-              rows={8}
-              disabled={respond.isPending}
-              placeholder={t("course_interview.placeholders.answer")}
-              className="w-full rounded-xl border border-m3-outline-variant/30 bg-surface-elev px-4 py-3 text-base text-m3-on-surface resize-y min-h-[10rem] focus:outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20"
-            />
-            {isHybrid && dictation.supported && (
-              <div className="flex items-center gap-2 mt-2">
-                <Button
-                  type="button"
-                  variant={dictation.listening ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => dictation.toggle()}
-                  disabled={respond.isPending}
-                  className={cn(
-                    "rounded-xl font-bold text-xs gap-2",
-                    dictation.listening && "gradient-primary text-white animate-pulse",
-                  )}
-                >
-                  {dictation.listening ? (
-                    <Mic className="h-3.5 w-3.5" />
-                  ) : (
-                    <MicOff className="h-3.5 w-3.5" />
-                  )}
-                  {dictation.listening
-                    ? t("course_interview.hybrid.listening")
-                    : t("course_interview.hybrid.speak_answer")}
-                </Button>
-                <span className="text-[11px] text-m3-outline">
-                  {t("course_interview.hybrid.dictation_hint")}
-                </span>
-              </div>
-            )}
-            {isHybrid && !dictation.supported && (
-              <p className="text-[11px] text-m3-outline mt-2">
-                {t("course_interview.hybrid.unsupported")}
-              </p>
-            )}
-            <div className="flex items-center justify-between mt-3 flex-wrap gap-3">
-              <span className="text-xs text-m3-outline">
-                {t("course_interview.labels.character_count", { count: answerText.length })}
-              </span>
-              <div className="flex items-center gap-3 flex-wrap justify-end">
-                <Button
-                  variant="ghost"
-                  onClick={() => void handleFinish()}
-                  disabled={finish.isPending || respond.isPending}
-                  className="font-bold text-m3-outline hover:text-m3-on-surface rounded-xl gap-2 text-sm"
-                >
-                  <Clock className="h-4 w-4" />
-                  {t("course_interview.actions.finish_early")}
-                </Button>
-                <Button
-                  onClick={() => void handleRespond()}
-                  disabled={respond.isPending || answerText.trim().length === 0}
-                  className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-6 py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
-                >
-                  {respond.isPending
-                    ? t("course_interview.actions.sending")
-                    : t("course_interview.actions.send_answer")}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </GlassCard>
-        ) : (
-          <GlassCard className="p-6 text-center">
-            <p className="text-sm text-m3-on-surface-variant">
-              {t("course_interview.status.compiling_results")}
-            </p>
-          </GlassCard>
-        )}
-      </div>
+      <EndInterviewDialog
+        open={endDialogOpen}
+        onOpenChange={(open) => {
+          if (finish.isPending && !open) return;
+          setEndDialogOpen(open);
+        }}
+        onConfirm={() => void handleFinish()}
+        isPending={finish.isPending}
+      />
     </div>
   );
 }

@@ -1,17 +1,10 @@
-/**
- * Displays a live transcript of the voice interview — agent and student turns.
- *
- * Agent turns: from useVoiceAssistant().agentTranscriptions
- *   → type ReceivedTranscriptionSegment with fields: id, text, final, firstReceivedTime
- *
- * Student turns: from useTranscriptions() (TextStreamData[])
- *   → type TextStreamData with fields: text, participantInfo, streamInfo
- *   Agent segments are filtered out by checking participantInfo.identity against the agent identity.
- */
+/** Live merged transcript for the LiveKit voice interview. */
 import { useEffect, useRef } from "react";
-import { useVoiceAssistant, useTranscriptions } from "@livekit/components-react";
-import { Bot, User } from "lucide-react";
+import { useTranscriptions, useVoiceAssistant } from "@livekit/components-react";
+import { Bot } from "lucide-react";
+
 import { cn } from "@/lib/utils";
+import { formatRelativeInterviewTime } from "./interview-workspace";
 
 interface VoiceTranscriptProps {
   className?: string;
@@ -19,90 +12,102 @@ interface VoiceTranscriptProps {
 
 export function VoiceTranscript({ className }: VoiceTranscriptProps) {
   const { agentTranscriptions, agent } = useVoiceAssistant();
-  // useTranscriptions() with no opts returns TextStreamData[] for all participants
   const allStreams = useTranscriptions();
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [agentTranscriptions, allStreams]);
 
-  // Agent identity for filtering student streams
   const agentIdentity = agent?.identity;
-
-  // Agent turns: ReceivedTranscriptionSegment has id, text, final, firstReceivedTime
-  const agentItems = agentTranscriptions.map((seg) => ({
-    key: `agent-${seg.id}`,
+  const agentItems = agentTranscriptions.map((segment) => ({
+    key: `agent-${segment.id}`,
     role: "agent" as const,
-    text: seg.text,
-    sortTime: seg.firstReceivedTime,
-    isFinal: seg.final,
+    text: segment.text,
+    sortTime: segment.firstReceivedTime,
+    isFinal: segment.final,
   }));
-
-  // Student turns: TextStreamData has text, participantInfo, streamInfo
-  // Exclude any stream from the agent participant
   const studentItems = allStreams
     .filter((stream) => stream.participantInfo.identity !== agentIdentity)
     .map((stream) => ({
       key: `student-${stream.streamInfo.id}`,
       role: "student" as const,
       text: stream.text,
-      // streamInfo.timestamp is the creation time (milliseconds)
       sortTime: stream.streamInfo.timestamp,
       isFinal: true,
     }));
-
   const merged = [...agentItems, ...studentItems].sort(
-    (a, b) => a.sortTime - b.sortTime,
+    (first, second) => first.sortTime - second.sortTime,
   );
+  const transcriptStartedAt = merged[0]?.sortTime ?? 0;
 
   if (merged.length === 0) {
     return (
       <div
         className={cn(
-          "flex items-center justify-center py-8 text-m3-on-surface-variant text-sm",
+          "flex items-center justify-center text-sm text-text-muted",
           className,
         )}
+        role="status"
       >
-        <Bot className="h-4 w-4 mr-2 opacity-50" />
-        Waiting for conversation to start…
+        <span className="mr-2 h-2 w-2 rounded-full bg-success" aria-hidden="true" />
+        AI interviewer is ready
       </div>
     );
   }
 
   return (
-    <div className={cn("space-y-3 overflow-y-auto max-h-72 pr-1", className)}>
-      {merged.map((item) => (
-        <div
-          key={item.key}
-          className={cn(
-            "flex gap-2 items-start",
-            item.role === "student" ? "justify-end" : "justify-start",
-          )}
-        >
-          {item.role === "agent" && (
-            <div className="w-6 h-6 rounded-full bg-m3-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Bot className="h-3 w-3 text-m3-primary" />
-            </div>
-          )}
-          <div
-            className={cn(
-              "rounded-xl px-4 py-2.5 max-w-[78%] text-sm leading-relaxed",
-              item.role === "agent"
-                ? "bg-m3-surface-container border border-m3-outline-variant/20 text-m3-on-surface"
-                : "bg-m3-primary text-white",
-              !item.isFinal && "opacity-70 italic",
-            )}
+    <div
+      className={cn("space-y-7 overflow-y-auto overscroll-contain pr-1", className)}
+      aria-label="Live interview transcript"
+    >
+      {merged.map((item) => {
+        const isAgent = item.role === "agent";
+        const elapsedSeconds = Math.max(
+          0,
+          Math.floor((item.sortTime - transcriptStartedAt) / 1000),
+        );
+        return (
+          <article
+            key={item.key}
+            className={cn("flex gap-3", isAgent ? "justify-start" : "justify-end")}
+            aria-label={isAgent ? "AI interviewer" : "You"}
           >
-            {item.text}
-          </div>
-          {item.role === "student" && (
-            <div className="w-6 h-6 rounded-full bg-m3-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <User className="h-3 w-3 text-m3-primary" />
+            {isAgent && (
+              <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border border-primary/15 bg-primary-soft text-primary">
+                <Bot className="h-3.5 w-3.5" aria-hidden="true" />
+              </div>
+            )}
+            <div
+              className={cn(
+                "max-w-[82%] text-sm leading-6 sm:max-w-[76%] sm:text-base",
+                isAgent
+                  ? "py-1 text-text-strong"
+                  : "rounded-xl border border-border bg-surface-muted px-4 py-3 text-text-body",
+                !item.isFinal && "italic text-text-muted",
+              )}
+            >
+              {isAgent && (
+                <div className="mb-1 flex items-center justify-between gap-4 text-xs font-semibold text-text-muted">
+                  <span>AI interviewer</span>
+                  <time className="font-medium tabular-nums text-text-subtle">
+                    {formatRelativeInterviewTime(elapsedSeconds)}
+                  </time>
+                </div>
+              )}
+              {!isAgent && (
+                <div className="mb-1 flex items-center justify-between gap-4 text-xs font-semibold text-text-muted">
+                  <span>You</span>
+                  <time className="font-medium tabular-nums text-text-subtle">
+                    {formatRelativeInterviewTime(elapsedSeconds)}
+                  </time>
+                </div>
+              )}
+              <p className="whitespace-pre-wrap">{item.text}</p>
             </div>
-          )}
-        </div>
-      ))}
+          </article>
+        );
+      })}
       <div ref={bottomRef} />
     </div>
   );

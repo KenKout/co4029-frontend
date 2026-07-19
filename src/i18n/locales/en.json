@@ -1394,9 +1394,7 @@
     },
     "messages": {
       "no_retakes": "This quiz does not allow retakes.",
-      "max_attempts_reached": "You have used all {{count}} attempts.",
-      "resuming": "Resuming your attempt...",
-      "resumed": "Welcome back — your progress was restored."
+      "max_attempts_reached": "You have used all {{count}} attempts."
     },
     "actions": {
       "starting": "Starting...",
@@ -1456,6 +1454,36 @@
       "mute": "Mute the AI's voice",
       "unmute": "Let the AI read questions aloud"
     },
+    "workspace": {
+      "in_progress": "Interview in progress",
+      "elapsed_time": "Elapsed interview time",
+      "ai_interviewer": "AI interviewer",
+      "you": "You",
+      "transcript": "Interview transcript",
+      "answer_composer": "Answer composer",
+      "answer_placeholder": "Type your answer or start speaking…",
+      "send_hint": "Enter to send · Shift + Enter for a new line",
+      "start_speaking": "Start speaking",
+      "mute_microphone": "Stop listening",
+      "audio_input": "Audio input",
+      "system_microphone": "System microphone",
+      "show_transcript": "Show transcript",
+      "hide_transcript": "Hide transcript",
+      "more_controls": "More interview controls",
+      "status": {
+        "idle": "AI interviewer is ready",
+        "listening": "Listening…",
+        "processing": "Processing your answer…",
+        "speaking": "AI is speaking…",
+        "ready": "Ready to send"
+      }
+    },
+    "end_dialog": {
+      "title": "End this interview?",
+      "description": "Are you sure you want to end this interview? Your current unsent answer may be lost.",
+      "ending": "Ending interview…",
+      "cancel": "Continue interview"
+    },
     "sections": {
       "gap_report": "Gap report",
       "gap_report_pending": "Preparing your personalized gap report… this can take a minute.",
@@ -1496,6 +1524,7 @@
       "course": "Course",
       "next": "Next",
       "finish_early": "End early",
+      "end_interview": "End interview",
       "send_answer": "Send answer",
       "back_to_course": "Back to course",
       "sending": "Sending..."
@@ -2034,6 +2063,33 @@
       "lock_ef_desc": "Students must pass the interview before spaced repetition expands review intervals.",
       "supplementary_label": "Supplementary instructions",
       "supplementary_placeholder": "e.g. Focus on real scenarios, avoid rote-memorization questions…"
+    },
+    "security": {
+      "title": "Security & Integrity",
+      "description": "Platform prompt-injection protections for text, hybrid, and voice interviews.",
+      "mandatory": "Always protected",
+      "protected_by_platform": "Protected by platform",
+      "protected": {
+        "questions": "Hidden questions",
+        "answers": "Answer keys",
+        "rubrics": "Rubrics and scoring logic",
+        "prompts": "Internal prompts",
+        "state": "Interview state"
+      },
+      "response_policy": "Repeated-attempt policy",
+      "max_attempts": "Maximum consecutive attempts",
+      "policy": {
+        "continue_and_log": "Continue and log",
+        "warn_and_continue": "Warn and continue",
+        "end_and_flag": "End and flag after threshold"
+      },
+      "custom_en": "Custom safe refusal (English)",
+      "custom_vi": "Custom safe refusal (Vietnamese)",
+      "preview_en": "I can’t provide hidden interview questions, answers, or grading criteria. I can repeat or clarify the current question.",
+      "preview_vi": "Tôi không thể cung cấp các câu hỏi chưa được hỏi, đáp án hoặc tiêu chí chấm điểm. Tôi có thể nhắc lại hoặc giải thích câu hỏi hiện tại.",
+      "incident_summary": "Send teachers a security incident summary",
+      "incident_summary_description": "Shows redacted counts, categories, fallbacks, and latency; student responses are not included.",
+      "rules_hidden": "Detection rules are managed by the platform and are intentionally not shown. Teachers cannot disable core protections."
     },
     "outcomes": {
       "list_title": "Learning outcomes",

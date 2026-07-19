@@ -1,8 +1,6 @@
 /**
- * Voice interview room: fetches LiveKit token, connects to the room,
- * renders controls + transcript. On disconnect or agent leave, triggers
- * completion polling so the parent can show pass/fail + gap report.
- * Must be mounted only after a user gesture ("Start voice interview" button).
+ * Voice interview room: preserves the existing LiveKit session lifecycle while
+ * presenting it as a focused AI-agent call workspace.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -13,41 +11,41 @@ import {
 } from "@livekit/components-react";
 import { ConnectionState, DisconnectReason } from "livekit-client";
 import "@livekit/components-styles";
+import { Bot } from "lucide-react";
 import { toast } from "sonner";
 
-import { GlassCard } from "@/components/ui/glass-card";
 import { useInterviewRealtimeToken } from "@/lib/api/hooks/interviews";
 import type { RealtimeTokenResponse } from "@/lib/api/types";
+import { cn } from "@/lib/utils";
 import { VoiceControls } from "./voice-controls";
 import { VoiceTranscript } from "./voice-transcript";
 import { useIntegrityReporter } from "./use-integrity-reporter";
 
 interface VoiceRoomProps {
   sessionId: string;
+  elapsed?: string;
   onCompleted: () => void;
 }
 
-/** Inner component — only rendered inside the LiveKitRoom provider */
 function RoomContent({
   onEndInterview,
   isEnding,
   onCompleted,
+  elapsed,
 }: {
   onEndInterview: () => void;
   isEnding: boolean;
   onCompleted: () => void;
+  elapsed?: string;
 }) {
   const connectionState = useConnectionState();
-  const { agent } = useVoiceAssistant();
+  const { agent, state: agentState } = useVoiceAssistant();
   const agentWasPresent = useRef(false);
 
-  // Track agent presence: once the agent leaves after being present, the
-  // interview is done server-side — trigger completion check.
   useEffect(() => {
     if (agent) {
       agentWasPresent.current = true;
     } else if (agentWasPresent.current) {
-      // Agent left — session is completed server-side
       onCompleted();
     }
   }, [agent, onCompleted]);
@@ -55,35 +53,56 @@ function RoomContent({
   const connecting =
     connectionState === ConnectionState.Connecting ||
     connectionState === ConnectionState.Reconnecting;
+  const active = agentState === "speaking" || agentState === "listening";
 
   return (
-    <div className="space-y-4">
-      {connecting && (
-        <p className="text-sm text-center text-m3-on-surface-variant animate-pulse">
-          Connecting to voice interview…
-        </p>
-      )}
+    <div className="flex min-h-0 flex-1 flex-col bg-white">
+      <section className="min-h-0 flex-1 overflow-hidden" aria-label="Voice interview conversation">
+        <div className="mx-auto flex h-full w-full max-w-[900px] flex-col px-4 sm:px-8">
+          <div className="flex shrink-0 flex-col items-center pb-6 pt-8 text-center sm:pt-12">
+            <div
+              className={cn(
+                "relative flex size-16 items-center justify-center rounded-full border border-primary/15 bg-primary-soft text-primary transition-transform sm:size-20",
+                active && "scale-105",
+              )}
+              aria-hidden="true"
+            >
+              {active && (
+                <span className="absolute inset-0 rounded-full border border-primary/25 motion-safe:animate-ping" />
+              )}
+              <Bot className="h-7 w-7 sm:h-8 sm:w-8" />
+            </div>
+            <p className="mt-3 text-sm font-semibold text-text-strong">AI interviewer</p>
+            {connecting && (
+              <p className="mt-1 text-xs text-text-muted motion-safe:animate-pulse">
+                Connecting to voice interview…
+              </p>
+            )}
+          </div>
 
-      <GlassCard className="p-5">
-        <VoiceTranscript className="mb-4" />
-        <div className="border-t border-m3-outline-variant/20 pt-4">
+          <VoiceTranscript className="min-h-0 flex-1 pb-6" />
+        </div>
+      </section>
+
+      <div className="shrink-0 bg-white/95 px-2 pb-2 pt-1 backdrop-blur-md sm:px-4 sm:pb-4">
+        <div className="mx-auto w-full max-w-[920px] rounded-xl border border-border bg-white px-3 py-2.5 shadow-editorial sm:px-4 sm:py-3">
           <VoiceControls
             onEndInterview={onEndInterview}
             isEnding={isEnding}
+            elapsed={elapsed}
           />
         </div>
-      </GlassCard>
+      </div>
     </div>
   );
 }
 
-export function VoiceRoom({ sessionId, onCompleted }: VoiceRoomProps) {
+export function VoiceRoom({ sessionId, elapsed, onCompleted }: VoiceRoomProps) {
   const [tokenData, setTokenData] = useState<RealtimeTokenResponse | null>(null);
   const [isEnding, setIsEnding] = useState(false);
   const [isFetchingToken, setIsFetchingToken] = useState(false);
   const fetchToken = useInterviewRealtimeToken(sessionId);
 
-  // Attach integrity event reporters
   useIntegrityReporter(sessionId);
 
   const acquireToken = useCallback(async () => {
@@ -92,15 +111,13 @@ export function VoiceRoom({ sessionId, onCompleted }: VoiceRoomProps) {
       const data = await fetchToken.mutateAsync();
       setTokenData(data);
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to get voice token";
-      toast.error(msg);
+      const message = err instanceof Error ? err.message : "Failed to get voice token";
+      toast.error(message);
     } finally {
       setIsFetchingToken(false);
     }
   }, [fetchToken]);
 
-  // Fetch token on mount
   useEffect(() => {
     void acquireToken();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -108,29 +125,26 @@ export function VoiceRoom({ sessionId, onCompleted }: VoiceRoomProps) {
 
   const handleDisconnected = useCallback(
     (reason?: DisconnectReason) => {
-      // DisconnectReason 1 = CLIENT_INITIATED (user pressed end)
-      if (reason !== DisconnectReason.CLIENT_INITIATED) {
-        // Unexpected disconnect — trigger completion check
-        onCompleted();
-      }
+      if (reason !== DisconnectReason.CLIENT_INITIATED) onCompleted();
     },
     [onCompleted],
   );
 
   const handleEndInterview = useCallback(() => {
     setIsEnding(true);
-    // Disconnect triggers LiveKitRoom.onDisconnected with CLIENT_INITIATED;
-    // we call onCompleted() directly here so there's no delay.
     onCompleted();
   }, [onCompleted]);
 
   if (isFetchingToken || !tokenData) {
     return (
-      <GlassCard className="p-8 text-center">
-        <p className="text-sm text-m3-on-surface-variant animate-pulse">
-          {isFetchingToken ? "Setting up voice interview…" : "Initializing…"}
-        </p>
-      </GlassCard>
+      <div className="flex min-h-0 flex-1 items-center justify-center px-6 text-center">
+        <div>
+          <span className="mx-auto mb-4 block size-8 rounded-full border-2 border-primary/20 border-t-primary motion-safe:animate-spin" />
+          <p className="text-sm text-text-muted motion-safe:animate-pulse">
+            {isFetchingToken ? "Setting up voice interview…" : "Initializing…"}
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -142,12 +156,14 @@ export function VoiceRoom({ sessionId, onCompleted }: VoiceRoomProps) {
       audio
       video={false}
       onDisconnected={handleDisconnected}
+      className="flex min-h-0 flex-1 flex-col bg-white"
     >
       <RoomAudioRenderer />
       <RoomContent
         onEndInterview={handleEndInterview}
         isEnding={isEnding}
         onCompleted={onCompleted}
+        elapsed={elapsed}
       />
     </LiveKitRoom>
   );

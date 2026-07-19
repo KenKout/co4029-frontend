@@ -1385,9 +1385,7 @@
     },
     "messages": {
       "no_retakes": "Bài quiz này không cho phép làm lại.",
-      "max_attempts_reached": "Bạn đã sử dụng hết {{count}} lượt.",
-      "resuming": "Đang khôi phục bài làm của bạn...",
-      "resumed": "Chào mừng trở lại — tiến trình của bạn đã được khôi phục."
+      "max_attempts_reached": "Bạn đã sử dụng hết {{count}} lượt."
     },
     "actions": {
       "starting": "Đang khởi tạo...",
@@ -1447,6 +1445,36 @@
       "mute": "Tắt giọng đọc của AI",
       "unmute": "Cho AI đọc câu hỏi thành tiếng"
     },
+    "workspace": {
+      "in_progress": "Đang phỏng vấn",
+      "elapsed_time": "Thời gian phỏng vấn đã trôi qua",
+      "ai_interviewer": "Người phỏng vấn AI",
+      "you": "Bạn",
+      "transcript": "Bản ghi phỏng vấn",
+      "answer_composer": "Trình soạn câu trả lời",
+      "answer_placeholder": "Nhập câu trả lời hoặc bắt đầu nói…",
+      "send_hint": "Enter để gửi · Shift + Enter để xuống dòng",
+      "start_speaking": "Bắt đầu nói",
+      "mute_microphone": "Dừng nghe",
+      "audio_input": "Đầu vào âm thanh",
+      "system_microphone": "Micrô hệ thống",
+      "show_transcript": "Hiện bản ghi",
+      "hide_transcript": "Ẩn bản ghi",
+      "more_controls": "Thêm điều khiển phỏng vấn",
+      "status": {
+        "idle": "Người phỏng vấn AI đã sẵn sàng",
+        "listening": "Đang nghe…",
+        "processing": "Đang xử lý câu trả lời…",
+        "speaking": "AI đang nói…",
+        "ready": "Sẵn sàng gửi"
+      }
+    },
+    "end_dialog": {
+      "title": "Kết thúc cuộc phỏng vấn?",
+      "description": "Bạn có chắc muốn kết thúc cuộc phỏng vấn này không? Câu trả lời chưa gửi hiện tại có thể bị mất.",
+      "ending": "Đang kết thúc…",
+      "cancel": "Tiếp tục phỏng vấn"
+    },
     "sections": {
       "gap_report": "Báo cáo lỗ hổng",
       "gap_report_pending": "Đang chuẩn bị báo cáo lỗ hổng cá nhân hóa… có thể mất một phút.",
@@ -1487,6 +1515,7 @@
       "course": "Khoá học",
       "next": "Tiếp theo",
       "finish_early": "Kết thúc sớm",
+      "end_interview": "Kết thúc phỏng vấn",
       "send_answer": "Gửi câu trả lời",
       "back_to_course": "Quay lại khoá học",
       "sending": "Đang gửi..."
@@ -2025,6 +2054,33 @@
       "lock_ef_desc": "Học viên phải vượt phỏng vấn trước khi spaced repetition tăng khoảng cách ôn tập.",
       "supplementary_label": "Hướng dẫn bổ sung",
       "supplementary_placeholder": "VD: Tập trung vào tình huống thực tế, tránh câu hỏi học thuộc lòng…"
+    },
+    "security": {
+      "title": "Bảo mật & Tính toàn vẹn",
+      "description": "Bảo vệ chống prompt injection cho phỏng vấn văn bản, hybrid và giọng nói.",
+      "mandatory": "Luôn được bảo vệ",
+      "protected_by_platform": "Nền tảng bảo vệ",
+      "protected": {
+        "questions": "Câu hỏi ẩn",
+        "answers": "Đáp án",
+        "rubrics": "Rubric và logic chấm điểm",
+        "prompts": "Prompt nội bộ",
+        "state": "Trạng thái phỏng vấn"
+      },
+      "response_policy": "Chính sách khi thử lặp lại",
+      "max_attempts": "Số lần liên tiếp tối đa",
+      "policy": {
+        "continue_and_log": "Tiếp tục và ghi nhật ký",
+        "warn_and_continue": "Cảnh báo và tiếp tục",
+        "end_and_flag": "Kết thúc và gắn cờ khi vượt ngưỡng"
+      },
+      "custom_en": "Lời từ chối an toàn tùy chỉnh (tiếng Anh)",
+      "custom_vi": "Lời từ chối an toàn tùy chỉnh (tiếng Việt)",
+      "preview_en": "I can’t provide hidden interview questions, answers, or grading criteria. I can repeat or clarify the current question.",
+      "preview_vi": "Tôi không thể cung cấp các câu hỏi chưa được hỏi, đáp án hoặc tiêu chí chấm điểm. Tôi có thể nhắc lại hoặc giải thích câu hỏi hiện tại.",
+      "incident_summary": "Gửi giáo viên báo cáo sự cố bảo mật",
+      "incident_summary_description": "Chỉ hiển thị số lượng, danh mục, fallback và độ trễ đã biên tập; không kèm câu trả lời của sinh viên.",
+      "rules_hidden": "Quy tắc phát hiện do nền tảng quản lý và cố ý không hiển thị. Giáo viên không thể tắt các lớp bảo vệ cốt lõi."
     },
     "outcomes": {
       "list_title": "Chuẩn đầu ra",

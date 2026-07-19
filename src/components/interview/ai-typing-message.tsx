@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 /**
  * Renders an AI interview message with a typewriter effect and, on first
@@ -34,6 +35,9 @@ export interface AiTypingMessageProps {
   speak: (text: string) => void;
   /** Called on each typed chunk so the parent can keep the view scrolled. */
   onTick?: () => void;
+  /** Reports whether the type-and-speak presentation is currently active. */
+  onTypingChange?: (typing: boolean) => void;
+  className?: string;
 }
 
 export function AiTypingMessage({
@@ -41,6 +45,8 @@ export function AiTypingMessage({
   animate,
   speak,
   onTick,
+  onTypingChange,
+  className,
 }: AiTypingMessageProps) {
   const reduced = prefersReducedMotion();
   const shouldAnimate = animate && !reduced;
@@ -48,9 +54,13 @@ export function AiTypingMessage({
   const [typing, setTyping] = useState(shouldAnimate);
   // Keep the latest onTick without restarting the typing effect.
   const onTickRef = useRef(onTick);
+  const onTypingChangeRef = useRef(onTypingChange);
   useEffect(() => {
     onTickRef.current = onTick;
   }, [onTick]);
+  useEffect(() => {
+    onTypingChangeRef.current = onTypingChange;
+  }, [onTypingChange]);
 
   // Type once per mount. Stable turn keys mean this never re-runs on the
   // parent's re-renders, so the animation doesn't restart mid-way.
@@ -58,9 +68,11 @@ export function AiTypingMessage({
     if (!shouldAnimate) {
       setShown(text);
       setTyping(false);
+      onTypingChangeRef.current?.(false);
       return;
     }
     // Speak the whole utterance immediately, in parallel with the typing.
+    onTypingChangeRef.current?.(true);
     speak(text);
 
     let index = 0;
@@ -72,16 +84,20 @@ export function AiTypingMessage({
       if (index >= chars.length) {
         window.clearInterval(timer);
         setTyping(false);
+        onTypingChangeRef.current?.(false);
       }
     }, TYPING_INTERVAL_MS);
 
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      onTypingChangeRef.current?.(false);
+    };
     // Intentionally run once on mount; deps captured at first render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <p className="text-base leading-relaxed whitespace-pre-wrap">
+    <p className={cn("text-base leading-relaxed whitespace-pre-wrap", className)}>
       {shown}
       {typing && (
         <span
