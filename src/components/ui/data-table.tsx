@@ -417,8 +417,8 @@ export function DataTable<T>({
                 key={id}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
                 className={cn(
-                  "group",
-                  onRowClick && "cursor-pointer hover:bg-m3-surface-container-low",
+                  "group hover:bg-m3-surface-container-low",
+                  onRowClick && "cursor-pointer",
                   rowClassName?.(row),
                 )}
               >

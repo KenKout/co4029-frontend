@@ -886,7 +886,14 @@
       "load_failed": "Couldn't load courses.",
       "empty_title": "No courses yet",
       "empty_body": "When instructors create courses, they will appear here.",
+      "empty_search": "No matching courses",
+      "search_placeholder": "Search by title or slug…",
       "back_to_admin": "Back to admin",
+      "cols": {
+        "course": "Course",
+        "status": "Status",
+        "created": "Created"
+      },
       "row_status": {
         "draft": "Draft",
         "published": "Published",
@@ -1100,8 +1107,15 @@
       "list_subtitle": "List of users within your permission scope.",
       "empty_title": "No users yet",
       "empty_body": "When users are registered, they will appear here.",
+      "empty_search": "No matching users",
+      "search_placeholder": "Search by name or email…",
       "back_to_list": "Back to list",
       "profile_section": "Profile",
+      "cols": {
+        "user": "User",
+        "status": "Status",
+        "joined": "Joined"
+      },
       "status": {
         "active": "Active",
         "invited": "Invited",
@@ -1923,7 +1937,7 @@
       },
       "spacing": {
         "title": "Spaced repetition",
-        "description": "Tune SM2 parameters. Range 1.3 - 5.0.",
+        "description": "Tune SM2 parameters. Range 1.3 - 2.5.",
         "starting_ef": "Starting EF",
         "unlock_ef": "EF unlock threshold"
       },
