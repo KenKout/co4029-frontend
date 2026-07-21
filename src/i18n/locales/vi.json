@@ -2031,7 +2031,7 @@
       },
       "spacing": {
         "title": "Lặp lại ngắt quãng",
-        "description": "Tinh chỉnh tham số SM2. Khoảng 1.3 – 5.0.",
+        "description": "Tinh chỉnh tham số SM2. Khoảng 1.3 – 2.5.",
         "starting_ef": "EF khởi đầu",
         "unlock_ef": "Ngưỡng EF mở khoá"
       },

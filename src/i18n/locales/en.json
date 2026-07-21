@@ -2040,7 +2040,7 @@
       },
       "spacing": {
         "title": "Spaced repetition",
-        "description": "Tune SM2 parameters. Range 1.3 - 5.0.",
+        "description": "Tune SM2 parameters. Range 1.3 - 2.5.",
         "starting_ef": "Starting EF",
         "unlock_ef": "EF unlock threshold"
       },

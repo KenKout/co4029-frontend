@@ -1350,7 +1350,7 @@ function QuestionCard({
               type="number"
               step={0.05}
               min={1.3}
-              max={3.5}
+              max={2.5}
               value={draft.expected_ef_ceiling ?? ""}
               placeholder={t(
                 "teacher_quiz_manage.editor.ef_ceiling_placeholder",
@@ -1743,7 +1743,7 @@ function SettingsTab({
             <Input
               type="number"
               min={1.3}
-              max={5.0}
+              max={2.5}
               step={0.1}
               value={draft.initial_ef}
               onChange={(e) => update("initial_ef", e.target.value)}
@@ -1755,7 +1755,7 @@ function SettingsTab({
             <Input
               type="number"
               min={1.3}
-              max={5.0}
+              max={2.5}
               step={0.1}
               value={draft.min_ef_for_unlock}
               onChange={(e) => update("min_ef_for_unlock", e.target.value)}
