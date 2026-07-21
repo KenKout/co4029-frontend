@@ -1582,6 +1582,12 @@
       "ending": "Ending interview…",
       "cancel": "Continue interview"
     },
+    "end_confirm": {
+      "title": "Confirm ending the interview",
+      "prompt": "Just to confirm — would you like to end and submit for grading, or continue the interview?",
+      "continue": "Continue interview",
+      "end_and_submit": "End and submit for grading"
+    },
     "leave_dialog": {
       "title": "Leave this interview for now?",
       "onboarding_description": "Your greeting and setup progress will stay in the same attempt for a limited inactivity window. When you return, choose Continue previous attempt. Any unsent text may be lost.",

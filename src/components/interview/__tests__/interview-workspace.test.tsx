@@ -10,6 +10,7 @@ vi.mock("@tanstack/react-router", () => ({
 import {
   AnswerComposer,
   ConversationMessage,
+  EndConfirmationPanel,
   EndInterviewDialog,
   AnswerControls,
   FocusedAnswerComposer,
@@ -237,6 +238,58 @@ describe("EndInterviewDialog", () => {
     expect(screen.getByRole("alertdialog")).toHaveTextContent(
       /câu trả lời chưa gửi hiện tại có thể bị mất/i,
     );
+  });
+});
+
+describe("EndConfirmationPanel", () => {
+  it("renders the confirmation prompt and both actions", () => {
+    render(
+      <EndConfirmationPanel
+        prompt="Xác nhận kết thúc?"
+        onContinue={() => undefined}
+        onEndAndSubmit={() => undefined}
+        isPending={false}
+      />,
+    );
+    expect(screen.getByText("Xác nhận kết thúc?")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /tiếp tục phỏng vấn/i }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: /kết thúc và nộp/i }),
+    ).toBeEnabled();
+  });
+
+  it("wires continue and end-and-submit callbacks", () => {
+    const onContinue = vi.fn();
+    const onEndAndSubmit = vi.fn();
+    render(
+      <EndConfirmationPanel
+        prompt="?"
+        onContinue={onContinue}
+        onEndAndSubmit={onEndAndSubmit}
+        isPending={false}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /tiếp tục phỏng vấn/i }));
+    fireEvent.click(screen.getByRole("button", { name: /kết thúc và nộp/i }));
+    expect(onContinue).toHaveBeenCalledTimes(1);
+    expect(onEndAndSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables both actions while a confirmation reply is pending", () => {
+    render(
+      <EndConfirmationPanel
+        prompt="?"
+        onContinue={() => undefined}
+        onEndAndSubmit={() => undefined}
+        isPending
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: /tiếp tục phỏng vấn/i }),
+    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: /đang kết thúc/i })).toBeDisabled();
   });
 });
 

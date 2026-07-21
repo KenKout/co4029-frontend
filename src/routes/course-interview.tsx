@@ -42,6 +42,7 @@ import { useSpeechDictation } from "@/lib/hooks/use-speech-dictation";
 import { type SpeechPersona } from "@/lib/hooks/use-speech-synthesis";
 import { useInterviewNarration } from "@/lib/hooks/use-interview-narration";
 import {
+  EndConfirmationPanel,
   EndInterviewDialog,
   FocusedAnswerComposer,
   FocusedInterviewStage,
@@ -63,6 +64,12 @@ import { ConnectionLostBanner } from "@/components/interview/error-banner";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getAuthDisplayName } from "@/lib/auth";
 import { SubmittedAnswerConfirmation } from "@/components/interview/submitted-answer-confirmation";
+import {
+  CANCEL_END_REPLY,
+  CONFIRM_END_REPLY,
+  endConfirmationPrompt,
+  isAwaitingEndConfirmation,
+} from "@/lib/interview/end-confirmation";
 import { useAnswerState } from "@/lib/interview/use-answer-state";
 import { normalizeQuestionText } from "@/lib/interview/question-content";
 import { planTransition } from "@/lib/interview/transition-sequencing";
@@ -237,7 +244,15 @@ export default function CourseInterviewPage() {
     beginSubmit,
     submitSucceeded,
     submitFailed,
+    restoreDraft,
   } = answer;
+  // End-confirmation gate (Slice 4): true after the interviewer asks the
+  // candidate to confirm ending (backend `pending_confirmation`). While true
+  // the main screen shows Continue / End-and-submit controls, the draft + timer
+  // are preserved, and ordinary answer submission is disabled. `endConfirmPrompt`
+  // holds the interviewer's confirmation utterance to display.
+  const [endConfirming, setEndConfirming] = useState(false);
+  const [endConfirmPrompt, setEndConfirmPrompt] = useState("");
   // The most recently acknowledged answer, shown as a compact confirmation on
   // the main screen (spec §8). Persists across the transition to the next
   // question so it can collapse into "✓ Previous answer submitted" rather than
@@ -1023,6 +1038,21 @@ export default function CourseInterviewPage() {
         turn_key: submissionId,
       });
 
+      // End-confirmation gate (Slice 4): the backend recognised this as a
+      // natural-language end request and is asking the candidate to confirm
+      // rather than closing. It is NOT an answer — roll the editor back to a
+      // preserved draft (no transcript entry, no advance), and surface the
+      // Continue / End-and-submit controls. The question + timer stay intact.
+      if (isAwaitingEndConfirmation(result)) {
+        restoreDraft(trimmed);
+        setAnswerText(trimmed);
+        setEndConfirmPrompt(
+          endConfirmationPrompt(result, t("course_interview.end_confirm.prompt")),
+        );
+        setEndConfirming(true);
+        return;
+      }
+
       // Server acknowledged — NOW commit to the transcript (spec: add only
       // after successful backend acknowledgement), deduped by submissionId so
       // a retry that reuses the id can't create a second entry.
@@ -1128,6 +1158,55 @@ export default function CourseInterviewPage() {
       } else {
         toast.error((err as Error).message || t("course_interview.errors.send_failed"));
       }
+    }
+  }
+
+  /**
+   * End-confirmation gate (Slice 4) — the candidate answered the "end and
+   * submit, or continue?" prompt via the explicit controls. Both send a canned
+   * reply the backend's confirmation-scoped classifier recognises, through the
+   * same `respond` mutation and turn-key idempotency as any other turn.
+   */
+  async function handleEndConfirm() {
+    if (!currentQuestion || !sessionId || respond.isPending) return;
+    try {
+      const result = await respond.mutateAsync({
+        session_id: sessionId,
+        session_question_id: currentQuestion.id,
+        answer_text: CONFIRM_END_REPLY,
+        turn_action: "answer",
+        turn_key: newTurnKey(),
+      });
+      setEndConfirming(false);
+      setEndConfirmPrompt("");
+      const finished = Boolean(result.should_finish ?? result.is_finished);
+      // Confirmed → the backend closes; run the existing finish flow.
+      if (finished || !isAwaitingEndConfirmation(result)) {
+        await beginClosing("ended_early");
+      }
+    } catch (err) {
+      toast.error((err as Error).message || t("course_interview.errors.send_failed"));
+    }
+  }
+
+  async function handleEndCancel() {
+    if (!currentQuestion || !sessionId || respond.isPending) return;
+    try {
+      await respond.mutateAsync({
+        session_id: sessionId,
+        session_question_id: currentQuestion.id,
+        answer_text: CANCEL_END_REPLY,
+        turn_action: "answer",
+        turn_key: newTurnKey(),
+      });
+    } catch {
+      // Even if the cancel round-trip fails, locally returning to the question
+      // is the safe default (the backend treats a non-confirm while pending as
+      // a cancel, and never advanced/scored). Surface nothing disruptive.
+    } finally {
+      // Return to the current question; the preserved draft is already restored.
+      setEndConfirming(false);
+      setEndConfirmPrompt("");
     }
   }
 
@@ -1503,7 +1582,14 @@ export default function CourseInterviewPage() {
     answerStatus.status === "submitted" &&
     recentSubmission?.questionId === currentQuestion?.id;
   const submissionSlot =
-    phase !== "questioning" ? null : answerStatus.status === "failed" ? (
+    phase !== "questioning" ? null : endConfirming ? (
+      <EndConfirmationPanel
+        prompt={endConfirmPrompt}
+        onContinue={() => void handleEndCancel()}
+        onEndAndSubmit={() => void handleEndConfirm()}
+        isPending={respond.isPending}
+      />
+    ) : answerStatus.status === "failed" ? (
       <SubmittedAnswerConfirmation
         status="failed"
         answer={answerStatus.draft}

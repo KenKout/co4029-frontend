@@ -1573,6 +1573,12 @@
       "ending": "Đang kết thúc…",
       "cancel": "Tiếp tục phỏng vấn"
     },
+    "end_confirm": {
+      "title": "Xác nhận kết thúc phỏng vấn",
+      "prompt": "Xin xác nhận — bạn muốn kết thúc và nộp bài để chấm điểm, hay tiếp tục buổi phỏng vấn?",
+      "continue": "Tiếp tục phỏng vấn",
+      "end_and_submit": "Kết thúc và nộp để chấm điểm"
+    },
     "leave_dialog": {
       "title": "Tạm rời buổi phỏng vấn?",
       "onboarding_description": "Tiến trình chào hỏi và chuẩn bị sẽ được giữ trong cùng lượt làm trong một khoảng thời gian không hoạt động giới hạn. Khi quay lại, hãy chọn Tiếp tục lượt trước. Nội dung chưa gửi có thể bị mất.",

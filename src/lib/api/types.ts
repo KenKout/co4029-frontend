@@ -154,6 +154,13 @@ export type InterviewSubmitAnswerResponse =
     transition_id?: string | null;
     transition_text?: string | null;
     transition_target?: "next_question" | "closing" | null;
+    // End-confirmation gate (Slice 4): the backend asks the candidate to
+    // confirm ending rather than closing immediately. `pending_confirmation`
+    // is true on a `request_end_confirmation` turn and stays true until the
+    // candidate confirms/cancels; `interaction_state` exposes the per-turn
+    // lifecycle axis (separate from interview progress/phase).
+    pending_confirmation?: boolean | null;
+    interaction_state?: string | null;
   };
 export type InterviewQuestionPublic = Schemas["InterviewQuestionPublic"];
 export type InterviewQuestionAuthoring = Schemas["InterviewQuestionAuthoring"];

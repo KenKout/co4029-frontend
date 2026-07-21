@@ -2519,6 +2519,69 @@ export function EndInterviewDialog({
   );
 }
 
+/**
+ * End-confirmation gate (Slice 4). Rendered on the main screen (in place of the
+ * submitted-answer confirmation) after the interviewer asks the candidate to
+ * confirm ending. Visually secondary to the Question Card; the current question
+ * + timer stay live behind it. Accessible: aria-live announces the prompt,
+ * both actions are ≥44px, focusable, and keyboard-operable.
+ */
+export function EndConfirmationPanel({
+  prompt,
+  onContinue,
+  onEndAndSubmit,
+  isPending,
+}: {
+  prompt: string;
+  onContinue: () => void;
+  onEndAndSubmit: () => void;
+  isPending: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="rounded-xl border border-amber-300 bg-amber-50/70 p-4"
+      role="group"
+      aria-label={t("course_interview.end_confirm.title")}
+    >
+      <p className="flex items-start gap-2 text-sm text-amber-900" aria-live="polite">
+        <CircleHelp className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <span>{prompt || t("course_interview.end_confirm.prompt")}</span>
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          className="min-h-[44px]"
+          onClick={onContinue}
+          disabled={isPending}
+        >
+          {t("course_interview.end_confirm.continue")}
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          className="min-h-[44px]"
+          onClick={onEndAndSubmit}
+          disabled={isPending}
+        >
+          {isPending ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              {t("course_interview.end_dialog.ending")}
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <PhoneOff className="h-4 w-4" aria-hidden="true" />
+              {t("course_interview.end_confirm.end_and_submit")}
+            </span>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function LeaveInterviewDialog({
   open,
   onStay,

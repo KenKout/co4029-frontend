@@ -70,6 +70,26 @@ describe("answerReducer", () => {
     expect(next.submissionId).toBe("sub-1");
   });
 
+  it("restoreDraft rolls a submitting turn back to draft with text preserved", () => {
+    // Used when the backend reveals the 'answer' was a natural-language end
+    // request → end-confirmation: it must NOT become a transcript entry, and
+    // the candidate keeps their text if they choose to continue.
+    const submitting = draft({
+      status: "submitting",
+      draft: "end the interview please",
+      submissionId: "sub-1",
+    });
+    const next = answerReducer(submitting, { type: "restoreDraft" });
+    expect(next.status).toBe("draft");
+    expect(next.draft).toBe("end the interview please");
+    expect(next.submissionId).toBeUndefined();
+  });
+
+  it("restoreDraft is a no-op when not submitting", () => {
+    const ready = draft({ status: "draft", draft: "x" });
+    expect(answerReducer(ready, { type: "restoreDraft" })).toBe(ready);
+  });
+
   it("editing after a failure clears the error and returns to draft", () => {
     const failed = draft({ status: "failed", draft: "x", error: "network" });
     const next = answerReducer(failed, { type: "editDraft", draft: "xy" });

@@ -48,6 +48,7 @@ export type AnswerAction =
   | { type: "submit"; submissionId: string; draft?: string }
   | { type: "submitSuccess"; submittedAnswer?: string }
   | { type: "submitFailure"; error: string }
+  | { type: "restoreDraft"; draft?: string }
   | { type: "reopen" };
 
 export function createInitialAnswerState(questionId: string): AnswerState {
@@ -144,6 +145,21 @@ export function answerReducer(state: AnswerState, action: AnswerAction): AnswerS
       return { ...state, status: "failed", error: action.error };
     }
 
+    case "restoreDraft": {
+      // The submitted text was NOT a real answer (e.g. a natural-language end
+      // request that the backend turned into an end-confirmation). Roll back to
+      // a clean draft with the content restored so it never becomes a
+      // transcript entry, and the candidate keeps their text if they continue.
+      if (state.status !== "submitting") return state;
+      return {
+        ...state,
+        status: "draft",
+        draft: action.draft ?? state.draft,
+        error: null,
+        submissionId: undefined,
+      };
+    }
+
     case "reopen": {
       // The AI asked a follow-up / clarification / hint on the SAME question
       // (no new questionId), so the candidate must answer again. Return to a
@@ -167,6 +183,7 @@ export interface UseAnswerStateResult {
   beginSubmit: (submissionId: string, draft?: string) => void;
   submitSucceeded: (submittedAnswer?: string) => void;
   submitFailed: (error: string) => void;
+  restoreDraft: (draft?: string) => void;
   resetForQuestion: (questionId: string) => void;
   reopenForFollowUp: () => void;
 }
@@ -198,6 +215,10 @@ export function useAnswerState(questionId: string): UseAnswerStateResult {
     (error: string) => dispatch({ type: "submitFailure", error }),
     [],
   );
+  const restoreDraft = useCallback(
+    (draft?: string) => dispatch({ type: "restoreDraft", draft }),
+    [],
+  );
   const resetForQuestion = useCallback(
     (nextQuestionId: string) => dispatch({ type: "reset", questionId: nextQuestionId }),
     [],
@@ -213,6 +234,7 @@ export function useAnswerState(questionId: string): UseAnswerStateResult {
     beginSubmit,
     submitSucceeded,
     submitFailed,
+    restoreDraft,
     resetForQuestion,
     reopenForFollowUp,
   };
