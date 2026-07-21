@@ -123,11 +123,21 @@ export type InterviewSessionStartResponse = Schemas["InterviewSessionStartRespon
   interview_language?: InterviewLanguage;
   assessment_started_at?: string | null;
 };
-export type InterviewOnboardingAction = NonNullable<
-  Schemas["InterviewOnboardingRespondRequest"]["action"]
->;
-export type InterviewOnboardingRespondRequest =
-  Schemas["InterviewOnboardingRespondRequest"];
+// The generated schema is regenerated from the backend OpenAPI doc; until that
+// regen runs, widen the union to include the in-session identity-correction
+// actions the backend already accepts (reject_identity / set_name).
+export type InterviewOnboardingAction =
+  | NonNullable<Schemas["InterviewOnboardingRespondRequest"]["action"]>
+  | "reject_identity"
+  | "set_name";
+export type InterviewOnboardingRespondRequest = Omit<
+  Schemas["InterviewOnboardingRespondRequest"],
+  "action"
+> & {
+  // Widen action to include the in-session identity-correction actions the
+  // backend accepts but the generated schema hasn't been regenerated for yet.
+  action?: InterviewOnboardingAction | null;
+};
 export type InterviewOnboardingRespondResponse =
   Schemas["InterviewOnboardingRespondResponse"];
 export type InterviewSessionFinishResponse = Schemas["InterviewSessionFinishResponse"];

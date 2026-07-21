@@ -1614,6 +1614,9 @@
       "need_moment": "Tôi cần thêm thời gian",
       "continue": "Tiếp tục",
       "wrong_name": "Đây không phải tên của tôi",
+      "ask_name": "Tôi nên gọi bạn là gì?",
+      "name_placeholder": "Nhập tên của bạn",
+      "save_name": "Lưu tên",
       "ready": "Bắt đầu phỏng vấn",
       "not_ready": "Chưa sẵn sàng",
       "reply_placeholder": "Trả lời người phỏng vấn hoặc chọn phản hồi nhanh…",
@@ -1623,6 +1626,7 @@
       "starting_assessment": "Đang bắt đầu phần phỏng vấn được đánh giá…",
       "action_messages": {
         "confirm_identity": "Đúng là tôi.",
+        "reject_identity": "Đây không phải tên của tôi.",
         "audio_clear": "Tôi nghe rõ.",
         "confirm_language": "Tôi muốn tiếp tục bằng tiếng Việt.",
         "continue_setup": "Tôi muốn tiếp tục.",

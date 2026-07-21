@@ -1,8 +1,9 @@
 import { Check, Loader2, Mic, ShieldCheck, Sparkles, UserRound } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,6 +22,8 @@ export type SetupLanguage = "en" | "vi";
 
 export type SetupAction =
   | "confirm_identity"
+  | "reject_identity"
+  | "set_name"
   | "audio_clear"
   | "needs_adjustment"
   | "confirm_language"
@@ -118,9 +121,17 @@ export function SetupChecklist({
   /** True while an onboarding request is in flight (drives the spinner). */
   pending?: boolean;
   onLanguageChange: (language: SetupLanguage) => void;
-  onAction: (action: SetupAction, language?: SetupLanguage) => void;
+  onAction: (
+    action: SetupAction,
+    payload?: { language?: SetupLanguage; name?: string },
+  ) => void;
 }) {
   const { t } = useTranslation();
+  // When the candidate says the profile name isn't theirs, the identity row
+  // switches to a name-entry field ("What should I call you?") before the
+  // set_name action is dispatched.
+  const [enteringName, setEnteringName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
 
   const identityState = itemState("identity_check", stage);
   const audioState = itemState("audio_check", stage);
@@ -154,7 +165,7 @@ export function SetupChecklist({
           label={t("course_interview.setup.identity")}
           value={candidateName}
         >
-          {identityState === "active" && (
+          {identityState === "active" && !enteringName && (
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
@@ -166,13 +177,62 @@ export function SetupChecklist({
                 <Check className="h-4 w-4" />
                 {t("course_interview.onboarding.confirm_identity")}
               </Button>
-              <Link
-                to="/profile"
-                className="text-xs font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                disabled={disabled}
+                onClick={() => {
+                  setEnteringName(true);
+                  onAction("reject_identity");
+                }}
+                className="min-h-11 rounded-lg"
               >
                 {t("course_interview.onboarding.wrong_name")}
-              </Link>
+              </Button>
             </div>
+          )}
+          {identityState === "active" && enteringName && (
+            <form
+              className="flex flex-col gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const name = nameDraft.trim();
+                if (!name) return;
+                onAction("set_name", { name });
+                setEnteringName(false);
+                setNameDraft("");
+              }}
+            >
+              <label
+                htmlFor="setup-preferred-name"
+                className="text-xs font-medium text-text-muted"
+              >
+                {t("course_interview.onboarding.ask_name")}
+              </label>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  id="setup-preferred-name"
+                  value={nameDraft}
+                  onChange={(event) => setNameDraft(event.target.value)}
+                  maxLength={60}
+                  autoFocus
+                  autoComplete="off"
+                  placeholder={t("course_interview.onboarding.name_placeholder")}
+                  className="h-11 max-w-[220px] flex-1"
+                  aria-label={t("course_interview.onboarding.ask_name")}
+                />
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={disabled || nameDraft.trim().length === 0}
+                  className="min-h-11 rounded-lg"
+                >
+                  <Check className="h-4 w-4" />
+                  {t("course_interview.onboarding.save_name")}
+                </Button>
+              </div>
+            </form>
           )}
         </ChecklistRow>
 
@@ -238,7 +298,7 @@ export function SetupChecklist({
                   aria-pressed={language === item}
                   onClick={() => {
                     onLanguageChange(item);
-                    onAction("confirm_language", item);
+                    onAction("confirm_language", { language: item });
                   }}
                   className="min-h-11 rounded-lg px-4"
                 >
