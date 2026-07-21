@@ -2449,6 +2449,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/interview-sessions/{session_id}/onboarding/respond": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Respond To Onboarding
+         * @description Confirm setup/readiness before revealing the first assessed question.
+         */
+        post: operations["respond_to_onboarding_api_v1_interview_sessions__session_id__onboarding_respond_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/interview-sessions/{session_id}/realtime-token": {
         parameters: {
             query?: never;
@@ -6021,6 +6041,50 @@ export interface components {
             failure_message?: string | null;
         };
         /**
+         * InterviewOnboardingRespondRequest
+         * @description One idempotent candidate response during pre-assessment onboarding.
+         */
+        InterviewOnboardingRespondRequest: {
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "identity_check" | "audio_check" | "language_check" | "preparation" | "readiness";
+            /** Response Text */
+            response_text?: string | null;
+            /** Action */
+            action?: ("confirm_identity" | "audio_clear" | "confirm_language" | "continue_setup" | "confirm_setup" | "needs_adjustment" | "ready" | "not_ready") | null;
+            /** Language */
+            language?: ("en" | "vi") | null;
+            /** Turn Key */
+            turn_key: string;
+        };
+        /**
+         * InterviewOnboardingRespondResponse
+         * @description Next persisted onboarding turn, or question one after readiness.
+         */
+        InterviewOnboardingRespondResponse: {
+            /**
+             * Onboarding Stage
+             * @enum {string}
+             */
+            onboarding_stage: "identity_check" | "audio_check" | "language_check" | "preparation" | "readiness" | "completed";
+            /**
+             * Interview Language
+             * @enum {string}
+             */
+            interview_language: "en" | "vi";
+            /** Ai Text */
+            ai_text?: string | null;
+            /** Is Complete */
+            is_complete: boolean;
+            first_question?: components["schemas"]["InterviewQuestionPublic"] | null;
+            /** Assessment Started At */
+            assessment_started_at?: string | null;
+            /** Time Remaining Seconds */
+            time_remaining_seconds?: number | null;
+        };
+        /**
          * InterviewOutcomeAuthoring
          * @description Authoring projection of :class:`InterviewOutcome`.
          *
@@ -6227,6 +6291,21 @@ export interface components {
             evidence_excerpt?: string | null;
         };
         /**
+         * InterviewSessionFinishRequest
+         * @description Optional close context supplied by ceremony-aware clients.
+         *
+         *     Older clients may continue sending no request body; that is treated as a
+         *     normal completion.
+         */
+        InterviewSessionFinishRequest: {
+            /**
+             * Reason
+             * @default natural
+             * @enum {string}
+             */
+            reason: "natural" | "ended_early" | "timed_out";
+        };
+        /**
          * InterviewSessionFinishResponse
          * @description Response shape for ``POST /interviews/sessions/{id}/finish``.
          *
@@ -6252,6 +6331,8 @@ export interface components {
              * @enum {string}
              */
             status: "in_progress" | "completed" | "timed_out" | "abandoned" | "failed";
+            /** Closing Text */
+            closing_text?: string | null;
             /** Total Score */
             total_score?: string | null;
             /**
@@ -6263,6 +6344,40 @@ export interface components {
             pass_verdict?: boolean | null;
             /** Ended At */
             ended_at?: string | null;
+        };
+        /**
+         * InterviewSessionHistoryTurn
+         * @description One learner-visible turn restored when an active attempt resumes.
+         */
+        InterviewSessionHistoryTurn: {
+            /** Id */
+            id: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "ai" | "user";
+            /** Content Text */
+            content_text: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "opening" | "briefing" | "transition" | "question" | "followup" | "clarification" | "hint" | "answer" | "closing";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Elapsed Seconds */
+            elapsed_seconds?: number | null;
+            /** Question Type */
+            question_type?: string | null;
+            /**
+             * Is Follow Up
+             * @default false
+             */
+            is_follow_up: boolean;
         };
         /**
          * InterviewSessionPublic
@@ -6308,6 +6423,20 @@ export interface components {
              * Format: date-time
              */
             started_at: string;
+            /** Assessment Started At */
+            assessment_started_at?: string | null;
+            /**
+             * Onboarding Stage
+             * @default completed
+             * @enum {string}
+             */
+            onboarding_stage: "identity_check" | "audio_check" | "language_check" | "preparation" | "readiness" | "completed";
+            /**
+             * Interview Language
+             * @default en
+             * @enum {string}
+             */
+            interview_language: "en" | "vi";
             /** Ended At */
             ended_at?: string | null;
             /** Resume Deadline At */
@@ -6350,11 +6479,29 @@ export interface components {
              * Format: uuid
              */
             session_id: string;
+            /** Opening Text */
+            opening_text?: string | null;
             first_question?: components["schemas"]["InterviewQuestionPublic"] | null;
             /** Time Remaining Seconds */
             time_remaining_seconds?: number | null;
             /** Question Count Remaining */
             question_count_remaining?: number | null;
+            /**
+             * Onboarding Stage
+             * @default completed
+             * @enum {string}
+             */
+            onboarding_stage: "identity_check" | "audio_check" | "language_check" | "preparation" | "readiness" | "completed";
+            /**
+             * Interview Language
+             * @default en
+             * @enum {string}
+             */
+            interview_language: "en" | "vi";
+            /** Assessment Started At */
+            assessment_started_at?: string | null;
+            /** History */
+            history?: components["schemas"]["InterviewSessionHistoryTurn"][];
         };
         /**
          * InterviewSessionSummary
@@ -6476,6 +6623,8 @@ export interface components {
             answer_text?: string | null;
             /** Audio Object Id */
             audio_object_id?: string | null;
+            /** Turn Action */
+            turn_action?: ("answer" | "repeat" | "clarify" | "explain_term" | "hint") | null;
             /** Latency Ms */
             latency_ms?: number | null;
             /** Turn Key */
@@ -6512,6 +6661,8 @@ export interface components {
             should_await_response?: boolean | null;
             /** Should Finish */
             should_finish?: boolean | null;
+            /** Assistance Kind */
+            assistance_kind?: ("repeat" | "clarification" | "term" | "hint") | null;
         };
         /**
          * InterviewSummaryPublic
@@ -10327,13 +10478,17 @@ export type SchemaInterviewForAuthoringPublic = components['schemas']['Interview
 export type SchemaInterviewForTakingPublic = components['schemas']['InterviewForTakingPublic'];
 export type SchemaInterviewGenerationRequest = components['schemas']['InterviewGenerationRequest'];
 export type SchemaInterviewGenerationRunPublic = components['schemas']['InterviewGenerationRunPublic'];
+export type SchemaInterviewOnboardingRespondRequest = components['schemas']['InterviewOnboardingRespondRequest'];
+export type SchemaInterviewOnboardingRespondResponse = components['schemas']['InterviewOnboardingRespondResponse'];
 export type SchemaInterviewOutcomeAuthoring = components['schemas']['InterviewOutcomeAuthoring'];
 export type SchemaInterviewOutcomeCreate = components['schemas']['InterviewOutcomeCreate'];
 export type SchemaInterviewQuestionAuthoring = components['schemas']['InterviewQuestionAuthoring'];
 export type SchemaInterviewQuestionCreate = components['schemas']['InterviewQuestionCreate'];
 export type SchemaInterviewQuestionPublic = components['schemas']['InterviewQuestionPublic'];
 export type SchemaInterviewRubricScore = components['schemas']['InterviewRubricScore'];
+export type SchemaInterviewSessionFinishRequest = components['schemas']['InterviewSessionFinishRequest'];
 export type SchemaInterviewSessionFinishResponse = components['schemas']['InterviewSessionFinishResponse'];
+export type SchemaInterviewSessionHistoryTurn = components['schemas']['InterviewSessionHistoryTurn'];
 export type SchemaInterviewSessionPublic = components['schemas']['InterviewSessionPublic'];
 export type SchemaInterviewSessionStartRequest = components['schemas']['InterviewSessionStartRequest'];
 export type SchemaInterviewSessionStartResponse = components['schemas']['InterviewSessionStartResponse'];
@@ -14789,7 +14944,9 @@ export interface operations {
     start_session_api_v1_interview_configs__config_id__sessions_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "accept-language"?: string | null;
+            };
             path: {
                 config_id: string;
             };
@@ -14808,6 +14965,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InterviewSessionStartResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    respond_to_onboarding_api_v1_interview_sessions__session_id__onboarding_respond_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterviewOnboardingRespondRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewOnboardingRespondResponse"];
                 };
             };
             /** @description Validation Error */
@@ -14999,13 +15191,19 @@ export interface operations {
     finish_session_api_v1_interview_sessions__session_id__finish_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "accept-language"?: string | null;
+            };
             path: {
                 session_id: string;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["InterviewSessionFinishRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

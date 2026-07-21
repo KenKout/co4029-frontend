@@ -20,11 +20,14 @@ import { cn } from "@/lib/utils";
 import { VoiceControls } from "./voice-controls";
 import { VoiceTranscript } from "./voice-transcript";
 import { useIntegrityReporter } from "./use-integrity-reporter";
+import type { ConversationTurn } from "./interview-workspace";
 
 interface VoiceRoomProps {
   sessionId: string;
   elapsed?: string;
-  onCompleted: () => void;
+  initialTranscript?: ConversationTurn[];
+  onCompleted: (reason: "natural" | "ended_early") => void;
+  onTranscriptChange?: (turns: ConversationTurn[]) => void;
 }
 
 function RoomContent({
@@ -32,11 +35,15 @@ function RoomContent({
   isEnding,
   onCompleted,
   elapsed,
+  initialTranscript,
+  onTranscriptChange,
 }: {
   onEndInterview: () => void;
   isEnding: boolean;
-  onCompleted: () => void;
+  onCompleted: (reason: "natural" | "ended_early") => void;
   elapsed?: string;
+  initialTranscript?: ConversationTurn[];
+  onTranscriptChange?: (turns: ConversationTurn[]) => void;
 }) {
   const connectionState = useConnectionState();
   const { agent, state: agentState } = useVoiceAssistant();
@@ -46,7 +53,7 @@ function RoomContent({
     if (agent) {
       agentWasPresent.current = true;
     } else if (agentWasPresent.current) {
-      onCompleted();
+      onCompleted("natural");
     }
   }, [agent, onCompleted]);
 
@@ -59,7 +66,7 @@ function RoomContent({
     <div className="flex min-h-0 flex-1 flex-col bg-white">
       <section className="min-h-0 flex-1 overflow-hidden" aria-label="Voice interview conversation">
         <div className="mx-auto flex h-full w-full max-w-[900px] flex-col px-4 sm:px-8">
-          <div className="flex shrink-0 flex-col items-center pb-6 pt-8 text-center sm:pt-12">
+          <div className="flex shrink-0 flex-col items-center pb-4 pt-5 text-center sm:pt-7">
             <div
               className={cn(
                 "relative flex size-16 items-center justify-center rounded-full border border-primary/15 bg-primary-soft text-primary transition-transform sm:size-20",
@@ -80,7 +87,11 @@ function RoomContent({
             )}
           </div>
 
-          <VoiceTranscript className="min-h-0 flex-1 pb-6" />
+          <VoiceTranscript
+            className="min-h-0 flex-1 justify-center pb-6"
+            initialTurns={initialTranscript}
+            onTranscriptChange={onTranscriptChange}
+          />
         </div>
       </section>
 
@@ -97,7 +108,13 @@ function RoomContent({
   );
 }
 
-export function VoiceRoom({ sessionId, elapsed, onCompleted }: VoiceRoomProps) {
+export function VoiceRoom({
+  sessionId,
+  elapsed,
+  initialTranscript,
+  onCompleted,
+  onTranscriptChange,
+}: VoiceRoomProps) {
   const [tokenData, setTokenData] = useState<RealtimeTokenResponse | null>(null);
   const [isEnding, setIsEnding] = useState(false);
   const [isFetchingToken, setIsFetchingToken] = useState(false);
@@ -125,14 +142,14 @@ export function VoiceRoom({ sessionId, elapsed, onCompleted }: VoiceRoomProps) {
 
   const handleDisconnected = useCallback(
     (reason?: DisconnectReason) => {
-      if (reason !== DisconnectReason.CLIENT_INITIATED) onCompleted();
+      if (reason !== DisconnectReason.CLIENT_INITIATED) onCompleted("natural");
     },
     [onCompleted],
   );
 
   const handleEndInterview = useCallback(() => {
     setIsEnding(true);
-    onCompleted();
+    onCompleted("ended_early");
   }, [onCompleted]);
 
   if (isFetchingToken || !tokenData) {
@@ -164,6 +181,8 @@ export function VoiceRoom({ sessionId, elapsed, onCompleted }: VoiceRoomProps) {
         isEnding={isEnding}
         onCompleted={onCompleted}
         elapsed={elapsed}
+        initialTranscript={initialTranscript}
+        onTranscriptChange={onTranscriptChange}
       />
     </LiveKitRoom>
   );

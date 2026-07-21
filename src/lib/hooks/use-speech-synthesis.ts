@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * Browser text-to-speech via the Web Speech API (`window.speechSynthesis`).
@@ -37,13 +37,15 @@ const PERSONA_PROSODY: Record<
 export interface SpeakOptions {
   lang?: string;
   persona?: SpeechPersona;
+  /** Called when the browser reports that audible playout has actually begun. */
+  onStart?: () => void;
 }
 
 export interface UseSpeechSynthesis {
   /** Whether the browser exposes speechSynthesis. */
   supported: boolean;
-  /** Speak the given text, cancelling any in-flight utterance first. */
-  speak: (text: string, options?: SpeakOptions) => void;
+  /** Speak text after the narration coordinator has cancelled stale speech. */
+  speak: (text: string, options?: SpeakOptions) => Promise<void>;
   /** Immediately stop any speech. */
   cancel: () => void;
 }
@@ -87,40 +89,45 @@ export function useSpeechSynthesis(): UseSpeechSynthesis {
   }, [supported]);
 
   const speak = useCallback(
-    (text: string, options: SpeakOptions = {}) => {
-      if (!supported) return;
+    (text: string, options: SpeakOptions = {}): Promise<void> => {
+      if (!supported) return Promise.resolve();
       const clean = text.trim();
-      if (!clean) return;
-      const { lang = "en-US", persona = "neutral" } = options;
+      if (!clean) return Promise.resolve();
+      const { lang = "en-US", persona = "neutral", onStart } = options;
       const prosody = PERSONA_PROSODY[persona] ?? PERSONA_PROSODY.neutral;
-      try {
-        // Interrupt whatever is currently being spoken so the newest AI turn
-        // takes over immediately rather than queueing behind stale speech.
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(clean);
-        utterance.lang = lang;
-        utterance.rate = prosody.rate;
-        utterance.pitch = prosody.pitch;
+      return new Promise<void>((resolve) => {
+        try {
+          const utterance = new SpeechSynthesisUtterance(clean);
+          utterance.onstart = () => onStart?.();
+          utterance.onend = () => resolve();
+          utterance.onerror = () => resolve();
+          utterance.lang = lang;
+          utterance.rate = prosody.rate;
+          utterance.pitch = prosody.pitch;
 
-        // Best-effort voice selection: among voices matching the language,
-        // prefer one whose name hints at the persona's tone; else any match.
-        const langPrefix = lang.slice(0, 2).toLowerCase();
-        const candidates = voicesRef.current.filter((v) =>
-          v.lang?.toLowerCase().startsWith(langPrefix),
-        );
-        if (candidates.length > 0) {
-          const hinted = prosody.voiceHints.length
-            ? candidates.find((v) =>
-                prosody.voiceHints.some((h) => v.name.toLowerCase().includes(h)),
-              )
-            : undefined;
-          utterance.voice = hinted ?? candidates[0];
+          // Best-effort voice selection: among voices matching the language,
+          // prefer one whose name hints at the persona's tone; else any match.
+          const langPrefix = lang.slice(0, 2).toLowerCase();
+          const candidates = voicesRef.current.filter((v) =>
+            v.lang?.toLowerCase().startsWith(langPrefix),
+          );
+          if (candidates.length > 0) {
+            const hinted = prosody.voiceHints.length
+              ? candidates.find((v) =>
+                  prosody.voiceHints.some((h) =>
+                    v.name.toLowerCase().includes(h),
+                  ),
+                )
+              : undefined;
+            utterance.voice = hinted ?? candidates[0];
+          }
+
+          window.speechSynthesis.speak(utterance);
+        } catch {
+          // Speech is best-effort; completion must still settle callers.
+          resolve();
         }
-
-        window.speechSynthesis.speak(utterance);
-      } catch {
-        // ignore — speech is best-effort
-      }
+      });
     },
     [supported],
   );
@@ -138,5 +145,8 @@ export function useSpeechSynthesis(): UseSpeechSynthesis {
     };
   }, []);
 
-  return { supported, speak, cancel };
+  return useMemo(
+    () => ({ supported, speak, cancel }),
+    [supported, speak, cancel],
+  );
 }

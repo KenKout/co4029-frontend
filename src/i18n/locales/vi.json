@@ -377,7 +377,6 @@
     "empty_body": "Liên hệ quản lý đào tạo để được đăng ký vào lộ trình phù hợp.",
     "view_paths": "Xem các lộ trình hiện có →",
     "started": "Bắt đầu: {{date}}",
-    "prepared": "Sẵn sàng",
     "status": {
       "active": "Đang học",
       "completed": "Hoàn thành",
@@ -402,7 +401,9 @@
       "passed": "Đạt",
       "not_passed": "Chưa đạt",
       "evaluating": "Đang chấm…",
-      "in_progress": "Đang diễn ra"
+      "in_progress": "Đang diễn ra",
+      "evaluation_failed": "Chấm điểm thất bại",
+      "not_graded": "Không chấm điểm"
     }
   },
   "career_path_detail": {
@@ -413,8 +414,6 @@
     "completed_courses": "Đã hoàn thành {{completed}}/{{total}} khóa học",
     "overall_progress": "Tổng tiến độ",
     "continue_learning": "Tiếp tục học",
-    "prepared_title": "Bạn đã sẵn sàng cho nghề nghiệp!",
-    "prepared_body": "Bạn đã hoàn thành mọi khóa học trong lộ trình này. Bạn đã sẵn sàng cho hướng nghề nghiệp này.",
     "managed_enrollment_title": "Đăng ký bởi quản lý",
     "managed_enrollment_body": "Liên hệ quản lý để được đăng ký vào lộ trình này.",
     "section_title": "Khóa học trong lộ trình",
@@ -1450,6 +1449,12 @@
       "elapsed_time": "Thời gian phỏng vấn đã trôi qua",
       "ai_interviewer": "Người phỏng vấn AI",
       "you": "Bạn",
+      "replay_message": "Phát lại tin nhắn AI này",
+      "replaying_message": "Đang phát lại tin nhắn AI này",
+      "user_typing": "Người dùng đang nhập…",
+      "preparing_question": "Người phỏng vấn AI đang chuẩn bị câu hỏi…",
+      "preparing_greeting": "Người phỏng vấn AI đang tham gia…",
+      "preparing_goodbye": "Người phỏng vấn AI đang kết thúc buổi phỏng vấn…",
       "transcript": "Bản ghi phỏng vấn",
       "answer_composer": "Trình soạn câu trả lời",
       "answer_placeholder": "Nhập câu trả lời hoặc bắt đầu nói…",
@@ -1461,11 +1466,69 @@
       "show_transcript": "Hiện bản ghi",
       "hide_transcript": "Ẩn bản ghi",
       "more_controls": "Thêm điều khiển phỏng vấn",
+      "question_of": "Câu hỏi {{current}} / {{total}}",
+      "question_number": "Câu hỏi {{current}}",
+      "interview_setup": "Chuẩn bị phỏng vấn",
+      "question_progress": "Tiến độ câu hỏi phỏng vấn",
+      "question_progress_unknown": "Tiến độ phỏng vấn; chưa có tổng số câu hỏi",
+      "connected": "Đã kết nối",
+      "disconnected": "Mất kết nối",
+      "connection_interrupted": "Kết nối phỏng vấn bị gián đoạn",
+      "interview_room": "Phòng phỏng vấn AI",
+      "introduction_completed": "Đã hoàn tất phần giới thiệu phỏng vấn",
+      "replay_question": "Phát lại câu hỏi hiện tại",
+      "replay": "Phát lại câu hỏi",
+      "ask_clarification": "Yêu cầu làm rõ",
+      "clarification_request": "Bạn có thể giải thích rõ hơn câu hỏi này không?",
+      "interviewer_assistance": "Hỗ trợ từ người phỏng vấn",
+      "interviewer_clarification": "Làm rõ từ người phỏng vấn",
+      "small_hint": "Gợi ý nhỏ",
+      "give_small_hint": "Cho tôi một gợi ý nhỏ",
+      "hint_provided": "Đã cung cấp gợi ý",
+      "hint_request": "Bạn có thể cho tôi một gợi ý nhỏ không?",
+      "explain_term": "Giải thích thuật ngữ",
+      "explain": "Giải thích",
+      "term_input_label": "Thuật ngữ trong câu hỏi hiện tại",
+      "term_input_placeholder": "Nhập thuật ngữ trong câu hỏi…",
+      "term_request": "Bạn có thể giải thích thuật ngữ “{{term}}” không?",
+      "view_transcript": "Xem bản ghi phỏng vấn",
+      "transcript_count": "{{count}} tin nhắn theo thứ tự thời gian",
+      "transcript_empty": "Bản ghi phỏng vấn chưa có nội dung.",
+      "retry": "Thử lại",
+      "answer_mode": "Chế độ trả lời",
+      "voice_mode": "Giọng nói",
+      "type_mode": "Gõ",
+      "retry_microphone": "Thử lại micrô",
+      "listening_short": "Đang nghe…",
+      "recording_paused": "Đã tạm dừng ghi âm",
+      "live_transcript_hint": "Bạn có thể chỉnh sửa bản ghi trực tiếp bên dưới.",
+      "pause_recording": "Tạm dừng",
+      "resume_recording": "Tiếp tục",
+      "finish_answer": "Hoàn tất câu trả lời",
+      "cancel_recording": "Hủy ghi âm",
+      "start_answering": "Bắt đầu trả lời",
+      "microphone_idle_hint": "Chỉ bắt đầu ghi âm khi bạn chủ động chọn bắt đầu.",
+      "live_transcript": "Bản ghi trực tiếp",
+      "latest_answer": "Câu trả lời gần nhất của ứng viên",
+      "answer_recovery_error": "Câu trả lời chưa được gửi và vẫn được giữ lại để bạn thử lại.",
+      "microphone_errors": {
+        "permission-denied": "Quyền truy cập micrô đang bị chặn. Hãy cấp quyền trong trình duyệt rồi thử lại.",
+        "no-microphone": "Không tìm thấy micrô. Hãy kết nối micrô hoặc chuyển sang chế độ Gõ.",
+        "no-speech": "Không phát hiện giọng nói. Hãy nói gần micrô hơn rồi thử lại.",
+        "audio-capture": "Micrô không khả dụng hoặc đang được ứng dụng khác sử dụng.",
+        "network": "Nhận dạng giọng nói bị gián đoạn do mạng. Nội dung đã nhập vẫn được giữ lại.",
+        "interrupted": "Ghi âm bị gián đoạn. Câu trả lời hiện tại vẫn được giữ lại.",
+        "unsupported": "Trình duyệt này không hỗ trợ nhập giọng nói. Hãy dùng chế độ Gõ."
+      },
       "status": {
-        "idle": "Người phỏng vấn AI đã sẵn sàng",
+        "idle": "Đang chờ câu trả lời của bạn",
         "listening": "Đang nghe…",
         "processing": "Đang xử lý câu trả lời…",
-        "speaking": "AI đang nói…",
+        "paused": "Đã tạm dừng ghi câu trả lời",
+        "thinking": "Đang phân tích câu trả lời…",
+        "speaking": "AI đang đặt câu hỏi…",
+        "error": "Đã xảy ra lỗi. Câu trả lời của bạn vẫn được giữ lại.",
+        "disconnected": "Kết nối bị gián đoạn",
         "ready": "Sẵn sàng gửi"
       }
     },
@@ -1474,6 +1537,58 @@
       "description": "Bạn có chắc muốn kết thúc cuộc phỏng vấn này không? Câu trả lời chưa gửi hiện tại có thể bị mất.",
       "ending": "Đang kết thúc…",
       "cancel": "Tiếp tục phỏng vấn"
+    },
+    "leave_dialog": {
+      "title": "Tạm rời buổi phỏng vấn?",
+      "onboarding_description": "Tiến trình chào hỏi và chuẩn bị sẽ được giữ trong cùng lượt làm trong một khoảng thời gian không hoạt động giới hạn. Khi quay lại, hãy chọn Tiếp tục lượt trước. Nội dung chưa gửi có thể bị mất.",
+      "assessment_description": "Đồng hồ phỏng vấn vẫn tiếp tục chạy khi bạn rời đi. Hãy quay lại trước khi thời gian về 0 để tiếp tục cùng lượt làm. Câu trả lời chưa gửi có thể bị mất.",
+      "untimed_description": "Buổi phỏng vấn không có đồng hồ đếm ngược cố định, nhưng lượt đang hoạt động sẽ hết hạn sau khoảng thời gian không hoạt động. Hãy quay lại kịp thời để tiếp tục từ cùng câu hỏi. Câu trả lời chưa gửi có thể bị mất.",
+      "leave": "Tạm rời đi",
+      "stay": "Ở lại phỏng vấn"
+    },
+    "resume_dialog": {
+      "title": "Tiếp tục lượt làm trước?",
+      "description": "Bạn sẽ quay lại đúng lượt làm đang hoạt động và tiếp tục từ bước chào hỏi hoặc câu hỏi kỹ thuật hiện tại. Thao tác này không tạo lượt làm mới.",
+      "notice_title": "Lượt {{attempt}} vẫn đang diễn ra",
+      "onboarding_notice": "Tiếp tục từ bước chào hỏi hiện tại. Đồng hồ đánh giá chưa bắt đầu, nhưng bước chuẩn bị sẽ hết hạn sau khoảng thời gian không hoạt động.",
+      "assessment_notice": "Tiếp tục từ câu hỏi kỹ thuật gần nhất. Đồng hồ đánh giá vẫn chạy trong lúc bạn rời đi.",
+      "untimed_assessment_notice": "Tiếp tục từ câu hỏi kỹ thuật gần nhất. Lượt làm chỉ được giữ trong khoảng thời gian không hoạt động.",
+      "continue": "Tiếp tục lượt trước",
+      "cancel": "Chưa tiếp tục"
+    },
+    "start_dialog": {
+      "title": "Tham gia bước chuẩn bị phỏng vấn?",
+      "description": "Trợ lý phỏng vấn ảo aBridgeAI sẽ xác nhận danh tính, âm thanh, ngôn ngữ và mức độ sẵn sàng của bạn. Đồng hồ đánh giá chỉ bắt đầu sau khi bạn xác nhận sẵn sàng. Giọng đọc AI được bật mặc định.",
+      "cancel": "Chưa sẵn sàng"
+    },
+    "onboarding": {
+      "language_label": "Ngôn ngữ phỏng vấn",
+      "languages": {
+        "en": "English",
+        "vi": "Tiếng Việt"
+      },
+      "confirm_identity": "Đúng là tôi",
+      "audio_clear": "Tôi nghe rõ",
+      "need_moment": "Tôi cần thêm thời gian",
+      "continue": "Tiếp tục",
+      "wrong_name": "Đây không phải tên của tôi",
+      "ready": "Bắt đầu phỏng vấn",
+      "not_ready": "Chưa sẵn sàng",
+      "reply_placeholder": "Trả lời người phỏng vấn hoặc chọn phản hồi nhanh…",
+      "timer_waiting": "Đồng hồ đánh giá bắt đầu khi bạn xác nhận đã sẵn sàng.",
+      "response_required": "Hãy nhập phản hồi hoặc chọn một tùy chọn.",
+      "send_failed": "Không thể gửi phản hồi chuẩn bị.",
+      "starting_assessment": "Đang bắt đầu phần phỏng vấn được đánh giá…",
+      "action_messages": {
+        "confirm_identity": "Đúng là tôi.",
+        "audio_clear": "Tôi nghe rõ.",
+        "confirm_language": "Tôi muốn tiếp tục bằng tiếng Việt.",
+        "continue_setup": "Tôi muốn tiếp tục.",
+        "confirm_setup": "Đúng là tôi. Âm thanh rõ ràng.",
+        "needs_adjustment": "Tôi cần thêm một chút thời gian để chỉnh âm thanh.",
+        "ready": "Tôi đã sẵn sàng bắt đầu.",
+        "not_ready": "Tôi chưa sẵn sàng."
+      }
     },
     "sections": {
       "gap_report": "Báo cáo lỗ hổng",
@@ -1540,7 +1655,9 @@
       "pass_summary": "Bạn đã đạt đủ số mục tiêu học tập để vượt qua buổi phỏng vấn này.",
       "fail_summary": "Bạn chưa đạt đủ số mục tiêu học tập lần này. Hãy ôn lại nội dung và thử lại.",
       "evaluation_failed": "Chấm điểm gặp lỗi",
-      "evaluation_failed_summary": "Hệ thống AI gặp lỗi khi chấm bài phỏng vấn của bạn và không thể trả kết quả sau nhiều lần thử. Điều này không phản ánh chất lượng câu trả lời của bạn — vui lòng liên hệ giáo viên hoặc thử lại phỏng vấn sau."
+      "evaluation_failed_summary": "Hệ thống AI gặp lỗi khi chấm bài phỏng vấn của bạn và không thể trả kết quả sau nhiều lần thử. Điều này không phản ánh chất lượng câu trả lời của bạn — vui lòng liên hệ giáo viên hoặc thử lại phỏng vấn sau.",
+      "abandoned": "Buổi phỏng vấn đã kết thúc",
+      "abandoned_summary": "Buổi phỏng vấn kết thúc trước khi bạn gửi câu trả lời, vì vậy lần thử này không có kết quả đánh giá."
     },
     "intro": {
       "description": "Phỏng vấn AI chấm điểm theo các tiêu chí của module. Trả lời từng câu một và xem phản hồi cuối phiên."
@@ -2149,7 +2266,9 @@
         "passed": "Đạt",
         "not_passed": "Chưa đạt",
         "evaluating": "Đang chấm…",
-        "in_progress": "Đang diễn ra"
+        "in_progress": "Đang diễn ra",
+        "evaluation_failed": "Chấm điểm thất bại",
+        "not_graded": "Không chấm điểm"
       }
     },
     "questions": {

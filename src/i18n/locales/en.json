@@ -376,7 +376,6 @@
     "empty_body": "Contact your training manager to be enrolled in a suitable path.",
     "view_paths": "Browse available paths →",
     "started": "Started: {{date}}",
-    "prepared": "Prepared",
     "status": {
       "active": "Active",
       "completed": "Completed",
@@ -401,7 +400,9 @@
       "passed": "Passed",
       "not_passed": "Not passed",
       "evaluating": "Evaluating…",
-      "in_progress": "In progress"
+      "in_progress": "In progress",
+      "evaluation_failed": "Evaluation failed",
+      "not_graded": "Not graded"
     }
   },
   "career_path_detail": {
@@ -412,8 +413,6 @@
     "completed_courses": "Completed {{completed}}/{{total}} courses",
     "overall_progress": "Overall progress",
     "continue_learning": "Continue learning",
-    "prepared_title": "You're career-ready!",
-    "prepared_body": "You've completed every course in this path. You're prepared for this career track.",
     "managed_enrollment_title": "Enrollment is managed",
     "managed_enrollment_body": "Contact your manager to be enrolled in this path.",
     "section_title": "Courses in this path",
@@ -1459,6 +1458,12 @@
       "elapsed_time": "Elapsed interview time",
       "ai_interviewer": "AI interviewer",
       "you": "You",
+      "replay_message": "Play this AI message again",
+      "replaying_message": "Playing this AI message again",
+      "user_typing": "User is typing…",
+      "preparing_question": "AI interviewer is preparing the question…",
+      "preparing_greeting": "AI interviewer is joining you…",
+      "preparing_goodbye": "AI interviewer is wrapping up…",
       "transcript": "Interview transcript",
       "answer_composer": "Answer composer",
       "answer_placeholder": "Type your answer or start speaking…",
@@ -1470,11 +1475,69 @@
       "show_transcript": "Show transcript",
       "hide_transcript": "Hide transcript",
       "more_controls": "More interview controls",
+      "question_of": "Question {{current}} of {{total}}",
+      "question_number": "Question {{current}}",
+      "interview_setup": "Interview setup",
+      "question_progress": "Interview question progress",
+      "question_progress_unknown": "Interview progress; total question count unavailable",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "connection_interrupted": "Interview connection interrupted",
+      "interview_room": "AI interview room",
+      "introduction_completed": "Interview introduction completed",
+      "replay_question": "Replay the current question",
+      "replay": "Replay question",
+      "ask_clarification": "Ask for clarification",
+      "clarification_request": "Could you clarify this question, please?",
+      "interviewer_assistance": "Interviewer assistance",
+      "interviewer_clarification": "Interviewer clarification",
+      "small_hint": "Small hint",
+      "give_small_hint": "Give me a small hint",
+      "hint_provided": "Hint provided",
+      "hint_request": "Could you give me a small hint?",
+      "explain_term": "Explain a term",
+      "explain": "Explain",
+      "term_input_label": "Term from the current question",
+      "term_input_placeholder": "Enter a term from the question…",
+      "term_request": "Could you explain the term “{{term}}”?",
+      "view_transcript": "View interview transcript",
+      "transcript_count": "{{count}} messages in chronological order",
+      "transcript_empty": "The interview transcript is not available yet.",
+      "retry": "Retry",
+      "answer_mode": "Answer input mode",
+      "voice_mode": "Voice",
+      "type_mode": "Type",
+      "retry_microphone": "Try microphone again",
+      "listening_short": "Listening…",
+      "recording_paused": "Recording paused",
+      "live_transcript_hint": "Your live transcript stays editable below.",
+      "pause_recording": "Pause",
+      "resume_recording": "Resume",
+      "finish_answer": "Finish answer",
+      "cancel_recording": "Cancel recording",
+      "start_answering": "Start answering",
+      "microphone_idle_hint": "Recording starts only when you choose to begin.",
+      "live_transcript": "Live transcript",
+      "latest_answer": "Latest candidate answer",
+      "answer_recovery_error": "Your answer was not sent. It is still here so you can retry.",
+      "microphone_errors": {
+        "permission-denied": "Microphone access is blocked. Allow it in browser settings, then try again.",
+        "no-microphone": "No microphone was detected. Connect one or switch to Type mode.",
+        "no-speech": "No voice was detected. Move closer to the microphone and try again.",
+        "audio-capture": "The microphone is unavailable or in use by another application.",
+        "network": "Speech recognition was interrupted by the network. Your typed answer is preserved.",
+        "interrupted": "Recording was interrupted. Your current answer is preserved.",
+        "unsupported": "Voice input is not supported in this browser. Use Type mode instead."
+      },
       "status": {
-        "idle": "AI interviewer is ready",
+        "idle": "Waiting for your answer",
         "listening": "Listening…",
         "processing": "Processing your answer…",
-        "speaking": "AI is speaking…",
+        "paused": "Answer recording paused",
+        "thinking": "Analyzing your answer…",
+        "speaking": "AI is asking the question…",
+        "error": "Something went wrong. Your answer is preserved.",
+        "disconnected": "Connection interrupted",
         "ready": "Ready to send"
       }
     },
@@ -1483,6 +1546,58 @@
       "description": "Are you sure you want to end this interview? Your current unsent answer may be lost.",
       "ending": "Ending interview…",
       "cancel": "Continue interview"
+    },
+    "leave_dialog": {
+      "title": "Leave this interview for now?",
+      "onboarding_description": "Your greeting and setup progress will stay in the same attempt for a limited inactivity window. When you return, choose Continue previous attempt. Any unsent text may be lost.",
+      "assessment_description": "The interview timer will continue while you are away. Return before it reaches zero to continue the same attempt. Any unsent answer may be lost.",
+      "untimed_description": "This interview has no fixed countdown, but the active attempt expires after the inactivity window. Return in time to continue from the same question. Any unsent answer may be lost.",
+      "leave": "Leave for now",
+      "stay": "Stay in interview"
+    },
+    "resume_dialog": {
+      "title": "Continue your previous attempt?",
+      "description": "You will return to the same active attempt and continue from your current greeting step or technical question. This does not create a new attempt.",
+      "notice_title": "Attempt {{attempt}} is still in progress",
+      "onboarding_notice": "Continue from your current greeting step. The assessed timer has not started yet, but the setup attempt expires after the inactivity window.",
+      "assessment_notice": "Continue from your latest technical question. The assessed timer has continued while you were away.",
+      "untimed_assessment_notice": "Continue from your latest technical question. This attempt remains available only within the inactivity window.",
+      "continue": "Continue previous attempt",
+      "cancel": "Not now"
+    },
+    "start_dialog": {
+      "title": "Join the interview setup?",
+      "description": "The aBridgeAI virtual interviewer will first confirm your identity, audio, language, and readiness. Your assessed interview timer will start only after you confirm that you are ready. AI voice is on by default.",
+      "cancel": "Not yet"
+    },
+    "onboarding": {
+      "language_label": "Interview language",
+      "languages": {
+        "en": "English",
+        "vi": "Tiếng Việt"
+      },
+      "confirm_identity": "Yes, that's me",
+      "audio_clear": "I can hear clearly",
+      "need_moment": "I need a moment",
+      "continue": "Continue",
+      "wrong_name": "That isn't my name",
+      "ready": "Start interview",
+      "not_ready": "Not ready yet",
+      "reply_placeholder": "Reply to the interviewer or use a quick response…",
+      "timer_waiting": "The assessed timer starts when you confirm you are ready.",
+      "response_required": "Type a response or choose one of the options.",
+      "send_failed": "Couldn't send your setup response.",
+      "starting_assessment": "Starting the assessed interview…",
+      "action_messages": {
+        "confirm_identity": "Yes, that's me.",
+        "audio_clear": "The audio is clear.",
+        "confirm_language": "I'd like to continue in English.",
+        "continue_setup": "I'm ready to continue.",
+        "confirm_setup": "Yes, that's me. The audio is clear.",
+        "needs_adjustment": "I need a moment to adjust my audio.",
+        "ready": "I'm ready to begin.",
+        "not_ready": "I'm not ready yet."
+      }
     },
     "sections": {
       "gap_report": "Gap report",
@@ -1549,7 +1664,9 @@
       "pass_summary": "You met enough of the learning outcomes to pass this interview.",
       "fail_summary": "You did not meet enough learning outcomes this time. Review the material and try again.",
       "evaluation_failed": "Evaluation failed",
-      "evaluation_failed_summary": "Our AI grader hit an error while scoring your interview and couldn't produce a result after several attempts. This is not a reflection of your answers — please contact your teacher or try the interview again later."
+      "evaluation_failed_summary": "Our AI grader hit an error while scoring your interview and couldn't produce a result after several attempts. This is not a reflection of your answers — please contact your teacher or try the interview again later.",
+      "abandoned": "Interview ended",
+      "abandoned_summary": "The interview ended before an answer was submitted, so there is no evaluation for this attempt."
     },
     "intro": {
       "description": "AI interview grades by module criteria. Answer one by one and review the final feedback."
@@ -2158,7 +2275,9 @@
         "passed": "Passed",
         "not_passed": "Not passed",
         "evaluating": "Evaluating…",
-        "in_progress": "In progress"
+        "in_progress": "In progress",
+        "evaluation_failed": "Evaluation failed",
+        "not_graded": "Not graded"
       }
     },
     "questions": {

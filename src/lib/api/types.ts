@@ -112,8 +112,28 @@ export type InterviewConfigUpdate = Schemas["InterviewConfigUpdate"];
 export type InterviewForTakingPublic = Schemas["InterviewForTakingPublic"];
 export type InterviewSessionPublic = Schemas["InterviewSessionPublic"];
 export type InterviewSessionStartRequest = Schemas["InterviewSessionStartRequest"];
-export type InterviewSessionStartResponse = Schemas["InterviewSessionStartResponse"];
+export type InterviewLanguage = NonNullable<
+  Schemas["InterviewOnboardingRespondRequest"]["language"]
+>;
+export type InterviewOnboardingStage =
+  Schemas["InterviewOnboardingRespondResponse"]["onboarding_stage"];
+export type InterviewSessionHistoryTurn = Schemas["InterviewSessionHistoryTurn"];
+export type InterviewSessionStartResponse = Schemas["InterviewSessionStartResponse"] & {
+  onboarding_stage?: InterviewOnboardingStage;
+  interview_language?: InterviewLanguage;
+  assessment_started_at?: string | null;
+};
+export type InterviewOnboardingAction = NonNullable<
+  Schemas["InterviewOnboardingRespondRequest"]["action"]
+>;
+export type InterviewOnboardingRespondRequest =
+  Schemas["InterviewOnboardingRespondRequest"];
+export type InterviewOnboardingRespondResponse =
+  Schemas["InterviewOnboardingRespondResponse"];
 export type InterviewSessionFinishResponse = Schemas["InterviewSessionFinishResponse"];
+export interface InterviewSessionFinishRequest {
+  reason?: "natural" | "ended_early" | "timed_out";
+}
 export type InterviewRespondRequest = Schemas["InterviewSubmitAnswerRequest"];
 export type InterviewSubmitAnswerRequest = Schemas["InterviewSubmitAnswerRequest"];
 export type InterviewSubmitAnswerResponse = Schemas["InterviewSubmitAnswerResponse"];
@@ -251,9 +271,16 @@ export type CareerPathCourseAdd = Schemas["CareerPathCourseAdd"];
 export type CareerPathCourseReorder = Schemas["CareerPathCourseReorder"];
 export type CareerPathStudentEnroll = Schemas["CareerPathStudentEnroll"];
 export type CareerPathProgressRead = Schemas["CareerPathProgressRead"];
+/**
+ * The enrollment list contract does not require aggregate progress. Some
+ * deployments enrich the same response with these values, while the learner
+ * page deliberately falls back to 0% / completed status when they are absent.
+ * Keep that progressive enhancement optional instead of weakening the
+ * generated OpenAPI schema itself.
+ */
 export type MyCareerEnrollmentRead = Schemas["MyCareerEnrollmentRead"] & {
-  overall_percent?: number;
-  is_prepared?: boolean;
+  overall_percent?: number | null;
+  is_prepared?: boolean | null;
 };
 export type StudentPathProgressAuthoring =
   Schemas["StudentPathProgressAuthoring"];

@@ -1,10 +1,12 @@
-import { useEffect } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Mail, Search, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { InfiniteList } from "@/components/ui/InfiniteList";
-import { useUsersList } from "@/lib/api/hooks/admin";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useServerTable } from "@/lib/api/use-server-table";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import type { User } from "@/lib/api/types";
 
@@ -29,35 +31,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function UserRow({ user }: { user: User }) {
-  const displayName =
-    user.profile?.display_name?.trim() || user.primary_email;
-
-  return (
-    <Link
-      to="/admin/users/$userId"
-      params={{ userId: user.id }}
-      className="block bg-surface-elev border border-border rounded-lg p-4 mb-2 hover:border-border-strong hover:shadow-editorial transition-colors duration-150"
-    >
-      <div className="flex items-center gap-4">
-        <div className="w-9 h-9 rounded-full bg-m3-primary-fixed flex items-center justify-center shrink-0">
-          <Users className="h-4 w-4 text-m3-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-text-strong truncate">
-            {displayName}
-          </p>
-          <p className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
-            <Mail className="h-3 w-3" />
-            <span className="truncate">{user.primary_email}</span>
-          </p>
-        </div>
-        <StatusBadge status={user.status} />
-      </div>
-    </Link>
-  );
-}
-
 export default function AdminUsersPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -73,17 +46,68 @@ export default function AdminUsersPage() {
     }
   }, [permissions.isLoading, canAdmin, navigate, t]);
 
-  const enabled = !permissions.isLoading && canAdmin;
-  const list = useUsersList(20);
+  // Server-side search + sort + page across the whole user set (the old
+  // InfiniteList had no search — an admin could not find a user by email).
+  const table = useServerTable<User>({
+    queryKey: ["admin", "users", "search"],
+    path: "/users/search",
+    pageSize: 25,
+    enabled: !permissions.isLoading && canAdmin,
+  });
+
+  const columns: DataTableColumn<User>[] = useMemo(
+    () => [
+      {
+        // id must match the backend sort whitelist key.
+        id: "email",
+        header: t("admin.users.cols.user", { defaultValue: "User" }),
+        sortable: true,
+        cell: (u) => {
+          const displayName = u.profile?.display_name?.trim() || u.primary_email;
+          return (
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-full bg-m3-primary-fixed flex items-center justify-center shrink-0">
+                <Users className="h-4 w-4 text-m3-primary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-text-strong truncate">
+                  {displayName}
+                </p>
+                <p className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
+                  <Mail className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{u.primary_email}</span>
+                </p>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        id: "status",
+        header: t("admin.users.cols.status", { defaultValue: "Status" }),
+        sortable: true,
+        cell: (u) => <StatusBadge status={u.status} />,
+      },
+      {
+        id: "created_at",
+        header: t("admin.users.cols.joined", { defaultValue: "Joined" }),
+        sortable: true,
+        align: "right",
+        cell: (u) => (
+          <span className="text-xs text-text-muted whitespace-nowrap">
+            {u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}
+          </span>
+        ),
+      },
+    ],
+    [t],
+  );
 
   if (permissions.isLoading) {
     return (
       <div className="space-y-3 pb-12">
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-16 bg-surface-muted animate-pulse rounded-lg"
-          />
+          <Skeleton key={i} className="h-16 rounded-lg" />
         ))}
       </div>
     );
@@ -106,43 +130,49 @@ export default function AdminUsersPage() {
         </p>
       </div>
 
-      {!enabled || list.isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="h-16 bg-surface-muted animate-pulse rounded-lg"
-            />
-          ))}
-        </div>
-      ) : list.isError ? (
+      {table.isError ? (
         <div className="bg-surface-elev border border-border rounded-lg p-5">
           <p className="text-sm text-danger">
             {t("admin.users.roles.errors.load_failed")}
           </p>
         </div>
       ) : (
-        <InfiniteList<User>
-          items={list.items}
-          hasNextPage={list.hasNextPage}
-          fetchNextPage={list.fetchNextPage}
-          isFetchingNextPage={list.isFetchingNextPage}
-          renderItem={(user) => <UserRow user={user} />}
-          keyOf={(user) => user.id}
-          empty={
-            <div className="bg-surface-elev border border-border rounded-lg p-10 text-center">
-              <Search className="h-10 w-10 mx-auto mb-3 text-text-subtle" />
-              <p className="text-sm font-medium text-text-strong">
-                {t("admin.users.empty_title", {
-                  defaultValue: "No users yet",
+        <DataTable
+          columns={columns}
+          data={table.rows}
+          getRowId={(u) => u.id}
+          loading={table.isLoading}
+          onRowClick={(u) =>
+            void navigate({ to: "/admin/users/$userId", params: { userId: u.id } })
+          }
+          pagination
+          manualPagination
+          manualSorting
+          rowCount={table.total}
+          page={table.page}
+          pageSize={table.pageSize}
+          onPageChange={table.setPage}
+          onPageSizeChange={table.setPageSize}
+          pageSizeOptions={[25, 50, 100]}
+          sort={table.sort}
+          onSortChange={table.setSort}
+          emptyState={
+            table.search
+              ? t("admin.users.empty_search", { defaultValue: "No matching users" })
+              : t("admin.users.empty_title", { defaultValue: "No users yet" })
+          }
+          toolbar={
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
+              <Input
+                type="text"
+                value={table.search}
+                onChange={(e) => table.setSearch(e.target.value)}
+                placeholder={t("admin.users.search_placeholder", {
+                  defaultValue: "Search by name or email…",
                 })}
-              </p>
-              <p className="text-xs text-text-muted mt-1">
-                {t("admin.users.empty_body", {
-                  defaultValue:
-                    "When users are registered, they will appear here.",
-                })}
-              </p>
+                className="pl-10"
+              />
             </div>
           }
         />

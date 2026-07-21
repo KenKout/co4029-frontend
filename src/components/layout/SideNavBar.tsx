@@ -144,35 +144,8 @@ export default function SideNavBar({
           )}
         </div>
 
-        {/* Role badge */}
-        <div className={cn("px-3 py-3 shrink-0", collapsed && "flex justify-center")}>
-          {collapsed ? (
-            <div
-              title={t(meta.label)}
-              className={cn(
-                "w-8 h-8 rounded-lg border flex items-center justify-center",
-                meta.bg,
-                meta.color
-              )}
-            >
-              <RoleIcon className="h-4 w-4" />
-            </div>
-          ) : (
-            <div
-              className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold tracking-wide uppercase",
-                meta.bg,
-                meta.color
-              )}
-            >
-              <RoleIcon className="h-3.5 w-3.5" />
-              <span>{t(meta.label)}</span>
-            </div>
-          )}
-        </div>
-
         {/* Nav groups */}
-        <nav className="flex-1 overflow-y-auto px-2 space-y-4 pb-2">
+        <nav className="flex-1 overflow-y-auto px-2 pt-4 space-y-4 pb-2">
           {navGroups.map((group) => (
             <div key={group.label}>
               {/* Group label — only when expanded */}

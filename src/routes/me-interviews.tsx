@@ -1,6 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, BookOpen, CheckCircle2, Loader2, Mic } from "lucide-react";
+import {
+  AlertCircle,
+  BookOpen,
+  CheckCircle2,
+  Loader2,
+  Mic,
+  MinusCircle,
+  XCircle,
+} from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -8,13 +16,21 @@ import { Button } from "@/components/ui/button";
 import { useMyInterviewSessions } from "@/lib/api/hooks/interviews";
 import type { InterviewSessionPublic } from "@/lib/api/types";
 
-type VerdictState = "passed" | "not_passed" | "evaluating" | "in_progress";
+type VerdictState =
+  | "passed"
+  | "not_passed"
+  | "evaluating"
+  | "in_progress"
+  | "evaluation_failed"
+  | "not_graded";
 
 // Thesis §4.3: students see the binary verdict ONLY. A completed session whose
 // async evaluation hasn't landed yet (pass_verdict === null) must read as
 // "evaluating", never as a fail.
 function verdictState(s: InterviewSessionPublic): VerdictState {
   if (s.status === "in_progress") return "in_progress";
+  if (s.status === "failed") return "evaluation_failed";
+  if (s.status === "abandoned") return "not_graded";
   if (s.pass_verdict === true) return "passed";
   if (s.pass_verdict === false) return "not_passed";
   return "evaluating";
@@ -25,6 +41,8 @@ const BADGE_CLASS: Record<VerdictState, string> = {
   not_passed: "bg-m3-primary-fixed text-m3-primary",
   evaluating: "bg-amber-50 text-amber-700",
   in_progress: "bg-slate-100 text-slate-600",
+  evaluation_failed: "bg-red-100 text-red-700",
+  not_graded: "bg-slate-100 text-slate-600",
 };
 
 function useFormatDate() {
@@ -59,6 +77,8 @@ function SessionRow({ item }: { item: InterviewSessionPublic }) {
           >
             {state === "passed" && <CheckCircle2 className="h-3 w-3" />}
             {state === "evaluating" && <Loader2 className="h-3 w-3 animate-spin" />}
+            {state === "evaluation_failed" && <XCircle className="h-3 w-3" />}
+            {state === "not_graded" && <MinusCircle className="h-3 w-3" />}
             {t(`me_interviews.state.${state}`)}
           </span>
         </div>

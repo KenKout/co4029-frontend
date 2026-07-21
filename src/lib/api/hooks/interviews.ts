@@ -14,11 +14,14 @@ import type {
   InterviewForTakingPublic,
   InterviewGenerationRequest,
   InterviewGenerationRunPublic,
+  InterviewOnboardingRespondRequest,
+  InterviewOnboardingRespondResponse,
   InterviewOutcomeAuthoring,
   InterviewOutcomeCreate,
   InterviewQuestionAuthoring,
   InterviewQuestionCreate,
   InterviewSessionFinishResponse,
+  InterviewSessionFinishRequest,
   InterviewSessionPublic,
   InterviewSessionStartRequest,
   InterviewSessionStartResponse,
@@ -40,12 +43,16 @@ export function useInterviewForTaking(configId: string | null | undefined) {
 }
 
 export function useStartInterviewSession(configId: string | null | undefined) {
+  const { i18n } = useTranslation();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: InterviewSessionStartRequest) =>
       apiPost<InterviewSessionStartResponse>(
         `/interview-configs/${configId}/sessions`,
         body,
+        {
+          "Accept-Language": i18n.resolvedLanguage ?? i18n.language ?? "en",
+        },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({
@@ -93,12 +100,35 @@ export function useInterviewRespond(sessionId: string | null | undefined) {
   });
 }
 
-export function useFinishInterview(sessionId: string | null | undefined) {
+export function useInterviewOnboarding(sessionId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
+    mutationFn: (body: InterviewOnboardingRespondRequest) =>
+      apiPost<InterviewOnboardingRespondResponse>(
+        `/interview-sessions/${sessionId}/onboarding/respond`,
+        body,
+      ),
+    onSuccess: () => {
+      if (sessionId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.interviews.session(sessionId),
+        });
+      }
+    },
+  });
+}
+
+export function useFinishInterview(sessionId: string | null | undefined) {
+  const { i18n } = useTranslation();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: InterviewSessionFinishRequest = { reason: "natural" }) =>
       apiPost<InterviewSessionFinishResponse>(
         `/interview-sessions/${sessionId}/finish`,
+        body,
+        {
+          "Accept-Language": i18n.resolvedLanguage ?? i18n.language ?? "en",
+        },
       ),
     onSuccess: () => {
       if (sessionId) {
@@ -138,7 +168,26 @@ export function useMyInterviewSessions() {
     queryKey: queryKeys.interviews.mySessions(),
     queryFn: () =>
       apiFetch<InterviewSessionPublic[]>(`/me/interview-sessions`),
+    refetchInterval: (query) =>
+      hasPendingInterviewEvaluation(query.state.data) ? 3000 : false,
   });
+}
+
+type InterviewEvaluationState = {
+  status: string;
+  pass_verdict?: boolean | null;
+};
+
+function hasPendingInterviewEvaluation(
+  sessions: readonly InterviewEvaluationState[] | undefined,
+): boolean {
+  return Boolean(
+    sessions?.some(
+      (session) =>
+        (session.status === "completed" || session.status === "timed_out") &&
+        session.pass_verdict == null,
+    ),
+  );
 }
 
 /* ───────────────── Teacher-side (W5.4) ───────────────── */
@@ -564,6 +613,8 @@ export function useInterviewSessionsForConfig(
         `/teacher/interview-configs/${configId}/sessions`,
       ),
     enabled: !!configId,
+    refetchInterval: (query) =>
+      hasPendingInterviewEvaluation(query.state.data) ? 3000 : false,
   });
 }
 
@@ -579,6 +630,8 @@ export function useCourseInterviewSessions(courseId: string | null | undefined) 
         `/teacher/courses/${courseId}/interview-sessions`,
       ),
     enabled: !!courseId,
+    refetchInterval: (query) =>
+      hasPendingInterviewEvaluation(query.state.data) ? 3000 : false,
   });
 }
 
@@ -597,6 +650,8 @@ export function useStudentInterviewSessions(
         `/teacher/courses/${courseId}/students/${studentId}/interview-sessions`,
       ),
     enabled: !!courseId && !!studentId,
+    refetchInterval: (query) =>
+      hasPendingInterviewEvaluation(query.state.data) ? 3000 : false,
   });
 }
 

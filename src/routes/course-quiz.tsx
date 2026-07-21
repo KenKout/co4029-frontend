@@ -23,6 +23,7 @@ import { ApiError } from "@/lib/api/client";
 import { useCourseBySlug } from "@/lib/api/hooks/courses";
 import {
   useMyQuizAttempts,
+  useQuizAttemptProgress,
   useStartQuizAttempt,
   useStudentQuiz,
   useSubmitQuizAnswer,
@@ -429,6 +430,14 @@ export default function CourseQuizPage() {
 
   const startAttempt = useStartQuizAttempt(quizId);
 
+  // A prior in-progress attempt (from before a refresh / back-navigation) —
+  // when present, its saved answers are rehydrated instead of starting fresh.
+  const inProgressAttempt = useMemo(
+    () => attempts.find((a) => a.status === "in_progress") ?? null,
+    [attempts],
+  );
+  const attemptProgress = useQuizAttemptProgress(inProgressAttempt?.id ?? null);
+
   const [taking, setTaking] = useState<QuizForTakingPublic | null>(null);
   const [activeAttemptId, setActiveAttemptId] = useState<string | null>(null);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -437,6 +446,7 @@ export default function CourseQuizPage() {
   const [submittedSummary, setSubmittedSummary] = useState<QuizAttemptRead | null>(null);
   const [perQuestionCooldown, setPerQuestionCooldown] = useState<Record<string, string>>({});
   const [hintDialogOpen, setHintDialogOpen] = useState(false);
+  const [activeQuestionElapsed, setActiveQuestionElapsed] = useState(0);
 
   useEffect(() => {
     setHintDialogOpen(false);
@@ -447,6 +457,52 @@ export default function CourseQuizPage() {
 
   const autoSubmitStartedRef = useRef(false);
   const questionSeenAtRef = useRef<Record<string, number>>({});
+  const hydratedAttemptIdRef = useRef<string | null>(null);
+
+  // Rehydrate local state from the server once, per attempt — runs on
+  // mount/refresh/back-navigation when an in_progress attempt already
+  // exists, so answers already saved via /answers aren't shown as blank.
+  useEffect(() => {
+    if (!attemptProgress.data || taking) return;
+    if (hydratedAttemptIdRef.current === attemptProgress.data.attempt_id) return;
+    hydratedAttemptIdRef.current = attemptProgress.data.attempt_id;
+
+    const progress = attemptProgress.data;
+    const sortedQuestions = [...progress.take.questions].sort(
+      (a, b) => a.position - b.position,
+    );
+    const answersByQuestion = new Map(progress.answers.map((a) => [a.question_id, a]));
+
+    setTaking(progress.take);
+    setActiveAttemptId(progress.attempt_id);
+    setStatuses(
+      sortedQuestions.map((q) => {
+        const saved = answersByQuestion.get(q.id);
+        return {
+          selectedOptionId: saved?.selected_option_id ?? null,
+          answerText: saved?.answer_text ?? null,
+          flagged: false,
+          hintViewed: saved?.hint_used ?? false,
+          savedToServer: saved != null,
+        };
+      }),
+    );
+    const firstUnanswered = sortedQuestions.findIndex(
+      (q) => !answersByQuestion.get(q.id),
+    );
+    setActiveIdx(firstUnanswered === -1 ? 0 : firstUnanswered);
+
+    const timeLimit = progress.take.quiz.time_limit_seconds ?? 0;
+    if (timeLimit) {
+      const elapsedSeconds = Math.floor(
+        (Date.now() - new Date(progress.started_at).getTime()) / 1000,
+      );
+      setTimeLeft(Math.max(0, timeLimit - elapsedSeconds));
+    }
+    autoSubmitStartedRef.current = false;
+    questionSeenAtRef.current = {};
+    setPerQuestionCooldown({});
+  }, [attemptProgress.data, taking]);
 
   const displayQuestions: QuizQuestionPublic[] = useMemo(
     () => (taking ? [...taking.questions].sort((a, b) => a.position - b.position) : []),
@@ -460,8 +516,18 @@ export default function CourseQuizPage() {
 
   useEffect(() => {
     const activeQuestionId = displayQuestions[activeIdx]?.id;
-    if (!activeQuestionId || questionSeenAtRef.current[activeQuestionId]) return;
-    questionSeenAtRef.current[activeQuestionId] = Date.now();
+    if (!activeQuestionId) {
+      setActiveQuestionElapsed(0);
+      return;
+    }
+    if (!questionSeenAtRef.current[activeQuestionId]) {
+      questionSeenAtRef.current[activeQuestionId] = Date.now();
+    }
+    const interval = window.setInterval(() => {
+      setActiveQuestionElapsed(Math.floor((Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000));
+    }, 1000);
+    setActiveQuestionElapsed(Math.floor((Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000));
+    return () => window.clearInterval(interval);
   }, [activeIdx, displayQuestions]);
 
   useEffect(() => {
@@ -475,9 +541,11 @@ export default function CourseQuizPage() {
   async function handleStartAttempt() {
     try {
       const result = await startAttempt.mutateAsync(undefined);
-      setTaking(result);
+      hydratedAttemptIdRef.current = result.attempt_id;
+      setTaking(result.take);
+      setActiveAttemptId(result.attempt_id);
       setStatuses(
-        result.questions.map(() => ({
+        result.take.questions.map(() => ({
           selectedOptionId: null,
           answerText: null,
           flagged: false,
@@ -486,7 +554,7 @@ export default function CourseQuizPage() {
         })),
       );
       setActiveIdx(0);
-      setTimeLeft(result.quiz.time_limit_seconds ?? 0);
+      setTimeLeft(result.take.quiz.time_limit_seconds ?? 0);
       autoSubmitStartedRef.current = false;
       questionSeenAtRef.current = {};
       setPerQuestionCooldown({});
@@ -509,12 +577,6 @@ export default function CourseQuizPage() {
       }
     }
   }
-
-  useEffect(() => {
-    if (!taking || activeAttemptId) return;
-    const inProgress = attempts.find((a) => a.status === "in_progress");
-    if (inProgress) setActiveAttemptId(inProgress.id);
-  }, [taking, attempts, activeAttemptId]);
 
   async function persistAnswer(questionIdx: number): Promise<boolean> {
     const question = displayQuestions[questionIdx];
@@ -613,7 +675,11 @@ export default function CourseQuizPage() {
     timeLeft,
   ]);
 
-  if (courseLoading || quizLoading || attemptsLoading) {
+  // While an in_progress attempt's resume payload is still loading, hold on
+  // the skeleton instead of flashing the "Start" screen before hydrating.
+  const resuming = !!inProgressAttempt && attemptProgress.isLoading && !taking;
+
+  if (courseLoading || quizLoading || attemptsLoading || resuming) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-6">
         <div className="space-y-3 w-full max-w-sm">
@@ -653,7 +719,7 @@ export default function CourseQuizPage() {
     const passingScore = Math.round(Number(quiz.passing_score_percent));
 
     return (
-      <div className="min-h-[70vh] max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10">
+      <div className="min-h-[70vh] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10">
         <div className="max-w-3xl w-full mx-auto space-y-6">
           <GlassCard className="p-8 sm:p-10 text-center">
             <div
@@ -713,7 +779,7 @@ export default function CourseQuizPage() {
 
   if (!taking) {
     return (
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10">
         <QuizIntroPanel
           quiz={quiz}
           attempts={attempts}
@@ -766,8 +832,8 @@ export default function CourseQuizPage() {
 
   return (
     <div className="min-h-[70vh] pb-20">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+      <div className="sticky top-16 z-10 bg-m3-surface/95 backdrop-blur-md border-b border-m3-outline-variant/30 py-4 mb-6 px-4 sm:px-6 lg:px-10 -mx-4 sm:-mx-6 lg:-mx-10 -mt-6 shadow-sm">
+        <div className="w-full flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3 flex-wrap -ml-3">
             <Link to="/courses/$slug/learn" params={{ slug }}>
               <Button variant="ghost" size="sm" className="rounded-xl text-m3-on-surface-variant hover:text-m3-primary gap-1.5 text-xs font-bold px-3">
@@ -805,7 +871,9 @@ export default function CourseQuizPage() {
             )}
           </div>
         </div>
+      </div>
 
+      <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
         <div className="mb-8">
           <div className="flex justify-between items-end mb-3 gap-4 flex-wrap">
             <div>
@@ -832,9 +900,13 @@ export default function CourseQuizPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 xl:col-span-9">
             <div className="bg-m3-surface-container-lowest rounded-xl p-6 sm:p-10 relative overflow-hidden shadow-editorial">
-              <div className="absolute top-0 right-0 m-5">
+              <div className="absolute top-0 right-0 m-5 flex items-center gap-2">
+                <Badge variant="outline" className="text-m3-outline border-m3-outline-variant font-mono text-[10px] bg-white">
+                  <Timer className="h-3 w-3 mr-1" />
+                  {formatTime(activeQuestionElapsed)}
+                </Badge>
                 <Badge className="bg-m3-secondary-fixed text-m3-on-surface border-0 font-bold text-[10px] px-3 py-1.5 gap-1.5 rounded-full">
                   <Sparkles className="h-3 w-3" />
                   {t("course_quiz.status.currently_doing")}
@@ -955,7 +1027,7 @@ export default function CourseQuizPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-4 space-y-5">
+          <div className="lg:col-span-4 xl:col-span-3 space-y-5">
             <HintDialog
               open={hintDialogOpen}
               onOpenChange={setHintDialogOpen}
