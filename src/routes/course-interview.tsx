@@ -647,6 +647,7 @@ export default function CourseInterviewPage() {
   async function handleOnboarding(
     action?: InterviewOnboardingAction,
     languageOverride?: InterviewLanguage,
+    nameOverride?: string,
   ) {
     if (!sessionId || onboardingStage === "completed") return;
     const pendingInterim = dictation.listening ? dictation.stop() : "";
@@ -659,7 +660,12 @@ export default function CourseInterviewPage() {
           lng: languageOverride ?? interviewLanguage,
         })
       : "";
-    const submittedText = naturalText || guidedText;
+    // set_name carries the candidate's typed name verbatim as the response
+    // text; the backend persists it as the session-scoped preferred name.
+    const submittedText =
+      action === "set_name" && nameOverride?.trim()
+        ? nameOverride.trim()
+        : naturalText || guidedText;
     if (!submittedText) {
       toast.error(t("course_interview.onboarding.response_required"));
       return;
@@ -1570,7 +1576,9 @@ export default function CourseInterviewPage() {
                 setInterviewLanguage(language);
                 void i18n.changeLanguage(language);
               }}
-              onAction={(action, language) => void handleOnboarding(action, language)}
+              onAction={(action, payload) =>
+                void handleOnboarding(action, payload?.language, payload?.name)
+              }
             />
           ) : undefined
         }

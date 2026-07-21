@@ -51,6 +51,32 @@ describe("SetupChecklist", () => {
     expect(onAction).toHaveBeenCalledWith("confirm_identity");
   });
 
+  it("lets the candidate correct their name and submits set_name", () => {
+    const onAction = vi.fn();
+    render(
+      <SetupChecklist {...baseProps} stage="identity_check" onAction={onAction} />,
+    );
+    // Reject the profile name → switches to the name-entry field.
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: tr("course_interview.onboarding.wrong_name"),
+      }),
+    );
+    expect(onAction).toHaveBeenCalledWith("reject_identity");
+
+    const input = screen.getByLabelText(
+      tr("course_interview.onboarding.ask_name"),
+    );
+    fireEvent.change(input, { target: { value: "  Robin  " } });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: tr("course_interview.onboarding.save_name"),
+      }),
+    );
+    // Name is trimmed and dispatched as set_name with the payload shape.
+    expect(onAction).toHaveBeenCalledWith("set_name", { name: "Robin" });
+  });
+
   it("fires the ready action from the readiness step", () => {
     const onAction = vi.fn();
     render(

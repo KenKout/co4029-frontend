@@ -1623,6 +1623,9 @@
       "need_moment": "I need a moment",
       "continue": "Continue",
       "wrong_name": "That isn't my name",
+      "ask_name": "What should I call you?",
+      "name_placeholder": "Enter your name",
+      "save_name": "Save name",
       "ready": "Start interview",
       "not_ready": "Not ready yet",
       "reply_placeholder": "Reply to the interviewer or use a quick response…",
@@ -1632,6 +1635,7 @@
       "starting_assessment": "Starting the assessed interview…",
       "action_messages": {
         "confirm_identity": "Yes, that's me.",
+        "reject_identity": "That isn't my name.",
         "audio_clear": "The audio is clear.",
         "confirm_language": "I'd like to continue in English.",
         "continue_setup": "I'm ready to continue.",
