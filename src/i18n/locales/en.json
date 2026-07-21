@@ -222,6 +222,12 @@
     "mark_complete": {
       "mark_done": "Mark as complete",
       "completed": "Completed"
+    },
+    "interview_in_progress": {
+      "badge": "In progress",
+      "title": "Interview session in progress",
+      "body": "You have an interview that is still ongoing. Finish it before starting a new one.",
+      "continue": "Continue latest session"
     }
   },
   "placeholder": {

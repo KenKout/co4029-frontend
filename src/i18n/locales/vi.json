@@ -223,6 +223,12 @@
     "mark_complete": {
       "mark_done": "Đánh dấu hoàn thành",
       "completed": "Đã hoàn thành"
+    },
+    "interview_in_progress": {
+      "badge": "Đang diễn ra",
+      "title": "Phiên phỏng vấn đang diễn ra",
+      "body": "Bạn có một buổi phỏng vấn vẫn đang diễn ra. Hãy hoàn thành trước khi bắt đầu buổi mới.",
+      "continue": "Tiếp tục phiên gần nhất"
     }
   },
   "placeholder": {
