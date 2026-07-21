@@ -42,6 +42,7 @@ import type {
   QuizQuestionPublic,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { clearSeenAt, loadSeenAt, saveSeenAt } from "@/lib/quiz-timing";
 
 type QuestionState = "completed" | "active" | "flagged" | "pending";
 
@@ -566,7 +567,10 @@ export default function CourseQuizPage() {
       setTimeLeft(Math.max(0, timeLimit - elapsedSeconds));
     }
     autoSubmitStartedRef.current = false;
-    questionSeenAtRef.current = {};
+    // Restore per-question first-seen timestamps so the elapsed badge (and
+    // the t_actual_ms we report) keep counting from the ORIGINAL first view,
+    // not from this refresh/resume. Falls back to {} when nothing persisted.
+    questionSeenAtRef.current = loadSeenAt(progress.attempt_id);
     setPerQuestionCooldown({});
   }, [attemptProgress.data, taking]);
 
@@ -588,13 +592,18 @@ export default function CourseQuizPage() {
     }
     if (!questionSeenAtRef.current[activeQuestionId]) {
       questionSeenAtRef.current[activeQuestionId] = Date.now();
+      // Persist the first-seen anchor so a refresh/resume keeps counting
+      // from here instead of restarting the elapsed badge at zero.
+      if (activeAttemptId) {
+        saveSeenAt(activeAttemptId, questionSeenAtRef.current);
+      }
     }
     const interval = window.setInterval(() => {
       setActiveQuestionElapsed(Math.floor((Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000));
     }, 1000);
     setActiveQuestionElapsed(Math.floor((Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000));
     return () => window.clearInterval(interval);
-  }, [activeIdx, displayQuestions]);
+  }, [activeIdx, displayQuestions, activeAttemptId]);
 
   useEffect(() => {
     if (!quiz?.time_limit_seconds || !sessionReady || submittedSummary) return;
@@ -622,6 +631,8 @@ export default function CourseQuizPage() {
       setActiveIdx(0);
       setTimeLeft(result.take.quiz.time_limit_seconds ?? 0);
       autoSubmitStartedRef.current = false;
+      // Fresh attempt: drop any stale persisted timing for this id.
+      clearSeenAt(result.attempt_id);
       questionSeenAtRef.current = {};
       setPerQuestionCooldown({});
     } catch (err) {
@@ -710,6 +721,8 @@ export default function CourseQuizPage() {
 
     try {
       const result = await submitAttempt.mutateAsync();
+      // Attempt is finalized — drop the persisted per-question timing mirror.
+      if (activeAttemptId) clearSeenAt(activeAttemptId);
       setSubmittedSummary(result);
       if (trigger === "timeout") {
         toast.error(t("course_quiz.errors.auto_submitted_timeout"));
