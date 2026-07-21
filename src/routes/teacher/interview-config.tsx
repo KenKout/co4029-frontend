@@ -164,7 +164,7 @@ export default function InterviewConfigPage() {
   const archiveConfig = useArchiveInterviewConfig(configId);
   const unarchiveConfig = useUnarchiveInterviewConfig(configId);
   const unpublishConfig = useUnpublishInterviewConfig(configId);
-  const deleteConfig = useDeleteInterviewConfig(configId);
+  const deleteConfig = useDeleteInterviewConfig(configId, courseId);
 
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
   // Briefly true right after a successful settings save so the header can show
