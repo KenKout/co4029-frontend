@@ -328,12 +328,40 @@ function QuizIntroPanel({
         )}
       </GlassCard>
 
-      {reviewableAttempts.length > 0 && (
+      {(reviewableAttempts.length > 0 || inProgressAttempt) && (
         <GlassCard className="p-6 sm:p-8">
           <h2 className="font-headline font-bold text-base text-m3-on-surface mb-4">
             {t("course_quiz.history.title")}
           </h2>
           <div className="space-y-2">
+            {inProgressAttempt && (
+              <button
+                type="button"
+                onClick={onResume}
+                disabled={resuming || starting}
+                className="w-full flex items-center gap-4 p-3 rounded-xl bg-m3-primary-fixed/20 hover:bg-m3-primary-fixed/40 transition-colors group text-left disabled:opacity-60"
+              >
+                <span className="text-xs font-headline font-black text-m3-primary tabular-nums shrink-0 w-8">
+                  #{inProgressAttempt.attempt_number}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-m3-primary/10 text-m3-primary">
+                      {t("course_quiz.status.currently_doing")}
+                    </span>
+                  </div>
+                  <p className="text-xs text-m3-on-surface-variant mt-0.5">
+                    {new Date(inProgressAttempt.started_at).toLocaleString()}
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-m3-primary group-hover:underline shrink-0 flex items-center gap-1">
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  {resuming
+                    ? t("course_quiz.resume.resuming")
+                    : t("course_quiz.resume.resume")}
+                </span>
+              </button>
+            )}
             {reviewableAttempts.map((a) => {
               const score =
                 a.score_percent != null ? Number(a.score_percent) : null;
