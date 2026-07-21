@@ -2171,6 +2171,32 @@
       "published": "Published",
       "archived": "Archived"
     },
+    "readiness": {
+      "title": "Adaptive readiness",
+      "subtitle": "Advisory checks on whether the adaptive interviewer has enough structured material to adapt well. These never block publishing.",
+      "loading": "Checking readiness…",
+      "error": "Could not load the readiness report.",
+      "all_clear": "Everything looks ready for adaptive interviewing.",
+      "rollout_title": "Adaptive rollout status",
+      "rollout_on": "On",
+      "rollout_off": "Off",
+      "modes": {
+        "text": "Text",
+        "hybrid": "Hybrid",
+        "voice": "Voice"
+      },
+      "warnings": {
+        "generic": "{{count}} item needs attention for adaptive readiness.",
+        "questions_without_outcome": "{{count}} approved question is not linked to an outcome, so its evidence can't be scored.",
+        "questions_without_outcome_other": "{{count}} approved questions are not linked to an outcome, so their evidence can't be scored.",
+        "outcomes_without_question": "{{count}} outcome has no approved question, so it can never be covered.",
+        "outcomes_without_question_other": "{{count}} outcomes have no approved question, so they can never be covered.",
+        "questions_missing_difficulty": "{{count}} approved question is missing a difficulty label, so difficulty adaptation can't place it.",
+        "questions_missing_difficulty_other": "{{count}} approved questions are missing a difficulty label, so difficulty adaptation can't place them.",
+        "low_difficulty_diversity": "All approved questions share one difficulty level, so there is no easy-to-hard ramp to adapt along.",
+        "insufficient_question_coverage": "The approved question pool looks thin for the configured duration; add more so the interview doesn't run out early."
+      }
+    },
     "errors": {
       "not_found_title": "Interview set not found",
       "not_found_body": "Interview question set could not be loaded for this course.",
@@ -2235,6 +2261,8 @@
       "generate_short": "Generate",
       "questions": "Question Bank",
       "questions_short": "Questions",
+      "adaptive_readiness": "Adaptive Readiness",
+      "adaptive_readiness_short": "Readiness",
       "status": {
         "completed": "Completed",
         "settings_incomplete": "Add a title",

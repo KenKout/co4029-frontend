@@ -2162,6 +2162,32 @@
       "published": "Đã xuất bản",
       "archived": "Đã lưu trữ"
     },
+    "readiness": {
+      "title": "Mức sẵn sàng thích ứng",
+      "subtitle": "Các kiểm tra mang tính tư vấn về việc người phỏng vấn thích ứng đã có đủ tài liệu có cấu trúc để thích ứng tốt hay chưa. Chúng không bao giờ chặn việc xuất bản.",
+      "loading": "Đang kiểm tra mức sẵn sàng…",
+      "error": "Không tải được báo cáo mức sẵn sàng.",
+      "all_clear": "Mọi thứ đã sẵn sàng cho phỏng vấn thích ứng.",
+      "rollout_title": "Trạng thái triển khai thích ứng",
+      "rollout_on": "Bật",
+      "rollout_off": "Tắt",
+      "modes": {
+        "text": "Văn bản",
+        "hybrid": "Kết hợp",
+        "voice": "Giọng nói"
+      },
+      "warnings": {
+        "generic": "{{count}} mục cần chú ý cho mức sẵn sàng thích ứng.",
+        "questions_without_outcome": "{{count}} câu hỏi đã duyệt chưa được liên kết với chuẩn đầu ra, nên bằng chứng của nó không thể được chấm.",
+        "questions_without_outcome_other": "{{count}} câu hỏi đã duyệt chưa được liên kết với chuẩn đầu ra, nên bằng chứng của chúng không thể được chấm.",
+        "outcomes_without_question": "{{count}} chuẩn đầu ra không có câu hỏi đã duyệt, nên không bao giờ có thể được bao phủ.",
+        "outcomes_without_question_other": "{{count}} chuẩn đầu ra không có câu hỏi đã duyệt, nên không bao giờ có thể được bao phủ.",
+        "questions_missing_difficulty": "{{count}} câu hỏi đã duyệt thiếu nhãn độ khó, nên việc điều chỉnh độ khó không thể sắp xếp nó.",
+        "questions_missing_difficulty_other": "{{count}} câu hỏi đã duyệt thiếu nhãn độ khó, nên việc điều chỉnh độ khó không thể sắp xếp chúng.",
+        "low_difficulty_diversity": "Tất cả câu hỏi đã duyệt cùng một mức độ khó, nên không có lộ trình dễ đến khó để thích ứng.",
+        "insufficient_question_coverage": "Nhóm câu hỏi đã duyệt có vẻ mỏng so với thời lượng đã cấu hình; hãy thêm câu hỏi để buổi phỏng vấn không kết thúc sớm."
+      }
+    },
     "errors": {
       "not_found_title": "Không tìm thấy bộ phỏng vấn",
       "not_found_body": "Bộ câu hỏi phỏng vấn không tải được cho khoá học này.",
@@ -2226,6 +2252,8 @@
       "generate_short": "Tạo",
       "questions": "Ngân hàng câu hỏi",
       "questions_short": "Câu hỏi",
+      "adaptive_readiness": "Mức sẵn sàng thích ứng",
+      "adaptive_readiness_short": "Sẵn sàng",
       "status": {
         "completed": "Hoàn tất",
         "settings_incomplete": "Thêm tiêu đề",
