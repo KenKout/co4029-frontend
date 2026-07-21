@@ -36,6 +36,7 @@ import {
   VolumeX,
   Wifi,
   WifiOff,
+  X,
 } from "lucide-react";
 
 import { AiTypingMessage } from "@/components/interview/ai-typing-message";
@@ -965,6 +966,84 @@ export function QuestionCard({
   );
 }
 
+/**
+ * Scrollable transcript body shared by the mobile Sheet drawer and the desktop
+ * docked panel. Owns the "don't auto-scroll when the user has scrolled away
+ * from the bottom" behaviour (spec §5) so both surfaces get it for free.
+ */
+function TranscriptConversation({
+  transcript,
+  questionTypeLabel,
+  speak,
+  onSpeakingChange,
+  onReplay,
+  replayDisabled,
+  replayingTurnId,
+  className,
+}: {
+  transcript: ConversationTurn[];
+  questionTypeLabel: (type: string | null | undefined) => string | null;
+  speak: (text: string) => void | Promise<void> | NarrationPresentation;
+  onSpeakingChange: (speaking: boolean) => void;
+  onReplay: (turn: ConversationTurn) => void;
+  replayDisabled: boolean;
+  replayingTurnId: string | null;
+  className?: string;
+}) {
+  const { t } = useTranslation();
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const endRef = useRef<HTMLDivElement | null>(null);
+  // Only auto-scroll to newest when the user is already pinned to the bottom.
+  const pinnedToBottomRef = useRef(true);
+
+  const handleScroll = useCallback(() => {
+    const element = scrollRef.current;
+    if (!element) return;
+    const distanceFromBottom =
+      element.scrollHeight - element.scrollTop - element.clientHeight;
+    pinnedToBottomRef.current = distanceFromBottom < 48;
+  }, []);
+
+  useEffect(() => {
+    if (pinnedToBottomRef.current) {
+      // jsdom (test env) doesn't implement scrollIntoView; guard so the
+      // auto-scroll effect stays a no-op there instead of throwing.
+      endRef.current?.scrollIntoView?.({ block: "nearest" });
+    }
+  }, [transcript]);
+
+  return (
+    <div
+      ref={scrollRef}
+      onScroll={handleScroll}
+      className={cn("min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-6 sm:px-5", className)}
+    >
+      {transcript.length === 0 ? (
+        <p className="py-12 text-center text-sm text-text-muted">
+          {t("course_interview.workspace.transcript_empty")}
+        </p>
+      ) : (
+        transcript.map((turn) => (
+          <ConversationMessage
+            key={turn.id}
+            turn={turn}
+            label={questionTypeLabel(turn.questionType)}
+            isLatest={false}
+            speak={speak}
+            onTick={() => undefined}
+            onSpeakingChange={onSpeakingChange}
+            replayVisible={turn.role === "ai"}
+            replayDisabled={replayDisabled || replayingTurnId !== null}
+            isReplaying={replayingTurnId === turn.id}
+            onReplay={() => onReplay(turn)}
+          />
+        ))
+      )}
+      <div ref={endRef} />
+    </div>
+  );
+}
+
 export function TranscriptDrawer({
   open,
   onOpenChange,
@@ -1021,31 +1100,88 @@ export function TranscriptDrawer({
             })}
           </p>
         </header>
-        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-6 sm:px-5">
-          {transcript.length === 0 ? (
-            <p className="py-12 text-center text-sm text-text-muted">
-              {t("course_interview.workspace.transcript_empty")}
-            </p>
-          ) : (
-            transcript.map((turn) => (
-              <ConversationMessage
-                key={turn.id}
-                turn={turn}
-                label={questionTypeLabel(turn.questionType)}
-                isLatest={false}
-                speak={speak}
-                onTick={() => undefined}
-                onSpeakingChange={onSpeakingChange}
-                replayVisible={turn.role === "ai"}
-                replayDisabled={replayDisabled || replayingTurnId !== null}
-                isReplaying={replayingTurnId === turn.id}
-                onReplay={() => onReplay(turn)}
-              />
-            ))
-          )}
-        </div>
+        <TranscriptConversation
+          transcript={transcript}
+          questionTypeLabel={questionTypeLabel}
+          speak={speak}
+          onSpeakingChange={onSpeakingChange}
+          onReplay={onReplay}
+          replayDisabled={replayDisabled}
+          replayingTurnId={replayingTurnId}
+        />
       </SheetContent>
     </Sheet>
+  );
+}
+
+/**
+ * Desktop-only docked transcript panel (spec §10). Instead of overlaying and
+ * cutting off the right edge of the Question Card, this renders in-flow so the
+ * main workspace reflows into the remaining width. Rendered beside the main
+ * column by the page layout; hidden on mobile where the Sheet drawer is used.
+ */
+export function TranscriptPanel({
+  open,
+  onClose,
+  transcript,
+  questionTypeLabel,
+  speak,
+  onSpeakingChange,
+  onReplay,
+  replayDisabled,
+  replayingTurnId,
+}: {
+  open: boolean;
+  onClose: () => void;
+  transcript: ConversationTurn[];
+  questionTypeLabel: (type: string | null | undefined) => string | null;
+  speak: (text: string) => void | Promise<void> | NarrationPresentation;
+  onSpeakingChange: (speaking: boolean) => void;
+  onReplay: (turn: ConversationTurn) => void;
+  replayDisabled: boolean;
+  replayingTurnId: string | null;
+}) {
+  const { t } = useTranslation();
+  if (!open) return null;
+
+  return (
+    <aside
+      className="hidden w-[380px] shrink-0 flex-col border-l border-border bg-white lg:flex xl:w-[420px]"
+      aria-label={t("course_interview.workspace.transcript")}
+    >
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold text-text-strong">
+            {t("course_interview.workspace.transcript")}
+          </h2>
+          <p className="mt-0.5 text-xs text-text-muted">
+            {t("course_interview.workspace.transcript_count", {
+              count: transcript.length,
+            })}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="size-9 shrink-0 rounded-lg text-text-muted"
+          aria-label={t("course_interview.workspace.hide_transcript")}
+          title={t("course_interview.workspace.hide_transcript")}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </header>
+      <TranscriptConversation
+        transcript={transcript}
+        questionTypeLabel={questionTypeLabel}
+        speak={speak}
+        onSpeakingChange={onSpeakingChange}
+        onReplay={onReplay}
+        replayDisabled={replayDisabled}
+        replayingTurnId={replayingTurnId}
+      />
+    </aside>
   );
 }
 
@@ -1218,6 +1354,8 @@ export function FocusedInterviewStage({
   activeTurnActions,
   activeTurnActionsVisible = false,
   replayAvailable = true,
+  submissionSlot,
+  transcriptDocked = false,
 }: {
   transcript: ConversationTurn[];
   status: InterviewAgentStatus;
@@ -1240,6 +1378,11 @@ export function FocusedInterviewStage({
   activeTurnActions?: ReactNode;
   activeTurnActionsVisible?: boolean;
   replayAvailable?: boolean;
+  /** Secondary confirmation for the most recently submitted answer (spec §8). */
+  submissionSlot?: ReactNode;
+  /** When the desktop docked transcript panel is open, hide the in-composer
+   * transcript trigger so it isn't duplicated. */
+  transcriptDocked?: boolean;
 }) {
   const { t } = useTranslation();
   const [presentedAiTurnIds, setPresentedAiTurnIds] = useState<ReadonlySet<string>>(
@@ -1430,6 +1573,8 @@ export function FocusedInterviewStage({
           </section>
         )}
 
+        {submissionSlot}
+
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-white px-4 py-3">
           <VoiceStatusIndicator
             status={status}
@@ -1437,8 +1582,13 @@ export function FocusedInterviewStage({
             onRetry={onRetry}
             className="min-w-0 flex-1"
           />
+          {/* The trigger stays visible at every breakpoint and simply flips
+              `transcriptOpen`. Which surface shows is decided by breakpoint: on
+              desktop (`transcriptDocked`) the route renders an in-flow docked
+              panel and the overlay Sheet is suppressed, so the two can never
+              show at once. */}
           <TranscriptDrawer
-            open={transcriptOpen}
+            open={transcriptOpen && !transcriptDocked}
             onOpenChange={onTranscriptOpenChange}
             transcript={transcript}
             questionTypeLabel={questionTypeLabel}

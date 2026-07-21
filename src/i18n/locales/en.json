@@ -1501,7 +1501,8 @@
       "term_input_placeholder": "Enter a term from the question…",
       "term_request": "Could you explain the term “{{term}}”?",
       "view_transcript": "View interview transcript",
-      "transcript_count": "{{count}} messages in chronological order",
+      "transcript_count_one": "{{count}} message",
+      "transcript_count_other": "{{count}} messages",
       "transcript_empty": "The interview transcript is not available yet.",
       "retry": "Retry",
       "answer_mode": "Answer input mode",
@@ -1540,6 +1541,18 @@
         "disconnected": "Connection interrupted",
         "ready": "Ready to send"
       }
+    },
+    "submission": {
+      "submitted_title": "Answer submitted",
+      "previous_submitted": "Previous answer submitted",
+      "analyzing": "Analyzing your answer…",
+      "expand": "Show more",
+      "collapse": "Show less",
+      "view_full_answer": "View full answer",
+      "failed_title": "Couldn't submit your answer",
+      "failed_preserved": "Your response has been preserved.",
+      "try_again": "Try again",
+      "continue_editing": "Continue editing"
     },
     "end_dialog": {
       "title": "End this interview?",
