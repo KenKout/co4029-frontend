@@ -356,8 +356,16 @@ export function useUnpublishInterviewConfig(configId: string | null | undefined)
 
 /**
  * DELETE /teacher/interview-configs/{config_id} — soft-delete.
+ *
+ * Pass `courseId` so the course content lists (both the public and teacher
+ * projections) are invalidated on success — otherwise the deleted interview
+ * lingers as a stale module item on the course page and clicking it 404s
+ * ("Interview set not found").
  */
-export function useDeleteInterviewConfig(configId: string | null | undefined) {
+export function useDeleteInterviewConfig(
+  configId: string | null | undefined,
+  courseId?: string | null,
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () =>
@@ -366,6 +374,14 @@ export function useDeleteInterviewConfig(configId: string | null | undefined) {
       if (configId) {
         qc.removeQueries({
           queryKey: queryKeys.interviews.configAuthoring(configId),
+        });
+      }
+      if (courseId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.courses.content(courseId),
+        });
+        void qc.invalidateQueries({
+          queryKey: ["teacher", "courses", courseId, "content"],
         });
       }
     },
