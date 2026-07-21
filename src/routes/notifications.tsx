@@ -20,7 +20,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { Notification } from "@/lib/api/types";
-import { Check, CheckCheck, Eye, EyeOff, Mail, Trash2 } from "lucide-react";
+import { ArrowRight, Check, CheckCheck, Eye, EyeOff, Mail, Trash2 } from "lucide-react";
 
 const SNIPPET_LIMIT = 200;
 
@@ -95,9 +95,18 @@ function NotificationRow({
   });
   const deepLink = notificationDeepLink(notification);
 
+  // Click-through auto-marks the notification read (agreed behaviour): if the
+  // student is acting on it, it's no longer unread. Mark first (fire-and-
+  // forget; the mutation is idempotent), then navigate. Applies to the row
+  // click, the "Take action" button, and inline body links.
+  function navigateAndMarkRead(path: string) {
+    if (!isRead) onMarkRead(notification.id);
+    onNavigate(path);
+  }
+
   function handleClick() {
     if (deepLink) {
-      onNavigate(deepLink);
+      navigateAndMarkRead(deepLink);
     } else {
       onToggle();
     }
@@ -135,7 +144,7 @@ function NotificationRow({
             <NotificationBody
               body={notification.body}
               expanded={expanded}
-              onLinkNavigate={onNavigate}
+              onLinkNavigate={navigateAndMarkRead}
             />
           )}
           <p className="text-xs text-m3-outline">
@@ -149,6 +158,22 @@ function NotificationRow({
       </button>
 
       <div className="flex flex-col items-end gap-1 shrink-0">
+        {deepLink && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={busy}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigateAndMarkRead(deepLink);
+            }}
+            className="gap-1.5 whitespace-nowrap"
+          >
+            {t("notifications.take_action")}
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        )}
         {!isRead && (
           <Button
             type="button"

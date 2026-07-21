@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -50,6 +50,7 @@ import type {
 import { cn } from "@/lib/utils";
 import { QuizGenerationPanel } from "./_components/quiz-generation-panel";
 import { QuestionBankModal } from "./_components/question-bank-modal";
+import { MasterySelector } from "./_components/MasterySelector";
 
 type TabKey = "questions" | "settings" | "preview";
 
@@ -174,6 +175,27 @@ export default function QuizManagePage() {
       return next.size === current.size ? current : next;
     });
   }, [questions]);
+
+  // "Icons-only when stuck" needs to know when the sticky action strip is
+  // actually pinned. CSS can't express that, so we watch a zero-height
+  // sentinel placed just above the strip: when it scrolls out of view under
+  // the global top bar, the strip is stuck and we condense it to icons.
+  // NOTE: these hooks MUST stay above the early returns below (loading /
+  // not-found guards) — hooks after a conditional return violate the rules
+  // of hooks and throw React error #310 once the data loads.
+  const stickySentinelRef = useRef<HTMLDivElement | null>(null);
+  const [actionsStuck, setActionsStuck] = useState(false);
+  useEffect(() => {
+    const sentinel = stickySentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setActionsStuck(!entry.isIntersecting),
+      // rootMargin top offset = global ContentTopBar height (64px / top-16)
+      { rootMargin: "-64px 0px 0px 0px", threshold: 0 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   if (authoringLoading || contentLoading) {
     return (
@@ -415,81 +437,110 @@ export default function QuizManagePage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
-          {course?.slug && (
-            <Link
-              to="/courses/$slug/quiz/$quizId"
-              params={{ slug: course.slug, quizId }}
-            >
-              <Button variant="outline" className="gap-2" type="button">
-                <Eye className="h-4 w-4" />
-                {t("teacher_quiz_manage.actions.view_as_student")}
-              </Button>
-            </Link>
-          )}
-          <Button
-            type="button"
-            disabled={publishDisabled}
-            onClick={handlePublish}
-            className={cn(
-              "gap-2 border-0 shadow-glass",
-              isPublished
-                ? "bg-emerald-600 text-white hover:bg-emerald-600 cursor-default"
-                : "gradient-primary text-white hover:shadow-ai-glow",
-            )}
-            title={
-              questions.length === 0
-                ? t("teacher_quiz_manage.actions.publish_needs_question")
-                : isPublished
-                  ? t("teacher_quiz_manage.status.published")
-                  : t("teacher_quiz_manage.actions.publish_quiz_tooltip")
-            }
-          >
-            {publishQuiz.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : isPublished ? (
-              <CheckCircle2 className="h-4 w-4" />
-            ) : (
-              <Upload className="h-4 w-4" />
-            )}
-            {isPublished
-              ? t("teacher_quiz_manage.status.published")
-              : t("teacher_quiz_manage.actions.publish")}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700"
-            onClick={() => setConfirmDelete(true)}
-            disabled={deleteQuiz.isPending}
-            title={t("teacher_quiz_manage.actions.delete_quiz_tooltip")}
-          >
-            <Trash2 className="h-4 w-4" />
-            {t("common.delete")}
-          </Button>
-        </div>
       </div>
 
-      <div className="bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 border border-m3-outline-variant/20 shadow-glass">
-        {TAB_KEYS.map((key) => {
-          const active = key === tab;
-          return (
-            <button
-              key={key}
+      {/* Zero-height sentinel: when it scrolls up under the global top bar,
+          the sticky strip below is pinned and we condense actions to icons. */}
+      <div ref={stickySentinelRef} aria-hidden className="h-px w-full" />
+
+      {/* Sticky strip: tab bar + page actions (View-as-student / Publish /
+          Delete). Pinned at top-16 (just under the global ContentTopBar) so
+          the teacher can publish/preview/delete from anywhere in a long quiz
+          without scrolling back up. z-20 keeps it below ContentTopBar and the
+          sidebar per frontend/AGENTS.md. Once stuck, it gains a solid blurred
+          background + shadow and the action buttons drop their text labels
+          (icons only) to stay compact. */}
+      <div className="sticky top-16 z-20 -mx-1 px-1">
+        <div
+          className={cn(
+            "flex items-center justify-between gap-3 rounded-xl border transition-all",
+            actionsStuck
+              ? "border-m3-outline-variant/30 bg-surface-elev/90 backdrop-blur-md shadow-glass px-2 py-1.5"
+              : "border-transparent px-0 py-0",
+          )}
+        >
+          <div className="bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 border border-m3-outline-variant/20 shadow-glass">
+            {TAB_KEYS.map((key) => {
+              const active = key === tab;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setTab(key)}
+                  aria-pressed={active}
+                  className={cn(
+                    "px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer",
+                    active
+                      ? "bg-surface-elev text-m3-primary shadow-sm"
+                      : "text-m3-on-surface-variant hover:text-m3-primary/80",
+                  )}
+                >
+                  {t(`teacher_quiz_manage.tabs.${key}`)}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {course?.slug && (
+              <Link
+                to="/courses/$slug/quiz/$quizId"
+                params={{ slug: course.slug, quizId }}
+              >
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  type="button"
+                  title={t("teacher_quiz_manage.actions.view_as_student")}
+                >
+                  <Eye className="h-4 w-4" />
+                  {!actionsStuck && t("teacher_quiz_manage.actions.view_as_student")}
+                </Button>
+              </Link>
+            )}
+            <Button
               type="button"
-              onClick={() => setTab(key)}
-              aria-pressed={active}
+              disabled={publishDisabled}
+              onClick={handlePublish}
               className={cn(
-                "px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer",
-                active
-                  ? "bg-surface-elev text-m3-primary shadow-sm"
-                  : "text-m3-on-surface-variant hover:text-m3-primary/80",
+                "gap-2 border-0 shadow-glass",
+                isPublished
+                  ? "bg-emerald-600 text-white hover:bg-emerald-600 cursor-default"
+                  : "gradient-primary text-white hover:shadow-ai-glow",
               )}
+              title={
+                questions.length === 0
+                  ? t("teacher_quiz_manage.actions.publish_needs_question")
+                  : isPublished
+                    ? t("teacher_quiz_manage.status.published")
+                    : t("teacher_quiz_manage.actions.publish_quiz_tooltip")
+              }
             >
-              {t(`teacher_quiz_manage.tabs.${key}`)}
-            </button>
-          );
-        })}
+              {publishQuiz.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isPublished ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              {!actionsStuck &&
+                (isPublished
+                  ? t("teacher_quiz_manage.status.published")
+                  : t("teacher_quiz_manage.actions.publish"))}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700"
+              onClick={() => setConfirmDelete(true)}
+              disabled={deleteQuiz.isPending}
+              title={t("teacher_quiz_manage.actions.delete_quiz_tooltip")}
+            >
+              <Trash2 className="h-4 w-4" />
+              {!actionsStuck && t("common.delete")}
+            </Button>
+          </div>
+        </div>
       </div>
 
       {tab === "questions" && (
@@ -513,12 +564,16 @@ export default function QuizManagePage() {
         />
       )}
 
-      {tab === "settings" && draft && (
+      {tab === "settings" && draft && quiz && (
         <SettingsTab
           draft={draft}
           setDraft={setDraft}
           onSubmit={handleSaveSettings}
           saving={patchQuiz.isPending}
+          dirty={
+            JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))
+          }
+          onReset={() => setDraft(draftFromQuiz(quiz))}
         />
       )}
 
@@ -794,7 +849,7 @@ function QuestionsTab({
       </div>
 
       <div className="col-span-12 lg:col-span-4">
-        <div className="lg:sticky lg:top-6 space-y-4">
+        <div className="lg:sticky lg:top-[8.5rem] space-y-4">
           <div className="rounded-xl border border-m3-secondary/10 bg-m3-surface-container-low p-5 shadow-glass space-y-3">
             <div className="flex items-center gap-2">
               <div className="h-9 w-9 rounded-xl gradient-primary flex items-center justify-center shadow-ai-glow">
@@ -856,8 +911,18 @@ function BulkSetExpectedTimeBar({
 }) {
   const { t } = useTranslation();
   if (totalQuestions === 0) return null;
+  const hasSelection = selectedCount > 0;
   return (
-    <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-4 flex flex-wrap items-center gap-3 shadow-glass">
+    // Inline bulk-action bar (not sticky): it emphasizes (primary tint) only
+    // when questions are selected; otherwise it stays a quiet neutral bar.
+    <div
+      className={cn(
+        "rounded-xl border p-4 flex flex-wrap items-center gap-3 shadow-glass transition-colors",
+        hasSelection
+          ? "border-m3-primary/30 bg-m3-primary-fixed/20"
+          : "border-m3-outline-variant/20 bg-m3-surface-container-lowest",
+      )}
+    >
       <div className="flex items-center gap-2 text-sm text-m3-on-surface">
         <Clock className="h-4 w-4 text-m3-secondary" />
         <span className="font-bold">
@@ -1569,11 +1634,15 @@ function SettingsTab({
   setDraft,
   onSubmit,
   saving,
+  dirty,
+  onReset,
 }: {
   draft: SettingsDraft;
   setDraft: React.Dispatch<React.SetStateAction<SettingsDraft | null>>;
   onSubmit: (e: React.FormEvent) => void;
   saving: boolean;
+  dirty: boolean;
+  onReset: () => void;
 }) {
   const { t } = useTranslation();
   function update<K extends keyof SettingsDraft>(
@@ -1738,59 +1807,65 @@ function SettingsTab({
         title={t("teacher_quiz_manage.settings.spacing.title")}
         description={t("teacher_quiz_manage.settings.spacing.description")}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Field label={t("teacher_quiz_manage.settings.spacing.starting_ef")}>
-            <Input
-              type="number"
-              min={1.3}
-              max={2.5}
-              step={0.1}
-              value={draft.initial_ef}
-              onChange={(e) => update("initial_ef", e.target.value)}
-              placeholder="2.50"
-              className="bg-m3-surface text-sm"
-            />
-          </Field>
-          <Field label={t("teacher_quiz_manage.settings.spacing.unlock_ef")}>
-            <Input
-              type="number"
-              min={1.3}
-              max={2.5}
-              step={0.1}
-              value={draft.min_ef_for_unlock}
-              onChange={(e) => update("min_ef_for_unlock", e.target.value)}
-              placeholder="2.30"
-              className="bg-m3-surface text-sm"
-            />
-          </Field>
-          <Field label="Coverage (%)">
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              value={draft.coverage_threshold}
-              onChange={(e) => update("coverage_threshold", e.target.value)}
-              placeholder="85"
-              className="bg-m3-surface text-sm"
-            />
-          </Field>
-        </div>
+        <MasterySelector
+          values={{
+            initial_ef: draft.initial_ef,
+            min_ef_for_unlock: draft.min_ef_for_unlock,
+            coverage_threshold: draft.coverage_threshold,
+          }}
+          onPatch={(patch) =>
+            setDraft((current) =>
+              current ? { ...current, ...patch } : current,
+            )
+          }
+        />
       </SettingsSection>
 
-      <div className="flex justify-end gap-2 pt-4 border-t border-m3-outline-variant/20">
-        <Button
-          type="submit"
-          disabled={saving}
-          className="gap-2 gradient-primary text-white border-0 hover:shadow-ai-glow"
-        >
-          {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
+      {/* Sticky action bar: pins to the bottom of the viewport so the teacher
+          can save from anywhere in a long form without scrolling back down.
+          It only becomes an active "unsaved changes" bar when the draft
+          differs from what's saved; otherwise Save is disabled and it stays
+          quiet. Negative margins cancel the form's padding so the bar spans
+          the full card width and reads as a footer. z-10 keeps it under the
+          global ContentTopBar (frontend/AGENTS.md). */}
+      <div className="sticky bottom-0 z-10 -mx-6 lg:-mx-8 -mb-6 lg:-mb-8 mt-8">
+        <div
+          className={cn(
+            "flex items-center justify-end gap-3 px-6 lg:px-8 py-4 border-t backdrop-blur-md transition-colors rounded-b-xl",
+            dirty
+              ? "border-m3-primary/30 bg-m3-primary-fixed/20"
+              : "border-m3-outline-variant/20 bg-m3-surface-container-lowest/80",
           )}
-          {t("teacher_quiz_manage.settings.save_button")}
-        </Button>
+        >
+          {dirty && (
+            <span className="mr-auto text-xs font-semibold text-m3-primary">
+              {t("teacher_quiz_manage.settings.unsaved_changes")}
+            </span>
+          )}
+          {dirty && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onReset}
+              disabled={saving}
+              className="gap-2"
+            >
+              {t("teacher_quiz_manage.settings.reset_button")}
+            </Button>
+          )}
+          <Button
+            type="submit"
+            disabled={saving || !dirty}
+            className="gap-2 gradient-primary text-white border-0 hover:shadow-ai-glow disabled:opacity-50"
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {t("teacher_quiz_manage.settings.save_button")}
+          </Button>
+        </div>
       </div>
     </form>
   );

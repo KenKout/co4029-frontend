@@ -47,7 +47,6 @@ import {
   FocusedInterviewStage,
   InterviewHeader,
   LeaveInterviewDialog,
-  OnboardingActions,
   StartInterviewDialog,
   TranscriptPanel,
   type ConversationTurn,
@@ -55,6 +54,14 @@ import {
   resolveInterviewState,
   useInterviewTimer,
 } from "@/components/interview/interview-workspace";
+import { SetupChecklist } from "@/components/interview/setup-checklist";
+import {
+  InterviewProgressSteps,
+  type InterviewStep,
+} from "@/components/interview/interview-progress-steps";
+import { ConnectionLostBanner } from "@/components/interview/error-banner";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { getAuthDisplayName } from "@/lib/auth";
 import { SubmittedAnswerConfirmation } from "@/components/interview/submitted-answer-confirmation";
 import { useAnswerState } from "@/lib/interview/use-answer-state";
 import { normalizeQuestionText } from "@/lib/interview/question-content";
@@ -260,6 +267,18 @@ export default function CourseInterviewPage() {
   );
   const [pendingFirstQuestion, setPendingFirstQuestion] =
     useState<InterviewQuestionPublic | null>(null);
+  // Candidate display name for the setup checklist's identity row. Uses the
+  // existing auth context (same source the dashboard/profile use); no new fetch.
+  const { user } = useAuth();
+  const candidateName = getAuthDisplayName(user);
+  // Coarse Setup → Interview → Completed step for the header indicator (spec §4),
+  // projected from the finer-grained InterviewPhase.
+  const interviewStep: InterviewStep =
+    phase === "closing" || phase === "results"
+      ? "completed"
+      : phase === "questioning"
+        ? "interview"
+        : "setup";
   const [pendingFinishResult, setPendingFinishResult] =
     useState<InterviewSessionFinishResponse | null>(null);
   const sessionStartedAtRef = useRef<number | null>(null);
@@ -628,6 +647,7 @@ export default function CourseInterviewPage() {
   async function handleOnboarding(
     action?: InterviewOnboardingAction,
     languageOverride?: InterviewLanguage,
+    nameOverride?: string,
   ) {
     if (!sessionId || onboardingStage === "completed") return;
     const pendingInterim = dictation.listening ? dictation.stop() : "";
@@ -640,7 +660,12 @@ export default function CourseInterviewPage() {
           lng: languageOverride ?? interviewLanguage,
         })
       : "";
-    const submittedText = naturalText || guidedText;
+    // set_name carries the candidate's typed name verbatim as the response
+    // text; the backend persists it as the session-scoped preferred name.
+    const submittedText =
+      action === "set_name" && nameOverride?.trim()
+        ? nameOverride.trim()
+        : naturalText || guidedText;
     if (!submittedText) {
       toast.error(t("course_interview.onboarding.response_required"));
       return;
@@ -1449,6 +1474,21 @@ export default function CourseInterviewPage() {
         onEndInterview={() => setEndDialogOpen(true)}
       />
 
+      {/* Coarse step indicator: Setup → Interview → Completed (spec §4). */}
+      <div className="shrink-0 border-b border-border bg-white/95">
+        <div className="mx-auto flex max-w-[1120px] items-center justify-center px-3 py-2 sm:px-6">
+          <InterviewProgressSteps current={interviewStep} />
+        </div>
+      </div>
+
+      {!connected && (
+        <div className="mx-auto w-full max-w-[840px] px-4 pt-3">
+          <ConnectionLostBanner
+            onRetry={() => setConnected(navigator.onLine)}
+          />
+        </div>
+      )}
+
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="flex min-w-0 flex-1 flex-col">
       <FocusedInterviewStage
@@ -1525,15 +1565,20 @@ export default function CourseInterviewPage() {
         activeTurnActions={
           (phase === "opening" || phase === "readiness") &&
           onboardingStage !== "completed" ? (
-            <OnboardingActions
+            <SetupChecklist
               stage={onboardingStage}
+              candidateName={candidateName}
               language={interviewLanguage}
+              micConnected={dictation.supported}
               disabled={onboarding.isPending || aiSpeaking}
+              pending={onboarding.isPending}
               onLanguageChange={(language) => {
                 setInterviewLanguage(language);
                 void i18n.changeLanguage(language);
               }}
-              onAction={(action, language) => void handleOnboarding(action, language)}
+              onAction={(action, payload) =>
+                void handleOnboarding(action, payload?.language, payload?.name)
+              }
             />
           ) : undefined
         }

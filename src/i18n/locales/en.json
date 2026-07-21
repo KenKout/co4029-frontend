@@ -222,6 +222,15 @@
     "mark_complete": {
       "mark_done": "Mark as complete",
       "completed": "Completed"
+    },
+    "home": {
+      "eyebrow": "Course home",
+      "progress_label": "{{completed}} of {{total}} lessons completed",
+      "continue": "Continue learning",
+      "start": "Start course",
+      "review": "Review course",
+      "next_up": "Next up",
+      "curriculum": "Curriculum"
     }
   },
   "placeholder": {
@@ -496,6 +505,7 @@
     "mark_all_read": "Mark all read",
     "mark_read": "Mark read",
     "delete": "Delete notification",
+    "take_action": "Take action",
     "open_link": "Open this resource",
     "empty_title": "No notifications yet",
     "empty_body": "When course updates, quizzes, or interview results arrive, you'll see them here.",
@@ -752,6 +762,7 @@
     "empty_courses_body": "Contact your instructor or training office to be enrolled in a course that matches your path.",
     "discover_courses": "Discover courses",
     "open_course": "Open course",
+    "open_course_named": "Open course: {{title}}",
     "enrolled_badge": "Enrolled",
     "ready_title": "Ready for the next challenge?",
     "ready_body": "Finish your enrolled courses, take AI-generated quizzes, and practice realistic interview scenarios — everything is tracked and personalized to your learning path.",
@@ -1350,6 +1361,11 @@
     }
   },
   "course_quiz": {
+    "resume": {
+      "pending_notice": "You have an unfinished attempt (#{{number}}). Resume it to continue where you left off.",
+      "resume": "Resume attempt",
+      "resuming": "Resuming..."
+    },
     "history": {
       "title": "Previous attempts",
       "review": "Review",
@@ -1594,6 +1610,9 @@
       "need_moment": "I need a moment",
       "continue": "Continue",
       "wrong_name": "That isn't my name",
+      "ask_name": "What should I call you?",
+      "name_placeholder": "Enter your name",
+      "save_name": "Save name",
       "ready": "Start interview",
       "not_ready": "Not ready yet",
       "reply_placeholder": "Reply to the interviewer or use a quick response…",
@@ -1603,6 +1622,7 @@
       "starting_assessment": "Starting the assessed interview…",
       "action_messages": {
         "confirm_identity": "Yes, that's me.",
+        "reject_identity": "That isn't my name.",
         "audio_clear": "The audio is clear.",
         "confirm_language": "I'd like to continue in English.",
         "continue_setup": "I'm ready to continue.",
@@ -2052,12 +2072,40 @@
         "reminders_desc": "Send a reminder when review is due."
       },
       "spacing": {
-        "title": "Spaced repetition",
-        "description": "Tune SM2 parameters. Range 1.3 - 2.5.",
+        "title": "Mastery & pacing",
+        "description": "Choose how much students should master before the next lesson unlocks.",
         "starting_ef": "Starting EF",
-        "unlock_ef": "EF unlock threshold"
+        "unlock_ef": "Unlock EF",
+        "coverage": "Coverage (%)",
+        "presets": {
+          "gentle": {
+            "name": "Gentle",
+            "desc": "Keep students moving. Light reinforcement before the next lesson opens."
+          },
+          "balanced": {
+            "name": "Balanced",
+            "desc": "Solid retention before advancing. A good default for most courses."
+          },
+          "rigorous": {
+            "name": "Rigorous",
+            "desc": "Strong mastery required. Students revisit material until it really sticks."
+          }
+        },
+        "preview": {
+          "gentle": "Students unlock the next lesson after a few quick reviews, once they've mastered about {{coverage}}% of the material.",
+          "balanced": "Students unlock the next lesson once they've reliably mastered about {{coverage}}% of the material.",
+          "rigorous": "Students keep reviewing until they've deeply mastered about {{coverage}}% of the material before the next lesson opens.",
+          "custom": "Custom settings: students unlock the next lesson once they've mastered about {{coverage}}% of the material."
+        },
+        "advanced": {
+          "toggle": "Advanced: fine-tune the spacing algorithm",
+          "custom_badge": "Custom",
+          "help": "These are the raw SM-2 parameters. EF (easiness factor, 1.3–2.5) controls how quickly review intervals grow; Unlock EF is the level a student must reach, and Coverage is the share of questions that must reach it before the next lesson unlocks. Most teachers can leave these to the presets above."
+        }
       },
-      "save_button": "Save settings"
+      "save_button": "Save settings",
+      "unsaved_changes": "You have unsaved changes",
+      "reset_button": "Discard"
     },
     "preview": {
       "title": "Student preview",

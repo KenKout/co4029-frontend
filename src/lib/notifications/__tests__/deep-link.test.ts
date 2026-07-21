@@ -92,22 +92,36 @@ describe("parseRemediationDeepLink (W5.10)", () => {
   });
 });
 
-describe("notificationDeepLink (W2.9 regression)", () => {
-  it("routes course entity to /courses/{id}", () => {
+describe("notificationDeepLink (Option B)", () => {
+  it("prefers action_url when present (backend-precomputed deep link)", () => {
     const link = notificationDeepLink(
-      makeNotification({ entity_type: "course", entity_id: "crs_42" }),
+      makeNotification({
+        action_url: "/courses/intro-to-ml/learn",
+        // action_url wins even if an entity mapping would also apply.
+        entity_type: "enrollment",
+        entity_id: "enr_1",
+      }),
     );
-    expect(link).toBe("/courses/crs_42");
+    expect(link).toBe("/courses/intro-to-ml/learn");
   });
 
-  it("routes lesson entity through /courses/learn", () => {
+  it("falls back to a static route for enrollment entities", () => {
     const link = notificationDeepLink(
-      makeNotification({ entity_type: "lesson", entity_id: "lsn_7" }),
+      makeNotification({ entity_type: "enrollment", entity_id: "enr_1" }),
     );
-    expect(link).toBe("/courses/learn?lessonId=lsn_7");
+    expect(link).toBe("/progress");
   });
 
-  it("returns null when entity_type is missing", () => {
+  it("returns null for slug-less entities without action_url (quiz)", () => {
+    // A quiz route needs a course slug, which entity_id alone can't provide,
+    // so a legacy row without action_url is intentionally non-navigable.
+    const link = notificationDeepLink(
+      makeNotification({ entity_type: "quiz", entity_id: "qz_1" }),
+    );
+    expect(link).toBeNull();
+  });
+
+  it("returns null when entity_type and action_url are both missing", () => {
     expect(notificationDeepLink(makeNotification())).toBeNull();
   });
 });

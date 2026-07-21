@@ -318,6 +318,36 @@ function CourseLearnLoaded({
 
   const targetAnchor = useMemo(() => (hash ? hash.replace(/^#/, "") : null), [hash]);
 
+  // Course-home landing: when the student arrives WITHOUT a content deep-link
+  // (?t= seek / ?p= page / #anchor), show a course-home overview (progress +
+  // continue button + full curriculum) instead of dropping straight into
+  // lesson 1. Selecting a lesson — or arriving via a deep-link — switches to
+  // the focused player view. This gives students an orientation/"what's next"
+  // surface the cramped sidebar can't, and makes the full curriculum visible
+  // on arrival (the reason the tiny sidebar felt like the only navigation).
+  const [showHome, setShowHome] = useState(
+    () => seekSeconds === null && targetPage === null && !targetAnchor,
+  );
+  // Resume target = first non-completed lesson (falls back to the first).
+  const resumeIdx = useMemo(() => {
+    const i = lessonItems.findIndex((li) => {
+      const id = li.item.target?.id;
+      return !id || lessonStatusMap.get(id) !== "completed";
+    });
+    return i >= 0 ? i : 0;
+  }, [lessonItems, lessonStatusMap]);
+  const completedCount = useMemo(
+    () =>
+      lessonItems.filter(
+        (li) => lessonStatusMap.get(li.item.target?.id ?? "") === "completed",
+      ).length,
+    [lessonItems, lessonStatusMap],
+  );
+  function openLesson(idx: number) {
+    setActiveIdx(idx);
+    setShowHome(false);
+  }
+
   useEffect(() => {
     const container = playerRef.current;
     if (!container) return;
@@ -498,7 +528,23 @@ function CourseLearnLoaded({
                 </div>
               </GlassCard>
             ) : */}
-            {lessonUnavailable ? (
+            {showHome ? (
+              <CourseHome
+                course={course}
+                sortedModules={sortedModules}
+                flatItems={flatItems}
+                lessonItems={lessonItems}
+                itemState={itemState}
+                onSelect={openLesson}
+                slug={slug}
+                activeModuleId={activeEntry?.moduleId}
+                completedCount={completedCount}
+                totalLessons={lessonItems.length}
+                resumeIdx={resumeIdx}
+                resumeLabel={lessonItems[resumeIdx]?.label}
+                resumeStarted={completedCount > 0}
+              />
+            ) : lessonUnavailable ? (
               <GlassCard className="p-10 text-center">
                 <p className="font-headline font-bold text-xl text-m3-on-surface mb-2">
                   {t("course_learn.lesson_unavailable_title")}
@@ -545,7 +591,7 @@ function CourseLearnLoaded({
               </div>
             )}
 
-            {activeEntry && (
+            {!showHome && activeEntry && (
               <div className="space-y-3">
                 <h1 className="font-headline font-extrabold text-3xl sm:text-4xl text-m3-primary tracking-tight leading-none">
                   {activeLesson?.title ?? activeEntry.label}
@@ -565,10 +611,12 @@ function CourseLearnLoaded({
               </div>
             )}
 
-            {course.instructor && (
+            {!showHome && course.instructor && (
               <InstructorBlock instructor={course.instructor} />
             )}
 
+            {!showHome && (
+            <>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-m3-outline-variant/20">
               <div className="flex gap-1 flex-wrap">
                 {TABS.map((tab) => (
@@ -650,31 +698,170 @@ function CourseLearnLoaded({
                 <ResourcesPanel resources={resources} />
               )}
             </div>
+            </>
+            )}
           </div>
 
-          <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-4">
-            <GlassCard className="flex flex-col overflow-hidden">
-              <div className="px-5 py-4 border-b border-m3-outline-variant/20 bg-m3-primary/5">
-                <h3 className="font-headline font-bold text-m3-primary text-sm">Curriculum</h3>
-              </div>
-              <div className="overflow-y-auto max-h-[520px] p-3 space-y-4">
-                {sortedModules.map((mod) => (
-                  <ModuleSection
-                    key={mod.id}
-                    mod={mod}
-                    flatItems={flatItems}
-                    lessonItems={lessonItems}
-                    itemState={itemState}
-                    onSelect={(idx) => setActiveIdx(idx)}
-                    slug={slug}
-                    isActiveModule={activeEntry?.moduleId === mod.id}
-                  />
-                ))}
-              </div>
-            </GlassCard>
-          </aside>
+          {/* Sidebar curriculum: only in lesson mode. In home mode the
+              main-column CourseHome renders the full curriculum, so showing
+              the sidebar too would duplicate it. */}
+          {!showHome && (
+            <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-4">
+              <GlassCard className="flex flex-col overflow-hidden">
+                <div className="px-5 py-4 border-b border-m3-outline-variant/20 bg-m3-primary/5">
+                  <h3 className="font-headline font-bold text-m3-primary text-sm">Curriculum</h3>
+                </div>
+                <div className="overflow-y-auto max-h-[520px] p-3 space-y-4">
+                  {sortedModules.map((mod) => (
+                    <ModuleSection
+                      key={mod.id}
+                      mod={mod}
+                      flatItems={flatItems}
+                      lessonItems={lessonItems}
+                      itemState={itemState}
+                      onSelect={openLesson}
+                      slug={slug}
+                      isActiveModule={activeEntry?.moduleId === mod.id}
+                    />
+                  ))}
+                </div>
+              </GlassCard>
+            </aside>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function CourseHome({
+  course,
+  sortedModules,
+  flatItems,
+  lessonItems,
+  itemState,
+  onSelect,
+  slug,
+  activeModuleId,
+  completedCount,
+  totalLessons,
+  resumeIdx,
+  resumeLabel,
+  resumeStarted,
+}: {
+  course: NonNullable<ReturnType<typeof useCourseBySlug>["data"]>;
+  sortedModules: ModulePublic[];
+  flatItems: FlatItem[];
+  lessonItems: FlatItem[];
+  itemState: (fi: FlatItem) => LessonState;
+  onSelect: (idx: number) => void;
+  slug: string;
+  activeModuleId?: string;
+  completedCount: number;
+  totalLessons: number;
+  resumeIdx: number;
+  resumeLabel?: string;
+  resumeStarted: boolean;
+}) {
+  const { t } = useTranslation();
+  const pct =
+    totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+  const allDone = totalLessons > 0 && completedCount >= totalLessons;
+
+  return (
+    <div className="space-y-6" data-testid="course-learn-home">
+      {/* Hero: title + resume/start CTA + progress */}
+      <GlassCard className="p-6 sm:p-8 space-y-5">
+        <div className="space-y-2">
+          <span className="text-xs font-headline font-semibold uppercase tracking-wider text-m3-secondary">
+            {t("course_learn.home.eyebrow")}
+          </span>
+          <h1 className="font-headline font-extrabold text-3xl sm:text-4xl text-m3-primary tracking-tight leading-none">
+            {course.title}
+          </h1>
+          {course.description && (
+            <p className="text-sm text-m3-on-surface-variant leading-relaxed max-w-2xl">
+              {course.description}
+            </p>
+          )}
+        </div>
+
+        {/* Progress */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs font-semibold">
+            <span className="text-m3-on-surface-variant">
+              {t("course_learn.home.progress_label", {
+                completed: completedCount,
+                total: totalLessons,
+              })}
+            </span>
+            <span className="text-m3-primary">{pct}%</span>
+          </div>
+          <div className="w-full h-2 bg-m3-surface-variant rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full gradient-primary transition-all duration-500"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Continue / Start CTA. pt-1 + border-t separates it from the
+            progress bar above — otherwise at 100% the fully-filled bar and
+            this button share the same gradient-primary fill and visually merge. */}
+        <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-m3-outline-variant/15">
+          <Button
+            className="rounded-xl gradient-primary text-white font-bold gap-2"
+            onClick={() => onSelect(resumeIdx)}
+            data-testid="course-learn-home-resume"
+          >
+            {allDone ? (
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                {t("course_learn.home.review")}
+              </>
+            ) : resumeStarted ? (
+              <>
+                <PlayCircle className="h-4 w-4" />
+                {t("course_learn.home.continue")}
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 fill-white" />
+                {t("course_learn.home.start")}
+              </>
+            )}
+          </Button>
+          {resumeLabel && !allDone && (
+            <span className="text-xs text-m3-on-surface-variant truncate max-w-[240px]">
+              {t("course_learn.home.next_up")}: {resumeLabel}
+            </span>
+          )}
+        </div>
+      </GlassCard>
+
+      {/* Full curriculum — the "display them all" surface, on the main column */}
+      <GlassCard className="p-4 sm:p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-4 w-4 text-m3-secondary" />
+          <h2 className="font-headline font-bold text-m3-on-surface text-sm">
+            {t("course_learn.home.curriculum")}
+          </h2>
+        </div>
+        <div className="space-y-4">
+          {sortedModules.map((mod) => (
+            <ModuleSection
+              key={mod.id}
+              mod={mod}
+              flatItems={flatItems}
+              lessonItems={lessonItems}
+              itemState={itemState}
+              onSelect={onSelect}
+              slug={slug}
+              isActiveModule={activeModuleId === mod.id}
+            />
+          ))}
+        </div>
+      </GlassCard>
     </div>
   );
 }

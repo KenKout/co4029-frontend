@@ -10,6 +10,7 @@ import {
   Clock,
   Flag,
   Lightbulb,
+  RotateCcw,
   Sparkles,
   Timer,
   X,
@@ -41,6 +42,7 @@ import type {
   QuizQuestionPublic,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { clearSeenAt, loadSeenAt, saveSeenAt } from "@/lib/quiz-timing";
 
 type QuestionState = "completed" | "active" | "flagged" | "pending";
 
@@ -197,14 +199,20 @@ function QuizStudyModeCard({
 function QuizIntroPanel({
   quiz,
   attempts,
+  inProgressAttempt,
   onStart,
+  onResume,
   starting,
+  resuming,
   slug,
 }: {
   quiz: QuizPublic;
   attempts: QuizAttemptRead[];
+  inProgressAttempt: QuizAttemptRead | null;
   onStart: () => void;
+  onResume: () => void;
   starting: boolean;
+  resuming: boolean;
   slug: string;
 }) {
   const { t } = useTranslation();
@@ -278,7 +286,30 @@ function QuizIntroPanel({
           </div>
         </div>
 
-        {blocked ? (
+        {inProgressAttempt ? (
+          <div className="space-y-4">
+            <div className="rounded-xl bg-m3-primary-fixed/30 border border-m3-primary/20 px-4 py-3 text-sm text-m3-on-surface flex items-center justify-center gap-2">
+              <RotateCcw className="h-4 w-4 text-m3-primary shrink-0" />
+              <span>
+                {t("course_quiz.resume.pending_notice", {
+                  number: inProgressAttempt.attempt_number,
+                })}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 justify-center flex-wrap">
+              <Button
+                onClick={onResume}
+                disabled={resuming || starting}
+                className="gradient-primary text-white rounded-xl font-bold gap-2 px-8 py-3 h-auto"
+              >
+                {resuming
+                  ? t("course_quiz.resume.resuming")
+                  : t("course_quiz.resume.resume")}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : blocked ? (
           <div className="rounded-xl bg-m3-surface-container-low px-4 py-3 text-sm text-m3-on-surface-variant">
             {noRetakesLeft && t("course_quiz.messages.no_retakes")}
             {maxAttemptsReached &&
@@ -298,12 +329,40 @@ function QuizIntroPanel({
         )}
       </GlassCard>
 
-      {reviewableAttempts.length > 0 && (
+      {(reviewableAttempts.length > 0 || inProgressAttempt) && (
         <GlassCard className="p-6 sm:p-8">
           <h2 className="font-headline font-bold text-base text-m3-on-surface mb-4">
             {t("course_quiz.history.title")}
           </h2>
           <div className="space-y-2">
+            {inProgressAttempt && (
+              <button
+                type="button"
+                onClick={onResume}
+                disabled={resuming || starting}
+                className="w-full flex items-center gap-4 p-3 rounded-xl bg-m3-primary-fixed/20 hover:bg-m3-primary-fixed/40 transition-colors group text-left disabled:opacity-60"
+              >
+                <span className="text-xs font-headline font-black text-m3-primary tabular-nums shrink-0 w-8">
+                  #{inProgressAttempt.attempt_number}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-m3-primary/10 text-m3-primary">
+                      {t("course_quiz.status.currently_doing")}
+                    </span>
+                  </div>
+                  <p className="text-xs text-m3-on-surface-variant mt-0.5">
+                    {new Date(inProgressAttempt.started_at).toLocaleString()}
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-m3-primary group-hover:underline shrink-0 flex items-center gap-1">
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  {resuming
+                    ? t("course_quiz.resume.resuming")
+                    : t("course_quiz.resume.resume")}
+                </span>
+              </button>
+            )}
             {reviewableAttempts.map((a) => {
               const score =
                 a.score_percent != null ? Number(a.score_percent) : null;
@@ -436,7 +495,15 @@ export default function CourseQuizPage() {
     () => attempts.find((a) => a.status === "in_progress") ?? null,
     [attempts],
   );
-  const attemptProgress = useQuizAttemptProgress(inProgressAttempt?.id ?? null);
+  // Resume is now an explicit user action (Resume button on the intro
+  // panel), NOT an automatic drop-in on mount. Auto-resuming raced the
+  // attempts list and (a) hid the intro/history and (b) fell through to
+  // POSTing a fresh attempt on the loser of the race — which is exactly
+  // how this quiz accumulated 13 empty in_progress duplicates.
+  const [resumeRequested, setResumeRequested] = useState(false);
+  const attemptProgress = useQuizAttemptProgress(
+    resumeRequested ? inProgressAttempt?.id ?? null : null,
+  );
 
   const [taking, setTaking] = useState<QuizForTakingPublic | null>(null);
   const [activeAttemptId, setActiveAttemptId] = useState<string | null>(null);
@@ -500,7 +567,10 @@ export default function CourseQuizPage() {
       setTimeLeft(Math.max(0, timeLimit - elapsedSeconds));
     }
     autoSubmitStartedRef.current = false;
-    questionSeenAtRef.current = {};
+    // Restore per-question first-seen timestamps so the elapsed badge (and
+    // the t_actual_ms we report) keep counting from the ORIGINAL first view,
+    // not from this refresh/resume. Falls back to {} when nothing persisted.
+    questionSeenAtRef.current = loadSeenAt(progress.attempt_id);
     setPerQuestionCooldown({});
   }, [attemptProgress.data, taking]);
 
@@ -522,13 +592,18 @@ export default function CourseQuizPage() {
     }
     if (!questionSeenAtRef.current[activeQuestionId]) {
       questionSeenAtRef.current[activeQuestionId] = Date.now();
+      // Persist the first-seen anchor so a refresh/resume keeps counting
+      // from here instead of restarting the elapsed badge at zero.
+      if (activeAttemptId) {
+        saveSeenAt(activeAttemptId, questionSeenAtRef.current);
+      }
     }
     const interval = window.setInterval(() => {
       setActiveQuestionElapsed(Math.floor((Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000));
     }, 1000);
     setActiveQuestionElapsed(Math.floor((Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000));
     return () => window.clearInterval(interval);
-  }, [activeIdx, displayQuestions]);
+  }, [activeIdx, displayQuestions, activeAttemptId]);
 
   useEffect(() => {
     if (!quiz?.time_limit_seconds || !sessionReady || submittedSummary) return;
@@ -556,6 +631,8 @@ export default function CourseQuizPage() {
       setActiveIdx(0);
       setTimeLeft(result.take.quiz.time_limit_seconds ?? 0);
       autoSubmitStartedRef.current = false;
+      // Fresh attempt: drop any stale persisted timing for this id.
+      clearSeenAt(result.attempt_id);
       questionSeenAtRef.current = {};
       setPerQuestionCooldown({});
     } catch (err) {
@@ -644,6 +721,8 @@ export default function CourseQuizPage() {
 
     try {
       const result = await submitAttempt.mutateAsync();
+      // Attempt is finalized — drop the persisted per-question timing mirror.
+      if (activeAttemptId) clearSeenAt(activeAttemptId);
       setSubmittedSummary(result);
       if (trigger === "timeout") {
         toast.error(t("course_quiz.errors.auto_submitted_timeout"));
@@ -675,9 +754,10 @@ export default function CourseQuizPage() {
     timeLeft,
   ]);
 
-  // While an in_progress attempt's resume payload is still loading, hold on
-  // the skeleton instead of flashing the "Start" screen before hydrating.
-  const resuming = !!inProgressAttempt && attemptProgress.isLoading && !taking;
+  // Once the user clicks Resume, hold on the skeleton while the resume
+  // payload loads instead of flashing the intro panel before hydrating.
+  const resuming =
+    resumeRequested && !!inProgressAttempt && attemptProgress.isLoading && !taking;
 
   if (courseLoading || quizLoading || attemptsLoading || resuming) {
     return (
@@ -783,8 +863,11 @@ export default function CourseQuizPage() {
         <QuizIntroPanel
           quiz={quiz}
           attempts={attempts}
+          inProgressAttempt={inProgressAttempt}
           onStart={() => void handleStartAttempt()}
+          onResume={() => setResumeRequested(true)}
           starting={startAttempt.isPending}
+          resuming={resumeRequested}
           slug={slug}
         />
       </div>
