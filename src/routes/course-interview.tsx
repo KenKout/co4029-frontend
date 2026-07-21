@@ -65,6 +65,7 @@ import { getAuthDisplayName } from "@/lib/auth";
 import { SubmittedAnswerConfirmation } from "@/components/interview/submitted-answer-confirmation";
 import { useAnswerState } from "@/lib/interview/use-answer-state";
 import { normalizeQuestionText } from "@/lib/interview/question-content";
+import { planTransition } from "@/lib/interview/transition-sequencing";
 
 function questionTypeLabel(type: string | null | undefined, t: (k: string) => string) {
   switch (type) {
@@ -267,6 +268,15 @@ export default function CourseInterviewPage() {
   );
   const [pendingFirstQuestion, setPendingFirstQuestion] =
     useState<InterviewQuestionPublic | null>(null);
+  // Mid-interview advance: the next question is held here while the standardized
+  // transition turn is shown + narrated (Natural Interview Transitions spec).
+  // The Question Card is revealed ONLY after the transition finishes presenting
+  // (via handleTurnPresented), so the card never appears alongside its transition.
+  const [pendingNextQuestion, setPendingNextQuestion] =
+    useState<InterviewQuestionPublic | null>(null);
+  // True while the final-question transition is showing before the goodbye
+  // (spec §ending: two short turns — final transition, then existing closing).
+  const [pendingFinalTransition, setPendingFinalTransition] = useState(false);
   // Candidate display name for the setup checklist's identity row. Uses the
   // existing auth context (same source the dashboard/profile use); no new fetch.
   const { user } = useAuth();
@@ -810,13 +820,44 @@ export default function CourseInterviewPage() {
         }
         return;
       }
+      // Mid-interview advance: the transition finished presenting/narrating, so
+      // now reveal the held next Question Card (spec §Frontend Sequencing —
+      // the card never appears at the same time as its transition).
+      if (turn.kind === "transition" && phase === "transition" && pendingNextQuestion) {
+        const question = pendingNextQuestion;
+        setPendingNextQuestion(null);
+        setCurrentQuestion(question);
+        setPhase("questioning");
+        if (inputMode !== "voice") {
+          setTranscript((previous) => [
+            ...previous,
+            makeAiTurn(question, false, currentElapsedSeconds()),
+          ]);
+        }
+        return;
+      }
+      // Final-question transition finished: now run the existing finish flow so
+      // the separate goodbye follows (spec §ending — two short turns).
+      if (turn.kind === "transition" && phase === "transition" && pendingFinalTransition) {
+        setPendingFinalTransition(false);
+        void beginClosing("natural");
+        return;
+      }
       if (turn.kind === "closing" && phase === "closing" && pendingFinishResult) {
         setPhase("results");
         setFinishResult(pendingFinishResult);
         setPendingFinishResult(null);
       }
     },
-    [inputMode, pendingFinishResult, pendingFirstQuestion, phase],
+    [
+      inputMode,
+      pendingFinishResult,
+      pendingFirstQuestion,
+      pendingNextQuestion,
+      pendingFinalTransition,
+      beginClosing,
+      phase,
+    ],
   );
 
   useEffect(() => {
@@ -1029,18 +1070,48 @@ export default function CourseInterviewPage() {
         if (!isAdvance) reopenForFollowUp();
       }
 
+      // Decide the transition to present (spec §Frontend Sequencing + §ending).
+      // Pure helper keeps the sequencing rules unit-testable and identical to
+      // what ships. A null plan on a finished turn means no transition text was
+      // available → close immediately (mixed-version safety).
+      const plan = planTransition(result, t("course_interview.transitions.next_question"));
+
       if (finished) {
+        if (plan && plan.target === "closing") {
+          // Final-question transition first; handleTurnPresented then runs the
+          // existing finish flow so the separate goodbye follows (two turns).
+          setPhase("transition");
+          setPendingFinalTransition(true);
+          setTranscript((prev) => [
+            ...prev,
+            makeCeremonyTurn(
+              "transition",
+              plan.text,
+              `${submissionId}-final`,
+              currentElapsedSeconds(),
+            ),
+          ]);
+          return;
+        }
         await beginClosing("natural");
         return;
       }
 
-      if (result.next_question) {
-        // resetAnswerForQuestion fires via the currentQuestion.id effect; here
-        // we just advance the question and append its turn.
-        setCurrentQuestion(result.next_question);
+      if (result.next_question && plan && plan.target === "next_question") {
+        // Show + narrate the transition, hold the next Question Card in
+        // pendingNextQuestion, and keep the composer hidden (phase="transition")
+        // until the transition finishes presenting (handleTurnPresented reveals
+        // the card — it never appears alongside its transition).
+        setPendingNextQuestion(result.next_question);
+        setPhase("transition");
         setTranscript((prev) => [
           ...prev,
-          makeAiTurn(result.next_question!, false, currentElapsedSeconds()),
+          makeCeremonyTurn(
+            "transition",
+            plan.text,
+            `${submissionId}-transition`,
+            currentElapsedSeconds(),
+          ),
         ]);
       }
     } catch (err) {
@@ -1640,7 +1711,9 @@ export default function CourseInterviewPage() {
         <div className="shrink-0 border-t border-border bg-white px-4 py-6 text-center">
           <p className="text-sm text-text-muted" role="status" aria-live="polite">
             {phase === "transition"
-              ? t("course_interview.onboarding.starting_assessment")
+              ? pendingNextQuestion || pendingFinalTransition
+                ? t("course_interview.transitions.status")
+                : t("course_interview.onboarding.starting_assessment")
               : phase === "closing"
                 ? t("course_interview.workspace.preparing_goodbye")
                 : t("course_interview.status.compiling_results")}
