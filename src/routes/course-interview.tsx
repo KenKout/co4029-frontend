@@ -49,11 +49,15 @@ import {
   LeaveInterviewDialog,
   OnboardingActions,
   StartInterviewDialog,
+  TranscriptPanel,
   type ConversationTurn,
   type InterviewAgentStatus,
   resolveInterviewState,
   useInterviewTimer,
 } from "@/components/interview/interview-workspace";
+import { SubmittedAnswerConfirmation } from "@/components/interview/submitted-answer-confirmation";
+import { useAnswerState } from "@/lib/interview/use-answer-state";
+import { normalizeQuestionText } from "@/lib/interview/question-content";
 
 function questionTypeLabel(type: string | null | undefined, t: (k: string) => string) {
   switch (type) {
@@ -77,10 +81,16 @@ function makeAiTurn(
   isFollowUp = false,
   elapsedSeconds = 0,
 ): ConversationTurn {
+  // Normalize at the data-mapping seam (spec §6): strip any guardrail / policy /
+  // wrapper text that leaked into prompt_text so the Question Card only ever
+  // renders the actual question. Fall back to the raw prompt only when
+  // sanitization removed everything (avoids a blank card for an odd-but-valid
+  // prompt the patterns over-matched).
+  const { text } = normalizeQuestionText(question.prompt_text);
   return {
     id: `q-${question.id}-${isFollowUp ? "f" : "m"}`,
     role: "ai",
-    text: question.prompt_text,
+    text: text || question.prompt_text,
     elapsedSeconds,
     questionType: question.question_type,
     isFollowUp,
@@ -208,6 +218,27 @@ export default function CourseInterviewPage() {
   const [currentQuestion, setCurrentQuestion] = useState<InterviewQuestionPublic | null>(null);
   const [transcript, setTranscript] = useState<ConversationTurn[]>([]);
   const [answerText, setAnswerText] = useState("");
+  // Structured submission status for the CURRENT question's answer (spec §7):
+  // governs submitting/submitted/failed guards, keeps the draft recoverable on
+  // failure, and prevents duplicate submissions. Keyed by question id so a new
+  // question resets it while unrelated rerenders never wipe the draft.
+  const answer = useAnswerState(currentQuestion?.id ?? "__none__");
+  const {
+    resetForQuestion: resetAnswerForQuestion,
+    reopenForFollowUp,
+    beginSubmit,
+    submitSucceeded,
+    submitFailed,
+  } = answer;
+  // The most recently acknowledged answer, shown as a compact confirmation on
+  // the main screen (spec §8). Persists across the transition to the next
+  // question so it can collapse into "✓ Previous answer submitted" rather than
+  // vanishing without feedback.
+  const [recentSubmission, setRecentSubmission] = useState<{
+    answer: string;
+    questionId: string;
+    submissionId: string;
+  } | null>(null);
   const [finishResult, setFinishResult] = useState<InterviewSessionFinishResponse | null>(null);
   const [inputMode, setInputMode] = useState<"voice" | "text" | "hybrid">("text");
   // true = voice session started and LiveKitRoom is active
@@ -236,6 +267,15 @@ export default function CourseInterviewPage() {
   const [assessmentStartedAtMs, setAssessmentStartedAtMs] = useState<number | null>(null);
   const sessionDeadlineAtRef = useRef<number | null>(null);
   const timeoutTriggeredRef = useRef(false);
+
+  // A genuinely new question resets the answer machine to a clean draft keyed
+  // by the new id (spec §7). The reducer no-ops when the id is unchanged, so an
+  // unrelated rerender that recomputes the same id never wipes the draft. The
+  // `recentSubmission` confirmation intentionally survives so it can collapse
+  // into "✓ Previous answer submitted" rather than vanishing.
+  useEffect(() => {
+    if (currentQuestion?.id) resetAnswerForQuestion(currentQuestion.id);
+  }, [currentQuestion?.id, resetAnswerForQuestion]);
 
   useEffect(() => {
     const handleOnline = () => setConnected(true);
@@ -780,44 +820,27 @@ export default function CourseInterviewPage() {
     return () => window.clearTimeout(timer);
   }, [beginClosing, phase, sessionId]);
 
-  async function handleRespond(
-    answerOverride?: string,
-    options: {
-      preserveDraft?: boolean;
-      turnAction?: InterviewTurnAction;
-      displayText?: string;
-    } = {},
+  /**
+   * Assistance turns (clarify / hint / explain-term) are NOT the candidate's
+   * answer — they keep the original optimistic-append behaviour and never touch
+   * the answer-submission state machine. Only a real "answer" turn drives the
+   * draft→submitting→submitted/failed lifecycle (see handleRespond).
+   */
+  async function handleAssistance(
+    requestText: string,
+    turnAction: Exclude<InterviewTurnAction, "answer">,
+    displayText: string,
   ) {
     if (!currentQuestion || !sessionId || respond.isPending) return;
-    const pendingInterim = dictation.listening ? dictation.stop() : "";
-    const sourceText = answerOverride ?? answerText;
-    const trimmed = [sourceText.trim(), pendingInterim]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
-    if (!trimmed) {
-      toast.error(t("course_interview.errors.answer_required"));
-      return;
-    }
+    const trimmed = requestText.trim();
+    if (!trimmed) return;
 
     const userTurnKey = `${currentQuestion.id}-${Date.now()}`;
-    const turnAction = options.turnAction ?? "answer";
-    const localTurnKind =
-      turnAction === "hint"
-        ? "hint"
-        : turnAction === "clarify" || turnAction === "explain_term"
-          ? "clarification"
-          : "answer";
+    const localTurnKind = turnAction === "hint" ? "hint" : "clarification";
     setTranscript((prev) => [
       ...prev,
-      makeUserTurn(
-        options.displayText ?? trimmed,
-        userTurnKey,
-        currentElapsedSeconds(),
-        localTurnKind,
-      ),
+      makeUserTurn(displayText, userTurnKey, currentElapsedSeconds(), localTurnKind),
     ]);
-    if (!options.preserveDraft) setAnswerText("");
 
     try {
       const result = await respond.mutateAsync({
@@ -825,25 +848,12 @@ export default function CourseInterviewPage() {
         session_question_id: currentQuestion.id,
         answer_text: trimmed,
         turn_action: turnAction,
-        // Idempotency key so a network retry never double-inserts the answer
-        // or re-runs the adaptive pipeline (adaptive safeguard #1). Legacy
-        // backend ignores it harmlessly.
         turn_key: newTurnKey(),
       });
 
-      // ── Adaptive path (structured fields present) ────────────────────────
-      // On an ADVANCE the backend puts ONLY ack+transition in ai_followup_text
-      // and the question in next_question, so rendering both never doubles the
-      // question. On a NON-advance (probe/clarify/repeat/closing) the whole
-      // utterance is in ai_followup_text / ai_turn_text and next_question is
-      // null. We prefer ai_turn_text (the combined natural utterance) when the
-      // action is not an advance, else fall back to ai_followup_text.
-      const isAdvance = Boolean(result.next_question);
       const finished = Boolean(result.should_finish ?? result.is_finished);
       const standaloneText =
-        !isAdvance && (result.ai_turn_text || result.ai_followup_text)
-          ? result.ai_turn_text || result.ai_followup_text!
-          : result.ai_followup_text || null;
+        result.ai_turn_text || result.ai_followup_text || null;
 
       if (standaloneText && !finished) {
         const assistanceTurnKind =
@@ -877,7 +887,6 @@ export default function CourseInterviewPage() {
         await beginClosing("natural");
         return;
       }
-
       if (result.next_question) {
         setCurrentQuestion(result.next_question);
         setTranscript((prev) => [
@@ -889,7 +898,135 @@ export default function CourseInterviewPage() {
       setTranscript((previous) =>
         previous.filter((turn) => turn.id !== `a-${userTurnKey}`),
       );
-      if (!options.preserveDraft) setAnswerText(trimmed);
+      if (err instanceof ApiError && err.status === 429) {
+        toast.error(t("course_interview.errors.rate_limited"));
+      } else {
+        toast.error((err as Error).message || t("course_interview.errors.send_failed"));
+      }
+    }
+  }
+
+  /**
+   * Submit the candidate's answer through the structured lifecycle (spec §2/§7):
+   *
+   *  1. `submitting`  — draft preserved, submit disabled, one submission only.
+   *  2. `submitted`   — ONLY after the server acknowledges: the answer is added
+   *     to the transcript exactly once (deduped by submissionId), the compact
+   *     confirmation replaces the editor, and the draft is cleared.
+   *  3. `failed`      — the draft is preserved and retry is exposed; no
+   *     transcript entry, no question advance, timer/question untouched.
+   *
+   * `retrySubmissionId` reuses the prior idempotency key so a retry after a
+   * failure cannot create a duplicate transcript entry server- or client-side.
+   */
+  async function handleRespond(
+    answerOverride?: string,
+    options: { retrySubmissionId?: string } = {},
+  ) {
+    if (!currentQuestion || !sessionId || respond.isPending) return;
+    // Guard against duplicate submissions from the state machine itself.
+    if (answer.state.status === "submitting" || answer.state.status === "submitted") {
+      return;
+    }
+    const pendingInterim = dictation.listening ? dictation.stop() : "";
+    const sourceText = answerOverride ?? answerText;
+    const trimmed = [sourceText.trim(), pendingInterim]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    if (!trimmed) {
+      toast.error(t("course_interview.errors.answer_required"));
+      return;
+    }
+
+    const questionId = currentQuestion.id;
+    // Stable submission id doubles as the transcript turn id and the server
+    // idempotency key, so a retry reuses it and never double-inserts.
+    const submissionId = options.retrySubmissionId ?? newTurnKey();
+    beginSubmit(submissionId, trimmed);
+
+    try {
+      const result = await respond.mutateAsync({
+        session_id: sessionId,
+        session_question_id: questionId,
+        answer_text: trimmed,
+        turn_action: "answer",
+        // Idempotency key so a network retry never double-inserts the answer
+        // or re-runs the adaptive pipeline (adaptive safeguard #1). Legacy
+        // backend ignores it harmlessly.
+        turn_key: submissionId,
+      });
+
+      // Server acknowledged — NOW commit to the transcript (spec: add only
+      // after successful backend acknowledgement), deduped by submissionId so
+      // a retry that reuses the id can't create a second entry.
+      const answerTurnId = `a-${submissionId}`;
+      setTranscript((prev) =>
+        prev.some((turn) => turn.id === answerTurnId)
+          ? prev
+          : [
+              ...prev,
+              makeUserTurn(trimmed, submissionId, currentElapsedSeconds(), "answer"),
+            ],
+      );
+      submitSucceeded(trimmed);
+      // Editor content is cleared ONLY after the server acknowledged (spec §2);
+      // the compact confirmation now stands in for the answer on the main screen.
+      setAnswerText("");
+      setRecentSubmission({ answer: trimmed, questionId, submissionId });
+
+      const isAdvance = Boolean(result.next_question);
+      const finished = Boolean(result.should_finish ?? result.is_finished);
+      const standaloneText =
+        !isAdvance && (result.ai_turn_text || result.ai_followup_text)
+          ? result.ai_turn_text || result.ai_followup_text!
+          : result.ai_followup_text || null;
+
+      if (standaloneText && !finished) {
+        const assistanceTurnKind =
+          result.assistance_kind === "hint"
+            ? "hint"
+            : result.assistance_kind === "clarification" ||
+                result.assistance_kind === "term"
+              ? "clarification"
+              : "followup";
+        setTranscript((prev) => [
+          ...prev,
+          makeFollowUpTurn(
+            standaloneText,
+            `${submissionId}-fu`,
+            currentElapsedSeconds(),
+            assistanceTurnKind,
+          ),
+        ]);
+        // A probe/clarification on the SAME question re-opens the answer so the
+        // candidate can respond again; the confirmation collapses to "previous".
+        if (!isAdvance) reopenForFollowUp();
+      }
+
+      if (finished) {
+        await beginClosing("natural");
+        return;
+      }
+
+      if (result.next_question) {
+        // resetAnswerForQuestion fires via the currentQuestion.id effect; here
+        // we just advance the question and append its turn.
+        setCurrentQuestion(result.next_question);
+        setTranscript((prev) => [
+          ...prev,
+          makeAiTurn(result.next_question!, false, currentElapsedSeconds()),
+        ]);
+      }
+    } catch (err) {
+      // Preserve the draft and expose retry (spec §3). No transcript entry was
+      // added, the question/timer are untouched, and we do NOT advance.
+      submitFailed(
+        err instanceof ApiError && err.status === 429
+          ? t("course_interview.errors.rate_limited")
+          : (err as Error).message || t("course_interview.errors.send_failed"),
+      );
+      setAnswerText(trimmed);
       if (err instanceof ApiError && err.status === 429) {
         toast.error(t("course_interview.errors.rate_limited"));
       } else {
@@ -1257,6 +1394,39 @@ export default function CourseInterviewPage() {
   }
 
   // ── Text mode chat UI ──────────────────────────────────────────────────────
+  // Open the transcript (docked panel on desktop, Sheet on mobile) at the full
+  // submitted answer.
+  const openTranscript = () => setTranscriptOpen(true);
+
+  // Compact main-screen confirmation for the most recent answer (spec §2/§8).
+  // One card, three shapes, never conflicting: failed (draft preserved + retry),
+  // submitted (preview + view full), or the collapsed "previous" acknowledgement
+  // once the answer is no longer the active one (next question / follow-up).
+  const answerStatus = answer.state;
+  const isCurrentSubmitted =
+    answerStatus.status === "submitted" &&
+    recentSubmission?.questionId === currentQuestion?.id;
+  const submissionSlot =
+    phase !== "questioning" ? null : answerStatus.status === "failed" ? (
+      <SubmittedAnswerConfirmation
+        status="failed"
+        answer={answerStatus.draft}
+        onRetry={() =>
+          void handleRespond(answerStatus.draft, {
+            retrySubmissionId: answerStatus.submissionId,
+          })
+        }
+        onContinueEditing={() => answer.setDraft(answerStatus.draft)}
+      />
+    ) : recentSubmission ? (
+      <SubmittedAnswerConfirmation
+        status="submitted"
+        answer={recentSubmission.answer}
+        previous={!isCurrentSubmitted}
+        onViewFullAnswer={openTranscript}
+      />
+    ) : null;
+
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
       <InterviewHeader
@@ -1279,11 +1449,15 @@ export default function CourseInterviewPage() {
         onEndInterview={() => setEndDialogOpen(true)}
       />
 
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col">
       <FocusedInterviewStage
         transcript={transcript}
         status={agentStatus}
         transcriptOpen={transcriptOpen}
         onTranscriptOpenChange={setTranscriptOpen}
+        submissionSlot={submissionSlot}
+        transcriptDocked
         assessmentActive={phase === "questioning"}
         currentQuestionNumber={currentQuestionNumber}
         totalQuestions={totalQuestions}
@@ -1300,30 +1474,30 @@ export default function CourseInterviewPage() {
         onClarifyQuestion={
           phase === "questioning"
             ? () =>
-                void handleRespond(
+                void handleAssistance(
                   t("course_interview.workspace.clarification_request"),
-                  { preserveDraft: true, turnAction: "clarify" },
+                  "clarify",
+                  t("course_interview.workspace.clarification_request"),
                 )
             : undefined
         }
         onRequestHint={
           phase === "questioning"
             ? () =>
-                void handleRespond(t("course_interview.workspace.hint_request"), {
-                  preserveDraft: true,
-                  turnAction: "hint",
-                })
+                void handleAssistance(
+                  t("course_interview.workspace.hint_request"),
+                  "hint",
+                  t("course_interview.workspace.hint_request"),
+                )
             : undefined
         }
         onExplainTerm={
           phase === "questioning"
             ? (term) =>
-                void handleRespond(
+                void handleAssistance(
                   t("course_interview.workspace.term_request", { term }),
-                  {
-                    preserveDraft: true,
-                    turnAction: "explain_term",
-                  },
+                  "explain_term",
+                  t("course_interview.workspace.term_request", { term }),
                 )
             : undefined
         }
@@ -1428,6 +1602,20 @@ export default function CourseInterviewPage() {
           </p>
         </div>
       )}
+        </div>
+
+        <TranscriptPanel
+          open={transcriptOpen}
+          onClose={() => setTranscriptOpen(false)}
+          transcript={transcript}
+          questionTypeLabel={(type) => questionTypeLabel(type, t)}
+          speak={speakIfOn}
+          onSpeakingChange={(speaking) => setAiSpeaking(voiceOn && speaking)}
+          onReplay={(turn) => void speakIfOn(turn.text)}
+          replayDisabled={!voiceOn}
+          replayingTurnId={null}
+        />
+      </div>
 
       <EndInterviewDialog
         open={endDialogOpen}

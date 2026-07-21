@@ -21,12 +21,14 @@ import {
   StartInterviewDialog,
   QuestionCard,
   TranscriptDrawer,
+  TranscriptPanel,
   UserTypingIndicator,
   VoiceStatusIndicator,
   formatRelativeInterviewTime,
   resolveInterviewState,
   useInterviewTimer,
 } from "../interview-workspace";
+import { SubmittedAnswerConfirmation } from "../submitted-answer-confirmation";
 
 describe("formatRelativeInterviewTime", () => {
   it("formats transcript timestamps relative to interview start", () => {
@@ -850,5 +852,115 @@ describe("P0 focused interview room", () => {
     expect(screen.getByRole("button", { name: "Audio is clear" })).toBeVisible();
     unmount();
     vi.useRealTimers();
+  });
+
+  it("renders a compact submission confirmation as a secondary element, not a chat bubble", async () => {
+    vi.useFakeTimers();
+    const onView = vi.fn();
+    const transcript = [
+      {
+        id: "question",
+        role: "ai" as const,
+        text: "Compare fact tables and factless fact tables.",
+        kind: "question" as const,
+        questionType: "technical",
+      },
+    ];
+
+    const { unmount } = render(
+      <FocusedInterviewStage
+        transcript={transcript}
+        status="thinking"
+        transcriptOpen={false}
+        onTranscriptOpenChange={() => undefined}
+        assessmentActive
+        currentQuestionNumber={1}
+        totalQuestions={null}
+        currentQuestionType="technical"
+        isUserTyping={false}
+        questionTypeLabel={() => "Technical"}
+        speak={() => undefined}
+        onSpeakingChange={() => undefined}
+        submissionSlot={
+          <SubmittedAnswerConfirmation
+            status="submitted"
+            answer={"A fact table stores measurable business events. ".repeat(6)}
+            onViewFullAnswer={onView}
+          />
+        }
+      />,
+    );
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50);
+    });
+
+    expect(
+      screen.getByText(i18n.t("course_interview.submission.submitted_title")),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: i18n.t("course_interview.submission.view_full_answer"),
+      }),
+    );
+    expect(onView).toHaveBeenCalledTimes(1);
+    unmount();
+    vi.useRealTimers();
+  });
+});
+
+describe("TranscriptPanel (desktop reflow)", () => {
+  const baseProps = {
+    transcript: [
+      { id: "prior", role: "user" as const, text: "A prior answer", kind: "answer" as const },
+    ],
+    questionTypeLabel: () => null,
+    speak: () => undefined,
+    onSpeakingChange: () => undefined,
+    onReplay: () => undefined,
+    replayDisabled: false,
+    replayingTurnId: null,
+  };
+
+  it("renders in-flow (not a fixed overlay) when open and hides when closed", () => {
+    const { rerender } = render(
+      <TranscriptPanel open={false} onClose={() => undefined} {...baseProps} />,
+    );
+    expect(screen.queryByText("A prior answer")).not.toBeInTheDocument();
+
+    rerender(<TranscriptPanel open onClose={() => undefined} {...baseProps} />);
+    const panel = screen.getByText("A prior answer").closest("aside");
+    expect(panel).not.toBeNull();
+    expect(panel).toHaveClass("shrink-0");
+    expect(panel?.className).not.toContain("fixed");
+  });
+
+  it("uses the singular message form for a single-message transcript", () => {
+    render(<TranscriptPanel open onClose={() => undefined} {...baseProps} />);
+    expect(
+      screen.getByText(
+        i18n.t("course_interview.workspace.transcript_count", { count: 1 }),
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("uses the plural message form and drops 'in chronological order'", () => {
+    render(
+      <TranscriptPanel
+        open
+        onClose={() => undefined}
+        {...baseProps}
+        transcript={[
+          { id: "a", role: "ai", text: "Q", kind: "question" },
+          { id: "b", role: "user", text: "A", kind: "answer" },
+        ]}
+      />,
+    );
+    expect(
+      screen.getByText(
+        i18n.t("course_interview.workspace.transcript_count", { count: 2 }),
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/chronological order|thứ tự thời gian/i)).not.toBeInTheDocument();
   });
 });

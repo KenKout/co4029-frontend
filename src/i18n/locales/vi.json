@@ -1492,7 +1492,8 @@
       "term_input_placeholder": "Nhập thuật ngữ trong câu hỏi…",
       "term_request": "Bạn có thể giải thích thuật ngữ “{{term}}” không?",
       "view_transcript": "Xem bản ghi phỏng vấn",
-      "transcript_count": "{{count}} tin nhắn theo thứ tự thời gian",
+      "transcript_count_one": "{{count}} tin nhắn",
+      "transcript_count_other": "{{count}} tin nhắn",
       "transcript_empty": "Bản ghi phỏng vấn chưa có nội dung.",
       "retry": "Thử lại",
       "answer_mode": "Chế độ trả lời",
@@ -1531,6 +1532,18 @@
         "disconnected": "Kết nối bị gián đoạn",
         "ready": "Sẵn sàng gửi"
       }
+    },
+    "submission": {
+      "submitted_title": "Đã gửi câu trả lời",
+      "previous_submitted": "Đã gửi câu trả lời trước đó",
+      "analyzing": "Đang phân tích câu trả lời…",
+      "expand": "Xem thêm",
+      "collapse": "Thu gọn",
+      "view_full_answer": "Xem toàn bộ câu trả lời",
+      "failed_title": "Không thể gửi câu trả lời của bạn",
+      "failed_preserved": "Câu trả lời của bạn đã được giữ lại.",
+      "try_again": "Thử lại",
+      "continue_editing": "Tiếp tục chỉnh sửa"
     },
     "end_dialog": {
       "title": "Kết thúc cuộc phỏng vấn?",
