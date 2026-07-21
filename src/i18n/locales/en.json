@@ -1650,6 +1650,10 @@
         "not_ready": "I'm not ready yet."
       }
     },
+    "transitions": {
+      "next_question": "Thank you. Now let's move on to the next question.",
+      "status": "Moving to the next question…"
+    },
     "sections": {
       "gap_report": "Gap report",
       "gap_report_pending": "Preparing your personalized gap report… this can take a minute.",

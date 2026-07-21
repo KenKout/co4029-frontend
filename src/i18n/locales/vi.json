@@ -1641,6 +1641,10 @@
         "not_ready": "Tôi chưa sẵn sàng."
       }
     },
+    "transitions": {
+      "next_question": "Cảm ơn bạn. Bây giờ chúng ta chuyển sang câu hỏi tiếp theo.",
+      "status": "Đang chuyển sang câu hỏi tiếp theo…"
+    },
     "sections": {
       "gap_report": "Báo cáo lỗ hổng",
       "gap_report_pending": "Đang chuẩn bị báo cáo lỗ hổng cá nhân hóa… có thể mất một phút.",
