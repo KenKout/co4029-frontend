@@ -18,13 +18,26 @@ export interface UseInterviewNarration {
 
 const SERVER_NARRATION_TIMEOUT_MS = 6_000;
 const AUDIO_READY_TIMEOUT_MS = 1_500;
-const AUDIO_OUTPUT_WARMUP_MS = 320;
-const AUDIO_OUTPUT_HANDOFF_OVERLAP_MS = 180;
+const AUDIO_OUTPUT_WARMUP_MS = 400;
+// Keep the warm-up loop running well into the real audio so the physical
+// output route can't re-idle and clip the first syllable during the handoff.
+const AUDIO_OUTPUT_HANDOFF_OVERLAP_MS = 320;
 const AUDIO_WARMUP_DURATION_MS = 500;
-const AUDIO_WARMUP_SAMPLE_RATE = 8_000;
+// 48 kHz so the alternating-sample keep-alive tone sits at 24 kHz (Nyquist),
+// which is inaudible — letting us raise its amplitude enough to hold the
+// output route open without the user ever hearing it.
+const AUDIO_WARMUP_SAMPLE_RATE = 48_000;
 const EMBEDDED_AUDIO_LEAD_IN_MS = 500;
 const AUDIO_SOURCE_SCHEDULE_AHEAD_MS = 30;
-const AUDIO_LEAD_IN_AMPLITUDE = 2 / 32_768;
+// Keep-alive amplitude for the near-silent warm-up tone and the embedded
+// lead-in. Both signals alternate every sample (a Nyquist-frequency tone the
+// speaker can't reproduce and the ear can't hear), so this can be far above
+// the old ~-84 dBFS noise floor. At ~-56 dBFS it reliably defeats the
+// auto-mute / squelch on power-managed laptop DACs and Bluetooth routes that
+// treated the previous ±2/32768 signal as digital silence and let the output
+// idle — which was clipping/attenuating the first syllable of each utterance.
+const AUDIO_KEEPALIVE_INT16 = 48;
+const AUDIO_LEAD_IN_AMPLITUDE = AUDIO_KEEPALIVE_INT16 / 32_768;
 const HAVE_FUTURE_DATA = 3;
 const PERSONA_WORDS_PER_MINUTE: Record<SpeechPersona, number> = {
   strict: 135,
@@ -71,8 +84,15 @@ function createAudioWarmupBlob(): Blob {
   writeText(36, "data");
   view.setUint32(40, dataLength, true);
   for (let index = 0; index < sampleCount; index += 1) {
-    // Roughly -84 dB: enough to exercise the output path but not be audible.
-    view.setInt16(44 + index * 2, index % 2 === 0 ? 2 : -2, true);
+    // Alternating full-Nyquist tone at the keep-alive amplitude: inaudible
+    // (the speaker can't reproduce a 24 kHz tone and the ear can't hear it) but
+    // loud enough in the digital domain to stop a power-managed DAC / Bluetooth
+    // route from auto-muting and clipping the first syllable of real speech.
+    view.setInt16(
+      44 + index * 2,
+      index % 2 === 0 ? AUDIO_KEEPALIVE_INT16 : -AUDIO_KEEPALIVE_INT16,
+      true,
+    );
   }
   return new Blob([buffer], { type: "audio/wav" });
 }
