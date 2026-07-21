@@ -10,6 +10,7 @@ import {
   Clock,
   Flag,
   Lightbulb,
+  RotateCcw,
   Sparkles,
   Timer,
   X,
@@ -197,14 +198,20 @@ function QuizStudyModeCard({
 function QuizIntroPanel({
   quiz,
   attempts,
+  inProgressAttempt,
   onStart,
+  onResume,
   starting,
+  resuming,
   slug,
 }: {
   quiz: QuizPublic;
   attempts: QuizAttemptRead[];
+  inProgressAttempt: QuizAttemptRead | null;
   onStart: () => void;
+  onResume: () => void;
   starting: boolean;
+  resuming: boolean;
   slug: string;
 }) {
   const { t } = useTranslation();
@@ -278,7 +285,30 @@ function QuizIntroPanel({
           </div>
         </div>
 
-        {blocked ? (
+        {inProgressAttempt ? (
+          <div className="space-y-4">
+            <div className="rounded-xl bg-m3-primary-fixed/30 border border-m3-primary/20 px-4 py-3 text-sm text-m3-on-surface flex items-center justify-center gap-2">
+              <RotateCcw className="h-4 w-4 text-m3-primary shrink-0" />
+              <span>
+                {t("course_quiz.resume.pending_notice", {
+                  number: inProgressAttempt.attempt_number,
+                })}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 justify-center flex-wrap">
+              <Button
+                onClick={onResume}
+                disabled={resuming || starting}
+                className="gradient-primary text-white rounded-xl font-bold gap-2 px-8 py-3 h-auto"
+              >
+                {resuming
+                  ? t("course_quiz.resume.resuming")
+                  : t("course_quiz.resume.resume")}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : blocked ? (
           <div className="rounded-xl bg-m3-surface-container-low px-4 py-3 text-sm text-m3-on-surface-variant">
             {noRetakesLeft && t("course_quiz.messages.no_retakes")}
             {maxAttemptsReached &&
@@ -436,7 +466,15 @@ export default function CourseQuizPage() {
     () => attempts.find((a) => a.status === "in_progress") ?? null,
     [attempts],
   );
-  const attemptProgress = useQuizAttemptProgress(inProgressAttempt?.id ?? null);
+  // Resume is now an explicit user action (Resume button on the intro
+  // panel), NOT an automatic drop-in on mount. Auto-resuming raced the
+  // attempts list and (a) hid the intro/history and (b) fell through to
+  // POSTing a fresh attempt on the loser of the race — which is exactly
+  // how this quiz accumulated 13 empty in_progress duplicates.
+  const [resumeRequested, setResumeRequested] = useState(false);
+  const attemptProgress = useQuizAttemptProgress(
+    resumeRequested ? inProgressAttempt?.id ?? null : null,
+  );
 
   const [taking, setTaking] = useState<QuizForTakingPublic | null>(null);
   const [activeAttemptId, setActiveAttemptId] = useState<string | null>(null);
@@ -675,9 +713,10 @@ export default function CourseQuizPage() {
     timeLeft,
   ]);
 
-  // While an in_progress attempt's resume payload is still loading, hold on
-  // the skeleton instead of flashing the "Start" screen before hydrating.
-  const resuming = !!inProgressAttempt && attemptProgress.isLoading && !taking;
+  // Once the user clicks Resume, hold on the skeleton while the resume
+  // payload loads instead of flashing the intro panel before hydrating.
+  const resuming =
+    resumeRequested && !!inProgressAttempt && attemptProgress.isLoading && !taking;
 
   if (courseLoading || quizLoading || attemptsLoading || resuming) {
     return (
@@ -783,8 +822,11 @@ export default function CourseQuizPage() {
         <QuizIntroPanel
           quiz={quiz}
           attempts={attempts}
+          inProgressAttempt={inProgressAttempt}
           onStart={() => void handleStartAttempt()}
+          onResume={() => setResumeRequested(true)}
           starting={startAttempt.isPending}
+          resuming={resumeRequested}
           slug={slug}
         />
       </div>

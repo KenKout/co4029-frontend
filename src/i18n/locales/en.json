@@ -1356,6 +1356,11 @@
     }
   },
   "course_quiz": {
+    "resume": {
+      "pending_notice": "You have an unfinished attempt (#{{number}}). Resume it to continue where you left off.",
+      "resume": "Resume attempt",
+      "resuming": "Resuming..."
+    },
     "history": {
       "title": "Previous attempts",
       "review": "Review",

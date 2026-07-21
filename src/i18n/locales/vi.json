@@ -1347,6 +1347,11 @@
     }
   },
   "course_quiz": {
+    "resume": {
+      "pending_notice": "Bạn có một lượt làm chưa hoàn thành (#{{number}}). Tiếp tục để làm tiếp từ chỗ đang dở.",
+      "resume": "Tiếp tục làm bài",
+      "resuming": "Đang tiếp tục..."
+    },
     "history": {
       "title": "Các lượt trước",
       "review": "Xem lại",
