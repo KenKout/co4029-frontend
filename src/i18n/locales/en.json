@@ -231,6 +231,12 @@
       "review": "Review course",
       "next_up": "Next up",
       "curriculum": "Curriculum"
+    },
+    "interview_in_progress": {
+      "badge": "In progress",
+      "title": "Interview session in progress",
+      "body": "You have an interview that is still ongoing. Finish it before starting a new one.",
+      "continue": "Continue latest session"
     }
   },
   "placeholder": {
@@ -1599,6 +1605,29 @@
       "description": "The aBridgeAI virtual interviewer will first confirm your identity, audio, language, and readiness. Your assessed interview timer will start only after you confirm that you are ready. AI voice is on by default.",
       "cancel": "Not yet"
     },
+    "steps": {
+      "aria_label": "Interview progress",
+      "setup": "Setup",
+      "interview": "Interview",
+      "completed": "Completed"
+    },
+    "setup": {
+      "title": "Ready for your interview?",
+      "subtitle": "A few quick checks and you're good to go.",
+      "identity": "Identity confirmed",
+      "microphone": "Microphone",
+      "mic_connected": "Connected",
+      "mic_unavailable": "Not detected",
+      "language": "Interview language"
+    },
+    "recovery": {
+      "connection_lost_title": "Connection lost",
+      "connection_lost_body": "You appear to be offline. We'll keep trying to reconnect.",
+      "reconnecting_title": "Reconnecting…",
+      "reconnecting_body": "Hold on — we're restoring your connection.",
+      "progress_safe": "Your progress and current answer are safe.",
+      "reconnect": "Reconnect"
+    },
     "onboarding": {
       "language_label": "Interview language",
       "languages": {
@@ -1631,6 +1660,10 @@
         "ready": "I'm ready to begin.",
         "not_ready": "I'm not ready yet."
       }
+    },
+    "transitions": {
+      "next_question": "Thank you. Now let's move on to the next question.",
+      "status": "Moving to the next question…"
     },
     "sections": {
       "gap_report": "Gap report",

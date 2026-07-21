@@ -146,7 +146,15 @@ export interface InterviewSessionFinishRequest {
 }
 export type InterviewRespondRequest = Schemas["InterviewSubmitAnswerRequest"];
 export type InterviewSubmitAnswerRequest = Schemas["InterviewSubmitAnswerRequest"];
-export type InterviewSubmitAnswerResponse = Schemas["InterviewSubmitAnswerResponse"];
+// Widen with the Natural Interview Transitions fields until the OpenAPI
+// snapshot is regenerated — the backend already returns these additive,
+// optional fields (transition text/id/target) on an advance or final turn.
+export type InterviewSubmitAnswerResponse =
+  Schemas["InterviewSubmitAnswerResponse"] & {
+    transition_id?: string | null;
+    transition_text?: string | null;
+    transition_target?: "next_question" | "closing" | null;
+  };
 export type InterviewQuestionPublic = Schemas["InterviewQuestionPublic"];
 export type InterviewQuestionAuthoring = Schemas["InterviewQuestionAuthoring"];
 export type InterviewQuestionCreate = Schemas["InterviewQuestionCreate"];
