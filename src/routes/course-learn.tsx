@@ -37,12 +37,14 @@ import {
 } from "@/lib/api/hooks/courses";
 import { useStreamUrl } from "@/lib/api/hooks/materials";
 import { useMyCourseProgress, useMarkLessonComplete, useUnmarkLessonComplete } from "@/lib/api/hooks/progress";
+import { useMyInterviewSessions } from "@/lib/api/hooks/interviews";
 // import { useCourseSrOverview } from "@/lib/api/hooks/spaced-repetition";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
 import ReactMarkdown from "react-markdown";
 import { queryKeys } from "@/lib/api/query-keys";
 import type {
   InstructorRead,
+  InterviewSessionPublic,
   LessonPublic,
   LessonResourcePublic,
   ModuleItemPublic,
@@ -218,6 +220,28 @@ function CourseLearnLoaded({
     () => flatItems.filter((fi) => fi.item.item_type === "lesson" && fi.item.target),
     [flatItems],
   );
+
+  // Map interview_config_id -> the student's in-progress session for it, so the
+  // curriculum can disable that interview item and offer a "continue" action
+  // instead of letting the student start a second concurrent session.
+  const { data: myInterviewSessions } = useMyInterviewSessions();
+  const inProgressByConfigId = useMemo(() => {
+    const map = new Map<string, InterviewSessionPublic>();
+    for (const session of myInterviewSessions ?? []) {
+      if (session.status !== "in_progress") continue;
+      if (session.course_id && session.course_id !== course.id) continue;
+      // Keep the most recently started session per config.
+      const existing = map.get(session.interview_config_id);
+      if (
+        !existing ||
+        new Date(session.started_at).getTime() >
+          new Date(existing.started_at).getTime()
+      ) {
+        map.set(session.interview_config_id, session);
+      }
+    }
+    return map;
+  }, [myInterviewSessions, course.id]);
 
   const [activeIdx, setActiveIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>("Lesson Notes");
@@ -668,6 +692,7 @@ function CourseLearnLoaded({
                     onSelect={(idx) => setActiveIdx(idx)}
                     slug={slug}
                     isActiveModule={activeEntry?.moduleId === mod.id}
+                    inProgressByConfigId={inProgressByConfigId}
                   />
                 ))}
               </div>
@@ -977,6 +1002,7 @@ function ModuleSection({
   onSelect,
   slug,
   isActiveModule,
+  inProgressByConfigId,
 }: {
   mod: ModulePublic;
   flatItems: FlatItem[];
@@ -985,7 +1011,9 @@ function ModuleSection({
   onSelect: (idx: number) => void;
   slug: string;
   isActiveModule: boolean;
+  inProgressByConfigId: Map<string, InterviewSessionPublic>;
 }) {
+  const { t } = useTranslation();
   const modItems = flatItems
     .map((fi) => ({ fi, idx: lessonItems.findIndex((lesson) => lesson.item.id === fi.item.id) }))
     .filter(({ fi }) => fi.moduleId === mod.id);
@@ -1068,11 +1096,58 @@ function ModuleSection({
         }
 
         if (isInterview && fi.item.target?.id) {
+          const configId = fi.item.target.id;
+          const activeSession = inProgressByConfigId.get(configId);
+
+          // An interview session is still occurring for this config: disable
+          // the item (block starting a second session) and surface a compact
+          // "in progress" card with a Continue action below it.
+          if (activeSession) {
+            return (
+              <div key={fi.item.id} className="space-y-1">
+                <div
+                  className={cn(className, "opacity-60 cursor-not-allowed")}
+                  aria-disabled="true"
+                >
+                  {inner}
+                </div>
+                <div
+                  className="ml-2 rounded-lg border border-m3-primary/30 bg-m3-primary/5 p-3"
+                  role="status"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full bg-m3-primary motion-safe:animate-pulse"
+                      aria-hidden="true"
+                    />
+                    <span className="text-[10px] font-bold uppercase tracking-tight text-m3-primary">
+                      {t("course_learn.interview_in_progress.badge")}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-xs font-semibold text-m3-on-surface">
+                    {t("course_learn.interview_in_progress.title")}
+                  </p>
+                  <p className="mt-0.5 text-[11px] leading-4 text-m3-on-surface-variant">
+                    {t("course_learn.interview_in_progress.body")}
+                  </p>
+                  <Link
+                    to="/courses/$slug/interview/$moduleId"
+                    params={{ slug, moduleId: configId }}
+                    className="mt-2.5 inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-m3-primary px-3 text-xs font-bold text-white transition-colors hover:bg-m3-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
+                  >
+                    <Play className="h-3.5 w-3.5" />
+                    {t("course_learn.interview_in_progress.continue")}
+                  </Link>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <Link
               key={fi.item.id}
               to="/courses/$slug/interview/$moduleId"
-              params={{ slug, moduleId: fi.item.target.id }}
+              params={{ slug, moduleId: configId }}
               className={className}
             >
               {inner}
