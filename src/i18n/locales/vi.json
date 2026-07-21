@@ -1574,6 +1574,29 @@
       "description": "Trợ lý phỏng vấn ảo aBridgeAI sẽ xác nhận danh tính, âm thanh, ngôn ngữ và mức độ sẵn sàng của bạn. Đồng hồ đánh giá chỉ bắt đầu sau khi bạn xác nhận sẵn sàng. Giọng đọc AI được bật mặc định.",
       "cancel": "Chưa sẵn sàng"
     },
+    "steps": {
+      "aria_label": "Tiến trình phỏng vấn",
+      "setup": "Chuẩn bị",
+      "interview": "Phỏng vấn",
+      "completed": "Hoàn tất"
+    },
+    "setup": {
+      "title": "Sẵn sàng cho buổi phỏng vấn?",
+      "subtitle": "Vài bước kiểm tra nhanh là bạn có thể bắt đầu.",
+      "identity": "Đã xác nhận danh tính",
+      "microphone": "Micro",
+      "mic_connected": "Đã kết nối",
+      "mic_unavailable": "Không phát hiện",
+      "language": "Ngôn ngữ phỏng vấn"
+    },
+    "recovery": {
+      "connection_lost_title": "Mất kết nối",
+      "connection_lost_body": "Có vẻ bạn đang ngoại tuyến. Chúng tôi sẽ tiếp tục thử kết nối lại.",
+      "reconnecting_title": "Đang kết nối lại…",
+      "reconnecting_body": "Vui lòng chờ — chúng tôi đang khôi phục kết nối.",
+      "progress_safe": "Tiến trình và câu trả lời hiện tại của bạn được giữ an toàn.",
+      "reconnect": "Kết nối lại"
+    },
     "onboarding": {
       "language_label": "Ngôn ngữ phỏng vấn",
       "languages": {

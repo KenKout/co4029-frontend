@@ -1583,6 +1583,29 @@
       "description": "The aBridgeAI virtual interviewer will first confirm your identity, audio, language, and readiness. Your assessed interview timer will start only after you confirm that you are ready. AI voice is on by default.",
       "cancel": "Not yet"
     },
+    "steps": {
+      "aria_label": "Interview progress",
+      "setup": "Setup",
+      "interview": "Interview",
+      "completed": "Completed"
+    },
+    "setup": {
+      "title": "Ready for your interview?",
+      "subtitle": "A few quick checks and you're good to go.",
+      "identity": "Identity confirmed",
+      "microphone": "Microphone",
+      "mic_connected": "Connected",
+      "mic_unavailable": "Not detected",
+      "language": "Interview language"
+    },
+    "recovery": {
+      "connection_lost_title": "Connection lost",
+      "connection_lost_body": "You appear to be offline. We'll keep trying to reconnect.",
+      "reconnecting_title": "Reconnecting…",
+      "reconnecting_body": "Hold on — we're restoring your connection.",
+      "progress_safe": "Your progress and current answer are safe.",
+      "reconnect": "Reconnect"
+    },
     "onboarding": {
       "language_label": "Interview language",
       "languages": {
