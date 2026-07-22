@@ -224,7 +224,19 @@ function QuizIntroPanel({
   const maxAttemptsReached =
     quiz.max_attempts != null && completed >= quiz.max_attempts;
   const noRetakesLeft = completed > 0 && !quiz.allow_retakes;
-  const blocked = maxAttemptsReached || noRetakesLeft;
+
+  // Scheduling window (backend migration 0032). NULL columns = no bound.
+  // available_from → not open yet; available_until → closed. `due_at` is a
+  // soft deadline: never blocks, only surfaces a "due" label / late warning.
+  const now = Date.now();
+  const openAt = quiz.available_from ? new Date(quiz.available_from) : null;
+  const closeAt = quiz.available_until ? new Date(quiz.available_until) : null;
+  const dueAt = quiz.due_at ? new Date(quiz.due_at) : null;
+  const notYetOpen = openAt != null && now < openAt.getTime();
+  const windowClosed = closeAt != null && now > closeAt.getTime();
+  const pastDue = dueAt != null && now > dueAt.getTime();
+  const blocked =
+    maxAttemptsReached || noRetakesLeft || notYetOpen || windowClosed;
 
   // Most recent attempts first; in_progress filtered out (review only after submit)
   const reviewableAttempts = [...attempts]
@@ -289,6 +301,55 @@ function QuizIntroPanel({
           </div>
         </div>
 
+        {(openAt || closeAt || dueAt) && (
+          <div className="mb-8 flex flex-col gap-2 text-left">
+            {openAt && (
+              <div className="flex items-center gap-2 text-sm text-m3-on-surface-variant">
+                <Clock className="h-4 w-4 shrink-0 text-m3-primary" />
+                <span>
+                  {t(
+                    notYetOpen
+                      ? "course_quiz.schedule.opens_at"
+                      : "course_quiz.schedule.opened_at",
+                    { when: openAt.toLocaleString() },
+                  )}
+                </span>
+              </div>
+            )}
+            {closeAt && (
+              <div className="flex items-center gap-2 text-sm text-m3-on-surface-variant">
+                <Clock className="h-4 w-4 shrink-0 text-amber-600" />
+                <span>
+                  {t(
+                    windowClosed
+                      ? "course_quiz.schedule.closed_at"
+                      : "course_quiz.schedule.closes_at",
+                    { when: closeAt.toLocaleString() },
+                  )}
+                </span>
+              </div>
+            )}
+            {dueAt && (
+              <div
+                className={cn(
+                  "flex items-center gap-2 text-sm",
+                  pastDue ? "text-amber-700 font-medium" : "text-m3-on-surface-variant",
+                )}
+              >
+                <Flag className="h-4 w-4 shrink-0" />
+                <span>
+                  {t(
+                    pastDue
+                      ? "course_quiz.schedule.was_due"
+                      : "course_quiz.schedule.due_by",
+                    { when: dueAt.toLocaleString() },
+                  )}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         {inProgressAttempt ? (
           <div className="space-y-4">
             <div className="rounded-xl bg-m3-primary-fixed/30 border border-m3-primary/20 px-4 py-3 text-sm text-m3-on-surface flex items-center justify-center gap-2">
@@ -314,8 +375,21 @@ function QuizIntroPanel({
           </div>
         ) : blocked ? (
           <div className="rounded-xl bg-m3-surface-container-low px-4 py-3 text-sm text-m3-on-surface-variant">
-            {noRetakesLeft && t("course_quiz.messages.no_retakes")}
+            {notYetOpen &&
+              t("course_quiz.messages.not_yet_open", {
+                when: openAt ? openAt.toLocaleString() : "",
+              })}
+            {windowClosed &&
+              t("course_quiz.messages.window_closed", {
+                when: closeAt ? closeAt.toLocaleString() : "",
+              })}
+            {noRetakesLeft &&
+              !notYetOpen &&
+              !windowClosed &&
+              t("course_quiz.messages.no_retakes")}
             {maxAttemptsReached &&
+              !notYetOpen &&
+              !windowClosed &&
               ` ${t("course_quiz.messages.max_attempts_reached", { count: quiz.max_attempts ?? 0 })}`}
           </div>
         ) : (
