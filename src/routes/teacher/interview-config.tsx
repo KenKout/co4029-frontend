@@ -8,6 +8,7 @@ import {
   ArrowDown,
   Check,
   CheckCircle2,
+  ChevronDown,
   HelpCircle,
   Loader2,
   Pencil,
@@ -860,6 +861,7 @@ function SettingsForm({
   justSaved: boolean;
 }) {
   const { t } = useTranslation();
+  const [securityOpen, setSecurityOpen] = useState(false);
   function update<K extends keyof SettingsDraft>(
     key: K,
     value: SettingsDraft[K],
@@ -1001,8 +1003,13 @@ function SettingsForm({
         </Field>
       </Section>
 
-      <details className="group rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-4">
-        <summary className="flex cursor-pointer list-none items-center gap-3">
+      <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-4">
+        <button
+          type="button"
+          aria-expanded={securityOpen}
+          onClick={() => setSecurityOpen((open) => !open)}
+          className="flex w-full cursor-pointer list-none items-center gap-3 text-left"
+        >
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-500/10 text-emerald-700">
             <ShieldCheck className="h-5 w-5" />
           </span>
@@ -1017,9 +1024,23 @@ function SettingsForm({
           <span className="text-xs font-bold text-emerald-700">
             {t("teacher_interview_config.security.mandatory")}
           </span>
-        </summary>
+          <ChevronDown
+            className={`h-5 w-5 shrink-0 text-m3-on-surface-variant transition-transform duration-300 ${
+              securityOpen ? "rotate-180" : ""
+            }`}
+            aria-hidden="true"
+          />
+        </button>
 
-        <div className="mt-5 space-y-5 border-t border-m3-outline-variant/20 pt-5">
+        <div
+          className={`grid transition-all duration-300 ease-in-out ${
+            securityOpen
+              ? "grid-rows-[1fr] opacity-100"
+              : "grid-rows-[0fr] opacity-0"
+          }`}
+        >
+          <div className="overflow-hidden">
+            <div className="mt-5 space-y-5 border-t border-m3-outline-variant/20 pt-5">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
               {t("teacher_interview_config.security.protected_by_platform")}
@@ -1119,8 +1140,10 @@ function SettingsForm({
           <p className="text-[11px] text-m3-on-surface-variant">
             {t("teacher_interview_config.security.rules_hidden")}
           </p>
+            </div>
+          </div>
         </div>
-      </details>
+      </div>
 
       <div className="flex items-center justify-between gap-3 pt-4 border-t border-m3-outline-variant/20">
         <p className="text-[11px] text-m3-on-surface-variant">
