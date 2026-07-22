@@ -590,32 +590,42 @@
   "teacher_sr_at_risk": {
     "breadcrumb_at_risk": "Sinh viên cần hỗ trợ",
     "title": "Sinh viên cần hỗ trợ",
-    "subtitle": "Danh sách sinh viên cần can thiệp dựa trên 3 tín hiệu UC-COURSE-04",
+    "subtitle": "Những sinh viên có thể đang tụt lại — bị đánh dấu vì bỏ ôn tập, không tiến bộ tuần này, hoặc yếu khi kiểm tra trực tiếp.",
     "no_activity": "Chưa có hoạt động",
     "today": "Hôm nay",
     "yesterday": "Hôm qua",
     "days_ago": "{{count}} ngày trước",
     "weeks_ago": "{{count}} tuần trước",
     "months_ago": "{{count}} tháng trước",
-    "flag_count": "{{count}} cờ",
+    "flag_count": "{{count}} vấn đề",
     "cols": {
       "student": "Sinh viên",
-      "total": "Tổng",
-      "compliance_short": "TT",
-      "kr_short": "KR",
-      "tp_short": "LT/TH"
+      "why_flagged": "Lý do đánh dấu",
+      "priority": "Ưu tiên",
+      "total": "Tổng"
+    },
+    "priority": {
+      "high_label": "Cần xử lý ngay",
+      "low_label": "Cần theo dõi"
     },
     "empty_title": "Không có sinh viên cần hỗ trợ",
     "empty_body": "Tất cả sinh viên đang theo kịp tiến độ. Tiếp tục theo dõi trên Tổng quan lớp.",
     "row_actions": "Thao tác dòng",
     "view_detail": "Xem chi tiết ôn tập",
+    "none_short": "Ổn định",
     "flags": {
-      "low_compliance_label": "Tỷ lệ tuân thủ thấp",
-      "low_compliance_short": "Tuân thủ",
-      "frozen_kr_label": "KR đứng yên",
-      "frozen_kr_short": "KR",
-      "tp_gap_label": "Chênh lệch lý thuyết-thực hành cao",
-      "tp_gap_short": "Lý thuyết / Thực hành"
+      "low_compliance_label": "Bỏ ôn tập",
+      "low_compliance_short": "Bỏ ôn tập",
+      "low_compliance_desc": "Hoàn thành chưa tới một nửa số thẻ ôn tập đúng hạn.",
+      "low_compliance_action": "Nhắc sinh viên hoàn thành ôn tập hằng ngày.",
+      "frozen_kr_label": "Không tiến bộ tuần này",
+      "frozen_kr_short": "Không tiến bộ tuần này",
+      "frozen_kr_desc": "Không có tiến bộ về độ ghi nhớ trong 7 ngày qua — đã ngừng ôn tập hoặc không cải thiện.",
+      "frozen_kr_action": "Hỏi thăm — sinh viên có thể đang bế tắc hoặc mất động lực.",
+      "tp_gap_label": "Yếu khi kiểm tra trực tiếp",
+      "tp_gap_short": "Yếu khi kiểm tra trực tiếp",
+      "tp_gap_desc": "Điểm bài kiểm tra viết cao nhưng điểm phỏng vấn trực tiếp thấp hơn nhiều (chênh 30+ điểm).",
+      "tp_gap_action": "Cho sinh viên luyện nói hoặc giải thích thành lời nhiều hơn."
     }
   },
   "teacher_sr_cohort": {
@@ -624,35 +634,54 @@
     "breadcrumb_overview": "Tổng quan lớp",
     "back": "Quay lại",
     "title": "Tổng quan lớp",
-    "subtitle": "Phân bố KR và các câu hỏi khó của từng bài",
+    "subtitle": "Mức độ ghi nhớ của lớp cho từng bài, và những câu hỏi các em thấy khó nhất.",
     "view_at_risk": "Học viên cần hỗ trợ",
     "lesson_picker_label": "Chọn bài học",
     "lesson_loading": "Đang tải...",
     "lesson_empty": "Khóa học chưa có bài học",
-    "histogram_title": "Phân bố KR — {{lesson}}",
-    "histogram_subtitle": "Số lượng sinh viên theo từng khoảng KR",
+    "histogram_title": "Độ ghi nhớ — {{lesson}}",
+    "histogram_subtitle": "Số sinh viên trong mỗi khoảng độ ghi nhớ",
+    "kr_hint": "Độ ghi nhớ (thuật ngữ: \"KR\", knowledge retention): ước tính của mô hình về khả năng sinh viên nhớ được nội dung ngay lúc này, từ 0% đến 100%. Càng cao càng tốt.",
     "student_count": "{{count}} sinh viên",
     "student_count_plural": "{{count}} sinh viên",
-    "kr_axis": "Khoảng KR",
+    "kr_axis": "Độ ghi nhớ",
     "students_axis": "Số sinh viên",
-    "kr_tooltip_label": "Khoảng KR",
-    "no_kr_data_title": "Chưa có dữ liệu KR",
+    "kr_tooltip_label": "Độ ghi nhớ",
+    "no_kr_data_title": "Chưa có dữ liệu ôn tập",
     "no_kr_data_body": "Sinh viên cần hoàn thành ít nhất một lượt ôn tập để xuất hiện trong biểu đồ.",
     "stats": {
-      "mean_kr": "KR trung bình",
-      "median_kr": "KR trung vị"
+      "mean_kr": "Độ ghi nhớ trung bình",
+      "median_kr": "Sinh viên điển hình"
     },
-    "difficult_title": "Câu khó",
-    "difficult_subtitle": "Top 10 câu hỏi có EF trung bình thấp nhất",
+    "difficult_title": "Câu hỏi sinh viên thấy khó nhất",
+    "difficult_subtitle": "10 câu hỏi lớp gặp khó khăn nhiều nhất",
+    "ef_hint": "Độ khó dựa trên hệ số dễ nhớ của câu hỏi (thuật ngữ: \"EF\"): điểm lặp lại ngắt quãng, càng thấp nghĩa là sinh viên sai nhiều hơn và phải ôn lại nhiều hơn. Dưới 1.6 = khó, 1.6–2.0 = trung bình.",
+    "difficulty": {
+      "hard": "Khó",
+      "medium": "Trung bình",
+      "easier": "Dễ hơn"
+    },
     "difficult_empty_title": "Chưa có câu hỏi khó",
     "difficult_empty_body": "Cần thêm dữ liệu để xếp hạng.",
+    "untitled_question": "(Câu hỏi chưa có nội dung)",
     "cols": {
       "question": "Câu hỏi",
-      "mean_ef": "EF trung bình",
+      "mean_ef": "Độ khó",
       "students": "Sinh viên",
       "actions": "Hành động"
     },
-    "regenerate_question": "Tái tạo câu hỏi"
+    "regenerate_question": "Tái tạo câu hỏi",
+    "detail": {
+      "loading": "Đang tải kết quả sinh viên…",
+      "empty": "Chưa có dữ liệu sinh viên cho câu hỏi này.",
+      "student": "Sinh viên",
+      "last_result": "Kết quả gần nhất",
+      "accuracy": "Độ chính xác",
+      "last_reviewed": "Ôn gần nhất",
+      "correct": "Đúng",
+      "incorrect": "Sai",
+      "accuracy_value": "{{correct}}/{{total}} đúng"
+    }
   },
   "management_career_paths": {
     "title": "Quản lý lộ trình",
@@ -1358,6 +1387,16 @@
     }
   },
   "course_quiz": {
+    "empty": {
+      "no_questions_title": "Chưa có câu hỏi",
+      "no_questions_body": "Bài kiểm tra này hiện chưa có câu hỏi nào được duyệt để hiển thị. Giáo viên có thể vẫn đang hoàn thiện — vui lòng quay lại sau."
+    },
+    "integrity": {
+      "badge": "Đang giám sát",
+      "title": "Bài kiểm tra này được giám sát",
+      "body": "Việc rời khỏi trang này — chuyển tab, ứng dụng hoặc cửa sổ — sẽ được ghi lại và chia sẻ với giáo viên của bạn.",
+      "reassure": "Hãy ở lại trang này cho đến khi nộp bài. Gián đoạn ngắn sẽ không làm bạn trượt, nhưng việc chuyển đi lại nhiều lần có thể bị đánh dấu để xem xét."
+    },
     "resume": {
       "pending_notice": "Bạn có một lượt làm chưa hoàn thành (#{{number}}). Tiếp tục để làm tiếp từ chỗ đang dở.",
       "resume": "Tiếp tục làm bài",
@@ -1960,6 +1999,7 @@
       "delete_failed": "Không thể xoá bài kiểm tra",
       "published": "Đã xuất bản bài kiểm tra",
       "publish_failed": "Không thể xuất bản bài kiểm tra",
+      "publish_pending_review": "Một số câu hỏi vẫn đang chờ duyệt. Hãy duyệt tất cả câu hỏi trước khi xuất bản.",
       "question_added": "Đã thêm câu hỏi",
       "add_question_failed": "Không thể thêm câu hỏi",
       "settings_saved": "Đã lưu cấu hình",
@@ -1969,6 +2009,8 @@
       "generation_failed": "Không thể tạo câu hỏi",
       "expected_time_set": "Đã đặt thời gian dự kiến cho {{count}} câu hỏi",
       "expected_time_failed": "Không thể đặt thời gian dự kiến",
+      "bulk_approved": "Đã duyệt {{count}} câu hỏi",
+      "bulk_approve_failed": "Không thể duyệt câu hỏi",
       "question_approved": "Đã duyệt câu hỏi",
       "question_saved": "Đã lưu câu hỏi",
       "save_question_failed": "Không thể lưu câu hỏi",
@@ -2006,6 +2048,10 @@
       "title": "Xoá bài kiểm tra này?",
       "body": "Hành động này sẽ xoá vĩnh viễn bài kiểm tra này, các câu hỏi, lượt làm bài và mục module liên quan. Không thể hoàn tác."
     },
+    "confirm_publish": {
+      "title": "Xuất bản bài kiểm tra này?",
+      "body": "Thao tác này sẽ xuất bản {{count}} câu hỏi và hiển thị bài kiểm tra cho học viên. Bạn có thể xem thử như học viên trước, hoặc xuất bản ngay."
+    },
     "confirm_delete_question": "Xoá câu hỏi này? Không thể hoàn tác.",
     "combo_undo": {
       "message": "Đang xoá {{count}} câu hỏi…",
@@ -2028,9 +2074,11 @@
       "title": "Đặt nhanh thời gian",
       "selected_count": "{{selected}}/{{total}} đã chọn",
       "duration_seconds": "Thời gian (giây)",
+      "seconds_suffix": "giây",
       "select_all": "Chọn tất cả",
       "deselect": "Bỏ chọn",
-      "apply": "Áp dụng cho đã chọn"
+      "apply": "Áp dụng cho đã chọn",
+      "approve_selected": "Duyệt đã chọn"
     },
     "questions": {
       "sr_select": "Chọn câu hỏi {{position}}",
@@ -2142,6 +2190,7 @@
       "description": "{{title}} — bản chỉ đọc, mô phỏng giao diện học viên.",
       "read_only": "Chỉ đọc",
       "empty_body": "Thêm câu hỏi trong tab Câu hỏi hoặc dùng AI để tạo nhanh.",
+      "empty_approved_body": "Chưa có câu hỏi nào được duyệt. Hãy duyệt câu hỏi trong tab Câu hỏi — học viên chỉ thấy câu hỏi đã duyệt.",
       "no_content": "(Chưa có nội dung)",
       "correct": "Đúng"
     }

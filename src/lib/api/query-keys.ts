@@ -61,6 +61,8 @@ export const queryKeys = {
     difficultCards: (courseId: string, lessonId: string, topN: number) =>
       ["sr", "difficult-cards", courseId, lessonId, topN] as const,
     atRisk: (courseId: string) => ["sr", "at-risk", courseId] as const,
+    cardStudentResults: (courseId: string, questionId: string) =>
+      ["sr", "card-student-results", courseId, questionId] as const,
     studentDetail: (courseId: string, studentId: string) =>
       ["sr", "student-detail", courseId, studentId] as const,
   },

@@ -29,6 +29,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ApiError } from "@/lib/api/client";
 import {
   useAddQuizQuestion,
+  useBulkApprove,
   useBulkSetExpectedTime,
   useDeleteQuiz,
   usePatchQuiz,
@@ -153,6 +154,7 @@ export default function QuizManagePage() {
 
   const [tab, setTab] = useState<TabKey>("questions");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmPublish, setConfirmPublish] = useState(false);
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
@@ -233,8 +235,18 @@ export default function QuizManagePage() {
 
   const moduleId = courseModule.id;
   const isPublished = quiz.status === "published";
+  // Hard approval gate: every question must be review_status="approved"
+  // before publish. This mirrors the backend publish_gate assertion — the
+  // "pending review" banner is now enforced, not just advisory.
+  const pendingReviewCount = questions.filter(
+    (q) => q.review_status !== "approved",
+  ).length;
+  const hasPendingReview = questions.length > 0 && pendingReviewCount > 0;
   const publishDisabled =
-    publishQuiz.isPending || isPublished || questions.length === 0;
+    publishQuiz.isPending ||
+    isPublished ||
+    questions.length === 0 ||
+    hasPendingReview;
 
   function returnToModule() {
     void navigate({
@@ -262,6 +274,7 @@ export default function QuizManagePage() {
     try {
       await publishQuiz.mutateAsync();
       toast.success(t("teacher_quiz_manage.toasts.published"));
+      setConfirmPublish(false);
     } catch (err: unknown) {
       if (
         err instanceof ApiError &&
@@ -270,6 +283,19 @@ export default function QuizManagePage() {
           err.code === "missing_expected_response_time" ||
           err.code === "missing_expected_time")
       ) {
+        setConfirmPublish(false);
+        return;
+      }
+      // Backend approval gate (pending_review): keep the dialog open is
+      // pointless since the gate can't be satisfied from here — surface the
+      // message and close so the teacher goes back to approve questions.
+      if (
+        err instanceof ApiError &&
+        err.status === 422 &&
+        err.code === "pending_review"
+      ) {
+        toast.error(t("teacher_quiz_manage.toasts.publish_pending_review"));
+        setConfirmPublish(false);
         return;
       }
       toast.error(
@@ -459,7 +485,7 @@ export default function QuizManagePage() {
               : "border-transparent px-0 py-0",
           )}
         >
-          <div className="bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 border border-m3-outline-variant/20 shadow-glass">
+          <div className="bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 border border-m3-outline-variant/20 shadow-lg shadow-m3-primary/5">
             {TAB_KEYS.map((key) => {
               const active = key === tab;
               return (
@@ -501,7 +527,7 @@ export default function QuizManagePage() {
             <Button
               type="button"
               disabled={publishDisabled}
-              onClick={handlePublish}
+              onClick={() => setConfirmPublish(true)}
               className={cn(
                 "gap-2 border-0 shadow-glass",
                 isPublished
@@ -641,6 +667,67 @@ export default function QuizManagePage() {
           </div>
         </div>
       )}
+
+      {confirmPublish && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-xl bg-m3-surface p-6 shadow-xl space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-xl bg-m3-primary/10 text-m3-primary flex items-center justify-center shrink-0">
+                <Upload className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="font-headline font-bold text-base text-m3-on-surface">
+                  {t("teacher_quiz_manage.confirm_publish.title")}
+                </h2>
+                <p className="text-sm text-m3-on-surface-variant">
+                  {t("teacher_quiz_manage.confirm_publish.body", {
+                    count: questions.length,
+                  })}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setConfirmPublish(false)}
+                disabled={publishQuiz.isPending}
+              >
+                {t("common.cancel")}
+              </Button>
+              {course?.slug && (
+                <Link
+                  to="/courses/$slug/quiz/$quizId"
+                  params={{ slug: course.slug, quizId }}
+                >
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    disabled={publishQuiz.isPending}
+                  >
+                    <Eye className="h-4 w-4" />
+                    {t("teacher_quiz_manage.actions.view_as_student")}
+                  </Button>
+                </Link>
+              )}
+              <Button
+                type="button"
+                onClick={handlePublish}
+                disabled={publishQuiz.isPending}
+                className="gradient-primary text-white border-0 gap-2 hover:shadow-ai-glow"
+              >
+                {publishQuiz.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {t("teacher_quiz_manage.actions.publish")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -682,6 +769,7 @@ function QuestionsTab({
 }) {
   const { t } = useTranslation();
   const bulkSet = useBulkSetExpectedTime(quizId);
+  const bulkApprove = useBulkApprove(quizId);
   const pendingCount = questions.filter(
     (q) => q.review_status !== "approved",
   ).length;
@@ -713,6 +801,25 @@ function QuestionsTab({
       toast.error(
         (err as Error).message ||
           t("teacher_quiz_manage.toasts.expected_time_failed"),
+      );
+    }
+  }
+
+  async function handleApproveBulk() {
+    try {
+      const result = await bulkApprove.mutateAsync({
+        question_ids: Array.from(selectedIds),
+      });
+      toast.success(
+        t("teacher_quiz_manage.toasts.bulk_approved", {
+          count: result.approved,
+        }),
+      );
+      onClearSelection();
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_quiz_manage.toasts.bulk_approve_failed"),
       );
     }
   }
@@ -806,6 +913,9 @@ function QuestionsTab({
           onApply={handleApplyBulk}
           applyValid={bulkValid}
           applying={bulkSet.isPending}
+          onApprove={handleApproveBulk}
+          approveValid={selectedIds.size > 0}
+          approving={bulkApprove.isPending}
         />
 
         {questions.length === 0 ? (
@@ -898,6 +1008,9 @@ function BulkSetExpectedTimeBar({
   onApply,
   applyValid,
   applying,
+  onApprove,
+  approveValid,
+  approving,
 }: {
   totalQuestions: number;
   selectedCount: number;
@@ -908,6 +1021,9 @@ function BulkSetExpectedTimeBar({
   onApply: () => void | Promise<void>;
   applyValid: boolean;
   applying: boolean;
+  onApprove: () => void | Promise<void>;
+  approveValid: boolean;
+  approving: boolean;
 }) {
   const { t } = useTranslation();
   if (totalQuestions === 0) return null;
@@ -935,18 +1051,24 @@ function BulkSetExpectedTimeBar({
           })}
         </Badge>
       </div>
+      {/* Compact seconds input: a narrow field with an inline "sec" suffix
+          so it reads as a seconds input without the wide label eating space. */}
       <div className="flex items-center gap-2 min-w-0">
-        <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant whitespace-nowrap">
-          {t("teacher_quiz_manage.bulk_time.duration_seconds")}
-        </label>
-        <Input
-          type="number"
-          min={1}
-          step={1}
-          value={bulkSeconds}
-          onChange={(e) => onBulkSecondsChange(e.target.value)}
-          className="bg-m3-surface text-sm w-24"
-        />
+        <div className="relative">
+          <Input
+            type="number"
+            min={1}
+            step={1}
+            value={bulkSeconds}
+            onChange={(e) => onBulkSecondsChange(e.target.value)}
+            aria-label={t("teacher_quiz_manage.bulk_time.duration_seconds")}
+            title={t("teacher_quiz_manage.bulk_time.duration_seconds")}
+            className="bg-m3-surface text-sm w-20 pr-9 tabular-nums"
+          />
+          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-m3-on-surface-variant">
+            {t("teacher_quiz_manage.bulk_time.seconds_suffix")}
+          </span>
+        </div>
       </div>
       <div className="flex items-center gap-2 flex-wrap ml-auto">
         <Button
@@ -980,6 +1102,20 @@ function BulkSetExpectedTimeBar({
             <Save className="h-3.5 w-3.5" />
           )}
           {t("teacher_quiz_manage.bulk_time.apply")}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          disabled={!approveValid || approving}
+          onClick={onApprove}
+          className="gap-2 bg-emerald-600 text-white border-0 hover:bg-emerald-700"
+        >
+          {approving ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <CheckCircle2 className="h-3.5 w-3.5" />
+          )}
+          {t("teacher_quiz_manage.bulk_time.approve_selected")}
         </Button>
       </div>
     </div>
@@ -1962,6 +2098,12 @@ function PreviewTab({
   questions: QuizQuestionAuthoring[];
 }) {
   const { t } = useTranslation();
+  // Preview mirrors the student experience: only approved questions are
+  // shown, matching the backend approved-only filter on the taking/published
+  // surfaces. Pending/rejected drafts never appear here.
+  const approvedQuestions = questions.filter(
+    (q) => q.review_status === "approved",
+  );
   return (
     <div className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl p-6 lg:p-8 space-y-6 shadow-glass">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
@@ -1978,19 +2120,19 @@ function PreviewTab({
         </Badge>
       </div>
 
-      {questions.length === 0 ? (
+      {approvedQuestions.length === 0 ? (
         <div className="text-center py-16 text-m3-on-surface-variant space-y-1">
           <HelpCircle className="h-8 w-8 mx-auto text-m3-outline-variant" />
           <p className="text-base font-bold">
             {t("teacher_quiz_manage.empty.no_questions_title")}
           </p>
           <p className="text-sm">
-            {t("teacher_quiz_manage.preview.empty_body")}
+            {t("teacher_quiz_manage.preview.empty_approved_body")}
           </p>
         </div>
       ) : (
         <div className="space-y-5">
-          {questions.map((question, idx) => (
+          {approvedQuestions.map((question, idx) => (
             <PreviewQuestion key={question.id} index={idx} question={question} />
           ))}
         </div>

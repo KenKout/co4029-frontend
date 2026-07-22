@@ -10,7 +10,6 @@ import {
   Snowflake,
   TrendingDown,
   UserCog,
-  XCircle,
 } from "lucide-react";
 import { useAtRiskStudents } from "@/lib/api/hooks/spaced-repetition";
 import { useCourse } from "@/lib/api/hooks/courses";
@@ -35,20 +34,33 @@ const FLAG_ICONS: Record<FlagKey, typeof TrendingDown> = {
   high_theory_practice_gap: AlertTriangle,
 };
 
-const FLAG_LABEL_KEYS: Record<FlagKey, { label: string; short: string }> = {
+const FLAG_LABEL_KEYS: Record<
+  FlagKey,
+  { label: string; short: string; desc: string; action: string }
+> = {
   low_compliance: {
     label: "teacher_sr_at_risk.flags.low_compliance_label",
     short: "teacher_sr_at_risk.flags.low_compliance_short",
+    desc: "teacher_sr_at_risk.flags.low_compliance_desc",
+    action: "teacher_sr_at_risk.flags.low_compliance_action",
   },
   frozen_kr: {
     label: "teacher_sr_at_risk.flags.frozen_kr_label",
     short: "teacher_sr_at_risk.flags.frozen_kr_short",
+    desc: "teacher_sr_at_risk.flags.frozen_kr_desc",
+    action: "teacher_sr_at_risk.flags.frozen_kr_action",
   },
   high_theory_practice_gap: {
     label: "teacher_sr_at_risk.flags.tp_gap_label",
     short: "teacher_sr_at_risk.flags.tp_gap_short",
+    desc: "teacher_sr_at_risk.flags.tp_gap_desc",
+    action: "teacher_sr_at_risk.flags.tp_gap_action",
   },
 };
+
+function activeFlagsOf(student: AtRiskStudent): FlagKey[] {
+  return FLAG_KEYS.filter((k) => student[k]);
+}
 
 function useRelDate() {
   const { t } = useTranslation();
@@ -67,22 +79,34 @@ function useRelDate() {
   };
 }
 
-function FlagCell({ active, label }: { active: boolean; label: string }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center justify-center gap-1 text-[11px] font-bold w-7 h-7 rounded-lg shrink-0",
-        active ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-600",
-      )}
-      title={label}
-      aria-label={label}
-    >
-      {active ? (
-        <XCircle className="h-3.5 w-3.5" />
-      ) : (
+function WhyFlaggedChips({ student }: { student: AtRiskStudent }) {
+  const { t } = useTranslation();
+  const flags = activeFlagsOf(student);
+  if (flags.length === 0) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
         <CheckCircle2 className="h-3.5 w-3.5" />
-      )}
-    </span>
+        {t("teacher_sr_at_risk.none_short")}
+      </span>
+    );
+  }
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {flags.map((key) => {
+        const Icon = FLAG_ICONS[key];
+        const meta = FLAG_LABEL_KEYS[key];
+        return (
+          <span
+            key={key}
+            className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-2 py-1 text-[11px] font-semibold text-red-700"
+            title={`${t(meta.label)} — ${t(meta.desc)}`}
+          >
+            <Icon className="h-3 w-3 shrink-0" />
+            {t(meta.short)}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 
@@ -102,23 +126,16 @@ export default function TeacherSrAtRiskPage() {
   const { data: course } = useCourse(courseId);
   const { data: students, isLoading } = useAtRiskStudents(courseId);
 
-  const atRiskList = students ?? [];
+  // Sort most-urgent first: more issues = higher up. Teachers scan top-down,
+  // so the students needing attention now surface immediately (the raw query
+  // orders alphabetically, which buries the worst cases).
+  const atRiskList = [...(students ?? [])].sort(
+    (a, b) => flagCountOf(b) - flagCountOf(a),
+  );
 
   const detailTo = "/teacher/courses/$courseId/students/$studentId/sr" as const;
   const goToDetail = (studentId: string) =>
     void navigate({ to: detailTo, params: { courseId, studentId } });
-
-  const flagColumn = (
-    key: FlagKey,
-    colId: string,
-    labelKey: string,
-  ): DataTableColumn<AtRiskStudent> => ({
-    id: colId,
-    header: t(`teacher_sr_at_risk.cols.${colId}`),
-    headerTitle: t(labelKey),
-    align: "center",
-    cell: (s) => <FlagCell active={s[key]} label={t(labelKey)} />,
-  });
 
   const columns: DataTableColumn<AtRiskStudent>[] = [
     {
@@ -141,23 +158,34 @@ export default function TeacherSrAtRiskPage() {
         </div>
       ),
     },
-    flagColumn("low_compliance", "compliance_short", "teacher_sr_at_risk.flags.low_compliance_label"),
-    flagColumn("frozen_kr", "kr_short", "teacher_sr_at_risk.flags.frozen_kr_label"),
-    flagColumn("high_theory_practice_gap", "tp_short", "teacher_sr_at_risk.flags.tp_gap_label"),
     {
-      id: "total",
-      header: t("teacher_sr_at_risk.cols.total"),
+      id: "why_flagged",
+      header: t("teacher_sr_at_risk.cols.why_flagged"),
+      cell: (s) => <WhyFlaggedChips student={s} />,
+    },
+    {
+      id: "priority",
+      header: t("teacher_sr_at_risk.cols.priority"),
       align: "center",
       cell: (s) => {
         const count = flagCountOf(s);
+        const high = count >= 2;
         return (
           <span
             className={cn(
-              "rounded-full px-2 py-1 text-[10px] font-bold whitespace-nowrap",
-              count >= 2 ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700",
+              "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap",
+              high ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700",
             )}
+            title={t("teacher_sr_at_risk.flag_count", { count })}
           >
-            {t("teacher_sr_at_risk.flag_count", { count })}
+            {high ? (
+              <AlertTriangle className="h-3 w-3" />
+            ) : (
+              <Eye className="h-3 w-3" />
+            )}
+            {high
+              ? t("teacher_sr_at_risk.priority.high_label")
+              : t("teacher_sr_at_risk.priority.low_label")}
           </span>
         );
       },
@@ -208,14 +236,19 @@ export default function TeacherSrAtRiskPage() {
                   <Icon className="h-5 w-5 text-red-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant truncate">
-                    {t(meta.short)}
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-2xl font-heading font-black text-m3-primary">
+                      {isLoading ? "—" : count}
+                    </p>
+                    <p className="text-sm font-bold text-m3-on-surface truncate">
+                      {t(meta.label)}
+                    </p>
+                  </div>
+                  <p className="text-xs text-m3-on-surface-variant mt-1 leading-snug">
+                    {t(meta.desc)}
                   </p>
-                  <p className="text-2xl font-heading font-black text-m3-primary mt-0.5">
-                    {isLoading ? "—" : count}
-                  </p>
-                  <p className="text-xs text-m3-on-surface-variant mt-0.5">
-                    {t(meta.label)}
+                  <p className="text-xs text-m3-primary/80 mt-1 leading-snug">
+                    {t(meta.action)}
                   </p>
                 </div>
               </div>

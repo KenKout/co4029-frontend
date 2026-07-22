@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   BookOpen,
@@ -35,6 +36,7 @@ import { isApiErrorCode } from "@/lib/api/error-codes";
 import { QuestionRenderer } from "@/routes/_components/QuestionRenderer";
 import { QuizSummaryCard, type QuizSummaryItem } from "@/routes/_components/QuizSummaryCard";
 import { QuizConfigPopover } from "@/routes/_components/QuizConfigPopover";
+import { QuizIntegrityNotice } from "@/routes/_components/QuizIntegrityNotice";
 import type {
   QuizAttemptRead,
   QuizForTakingPublic,
@@ -43,6 +45,7 @@ import type {
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { clearSeenAt, loadSeenAt, saveSeenAt } from "@/lib/quiz-timing";
+import { useQuizIntegrityReporter } from "@/lib/hooks/useQuizIntegrityReporter";
 
 type QuestionState = "completed" | "active" | "flagged" | "pending";
 
@@ -522,6 +525,11 @@ export default function CourseQuizPage() {
   const submitAnswer = useSubmitQuizAnswer(activeAttemptId);
   const submitAttempt = useSubmitQuizAttempt(activeAttemptId);
 
+  // Proctoring: report tab-switch / focus-loss signals ONLY while a take is
+  // live (an attempt exists and we're in taking mode). Passing null outside
+  // an active take detaches the listeners. Fire-and-forget; never blocks UI.
+  useQuizIntegrityReporter(taking && activeAttemptId ? activeAttemptId : null);
+
   const autoSubmitStartedRef = useRef(false);
   const questionSeenAtRef = useRef<Record<string, number>>({});
   const hydratedAttemptIdRef = useRef<string | null>(null);
@@ -874,6 +882,34 @@ export default function CourseQuizPage() {
     );
   }
 
+  // Defensive: a live take can legitimately carry zero questions — e.g. a
+  // quiz published before the approval gate whose questions are all still
+  // pending review (the approved-only taking filter excludes them). Render a
+  // friendly empty state instead of dereferencing an undefined question.
+  if (displayQuestions.length === 0) {
+    return (
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-10">
+        <div className="max-w-lg mx-auto text-center bg-m3-surface-container-lowest rounded-xl p-10 shadow-editorial space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 flex items-center justify-center">
+            <AlertCircle className="h-7 w-7 text-amber-600" />
+          </div>
+          <h2 className="font-headline font-bold text-xl text-m3-on-surface">
+            {t("course_quiz.empty.no_questions_title")}
+          </h2>
+          <p className="text-sm text-m3-on-surface-variant">
+            {t("course_quiz.empty.no_questions_body")}
+          </p>
+          <Link to="/courses/$slug/learn" params={{ slug }}>
+            <Button variant="outline" className="gap-2 mt-2">
+              <ArrowLeft className="h-4 w-4" />
+              {t("course_interview.actions.course")}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const activeQuestion = displayQuestions[activeIdx];
   const activeStatus = statuses[activeIdx] ?? {
     selectedOptionId: null,
@@ -936,6 +972,7 @@ export default function CourseQuizPage() {
               showHints={quiz.show_hints}
               cooldownHours={quiz.cooldown_hours}
             />
+            {taking && activeAttemptId && <QuizIntegrityNotice />}
             {quiz.time_limit_seconds ? (
               <div
                 className={cn(

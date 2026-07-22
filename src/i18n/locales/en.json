@@ -595,7 +595,7 @@
   "teacher_sr_at_risk": {
     "breadcrumb_at_risk": "At-risk students",
     "title": "Students who need help",
-    "subtitle": "Students flagged by the three UC-COURSE-04 signals",
+    "subtitle": "Students who may be falling behind — flagged for skipping reviews, stalling this week, or struggling when tested live.",
     "no_activity": "No activity yet",
     "today": "Today",
     "yesterday": "Yesterday",
@@ -605,26 +605,36 @@
     "weeks_ago_plural": "{{count}} weeks ago",
     "months_ago": "{{count}} month ago",
     "months_ago_plural": "{{count}} months ago",
-    "flag_count": "{{count}} flag",
-    "flag_count_plural": "{{count}} flags",
+    "flag_count": "{{count}} issue",
+    "flag_count_plural": "{{count}} issues",
     "cols": {
       "student": "Student",
-      "total": "Total",
-      "compliance_short": "Comp",
-      "kr_short": "KR",
-      "tp_short": "TH/PR"
+      "why_flagged": "Why flagged",
+      "priority": "Priority",
+      "total": "Total"
+    },
+    "priority": {
+      "high_label": "Needs attention now",
+      "low_label": "Keep an eye on"
     },
     "empty_title": "No at-risk students",
     "empty_body": "Everyone is keeping up. Keep watching the class overview.",
     "row_actions": "Row actions",
     "view_detail": "View review detail",
+    "none_short": "On track",
     "flags": {
-      "low_compliance_label": "Low compliance",
-      "low_compliance_short": "Compliance",
-      "frozen_kr_label": "Frozen KR",
-      "frozen_kr_short": "KR",
-      "tp_gap_label": "Large theory-vs-practice gap",
-      "tp_gap_short": "Theory / Practice"
+      "low_compliance_label": "Skipping reviews",
+      "low_compliance_short": "Skipping reviews",
+      "low_compliance_desc": "Completes fewer than half of their scheduled flashcard reviews on time.",
+      "low_compliance_action": "Nudge them to complete their daily reviews.",
+      "frozen_kr_label": "Stalled this week",
+      "frozen_kr_short": "Stalled this week",
+      "frozen_kr_desc": "No memory-strength progress in the last 7 days — they've stopped reviewing or aren't improving.",
+      "frozen_kr_action": "Check in — they may be stuck or disengaged.",
+      "tp_gap_label": "Weak when tested live",
+      "tp_gap_short": "Weak when tested live",
+      "tp_gap_desc": "Scores well on written quizzes but much lower in live interviews (30+ point gap).",
+      "tp_gap_action": "Give them more speaking or explain-out-loud practice."
     }
   },
   "teacher_sr_cohort": {
@@ -633,35 +643,54 @@
     "breadcrumb_overview": "Class overview",
     "back": "Back",
     "title": "Class overview",
-    "subtitle": "KR distribution and difficult questions per lesson",
+    "subtitle": "How well your class remembers each lesson, and which questions they find hardest.",
     "view_at_risk": "At-risk students",
     "lesson_picker_label": "Pick a lesson",
     "lesson_loading": "Loading…",
     "lesson_empty": "This course has no lessons yet",
-    "histogram_title": "KR distribution — {{lesson}}",
-    "histogram_subtitle": "Number of students per KR bucket",
+    "histogram_title": "Memory strength — {{lesson}}",
+    "histogram_subtitle": "How many students fall into each memory-strength range",
+    "kr_hint": "Memory strength (technically \"KR\", knowledge retention): the model's estimate of how likely a student is to recall the material right now, from 0% to 100%. Higher is better.",
     "student_count": "{{count}} student",
     "student_count_plural": "{{count}} students",
-    "kr_axis": "KR bucket",
+    "kr_axis": "Memory strength",
     "students_axis": "Students",
-    "kr_tooltip_label": "KR bucket",
-    "no_kr_data_title": "No KR data yet",
+    "kr_tooltip_label": "Memory strength",
+    "no_kr_data_title": "No review data yet",
     "no_kr_data_body": "Students must finish at least one review session to appear in the chart.",
     "stats": {
-      "mean_kr": "Mean KR",
-      "median_kr": "Median KR"
+      "mean_kr": "Average memory strength",
+      "median_kr": "Typical student"
     },
-    "difficult_title": "Difficult questions",
-    "difficult_subtitle": "Top 10 questions with the lowest mean EF",
+    "difficult_title": "Questions students find hardest",
+    "difficult_subtitle": "The 10 questions the class struggles with most",
+    "ef_hint": "Difficulty is based on the question's easiness factor (technically \"EF\"): a spaced-repetition score where lower means students get it wrong more often and review it more. Below 1.6 = hard, 1.6–2.0 = medium.",
+    "difficulty": {
+      "hard": "Hard",
+      "medium": "Medium",
+      "easier": "Easier"
+    },
     "difficult_empty_title": "No difficult questions yet",
     "difficult_empty_body": "More data is needed to rank questions.",
+    "untitled_question": "(Untitled question)",
     "cols": {
       "question": "Question",
-      "mean_ef": "Mean EF",
+      "mean_ef": "Difficulty",
       "students": "Students",
       "actions": "Actions"
     },
-    "regenerate_question": "Regenerate question"
+    "regenerate_question": "Regenerate question",
+    "detail": {
+      "loading": "Loading student results…",
+      "empty": "No student data for this question yet.",
+      "student": "Student",
+      "last_result": "Last result",
+      "accuracy": "Accuracy",
+      "last_reviewed": "Last reviewed",
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "accuracy_value": "{{correct}}/{{total}} correct"
+    }
   },
   "management_career_paths": {
     "title": "Manage career paths",
@@ -1367,6 +1396,16 @@
     }
   },
   "course_quiz": {
+    "empty": {
+      "no_questions_title": "No questions available",
+      "no_questions_body": "This quiz doesn't have any approved questions to show right now. Your teacher may still be finalizing it — please check back later."
+    },
+    "integrity": {
+      "badge": "Monitored",
+      "title": "This quiz is monitored",
+      "body": "Leaving this page — switching tabs, apps, or windows — is recorded and shared with your teacher.",
+      "reassure": "Stay on this page until you submit. Brief interruptions won't fail your quiz, but repeated switching may be flagged for review."
+    },
     "resume": {
       "pending_notice": "You have an unfinished attempt (#{{number}}). Resume it to continue where you left off.",
       "resume": "Resume attempt",
@@ -1969,6 +2008,7 @@
       "delete_failed": "Failed to delete quiz",
       "published": "Quiz published",
       "publish_failed": "Failed to publish quiz",
+      "publish_pending_review": "Some questions are still pending review. Approve all questions before publishing.",
       "question_added": "Question added",
       "add_question_failed": "Failed to add question",
       "settings_saved": "Settings saved",
@@ -1978,6 +2018,8 @@
       "generation_failed": "Failed to generate questions",
       "expected_time_set": "Expected time set for {{count}} questions",
       "expected_time_failed": "Failed to set expected time",
+      "bulk_approved": "Approved {{count}} question(s)",
+      "bulk_approve_failed": "Failed to approve questions",
       "question_approved": "Question approved",
       "question_saved": "Question saved",
       "save_question_failed": "Failed to save question",
@@ -2015,6 +2057,10 @@
       "title": "Delete this quiz?",
       "body": "This permanently deletes the quiz, its questions, attempts, and module entry. This cannot be undone."
     },
+    "confirm_publish": {
+      "title": "Publish this quiz?",
+      "body": "This will publish {{count}} question(s) and make the quiz visible to students. You can preview it as a student first, or publish now."
+    },
     "confirm_delete_question": "Delete this question? This cannot be undone.",
     "combo_undo": {
       "message": "Deleting {{count}} question(s)…",
@@ -2037,9 +2083,11 @@
       "title": "Quick set time",
       "selected_count": "{{selected}}/{{total}} selected",
       "duration_seconds": "Time (seconds)",
+      "seconds_suffix": "sec",
       "select_all": "Select all",
       "deselect": "Deselect",
-      "apply": "Apply to selected"
+      "apply": "Apply to selected",
+      "approve_selected": "Approve selected"
     },
     "questions": {
       "sr_select": "Select question {{position}}",
@@ -2151,6 +2199,7 @@
       "description": "{{title}} - read-only, simulating the student view.",
       "read_only": "Read-only",
       "empty_body": "Add questions in the Questions tab or use AI to generate them.",
+      "empty_approved_body": "No approved questions yet. Approve questions in the Questions tab — students only see approved ones.",
       "no_content": "(No content)",
       "correct": "Correct"
     }

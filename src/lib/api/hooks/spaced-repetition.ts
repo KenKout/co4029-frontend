@@ -16,6 +16,25 @@ import type {
 const STALE_60S = 60_000;
 const STALE_5M = 5 * 60_000;
 
+/**
+ * `prompt_text` was added to the difficult-cards endpoint after the committed
+ * OpenAPI snapshot, so we widen the generated type locally rather than
+ * regenerate the whole snapshot mid-change.
+ */
+export type DifficultCardWithPrompt = DifficultCard & { prompt_text: string };
+
+/** Per-student result on a single question (card). Endpoint post-dates snapshot. */
+export type CardStudentResult = {
+  student_id: string;
+  name: string;
+  ef: number;
+  total_reviews: number;
+  last_reviewed_at: string | null;
+  last_correct: boolean | null;
+  correct_count: number;
+  review_count: number;
+};
+
 export type UseCardsDueOptions = {
   lessonId?: string;
   limit?: number;
@@ -110,10 +129,26 @@ export function useDifficultCards(
       topN,
     ),
     queryFn: () =>
-      apiFetch<DifficultCard[]>(
+      apiFetch<DifficultCardWithPrompt[]>(
         `/teacher/courses/${courseId}/lessons/${lessonId}/difficult-cards?top_n=${topN}`,
       ),
     enabled: !!courseId && !!lessonId,
+    staleTime: STALE_5M,
+  });
+}
+
+export function useCardStudentResults(
+  courseId: string | undefined,
+  questionId: string | undefined,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: queryKeys.sr.cardStudentResults(courseId ?? "", questionId ?? ""),
+    queryFn: () =>
+      apiFetch<CardStudentResult[]>(
+        `/teacher/courses/${courseId}/questions/${questionId}/student-results`,
+      ),
+    enabled: !!courseId && !!questionId && enabled,
     staleTime: STALE_5M,
   });
 }

@@ -26,6 +26,44 @@ import type {
 } from "../types";
 
 /**
+ * Quiz integrity (proctoring) event types + reporter hook. The endpoint
+ * (`POST /attempts/{id}/integrity-events`) post-dates the committed OpenAPI
+ * snapshot, so types are declared locally following this file's convention.
+ */
+export type QuizIntegrityEventType =
+  | "focus_lost"
+  | "tab_switch"
+  | "fullscreen_exit"
+  | "warning_issued"
+  | "reconnect"
+  | "disconnect";
+
+export type QuizIntegritySeverity = "info" | "warning" | "critical";
+
+export interface QuizIntegrityEvent {
+  event_type: QuizIntegrityEventType;
+  severity?: QuizIntegritySeverity;
+  metadata?: Record<string, string | number | boolean>;
+}
+
+/**
+ * Fire-and-forget batch POST of quiz integrity signals for a live attempt.
+ * Mirrors `useReportIntegrityEvents` (interviews). Errors must never break
+ * the take, so callers swallow rejections.
+ */
+export function useReportQuizIntegrityEvents(
+  attemptId: string | null | undefined,
+) {
+  return useMutation({
+    mutationFn: ({ events }: { events: QuizIntegrityEvent[] }) =>
+      apiPost<{ accepted: number }>(
+        `/attempts/${attemptId}/integrity-events`,
+        { events },
+      ),
+  });
+}
+
+/**
  * Resume payload for an in-progress attempt. Declared locally (not in
  * `types.ts`) because this endpoint post-dates the committed OpenAPI
  * snapshot — mirrors backend `QuizAttemptProgressRead` /
@@ -445,6 +483,35 @@ export function useBulkSetExpectedTime(quizId: string | null | undefined) {
       return apiPost<BulkSetExpectedTimeResponse>(
         `/teacher/quizzes/${quizId}/questions/bulk-set-expected-time`,
         body,
+      );
+    },
+    onSuccess: () => {
+      if (quizId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.authoring(quizId),
+        });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.questions(quizId),
+        });
+      }
+    },
+  });
+}
+
+/**
+ * Bulk-approve questions (flip review_status → 'approved' for many at once).
+ * The teacher's bulk sign-off for AI-generated content.
+ */
+export function useBulkApprove(quizId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ question_ids }: { question_ids: string[] }) => {
+      if (question_ids.length === 0) {
+        throw new Error(i18n.t("teacher_quiz_manage.errors.bulk_select_required"));
+      }
+      return apiPost<{ approved: number }>(
+        `/teacher/quizzes/${quizId}/questions/bulk-approve`,
+        { question_ids },
       );
     },
     onSuccess: () => {
