@@ -30,6 +30,7 @@
     "my_interviews": "Phỏng vấn của tôi",
     "overview": "Tổng quan",
     "my_courses": "Khoá của tôi",
+    "students": "Sinh viên",
     "department_courses": "Khoá của khoa",
     "active_users": "Người dùng đang hoạt động",
     "content": "Nội dung",
@@ -193,6 +194,16 @@
       "intermediate": "Trung cấp",
       "advanced": "Nâng cao"
     }
+  },
+  "teacher_students_hub": {
+    "eyebrow": "Quản lý sinh viên",
+    "title": "Sinh viên",
+    "subtitle": "Chọn một khóa học để xem danh sách, thêm sinh viên hoặc quản lý ghi danh.",
+    "manage_cta": "Xem danh sách & quản lý ghi danh",
+    "empty": "Bạn chưa có khóa học nào."
+  },
+  "teacher_course_students": {
+    "manage_enrollments": "Quản lý ghi danh"
   },
   "teacher_courses_list": {
     "title": "Khóa học của tôi",
