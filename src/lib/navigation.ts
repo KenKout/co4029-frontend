@@ -16,6 +16,7 @@ import {
   ScrollText,
   Briefcase,
   User,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 
@@ -66,6 +67,7 @@ export const studentNavGroups: NavGroup[] = [
 export const teacherNavItems: NavItem[] = [
   { label: "Overview", i18nKey: "nav.overview", href: "/teacher", icon: LayoutDashboard, exact: true },
   { label: "My Courses", i18nKey: "nav.my_courses", href: "/teacher/courses", icon: BookOpen },
+  { label: "Students", i18nKey: "nav.students", href: "/teacher/students", icon: GraduationCap },
   { label: "Department Courses", i18nKey: "nav.department_courses", href: "/dept", icon: Users },
   { label: "Career Paths", i18nKey: "nav.career_paths", href: "/management/career-paths", icon: Briefcase },
 ];
@@ -83,6 +85,7 @@ export const teacherNavGroups: NavGroup[] = [
     i18nKey: "nav_groups.content",
     items: [
       { label: "My Courses", i18nKey: "nav.my_courses", href: "/teacher/courses", icon: BookOpen },
+      { label: "Students", i18nKey: "nav.students", href: "/teacher/students", icon: GraduationCap },
       { label: "Department Courses", i18nKey: "nav.department_courses", href: "/dept", icon: Users },
     ],
   },

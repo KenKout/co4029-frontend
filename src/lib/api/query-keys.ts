@@ -61,6 +61,8 @@ export const queryKeys = {
     difficultCards: (courseId: string, lessonId: string, topN: number) =>
       ["sr", "difficult-cards", courseId, lessonId, topN] as const,
     atRisk: (courseId: string) => ["sr", "at-risk", courseId] as const,
+    cardStudentResults: (courseId: string, questionId: string) =>
+      ["sr", "card-student-results", courseId, questionId] as const,
     studentDetail: (courseId: string, studentId: string) =>
       ["sr", "student-detail", courseId, studentId] as const,
   },
@@ -204,6 +206,8 @@ export const queryKeys = {
       ["interviews", "gap-report", sessionId] as const,
     configAuthoring: (configId: string) =>
       ["interviews", "config-authoring", configId] as const,
+    adaptiveReadiness: (configId: string) =>
+      ["interviews", "adaptive-readiness", configId] as const,
     teacherGapReport: (sessionId: string) =>
       ["interviews", "teacher-gap-report", sessionId] as const,
     generationRun: (configId: string, runId: string) =>

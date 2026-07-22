@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ApiError, apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import type {
+  AdaptiveReadinessRead,
   GapReportAuthoringRead,
   GapReportRead,
   IntegrityEventsRequest,
@@ -14,11 +15,14 @@ import type {
   InterviewForTakingPublic,
   InterviewGenerationRequest,
   InterviewGenerationRunPublic,
+  InterviewOnboardingRespondRequest,
+  InterviewOnboardingRespondResponse,
   InterviewOutcomeAuthoring,
   InterviewOutcomeCreate,
   InterviewQuestionAuthoring,
   InterviewQuestionCreate,
   InterviewSessionFinishResponse,
+  InterviewSessionFinishRequest,
   InterviewSessionPublic,
   InterviewSessionStartRequest,
   InterviewSessionStartResponse,
@@ -40,12 +44,16 @@ export function useInterviewForTaking(configId: string | null | undefined) {
 }
 
 export function useStartInterviewSession(configId: string | null | undefined) {
+  const { i18n } = useTranslation();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: InterviewSessionStartRequest) =>
       apiPost<InterviewSessionStartResponse>(
         `/interview-configs/${configId}/sessions`,
         body,
+        {
+          "Accept-Language": i18n.resolvedLanguage ?? i18n.language ?? "en",
+        },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({
@@ -93,12 +101,35 @@ export function useInterviewRespond(sessionId: string | null | undefined) {
   });
 }
 
-export function useFinishInterview(sessionId: string | null | undefined) {
+export function useInterviewOnboarding(sessionId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
+    mutationFn: (body: InterviewOnboardingRespondRequest) =>
+      apiPost<InterviewOnboardingRespondResponse>(
+        `/interview-sessions/${sessionId}/onboarding/respond`,
+        body,
+      ),
+    onSuccess: () => {
+      if (sessionId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.interviews.session(sessionId),
+        });
+      }
+    },
+  });
+}
+
+export function useFinishInterview(sessionId: string | null | undefined) {
+  const { i18n } = useTranslation();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: InterviewSessionFinishRequest = { reason: "natural" }) =>
       apiPost<InterviewSessionFinishResponse>(
         `/interview-sessions/${sessionId}/finish`,
+        body,
+        {
+          "Accept-Language": i18n.resolvedLanguage ?? i18n.language ?? "en",
+        },
       ),
     onSuccess: () => {
       if (sessionId) {
@@ -138,7 +169,26 @@ export function useMyInterviewSessions() {
     queryKey: queryKeys.interviews.mySessions(),
     queryFn: () =>
       apiFetch<InterviewSessionPublic[]>(`/me/interview-sessions`),
+    refetchInterval: (query) =>
+      hasPendingInterviewEvaluation(query.state.data) ? 3000 : false,
   });
+}
+
+type InterviewEvaluationState = {
+  status: string;
+  pass_verdict?: boolean | null;
+};
+
+function hasPendingInterviewEvaluation(
+  sessions: readonly InterviewEvaluationState[] | undefined,
+): boolean {
+  return Boolean(
+    sessions?.some(
+      (session) =>
+        (session.status === "completed" || session.status === "timed_out") &&
+        session.pass_verdict == null,
+    ),
+  );
 }
 
 /* ───────────────── Teacher-side (W5.4) ───────────────── */
@@ -149,6 +199,22 @@ export function useInterviewForAuthoring(configId: string | null | undefined) {
     queryFn: () =>
       apiFetch<InterviewForAuthoringPublic>(
         `/teacher/interview-configs/${configId}`,
+      ),
+    enabled: !!configId,
+  });
+}
+
+/**
+ * GET /teacher/interview-configs/{config_id}/adaptive-readiness — advisory
+ * adaptive-readiness report (Slice 5). Never blocks publishing; the panel shows
+ * warnings + per-mode rollout status.
+ */
+export function useAdaptiveReadiness(configId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.interviews.adaptiveReadiness(configId ?? ""),
+    queryFn: () =>
+      apiFetch<AdaptiveReadinessRead>(
+        `/teacher/interview-configs/${configId}/adaptive-readiness`,
       ),
     enabled: !!configId,
   });
@@ -307,8 +373,16 @@ export function useUnpublishInterviewConfig(configId: string | null | undefined)
 
 /**
  * DELETE /teacher/interview-configs/{config_id} — soft-delete.
+ *
+ * Pass `courseId` so the course content lists (both the public and teacher
+ * projections) are invalidated on success — otherwise the deleted interview
+ * lingers as a stale module item on the course page and clicking it 404s
+ * ("Interview set not found").
  */
-export function useDeleteInterviewConfig(configId: string | null | undefined) {
+export function useDeleteInterviewConfig(
+  configId: string | null | undefined,
+  courseId?: string | null,
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () =>
@@ -317,6 +391,14 @@ export function useDeleteInterviewConfig(configId: string | null | undefined) {
       if (configId) {
         qc.removeQueries({
           queryKey: queryKeys.interviews.configAuthoring(configId),
+        });
+      }
+      if (courseId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.courses.content(courseId),
+        });
+        void qc.invalidateQueries({
+          queryKey: ["teacher", "courses", courseId, "content"],
         });
       }
     },
@@ -564,6 +646,8 @@ export function useInterviewSessionsForConfig(
         `/teacher/interview-configs/${configId}/sessions`,
       ),
     enabled: !!configId,
+    refetchInterval: (query) =>
+      hasPendingInterviewEvaluation(query.state.data) ? 3000 : false,
   });
 }
 
@@ -579,6 +663,8 @@ export function useCourseInterviewSessions(courseId: string | null | undefined) 
         `/teacher/courses/${courseId}/interview-sessions`,
       ),
     enabled: !!courseId,
+    refetchInterval: (query) =>
+      hasPendingInterviewEvaluation(query.state.data) ? 3000 : false,
   });
 }
 
@@ -597,6 +683,8 @@ export function useStudentInterviewSessions(
         `/teacher/courses/${courseId}/students/${studentId}/interview-sessions`,
       ),
     enabled: !!courseId && !!studentId,
+    refetchInterval: (query) =>
+      hasPendingInterviewEvaluation(query.state.data) ? 3000 : false,
   });
 }
 

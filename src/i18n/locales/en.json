@@ -30,6 +30,7 @@
     "my_interviews": "My Interviews",
     "overview": "Overview",
     "my_courses": "My Courses",
+    "students": "Students",
     "department_courses": "Department Courses",
     "active_users": "Active Users",
     "content": "Content",
@@ -193,6 +194,16 @@
       "advanced": "Advanced"
     }
   },
+  "teacher_students_hub": {
+    "eyebrow": "Student Management",
+    "title": "Students",
+    "subtitle": "Pick a course to view its roster, add students, or manage enrollments.",
+    "manage_cta": "View roster & manage enrollments",
+    "empty": "You don't have any courses yet."
+  },
+  "teacher_course_students": {
+    "manage_enrollments": "Manage enrollments"
+  },
   "teacher_courses_list": {
     "title": "My courses",
     "n_courses": "{{count}} course",
@@ -222,6 +233,21 @@
     "mark_complete": {
       "mark_done": "Mark as complete",
       "completed": "Completed"
+    },
+    "home": {
+      "eyebrow": "Course home",
+      "progress_label": "{{completed}} of {{total}} lessons completed",
+      "continue": "Continue learning",
+      "start": "Start course",
+      "review": "Review course",
+      "next_up": "Next up",
+      "curriculum": "Curriculum"
+    },
+    "interview_in_progress": {
+      "badge": "In progress",
+      "title": "Interview session in progress",
+      "body": "You have an interview that is still ongoing. Finish it before starting a new one.",
+      "continue": "Continue latest session"
     }
   },
   "placeholder": {
@@ -376,7 +402,6 @@
     "empty_body": "Contact your training manager to be enrolled in a suitable path.",
     "view_paths": "Browse available paths →",
     "started": "Started: {{date}}",
-    "prepared": "Prepared",
     "status": {
       "active": "Active",
       "completed": "Completed",
@@ -401,7 +426,9 @@
       "passed": "Passed",
       "not_passed": "Not passed",
       "evaluating": "Evaluating…",
-      "in_progress": "In progress"
+      "in_progress": "In progress",
+      "evaluation_failed": "Evaluation failed",
+      "not_graded": "Not graded"
     }
   },
   "career_path_detail": {
@@ -412,8 +439,6 @@
     "completed_courses": "Completed {{completed}}/{{total}} courses",
     "overall_progress": "Overall progress",
     "continue_learning": "Continue learning",
-    "prepared_title": "You're career-ready!",
-    "prepared_body": "You've completed every course in this path. You're prepared for this career track.",
     "managed_enrollment_title": "Enrollment is managed",
     "managed_enrollment_body": "Contact your manager to be enrolled in this path.",
     "section_title": "Courses in this path",
@@ -497,6 +522,7 @@
     "mark_all_read": "Mark all read",
     "mark_read": "Mark read",
     "delete": "Delete notification",
+    "take_action": "Take action",
     "open_link": "Open this resource",
     "empty_title": "No notifications yet",
     "empty_body": "When course updates, quizzes, or interview results arrive, you'll see them here.",
@@ -580,7 +606,7 @@
   "teacher_sr_at_risk": {
     "breadcrumb_at_risk": "At-risk students",
     "title": "Students who need help",
-    "subtitle": "Students flagged by the three UC-COURSE-04 signals",
+    "subtitle": "Students who may be falling behind — flagged for skipping reviews, stalling this week, or struggling when tested live.",
     "no_activity": "No activity yet",
     "today": "Today",
     "yesterday": "Yesterday",
@@ -590,26 +616,36 @@
     "weeks_ago_plural": "{{count}} weeks ago",
     "months_ago": "{{count}} month ago",
     "months_ago_plural": "{{count}} months ago",
-    "flag_count": "{{count}} flag",
-    "flag_count_plural": "{{count}} flags",
+    "flag_count": "{{count}} issue",
+    "flag_count_plural": "{{count}} issues",
     "cols": {
       "student": "Student",
-      "total": "Total",
-      "compliance_short": "Comp",
-      "kr_short": "KR",
-      "tp_short": "TH/PR"
+      "why_flagged": "Why flagged",
+      "priority": "Priority",
+      "total": "Total"
+    },
+    "priority": {
+      "high_label": "Needs attention now",
+      "low_label": "Keep an eye on"
     },
     "empty_title": "No at-risk students",
     "empty_body": "Everyone is keeping up. Keep watching the class overview.",
     "row_actions": "Row actions",
     "view_detail": "View review detail",
+    "none_short": "On track",
     "flags": {
-      "low_compliance_label": "Low compliance",
-      "low_compliance_short": "Compliance",
-      "frozen_kr_label": "Frozen KR",
-      "frozen_kr_short": "KR",
-      "tp_gap_label": "Large theory-vs-practice gap",
-      "tp_gap_short": "Theory / Practice"
+      "low_compliance_label": "Skipping reviews",
+      "low_compliance_short": "Skipping reviews",
+      "low_compliance_desc": "Completes fewer than half of their scheduled flashcard reviews on time.",
+      "low_compliance_action": "Nudge them to complete their daily reviews.",
+      "frozen_kr_label": "Stalled this week",
+      "frozen_kr_short": "Stalled this week",
+      "frozen_kr_desc": "No memory-strength progress in the last 7 days — they've stopped reviewing or aren't improving.",
+      "frozen_kr_action": "Check in — they may be stuck or disengaged.",
+      "tp_gap_label": "Weak when tested live",
+      "tp_gap_short": "Weak when tested live",
+      "tp_gap_desc": "Scores well on written quizzes but much lower in live interviews (30+ point gap).",
+      "tp_gap_action": "Give them more speaking or explain-out-loud practice."
     }
   },
   "teacher_sr_cohort": {
@@ -618,35 +654,54 @@
     "breadcrumb_overview": "Class overview",
     "back": "Back",
     "title": "Class overview",
-    "subtitle": "KR distribution and difficult questions per lesson",
+    "subtitle": "How well your class remembers each lesson, and which questions they find hardest.",
     "view_at_risk": "At-risk students",
     "lesson_picker_label": "Pick a lesson",
     "lesson_loading": "Loading…",
     "lesson_empty": "This course has no lessons yet",
-    "histogram_title": "KR distribution — {{lesson}}",
-    "histogram_subtitle": "Number of students per KR bucket",
+    "histogram_title": "Memory strength — {{lesson}}",
+    "histogram_subtitle": "How many students fall into each memory-strength range",
+    "kr_hint": "Memory strength (technically \"KR\", knowledge retention): the model's estimate of how likely a student is to recall the material right now, from 0% to 100%. Higher is better.",
     "student_count": "{{count}} student",
     "student_count_plural": "{{count}} students",
-    "kr_axis": "KR bucket",
+    "kr_axis": "Memory strength",
     "students_axis": "Students",
-    "kr_tooltip_label": "KR bucket",
-    "no_kr_data_title": "No KR data yet",
+    "kr_tooltip_label": "Memory strength",
+    "no_kr_data_title": "No review data yet",
     "no_kr_data_body": "Students must finish at least one review session to appear in the chart.",
     "stats": {
-      "mean_kr": "Mean KR",
-      "median_kr": "Median KR"
+      "mean_kr": "Average memory strength",
+      "median_kr": "Typical student"
     },
-    "difficult_title": "Difficult questions",
-    "difficult_subtitle": "Top 10 questions with the lowest mean EF",
+    "difficult_title": "Questions students find hardest",
+    "difficult_subtitle": "The 10 questions the class struggles with most",
+    "ef_hint": "Difficulty is based on the question's easiness factor (technically \"EF\"): a spaced-repetition score where lower means students get it wrong more often and review it more. Below 1.6 = hard, 1.6–2.0 = medium.",
+    "difficulty": {
+      "hard": "Hard",
+      "medium": "Medium",
+      "easier": "Easier"
+    },
     "difficult_empty_title": "No difficult questions yet",
     "difficult_empty_body": "More data is needed to rank questions.",
+    "untitled_question": "(Untitled question)",
     "cols": {
       "question": "Question",
-      "mean_ef": "Mean EF",
+      "mean_ef": "Difficulty",
       "students": "Students",
       "actions": "Actions"
     },
-    "regenerate_question": "Regenerate question"
+    "regenerate_question": "Regenerate question",
+    "detail": {
+      "loading": "Loading student results…",
+      "empty": "No student data for this question yet.",
+      "student": "Student",
+      "last_result": "Last result",
+      "accuracy": "Accuracy",
+      "last_reviewed": "Last reviewed",
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "accuracy_value": "{{correct}}/{{total}} correct"
+    }
   },
   "management_career_paths": {
     "title": "Manage career paths",
@@ -753,6 +808,7 @@
     "empty_courses_body": "Contact your instructor or training office to be enrolled in a course that matches your path.",
     "discover_courses": "Discover courses",
     "open_course": "Open course",
+    "open_course_named": "Open course: {{title}}",
     "enrolled_badge": "Enrolled",
     "ready_title": "Ready for the next challenge?",
     "ready_body": "Finish your enrolled courses, take AI-generated quizzes, and practice realistic interview scenarios — everything is tracked and personalized to your learning path.",
@@ -1365,6 +1421,21 @@
     }
   },
   "course_quiz": {
+    "empty": {
+      "no_questions_title": "No questions available",
+      "no_questions_body": "This quiz doesn't have any approved questions to show right now. Your teacher may still be finalizing it — please check back later."
+    },
+    "integrity": {
+      "badge": "Monitored",
+      "title": "This quiz is monitored",
+      "body": "Leaving this page — switching tabs, apps, or windows — is recorded and shared with your teacher.",
+      "reassure": "Stay on this page until you submit. Brief interruptions won't fail your quiz, but repeated switching may be flagged for review."
+    },
+    "resume": {
+      "pending_notice": "You have an unfinished attempt (#{{number}}). Resume it to continue where you left off.",
+      "resume": "Resume attempt",
+      "resuming": "Resuming..."
+    },
     "history": {
       "title": "Previous attempts",
       "review": "Review",
@@ -1395,7 +1466,9 @@
       "flagged": "Flagged",
       "no_time_limit": "No time limit",
       "attempt_summary": "Attempt {{attempt}} • {{correct}}/{{total}} correct",
-      "question_label_short": "Question {{index}}"
+      "question_label_short": "Question {{index}}",
+      "started_at": "Started at",
+      "elapsed": "Elapsed"
     },
     "values": {
       "hint_available": "Available",
@@ -1408,7 +1481,17 @@
     },
     "messages": {
       "no_retakes": "This quiz does not allow retakes.",
-      "max_attempts_reached": "You have used all {{count}} attempts."
+      "max_attempts_reached": "You have used all {{count}} attempts.",
+      "not_yet_open": "This quiz opens on {{when}}.",
+      "window_closed": "This quiz closed on {{when}}."
+    },
+    "schedule": {
+      "opens_at": "Opens {{when}}",
+      "opened_at": "Opened {{when}}",
+      "closes_at": "Closes {{when}}",
+      "closed_at": "Closed {{when}}",
+      "due_by": "Due by {{when}}",
+      "was_due": "Was due {{when}}"
     },
     "actions": {
       "starting": "Starting...",
@@ -1419,6 +1502,9 @@
       "next": "Next",
       "previous": "Previous",
       "save_and_continue": "Save and continue",
+      "save": "Save",
+      "saved": "Saved",
+      "continue": "Continue",
       "back_to_course": "Back to course",
       "unflag": "Unflag",
       "flag": "Flag",
@@ -1473,6 +1559,12 @@
       "elapsed_time": "Elapsed interview time",
       "ai_interviewer": "AI interviewer",
       "you": "You",
+      "replay_message": "Play this AI message again",
+      "replaying_message": "Playing this AI message again",
+      "user_typing": "User is typing…",
+      "preparing_question": "AI interviewer is preparing the question…",
+      "preparing_greeting": "AI interviewer is joining you…",
+      "preparing_goodbye": "AI interviewer is wrapping up…",
       "transcript": "Interview transcript",
       "answer_composer": "Answer composer",
       "answer_placeholder": "Type your answer or start speaking…",
@@ -1484,19 +1576,179 @@
       "show_transcript": "Show transcript",
       "hide_transcript": "Hide transcript",
       "more_controls": "More interview controls",
+      "question_of": "Question {{current}} of {{total}}",
+      "question_number": "Question {{current}}",
+      "interview_setup": "Interview setup",
+      "question_progress": "Interview question progress",
+      "question_progress_unknown": "Interview progress; total question count unavailable",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "connection_interrupted": "Interview connection interrupted",
+      "interview_room": "AI interview room",
+      "introduction_completed": "Interview introduction completed",
+      "replay_question": "Replay the current question",
+      "replay": "Replay question",
+      "ask_clarification": "Ask for clarification",
+      "clarification_request": "Could you clarify this question, please?",
+      "interviewer_assistance": "Interviewer assistance",
+      "interviewer_clarification": "Interviewer clarification",
+      "small_hint": "Small hint",
+      "give_small_hint": "Give me a small hint",
+      "hint_provided": "Hint provided",
+      "hint_request": "Could you give me a small hint?",
+      "explain_term": "Explain a term",
+      "explain": "Explain",
+      "term_input_label": "Term from the current question",
+      "term_input_placeholder": "Enter a term from the question…",
+      "term_request": "Could you explain the term “{{term}}”?",
+      "view_transcript": "View interview transcript",
+      "transcript_count_one": "{{count}} message",
+      "transcript_count_other": "{{count}} messages",
+      "transcript_empty": "The interview transcript is not available yet.",
+      "retry": "Retry",
+      "answer_mode": "Answer input mode",
+      "voice_mode": "Voice",
+      "type_mode": "Type",
+      "retry_microphone": "Try microphone again",
+      "listening_short": "Listening…",
+      "recording_paused": "Recording paused",
+      "live_transcript_hint": "Your live transcript stays editable below.",
+      "pause_recording": "Pause",
+      "resume_recording": "Resume",
+      "finish_answer": "Finish answer",
+      "cancel_recording": "Cancel recording",
+      "start_answering": "Start answering",
+      "microphone_idle_hint": "Recording starts only when you choose to begin.",
+      "live_transcript": "Live transcript",
+      "latest_answer": "Latest candidate answer",
+      "answer_recovery_error": "Your answer was not sent. It is still here so you can retry.",
+      "microphone_errors": {
+        "permission-denied": "Microphone access is blocked. Allow it in browser settings, then try again.",
+        "no-microphone": "No microphone was detected. Connect one or switch to Type mode.",
+        "no-speech": "No voice was detected. Move closer to the microphone and try again.",
+        "audio-capture": "The microphone is unavailable or in use by another application.",
+        "network": "Speech recognition was interrupted by the network. Your typed answer is preserved.",
+        "interrupted": "Recording was interrupted. Your current answer is preserved.",
+        "unsupported": "Voice input is not supported in this browser. Use Type mode instead."
+      },
       "status": {
-        "idle": "AI interviewer is ready",
+        "idle": "Waiting for your answer",
         "listening": "Listening…",
         "processing": "Processing your answer…",
-        "speaking": "AI is speaking…",
+        "paused": "Answer recording paused",
+        "thinking": "Analyzing your answer…",
+        "speaking": "AI is asking the question…",
+        "error": "Something went wrong. Your answer is preserved.",
+        "disconnected": "Connection interrupted",
         "ready": "Ready to send"
       }
+    },
+    "submission": {
+      "submitted_title": "Answer submitted",
+      "previous_submitted": "Previous answer submitted",
+      "analyzing": "Analyzing your answer…",
+      "expand": "Show more",
+      "collapse": "Show less",
+      "view_full_answer": "View full answer",
+      "failed_title": "Couldn't submit your answer",
+      "failed_preserved": "Your response has been preserved.",
+      "try_again": "Try again",
+      "continue_editing": "Continue editing"
     },
     "end_dialog": {
       "title": "End this interview?",
       "description": "Are you sure you want to end this interview? Your current unsent answer may be lost.",
       "ending": "Ending interview…",
       "cancel": "Continue interview"
+    },
+    "end_confirm": {
+      "title": "Confirm ending the interview",
+      "prompt": "Just to confirm — would you like to end and submit for grading, or continue the interview?",
+      "continue": "Continue interview",
+      "end_and_submit": "End and submit for grading"
+    },
+    "leave_dialog": {
+      "title": "Leave this interview for now?",
+      "onboarding_description": "Your greeting and setup progress will stay in the same attempt for a limited inactivity window. When you return, choose Continue previous attempt. Any unsent text may be lost.",
+      "assessment_description": "The interview timer will continue while you are away. Return before it reaches zero to continue the same attempt. Any unsent answer may be lost.",
+      "untimed_description": "This interview has no fixed countdown, but the active attempt expires after the inactivity window. Return in time to continue from the same question. Any unsent answer may be lost.",
+      "leave": "Leave for now",
+      "stay": "Stay in interview"
+    },
+    "resume_dialog": {
+      "title": "Continue your previous attempt?",
+      "description": "You will return to the same active attempt and continue from your current greeting step or technical question. This does not create a new attempt.",
+      "notice_title": "Attempt {{attempt}} is still in progress",
+      "onboarding_notice": "Continue from your current greeting step. The assessed timer has not started yet, but the setup attempt expires after the inactivity window.",
+      "assessment_notice": "Continue from your latest technical question. The assessed timer has continued while you were away.",
+      "untimed_assessment_notice": "Continue from your latest technical question. This attempt remains available only within the inactivity window.",
+      "continue": "Continue previous attempt",
+      "cancel": "Not now"
+    },
+    "start_dialog": {
+      "title": "Join the interview setup?",
+      "description": "The aBridgeAI virtual interviewer will first confirm your identity, audio, language, and readiness. Your assessed interview timer will start only after you confirm that you are ready. AI voice is on by default.",
+      "cancel": "Not yet"
+    },
+    "steps": {
+      "aria_label": "Interview progress",
+      "setup": "Setup",
+      "interview": "Interview",
+      "completed": "Completed"
+    },
+    "setup": {
+      "title": "Ready for your interview?",
+      "subtitle": "A few quick checks and you're good to go.",
+      "identity": "Identity confirmed",
+      "microphone": "Microphone",
+      "mic_connected": "Connected",
+      "mic_unavailable": "Not detected",
+      "language": "Interview language"
+    },
+    "recovery": {
+      "connection_lost_title": "Connection lost",
+      "connection_lost_body": "You appear to be offline. We'll keep trying to reconnect.",
+      "reconnecting_title": "Reconnecting…",
+      "reconnecting_body": "Hold on — we're restoring your connection.",
+      "progress_safe": "Your progress and current answer are safe.",
+      "reconnect": "Reconnect"
+    },
+    "onboarding": {
+      "language_label": "Interview language",
+      "languages": {
+        "en": "English",
+        "vi": "Tiếng Việt"
+      },
+      "confirm_identity": "Yes, that's me",
+      "audio_clear": "I can hear clearly",
+      "need_moment": "I need a moment",
+      "continue": "Continue",
+      "wrong_name": "That isn't my name",
+      "ask_name": "What should I call you?",
+      "name_placeholder": "Enter your name",
+      "save_name": "Save name",
+      "ready": "Start interview",
+      "not_ready": "Not ready yet",
+      "reply_placeholder": "Reply to the interviewer or use a quick response…",
+      "timer_waiting": "The assessed timer starts when you confirm you are ready.",
+      "response_required": "Type a response or choose one of the options.",
+      "send_failed": "Couldn't send your setup response.",
+      "starting_assessment": "Starting the assessed interview…",
+      "action_messages": {
+        "confirm_identity": "Yes, that's me.",
+        "reject_identity": "That isn't my name.",
+        "audio_clear": "The audio is clear.",
+        "confirm_language": "I'd like to continue in English.",
+        "continue_setup": "I'm ready to continue.",
+        "confirm_setup": "Yes, that's me. The audio is clear.",
+        "needs_adjustment": "I need a moment to adjust my audio.",
+        "ready": "I'm ready to begin.",
+        "not_ready": "I'm not ready yet."
+      }
+    },
+    "transitions": {
+      "next_question": "Thank you. Now let's move on to the next question.",
+      "status": "Moving to the next question…"
     },
     "sections": {
       "gap_report": "Gap report",
@@ -1563,7 +1815,9 @@
       "pass_summary": "You met enough of the learning outcomes to pass this interview.",
       "fail_summary": "You did not meet enough learning outcomes this time. Review the material and try again.",
       "evaluation_failed": "Evaluation failed",
-      "evaluation_failed_summary": "Our AI grader hit an error while scoring your interview and couldn't produce a result after several attempts. This is not a reflection of your answers — please contact your teacher or try the interview again later."
+      "evaluation_failed_summary": "Our AI grader hit an error while scoring your interview and couldn't produce a result after several attempts. This is not a reflection of your answers — please contact your teacher or try the interview again later.",
+      "abandoned": "Interview ended",
+      "abandoned_summary": "The interview ended before an answer was submitted, so there is no evaluation for this attempt."
     },
     "intro": {
       "description": "AI interview grades by module criteria. Answer one by one and review the final feedback."
@@ -1794,6 +2048,7 @@
       "delete_failed": "Failed to delete quiz",
       "published": "Quiz published",
       "publish_failed": "Failed to publish quiz",
+      "publish_pending_review": "Some questions are still pending review. Approve all questions before publishing.",
       "question_added": "Question added",
       "add_question_failed": "Failed to add question",
       "settings_saved": "Settings saved",
@@ -1803,6 +2058,8 @@
       "generation_failed": "Failed to generate questions",
       "expected_time_set": "Expected time set for {{count}} questions",
       "expected_time_failed": "Failed to set expected time",
+      "bulk_approved": "Approved {{count}} question(s)",
+      "bulk_approve_failed": "Failed to approve questions",
       "question_approved": "Question approved",
       "question_saved": "Question saved",
       "save_question_failed": "Failed to save question",
@@ -1840,6 +2097,10 @@
       "title": "Delete this quiz?",
       "body": "This permanently deletes the quiz, its questions, attempts, and module entry. This cannot be undone."
     },
+    "confirm_publish": {
+      "title": "Publish this quiz?",
+      "body": "This will publish {{count}} question(s) and make the quiz visible to students. You can preview it as a student first, or publish now."
+    },
     "confirm_delete_question": "Delete this question? This cannot be undone.",
     "combo_undo": {
       "message": "Deleting {{count}} question(s)…",
@@ -1862,9 +2123,11 @@
       "title": "Quick set time",
       "selected_count": "{{selected}}/{{total}} selected",
       "duration_seconds": "Time (seconds)",
+      "seconds_suffix": "sec",
       "select_all": "Select all",
       "deselect": "Deselect",
-      "apply": "Apply to selected"
+      "apply": "Apply to selected",
+      "approve_selected": "Approve selected"
     },
     "questions": {
       "sr_select": "Select question {{position}}",
@@ -1924,6 +2187,16 @@
         "cooldown_hint": "Wait time between attempts.",
         "cooldown_placeholder": "Optional"
       },
+      "schedule": {
+        "title": "Availability window",
+        "description": "Schedule when students can take this quiz. Leave any field blank for no limit.",
+        "open_label": "Opens at",
+        "open_hint": "Students cannot start before this time.",
+        "close_label": "Closes at",
+        "close_hint": "No new attempts after this time.",
+        "due_label": "Due date",
+        "due_hint": "Soft deadline shown to students; attempts after it are marked late but not blocked."
+      },
       "behavior": {
         "title": "Behavior",
         "shuffle_q_label": "Shuffle questions",
@@ -1936,18 +2209,47 @@
         "reminders_desc": "Send a reminder when review is due."
       },
       "spacing": {
-        "title": "Spaced repetition",
-        "description": "Tune SM2 parameters. Range 1.3 - 2.5.",
+        "title": "Mastery & pacing",
+        "description": "Choose how much students should master before the next lesson unlocks.",
         "starting_ef": "Starting EF",
-        "unlock_ef": "EF unlock threshold"
+        "unlock_ef": "Unlock EF",
+        "coverage": "Coverage (%)",
+        "presets": {
+          "gentle": {
+            "name": "Gentle",
+            "desc": "Keep students moving. Light reinforcement before the next lesson opens."
+          },
+          "balanced": {
+            "name": "Balanced",
+            "desc": "Solid retention before advancing. A good default for most courses."
+          },
+          "rigorous": {
+            "name": "Rigorous",
+            "desc": "Strong mastery required. Students revisit material until it really sticks."
+          }
+        },
+        "preview": {
+          "gentle": "Students unlock the next lesson after a few quick reviews, once they've mastered about {{coverage}}% of the material.",
+          "balanced": "Students unlock the next lesson once they've reliably mastered about {{coverage}}% of the material.",
+          "rigorous": "Students keep reviewing until they've deeply mastered about {{coverage}}% of the material before the next lesson opens.",
+          "custom": "Custom settings: students unlock the next lesson once they've mastered about {{coverage}}% of the material."
+        },
+        "advanced": {
+          "toggle": "Advanced: fine-tune the spacing algorithm",
+          "custom_badge": "Custom",
+          "help": "These are the raw SM-2 parameters. EF (easiness factor, 1.3–2.5) controls how quickly review intervals grow; Unlock EF is the level a student must reach, and Coverage is the share of questions that must reach it before the next lesson unlocks. Most teachers can leave these to the presets above."
+        }
       },
-      "save_button": "Save settings"
+      "save_button": "Save settings",
+      "unsaved_changes": "You have unsaved changes",
+      "reset_button": "Discard"
     },
     "preview": {
       "title": "Student preview",
       "description": "{{title}} - read-only, simulating the student view.",
       "read_only": "Read-only",
       "empty_body": "Add questions in the Questions tab or use AI to generate them.",
+      "empty_approved_body": "No approved questions yet. Approve questions in the Questions tab — students only see approved ones.",
       "no_content": "(No content)",
       "correct": "Correct"
     }
@@ -1967,6 +2269,32 @@
       "draft": "Draft",
       "published": "Published",
       "archived": "Archived"
+    },
+    "readiness": {
+      "title": "Adaptive readiness",
+      "subtitle": "Advisory checks on whether the adaptive interviewer has enough structured material to adapt well. These never block publishing.",
+      "loading": "Checking readiness…",
+      "error": "Could not load the readiness report.",
+      "all_clear": "Everything looks ready for adaptive interviewing.",
+      "rollout_title": "Adaptive rollout status",
+      "rollout_on": "On",
+      "rollout_off": "Off",
+      "modes": {
+        "text": "Text",
+        "hybrid": "Hybrid",
+        "voice": "Voice"
+      },
+      "warnings": {
+        "generic": "{{count}} item needs attention for adaptive readiness.",
+        "questions_without_outcome": "{{count}} approved question is not linked to an outcome, so its evidence can't be scored.",
+        "questions_without_outcome_other": "{{count}} approved questions are not linked to an outcome, so their evidence can't be scored.",
+        "outcomes_without_question": "{{count}} outcome has no approved question, so it can never be covered.",
+        "outcomes_without_question_other": "{{count}} outcomes have no approved question, so they can never be covered.",
+        "questions_missing_difficulty": "{{count}} approved question is missing a difficulty label, so difficulty adaptation can't place it.",
+        "questions_missing_difficulty_other": "{{count}} approved questions are missing a difficulty label, so difficulty adaptation can't place them.",
+        "low_difficulty_diversity": "All approved questions share one difficulty level, so there is no easy-to-hard ramp to adapt along.",
+        "insufficient_question_coverage": "The approved question pool looks thin for the configured duration; add more so the interview doesn't run out early."
+      }
     },
     "errors": {
       "not_found_title": "Interview set not found",
@@ -2032,6 +2360,8 @@
       "generate_short": "Generate",
       "questions": "Question Bank",
       "questions_short": "Questions",
+      "adaptive_readiness": "Adaptive Readiness",
+      "adaptive_readiness_short": "Readiness",
       "status": {
         "completed": "Completed",
         "settings_incomplete": "Add a title",
@@ -2172,7 +2502,9 @@
         "passed": "Passed",
         "not_passed": "Not passed",
         "evaluating": "Evaluating…",
-        "in_progress": "In progress"
+        "in_progress": "In progress",
+        "evaluation_failed": "Evaluation failed",
+        "not_graded": "Not graded"
       }
     },
     "questions": {

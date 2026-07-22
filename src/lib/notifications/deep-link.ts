@@ -1,22 +1,22 @@
 import type { Notification } from "@/lib/api/types";
 
 export function notificationDeepLink(notification: Notification): string | null {
+  // Option B: prefer the precomputed action_url built by the backend, which
+  // holds the full routing context (course slug + nested ids) at creation
+  // time. A single entity_id can't express a nested route, so this is the
+  // reliable target. The entity_type map below is a best-effort fallback for
+  // legacy rows created before action_url existed.
+  if (notification.action_url) return notification.action_url;
+
   if (!notification.entity_type || !notification.entity_id) return null;
   switch (notification.entity_type) {
-    case "course":
-      return `/courses/${notification.entity_id}`;
-    case "lesson":
-      return `/courses/learn?lessonId=${notification.entity_id}`;
-    case "quiz":
-      return `/quizzes/${notification.entity_id}`;
-    case "interview":
-      return `/interview-sessions/${notification.entity_id}`;
-    case "material":
-      return `/materials/${notification.entity_id}`;
+    // NOTE: fallbacks that need a course slug (quiz, lesson) can't be built
+    // from entity_id alone — those rows rely on action_url. Only routes that
+    // are addressable by a single id (or are static) are mapped here.
     case "enrollment":
-      return `/me/enrollments`;
+      return `/progress`;
     case "career_path":
-      return `/career-paths/${notification.entity_id}`;
+      return `/progress`;
     default:
       return null;
   }

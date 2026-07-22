@@ -1,14 +1,22 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, MinusCircle, XCircle } from "lucide-react";
 
 import { useInterviewSessionsForConfig } from "@/lib/api/hooks/interviews";
 import type { InterviewSessionSummary } from "@/lib/api/types";
 
-type VerdictState = "passed" | "not_passed" | "evaluating" | "in_progress";
+type VerdictState =
+  | "passed"
+  | "not_passed"
+  | "evaluating"
+  | "in_progress"
+  | "evaluation_failed"
+  | "not_graded";
 
 function verdictState(s: InterviewSessionSummary): VerdictState {
   if (s.status === "in_progress") return "in_progress";
+  if (s.status === "failed") return "evaluation_failed";
+  if (s.status === "abandoned") return "not_graded";
   if (s.pass_verdict === true) return "passed";
   if (s.pass_verdict === false) return "not_passed";
   return "evaluating";
@@ -19,6 +27,8 @@ const BADGE_CLASS: Record<VerdictState, string> = {
   not_passed: "bg-red-100 text-red-700",
   evaluating: "bg-amber-50 text-amber-700",
   in_progress: "bg-slate-100 text-slate-600",
+  evaluation_failed: "bg-red-100 text-red-700",
+  not_graded: "bg-slate-100 text-slate-600",
 };
 
 function formatDate(iso: string | null | undefined, locale: string): string {
@@ -81,6 +91,8 @@ export function InterviewSessionsList({ configId }: { configId: string }) {
                   >
                     {state === "passed" && <CheckCircle2 className="h-3 w-3" />}
                     {state === "evaluating" && <Loader2 className="h-3 w-3 animate-spin" />}
+                    {state === "evaluation_failed" && <XCircle className="h-3 w-3" />}
+                    {state === "not_graded" && <MinusCircle className="h-3 w-3" />}
                     {t(`teacher_interview_config.sessions.state.${state}`)}
                   </span>
                   <ArrowRight className="h-4 w-4 text-m3-on-surface-variant shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />

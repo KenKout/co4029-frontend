@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/section-nav";
 import { QuestionBank } from "@/routes/teacher/_components/question-bank";
 import { LearningOutcomes } from "@/routes/teacher/_components/learning-outcomes";
+import { AdaptiveReadinessPanel } from "@/routes/teacher/_components/adaptive-readiness-panel";
 import {
   useArchiveInterviewConfig,
   useCreateInterviewQuestion,
@@ -164,7 +165,7 @@ export default function InterviewConfigPage() {
   const archiveConfig = useArchiveInterviewConfig(configId);
   const unarchiveConfig = useUnarchiveInterviewConfig(configId);
   const unpublishConfig = useUnpublishInterviewConfig(configId);
-  const deleteConfig = useDeleteInterviewConfig(configId);
+  const deleteConfig = useDeleteInterviewConfig(configId, courseId);
 
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
   // Briefly true right after a successful settings save so the header can show
@@ -318,6 +319,12 @@ export default function InterviewConfigPage() {
         label: t("teacher_interview_config.section_nav.questions"),
         shortLabel: t("teacher_interview_config.section_nav.questions_short"),
         status: questionsStatus,
+      },
+      {
+        id: "adaptive-readiness",
+        label: t("teacher_interview_config.section_nav.adaptive_readiness"),
+        shortLabel: t("teacher_interview_config.section_nav.adaptive_readiness_short"),
+        status: { kind: "none" },
       },
     ];
   }, [t, settingsComplete, outcomeCount, draftCount, approvedCount]);
@@ -722,6 +729,9 @@ export default function InterviewConfigPage() {
                   outcomes={outcomes ?? []}
                   outcomeFilterSignal={outcomeFilterSignal}
                 />
+              </section>
+              <section id="adaptive-readiness" className="scroll-mt-32">
+                <AdaptiveReadinessPanel configId={configId} />
               </section>
             </>
           )}

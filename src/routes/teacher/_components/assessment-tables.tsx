@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, MinusCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { InterviewSessionTeacherRead, QuizAttemptTeacherRead } from "@/lib/api/types";
@@ -144,6 +144,22 @@ function InterviewVerdictBadge({ session }: { session: InterviewSessionTeacherRe
       <Badge className="text-[10px] border-0 bg-slate-100 text-slate-600 gap-1">
         <Loader2 className="h-3 w-3" />
         In progress
+      </Badge>
+    );
+  }
+  if (session.status === "failed") {
+    return (
+      <Badge className="text-[10px] border-0 bg-red-100 text-red-700 gap-1">
+        <XCircle className="h-3 w-3" />
+        Evaluation failed
+      </Badge>
+    );
+  }
+  if (session.status === "abandoned") {
+    return (
+      <Badge className="text-[10px] border-0 bg-slate-100 text-slate-600 gap-1">
+        <MinusCircle className="h-3 w-3" />
+        Not graded
       </Badge>
     );
   }

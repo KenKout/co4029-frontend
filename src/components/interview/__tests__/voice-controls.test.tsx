@@ -12,6 +12,7 @@ vi.mock("@livekit/components-react", () => ({
   useTrackToggle: () => ({
     enabled: true,
     toggle: vi.fn(),
+    pending: false,
   }),
   useVoiceAssistant: () => ({
     state: "listening",
@@ -40,8 +41,12 @@ vi.mock("@/lib/utils", () => ({
 }));
 
 vi.mock("lucide-react", () => ({
-  Mic: () => <div data-testid="mic-icon" />,
-  MicOff: () => <div data-testid="mic-off-icon" />,
+  Check: () => <div data-testid="check-icon" />,
+  Pause: () => <div data-testid="pause-icon" />,
+  Play: () => <div data-testid="play-icon" />,
+  RotateCcw: () => <div data-testid="retry-icon" />,
+  CircleAlert: () => <div data-testid="alert-icon" />,
+  WifiOff: () => <div data-testid="wifi-off-icon" />,
   PhoneOff: () => <div data-testid="phone-off-icon" />,
   Volume2: () => <div data-testid="volume-icon" />,
   Clock3: () => <div data-testid="clock-icon" />,
@@ -80,9 +85,8 @@ describe("VoiceControls", () => {
     const mockOnEnd = vi.fn();
     render(<VoiceControls onEndInterview={mockOnEnd} />);
 
-    // Should render mic icons
-    const micIcon = screen.queryByTestId("mic-icon");
-    expect(micIcon).toBeTruthy();
+    expect(screen.queryByTestId("pause-icon")).toBeTruthy();
+    expect(screen.queryByTestId("check-icon")).toBeTruthy();
   });
 
   it("renders timer section", () => {

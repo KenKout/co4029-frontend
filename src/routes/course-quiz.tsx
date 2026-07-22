@@ -4,12 +4,14 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   BookOpen,
   Clock,
   Flag,
   Lightbulb,
+  RotateCcw,
   Sparkles,
   Timer,
   X,
@@ -34,6 +36,7 @@ import { isApiErrorCode } from "@/lib/api/error-codes";
 import { QuestionRenderer } from "@/routes/_components/QuestionRenderer";
 import { QuizSummaryCard, type QuizSummaryItem } from "@/routes/_components/QuizSummaryCard";
 import { QuizConfigPopover } from "@/routes/_components/QuizConfigPopover";
+import { QuizIntegrityNotice } from "@/routes/_components/QuizIntegrityNotice";
 import type {
   QuizAttemptRead,
   QuizForTakingPublic,
@@ -41,6 +44,8 @@ import type {
   QuizQuestionPublic,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { clearSeenAt, loadSeenAt, saveSeenAt } from "@/lib/quiz-timing";
+import { useQuizIntegrityReporter } from "@/lib/hooks/useQuizIntegrityReporter";
 
 type QuestionState = "completed" | "active" | "flagged" | "pending";
 
@@ -56,6 +61,20 @@ function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60).toString().padStart(2, "0");
   const s = (seconds % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
+}
+
+// Elapsed time can run for hours on an untimed quiz, so it needs an
+// hour segment that ``formatTime`` (mm:ss only) can't express. Falls back
+// to mm:ss under an hour to stay visually consistent with the countdown.
+function formatDuration(seconds: number) {
+  const safe = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(safe / 3600);
+  const m = Math.floor((safe % 3600) / 60);
+  const s = safe % 60;
+  if (h > 0) {
+    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
 function hasAnswer(status: QuestionStatus): boolean {
@@ -197,14 +216,20 @@ function QuizStudyModeCard({
 function QuizIntroPanel({
   quiz,
   attempts,
+  inProgressAttempt,
   onStart,
+  onResume,
   starting,
+  resuming,
   slug,
 }: {
   quiz: QuizPublic;
   attempts: QuizAttemptRead[];
+  inProgressAttempt: QuizAttemptRead | null;
   onStart: () => void;
+  onResume: () => void;
   starting: boolean;
+  resuming: boolean;
   slug: string;
 }) {
   const { t } = useTranslation();
@@ -213,7 +238,19 @@ function QuizIntroPanel({
   const maxAttemptsReached =
     quiz.max_attempts != null && completed >= quiz.max_attempts;
   const noRetakesLeft = completed > 0 && !quiz.allow_retakes;
-  const blocked = maxAttemptsReached || noRetakesLeft;
+
+  // Scheduling window (backend migration 0032). NULL columns = no bound.
+  // available_from → not open yet; available_until → closed. `due_at` is a
+  // soft deadline: never blocks, only surfaces a "due" label / late warning.
+  const now = Date.now();
+  const openAt = quiz.available_from ? new Date(quiz.available_from) : null;
+  const closeAt = quiz.available_until ? new Date(quiz.available_until) : null;
+  const dueAt = quiz.due_at ? new Date(quiz.due_at) : null;
+  const notYetOpen = openAt != null && now < openAt.getTime();
+  const windowClosed = closeAt != null && now > closeAt.getTime();
+  const pastDue = dueAt != null && now > dueAt.getTime();
+  const blocked =
+    maxAttemptsReached || noRetakesLeft || notYetOpen || windowClosed;
 
   // Most recent attempts first; in_progress filtered out (review only after submit)
   const reviewableAttempts = [...attempts]
@@ -278,10 +315,95 @@ function QuizIntroPanel({
           </div>
         </div>
 
-        {blocked ? (
+        {(openAt || closeAt || dueAt) && (
+          <div className="mb-8 flex flex-col gap-2 text-left">
+            {openAt && (
+              <div className="flex items-center gap-2 text-sm text-m3-on-surface-variant">
+                <Clock className="h-4 w-4 shrink-0 text-m3-primary" />
+                <span>
+                  {t(
+                    notYetOpen
+                      ? "course_quiz.schedule.opens_at"
+                      : "course_quiz.schedule.opened_at",
+                    { when: openAt.toLocaleString() },
+                  )}
+                </span>
+              </div>
+            )}
+            {closeAt && (
+              <div className="flex items-center gap-2 text-sm text-m3-on-surface-variant">
+                <Clock className="h-4 w-4 shrink-0 text-amber-600" />
+                <span>
+                  {t(
+                    windowClosed
+                      ? "course_quiz.schedule.closed_at"
+                      : "course_quiz.schedule.closes_at",
+                    { when: closeAt.toLocaleString() },
+                  )}
+                </span>
+              </div>
+            )}
+            {dueAt && (
+              <div
+                className={cn(
+                  "flex items-center gap-2 text-sm",
+                  pastDue ? "text-amber-700 font-medium" : "text-m3-on-surface-variant",
+                )}
+              >
+                <Flag className="h-4 w-4 shrink-0" />
+                <span>
+                  {t(
+                    pastDue
+                      ? "course_quiz.schedule.was_due"
+                      : "course_quiz.schedule.due_by",
+                    { when: dueAt.toLocaleString() },
+                  )}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {inProgressAttempt ? (
+          <div className="space-y-4">
+            <div className="rounded-xl bg-m3-primary-fixed/30 border border-m3-primary/20 px-4 py-3 text-sm text-m3-on-surface flex items-center justify-center gap-2">
+              <RotateCcw className="h-4 w-4 text-m3-primary shrink-0" />
+              <span>
+                {t("course_quiz.resume.pending_notice", {
+                  number: inProgressAttempt.attempt_number,
+                })}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 justify-center flex-wrap">
+              <Button
+                onClick={onResume}
+                disabled={resuming || starting}
+                className="gradient-primary text-white rounded-xl font-bold gap-2 px-8 py-3 h-auto"
+              >
+                {resuming
+                  ? t("course_quiz.resume.resuming")
+                  : t("course_quiz.resume.resume")}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : blocked ? (
           <div className="rounded-xl bg-m3-surface-container-low px-4 py-3 text-sm text-m3-on-surface-variant">
-            {noRetakesLeft && t("course_quiz.messages.no_retakes")}
+            {notYetOpen &&
+              t("course_quiz.messages.not_yet_open", {
+                when: openAt ? openAt.toLocaleString() : "",
+              })}
+            {windowClosed &&
+              t("course_quiz.messages.window_closed", {
+                when: closeAt ? closeAt.toLocaleString() : "",
+              })}
+            {noRetakesLeft &&
+              !notYetOpen &&
+              !windowClosed &&
+              t("course_quiz.messages.no_retakes")}
             {maxAttemptsReached &&
+              !notYetOpen &&
+              !windowClosed &&
               ` ${t("course_quiz.messages.max_attempts_reached", { count: quiz.max_attempts ?? 0 })}`}
           </div>
         ) : (
@@ -298,12 +420,40 @@ function QuizIntroPanel({
         )}
       </GlassCard>
 
-      {reviewableAttempts.length > 0 && (
+      {(reviewableAttempts.length > 0 || inProgressAttempt) && (
         <GlassCard className="p-6 sm:p-8">
           <h2 className="font-headline font-bold text-base text-m3-on-surface mb-4">
             {t("course_quiz.history.title")}
           </h2>
           <div className="space-y-2">
+            {inProgressAttempt && (
+              <button
+                type="button"
+                onClick={onResume}
+                disabled={resuming || starting}
+                className="w-full flex items-center gap-4 p-3 rounded-xl bg-m3-primary-fixed/20 hover:bg-m3-primary-fixed/40 transition-colors group text-left disabled:opacity-60"
+              >
+                <span className="text-xs font-headline font-black text-m3-primary tabular-nums shrink-0 w-8">
+                  #{inProgressAttempt.attempt_number}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-m3-primary/10 text-m3-primary">
+                      {t("course_quiz.status.currently_doing")}
+                    </span>
+                  </div>
+                  <p className="text-xs text-m3-on-surface-variant mt-0.5">
+                    {new Date(inProgressAttempt.started_at).toLocaleString()}
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-m3-primary group-hover:underline shrink-0 flex items-center gap-1">
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  {resuming
+                    ? t("course_quiz.resume.resuming")
+                    : t("course_quiz.resume.resume")}
+                </span>
+              </button>
+            )}
             {reviewableAttempts.map((a) => {
               const score =
                 a.score_percent != null ? Number(a.score_percent) : null;
@@ -363,33 +513,58 @@ function QuizIntroPanel({
 function QuestionSubmitButton({
   isLastQuestion,
   hasSelection,
+  isSaved,
   isSavingAnswer,
   isFinalSubmitting,
   cooldownRetryAt: cooldownAt,
+  onSave,
   onSaveNext,
   onFinalSubmit,
 }: {
   isLastQuestion: boolean;
   hasSelection: boolean;
+  isSaved: boolean;
   isSavingAnswer: boolean;
   isFinalSubmitting: boolean;
   cooldownRetryAt: string | null;
+  onSave: () => void;
   onSaveNext: () => void;
   onFinalSubmit: () => void;
 }) {
   const { t } = useTranslation();
   const cooldown = useCardCooldown(cooldownAt);
   const cooldownActive = !!cooldownAt && !cooldown.isExpired;
-  const disabled =
-    !hasSelection || isSavingAnswer || isFinalSubmitting || cooldownActive;
+  const busy = isSavingAnswer || isFinalSubmitting;
+  const primaryDisabled = !hasSelection || busy || cooldownActive;
+  // Save (secondary) is additionally suppressed once the current answer is
+  // already persisted — there's nothing new to write. Continue/Submit stay
+  // enabled so the student can still advance without a redundant save.
+  const saveDisabled = primaryDisabled || isSaved;
 
-  if (isLastQuestion) {
-    return (
-      <div className="flex items-center gap-3 flex-wrap">
-        {cooldownActive && <CardCooldownBadge retryAt={cooldownAt} />}
+  // Secondary "Save" — persists the current answer in place, no navigation.
+  const saveButton = (
+    <Button
+      variant="outline"
+      onClick={onSave}
+      disabled={saveDisabled}
+      className="font-bold rounded-xl gap-2 px-5 py-3 h-auto border-m3-primary/40 text-m3-primary hover:bg-m3-primary-fixed/30 active:scale-95 transition-all disabled:opacity-50"
+    >
+      {isSavingAnswer
+        ? t("course_quiz.actions.saving")
+        : isSaved
+          ? t("course_quiz.actions.saved")
+          : t("course_quiz.actions.save")}
+    </Button>
+  );
+
+  return (
+    <div className="flex items-center gap-3 flex-wrap justify-end">
+      {cooldownActive && <CardCooldownBadge retryAt={cooldownAt} />}
+      {saveButton}
+      {isLastQuestion ? (
         <Button
           onClick={onFinalSubmit}
-          disabled={disabled}
+          disabled={primaryDisabled}
           className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-6 py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
         >
           {isFinalSubmitting
@@ -399,23 +574,18 @@ function QuestionSubmitButton({
               : t("course_quiz.actions.submit")}
           <ArrowRight className="h-4 w-4" />
         </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-3 flex-wrap">
-      {cooldownActive && <CardCooldownBadge retryAt={cooldownAt} />}
-      <Button
-        onClick={onSaveNext}
-        disabled={disabled}
-        className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-6 py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
-      >
-        {isSavingAnswer
-          ? t("course_quiz.actions.saving")
-          : t("course_quiz.actions.next")}
-        <ArrowRight className="h-4 w-4" />
-      </Button>
+      ) : (
+        <Button
+          onClick={onSaveNext}
+          disabled={primaryDisabled}
+          className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-6 py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
+        >
+          {isSavingAnswer
+            ? t("course_quiz.actions.saving")
+            : t("course_quiz.actions.continue")}
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }
@@ -436,7 +606,15 @@ export default function CourseQuizPage() {
     () => attempts.find((a) => a.status === "in_progress") ?? null,
     [attempts],
   );
-  const attemptProgress = useQuizAttemptProgress(inProgressAttempt?.id ?? null);
+  // Resume is now an explicit user action (Resume button on the intro
+  // panel), NOT an automatic drop-in on mount. Auto-resuming raced the
+  // attempts list and (a) hid the intro/history and (b) fell through to
+  // POSTing a fresh attempt on the loser of the race — which is exactly
+  // how this quiz accumulated 13 empty in_progress duplicates.
+  const [resumeRequested, setResumeRequested] = useState(false);
+  const attemptProgress = useQuizAttemptProgress(
+    resumeRequested ? inProgressAttempt?.id ?? null : null,
+  );
 
   const [taking, setTaking] = useState<QuizForTakingPublic | null>(null);
   const [activeAttemptId, setActiveAttemptId] = useState<string | null>(null);
@@ -447,6 +625,12 @@ export default function CourseQuizPage() {
   const [perQuestionCooldown, setPerQuestionCooldown] = useState<Record<string, string>>({});
   const [hintDialogOpen, setHintDialogOpen] = useState(false);
   const [activeQuestionElapsed, setActiveQuestionElapsed] = useState(0);
+  // Wall-clock start of the whole attempt (epoch ms). Drives the "Started at"
+  // label and the total-elapsed indicator, which stays visible whether or not
+  // the quiz has a time limit. Set on fresh start and on resume/hydrate so the
+  // elapsed count reflects the ORIGINAL start, not this session.
+  const [quizStartedAt, setQuizStartedAt] = useState<number | null>(null);
+  const [quizElapsed, setQuizElapsed] = useState(0);
 
   useEffect(() => {
     setHintDialogOpen(false);
@@ -454,6 +638,11 @@ export default function CourseQuizPage() {
 
   const submitAnswer = useSubmitQuizAnswer(activeAttemptId);
   const submitAttempt = useSubmitQuizAttempt(activeAttemptId);
+
+  // Proctoring: report tab-switch / focus-loss signals ONLY while a take is
+  // live (an attempt exists and we're in taking mode). Passing null outside
+  // an active take detaches the listeners. Fire-and-forget; never blocks UI.
+  useQuizIntegrityReporter(taking && activeAttemptId ? activeAttemptId : null);
 
   const autoSubmitStartedRef = useRef(false);
   const questionSeenAtRef = useRef<Record<string, number>>({});
@@ -492,15 +681,19 @@ export default function CourseQuizPage() {
     );
     setActiveIdx(firstUnanswered === -1 ? 0 : firstUnanswered);
 
+    const startedAtMs = new Date(progress.started_at).getTime();
+    setQuizStartedAt(startedAtMs);
+    setQuizElapsed(Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000)));
     const timeLimit = progress.take.quiz.time_limit_seconds ?? 0;
     if (timeLimit) {
-      const elapsedSeconds = Math.floor(
-        (Date.now() - new Date(progress.started_at).getTime()) / 1000,
-      );
+      const elapsedSeconds = Math.floor((Date.now() - startedAtMs) / 1000);
       setTimeLeft(Math.max(0, timeLimit - elapsedSeconds));
     }
     autoSubmitStartedRef.current = false;
-    questionSeenAtRef.current = {};
+    // Restore per-question first-seen timestamps so the elapsed badge (and
+    // the t_actual_ms we report) keep counting from the ORIGINAL first view,
+    // not from this refresh/resume. Falls back to {} when nothing persisted.
+    questionSeenAtRef.current = loadSeenAt(progress.attempt_id);
     setPerQuestionCooldown({});
   }, [attemptProgress.data, taking]);
 
@@ -522,13 +715,18 @@ export default function CourseQuizPage() {
     }
     if (!questionSeenAtRef.current[activeQuestionId]) {
       questionSeenAtRef.current[activeQuestionId] = Date.now();
+      // Persist the first-seen anchor so a refresh/resume keeps counting
+      // from here instead of restarting the elapsed badge at zero.
+      if (activeAttemptId) {
+        saveSeenAt(activeAttemptId, questionSeenAtRef.current);
+      }
     }
     const interval = window.setInterval(() => {
       setActiveQuestionElapsed(Math.floor((Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000));
     }, 1000);
     setActiveQuestionElapsed(Math.floor((Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000));
     return () => window.clearInterval(interval);
-  }, [activeIdx, displayQuestions]);
+  }, [activeIdx, displayQuestions, activeAttemptId]);
 
   useEffect(() => {
     if (!quiz?.time_limit_seconds || !sessionReady || submittedSummary) return;
@@ -537,6 +735,18 @@ export default function CourseQuizPage() {
     }, 1000);
     return () => window.clearInterval(timerId);
   }, [quiz?.time_limit_seconds, sessionReady, submittedSummary]);
+
+  // Total-elapsed ticker. Runs for EVERY live attempt regardless of whether
+  // the quiz has a time limit, so the elapsed indicator is always visible.
+  // Derives from the wall-clock start so it stays accurate across refreshes.
+  useEffect(() => {
+    if (quizStartedAt == null || !sessionReady || submittedSummary) return;
+    const tick = () =>
+      setQuizElapsed(Math.max(0, Math.floor((Date.now() - quizStartedAt) / 1000)));
+    tick();
+    const timerId = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timerId);
+  }, [quizStartedAt, sessionReady, submittedSummary]);
 
   async function handleStartAttempt() {
     try {
@@ -555,7 +765,11 @@ export default function CourseQuizPage() {
       );
       setActiveIdx(0);
       setTimeLeft(result.take.quiz.time_limit_seconds ?? 0);
+      setQuizStartedAt(Date.now());
+      setQuizElapsed(0);
       autoSubmitStartedRef.current = false;
+      // Fresh attempt: drop any stale persisted timing for this id.
+      clearSeenAt(result.attempt_id);
       questionSeenAtRef.current = {};
       setPerQuestionCooldown({});
     } catch (err) {
@@ -623,6 +837,14 @@ export default function CourseQuizPage() {
     }
   }
 
+  // Save the current answer WITHOUT navigating. Distinct from Continue so a
+  // student can checkpoint their answer and keep thinking on the same
+  // question. `persistAnswer` is idempotent (returns true and no-ops when the
+  // answer is already saved), so a redundant Save is harmless.
+  async function handleSaveOnly() {
+    await persistAnswer(activeIdx);
+  }
+
   async function handleSaveNext() {
     const ok = await persistAnswer(activeIdx);
     if (ok) {
@@ -644,6 +866,8 @@ export default function CourseQuizPage() {
 
     try {
       const result = await submitAttempt.mutateAsync();
+      // Attempt is finalized — drop the persisted per-question timing mirror.
+      if (activeAttemptId) clearSeenAt(activeAttemptId);
       setSubmittedSummary(result);
       if (trigger === "timeout") {
         toast.error(t("course_quiz.errors.auto_submitted_timeout"));
@@ -675,9 +899,10 @@ export default function CourseQuizPage() {
     timeLeft,
   ]);
 
-  // While an in_progress attempt's resume payload is still loading, hold on
-  // the skeleton instead of flashing the "Start" screen before hydrating.
-  const resuming = !!inProgressAttempt && attemptProgress.isLoading && !taking;
+  // Once the user clicks Resume, hold on the skeleton while the resume
+  // payload loads instead of flashing the intro panel before hydrating.
+  const resuming =
+    resumeRequested && !!inProgressAttempt && attemptProgress.isLoading && !taking;
 
   if (courseLoading || quizLoading || attemptsLoading || resuming) {
     return (
@@ -783,10 +1008,41 @@ export default function CourseQuizPage() {
         <QuizIntroPanel
           quiz={quiz}
           attempts={attempts}
+          inProgressAttempt={inProgressAttempt}
           onStart={() => void handleStartAttempt()}
+          onResume={() => setResumeRequested(true)}
           starting={startAttempt.isPending}
+          resuming={resumeRequested}
           slug={slug}
         />
+      </div>
+    );
+  }
+
+  // Defensive: a live take can legitimately carry zero questions — e.g. a
+  // quiz published before the approval gate whose questions are all still
+  // pending review (the approved-only taking filter excludes them). Render a
+  // friendly empty state instead of dereferencing an undefined question.
+  if (displayQuestions.length === 0) {
+    return (
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-10">
+        <div className="max-w-lg mx-auto text-center bg-m3-surface-container-lowest rounded-xl p-10 shadow-editorial space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 flex items-center justify-center">
+            <AlertCircle className="h-7 w-7 text-amber-600" />
+          </div>
+          <h2 className="font-headline font-bold text-xl text-m3-on-surface">
+            {t("course_quiz.empty.no_questions_title")}
+          </h2>
+          <p className="text-sm text-m3-on-surface-variant">
+            {t("course_quiz.empty.no_questions_body")}
+          </p>
+          <Link to="/courses/$slug/learn" params={{ slug }}>
+            <Button variant="outline" className="gap-2 mt-2">
+              <ArrowLeft className="h-4 w-4" />
+              {t("course_interview.actions.course")}
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -853,18 +1109,42 @@ export default function CourseQuizPage() {
               showHints={quiz.show_hints}
               cooldownHours={quiz.cooldown_hours}
             />
+            {taking && activeAttemptId && <QuizIntegrityNotice />}
+            {/* Started-at: when the current attempt began (wall clock). */}
+            {quizStartedAt != null && (
+              <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-m3-surface-container text-m3-on-surface-variant text-sm">
+                <Clock className="h-4 w-4 text-m3-primary" />
+                <span className="font-medium">
+                  {t("course_quiz.labels.started_at")}
+                </span>
+                <span className="font-semibold tabular-nums text-m3-on-surface">
+                  {new Date(quizStartedAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+            )}
+            {/* Elapsed: always visible, timed or not. */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-m3-surface-container text-m3-on-surface-variant font-mono font-bold text-sm">
+              <Timer className="h-4 w-4 text-m3-secondary" />
+              <span className="tabular-nums text-m3-on-surface">
+                {formatDuration(quizElapsed)}
+              </span>
+            </div>
+            {/* Countdown: only when the quiz has a time limit. */}
             {quiz.time_limit_seconds ? (
               <div
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold text-sm",
-                  isTimeLow ? "bg-red-50 text-red-600 animate-pulse" : "bg-m3-surface-container text-m3-primary",
+                  isTimeLow ? "bg-red-50 text-red-600 animate-pulse" : "bg-m3-primary-fixed/40 text-m3-primary",
                 )}
               >
                 <Timer className="h-4 w-4" />
                 {formatTime(sessionReady ? timeLeft : quiz.time_limit_seconds)}
               </div>
             ) : (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-m3-surface-container text-m3-primary font-bold text-sm">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-m3-surface-container text-m3-on-surface-variant text-sm font-medium">
                 <Clock className="h-4 w-4" />
                 {t("course_quiz.labels.no_time_limit")}
               </div>
@@ -900,7 +1180,7 @@ export default function CourseQuizPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-8 xl:col-span-9">
+          <div className="lg:col-span-9 xl:col-span-10">
             <div className="bg-m3-surface-container-lowest rounded-xl p-6 sm:p-10 relative overflow-hidden shadow-editorial">
               <div className="absolute top-0 right-0 m-5 flex items-center gap-2">
                 <Badge variant="outline" className="text-m3-outline border-m3-outline-variant font-mono text-[10px] bg-white">
@@ -1017,9 +1297,11 @@ export default function CourseQuizPage() {
                 <QuestionSubmitButton
                   isLastQuestion={isLastQuestion}
                   hasSelection={hasAnswer(activeStatus)}
+                  isSaved={activeStatus.savedToServer}
                   isSavingAnswer={submitAnswer.isPending}
                   isFinalSubmitting={submitAttempt.isPending}
                   cooldownRetryAt={activeQuestionCooldown}
+                  onSave={() => void handleSaveOnly()}
                   onSaveNext={() => void handleSaveNext()}
                   onFinalSubmit={() => void handleFinalSubmit("manual")}
                 />
@@ -1027,7 +1309,7 @@ export default function CourseQuizPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-4 xl:col-span-3 space-y-5">
+          <div className="lg:col-span-3 xl:col-span-2 space-y-5 lg:sticky lg:top-32 lg:self-start">
             <HintDialog
               open={hintDialogOpen}
               onOpenChange={setHintDialogOpen}

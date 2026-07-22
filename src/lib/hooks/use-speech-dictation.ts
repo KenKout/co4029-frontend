@@ -1,31 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/**
- * Browser speech-to-text dictation via the Web Speech API
- * (`SpeechRecognition` / `webkitSpeechRecognition`).
- *
- * This powers the per-question voice input in HYBRID interview sessions:
- * the student speaks, the browser transcribes to text locally, and the text
- * is submitted through the normal REST `/respond` path. No server changes,
- * no LiveKit — the same text brain scores the answer.
- *
- * Not all browsers implement the API (Firefox notably does not). Callers
- * should check `supported` and fall back to the textarea when it is false.
- *
- * The recognizer is configured with `interimResults` so the caller can show
- * a live partial transcript; the finalized chunks are accumulated and handed
- * back through `onResult` so they can be appended to the answer draft.
- */
-
-// Minimal typings — the DOM lib does not ship SpeechRecognition types.
+/** Minimal Web Speech API types because the DOM library does not include them. */
 interface SpeechRecognitionAlternativeLike {
   transcript: string;
 }
+
 interface SpeechRecognitionResultLike {
   0: SpeechRecognitionAlternativeLike;
   isFinal: boolean;
   length: number;
 }
+
 interface SpeechRecognitionEventLike {
   resultIndex: number;
   results: {
@@ -33,9 +18,11 @@ interface SpeechRecognitionEventLike {
     [index: number]: SpeechRecognitionResultLike;
   };
 }
+
 interface SpeechRecognitionErrorEventLike {
   error: string;
 }
+
 interface SpeechRecognitionLike {
   lang: string;
   continuous: boolean;
@@ -47,57 +34,95 @@ interface SpeechRecognitionLike {
   onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
   onend: (() => void) | null;
 }
+
 type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
 
 function getRecognitionCtor(): SpeechRecognitionCtor | null {
   if (typeof window === "undefined") return null;
-  const w = window as unknown as {
+  const browserWindow = window as unknown as {
     SpeechRecognition?: SpeechRecognitionCtor;
     webkitSpeechRecognition?: SpeechRecognitionCtor;
   };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+  return browserWindow.SpeechRecognition ?? browserWindow.webkitSpeechRecognition ?? null;
+}
+
+export type SpeechDictationError =
+  | "permission-denied"
+  | "no-microphone"
+  | "no-speech"
+  | "audio-capture"
+  | "network"
+  | "interrupted"
+  | "unsupported";
+
+function normalizeRecognitionError(error: string): SpeechDictationError {
+  switch (error) {
+    case "not-allowed":
+    case "service-not-allowed":
+      return "permission-denied";
+    case "audio-capture":
+      return "audio-capture";
+    case "no-speech":
+      return "no-speech";
+    case "network":
+      return "network";
+    case "aborted":
+      return "interrupted";
+    default:
+      return "no-microphone";
+  }
 }
 
 export interface UseSpeechDictationOptions {
-  /** BCP-47 language tag, e.g. "en-US" or "vi-VN". */
+  /** BCP-47 language tag, for example en-US or vi-VN. */
   lang?: string;
-  /** Called with each finalized transcript chunk (already trimmed). */
+  /** Called with each finalized transcript chunk. */
   onResult: (finalText: string) => void;
 }
 
 export interface UseSpeechDictation {
-  /** Whether the browser exposes the Web Speech API at all. */
   supported: boolean;
-  /** True while actively listening. */
   listening: boolean;
-  /** Live, not-yet-finalized transcript (for display only). */
+  paused: boolean;
   interim: string;
-  /** Begin listening. No-op when unsupported or already listening. */
+  error: SpeechDictationError | null;
   start: () => void;
-  /** Stop listening and finalize. */
-  stop: () => void;
-  /** Toggle listening on/off. */
+  pause: () => void;
+  resume: () => void;
+  /** Stops capture and returns the last uncommitted interim text. */
+  stop: () => string;
+  cancel: () => void;
+  retry: () => void;
   toggle: () => void;
 }
 
+/**
+ * Browser speech-to-text for hybrid interview answers. Final chunks are
+ * appended to the canonical answer draft by the caller, so switching between
+ * voice and typing never discards candidate input.
+ */
 export function useSpeechDictation({
   lang = "en-US",
   onResult,
 }: UseSpeechDictationOptions): UseSpeechDictation {
   const ctor = getRecognitionCtor();
   const supported = ctor !== null;
-
   const [listening, setListening] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [interim, setInterim] = useState("");
+  const [error, setError] = useState<SpeechDictationError | null>(
+    supported ? null : "unsupported",
+  );
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
-  // Keep the latest onResult without re-creating the recognizer each render.
+  const interimRef = useRef("");
+  const intentionalStopRef = useRef(false);
   const onResultRef = useRef(onResult);
+
   useEffect(() => {
     onResultRef.current = onResult;
   }, [onResult]);
 
-  // (Re)build the recognizer when support or language changes.
   useEffect(() => {
     if (!ctor) return;
     const recognition = new ctor();
@@ -108,24 +133,32 @@ export function useSpeechDictation({
     recognition.onresult = (event) => {
       let finalChunk = "";
       let interimChunk = "";
-      for (let i = event.resultIndex; i < event.results.length; i += 1) {
-        const result = event.results[i];
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        const result = event.results[index];
         const text = result[0]?.transcript ?? "";
         if (result.isFinal) finalChunk += text;
         else interimChunk += text;
       }
-      if (finalChunk.trim()) {
+      if (finalChunk.trim() && !intentionalStopRef.current) {
         onResultRef.current(finalChunk.trim());
       }
+      interimRef.current = interimChunk;
       setInterim(interimChunk);
     };
-    recognition.onerror = () => {
+
+    recognition.onerror = (event) => {
       setListening(false);
-      setInterim("");
+      if (!intentionalStopRef.current) {
+        setPaused(false);
+        setError(normalizeRecognitionError(event.error));
+      }
     };
+
     recognition.onend = () => {
       setListening(false);
+      interimRef.current = "";
       setInterim("");
+      intentionalStopRef.current = false;
     };
 
     recognitionRef.current = recognition;
@@ -136,7 +169,7 @@ export function useSpeechDictation({
       try {
         recognition.abort();
       } catch {
-        // ignore — already stopped
+        // The recognizer may already be inactive.
       }
       recognitionRef.current = null;
     };
@@ -144,32 +177,93 @@ export function useSpeechDictation({
 
   const start = useCallback(() => {
     const recognition = recognitionRef.current;
-    if (!recognition || listening) return;
+    if (!recognition || listening) {
+      if (!recognition) setError("unsupported");
+      return;
+    }
     try {
+      intentionalStopRef.current = false;
       recognition.start();
       setListening(true);
+      setPaused(false);
+      setError(null);
+      interimRef.current = "";
       setInterim("");
     } catch {
-      // start() throws if called while already started — ignore.
+      setError("interrupted");
     }
   }, [listening]);
 
   const stop = useCallback(() => {
-    const recognition = recognitionRef.current;
-    if (!recognition) return;
+    const pendingInterim = interimRef.current.trim();
     try {
-      recognition.stop();
+      intentionalStopRef.current = true;
+      recognitionRef.current?.stop();
     } catch {
-      // ignore
+      // The recognizer may already be inactive.
     }
     setListening(false);
+    setPaused(false);
+    interimRef.current = "";
+    setInterim("");
+    return pendingInterim;
+  }, []);
+
+  const pause = useCallback(() => {
+    const pendingInterim = interimRef.current.trim();
+    if (pendingInterim) onResultRef.current(pendingInterim);
+    try {
+      intentionalStopRef.current = true;
+      recognitionRef.current?.stop();
+    } catch {
+      // The recognizer may already have stopped after a natural pause.
+    }
+    setListening(false);
+    setPaused(true);
+    interimRef.current = "";
     setInterim("");
   }, []);
+
+  const resume = useCallback(() => {
+    setPaused(false);
+    start();
+  }, [start]);
+
+  const cancel = useCallback(() => {
+    intentionalStopRef.current = true;
+    try {
+      recognitionRef.current?.abort();
+    } catch {
+      // The recognizer may already be inactive.
+    }
+    setListening(false);
+    setPaused(false);
+    interimRef.current = "";
+    setInterim("");
+  }, []);
+
+  const retry = useCallback(() => {
+    setError(null);
+    start();
+  }, [start]);
 
   const toggle = useCallback(() => {
     if (listening) stop();
     else start();
   }, [listening, start, stop]);
 
-  return { supported, listening, interim, start, stop, toggle };
+  return {
+    supported,
+    listening,
+    paused,
+    interim,
+    error,
+    start,
+    pause,
+    resume,
+    stop,
+    cancel,
+    retry,
+    toggle,
+  };
 }

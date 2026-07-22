@@ -75,9 +75,22 @@ export type MultipartAbortIn = Schemas["MultipartAbortIn"];
 export type ReprocessOut = Schemas["ReprocessOut"];
 export type ProcessingProgress = Schemas["ProcessingProgress"];
 
-export type Quiz = Schemas["QuizPublic"];
-export type QuizPublic = Schemas["QuizPublic"];
-export type QuizAuthoring = Schemas["QuizAuthoring"];
+/**
+ * Scheduling window (backend migration 0032). These fields post-date the
+ * committed OpenAPI snapshot, so augment locally until the snapshot is
+ * regenerated against the live backend at deploy time (an all-optional
+ * intersection stays compatible with the eventual generated shape).
+ * NULL = no restriction. `due_at` is a soft deadline (does not block).
+ */
+export interface QuizScheduleWindow {
+  available_from?: string | null;
+  available_until?: string | null;
+  due_at?: string | null;
+}
+
+export type Quiz = Schemas["QuizPublic"] & QuizScheduleWindow;
+export type QuizPublic = Schemas["QuizPublic"] & QuizScheduleWindow;
+export type QuizAuthoring = Schemas["QuizAuthoring"] & QuizScheduleWindow;
 export type QuizForTaking = Schemas["QuizForTakingPublic"];
 export type QuizForTakingPublic = Schemas["QuizForTakingPublic"];
 export type QuizForAuthoring = Schemas["QuizForAuthoringPublic"];
@@ -112,11 +125,56 @@ export type InterviewConfigUpdate = Schemas["InterviewConfigUpdate"];
 export type InterviewForTakingPublic = Schemas["InterviewForTakingPublic"];
 export type InterviewSessionPublic = Schemas["InterviewSessionPublic"];
 export type InterviewSessionStartRequest = Schemas["InterviewSessionStartRequest"];
-export type InterviewSessionStartResponse = Schemas["InterviewSessionStartResponse"];
+export type InterviewLanguage = NonNullable<
+  Schemas["InterviewOnboardingRespondRequest"]["language"]
+>;
+export type InterviewOnboardingStage =
+  Schemas["InterviewOnboardingRespondResponse"]["onboarding_stage"];
+export type InterviewSessionHistoryTurn = Schemas["InterviewSessionHistoryTurn"];
+export type InterviewSessionStartResponse = Schemas["InterviewSessionStartResponse"] & {
+  onboarding_stage?: InterviewOnboardingStage;
+  interview_language?: InterviewLanguage;
+  assessment_started_at?: string | null;
+};
+// The generated schema is regenerated from the backend OpenAPI doc; until that
+// regen runs, widen the union to include the in-session identity-correction
+// actions the backend already accepts (reject_identity / set_name).
+export type InterviewOnboardingAction =
+  | NonNullable<Schemas["InterviewOnboardingRespondRequest"]["action"]>
+  | "reject_identity"
+  | "set_name";
+export type InterviewOnboardingRespondRequest = Omit<
+  Schemas["InterviewOnboardingRespondRequest"],
+  "action"
+> & {
+  // Widen action to include the in-session identity-correction actions the
+  // backend accepts but the generated schema hasn't been regenerated for yet.
+  action?: InterviewOnboardingAction | null;
+};
+export type InterviewOnboardingRespondResponse =
+  Schemas["InterviewOnboardingRespondResponse"];
 export type InterviewSessionFinishResponse = Schemas["InterviewSessionFinishResponse"];
+export interface InterviewSessionFinishRequest {
+  reason?: "natural" | "ended_early" | "timed_out";
+}
 export type InterviewRespondRequest = Schemas["InterviewSubmitAnswerRequest"];
 export type InterviewSubmitAnswerRequest = Schemas["InterviewSubmitAnswerRequest"];
-export type InterviewSubmitAnswerResponse = Schemas["InterviewSubmitAnswerResponse"];
+// Widen with the Natural Interview Transitions fields until the OpenAPI
+// snapshot is regenerated — the backend already returns these additive,
+// optional fields (transition text/id/target) on an advance or final turn.
+export type InterviewSubmitAnswerResponse =
+  Schemas["InterviewSubmitAnswerResponse"] & {
+    transition_id?: string | null;
+    transition_text?: string | null;
+    transition_target?: "next_question" | "closing" | null;
+    // End-confirmation gate (Slice 4): the backend asks the candidate to
+    // confirm ending rather than closing immediately. `pending_confirmation`
+    // is true on a `request_end_confirmation` turn and stays true until the
+    // candidate confirms/cancels; `interaction_state` exposes the per-turn
+    // lifecycle axis (separate from interview progress/phase).
+    pending_confirmation?: boolean | null;
+    interaction_state?: string | null;
+  };
 export type InterviewQuestionPublic = Schemas["InterviewQuestionPublic"];
 export type InterviewQuestionAuthoring = Schemas["InterviewQuestionAuthoring"];
 export type InterviewQuestionCreate = Schemas["InterviewQuestionCreate"];
@@ -126,6 +184,28 @@ export type InterviewGenerationRequest = Schemas["InterviewGenerationRequest"];
 export type InterviewGenerationRunPublic = Schemas["InterviewGenerationRunPublic"];
 export type GapReportRead = Schemas["GapReportRead"];
 export type GapReportAuthoringRead = Schemas["GapReportAuthoringRead"];
+
+// Adaptive readiness (Slice 5) — advisory authoring analysis. Manually typed
+// until the OpenAPI snapshot is regenerated; the backend returns these from
+// GET /teacher/interview-configs/{id}/adaptive-readiness.
+export type AdaptiveReadinessLevel = "info" | "warning";
+export interface AdaptiveReadinessWarning {
+  code: string;
+  level: AdaptiveReadinessLevel;
+  affected_ids: string[];
+  count: number;
+}
+export interface AdaptiveModeRolloutStatus {
+  text: boolean;
+  hybrid: boolean;
+  voice: boolean;
+}
+export interface AdaptiveReadinessRead {
+  config_id: string;
+  warnings: AdaptiveReadinessWarning[];
+  rollout: AdaptiveModeRolloutStatus;
+  blocks_publish: boolean;
+}
 
 export interface InterviewForAuthoringPublic {
   config: InterviewConfigAuthoring;
@@ -177,7 +257,12 @@ export type InvitationCodeAuthoring = Schemas["InvitationCodeAuthoring"];
 export type InvitationCodePatch = Schemas["InvitationCodePatch"];
 export type CSVImportPayload = Schemas["CSVImportPayload"];
 
-export type Notification = Schemas["NotificationRead"];
+// action_url is a precomputed relative deep-link built by the producing
+// feature (backend Option B). Extended manually until the OpenAPI snapshot
+// is regenerated — the generated NotificationRead doesn't carry it yet.
+export type Notification = Schemas["NotificationRead"] & {
+  action_url?: string | null;
+};
 export type NotificationPreference = Schemas["NotificationPreferenceRead"];
 export type NotificationPreferenceRead = Schemas["NotificationPreferenceRead"];
 export type NotificationPreferenceUpdate = Schemas["NotificationPreferenceUpdate"];
@@ -251,9 +336,16 @@ export type CareerPathCourseAdd = Schemas["CareerPathCourseAdd"];
 export type CareerPathCourseReorder = Schemas["CareerPathCourseReorder"];
 export type CareerPathStudentEnroll = Schemas["CareerPathStudentEnroll"];
 export type CareerPathProgressRead = Schemas["CareerPathProgressRead"];
+/**
+ * The enrollment list contract does not require aggregate progress. Some
+ * deployments enrich the same response with these values, while the learner
+ * page deliberately falls back to 0% / completed status when they are absent.
+ * Keep that progressive enhancement optional instead of weakening the
+ * generated OpenAPI schema itself.
+ */
 export type MyCareerEnrollmentRead = Schemas["MyCareerEnrollmentRead"] & {
-  overall_percent?: number;
-  is_prepared?: boolean;
+  overall_percent?: number | null;
+  is_prepared?: boolean | null;
 };
 export type StudentPathProgressAuthoring =
   Schemas["StudentPathProgressAuthoring"];

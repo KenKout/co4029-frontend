@@ -37,12 +37,14 @@ import {
 } from "@/lib/api/hooks/courses";
 import { useStreamUrl } from "@/lib/api/hooks/materials";
 import { useMyCourseProgress, useMarkLessonComplete, useUnmarkLessonComplete } from "@/lib/api/hooks/progress";
+import { useMyInterviewSessions } from "@/lib/api/hooks/interviews";
 // import { useCourseSrOverview } from "@/lib/api/hooks/spaced-repetition";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
 import ReactMarkdown from "react-markdown";
 import { queryKeys } from "@/lib/api/query-keys";
 import type {
   InstructorRead,
+  InterviewSessionPublic,
   LessonPublic,
   LessonResourcePublic,
   ModuleItemPublic,
@@ -219,6 +221,28 @@ function CourseLearnLoaded({
     [flatItems],
   );
 
+  // Map interview_config_id -> the student's in-progress session for it, so the
+  // curriculum can disable that interview item and offer a "continue" action
+  // instead of letting the student start a second concurrent session.
+  const { data: myInterviewSessions } = useMyInterviewSessions();
+  const inProgressByConfigId = useMemo(() => {
+    const map = new Map<string, InterviewSessionPublic>();
+    for (const session of myInterviewSessions ?? []) {
+      if (session.status !== "in_progress") continue;
+      if (session.course_id && session.course_id !== course.id) continue;
+      // Keep the most recently started session per config.
+      const existing = map.get(session.interview_config_id);
+      if (
+        !existing ||
+        new Date(session.started_at).getTime() >
+          new Date(existing.started_at).getTime()
+      ) {
+        map.set(session.interview_config_id, session);
+      }
+    }
+    return map;
+  }, [myInterviewSessions, course.id]);
+
   const [activeIdx, setActiveIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>("Lesson Notes");
 
@@ -317,6 +341,36 @@ function CourseLearnLoaded({
   }, [search.p]);
 
   const targetAnchor = useMemo(() => (hash ? hash.replace(/^#/, "") : null), [hash]);
+
+  // Course-home landing: when the student arrives WITHOUT a content deep-link
+  // (?t= seek / ?p= page / #anchor), show a course-home overview (progress +
+  // continue button + full curriculum) instead of dropping straight into
+  // lesson 1. Selecting a lesson — or arriving via a deep-link — switches to
+  // the focused player view. This gives students an orientation/"what's next"
+  // surface the cramped sidebar can't, and makes the full curriculum visible
+  // on arrival (the reason the tiny sidebar felt like the only navigation).
+  const [showHome, setShowHome] = useState(
+    () => seekSeconds === null && targetPage === null && !targetAnchor,
+  );
+  // Resume target = first non-completed lesson (falls back to the first).
+  const resumeIdx = useMemo(() => {
+    const i = lessonItems.findIndex((li) => {
+      const id = li.item.target?.id;
+      return !id || lessonStatusMap.get(id) !== "completed";
+    });
+    return i >= 0 ? i : 0;
+  }, [lessonItems, lessonStatusMap]);
+  const completedCount = useMemo(
+    () =>
+      lessonItems.filter(
+        (li) => lessonStatusMap.get(li.item.target?.id ?? "") === "completed",
+      ).length,
+    [lessonItems, lessonStatusMap],
+  );
+  function openLesson(idx: number) {
+    setActiveIdx(idx);
+    setShowHome(false);
+  }
 
   useEffect(() => {
     const container = playerRef.current;
@@ -498,7 +552,24 @@ function CourseLearnLoaded({
                 </div>
               </GlassCard>
             ) : */}
-            {lessonUnavailable ? (
+            {showHome ? (
+              <CourseHome
+                course={course}
+                sortedModules={sortedModules}
+                flatItems={flatItems}
+                lessonItems={lessonItems}
+                itemState={itemState}
+                onSelect={openLesson}
+                slug={slug}
+                activeModuleId={activeEntry?.moduleId}
+                completedCount={completedCount}
+                totalLessons={lessonItems.length}
+                resumeIdx={resumeIdx}
+                resumeLabel={lessonItems[resumeIdx]?.label}
+                resumeStarted={completedCount > 0}
+                inProgressByConfigId={inProgressByConfigId}
+              />
+            ) : lessonUnavailable ? (
               <GlassCard className="p-10 text-center">
                 <p className="font-headline font-bold text-xl text-m3-on-surface mb-2">
                   {t("course_learn.lesson_unavailable_title")}
@@ -545,7 +616,7 @@ function CourseLearnLoaded({
               </div>
             )}
 
-            {activeEntry && (
+            {!showHome && activeEntry && (
               <div className="space-y-3">
                 <h1 className="font-headline font-extrabold text-3xl sm:text-4xl text-m3-primary tracking-tight leading-none">
                   {activeLesson?.title ?? activeEntry.label}
@@ -565,10 +636,12 @@ function CourseLearnLoaded({
               </div>
             )}
 
-            {course.instructor && (
+            {!showHome && course.instructor && (
               <InstructorBlock instructor={course.instructor} />
             )}
 
+            {!showHome && (
+            <>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-m3-outline-variant/20">
               <div className="flex gap-1 flex-wrap">
                 {TABS.map((tab) => (
@@ -650,31 +723,174 @@ function CourseLearnLoaded({
                 <ResourcesPanel resources={resources} />
               )}
             </div>
+            </>
+            )}
           </div>
 
-          <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-4">
-            <GlassCard className="flex flex-col overflow-hidden">
-              <div className="px-5 py-4 border-b border-m3-outline-variant/20 bg-m3-primary/5">
-                <h3 className="font-headline font-bold text-m3-primary text-sm">Curriculum</h3>
-              </div>
-              <div className="overflow-y-auto max-h-[520px] p-3 space-y-4">
-                {sortedModules.map((mod) => (
-                  <ModuleSection
-                    key={mod.id}
-                    mod={mod}
-                    flatItems={flatItems}
-                    lessonItems={lessonItems}
-                    itemState={itemState}
-                    onSelect={(idx) => setActiveIdx(idx)}
-                    slug={slug}
-                    isActiveModule={activeEntry?.moduleId === mod.id}
-                  />
-                ))}
-              </div>
-            </GlassCard>
-          </aside>
+          {/* Sidebar curriculum: only in lesson mode. In home mode the
+              main-column CourseHome renders the full curriculum, so showing
+              the sidebar too would duplicate it. */}
+          {!showHome && (
+            <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-4">
+              <GlassCard className="flex flex-col overflow-hidden">
+                <div className="px-5 py-4 border-b border-m3-outline-variant/20 bg-m3-primary/5">
+                  <h3 className="font-headline font-bold text-m3-primary text-sm">Curriculum</h3>
+                </div>
+                <div className="overflow-y-auto max-h-[520px] p-3 space-y-4">
+                  {sortedModules.map((mod) => (
+                    <ModuleSection
+                      key={mod.id}
+                      mod={mod}
+                      flatItems={flatItems}
+                      lessonItems={lessonItems}
+                      itemState={itemState}
+                      onSelect={openLesson}
+                      slug={slug}
+                      isActiveModule={activeEntry?.moduleId === mod.id}
+                      inProgressByConfigId={inProgressByConfigId}
+                    />
+                  ))}
+                </div>
+              </GlassCard>
+            </aside>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function CourseHome({
+  course,
+  sortedModules,
+  flatItems,
+  lessonItems,
+  itemState,
+  onSelect,
+  slug,
+  activeModuleId,
+  completedCount,
+  totalLessons,
+  resumeIdx,
+  resumeLabel,
+  resumeStarted,
+  inProgressByConfigId,
+}: {
+  course: NonNullable<ReturnType<typeof useCourseBySlug>["data"]>;
+  sortedModules: ModulePublic[];
+  flatItems: FlatItem[];
+  lessonItems: FlatItem[];
+  itemState: (fi: FlatItem) => LessonState;
+  onSelect: (idx: number) => void;
+  slug: string;
+  activeModuleId?: string;
+  completedCount: number;
+  totalLessons: number;
+  resumeIdx: number;
+  resumeLabel?: string;
+  resumeStarted: boolean;
+  inProgressByConfigId: Map<string, InterviewSessionPublic>;
+}) {
+  const { t } = useTranslation();
+  const pct =
+    totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+  const allDone = totalLessons > 0 && completedCount >= totalLessons;
+
+  return (
+    <div className="space-y-6" data-testid="course-learn-home">
+      {/* Hero: title + resume/start CTA + progress */}
+      <GlassCard className="p-6 sm:p-8 space-y-5">
+        <div className="space-y-2">
+          <span className="text-xs font-headline font-semibold uppercase tracking-wider text-m3-secondary">
+            {t("course_learn.home.eyebrow")}
+          </span>
+          <h1 className="font-headline font-extrabold text-3xl sm:text-4xl text-m3-primary tracking-tight leading-none">
+            {course.title}
+          </h1>
+          {course.description && (
+            <p className="text-sm text-m3-on-surface-variant leading-relaxed max-w-2xl">
+              {course.description}
+            </p>
+          )}
+        </div>
+
+        {/* Progress */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs font-semibold">
+            <span className="text-m3-on-surface-variant">
+              {t("course_learn.home.progress_label", {
+                completed: completedCount,
+                total: totalLessons,
+              })}
+            </span>
+            <span className="text-m3-primary">{pct}%</span>
+          </div>
+          <div className="w-full h-2 bg-m3-surface-variant rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full gradient-primary transition-all duration-500"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Continue / Start CTA. pt-1 + border-t separates it from the
+            progress bar above — otherwise at 100% the fully-filled bar and
+            this button share the same gradient-primary fill and visually merge. */}
+        <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-m3-outline-variant/15">
+          <Button
+            className="rounded-xl gradient-primary text-white font-bold gap-2"
+            onClick={() => onSelect(resumeIdx)}
+            data-testid="course-learn-home-resume"
+          >
+            {allDone ? (
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                {t("course_learn.home.review")}
+              </>
+            ) : resumeStarted ? (
+              <>
+                <PlayCircle className="h-4 w-4" />
+                {t("course_learn.home.continue")}
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 fill-white" />
+                {t("course_learn.home.start")}
+              </>
+            )}
+          </Button>
+          {resumeLabel && !allDone && (
+            <span className="text-xs text-m3-on-surface-variant truncate max-w-[240px]">
+              {t("course_learn.home.next_up")}: {resumeLabel}
+            </span>
+          )}
+        </div>
+      </GlassCard>
+
+      {/* Full curriculum — the "display them all" surface, on the main column */}
+      <GlassCard className="p-4 sm:p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-4 w-4 text-m3-secondary" />
+          <h2 className="font-headline font-bold text-m3-on-surface text-sm">
+            {t("course_learn.home.curriculum")}
+          </h2>
+        </div>
+        <div className="space-y-4">
+          {sortedModules.map((mod) => (
+            <ModuleSection
+              key={mod.id}
+              mod={mod}
+              flatItems={flatItems}
+              lessonItems={lessonItems}
+              itemState={itemState}
+              onSelect={onSelect}
+              slug={slug}
+              isActiveModule={activeModuleId === mod.id}
+              inProgressByConfigId={inProgressByConfigId}
+            />
+          ))}
+        </div>
+      </GlassCard>
     </div>
   );
 }
@@ -977,6 +1193,7 @@ function ModuleSection({
   onSelect,
   slug,
   isActiveModule,
+  inProgressByConfigId,
 }: {
   mod: ModulePublic;
   flatItems: FlatItem[];
@@ -985,7 +1202,9 @@ function ModuleSection({
   onSelect: (idx: number) => void;
   slug: string;
   isActiveModule: boolean;
+  inProgressByConfigId: Map<string, InterviewSessionPublic>;
 }) {
+  const { t } = useTranslation();
   const modItems = flatItems
     .map((fi) => ({ fi, idx: lessonItems.findIndex((lesson) => lesson.item.id === fi.item.id) }))
     .filter(({ fi }) => fi.moduleId === mod.id);
@@ -1068,11 +1287,58 @@ function ModuleSection({
         }
 
         if (isInterview && fi.item.target?.id) {
+          const configId = fi.item.target.id;
+          const activeSession = inProgressByConfigId.get(configId);
+
+          // An interview session is still occurring for this config: disable
+          // the item (block starting a second session) and surface a compact
+          // "in progress" card with a Continue action below it.
+          if (activeSession) {
+            return (
+              <div key={fi.item.id} className="space-y-1">
+                <div
+                  className={cn(className, "opacity-60 cursor-not-allowed")}
+                  aria-disabled="true"
+                >
+                  {inner}
+                </div>
+                <div
+                  className="ml-2 rounded-lg border border-m3-primary/30 bg-m3-primary/5 p-3"
+                  role="status"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full bg-m3-primary motion-safe:animate-pulse"
+                      aria-hidden="true"
+                    />
+                    <span className="text-[10px] font-bold uppercase tracking-tight text-m3-primary">
+                      {t("course_learn.interview_in_progress.badge")}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-xs font-semibold text-m3-on-surface">
+                    {t("course_learn.interview_in_progress.title")}
+                  </p>
+                  <p className="mt-0.5 text-[11px] leading-4 text-m3-on-surface-variant">
+                    {t("course_learn.interview_in_progress.body")}
+                  </p>
+                  <Link
+                    to="/courses/$slug/interview/$moduleId"
+                    params={{ slug, moduleId: configId }}
+                    className="mt-2.5 inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-m3-primary px-3 text-xs font-bold text-white transition-colors hover:bg-m3-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
+                  >
+                    <Play className="h-3.5 w-3.5" />
+                    {t("course_learn.interview_in_progress.continue")}
+                  </Link>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <Link
               key={fi.item.id}
               to="/courses/$slug/interview/$moduleId"
-              params={{ slug, moduleId: fi.item.target.id }}
+              params={{ slug, moduleId: configId }}
               className={className}
             >
               {inner}

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   ArrowLeft, ArrowRight, Search, Filter, Users, TrendingUp,
   AlertTriangle, ChevronRight, Clock, UserCheck, UserX,
-  UserMinus, ArrowUpRight, Award,
+  UserMinus, ArrowUpRight, Award, UserPlus,
 } from "lucide-react";
 import { useTeacherCourseById, useTeacherCourseRoster } from "@/lib/api/hooks/teacher-courses";
 import type { RosterStudent } from "@/lib/api/types/teacher";
@@ -161,12 +161,30 @@ export default function CourseStudentsPage() {
           </p>
         </div>
 
-        {atRiskCount > 0 && (
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl px-4 py-2.5 text-sm font-semibold shrink-0">
-            <AlertTriangle className="h-4 w-4" />
-            {atRiskCount} student{atRiskCount !== 1 ? "s" : ""} need attention
-          </div>
-        )}
+        <div className="flex items-center gap-3 shrink-0">
+          {atRiskCount > 0 && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl px-4 py-2.5 text-sm font-semibold">
+              <AlertTriangle className="h-4 w-4" />
+              {atRiskCount} student{atRiskCount !== 1 ? "s" : ""} need attention
+            </div>
+          )}
+          {/* Entry point to enrollment management (add / bulk-import / invite
+              codes). Previously only reachable buried inside course-manage —
+              surfaced here since this roster is where teachers look to add a
+              student. */}
+          <Link
+            to="/management/courses/$courseId/enrollments"
+            params={{ courseId }}
+          >
+            <button
+              type="button"
+              className="flex items-center gap-2 bg-m3-primary text-white rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-m3-primary/90 transition-colors cursor-pointer"
+            >
+              <UserPlus className="h-4 w-4" />
+              {t("teacher_course_students.manage_enrollments")}
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* ── 12-col grid ── */}

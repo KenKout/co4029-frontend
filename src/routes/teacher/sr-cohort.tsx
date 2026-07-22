@@ -5,10 +5,15 @@ import {
   AlertTriangle,
   ArrowLeft,
   Brain,
+  CheckCircle2,
   ChevronDown,
+  ChevronRight,
+  Info,
+  Loader2,
   RefreshCw,
   Sparkles,
   Users,
+  XCircle,
 } from "lucide-react";
 import {
   Bar,
@@ -21,6 +26,9 @@ import {
 } from "recharts";
 import { useQueries } from "@tanstack/react-query";
 import {
+  type CardStudentResult,
+  type DifficultCardWithPrompt,
+  useCardStudentResults,
   useCohortKr,
   useDifficultCards,
 } from "@/lib/api/hooks/spaced-repetition";
@@ -143,6 +151,213 @@ function CohortHistogram({
   );
 }
 
+// Relative-date formatter. Reuses the at-risk page's date i18n keys
+// (teacher_sr_at_risk.*) since they already exist in both locales.
+function useRelDate() {
+  const { t } = useTranslation();
+  return (iso: string | null | undefined) => {
+    if (!iso) return t("teacher_sr_at_risk.no_activity");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const d = new Date(iso);
+    d.setHours(0, 0, 0, 0);
+    const days = Math.round((today.getTime() - d.getTime()) / 86_400_000);
+    if (days <= 0) return t("teacher_sr_at_risk.today");
+    if (days === 1) return t("teacher_sr_at_risk.yesterday");
+    if (days < 7) return t("teacher_sr_at_risk.days_ago", { count: days });
+    if (days < 30)
+      return t("teacher_sr_at_risk.weeks_ago", { count: Math.floor(days / 7) });
+    return t("teacher_sr_at_risk.months_ago", { count: Math.floor(days / 30) });
+  };
+}
+
+function efMeta(meanEf: number) {
+  if (meanEf < 1.6) {
+    return {
+      cls: "bg-red-100 text-red-700 border-red-200",
+      labelKey: "teacher_sr_cohort.difficulty.hard",
+    };
+  }
+  if (meanEf < 2.0) {
+    return {
+      cls: "bg-amber-100 text-amber-700 border-amber-200",
+      labelKey: "teacher_sr_cohort.difficulty.medium",
+    };
+  }
+  return {
+    cls: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    labelKey: "teacher_sr_cohort.difficulty.easier",
+  };
+}
+
+/** One difficult-question row; expands to a per-student results panel. */
+function DifficultCardRow({
+  card,
+  courseId,
+}: {
+  card: DifficultCardWithPrompt;
+  courseId: string;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  // Fetch per-student results lazily — only once the row is first expanded.
+  const { data: results, isLoading } = useCardStudentResults(
+    courseId,
+    card.question_id,
+    open,
+  );
+  const meta = efMeta(card.mean_ef);
+  const difficultyLabel = t(meta.labelKey);
+
+  return (
+    <div>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((v) => !v);
+          }
+        }}
+        aria-expanded={open}
+        className="grid sm:grid-cols-[24px_1fr_150px_110px_140px] gap-4 px-6 py-3 items-center hover:bg-m3-surface-container-low transition-colors cursor-pointer"
+      >
+        <ChevronRight
+          className={cn(
+            "h-4 w-4 text-m3-on-surface-variant transition-transform shrink-0",
+            open && "rotate-90",
+          )}
+        />
+        <p
+          className="text-sm text-m3-on-surface truncate"
+          title={card.prompt_text}
+        >
+          {card.prompt_text || t("teacher_sr_cohort.untitled_question")}
+        </p>
+        <span
+          className={cn(
+            "text-xs font-bold px-2.5 py-1 rounded-full border w-fit inline-flex items-center gap-1.5",
+            meta.cls,
+          )}
+          title={t("teacher_sr_cohort.ef_hint")}
+        >
+          {difficultyLabel}
+          <span className="font-mono font-medium opacity-70">
+            EF {card.mean_ef.toFixed(2)}
+          </span>
+        </span>
+        <span className="text-sm text-m3-on-surface-variant inline-flex items-center gap-1">
+          <Users className="h-3.5 w-3.5" />
+          {card.student_count}
+        </span>
+        <Link
+          to="/teacher/courses/$courseId/quizzes/$quizId"
+          params={{ courseId, quizId: card.quiz_id }}
+          search={{ question: card.question_id }}
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center justify-end gap-1.5 text-xs font-semibold text-m3-primary hover:underline cursor-pointer"
+        >
+          <RefreshCw className="h-3 w-3" />
+          {t("teacher_sr_cohort.regenerate_question")}
+        </Link>
+      </div>
+
+      {open && (
+        <div className="px-6 pb-4 pt-1 bg-m3-surface-container-lowest">
+          <CardStudentResultsPanel results={results} loading={isLoading} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Per-student breakdown for one question (weakest first). */
+function CardStudentResultsPanel({
+  results,
+  loading,
+}: {
+  results: CardStudentResult[] | undefined;
+  loading: boolean;
+}) {
+  const { t } = useTranslation();
+  const relDate = useRelDate();
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 py-6 justify-center text-sm text-m3-on-surface-variant">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        {t("teacher_sr_cohort.detail.loading")}
+      </div>
+    );
+  }
+  if (!results || results.length === 0) {
+    return (
+      <div className="py-6 text-center text-sm text-m3-on-surface-variant">
+        {t("teacher_sr_cohort.detail.empty")}
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-m3-outline-variant/20 overflow-hidden">
+      <div className="grid grid-cols-[1fr_90px_110px_120px] gap-3 px-4 py-2 bg-m3-surface-container-low">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+          {t("teacher_sr_cohort.detail.student")}
+        </span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant text-center">
+          {t("teacher_sr_cohort.detail.last_result")}
+        </span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant text-center">
+          {t("teacher_sr_cohort.detail.accuracy")}
+        </span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant text-right">
+          {t("teacher_sr_cohort.detail.last_reviewed")}
+        </span>
+      </div>
+      <div className="divide-y divide-m3-outline-variant/10">
+        {results.map((r) => (
+          <div
+            key={r.student_id}
+            className="grid grid-cols-[1fr_90px_110px_120px] gap-3 px-4 py-2.5 items-center"
+          >
+            <span className="text-sm text-m3-on-surface truncate" title={r.name}>
+              {r.name}
+            </span>
+            <span className="flex justify-center">
+              {r.last_correct == null ? (
+                <span className="text-xs text-m3-on-surface-variant">—</span>
+              ) : r.last_correct ? (
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  {t("teacher_sr_cohort.detail.correct")}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600">
+                  <XCircle className="h-3.5 w-3.5" />
+                  {t("teacher_sr_cohort.detail.incorrect")}
+                </span>
+              )}
+            </span>
+            <span className="text-xs text-m3-on-surface-variant text-center tabular-nums">
+              {r.review_count > 0
+                ? t("teacher_sr_cohort.detail.accuracy_value", {
+                    correct: r.correct_count,
+                    total: r.review_count,
+                  })
+                : "—"}
+            </span>
+            <span className="text-xs text-m3-on-surface-variant text-right">
+              {relDate(r.last_reviewed_at)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function TeacherSrCohortPage() {
   const { t } = useTranslation();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
@@ -246,10 +461,17 @@ export default function TeacherSrCohortPage() {
         <section className="bg-m3-surface-container-lowest rounded-xl ghost-border shadow-editorial p-6 space-y-5">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
-              <h2 className="font-heading font-bold text-lg text-m3-on-surface">
+              <h2 className="font-heading font-bold text-lg text-m3-on-surface flex items-center gap-1.5">
                 {t("teacher_sr_cohort.histogram_title", {
                   lesson: selectedLesson?.lesson_title ?? "—",
                 })}
+                <Info
+                  className="h-3.5 w-3.5 text-m3-on-surface-variant/60 cursor-help shrink-0"
+                  aria-label={t("teacher_sr_cohort.kr_hint")}
+                  tabIndex={0}
+                >
+                  <title>{t("teacher_sr_cohort.kr_hint")}</title>
+                </Info>
               </h2>
               <p className="text-xs text-m3-on-surface-variant">
                 {t("teacher_sr_cohort.histogram_subtitle")}
@@ -311,6 +533,13 @@ export default function TeacherSrCohortPage() {
               <h2 className="font-heading font-bold text-lg text-m3-on-surface flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-m3-secondary" />
                 {t("teacher_sr_cohort.difficult_title")}
+                <Info
+                  className="h-3.5 w-3.5 text-m3-on-surface-variant/60 cursor-help shrink-0"
+                  aria-label={t("teacher_sr_cohort.ef_hint")}
+                  tabIndex={0}
+                >
+                  <title>{t("teacher_sr_cohort.ef_hint")}</title>
+                </Info>
               </h2>
               <p className="text-xs text-m3-on-surface-variant">
                 {t("teacher_sr_cohort.difficult_subtitle")}
@@ -339,7 +568,8 @@ export default function TeacherSrCohortPage() {
             </div>
           ) : (
             <div className="divide-y divide-m3-outline-variant/10">
-              <div className="hidden sm:grid grid-cols-[1fr_120px_120px_140px] gap-4 px-6 py-2.5 bg-m3-surface-container-low">
+              <div className="hidden sm:grid grid-cols-[24px_1fr_150px_110px_140px] gap-4 px-6 py-2.5 bg-m3-surface-container-low">
+                <span />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
                   {t("teacher_sr_cohort.cols.question")}
                 </span>
@@ -353,45 +583,13 @@ export default function TeacherSrCohortPage() {
                   {t("teacher_sr_cohort.cols.actions")}
                 </span>
               </div>
-              {difficult.map((card) => {
-                const efClass =
-                  card.mean_ef < 1.6
-                    ? "bg-red-100 text-red-700 border-red-200"
-                    : card.mean_ef < 2.0
-                      ? "bg-amber-100 text-amber-700 border-amber-200"
-                      : "bg-emerald-100 text-emerald-700 border-emerald-200";
-                return (
-                  <div
-                    key={card.question_id}
-                    className="grid sm:grid-cols-[1fr_120px_120px_140px] gap-4 px-6 py-3 items-center hover:bg-m3-surface-container-low transition-colors"
-                  >
-                    <p className="text-sm text-m3-on-surface font-mono truncate">
-                      {card.question_id.slice(0, 8)}…
-                    </p>
-                    <span
-                      className={cn(
-                        "text-xs font-bold px-2.5 py-1 rounded-full border w-fit",
-                        efClass,
-                      )}
-                    >
-                      EF {card.mean_ef.toFixed(2)}
-                    </span>
-                    <span className="text-sm text-m3-on-surface-variant inline-flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5" />
-                      {card.student_count}
-                    </span>
-                    <Link
-                      to="/teacher/courses/$courseId/quizzes/$quizId"
-                      params={{ courseId, quizId: card.quiz_id }}
-                      search={{ question: card.question_id }}
-                      className="inline-flex items-center justify-end gap-1.5 text-xs font-semibold text-m3-primary hover:underline cursor-pointer"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                      {t("teacher_sr_cohort.regenerate_question")}
-                    </Link>
-                  </div>
-                );
-              })}
+              {difficult.map((card) => (
+                <DifficultCardRow
+                  key={card.question_id}
+                  card={card}
+                  courseId={courseId}
+                />
+              ))}
             </div>
           )}
         </section>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -29,6 +29,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ApiError } from "@/lib/api/client";
 import {
   useAddQuizQuestion,
+  useBulkApprove,
   useBulkSetExpectedTime,
   useDeleteQuiz,
   usePatchQuiz,
@@ -50,6 +51,7 @@ import type {
 import { cn } from "@/lib/utils";
 import { QuizGenerationPanel } from "./_components/quiz-generation-panel";
 import { QuestionBankModal } from "./_components/question-bank-modal";
+import { MasterySelector } from "./_components/MasterySelector";
 
 type TabKey = "questions" | "settings" | "preview";
 
@@ -70,10 +72,44 @@ interface SettingsDraft {
   shuffle_options: boolean;
   show_hints: boolean;
   reminders_enabled: boolean;
+  // Scheduling window (migration 0032). Held as `datetime-local` strings
+  // ("YYYY-MM-DDTHH:mm", local time) or "" when unset.
+  available_from: string;
+  available_until: string;
+  due_at: string;
 }
 
 function toDraftString(value: string | number | null | undefined) {
   return value == null ? "" : String(value);
+}
+
+/**
+ * Convert a server ISO-8601 UTC instant to the local-time value a
+ * `datetime-local` input expects ("YYYY-MM-DDTHH:mm"). Returns "" for
+ * null/empty/invalid so an unset window renders as a blank field.
+ */
+function isoToLocalInput(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
+}
+
+/**
+ * Convert a `datetime-local` value (local time) back to an ISO-8601 UTC
+ * string for the API, or null when blank. The Date ctor interprets the
+ * bare local string in the browser's zone, and toISOString normalises to UTC.
+ */
+function localInputToIso(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const d = new Date(trimmed);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
 }
 
 function integerOrNull(value: string): number | null {
@@ -111,6 +147,9 @@ function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
     shuffle_options: quiz.shuffle_options,
     show_hints: quiz.show_hints,
     reminders_enabled: quiz.reminders_enabled,
+    available_from: isoToLocalInput(quiz.available_from),
+    available_until: isoToLocalInput(quiz.available_until),
+    due_at: isoToLocalInput(quiz.due_at),
   };
 }
 
@@ -152,6 +191,7 @@ export default function QuizManagePage() {
 
   const [tab, setTab] = useState<TabKey>("questions");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmPublish, setConfirmPublish] = useState(false);
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
@@ -174,6 +214,27 @@ export default function QuizManagePage() {
       return next.size === current.size ? current : next;
     });
   }, [questions]);
+
+  // "Icons-only when stuck" needs to know when the sticky action strip is
+  // actually pinned. CSS can't express that, so we watch a zero-height
+  // sentinel placed just above the strip: when it scrolls out of view under
+  // the global top bar, the strip is stuck and we condense it to icons.
+  // NOTE: these hooks MUST stay above the early returns below (loading /
+  // not-found guards) — hooks after a conditional return violate the rules
+  // of hooks and throw React error #310 once the data loads.
+  const stickySentinelRef = useRef<HTMLDivElement | null>(null);
+  const [actionsStuck, setActionsStuck] = useState(false);
+  useEffect(() => {
+    const sentinel = stickySentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setActionsStuck(!entry.isIntersecting),
+      // rootMargin top offset = global ContentTopBar height (64px / top-16)
+      { rootMargin: "-64px 0px 0px 0px", threshold: 0 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   if (authoringLoading || contentLoading) {
     return (
@@ -211,8 +272,18 @@ export default function QuizManagePage() {
 
   const moduleId = courseModule.id;
   const isPublished = quiz.status === "published";
+  // Hard approval gate: every question must be review_status="approved"
+  // before publish. This mirrors the backend publish_gate assertion — the
+  // "pending review" banner is now enforced, not just advisory.
+  const pendingReviewCount = questions.filter(
+    (q) => q.review_status !== "approved",
+  ).length;
+  const hasPendingReview = questions.length > 0 && pendingReviewCount > 0;
   const publishDisabled =
-    publishQuiz.isPending || isPublished || questions.length === 0;
+    publishQuiz.isPending ||
+    isPublished ||
+    questions.length === 0 ||
+    hasPendingReview;
 
   function returnToModule() {
     void navigate({
@@ -240,6 +311,7 @@ export default function QuizManagePage() {
     try {
       await publishQuiz.mutateAsync();
       toast.success(t("teacher_quiz_manage.toasts.published"));
+      setConfirmPublish(false);
     } catch (err: unknown) {
       if (
         err instanceof ApiError &&
@@ -248,6 +320,19 @@ export default function QuizManagePage() {
           err.code === "missing_expected_response_time" ||
           err.code === "missing_expected_time")
       ) {
+        setConfirmPublish(false);
+        return;
+      }
+      // Backend approval gate (pending_review): keep the dialog open is
+      // pointless since the gate can't be satisfied from here — surface the
+      // message and close so the teacher goes back to approve questions.
+      if (
+        err instanceof ApiError &&
+        err.status === 422 &&
+        err.code === "pending_review"
+      ) {
+        toast.error(t("teacher_quiz_manage.toasts.publish_pending_review"));
+        setConfirmPublish(false);
         return;
       }
       toast.error(
@@ -323,6 +408,9 @@ export default function QuizManagePage() {
         shuffle_options: draft.shuffle_options,
         show_hints: draft.show_hints,
         reminders_enabled: draft.reminders_enabled,
+        available_from: localInputToIso(draft.available_from),
+        available_until: localInputToIso(draft.available_until),
+        due_at: localInputToIso(draft.due_at),
       });
       toast.success(t("teacher_quiz_manage.toasts.settings_saved"));
     } catch (err: unknown) {
@@ -415,81 +503,110 @@ export default function QuizManagePage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
-          {course?.slug && (
-            <Link
-              to="/courses/$slug/quiz/$quizId"
-              params={{ slug: course.slug, quizId }}
-            >
-              <Button variant="outline" className="gap-2" type="button">
-                <Eye className="h-4 w-4" />
-                {t("teacher_quiz_manage.actions.view_as_student")}
-              </Button>
-            </Link>
-          )}
-          <Button
-            type="button"
-            disabled={publishDisabled}
-            onClick={handlePublish}
-            className={cn(
-              "gap-2 border-0 shadow-glass",
-              isPublished
-                ? "bg-emerald-600 text-white hover:bg-emerald-600 cursor-default"
-                : "gradient-primary text-white hover:shadow-ai-glow",
-            )}
-            title={
-              questions.length === 0
-                ? t("teacher_quiz_manage.actions.publish_needs_question")
-                : isPublished
-                  ? t("teacher_quiz_manage.status.published")
-                  : t("teacher_quiz_manage.actions.publish_quiz_tooltip")
-            }
-          >
-            {publishQuiz.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : isPublished ? (
-              <CheckCircle2 className="h-4 w-4" />
-            ) : (
-              <Upload className="h-4 w-4" />
-            )}
-            {isPublished
-              ? t("teacher_quiz_manage.status.published")
-              : t("teacher_quiz_manage.actions.publish")}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700"
-            onClick={() => setConfirmDelete(true)}
-            disabled={deleteQuiz.isPending}
-            title={t("teacher_quiz_manage.actions.delete_quiz_tooltip")}
-          >
-            <Trash2 className="h-4 w-4" />
-            {t("common.delete")}
-          </Button>
-        </div>
       </div>
 
-      <div className="bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 border border-m3-outline-variant/20 shadow-glass">
-        {TAB_KEYS.map((key) => {
-          const active = key === tab;
-          return (
-            <button
-              key={key}
+      {/* Zero-height sentinel: when it scrolls up under the global top bar,
+          the sticky strip below is pinned and we condense actions to icons. */}
+      <div ref={stickySentinelRef} aria-hidden className="h-px w-full" />
+
+      {/* Sticky strip: tab bar + page actions (View-as-student / Publish /
+          Delete). Pinned at top-16 (just under the global ContentTopBar) so
+          the teacher can publish/preview/delete from anywhere in a long quiz
+          without scrolling back up. z-20 keeps it below ContentTopBar and the
+          sidebar per frontend/AGENTS.md. Once stuck, it gains a solid blurred
+          background + shadow and the action buttons drop their text labels
+          (icons only) to stay compact. */}
+      <div className="sticky top-16 z-20 -mx-1 px-1">
+        <div
+          className={cn(
+            "flex items-center justify-between gap-3 rounded-xl border transition-all",
+            actionsStuck
+              ? "border-m3-outline-variant/30 bg-surface-elev/90 backdrop-blur-md shadow-glass px-2 py-1.5"
+              : "border-transparent px-0 py-0",
+          )}
+        >
+          <div className="bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 border border-m3-outline-variant/20 shadow-lg shadow-m3-primary/5">
+            {TAB_KEYS.map((key) => {
+              const active = key === tab;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setTab(key)}
+                  aria-pressed={active}
+                  className={cn(
+                    "px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer",
+                    active
+                      ? "bg-surface-elev text-m3-primary shadow-sm"
+                      : "text-m3-on-surface-variant hover:text-m3-primary/80",
+                  )}
+                >
+                  {t(`teacher_quiz_manage.tabs.${key}`)}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {course?.slug && (
+              <Link
+                to="/courses/$slug/quiz/$quizId"
+                params={{ slug: course.slug, quizId }}
+              >
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  type="button"
+                  title={t("teacher_quiz_manage.actions.view_as_student")}
+                >
+                  <Eye className="h-4 w-4" />
+                  {!actionsStuck && t("teacher_quiz_manage.actions.view_as_student")}
+                </Button>
+              </Link>
+            )}
+            <Button
               type="button"
-              onClick={() => setTab(key)}
-              aria-pressed={active}
+              disabled={publishDisabled}
+              onClick={() => setConfirmPublish(true)}
               className={cn(
-                "px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer",
-                active
-                  ? "bg-surface-elev text-m3-primary shadow-sm"
-                  : "text-m3-on-surface-variant hover:text-m3-primary/80",
+                "gap-2 border-0 shadow-glass",
+                isPublished
+                  ? "bg-emerald-600 text-white hover:bg-emerald-600 cursor-default"
+                  : "gradient-primary text-white hover:shadow-ai-glow",
               )}
+              title={
+                questions.length === 0
+                  ? t("teacher_quiz_manage.actions.publish_needs_question")
+                  : isPublished
+                    ? t("teacher_quiz_manage.status.published")
+                    : t("teacher_quiz_manage.actions.publish_quiz_tooltip")
+              }
             >
-              {t(`teacher_quiz_manage.tabs.${key}`)}
-            </button>
-          );
-        })}
+              {publishQuiz.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isPublished ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              {!actionsStuck &&
+                (isPublished
+                  ? t("teacher_quiz_manage.status.published")
+                  : t("teacher_quiz_manage.actions.publish"))}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700"
+              onClick={() => setConfirmDelete(true)}
+              disabled={deleteQuiz.isPending}
+              title={t("teacher_quiz_manage.actions.delete_quiz_tooltip")}
+            >
+              <Trash2 className="h-4 w-4" />
+              {!actionsStuck && t("common.delete")}
+            </Button>
+          </div>
+        </div>
       </div>
 
       {tab === "questions" && (
@@ -513,12 +630,16 @@ export default function QuizManagePage() {
         />
       )}
 
-      {tab === "settings" && draft && (
+      {tab === "settings" && draft && quiz && (
         <SettingsTab
           draft={draft}
           setDraft={setDraft}
           onSubmit={handleSaveSettings}
           saving={patchQuiz.isPending}
+          dirty={
+            JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))
+          }
+          onReset={() => setDraft(draftFromQuiz(quiz))}
         />
       )}
 
@@ -586,6 +707,67 @@ export default function QuizManagePage() {
           </div>
         </div>
       )}
+
+      {confirmPublish && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-xl bg-m3-surface p-6 shadow-xl space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-xl bg-m3-primary/10 text-m3-primary flex items-center justify-center shrink-0">
+                <Upload className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="font-headline font-bold text-base text-m3-on-surface">
+                  {t("teacher_quiz_manage.confirm_publish.title")}
+                </h2>
+                <p className="text-sm text-m3-on-surface-variant">
+                  {t("teacher_quiz_manage.confirm_publish.body", {
+                    count: questions.length,
+                  })}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setConfirmPublish(false)}
+                disabled={publishQuiz.isPending}
+              >
+                {t("common.cancel")}
+              </Button>
+              {course?.slug && (
+                <Link
+                  to="/courses/$slug/quiz/$quizId"
+                  params={{ slug: course.slug, quizId }}
+                >
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    disabled={publishQuiz.isPending}
+                  >
+                    <Eye className="h-4 w-4" />
+                    {t("teacher_quiz_manage.actions.view_as_student")}
+                  </Button>
+                </Link>
+              )}
+              <Button
+                type="button"
+                onClick={handlePublish}
+                disabled={publishQuiz.isPending}
+                className="gradient-primary text-white border-0 gap-2 hover:shadow-ai-glow"
+              >
+                {publishQuiz.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {t("teacher_quiz_manage.actions.publish")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -627,6 +809,7 @@ function QuestionsTab({
 }) {
   const { t } = useTranslation();
   const bulkSet = useBulkSetExpectedTime(quizId);
+  const bulkApprove = useBulkApprove(quizId);
   const pendingCount = questions.filter(
     (q) => q.review_status !== "approved",
   ).length;
@@ -658,6 +841,25 @@ function QuestionsTab({
       toast.error(
         (err as Error).message ||
           t("teacher_quiz_manage.toasts.expected_time_failed"),
+      );
+    }
+  }
+
+  async function handleApproveBulk() {
+    try {
+      const result = await bulkApprove.mutateAsync({
+        question_ids: Array.from(selectedIds),
+      });
+      toast.success(
+        t("teacher_quiz_manage.toasts.bulk_approved", {
+          count: result.approved,
+        }),
+      );
+      onClearSelection();
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_quiz_manage.toasts.bulk_approve_failed"),
       );
     }
   }
@@ -751,6 +953,9 @@ function QuestionsTab({
           onApply={handleApplyBulk}
           applyValid={bulkValid}
           applying={bulkSet.isPending}
+          onApprove={handleApproveBulk}
+          approveValid={selectedIds.size > 0}
+          approving={bulkApprove.isPending}
         />
 
         {questions.length === 0 ? (
@@ -794,7 +999,7 @@ function QuestionsTab({
       </div>
 
       <div className="col-span-12 lg:col-span-4">
-        <div className="lg:sticky lg:top-6 space-y-4">
+        <div className="lg:sticky lg:top-[8.5rem] space-y-4">
           <div className="rounded-xl border border-m3-secondary/10 bg-m3-surface-container-low p-5 shadow-glass space-y-3">
             <div className="flex items-center gap-2">
               <div className="h-9 w-9 rounded-xl gradient-primary flex items-center justify-center shadow-ai-glow">
@@ -843,6 +1048,9 @@ function BulkSetExpectedTimeBar({
   onApply,
   applyValid,
   applying,
+  onApprove,
+  approveValid,
+  approving,
 }: {
   totalQuestions: number;
   selectedCount: number;
@@ -853,11 +1061,24 @@ function BulkSetExpectedTimeBar({
   onApply: () => void | Promise<void>;
   applyValid: boolean;
   applying: boolean;
+  onApprove: () => void | Promise<void>;
+  approveValid: boolean;
+  approving: boolean;
 }) {
   const { t } = useTranslation();
   if (totalQuestions === 0) return null;
+  const hasSelection = selectedCount > 0;
   return (
-    <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-4 flex flex-wrap items-center gap-3 shadow-glass">
+    // Inline bulk-action bar (not sticky): it emphasizes (primary tint) only
+    // when questions are selected; otherwise it stays a quiet neutral bar.
+    <div
+      className={cn(
+        "rounded-xl border p-4 flex flex-wrap items-center gap-3 shadow-glass transition-colors",
+        hasSelection
+          ? "border-m3-primary/30 bg-m3-primary-fixed/20"
+          : "border-m3-outline-variant/20 bg-m3-surface-container-lowest",
+      )}
+    >
       <div className="flex items-center gap-2 text-sm text-m3-on-surface">
         <Clock className="h-4 w-4 text-m3-secondary" />
         <span className="font-bold">
@@ -870,18 +1091,24 @@ function BulkSetExpectedTimeBar({
           })}
         </Badge>
       </div>
+      {/* Compact seconds input: a narrow field with an inline "sec" suffix
+          so it reads as a seconds input without the wide label eating space. */}
       <div className="flex items-center gap-2 min-w-0">
-        <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant whitespace-nowrap">
-          {t("teacher_quiz_manage.bulk_time.duration_seconds")}
-        </label>
-        <Input
-          type="number"
-          min={1}
-          step={1}
-          value={bulkSeconds}
-          onChange={(e) => onBulkSecondsChange(e.target.value)}
-          className="bg-m3-surface text-sm w-24"
-        />
+        <div className="relative">
+          <Input
+            type="number"
+            min={1}
+            step={1}
+            value={bulkSeconds}
+            onChange={(e) => onBulkSecondsChange(e.target.value)}
+            aria-label={t("teacher_quiz_manage.bulk_time.duration_seconds")}
+            title={t("teacher_quiz_manage.bulk_time.duration_seconds")}
+            className="bg-m3-surface text-sm w-20 pr-9 tabular-nums"
+          />
+          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-m3-on-surface-variant">
+            {t("teacher_quiz_manage.bulk_time.seconds_suffix")}
+          </span>
+        </div>
       </div>
       <div className="flex items-center gap-2 flex-wrap ml-auto">
         <Button
@@ -915,6 +1142,20 @@ function BulkSetExpectedTimeBar({
             <Save className="h-3.5 w-3.5" />
           )}
           {t("teacher_quiz_manage.bulk_time.apply")}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          disabled={!approveValid || approving}
+          onClick={onApprove}
+          className="gap-2 bg-emerald-600 text-white border-0 hover:bg-emerald-700"
+        >
+          {approving ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <CheckCircle2 className="h-3.5 w-3.5" />
+          )}
+          {t("teacher_quiz_manage.bulk_time.approve_selected")}
         </Button>
       </div>
     </div>
@@ -1350,7 +1591,7 @@ function QuestionCard({
               type="number"
               step={0.05}
               min={1.3}
-              max={3.5}
+              max={2.5}
               value={draft.expected_ef_ceiling ?? ""}
               placeholder={t(
                 "teacher_quiz_manage.editor.ef_ceiling_placeholder",
@@ -1569,11 +1810,15 @@ function SettingsTab({
   setDraft,
   onSubmit,
   saving,
+  dirty,
+  onReset,
 }: {
   draft: SettingsDraft;
   setDraft: React.Dispatch<React.SetStateAction<SettingsDraft | null>>;
   onSubmit: (e: React.FormEvent) => void;
   saving: boolean;
+  dirty: boolean;
+  onReset: () => void;
 }) {
   const { t } = useTranslation();
   function update<K extends keyof SettingsDraft>(
@@ -1699,6 +1944,47 @@ function SettingsTab({
         )}
       </SettingsSection>
 
+      <SettingsSection
+        title={t("teacher_quiz_manage.settings.schedule.title")}
+        description={t("teacher_quiz_manage.settings.schedule.description")}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field
+            label={t("teacher_quiz_manage.settings.schedule.open_label")}
+            hint={t("teacher_quiz_manage.settings.schedule.open_hint")}
+          >
+            <Input
+              type="datetime-local"
+              value={draft.available_from}
+              onChange={(e) => update("available_from", e.target.value)}
+              className="bg-m3-surface text-sm"
+            />
+          </Field>
+          <Field
+            label={t("teacher_quiz_manage.settings.schedule.close_label")}
+            hint={t("teacher_quiz_manage.settings.schedule.close_hint")}
+          >
+            <Input
+              type="datetime-local"
+              value={draft.available_until}
+              onChange={(e) => update("available_until", e.target.value)}
+              className="bg-m3-surface text-sm"
+            />
+          </Field>
+        </div>
+        <Field
+          label={t("teacher_quiz_manage.settings.schedule.due_label")}
+          hint={t("teacher_quiz_manage.settings.schedule.due_hint")}
+        >
+          <Input
+            type="datetime-local"
+            value={draft.due_at}
+            onChange={(e) => update("due_at", e.target.value)}
+            className="bg-m3-surface text-sm w-full sm:w-72"
+          />
+        </Field>
+      </SettingsSection>
+
       <SettingsSection title={t("teacher_quiz_manage.settings.behavior.title")}>
         <ToggleRow
           label={t("teacher_quiz_manage.settings.behavior.shuffle_q_label")}
@@ -1738,59 +2024,65 @@ function SettingsTab({
         title={t("teacher_quiz_manage.settings.spacing.title")}
         description={t("teacher_quiz_manage.settings.spacing.description")}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Field label={t("teacher_quiz_manage.settings.spacing.starting_ef")}>
-            <Input
-              type="number"
-              min={1.3}
-              max={5.0}
-              step={0.1}
-              value={draft.initial_ef}
-              onChange={(e) => update("initial_ef", e.target.value)}
-              placeholder="2.50"
-              className="bg-m3-surface text-sm"
-            />
-          </Field>
-          <Field label={t("teacher_quiz_manage.settings.spacing.unlock_ef")}>
-            <Input
-              type="number"
-              min={1.3}
-              max={5.0}
-              step={0.1}
-              value={draft.min_ef_for_unlock}
-              onChange={(e) => update("min_ef_for_unlock", e.target.value)}
-              placeholder="2.30"
-              className="bg-m3-surface text-sm"
-            />
-          </Field>
-          <Field label="Coverage (%)">
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              value={draft.coverage_threshold}
-              onChange={(e) => update("coverage_threshold", e.target.value)}
-              placeholder="85"
-              className="bg-m3-surface text-sm"
-            />
-          </Field>
-        </div>
+        <MasterySelector
+          values={{
+            initial_ef: draft.initial_ef,
+            min_ef_for_unlock: draft.min_ef_for_unlock,
+            coverage_threshold: draft.coverage_threshold,
+          }}
+          onPatch={(patch) =>
+            setDraft((current) =>
+              current ? { ...current, ...patch } : current,
+            )
+          }
+        />
       </SettingsSection>
 
-      <div className="flex justify-end gap-2 pt-4 border-t border-m3-outline-variant/20">
-        <Button
-          type="submit"
-          disabled={saving}
-          className="gap-2 gradient-primary text-white border-0 hover:shadow-ai-glow"
-        >
-          {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
+      {/* Sticky action bar: pins to the bottom of the viewport so the teacher
+          can save from anywhere in a long form without scrolling back down.
+          It only becomes an active "unsaved changes" bar when the draft
+          differs from what's saved; otherwise Save is disabled and it stays
+          quiet. Negative margins cancel the form's padding so the bar spans
+          the full card width and reads as a footer. z-10 keeps it under the
+          global ContentTopBar (frontend/AGENTS.md). */}
+      <div className="sticky bottom-0 z-10 -mx-6 lg:-mx-8 -mb-6 lg:-mb-8 mt-8">
+        <div
+          className={cn(
+            "flex items-center justify-end gap-3 px-6 lg:px-8 py-4 border-t backdrop-blur-md transition-colors rounded-b-xl",
+            dirty
+              ? "border-m3-primary/30 bg-m3-primary-fixed/20"
+              : "border-m3-outline-variant/20 bg-m3-surface-container-lowest/80",
           )}
-          {t("teacher_quiz_manage.settings.save_button")}
-        </Button>
+        >
+          {dirty && (
+            <span className="mr-auto text-xs font-semibold text-m3-primary">
+              {t("teacher_quiz_manage.settings.unsaved_changes")}
+            </span>
+          )}
+          {dirty && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onReset}
+              disabled={saving}
+              className="gap-2"
+            >
+              {t("teacher_quiz_manage.settings.reset_button")}
+            </Button>
+          )}
+          <Button
+            type="submit"
+            disabled={saving || !dirty}
+            className="gap-2 gradient-primary text-white border-0 hover:shadow-ai-glow disabled:opacity-50"
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {t("teacher_quiz_manage.settings.save_button")}
+          </Button>
+        </div>
       </div>
     </form>
   );
@@ -1887,6 +2179,12 @@ function PreviewTab({
   questions: QuizQuestionAuthoring[];
 }) {
   const { t } = useTranslation();
+  // Preview mirrors the student experience: only approved questions are
+  // shown, matching the backend approved-only filter on the taking/published
+  // surfaces. Pending/rejected drafts never appear here.
+  const approvedQuestions = questions.filter(
+    (q) => q.review_status === "approved",
+  );
   return (
     <div className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl p-6 lg:p-8 space-y-6 shadow-glass">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
@@ -1903,19 +2201,19 @@ function PreviewTab({
         </Badge>
       </div>
 
-      {questions.length === 0 ? (
+      {approvedQuestions.length === 0 ? (
         <div className="text-center py-16 text-m3-on-surface-variant space-y-1">
           <HelpCircle className="h-8 w-8 mx-auto text-m3-outline-variant" />
           <p className="text-base font-bold">
             {t("teacher_quiz_manage.empty.no_questions_title")}
           </p>
           <p className="text-sm">
-            {t("teacher_quiz_manage.preview.empty_body")}
+            {t("teacher_quiz_manage.preview.empty_approved_body")}
           </p>
         </div>
       ) : (
         <div className="space-y-5">
-          {questions.map((question, idx) => (
+          {approvedQuestions.map((question, idx) => (
             <PreviewQuestion key={question.id} index={idx} question={question} />
           ))}
         </div>

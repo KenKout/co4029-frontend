@@ -30,7 +30,12 @@ import {
 function CourseProgressCard({ course }: { course: Course }) {
   const { t } = useTranslation();
   return (
-    <div className="bg-m3-surface-container-lowest rounded-xl shadow-editorial ghost-border p-6 flex flex-col gap-4 hover:-translate-y-0.5 transition-transform duration-200">
+    <Link
+      to="/courses/$slug"
+      params={{ slug: course.slug }}
+      aria-label={t("dashboard.open_course_named", { title: course.title })}
+      className="group bg-m3-surface-container-lowest rounded-xl shadow-editorial ghost-border p-6 flex flex-col gap-4 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
+    >
       <div className="relative h-32 rounded-xl overflow-hidden bg-gradient-to-br from-m3-primary to-m3-secondary flex items-center justify-center">
         <GraduationCap className="h-10 w-10 text-white/60" />
         <div className="absolute top-3 right-3">
@@ -50,15 +55,11 @@ function CourseProgressCard({ course }: { course: Course }) {
         )}
       </div>
 
-      <Link
-        to="/courses/$slug"
-        params={{ slug: course.slug }}
-        className="inline-flex items-center gap-2 gradient-primary text-white rounded-xl font-semibold px-4 py-2 text-sm shadow-glass hover:opacity-90 transition-opacity self-start"
-      >
+      <span className="inline-flex items-center gap-2 gradient-primary text-white rounded-xl font-semibold px-4 py-2 text-sm shadow-glass transition-opacity group-hover:opacity-90 self-start">
         {t("dashboard.open_course")}
-        <ArrowRight className="h-4 w-4" />
-      </Link>
-    </div>
+        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+      </span>
+    </Link>
   );
 }
 
