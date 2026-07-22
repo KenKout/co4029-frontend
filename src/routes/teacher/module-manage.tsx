@@ -41,7 +41,6 @@ import type {
   CourseContentModule,
 } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
-import { isFeatureEnabled } from "@/lib/feature-flags";
 
 const LESSON_TYPE_CONFIG: Record<
   string,
@@ -201,7 +200,7 @@ function ItemRow({
             </Button>
           </Link>
         )}
-        {item.item_type === "quiz" && item.quiz_id && isFeatureEnabled("quiz_results_dashboard") && (
+        {item.item_type === "quiz" && item.quiz_id && (
           <Link
             to="/teacher/courses/$courseId/quizzes/$quizId/results"
             params={{ courseId, quizId: item.quiz_id }}
