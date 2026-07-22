@@ -24,7 +24,7 @@ export interface FeatureFlags {
 }
 
 const FLAGS: FeatureFlags = {
-  quiz_results_dashboard: false,
+  quiz_results_dashboard: true,
 };
 
 /** Returns whether a feature flag is currently enabled. */

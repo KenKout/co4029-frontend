@@ -64,6 +64,7 @@ import {
   EMPTY_BLOOM_DISTRIBUTION,
   TopicTagInput,
 } from "./quiz-generation-form-controls";
+import { GenerationProgress } from "./quiz-results/GenerationProgress";
 
 /**
  * Difficulty levels accepted by the backend's
@@ -353,15 +354,29 @@ export function QuizGenerationPanel({
   // persisting the run id in the browser. Survives cross-device
   // sessions, tab closes, and lets two teachers viewing the same
   // quiz both see the in-flight run.
+  //
+  // Only auto-reattach a NON-TERMINAL run (pending/running). A completed
+  // or failed run is shown as a dismissible "last result" via
+  // `displayRun` below — reattaching it to `activeRunId` was the bug
+  // where clicking Generate just surfaced an already-finished run's data
+  // instead of starting fresh.
   const { data: latestRun } = useLatestQuizGenerationRun(quizId);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   useEffect(() => {
     if (activeRunId) return;
-    if (latestRun?.id) {
+    if (
+      latestRun?.id &&
+      (latestRun.status === "pending" || latestRun.status === "running")
+    ) {
       setActiveRunId(latestRun.id);
     }
-  }, [latestRun?.id, activeRunId]);
+  }, [latestRun?.id, latestRun?.status, activeRunId]);
   const { data: activeRun } = useQuizGenerationRun(quizId, activeRunId);
+
+  // The run to visualise: the live one if attached, else the most recent
+  // finished run so the teacher still sees "last generation" context
+  // (stepper collapsed to done + logs) without it blocking a new run.
+  const displayRun = activeRun ?? (activeRunId ? undefined : latestRun) ?? null;
 
   const [selectedLessonIds, setSelectedLessonIds] = useState<string[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -386,7 +401,6 @@ export function QuizGenerationPanel({
           activeRun.status === "pending" ||
           activeRun.status === "running"),
     );
-  const generationFailed = activeRun?.status === "failed";
 
   // Surface terminal-state toasts exactly once per run id (the
   // polling hook re-runs on every refetch — without the ref guard
@@ -764,28 +778,8 @@ export function QuizGenerationPanel({
         </p>
       </div>
 
-      {/* ── Run status / failure ── */}
-      {generationInProgress && (
-        <div className="rounded-xl bg-m3-surface p-4 border border-m3-secondary/10 text-center space-y-2">
-          <Loader2 className="h-6 w-6 animate-spin text-m3-secondary mx-auto" />
-          <p className="font-headline font-bold text-sm text-m3-on-surface">
-            Building quiz draft
-          </p>
-          <p className="text-xs text-m3-on-surface-variant">
-            Retrieval → knowledge graph → ideation → generation → validation.
-          </p>
-        </div>
-      )}
-
-      {generationFailed && (
-        <div className="rounded-xl bg-red-50 p-3 border border-red-100 text-red-700 text-sm flex gap-2">
-          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-semibold">Generation failed</p>
-            <p>{activeRun?.error_message ?? "Try again or adjust your inputs."}</p>
-          </div>
-        </div>
-      )}
+      {/* ── Live run status: stage stepper + stepped % + elapsed + logs ── */}
+      {displayRun && <GenerationProgress run={displayRun} />}
 
       <Button
         type="submit"

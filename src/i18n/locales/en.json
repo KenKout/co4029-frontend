@@ -2065,6 +2065,24 @@
       "answered": "{{count}} answered",
       "chosen_count": "{{count}} ({{pct}}%)",
       "empty": "This quiz has no questions yet."
+    },
+    "generation": {
+      "starting": "Starting generation…",
+      "running_stage": "Working: {{stage}}",
+      "done": "Generation complete",
+      "failed": "Generation failed",
+      "cancelled": "Generation cancelled",
+      "elapsed": "Elapsed time",
+      "logs_toggle": "Activity log ({{count}})",
+      "stages": {
+        "retrieval": "Retrieval",
+        "outline": "Outline",
+        "ideation": "Ideation",
+        "generation": "Generation",
+        "validation": "Validation",
+        "dedup": "Dedup",
+        "persistence": "Saving"
+      }
     }
   },
   "teacher_quiz_manage": {

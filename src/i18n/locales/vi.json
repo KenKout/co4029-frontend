@@ -2056,6 +2056,24 @@
       "answered": "{{count}} lượt trả lời",
       "chosen_count": "{{count}} ({{pct}}%)",
       "empty": "Bài kiểm tra này chưa có câu hỏi nào."
+    },
+    "generation": {
+      "starting": "Đang bắt đầu tạo…",
+      "running_stage": "Đang xử lý: {{stage}}",
+      "done": "Tạo hoàn tất",
+      "failed": "Tạo thất bại",
+      "cancelled": "Đã huỷ tạo",
+      "elapsed": "Thời gian đã trôi qua",
+      "logs_toggle": "Nhật ký hoạt động ({{count}})",
+      "stages": {
+        "retrieval": "Truy xuất",
+        "outline": "Dàn ý",
+        "ideation": "Lên ý tưởng",
+        "generation": "Sinh câu hỏi",
+        "validation": "Kiểm định",
+        "dedup": "Lọc trùng",
+        "persistence": "Lưu"
+      }
     }
   },
   "teacher_quiz_manage": {
