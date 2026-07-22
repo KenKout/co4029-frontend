@@ -1126,6 +1126,54 @@ export interface paths {
         patch: operations["update_module_api_v1_teacher_modules__module_id__patch"];
         trace?: never;
     };
+    "/api/v1/teacher/courses/{course_id}/outcomes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Course Outcomes
+         * @description Teacher view of a course's learning outcomes, ordered by position.
+         */
+        get: operations["list_course_outcomes_api_v1_teacher_courses__course_id__outcomes_get"];
+        put?: never;
+        /**
+         * Create Course Outcome
+         * @description Append a learning outcome to a course (§LO-1).
+         */
+        post: operations["create_course_outcome_api_v1_teacher_courses__course_id__outcomes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/{course_id}/outcomes/{outcome_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Course Outcome
+         * @description Soft-delete an outcome and compact positions to 1..N (§LO-2).
+         */
+        delete: operations["delete_course_outcome_api_v1_teacher_courses__course_id__outcomes__outcome_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Course Outcome
+         * @description Edit an outcome's text (§LO-2).
+         */
+        patch: operations["update_course_outcome_api_v1_teacher_courses__course_id__outcomes__outcome_id__patch"];
+        trace?: never;
+    };
     "/api/v1/teacher/modules/{module_id}/prerequisites": {
         parameters: {
             query?: never;
@@ -5253,6 +5301,18 @@ export interface components {
             deleted_by?: string | null;
         };
         /**
+         * CourseLearningOutcomeCreate
+         * @description Body for ``POST /teacher/courses/{course_id}/outcomes`` (§LO-1).
+         *
+         *     Only ``outcome_text`` is client-supplied. ``position`` is assigned
+         *     server-side (append at the end); the ``(L.O.x)`` code is derived from
+         *     that position at display time and is never stored.
+         */
+        CourseLearningOutcomeCreate: {
+            /** Outcome Text */
+            outcome_text: string;
+        };
+        /**
          * CourseLearningOutcomePublic
          * @description Public projection of a course learning outcome (§A12).
          */
@@ -5266,6 +5326,18 @@ export interface components {
             position: number;
             /** Outcome Text */
             outcome_text: string;
+        };
+        /**
+         * CourseLearningOutcomeUpdate
+         * @description Body for ``PATCH /teacher/courses/{course_id}/outcomes/{outcome_id}``.
+         *
+         *     Only the text is editable — position is managed by the server
+         *     (append on create, contiguous re-index on delete), and the code is
+         *     display-only, so neither is accepted from the client.
+         */
+        CourseLearningOutcomeUpdate: {
+            /** Outcome Text */
+            outcome_text?: string | null;
         };
         /** CoursePage */
         CoursePage: {
@@ -9512,6 +9584,33 @@ export interface components {
             questions: components["schemas"]["QuizQuestionPublic"][];
         };
         /**
+         * QuizGenerationProgress
+         * @description Live-progress projection sourced from ``GenerationRun.progress_json``.
+         *
+         *     Written incrementally by the pipeline's checkpoint helper (migration
+         *     0035) through a dedicated session, so a status poll can surface the
+         *     current stage, a stepped percentage (``stage_index / total_stages``),
+         *     and an append-only event log while the worker is still running.
+         */
+        QuizGenerationProgress: {
+            /** Current Stage */
+            current_stage?: string | null;
+            /**
+             * Stage Index
+             * @default 0
+             */
+            stage_index: number;
+            /**
+             * Total Stages
+             * @default 0
+             */
+            total_stages: number;
+            /** Updated At */
+            updated_at?: string | null;
+            /** Events */
+            events?: components["schemas"]["QuizGenerationStageEvent"][];
+        };
+        /**
          * QuizGenerationRequest
          * @description Body for ``POST /teacher/quizzes/{id}/generate``.
          *
@@ -9551,6 +9650,8 @@ export interface components {
             model_preference?: string | null;
             /** Source Lesson Ids */
             source_lesson_ids?: string[];
+            /** Target Outcome Ids */
+            target_outcome_ids?: string[];
             /** Config Json */
             config_json?: {
                 [key: string]: unknown;
@@ -9608,6 +9709,22 @@ export interface components {
             error_message?: string | null;
             /** Pipeline Run Id */
             pipeline_run_id?: string | null;
+            progress?: components["schemas"]["QuizGenerationProgress"] | null;
+        };
+        /**
+         * QuizGenerationStageEvent
+         * @description One append-only progress event recorded as a pipeline stage starts.
+         */
+        QuizGenerationStageEvent: {
+            /** Stage */
+            stage: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Detail */
+            detail?: string | null;
         };
         /** QuizIntegrityEventBatchRequest */
         QuizIntegrityEventBatchRequest: {
@@ -11059,7 +11176,9 @@ export type SchemaCourseContentAuthoring = components['schemas']['CourseContentA
 export type SchemaCourseContentPublic = components['schemas']['CourseContentPublic'];
 export type SchemaCourseCreate = components['schemas']['CourseCreate'];
 export type SchemaCourseLearningOutcomeAuthoring = components['schemas']['CourseLearningOutcomeAuthoring'];
+export type SchemaCourseLearningOutcomeCreate = components['schemas']['CourseLearningOutcomeCreate'];
 export type SchemaCourseLearningOutcomePublic = components['schemas']['CourseLearningOutcomePublic'];
+export type SchemaCourseLearningOutcomeUpdate = components['schemas']['CourseLearningOutcomeUpdate'];
 export type SchemaCoursePage = components['schemas']['CoursePage'];
 export type SchemaCourseProcessingAudit = components['schemas']['CourseProcessingAudit'];
 export type SchemaCourseProgressSummary = components['schemas']['CourseProgressSummary'];
@@ -11216,8 +11335,10 @@ export type SchemaQuizAttemptTeacherRead = components['schemas']['QuizAttemptTea
 export type SchemaQuizAuthoring = components['schemas']['QuizAuthoring'];
 export type SchemaQuizForAuthoringPublic = components['schemas']['QuizForAuthoringPublic'];
 export type SchemaQuizForTakingPublic = components['schemas']['QuizForTakingPublic'];
+export type SchemaQuizGenerationProgress = components['schemas']['QuizGenerationProgress'];
 export type SchemaQuizGenerationRequest = components['schemas']['QuizGenerationRequest'];
 export type SchemaQuizGenerationRunRead = components['schemas']['QuizGenerationRunRead'];
+export type SchemaQuizGenerationStageEvent = components['schemas']['QuizGenerationStageEvent'];
 export type SchemaQuizIntegrityEventBatchRequest = components['schemas']['QuizIntegrityEventBatchRequest'];
 export type SchemaQuizIntegrityEventItem = components['schemas']['QuizIntegrityEventItem'];
 export type SchemaQuizOptionDistribution = components['schemas']['QuizOptionDistribution'];
@@ -13389,6 +13510,138 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ModuleAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_course_outcomes_api_v1_teacher_courses__course_id__outcomes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseLearningOutcomeAuthoring"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_course_outcome_api_v1_teacher_courses__course_id__outcomes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseLearningOutcomeCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseLearningOutcomeAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_course_outcome_api_v1_teacher_courses__course_id__outcomes__outcome_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_course_outcome_api_v1_teacher_courses__course_id__outcomes__outcome_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseLearningOutcomeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseLearningOutcomeAuthoring"];
                 };
             };
             /** @description Validation Error */
