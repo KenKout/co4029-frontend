@@ -9426,6 +9426,12 @@ export interface components {
              */
             module_id: string;
             /**
+             * Grading Method
+             * @default highest
+             * @enum {string}
+             */
+            grading_method: "highest" | "average" | "first" | "last";
+            /**
              * Shuffle Questions
              * @default false
              */
@@ -9764,6 +9770,10 @@ export interface components {
              * @default []
              */
             options: components["schemas"]["QuizQuestionOptionAuthoring"][];
+            /** Learning Outcome Id */
+            learning_outcome_id?: string | null;
+            /** Outcome Position */
+            outcome_position?: number | null;
             /** Explanation */
             explanation?: string | null;
             /** Difficulty */
@@ -9945,6 +9955,10 @@ export interface components {
              * @default []
              */
             options: components["schemas"]["QuizQuestionOptionPublic"][];
+            /** Learning Outcome Id */
+            learning_outcome_id?: string | null;
+            /** Outcome Position */
+            outcome_position?: number | null;
         };
         /**
          * QuizResultsRead
