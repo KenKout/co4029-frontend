@@ -2010,6 +2010,63 @@
       "max_uses_label_short": "Max uses"
     }
   },
+  "teacher_quiz_results": {
+    "title": "Quiz results",
+    "breadcrumb": "Results",
+    "actions": {
+      "back_to_editor": "Back to editor"
+    },
+    "empty": {
+      "title": "No attempts yet",
+      "description": "Once students start taking this quiz, their scores and question-level performance will show up here."
+    },
+    "errors": {
+      "not_found_title": "Quiz not found",
+      "not_found_description": "This quiz may have been moved or deleted."
+    },
+    "summary": {
+      "students": "Students",
+      "attempts": "Attempts",
+      "mean": "Mean score",
+      "median": "Median score",
+      "pass_rate": "Pass rate",
+      "avg_time": "Avg. time",
+      "iqr": "Middle 50%: {{lower}}–{{upper}}",
+      "grading_method_label": "Counting {{method}} attempt · pass ≥ {{passing}}%"
+    },
+    "histogram": {
+      "title": "Score distribution",
+      "x_axis": "Score band",
+      "y_axis": "Students",
+      "tooltip_students": "students",
+      "pass_line": "Pass"
+    },
+    "tabs": {
+      "by_student": "By student",
+      "by_question": "By question"
+    },
+    "per_student": {
+      "col_student": "Student",
+      "col_best": "Best",
+      "col_latest": "Latest",
+      "col_attempts": "Attempts",
+      "col_status": "Status",
+      "col_last_attempt": "Last attempt",
+      "passed": "Passed",
+      "failed": "Failed",
+      "toggle_best": "Best score",
+      "toggle_latest": "Latest score",
+      "empty": "No students have attempted this quiz yet."
+    },
+    "per_question": {
+      "col_question": "Question",
+      "col_answered": "Answered",
+      "col_correct": "Correct",
+      "answered": "{{count}} answered",
+      "chosen_count": "{{count}} ({{pct}}%)",
+      "empty": "This quiz has no questions yet."
+    }
+  },
   "teacher_quiz_manage": {
     "tabs": {
       "questions": "Questions",

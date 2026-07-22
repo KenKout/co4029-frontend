@@ -2001,6 +2001,63 @@
       "max_uses_label_short": "Số lượt dùng tối đa"
     }
   },
+  "teacher_quiz_results": {
+    "title": "Kết quả bài kiểm tra",
+    "breadcrumb": "Kết quả",
+    "actions": {
+      "back_to_editor": "Quay lại trình chỉnh sửa"
+    },
+    "empty": {
+      "title": "Chưa có lượt làm nào",
+      "description": "Khi học viên bắt đầu làm bài kiểm tra này, điểm số và mức độ làm đúng từng câu sẽ hiển thị ở đây."
+    },
+    "errors": {
+      "not_found_title": "Không tìm thấy bài kiểm tra",
+      "not_found_description": "Bài kiểm tra này có thể đã bị di chuyển hoặc xóa."
+    },
+    "summary": {
+      "students": "Học viên",
+      "attempts": "Lượt làm",
+      "mean": "Điểm trung bình",
+      "median": "Điểm trung vị",
+      "pass_rate": "Tỷ lệ đạt",
+      "avg_time": "Thời gian TB",
+      "iqr": "50% ở giữa: {{lower}}–{{upper}}",
+      "grading_method_label": "Tính theo lượt {{method}} · đạt ≥ {{passing}}%"
+    },
+    "histogram": {
+      "title": "Phân bố điểm",
+      "x_axis": "Khoảng điểm",
+      "y_axis": "Học viên",
+      "tooltip_students": "học viên",
+      "pass_line": "Đạt"
+    },
+    "tabs": {
+      "by_student": "Theo học viên",
+      "by_question": "Theo câu hỏi"
+    },
+    "per_student": {
+      "col_student": "Học viên",
+      "col_best": "Cao nhất",
+      "col_latest": "Gần nhất",
+      "col_attempts": "Lượt làm",
+      "col_status": "Trạng thái",
+      "col_last_attempt": "Lần làm gần nhất",
+      "passed": "Đạt",
+      "failed": "Chưa đạt",
+      "toggle_best": "Điểm cao nhất",
+      "toggle_latest": "Điểm gần nhất",
+      "empty": "Chưa có học viên nào làm bài kiểm tra này."
+    },
+    "per_question": {
+      "col_question": "Câu hỏi",
+      "col_answered": "Đã trả lời",
+      "col_correct": "Đúng",
+      "answered": "{{count}} lượt trả lời",
+      "chosen_count": "{{count}} ({{pct}}%)",
+      "empty": "Bài kiểm tra này chưa có câu hỏi nào."
+    }
+  },
   "teacher_quiz_manage": {
     "tabs": {
       "questions": "Câu hỏi",
