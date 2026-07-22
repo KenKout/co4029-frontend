@@ -1443,7 +1443,9 @@
       "flagged": "Đánh dấu",
       "no_time_limit": "Không giới hạn thời gian",
       "attempt_summary": "Lượt {{attempt}} • {{correct}}/{{total}} câu đúng",
-      "question_label_short": "Câu hỏi {{index}}"
+      "question_label_short": "Câu hỏi {{index}}",
+      "started_at": "Bắt đầu lúc",
+      "elapsed": "Đã trôi qua"
     },
     "values": {
       "hint_available": "Có sẵn",
@@ -1477,6 +1479,9 @@
       "next": "Tiếp theo",
       "previous": "Trước",
       "save_and_continue": "Lưu & tiếp tục",
+      "save": "Lưu",
+      "saved": "Đã lưu",
+      "continue": "Tiếp tục",
       "back_to_course": "Quay lại khoá học",
       "unflag": "Bỏ đánh dấu",
       "flag": "Đánh dấu",

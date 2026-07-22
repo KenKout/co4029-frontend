@@ -1452,7 +1452,9 @@
       "flagged": "Flagged",
       "no_time_limit": "No time limit",
       "attempt_summary": "Attempt {{attempt}} • {{correct}}/{{total}} correct",
-      "question_label_short": "Question {{index}}"
+      "question_label_short": "Question {{index}}",
+      "started_at": "Started at",
+      "elapsed": "Elapsed"
     },
     "values": {
       "hint_available": "Available",
@@ -1486,6 +1488,9 @@
       "next": "Next",
       "previous": "Previous",
       "save_and_continue": "Save and continue",
+      "save": "Save",
+      "saved": "Saved",
+      "continue": "Continue",
       "back_to_course": "Back to course",
       "unflag": "Unflag",
       "flag": "Flag",

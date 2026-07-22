@@ -63,6 +63,20 @@ function formatTime(seconds: number) {
   return `${m}:${s}`;
 }
 
+// Elapsed time can run for hours on an untimed quiz, so it needs an
+// hour segment that ``formatTime`` (mm:ss only) can't express. Falls back
+// to mm:ss under an hour to stay visually consistent with the countdown.
+function formatDuration(seconds: number) {
+  const safe = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(safe / 3600);
+  const m = Math.floor((safe % 3600) / 60);
+  const s = safe % 60;
+  if (h > 0) {
+    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
 function hasAnswer(status: QuestionStatus): boolean {
   return status.selectedOptionId !== null || (status.answerText ?? "").length > 0;
 }
@@ -499,33 +513,58 @@ function QuizIntroPanel({
 function QuestionSubmitButton({
   isLastQuestion,
   hasSelection,
+  isSaved,
   isSavingAnswer,
   isFinalSubmitting,
   cooldownRetryAt: cooldownAt,
+  onSave,
   onSaveNext,
   onFinalSubmit,
 }: {
   isLastQuestion: boolean;
   hasSelection: boolean;
+  isSaved: boolean;
   isSavingAnswer: boolean;
   isFinalSubmitting: boolean;
   cooldownRetryAt: string | null;
+  onSave: () => void;
   onSaveNext: () => void;
   onFinalSubmit: () => void;
 }) {
   const { t } = useTranslation();
   const cooldown = useCardCooldown(cooldownAt);
   const cooldownActive = !!cooldownAt && !cooldown.isExpired;
-  const disabled =
-    !hasSelection || isSavingAnswer || isFinalSubmitting || cooldownActive;
+  const busy = isSavingAnswer || isFinalSubmitting;
+  const primaryDisabled = !hasSelection || busy || cooldownActive;
+  // Save (secondary) is additionally suppressed once the current answer is
+  // already persisted — there's nothing new to write. Continue/Submit stay
+  // enabled so the student can still advance without a redundant save.
+  const saveDisabled = primaryDisabled || isSaved;
 
-  if (isLastQuestion) {
-    return (
-      <div className="flex items-center gap-3 flex-wrap">
-        {cooldownActive && <CardCooldownBadge retryAt={cooldownAt} />}
+  // Secondary "Save" — persists the current answer in place, no navigation.
+  const saveButton = (
+    <Button
+      variant="outline"
+      onClick={onSave}
+      disabled={saveDisabled}
+      className="font-bold rounded-xl gap-2 px-5 py-3 h-auto border-m3-primary/40 text-m3-primary hover:bg-m3-primary-fixed/30 active:scale-95 transition-all disabled:opacity-50"
+    >
+      {isSavingAnswer
+        ? t("course_quiz.actions.saving")
+        : isSaved
+          ? t("course_quiz.actions.saved")
+          : t("course_quiz.actions.save")}
+    </Button>
+  );
+
+  return (
+    <div className="flex items-center gap-3 flex-wrap justify-end">
+      {cooldownActive && <CardCooldownBadge retryAt={cooldownAt} />}
+      {saveButton}
+      {isLastQuestion ? (
         <Button
           onClick={onFinalSubmit}
-          disabled={disabled}
+          disabled={primaryDisabled}
           className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-6 py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
         >
           {isFinalSubmitting
@@ -535,23 +574,18 @@ function QuestionSubmitButton({
               : t("course_quiz.actions.submit")}
           <ArrowRight className="h-4 w-4" />
         </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-3 flex-wrap">
-      {cooldownActive && <CardCooldownBadge retryAt={cooldownAt} />}
-      <Button
-        onClick={onSaveNext}
-        disabled={disabled}
-        className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-6 py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
-      >
-        {isSavingAnswer
-          ? t("course_quiz.actions.saving")
-          : t("course_quiz.actions.next")}
-        <ArrowRight className="h-4 w-4" />
-      </Button>
+      ) : (
+        <Button
+          onClick={onSaveNext}
+          disabled={primaryDisabled}
+          className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-6 py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
+        >
+          {isSavingAnswer
+            ? t("course_quiz.actions.saving")
+            : t("course_quiz.actions.continue")}
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }
@@ -591,6 +625,12 @@ export default function CourseQuizPage() {
   const [perQuestionCooldown, setPerQuestionCooldown] = useState<Record<string, string>>({});
   const [hintDialogOpen, setHintDialogOpen] = useState(false);
   const [activeQuestionElapsed, setActiveQuestionElapsed] = useState(0);
+  // Wall-clock start of the whole attempt (epoch ms). Drives the "Started at"
+  // label and the total-elapsed indicator, which stays visible whether or not
+  // the quiz has a time limit. Set on fresh start and on resume/hydrate so the
+  // elapsed count reflects the ORIGINAL start, not this session.
+  const [quizStartedAt, setQuizStartedAt] = useState<number | null>(null);
+  const [quizElapsed, setQuizElapsed] = useState(0);
 
   useEffect(() => {
     setHintDialogOpen(false);
@@ -641,11 +681,12 @@ export default function CourseQuizPage() {
     );
     setActiveIdx(firstUnanswered === -1 ? 0 : firstUnanswered);
 
+    const startedAtMs = new Date(progress.started_at).getTime();
+    setQuizStartedAt(startedAtMs);
+    setQuizElapsed(Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000)));
     const timeLimit = progress.take.quiz.time_limit_seconds ?? 0;
     if (timeLimit) {
-      const elapsedSeconds = Math.floor(
-        (Date.now() - new Date(progress.started_at).getTime()) / 1000,
-      );
+      const elapsedSeconds = Math.floor((Date.now() - startedAtMs) / 1000);
       setTimeLeft(Math.max(0, timeLimit - elapsedSeconds));
     }
     autoSubmitStartedRef.current = false;
@@ -695,6 +736,18 @@ export default function CourseQuizPage() {
     return () => window.clearInterval(timerId);
   }, [quiz?.time_limit_seconds, sessionReady, submittedSummary]);
 
+  // Total-elapsed ticker. Runs for EVERY live attempt regardless of whether
+  // the quiz has a time limit, so the elapsed indicator is always visible.
+  // Derives from the wall-clock start so it stays accurate across refreshes.
+  useEffect(() => {
+    if (quizStartedAt == null || !sessionReady || submittedSummary) return;
+    const tick = () =>
+      setQuizElapsed(Math.max(0, Math.floor((Date.now() - quizStartedAt) / 1000)));
+    tick();
+    const timerId = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timerId);
+  }, [quizStartedAt, sessionReady, submittedSummary]);
+
   async function handleStartAttempt() {
     try {
       const result = await startAttempt.mutateAsync(undefined);
@@ -712,6 +765,8 @@ export default function CourseQuizPage() {
       );
       setActiveIdx(0);
       setTimeLeft(result.take.quiz.time_limit_seconds ?? 0);
+      setQuizStartedAt(Date.now());
+      setQuizElapsed(0);
       autoSubmitStartedRef.current = false;
       // Fresh attempt: drop any stale persisted timing for this id.
       clearSeenAt(result.attempt_id);
@@ -780,6 +835,14 @@ export default function CourseQuizPage() {
       toast.error((err as Error).message || t("course_quiz.errors.save_answer_failed"));
       return false;
     }
+  }
+
+  // Save the current answer WITHOUT navigating. Distinct from Continue so a
+  // student can checkpoint their answer and keep thinking on the same
+  // question. `persistAnswer` is idempotent (returns true and no-ops when the
+  // answer is already saved), so a redundant Save is harmless.
+  async function handleSaveOnly() {
+    await persistAnswer(activeIdx);
   }
 
   async function handleSaveNext() {
@@ -1047,18 +1110,41 @@ export default function CourseQuizPage() {
               cooldownHours={quiz.cooldown_hours}
             />
             {taking && activeAttemptId && <QuizIntegrityNotice />}
+            {/* Started-at: when the current attempt began (wall clock). */}
+            {quizStartedAt != null && (
+              <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-m3-surface-container text-m3-on-surface-variant text-sm">
+                <Clock className="h-4 w-4 text-m3-primary" />
+                <span className="font-medium">
+                  {t("course_quiz.labels.started_at")}
+                </span>
+                <span className="font-semibold tabular-nums text-m3-on-surface">
+                  {new Date(quizStartedAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+            )}
+            {/* Elapsed: always visible, timed or not. */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-m3-surface-container text-m3-on-surface-variant font-mono font-bold text-sm">
+              <Timer className="h-4 w-4 text-m3-secondary" />
+              <span className="tabular-nums text-m3-on-surface">
+                {formatDuration(quizElapsed)}
+              </span>
+            </div>
+            {/* Countdown: only when the quiz has a time limit. */}
             {quiz.time_limit_seconds ? (
               <div
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold text-sm",
-                  isTimeLow ? "bg-red-50 text-red-600 animate-pulse" : "bg-m3-surface-container text-m3-primary",
+                  isTimeLow ? "bg-red-50 text-red-600 animate-pulse" : "bg-m3-primary-fixed/40 text-m3-primary",
                 )}
               >
                 <Timer className="h-4 w-4" />
                 {formatTime(sessionReady ? timeLeft : quiz.time_limit_seconds)}
               </div>
             ) : (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-m3-surface-container text-m3-primary font-bold text-sm">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-m3-surface-container text-m3-on-surface-variant text-sm font-medium">
                 <Clock className="h-4 w-4" />
                 {t("course_quiz.labels.no_time_limit")}
               </div>
@@ -1094,7 +1180,7 @@ export default function CourseQuizPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-8 xl:col-span-9">
+          <div className="lg:col-span-9 xl:col-span-10">
             <div className="bg-m3-surface-container-lowest rounded-xl p-6 sm:p-10 relative overflow-hidden shadow-editorial">
               <div className="absolute top-0 right-0 m-5 flex items-center gap-2">
                 <Badge variant="outline" className="text-m3-outline border-m3-outline-variant font-mono text-[10px] bg-white">
@@ -1211,9 +1297,11 @@ export default function CourseQuizPage() {
                 <QuestionSubmitButton
                   isLastQuestion={isLastQuestion}
                   hasSelection={hasAnswer(activeStatus)}
+                  isSaved={activeStatus.savedToServer}
                   isSavingAnswer={submitAnswer.isPending}
                   isFinalSubmitting={submitAttempt.isPending}
                   cooldownRetryAt={activeQuestionCooldown}
+                  onSave={() => void handleSaveOnly()}
                   onSaveNext={() => void handleSaveNext()}
                   onFinalSubmit={() => void handleFinalSubmit("manual")}
                 />
@@ -1221,7 +1309,7 @@ export default function CourseQuizPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-4 xl:col-span-3 space-y-5">
+          <div className="lg:col-span-3 xl:col-span-2 space-y-5 lg:sticky lg:top-32 lg:self-start">
             <HintDialog
               open={hintDialogOpen}
               onOpenChange={setHintDialogOpen}
