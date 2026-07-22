@@ -2127,7 +2127,8 @@
       "publish": "Publish",
       "delete_quiz_tooltip": "Delete quiz, questions, attempts, and module item",
       "add_question": "Add question",
-      "view_as_student": "View as student"
+      "view_as_student": "View as student",
+      "view_results": "Results"
     },
     "status": {
       "published": "Published",

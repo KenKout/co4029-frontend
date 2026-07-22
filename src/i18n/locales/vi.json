@@ -2118,7 +2118,8 @@
       "publish": "Xuất bản",
       "delete_quiz_tooltip": "Xoá bài kiểm tra, câu hỏi, lượt làm bài và mục module",
       "add_question": "Thêm câu hỏi",
-      "view_as_student": "Xem như học viên"
+      "view_as_student": "Xem như học viên",
+      "view_results": "Kết quả"
     },
     "status": {
       "published": "Đã xuất bản",

@@ -5,6 +5,7 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
+  BarChart3,
   BookOpen,
   CheckCircle2,
   Clock,
@@ -49,6 +50,7 @@ import type {
   QuizQuestionAuthoring,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { QuizGenerationPanel } from "./_components/quiz-generation-panel";
 import { QuestionBankModal } from "./_components/question-bank-modal";
 import { MasterySelector } from "./_components/MasterySelector";
@@ -552,6 +554,22 @@ export default function QuizManagePage() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {isFeatureEnabled("quiz_results_dashboard") && (
+              <Link
+                to="/teacher/courses/$courseId/quizzes/$quizId/results"
+                params={{ courseId, quizId }}
+              >
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  type="button"
+                  title={t("teacher_quiz_manage.actions.view_results")}
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  {!actionsStuck && t("teacher_quiz_manage.actions.view_results")}
+                </Button>
+              </Link>
+            )}
             {course?.slug && (
               <Link
                 to="/courses/$slug/quiz/$quizId"
