@@ -2208,7 +2208,13 @@
         "pass_score": "Điểm đậu",
         "time_label": "Thời gian (phút)",
         "time_hint": "Để trống nếu không giới hạn.",
-        "time_placeholder": "Ví dụ: 30"
+        "time_placeholder": "Ví dụ: 30",
+        "grading_method_label": "Cách tính điểm",
+        "grading_method_hint": "Lượt làm nào được tính là điểm của học viên khi cho phép làm lại.",
+        "grading_method_highest": "Điểm cao nhất",
+        "grading_method_average": "Điểm trung bình",
+        "grading_method_first": "Lần làm đầu tiên",
+        "grading_method_last": "Lần làm gần nhất"
       },
       "attempts": {
         "title": "Số lần làm",

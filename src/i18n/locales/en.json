@@ -2217,7 +2217,13 @@
         "pass_score": "Passing score",
         "time_label": "Time (minutes)",
         "time_hint": "Leave blank for unlimited.",
-        "time_placeholder": "e.g. 30"
+        "time_placeholder": "e.g. 30",
+        "grading_method_label": "Grading method",
+        "grading_method_hint": "Which attempt counts as the student's score when retakes are allowed.",
+        "grading_method_highest": "Highest score",
+        "grading_method_average": "Average score",
+        "grading_method_first": "First attempt",
+        "grading_method_last": "Last attempt"
       },
       "attempts": {
         "title": "Attempts",

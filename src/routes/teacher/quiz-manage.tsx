@@ -72,6 +72,8 @@ interface SettingsDraft {
   shuffle_options: boolean;
   show_hints: boolean;
   reminders_enabled: boolean;
+  // Moodle-style headline-score policy (migration 0033).
+  grading_method: "highest" | "average" | "first" | "last";
   // Scheduling window (migration 0032). Held as `datetime-local` strings
   // ("YYYY-MM-DDTHH:mm", local time) or "" when unset.
   available_from: string;
@@ -147,6 +149,7 @@ function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
     shuffle_options: quiz.shuffle_options,
     show_hints: quiz.show_hints,
     reminders_enabled: quiz.reminders_enabled,
+    grading_method: quiz.grading_method ?? "highest",
     available_from: isoToLocalInput(quiz.available_from),
     available_until: isoToLocalInput(quiz.available_until),
     due_at: isoToLocalInput(quiz.due_at),
@@ -408,6 +411,7 @@ export default function QuizManagePage() {
         shuffle_options: draft.shuffle_options,
         show_hints: draft.show_hints,
         reminders_enabled: draft.reminders_enabled,
+        grading_method: draft.grading_method,
         available_from: localInputToIso(draft.available_from),
         available_until: localInputToIso(draft.available_until),
         due_at: localInputToIso(draft.due_at),
@@ -1898,6 +1902,34 @@ function SettingsTab({
             )}
             className="bg-m3-surface text-sm w-40"
           />
+        </Field>
+        <Field
+          label={t("teacher_quiz_manage.settings.scoring.grading_method_label")}
+          hint={t("teacher_quiz_manage.settings.scoring.grading_method_hint")}
+        >
+          <select
+            value={draft.grading_method}
+            onChange={(e) =>
+              update(
+                "grading_method",
+                e.target.value as SettingsDraft["grading_method"],
+              )
+            }
+            className="w-full sm:w-72 rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+          >
+            <option value="highest">
+              {t("teacher_quiz_manage.settings.scoring.grading_method_highest")}
+            </option>
+            <option value="average">
+              {t("teacher_quiz_manage.settings.scoring.grading_method_average")}
+            </option>
+            <option value="first">
+              {t("teacher_quiz_manage.settings.scoring.grading_method_first")}
+            </option>
+            <option value="last">
+              {t("teacher_quiz_manage.settings.scoring.grading_method_last")}
+            </option>
+          </select>
         </Field>
       </SettingsSection>
 
