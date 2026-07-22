@@ -194,6 +194,7 @@ export const queryKeys = {
       ["quizzes", "course-attempts", courseId] as const,
     studentAttempts: (courseId: string, studentId: string) =>
       ["quizzes", "student-attempts", courseId, studentId] as const,
+    results: (quizId: string) => ["quizzes", "results", quizId] as const,
   },
 
   interviews: {

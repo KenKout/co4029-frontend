@@ -228,6 +228,14 @@ export interface InterviewSessionSummary {
 export type InterviewSessionTeacherRead = Schemas["InterviewSessionTeacherRead"];
 export type QuizAttemptTeacherRead = Schemas["QuizAttemptTeacherRead"];
 
+// Teacher quiz results & analytics dashboard (GET /teacher/quizzes/{id}/results).
+export type QuizResultsRead = Schemas["QuizResultsRead"];
+export type QuizResultsSummary = Schemas["QuizResultsSummary"];
+export type QuizScoreBucket = Schemas["QuizScoreBucket"];
+export type QuizPerStudentRow = Schemas["QuizPerStudentRow"];
+export type QuizQuestionBreakdown = Schemas["QuizQuestionBreakdown"];
+export type QuizOptionDistribution = Schemas["QuizOptionDistribution"];
+
 export interface InterviewTranscriptTurn {
   role: "user" | "ai" | "system";
   question_prompt: string | null;

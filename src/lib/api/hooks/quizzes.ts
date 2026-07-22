@@ -23,6 +23,7 @@ import type {
   QuizForTakingPublic,
   QuizPublic,
   QuizQuestionAuthoring,
+  QuizResultsRead,
 } from "../types";
 
 /**
@@ -217,6 +218,21 @@ export function useQuizAuthoring(quizId: string | null | undefined) {
     queryKey: queryKeys.quizzes.authoring(quizId ?? ""),
     queryFn: () =>
       apiFetch<QuizForAuthoringPublic>(`/teacher/quizzes/${quizId}`),
+    enabled: !!quizId,
+  });
+}
+
+/**
+ * Teacher-facing per-quiz results & analytics
+ * (`GET /teacher/quizzes/{quizId}/results`): grading-method-aware summary
+ * (mean/median/quartiles/pass-rate/histogram), per-student rollup, and
+ * per-question breakdown. Powers the quiz results dashboard.
+ */
+export function useQuizResults(quizId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.quizzes.results(quizId ?? ""),
+    queryFn: () =>
+      apiFetch<QuizResultsRead>(`/teacher/quizzes/${quizId}/results`),
     enabled: !!quizId,
   });
 }
