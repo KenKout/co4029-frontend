@@ -75,9 +75,22 @@ export type MultipartAbortIn = Schemas["MultipartAbortIn"];
 export type ReprocessOut = Schemas["ReprocessOut"];
 export type ProcessingProgress = Schemas["ProcessingProgress"];
 
-export type Quiz = Schemas["QuizPublic"];
-export type QuizPublic = Schemas["QuizPublic"];
-export type QuizAuthoring = Schemas["QuizAuthoring"];
+/**
+ * Scheduling window (backend migration 0032). These fields post-date the
+ * committed OpenAPI snapshot, so augment locally until the snapshot is
+ * regenerated against the live backend at deploy time (an all-optional
+ * intersection stays compatible with the eventual generated shape).
+ * NULL = no restriction. `due_at` is a soft deadline (does not block).
+ */
+export interface QuizScheduleWindow {
+  available_from?: string | null;
+  available_until?: string | null;
+  due_at?: string | null;
+}
+
+export type Quiz = Schemas["QuizPublic"] & QuizScheduleWindow;
+export type QuizPublic = Schemas["QuizPublic"] & QuizScheduleWindow;
+export type QuizAuthoring = Schemas["QuizAuthoring"] & QuizScheduleWindow;
 export type QuizForTaking = Schemas["QuizForTakingPublic"];
 export type QuizForTakingPublic = Schemas["QuizForTakingPublic"];
 export type QuizForAuthoring = Schemas["QuizForAuthoringPublic"];

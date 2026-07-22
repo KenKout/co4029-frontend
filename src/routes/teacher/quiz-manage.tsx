@@ -72,10 +72,44 @@ interface SettingsDraft {
   shuffle_options: boolean;
   show_hints: boolean;
   reminders_enabled: boolean;
+  // Scheduling window (migration 0032). Held as `datetime-local` strings
+  // ("YYYY-MM-DDTHH:mm", local time) or "" when unset.
+  available_from: string;
+  available_until: string;
+  due_at: string;
 }
 
 function toDraftString(value: string | number | null | undefined) {
   return value == null ? "" : String(value);
+}
+
+/**
+ * Convert a server ISO-8601 UTC instant to the local-time value a
+ * `datetime-local` input expects ("YYYY-MM-DDTHH:mm"). Returns "" for
+ * null/empty/invalid so an unset window renders as a blank field.
+ */
+function isoToLocalInput(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
+}
+
+/**
+ * Convert a `datetime-local` value (local time) back to an ISO-8601 UTC
+ * string for the API, or null when blank. The Date ctor interprets the
+ * bare local string in the browser's zone, and toISOString normalises to UTC.
+ */
+function localInputToIso(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const d = new Date(trimmed);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
 }
 
 function integerOrNull(value: string): number | null {
@@ -113,6 +147,9 @@ function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
     shuffle_options: quiz.shuffle_options,
     show_hints: quiz.show_hints,
     reminders_enabled: quiz.reminders_enabled,
+    available_from: isoToLocalInput(quiz.available_from),
+    available_until: isoToLocalInput(quiz.available_until),
+    due_at: isoToLocalInput(quiz.due_at),
   };
 }
 
@@ -371,6 +408,9 @@ export default function QuizManagePage() {
         shuffle_options: draft.shuffle_options,
         show_hints: draft.show_hints,
         reminders_enabled: draft.reminders_enabled,
+        available_from: localInputToIso(draft.available_from),
+        available_until: localInputToIso(draft.available_until),
+        due_at: localInputToIso(draft.due_at),
       });
       toast.success(t("teacher_quiz_manage.toasts.settings_saved"));
     } catch (err: unknown) {
@@ -1902,6 +1942,47 @@ function SettingsTab({
             </Field>
           </div>
         )}
+      </SettingsSection>
+
+      <SettingsSection
+        title={t("teacher_quiz_manage.settings.schedule.title")}
+        description={t("teacher_quiz_manage.settings.schedule.description")}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field
+            label={t("teacher_quiz_manage.settings.schedule.open_label")}
+            hint={t("teacher_quiz_manage.settings.schedule.open_hint")}
+          >
+            <Input
+              type="datetime-local"
+              value={draft.available_from}
+              onChange={(e) => update("available_from", e.target.value)}
+              className="bg-m3-surface text-sm"
+            />
+          </Field>
+          <Field
+            label={t("teacher_quiz_manage.settings.schedule.close_label")}
+            hint={t("teacher_quiz_manage.settings.schedule.close_hint")}
+          >
+            <Input
+              type="datetime-local"
+              value={draft.available_until}
+              onChange={(e) => update("available_until", e.target.value)}
+              className="bg-m3-surface text-sm"
+            />
+          </Field>
+        </div>
+        <Field
+          label={t("teacher_quiz_manage.settings.schedule.due_label")}
+          hint={t("teacher_quiz_manage.settings.schedule.due_hint")}
+        >
+          <Input
+            type="datetime-local"
+            value={draft.due_at}
+            onChange={(e) => update("due_at", e.target.value)}
+            className="bg-m3-surface text-sm w-full sm:w-72"
+          />
+        </Field>
       </SettingsSection>
 
       <SettingsSection title={t("teacher_quiz_manage.settings.behavior.title")}>

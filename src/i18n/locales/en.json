@@ -1454,7 +1454,17 @@
     },
     "messages": {
       "no_retakes": "This quiz does not allow retakes.",
-      "max_attempts_reached": "You have used all {{count}} attempts."
+      "max_attempts_reached": "You have used all {{count}} attempts.",
+      "not_yet_open": "This quiz opens on {{when}}.",
+      "window_closed": "This quiz closed on {{when}}."
+    },
+    "schedule": {
+      "opens_at": "Opens {{when}}",
+      "opened_at": "Opened {{when}}",
+      "closes_at": "Closes {{when}}",
+      "closed_at": "Closed {{when}}",
+      "due_by": "Due by {{when}}",
+      "was_due": "Was due {{when}}"
     },
     "actions": {
       "starting": "Starting...",
@@ -2146,6 +2156,16 @@
         "cooldown_label": "Cooldown (hours)",
         "cooldown_hint": "Wait time between attempts.",
         "cooldown_placeholder": "Optional"
+      },
+      "schedule": {
+        "title": "Availability window",
+        "description": "Schedule when students can take this quiz. Leave any field blank for no limit.",
+        "open_label": "Opens at",
+        "open_hint": "Students cannot start before this time.",
+        "close_label": "Closes at",
+        "close_hint": "No new attempts after this time.",
+        "due_label": "Due date",
+        "due_hint": "Soft deadline shown to students; attempts after it are marked late but not blocked."
       },
       "behavior": {
         "title": "Behavior",

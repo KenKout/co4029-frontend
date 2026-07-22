@@ -1445,7 +1445,17 @@
     },
     "messages": {
       "no_retakes": "Bài quiz này không cho phép làm lại.",
-      "max_attempts_reached": "Bạn đã sử dụng hết {{count}} lượt."
+      "max_attempts_reached": "Bạn đã sử dụng hết {{count}} lượt.",
+      "not_yet_open": "Bài quiz này mở vào {{when}}.",
+      "window_closed": "Bài quiz này đã đóng vào {{when}}."
+    },
+    "schedule": {
+      "opens_at": "Mở lúc {{when}}",
+      "opened_at": "Đã mở lúc {{when}}",
+      "closes_at": "Đóng lúc {{when}}",
+      "closed_at": "Đã đóng lúc {{when}}",
+      "due_by": "Hạn nộp {{when}}",
+      "was_due": "Đã đến hạn {{when}}"
     },
     "actions": {
       "starting": "Đang khởi tạo...",
@@ -2137,6 +2147,16 @@
         "cooldown_label": "Cooldown (giờ)",
         "cooldown_hint": "Khoảng chờ giữa các lần.",
         "cooldown_placeholder": "Tuỳ chọn"
+      },
+      "schedule": {
+        "title": "Khung thời gian mở bài",
+        "description": "Lên lịch thời điểm học viên có thể làm bài quiz này. Để trống bất kỳ trường nào nếu không giới hạn.",
+        "open_label": "Mở lúc",
+        "open_hint": "Học viên không thể bắt đầu trước thời điểm này.",
+        "close_label": "Đóng lúc",
+        "close_hint": "Không cho phép làm bài mới sau thời điểm này.",
+        "due_label": "Hạn nộp",
+        "due_hint": "Hạn mềm hiển thị cho học viên; bài làm sau hạn được đánh dấu trễ nhưng không bị chặn."
       },
       "behavior": {
         "title": "Hành vi",
