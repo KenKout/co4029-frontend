@@ -164,7 +164,7 @@ export default function QuizResultsPage() {
             gradingMethod={results.grading_method}
           />
 
-          <div className="rounded-xl border border-m3-outline-variant/20 bg-card p-4 shadow-editorial">
+          <div className="rounded-xl border border-m3-outline-variant bg-card p-4 shadow-editorial">
             <h2 className="mb-3 text-sm font-semibold text-m3-on-surface">
               {t("teacher_quiz_results.histogram.title")}
             </h2>

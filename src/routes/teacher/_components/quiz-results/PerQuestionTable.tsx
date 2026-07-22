@@ -100,7 +100,7 @@ function QuestionRow({
   const hasOptions = question.option_distribution.length > 0;
 
   return (
-    <div className="border-b border-m3-outline-variant/20 last:border-b-0">
+    <div className="border-b border-m3-outline-variant last:border-b-0">
       <button
         type="button"
         onClick={() => hasOptions && setExpanded((v) => !v)}
@@ -171,8 +171,8 @@ export function PerQuestionTable({ questions }: PerQuestionTableProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-m3-outline-variant/20">
-      <div className="flex items-center gap-3 border-b border-m3-outline-variant/20 bg-m3-surface-container-low px-3 py-2 text-xs font-semibold uppercase tracking-wide text-m3-on-surface-variant">
+    <div className="overflow-hidden rounded-xl border border-m3-outline-variant bg-card">
+      <div className="flex items-center gap-3 border-b border-m3-outline-variant bg-m3-surface-container-low px-3 py-2 text-xs font-semibold uppercase tracking-wide text-m3-on-surface-variant">
         <span className="w-6 shrink-0">#</span>
         <span className="min-w-0 flex-1">
           {t("teacher_quiz_results.per_question.col_question")}

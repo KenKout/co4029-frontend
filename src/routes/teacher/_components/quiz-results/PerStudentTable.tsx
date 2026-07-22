@@ -165,6 +165,8 @@ export function PerStudentTable({
           onStudentClick ? (row) => onStudentClick(row.student_id) : undefined
         }
         emptyState={t("teacher_quiz_results.per_student.empty")}
+        bordered={false}
+        containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card"
       />
     </div>
   );
