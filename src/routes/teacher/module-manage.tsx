@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   ArrowRight,
+  BarChart3,
   Video,
   HelpCircle,
   BookOpen,
@@ -40,6 +41,7 @@ import type {
   CourseContentModule,
 } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 const LESSON_TYPE_CONFIG: Record<
   string,
@@ -196,6 +198,18 @@ function ItemRow({
           >
             <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-m3-on-surface">
               <Pencil className="h-3.5 w-3.5" />
+            </Button>
+          </Link>
+        )}
+        {item.item_type === "quiz" && item.quiz_id && isFeatureEnabled("quiz_results_dashboard") && (
+          <Link
+            to="/teacher/courses/$courseId/quizzes/$quizId/results"
+            params={{ courseId, quizId: item.quiz_id }}
+            onClick={(e) => e.stopPropagation()}
+            title={t("teacher_quiz_manage.actions.view_results")}
+          >
+            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-m3-on-surface">
+              <BarChart3 className="h-3.5 w-3.5" />
             </Button>
           </Link>
         )}
