@@ -6,8 +6,11 @@ import { ArrowLeft, BarChart3, HelpCircle, Loader2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { cn } from "@/lib/utils";
-import { useQuizResults } from "@/lib/api/hooks/quizzes";
-import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
+import { useQuizAuthoring, useQuizResults } from "@/lib/api/hooks/quizzes";
+import {
+  useTeacherCourseById,
+  useTeacherCourseContent,
+} from "@/lib/api/hooks/teacher-courses";
 import { ResultsSummaryCards } from "./_components/quiz-results/ResultsSummaryCards";
 import { ScoreHistogram } from "./_components/quiz-results/ScoreHistogram";
 import { PerStudentTable } from "./_components/quiz-results/PerStudentTable";
@@ -26,6 +29,13 @@ export default function QuizResultsPage() {
 
   const { data: course } = useTeacherCourseById(courseId);
   const { data: results, isLoading, isError } = useQuizResults(quizId);
+  // Sourced only for the breadcrumb, so its Module → Quiz depth matches the
+  // quiz editor's trail (Teaching → Course → Module → Quiz → Results).
+  const { data: authoring } = useQuizAuthoring(quizId);
+  const { data: content } = useTeacherCourseContent(courseId);
+  const courseModule = content?.modules.find(
+    (entry) => entry.id === authoring?.quiz?.module_id,
+  );
 
   const [tab, setTab] = useState<ResultsTab>("students");
   const [headlineMetric, setHeadlineMetric] = useState<HeadlineMetric>("best");
@@ -88,6 +98,15 @@ export default function QuizResultsPage() {
             to: "/teacher/courses/$courseId",
             params: { courseId },
           },
+          ...(courseModule
+            ? [
+                {
+                  label: courseModule.title,
+                  to: "/teacher/courses/$courseId/modules/$moduleId" as const,
+                  params: { courseId, moduleId: courseModule.id },
+                },
+              ]
+            : []),
           {
             label: results.quiz_title,
             to: "/teacher/courses/$courseId/quizzes/$quizId",
