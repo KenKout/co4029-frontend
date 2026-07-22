@@ -376,6 +376,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Users
+         * @description Page-numbered admin user list with server-side search (email /
+         *     display name) + whitelisted sort (``email`` / ``status`` /
+         *     ``created_at``).
+         */
+        get: operations["search_users_api_v1_users_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{user_id}": {
         parameters: {
             query?: never;
@@ -527,6 +549,28 @@ export interface paths {
         put?: never;
         /** Create Organization Endpoint */
         post: operations["create_organization_endpoint_api_v1_admin_organizations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/organizations/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Organizations Endpoint
+         * @description Page-numbered admin org list with server-side search (name/slug) +
+         *     whitelisted sort (``name`` / ``status`` / ``created_at``). Additive to
+         *     the cursor endpoint above — this one backs the DataTable.
+         */
+        get: operations["search_organizations_endpoint_api_v1_admin_organizations_search_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1451,6 +1495,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/courses/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search All Courses
+         * @description Page-numbered admin course list with server-side search (title /
+         *     slug) + whitelisted sort (``title`` / ``status`` / ``created_at``).
+         *     Additive to the cursor ``GET /admin/courses`` above — this one backs
+         *     the DataTable. ``include_deleted`` defaults to ``True`` (admin view).
+         */
+        get: operations["search_all_courses_api_v1_admin_courses_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/courses/{course_id}/restore": {
         parameters: {
             query?: never;
@@ -1976,6 +2043,11 @@ export interface paths {
          * Start Attempt
          * @description Create a :class:`QuizAttempt` and return the no-leak take payload.
          *
+         *     Response shares the :class:`QuizAttemptProgressRead` shape with
+         *     ``GET /attempts/{id}/progress`` (``answers=[]`` here since nothing is
+         *     saved yet) so the client gets ``attempt_id`` back immediately and can
+         *     reuse one hydration path for both "start" and "resume".
+         *
          *     Maps :class:`AllCardsInCooldownError` (raised when every question in
          *     the quiz is still in SR cooldown — thesis UC-LEARN-01 Alt 1a) to
          *     HTTP 429 with a ``Retry-After`` header counting down to the earliest
@@ -2021,6 +2093,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attempts/{attempt_id}/integrity-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Quiz Integrity Events
+         * @description Best-effort ingest of browser integrity signals for a live attempt.
+         *
+         *     Ownership is enforced (attempt must belong to the caller). Events are
+         *     recorded only while the attempt is ``in_progress`` — late events for a
+         *     submitted/graded/abandoned attempt are silently dropped so this never
+         *     blocks the take. Append-only; post-attempt / teacher review only, never
+         *     surfaced to the student.
+         */
+        post: operations["record_quiz_integrity_events_api_v1_attempts__attempt_id__integrity_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/attempts/{attempt_id}/submit": {
         parameters: {
             query?: never;
@@ -2053,6 +2151,35 @@ export interface paths {
          * @description Return one attempt detail, scoped to the calling student.
          */
         get: operations["get_attempt_api_v1_attempts__attempt_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attempts/{attempt_id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Attempt Progress
+         * @description Resume payload for an in-progress attempt.
+         *
+         *     Lets the client rehydrate per-question state after an interruption
+         *     (power-off, reload, critical notification) instead of wiping progress.
+         *     Returns 404 when the attempt is missing, belongs to a different
+         *     student, or is no longer in flight (submitted / graded / abandoned).
+         *
+         *     No-leak: unlike ``/review`` this fires WHILE the attempt is open, so
+         *     the payload carries only the student's own saved inputs — never
+         *     ``is_correct`` / ``points_awarded`` (see ``QuizAttemptProgressAnswer``).
+         */
+        get: operations["get_attempt_progress_api_v1_attempts__attempt_id__progress_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2199,6 +2326,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teacher/quizzes/{quiz_id}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Quiz Results
+         * @description Assemble the full teacher-facing results analytics payload for a quiz.
+         *
+         *     Combines the grading-method-aware summary, a per-student rollup, and the
+         *     per-question breakdown into one response. A quiz with zero completed
+         *     attempts returns a zeroed summary + empty ``per_student`` while
+         *     ``per_question`` still lists every question (zero counts).
+         */
+        get: operations["get_quiz_results_api_v1_teacher_quizzes__quiz_id__results_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teacher/quizzes/{quiz_id}/publish": {
         parameters: {
             query?: never;
@@ -2227,6 +2379,26 @@ export interface paths {
         put?: never;
         /** Bulk Set Expected Time */
         post: operations["bulk_set_expected_time_api_v1_teacher_quizzes__quiz_id__questions_bulk_set_expected_time_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/quizzes/{quiz_id}/questions/bulk-approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Approve Questions
+         * @description Approve many questions at once (bulk sign-off for AI content).
+         */
+        post: operations["bulk_approve_questions_api_v1_teacher_quizzes__quiz_id__questions_bulk_approve_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2709,6 +2881,30 @@ export interface paths {
         head?: never;
         /** Update Interview Config */
         patch: operations["update_interview_config_api_v1_teacher_interview_configs__config_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/teacher/interview-configs/{config_id}/adaptive-readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Adaptive Readiness
+         * @description Advisory adaptive-readiness report for the authoring workspace (Slice 5).
+         *
+         *     Read-only; never blocks publishing. Warnings guide the teacher on whether
+         *     the adaptive interviewer has enough structured material (outcome links,
+         *     difficulty labels, coverage) to adapt well.
+         */
+        get: operations["get_adaptive_readiness_api_v1_teacher_interview_configs__config_id__adaptive_readiness_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/teacher/interview-configs/{config_id}/publish": {
@@ -4059,6 +4255,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teacher/courses/{course_id}/questions/{question_id}/student-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Card Student Results
+         * @description Per-student results for one question (weakest EF first).
+         */
+        get: operations["get_card_student_results_api_v1_teacher_courses__course_id__questions__question_id__student_results_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teacher/courses/{course_id}/at-risk": {
         parameters: {
             query?: never;
@@ -4355,6 +4571,45 @@ export interface components {
             mau: number;
         };
         /**
+         * AdaptiveModeRolloutStatus
+         * @description Whether the adaptive interviewer is live for each input mode.
+         *
+         *     Reflects the deployment flag matrix (master + per-mode switches), NOT a
+         *     per-config toggle — teachers see it read-only so they understand which
+         *     modes will actually run the adaptive brain for their published interview.
+         */
+        AdaptiveModeRolloutStatus: {
+            /** Text */
+            text: boolean;
+            /** Hybrid */
+            hybrid: boolean;
+            /** Voice */
+            voice: boolean;
+        };
+        /**
+         * AdaptiveReadinessRead
+         * @description Adaptive-readiness report for the authoring workspace.
+         *
+         *     ``warnings`` are ADVISORY — they never block publishing (only the existing
+         *     hard requirements do). ``blocks_publish`` is always False here and is kept
+         *     explicit so the client never mistakes a warning for a publish gate.
+         */
+        AdaptiveReadinessRead: {
+            /**
+             * Config Id
+             * Format: uuid
+             */
+            config_id: string;
+            /** Warnings */
+            warnings?: components["schemas"]["ReadinessWarningRead"][];
+            rollout: components["schemas"]["AdaptiveModeRolloutStatus"];
+            /**
+             * Blocks Publish
+             * @default false
+             */
+            blocks_publish: boolean;
+        };
+        /**
          * AdminCoursePage
          * @description Cursor-paginated admin view of every course (T3.5 ``CursorPage``).
          */
@@ -4421,6 +4676,16 @@ export interface components {
             /** Last Active At */
             last_active_at?: string | null;
         };
+        /** BulkApproveRequest */
+        BulkApproveRequest: {
+            /** Question Ids */
+            question_ids: string[];
+        };
+        /** BulkApproveResponse */
+        BulkApproveResponse: {
+            /** Approved */
+            approved: number;
+        };
         /** BulkEnrollFailure */
         BulkEnrollFailure: {
             /** Identifier */
@@ -4486,6 +4751,28 @@ export interface components {
             created_users: string[];
             /** Failures */
             failures: components["schemas"]["CSVImportFailure"][];
+        };
+        /** CardStudentResultRead */
+        CardStudentResultRead: {
+            /**
+             * Student Id
+             * Format: uuid
+             */
+            student_id: string;
+            /** Name */
+            name: string;
+            /** Ef */
+            ef: number;
+            /** Total Reviews */
+            total_reviews: number;
+            /** Last Reviewed At */
+            last_reviewed_at?: string | null;
+            /** Last Correct */
+            last_correct?: boolean | null;
+            /** Correct Count */
+            correct_count: number;
+            /** Review Count */
+            review_count: number;
         };
         /** CardsDueItem */
         CardsDueItem: {
@@ -5259,6 +5546,8 @@ export interface components {
              * Format: uuid
              */
             quiz_id: string;
+            /** Prompt Text */
+            prompt_text: string;
             /** Mean Ef */
             mean_ef: number;
             /** Student Count */
@@ -6053,7 +6342,7 @@ export interface components {
             /** Response Text */
             response_text?: string | null;
             /** Action */
-            action?: ("confirm_identity" | "audio_clear" | "confirm_language" | "continue_setup" | "confirm_setup" | "needs_adjustment" | "ready" | "not_ready") | null;
+            action?: ("confirm_identity" | "audio_clear" | "confirm_language" | "continue_setup" | "confirm_setup" | "needs_adjustment" | "ready" | "not_ready" | "reject_identity" | "set_name") | null;
             /** Language */
             language?: ("en" | "vi") | null;
             /** Turn Key */
@@ -6663,6 +6952,16 @@ export interface components {
             should_finish?: boolean | null;
             /** Assistance Kind */
             assistance_kind?: ("repeat" | "clarification" | "term" | "hint") | null;
+            /** Pending Confirmation */
+            pending_confirmation?: boolean | null;
+            /** Interaction State */
+            interaction_state?: string | null;
+            /** Transition Id */
+            transition_id?: string | null;
+            /** Transition Text */
+            transition_text?: string | null;
+            /** Transition Target */
+            transition_target?: ("next_question" | "closing") | null;
         };
         /**
          * InterviewSummaryPublic
@@ -8104,6 +8403,16 @@ export interface components {
             started_at: string;
             /** Completed At */
             completed_at?: string | null;
+            /**
+             * Overall Percent
+             * @default 0
+             */
+            overall_percent: number;
+            /**
+             * Is Prepared
+             * @default false
+             */
+            is_prepared: boolean;
         };
         /** MyCourseProgressSummary */
         MyCourseProgressSummary: {
@@ -8197,6 +8506,8 @@ export interface components {
             title: string;
             /** Body */
             body: string;
+            /** Action Url */
+            action_url: string | null;
             /** Scheduled For */
             scheduled_for: string | null;
             /** Delivered At */
@@ -8459,6 +8770,45 @@ export interface components {
             total_materials: number;
             /** Total Quiz Attempts */
             total_quiz_attempts: number;
+        };
+        /** PageResponse[CourseAuthoring] */
+        PageResponse_CourseAuthoring_: {
+            /** Items */
+            items: components["schemas"]["CourseAuthoring"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total Pages */
+            total_pages: number;
+        };
+        /** PageResponse[OrganizationRead] */
+        PageResponse_OrganizationRead_: {
+            /** Items */
+            items: components["schemas"]["OrganizationRead"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total Pages */
+            total_pages: number;
+        };
+        /** PageResponse[UserRead] */
+        PageResponse_UserRead_: {
+            /** Items */
+            items: components["schemas"]["UserRead"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total Pages */
+            total_pages: number;
         };
         /**
          * PathReadinessOverview
@@ -8753,6 +9103,76 @@ export interface components {
             selected_option_id?: string | null;
         };
         /**
+         * QuizAttemptProgressAnswer
+         * @description One saved answer for an in-progress attempt (resume payload).
+         *
+         *     SECURITY INVARIANT: this is served WHILE the attempt is still in
+         *     flight, so it MUST NOT expose ``is_correct`` / ``points_awarded`` (that
+         *     would let a student probe correctness by saving an answer and reading it
+         *     back). Only the student's own inputs are echoed — the same no-leak
+         *     discipline as :class:`QuizQuestionOptionPublic`.
+         */
+        QuizAttemptProgressAnswer: {
+            /**
+             * Question Id
+             * Format: uuid
+             */
+            question_id: string;
+            /** Selected Option Id */
+            selected_option_id?: string | null;
+            /** Answer Text */
+            answer_text?: string | null;
+            /**
+             * Hint Used
+             * @default false
+             */
+            hint_used: boolean;
+            /** T Actual Ms */
+            t_actual_ms?: number | null;
+        };
+        /**
+         * QuizAttemptProgressRead
+         * @description Resume payload for an in-progress attempt.
+         *
+         *     Lets the client rehydrate its per-question state after an interruption
+         *     (power-off, reload, critical notification) instead of wiping progress.
+         *     Carries the attempt identity + timing anchor (``started_at`` so the
+         *     client can resume a timed quiz from elapsed wall-clock, not from full),
+         *     the full no-leak take payload (quiz + questions, so the client can
+         *     re-render without re-POSTing a new attempt), and the answers saved so
+         *     far. Correctness fields are omitted by :class:`QuizAttemptProgressAnswer`
+         *     and the embedded ``take`` reuses the ``QuizQuestionPublic`` projection
+         *     which already drops ``is_correct``.
+         */
+        QuizAttemptProgressRead: {
+            /**
+             * Attempt Id
+             * Format: uuid
+             */
+            attempt_id: string;
+            /**
+             * Quiz Id
+             * Format: uuid
+             */
+            quiz_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "in_progress" | "submitted" | "graded" | "abandoned" | "expired";
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            take: components["schemas"]["QuizForTakingPublic"];
+            /**
+             * Answers
+             * @default []
+             */
+            answers: components["schemas"]["QuizAttemptProgressAnswer"][];
+        };
+        /**
          * QuizAttemptRead
          * @description Student's view of their own attempt.
          *
@@ -8989,6 +9409,12 @@ export interface components {
              * @default true
              */
             show_hints: boolean;
+            /** Available From */
+            available_from?: string | null;
+            /** Available Until */
+            available_until?: string | null;
+            /** Due At */
+            due_at?: string | null;
             /**
              * Course Id
              * Format: uuid
@@ -9177,6 +9603,71 @@ export interface components {
             /** Pipeline Run Id */
             pipeline_run_id?: string | null;
         };
+        /** QuizIntegrityEventBatchRequest */
+        QuizIntegrityEventBatchRequest: {
+            /** Events */
+            events: components["schemas"]["QuizIntegrityEventItem"][];
+        };
+        /** QuizIntegrityEventItem */
+        QuizIntegrityEventItem: {
+            /**
+             * Event Type
+             * @enum {string}
+             */
+            event_type: "focus_lost" | "tab_switch" | "fullscreen_exit" | "warning_issued" | "reconnect" | "disconnect";
+            /**
+             * Severity
+             * @default info
+             * @enum {string}
+             */
+            severity: "info" | "warning" | "critical";
+            /** Metadata */
+            metadata?: {
+                [key: string]: string | number | boolean;
+            };
+        };
+        /**
+         * QuizOptionDistribution
+         * @description Per-option chosen-count for an MCQ question.
+         */
+        QuizOptionDistribution: {
+            /**
+             * Option Id
+             * Format: uuid
+             */
+            option_id: string;
+            /** Option Key */
+            option_key: string;
+            /** Option Text */
+            option_text: string;
+            /** Is Correct */
+            is_correct: boolean;
+            /** Chosen Count */
+            chosen_count: number;
+        };
+        /**
+         * QuizPerStudentRow
+         * @description Per-student rollup over that student's completed attempts.
+         */
+        QuizPerStudentRow: {
+            /**
+             * Student Id
+             * Format: uuid
+             */
+            student_id: string;
+            /** Student Name */
+            student_name: string | null;
+            /** Best Score Percent */
+            best_score_percent: string | null;
+            /** Latest Score Percent */
+            latest_score_percent: string | null;
+            /** Attempts Count */
+            attempts_count: number;
+            /** Passed */
+            passed: boolean | null;
+            /** Last Attempt At */
+            last_attempt_at: string | null;
+        };
         /**
          * QuizPublic
          * @description Student-facing quiz summary.
@@ -9231,6 +9722,12 @@ export interface components {
              * @default true
              */
             show_hints: boolean;
+            /** Available From */
+            available_from?: string | null;
+            /** Available Until */
+            available_until?: string | null;
+            /** Due At */
+            due_at?: string | null;
         };
         /**
          * QuizQuestionAuthoring
@@ -9317,6 +9814,27 @@ export interface components {
             deleted_at?: string | null;
             /** Deleted By */
             deleted_by?: string | null;
+        };
+        /**
+         * QuizQuestionBreakdown
+         * @description Per-question performance breakdown (hardest-first ordering).
+         */
+        QuizQuestionBreakdown: {
+            /**
+             * Question Id
+             * Format: uuid
+             */
+            question_id: string;
+            /** Prompt */
+            prompt: string;
+            /** Correct Count */
+            correct_count: number;
+            /** Answered Count */
+            answered_count: number;
+            /** Correctness Rate */
+            correctness_rate: number | null;
+            /** Option Distribution */
+            option_distribution: components["schemas"]["QuizOptionDistribution"][];
         };
         /**
          * QuizQuestionOptionAuthoring
@@ -9429,6 +9947,69 @@ export interface components {
             options: components["schemas"]["QuizQuestionOptionPublic"][];
         };
         /**
+         * QuizResultsRead
+         * @description Full teacher-facing quiz-results payload.
+         */
+        QuizResultsRead: {
+            /**
+             * Quiz Id
+             * Format: uuid
+             */
+            quiz_id: string;
+            /** Quiz Title */
+            quiz_title: string;
+            /** Passing Score Percent */
+            passing_score_percent: string;
+            /**
+             * Grading Method
+             * @enum {string}
+             */
+            grading_method: "highest" | "average" | "first" | "last";
+            summary: components["schemas"]["QuizResultsSummary"];
+            /** Per Student */
+            per_student: components["schemas"]["QuizPerStudentRow"][];
+            /** Per Question */
+            per_question: components["schemas"]["QuizQuestionBreakdown"][];
+        };
+        /**
+         * QuizResultsSummary
+         * @description Cohort headline stats over the grading-method-reduced attempt set.
+         */
+        QuizResultsSummary: {
+            /** Total Attempts */
+            total_attempts: number;
+            /** Unique Students */
+            unique_students: number;
+            /** Mean Score */
+            mean_score: number | null;
+            /** Median Score */
+            median_score: number | null;
+            /** P25 */
+            p25: number | null;
+            /** P75 */
+            p75: number | null;
+            /** Pass Rate */
+            pass_rate: number | null;
+            /** Mean Time Seconds */
+            mean_time_seconds: number | null;
+            /** Histogram */
+            histogram: components["schemas"]["QuizScoreBucket"][];
+        };
+        /**
+         * QuizScoreBucket
+         * @description One score-histogram band (see ``analytics._score_histogram``).
+         */
+        QuizScoreBucket: {
+            /** Label */
+            label: string;
+            /** Lower */
+            lower: number;
+            /** Upper */
+            upper: number;
+            /** Count */
+            count: number;
+        };
+        /**
          * QuizSummaryPublic
          * @description Slim quiz projection embedded inside :class:`ModuleItemPublic.target`.
          *
@@ -9446,6 +10027,26 @@ export interface components {
             id: string;
             /** Title */
             title: string;
+        };
+        /**
+         * ReadinessWarningRead
+         * @description One advisory readiness finding. ``code`` drives the localized UI copy.
+         */
+        ReadinessWarningRead: {
+            /** Code */
+            code: string;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "info" | "warning";
+            /** Affected Ids */
+            affected_ids?: string[];
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
         };
         /**
          * RealtimeTokenResponse
@@ -10400,12 +11001,16 @@ export interface components {
     pathItems: never;
 }
 export type SchemaActiveUsersOut = components['schemas']['ActiveUsersOut'];
+export type SchemaAdaptiveModeRolloutStatus = components['schemas']['AdaptiveModeRolloutStatus'];
+export type SchemaAdaptiveReadinessRead = components['schemas']['AdaptiveReadinessRead'];
 export type SchemaAdminCoursePage = components['schemas']['AdminCoursePage'];
 export type SchemaAssignTeacherRequest = components['schemas']['AssignTeacherRequest'];
 export type SchemaAtRiskListRead = components['schemas']['AtRiskListRead'];
 export type SchemaAtRiskReason = components['schemas']['AtRiskReason'];
 export type SchemaAtRiskStudent = components['schemas']['AtRiskStudent'];
 export type SchemaAtRiskStudentRead = components['schemas']['AtRiskStudentRead'];
+export type SchemaBulkApproveRequest = components['schemas']['BulkApproveRequest'];
+export type SchemaBulkApproveResponse = components['schemas']['BulkApproveResponse'];
 export type SchemaBulkEnrollFailure = components['schemas']['BulkEnrollFailure'];
 export type SchemaBulkEnrollRequest = components['schemas']['BulkEnrollRequest'];
 export type SchemaBulkEnrollResult = components['schemas']['BulkEnrollResult'];
@@ -10415,6 +11020,7 @@ export type SchemaBulkSetItem = components['schemas']['BulkSetItem'];
 export type SchemaCsvImportFailure = components['schemas']['CSVImportFailure'];
 export type SchemaCsvImportPayload = components['schemas']['CSVImportPayload'];
 export type SchemaCsvImportResult = components['schemas']['CSVImportResult'];
+export type SchemaCardStudentResultRead = components['schemas']['CardStudentResultRead'];
 export type SchemaCardsDueItem = components['schemas']['CardsDueItem'];
 export type SchemaCardsDuePage = components['schemas']['CardsDuePage'];
 export type SchemaCareerPathAuthoring = components['schemas']['CareerPathAuthoring'];
@@ -10569,6 +11175,9 @@ export type SchemaOrganizationPatch = components['schemas']['OrganizationPatch']
 export type SchemaOrganizationRead = components['schemas']['OrganizationRead'];
 export type SchemaOutlineSection = components['schemas']['OutlineSection'];
 export type SchemaOverviewOut = components['schemas']['OverviewOut'];
+export type SchemaPageResponseCourseAuthoring = components['schemas']['PageResponse_CourseAuthoring_'];
+export type SchemaPageResponseOrganizationRead = components['schemas']['PageResponse_OrganizationRead_'];
+export type SchemaPageResponseUserRead = components['schemas']['PageResponse_UserRead_'];
 export type SchemaPathReadinessOverview = components['schemas']['PathReadinessOverview'];
 export type SchemaPermissionRead = components['schemas']['PermissionRead'];
 export type SchemaPipelineSpendOut = components['schemas']['PipelineSpendOut'];
@@ -10582,6 +11191,8 @@ export type SchemaQuestionBankPage = components['schemas']['QuestionBankPage'];
 export type SchemaQueueDepthOut = components['schemas']['QueueDepthOut'];
 export type SchemaQuizAttemptAnswerInput = components['schemas']['QuizAttemptAnswerInput'];
 export type SchemaQuizAttemptAnswerRead = components['schemas']['QuizAttemptAnswerRead'];
+export type SchemaQuizAttemptProgressAnswer = components['schemas']['QuizAttemptProgressAnswer'];
+export type SchemaQuizAttemptProgressRead = components['schemas']['QuizAttemptProgressRead'];
 export type SchemaQuizAttemptRead = components['schemas']['QuizAttemptRead'];
 export type SchemaQuizAttemptReviewOption = components['schemas']['QuizAttemptReviewOption'];
 export type SchemaQuizAttemptReviewQuestion = components['schemas']['QuizAttemptReviewQuestion'];
@@ -10593,12 +11204,21 @@ export type SchemaQuizForAuthoringPublic = components['schemas']['QuizForAuthori
 export type SchemaQuizForTakingPublic = components['schemas']['QuizForTakingPublic'];
 export type SchemaQuizGenerationRequest = components['schemas']['QuizGenerationRequest'];
 export type SchemaQuizGenerationRunRead = components['schemas']['QuizGenerationRunRead'];
+export type SchemaQuizIntegrityEventBatchRequest = components['schemas']['QuizIntegrityEventBatchRequest'];
+export type SchemaQuizIntegrityEventItem = components['schemas']['QuizIntegrityEventItem'];
+export type SchemaQuizOptionDistribution = components['schemas']['QuizOptionDistribution'];
+export type SchemaQuizPerStudentRow = components['schemas']['QuizPerStudentRow'];
 export type SchemaQuizPublic = components['schemas']['QuizPublic'];
 export type SchemaQuizQuestionAuthoring = components['schemas']['QuizQuestionAuthoring'];
+export type SchemaQuizQuestionBreakdown = components['schemas']['QuizQuestionBreakdown'];
 export type SchemaQuizQuestionOptionAuthoring = components['schemas']['QuizQuestionOptionAuthoring'];
 export type SchemaQuizQuestionOptionPublic = components['schemas']['QuizQuestionOptionPublic'];
 export type SchemaQuizQuestionPublic = components['schemas']['QuizQuestionPublic'];
+export type SchemaQuizResultsRead = components['schemas']['QuizResultsRead'];
+export type SchemaQuizResultsSummary = components['schemas']['QuizResultsSummary'];
+export type SchemaQuizScoreBucket = components['schemas']['QuizScoreBucket'];
 export type SchemaQuizSummaryPublic = components['schemas']['QuizSummaryPublic'];
+export type SchemaReadinessWarningRead = components['schemas']['ReadinessWarningRead'];
 export type SchemaRealtimeTokenResponse = components['schemas']['RealtimeTokenResponse'];
 export type SchemaRecentCallOut = components['schemas']['RecentCallOut'];
 export type SchemaRefreshTokenRequest = components['schemas']['RefreshTokenRequest'];
@@ -11054,6 +11674,42 @@ export interface operations {
             };
         };
     };
+    search_users_api_v1_users_search_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                status?: string | null;
+                sort?: string | null;
+                sort_dir?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResponse_UserRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_user_api_v1_users__user_id__get: {
         parameters: {
             query?: never;
@@ -11437,6 +12093,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrganizationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_organizations_endpoint_api_v1_admin_organizations_search_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                status?: string | null;
+                sort?: string | null;
+                sort_dir?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResponse_OrganizationRead_"];
                 };
             };
             /** @description Validation Error */
@@ -13333,6 +14025,43 @@ export interface operations {
             };
         };
     };
+    search_all_courses_api_v1_admin_courses_search_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                status?: string | null;
+                include_deleted?: boolean;
+                sort?: string | null;
+                sort_dir?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResponse_CourseAuthoring_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     restore_soft_deleted_course_api_v1_admin_courses__course_id__restore_post: {
         parameters: {
             query?: never;
@@ -14162,7 +14891,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["QuizForTakingPublic"];
+                    "application/json": components["schemas"]["QuizAttemptProgressRead"];
                 };
             };
             /** @description Validation Error */
@@ -14198,6 +14927,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QuizAttemptAnswerRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_quiz_integrity_events_api_v1_attempts__attempt_id__integrity_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuizIntegrityEventBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -14260,6 +15026,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QuizAttemptRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_attempt_progress_api_v1_attempts__attempt_id__progress_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizAttemptProgressRead"];
                 };
             };
             /** @description Validation Error */
@@ -14532,6 +15329,37 @@ export interface operations {
             };
         };
     };
+    get_quiz_results_api_v1_teacher_quizzes__quiz_id__results_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                quiz_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizResultsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     publish_quiz_api_v1_teacher_quizzes__quiz_id__publish_post: {
         parameters: {
             query?: never;
@@ -14585,6 +15413,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkSetExpectedTimeResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_approve_questions_api_v1_teacher_quizzes__quiz_id__questions_bulk_approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                quiz_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkApproveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkApproveResponse"];
                 };
             };
             /** @description Validation Error */
@@ -15456,6 +16319,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InterviewConfigAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_adaptive_readiness_api_v1_teacher_interview_configs__config_id__adaptive_readiness_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                config_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdaptiveReadinessRead"];
                 };
             };
             /** @description Validation Error */
@@ -17963,6 +18857,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DifficultCardRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_card_student_results_api_v1_teacher_courses__course_id__questions__question_id__student_results_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardStudentResultRead"][];
                 };
             };
             /** @description Validation Error */
