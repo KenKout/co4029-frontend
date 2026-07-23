@@ -17,7 +17,9 @@ import {
   ArrowUpRight,
   Award,
   UserPlus,
+  X,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   useTeacherCourseById,
   useTeacherCourseRoster,
@@ -408,14 +410,44 @@ export default function CourseStudentsPage() {
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 text-m3-on-surface-variant">
-                <Users className="h-10 w-10 opacity-30" />
-                <p className="text-sm font-medium">
-                  {students.length === 0
-                    ? "No students enrolled yet."
-                    : "No students match your filters."}
-                </p>
-              </div>
+              students.length === 0 ? (
+                /* First-run — no enrollments exist yet. */
+                <div className="flex flex-col items-center justify-center py-16 gap-3 text-center max-w-sm mx-auto">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-m3-primary-fixed">
+                    <Users className="h-7 w-7 text-m3-primary" />
+                  </div>
+                  <p className="text-base font-headline font-bold text-m3-on-surface">
+                    No students enrolled yet
+                  </p>
+                  <p className="text-sm text-m3-on-surface-variant">
+                    Once students enroll in this course, they'll appear here
+                    with their progress and risk signals.
+                  </p>
+                </div>
+              ) : (
+                /* No-match — enrollments exist but filters/search hid them. */
+                <div className="flex flex-col items-center justify-center py-16 gap-3 text-center text-m3-on-surface-variant">
+                  <Search className="h-10 w-10 opacity-30" />
+                  <p className="text-sm font-medium text-m3-on-surface">
+                    No students match
+                  </p>
+                  <p className="text-xs">
+                    Try a different search term or clear your filters.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-1 gap-2"
+                    onClick={() => {
+                      setSearch("");
+                      setStatusFilter("all");
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                    Clear filters
+                  </Button>
+                </div>
+              )
             ) : (
               <div className="divide-y divide-m3-outline-variant/10">
                 {filtered.map((student) => {

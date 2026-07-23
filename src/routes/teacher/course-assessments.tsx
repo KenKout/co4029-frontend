@@ -6,6 +6,7 @@ import {
   ClipboardList,
   MessageSquare,
   Users,
+  X,
 } from "lucide-react";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -132,6 +133,66 @@ export default function CourseAssessmentsPage() {
     for (const s of interviewSessions ?? []) ids.add(s.student_id);
     return ids.size;
   }, [quizAttempts, interviewSessions]);
+
+  // Active-filter chips — one removable chip per non-default filter, so the
+  // teacher sees exactly what's narrowing the list and can clear each singly.
+  const RESULT_LABELS: Record<string, string> = {
+    passed: "Passed",
+    not_passed: "Not passed",
+    grading: "Grading",
+    evaluating: "Evaluating",
+    in_progress: "In progress",
+    failed: "Evaluation failed",
+    not_graded: "Not graded",
+  };
+  const TIME_LABELS: Record<string, string> = {
+    today: "Last 24 hours",
+    "7": "Last 7 days",
+    "30": "Last 30 days",
+    "90": "Last 90 days",
+  };
+  const activeChips = useMemo(() => {
+    const chips: {
+      key: string;
+      prefix: string;
+      label: string;
+      onRemove: () => void;
+    }[] = [];
+    if (search.trim()) {
+      chips.push({
+        key: "search",
+        prefix: "Search:",
+        label: search.trim(),
+        onRemove: () => setSearch(""),
+      });
+    }
+    if (titleFilter !== "all") {
+      chips.push({
+        key: "title",
+        prefix: tab === "quizzes" ? "Quiz:" : "Interview:",
+        label: titleFilter,
+        onRemove: () => setTitleFilter("all"),
+      });
+    }
+    if (resultFilter !== "all") {
+      chips.push({
+        key: "result",
+        prefix: "Result:",
+        label: RESULT_LABELS[resultFilter] ?? resultFilter,
+        onRemove: () => setResultFilter("all"),
+      });
+    }
+    if (timeFilter !== "all") {
+      chips.push({
+        key: "time",
+        prefix: "Time:",
+        label: TIME_LABELS[timeFilter] ?? timeFilter,
+        onRemove: () => setTimeFilter("all"),
+      });
+    }
+    return chips;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, titleFilter, resultFilter, timeFilter, tab]);
 
   const quizPassRate = useMemo(() => {
     const graded = (quizAttempts ?? []).filter((a) => a.passed !== null);
@@ -299,12 +360,54 @@ export default function CourseAssessmentsPage() {
           )}
         </div>
 
+        {/* Active-filter chips + result count — mirrors the courses page so
+            the teacher can see and remove each active filter at a glance. */}
+        {activeChips.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {activeChips.map((chip) => (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={chip.onRemove}
+                className="inline-flex items-center gap-1.5 rounded-full bg-m3-primary-fixed px-2.5 py-1 text-xs font-medium text-m3-primary transition-colors hover:bg-m3-primary/15"
+              >
+                <span className="text-m3-on-surface-variant">{chip.prefix}</span>
+                {chip.label}
+                <X className="h-3 w-3" />
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                setTitleFilter("all");
+                setResultFilter("all");
+                setTimeFilter("all");
+                setSearch("");
+              }}
+              className="text-xs font-medium text-m3-on-surface-variant underline underline-offset-2 hover:text-m3-on-surface"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
+
+        <p className="text-xs text-m3-on-surface-variant">
+          {tab === "quizzes"
+            ? `Showing ${filteredQuizAttempts.length} of ${quizAttempts?.length ?? 0}`
+            : `Showing ${filteredInterviewSessions.length} of ${interviewSessions?.length ?? 0}`}
+        </p>
+
         <section className="bg-m3-surface-container-lowest rounded-xl ghost-border shadow-editorial p-4">
           {tab === "quizzes" ? (
             <QuizAttemptsTable
               attempts={filteredQuizAttempts}
               loading={quizzesLoading}
               showStudentColumn
+              emptyState={
+                (quizAttempts?.length ?? 0) === 0
+                  ? "No quiz attempts yet."
+                  : "No attempts match your filters."
+              }
               onRowClick={(a) =>
                 void navigate({
                   to: "/teacher/courses/$courseId/quiz-attempts/$attemptId",
@@ -317,6 +420,11 @@ export default function CourseAssessmentsPage() {
               sessions={filteredInterviewSessions}
               loading={interviewsLoading}
               showStudentColumn
+              emptyState={
+                (interviewSessions?.length ?? 0) === 0
+                  ? "No interview attempts yet."
+                  : "No attempts match your filters."
+              }
               onRowClick={(s) =>
                 void navigate({
                   to: "/teacher/interview-sessions/$sessionId/gap-report",
