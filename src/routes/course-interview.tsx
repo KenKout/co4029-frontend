@@ -6,11 +6,14 @@ import {
   ArrowLeft,
   ArrowRight,
   Bot,
+  Clock,
   History,
+  Infinity as InfinityIcon,
   Loader2,
   Mic,
   MicOff,
   Sparkles,
+  User,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -1532,19 +1535,35 @@ export default function CourseInterviewPage() {
   // ── Pre-start screen (mode selection) ─────────────────────────────────────
   if (!sessionId) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center px-4 py-16 sm:px-6">
-        <Link
-          to="/courses/$slug/learn"
-          params={{ slug }}
-          className="absolute left-4 top-4 inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-text-muted outline-none transition-colors hover:bg-surface-muted hover:text-text-strong focus-visible:ring-2 focus-visible:ring-primary/60 sm:left-6 sm:top-6"
-          aria-label={t("course_interview.actions.back_to_course")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t("course_interview.actions.back_to_course")}
-        </Link>
+      <div className="relative flex min-h-screen items-center justify-center px-4 py-12 sm:px-6">
+        <div className="max-w-xl w-full mx-auto space-y-4">
+          {/* Back link re-anchored just above the card so it reads as part of
+              the centered block rather than orphaned at the top of the page. */}
+          <Link
+            to="/courses/$slug/learn"
+            params={{ slug }}
+            className="inline-flex h-9 items-center gap-2 rounded-lg px-3 -ml-3 text-sm font-semibold text-text-muted outline-none transition-colors hover:bg-surface-muted hover:text-text-strong focus-visible:ring-2 focus-visible:ring-primary/60"
+            aria-label={t("course_interview.actions.back_to_course")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t("course_interview.actions.back_to_course")}
+          </Link>
 
-        <div className="max-w-2xl w-full mx-auto space-y-6">
           <GlassCard className="p-8 sm:p-10 text-center">
+            {/* Module-context eyebrow — gives the bare title a frame of
+                reference (which course / that this is an AI module interview). */}
+            <div className="mb-3 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-m3-secondary">
+              <Bot className="h-3.5 w-3.5" />
+              <span>{t("course_interview.labels.ai_interview")}</span>
+              {course?.title && (
+                <>
+                  <span className="text-m3-outline">·</span>
+                  <span className="normal-case font-semibold text-m3-on-surface-variant truncate max-w-[220px]">
+                    {course.title}
+                  </span>
+                </>
+              )}
+            </div>
             <h1 className="font-headline font-extrabold text-3xl text-m3-primary mb-3">
               {config.title}
             </h1>
@@ -1579,38 +1598,61 @@ export default function CourseInterviewPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 text-left">
-              <div className="rounded-xl bg-m3-surface-container-low p-4">
-                <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-                  {t("course_interview.labels.persona")}
-                </span>
-                <span className="text-base font-bold text-m3-primary">
-                  {config.persona === "strict"
-                    ? t("course_interview.values.persona.strict")
-                    : config.persona === "supportive"
-                      ? t("course_interview.values.persona.supportive")
-                      : t("course_interview.values.persona.neutral")}
-                </span>
+            {/* Stat tiles — icon chip + label + value. Values share one
+                consistent color/weight (the earlier design had one stat
+                arbitrarily blue); a hairline border lifts them off the card. */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+              <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+                  <User className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-[10px] text-m3-on-surface-variant uppercase font-bold tracking-wider">
+                    {t("course_interview.labels.persona")}
+                  </span>
+                  <span className="text-sm font-bold text-m3-on-surface">
+                    {config.persona === "strict"
+                      ? t("course_interview.values.persona.strict")
+                      : config.persona === "supportive"
+                        ? t("course_interview.values.persona.supportive")
+                        : t("course_interview.values.persona.neutral")}
+                  </span>
+                </div>
               </div>
-              <div className="rounded-xl bg-m3-surface-container-low p-4">
-                <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-                  {t("course_interview.labels.time")}
-                </span>
-                <span className="text-base font-bold text-m3-on-surface">
-                  {config.time_limit_minutes
-                    ? t("course_interview.values.time_limit_minutes", {
-                        minutes: config.time_limit_minutes,
-                      })
-                    : t("course_interview.values.no_limit")}
-                </span>
+              <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+                  <Clock className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-[10px] text-m3-on-surface-variant uppercase font-bold tracking-wider">
+                    {t("course_interview.labels.time")}
+                  </span>
+                  <span className="text-sm font-bold text-m3-on-surface">
+                    {config.time_limit_minutes
+                      ? t("course_interview.values.time_limit_minutes", {
+                          minutes: config.time_limit_minutes,
+                        })
+                      : t("course_interview.values.no_limit")}
+                  </span>
+                </div>
               </div>
-              <div className="rounded-xl bg-m3-surface-container-low p-4">
-                <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-                  {t("course_interview.labels.max_attempts")}
-                </span>
-                <span className="text-base font-bold text-m3-secondary">
-                  {config.max_attempts ?? t("course_interview.values.no_limit")}
-                </span>
+              <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+                  {config.max_attempts ? (
+                    <History className="h-4 w-4" />
+                  ) : (
+                    <InfinityIcon className="h-4 w-4" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-[10px] text-m3-on-surface-variant uppercase font-bold tracking-wider">
+                    {t("course_interview.labels.max_attempts")}
+                  </span>
+                  <span className="text-sm font-bold text-m3-on-surface">
+                    {config.max_attempts ??
+                      t("course_interview.values.no_limit")}
+                  </span>
+                </div>
               </div>
             </div>
 
