@@ -740,6 +740,7 @@ export default function InterviewConfigPage() {
                   configId={configId}
                   courseId={courseId}
                   moduleTitle={courseModule?.title ?? null}
+                  modules={content?.modules ?? []}
                   questions={questions ?? []}
                   outcomes={outcomes ?? []}
                   outcomeFilterSignal={outcomeFilterSignal}

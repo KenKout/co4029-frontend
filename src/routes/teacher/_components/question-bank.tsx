@@ -11,6 +11,7 @@ import {
   CircleDashed,
   CircleDot,
   FileText,
+  Layers,
   Library,
   Loader2,
   MoreVertical,
@@ -126,6 +127,8 @@ interface QuestionBankProps {
   courseId: string;
   /** Title of the module this interview belongs to (shown as a badge). */
   moduleTitle?: string | null;
+  /** Course modules (id + title) for grouping questions by source module. */
+  modules?: { id: string; title: string }[];
   questions: InterviewQuestionAuthoring[];
   outcomes: InterviewOutcomeAuthoring[];
   /**
@@ -140,6 +143,7 @@ export function QuestionBank({
   configId,
   courseId,
   moduleTitle,
+  modules = [],
   questions,
   outcomes,
   outcomeFilterSignal,
@@ -302,6 +306,69 @@ export function QuestionBank({
     sourceFilter,
     outcomeById,
   ]);
+
+  // Group filtered questions by source module for the bank display:
+  //   - one group per module (questions attributed to exactly that module)
+  //   - a dedicated "multiple modules" group for questions drawing from 2+
+  //   - an "unattributed" group for legacy rows with no module ids
+  // Groups render in course module order; multi-module + unattributed last.
+  const moduleTitleById = useMemo(
+    () => new Map(modules.map((m) => [m.id, m.title])),
+    [modules],
+  );
+  const groupedByModule = useMemo(() => {
+    const single = new Map<string, InterviewQuestionAuthoring[]>();
+    const multi: InterviewQuestionAuthoring[] = [];
+    const none: InterviewQuestionAuthoring[] = [];
+    for (const q of filtered) {
+      const ids = Array.isArray(q.source_module_ids)
+        ? q.source_module_ids
+        : [];
+      if (ids.length === 0) none.push(q);
+      else if (ids.length === 1) {
+        const key = ids[0];
+        const arr = single.get(key) ?? [];
+        arr.push(q);
+        single.set(key, arr);
+      } else multi.push(q);
+    }
+    // Order single-module groups by the course module order when known.
+    const orderedIds = [
+      ...modules.map((m) => m.id).filter((id) => single.has(id)),
+      ...[...single.keys()].filter(
+        (id) => !modules.some((m) => m.id === id),
+      ),
+    ];
+    const groups: {
+      key: string;
+      title: string;
+      kind: "module" | "multi" | "none";
+      items: InterviewQuestionAuthoring[];
+    }[] = orderedIds.map((id) => ({
+      key: id,
+      title: moduleTitleById.get(id) ?? t("teacher_interview_config.qbank.module_unknown"),
+      kind: "module",
+      items: single.get(id) ?? [],
+    }));
+    if (multi.length > 0)
+      groups.push({
+        key: "__multi__",
+        title: t("teacher_interview_config.qbank.module_multi"),
+        kind: "multi",
+        items: multi,
+      });
+    if (none.length > 0)
+      groups.push({
+        key: "__none__",
+        title: t("teacher_interview_config.qbank.module_none"),
+        kind: "none",
+        items: none,
+      });
+    return groups;
+  }, [filtered, modules, moduleTitleById, t]);
+  // Only show group headers when there's genuinely more than one group to
+  // distinguish — a single-group bank renders flat as before.
+  const showModuleGroups = groupedByModule.length > 1;
 
   const anyFilterActive =
     search.trim() !== "" ||
@@ -979,8 +1046,8 @@ export function QuestionBank({
             </Button>
           </div>
         ) : (
-          <ul className="space-y-2" role="list">
-            {filtered.map((q) => {
+          (() => {
+            const renderCard = (q: InterviewQuestionAuthoring) => {
               const displayIndex = sorted.findIndex((s) => s.id === q.id);
               return (
                 <QuestionCard
@@ -1020,8 +1087,41 @@ export function QuestionBank({
                   )}
                 />
               );
-            })}
-          </ul>
+            };
+            // Flat list when there's only one module group (or no module
+            // data); grouped sections with headers otherwise.
+            if (!showModuleGroups) {
+              return (
+                <ul className="space-y-2" role="list">
+                  {filtered.map(renderCard)}
+                </ul>
+              );
+            }
+            return (
+              <div className="space-y-5">
+                {groupedByModule.map((g) => (
+                  <div key={g.key} className="space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      {g.kind === "multi" ? (
+                        <Layers className="h-3.5 w-3.5 text-m3-secondary" />
+                      ) : (
+                        <Library className="h-3.5 w-3.5 text-m3-secondary" />
+                      )}
+                      <h4 className="text-xs font-bold uppercase tracking-wide text-m3-secondary">
+                        {g.title}
+                      </h4>
+                      <span className="text-[11px] text-m3-on-surface-variant">
+                        ({g.items.length})
+                      </span>
+                    </div>
+                    <ul className="space-y-2" role="list">
+                      {g.items.map(renderCard)}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            );
+          })()
         )}
       </div>
 

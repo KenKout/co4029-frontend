@@ -179,7 +179,12 @@ export type InterviewSubmitAnswerResponse =
     interaction_state?: string | null;
   };
 export type InterviewQuestionPublic = Schemas["InterviewQuestionPublic"];
-export type InterviewQuestionAuthoring = Schemas["InterviewQuestionAuthoring"];
+// Widen with source_module_ids (module attribution for question-bank grouping)
+// until the OpenAPI snapshot is regenerated.
+export type InterviewQuestionAuthoring =
+  Schemas["InterviewQuestionAuthoring"] & {
+    source_module_ids?: string[];
+  };
 export type InterviewQuestionCreate = Schemas["InterviewQuestionCreate"];
 export type InterviewOutcomeAuthoring = Schemas["InterviewOutcomeAuthoring"];
 export type InterviewOutcomeCreate = Schemas["InterviewOutcomeCreate"];
