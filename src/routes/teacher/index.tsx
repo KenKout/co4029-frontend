@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
+import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import {
   useTeacherCourses,
@@ -34,22 +35,18 @@ export default function TeacherDashboard() {
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-headline font-bold text-m3-primary">
-            {t("teacher_dashboard.title")}
-          </h1>
-          <p className="text-sm text-m3-on-surface-variant mt-1">
-            {t("teacher_dashboard.subtitle")}
-          </p>
-        </div>
-        <Link to="/teacher/courses/new">
-          <Button size="sm" className="gap-2">
-            <Plus className="h-4 w-4" />
-            {t("teacher_dashboard.new_course")}
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title={t("teacher_dashboard.title")}
+        subtitle={t("teacher_dashboard.subtitle")}
+        action={
+          <Link to="/teacher/courses/new">
+            <Button size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
+              {t("teacher_dashboard.new_course")}
+            </Button>
+          </Link>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

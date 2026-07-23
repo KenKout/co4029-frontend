@@ -5,6 +5,7 @@ import { Plus, BookOpen, Search, X, CheckCircle, FileEdit, Archive } from "lucid
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
+import { PageHeader } from "@/components/ui/page-header";
 import { useTeacherCourses } from "@/lib/api/hooks/teacher-courses";
 import { TeacherCourseCard } from "@/routes/teacher/_components/TeacherCourseCard";
 
@@ -50,20 +51,20 @@ export default function TeacherCoursesPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <h1 className="text-2xl font-headline font-bold text-m3-primary">
-          {t("teacher_courses_list.title")}
-        </h1>
-        <Link to="/teacher/courses/new" className="shrink-0">
-          <Button
-            size="sm"
-            className="gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <Plus className="h-4 w-4" />
-            {t("teacher_courses_list.new_course")}
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title={t("teacher_courses_list.title")}
+        action={
+          <Link to="/teacher/courses/new" className="shrink-0">
+            <Button
+              size="sm"
+              className="gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <Plus className="h-4 w-4" />
+              {t("teacher_courses_list.new_course")}
+            </Button>
+          </Link>
+        }
+      />
 
       {/* Stat strip — the per-status breakdown promoted out of the subtitle
           into scannable tiles (same visual family as the dashboard). */}
