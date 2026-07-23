@@ -63,23 +63,30 @@ export function TeacherCourseCard({
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-          <Badge className="absolute top-3 left-3 z-10 bg-black/40 text-white border border-white/20 backdrop-blur-sm text-[10px] font-semibold tracking-wide">
-            <Sparkles className="h-2.5 w-2.5 mr-1" />
-            {t("courses_list.ai_boost")}
-          </Badge>
-          {/* Status badge — teacher-relevant, overlaid top-right. */}
-          <Badge
-            className={cn(
-              "absolute top-3 right-3 z-10 border-0 text-[10px] font-semibold",
-              STATUS_COLORS[course.status] ?? "bg-slate-100 text-slate-500",
-            )}
-          >
-            {t(`teacher_dashboard.status.${course.status}`, {
-              defaultValue: course.status,
-            })}
-          </Badge>
-          <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity">
-            <GraduationCap className="h-16 w-16 text-white" />
+          {/* GraduationCap motif only on the gradient placeholder — a real
+              thumbnail shouldn't have an icon overlaid on top of it. */}
+          {!course.thumbnail_url && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity">
+              <GraduationCap className="h-16 w-16 text-white" />
+            </div>
+          )}
+          {/* AI Boost + status badges pinned bottom-right so an uploaded image
+              doesn't obscure them at the top. */}
+          <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5">
+            <Badge className="bg-black/40 text-white border border-white/20 backdrop-blur-sm text-[10px] font-semibold tracking-wide">
+              <Sparkles className="h-2.5 w-2.5 mr-1" />
+              {t("courses_list.ai_boost")}
+            </Badge>
+            <Badge
+              className={cn(
+                "border-0 text-[10px] font-semibold",
+                STATUS_COLORS[course.status] ?? "bg-slate-100 text-slate-500",
+              )}
+            >
+              {t(`teacher_dashboard.status.${course.status}`, {
+                defaultValue: course.status,
+              })}
+            </Badge>
           </div>
         </div>
 
