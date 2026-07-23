@@ -170,8 +170,6 @@ export default function InterviewGapReportPage() {
             studyPlan={report.study_plan}
             courseId={report.course_id}
           />
-
-          <CriterionBreakdown report={report} />
         </div>
 
         <div className="col-span-12 lg:col-span-5 space-y-4">
@@ -179,12 +177,25 @@ export default function InterviewGapReportPage() {
         </div>
       </div>
 
-      <TranscriptCard sessionId={sessionId} />
+      {/* Full-width like Session context + Interview transcript so the charts
+          and per-criterion notes have room to breathe. */}
+      <CriterionBreakdown report={report} />
+
+      <TranscriptCard
+        sessionId={sessionId}
+        studentName={report.student_name ?? null}
+      />
     </div>
   );
 }
 
-function TranscriptCard({ sessionId }: { sessionId: string }) {
+function TranscriptCard({
+  sessionId,
+  studentName,
+}: {
+  sessionId: string;
+  studentName: string | null;
+}) {
   const { t } = useTranslation();
   const { data, isLoading } = useInterviewTranscript(sessionId);
   const turns = data?.turns ?? [];
@@ -235,14 +246,17 @@ function TranscriptCard({ sessionId }: { sessionId: string }) {
                 key={start + idx}
                 className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-1"
               >
-                <div className="flex items-start justify-between gap-3">
-                  {turn.question_prompt ? (
-                    <p className="text-[11px] font-semibold text-m3-outline uppercase tracking-widest">
-                      {turn.question_prompt}
-                    </p>
-                  ) : (
-                    <span />
-                  )}
+                {/* Header line: speaker on the left, timestamp on the far
+                    right. The speaker label is on its own line so the timer
+                    can never collide with a long question prompt or answer. */}
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-m3-primary">
+                    {turn.role === "user" && studentName
+                      ? studentName
+                      : t(
+                          `teacher_interview_gap_report.transcript.role.${turn.role}`,
+                        )}
+                  </span>
                   {/* Relative timestamp (0:00 = first turn), pushed to the far right. */}
                   <time className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-m3-primary">
                     {formatRelativeTime(
@@ -250,13 +264,13 @@ function TranscriptCard({ sessionId }: { sessionId: string }) {
                     )}
                   </time>
                 </div>
+                {turn.question_prompt && (
+                  <p className="text-[11px] font-semibold text-m3-outline uppercase tracking-widest">
+                    {turn.question_prompt}
+                  </p>
+                )}
+                {/* Content always begins below the header line. */}
                 <p className="text-sm text-m3-on-surface leading-relaxed">
-                  <span className="font-bold mr-1.5">
-                    {t(
-                      `teacher_interview_gap_report.transcript.role.${turn.role}`,
-                    )}
-                    :
-                  </span>
                   {turn.content_text ??
                     (turn.has_audio
                       ? t("teacher_interview_gap_report.transcript.audio_only")
