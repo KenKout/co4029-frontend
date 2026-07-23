@@ -46,11 +46,22 @@ export function TeacherCourseCard({
       className="group block h-full"
     >
       <div className="flex h-full flex-col bg-card rounded-xl overflow-hidden shadow-editorial ghost-border transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-glass">
-        {/* Gradient banner */}
+        {/* Banner — the uploaded thumbnail when present, else a gradient. */}
         <div className="relative aspect-video overflow-hidden shrink-0">
-          <div
-            className={cn("absolute inset-0 bg-gradient-to-br", gradientClass)}
-          />
+          {course.thumbnail_url ? (
+            <img
+              src={course.thumbnail_url}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <div
+              className={cn(
+                "absolute inset-0 bg-gradient-to-br",
+                gradientClass,
+              )}
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           <Badge className="absolute top-3 left-3 z-10 bg-black/40 text-white border border-white/20 backdrop-blur-sm text-[10px] font-semibold tracking-wide">
             <Sparkles className="h-2.5 w-2.5 mr-1" />

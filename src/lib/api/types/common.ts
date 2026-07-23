@@ -15,6 +15,9 @@ export interface Course {
   status: "draft" | "published" | "archived";
   level: string | null;
   thumbnail_object_id: string | null;
+  // Short-TTL presigned GET URL for the course thumbnail, minted server-side.
+  // Null when no thumbnail is set — the UI falls back to the gradient banner.
+  thumbnail_url?: string | null;
   estimated_minutes: number | null;
   expected_completion_days: number | null;
   enrollment_cap: number | null;

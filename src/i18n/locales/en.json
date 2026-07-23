@@ -203,6 +203,15 @@
   },
   "teacher_course_settings": {
     "title": "Course Settings",
+    "thumbnail": {
+      "label": "Course image",
+      "change": "Change image",
+      "hint": "JPEG, PNG, WebP or GIF · up to 5 MB. Shown on course cards.",
+      "updated": "Course image updated",
+      "upload_failed": "Couldn't upload the image. Please try again.",
+      "invalid_type": "Please choose a JPEG, PNG, WebP, or GIF image.",
+      "too_large": "Image must be 5 MB or smaller."
+    },
     "status_summary_published": "Published",
     "status_summary_draft": "Draft",
     "no_level": "No level",

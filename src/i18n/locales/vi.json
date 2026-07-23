@@ -204,6 +204,15 @@
   },
   "teacher_course_settings": {
     "title": "Cài đặt khóa học",
+    "thumbnail": {
+      "label": "Ảnh khóa học",
+      "change": "Đổi ảnh",
+      "hint": "JPEG, PNG, WebP hoặc GIF · tối đa 5 MB. Hiển thị trên thẻ khóa học.",
+      "updated": "Đã cập nhật ảnh khóa học",
+      "upload_failed": "Không thể tải ảnh lên. Vui lòng thử lại.",
+      "invalid_type": "Vui lòng chọn ảnh JPEG, PNG, WebP hoặc GIF.",
+      "too_large": "Ảnh phải nhỏ hơn hoặc bằng 5 MB."
+    },
     "status_summary_published": "Đã xuất bản",
     "status_summary_draft": "Bản nháp",
     "no_level": "Chưa đặt cấp độ",

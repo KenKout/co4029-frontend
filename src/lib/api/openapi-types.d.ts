@@ -5240,6 +5240,8 @@ export interface components {
             level?: string | null;
             /** Thumbnail Object Id */
             thumbnail_object_id?: string | null;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
             /** Estimated Minutes */
             estimated_minutes?: number | null;
             /** Expected Completion Days */

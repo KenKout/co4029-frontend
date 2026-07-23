@@ -26,6 +26,8 @@ import {
   Trash2,
   X,
   Library,
+  ImageIcon,
+  Camera,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,7 @@ import {
   useCreateLesson,
   useUpdateModule,
   useUpdateCourse,
+  useUploadCourseThumbnail,
   useReorderModuleItems,
 } from "@/lib/api/hooks/teacher-courses";
 import {
@@ -105,6 +108,35 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
   const [enrollmentCap, setEnrollmentCap] = useState("");
   const [completionDays, setCompletionDays] = useState("");
   const initialized = useRef(false);
+  const uploadThumbnail = useUploadCourseThumbnail(courseId);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+
+  // Client-side guardrails mirroring the backend (JPEG/PNG/WebP/GIF, ≤ 5 MiB).
+  const THUMB_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
+  const THUMB_MAX_BYTES = 5 * 1024 * 1024;
+
+  function handleThumbnailFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+    if (!THUMB_ACCEPT.split(",").includes(file.type)) {
+      toast.error(t("teacher_course_settings.thumbnail.invalid_type"));
+      return;
+    }
+    if (file.size > THUMB_MAX_BYTES) {
+      toast.error(t("teacher_course_settings.thumbnail.too_large"));
+      return;
+    }
+    uploadThumbnail.mutate(file, {
+      onSuccess: () =>
+        toast.success(t("teacher_course_settings.thumbnail.updated")),
+      onError: (err) =>
+        toast.error(
+          (err as Error).message ||
+            t("teacher_course_settings.thumbnail.upload_failed"),
+        ),
+    });
+  }
 
   if (course && !initialized.current) {
     initialized.current = true;
@@ -201,6 +233,69 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
             className="p-5 border-t border-m3-outline-variant/10 bg-m3-surface space-y-5"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Thumbnail — the image representing this course on cards.
+                  Click the banner (or the button) to upload a new one. */}
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("teacher_course_settings.thumbnail.label")}
+                </label>
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => thumbnailInputRef.current?.click()}
+                    disabled={uploadThumbnail.isPending}
+                    aria-label={t("teacher_course_settings.thumbnail.change")}
+                    className="group relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg ghost-border focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed"
+                  >
+                    {course?.thumbnail_url ? (
+                      <img
+                        src={course.thumbnail_url}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-500 via-blue-700 to-blue-800">
+                        <ImageIcon className="h-6 w-6 text-white/70" />
+                      </div>
+                    )}
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                      {uploadThumbnail.isPending ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-white" />
+                      ) : (
+                        <Camera className="h-5 w-5 text-white" />
+                      )}
+                    </span>
+                  </button>
+                  <div className="min-w-0">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={uploadThumbnail.isPending}
+                      onClick={() => thumbnailInputRef.current?.click()}
+                      className="gap-1.5"
+                    >
+                      {uploadThumbnail.isPending ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Camera className="h-3.5 w-3.5" />
+                      )}
+                      {t("teacher_course_settings.thumbnail.change")}
+                    </Button>
+                    <p className="mt-1 text-xs text-m3-on-surface-variant">
+                      {t("teacher_course_settings.thumbnail.hint")}
+                    </p>
+                  </div>
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept={THUMB_ACCEPT}
+                    onChange={handleThumbnailFile}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
               {/* Title */}
               <div className="sm:col-span-2 space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">

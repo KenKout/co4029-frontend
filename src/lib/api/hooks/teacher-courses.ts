@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiDelete, apiFetch, apiPatch, apiPost, apiPut } from "../client";
+import { authenticatedFetch } from "../../auth";
 import { queryKeys } from "../query-keys";
 import type {
   CourseAuthoring,
@@ -146,6 +147,49 @@ export function useUpdateCourse(courseId: string) {
   return useMutation({
     mutationFn: (payload: CourseUpdate) =>
       apiPatch<CourseAuthoring>(`/teacher/courses/${courseId}`, payload),
+    onSuccess: (course) => {
+      qc.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
+      qc.invalidateQueries({ queryKey: queryKeys.courses.bySlug(course.slug) });
+      qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
+      qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
+      qc.invalidateQueries({ queryKey: ["teacher", "courses", courseId] });
+    },
+  });
+}
+
+// Uploads the raw image bytes as the PUT body with the file's MIME type in the
+// Content-Type header (the backend reads request.body(), no multipart wrapper).
+export function useUploadCourseThumbnail(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File): Promise<CourseAuthoring> => {
+      const response = await authenticatedFetch(
+        `/teacher/courses/${courseId}/thumbnail`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": file.type || "application/octet-stream" },
+          body: file,
+        },
+      );
+      if (!response.ok) {
+        let detail = response.statusText;
+        try {
+          const payload: unknown = await response.json();
+          if (
+            payload &&
+            typeof payload === "object" &&
+            "detail" in payload &&
+            typeof (payload as { detail: unknown }).detail === "string"
+          ) {
+            detail = (payload as { detail: string }).detail;
+          }
+        } catch {
+          // keep statusText
+        }
+        throw new Error(detail);
+      }
+      return (await response.json()) as CourseAuthoring;
+    },
     onSuccess: (course) => {
       qc.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.bySlug(course.slug) });
