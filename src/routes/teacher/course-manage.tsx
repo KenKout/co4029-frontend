@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -138,6 +138,11 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
     });
   }
 
+  // Briefly true right after a successful save so the header can show a
+  // transient "Saved" confirmation (cleared once edits resume or the timer
+  // elapses) — mirrors the interview-config save UX.
+  const [justSaved, setJustSaved] = useState(false);
+
   if (course && !initialized.current) {
     initialized.current = true;
     setTitle(course.title ?? "");
@@ -149,6 +154,33 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
     setEnrollmentCap(course.enrollment_cap?.toString() ?? "");
     setCompletionDays(course.expected_completion_days?.toString() ?? "");
   }
+
+  // Compare the current form against the saved course so the button can show
+  // Saving… / Unsaved changes / Saved and disable itself when there's nothing
+  // to save (matches the interview-config settings behaviour).
+  const settingsDirty = useMemo(() => {
+    if (!course) return false;
+    return (
+      title.trim() !== (course.title ?? "") ||
+      slug.trim() !== (course.slug ?? "") ||
+      description.trim() !== (course.description ?? "") ||
+      level !== (course.level ?? "") ||
+      status !== (course.status ?? "draft") ||
+      estimatedMinutes !== (course.estimated_minutes?.toString() ?? "") ||
+      enrollmentCap !== (course.enrollment_cap?.toString() ?? "") ||
+      completionDays !== (course.expected_completion_days?.toString() ?? "")
+    );
+  }, [
+    course,
+    title,
+    slug,
+    description,
+    level,
+    status,
+    estimatedMinutes,
+    enrollmentCap,
+    completionDays,
+  ]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -175,6 +207,8 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
           ? Number(completionDays)
           : undefined,
       });
+      setJustSaved(true);
+      window.setTimeout(() => setJustSaved(false), 2500);
       toast.success(t("teacher_course_settings.saved"));
     } catch (err: unknown) {
       toast.error(
@@ -444,11 +478,45 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
               </div>
             </div>
 
-            <div className="flex justify-end pt-1">
+            <div className="flex items-center justify-end gap-3 pt-1">
+              {/* Save-state indicator beside the button — Saving… / Unsaved
+                  changes / Saved — so the teacher always knows whether their
+                  edits are persisted (mirrors the interview-config save UX). */}
+              {updateCourse.isPending ? (
+                <span
+                  role="status"
+                  aria-live="polite"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-m3-on-surface-variant"
+                >
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                  {t("teacher_course_settings.save_status.saving")}
+                </span>
+              ) : settingsDirty ? (
+                <span
+                  role="status"
+                  aria-live="polite"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700"
+                >
+                  <span
+                    className="h-2 w-2 rounded-full bg-amber-500"
+                    aria-hidden
+                  />
+                  {t("teacher_course_settings.save_status.unsaved")}
+                </span>
+              ) : justSaved ? (
+                <span
+                  role="status"
+                  aria-live="polite"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600"
+                >
+                  <Check className="h-3.5 w-3.5" aria-hidden />
+                  {t("teacher_course_settings.save_status.saved")}
+                </span>
+              ) : null}
               <Button
                 type="submit"
                 size="sm"
-                disabled={updateCourse.isPending}
+                disabled={updateCourse.isPending || !settingsDirty}
                 className="gap-2 gradient-primary text-white border-0 shadow-sm"
               >
                 {updateCourse.isPending ? (

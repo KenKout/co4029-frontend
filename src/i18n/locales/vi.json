@@ -238,9 +238,14 @@
     "enrollment_cap_placeholder": "Để trống nếu không giới hạn",
     "expected_completion": "Thời gian hoàn thành dự kiến (ngày)",
     "expected_completion_placeholder": "vd. 30",
-    "save": "Lưu cài đặt khóa học",
+    "save": "Lưu",
     "saved": "Đã lưu cài đặt khóa học",
-    "save_failed": "Lưu thất bại"
+    "save_failed": "Lưu thất bại",
+    "save_status": {
+      "saving": "Đang lưu…",
+      "saved": "Đã lưu",
+      "unsaved": "Có thay đổi chưa lưu"
+    }
   },
   "teacher_quiz_attempt": {
     "load_failed": "Không tải được lượt làm này.",

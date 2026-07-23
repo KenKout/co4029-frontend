@@ -237,9 +237,14 @@
     "enrollment_cap_placeholder": "Leave empty for unlimited",
     "expected_completion": "Expected Completion (days)",
     "expected_completion_placeholder": "e.g. 30",
-    "save": "Save Course Settings",
+    "save": "Save",
     "saved": "Course settings saved",
-    "save_failed": "Save failed"
+    "save_failed": "Save failed",
+    "save_status": {
+      "saving": "Saving…",
+      "saved": "Saved",
+      "unsaved": "Unsaved changes"
+    }
   },
   "teacher_quiz_attempt": {
     "load_failed": "Couldn't load this attempt.",
