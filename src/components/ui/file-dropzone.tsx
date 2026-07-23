@@ -56,23 +56,36 @@ export function FileDropzone({
   // exposes during dragover). Drives the file-type logo while dragging.
   const [dragMime, setDragMime] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Drag-enter/leave nesting counter. dragenter/dragleave fire for EVERY
+  // element the cursor crosses (root AND its children), so a naive
+  // setDragging(false) on dragleave flickers wildly as you move over the
+  // inner icon/text. Counting enters minus leaves means we only clear the
+  // dragging state when the count returns to zero — i.e. the cursor has
+  // truly left the whole dropzone, not just moved onto a child.
+  const dragDepth = useRef(0);
+
+  const resetDrag = useCallback(() => {
+    dragDepth.current = 0;
+    setDragging(false);
+    setDragMime(null);
+  }, []);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
-      setDragging(false);
-      setDragMime(null);
+      resetDrag();
       if (disabled) return;
       const file = e.dataTransfer.files[0];
       if (file) onFile(file);
     },
-    [onFile, disabled],
+    [onFile, disabled, resetDrag],
   );
 
-  const handleDragOver = useCallback(
+  const handleDragEnter = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       if (disabled) return;
+      dragDepth.current += 1;
       setDragging(true);
       // dataTransfer.items carries the kind/type during drag; files[] is empty
       // until drop. Read the first item's MIME to pick the logo.
@@ -81,6 +94,28 @@ export function FileDropzone({
       setDragMime((prev) => (prev === mime ? prev : mime));
     },
     [disabled],
+  );
+
+  const handleDragOver = useCallback(
+    (e: React.DragEvent) => {
+      // Must preventDefault on every dragover or the browser rejects the drop
+      // (and navigates to / opens the file instead). Show the copy cursor.
+      e.preventDefault();
+      if (!disabled) e.dataTransfer.dropEffect = "copy";
+    },
+    [disabled],
+  );
+
+  const handleDragLeave = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      dragDepth.current = Math.max(0, dragDepth.current - 1);
+      if (dragDepth.current === 0) {
+        setDragging(false);
+        setDragMime(null);
+      }
+    },
+    [],
   );
 
   const kind = fileKind({ mime: dragMime });
@@ -94,11 +129,9 @@ export function FileDropzone({
       tabIndex={blocked ? -1 : 0}
       aria-disabled={blocked}
       aria-busy={busy}
+      onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
-      onDragLeave={() => {
-        setDragging(false);
-        setDragMime(null);
-      }}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={() => !blocked && inputRef.current?.click()}
       onKeyDown={(e) => {
@@ -108,11 +141,16 @@ export function FileDropzone({
         }
       }}
       className={cn(
-        "relative cursor-pointer rounded-xl border-2 text-center transition-all duration-200 outline-none",
+        // NOTE: no scale/transform on the drag-active state. A transform
+        // resizes the hit box, and if the user releases on a frame where it
+        // just resized, the drop can land outside the element → the browser
+        // opens the file instead. Keep the box geometry stable; only the
+        // border + background change.
+        "relative cursor-pointer rounded-xl border-2 text-center transition-colors duration-200 outline-none",
         compact ? "p-5" : "p-10",
         "focus-visible:ring-2 focus-visible:ring-m3-secondary/60",
         dragging
-          ? "dropzone-spin-border bg-m3-secondary-fixed/25 scale-[1.01]"
+          ? "dropzone-spin-border bg-m3-secondary-fixed/25"
           : "border-dashed border-m3-outline-variant/40 hover:border-m3-secondary hover:bg-m3-surface-container-low/60",
         blocked && "pointer-events-none opacity-50",
         className,
@@ -135,9 +173,12 @@ export function FileDropzone({
 
       {busy ? (
         // Upload in flight: spinner + label, no drag/click affordance.
+        // pointer-events-none on all inner content so children never become
+        // drag targets (redundant with the depth counter, but it also stops
+        // any stray hover/flicker at the child boundary — belt and braces).
         <div
           className={cn(
-            "flex items-center justify-center",
+            "pointer-events-none flex items-center justify-center",
             compact ? "gap-3" : "flex-col gap-3",
           )}
         >
@@ -156,7 +197,7 @@ export function FileDropzone({
         // ring is the border; the logo pulses to signal "release here".
         <div
           className={cn(
-            "flex items-center justify-center",
+            "pointer-events-none flex items-center justify-center",
             compact ? "gap-3" : "flex-col gap-3",
           )}
         >
@@ -175,7 +216,7 @@ export function FileDropzone({
           </div>
         </div>
       ) : (
-        <>
+        <div className="pointer-events-none">
           <div
             className={cn(
               "flex items-center justify-center",
@@ -213,7 +254,7 @@ export function FileDropzone({
               )}
             </>
           )}
-        </>
+        </div>
       )}
     </div>
   );
