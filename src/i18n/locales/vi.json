@@ -1708,6 +1708,8 @@
       "preparing_question": "Người phỏng vấn AI đang chuẩn bị câu hỏi…",
       "preparing_greeting": "Người phỏng vấn AI đang tham gia…",
       "preparing_goodbye": "Người phỏng vấn AI đang kết thúc buổi phỏng vấn…",
+      "wrap_up_hint": "Các câu hỏi kết thúc này không được chấm điểm. Bạn có thể trả lời, hoặc chuyển thẳng đến kết quả.",
+      "skip_and_finish": "Bỏ qua & kết thúc",
       "transcript": "Bản ghi phỏng vấn",
       "answer_composer": "Trình soạn câu trả lời",
       "answer_placeholder": "Nhập câu trả lời hoặc bắt đầu nói…",
@@ -1900,7 +1902,8 @@
       "gap_report": "Báo cáo lỗ hổng",
       "gap_report_pending": "Đang chuẩn bị báo cáo lỗ hổng cá nhân hóa… có thể mất một phút.",
       "study_plan": "Kế hoạch học tập",
-      "follow_up": "Tiếp theo"
+      "follow_up": "Tiếp theo",
+      "wrap_up": "Kết thúc"
     },
     "labels": {
       "persona": "Phong cách",

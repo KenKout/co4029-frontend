@@ -1718,6 +1718,8 @@
       "preparing_question": "AI interviewer is preparing the question…",
       "preparing_greeting": "AI interviewer is joining you…",
       "preparing_goodbye": "AI interviewer is wrapping up…",
+      "wrap_up_hint": "These closing questions aren't graded. Answer them, or skip straight to your results.",
+      "skip_and_finish": "Skip & finish",
       "transcript": "Interview transcript",
       "answer_composer": "Answer composer",
       "answer_placeholder": "Type your answer or start speaking…",
@@ -1910,7 +1912,8 @@
       "gap_report": "Gap report",
       "gap_report_pending": "Preparing your personalized gap report… this can take a minute.",
       "study_plan": "Study plan",
-      "follow_up": "Follow-up"
+      "follow_up": "Follow-up",
+      "wrap_up": "Wrap-up"
     },
     "labels": {
       "persona": "Persona",

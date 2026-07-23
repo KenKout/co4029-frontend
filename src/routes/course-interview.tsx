@@ -69,6 +69,7 @@ import {
   CONFIRM_END_REPLY,
   endConfirmationPrompt,
   isAwaitingEndConfirmation,
+  isClosingTurn,
 } from "@/lib/interview/end-confirmation";
 import { useAnswerState } from "@/lib/interview/use-answer-state";
 import { normalizeQuestionText } from "@/lib/interview/question-content";
@@ -279,6 +280,11 @@ export default function CourseInterviewPage() {
   } | null>(null);
   const [finishResult, setFinishResult] =
     useState<InterviewSessionFinishResponse | null>(null);
+  // True once a rich-closing sub-step (self-reflection / invite-questions) has
+  // been surfaced. The assessed questions are already complete at this point,
+  // so the composer offers a Skip-and-finish control that ends the interview
+  // and goes straight to the Evaluation screen (grading is unaffected).
+  const [closingCeremonyActive, setClosingCeremonyActive] = useState(false);
   const [inputMode, setInputMode] = useState<"voice" | "text" | "hybrid">(
     "text",
   );
@@ -1146,25 +1152,46 @@ export default function CourseInterviewPage() {
           : result.ai_followup_text || null;
 
       if (standaloneText && !finished) {
-        const assistanceTurnKind =
-          result.assistance_kind === "hint"
-            ? "hint"
-            : result.assistance_kind === "clarification" ||
-                result.assistance_kind === "term"
-              ? "clarification"
-              : "followup";
-        setTranscript((prev) => [
-          ...prev,
-          makeFollowUpTurn(
-            standaloneText,
-            `${submissionId}-fu`,
-            currentElapsedSeconds(),
-            assistanceTurnKind,
-          ),
-        ]);
-        // A probe/clarification on the SAME question re-opens the answer so the
-        // candidate can respond again; the confirmation collapses to "previous".
-        if (!isAdvance) reopenForFollowUp();
+        const closing = isClosingTurn(result);
+        if (closing) {
+          // Rich-closing sub-step (self-reflection / invite-questions): NON-
+          // assessed ceremony. Tag it `kind: "closing"` so the transcript
+          // groups it under a "Wrap-up" section (never "Question N"), and flag
+          // the ceremony so the composer offers a Skip-and-finish control.
+          setTranscript((prev) => [
+            ...prev,
+            {
+              id: `c-${submissionId}`,
+              role: "ai",
+              text: standaloneText,
+              elapsedSeconds: currentElapsedSeconds(),
+              kind: "closing",
+            },
+          ]);
+          setClosingCeremonyActive(true);
+          reopenForFollowUp();
+        } else {
+          const assistanceTurnKind =
+            result.assistance_kind === "hint"
+              ? "hint"
+              : result.assistance_kind === "clarification" ||
+                  result.assistance_kind === "term"
+                ? "clarification"
+                : "followup";
+          setTranscript((prev) => [
+            ...prev,
+            makeFollowUpTurn(
+              standaloneText,
+              `${submissionId}-fu`,
+              currentElapsedSeconds(),
+              assistanceTurnKind,
+            ),
+          ]);
+          // A probe/clarification on the SAME question re-opens the answer so
+          // the candidate can respond again; the confirmation collapses to
+          // "previous".
+          if (!isAdvance) reopenForFollowUp();
+        }
       }
 
       // Decide the transition to present (spec §Frontend Sequencing + §ending).
@@ -1836,6 +1863,26 @@ export default function CourseInterviewPage() {
               !onboarding.isPending
             }
           />
+
+          {closingCeremonyActive && phase === "questioning" && (
+            <div className="shrink-0 border-t border-border bg-primary-soft/40 px-4 py-3">
+              <div className="mx-auto flex max-w-[840px] flex-wrap items-center justify-between gap-3">
+                <p className="text-xs text-text-muted">
+                  {t("course_interview.workspace.wrap_up_hint")}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={respond.isPending}
+                  onClick={() => void beginClosing("natural")}
+                  className="gap-1.5 bg-white"
+                >
+                  {t("course_interview.workspace.skip_and_finish")}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {(currentQuestion && phase === "questioning") ||
           phase === "opening" ||

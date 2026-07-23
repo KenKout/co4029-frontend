@@ -513,7 +513,11 @@ export function ConversationMessage({
             <span className="text-xs font-semibold text-text-strong">
               {t("course_interview.workspace.ai_interviewer")}
             </span>
-            {turn.isFollowUp ? (
+            {turn.kind === "closing" ? (
+              <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                {t("course_interview.sections.wrap_up")}
+              </span>
+            ) : turn.isFollowUp ? (
               <span className="text-[11px] font-medium text-text-subtle">
                 {t("course_interview.sections.follow_up")}
               </span>
