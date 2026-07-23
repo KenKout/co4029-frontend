@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -132,6 +132,64 @@ export default function CourseStudentDetailPage() {
     useStudentQuizAttempts(courseId, studentId);
   const { data: interviewSessions, isLoading: interviewSessionsLoading } =
     useStudentInterviewSessions(courseId, studentId);
+
+  // ── Interview attempt filters (Interview / Result / Time) ──
+  const [ivInterviewFilter, setIvInterviewFilter] = useState("all");
+  const [ivResultFilter, setIvResultFilter] = useState("all");
+  const [ivTimeFilter, setIvTimeFilter] = useState("all");
+
+  const ivTimeCutoff = useMemo(() => {
+    if (ivTimeFilter === "all") return null;
+    const days = ivTimeFilter === "today" ? 1 : Number(ivTimeFilter);
+    return Date.now() - days * 24 * 60 * 60 * 1000;
+  }, [ivTimeFilter]);
+
+  // Distinct interview titles this student attempted, for the Interview dropdown.
+  const ivInterviewTitles = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of interviewSessions ?? []) set.add(s.interview_config_title);
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [interviewSessions]);
+
+  const filteredInterviewSessions = useMemo(() => {
+    return (interviewSessions ?? []).filter((s) => {
+      if (
+        ivInterviewFilter !== "all" &&
+        s.interview_config_title !== ivInterviewFilter
+      )
+        return false;
+      if (ivResultFilter !== "all") {
+        const r =
+          s.status === "in_progress"
+            ? "in_progress"
+            : s.status === "failed"
+              ? "failed"
+              : s.status === "abandoned"
+                ? "not_graded"
+                : s.pass_verdict === true
+                  ? "passed"
+                  : s.pass_verdict === false
+                    ? "not_passed"
+                    : "evaluating";
+        if (r !== ivResultFilter) return false;
+      }
+      if (ivTimeCutoff != null) {
+        const ts = new Date(s.started_at).getTime();
+        if (Number.isNaN(ts) || ts < ivTimeCutoff) return false;
+      }
+      return true;
+    });
+  }, [
+    interviewSessions,
+    ivInterviewFilter,
+    ivResultFilter,
+    ivTimeCutoff,
+  ]);
+
+  const ivFiltersActive =
+    ivInterviewFilter !== "all" ||
+    ivResultFilter !== "all" ||
+    ivTimeFilter !== "all";
 
   const student = roster?.students.find((s) => s.student_id === studentId);
   const updateEnrollment = useUpdateEnrollment(
@@ -373,14 +431,73 @@ export default function CourseStudentDetailPage() {
 
           {/* Interview attempts */}
           <section className="bg-m3-surface-container-lowest rounded-xl p-6 ghost-border shadow-editorial space-y-4">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-m3-secondary" />
-              <h2 className="font-headline font-bold text-lg text-m3-on-surface">
-                Interview Attempts
-              </h2>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-m3-secondary" />
+                <h2 className="font-headline font-bold text-lg text-m3-on-surface">
+                  Interview Attempts
+                </h2>
+              </div>
+              {/* Filters: Interview / Result / Time — mirror the course
+                  Assessments page so teachers get the same controls here. */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <select
+                  value={ivInterviewFilter}
+                  onChange={(e) => setIvInterviewFilter(e.target.value)}
+                  className="h-8 rounded-lg border border-m3-outline-variant/40 bg-m3-surface-container-lowest px-2 text-xs text-m3-on-surface"
+                  aria-label="Filter by interview"
+                >
+                  <option value="all">All interviews</option>
+                  {ivInterviewTitles.map((title) => (
+                    <option key={title} value={title}>
+                      {title}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={ivResultFilter}
+                  onChange={(e) => setIvResultFilter(e.target.value)}
+                  className="h-8 rounded-lg border border-m3-outline-variant/40 bg-m3-surface-container-lowest px-2 text-xs text-m3-on-surface"
+                  aria-label="Filter by result"
+                >
+                  <option value="all">All results</option>
+                  <option value="passed">Passed</option>
+                  <option value="not_passed">Not passed</option>
+                  <option value="evaluating">Evaluating</option>
+                  <option value="in_progress">In progress</option>
+                  <option value="failed">Evaluation failed</option>
+                  <option value="not_graded">Not graded</option>
+                </select>
+                <select
+                  value={ivTimeFilter}
+                  onChange={(e) => setIvTimeFilter(e.target.value)}
+                  className="h-8 rounded-lg border border-m3-outline-variant/40 bg-m3-surface-container-lowest px-2 text-xs text-m3-on-surface"
+                  aria-label="Filter by time"
+                >
+                  <option value="all">All time</option>
+                  <option value="today">Last 24 hours</option>
+                  <option value="7">Last 7 days</option>
+                  <option value="30">Last 30 days</option>
+                  <option value="90">Last 90 days</option>
+                </select>
+                {ivFiltersActive && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={() => {
+                      setIvInterviewFilter("all");
+                      setIvResultFilter("all");
+                      setIvTimeFilter("all");
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
             </div>
             <InterviewSessionsTable
-              sessions={interviewSessions ?? []}
+              sessions={filteredInterviewSessions}
               loading={interviewSessionsLoading}
               showStudentColumn={false}
               onRowClick={(s) =>

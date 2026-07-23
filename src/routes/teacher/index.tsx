@@ -11,17 +11,10 @@ import {
   Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { useTeacherCourses } from "@/lib/api/hooks/teacher-courses";
-import { cn } from "@/lib/utils";
-
-const STATUS_COLORS: Record<string, string> = {
-  published: "bg-emerald-100 text-emerald-700",
-  draft: "bg-amber-50 text-amber-700",
-  archived: "bg-slate-100 text-slate-500",
-};
+import { TeacherCourseCard } from "@/routes/teacher/_components/TeacherCourseCard";
 
 export default function TeacherDashboard() {
   const { t } = useTranslation();
@@ -90,12 +83,15 @@ export default function TeacherDashboard() {
         />
 
         {isLoading ? (
-          <div className="grid gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 mt-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-40 bg-m3-surface-container animate-pulse rounded-xl"
-              />
+              <div key={i} className="rounded-xl ghost-border overflow-hidden">
+                <div className="aspect-video bg-m3-surface-container animate-pulse" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 w-3/4 bg-m3-surface-container animate-pulse rounded" />
+                  <div className="h-3 w-1/2 bg-m3-surface-container animate-pulse rounded" />
+                </div>
+              </div>
             ))}
           </div>
         ) : courses.length === 0 ? (
@@ -115,56 +111,9 @@ export default function TeacherDashboard() {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-3">
-            {courses.slice(0, 6).map((course) => (
-              <Link
-                key={course.id}
-                to="/teacher/courses/$courseId"
-                params={{ courseId: course.id }}
-                className="group block h-full"
-              >
-                <div className="flex h-full flex-col bg-card rounded-xl p-5 shadow-editorial ghost-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="flex-1 min-w-0 font-headline font-semibold text-sm text-m3-on-surface line-clamp-2">
-                      {course.title}
-                    </h3>
-                    <Badge
-                      className={cn(
-                        "shrink-0 text-[10px] font-semibold border-0",
-                        STATUS_COLORS[course.status] ??
-                          "bg-slate-100 text-slate-500",
-                      )}
-                    >
-                      {t(`teacher_dashboard.status.${course.status}`, {
-                        defaultValue: course.status,
-                      })}
-                    </Badge>
-                  </div>
-                  {/* Fixed-height description slot so cards with and without a
-                      description keep the same overall height and the meta row
-                      lines up across the grid. */}
-                  <p className="text-xs text-m3-on-surface-variant mt-1.5 line-clamp-2 min-h-[2rem]">
-                    {course.description ?? ""}
-                  </p>
-                  {/* Meta row pinned to the bottom via mt-auto so every card's
-                      footer aligns regardless of title/description length. */}
-                  <div className="mt-auto pt-3 flex items-center gap-2 text-[11px] text-m3-on-surface-variant">
-                    {course.level && (
-                      <span className="px-1.5 py-0.5 bg-m3-surface-container rounded-md font-medium">
-                        {t(`teacher_dashboard.level.${course.level}`, {
-                          defaultValue: course.level,
-                        })}
-                      </span>
-                    )}
-                    {course.estimated_minutes && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {Math.round(course.estimated_minutes / 60)}h
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </Link>
+          <div className="grid gap-5 mt-4 sm:grid-cols-2 lg:grid-cols-3">
+            {courses.slice(0, 6).map((course, i) => (
+              <TeacherCourseCard key={course.id} course={course} index={i} />
             ))}
           </div>
         )}
