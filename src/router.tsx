@@ -9,6 +9,7 @@ import {
 
 import { getStoredAuthSession } from "@/lib/auth";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { MfaGate } from "@/components/auth/MfaGate";
 import { Toaster } from "sonner";
 
@@ -571,7 +572,13 @@ const routeTree = rootRoute.addChildren([
   callbackRoute,
 ]);
 
-export const router = createRouter({ routeTree });
+export const router = createRouter({
+  routeTree,
+  // Without a default error component, any uncaught render error in a route
+  // blanks the whole app to a white screen. This catches it per-route and
+  // shows a readable fallback + the actual error message.
+  defaultErrorComponent: RouteErrorBoundary,
+});
 
 declare module "@tanstack/react-router" {
   interface Register {
