@@ -37,8 +37,16 @@ function CourseProgressCard({ course }: { course: Course }) {
       className="group bg-m3-surface-container-lowest rounded-xl shadow-editorial ghost-border p-6 flex flex-col gap-4 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
     >
       <div className="relative h-32 rounded-xl overflow-hidden bg-gradient-to-br from-m3-primary to-m3-secondary flex items-center justify-center">
-        <GraduationCap className="h-10 w-10 text-white/60" />
-        <div className="absolute top-3 right-3">
+        {course.thumbnail_url ? (
+          <img
+            src={course.thumbnail_url}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <GraduationCap className="h-10 w-10 text-white/60" />
+        )}
+        <div className="absolute top-3 right-3 z-10">
           <Badge className="bg-m3-secondary-fixed text-m3-on-secondary-fixed border-0 text-xs font-medium">
             {t("dashboard.enrolled_badge")}
           </Badge>
