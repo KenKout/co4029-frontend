@@ -7,7 +7,12 @@ interface SectionHeaderProps {
   className?: string;
 }
 
-export function SectionHeader({ title, subtitle, action, className }: SectionHeaderProps) {
+export function SectionHeader({
+  title,
+  subtitle,
+  action,
+  className,
+}: SectionHeaderProps) {
   return (
     <div className={cn("flex items-start justify-between gap-4", className)}>
       <div>

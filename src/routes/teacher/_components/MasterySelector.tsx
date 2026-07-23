@@ -35,9 +35,21 @@ export interface MasteryValues {
  * (coverage_threshold).
  */
 export const MASTERY_PRESETS: Record<MasteryPresetKey, MasteryValues> = {
-  gentle: { initial_ef: "2.5", min_ef_for_unlock: "2.0", coverage_threshold: "70" },
-  balanced: { initial_ef: "2.5", min_ef_for_unlock: "2.3", coverage_threshold: "85" },
-  rigorous: { initial_ef: "2.5", min_ef_for_unlock: "2.4", coverage_threshold: "95" },
+  gentle: {
+    initial_ef: "2.5",
+    min_ef_for_unlock: "2.0",
+    coverage_threshold: "70",
+  },
+  balanced: {
+    initial_ef: "2.5",
+    min_ef_for_unlock: "2.3",
+    coverage_threshold: "85",
+  },
+  rigorous: {
+    initial_ef: "2.5",
+    min_ef_for_unlock: "2.4",
+    coverage_threshold: "95",
+  },
 };
 
 const PRESET_ORDER: MasteryPresetKey[] = ["gentle", "balanced", "rigorous"];
@@ -55,7 +67,9 @@ function num(value: string): number | null {
  * so a fresh quiz reads as Balanced rather than Custom. Anything that doesn't
  * match a preset within tolerance is "custom".
  */
-export function detectPreset(values: MasteryValues): MasteryPresetKey | "custom" {
+export function detectPreset(
+  values: MasteryValues,
+): MasteryPresetKey | "custom" {
   const ef = num(values.initial_ef);
   const unlock = num(values.min_ef_for_unlock);
   const coverage = num(values.coverage_threshold);
@@ -64,11 +78,14 @@ export function detectPreset(values: MasteryValues): MasteryPresetKey | "custom"
 
   for (const key of PRESET_ORDER) {
     const preset = MASTERY_PRESETS[key];
-    const efMatch = ef !== null && Math.abs(ef - Number(preset.initial_ef)) < 0.001;
+    const efMatch =
+      ef !== null && Math.abs(ef - Number(preset.initial_ef)) < 0.001;
     const unlockMatch =
-      unlock !== null && Math.abs(unlock - Number(preset.min_ef_for_unlock)) < 0.001;
+      unlock !== null &&
+      Math.abs(unlock - Number(preset.min_ef_for_unlock)) < 0.001;
     const coverageMatch =
-      coverage !== null && Math.abs(coverage - Number(preset.coverage_threshold)) < 0.001;
+      coverage !== null &&
+      Math.abs(coverage - Number(preset.coverage_threshold)) < 0.001;
     if (efMatch && unlockMatch && coverageMatch) return key;
   }
   return "custom";
@@ -112,7 +129,9 @@ export function MasterySelector({ values, onPatch }: MasterySelectorProps) {
                   )}
                 />
                 <span className="font-headline font-extrabold text-sm text-m3-on-surface">
-                  {t(`teacher_quiz_manage.settings.spacing.presets.${key}.name`)}
+                  {t(
+                    `teacher_quiz_manage.settings.spacing.presets.${key}.name`,
+                  )}
                 </span>
               </div>
               <p className="text-xs text-m3-on-surface-variant leading-relaxed">
@@ -148,7 +167,9 @@ export function MasterySelector({ values, onPatch }: MasterySelectorProps) {
             {t("teacher_quiz_manage.settings.spacing.advanced.toggle")}
             {selected === "custom" && (
               <span className="ml-2 normal-case tracking-normal text-m3-primary font-semibold">
-                {t("teacher_quiz_manage.settings.spacing.advanced.custom_badge")}
+                {t(
+                  "teacher_quiz_manage.settings.spacing.advanced.custom_badge",
+                )}
               </span>
             )}
           </span>

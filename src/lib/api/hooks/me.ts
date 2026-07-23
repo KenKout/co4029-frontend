@@ -19,8 +19,7 @@ export function useMyEnrollments() {
 export function useMyEnrollment(courseId: string | null | undefined) {
   return useQuery({
     queryKey: queryKeys.me.enrollment(courseId ?? ""),
-    queryFn: () =>
-      apiFetch<EnrollmentRead>(`/me/enrollments/${courseId}`),
+    queryFn: () => apiFetch<EnrollmentRead>(`/me/enrollments/${courseId}`),
     enabled: Boolean(courseId),
     staleTime: 1000 * 60,
     retry: retryUnless404,

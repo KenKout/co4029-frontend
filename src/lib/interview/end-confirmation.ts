@@ -42,5 +42,7 @@ export function endConfirmationPrompt(
   result: RespondEndConfirmationFields,
   fallback: string,
 ): string {
-  return (result.ai_turn_text || result.ai_followup_text || "").trim() || fallback;
+  return (
+    (result.ai_turn_text || result.ai_followup_text || "").trim() || fallback
+  );
 }

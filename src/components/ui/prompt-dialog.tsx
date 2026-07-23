@@ -83,11 +83,7 @@ export function PromptDialog({
                 </Button>
               }
             />
-            <Button
-              type="button"
-              onClick={onConfirm}
-              disabled={isPending}
-            >
+            <Button type="button" onClick={onConfirm} disabled={isPending}>
               {confirmLabel}
             </Button>
           </div>

@@ -10,7 +10,8 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
-        secondary: "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
+        secondary:
+          "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
         destructive: "bg-destructive/10 text-destructive",
         outline: "border-border text-foreground",
         ghost: "hover:bg-muted hover:text-muted-foreground",
@@ -20,7 +21,7 @@ const badgeVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  }
+  },
 );
 
 function Badge({
@@ -33,7 +34,7 @@ function Badge({
     defaultTagName: "span",
     props: mergeProps<"span">(
       { className: cn(badgeVariants({ variant }), className) },
-      props
+      props,
     ),
     render,
     state: { slot: "badge", variant },

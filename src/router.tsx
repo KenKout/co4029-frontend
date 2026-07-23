@@ -82,7 +82,7 @@ const authenticatedRoute = createRoute({
 
     if (!session) {
       const next = location.pathname.startsWith("/login")
-        ? new URLSearchParams(location.search).get("next") ?? undefined
+        ? (new URLSearchParams(location.search).get("next") ?? undefined)
         : location.href;
 
       throw redirect({
@@ -254,9 +254,7 @@ const teacherInterviewGapReportRoute = createRoute({
 const teacherStudentsHubRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/students",
-  component: lazyRouteComponent(
-    () => import("@/routes/teacher/students-hub"),
-  ),
+  component: lazyRouteComponent(() => import("@/routes/teacher/students-hub")),
 });
 
 const teacherCourseStudentsRoute = createRoute({
@@ -352,9 +350,7 @@ const adminProcessingRoute = createRoute({
 const adminProcessingJobRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/processing/$jobId",
-  component: lazyRouteComponent(
-    () => import("@/routes/admin/processing-job"),
-  ),
+  component: lazyRouteComponent(() => import("@/routes/admin/processing-job")),
 });
 
 const adminAiCostsRoute = createRoute({

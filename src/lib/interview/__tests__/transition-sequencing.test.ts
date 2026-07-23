@@ -38,7 +38,10 @@ describe("planTransition", () => {
 
   it("plans a closing transition on a finished turn", () => {
     const plan = planTransition(
-      { is_finished: true, transition_text: "Thank you. That was the final question." },
+      {
+        is_finished: true,
+        transition_text: "Thank you. That was the final question.",
+      },
       FALLBACK,
     );
     expect(plan).toEqual({
@@ -74,14 +77,16 @@ describe("planTransition", () => {
 
 describe("transitionHoldMs", () => {
   it("uses a short fixed conversational beat when voice is enabled", () => {
-    expect(transitionHoldMs("any length of text here", { voiceEnabled: true })).toBe(
-      VOICE_BEAT_MS,
-    );
+    expect(
+      transitionHoldMs("any length of text here", { voiceEnabled: true }),
+    ).toBe(VOICE_BEAT_MS);
   });
 
   it("clamps a very short transition up to the 900ms floor when voice is off", () => {
     // 2 words × 180ms = 360ms → clamped up to 900ms.
-    expect(transitionHoldMs("Next question", { voiceEnabled: false })).toBe(900);
+    expect(transitionHoldMs("Next question", { voiceEnabled: false })).toBe(
+      900,
+    );
   });
 
   it("scales with word count between the bounds when voice is off", () => {

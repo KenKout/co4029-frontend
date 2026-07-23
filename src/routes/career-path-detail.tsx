@@ -80,7 +80,9 @@ function CourseRow({
               <div className="h-1.5 w-full bg-m3-surface-container rounded-full overflow-hidden">
                 <div
                   className="h-full bg-m3-primary transition-all"
-                  style={{ width: `${Math.min(100, Math.max(0, completion))}%` }}
+                  style={{
+                    width: `${Math.min(100, Math.max(0, completion))}%`,
+                  }}
                 />
               </div>
             </div>
@@ -172,7 +174,9 @@ export default function CareerPathDetailPage() {
               <span className="inline-flex items-center gap-1.5">
                 <BookOpen className="h-3.5 w-3.5" />
                 <strong>
-                  {t("career_path_detail.n_courses", { count: data.courses.length })}
+                  {t("career_path_detail.n_courses", {
+                    count: data.courses.length,
+                  })}
                 </strong>
               </span>
               {enrolled && progress.data && (
@@ -201,10 +205,7 @@ export default function CareerPathDetailPage() {
               </p>
             </div>
             {firstIncomplete && (
-              <Link
-                to="/courses/$slug"
-                params={{ slug: firstIncomplete.slug }}
-              >
+              <Link to="/courses/$slug" params={{ slug: firstIncomplete.slug }}>
                 <Button size="sm" className="gap-2">
                   {t("career_path_detail.continue_learning")}
                   <ArrowRight className="h-4 w-4" />

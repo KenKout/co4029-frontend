@@ -1,6 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Bell, Loader2, LayoutDashboard, Settings, LogOut, User } from "lucide-react";
+import {
+  Bell,
+  Loader2,
+  LayoutDashboard,
+  Settings,
+  LogOut,
+  User,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -82,7 +89,9 @@ export default function ContentTopBar() {
             className="w-56 rounded-lg bg-card shadow-editorial border border-border p-1.5"
           >
             <div className="px-3 py-2.5">
-              <p className="text-sm font-semibold text-m3-on-surface truncate">{displayName}</p>
+              <p className="text-sm font-semibold text-m3-on-surface truncate">
+                {displayName}
+              </p>
               <p className="text-xs text-m3-on-surface-variant truncate mt-0.5">
                 {user?.primary_email}
               </p>
@@ -92,23 +101,32 @@ export default function ContentTopBar() {
 
             <DropdownMenuGroup>
               <DropdownMenuItem className="rounded-md px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-primary-soft focus:bg-primary-soft focus:text-primary">
-                <Link to="/dashboard" className="flex items-center gap-3 w-full">
+                <Link
+                  to="/dashboard"
+                  className="flex items-center gap-3 w-full"
+                >
                   <LayoutDashboard className="h-4 w-4 text-m3-on-surface-variant" />
-                  <span className="text-sm font-medium">{t("nav.dashboard")}</span>
+                  <span className="text-sm font-medium">
+                    {t("nav.dashboard")}
+                  </span>
                 </Link>
               </DropdownMenuItem>
 
               <DropdownMenuItem className="rounded-md px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-primary-soft focus:bg-primary-soft focus:text-primary">
                 <Link to="/settings" className="flex items-center gap-3 w-full">
                   <Settings className="h-4 w-4 text-m3-on-surface-variant" />
-                  <span className="text-sm font-medium">{t("nav.settings")}</span>
+                  <span className="text-sm font-medium">
+                    {t("nav.settings")}
+                  </span>
                 </Link>
               </DropdownMenuItem>
 
               <DropdownMenuItem className="rounded-md px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-primary-soft focus:bg-primary-soft focus:text-primary">
                 <Link to="/profile" className="flex items-center gap-3 w-full">
                   <User className="h-4 w-4 text-m3-on-surface-variant" />
-                  <span className="text-sm font-medium">{t("nav.profile")}</span>
+                  <span className="text-sm font-medium">
+                    {t("nav.profile")}
+                  </span>
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>

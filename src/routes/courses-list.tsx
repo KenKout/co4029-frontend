@@ -1,7 +1,13 @@
 import { useState, useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Search, SlidersHorizontal, Sparkles, GraduationCap, AlertCircle } from "lucide-react";
+import {
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  GraduationCap,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -28,10 +34,16 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
   const gradientClass = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
 
   return (
-    <Link to="/courses/$slug" params={{ slug: course.slug }} className="group block">
+    <Link
+      to="/courses/$slug"
+      params={{ slug: course.slug }}
+      className="group block"
+    >
       <div className="bg-card rounded-xl overflow-hidden shadow-editorial ghost-border transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-glass h-full flex flex-col">
         <div className="relative aspect-video overflow-hidden shrink-0">
-          <div className={cn("absolute inset-0 bg-gradient-to-br", gradientClass)} />
+          <div
+            className={cn("absolute inset-0 bg-gradient-to-br", gradientClass)}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           <Badge className="absolute top-3 left-3 z-10 bg-black/40 text-white border border-white/20 backdrop-blur-sm text-[10px] font-semibold tracking-wide">
             <Sparkles className="h-2.5 w-2.5 mr-1" />
@@ -116,7 +128,6 @@ export default function CoursesListPage() {
   return (
     <div className="relative min-h-screen pb-28">
       <div className="max-w-6xl mx-auto space-y-8">
-
         <header className="pt-2">
           <div className="flex items-center gap-3 mb-2">
             <AIInsightChip pulse>{t("courses_list.ai_chip")}</AIInsightChip>
@@ -133,7 +144,9 @@ export default function CoursesListPage() {
           <div className="flex flex-col sm:flex-row gap-3 max-w-4xl">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-m3-outline pointer-events-none" />
-              <label htmlFor="courses-search" className="sr-only">{t("courses_list.search_label")}</label>
+              <label htmlFor="courses-search" className="sr-only">
+                {t("courses_list.search_label")}
+              </label>
               <Input
                 id="courses-search"
                 placeholder={t("courses_list.search_placeholder")}
@@ -159,7 +172,10 @@ export default function CoursesListPage() {
             <p className="text-xs text-m3-on-surface-variant mt-2">
               {filtered.length === items.length
                 ? t("courses_list.n_loaded", { count: items.length })
-                : t("courses_list.n_of_total", { shown: filtered.length, total: items.length })}
+                : t("courses_list.n_of_total", {
+                    shown: filtered.length,
+                    total: items.length,
+                  })}
               {query && (
                 <button
                   onClick={clearFilters}
@@ -201,7 +217,9 @@ export default function CoursesListPage() {
 
           {isLoading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-              {[1, 2, 3, 4, 5, 6].map((i) => <CourseSkeletonCard key={i} />)}
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <CourseSkeletonCard key={i} />
+              ))}
             </div>
           )}
 
@@ -240,7 +258,9 @@ export default function CoursesListPage() {
                   }
                 />
               }
-              renderItem={(course, i) => <CourseCard course={course} index={i} />}
+              renderItem={(course, i) => (
+                <CourseCard course={course} index={i} />
+              )}
             />
           )}
         </section>

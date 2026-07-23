@@ -22,17 +22,27 @@ function useRelativeDue() {
     const now = Date.now();
     const due = new Date(dueAt).getTime();
     const diffMs = due - now;
-    if (diffMs <= 0) return { label: t("study_cards_due.due_now"), overdue: true };
+    if (diffMs <= 0)
+      return { label: t("study_cards_due.due_now"), overdue: true };
     const minutes = Math.round(diffMs / 60_000);
     if (minutes < 60) {
-      return { label: t("study_cards_due.minutes_left", { count: minutes }), overdue: false };
+      return {
+        label: t("study_cards_due.minutes_left", { count: minutes }),
+        overdue: false,
+      };
     }
     const hours = Math.round(minutes / 60);
     if (hours < 24) {
-      return { label: t("study_cards_due.hours_left", { count: hours }), overdue: false };
+      return {
+        label: t("study_cards_due.hours_left", { count: hours }),
+        overdue: false,
+      };
     }
     const days = Math.round(hours / 24);
-    return { label: t("study_cards_due.days_left", { count: days }), overdue: false };
+    return {
+      label: t("study_cards_due.days_left", { count: days }),
+      overdue: false,
+    };
   };
 }
 
@@ -87,13 +97,8 @@ function CardDueRow({ card }: { card: CardDue }) {
 
 export default function StudyCardsDuePage() {
   const { t } = useTranslation();
-  const {
-    items,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-    isLoading,
-  } = useCardsDue({ limit: 20 });
+  const { items, hasNextPage, fetchNextPage, isFetchingNextPage, isLoading } =
+    useCardsDue({ limit: 20 });
 
   const overdueCount = items.filter(
     (c) => new Date(c.due_at).getTime() <= Date.now(),
@@ -119,7 +124,9 @@ export default function StudyCardsDuePage() {
                   ? t("study_cards_due.empty_subtitle")
                   : `${t("study_cards_due.n_cards", { count: items.length })}${
                       overdueCount > 0
-                        ? t("study_cards_due.n_overdue_suffix", { count: overdueCount })
+                        ? t("study_cards_due.n_overdue_suffix", {
+                            count: overdueCount,
+                          })
                         : ""
                     }`
             }

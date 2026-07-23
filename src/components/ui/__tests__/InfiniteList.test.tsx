@@ -35,16 +35,17 @@ class MockIntersectionObserver implements IntersectionObserver {
   }
 
   trigger(isIntersecting: boolean): void {
-    const entries = this.observed.map((target) =>
-      ({
-        isIntersecting,
-        target,
-        boundingClientRect: target.getBoundingClientRect(),
-        intersectionRatio: isIntersecting ? 1 : 0,
-        intersectionRect: target.getBoundingClientRect(),
-        rootBounds: null,
-        time: Date.now(),
-      }) as IntersectionObserverEntry,
+    const entries = this.observed.map(
+      (target) =>
+        ({
+          isIntersecting,
+          target,
+          boundingClientRect: target.getBoundingClientRect(),
+          intersectionRatio: isIntersecting ? 1 : 0,
+          intersectionRect: target.getBoundingClientRect(),
+          rootBounds: null,
+          time: Date.now(),
+        }) as IntersectionObserverEntry,
     );
     this.callback(entries);
   }
@@ -61,7 +62,10 @@ describe("InfiniteList", () => {
   });
 
   it("renders items via renderItem", () => {
-    const items = [{ id: "a", label: "Apple" }, { id: "b", label: "Banana" }];
+    const items = [
+      { id: "a", label: "Apple" },
+      { id: "b", label: "Banana" },
+    ];
 
     render(
       <InfiniteList

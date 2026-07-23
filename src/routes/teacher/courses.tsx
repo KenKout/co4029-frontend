@@ -5,14 +5,17 @@ import { Plus, BookOpen, Clock, Search, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useTeacherCourseContent, useTeacherCourses } from "@/lib/api/hooks/teacher-courses";
+import {
+  useTeacherCourseContent,
+  useTeacherCourses,
+} from "@/lib/api/hooks/teacher-courses";
 import type { Course } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
   published: "bg-emerald-100 text-emerald-700",
-  draft:     "bg-amber-50 text-amber-700",
-  archived:  "bg-slate-100 text-slate-500",
+  draft: "bg-amber-50 text-amber-700",
+  archived: "bg-slate-100 text-slate-500",
 };
 
 function ModuleChips({ courseId }: { courseId: string }) {
@@ -51,7 +54,7 @@ function CourseCard({ course }: { course: Course }) {
           "h-1 w-full",
           course.status === "published"
             ? "bg-gradient-to-r from-m3-primary to-m3-secondary"
-            : "bg-m3-outline-variant"
+            : "bg-m3-outline-variant",
         )}
       />
       <div className="p-5">
@@ -67,7 +70,7 @@ function CourseCard({ course }: { course: Course }) {
           <Badge
             className={cn(
               "text-[10px] font-semibold border-0 shrink-0 mt-0.5",
-              STATUS_COLORS[course.status] ?? "bg-slate-100 text-slate-500"
+              STATUS_COLORS[course.status] ?? "bg-slate-100 text-slate-500",
             )}
           >
             {course.status}
@@ -101,7 +104,10 @@ function CourseCard({ course }: { course: Course }) {
 
         {/* Action */}
         <div className="mt-4 flex justify-end">
-          <Link to="/teacher/courses/$courseId" params={{ courseId: course.id }}>
+          <Link
+            to="/teacher/courses/$courseId"
+            params={{ courseId: course.id }}
+          >
             <Button
               variant="outline"
               size="sm"
@@ -137,11 +143,15 @@ export default function TeacherCoursesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-headline font-bold text-m3-on-surface">{t("teacher_courses_list.title")}</h1>
+          <h1 className="text-2xl font-headline font-bold text-m3-on-surface">
+            {t("teacher_courses_list.title")}
+          </h1>
           <p className="text-sm text-m3-on-surface-variant mt-1">
             {t("teacher_courses_list.n_courses", { count: courses.length })}
-            {published > 0 && t("teacher_courses_list.published_suffix", { count: published })}
-            {draft > 0 && t("teacher_courses_list.draft_suffix", { count: draft })}
+            {published > 0 &&
+              t("teacher_courses_list.published_suffix", { count: published })}
+            {draft > 0 &&
+              t("teacher_courses_list.draft_suffix", { count: draft })}
           </p>
         </div>
         <Link to="/teacher/courses/new">
@@ -182,14 +192,19 @@ export default function TeacherCoursesPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-48 bg-m3-surface-container animate-pulse rounded-xl" />
+            <div
+              key={i}
+              className="h-48 bg-m3-surface-container animate-pulse rounded-xl"
+            />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-m3-on-surface-variant">
           <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-20" />
           <p className="text-sm font-medium">
-            {search ? t("teacher_courses_list.no_match") : t("teacher_courses_list.no_courses_yet")}
+            {search
+              ? t("teacher_courses_list.no_match")
+              : t("teacher_courses_list.no_courses_yet")}
           </p>
           {!search && (
             <Link to="/teacher/courses/new">

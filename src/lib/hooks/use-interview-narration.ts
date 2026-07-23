@@ -235,7 +235,8 @@ export function useInterviewNarration(params: {
       const warmupStartedAt = startAudioWarmup();
       const ensureAudioWarmup = async () => {
         if (warmupStartedAt !== null) {
-          const remaining = AUDIO_OUTPUT_WARMUP_MS - (nowMs() - warmupStartedAt);
+          const remaining =
+            AUDIO_OUTPUT_WARMUP_MS - (nowMs() - warmupStartedAt);
           if (remaining > 0) {
             await new Promise<void>((resolve) => {
               window.setTimeout(resolve, remaining);
@@ -345,7 +346,9 @@ export function useInterviewNarration(params: {
             try {
               context = new AudioContextClass();
               const encodedAudio = await blob.arrayBuffer();
-              const decodedAudio = await context.decodeAudioData(encodedAudio.slice(0));
+              const decodedAudio = await context.decodeAudioData(
+                encodedAudio.slice(0),
+              );
               if (myToken !== tokenRef.current) {
                 void context.close().catch(() => undefined);
                 return;
@@ -373,7 +376,10 @@ export function useInterviewNarration(params: {
                       ? AUDIO_LEAD_IN_AMPLITUDE
                       : -AUDIO_LEAD_IN_AMPLITUDE;
                 }
-                destination.set(decodedAudio.getChannelData(channel), leadInFrames);
+                destination.set(
+                  decodedAudio.getChannelData(channel),
+                  leadInFrames,
+                );
               }
 
               const source = context.createBufferSource();

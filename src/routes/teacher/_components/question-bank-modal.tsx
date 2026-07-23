@@ -25,22 +25,13 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Filter,
-  Loader2,
-  Search,
-  Sparkles,
-  X,
-} from "lucide-react";
+import { Filter, Loader2, Search, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InfiniteList } from "@/components/ui/InfiniteList";
-import {
-  useCourseModules,
-  useModuleLessons,
-} from "@/lib/api/hooks/courses";
+import { useCourseModules, useModuleLessons } from "@/lib/api/hooks/courses";
 import {
   useImportQuestionsFromBank,
   useQuestionBank,
@@ -148,7 +139,15 @@ export function QuestionBankModal({
       reviewStatus !== "approved" ? "x" : "",
       search,
     ].filter(Boolean).length;
-  }, [moduleId, lessonId, questionType, bloomLevel, difficulty, reviewStatus, search]);
+  }, [
+    moduleId,
+    lessonId,
+    questionType,
+    bloomLevel,
+    difficulty,
+    reviewStatus,
+    search,
+  ]);
 
   function toggle(id: string) {
     setSelected((current) => {
@@ -189,7 +188,9 @@ export function QuestionBankModal({
     }
     try {
       const cloned = await importer.mutateAsync(Array.from(selected));
-      toast.success(`Imported ${cloned.length} question${cloned.length === 1 ? "" : "s"}`);
+      toast.success(
+        `Imported ${cloned.length} question${cloned.length === 1 ? "" : "s"}`,
+      );
       onClose();
     } catch (err) {
       toast.error((err as Error).message ?? "Import failed");
@@ -198,8 +199,8 @@ export function QuestionBankModal({
 
   const modules = modulesQuery.data ?? [];
   const lessons = lessonsQuery.data ?? [];
-  const allVisibleSelected = rows.length > 0
-    && rows.every((entry) => selected.has(entry.question.id));
+  const allVisibleSelected =
+    rows.length > 0 && rows.every((entry) => selected.has(entry.question.id));
 
   return (
     <div
@@ -220,9 +221,8 @@ export function QuestionBankModal({
                 Question bank
               </h2>
               <p className="text-sm text-m3-on-surface-variant">
-                Reuse approved questions across the course. Imported
-                clones become draft (pending) so you can review before
-                publishing.
+                Reuse approved questions across the course. Imported clones
+                become draft (pending) so you can review before publishing.
               </p>
             </div>
           </div>
@@ -415,7 +415,8 @@ export function QuestionBankModal({
         <div className="flex items-center justify-between gap-2 shrink-0">
           <div className="flex items-center gap-3">
             <span className="text-xs text-m3-on-surface-variant">
-              <strong className="text-m3-on-surface">{selected.size}</strong> selected
+              <strong className="text-m3-on-surface">{selected.size}</strong>{" "}
+              selected
               {` · ${rows.length} shown${bank.hasNextPage ? "+" : ""}`}
             </span>
             {rows.length > 0 ? (

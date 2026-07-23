@@ -107,11 +107,11 @@ export interface ConversationTurn {
     | "opening"
     | "briefing"
     | "transition"
-     | "question"
-     | "followup"
-     | "clarification"
-     | "hint"
-     | "answer"
+    | "question"
+    | "followup"
+    | "clarification"
+    | "hint"
+    | "answer"
     | "closing";
 }
 
@@ -136,7 +136,10 @@ const STATUS_LABELS: Record<InterviewAgentStatus, string> = {
   disconnected: "course_interview.workspace.status.disconnected",
 };
 
-export function useInterviewTimer(active: boolean, startedAtMs?: number | null) {
+export function useInterviewTimer(
+  active: boolean,
+  startedAtMs?: number | null,
+) {
   const [seconds, setSeconds] = useState(0);
   const startedAtRef = useRef<number | null>(null);
 
@@ -287,8 +290,12 @@ export function InterviewHeader({
 }) {
   const { t } = useTranslation();
   const safeCurrent = Math.max(1, currentQuestion ?? 1);
-  const safeTotal = totalQuestions ? Math.max(safeCurrent, totalQuestions) : null;
-  const progress = safeTotal ? Math.min(100, (safeCurrent / safeTotal) * 100) : null;
+  const safeTotal = totalQuestions
+    ? Math.max(safeCurrent, totalQuestions)
+    : null;
+  const progress = safeTotal
+    ? Math.min(100, (safeCurrent / safeTotal) * 100)
+    : null;
   const expected = expectedDurationMinutes
     ? formatRelativeInterviewTime(expectedDurationMinutes * 60)
     : null;
@@ -317,7 +324,9 @@ export function InterviewHeader({
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-text-strong">{interviewTitle}</p>
+            <p className="truncate text-sm font-semibold text-text-strong">
+              {interviewTitle}
+            </p>
             <p className="truncate text-xs text-text-muted">{courseName}</p>
           </div>
         </div>
@@ -349,7 +358,9 @@ export function InterviewHeader({
           ) : (
             <div
               role="progressbar"
-              aria-label={t("course_interview.workspace.question_progress_unknown")}
+              aria-label={t(
+                "course_interview.workspace.question_progress_unknown",
+              )}
               className="h-1.5 overflow-hidden rounded-full bg-surface-muted"
             >
               <span className="block h-full w-1/3 rounded-full bg-primary motion-safe:animate-pulse" />
@@ -369,7 +380,11 @@ export function InterviewHeader({
                 : t("course_interview.workspace.connection_interrupted")
             }
           >
-            {connected ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+            {connected ? (
+              <Wifi className="h-3.5 w-3.5" />
+            ) : (
+              <WifiOff className="h-3.5 w-3.5" />
+            )}
             <span className="hidden xl:inline">
               {connected
                 ? t("course_interview.workspace.connected")
@@ -384,29 +399,33 @@ export function InterviewHeader({
             {expected ? ` / ${expected}` : ""}
           </time>
           {showVoiceControl && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-lg"
-            onClick={onToggleVoice}
-            aria-pressed={voiceOn}
-            aria-label={
-              voiceOn
-                ? t("course_interview.narration.mute")
-                : t("course_interview.narration.unmute")
-            }
-            title={
-              voiceOn
-                ? t("course_interview.narration.mute")
-                : t("course_interview.narration.unmute")
-            }
-            className={cn(
-              "size-11 rounded-lg sm:size-9",
-              voiceOn ? "text-primary" : "bg-surface-muted text-text-muted",
-            )}
-          >
-            {voiceOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-          </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-lg"
+              onClick={onToggleVoice}
+              aria-pressed={voiceOn}
+              aria-label={
+                voiceOn
+                  ? t("course_interview.narration.mute")
+                  : t("course_interview.narration.unmute")
+              }
+              title={
+                voiceOn
+                  ? t("course_interview.narration.mute")
+                  : t("course_interview.narration.unmute")
+              }
+              className={cn(
+                "size-11 rounded-lg sm:size-9",
+                voiceOn ? "text-primary" : "bg-surface-muted text-text-muted",
+              )}
+            >
+              {voiceOn ? (
+                <Volume2 className="h-4 w-4" />
+              ) : (
+                <VolumeX className="h-4 w-4" />
+              )}
+            </Button>
           )}
           {onEndInterview && (
             <Button
@@ -531,7 +550,10 @@ export function ConversationMessage({
                 )}
               >
                 {isReplaying ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  <Loader2
+                    className="h-3.5 w-3.5 animate-spin"
+                    aria-hidden="true"
+                  />
                 ) : (
                   <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
                 )}
@@ -544,7 +566,9 @@ export function ConversationMessage({
           <div className="mb-1.5 flex items-center justify-between gap-3 text-[11px] font-medium text-text-muted">
             <span>{t("course_interview.workspace.you")}</span>
             {showTimestamp && (
-              <time className="tabular-nums text-text-subtle">{relativeTime}</time>
+              <time className="tabular-nums text-text-subtle">
+                {relativeTime}
+              </time>
             )}
           </div>
         )}
@@ -569,10 +593,14 @@ export function ConversationMessage({
             )}
           />
         ) : (
-          <p className="whitespace-pre-wrap text-sm leading-6 sm:text-base">{turn.text}</p>
+          <p className="whitespace-pre-wrap text-sm leading-6 sm:text-base">
+            {turn.text}
+          </p>
         )}
         {isAi && (
-          <MessageTurnActions visible={actionsVisible}>{actions}</MessageTurnActions>
+          <MessageTurnActions visible={actionsVisible}>
+            {actions}
+          </MessageTurnActions>
         )}
       </div>
     </article>
@@ -703,9 +731,9 @@ export function InterviewStage({
 }) {
   const { t } = useTranslation();
   const endRef = useRef<HTMLDivElement | null>(null);
-  const [presentedAiTurnIds, setPresentedAiTurnIds] = useState<ReadonlySet<string>>(
-    () => new Set(),
-  );
+  const [presentedAiTurnIds, setPresentedAiTurnIds] = useState<
+    ReadonlySet<string>
+  >(() => new Set());
   const [replayingTurnId, setReplayingTurnId] = useState<string | null>(null);
   const replayLockRef = useRef(false);
   const lastAiTurnId = useMemo(() => {
@@ -1017,7 +1045,10 @@ function TranscriptConversation({
     <div
       ref={scrollRef}
       onScroll={handleScroll}
-      className={cn("min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-6 sm:px-5", className)}
+      className={cn(
+        "min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-6 sm:px-5",
+        className,
+      )}
     >
       {transcript.length === 0 ? (
         <p className="py-12 text-center text-sm text-text-muted">
@@ -1297,7 +1328,10 @@ function InterviewerAssistance({
 
         {termOpen && (
           <div className="mt-3 flex flex-col gap-2 sm:ml-11 sm:flex-row">
-            <label className="sr-only" htmlFor={`clarification-term-${turn.id}`}>
+            <label
+              className="sr-only"
+              htmlFor={`clarification-term-${turn.id}`}
+            >
               {t("course_interview.workspace.term_input_label")}
             </label>
             <input
@@ -1313,7 +1347,9 @@ function InterviewerAssistance({
               }}
               autoFocus
               maxLength={100}
-              placeholder={t("course_interview.workspace.term_input_placeholder")}
+              placeholder={t(
+                "course_interview.workspace.term_input_placeholder",
+              )}
               className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-white px-3 text-sm text-text-strong outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
             />
             <Button
@@ -1386,9 +1422,9 @@ export function FocusedInterviewStage({
   transcriptDocked?: boolean;
 }) {
   const { t } = useTranslation();
-  const [presentedAiTurnIds, setPresentedAiTurnIds] = useState<ReadonlySet<string>>(
-    () => new Set(),
-  );
+  const [presentedAiTurnIds, setPresentedAiTurnIds] = useState<
+    ReadonlySet<string>
+  >(() => new Set());
   const [replayingTurnId, setReplayingTurnId] = useState<string | null>(null);
   const replayLockRef = useRef(false);
 
@@ -1408,7 +1444,11 @@ export function FocusedInterviewStage({
   const activeTurn = activeTurnIndex >= 0 ? transcript[activeTurnIndex] : null;
   const assistanceTurn = useMemo(() => {
     if (!assessmentActive || activeTurnIndex < 0) return null;
-    for (let index = transcript.length - 1; index > activeTurnIndex; index -= 1) {
+    for (
+      let index = transcript.length - 1;
+      index > activeTurnIndex;
+      index -= 1
+    ) {
       const turn = transcript[index];
       if (
         turn.role === "ai" &&
@@ -1457,7 +1497,11 @@ export function FocusedInterviewStage({
       onSpeakingChange(true);
       try {
         const presentation = speak(turn.text);
-        if (presentation && typeof presentation === "object" && "finished" in presentation) {
+        if (
+          presentation &&
+          typeof presentation === "object" &&
+          "finished" in presentation
+        ) {
           await presentation.finished.catch(() => undefined);
         } else {
           await Promise.resolve(presentation).catch(() => undefined);
@@ -1483,16 +1527,22 @@ export function FocusedInterviewStage({
   );
 
   return (
-    <main className="min-h-0 flex-1 overflow-y-auto bg-surface" aria-label={t("course_interview.workspace.interview_room")}>
+    <main
+      className="min-h-0 flex-1 overflow-y-auto bg-surface"
+      aria-label={t("course_interview.workspace.interview_room")}
+    >
       <div className="mx-auto flex min-h-full w-full max-w-[1000px] flex-col justify-center gap-5 px-4 py-6 sm:px-8 sm:py-8">
-        {assessmentActive && transcript.some((turn) => turn.kind === "opening" || turn.kind === "briefing") && (
-          <div className="flex items-center gap-2 text-xs font-semibold text-success">
-            <span className="flex size-5 items-center justify-center rounded-full bg-success/10">
-              <Check className="h-3.5 w-3.5" />
-            </span>
-            {t("course_interview.workspace.introduction_completed")}
-          </div>
-        )}
+        {assessmentActive &&
+          transcript.some(
+            (turn) => turn.kind === "opening" || turn.kind === "briefing",
+          ) && (
+            <div className="flex items-center gap-2 text-xs font-semibold text-success">
+              <span className="flex size-5 items-center justify-center rounded-full bg-success/10">
+                <Check className="h-3.5 w-3.5" />
+              </span>
+              {t("course_interview.workspace.introduction_completed")}
+            </div>
+          )}
 
         {activeTurn ? (
           assessmentActive ? (
@@ -1554,7 +1604,8 @@ export function FocusedInterviewStage({
                 onPresentationComplete={() => markPresented(activeTurn)}
                 actions={activeTurnActions}
                 actionsVisible={
-                  presentedAiTurnIds.has(activeTurn.id) && activeTurnActionsVisible
+                  presentedAiTurnIds.has(activeTurn.id) &&
+                  activeTurnActionsVisible
                 }
                 replayVisible={
                   replayAvailable && presentedAiTurnIds.has(activeTurn.id)
@@ -1566,7 +1617,10 @@ export function FocusedInterviewStage({
             </section>
           )
         ) : (
-          <section className="rounded-2xl border border-border bg-white px-6 py-12 text-center shadow-editorial" role="status">
+          <section
+            className="rounded-2xl border border-border bg-white px-6 py-12 text-center shadow-editorial"
+            role="status"
+          >
             <Loader2 className="mx-auto mb-4 h-6 w-6 animate-spin text-primary" />
             <p className="text-sm text-text-muted">
               {t("course_interview.workspace.preparing_question")}
@@ -1678,7 +1732,11 @@ export function InterviewControls({
         disabled={!micAvailable || disabled}
         onClick={onMicToggle}
       >
-        {micActive ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+        {micActive ? (
+          <Mic className="h-4 w-4" />
+        ) : (
+          <MicOff className="h-4 w-4" />
+        )}
       </ComposerControl>
 
       <div className="hidden items-center gap-1.5 sm:flex">
@@ -1695,7 +1753,12 @@ export function InterviewControls({
             </span>
             <ChevronDown className="hidden h-3.5 w-3.5 lg:block" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" side="top" sideOffset={10} className="w-52">
+          <DropdownMenuContent
+            align="start"
+            side="top"
+            sideOffset={10}
+            className="w-52"
+          >
             <DropdownMenuItem className="gap-2 px-3 py-2">
               <AudioLines className="h-4 w-4" />
               {t("course_interview.workspace.system_microphone")}
@@ -1725,13 +1788,23 @@ export function InterviewControls({
         >
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" side="top" sideOffset={10} className="w-52">
-          <DropdownMenuItem onClick={onTranscriptToggle} className="gap-2 px-3 py-2">
+        <DropdownMenuContent
+          align="start"
+          side="top"
+          sideOffset={10}
+          className="w-52"
+        >
+          <DropdownMenuItem
+            onClick={onTranscriptToggle}
+            className="gap-2 px-3 py-2"
+          >
             <MessageSquareText className="h-4 w-4" />
             {transcriptOpen
               ? t("course_interview.workspace.hide_transcript")
               : t("course_interview.workspace.show_transcript")}
-            {transcriptOpen && <Check className="ml-auto h-4 w-4 text-primary" />}
+            {transcriptOpen && (
+              <Check className="ml-auto h-4 w-4 text-primary" />
+            )}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem disabled className="gap-2 px-3 py-2">
@@ -1741,7 +1814,11 @@ export function InterviewControls({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <VoiceStatusIndicator status={status} compact className="hidden sm:flex" />
+      <VoiceStatusIndicator
+        status={status}
+        compact
+        className="hidden sm:flex"
+      />
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
         <span className="inline-flex h-9 items-center gap-1.5 px-1 font-mono text-xs font-semibold tabular-nums text-text-muted sm:px-2">
@@ -1759,7 +1836,9 @@ export function InterviewControls({
           title={t("course_interview.actions.end_interview")}
         >
           <PhoneOff className="h-4 w-4" />
-          <span className="hidden md:inline">{t("course_interview.actions.end_interview")}</span>
+          <span className="hidden md:inline">
+            {t("course_interview.actions.end_interview")}
+          </span>
         </Button>
       </div>
     </div>
@@ -1777,7 +1856,10 @@ export function OnboardingActions({
   language: InterviewLanguage;
   disabled?: boolean;
   onLanguageChange: (language: InterviewLanguage) => void;
-  onAction: (action: InterviewOnboardingAction, language?: InterviewLanguage) => void;
+  onAction: (
+    action: InterviewOnboardingAction,
+    language?: InterviewLanguage,
+  ) => void;
 }) {
   const { t } = useTranslation();
 
@@ -1986,7 +2068,9 @@ export function AnswerComposer({
             onKeyDown={handleKeyDown}
             disabled={sending}
             rows={2}
-            placeholder={placeholder ?? t("course_interview.workspace.answer_placeholder")}
+            placeholder={
+              placeholder ?? t("course_interview.workspace.answer_placeholder")
+            }
             className="block min-h-[72px] w-full resize-none overflow-y-auto bg-transparent pb-8 pr-12 text-[15px] leading-6 text-text-strong outline-none placeholder:text-text-subtle disabled:cursor-wait"
           />
 
@@ -1994,7 +2078,9 @@ export function AnswerComposer({
             {t("course_interview.workspace.send_hint")}
           </span>
           <span className="sr-only" aria-live="polite">
-            {t("course_interview.labels.character_count", { count: draftLength })}
+            {t("course_interview.labels.character_count", {
+              count: draftLength,
+            })}
           </span>
 
           <Button
@@ -2054,12 +2140,14 @@ function useRecordingTimer(active: boolean, paused: boolean) {
     wasRecordingRef.current = recording;
 
     if (!active) return;
-    if (segmentStartedRef.current === null) segmentStartedRef.current = Date.now();
+    if (segmentStartedRef.current === null)
+      segmentStartedRef.current = Date.now();
     const update = () => {
       const segmentStarted = segmentStartedRef.current;
       if (segmentStarted === null) return;
       setSeconds(
-        accumulatedRef.current + Math.floor((Date.now() - segmentStarted) / 1000),
+        accumulatedRef.current +
+          Math.floor((Date.now() - segmentStarted) / 1000),
       );
     };
     update();
@@ -2068,7 +2156,9 @@ function useRecordingTimer(active: boolean, paused: boolean) {
       window.clearInterval(timer);
       const segmentStarted = segmentStartedRef.current;
       if (segmentStarted !== null) {
-        accumulatedRef.current += Math.floor((Date.now() - segmentStarted) / 1000);
+        accumulatedRef.current += Math.floor(
+          (Date.now() - segmentStarted) / 1000,
+        );
         segmentStartedRef.current = null;
       }
     };
@@ -2199,10 +2289,18 @@ export function AnswerControls({
             <div className="flex flex-wrap items-center gap-3" role="alert">
               <CircleAlert className="h-5 w-5 shrink-0 text-danger" />
               <p className="min-w-0 flex-1 text-sm text-danger">
-                {t(errorKey ?? "course_interview.workspace.microphone_errors.interrupted")}
+                {t(
+                  errorKey ??
+                    "course_interview.workspace.microphone_errors.interrupted",
+                )}
               </p>
               {onRetry && (
-                <Button type="button" variant="outline" size="lg" onClick={onRetry}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  onClick={onRetry}
+                >
                   <RotateCcw className="h-4 w-4" />
                   {t("course_interview.workspace.retry_microphone")}
                 </Button>
@@ -2214,11 +2312,17 @@ export function AnswerControls({
                 <span
                   className={cn(
                     "flex size-11 shrink-0 items-center justify-center rounded-full",
-                    micActive ? "bg-primary text-white" : "bg-warning/10 text-warning",
+                    micActive
+                      ? "bg-primary text-white"
+                      : "bg-warning/10 text-warning",
                   )}
                   aria-hidden="true"
                 >
-                  {micActive ? <Mic className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
+                  {micActive ? (
+                    <Mic className="h-5 w-5" />
+                  ) : (
+                    <Pause className="h-5 w-5" />
+                  )}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-text-strong">
@@ -2235,7 +2339,10 @@ export function AnswerControls({
                 </time>
               </div>
 
-              <div className="flex h-8 items-center justify-center gap-1" aria-hidden="true">
+              <div
+                className="flex h-8 items-center justify-center gap-1"
+                aria-hidden="true"
+              >
                 {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((bar) => (
                   <span
                     key={bar}
@@ -2251,12 +2358,24 @@ export function AnswerControls({
 
               <div className="flex flex-wrap items-center justify-center gap-2">
                 {micActive ? (
-                  <Button type="button" variant="outline" size="lg" onClick={onPause} className="min-h-11">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    onClick={onPause}
+                    className="min-h-11"
+                  >
                     <Pause className="h-4 w-4" />
                     {t("course_interview.workspace.pause_recording")}
                   </Button>
                 ) : (
-                  <Button type="button" variant="outline" size="lg" onClick={onResume} className="min-h-11">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    onClick={onResume}
+                    className="min-h-11"
+                  >
                     <Play className="h-4 w-4" />
                     {t("course_interview.workspace.resume_recording")}
                   </Button>
@@ -2365,11 +2484,17 @@ export function FocusedAnswerComposer({
     status !== "speaking" &&
     status !== "disconnected";
   const voiceDisabled =
-    sending || status === "thinking" || status === "speaking" || status === "disconnected";
+    sending ||
+    status === "thinking" ||
+    status === "speaking" ||
+    status === "disconnected";
   // While the AI is thinking or speaking (or the turn is submitting), lock the
   // text field so the candidate can't type over the interviewer's message.
   const inputDisabled =
-    sending || status === "thinking" || status === "speaking" || status === "disconnected";
+    sending ||
+    status === "thinking" ||
+    status === "speaking" ||
+    status === "disconnected";
 
   useEffect(() => {
     if (!micAvailable && mode === "voice") setMode("type");
@@ -2390,7 +2515,11 @@ export function FocusedAnswerComposer({
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey &&
+      !event.nativeEvent.isComposing
+    ) {
       event.preventDefault();
       if (canSubmit) onSubmit();
     }
@@ -2426,7 +2555,10 @@ export function FocusedAnswerComposer({
         />
 
         <div className="relative mt-3 border-t border-border pt-3">
-          <label htmlFor="focused-answer" className="mb-1.5 block text-xs font-semibold text-text-muted">
+          <label
+            htmlFor="focused-answer"
+            className="mb-1.5 block text-xs font-semibold text-text-muted"
+          >
             {mode === "voice"
               ? t("course_interview.workspace.live_transcript")
               : t("course_interview.labels.answer")}
@@ -2442,12 +2574,15 @@ export function FocusedAnswerComposer({
             placeholder={
               status === "thinking" || status === "speaking"
                 ? t("course_interview.workspace.answer_locked")
-                : (placeholder ?? t("course_interview.workspace.answer_placeholder"))
+                : (placeholder ??
+                  t("course_interview.workspace.answer_placeholder"))
             }
             className="block min-h-20 w-full resize-none overflow-y-auto rounded-xl border border-border bg-surface px-3.5 py-3 pr-14 text-[15px] leading-6 text-text-strong outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/10 disabled:cursor-wait disabled:opacity-70"
           />
           <span className="sr-only" aria-live="polite">
-            {t("course_interview.labels.character_count", { count: draftLength })}
+            {t("course_interview.labels.character_count", {
+              count: draftLength,
+            })}
           </span>
           <Button
             type="button"
@@ -2462,13 +2597,21 @@ export function FocusedAnswerComposer({
             }
             title={t("course_interview.actions.send_answer")}
           >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {sending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </div>
 
         <div className="mt-2 flex items-center gap-2 text-[11px] text-text-subtle">
-          <span className="hidden sm:inline">{t("course_interview.workspace.send_hint")}</span>
-          <span className="ml-auto font-mono font-semibold tabular-nums sm:hidden">{elapsed}</span>
+          <span className="hidden sm:inline">
+            {t("course_interview.workspace.send_hint")}
+          </span>
+          <span className="ml-auto font-mono font-semibold tabular-nums sm:hidden">
+            {elapsed}
+          </span>
           <Button
             type="button"
             variant="ghost"
@@ -2561,7 +2704,10 @@ export function EndConfirmationPanel({
       role="group"
       aria-label={t("course_interview.end_confirm.title")}
     >
-      <p className="flex items-start gap-2 text-sm text-amber-900" aria-live="polite">
+      <p
+        className="flex items-start gap-2 text-sm text-amber-900"
+        aria-live="polite"
+      >
         <CircleHelp className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <span>{prompt || t("course_interview.end_confirm.prompt")}</span>
       </p>
@@ -2625,8 +2771,8 @@ export function LeaveInterviewDialog({
         !assessmentStarted
           ? "course_interview.leave_dialog.onboarding_description"
           : hasTimeLimit
-          ? "course_interview.leave_dialog.assessment_description"
-          : "course_interview.leave_dialog.untimed_description",
+            ? "course_interview.leave_dialog.assessment_description"
+            : "course_interview.leave_dialog.untimed_description",
       )}
       confirmLabel={t("course_interview.leave_dialog.leave")}
       cancelLabel={t("course_interview.leave_dialog.stay")}
@@ -2655,13 +2801,13 @@ export function StartInterviewDialog({
   const fallbackCopy = isVietnamese
     ? {
         title: "Bạn đã sẵn sàng bắt đầu?",
-      description:
+        description:
           "Trợ lý phỏng vấn ảo sẽ xác nhận âm thanh, ngôn ngữ và mức độ sẵn sàng trước. Đồng hồ chỉ bắt đầu sau khi bạn xác nhận sẵn sàng.",
         cancel: "Chưa sẵn sàng",
       }
     : {
         title: "Ready to begin?",
-      description:
+        description:
           "The virtual interviewer will confirm audio, language, and readiness first. The assessed timer starts only after you confirm that you are ready.",
         cancel: "Not yet",
       };

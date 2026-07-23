@@ -117,7 +117,9 @@ export function TopicTagInput({
             {value}
             <button
               type="button"
-              onClick={() => onChange(values.filter((entry) => entry !== value))}
+              onClick={() =>
+                onChange(values.filter((entry) => entry !== value))
+              }
               className="text-m3-secondary hover:text-m3-primary cursor-pointer"
               aria-label={`Remove ${value}`}
             >
@@ -135,7 +137,11 @@ export function TopicTagInput({
               e.preventDefault();
               commit();
             }
-            if (e.key === "Backspace" && draft.length === 0 && values.length > 0) {
+            if (
+              e.key === "Backspace" &&
+              draft.length === 0 &&
+              values.length > 0
+            ) {
               onChange(values.slice(0, -1));
             }
           }}
@@ -276,8 +282,8 @@ export function CoverageOptionsForm({
         />
         <p className="text-[10px] text-m3-on-surface-variant">
           When grouping is <strong>fixed</strong>, every <em>N</em> consecutive
-          slides become one section. Lower = more sections = more questions
-          per slide.
+          slides become one section. Lower = more sections = more questions per
+          slide.
         </p>
       </div>
       <label className="flex items-start gap-2 cursor-pointer">
@@ -324,7 +330,11 @@ function LessonOutlineSection({
   onSectionsChange: (sectionIds: string[]) => void;
   onSuggestQuestionCount: (count: number) => void;
 }) {
-  const { data: outline, isLoading, error } = useLessonOutline(lessonId, {
+  const {
+    data: outline,
+    isLoading,
+    error,
+  } = useLessonOutline(lessonId, {
     slidesPerSection,
     sectionGrouping,
   });
@@ -344,7 +354,8 @@ function LessonOutlineSection({
       <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800 flex items-start gap-2">
         <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
         <span>
-          Could not load outline for <strong>{fallbackTitle}</strong>. Material may still be processing.
+          Could not load outline for <strong>{fallbackTitle}</strong>. Material
+          may still be processing.
         </span>
       </div>
     );
@@ -374,7 +385,8 @@ function LessonOutlineSection({
           {outline.lesson_title}
         </span>
         <span className="text-[10px] text-m3-on-surface-variant">
-          {outline.sections.length} section{outline.sections.length === 1 ? "" : "s"}
+          {outline.sections.length} section
+          {outline.sections.length === 1 ? "" : "s"}
         </span>
         <span className="text-[10px] font-semibold text-m3-secondary">
           ~{outline.suggested_question_count} suggested
@@ -430,7 +442,8 @@ function LessonOutlineSection({
                     {section.title}
                   </span>
                   <span className="block text-[10px] text-m3-on-surface-variant">
-                    {section.chunk_count} chunk{section.chunk_count === 1 ? "" : "s"}
+                    {section.chunk_count} chunk
+                    {section.chunk_count === 1 ? "" : "s"}
                     {" · "}
                     pages {section.page_range[0]}–{section.page_range[1]}
                     {" · "}
@@ -583,7 +596,9 @@ export function BloomDistributionInput({
           <p
             className={cn(
               "text-[11px]",
-              overflow ? "text-red-600 font-semibold" : "text-m3-on-surface-variant",
+              overflow
+                ? "text-red-600 font-semibold"
+                : "text-m3-on-surface-variant",
             )}
           >
             Total: {total}/{questionCount}

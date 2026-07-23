@@ -53,11 +53,13 @@ export function TrendingCarousel({ courses }: TrendingCarouselProps) {
           let opacity = 1;
 
           if (offset === -1) {
-            transform = "translateX(-60%) scale(0.85) translateZ(-100px) rotateY(15deg)";
+            transform =
+              "translateX(-60%) scale(0.85) translateZ(-100px) rotateY(15deg)";
             zIndex = 10;
             opacity = 0.7;
           } else if (offset === 1) {
-            transform = "translateX(60%) scale(0.85) translateZ(-100px) rotateY(-15deg)";
+            transform =
+              "translateX(60%) scale(0.85) translateZ(-100px) rotateY(-15deg)";
             zIndex = 10;
             opacity = 0.7;
           } else if (offset !== 0) {
@@ -84,15 +86,23 @@ export function TrendingCarousel({ courses }: TrendingCarouselProps) {
               }}
             >
               <div className="relative h-56 overflow-hidden">
-                <div className={`absolute inset-0 bg-gradient-to-br ${course.thumbFrom} ${course.thumbTo}`} />
+                <div
+                  className={`absolute inset-0 bg-gradient-to-br ${course.thumbFrom} ${course.thumbTo}`}
+                />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-16 h-16 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                     <GraduationCap className="w-8 h-8 text-white" />
                   </div>
                 </div>
-                <div className={`absolute inset-0 bg-gradient-to-t ${course.overlayFrom} ${course.overlayTo}`} />
+                <div
+                  className={`absolute inset-0 bg-gradient-to-t ${course.overlayFrom} ${course.overlayTo}`}
+                />
                 <div className="absolute top-4 left-4">
-                  <Badge className={`${course.tagColor} border-0 text-xs font-medium px-2.5 py-1`}>{course.tag}</Badge>
+                  <Badge
+                    className={`${course.tagColor} border-0 text-xs font-medium px-2.5 py-1`}
+                  >
+                    {course.tag}
+                  </Badge>
                 </div>
               </div>
 
@@ -100,9 +110,13 @@ export function TrendingCarousel({ courses }: TrendingCarouselProps) {
                 <h3 className="font-headline font-semibold text-m3-on-surface text-lg leading-snug line-clamp-2">
                   {course.title}
                 </h3>
-                <p className="text-sm text-m3-on-surface-variant font-medium">{course.instructor}</p>
+                <p className="text-sm text-m3-on-surface-variant font-medium">
+                  {course.instructor}
+                </p>
 
-                <div className={`flex items-center gap-4 text-sm transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                <div
+                  className={`flex items-center gap-4 text-sm transition-all duration-500 ${isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+                >
                   <span className="flex items-center gap-1.5 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-1 rounded-md font-semibold">
                     <span className="text-yellow-500 text-base">★</span>
                     {course.rating}
@@ -118,7 +132,9 @@ export function TrendingCarousel({ courses }: TrendingCarouselProps) {
                 <div className="absolute bottom-0 left-0 w-full h-1.5 bg-m3-surface-variant overflow-hidden">
                   <div
                     className="h-full bg-m3-primary w-full"
-                    style={{ animation: 'progress-fill 5000ms linear forwards' }}
+                    style={{
+                      animation: "progress-fill 5000ms linear forwards",
+                    }}
                   />
                 </div>
               )}

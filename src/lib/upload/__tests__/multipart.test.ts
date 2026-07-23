@@ -85,12 +85,11 @@ describe("uploadPartWithRetry", () => {
     }) as unknown as typeof fetch;
 
     const delay = vi.fn(async () => {});
-    const etag = await uploadPartWithRetry(
-      "https://s3/p",
-      new Blob(["x"]),
-      1,
-      { fetcher, retryDelays: [1, 2, 4], delay },
-    );
+    const etag = await uploadPartWithRetry("https://s3/p", new Blob(["x"]), 1, {
+      fetcher,
+      retryDelays: [1, 2, 4],
+      delay,
+    });
 
     expect(etag).toBe("ok");
     expect(fetcher).toHaveBeenCalledTimes(3);

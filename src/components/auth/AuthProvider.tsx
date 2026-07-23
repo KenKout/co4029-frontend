@@ -26,11 +26,13 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function applySessionState(setState: (nextState: {
-  status: AuthStatus;
-  requiresMfa: boolean;
-  user: AuthUser | null;
-}) => void) {
+function applySessionState(
+  setState: (nextState: {
+    status: AuthStatus;
+    requiresMfa: boolean;
+    user: AuthUser | null;
+  }) => void,
+) {
   const session = getStoredAuthSession();
 
   if (session) {
@@ -107,7 +109,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (err instanceof RefreshAuthError) {
             // Genuine auth failure — refreshAuthSession already
             // cleared storage. Sync state to unauthenticated.
-            setState({ status: "unauthenticated", requiresMfa: false, user: null });
+            setState({
+              status: "unauthenticated",
+              requiresMfa: false,
+              user: null,
+            });
             return;
           }
           // Unknown error — be conservative and keep the session
@@ -179,7 +185,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         return session.user;
       }
-      setAuthState({ status: "unauthenticated", requiresMfa: false, user: null });
+      setAuthState({
+        status: "unauthenticated",
+        requiresMfa: false,
+        user: null,
+      });
       return null;
     }
   }

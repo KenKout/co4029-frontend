@@ -43,9 +43,21 @@ import { cn } from "@/lib/utils";
 type TabKey = "roster" | "bulk" | "codes";
 
 const TABS: { key: TabKey; labelKey: string; icon: typeof Users }[] = [
-  { key: "roster", labelKey: "management_course_enrollments.tabs.roster", icon: Users },
-  { key: "bulk", labelKey: "management_course_enrollments.tabs.bulk", icon: Upload },
-  { key: "codes", labelKey: "management_course_enrollments.tabs.codes", icon: FileSpreadsheet },
+  {
+    key: "roster",
+    labelKey: "management_course_enrollments.tabs.roster",
+    icon: Users,
+  },
+  {
+    key: "bulk",
+    labelKey: "management_course_enrollments.tabs.bulk",
+    icon: Upload,
+  },
+  {
+    key: "codes",
+    labelKey: "management_course_enrollments.tabs.codes",
+    icon: FileSpreadsheet,
+  },
 ];
 
 const UUID_RE =
@@ -54,7 +66,8 @@ const UUID_RE =
 const FAILURE_KEY: Record<string, string> = {
   user_not_found: "management_course_enrollments.failure.user_not_found",
   already_enrolled: "management_course_enrollments.failure.already_enrolled",
-  invalid_identifier: "management_course_enrollments.failure.invalid_identifier",
+  invalid_identifier:
+    "management_course_enrollments.failure.invalid_identifier",
   forbidden: "management_course_enrollments.failure.forbidden",
 };
 
@@ -138,8 +151,15 @@ export default function ManagementCourseEnrollmentsPage() {
       <div className="pt-4">
         <Breadcrumbs
           items={[
-            { label: t("teacher_common.breadcrumb_teaching"), to: "/teacher/courses" },
-            { label: course?.title ?? t("teacher_common.breadcrumb_course"), to: "/teacher/courses/$courseId", params: { courseId } },
+            {
+              label: t("teacher_common.breadcrumb_teaching"),
+              to: "/teacher/courses",
+            },
+            {
+              label: course?.title ?? t("teacher_common.breadcrumb_course"),
+              to: "/teacher/courses/$courseId",
+              params: { courseId },
+            },
             { label: t("management_course_enrollments.breadcrumb.manage") },
           ]}
         />
@@ -444,8 +464,12 @@ function BulkTab({ courseId }: { courseId: string }) {
         />
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-m3-on-surface-variant">
           <div className="flex gap-3">
-            <span>UUID: <strong>{parsed.userIds.length}</strong></span>
-            <span>Email: <strong>{parsed.emails.length}</strong></span>
+            <span>
+              UUID: <strong>{parsed.userIds.length}</strong>
+            </span>
+            <span>
+              Email: <strong>{parsed.emails.length}</strong>
+            </span>
             {parsed.invalid.length > 0 && (
               <span className="text-amber-700">
                 {t("management_course_enrollments.bulk.invalid_count", {
@@ -509,7 +533,9 @@ function BulkTab({ courseId }: { courseId: string }) {
         </label>
       </div>
 
-      {result && <BulkResultPanel result={result} onClose={() => setResult(null)} />}
+      {result && (
+        <BulkResultPanel result={result} onClose={() => setResult(null)} />
+      )}
     </div>
   );
 }
@@ -627,9 +653,7 @@ function CodesTab({ courseId }: { courseId: string }) {
       },
       {
         onSuccess: () => {
-          toast.success(
-            t("management_course_enrollments.toasts.code_created"),
-          );
+          toast.success(t("management_course_enrollments.toasts.code_created"));
           setCode("");
           setExpiresAt("");
           setMaxUses("");
@@ -955,9 +979,7 @@ function EditCodeModal({
       },
       {
         onSuccess: () => {
-          toast.success(
-            t("management_course_enrollments.toasts.code_updated"),
-          );
+          toast.success(t("management_course_enrollments.toasts.code_updated"));
           onClose();
         },
         onError: (err) =>
@@ -1038,7 +1060,12 @@ function EditCodeModal({
           >
             {t("common.cancel")}
           </Button>
-          <Button type="submit" size="sm" disabled={patch.isPending} className="gap-2">
+          <Button
+            type="submit"
+            size="sm"
+            disabled={patch.isPending}
+            className="gap-2"
+          >
             {patch.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             {t("common.save")}
           </Button>

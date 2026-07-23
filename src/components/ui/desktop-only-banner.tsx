@@ -26,7 +26,10 @@ export function DesktopOnlyBanner() {
       data-slot="desktop-only-banner"
       className="mb-4 flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-text-strong"
     >
-      <Monitor className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden="true" />
+      <Monitor
+        className="mt-0.5 size-5 shrink-0 text-warning"
+        aria-hidden="true"
+      />
       <div className="flex-1">
         <p className="font-medium">{t("desktop_only.title")}</p>
         <p className="text-text-muted">{t("desktop_only.description")}</p>

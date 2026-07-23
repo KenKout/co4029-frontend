@@ -2,11 +2,30 @@ import { useState, useRef } from "react";
 import { Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft, Plus, ChevronDown,
-  Video, BookOpen, GripVertical, HelpCircle, Mic,
-  Pencil, Loader2, ArrowRight, Check, Users, UserPlus, Activity,
-  Settings, Save, ExternalLink, Brain, ClipboardList,
-  ListChecks, Trash2, X, Library,
+  ArrowLeft,
+  Plus,
+  ChevronDown,
+  Video,
+  BookOpen,
+  GripVertical,
+  HelpCircle,
+  Mic,
+  Pencil,
+  Loader2,
+  ArrowRight,
+  Check,
+  Users,
+  UserPlus,
+  Activity,
+  Settings,
+  Save,
+  ExternalLink,
+  Brain,
+  ClipboardList,
+  ListChecks,
+  Trash2,
+  X,
+  Library,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -30,16 +49,42 @@ import {
 } from "@/lib/api/hooks/courses";
 import { useCreateQuiz } from "@/lib/api/hooks/quizzes";
 import { useCreateInterviewConfig } from "@/lib/api/hooks/interviews";
-import type { CourseContentItem, CourseContentModule } from "@/lib/api/types/common";
+import type {
+  CourseContentItem,
+  CourseContentModule,
+} from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
 
-const LESSON_TYPE_CONFIG: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; badge: string }> = {
-  video:    { label: "teacher_common.video_label",    icon: Video,       badge: "bg-blue-50 text-blue-700" },
-  reading:  { label: "teacher_common.reading_label",  icon: BookOpen,    badge: "bg-emerald-50 text-emerald-700" },
+const LESSON_TYPE_CONFIG: Record<
+  string,
+  {
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    badge: string;
+  }
+> = {
+  video: {
+    label: "teacher_common.video_label",
+    icon: Video,
+    badge: "bg-blue-50 text-blue-700",
+  },
+  reading: {
+    label: "teacher_common.reading_label",
+    icon: BookOpen,
+    badge: "bg-emerald-50 text-emerald-700",
+  },
 };
 
-const QUIZ_ITEM_CONFIG = { label: "teacher_common.quiz_label", icon: HelpCircle, badge: "bg-blue-50 text-blue-800" };
-const INTERVIEW_ITEM_CONFIG = { label: "teacher_common.interview_label", icon: Mic, badge: "bg-slate-50 text-slate-600" };
+const QUIZ_ITEM_CONFIG = {
+  label: "teacher_common.quiz_label",
+  icon: HelpCircle,
+  badge: "bg-blue-50 text-blue-800",
+};
+const INTERVIEW_ITEM_CONFIG = {
+  label: "teacher_common.interview_label",
+  icon: Mic,
+  badge: "bg-slate-50 text-slate-600",
+};
 
 const ADD_PILL_CLS =
   "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-m3-on-surface-variant " +
@@ -80,15 +125,29 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
         slug: slug.trim() || undefined,
         title: title.trim() || undefined,
         description: description.trim() || undefined,
-        level: (level || undefined) as "beginner" | "intermediate" | "advanced" | undefined,
-        status: (status || undefined) as "draft" | "published" | "archived" | undefined,
-        estimated_minutes: estimatedMinutes ? Number(estimatedMinutes) : undefined,
+        level: (level || undefined) as
+          | "beginner"
+          | "intermediate"
+          | "advanced"
+          | undefined,
+        status: (status || undefined) as
+          | "draft"
+          | "published"
+          | "archived"
+          | undefined,
+        estimated_minutes: estimatedMinutes
+          ? Number(estimatedMinutes)
+          : undefined,
         enrollment_cap: enrollmentCap ? Number(enrollmentCap) : undefined,
-        expected_completion_days: completionDays ? Number(completionDays) : undefined,
+        expected_completion_days: completionDays
+          ? Number(completionDays)
+          : undefined,
       });
       toast.success(t("teacher_course_settings.saved"));
     } catch (err: unknown) {
-      toast.error((err as Error).message || t("teacher_course_settings.save_failed"));
+      toast.error(
+        (err as Error).message || t("teacher_course_settings.save_failed"),
+      );
     }
   }
 
@@ -96,7 +155,7 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
     <div
       className={cn(
         "rounded-xl border border-l-4 border-m3-outline-variant/20 overflow-hidden transition-colors",
-        open ? "border-l-m3-primary" : "border-l-m3-outline-variant"
+        open ? "border-l-m3-primary" : "border-l-m3-outline-variant",
       )}
     >
       <button
@@ -106,7 +165,7 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
           "group w-full flex items-center gap-3 px-5 py-4 text-left cursor-pointer transition-colors",
           open
             ? "bg-m3-surface-container-low hover:bg-m3-surface-container"
-            : "hover:bg-m3-primary/5"
+            : "hover:bg-m3-primary/5",
         )}
       >
         <Settings className="h-4 w-4 text-m3-secondary shrink-0" />
@@ -117,14 +176,15 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
           {course?.status === "published"
             ? t("teacher_course_settings.status_summary_published")
             : t("teacher_course_settings.status_summary_draft")}{" "}
-          · {course?.level
+          ·{" "}
+          {course?.level
             ? t(`teacher_course_settings.level_${course.level}`)
             : t("teacher_course_settings.no_level")}
         </span>
         <ChevronDown
           className={cn(
             "h-4 w-4 text-m3-on-surface-variant transition-transform duration-300",
-            open ? "rotate-0" : "-rotate-90"
+            open ? "rotate-0" : "-rotate-90",
           )}
         />
       </button>
@@ -132,122 +192,179 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
       <div
         className={cn(
           "grid transition-[grid-template-rows] duration-300 ease-in-out",
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
         )}
       >
         <div className="overflow-hidden min-h-0">
-        <form onSubmit={handleSave} className="p-5 border-t border-m3-outline-variant/10 bg-m3-surface space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Title */}
-            <div className="sm:col-span-2 space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.course_title")}</label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t("teacher_course_settings.course_title_placeholder")}
-                className="text-sm"
-              />
+          <form
+            onSubmit={handleSave}
+            className="p-5 border-t border-m3-outline-variant/10 bg-m3-surface space-y-5"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Title */}
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("teacher_course_settings.course_title")}
+                </label>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={t(
+                    "teacher_course_settings.course_title_placeholder",
+                  )}
+                  className="text-sm"
+                />
+              </div>
+
+              {/* Slug */}
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("teacher_course_settings.course_slug")}
+                </label>
+                <Input
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  placeholder={t(
+                    "teacher_course_settings.course_slug_placeholder",
+                  )}
+                  className="text-sm"
+                />
+                <p className="text-[11px] text-m3-on-surface-variant">
+                  {t("teacher_course_settings.course_slug_help")}
+                </p>
+              </div>
+
+              {/* Description */}
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("teacher_course_settings.description")}
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  placeholder={t(
+                    "teacher_course_settings.description_placeholder",
+                  )}
+                  className="w-full px-4 py-3 text-sm bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all placeholder:text-m3-on-surface-variant/40"
+                />
+              </div>
+
+              {/* Level */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("teacher_course_settings.level")}
+                </label>
+                <select
+                  value={level}
+                  onChange={(e) => setLevel(e.target.value)}
+                  className="w-full px-4 py-3 text-sm bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer"
+                >
+                  <option value="">
+                    {t("teacher_course_settings.level_not_set")}
+                  </option>
+                  <option value="beginner">
+                    {t("teacher_course_settings.level_beginner")}
+                  </option>
+                  <option value="intermediate">
+                    {t("teacher_course_settings.level_intermediate")}
+                  </option>
+                  <option value="advanced">
+                    {t("teacher_course_settings.level_advanced")}
+                  </option>
+                </select>
+              </div>
+
+              {/* Status */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("teacher_course_settings.status")}
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full px-4 py-3 text-sm bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer"
+                >
+                  <option value="draft">
+                    {t("teacher_course_settings.status_draft")}
+                  </option>
+                  <option value="published">
+                    {t("teacher_course_settings.status_published")}
+                  </option>
+                  <option value="archived">
+                    {t("teacher_course_settings.status_archived")}
+                  </option>
+                </select>
+              </div>
+
+              {/* Estimated minutes */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("teacher_course_settings.estimated_duration")}
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={estimatedMinutes}
+                  onChange={(e) => setEstimatedMinutes(e.target.value)}
+                  placeholder={t(
+                    "teacher_course_settings.estimated_duration_placeholder",
+                  )}
+                  className="text-sm"
+                />
+              </div>
+
+              {/* Enrollment cap */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("teacher_course_settings.enrollment_cap")}
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={enrollmentCap}
+                  onChange={(e) => setEnrollmentCap(e.target.value)}
+                  placeholder={t(
+                    "teacher_course_settings.enrollment_cap_placeholder",
+                  )}
+                  className="text-sm"
+                />
+              </div>
+
+              {/* Completion days */}
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("teacher_course_settings.expected_completion")}
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={completionDays}
+                  onChange={(e) => setCompletionDays(e.target.value)}
+                  placeholder={t(
+                    "teacher_course_settings.expected_completion_placeholder",
+                  )}
+                  className="text-sm"
+                />
+              </div>
             </div>
 
-            {/* Slug */}
-            <div className="sm:col-span-2 space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.course_slug")}</label>
-              <Input
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                placeholder={t("teacher_course_settings.course_slug_placeholder")}
-                className="text-sm"
-              />
-              <p className="text-[11px] text-m3-on-surface-variant">
-                {t("teacher_course_settings.course_slug_help")}
-              </p>
-            </div>
-
-            {/* Description */}
-            <div className="sm:col-span-2 space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.description")}</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-                placeholder={t("teacher_course_settings.description_placeholder")}
-                className="w-full px-4 py-3 text-sm bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all placeholder:text-m3-on-surface-variant/40"
-              />
-            </div>
-
-            {/* Level */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.level")}</label>
-              <select
-                value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                className="w-full px-4 py-3 text-sm bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer"
+            <div className="flex justify-end pt-1">
+              <Button
+                type="submit"
+                size="sm"
+                disabled={updateCourse.isPending}
+                className="gap-2 gradient-primary text-white border-0 shadow-sm"
               >
-                <option value="">{t("teacher_course_settings.level_not_set")}</option>
-                <option value="beginner">{t("teacher_course_settings.level_beginner")}</option>
-                <option value="intermediate">{t("teacher_course_settings.level_intermediate")}</option>
-                <option value="advanced">{t("teacher_course_settings.level_advanced")}</option>
-              </select>
+                {updateCourse.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                {t("teacher_course_settings.save")}
+              </Button>
             </div>
-
-            {/* Status */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.status")}</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-4 py-3 text-sm bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer"
-              >
-                <option value="draft">{t("teacher_course_settings.status_draft")}</option>
-                <option value="published">{t("teacher_course_settings.status_published")}</option>
-                <option value="archived">{t("teacher_course_settings.status_archived")}</option>
-              </select>
-            </div>
-
-            {/* Estimated minutes */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.estimated_duration")}</label>
-              <Input
-                type="number" min={0}
-                value={estimatedMinutes}
-                onChange={(e) => setEstimatedMinutes(e.target.value)}
-                placeholder={t("teacher_course_settings.estimated_duration_placeholder")}
-                className="text-sm"
-              />
-            </div>
-
-            {/* Enrollment cap */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.enrollment_cap")}</label>
-              <Input
-                type="number" min={0}
-                value={enrollmentCap}
-                onChange={(e) => setEnrollmentCap(e.target.value)}
-                placeholder={t("teacher_course_settings.enrollment_cap_placeholder")}
-                className="text-sm"
-              />
-            </div>
-
-            {/* Completion days */}
-            <div className="sm:col-span-2 space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.expected_completion")}</label>
-              <Input
-                type="number" min={0}
-                value={completionDays}
-                onChange={(e) => setCompletionDays(e.target.value)}
-                placeholder={t("teacher_course_settings.expected_completion_placeholder")}
-                className="text-sm"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-1">
-            <Button type="submit" size="sm" disabled={updateCourse.isPending} className="gap-2 gradient-primary text-white border-0 shadow-sm">
-              {updateCourse.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {t("teacher_course_settings.save")}
-            </Button>
-          </div>
-        </form>
+          </form>
         </div>
       </div>
     </div>
@@ -276,7 +393,10 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
       setNewText("");
       toast.success(t("teacher_outcomes.added", "Learning outcome added"));
     } catch (err: unknown) {
-      toast.error((err as Error).message || t("teacher_outcomes.add_failed", "Failed to add outcome"));
+      toast.error(
+        (err as Error).message ||
+          t("teacher_outcomes.add_failed", "Failed to add outcome"),
+      );
     }
   }
 
@@ -298,7 +418,10 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
       cancelEdit();
       toast.success(t("teacher_outcomes.updated", "Learning outcome updated"));
     } catch (err: unknown) {
-      toast.error((err as Error).message || t("teacher_outcomes.update_failed", "Failed to update outcome"));
+      toast.error(
+        (err as Error).message ||
+          t("teacher_outcomes.update_failed", "Failed to update outcome"),
+      );
     }
   }
 
@@ -308,7 +431,10 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
       setPendingDeleteId(null);
       toast.success(t("teacher_outcomes.deleted", "Learning outcome deleted"));
     } catch (err: unknown) {
-      toast.error((err as Error).message || t("teacher_outcomes.delete_failed", "Failed to delete outcome"));
+      toast.error(
+        (err as Error).message ||
+          t("teacher_outcomes.delete_failed", "Failed to delete outcome"),
+      );
     }
   }
 
@@ -316,7 +442,7 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
     <div
       className={cn(
         "rounded-xl border border-l-4 border-m3-outline-variant/20 overflow-hidden transition-colors",
-        open ? "border-l-m3-primary" : "border-l-m3-outline-variant"
+        open ? "border-l-m3-primary" : "border-l-m3-outline-variant",
       )}
     >
       <button
@@ -326,7 +452,7 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
           "group w-full flex items-center gap-3 px-5 py-4 text-left cursor-pointer transition-colors",
           open
             ? "bg-m3-surface-container-low hover:bg-m3-surface-container"
-            : "hover:bg-m3-primary/5"
+            : "hover:bg-m3-primary/5",
         )}
       >
         <ListChecks className="h-4 w-4 text-m3-secondary shrink-0" />
@@ -334,12 +460,14 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
           {t("teacher_outcomes.title", "Learning Outcomes")}
         </span>
         <span className="text-xs text-m3-on-surface-variant mr-2 hidden sm:block">
-          {t("teacher_outcomes.count", "{{count}} defined", { count: outcomes.length })}
+          {t("teacher_outcomes.count", "{{count}} defined", {
+            count: outcomes.length,
+          })}
         </span>
         <ChevronDown
           className={cn(
             "h-4 w-4 text-m3-on-surface-variant transition-transform duration-300",
-            open ? "rotate-0" : "-rotate-90"
+            open ? "rotate-0" : "-rotate-90",
           )}
         />
       </button>
@@ -347,7 +475,7 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
       <div
         className={cn(
           "grid transition-[grid-template-rows] duration-300 ease-in-out",
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
         )}
       >
         <div className="overflow-hidden min-h-0">
@@ -356,13 +484,15 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
               <p className="text-sm text-m3-on-surface-variant">
                 {t(
                   "teacher_outcomes.empty",
-                  "No learning outcomes yet. Add one to describe what students will achieve."
+                  "No learning outcomes yet. Add one to describe what students will achieve.",
                 )}
               </p>
             ) : (
               <ul className="space-y-2">
                 {outcomes.map((outcome, idx) => {
-                  const code = t("teacher_outcomes.code", "L.O.{{n}}", { n: idx + 1 });
+                  const code = t("teacher_outcomes.code", "L.O.{{n}}", {
+                    n: idx + 1,
+                  });
                   const isEditing = editingId === outcome.id;
                   return (
                     <li
@@ -393,7 +523,9 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                               type="button"
                               size="icon-sm"
                               variant="ghost"
-                              disabled={updateOutcome.isPending || !editText.trim()}
+                              disabled={
+                                updateOutcome.isPending || !editText.trim()
+                              }
                               onClick={() => void handleSaveEdit(outcome.id)}
                               aria-label={t("teacher_outcomes.save", "Save")}
                             >
@@ -408,7 +540,10 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                               size="icon-sm"
                               variant="ghost"
                               onClick={cancelEdit}
-                              aria-label={t("teacher_outcomes.cancel", "Cancel")}
+                              aria-label={t(
+                                "teacher_outcomes.cancel",
+                                "Cancel",
+                              )}
                             >
                               <X className="h-4 w-4 text-m3-on-surface-variant" />
                             </Button>
@@ -424,7 +559,9 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                               type="button"
                               size="icon-sm"
                               variant="ghost"
-                              onClick={() => startEdit(outcome.id, outcome.outcome_text)}
+                              onClick={() =>
+                                startEdit(outcome.id, outcome.outcome_text)
+                              }
                               aria-label={t("teacher_outcomes.edit", "Edit")}
                             >
                               <Pencil className="h-4 w-4 text-m3-on-surface-variant" />
@@ -434,7 +571,10 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                               size="icon-sm"
                               variant="ghost"
                               onClick={() => setPendingDeleteId(outcome.id)}
-                              aria-label={t("teacher_outcomes.delete", "Delete")}
+                              aria-label={t(
+                                "teacher_outcomes.delete",
+                                "Delete",
+                              )}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -453,7 +593,7 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                 onChange={(e) => setNewText(e.target.value)}
                 placeholder={t(
                   "teacher_outcomes.add_placeholder",
-                  "e.g. Explain the core principles of…"
+                  "e.g. Explain the core principles of…",
                 )}
                 className="flex-1 text-sm"
               />
@@ -483,7 +623,7 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
         title={t("teacher_outcomes.delete_title", "Delete learning outcome?")}
         description={t(
           "teacher_outcomes.delete_description",
-          "The remaining outcomes will be renumbered automatically."
+          "The remaining outcomes will be renumbered automatically.",
         )}
         confirmLabel={t("teacher_outcomes.delete", "Delete")}
         isPending={deleteOutcome.isPending}
@@ -516,7 +656,10 @@ function AddLessonPills({
   const [interviewTitle, setInterviewTitle] = useState("");
 
   function slugify(title: string) {
-    return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
   }
 
   async function handleAdd(lessonType: string) {
@@ -533,7 +676,9 @@ function AddLessonPills({
       });
       toast.success(t("teacher_common.lesson_added", { label }));
     } catch (err: unknown) {
-      toast.error((err as Error).message || t("teacher_common.add_lesson_failed"));
+      toast.error(
+        (err as Error).message || t("teacher_common.add_lesson_failed"),
+      );
     } finally {
       setAdding(false);
     }
@@ -554,7 +699,9 @@ function AddLessonPills({
       });
       toast.success(t("teacher_common.quiz_added"));
     } catch (err: unknown) {
-      toast.error((err as Error).message || t("teacher_common.add_quiz_failed"));
+      toast.error(
+        (err as Error).message || t("teacher_common.add_quiz_failed"),
+      );
     } finally {
       setAdding(false);
     }
@@ -673,7 +820,14 @@ function AddLessonPills({
 }
 
 function ModuleItemRow({
-  item, courseId, isDragOver, isDragging, onDragStart, onDragOver, onDrop, onDragEnd,
+  item,
+  courseId,
+  isDragOver,
+  isDragging,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
 }: {
   item: CourseContentItem;
   courseId: string;
@@ -689,17 +843,25 @@ function ModuleItemRow({
   const quiz = item.quiz;
   const interview = item.interview;
   const lessonType = item.target?.lesson_type ?? lesson?.lesson_type ?? "video";
-  const cfg = item.item_type === "lesson"
-    ? (LESSON_TYPE_CONFIG[lessonType] ?? LESSON_TYPE_CONFIG["video"])
-    : item.item_type === "quiz"
-    ? QUIZ_ITEM_CONFIG
-    : INTERVIEW_ITEM_CONFIG;
+  const cfg =
+    item.item_type === "lesson"
+      ? (LESSON_TYPE_CONFIG[lessonType] ?? LESSON_TYPE_CONFIG["video"])
+      : item.item_type === "quiz"
+        ? QUIZ_ITEM_CONFIG
+        : INTERVIEW_ITEM_CONFIG;
   const Icon = cfg?.icon ?? BookOpen;
   const rawLabel = cfg?.label ?? item.item_type;
   const label = rawLabel.startsWith("teacher_common.")
     ? t(rawLabel)
-    : (item.item_type === "lesson" ? t("teacher_common.lesson_fallback") : rawLabel);
-  const title = item.target?.title ?? lesson?.title ?? quiz?.title ?? interview?.title ?? label;
+    : item.item_type === "lesson"
+      ? t("teacher_common.lesson_fallback")
+      : rawLabel;
+  const title =
+    item.target?.title ??
+    lesson?.title ??
+    quiz?.title ??
+    interview?.title ??
+    label;
   const status = lesson?.status ?? quiz?.status ?? interview?.status;
 
   return (
@@ -714,11 +876,16 @@ function ModuleItemRow({
         isDragging ? "opacity-40" : "",
         isDragOver
           ? "ring-2 ring-m3-primary/40 bg-m3-primary-fixed shadow-sm"
-          : "bg-m3-surface hover:bg-m3-surface-container"
+          : "bg-m3-surface hover:bg-m3-surface-container",
       )}
     >
       <GripVertical className="h-3.5 w-3.5 text-m3-outline-variant shrink-0" />
-      <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", cfg?.badge ?? "bg-slate-50 text-slate-500")}>
+      <div
+        className={cn(
+          "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
+          cfg?.badge ?? "bg-slate-50 text-slate-500",
+        )}
+      >
         <Icon className="h-3.5 w-3.5" />
       </div>
       {item.item_type === "lesson" && item.lesson_id ? (
@@ -756,11 +923,23 @@ function ModuleItemRow({
           {title}
         </span>
       )}
-      <Badge className={cn("text-[10px] border-0 shrink-0", cfg?.badge ?? "bg-slate-100 text-slate-500")}>
+      <Badge
+        className={cn(
+          "text-[10px] border-0 shrink-0",
+          cfg?.badge ?? "bg-slate-100 text-slate-500",
+        )}
+      >
         {label}
       </Badge>
       {status && (
-        <Badge className={cn("text-[10px] border-0 shrink-0", status === "published" ? "bg-emerald-100 text-emerald-700" : "bg-amber-50 text-amber-700")}>
+        <Badge
+          className={cn(
+            "text-[10px] border-0 shrink-0",
+            status === "published"
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-amber-50 text-amber-700",
+          )}
+        >
           {status}
         </Badge>
       )}
@@ -771,7 +950,11 @@ function ModuleItemRow({
             params={{ courseId, lessonId: item.lesson_id }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Button variant="ghost" size="icon" className="h-6 w-6 hover:text-m3-on-surface">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 hover:text-m3-on-surface"
+            >
               <Pencil className="h-3 w-3" />
             </Button>
           </Link>
@@ -782,7 +965,11 @@ function ModuleItemRow({
             params={{ courseId, quizId: item.quiz_id }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Button variant="ghost" size="icon" className="h-6 w-6 hover:text-m3-on-surface">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 hover:text-m3-on-surface"
+            >
               <Pencil className="h-3 w-3" />
             </Button>
           </Link>
@@ -793,7 +980,11 @@ function ModuleItemRow({
             params={{ courseId, configId: item.interview_config_id }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Button variant="ghost" size="icon" className="h-6 w-6 hover:text-m3-on-surface">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 hover:text-m3-on-surface"
+            >
               <Pencil className="h-3 w-3" />
             </Button>
           </Link>
@@ -823,10 +1014,18 @@ function ModuleAccordion({
   const [dragSourceIdx, setDragSourceIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
-  const allItemsSorted = [...(module.items ?? [])].sort((a, b) => a.position - b.position);
-  const lessonCount = (module.items ?? []).filter((i) => i.item_type === "lesson").length;
-  const quizCount = (module.items ?? []).filter((i) => i.item_type === "quiz").length;
-  const interviewCount = (module.items ?? []).filter((i) => i.item_type === "interview").length;
+  const allItemsSorted = [...(module.items ?? [])].sort(
+    (a, b) => a.position - b.position,
+  );
+  const lessonCount = (module.items ?? []).filter(
+    (i) => i.item_type === "lesson",
+  ).length;
+  const quizCount = (module.items ?? []).filter(
+    (i) => i.item_type === "quiz",
+  ).length;
+  const interviewCount = (module.items ?? []).filter(
+    (i) => i.item_type === "interview",
+  ).length;
 
   function handleDrop(dropIdx: number) {
     if (dragSourceIdx === null || dragSourceIdx === dropIdx) {
@@ -839,7 +1038,10 @@ function ModuleAccordion({
     newOrder.splice(dropIdx, 0, moved);
     const allIds = newOrder.map((item) => item.id);
     reorderItems.mutate(allIds, {
-      onError: (err) => toast.error((err as Error).message || t("teacher_common.reorder_failed")),
+      onError: (err) =>
+        toast.error(
+          (err as Error).message || t("teacher_common.reorder_failed"),
+        ),
     });
     setDragSourceIdx(null);
     setDragOverIdx(null);
@@ -856,38 +1058,44 @@ function ModuleAccordion({
     setEditingTitle(false);
     const trimmed = titleDraft.trim();
     if (trimmed && trimmed !== module.title) {
-      updateModule.mutate({ title: trimmed }, {
-        onError: (err) => toast.error((err as Error).message),
-      });
+      updateModule.mutate(
+        { title: trimmed },
+        {
+          onError: (err) => toast.error((err as Error).message),
+        },
+      );
     }
   }
 
   function toggleStatus(e: React.MouseEvent) {
     e.stopPropagation();
     const next = module.status === "published" ? "draft" : "published";
-    updateModule.mutate({ status: next }, {
-      onSuccess: () =>
-        toast.success(
-          t("teacher_common.module_status_set", {
-            status: t(`teacher_dashboard.status.${next}`),
-          }),
-        ),
-      onError: (err) => toast.error((err as Error).message),
-    });
+    updateModule.mutate(
+      { status: next },
+      {
+        onSuccess: () =>
+          toast.success(
+            t("teacher_common.module_status_set", {
+              status: t(`teacher_dashboard.status.${next}`),
+            }),
+          ),
+        onError: (err) => toast.error((err as Error).message),
+      },
+    );
   }
 
   return (
     <div
       className={cn(
         "flex flex-col rounded-xl border-l-4 overflow-hidden",
-        open ? "border-m3-primary" : "border-m3-outline-variant"
+        open ? "border-m3-primary" : "border-m3-outline-variant",
       )}
     >
       {/* Header row */}
       <div
         className={cn(
           "group w-full flex items-center gap-3 p-4 text-left cursor-pointer transition-colors",
-          "bg-m3-surface-container-low hover:bg-m3-surface-container"
+          "bg-m3-surface-container-low hover:bg-m3-surface-container",
         )}
         onClick={() => !editingTitle && setOpen((o) => !o)}
       >
@@ -902,7 +1110,10 @@ function ModuleAccordion({
             onBlur={saveTitle}
             onKeyDown={(e) => {
               if (e.key === "Enter") saveTitle();
-              if (e.key === "Escape") { setEditingTitle(false); setTitleDraft(module.title); }
+              if (e.key === "Escape") {
+                setEditingTitle(false);
+                setTitleDraft(module.title);
+              }
               e.stopPropagation();
             }}
             onClick={(e) => e.stopPropagation()}
@@ -910,8 +1121,11 @@ function ModuleAccordion({
           />
         ) : (
           <span className="flex-1 font-headline font-semibold text-sm text-m3-on-surface transition-colors group-hover:text-m3-primary">
-            {updateModule.isPending && updateModule.variables && "title" in updateModule.variables
-              ? (updateModule.variables as { title?: string }).title ?? module.title
+            {updateModule.isPending &&
+            updateModule.variables &&
+            "title" in updateModule.variables
+              ? ((updateModule.variables as { title?: string }).title ??
+                module.title)
               : module.title}
           </span>
         )}
@@ -923,9 +1137,15 @@ function ModuleAccordion({
           onClick={(e) => e.stopPropagation()}
           className="shrink-0"
         >
-          <Button variant="outline" size="sm" className="gap-1.5 h-7 px-2.5 text-xs border-m3-outline-variant/30">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 h-7 px-2.5 text-xs border-m3-outline-variant/30"
+          >
             <ExternalLink className="h-3 w-3" />
-            <span className="hidden sm:inline">{t("teacher_common.edit_button")}</span>
+            <span className="hidden sm:inline">
+              {t("teacher_common.edit_button")}
+            </span>
           </Button>
         </Link>
 
@@ -943,7 +1163,7 @@ function ModuleAccordion({
             "text-[10px] font-bold px-2 py-0.5 rounded-full border-0 transition-colors cursor-pointer",
             module.status === "published"
               ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-              : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+              : "bg-amber-50 text-amber-700 hover:bg-amber-100",
           )}
         >
           {updateModule.isPending
@@ -955,8 +1175,7 @@ function ModuleAccordion({
 
         {/* Meta counts */}
         <span className="text-[11px] text-m3-on-surface-variant hidden sm:block shrink-0">
-          {lessonCount}L
-          {quizCount > 0 && ` · ${quizCount}Q`}
+          {lessonCount}L{quizCount > 0 && ` · ${quizCount}Q`}
           {interviewCount > 0 && ` · ${interviewCount}I`}
         </span>
 
@@ -967,7 +1186,11 @@ function ModuleAccordion({
           onClick={startEditTitle}
           className="shrink-0 p-1 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors"
         >
-          {editingTitle ? <Check className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+          {editingTitle ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : (
+            <Pencil className="h-3.5 w-3.5" />
+          )}
         </button>
 
         {/* Chevron expand */}
@@ -979,7 +1202,7 @@ function ModuleAccordion({
           <ChevronDown
             className={cn(
               "h-4 w-4 text-m3-on-surface-variant transition-transform duration-300",
-              open ? "rotate-0" : "-rotate-90"
+              open ? "rotate-0" : "-rotate-90",
             )}
           />
         </button>
@@ -988,14 +1211,16 @@ function ModuleAccordion({
       <div
         className={cn(
           "grid transition-[grid-template-rows] duration-300 ease-in-out",
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
         )}
       >
         <div className="overflow-hidden min-h-0">
           <div className="border-t border-m3-outline-variant bg-card">
             <div className="p-4 flex flex-col gap-1">
               {allItemsSorted.length === 0 && (
-                <p className="text-xs text-m3-on-surface-variant py-2 pl-1">{t("teacher_common.no_items_yet")}</p>
+                <p className="text-xs text-m3-on-surface-variant py-2 pl-1">
+                  {t("teacher_common.no_items_yet")}
+                </p>
               )}
               {allItemsSorted.map((item, idx) => (
                 <ModuleItemRow
@@ -1008,11 +1233,21 @@ function ModuleAccordion({
                     setDragSourceIdx(idx);
                     const el = e.currentTarget as HTMLElement;
                     const rect = el.getBoundingClientRect();
-                    e.dataTransfer.setDragImage(el, e.clientX - rect.left, e.clientY - rect.top);
+                    e.dataTransfer.setDragImage(
+                      el,
+                      e.clientX - rect.left,
+                      e.clientY - rect.top,
+                    );
                   }}
-                  onDragOver={(e) => { e.preventDefault(); setDragOverIdx(idx); }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOverIdx(idx);
+                  }}
                   onDrop={() => handleDrop(idx)}
-                  onDragEnd={() => { setDragSourceIdx(null); setDragOverIdx(null); }}
+                  onDragEnd={() => {
+                    setDragSourceIdx(null);
+                    setDragOverIdx(null);
+                  }}
                 />
               ))}
               <AddLessonPills
@@ -1050,12 +1285,17 @@ function AddModuleForm({
       toast.success(t("teacher_common.module_created"));
       onDone();
     } catch (err: unknown) {
-      toast.error((err as Error).message || t("teacher_common.create_module_failed"));
+      toast.error(
+        (err as Error).message || t("teacher_common.create_module_failed"),
+      );
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 p-4 bg-m3-surface-container rounded-xl">
+    <form
+      onSubmit={handleSubmit}
+      className="flex gap-2 p-4 bg-m3-surface-container rounded-xl"
+    >
       <Input
         autoFocus
         required
@@ -1065,7 +1305,11 @@ function AddModuleForm({
         className="flex-1 text-sm"
       />
       <Button type="submit" size="sm" disabled={createModule.isPending}>
-        {createModule.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t("common.create")}
+        {createModule.isPending ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          t("common.create")
+        )}
       </Button>
       <Button type="button" variant="ghost" size="sm" onClick={onDone}>
         {t("common.cancel")}
@@ -1094,7 +1338,10 @@ export default function CourseManagePage() {
         </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 text-xs text-m3-on-surface-variant mb-0.5">
-            <Link to="/teacher/courses" className="hover:text-m3-primary transition-colors">
+            <Link
+              to="/teacher/courses"
+              className="hover:text-m3-primary transition-colors"
+            >
               {t("teacher_courses_list.title")}
             </Link>
             <ArrowRight className="h-3 w-3" />
@@ -1107,47 +1354,107 @@ export default function CourseManagePage() {
             {t("teacher_common.module_count", { count: modules.length })}
             {modules.length > 0 &&
               t("teacher_common.lesson_count_suffix", {
-                count: modules.reduce((acc, m) => acc + (m.items ?? []).filter(i => i.item_type === "lesson").length, 0),
+                count: modules.reduce(
+                  (acc, m) =>
+                    acc +
+                    (m.items ?? []).filter((i) => i.item_type === "lesson")
+                      .length,
+                  0,
+                ),
               })}
           </p>
 
           {/* Course navigation — moved below the course name so the header
               stays clean and the nav wraps as its own row. */}
           <div className="flex flex-wrap items-center gap-2 mt-3">
-            <Link to="/teacher/courses/$courseId/students" params={{ courseId }}>
-              <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+            <Link
+              to="/teacher/courses/$courseId/students"
+              params={{ courseId }}
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-m3-outline-variant/30 shrink-0"
+              >
                 <Users className="h-4 w-4 text-m3-secondary" />
-                <span className="hidden sm:inline">{t("teacher_common.nav_students")}</span>
+                <span className="hidden sm:inline">
+                  {t("teacher_common.nav_students")}
+                </span>
               </Button>
             </Link>
-            <Link to="/teacher/courses/$courseId/progress" params={{ courseId }}>
-              <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+            <Link
+              to="/teacher/courses/$courseId/progress"
+              params={{ courseId }}
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-m3-outline-variant/30 shrink-0"
+              >
                 <Activity className="h-4 w-4 text-m3-secondary" />
-                <span className="hidden sm:inline">{t("teacher_common.nav_progress")}</span>
+                <span className="hidden sm:inline">
+                  {t("teacher_common.nav_progress")}
+                </span>
               </Button>
             </Link>
-            <Link to="/teacher/courses/$courseId/assessments" params={{ courseId }}>
-              <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+            <Link
+              to="/teacher/courses/$courseId/assessments"
+              params={{ courseId }}
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-m3-outline-variant/30 shrink-0"
+              >
                 <ClipboardList className="h-4 w-4 text-m3-secondary" />
-                <span className="hidden sm:inline">{t("teacher_common.nav_assessments")}</span>
+                <span className="hidden sm:inline">
+                  {t("teacher_common.nav_assessments")}
+                </span>
               </Button>
             </Link>
-            <Link to="/teacher/courses/$courseId/question-bank" params={{ courseId }}>
-              <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+            <Link
+              to="/teacher/courses/$courseId/question-bank"
+              params={{ courseId }}
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-m3-outline-variant/30 shrink-0"
+              >
                 <Library className="h-4 w-4 text-m3-secondary" />
-                <span className="hidden sm:inline">{t("teacher_common.nav_question_bank")}</span>
+                <span className="hidden sm:inline">
+                  {t("teacher_common.nav_question_bank")}
+                </span>
               </Button>
             </Link>
-            <Link to="/teacher/courses/$courseId/sr-cohort" params={{ courseId }}>
-              <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+            <Link
+              to="/teacher/courses/$courseId/sr-cohort"
+              params={{ courseId }}
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-m3-outline-variant/30 shrink-0"
+              >
                 <Brain className="h-4 w-4 text-m3-secondary" />
-                <span className="hidden sm:inline">{t("teacher_common.nav_retention")}</span>
+                <span className="hidden sm:inline">
+                  {t("teacher_common.nav_retention")}
+                </span>
               </Button>
             </Link>
-            <Link to="/management/courses/$courseId/enrollments" params={{ courseId }}>
-              <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+            <Link
+              to="/management/courses/$courseId/enrollments"
+              params={{ courseId }}
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-m3-outline-variant/30 shrink-0"
+              >
                 <UserPlus className="h-4 w-4 text-m3-secondary" />
-                <span className="hidden sm:inline">{t("teacher_common.nav_manage_enrollments")}</span>
+                <span className="hidden sm:inline">
+                  {t("teacher_common.nav_manage_enrollments")}
+                </span>
               </Button>
             </Link>
           </div>
@@ -1188,7 +1495,10 @@ export default function CourseManagePage() {
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2].map((i) => (
-              <div key={i} className="h-16 bg-m3-surface-container animate-pulse rounded-xl" />
+              <div
+                key={i}
+                className="h-16 bg-m3-surface-container animate-pulse rounded-xl"
+              />
             ))}
           </div>
         ) : (

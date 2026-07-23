@@ -43,7 +43,11 @@ function getRecognitionCtor(): SpeechRecognitionCtor | null {
     SpeechRecognition?: SpeechRecognitionCtor;
     webkitSpeechRecognition?: SpeechRecognitionCtor;
   };
-  return browserWindow.SpeechRecognition ?? browserWindow.webkitSpeechRecognition ?? null;
+  return (
+    browserWindow.SpeechRecognition ??
+    browserWindow.webkitSpeechRecognition ??
+    null
+  );
 }
 
 export type SpeechDictationError =
@@ -133,7 +137,11 @@ export function useSpeechDictation({
     recognition.onresult = (event) => {
       let finalChunk = "";
       let interimChunk = "";
-      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+      for (
+        let index = event.resultIndex;
+        index < event.results.length;
+        index += 1
+      ) {
         const result = event.results[index];
         const text = result[0]?.transcript ?? "";
         if (result.isFinal) finalChunk += text;

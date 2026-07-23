@@ -50,13 +50,22 @@ function slugGradient(slug: string) {
 }
 
 function ItemTypeIcon({ type }: { type: "lesson" | "quiz" | "interview" }) {
-  if (type === "quiz") return <HelpCircle className="h-3.5 w-3.5 text-m3-primary shrink-0" />;
-  if (type === "interview") return <Mic className="h-3.5 w-3.5 text-m3-secondary shrink-0" />;
+  if (type === "quiz")
+    return <HelpCircle className="h-3.5 w-3.5 text-m3-primary shrink-0" />;
+  if (type === "interview")
+    return <Mic className="h-3.5 w-3.5 text-m3-secondary shrink-0" />;
   return <PlayCircle className="h-3.5 w-3.5 text-m3-secondary shrink-0" />;
 }
 
 function SkeletonBlock({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-xl bg-m3-surface-container", className)} />;
+  return (
+    <div
+      className={cn(
+        "animate-pulse rounded-xl bg-m3-surface-container",
+        className,
+      )}
+    />
+  );
 }
 
 function initials(name: string) {
@@ -76,8 +85,10 @@ export default function CourseDetailPage() {
   const course = courseQuery.data;
   const courseId = course?.id;
 
-  const { data: outcomes, isLoading: outcomesLoading } = useCourseOutcomes(courseId);
-  const { data: content, isLoading: contentLoading } = useCourseContent(courseId);
+  const { data: outcomes, isLoading: outcomesLoading } =
+    useCourseOutcomes(courseId);
+  const { data: content, isLoading: contentLoading } =
+    useCourseContent(courseId);
   const { data: tags } = useCourseTags(courseId);
 
   const courseUnavailable =
@@ -87,7 +98,7 @@ export default function CourseDetailPage() {
 
   if (courseQuery.isLoading) {
     return (
-    <div className="min-h-screen pb-28">
+      <div className="min-h-screen pb-28">
         <div className="h-72 bg-m3-surface-container animate-pulse" />
         <div className="max-w-6xl mx-auto space-y-6">
           <SkeletonBlock className="h-48" />
@@ -109,7 +120,8 @@ export default function CourseDetailPage() {
           </p>
           <Link to="/courses">
             <Button className="gradient-primary text-white rounded-xl gap-2">
-              {t("course_detail.browse_courses")} <ArrowRight className="h-4 w-4" />
+              {t("course_detail.browse_courses")}{" "}
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -131,11 +143,15 @@ export default function CourseDetailPage() {
 
   return (
     <div className="min-h-screen pb-28">
-
       <div className="relative overflow-hidden border-b border-m3-outline-variant/20 pb-10 pt-2">
         <div className="max-w-6xl mx-auto">
           <nav className="flex items-center gap-2 text-xs text-m3-on-surface-variant mb-6">
-            <Link to="/courses" className="hover:text-m3-primary transition-colors">{t("course_detail.breadcrumb_courses")}</Link>
+            <Link
+              to="/courses"
+              className="hover:text-m3-primary transition-colors"
+            >
+              {t("course_detail.breadcrumb_courses")}
+            </Link>
             <span>/</span>
             <span className="text-m3-on-surface truncate">{course.title}</span>
           </nav>
@@ -184,16 +200,16 @@ export default function CourseDetailPage() {
               )}
             </div>
 
-            <div className="hidden lg:block w-80 xl:w-88 shrink-0">{ctaCard}</div>
+            <div className="hidden lg:block w-80 xl:w-88 shrink-0">
+              {ctaCard}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-
           <div className="flex-1 min-w-0 space-y-8">
-
             {outcomesLoading ? (
               <SkeletonBlock className="h-48" />
             ) : outcomes && outcomes.length > 0 ? (
@@ -219,7 +235,9 @@ export default function CourseDetailPage() {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <h2 className="font-headline font-bold text-xl text-m3-on-surface">{t("course_detail.course_content")}</h2>
+                <h2 className="font-headline font-bold text-xl text-m3-on-surface">
+                  {t("course_detail.course_content")}
+                </h2>
                 {!contentLoading && content && (
                   <span className="text-xs text-m3-on-surface-variant">
                     {t("course_detail.modules_count", { count: moduleCount })}
@@ -229,13 +247,17 @@ export default function CourseDetailPage() {
 
               {contentLoading ? (
                 <div className="space-y-2">
-                  {[1, 2, 3].map((i) => <SkeletonBlock key={i} className="h-16" />)}
+                  {[1, 2, 3].map((i) => (
+                    <SkeletonBlock key={i} className="h-16" />
+                  ))}
                 </div>
               ) : content && moduleCount > 0 ? (
                 <ModuleAccordion modules={content.modules} />
               ) : (
                 <div className="rounded-xl border border-dashed border-m3-outline-variant p-10 text-center">
-                  <p className="text-sm text-m3-on-surface-variant">{t("course_detail.no_modules")}</p>
+                  <p className="text-sm text-m3-on-surface-variant">
+                    {t("course_detail.no_modules")}
+                  </p>
                 </div>
               )}
             </div>
@@ -287,7 +309,10 @@ function InstructorLine({ instructor }: { instructor: InstructorRead | null }) {
     <div className="flex items-center gap-2.5 text-sm text-m3-on-surface-variant">
       <Avatar className="h-7 w-7">
         {instructor.avatar_url ? (
-          <AvatarImage src={instructor.avatar_url} alt={instructor.display_name} />
+          <AvatarImage
+            src={instructor.avatar_url}
+            alt={instructor.display_name}
+          />
         ) : null}
         <AvatarFallback className="gradient-secondary text-white text-xs font-bold">
           {initials(instructor.display_name)}
@@ -295,9 +320,14 @@ function InstructorLine({ instructor }: { instructor: InstructorRead | null }) {
       </Avatar>
       <span>
         {t("course_detail.created_by")}{" "}
-        <span className="text-m3-on-surface font-semibold">{instructor.display_name}</span>
+        <span className="text-m3-on-surface font-semibold">
+          {instructor.display_name}
+        </span>
         {instructor.headline && (
-          <span className="text-m3-on-surface-variant/60"> · {instructor.headline}</span>
+          <span className="text-m3-on-surface-variant/60">
+            {" "}
+            · {instructor.headline}
+          </span>
         )}
       </span>
     </div>
@@ -344,10 +374,11 @@ function ModuleAccordion({ modules }: { modules: ModulePublic[] }) {
                   </p>
                 </div>
               </div>
-              {isOpen
-                ? <ChevronUp className="h-4 w-4 text-m3-outline shrink-0 ml-3" />
-                : <ChevronDown className="h-4 w-4 text-m3-outline shrink-0 ml-3" />
-              }
+              {isOpen ? (
+                <ChevronUp className="h-4 w-4 text-m3-outline shrink-0 ml-3" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-m3-outline shrink-0 ml-3" />
+              )}
             </button>
 
             {isOpen && <ModuleItemsPanel moduleId={mod.id} />}
@@ -388,7 +419,7 @@ function ModuleItemsPanel({ moduleId }: { moduleId: string }) {
             ? t("course_detail.item_quiz")
             : item.item_type === "interview"
               ? t("course_detail.item_interview")
-              : item.target?.title ?? t("course_detail.item_lesson");
+              : (item.target?.title ?? t("course_detail.item_lesson"));
         return (
           <div
             key={item.id}
@@ -411,11 +442,16 @@ function InstructorCard({ instructor }: { instructor: InstructorRead }) {
 
   return (
     <GlassCard className="p-6 sm:p-8">
-      <h2 className="font-headline font-bold text-xl text-m3-on-surface mb-5">{t("course_detail.about_instructor")}</h2>
+      <h2 className="font-headline font-bold text-xl text-m3-on-surface mb-5">
+        {t("course_detail.about_instructor")}
+      </h2>
       <div className="flex flex-col sm:flex-row gap-5">
         <Avatar className="h-20 w-20 shrink-0 ring-4 ring-white shadow-xl self-start">
           {instructor.avatar_url ? (
-            <AvatarImage src={instructor.avatar_url} alt={instructor.display_name} />
+            <AvatarImage
+              src={instructor.avatar_url}
+              alt={instructor.display_name}
+            />
           ) : null}
           <AvatarFallback className="gradient-primary text-white text-xl font-bold">
             {inits}
@@ -426,10 +462,14 @@ function InstructorCard({ instructor }: { instructor: InstructorRead }) {
             <h3 className="font-headline font-bold text-m3-primary text-lg">
               {instructor.display_name}
             </h3>
-            <p className="text-m3-secondary text-sm font-semibold mt-0.5">{t("course_detail.instructor_role")}</p>
+            <p className="text-m3-secondary text-sm font-semibold mt-0.5">
+              {t("course_detail.instructor_role")}
+            </p>
           </div>
           {instructor.headline && (
-            <p className="text-sm text-m3-on-surface-variant leading-relaxed">{instructor.headline}</p>
+            <p className="text-sm text-m3-on-surface-variant leading-relaxed">
+              {instructor.headline}
+            </p>
           )}
         </div>
       </div>
@@ -461,7 +501,11 @@ function CtaCard({
       </div>
 
       <div className="p-5 space-y-5">
-        <Link to="/courses/$slug/learn" params={{ slug: course.slug }} className="block">
+        <Link
+          to="/courses/$slug/learn"
+          params={{ slug: course.slug }}
+          className="block"
+        >
           <Button className="w-full gradient-primary text-white font-bold rounded-xl py-5 h-auto text-base gap-2 shadow-ai-glow hover:opacity-90 transition-opacity">
             {t("course_detail.start_learning")}
             <ArrowRight className="h-5 w-5" />
@@ -474,7 +518,9 @@ function CtaCard({
               <BookOpen className="h-4 w-4 text-m3-outline" />
               {t("course_detail.modules")}
             </span>
-            <span className="font-semibold text-m3-on-surface text-xs">{moduleCount}</span>
+            <span className="font-semibold text-m3-on-surface text-xs">
+              {moduleCount}
+            </span>
           </div>
         )}
 
@@ -495,7 +541,10 @@ function CtaCard({
           <div className="flex items-center gap-3 pt-2 border-t border-m3-outline-variant/20">
             <Avatar className="h-9 w-9 shrink-0">
               {course.instructor.avatar_url ? (
-                <AvatarImage src={course.instructor.avatar_url} alt={course.instructor.display_name} />
+                <AvatarImage
+                  src={course.instructor.avatar_url}
+                  alt={course.instructor.display_name}
+                />
               ) : null}
               <AvatarFallback className="gradient-primary text-white text-xs font-bold">
                 {initials(course.instructor.display_name)}
@@ -505,7 +554,9 @@ function CtaCard({
               <p className="text-xs font-semibold text-m3-on-surface truncate">
                 {course.instructor.display_name}
               </p>
-              <p className="text-[10px] text-m3-on-surface-variant">{t("course_detail.instructor_role")}</p>
+              <p className="text-[10px] text-m3-on-surface-variant">
+                {t("course_detail.instructor_role")}
+              </p>
             </div>
           </div>
         )}

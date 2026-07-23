@@ -106,7 +106,9 @@ function QuestionRow({
         onClick={() => hasOptions && setExpanded((v) => !v)}
         className={cn(
           "flex w-full items-center gap-3 px-3 py-3 text-left transition-colors",
-          hasOptions ? "cursor-pointer hover:bg-m3-surface-container-low" : "cursor-default",
+          hasOptions
+            ? "cursor-pointer hover:bg-m3-surface-container-low"
+            : "cursor-default",
         )}
         aria-expanded={hasOptions ? expanded : undefined}
       >
@@ -186,7 +188,11 @@ export function PerQuestionTable({ questions }: PerQuestionTableProps) {
         <span className="w-5 shrink-0" />
       </div>
       {questions.map((question, index) => (
-        <QuestionRow key={question.question_id} question={question} index={index} />
+        <QuestionRow
+          key={question.question_id}
+          question={question}
+          index={index}
+        />
       ))}
     </div>
   );

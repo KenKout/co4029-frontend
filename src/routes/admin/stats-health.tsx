@@ -22,7 +22,10 @@ const WINDOW_HOURS: Record<Window, number> = {
 
 function useFormatCount() {
   const { i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   return (n: number | undefined): string => {
     if (n === undefined || n === null) return "—";
     return new Intl.NumberFormat(locale).format(n);

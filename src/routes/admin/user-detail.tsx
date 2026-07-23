@@ -97,7 +97,9 @@ function ConfirmDisableDialog({
             disabled={isPending}
             className="px-3 py-1.5 text-sm font-semibold rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
           >
-            {isPending ? t("admin.users.actions.disabling") : t("admin.users.actions.disable")}
+            {isPending
+              ? t("admin.users.actions.disabling")
+              : t("admin.users.actions.disable")}
           </button>
         </div>
       </div>
@@ -154,7 +156,11 @@ function RoleAssignmentsSection({
     grant.mutate(
       {
         role_code: roleCode,
-        scope_kind: scopeKind as "global" | "organization" | "org_unit" | "course",
+        scope_kind: scopeKind as
+          | "global"
+          | "organization"
+          | "org_unit"
+          | "course",
         organization_id: organizationId.trim() || null,
         org_unit_id: orgUnitId.trim() || null,
         course_id: courseId.trim() || null,
@@ -162,7 +168,9 @@ function RoleAssignmentsSection({
       },
       {
         onSuccess: () => {
-          toast.success(t("admin.users.roles.success.granted", { role: roleCode }));
+          toast.success(
+            t("admin.users.roles.success.granted", { role: roleCode }),
+          );
           setRoleCode("");
           setOrganizationId("");
           setOrgUnitId("");
@@ -170,7 +178,8 @@ function RoleAssignmentsSection({
         },
         onError: (err) =>
           toast.error(
-            (err as Error).message || t("admin.users.roles.errors.grant_failed"),
+            (err as Error).message ||
+              t("admin.users.roles.errors.grant_failed"),
           ),
       },
     );
@@ -216,7 +225,9 @@ function RoleAssignmentsSection({
                   onClick={() => {
                     if (
                       window.confirm(
-                        t("admin.users.roles.revoke_confirm", { role: roleName }),
+                        t("admin.users.roles.revoke_confirm", {
+                          role: roleName,
+                        }),
                       )
                     ) {
                       revoke.mutate(a.id, {
@@ -273,10 +284,18 @@ function RoleAssignmentsSection({
               onChange={(e) => setScopeKind(e.target.value)}
               className="mt-1 block w-full rounded-md border border-border bg-surface-elev px-2 py-1.5 text-sm"
             >
-              <option value="organization">{t("admin.users.roles.scope_organization")}</option>
-              <option value="org_unit">{t("admin.users.roles.scope_org_unit")}</option>
-              <option value="course">{t("admin.users.roles.scope_course")}</option>
-              <option value="global">{t("admin.users.roles.scope_global")}</option>
+              <option value="organization">
+                {t("admin.users.roles.scope_organization")}
+              </option>
+              <option value="org_unit">
+                {t("admin.users.roles.scope_org_unit")}
+              </option>
+              <option value="course">
+                {t("admin.users.roles.scope_course")}
+              </option>
+              <option value="global">
+                {t("admin.users.roles.scope_global")}
+              </option>
             </select>
           </label>
           {scopeKind === "organization" || scopeKind === "org_unit" ? (
@@ -323,7 +342,9 @@ function RoleAssignmentsSection({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:bg-m3-primary/90 disabled:opacity-50"
         >
           <Plus className="h-3.5 w-3.5" />
-          {grant.isPending ? t("admin.users.roles.granting") : t("admin.users.roles.grant")}
+          {grant.isPending
+            ? t("admin.users.roles.granting")
+            : t("admin.users.roles.grant")}
         </button>
       </form>
     </div>
@@ -376,7 +397,8 @@ export default function AdminUserDetailPage() {
         ),
       onError: (err) =>
         toast.error(
-          (err as Error).message || t("admin.users.roles.errors.disable_failed"),
+          (err as Error).message ||
+            t("admin.users.roles.errors.disable_failed"),
         ),
     });
   };
@@ -557,8 +579,8 @@ export default function AdminUserDetailPage() {
                 {data.active_sessions.map((s) => (
                   <li key={s.id} className="py-2 text-xs text-text-muted">
                     <span className="font-mono">{s.id}</span> —{" "}
-                    {t("admin.users.roles.session_ip")}{" "}
-                    {s.ip_address ?? "—"} · {t("admin.users.roles.session_expires")}{" "}
+                    {t("admin.users.roles.session_ip")} {s.ip_address ?? "—"} ·{" "}
+                    {t("admin.users.roles.session_expires")}{" "}
                     {formatDate(s.expires_at, locale)}
                   </li>
                 ))}

@@ -43,7 +43,11 @@ export function planTransition(
 ): TransitionPlan | null {
   const finished = Boolean(result.should_finish ?? result.is_finished);
   if (finished) {
-    const text = (result.transition_text || result.ai_followup_text || "").trim();
+    const text = (
+      result.transition_text ||
+      result.ai_followup_text ||
+      ""
+    ).trim();
     // No final transition text at all → let the caller close immediately.
     if (!text) return null;
     return { showTransition: true, text, target: "closing" };
@@ -88,5 +92,9 @@ export function transitionHoldMs(
   { voiceEnabled }: { voiceEnabled: boolean },
 ): number {
   if (voiceEnabled) return VOICE_BEAT_MS;
-  return clamp(wordCount(text) * PER_WORD_MS, MIN_READING_HOLD_MS, MAX_READING_HOLD_MS);
+  return clamp(
+    wordCount(text) * PER_WORD_MS,
+    MIN_READING_HOLD_MS,
+    MAX_READING_HOLD_MS,
+  );
 }

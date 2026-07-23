@@ -2,39 +2,74 @@ import { useState, useMemo } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft, ArrowRight, Search, Filter, Users, TrendingUp,
-  AlertTriangle, ChevronRight, Clock, UserCheck, UserX,
-  UserMinus, ArrowUpRight, Award, UserPlus,
+  ArrowLeft,
+  ArrowRight,
+  Search,
+  Filter,
+  Users,
+  TrendingUp,
+  AlertTriangle,
+  ChevronRight,
+  Clock,
+  UserCheck,
+  UserX,
+  UserMinus,
+  ArrowUpRight,
+  Award,
+  UserPlus,
 } from "lucide-react";
-import { useTeacherCourseById, useTeacherCourseRoster } from "@/lib/api/hooks/teacher-courses";
+import {
+  useTeacherCourseById,
+  useTeacherCourseRoster,
+} from "@/lib/api/hooks/teacher-courses";
 import type { RosterStudent } from "@/lib/api/types/teacher";
 import { GradientProgress } from "@/components/ui/gradient-progress";
 import { cn } from "@/lib/utils";
 
 /* ── Risk / status helpers ── */
-const RISK_META: Record<string, { label: string; badge: string; dot: string }> = {
-  none:   { label: "On Track",  badge: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500" },
-  low:    { label: "Low Risk",  badge: "bg-blue-100 text-blue-700",       dot: "bg-blue-400"   },
-  medium: { label: "At Risk",   badge: "bg-amber-100 text-amber-700",     dot: "bg-amber-500"  },
-  high:   { label: "High Risk", badge: "bg-red-100 text-red-700",         dot: "bg-red-500"    },
-};
+const RISK_META: Record<string, { label: string; badge: string; dot: string }> =
+  {
+    none: {
+      label: "On Track",
+      badge: "bg-emerald-100 text-emerald-700",
+      dot: "bg-emerald-500",
+    },
+    low: {
+      label: "Low Risk",
+      badge: "bg-blue-100 text-blue-700",
+      dot: "bg-blue-400",
+    },
+    medium: {
+      label: "At Risk",
+      badge: "bg-amber-100 text-amber-700",
+      dot: "bg-amber-500",
+    },
+    high: {
+      label: "High Risk",
+      badge: "bg-red-100 text-red-700",
+      dot: "bg-red-500",
+    },
+  };
 
 const ENROLL_META: Record<string, { label: string; badge: string }> = {
-  active:    { label: "Active",    badge: "bg-emerald-100 text-emerald-700" },
-  completed: { label: "Completed", badge: "bg-m3-primary-fixed text-m3-primary" },
-  dropped:   { label: "Dropped",   badge: "bg-slate-100 text-slate-500"        },
-  waitlisted: { label: "Waitlist", badge: "bg-amber-100 text-amber-700"         },
+  active: { label: "Active", badge: "bg-emerald-100 text-emerald-700" },
+  completed: {
+    label: "Completed",
+    badge: "bg-m3-primary-fixed text-m3-primary",
+  },
+  dropped: { label: "Dropped", badge: "bg-slate-100 text-slate-500" },
+  waitlisted: { label: "Waitlist", badge: "bg-amber-100 text-amber-700" },
 };
 
 type StatusFilter = "all" | "active" | "completed" | "dropped" | "at_risk";
 type SortKey = "progress" | "name" | "enrolled_at" | "risk";
 
 const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
-  { key: "all",       label: "All"       },
-  { key: "active",    label: "Active"    },
-  { key: "at_risk",   label: "At Risk"   },
+  { key: "all", label: "All" },
+  { key: "active", label: "Active" },
+  { key: "at_risk", label: "At Risk" },
   { key: "completed", label: "Completed" },
-  { key: "dropped",   label: "Dropped"  },
+  { key: "dropped", label: "Dropped" },
 ];
 
 /* ── Avatar initials + colour ── */
@@ -54,18 +89,21 @@ const AVATAR_COLORS = [
 
 function avatarColor(studentId: string) {
   let hash = 0;
-  for (let i = 0; i < studentId.length; i++) hash = studentId.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < studentId.length; i++)
+    hash = studentId.charCodeAt(i) + ((hash << 5) - hash);
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
 function relDate(iso: string | null) {
   if (!iso) return "Never";
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const d = new Date(iso); d.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(iso);
+  d.setHours(0, 0, 0, 0);
   const days = Math.round((today.getTime() - d.getTime()) / 86400000);
   if (days === 0) return "Today";
   if (days === 1) return "Yesterday";
-  if (days < 7)  return `${days}d ago`;
+  if (days < 7) return `${days}d ago`;
   return `${Math.floor(days / 7)}w ago`;
 }
 
@@ -76,18 +114,26 @@ export default function CourseStudentsPage() {
   const { data: course } = useTeacherCourseById(courseId);
   const { data: roster, isLoading } = useTeacherCourseRoster(courseId);
 
-  const [search, setSearch]           = useState("");
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [sortKey, setSortKey]         = useState<SortKey>("progress");
+  const [sortKey, setSortKey] = useState<SortKey>("progress");
 
   const students = roster?.students ?? [];
 
   /* ── Cohort stats ── */
-  const activeCount    = students.filter((s) => s.enrollment_status === "active").length;
-  const completedCount = students.filter((s) => s.enrollment_status === "completed").length;
-  const atRiskCount    = students.filter((s) => s.at_risk_level === "medium" || s.at_risk_level === "high").length;
-  const avgProgress    = students.length
-    ? Math.round(students.reduce((a, s) => a + s.progress_percent, 0) / students.length)
+  const activeCount = students.filter(
+    (s) => s.enrollment_status === "active",
+  ).length;
+  const completedCount = students.filter(
+    (s) => s.enrollment_status === "completed",
+  ).length;
+  const atRiskCount = students.filter(
+    (s) => s.at_risk_level === "medium" || s.at_risk_level === "high",
+  ).length;
+  const avgProgress = students.length
+    ? Math.round(
+        students.reduce((a, s) => a + s.progress_percent, 0) / students.length,
+      )
     : 0;
 
   /* ── Filter + sort ── */
@@ -95,7 +141,9 @@ export default function CourseStudentsPage() {
     let list = students;
 
     if (statusFilter === "at_risk") {
-      list = list.filter((s) => s.at_risk_level === "medium" || s.at_risk_level === "high");
+      list = list.filter(
+        (s) => s.at_risk_level === "medium" || s.at_risk_level === "high",
+      );
     } else if (statusFilter !== "all") {
       list = list.filter((s) => s.enrollment_status === statusFilter);
     }
@@ -103,37 +151,61 @@ export default function CourseStudentsPage() {
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
-        (s) => s.display_name.toLowerCase().includes(q) || s.primary_email.toLowerCase().includes(q)
+        (s) =>
+          s.display_name.toLowerCase().includes(q) ||
+          s.primary_email.toLowerCase().includes(q),
       );
     }
 
     return [...list].sort((a, b) => {
-      if (sortKey === "name")        return a.display_name.localeCompare(b.display_name);
-      if (sortKey === "progress")    return b.progress_percent - a.progress_percent;
-      if (sortKey === "enrolled_at") return b.enrolled_at.localeCompare(a.enrolled_at);
+      if (sortKey === "name")
+        return a.display_name.localeCompare(b.display_name);
+      if (sortKey === "progress")
+        return b.progress_percent - a.progress_percent;
+      if (sortKey === "enrolled_at")
+        return b.enrolled_at.localeCompare(a.enrolled_at);
       if (sortKey === "risk") {
         const order = { high: 3, medium: 2, low: 1, none: 0 };
-        return (order[b.at_risk_level as keyof typeof order] ?? 0) - (order[a.at_risk_level as keyof typeof order] ?? 0);
+        return (
+          (order[b.at_risk_level as keyof typeof order] ?? 0) -
+          (order[a.at_risk_level as keyof typeof order] ?? 0)
+        );
       }
       return 0;
     });
   }, [students, statusFilter, search, sortKey]);
 
-  const riskBreakdown = (["high", "medium", "low", "none"] as const).map((level) => ({
-    level,
-    meta: RISK_META[level],
-    count: students.filter((s) => s.at_risk_level === level).length,
-    pct: students.length ? Math.round((students.filter((s) => s.at_risk_level === level).length / students.length) * 100) : 0,
-  }));
+  const riskBreakdown = (["high", "medium", "low", "none"] as const).map(
+    (level) => ({
+      level,
+      meta: RISK_META[level],
+      count: students.filter((s) => s.at_risk_level === level).length,
+      pct: students.length
+        ? Math.round(
+            (students.filter((s) => s.at_risk_level === level).length /
+              students.length) *
+              100,
+          )
+        : 0,
+    }),
+  );
 
   return (
     <div className="max-w-[1440px] mx-auto pb-16">
-
       {/* ── Breadcrumb ── */}
       <div className="flex items-center gap-1.5 text-xs text-m3-on-surface-variant pt-4 pb-6">
-        <Link to="/teacher/courses" className="hover:text-m3-primary transition-colors">{t("teacher_courses_list.title")}</Link>
+        <Link
+          to="/teacher/courses"
+          className="hover:text-m3-primary transition-colors"
+        >
+          {t("teacher_courses_list.title")}
+        </Link>
         <ArrowRight className="h-3 w-3" />
-        <Link to="/teacher/courses/$courseId" params={{ courseId }} className="hover:text-m3-primary transition-colors truncate max-w-[200px]">
+        <Link
+          to="/teacher/courses/$courseId"
+          params={{ courseId }}
+          className="hover:text-m3-primary transition-colors truncate max-w-[200px]"
+        >
           {course?.title ?? "…"}
         </Link>
         <ArrowRight className="h-3 w-3" />
@@ -145,7 +217,10 @@ export default function CourseStudentsPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <Link to="/teacher/courses/$courseId" params={{ courseId }}>
-              <button type="button" className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer">
+              <button
+                type="button"
+                className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
+              >
                 <ArrowLeft className="h-4 w-4" />
               </button>
             </Link>
@@ -157,7 +232,8 @@ export default function CourseStudentsPage() {
             {course?.title ?? "Students"}
           </h1>
           <p className="text-m3-on-surface-variant text-sm">
-            {students.length} enrolled &bull; {activeCount} active &bull; {completedCount} completed
+            {students.length} enrolled &bull; {activeCount} active &bull;{" "}
+            {completedCount} completed
           </p>
         </div>
 
@@ -189,25 +265,59 @@ export default function CourseStudentsPage() {
 
       {/* ── 12-col grid ── */}
       <div className="grid grid-cols-12 gap-6">
-
         {/* ── Main 8 cols ── */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
-
           {/* Stat cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { label: "Total",       value: String(students.length),  sub: "Enrolled",     icon: Users,         cls: "" },
-              { label: "Avg Progress",value: `${avgProgress}%`,        sub: "Cohort avg",   icon: TrendingUp,    cls: "" },
-              { label: "At Risk",     value: String(atRiskCount),      sub: "Need attention",icon: AlertTriangle, cls: atRiskCount > 0 ? "border-amber-200" : "" },
-              { label: "Completed",   value: String(completedCount),   sub: "Finished",     icon: Award,         cls: "" },
+              {
+                label: "Total",
+                value: String(students.length),
+                sub: "Enrolled",
+                icon: Users,
+                cls: "",
+              },
+              {
+                label: "Avg Progress",
+                value: `${avgProgress}%`,
+                sub: "Cohort avg",
+                icon: TrendingUp,
+                cls: "",
+              },
+              {
+                label: "At Risk",
+                value: String(atRiskCount),
+                sub: "Need attention",
+                icon: AlertTriangle,
+                cls: atRiskCount > 0 ? "border-amber-200" : "",
+              },
+              {
+                label: "Completed",
+                value: String(completedCount),
+                sub: "Finished",
+                icon: Award,
+                cls: "",
+              },
             ].map((s) => (
-              <div key={s.label} className={cn("bg-m3-surface-container-lowest rounded-xl p-4 ghost-border shadow-editorial space-y-2", s.cls)}>
+              <div
+                key={s.label}
+                className={cn(
+                  "bg-m3-surface-container-lowest rounded-xl p-4 ghost-border shadow-editorial space-y-2",
+                  s.cls,
+                )}
+              >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{s.label}</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                    {s.label}
+                  </span>
                   <s.icon className="h-4 w-4 text-m3-secondary" />
                 </div>
-                <div className="text-2xl font-headline font-black text-m3-primary">{s.value}</div>
-                <div className="text-xs text-m3-on-surface-variant">{s.sub}</div>
+                <div className="text-2xl font-headline font-black text-m3-primary">
+                  {s.value}
+                </div>
+                <div className="text-xs text-m3-on-surface-variant">
+                  {s.sub}
+                </div>
               </div>
             ))}
           </div>
@@ -229,24 +339,35 @@ export default function CourseStudentsPage() {
               <div className="flex gap-2 flex-wrap">
                 {STATUS_FILTERS.map((f) => {
                   const count =
-                    f.key === "all"     ? students.length :
-                    f.key === "at_risk" ? atRiskCount :
-                    students.filter((s) => s.enrollment_status === f.key).length;
+                    f.key === "all"
+                      ? students.length
+                      : f.key === "at_risk"
+                        ? atRiskCount
+                        : students.filter((s) => s.enrollment_status === f.key)
+                            .length;
                   return (
                     <button
-                      key={f.key} type="button"
+                      key={f.key}
+                      type="button"
                       onClick={() => setStatusFilter(f.key)}
                       className={cn(
                         "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer",
                         statusFilter === f.key
                           ? "bg-m3-primary text-white"
-                          : "bg-m3-surface-container-high text-m3-on-surface-variant hover:bg-m3-surface-container-highest"
+                          : "bg-m3-surface-container-high text-m3-on-surface-variant hover:bg-m3-surface-container-highest",
                       )}
                     >
                       {f.label}
-                      <span className={cn("ml-1.5 px-1.5 py-0.5 rounded text-[10px]",
-                        statusFilter === f.key ? "bg-white/20" : "bg-m3-surface-container-highest"
-                      )}>{count}</span>
+                      <span
+                        className={cn(
+                          "ml-1.5 px-1.5 py-0.5 rounded text-[10px]",
+                          statusFilter === f.key
+                            ? "bg-white/20"
+                            : "bg-m3-surface-container-highest",
+                        )}
+                      >
+                        {count}
+                      </span>
                     </button>
                   );
                 })}
@@ -274,17 +395,28 @@ export default function CourseStudentsPage() {
             {/* Header */}
             <div className="hidden sm:grid grid-cols-[auto_1fr_130px_100px_90px_40px] gap-4 items-center px-5 py-3 border-b border-m3-outline-variant/10">
               <div className="w-10" />
-              <span className="text-[10px] font-bold text-m3-on-surface-variant uppercase tracking-wider">Student</span>
-              <span className="text-[10px] font-bold text-m3-on-surface-variant uppercase tracking-wider">Progress</span>
-              <span className="text-[10px] font-bold text-m3-on-surface-variant uppercase tracking-wider">Risk</span>
-              <span className="text-[10px] font-bold text-m3-on-surface-variant uppercase tracking-wider">Active</span>
+              <span className="text-[10px] font-bold text-m3-on-surface-variant uppercase tracking-wider">
+                Student
+              </span>
+              <span className="text-[10px] font-bold text-m3-on-surface-variant uppercase tracking-wider">
+                Progress
+              </span>
+              <span className="text-[10px] font-bold text-m3-on-surface-variant uppercase tracking-wider">
+                Risk
+              </span>
+              <span className="text-[10px] font-bold text-m3-on-surface-variant uppercase tracking-wider">
+                Active
+              </span>
               <div />
             </div>
 
             {isLoading ? (
               <div className="space-y-px">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="px-5 py-4 animate-pulse flex gap-4 items-center">
+                  <div
+                    key={i}
+                    className="px-5 py-4 animate-pulse flex gap-4 items-center"
+                  >
                     <div className="w-10 h-10 rounded-full bg-m3-surface-container-high shrink-0" />
                     <div className="flex-1 space-y-2">
                       <div className="h-3 bg-m3-surface-container-high rounded w-1/3" />
@@ -297,14 +429,19 @@ export default function CourseStudentsPage() {
               <div className="flex flex-col items-center justify-center py-16 gap-3 text-m3-on-surface-variant">
                 <Users className="h-10 w-10 opacity-30" />
                 <p className="text-sm font-medium">
-                  {students.length === 0 ? "No students enrolled yet." : "No students match your filters."}
+                  {students.length === 0
+                    ? "No students enrolled yet."
+                    : "No students match your filters."}
                 </p>
               </div>
             ) : (
               <div className="divide-y divide-m3-outline-variant/10">
                 {filtered.map((student) => {
-                  const risk = RISK_META[student.at_risk_level] ?? RISK_META.none;
-                  const enroll = ENROLL_META[student.enrollment_status] ?? ENROLL_META.active;
+                  const risk =
+                    RISK_META[student.at_risk_level] ?? RISK_META.none;
+                  const enroll =
+                    ENROLL_META[student.enrollment_status] ??
+                    ENROLL_META.active;
                   const initials = avatarInitials(student.display_name);
                   const aColor = avatarColor(student.student_id);
                   return (
@@ -315,17 +452,33 @@ export default function CourseStudentsPage() {
                       className="flex sm:grid sm:grid-cols-[auto_1fr_130px_100px_90px_40px] gap-4 items-center px-5 py-4 hover:bg-m3-surface-container-low transition-colors cursor-pointer group"
                     >
                       {/* Avatar */}
-                      <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 uppercase", aColor)}>
+                      <div
+                        className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 uppercase",
+                          aColor,
+                        )}
+                      >
                         {initials || "?"}
                       </div>
 
                       {/* Name + email + enrollment status */}
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-sm text-m3-on-surface truncate">{student.display_name}</span>
-                          <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0", enroll.badge)}>{enroll.label}</span>
+                          <span className="font-semibold text-sm text-m3-on-surface truncate">
+                            {student.display_name}
+                          </span>
+                          <span
+                            className={cn(
+                              "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                              enroll.badge,
+                            )}
+                          >
+                            {enroll.label}
+                          </span>
                         </div>
-                        <p className="text-xs text-m3-on-surface-variant truncate mt-0.5">{student.primary_email}</p>
+                        <p className="text-xs text-m3-on-surface-variant truncate mt-0.5">
+                          {student.primary_email}
+                        </p>
                       </div>
 
                       {/* Progress bar */}
@@ -333,12 +486,23 @@ export default function CourseStudentsPage() {
                         <div className="flex justify-between text-[10px] font-medium text-m3-on-surface-variant">
                           <span>{Math.round(student.progress_percent)}%</span>
                         </div>
-                        <GradientProgress value={student.progress_percent} size="sm" variant="primary" />
+                        <GradientProgress
+                          value={student.progress_percent}
+                          size="sm"
+                          variant="primary"
+                        />
                       </div>
 
                       {/* Risk badge */}
                       <div className="hidden sm:flex items-center">
-                        <span className={cn("text-[10px] font-bold px-2.5 py-1 rounded-full", risk.badge)}>{risk.label}</span>
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold px-2.5 py-1 rounded-full",
+                            risk.badge,
+                          )}
+                        >
+                          {risk.label}
+                        </span>
                       </div>
 
                       {/* Last active */}
@@ -361,25 +525,34 @@ export default function CourseStudentsPage() {
 
         {/* ── Sidebar 4 cols ── */}
         <div className="col-span-12 lg:col-span-4 space-y-6 lg:sticky lg:top-24 self-start">
-
           {/* Cohort overview */}
           <div className="bg-m3-surface-container-lowest rounded-xl p-6 ghost-border shadow-editorial space-y-5">
-            <h3 className="font-headline font-bold text-m3-primary text-base">Cohort Overview</h3>
+            <h3 className="font-headline font-bold text-m3-primary text-base">
+              Cohort Overview
+            </h3>
 
             {riskBreakdown.map(({ level, meta, count, pct }) => (
               <div key={level} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <span className={cn("w-2 h-2 rounded-full shrink-0", meta.dot)} />
-                    <span className="font-medium text-m3-on-surface">{meta.label}</span>
+                    <span
+                      className={cn("w-2 h-2 rounded-full shrink-0", meta.dot)}
+                    />
+                    <span className="font-medium text-m3-on-surface">
+                      {meta.label}
+                    </span>
                   </div>
                   <span className="font-bold text-m3-on-surface-variant">
-                    {count} <span className="font-normal opacity-60">({pct}%)</span>
+                    {count}{" "}
+                    <span className="font-normal opacity-60">({pct}%)</span>
                   </span>
                 </div>
                 <div className="h-1.5 rounded-full bg-m3-surface-container-high overflow-hidden">
                   <div
-                    className={cn("h-full rounded-full transition-all duration-700", meta.dot)}
+                    className={cn(
+                      "h-full rounded-full transition-all duration-700",
+                      meta.dot,
+                    )}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -388,12 +561,37 @@ export default function CourseStudentsPage() {
 
             <div className="grid grid-cols-2 gap-3 pt-2 border-t border-m3-outline-variant/10">
               <div className="bg-m3-surface-container-low rounded-xl p-3 text-center">
-                <div className="text-2xl font-headline font-black text-m3-primary">{activeCount}</div>
-                <div className="text-[10px] text-m3-on-surface-variant font-bold uppercase tracking-wide mt-0.5">Active</div>
+                <div className="text-2xl font-headline font-black text-m3-primary">
+                  {activeCount}
+                </div>
+                <div className="text-[10px] text-m3-on-surface-variant font-bold uppercase tracking-wide mt-0.5">
+                  Active
+                </div>
               </div>
-              <div className={cn("rounded-xl p-3 text-center", atRiskCount > 0 ? "bg-amber-50" : "bg-m3-surface-container-low")}>
-                <div className={cn("text-2xl font-headline font-black", atRiskCount > 0 ? "text-amber-600" : "text-m3-primary")}>{atRiskCount}</div>
-                <div className={cn("text-[10px] font-bold uppercase tracking-wide mt-0.5", atRiskCount > 0 ? "text-amber-600" : "text-m3-on-surface-variant")}>
+              <div
+                className={cn(
+                  "rounded-xl p-3 text-center",
+                  atRiskCount > 0
+                    ? "bg-amber-50"
+                    : "bg-m3-surface-container-low",
+                )}
+              >
+                <div
+                  className={cn(
+                    "text-2xl font-headline font-black",
+                    atRiskCount > 0 ? "text-amber-600" : "text-m3-primary",
+                  )}
+                >
+                  {atRiskCount}
+                </div>
+                <div
+                  className={cn(
+                    "text-[10px] font-bold uppercase tracking-wide mt-0.5",
+                    atRiskCount > 0
+                      ? "text-amber-600"
+                      : "text-m3-on-surface-variant",
+                  )}
+                >
                   At Risk
                 </div>
               </div>
@@ -402,56 +600,96 @@ export default function CourseStudentsPage() {
 
           {/* Quick filters */}
           <div className="bg-m3-surface-container-lowest rounded-xl p-6 ghost-border shadow-editorial space-y-2">
-            <h3 className="font-headline font-bold text-m3-primary text-base mb-4">Quick Filters</h3>
+            <h3 className="font-headline font-bold text-m3-primary text-base mb-4">
+              Quick Filters
+            </h3>
             {[
-              { icon: AlertTriangle, label: "At-Risk Students",  color: "text-amber-600",   bg: "bg-amber-50",    filter: "at_risk"   as StatusFilter },
-              { icon: UserCheck,     label: "Active Students",   color: "text-emerald-600", bg: "bg-emerald-50",  filter: "active"    as StatusFilter },
-              { icon: Award,         label: "Completed Course",  color: "text-m3-primary",  bg: "bg-m3-primary-fixed", filter: "completed" as StatusFilter },
-              { icon: UserMinus,     label: "Dropped Students",  color: "text-slate-500",   bg: "bg-slate-100",   filter: "dropped"   as StatusFilter },
+              {
+                icon: AlertTriangle,
+                label: "At-Risk Students",
+                color: "text-amber-600",
+                bg: "bg-amber-50",
+                filter: "at_risk" as StatusFilter,
+              },
+              {
+                icon: UserCheck,
+                label: "Active Students",
+                color: "text-emerald-600",
+                bg: "bg-emerald-50",
+                filter: "active" as StatusFilter,
+              },
+              {
+                icon: Award,
+                label: "Completed Course",
+                color: "text-m3-primary",
+                bg: "bg-m3-primary-fixed",
+                filter: "completed" as StatusFilter,
+              },
+              {
+                icon: UserMinus,
+                label: "Dropped Students",
+                color: "text-slate-500",
+                bg: "bg-slate-100",
+                filter: "dropped" as StatusFilter,
+              },
             ].map((a) => (
               <button
-                key={a.label} type="button"
+                key={a.label}
+                type="button"
                 onClick={() => setStatusFilter(a.filter)}
                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-m3-surface-container-low transition-colors group text-left cursor-pointer"
               >
                 <div className={cn("p-2 rounded-lg", a.bg)}>
                   <a.icon className={cn("h-4 w-4", a.color)} />
                 </div>
-                <span className="text-sm font-medium text-m3-on-surface flex-1">{a.label}</span>
+                <span className="text-sm font-medium text-m3-on-surface flex-1">
+                  {a.label}
+                </span>
                 <ArrowUpRight className="h-3.5 w-3.5 text-m3-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
             ))}
           </div>
 
           {/* Top performer */}
-          {students.length > 0 && (() => {
-            const top = [...students].sort((a, b) => b.progress_percent - a.progress_percent)[0];
-            const aColor = avatarColor(top.student_id);
-            return (
-              <Link
-                to="/teacher/courses/$courseId/students/$studentId"
-                params={{ courseId, studentId: top.student_id }}
-                className="gradient-primary rounded-xl p-6 text-white relative overflow-hidden shadow-lg block hover:opacity-95 transition-opacity cursor-pointer"
-              >
-                <UserX className="absolute -bottom-4 -right-4 h-24 w-24 text-white/10 pointer-events-none" />
-                <div className="relative z-10 space-y-3">
-                  <h4 className="font-headline font-bold text-sm text-white/80 uppercase tracking-widest">Top Performer</h4>
-                  <div className="flex items-center gap-3">
-                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold uppercase bg-white/20 text-white")}>
-                      {avatarInitials(top.display_name) || "?"}
+          {students.length > 0 &&
+            (() => {
+              const top = [...students].sort(
+                (a, b) => b.progress_percent - a.progress_percent,
+              )[0];
+              const aColor = avatarColor(top.student_id);
+              return (
+                <Link
+                  to="/teacher/courses/$courseId/students/$studentId"
+                  params={{ courseId, studentId: top.student_id }}
+                  className="gradient-primary rounded-xl p-6 text-white relative overflow-hidden shadow-lg block hover:opacity-95 transition-opacity cursor-pointer"
+                >
+                  <UserX className="absolute -bottom-4 -right-4 h-24 w-24 text-white/10 pointer-events-none" />
+                  <div className="relative z-10 space-y-3">
+                    <h4 className="font-headline font-bold text-sm text-white/80 uppercase tracking-widest">
+                      Top Performer
+                    </h4>
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold uppercase bg-white/20 text-white",
+                        )}
+                      >
+                        {avatarInitials(top.display_name) || "?"}
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm">{top.display_name}</p>
+                        <p className="text-xs text-white/70">
+                          {Math.round(top.progress_percent)}% progress
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-sm">{top.display_name}</p>
-                      <p className="text-xs text-white/70">{Math.round(top.progress_percent)}% progress</p>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white transition-colors">
+                      View profile <ChevronRight className="h-3.5 w-3.5" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white transition-colors">
-                    View profile <ChevronRight className="h-3.5 w-3.5" />
-                  </div>
-                </div>
-              </Link>
-            );
-          })()}
+                </Link>
+              );
+            })()}
         </div>
       </div>
     </div>

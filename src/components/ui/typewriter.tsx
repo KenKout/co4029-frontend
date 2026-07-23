@@ -8,7 +8,13 @@ interface TypewriterProps {
   cursor?: boolean;
 }
 
-export function Typewriter({ text, speed = 50, delay = 0, className = "", cursor = false }: TypewriterProps) {
+export function Typewriter({
+  text,
+  speed = 50,
+  delay = 0,
+  className = "",
+  cursor = false,
+}: TypewriterProps) {
   const [displayedText, setDisplayedText] = useState("");
   const [started, setStarted] = useState(false);
   const [done, setDone] = useState(false);
@@ -20,7 +26,7 @@ export function Typewriter({ text, speed = 50, delay = 0, className = "", cursor
 
   useEffect(() => {
     if (!started) return;
-    
+
     let i = 0;
     const interval = setInterval(() => {
       if (i < text.length) {
@@ -31,7 +37,7 @@ export function Typewriter({ text, speed = 50, delay = 0, className = "", cursor
         setDone(true);
       }
     }, speed);
-    
+
     return () => clearInterval(interval);
   }, [text, speed, started]);
 

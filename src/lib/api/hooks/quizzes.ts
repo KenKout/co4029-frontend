@@ -58,10 +58,9 @@ export function useReportQuizIntegrityEvents(
 ) {
   return useMutation({
     mutationFn: ({ events }: { events: QuizIntegrityEvent[] }) =>
-      apiPost<{ accepted: number }>(
-        `/attempts/${attemptId}/integrity-events`,
-        { events },
-      ),
+      apiPost<{ accepted: number }>(`/attempts/${attemptId}/integrity-events`, {
+        events,
+      }),
   });
 }
 
@@ -155,7 +154,10 @@ export function useStudentQuizAttempts(
   studentId: string | null | undefined,
 ) {
   return useQuery({
-    queryKey: queryKeys.quizzes.studentAttempts(courseId ?? "", studentId ?? ""),
+    queryKey: queryKeys.quizzes.studentAttempts(
+      courseId ?? "",
+      studentId ?? "",
+    ),
     queryFn: () =>
       apiFetch<QuizAttemptTeacherRead[]>(
         `/teacher/courses/${courseId}/students/${studentId}/quiz-attempts`,
@@ -190,7 +192,8 @@ export function useStartQuizAttempt(quizId: string | null | undefined) {
 export function useQuizAttemptProgress(attemptId: string | null | undefined) {
   return useQuery({
     queryKey: queryKeys.quizzes.attemptProgress(attemptId ?? ""),
-    queryFn: () => apiFetch<QuizAttemptProgressRead>(`/attempts/${attemptId}/progress`),
+    queryFn: () =>
+      apiFetch<QuizAttemptProgressRead>(`/attempts/${attemptId}/progress`),
     enabled: !!attemptId,
   });
 }
@@ -198,18 +201,14 @@ export function useQuizAttemptProgress(attemptId: string | null | undefined) {
 export function useSubmitQuizAnswer(attemptId: string | null | undefined) {
   return useMutation({
     mutationFn: (payload: QuizAttemptSubmitAnswer) =>
-      apiPost<QuizAttemptAnswerRead>(
-        `/attempts/${attemptId}/answers`,
-        payload,
-      ),
+      apiPost<QuizAttemptAnswerRead>(`/attempts/${attemptId}/answers`, payload),
   });
 }
 
 export function useSubmitQuizAttempt(attemptId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      apiPost<QuizAttemptRead>(`/attempts/${attemptId}/submit`),
+    mutationFn: () => apiPost<QuizAttemptRead>(`/attempts/${attemptId}/submit`),
     onSuccess: (attempt) => {
       void qc.invalidateQueries({
         queryKey: queryKeys.quizzes.attempt(attempt.id),
@@ -276,10 +275,7 @@ export function useCreateQuiz(courseId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: Record<string, unknown>) =>
-      apiPost<QuizAuthoring>(
-        `/teacher/courses/${courseId}/quizzes`,
-        payload,
-      ),
+      apiPost<QuizAuthoring>(`/teacher/courses/${courseId}/quizzes`, payload),
     onSuccess: (quiz) => {
       void qc.invalidateQueries({
         queryKey: queryKeys.quizzes.authoring(quiz.id),
@@ -309,7 +305,8 @@ export function usePatchQuiz(quizId: string | null | undefined) {
   });
 }
 
-const PUBLISH_MISSING_TEXP_KEY = "teacher_quiz_manage.errors.publish_missing_t_exp";
+const PUBLISH_MISSING_TEXP_KEY =
+  "teacher_quiz_manage.errors.publish_missing_t_exp";
 
 export function usePublishQuiz(quizId: string | null | undefined) {
   const qc = useQueryClient();
@@ -492,9 +489,7 @@ export function useQuizGenerationRun(
  * and tab closes, and lets two teachers viewing the same quiz both
  * see the same run.
  */
-export function useLatestQuizGenerationRun(
-  quizId: string | null | undefined,
-) {
+export function useLatestQuizGenerationRun(quizId: string | null | undefined) {
   return useQuery({
     queryKey: queryKeys.quizzes.latestGenerationRun(quizId ?? ""),
     enabled: !!quizId,
@@ -520,10 +515,14 @@ export function useBulkSetExpectedTime(quizId: string | null | undefined) {
       expected_seconds: number;
     }) => {
       if (question_ids.length === 0) {
-        throw new Error(i18n.t("teacher_quiz_manage.errors.bulk_select_required"));
+        throw new Error(
+          i18n.t("teacher_quiz_manage.errors.bulk_select_required"),
+        );
       }
       if (!Number.isFinite(expected_seconds) || expected_seconds <= 0) {
-        throw new Error(i18n.t("teacher_quiz_manage.errors.bulk_seconds_positive"));
+        throw new Error(
+          i18n.t("teacher_quiz_manage.errors.bulk_seconds_positive"),
+        );
       }
       const body: BulkSetExpectedTimeRequest = {
         items: question_ids.map((qid) => ({
@@ -558,7 +557,9 @@ export function useBulkApprove(quizId: string | null | undefined) {
   return useMutation({
     mutationFn: ({ question_ids }: { question_ids: string[] }) => {
       if (question_ids.length === 0) {
-        throw new Error(i18n.t("teacher_quiz_manage.errors.bulk_select_required"));
+        throw new Error(
+          i18n.t("teacher_quiz_manage.errors.bulk_select_required"),
+        );
       }
       return apiPost<{ approved: number }>(
         `/teacher/quizzes/${quizId}/questions/bulk-approve`,
@@ -610,7 +611,8 @@ export function useQuestionBank(
       const params = new URLSearchParams();
       if (filters.moduleId) params.set("module_id", filters.moduleId);
       if (filters.lessonId) params.set("lesson_id", filters.lessonId);
-      if (filters.questionType) params.set("question_type", filters.questionType);
+      if (filters.questionType)
+        params.set("question_type", filters.questionType);
       if (filters.bloomLevel) params.set("bloom_level", filters.bloomLevel);
       if (filters.difficulty) params.set("difficulty", filters.difficulty);
       if (filters.reviewStatus !== undefined) {
@@ -634,9 +636,7 @@ export function useQuestionBank(
   });
 }
 
-export function useImportQuestionsFromBank(
-  quizId: string | null | undefined,
-) {
+export function useImportQuestionsFromBank(quizId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (sourceQuestionIds: string[]) => {
@@ -747,9 +747,7 @@ export function usePendingQuestionDeletes(
       const qid = quizIdRef.current;
       if (!qid || ids.length === 0) return;
       const results = await Promise.allSettled(
-        ids.map((id) =>
-          apiDelete(`/teacher/quizzes/${qid}/questions/${id}`),
-        ),
+        ids.map((id) => apiDelete(`/teacher/quizzes/${qid}/questions/${id}`)),
       );
       const failed = results.filter((r) => r.status === "rejected").length;
       if (failed > 0) {

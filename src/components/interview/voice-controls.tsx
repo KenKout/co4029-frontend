@@ -88,7 +88,11 @@ export function VoiceControls({
         <VoiceStatusIndicator
           status={status}
           className="min-w-[12rem] flex-1"
-          message={micError ? "Microphone access failed. Your interview is still connected." : undefined}
+          message={
+            micError
+              ? "Microphone access failed. Your interview is still connected."
+              : undefined
+          }
           onRetry={
             micError
               ? () => {
@@ -108,7 +112,9 @@ export function VoiceControls({
               setPausedByUser(true);
               void toggle(false);
             }}
-            disabled={micPending || finishingAnswer || agentState === "speaking"}
+            disabled={
+              micPending || finishingAnswer || agentState === "speaking"
+            }
             className="min-h-11"
           >
             <Pause className="h-4 w-4" />
@@ -124,11 +130,19 @@ export function VoiceControls({
               setMicError(false);
               void toggle(true).catch(() => setMicError(true));
             }}
-            disabled={micPending || finishingAnswer || agentState === "speaking"}
+            disabled={
+              micPending || finishingAnswer || agentState === "speaking"
+            }
             className="min-h-11"
           >
-            {micPending ? <RotateCcw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-            <span className="hidden sm:inline">{pausedByUser ? "Resume" : "Start answering"}</span>
+            {micPending ? (
+              <RotateCcw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">
+              {pausedByUser ? "Resume" : "Start answering"}
+            </span>
           </Button>
         )}
 
@@ -140,7 +154,12 @@ export function VoiceControls({
             setFinishingAnswer(true);
             void toggle(false);
           }}
-          disabled={!micEnabled || micPending || finishingAnswer || agentState === "speaking"}
+          disabled={
+            !micEnabled ||
+            micPending ||
+            finishingAnswer ||
+            agentState === "speaking"
+          }
           className="min-h-11"
         >
           <Check className="h-4 w-4" />
@@ -161,7 +180,9 @@ export function VoiceControls({
           title="End interview"
         >
           <PhoneOff className="h-4 w-4" />
-          <span className="hidden sm:inline">{isEnding ? "Ending…" : "End interview"}</span>
+          <span className="hidden sm:inline">
+            {isEnding ? "Ending…" : "End interview"}
+          </span>
         </Button>
       </div>
 

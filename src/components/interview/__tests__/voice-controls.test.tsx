@@ -63,9 +63,7 @@ describe("VoiceControls", () => {
 
   it("renders without crashing", () => {
     const mockOnEnd = vi.fn();
-    const { container } = render(
-      <VoiceControls onEndInterview={mockOnEnd} />
-    );
+    const { container } = render(<VoiceControls onEndInterview={mockOnEnd} />);
 
     expect(container).toBeTruthy();
   });
@@ -75,9 +73,9 @@ describe("VoiceControls", () => {
     render(<VoiceControls onEndInterview={mockOnEnd} />);
 
     // Find and click the end interview button
-    const endButton = screen.getAllByTestId("button").find(
-      (btn) => btn.textContent?.includes("End interview")
-    );
+    const endButton = screen
+      .getAllByTestId("button")
+      .find((btn) => btn.textContent?.includes("End interview"));
     expect(endButton).toBeTruthy();
   });
 
@@ -91,9 +89,7 @@ describe("VoiceControls", () => {
 
   it("renders timer section", () => {
     const mockOnEnd = vi.fn();
-    const { container } = render(
-      <VoiceControls onEndInterview={mockOnEnd} />
-    );
+    const { container } = render(<VoiceControls onEndInterview={mockOnEnd} />);
 
     // Should have timer text (00:00 format)
     expect(container.textContent).toMatch(/\d{2}:\d{2}/);
@@ -105,7 +101,9 @@ describe("VoiceControls", () => {
 
     // Button should show "Ending…" text when isEnding is true
     const buttons = screen.getAllByTestId("button");
-    const endButton = buttons.find((btn) => btn.textContent?.includes("Ending"));
+    const endButton = buttons.find((btn) =>
+      btn.textContent?.includes("Ending"),
+    );
     expect(endButton).toBeTruthy();
   });
 });

@@ -35,7 +35,10 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
     const collapseForInterview = () => setCollapsed(true);
     window.addEventListener("abridge:interview-started", collapseForInterview);
     return () =>
-      window.removeEventListener("abridge:interview-started", collapseForInterview);
+      window.removeEventListener(
+        "abridge:interview-started",
+        collapseForInterview,
+      );
   }, []);
 
   useEffect(() => {
@@ -123,7 +126,7 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
         className={cn(
           "relative min-h-screen transition-all duration-300 bg-white",
           "ml-16",
-          !collapsed && "md:ml-64"
+          !collapsed && "md:ml-64",
         )}
       >
         {!isInterviewWorkspace && (
@@ -133,7 +136,9 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
         <div
           className={cn(
             "relative",
-            isInterviewWorkspace ? "min-h-screen" : "px-4 py-6 sm:px-6 lg:px-10",
+            isInterviewWorkspace
+              ? "min-h-screen"
+              : "px-4 py-6 sm:px-6 lg:px-10",
           )}
         >
           {children}

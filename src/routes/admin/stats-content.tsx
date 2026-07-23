@@ -8,7 +8,10 @@ type BreakdownRow = { id: string; label: string; count: unknown };
 
 function useFormatCount() {
   const { i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   return (n: unknown): string => {
     if (typeof n === "number") return new Intl.NumberFormat(locale).format(n);
     return "—";
@@ -56,7 +59,9 @@ function BreakdownTable({
       header: t("admin.stats.labels.count"),
       align: "right",
       cell: (r) => (
-        <span className="font-medium text-text-strong">{formatCount(r.count)}</span>
+        <span className="font-medium text-text-strong">
+          {formatCount(r.count)}
+        </span>
       ),
     },
   ];

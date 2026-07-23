@@ -141,7 +141,7 @@ export function GenerationProgress({ run }: { run: QuizGenerationRunRead }) {
 
   const elapsed = useElapsedSeconds(
     run.started_at,
-    isTerminal ? run.completed_at ?? progress?.updated_at ?? null : null,
+    isTerminal ? (run.completed_at ?? progress?.updated_at ?? null) : null,
   );
 
   // Auto-scroll the logs panel to the newest event when open.
@@ -186,10 +186,7 @@ export function GenerationProgress({ run }: { run: QuizGenerationRunRead }) {
           ? t("teacher_quiz_results.generation.cancelled")
           : currentStage
             ? t("teacher_quiz_results.generation.running_stage", {
-                stage: t(
-                  STAGE_LABEL_KEYS[currentStage] ?? "",
-                  currentStage,
-                ),
+                stage: t(STAGE_LABEL_KEYS[currentStage] ?? "", currentStage),
               })
             : t("teacher_quiz_results.generation.starting");
 

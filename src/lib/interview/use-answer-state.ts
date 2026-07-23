@@ -62,7 +62,10 @@ export function createInitialAnswerState(questionId: string): AnswerState {
   };
 }
 
-export function answerReducer(state: AnswerState, action: AnswerAction): AnswerState {
+export function answerReducer(
+  state: AnswerState,
+  action: AnswerAction,
+): AnswerState {
   switch (action.type) {
     case "reset": {
       // A genuinely new question resets everything keyed by the new id.
@@ -75,7 +78,8 @@ export function answerReducer(state: AnswerState, action: AnswerAction): AnswerS
     case "editDraft": {
       // Editing is only meaningful before/around submission. While submitting,
       // ignore edits (composer is disabled) so we can't race the request.
-      if (state.status === "submitting" || state.status === "submitted") return state;
+      if (state.status === "submitting" || state.status === "submitted")
+        return state;
       return {
         ...state,
         draft: action.draft,
@@ -87,7 +91,8 @@ export function answerReducer(state: AnswerState, action: AnswerAction): AnswerS
     }
 
     case "startRecording": {
-      if (state.status === "submitting" || state.status === "submitted") return state;
+      if (state.status === "submitting" || state.status === "submitted")
+        return state;
       return { ...state, status: "recording", error: null };
     }
 
@@ -101,7 +106,8 @@ export function answerReducer(state: AnswerState, action: AnswerAction): AnswerS
     }
 
     case "review": {
-      if (state.status === "submitting" || state.status === "submitted") return state;
+      if (state.status === "submitting" || state.status === "submitted")
+        return state;
       return {
         ...state,
         status: "reviewing",
@@ -114,7 +120,8 @@ export function answerReducer(state: AnswerState, action: AnswerAction): AnswerS
       // Prevent duplicate submissions: only a draft/reviewing/recording/failed
       // answer can transition into `submitting`. A second submit while one is
       // already in flight is a no-op.
-      if (state.status === "submitting" || state.status === "submitted") return state;
+      if (state.status === "submitting" || state.status === "submitted")
+        return state;
       return {
         ...state,
         status: "submitting",
@@ -195,20 +202,30 @@ export function useAnswerState(questionId: string): UseAnswerStateResult {
     createInitialAnswerState,
   );
 
-  const setDraft = useCallback((draft: string) => dispatch({ type: "editDraft", draft }), []);
-  const startRecording = useCallback(() => dispatch({ type: "startRecording" }), []);
+  const setDraft = useCallback(
+    (draft: string) => dispatch({ type: "editDraft", draft }),
+    [],
+  );
+  const startRecording = useCallback(
+    () => dispatch({ type: "startRecording" }),
+    [],
+  );
   const stopRecording = useCallback(
     (draft?: string) => dispatch({ type: "stopRecording", draft }),
     [],
   );
-  const review = useCallback((draft?: string) => dispatch({ type: "review", draft }), []);
+  const review = useCallback(
+    (draft?: string) => dispatch({ type: "review", draft }),
+    [],
+  );
   const beginSubmit = useCallback(
     (submissionId: string, draft?: string) =>
       dispatch({ type: "submit", submissionId, draft }),
     [],
   );
   const submitSucceeded = useCallback(
-    (submittedAnswer?: string) => dispatch({ type: "submitSuccess", submittedAnswer }),
+    (submittedAnswer?: string) =>
+      dispatch({ type: "submitSuccess", submittedAnswer }),
     [],
   );
   const submitFailed = useCallback(
@@ -220,7 +237,8 @@ export function useAnswerState(questionId: string): UseAnswerStateResult {
     [],
   );
   const resetForQuestion = useCallback(
-    (nextQuestionId: string) => dispatch({ type: "reset", questionId: nextQuestionId }),
+    (nextQuestionId: string) =>
+      dispatch({ type: "reset", questionId: nextQuestionId }),
     [],
   );
   const reopenForFollowUp = useCallback(() => dispatch({ type: "reopen" }), []);

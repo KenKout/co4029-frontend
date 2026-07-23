@@ -1,6 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, AlertCircle, BookOpen, CheckCircle2, GraduationCap } from "lucide-react";
+import {
+  ArrowRight,
+  AlertCircle,
+  BookOpen,
+  CheckCircle2,
+  GraduationCap,
+} from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -16,7 +22,10 @@ const STATUS_COLOR: Record<MyCareerEnrollmentRead["status"], string> = {
 
 function useFormatDate() {
   const { i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   return (iso: string | null | undefined): string => {
     if (!iso) return "—";
     const d = new Date(iso);
@@ -32,7 +41,9 @@ function useFormatDate() {
 function EnrollmentRow({ item }: { item: MyCareerEnrollmentRead }) {
   const { t } = useTranslation();
   const formatDate = useFormatDate();
-  const percent = Math.round(Math.min(100, Math.max(0, item.overall_percent ?? 0)));
+  const percent = Math.round(
+    Math.min(100, Math.max(0, item.overall_percent ?? 0)),
+  );
   const prepared = item.is_prepared ?? item.status === "completed";
   return (
     <Link
@@ -78,7 +89,11 @@ function EnrollmentRow({ item }: { item: MyCareerEnrollmentRead }) {
 
           <div className="mt-1 flex items-center gap-3 text-[11px] text-m3-on-surface-variant">
             <span className="font-mono truncate">{item.slug}</span>
-            <span>{t("me_career_paths.started", { date: formatDate(item.started_at) })}</span>
+            <span>
+              {t("me_career_paths.started", {
+                date: formatDate(item.started_at),
+              })}
+            </span>
             {item.completed_at && (
               <span className="inline-flex items-center gap-1 text-emerald-700">
                 <CheckCircle2 className="h-3 w-3" />

@@ -95,19 +95,27 @@ function ItemRow({
   const quiz = item.quiz;
   const interview = item.interview;
   const lessonType = item.target?.lesson_type ?? lesson?.lesson_type ?? "video";
-  const cfg = item.item_type === "quiz"
-    ? QUIZ_ITEM_CONFIG
-    : item.item_type === "lesson"
-      ? (LESSON_TYPE_CONFIG[lessonType] ?? LESSON_TYPE_CONFIG["video"])
-      : null;
+  const cfg =
+    item.item_type === "quiz"
+      ? QUIZ_ITEM_CONFIG
+      : item.item_type === "lesson"
+        ? (LESSON_TYPE_CONFIG[lessonType] ?? LESSON_TYPE_CONFIG["video"])
+        : null;
   const Icon = cfg?.icon ?? BookOpen;
-  const label = item.item_type === "quiz"
-    ? t(QUIZ_ITEM_CONFIG.label)
-    : item.item_type === "interview"
-      ? t("teacher_common.interview_label")
-      : (cfg?.label ?? item.item_type);
-  const title = item.target?.title ?? lesson?.title ?? quiz?.title ?? interview?.title ?? label;
-  const status = item.target?.status ?? lesson?.status ?? quiz?.status ?? interview?.status;
+  const label =
+    item.item_type === "quiz"
+      ? t(QUIZ_ITEM_CONFIG.label)
+      : item.item_type === "interview"
+        ? t("teacher_common.interview_label")
+        : (cfg?.label ?? item.item_type);
+  const title =
+    item.target?.title ??
+    lesson?.title ??
+    quiz?.title ??
+    interview?.title ??
+    label;
+  const status =
+    item.target?.status ?? lesson?.status ?? quiz?.status ?? interview?.status;
 
   return (
     <div
@@ -195,7 +203,11 @@ function ItemRow({
             params={{ courseId, lessonId: item.lesson_id }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-m3-on-surface">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 hover:text-m3-on-surface"
+            >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
           </Link>
@@ -207,7 +219,11 @@ function ItemRow({
             onClick={(e) => e.stopPropagation()}
             title={t("teacher_quiz_manage.actions.view_results")}
           >
-            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-m3-on-surface">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 hover:text-m3-on-surface"
+            >
               <BarChart3 className="h-3.5 w-3.5" />
             </Button>
           </Link>
@@ -218,7 +234,11 @@ function ItemRow({
             params={{ courseId, quizId: item.quiz_id }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-m3-on-surface">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 hover:text-m3-on-surface"
+            >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
           </Link>
@@ -229,7 +249,11 @@ function ItemRow({
             params={{ courseId, configId: item.interview_config_id }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-m3-on-surface">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 hover:text-m3-on-surface"
+            >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
           </Link>
@@ -450,7 +474,9 @@ function ModuleSettings({
     try {
       await updateModule.mutateAsync({
         description: description.trim() || undefined,
-        estimated_minutes: estimatedMinutes ? Number(estimatedMinutes) : undefined,
+        estimated_minutes: estimatedMinutes
+          ? Number(estimatedMinutes)
+          : undefined,
       });
       toast.success("Module settings saved");
     } catch (err: unknown) {
@@ -598,7 +624,9 @@ export default function ModuleManagePage() {
     );
   }
 
-  const sortedItems = [...(module.items ?? [])].sort((a, b) => a.position - b.position);
+  const sortedItems = [...(module.items ?? [])].sort(
+    (a, b) => a.position - b.position,
+  );
 
   function startEdit(e: React.MouseEvent) {
     e.stopPropagation();
@@ -665,7 +693,10 @@ export default function ModuleManagePage() {
     <div className="space-y-6 pb-12">
       <Breadcrumbs
         items={[
-          { label: t("teacher_common.breadcrumb_teaching"), to: "/teacher/courses" },
+          {
+            label: t("teacher_common.breadcrumb_teaching"),
+            to: "/teacher/courses",
+          },
           {
             label: course?.title ?? t("teacher_common.breadcrumb_course"),
             to: "/teacher/courses/$courseId",

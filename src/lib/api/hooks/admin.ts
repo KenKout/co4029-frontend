@@ -60,9 +60,19 @@ export function useMyRoles() {
 export function useUpdateEnrollment(enrollmentId: string, courseId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { status?: string; completed_at?: string; dropped_at?: string }) =>
-      apiPatch<CourseEnrollmentRead>(`/teacher/course-enrollments/${enrollmentId}`, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["teacher", "courses", courseId, "roster"] }),
+    mutationFn: (payload: {
+      status?: string;
+      completed_at?: string;
+      dropped_at?: string;
+    }) =>
+      apiPatch<CourseEnrollmentRead>(
+        `/teacher/course-enrollments/${enrollmentId}`,
+        payload,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: ["teacher", "courses", courseId, "roster"],
+      }),
   });
 }
 
@@ -125,7 +135,10 @@ export function useUserDetail(userId: string) {
   });
 }
 
-export function useAdminCourses(opts?: { includeDeleted?: boolean; limit?: number }) {
+export function useAdminCourses(opts?: {
+  includeDeleted?: boolean;
+  limit?: number;
+}) {
   const includeDeleted = opts?.includeDeleted ?? true;
   const limit = opts?.limit ?? 20;
   return useInfinitePage<CourseAuthoring>({
@@ -206,8 +219,7 @@ export interface AdminUserDetailResponse {
 export function useAdminUser(userId: string) {
   return useQuery({
     queryKey: queryKeys.admin.userDetail(userId),
-    queryFn: () =>
-      apiFetch<AdminUserDetailResponse>(`/admin/users/${userId}`),
+    queryFn: () => apiFetch<AdminUserDetailResponse>(`/admin/users/${userId}`),
     enabled: Boolean(userId),
   });
 }
@@ -215,8 +227,7 @@ export function useAdminUser(userId: string) {
 export function useDisableUser(userId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      apiPost<DisableUserOut>(`/admin/users/${userId}/disable`),
+    mutationFn: () => apiPost<DisableUserOut>(`/admin/users/${userId}/disable`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["admin", "users"] });
       void qc.invalidateQueries({
@@ -229,8 +240,7 @@ export function useDisableUser(userId: string) {
 export function useEnableUser(userId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      apiPost<EnableUserOut>(`/admin/users/${userId}/enable`),
+    mutationFn: () => apiPost<EnableUserOut>(`/admin/users/${userId}/enable`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["admin", "users"] });
       void qc.invalidateQueries({
@@ -243,8 +253,7 @@ export function useEnableUser(userId: string) {
 export function useProcessingQueue() {
   return useQuery({
     queryKey: queryKeys.admin.processingQueue(),
-    queryFn: () =>
-      apiFetch<ProcessingQueueDepth>("/admin/processing/queue"),
+    queryFn: () => apiFetch<ProcessingQueueDepth>("/admin/processing/queue"),
     staleTime: 1000 * 10,
     refetchInterval: 1000 * 15,
   });
@@ -252,10 +261,15 @@ export function useProcessingQueue() {
 
 const PROCESSING_JOBS_WINDOW_MS = 1000 * 60 * 60 * 24 * 7;
 
-export function useProcessingJobs(opts?: { status?: string; since?: string; limit?: number }) {
+export function useProcessingJobs(opts?: {
+  status?: string;
+  since?: string;
+  limit?: number;
+}) {
   const status = opts?.status;
   const since =
-    opts?.since ?? new Date(Date.now() - PROCESSING_JOBS_WINDOW_MS).toISOString();
+    opts?.since ??
+    new Date(Date.now() - PROCESSING_JOBS_WINDOW_MS).toISOString();
   const limit = opts?.limit ?? 50;
   return useQuery({
     queryKey: queryKeys.admin.processingJobs(status),
@@ -363,9 +377,7 @@ export function useRecentAiCalls(opts?: { limit?: number }) {
   return useQuery({
     queryKey: queryKeys.admin.aiCosts.recent(limit),
     queryFn: () =>
-      apiFetch<AiCostsRecentCall[]>(
-        `/admin/ai/costs/recent?limit=${limit}`,
-      ),
+      apiFetch<AiCostsRecentCall[]>(`/admin/ai/costs/recent?limit=${limit}`),
     staleTime: 1000 * 30,
   });
 }
@@ -514,9 +526,7 @@ export function useOrgMemberships(orgId: string) {
   return useQuery({
     queryKey: queryKeys.admin.orgMemberships(orgId),
     queryFn: () =>
-      apiFetch<MembershipRead[]>(
-        `/admin/organizations/${orgId}/memberships`,
-      ),
+      apiFetch<MembershipRead[]>(`/admin/organizations/${orgId}/memberships`),
     enabled: Boolean(orgId),
     staleTime: 1000 * 30,
   });
@@ -577,7 +587,9 @@ export function useAuditDataChanges(table: string, entityId: string) {
     queryKey: queryKeys.admin.auditDataChanges(table, entityId),
     queryFn: () => {
       const params = new URLSearchParams({ table, entity_id: entityId });
-      return apiFetch<DataChangeRow>(`/admin/audit/data-changes?${params.toString()}`);
+      return apiFetch<DataChangeRow>(
+        `/admin/audit/data-changes?${params.toString()}`,
+      );
     },
     enabled: Boolean(table) && Boolean(entityId),
     retry: false,

@@ -1,10 +1,18 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { useState, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import i18n from "@/i18n";
 
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children }: { children: ReactNode }) => <a href="/profile">{children}</a>,
+  Link: ({ children }: { children: ReactNode }) => (
+    <a href="/profile">{children}</a>
+  ),
 }));
 
 import {
@@ -122,12 +130,20 @@ describe("ConversationMessage replay", () => {
       onReplay,
     };
     const { rerender } = render(
-      <ConversationMessage {...commonProps} replayVisible={false} replayDisabled />,
+      <ConversationMessage
+        {...commonProps}
+        replayVisible={false}
+        replayDisabled
+      />,
     );
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
 
     rerender(
-      <ConversationMessage {...commonProps} replayVisible replayDisabled={false} />,
+      <ConversationMessage
+        {...commonProps}
+        replayVisible
+        replayDisabled={false}
+      />,
     );
     const replayButton = screen.getByRole("button");
     expect(replayButton).toBeEnabled();
@@ -143,7 +159,9 @@ describe("MessageTurnActions", () => {
         <button type="button">Quick response</button>
       </MessageTurnActions>,
     );
-    expect(screen.queryByRole("button", { name: "Quick response" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Quick response" }),
+    ).not.toBeInTheDocument();
 
     rerender(
       <MessageTurnActions visible>
@@ -151,7 +169,9 @@ describe("MessageTurnActions", () => {
       </MessageTurnActions>,
     );
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Quick response" })).toBeVisible(),
+      expect(
+        screen.getByRole("button", { name: "Quick response" }),
+      ).toBeVisible(),
     );
 
     rerender(
@@ -160,7 +180,9 @@ describe("MessageTurnActions", () => {
       </MessageTurnActions>,
     );
     await waitFor(() =>
-      expect(screen.queryByRole("button", { name: "Quick response" })).not.toBeInTheDocument(),
+      expect(
+        screen.queryByRole("button", { name: "Quick response" }),
+      ).not.toBeInTheDocument(),
     );
   });
 });
@@ -169,7 +191,9 @@ describe("UserTypingIndicator", () => {
   it("announces that the candidate is typing", () => {
     render(<UserTypingIndicator />);
 
-    expect(screen.getByRole("status")).toHaveTextContent(/người dùng đang nhập/i);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /người dùng đang nhập/i,
+    );
   });
 });
 
@@ -220,7 +244,9 @@ describe("AnswerComposer", () => {
       shiftKey: false,
     });
     expect(onSubmit).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: /gửi câu trả lời/i })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /gửi câu trả lời/i }),
+    ).toBeDisabled();
   });
 });
 
@@ -271,7 +297,9 @@ describe("EndConfirmationPanel", () => {
         isPending={false}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /tiếp tục phỏng vấn/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /tiếp tục phỏng vấn/i }),
+    );
     fireEvent.click(screen.getByRole("button", { name: /kết thúc và nộp/i }));
     expect(onContinue).toHaveBeenCalledTimes(1);
     expect(onEndAndSubmit).toHaveBeenCalledTimes(1);
@@ -289,7 +317,9 @@ describe("EndConfirmationPanel", () => {
     expect(
       screen.getByRole("button", { name: /tiếp tục phỏng vấn/i }),
     ).toBeDisabled();
-    expect(screen.getByRole("button", { name: /đang kết thúc/i })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /đang kết thúc/i }),
+    ).toBeDisabled();
   });
 });
 
@@ -390,7 +420,9 @@ describe("OnboardingActions", () => {
         onAction={onAction}
       />,
     );
-    const audioClearButton = screen.getByRole("button", { name: /tôi nghe rõ/i });
+    const audioClearButton = screen.getByRole("button", {
+      name: /tôi nghe rõ/i,
+    });
     expect(audioClearButton.parentElement).toHaveClass("justify-start");
     expect(audioClearButton.parentElement).not.toHaveClass("justify-end");
     fireEvent.click(audioClearButton);
@@ -474,7 +506,9 @@ describe("P0 focused interview room", () => {
       />,
     );
 
-    expect(screen.getByText("Compare fact tables and factless fact tables.")).toBeVisible();
+    expect(
+      screen.getByText("Compare fact tables and factless fact tables."),
+    ).toBeVisible();
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(20_000);
@@ -548,10 +582,14 @@ describe("P0 focused interview room", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       "Explain database normalization.",
     );
-    expect(screen.getByText(i18n.t("course_interview.workspace.question_of", {
-      current: 2,
-      total: 8,
-    }))).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        i18n.t("course_interview.workspace.question_of", {
+          current: 2,
+          total: 8,
+        }),
+      ),
+    ).toBeInTheDocument();
     expect(onPresented).toHaveBeenCalledTimes(1);
     unmount();
     vi.useRealTimers();
@@ -574,7 +612,10 @@ describe("P0 focused interview room", () => {
     );
 
     expect(screen.getByText("Câu hỏi 2 / 8")).toBeInTheDocument();
-    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "25");
+    expect(screen.getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      "25",
+    );
     expect(screen.getByText("07:19 / 30:00")).toBeInTheDocument();
   });
 
@@ -594,7 +635,9 @@ describe("P0 focused interview room", () => {
     );
 
     expect(screen.getByText("Câu hỏi 3")).toBeInTheDocument();
-    expect(screen.getByRole("progressbar")).not.toHaveAttribute("aria-valuemax");
+    expect(screen.getByRole("progressbar")).not.toHaveAttribute(
+      "aria-valuemax",
+    );
   });
 
   it("keeps the interview timer anchored across rerenders", async () => {
@@ -640,15 +683,19 @@ describe("P0 focused interview room", () => {
   });
 
   it("resolves conflicting runtime signals to one primary state", () => {
+    expect(resolveInterviewState({ speaking: true, listening: true })).toBe(
+      "speaking",
+    );
     expect(
-      resolveInterviewState({ speaking: true, listening: true }),
-    ).toBe("speaking");
-    expect(
-      resolveInterviewState({ thinking: true, speaking: true, listening: true }),
+      resolveInterviewState({
+        thinking: true,
+        speaking: true,
+        listening: true,
+      }),
     ).toBe("thinking");
-    expect(
-      resolveInterviewState({ connected: false, thinking: true }),
-    ).toBe("disconnected");
+    expect(resolveInterviewState({ connected: false, thinking: true })).toBe(
+      "disconnected",
+    );
   });
 
   it("supports start, pause, resume, and finish recording controls", () => {
@@ -787,7 +834,12 @@ describe("P0 focused interview room", () => {
           open={open}
           onOpenChange={setOpen}
           transcript={[
-            { id: "prior", role: "user", text: "A prior answer", kind: "answer" },
+            {
+              id: "prior",
+              role: "user",
+              text: "A prior answer",
+              kind: "answer",
+            },
           ]}
           questionTypeLabel={() => null}
           speak={() => undefined}
@@ -801,14 +853,19 @@ describe("P0 focused interview room", () => {
 
     render(<TranscriptHarness />);
     const trigger = screen.getByRole("button", {
-      name: new RegExp(i18n.t("course_interview.workspace.view_transcript"), "i"),
+      name: new RegExp(
+        i18n.t("course_interview.workspace.view_transcript"),
+        "i",
+      ),
     });
     expect(screen.queryByText("A prior answer")).not.toBeInTheDocument();
     trigger.focus();
     fireEvent.click(trigger);
     expect(await screen.findByText("A prior answer")).toBeInTheDocument();
     fireEvent.keyDown(document, { key: "Escape" });
-    await waitFor(() => expect(screen.queryByText("A prior answer")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByText("A prior answer")).not.toBeInTheDocument(),
+    );
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
@@ -882,7 +939,9 @@ describe("P0 focused interview room", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(50);
     });
-    expect(screen.getByRole("button", { name: "Confirm identity" })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Confirm identity" }),
+    ).toBeVisible();
 
     rerender(
       <FocusedInterviewStage
@@ -901,8 +960,12 @@ describe("P0 focused interview room", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(50);
     });
-    expect(screen.getByText("Thank you. Can you hear me clearly?")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Audio is clear" })).toBeVisible();
+    expect(
+      screen.getByText("Thank you. Can you hear me clearly?"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Audio is clear" }),
+    ).toBeVisible();
     unmount();
     vi.useRealTimers();
   });
@@ -937,7 +1000,9 @@ describe("P0 focused interview room", () => {
         submissionSlot={
           <SubmittedAnswerConfirmation
             status="submitted"
-            answer={"A fact table stores measurable business events. ".repeat(6)}
+            answer={"A fact table stores measurable business events. ".repeat(
+              6,
+            )}
             onViewFullAnswer={onView}
           />
         }
@@ -965,7 +1030,12 @@ describe("P0 focused interview room", () => {
 describe("TranscriptPanel (desktop reflow)", () => {
   const baseProps = {
     transcript: [
-      { id: "prior", role: "user" as const, text: "A prior answer", kind: "answer" as const },
+      {
+        id: "prior",
+        role: "user" as const,
+        text: "A prior answer",
+        kind: "answer" as const,
+      },
     ],
     questionTypeLabel: () => null,
     speak: () => undefined,
@@ -1014,6 +1084,8 @@ describe("TranscriptPanel (desktop reflow)", () => {
         i18n.t("course_interview.workspace.transcript_count", { count: 2 }),
       ),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/chronological order|thứ tự thời gian/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/chronological order|thứ tự thời gian/i),
+    ).not.toBeInTheDocument();
   });
 });

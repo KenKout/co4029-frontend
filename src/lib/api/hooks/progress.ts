@@ -19,9 +19,7 @@ export function useLessonProgress(lessonId: string | null | undefined) {
   return useQuery({
     queryKey: queryKeys.progress.lesson(lessonId ?? ""),
     queryFn: () =>
-      apiFetch<LessonProgressPublic>(
-        `/me/progress/lessons/${lessonId}`,
-      ),
+      apiFetch<LessonProgressPublic>(`/me/progress/lessons/${lessonId}`),
     enabled: Boolean(lessonId),
     staleTime: 1000 * 30,
     retry: retryUnless404,
@@ -32,9 +30,7 @@ export function useMyCourseProgress(courseId: string | null | undefined) {
   return useQuery({
     queryKey: queryKeys.progress.myCourse(courseId ?? ""),
     queryFn: () =>
-      apiFetch<MyCourseProgressSummary>(
-        `/me/progress/courses/${courseId}`,
-      ),
+      apiFetch<MyCourseProgressSummary>(`/me/progress/courses/${courseId}`),
     enabled: Boolean(courseId),
     staleTime: 1000 * 30,
     retry: retryUnless404,
@@ -131,9 +127,7 @@ export function useAtRiskRoster(courseId: string | null | undefined) {
   return useQuery({
     queryKey: queryKeys.progress.atRiskRoster(courseId ?? ""),
     queryFn: () =>
-      apiFetch<AtRiskListRead>(
-        `/teacher/courses/${courseId}/progress/at-risk`,
-      ),
+      apiFetch<AtRiskListRead>(`/teacher/courses/${courseId}/progress/at-risk`),
     enabled: Boolean(courseId),
     staleTime: 1000 * 30,
   });

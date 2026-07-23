@@ -35,13 +35,25 @@ export function GradientProgress({
     <div className={cn("w-full", className)}>
       {showLabel && (
         <div className="flex justify-between items-center mb-1.5">
-          <span className="text-xs font-medium text-m3-on-surface-variant">Progress</span>
-          <span className="text-xs font-semibold text-m3-on-surface">{Math.round(percentage)}%</span>
+          <span className="text-xs font-medium text-m3-on-surface-variant">
+            Progress
+          </span>
+          <span className="text-xs font-semibold text-m3-on-surface">
+            {Math.round(percentage)}%
+          </span>
         </div>
       )}
-      <div className={cn("w-full rounded-full bg-m3-surface-container-high overflow-hidden", sizeMap[size])}>
+      <div
+        className={cn(
+          "w-full rounded-full bg-m3-surface-container-high overflow-hidden",
+          sizeMap[size],
+        )}
+      >
         <div
-          className={cn("h-full rounded-full bg-gradient-to-r transition-all duration-500 ease-out", gradientMap[variant])}
+          className={cn(
+            "h-full rounded-full bg-gradient-to-r transition-all duration-500 ease-out",
+            gradientMap[variant],
+          )}
           style={{ width: `${percentage}%` }}
         />
       </div>

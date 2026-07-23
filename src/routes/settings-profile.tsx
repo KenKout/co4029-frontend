@@ -4,7 +4,13 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { useMe, useUpdateProfile } from "@/lib/api/hooks/auth";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -120,8 +126,12 @@ export default function SettingsProfilePage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="display_name" className="text-sm font-medium text-foreground">
-                {t("settings_profile.fields.display_name")} <span className="text-destructive">*</span>
+              <label
+                htmlFor="display_name"
+                className="text-sm font-medium text-foreground"
+              >
+                {t("settings_profile.fields.display_name")}{" "}
+                <span className="text-destructive">*</span>
               </label>
               <Input
                 id="display_name"
@@ -131,7 +141,9 @@ export default function SettingsProfilePage() {
                 maxLength={100}
                 defaultValue={me?.profile?.display_name ?? ""}
                 aria-invalid={!!errors.display_name}
-                aria-describedby={errors.display_name ? "err-display_name" : undefined}
+                aria-describedby={
+                  errors.display_name ? "err-display_name" : undefined
+                }
               />
               {errors.display_name && (
                 <p id="err-display_name" className="text-sm text-destructive">
@@ -141,7 +153,10 @@ export default function SettingsProfilePage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="given_name" className="text-sm font-medium text-foreground">
+              <label
+                htmlFor="given_name"
+                className="text-sm font-medium text-foreground"
+              >
                 {t("settings_profile.fields.given_name")}
               </label>
               <Input
@@ -150,7 +165,9 @@ export default function SettingsProfilePage() {
                 maxLength={100}
                 defaultValue={me?.profile?.given_name ?? ""}
                 aria-invalid={!!errors.given_name}
-                aria-describedby={errors.given_name ? "err-given_name" : undefined}
+                aria-describedby={
+                  errors.given_name ? "err-given_name" : undefined
+                }
               />
               {errors.given_name && (
                 <p id="err-given_name" className="text-sm text-destructive">
@@ -160,7 +177,10 @@ export default function SettingsProfilePage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="family_name" className="text-sm font-medium text-foreground">
+              <label
+                htmlFor="family_name"
+                className="text-sm font-medium text-foreground"
+              >
                 {t("settings_profile.fields.family_name")}
               </label>
               <Input
@@ -169,7 +189,9 @@ export default function SettingsProfilePage() {
                 maxLength={100}
                 defaultValue={me?.profile?.family_name ?? ""}
                 aria-invalid={!!errors.family_name}
-                aria-describedby={errors.family_name ? "err-family_name" : undefined}
+                aria-describedby={
+                  errors.family_name ? "err-family_name" : undefined
+                }
               />
               {errors.family_name && (
                 <p id="err-family_name" className="text-sm text-destructive">
@@ -179,7 +201,10 @@ export default function SettingsProfilePage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="bio" className="text-sm font-medium text-foreground">
+              <label
+                htmlFor="bio"
+                className="text-sm font-medium text-foreground"
+              >
                 {t("settings_profile.fields.bio")}
               </label>
               <textarea

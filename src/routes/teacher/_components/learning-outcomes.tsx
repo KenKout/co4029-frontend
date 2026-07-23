@@ -190,8 +190,7 @@ export function LearningOutcomes({
   // teacher can edit afterwards. Already-imported outcomes are hidden from the
   // picker by comparing normalized text (course outcomes have no interview id).
   const existingTexts = useMemo(
-    () =>
-      new Set(sorted.map((o) => o.outcome_text.trim().toLowerCase())),
+    () => new Set(sorted.map((o) => o.outcome_text.trim().toLowerCase())),
     [sorted],
   );
   const importableOutcomes = useMemo(
@@ -215,9 +214,7 @@ export function LearningOutcomes({
     });
   }
   async function submitImport() {
-    const chosen = importableOutcomes.filter((co) =>
-      selectedImport.has(co.id),
-    );
+    const chosen = importableOutcomes.filter((co) => selectedImport.has(co.id));
     if (chosen.length === 0) return;
     setImportBusy(true);
     let created = 0;
@@ -332,7 +329,9 @@ export function LearningOutcomes({
         patch: { position: neighbourPos },
       });
       announce(
-        t("teacher_interview_config.outcomes.sr_moved", { position: target + 1 }),
+        t("teacher_interview_config.outcomes.sr_moved", {
+          position: target + 1,
+        }),
       );
     } catch (err: unknown) {
       toast.error((err as Error).message);
@@ -473,7 +472,8 @@ export function LearningOutcomes({
 
       {/* Empty state with editable templates */}
       {!hasOutcomes ? (
-        !adding && !importing && (
+        !adding &&
+        !importing && (
           <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
             <div className="flex items-start gap-2">
               <TriangleAlert
@@ -555,8 +555,12 @@ export function LearningOutcomes({
                       <div className="flex flex-col">
                         <button
                           type="button"
-                          aria-label={t("teacher_interview_config.questions.move_up")}
-                          title={t("teacher_interview_config.questions.move_up")}
+                          aria-label={t(
+                            "teacher_interview_config.questions.move_up",
+                          )}
+                          title={t(
+                            "teacher_interview_config.questions.move_up",
+                          )}
                           disabled={reordering || idx === 0}
                           onClick={() => void handleReorder(idx, -1)}
                           className="text-m3-on-surface-variant hover:text-m3-primary disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-not-allowed"
@@ -565,8 +569,12 @@ export function LearningOutcomes({
                         </button>
                         <button
                           type="button"
-                          aria-label={t("teacher_interview_config.questions.move_down")}
-                          title={t("teacher_interview_config.questions.move_down")}
+                          aria-label={t(
+                            "teacher_interview_config.questions.move_down",
+                          )}
+                          title={t(
+                            "teacher_interview_config.questions.move_down",
+                          )}
                           disabled={reordering || idx === sorted.length - 1}
                           onClick={() => void handleReorder(idx, 1)}
                           className="text-m3-on-surface-variant hover:text-m3-primary disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-not-allowed"
@@ -585,7 +593,9 @@ export function LearningOutcomes({
                         <CoverageChip coverage={cov} count={count} />
                         <Dot />
                         <span>
-                          {t(`teacher_interview_config.outcomes.type_${o.outcome_type}`)}
+                          {t(
+                            `teacher_interview_config.outcomes.type_${o.outcome_type}`,
+                          )}
                         </span>
                         <Dot />
                         <span>
@@ -619,7 +629,9 @@ export function LearningOutcomes({
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger
-                          aria-label={t("teacher_interview_config.qbank.more_actions")}
+                          aria-label={t(
+                            "teacher_interview_config.qbank.more_actions",
+                          )}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-m3-on-surface-variant hover:bg-surface-muted hover:text-m3-on-surface cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         >
                           <MoreVertical className="h-4 w-4" />
@@ -629,7 +641,9 @@ export function LearningOutcomes({
                             onClick={() => onViewQuestions(o.id)}
                             className="gap-2 sm:hidden"
                           >
-                            {t("teacher_interview_config.outcomes.view_questions")}
+                            {t(
+                              "teacher_interview_config.outcomes.view_questions",
+                            )}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => beginEdit(o)}
@@ -711,7 +725,10 @@ function ImportFromCoursePanel({
   return (
     <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
       <div className="flex items-start gap-2">
-        <BookOpen className="h-4 w-4 text-primary mt-0.5 shrink-0" aria-hidden="true" />
+        <BookOpen
+          className="h-4 w-4 text-primary mt-0.5 shrink-0"
+          aria-hidden="true"
+        />
         <div className="space-y-0.5">
           <p className="text-sm font-bold text-m3-on-surface">
             {t("teacher_interview_config.outcomes.import_title")}
@@ -821,7 +838,8 @@ function TemplateRow({
             onClick={() => onPick(tpl)}
             className="rounded-full border border-dashed border-m3-outline-variant/40 bg-m3-surface px-2.5 py-1 text-[11px] text-m3-on-surface-variant hover:bg-primary/10 hover:border-primary/40 hover:text-primary hover:-translate-y-0.5 hover:shadow-sm active:scale-95 transition-all duration-200 cursor-pointer"
           >
-            + {t(`teacher_interview_config.outcomes.template_labels.${tpl.key}`)}
+            +{" "}
+            {t(`teacher_interview_config.outcomes.template_labels.${tpl.key}`)}
           </button>
         ))}
       </div>

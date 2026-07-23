@@ -41,7 +41,11 @@ describe("SetupChecklist", () => {
   it("shows the candidate name and confirm action on the identity step", () => {
     const onAction = vi.fn();
     render(
-      <SetupChecklist {...baseProps} stage="identity_check" onAction={onAction} />,
+      <SetupChecklist
+        {...baseProps}
+        stage="identity_check"
+        onAction={onAction}
+      />,
     );
     expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
     const confirm = screen.getByRole("button", {
@@ -54,7 +58,11 @@ describe("SetupChecklist", () => {
   it("lets the candidate correct their name and submits set_name", () => {
     const onAction = vi.fn();
     render(
-      <SetupChecklist {...baseProps} stage="identity_check" onAction={onAction} />,
+      <SetupChecklist
+        {...baseProps}
+        stage="identity_check"
+        onAction={onAction}
+      />,
     );
     // Reject the profile name → switches to the name-entry field.
     fireEvent.click(
@@ -92,7 +100,11 @@ describe("SetupChecklist", () => {
 
   it("reports an unavailable microphone without losing the row", () => {
     render(
-      <SetupChecklist {...baseProps} stage="audio_check" micConnected={false} />,
+      <SetupChecklist
+        {...baseProps}
+        stage="audio_check"
+        micConnected={false}
+      />,
     );
     expect(
       screen.getByText(tr("course_interview.setup.mic_unavailable")),

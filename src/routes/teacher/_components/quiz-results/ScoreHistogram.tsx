@@ -89,7 +89,8 @@ export function ScoreHistogram({
         <Bar dataKey="count" radius={[6, 6, 0, 0]} isAnimationActive={false}>
           {histogram.map((bucket) => {
             const isPassing =
-              passingBucket !== undefined && bucket.lower >= passingBucket.lower;
+              passingBucket !== undefined &&
+              bucket.lower >= passingBucket.lower;
             return (
               <Cell
                 key={bucket.label}

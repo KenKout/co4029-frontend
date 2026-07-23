@@ -51,7 +51,10 @@ const STAGE_ORDER: readonly SetupStage[] = [
 ];
 
 /** Which checklist rows are considered satisfied once we reach a given stage. */
-function itemState(rowStage: SetupStage, current: SetupStage): ChecklistItemState {
+function itemState(
+  rowStage: SetupStage,
+  current: SetupStage,
+): ChecklistItemState {
   const rowIndex = STAGE_ORDER.indexOf(rowStage);
   const currentIndex = STAGE_ORDER.indexOf(current);
   if (rowIndex < currentIndex) return "done";
@@ -77,7 +80,8 @@ function ChecklistRow({
       className={cn(
         "flex items-start gap-3 rounded-xl border px-4 py-3 transition-colors",
         state === "done" && "border-success/30 bg-success/5",
-        state === "active" && "border-primary/40 bg-primary-soft/40 shadow-editorial",
+        state === "active" &&
+          "border-primary/40 bg-primary-soft/40 shadow-editorial",
         state === "upcoming" && "border-border bg-surface-muted/40 opacity-70",
       )}
     >
@@ -87,7 +91,8 @@ function ChecklistRow({
           "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full border",
           state === "done" && "border-success bg-success text-white",
           state === "active" && "border-primary/30 bg-white text-primary",
-          state === "upcoming" && "border-border-strong bg-white text-text-subtle",
+          state === "upcoming" &&
+            "border-border-strong bg-white text-text-subtle",
         )}
       >
         {state === "done" ? <Check className="h-4 w-4" /> : icon}
@@ -227,7 +232,9 @@ export function SetupChecklist({
                   maxLength={60}
                   autoFocus
                   autoComplete="off"
-                  placeholder={t("course_interview.onboarding.name_placeholder")}
+                  placeholder={t(
+                    "course_interview.onboarding.name_placeholder",
+                  )}
                   className="h-11 max-w-[220px] flex-1"
                   aria-label={t("course_interview.onboarding.ask_name")}
                 />

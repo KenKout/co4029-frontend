@@ -92,7 +92,10 @@ export default function QuizResultsPage() {
     <div className="space-y-6 pb-12 max-w-[1500px] mx-auto">
       <Breadcrumbs
         items={[
-          { label: t("teacher_common.breadcrumb_teaching"), to: "/teacher/courses" },
+          {
+            label: t("teacher_common.breadcrumb_teaching"),
+            to: "/teacher/courses",
+          },
           {
             label: course?.title ?? t("teacher_common.breadcrumb_course"),
             to: "/teacher/courses/$courseId",

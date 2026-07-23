@@ -267,7 +267,11 @@ export default function QuizManagePage() {
             {t("teacher_quiz_manage.errors.not_found_description")}
           </p>
         </div>
-        <Link to="/teacher/courses/$courseId" params={{ courseId }} className="inline-flex">
+        <Link
+          to="/teacher/courses/$courseId"
+          params={{ courseId }}
+          className="inline-flex"
+        >
           <Button variant="outline" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             {t("teacher_quiz_manage.errors.back_to_course")}
@@ -344,7 +348,8 @@ export default function QuizManagePage() {
         return;
       }
       toast.error(
-        (err as Error).message || t("teacher_quiz_manage.toasts.publish_failed"),
+        (err as Error).message ||
+          t("teacher_quiz_manage.toasts.publish_failed"),
       );
     }
   }
@@ -451,7 +456,10 @@ export default function QuizManagePage() {
     <div className="space-y-6 pb-12 max-w-[1500px] mx-auto">
       <Breadcrumbs
         items={[
-          { label: t("teacher_common.breadcrumb_teaching"), to: "/teacher/courses" },
+          {
+            label: t("teacher_common.breadcrumb_teaching"),
+            to: "/teacher/courses",
+          },
           {
             label: course?.title ?? t("teacher_common.breadcrumb_course"),
             to: "/teacher/courses/$courseId",
@@ -511,7 +519,6 @@ export default function QuizManagePage() {
             )}
           </div>
         </div>
-
       </div>
 
       {/* Zero-height sentinel: when it scrolls up under the global top bar,
@@ -571,21 +578,13 @@ export default function QuizManagePage() {
                 {!actionsStuck && t("teacher_quiz_manage.actions.view_results")}
               </Button>
             </Link>
-            {/* View as student opens the in-app WYSIWYG preview tab (approved
-                questions only). It must NOT link to the live student route
-                (/courses/$slug/quiz/$quizId) — that route serves only
-                PUBLISHED quizzes, so previewing a draft 404s ("Quiz not
-                found"), which is exactly when a teacher wants to preview. */}
-            <Button
-              variant="outline"
-              className="gap-2"
-              type="button"
-              onClick={() => setTab("preview")}
-              title={t("teacher_quiz_manage.actions.view_as_student")}
-            >
-              <Eye className="h-4 w-4" />
-              {!actionsStuck && t("teacher_quiz_manage.actions.view_as_student")}
-            </Button>
+            {/* "View as student" used to be a button here, but it was
+                redundant with the Preview tab (both open the same in-app
+                WYSIWYG PreviewTab). Removed the button; the Preview tab is
+                now the single entry point (plus a jump-to-preview button in
+                the publish dialog). The tab intentionally does NOT link to
+                the live student route (/courses/$slug/quiz/$quizId) — that
+                serves only PUBLISHED quizzes, so previewing a draft 404s. */}
             <Button
               type="button"
               disabled={publishDisabled}
@@ -659,16 +658,12 @@ export default function QuizManagePage() {
           setDraft={setDraft}
           onSubmit={handleSaveSettings}
           saving={patchQuiz.isPending}
-          dirty={
-            JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))
-          }
+          dirty={JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))}
           onReset={() => setDraft(draftFromQuiz(quiz))}
         />
       )}
 
-      {tab === "preview" && (
-        <PreviewTab quiz={quiz} questions={questions} />
-      )}
+      {tab === "preview" && <PreviewTab quiz={quiz} questions={questions} />}
 
       {showGenerateModal && quiz?.module_id && (
         <GenerateModal
@@ -847,9 +842,7 @@ function QuestionsTab({
 
   const secondsValue = Number(bulkSeconds);
   const bulkValid =
-    selectedIds.size > 0 &&
-    Number.isFinite(secondsValue) &&
-    secondsValue > 0;
+    selectedIds.size > 0 && Number.isFinite(secondsValue) && secondsValue > 0;
 
   async function handleApplyBulk() {
     try {
@@ -902,7 +895,10 @@ function QuestionsTab({
         {comboCount > 0 && (
           <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 flex items-center gap-3 rounded-xl bg-m3-inverse-surface text-m3-inverse-on-surface px-4 py-3 shadow-lg max-w-[calc(100vw-2rem)]">
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center">
-              <svg className="absolute inset-0 h-8 w-8 -rotate-90" viewBox="0 0 32 32">
+              <svg
+                className="absolute inset-0 h-8 w-8 -rotate-90"
+                viewBox="0 0 32 32"
+              >
                 <circle
                   cx="16"
                   cy="16"
@@ -1056,7 +1052,10 @@ function QuestionsTab({
               className="w-full gap-2"
             >
               <BookOpen className="h-4 w-4" />
-              {t("teacher_quiz_manage.ai_panel.import_from_bank", "Import from bank")}
+              {t(
+                "teacher_quiz_manage.ai_panel.import_from_bank",
+                "Import from bank",
+              )}
             </Button>
           </div>
 
@@ -1259,9 +1258,7 @@ function QuestionCard({
             ? null
             : Math.max(1, Math.round(draft.expected_response_seconds)) * 1000,
         expected_ef_ceiling:
-          draft.expected_ef_ceiling == null
-            ? null
-            : draft.expected_ef_ceiling,
+          draft.expected_ef_ceiling == null ? null : draft.expected_ef_ceiling,
         review_status: reviewStatus,
         learning_outcome_id: draft.learning_outcome_id || null,
         ...(hasOptions
@@ -1310,8 +1307,7 @@ function QuestionCard({
         return;
       }
       toast.error(
-        (err as Error).message ||
-          t("teacher_quiz_manage.toasts.regen_failed"),
+        (err as Error).message || t("teacher_quiz_manage.toasts.regen_failed"),
       );
     }
   }
@@ -1401,7 +1397,9 @@ function QuestionCard({
           }
           className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
         >
-          <option value="">{t("teacher_quiz_manage.outcome.none", "No outcome")}</option>
+          <option value="">
+            {t("teacher_quiz_manage.outcome.none", "No outcome")}
+          </option>
           {outcomes.map((outcome) => (
             <option key={outcome.id} value={outcome.id}>
               {`L.O.${outcome.position} — ${
@@ -1416,7 +1414,10 @@ function QuestionCard({
 
       <div className="space-y-1.5">
         <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          {t("teacher_quiz_manage.editor.hint_label", "Hint (shown to learner on request)")}
+          {t(
+            "teacher_quiz_manage.editor.hint_label",
+            "Hint (shown to learner on request)",
+          )}
         </label>
         <textarea
           value={draft.hint_text}
@@ -1433,7 +1434,7 @@ function QuestionCard({
         <p className="text-[11px] text-m3-on-surface-variant">
           {t(
             "teacher_quiz_manage.editor.hint_help",
-            "Optional. Only shown to learners if \"Show hints\" is enabled in Quiz Settings. Must not reveal the answer.",
+            'Optional. Only shown to learners if "Show hints" is enabled in Quiz Settings. Must not reveal the answer.',
           )}
         </p>
       </div>
@@ -1493,7 +1494,10 @@ function QuestionCard({
       {question.question_type === "short_answer" && (
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            {t("teacher_quiz_manage.editor.correct_answer_label", "Correct answer")}
+            {t(
+              "teacher_quiz_manage.editor.correct_answer_label",
+              "Correct answer",
+            )}
           </label>
           <div className="rounded-xl border-2 border-emerald-300 bg-emerald-50/60 px-3 py-2.5 text-sm text-m3-on-surface">
             {typeof correctAnswer === "string" && correctAnswer.length > 0 ? (
@@ -1620,10 +1624,7 @@ function QuestionCard({
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t(
-                "teacher_quiz_manage.editor.t_exp_label",
-                "Expected time (s)",
-              )}
+              {t("teacher_quiz_manage.editor.t_exp_label", "Expected time (s)")}
             </label>
             <Input
               type="number"
@@ -1646,10 +1647,7 @@ function QuestionCard({
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t(
-                "teacher_quiz_manage.editor.ef_ceiling_label",
-                "EF ceiling",
-              )}
+              {t("teacher_quiz_manage.editor.ef_ceiling_label", "EF ceiling")}
             </label>
             <Input
               type="number"
@@ -1771,7 +1769,9 @@ interface QuestionDraft {
  * (string for short_answer, array of strings for fill_blank). The
  * payload field is read-only in the v1 authoring UI; teachers edit
  * stem + explanation, and regenerate to change the answer. */
-function readCorrectAnswer(question: QuizQuestionAuthoring): string | string[] | null {
+function readCorrectAnswer(
+  question: QuizQuestionAuthoring,
+): string | string[] | null {
   const payload = question.original_generated_payload as
     | { correct_answer?: unknown }
     | null
@@ -1867,7 +1867,6 @@ function GenerateModal({
   );
 }
 
-
 function SettingsTab({
   draft,
   setDraft,
@@ -1927,7 +1926,9 @@ function SettingsTab({
         <Field
           label={
             <span className="flex items-center justify-between">
-              <span>{t("teacher_quiz_manage.settings.scoring.pass_score")}</span>
+              <span>
+                {t("teacher_quiz_manage.settings.scoring.pass_score")}
+              </span>
               <span className="text-m3-primary font-extrabold text-sm">
                 {draft.passing_score_percent}%
               </span>
@@ -2389,7 +2390,9 @@ function PreviewTab({
             {t("teacher_quiz_manage.preview.title")}
           </h2>
           <p className="text-sm text-m3-on-surface-variant mt-1">
-            {t("teacher_quiz_manage.preview.description", { title: quiz.title })}
+            {t("teacher_quiz_manage.preview.description", {
+              title: quiz.title,
+            })}
           </p>
         </div>
         <Badge className="border border-m3-outline-variant/40 bg-m3-surface-container-low text-m3-on-surface-variant rounded-full text-[11px] font-medium px-3 py-1 self-start sm:self-auto">
@@ -2410,7 +2413,11 @@ function PreviewTab({
       ) : (
         <div className="space-y-5">
           {approvedQuestions.map((question, idx) => (
-            <PreviewQuestion key={question.id} index={idx} question={question} />
+            <PreviewQuestion
+              key={question.id}
+              index={idx}
+              question={question}
+            />
           ))}
         </div>
       )}

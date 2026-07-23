@@ -95,7 +95,9 @@ export default function GoogleCallbackPage() {
         if (tokenResponse.requires_mfa) {
           const next = consumePostLoginRedirect();
           setStatus(t("google_callback.mfa_redirect"));
-          window.location.replace(`/login/mfa?next=${encodeURIComponent(next)}`);
+          window.location.replace(
+            `/login/mfa?next=${encodeURIComponent(next)}`,
+          );
           return;
         }
 
@@ -104,7 +106,9 @@ export default function GoogleCallbackPage() {
       } catch (err) {
         fail(
           t("google_callback.exchange_failed_title"),
-          err instanceof Error ? err.message : t("google_callback.exchange_failed_detail"),
+          err instanceof Error
+            ? err.message
+            : t("google_callback.exchange_failed_detail"),
         );
       }
     }

@@ -90,8 +90,7 @@ export function useInterviewRespond(sessionId: string | null | undefined) {
         `/interview-sessions/${sessionId}/respond`,
         body,
         {
-          "Accept-Language":
-            i18n.resolvedLanguage ?? i18n.language ?? "en",
+          "Accept-Language": i18n.resolvedLanguage ?? i18n.language ?? "en",
         },
       ),
     onSuccess: () => {
@@ -162,16 +161,14 @@ export function useGapReport(sessionId: string | null | undefined) {
     retry: (failureCount, error) =>
       error instanceof ApiError && error.status === 404 && failureCount < 60,
     retryDelay: 3000,
-    refetchInterval: (query) =>
-      query.state.data === undefined ? 3000 : false,
+    refetchInterval: (query) => (query.state.data === undefined ? 3000 : false),
   });
 }
 
 export function useMyInterviewSessions() {
   return useQuery({
     queryKey: queryKeys.interviews.mySessions(),
-    queryFn: () =>
-      apiFetch<InterviewSessionPublic[]>(`/me/interview-sessions`),
+    queryFn: () => apiFetch<InterviewSessionPublic[]>(`/me/interview-sessions`),
     refetchInterval: (query) =>
       hasPendingInterviewEvaluation(query.state.data) ? 3000 : false,
   });
@@ -334,7 +331,9 @@ export function useArchiveInterviewConfig(configId: string | null | undefined) {
 /**
  * POST /teacher/interview-configs/{config_id}/unarchive — flip status back to draft.
  */
-export function useUnarchiveInterviewConfig(configId: string | null | undefined) {
+export function useUnarchiveInterviewConfig(
+  configId: string | null | undefined,
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () =>
@@ -356,7 +355,9 @@ export function useUnarchiveInterviewConfig(configId: string | null | undefined)
  * POST /teacher/interview-configs/{config_id}/unpublish — flip a published
  * config back to draft (hides it from students so it can be edited/regenerated).
  */
-export function useUnpublishInterviewConfig(configId: string | null | undefined) {
+export function useUnpublishInterviewConfig(
+  configId: string | null | undefined,
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () =>
@@ -388,8 +389,7 @@ export function useDeleteInterviewConfig(
 ) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      apiDelete(`/teacher/interview-configs/${configId}`),
+    mutationFn: () => apiDelete(`/teacher/interview-configs/${configId}`),
     onSuccess: () => {
       if (configId) {
         qc.removeQueries({
@@ -413,7 +413,9 @@ export function useDeleteInterviewConfig(
  * New questions are stored with review_status='approved' (the service-layer
  * default for teacher-authored questions).
  */
-export function useCreateInterviewQuestion(configId: string | null | undefined) {
+export function useCreateInterviewQuestion(
+  configId: string | null | undefined,
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: InterviewQuestionCreate) =>
@@ -436,7 +438,9 @@ export function useCreateInterviewQuestion(configId: string | null | undefined) 
  * partial update (used to flip review_status: 'pending' → 'approved' and to
  * edit prompt_text / question_type / difficulty / position).
  */
-export function useUpdateInterviewQuestion(configId: string | null | undefined) {
+export function useUpdateInterviewQuestion(
+  configId: string | null | undefined,
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -472,7 +476,9 @@ export function useUpdateInterviewQuestion(configId: string | null | undefined) 
  * DELETE /teacher/interview-configs/{config_id}/questions/{question_id} —
  * soft-delete a single question.
  */
-export function useDeleteInterviewQuestion(configId: string | null | undefined) {
+export function useDeleteInterviewQuestion(
+  configId: string | null | undefined,
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (questionId: string) =>
@@ -552,9 +558,7 @@ export function useDeleteInterviewOutcome(configId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (outcomeId: string) =>
-      apiDelete(
-        `/teacher/interview-configs/${configId}/outcomes/${outcomeId}`,
-      ),
+      apiDelete(`/teacher/interview-configs/${configId}/outcomes/${outcomeId}`),
     onSuccess: () => {
       if (configId) {
         void qc.invalidateQueries({
@@ -603,10 +607,7 @@ export function useInterviewGenerationRun(
   runId: string | null | undefined,
 ) {
   return useQuery({
-    queryKey: queryKeys.interviews.generationRun(
-      configId ?? "",
-      runId ?? "",
-    ),
+    queryKey: queryKeys.interviews.generationRun(configId ?? "", runId ?? ""),
     queryFn: () =>
       apiFetch<InterviewGenerationRunPublic>(
         `/teacher/interview-configs/${configId}/generation-runs/${runId}`,
@@ -680,7 +681,9 @@ export function useInterviewSessionsForConfig(
  * GET /teacher/courses/{course_id}/interview-sessions — every interview
  * session (any student, any config) in a course. Course-wide Assessments tab.
  */
-export function useCourseInterviewSessions(courseId: string | null | undefined) {
+export function useCourseInterviewSessions(
+  courseId: string | null | undefined,
+) {
   return useQuery({
     queryKey: queryKeys.interviews.courseSessions(courseId ?? ""),
     queryFn: () =>
@@ -787,7 +790,10 @@ export function useStudentInterviewSessions(
   studentId: string | null | undefined,
 ) {
   return useQuery({
-    queryKey: queryKeys.interviews.studentSessions(courseId ?? "", studentId ?? ""),
+    queryKey: queryKeys.interviews.studentSessions(
+      courseId ?? "",
+      studentId ?? "",
+    ),
     queryFn: () =>
       apiFetch<InterviewSessionTeacherRead[]>(
         `/teacher/courses/${courseId}/students/${studentId}/interview-sessions`,
@@ -839,7 +845,9 @@ export function useTeacherInterviewSession(
  * Fetches a short-lived LiveKit participant token for voice mode.
  * Errors: 503 voice disabled, 409 wrong mode/status, 403/404 ownership/missing.
  */
-export function useInterviewRealtimeToken(sessionId: string | null | undefined) {
+export function useInterviewRealtimeToken(
+  sessionId: string | null | undefined,
+) {
   const { i18n } = useTranslation();
   return useMutation({
     mutationFn: () =>
@@ -869,6 +877,4 @@ export function useReportIntegrityEvents(sessionId: string | null | undefined) {
   });
 }
 
-export type {
-  InterviewForTakingPublic,
-};
+export type { InterviewForTakingPublic };

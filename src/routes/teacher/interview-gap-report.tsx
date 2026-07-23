@@ -1,5 +1,19 @@
-import { Link, useNavigate, useParams, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, ChevronLeft, ChevronRight, FileText, Loader2, Pencil, Save, X } from "lucide-react";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useRouter,
+} from "@tanstack/react-router";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Loader2,
+  Pencil,
+  Save,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -76,8 +90,12 @@ export default function InterviewGapReportPage() {
   const router = useRouter();
   const navigate = useNavigate();
   const { sessionId } = useParams({ strict: false }) as { sessionId: string };
-  const { data: report, isLoading, isError, error } =
-    useTeacherGapReport(sessionId);
+  const {
+    data: report,
+    isLoading,
+    isError,
+    error,
+  } = useTeacherGapReport(sessionId);
   const { data: session } = useTeacherInterviewSession(sessionId);
 
   const configId = session?.interview_config_id;
@@ -151,9 +169,7 @@ export default function InterviewGapReportPage() {
             teacherSummary={report.teacher_summary}
           />
 
-          <CriterionBreakdown
-            breakdown={report.per_criterion_breakdown}
-          />
+          <CriterionBreakdown breakdown={report.per_criterion_breakdown} />
         </div>
 
         <div className="col-span-12 lg:col-span-5 space-y-4">
@@ -175,7 +191,8 @@ function TranscriptCard({ sessionId }: { sessionId: string }) {
 
   // Baseline for relative timestamps: the first turn is 0:00, every later turn
   // is its offset from that first turn (matches the live interview session).
-  const baseline = turns.length > 0 ? new Date(turns[0].created_at).getTime() : 0;
+  const baseline =
+    turns.length > 0 ? new Date(turns[0].created_at).getTime() : 0;
 
   const total = turns.length;
   const pageCount = Math.max(1, Math.ceil(total / TRANSCRIPT_PAGE_SIZE));
@@ -200,7 +217,9 @@ function TranscriptCard({ sessionId }: { sessionId: string }) {
         )}
       </div>
       {isLoading && (
-        <p className="text-sm text-m3-on-surface-variant">{t("common.loading")}</p>
+        <p className="text-sm text-m3-on-surface-variant">
+          {t("common.loading")}
+        </p>
       )}
       {!isLoading && turns.length === 0 && (
         <p className="text-sm text-m3-on-surface-variant">
@@ -232,7 +251,10 @@ function TranscriptCard({ sessionId }: { sessionId: string }) {
                 </div>
                 <p className="text-sm text-m3-on-surface leading-relaxed">
                   <span className="font-bold mr-1.5">
-                    {t(`teacher_interview_gap_report.transcript.role.${turn.role}`)}:
+                    {t(
+                      `teacher_interview_gap_report.transcript.role.${turn.role}`,
+                    )}
+                    :
                   </span>
                   {turn.content_text ??
                     (turn.has_audio
@@ -322,13 +344,21 @@ function Header({
   );
 }
 
-function ContextRow({ label, value }: { label: string; value: React.ReactNode }) {
+function ContextRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) {
   return (
     <div className="min-w-0">
       <p className="text-[10px] uppercase font-bold tracking-widest text-m3-on-surface-variant/70">
         {label}
       </p>
-      <p className="text-sm font-semibold text-m3-on-surface truncate">{value}</p>
+      <p className="text-sm font-semibold text-m3-on-surface truncate">
+        {value}
+      </p>
     </div>
   );
 }
@@ -349,7 +379,8 @@ function ContextCard({
       ? Math.max(
           0,
           Math.round(
-            (new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 60000,
+            (new Date(endedAt).getTime() - new Date(startedAt).getTime()) /
+              60000,
           ),
         )
       : null;
@@ -523,7 +554,9 @@ function NotesCard({
         {/* Animated expand/collapse for the editor. */}
         <div
           className={`grid transition-all duration-300 ease-out ${
-            editing ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            editing
+              ? "grid-rows-[1fr] opacity-100"
+              : "grid-rows-[0fr] opacity-0"
           }`}
         >
           <div className="overflow-hidden">

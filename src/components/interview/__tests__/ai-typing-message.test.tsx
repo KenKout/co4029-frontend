@@ -18,16 +18,12 @@ describe("AiTypingMessage", () => {
         }),
     );
 
-    render(
-      <AiTypingMessage
-        text="Hello"
-        animate
-        speak={speak}
-      />,
-    );
+    render(<AiTypingMessage text="Hello" animate speak={speak} />);
 
     expect(speak).toHaveBeenCalledWith("Hello");
-    expect(screen.getByRole("status")).toHaveTextContent(/đang chuẩn bị câu hỏi/i);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /đang chuẩn bị câu hỏi/i,
+    );
     expect(screen.queryByText("Hello")).not.toBeInTheDocument();
 
     await act(async () => {

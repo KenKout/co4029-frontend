@@ -126,7 +126,9 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
     // any legacy text/voice config is normalized to hybrid on load.
     supported_modes: "hybrid",
     time_limit_minutes:
-      config.time_limit_minutes == null ? "" : String(config.time_limit_minutes),
+      config.time_limit_minutes == null
+        ? ""
+        : String(config.time_limit_minutes),
     max_attempts:
       config.max_attempts == null ? "" : String(config.max_attempts),
     min_outcomes_to_pass:
@@ -180,7 +182,8 @@ export default function InterviewConfigPage() {
 
   const draftCount = questions?.length ?? config?.draft_question_count ?? 0;
   const approvedCount = useMemo(
-    () => (questions ?? []).filter((q) => q.review_status === "approved").length,
+    () =>
+      (questions ?? []).filter((q) => q.review_status === "approved").length,
     [questions],
   );
 
@@ -275,16 +278,21 @@ export default function InterviewConfigPage() {
         }
       : {
           kind: "warning",
-          label: t("teacher_interview_config.section_nav.status.settings_incomplete"),
+          label: t(
+            "teacher_interview_config.section_nav.status.settings_incomplete",
+          ),
         };
 
     const outcomesStatus: SectionStatus =
       outcomeCount > 0
         ? {
             kind: "completed",
-            label: t("teacher_interview_config.section_nav.status.outcomes_count", {
-              count: outcomeCount,
-            }),
+            label: t(
+              "teacher_interview_config.section_nav.status.outcomes_count",
+              {
+                count: outcomeCount,
+              },
+            ),
           }
         : {
             kind: "warning",
@@ -295,9 +303,12 @@ export default function InterviewConfigPage() {
       draftCount > 0
         ? {
             kind: "info",
-            label: t("teacher_interview_config.section_nav.status.generated_count", {
-              count: draftCount,
-            }),
+            label: t(
+              "teacher_interview_config.section_nav.status.generated_count",
+              {
+                count: draftCount,
+              },
+            ),
           }
         : { kind: "none" };
 
@@ -305,14 +316,19 @@ export default function InterviewConfigPage() {
       draftCount > 0
         ? {
             kind: approvedCount === draftCount ? "completed" : "info",
-            label: t("teacher_interview_config.section_nav.status.approved_ratio", {
-              approved: approvedCount,
-              total: draftCount,
-            }),
+            label: t(
+              "teacher_interview_config.section_nav.status.approved_ratio",
+              {
+                approved: approvedCount,
+                total: draftCount,
+              },
+            ),
           }
         : {
             kind: "warning",
-            label: t("teacher_interview_config.section_nav.status.no_questions"),
+            label: t(
+              "teacher_interview_config.section_nav.status.no_questions",
+            ),
           };
 
     return [
@@ -325,7 +341,9 @@ export default function InterviewConfigPage() {
       {
         id: "learning-outcomes",
         label: t("teacher_interview_config.section_nav.learning_outcomes"),
-        shortLabel: t("teacher_interview_config.section_nav.learning_outcomes_short"),
+        shortLabel: t(
+          "teacher_interview_config.section_nav.learning_outcomes_short",
+        ),
         status: outcomesStatus,
       },
       {
@@ -343,7 +361,9 @@ export default function InterviewConfigPage() {
       {
         id: "adaptive-readiness",
         label: t("teacher_interview_config.section_nav.adaptive_readiness"),
-        shortLabel: t("teacher_interview_config.section_nav.adaptive_readiness_short"),
+        shortLabel: t(
+          "teacher_interview_config.section_nav.adaptive_readiness_short",
+        ),
         status: { kind: "none" },
       },
     ];
@@ -446,12 +466,16 @@ export default function InterviewConfigPage() {
     } catch (err: unknown) {
       const message = (err as Error).message || "";
       if (isArchived || /archived/i.test(message)) {
-        toast.error(t("teacher_interview_config.errors.publish_blocked_archived"));
+        toast.error(
+          t("teacher_interview_config.errors.publish_blocked_archived"),
+        );
       } else if (/interview_no_outcomes|outcome/i.test(message)) {
         toast.error(t("teacher_interview_config.errors.outcomes_required"));
       } else if (
         approvedCount === 0 ||
-        /interview_no_approved_questions|question|insufficient|empty/i.test(message)
+        /interview_no_approved_questions|question|insufficient|empty/i.test(
+          message,
+        )
       ) {
         toast.error(t("teacher_interview_config.errors.questions_required"));
       } else {
@@ -557,7 +581,10 @@ export default function InterviewConfigPage() {
     <div className="space-y-6 pb-12 max-w-[1400px] mx-auto">
       <Breadcrumbs
         items={[
-          { label: t("teacher_common.breadcrumb_teaching"), to: "/teacher/courses" },
+          {
+            label: t("teacher_common.breadcrumb_teaching"),
+            to: "/teacher/courses",
+          },
           {
             label: course?.title ?? t("teacher_common.breadcrumb_course"),
             to: "/teacher/courses/$courseId",
@@ -684,7 +711,9 @@ export default function InterviewConfigPage() {
                   size="icon"
                   className="shrink-0"
                   title={t("teacher_interview_config.actions.more_tooltip")}
-                  aria-label={t("teacher_interview_config.actions.more_tooltip")}
+                  aria-label={t(
+                    "teacher_interview_config.actions.more_tooltip",
+                  )}
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
@@ -874,7 +903,9 @@ function readGenerationProgress(
   if (!cfg) return null;
 
   const toInt = (v: unknown): number | null =>
-    typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.floor(v)) : null;
+    typeof v === "number" && Number.isFinite(v)
+      ? Math.max(0, Math.floor(v))
+      : null;
 
   // Completed summary takes precedence so the bar always finishes at target.
   const pipeline = cfg.pipeline as Record<string, unknown> | undefined;
@@ -887,7 +918,10 @@ function readGenerationProgress(
         phase: "completed",
         accepted,
         target,
-        percent: target > 0 ? Math.round((Math.min(accepted, target) / target) * 100) : 100,
+        percent:
+          target > 0
+            ? Math.round((Math.min(accepted, target) / target) * 100)
+            : 100,
       };
     }
   }
@@ -898,13 +932,18 @@ function readGenerationProgress(
     const accepted = toInt(live.accepted);
     const phaseRaw = live.phase;
     const phase =
-      phaseRaw === "saving" || phaseRaw === "completed" ? phaseRaw : "generating";
+      phaseRaw === "saving" || phaseRaw === "completed"
+        ? phaseRaw
+        : "generating";
     if (target !== null && accepted !== null) {
       return {
         phase,
         accepted,
         target,
-        percent: target > 0 ? Math.round((Math.min(accepted, target) / target) * 100) : 0,
+        percent:
+          target > 0
+            ? Math.round((Math.min(accepted, target) / target) * 100)
+            : 0,
       };
     }
   }
@@ -930,11 +969,26 @@ function TabBar({
   function statusDot(status: SectionNavItem["status"]) {
     const kind = status?.kind ?? "none";
     if (kind === "completed")
-      return <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />;
+      return (
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-emerald-500"
+          aria-hidden="true"
+        />
+      );
     if (kind === "warning")
-      return <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />;
+      return (
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-amber-500"
+          aria-hidden="true"
+        />
+      );
     if (kind === "info")
-      return <span className="h-1.5 w-1.5 rounded-full bg-m3-secondary" aria-hidden="true" />;
+      return (
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-m3-secondary"
+          aria-hidden="true"
+        />
+      );
     return null;
   }
 
@@ -1044,9 +1098,7 @@ function TabBar({
                 <span
                   className={cn(
                     "mt-0.5 block text-[11px] leading-tight transition-colors duration-300",
-                    isActive
-                      ? "text-white/80"
-                      : "text-m3-on-surface-variant",
+                    isActive ? "text-white/80" : "text-m3-on-surface-variant",
                   )}
                 >
                   {status.label}
@@ -1192,17 +1244,13 @@ function SettingsForm({
     >
       <Section
         title={t("teacher_interview_config.sections.general.title")}
-        description={t(
-          "teacher_interview_config.sections.general.description",
-        )}
+        description={t("teacher_interview_config.sections.general.description")}
       >
         <Field label={t("teacher_interview_config.fields.title")}>
           <Input
             value={draft.title}
             onChange={(e) => update("title", e.target.value)}
-            placeholder={t(
-              "teacher_interview_config.fields.title_placeholder",
-            )}
+            placeholder={t("teacher_interview_config.fields.title_placeholder")}
             className="bg-m3-surface text-sm"
           />
         </Field>
@@ -1290,9 +1338,7 @@ function SettingsForm({
           "teacher_interview_config.sections.guidance.description",
         )}
       >
-        <Field
-          label={t("teacher_interview_config.fields.supplementary_label")}
-        >
+        <Field label={t("teacher_interview_config.fields.supplementary_label")}>
           <textarea
             value={draft.supplementary_instructions}
             onChange={(e) =>
@@ -1345,105 +1391,116 @@ function SettingsForm({
         >
           <div className="overflow-hidden">
             <div className="mt-5 space-y-5 border-t border-m3-outline-variant/20 pt-5">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t("teacher_interview_config.security.protected_by_platform")}
-            </p>
-            <ul className="mt-2 grid gap-2 text-sm text-m3-on-surface sm:grid-cols-2">
-              {["questions", "answers", "rubrics", "prompts", "state"].map(
-                (item) => (
-                  <li key={item} className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-emerald-600" />
-                    {t(`teacher_interview_config.security.protected.${item}`)}
-                  </li>
-                ),
-              )}
-            </ul>
-          </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("teacher_interview_config.security.protected_by_platform")}
+                </p>
+                <ul className="mt-2 grid gap-2 text-sm text-m3-on-surface sm:grid-cols-2">
+                  {["questions", "answers", "rubrics", "prompts", "state"].map(
+                    (item) => (
+                      <li key={item} className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-emerald-600" />
+                        {t(
+                          `teacher_interview_config.security.protected.${item}`,
+                        )}
+                      </li>
+                    ),
+                  )}
+                </ul>
+              </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t("teacher_interview_config.security.response_policy")}>
-              <select
-                value={draft.security_response_policy}
-                onChange={(e) =>
-                  update(
-                    "security_response_policy",
-                    e.target.value as SecurityResponsePolicy,
-                  )
-                }
-                className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-              >
-                {[
-                  "continue_and_log",
-                  "warn_and_continue",
-                  "end_and_flag",
-                ].map((policy) => (
-                  <option key={policy} value={policy}>
-                    {t(`teacher_interview_config.security.policy.${policy}`)}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label={t("teacher_interview_config.security.max_attempts")}>
-              <Input
-                type="number"
-                min={2}
-                max={20}
-                value={draft.security_max_consecutive_attempts}
-                onChange={(e) =>
-                  update("security_max_consecutive_attempts", e.target.value)
-                }
-                className="bg-m3-surface text-sm"
-              />
-            </Field>
-          </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field
+                  label={t("teacher_interview_config.security.response_policy")}
+                >
+                  <select
+                    value={draft.security_response_policy}
+                    onChange={(e) =>
+                      update(
+                        "security_response_policy",
+                        e.target.value as SecurityResponsePolicy,
+                      )
+                    }
+                    className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+                  >
+                    {[
+                      "continue_and_log",
+                      "warn_and_continue",
+                      "end_and_flag",
+                    ].map((policy) => (
+                      <option key={policy} value={policy}>
+                        {t(
+                          `teacher_interview_config.security.policy.${policy}`,
+                        )}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field
+                  label={t("teacher_interview_config.security.max_attempts")}
+                >
+                  <Input
+                    type="number"
+                    min={2}
+                    max={20}
+                    value={draft.security_max_consecutive_attempts}
+                    onChange={(e) =>
+                      update(
+                        "security_max_consecutive_attempts",
+                        e.target.value,
+                      )
+                    }
+                    className="bg-m3-surface text-sm"
+                  />
+                </Field>
+              </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Field label={t("teacher_interview_config.security.custom_en")}>
-              <textarea
-                rows={3}
-                maxLength={500}
-                value={draft.security_custom_refusal_en}
-                onChange={(e) =>
-                  update("security_custom_refusal_en", e.target.value)
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Field label={t("teacher_interview_config.security.custom_en")}>
+                  <textarea
+                    rows={3}
+                    maxLength={500}
+                    value={draft.security_custom_refusal_en}
+                    onChange={(e) =>
+                      update("security_custom_refusal_en", e.target.value)
+                    }
+                    className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+                  />
+                  <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
+                    {draft.security_custom_refusal_en.trim() ||
+                      t("teacher_interview_config.security.preview_en")}
+                  </p>
+                </Field>
+                <Field label={t("teacher_interview_config.security.custom_vi")}>
+                  <textarea
+                    rows={3}
+                    maxLength={500}
+                    value={draft.security_custom_refusal_vi}
+                    onChange={(e) =>
+                      update("security_custom_refusal_vi", e.target.value)
+                    }
+                    className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+                  />
+                  <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
+                    {draft.security_custom_refusal_vi.trim() ||
+                      t("teacher_interview_config.security.preview_vi")}
+                  </p>
+                </Field>
+              </div>
+
+              <ToggleRow
+                label={t("teacher_interview_config.security.incident_summary")}
+                description={t(
+                  "teacher_interview_config.security.incident_summary_description",
+                )}
+                value={draft.security_incident_summary_enabled}
+                onChange={(value) =>
+                  update("security_incident_summary_enabled", value)
                 }
-                className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
               />
-              <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
-                {draft.security_custom_refusal_en.trim() ||
-                  t("teacher_interview_config.security.preview_en")}
+              <p className="text-[11px] text-m3-on-surface-variant">
+                {t("teacher_interview_config.security.rules_hidden")}
               </p>
-            </Field>
-            <Field label={t("teacher_interview_config.security.custom_vi")}>
-              <textarea
-                rows={3}
-                maxLength={500}
-                value={draft.security_custom_refusal_vi}
-                onChange={(e) =>
-                  update("security_custom_refusal_vi", e.target.value)
-                }
-                className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-              />
-              <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
-                {draft.security_custom_refusal_vi.trim() ||
-                  t("teacher_interview_config.security.preview_vi")}
-              </p>
-            </Field>
-          </div>
-
-          <ToggleRow
-            label={t("teacher_interview_config.security.incident_summary")}
-            description={t(
-              "teacher_interview_config.security.incident_summary_description",
-            )}
-            value={draft.security_incident_summary_enabled}
-            onChange={(value) =>
-              update("security_incident_summary_enabled", value)
-            }
-          />
-          <p className="text-[11px] text-m3-on-surface-variant">
-            {t("teacher_interview_config.security.rules_hidden")}
-          </p>
             </div>
           </div>
         </div>
@@ -1756,7 +1813,9 @@ function GenerationSection({
                       ? t("teacher_interview_config.generate.phase_done")
                       : progress.phase === "saving"
                         ? t("teacher_interview_config.generate.phase_saving")
-                        : t("teacher_interview_config.generate.phase_generating")}
+                        : t(
+                            "teacher_interview_config.generate.phase_generating",
+                          )}
                   </span>
                   <span className="tabular-nums">{progress.percent}%</span>
                 </div>
@@ -1766,7 +1825,9 @@ function GenerationSection({
                       "h-full rounded-full transition-[width] duration-500 ease-out",
                       completed ? "bg-emerald-500" : "bg-blue-500",
                     )}
-                    style={{ width: `${Math.max(progress.percent, inProgress ? 6 : 0)}%` }}
+                    style={{
+                      width: `${Math.max(progress.percent, inProgress ? 6 : 0)}%`,
+                    }}
                   />
                 </div>
               </div>

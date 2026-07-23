@@ -29,7 +29,11 @@ export class MultipartUploadError extends Error {
   partNumber: number | null;
   cause?: unknown;
 
-  constructor(message: string, partNumber: number | null = null, cause?: unknown) {
+  constructor(
+    message: string,
+    partNumber: number | null = null,
+    cause?: unknown,
+  ) {
     super(message);
     this.name = "MultipartUploadError";
     this.partNumber = partNumber;
@@ -40,7 +44,8 @@ export class MultipartUploadError extends Error {
 const DEFAULT_RETRY_DELAYS = [1000, 2000, 4000];
 const DEFAULT_CONCURRENCY = 3;
 
-const defaultDelay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+const defaultDelay = (ms: number) =>
+  new Promise<void>((r) => setTimeout(r, ms));
 
 export function planParts(
   fileSize: number,
@@ -111,7 +116,10 @@ export async function uploadPartWithRetry(
         return etag;
       }
     } catch (err) {
-      if (err instanceof MultipartUploadError && err.message.startsWith("S3 PUT missing ETag")) {
+      if (
+        err instanceof MultipartUploadError &&
+        err.message.startsWith("S3 PUT missing ETag")
+      ) {
         throw err;
       }
       lastErr = err;
@@ -121,7 +129,9 @@ export async function uploadPartWithRetry(
     }
 
     if (attempt < maxAttempts) {
-      await delay(retryDelays[attempt - 1] ?? retryDelays[retryDelays.length - 1]);
+      await delay(
+        retryDelays[attempt - 1] ?? retryDelays[retryDelays.length - 1],
+      );
     }
   }
 
@@ -138,7 +148,9 @@ export async function uploadMultipart(
   opts: MultipartUploadOpts,
 ): Promise<{ uploadId: string; parts: UploadedPart[] }> {
   if (init.mode !== "multipart") {
-    throw new MultipartUploadError("uploadMultipart called with mode != 'multipart'");
+    throw new MultipartUploadError(
+      "uploadMultipart called with mode != 'multipart'",
+    );
   }
   if (!init.upload_id) {
     throw new MultipartUploadError("init.upload_id missing");
@@ -209,8 +221,9 @@ export async function uploadMultipart(
   }
 
   reportProgress();
-  const workers = Array.from({ length: Math.min(concurrency, planned.length) }, () =>
-    worker(),
+  const workers = Array.from(
+    { length: Math.min(concurrency, planned.length) },
+    () => worker(),
   );
   await Promise.all(workers);
 

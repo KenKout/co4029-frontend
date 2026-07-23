@@ -1,9 +1,21 @@
 import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Loader2, LogOut, LayoutDashboard, Briefcase, ShieldCheck } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  LogOut,
+  LayoutDashboard,
+  Briefcase,
+  ShieldCheck,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { type NavItem, type NavGroup, secondaryNavItems } from "@/lib/navigation";
+import {
+  type NavItem,
+  type NavGroup,
+  secondaryNavItems,
+} from "@/lib/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
@@ -79,7 +91,8 @@ export default function SideNavBar({
   function isItemActive(item: NavItem) {
     return item.exact
       ? location.pathname === item.href
-      : location.pathname === item.href || location.pathname.startsWith(item.href + "/");
+      : location.pathname === item.href ||
+          location.pathname.startsWith(item.href + "/");
   }
 
   function renderNavItem(item: NavItem) {
@@ -102,7 +115,9 @@ export default function SideNavBar({
         )}
       >
         <item.icon className="h-4 w-4 flex-shrink-0" />
-        {!collapsed && <span className="text-sm font-medium truncate">{label}</span>}
+        {!collapsed && (
+          <span className="text-sm font-medium truncate">{label}</span>
+        )}
       </Link>
     );
   }
@@ -113,24 +128,31 @@ export default function SideNavBar({
         className={cn(
           "flex flex-col h-screen bg-white border-r border-border fixed left-0 top-0 z-40 transition-all duration-300 shadow-sm",
           collapsed ? "w-16" : "w-64",
-          className
+          className,
         )}
       >
         {/* Logo + toggle */}
         <div
           className={cn(
             "h-16 flex items-center border-b border-border px-4 shrink-0",
-            collapsed ? "justify-center" : "justify-between gap-2"
+            collapsed ? "justify-center" : "justify-between gap-2",
           )}
         >
           {collapsed ? (
-            <Link to="/" className="text-base font-bold text-primary tracking-tight font-heading cursor-pointer">
+            <Link
+              to="/"
+              className="text-base font-bold text-primary tracking-tight font-heading cursor-pointer"
+            >
               aB
             </Link>
           ) : (
             <Link to="/" className="flex flex-col cursor-pointer min-w-0">
-              <span className="text-lg font-bold text-primary tracking-tight font-heading">aBridgeAI</span>
-              <span className="text-[9px] uppercase tracking-widest text-text-subtle">The Cognitive Conduit</span>
+              <span className="text-lg font-bold text-primary tracking-tight font-heading">
+                aBridgeAI
+              </span>
+              <span className="text-[9px] uppercase tracking-widest text-text-subtle">
+                The Cognitive Conduit
+              </span>
             </Link>
           )}
           {onToggle && (
@@ -139,7 +161,11 @@ export default function SideNavBar({
               className="cursor-pointer p-1.5 rounded-md hover:bg-surface-muted text-text-subtle hover:text-text-strong transition-colors shrink-0"
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              {collapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
             </button>
           )}
         </div>
@@ -155,10 +181,13 @@ export default function SideNavBar({
                 </p>
               )}
               {/* Divider — only when collapsed */}
-              {collapsed && (
-                <div className="w-6 h-px bg-border mx-auto mb-1" />
-              )}
-              <div className={cn("flex flex-col gap-0.5", collapsed && "items-center")}>
+              {collapsed && <div className="w-6 h-px bg-border mx-auto mb-1" />}
+              <div
+                className={cn(
+                  "flex flex-col gap-0.5",
+                  collapsed && "items-center",
+                )}
+              >
                 {group.items.map(renderNavItem)}
               </div>
             </div>
@@ -166,7 +195,12 @@ export default function SideNavBar({
         </nav>
 
         {/* Secondary (help + logout) */}
-        <div className={cn("flex flex-col gap-0.5 px-2 py-3 border-t border-border shrink-0", collapsed && "items-center")}>
+        <div
+          className={cn(
+            "flex flex-col gap-0.5 px-2 py-3 border-t border-border shrink-0",
+            collapsed && "items-center",
+          )}
+        >
           {secondaryNavItems.map((item) => {
             const label = labelOf(item);
             const baseClasses = cn(
@@ -174,7 +208,7 @@ export default function SideNavBar({
               collapsed ? "justify-center w-10 h-10 px-0 mx-auto" : "px-3",
               isLogoutItem(item)
                 ? "text-text-subtle hover:text-danger hover:bg-danger/10"
-                : "text-text-subtle hover:text-primary hover:bg-surface-muted"
+                : "text-text-subtle hover:text-primary hover:bg-surface-muted",
             );
 
             if (isLogoutItem(item)) {
@@ -188,7 +222,7 @@ export default function SideNavBar({
                   className={cn(
                     baseClasses,
                     "w-full text-left bg-transparent border-0 disabled:opacity-60 disabled:cursor-not-allowed",
-                    collapsed && "w-10"
+                    collapsed && "w-10",
                   )}
                 >
                   {isLoggingOut ? (
@@ -196,7 +230,9 @@ export default function SideNavBar({
                   ) : (
                     <LogOut className="h-4 w-4 flex-shrink-0" />
                   )}
-                  {!collapsed && <span className="text-sm font-medium">{label}</span>}
+                  {!collapsed && (
+                    <span className="text-sm font-medium">{label}</span>
+                  )}
                 </button>
               );
             }
@@ -209,7 +245,9 @@ export default function SideNavBar({
                 className={baseClasses}
               >
                 <item.icon className="h-4 w-4 flex-shrink-0" />
-                {!collapsed && <span className="text-sm font-medium">{label}</span>}
+                {!collapsed && (
+                  <span className="text-sm font-medium">{label}</span>
+                )}
               </Link>
             );
           })}

@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ApiError, apiDelete, apiFetch, apiPatch, apiPost, apiPut } from "../client";
+import {
+  ApiError,
+  apiDelete,
+  apiFetch,
+  apiPatch,
+  apiPost,
+  apiPut,
+} from "../client";
 import { queryKeys } from "../query-keys";
 import { useInfinitePage } from "../use-infinite-page";
 import type {
@@ -59,8 +66,7 @@ export function useCareerPath(slug: string | undefined) {
 export function useMyCareerEnrollments() {
   return useQuery({
     queryKey: queryKeys.careerPaths.myEnrollments(),
-    queryFn: () =>
-      apiFetch<MyCareerEnrollmentRead[]>("/me/career-enrollments"),
+    queryFn: () => apiFetch<MyCareerEnrollmentRead[]>("/me/career-enrollments"),
     staleTime: 1000 * 60 * 2,
   });
 }

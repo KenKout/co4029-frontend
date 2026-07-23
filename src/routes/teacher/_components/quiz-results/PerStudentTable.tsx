@@ -98,7 +98,10 @@ export function PerStudentTable({
           return <span className="text-m3-on-surface-variant">—</span>;
         }
         return row.passed ? (
-          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
+          <Badge
+            variant="secondary"
+            className="bg-emerald-100 text-emerald-700"
+          >
             <CheckCircle2 />
             {t("teacher_quiz_results.per_student.passed")}
           </Badge>

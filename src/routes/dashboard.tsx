@@ -84,26 +84,45 @@ function EmptyCourses() {
   );
 }
 
-function NotificationItem({ notification }: {
-  notification: { id: string; category: string; title: string; body: string | null; read_at: string | null; created_at: string };
+function NotificationItem({
+  notification,
+}: {
+  notification: {
+    id: string;
+    category: string;
+    title: string;
+    body: string | null;
+    read_at: string | null;
+    created_at: string;
+  };
 }) {
   const isRead = notification.read_at !== null;
-  const icon = notification.category === "quiz_ready" ? FileText
-    : notification.category === "interview_ready" ? Mic
-    : notification.category === "progress" ? CheckCircle2
-    : Bell;
+  const icon =
+    notification.category === "quiz_ready"
+      ? FileText
+      : notification.category === "interview_ready"
+        ? Mic
+        : notification.category === "progress"
+          ? CheckCircle2
+          : Bell;
 
   const Icon = icon;
 
   return (
-    <div className={`flex items-start gap-3 p-4 rounded-xl transition-colors ${isRead ? "opacity-60" : "bg-m3-secondary-fixed/20"}`}>
+    <div
+      className={`flex items-start gap-3 p-4 rounded-xl transition-colors ${isRead ? "opacity-60" : "bg-m3-secondary-fixed/20"}`}
+    >
       <div className="w-8 h-8 rounded-xl gradient-secondary flex items-center justify-center shrink-0">
         <Icon className="h-4 w-4 text-white" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-m3-on-surface">{notification.title}</p>
+        <p className="text-sm font-semibold text-m3-on-surface">
+          {notification.title}
+        </p>
         {notification.body && (
-          <p className="text-xs text-m3-on-surface-variant mt-0.5 line-clamp-1">{notification.body}</p>
+          <p className="text-xs text-m3-on-surface-variant mt-0.5 line-clamp-1">
+            {notification.body}
+          </p>
         )}
         <p className="text-xs text-m3-outline mt-1">
           {new Date(notification.created_at).toLocaleDateString()}
@@ -122,14 +141,9 @@ export default function DashboardPage() {
   const [fabHovered, setFabHovered] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  const {
-    items: myCourses,
-    isLoading: coursesLoading,
-  } = useMyCourses(8);
-  const {
-    items: notifications,
-    isLoading: notificationsLoading,
-  } = useNotifications();
+  const { items: myCourses, isLoading: coursesLoading } = useMyCourses(8);
+  const { items: notifications, isLoading: notificationsLoading } =
+    useNotifications();
 
   const firstName = getAuthDisplayName(user).split(" ")[0];
   const initials = getAuthUserInitials(user);
@@ -149,7 +163,6 @@ export default function DashboardPage() {
   return (
     <div className="relative min-h-screen pb-28">
       <div className="max-w-6xl mx-auto space-y-8">
-
         <header className="flex items-start justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-3 mb-1">
@@ -310,7 +323,10 @@ export default function DashboardPage() {
         </section>
 
         <section className="relative overflow-hidden rounded-xl gradient-primary p-8 flex flex-col gap-5 shadow-editorial">
-          <div className="pointer-events-none absolute -bottom-10 -right-10 w-48 h-48 rounded-full opacity-20 blur-2xl" style={{ background: "#1d4ed8" }} />
+          <div
+            className="pointer-events-none absolute -bottom-10 -right-10 w-48 h-48 rounded-full opacity-20 blur-2xl"
+            style={{ background: "#1d4ed8" }}
+          />
 
           <AIInsightChip className="self-start bg-white/15 text-white border-0">
             {t("dashboard.ai_chip")}
@@ -333,19 +349,23 @@ export default function DashboardPage() {
               </Button>
             </Link>
             <Link to="/dashboard/sr">
-              <Button variant="outline" className="bg-white/10 border-white/25 text-white hover:bg-white/20 rounded-xl font-semibold">
+              <Button
+                variant="outline"
+                className="bg-white/10 border-white/25 text-white hover:bg-white/20 rounded-xl font-semibold"
+              >
                 {t("dashboard.view_progress")}
               </Button>
             </Link>
           </div>
         </section>
-
       </div>
 
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
         <div
           className={`transition-all duration-200 origin-bottom-right ${
-            fabHovered ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-1 pointer-events-none"
+            fabHovered
+              ? "opacity-100 scale-100 translate-y-0"
+              : "opacity-0 scale-95 translate-y-1 pointer-events-none"
           }`}
         >
           <div className="bg-m3-on-surface text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-editorial whitespace-nowrap">

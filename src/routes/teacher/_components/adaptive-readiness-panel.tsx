@@ -121,9 +121,7 @@ function StatusPill({ count }: { count: number }) {
     <span
       className={cn(
         "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
-        ready
-          ? "bg-emerald-50 text-emerald-700"
-          : "bg-amber-50 text-amber-700",
+        ready ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700",
       )}
     >
       {ready ? (
@@ -240,7 +238,10 @@ function CoverageStats({
         </div>
         <div className="mt-1.5 space-y-1">
           {DIFFICULTY_KEYS.map((k) => (
-            <div key={k} className="flex items-center justify-between text-[11px]">
+            <div
+              key={k}
+              className="flex items-center justify-between text-[11px]"
+            >
               <span className="text-m3-on-surface-variant">
                 {t(`teacher_interview_config.difficulty.${k}`)}
               </span>
@@ -337,16 +338,25 @@ function ReadinessWarnings({
             )}
           >
             {isWarning ? (
-              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <TriangleAlert
+                className="mt-0.5 h-4 w-4 shrink-0"
+                aria-hidden="true"
+              />
             ) : (
-              <CircleHelp className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <CircleHelp
+                className="mt-0.5 h-4 w-4 shrink-0"
+                aria-hidden="true"
+              />
             )}
             <span className="flex-1">
               {t(`teacher_interview_config.readiness.warnings.${w.code}`, {
                 count: w.count,
-                defaultValue: t("teacher_interview_config.readiness.warnings.generic", {
-                  count: w.count,
-                }),
+                defaultValue: t(
+                  "teacher_interview_config.readiness.warnings.generic",
+                  {
+                    count: w.count,
+                  },
+                ),
               })}
             </span>
             {tab && onGoTo && (
@@ -374,8 +384,14 @@ function RolloutStatus({
   const { t } = useTranslation();
   const modes: { key: keyof typeof rollout; label: string }[] = [
     { key: "text", label: t("teacher_interview_config.readiness.modes.text") },
-    { key: "hybrid", label: t("teacher_interview_config.readiness.modes.hybrid") },
-    { key: "voice", label: t("teacher_interview_config.readiness.modes.voice") },
+    {
+      key: "hybrid",
+      label: t("teacher_interview_config.readiness.modes.hybrid"),
+    },
+    {
+      key: "voice",
+      label: t("teacher_interview_config.readiness.modes.voice"),
+    },
   ];
 
   return (

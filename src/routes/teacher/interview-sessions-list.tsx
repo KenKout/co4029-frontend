@@ -1,6 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, Loader2, MinusCircle, XCircle } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Loader2,
+  MinusCircle,
+  XCircle,
+} from "lucide-react";
 
 import { useInterviewSessionsForConfig } from "@/lib/api/hooks/interviews";
 import type { InterviewSessionSummary } from "@/lib/api/types";
@@ -35,13 +41,20 @@ function formatDate(iso: string | null | undefined, locale: string): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(locale, { year: "numeric", month: "2-digit", day: "2-digit" });
+  return d.toLocaleDateString(locale, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 }
 
 // PLACEHOLDER_LIST
 export function InterviewSessionsList({ configId }: { configId: string }) {
   const { t, i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   const { data, isLoading } = useInterviewSessionsForConfig(configId);
   const sessions = data ?? [];
 
@@ -57,7 +70,9 @@ export function InterviewSessionsList({ configId }: { configId: string }) {
       </div>
 
       {isLoading && (
-        <p className="text-xs text-m3-on-surface-variant">{t("common.loading")}</p>
+        <p className="text-xs text-m3-on-surface-variant">
+          {t("common.loading")}
+        </p>
       )}
 
       {!isLoading && sessions.length === 0 && (
@@ -82,7 +97,11 @@ export function InterviewSessionsList({ configId }: { configId: string }) {
                       {s.student_name ?? s.student_id}
                     </p>
                     <div className="mt-0.5 flex items-center gap-3 text-[11px] text-m3-on-surface-variant">
-                      <span>{t("teacher_interview_config.sessions.attempt", { n: s.attempt_number })}</span>
+                      <span>
+                        {t("teacher_interview_config.sessions.attempt", {
+                          n: s.attempt_number,
+                        })}
+                      </span>
                       <span>{formatDate(s.started_at, locale)}</span>
                     </div>
                   </div>
@@ -90,9 +109,15 @@ export function InterviewSessionsList({ configId }: { configId: string }) {
                     className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${BADGE_CLASS[state]}`}
                   >
                     {state === "passed" && <CheckCircle2 className="h-3 w-3" />}
-                    {state === "evaluating" && <Loader2 className="h-3 w-3 animate-spin" />}
-                    {state === "evaluation_failed" && <XCircle className="h-3 w-3" />}
-                    {state === "not_graded" && <MinusCircle className="h-3 w-3" />}
+                    {state === "evaluating" && (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    )}
+                    {state === "evaluation_failed" && (
+                      <XCircle className="h-3 w-3" />
+                    )}
+                    {state === "not_graded" && (
+                      <MinusCircle className="h-3 w-3" />
+                    )}
                     {t(`teacher_interview_config.sessions.state.${state}`)}
                   </span>
                   <ArrowRight className="h-4 w-4 text-m3-on-surface-variant shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />

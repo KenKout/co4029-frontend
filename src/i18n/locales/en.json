@@ -3171,14 +3171,14 @@
     "confirming": "Signing out…",
     "cancel": "Cancel"
   },
-   "nav_groups": {
-   "learning": "Learning",
-   "my_journey": "My Journey",
-   "overview": "Overview",
-   "content": "Content",
-   "pathways": "Pathways",
-   "analytics": "Analytics",
-   "management": "Management",
-   "system": "System"
+  "nav_groups": {
+    "learning": "Learning",
+    "my_journey": "My Journey",
+    "overview": "Overview",
+    "content": "Content",
+    "pathways": "Pathways",
+    "analytics": "Analytics",
+    "management": "Management",
+    "system": "System"
   }
 }

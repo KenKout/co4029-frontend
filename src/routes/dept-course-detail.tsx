@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Link,
-  useNavigate,
-  useParams,
-} from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import {
@@ -25,10 +21,7 @@ import {
 } from "@/lib/api/hooks/dept";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import { ApiError } from "@/lib/api/client";
-import type {
-  RosterEntry,
-  TeacherAssignmentRead,
-} from "@/lib/api/types";
+import type { RosterEntry, TeacherAssignmentRead } from "@/lib/api/types";
 
 const UUID_RX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -193,9 +186,11 @@ function AssignTeacherForm({ courseId }: { courseId: string }) {
 
 function StudentRow({ entry }: { entry: RosterEntry }) {
   const { t, i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
-  const cls =
-    ENROLLMENT_COLOR[entry.status] ?? "bg-slate-100 text-slate-700";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
+  const cls = ENROLLMENT_COLOR[entry.status] ?? "bg-slate-100 text-slate-700";
   const label = t(`dept_course_detail.enrollment_status.${entry.status}`, {
     defaultValue: entry.status,
   });

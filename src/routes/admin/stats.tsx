@@ -1,11 +1,20 @@
-import { BookOpen, ClipboardCheck, FileText, GraduationCap, Users } from "lucide-react";
+import {
+  BookOpen,
+  ClipboardCheck,
+  FileText,
+  GraduationCap,
+  Users,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { StatCard } from "@/components/ui/stat-card";
 import { useAdminStatsOverview } from "@/lib/api/hooks/admin";
 
 function useFormatCount() {
   const { i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   return (n: number | undefined): string => {
     if (n === undefined || n === null) return "—";
     return new Intl.NumberFormat(locale).format(n);

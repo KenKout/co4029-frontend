@@ -64,8 +64,12 @@ export default function CourseQuizAttemptDetailPage() {
 
   const integrityCounts = useMemo(() => {
     const events = data?.integrity_events ?? [];
-    const tabSwitch = events.filter((e) => e.event_type === "tab_switch").length;
-    const focusLost = events.filter((e) => e.event_type === "focus_lost").length;
+    const tabSwitch = events.filter(
+      (e) => e.event_type === "tab_switch",
+    ).length;
+    const focusLost = events.filter(
+      (e) => e.event_type === "focus_lost",
+    ).length;
     return { total: events.length, tabSwitch, focusLost };
   }, [data]);
 
@@ -165,7 +169,8 @@ export default function CourseQuizAttemptDetailPage() {
 
         <div className="text-xs text-m3-on-surface-variant flex flex-wrap gap-x-6 gap-y-1">
           <span>
-            {t("teacher_quiz_attempt.started")}: {fmtDateTime(attempt.started_at)}
+            {t("teacher_quiz_attempt.started")}:{" "}
+            {fmtDateTime(attempt.started_at)}
           </span>
           <span>
             {t("teacher_quiz_attempt.submitted")}:{" "}
@@ -313,10 +318,7 @@ function IntegrityPanel({
                 ? Eye
                 : Clock;
           return (
-            <div
-              key={ev.id}
-              className="flex items-center gap-3 px-5 py-2.5"
-            >
+            <div key={ev.id} className="flex items-center gap-3 px-5 py-2.5">
               <Icon className="h-4 w-4 text-amber-700 shrink-0" />
               <span className="text-sm text-m3-on-surface flex-1">
                 {t(`teacher_quiz_attempt.integrity.event.${ev.event_type}`, {
@@ -341,7 +343,8 @@ function IntegrityPanel({
 
 function QuestionRow({ question }: { question: QuizAttemptReviewQuestion }) {
   const { t } = useTranslation();
-  const answered = question.selected_option_id != null || !!question.answer_text;
+  const answered =
+    question.selected_option_id != null || !!question.answer_text;
 
   return (
     <div className="px-5 py-4">

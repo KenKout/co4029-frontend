@@ -349,9 +349,7 @@ export function QuestionBank({
     const multi: InterviewQuestionAuthoring[] = [];
     const none: InterviewQuestionAuthoring[] = [];
     for (const q of filtered) {
-      const ids = Array.isArray(q.source_module_ids)
-        ? q.source_module_ids
-        : [];
+      const ids = Array.isArray(q.source_module_ids) ? q.source_module_ids : [];
       if (ids.length === 0) none.push(q);
       else if (ids.length === 1) {
         const key = ids[0];
@@ -363,9 +361,7 @@ export function QuestionBank({
     // Order single-module groups by the course module order when known.
     const orderedIds = [
       ...modules.map((m) => m.id).filter((id) => single.has(id)),
-      ...[...single.keys()].filter(
-        (id) => !modules.some((m) => m.id === id),
-      ),
+      ...[...single.keys()].filter((id) => !modules.some((m) => m.id === id)),
     ];
     const groups: {
       key: string;
@@ -374,7 +370,9 @@ export function QuestionBank({
       items: InterviewQuestionAuthoring[];
     }[] = orderedIds.map((id) => ({
       key: id,
-      title: moduleTitleById.get(id) ?? t("teacher_interview_config.qbank.module_unknown"),
+      title:
+        moduleTitleById.get(id) ??
+        t("teacher_interview_config.qbank.module_unknown"),
       kind: "module",
       items: single.get(id) ?? [],
     }));
@@ -639,12 +637,16 @@ export function QuestionBank({
       });
       announce(
         t("teacher_interview_config.qbank.sr.status_changed", {
-          status: t(`teacher_interview_config.qbank.status.${statusMeta(next).key}`),
+          status: t(
+            `teacher_interview_config.qbank.status.${statusMeta(next).key}`,
+          ),
         }),
       );
       toast.success(
         t("teacher_interview_config.qbank.toasts.status_changed", {
-          status: t(`teacher_interview_config.qbank.status.${statusMeta(next).key}`),
+          status: t(
+            `teacher_interview_config.qbank.status.${statusMeta(next).key}`,
+          ),
         }),
         {
           action: {
@@ -862,9 +864,7 @@ export function QuestionBank({
   // per-question "Add to bank" disabled state + "Already in bank" label.
   const bankedPrompts = useMemo(
     () =>
-      new Set(
-        (bankItems ?? []).map((b) => b.prompt_text.trim().toLowerCase()),
-      ),
+      new Set((bankItems ?? []).map((b) => b.prompt_text.trim().toLowerCase())),
     [bankItems],
   );
 
@@ -898,7 +898,9 @@ export function QuestionBank({
         });
         created += 1;
       }
-      announce(t("teacher_interview_config.qbank.imported", { count: created }));
+      announce(
+        t("teacher_interview_config.qbank.imported", { count: created }),
+      );
       toast.success(
         t("teacher_interview_config.qbank.imported", { count: created }),
       );
@@ -972,7 +974,11 @@ export function QuestionBank({
 
     // Only the items whose slot changed need a PATCH.
     const changed = newOrder
-      .map((q, i) => ({ id: q.id, desired: positions[i], prev: q.position ?? 0 }))
+      .map((q, i) => ({
+        id: q.id,
+        desired: positions[i],
+        prev: q.position ?? 0,
+      }))
       .filter((c) => c.desired !== c.prev);
     if (changed.length === 0) return;
 
@@ -1052,7 +1058,9 @@ export function QuestionBank({
               {moduleTitle && (
                 <span
                   className="inline-flex items-center gap-1 rounded-full bg-m3-secondary/10 px-2 py-0.5 text-[11px] font-semibold text-m3-secondary"
-                  title={t("teacher_interview_config.qbank.module_badge_tooltip")}
+                  title={t(
+                    "teacher_interview_config.qbank.module_badge_tooltip",
+                  )}
                 >
                   <Library className="h-3 w-3" />
                   {moduleTitle}
@@ -1182,8 +1190,12 @@ export function QuestionBank({
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("teacher_interview_config.qbank.search_placeholder")}
-                aria-label={t("teacher_interview_config.qbank.search_placeholder")}
+                placeholder={t(
+                  "teacher_interview_config.qbank.search_placeholder",
+                )}
+                aria-label={t(
+                  "teacher_interview_config.qbank.search_placeholder",
+                )}
                 className="bg-m3-surface text-sm pl-9"
               />
             </div>
@@ -1216,9 +1228,12 @@ export function QuestionBank({
                 options={[
                   {
                     value: "all",
-                    label: t("teacher_interview_config.qbank.filter.all_count", {
-                      count: sorted.length,
-                    }),
+                    label: t(
+                      "teacher_interview_config.qbank.filter.all_count",
+                      {
+                        count: sorted.length,
+                      },
+                    ),
                   },
                   ...STATUS_ORDER.map((s) => ({
                     value: s,
@@ -1232,8 +1247,16 @@ export function QuestionBank({
                   value={outcomeFilter}
                   onChange={(v) => setOutcomeFilter(v)}
                   options={[
-                    { value: "all", label: t("teacher_interview_config.qbank.filter.all") },
-                    { value: "none", label: t("teacher_interview_config.qbank.filter.no_outcome") },
+                    {
+                      value: "all",
+                      label: t("teacher_interview_config.qbank.filter.all"),
+                    },
+                    {
+                      value: "none",
+                      label: t(
+                        "teacher_interview_config.qbank.filter.no_outcome",
+                      ),
+                    },
                     ...outcomes
                       .slice()
                       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
@@ -1250,7 +1273,10 @@ export function QuestionBank({
                   value={difficultyFilter}
                   onChange={setDifficultyFilter}
                   options={[
-                    { value: "all", label: t("teacher_interview_config.qbank.filter.all") },
+                    {
+                      value: "all",
+                      label: t("teacher_interview_config.qbank.filter.all"),
+                    },
                     ...presentDifficulties.map((d) => ({
                       value: d,
                       label: t(`teacher_interview_config.difficulty.${d}`),
@@ -1264,7 +1290,10 @@ export function QuestionBank({
                   value={typeFilter}
                   onChange={setTypeFilter}
                   options={[
-                    { value: "all", label: t("teacher_interview_config.qbank.filter.all") },
+                    {
+                      value: "all",
+                      label: t("teacher_interview_config.qbank.filter.all"),
+                    },
                     ...presentTypes.map((qt) => ({
                       value: qt,
                       label: t(`teacher_interview_config.question_type.${qt}`),
@@ -1277,9 +1306,18 @@ export function QuestionBank({
                 value={sourceFilter}
                 onChange={(v) => setSourceFilter(v as "all" | "ai" | "manual")}
                 options={[
-                  { value: "all", label: t("teacher_interview_config.qbank.filter.all") },
-                  { value: "ai", label: t("teacher_interview_config.qbank.source.ai") },
-                  { value: "manual", label: t("teacher_interview_config.qbank.source.manual") },
+                  {
+                    value: "all",
+                    label: t("teacher_interview_config.qbank.filter.all"),
+                  },
+                  {
+                    value: "ai",
+                    label: t("teacher_interview_config.qbank.source.ai"),
+                  },
+                  {
+                    value: "manual",
+                    label: t("teacher_interview_config.qbank.source.manual"),
+                  },
                 ]}
               />
             </div>
@@ -1298,7 +1336,9 @@ export function QuestionBank({
                 )}
                 {statusFilter !== "all" && (
                   <FilterChip
-                    label={t(`teacher_interview_config.qbank.status.${statusMeta(statusFilter).key}`)}
+                    label={t(
+                      `teacher_interview_config.qbank.status.${statusMeta(statusFilter).key}`,
+                    )}
                     onClear={() => setStatusFilter("all")}
                   />
                 )}
@@ -1314,19 +1354,25 @@ export function QuestionBank({
                 )}
                 {difficultyFilter !== "all" && (
                   <FilterChip
-                    label={t(`teacher_interview_config.difficulty.${difficultyFilter}`)}
+                    label={t(
+                      `teacher_interview_config.difficulty.${difficultyFilter}`,
+                    )}
                     onClear={() => setDifficultyFilter("all")}
                   />
                 )}
                 {typeFilter !== "all" && (
                   <FilterChip
-                    label={t(`teacher_interview_config.question_type.${typeFilter}`)}
+                    label={t(
+                      `teacher_interview_config.question_type.${typeFilter}`,
+                    )}
                     onClear={() => setTypeFilter("all")}
                   />
                 )}
                 {sourceFilter !== "all" && (
                   <FilterChip
-                    label={t(`teacher_interview_config.qbank.source.${sourceFilter}`)}
+                    label={t(
+                      `teacher_interview_config.qbank.source.${sourceFilter}`,
+                    )}
                     onClear={() => setSourceFilter("all")}
                   />
                 )}
@@ -1351,14 +1397,18 @@ export function QuestionBank({
               value={newText}
               onChange={(e) => setNewText(e.target.value)}
               rows={3}
-              placeholder={t("teacher_interview_config.questions.add_placeholder")}
+              placeholder={t(
+                "teacher_interview_config.questions.add_placeholder",
+              )}
               className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
             />
             <textarea
               value={newAnswer}
               onChange={(e) => setNewAnswer(e.target.value)}
               rows={3}
-              placeholder={t("teacher_interview_config.questions.add_answer_placeholder")}
+              placeholder={t(
+                "teacher_interview_config.questions.add_answer_placeholder",
+              )}
               className="w-full rounded-xl border border-dashed border-m3-secondary/30 bg-m3-secondary/[0.03] px-3 py-2.5 text-sm placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
             />
             <div className="flex justify-end gap-2">
@@ -1392,7 +1442,10 @@ export function QuestionBank({
         {!hasQuestions ? (
           <div className="text-center py-12 px-4 space-y-3">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft">
-              <ClipboardList className="h-6 w-6 text-m3-primary" aria-hidden="true" />
+              <ClipboardList
+                className="h-6 w-6 text-m3-primary"
+                aria-hidden="true"
+              />
             </div>
             <div className="space-y-1">
               <p className="text-sm font-semibold text-m3-on-surface">
@@ -1444,7 +1497,9 @@ export function QuestionBank({
                   }}
                   onChange={toggleSelectAll}
                   className="h-4 w-4 rounded border-m3-outline-variant/60 text-m3-primary focus:ring-2 focus:ring-m3-primary/30 cursor-pointer"
-                  aria-label={t("teacher_interview_config.qbank.bulk.select_all")}
+                  aria-label={t(
+                    "teacher_interview_config.qbank.bulk.select_all",
+                  )}
                 />
                 {selectedVisibleIds.length > 0
                   ? t("teacher_interview_config.qbank.bulk.selected", {
@@ -1468,108 +1523,108 @@ export function QuestionBank({
             )}
 
             {(() => {
-            // Drag-to-reorder only makes sense on the flat, unfiltered list:
-            // once filtered or grouped by module, the visible order no longer
-            // maps 1:1 to persisted positions, so dropping would be ambiguous.
-            const dndEnabled = !showModuleGroups && !anyFilterActive;
-            const renderCard = (q: InterviewQuestionAuthoring) => {
-              const displayIndex = sorted.findIndex((s) => s.id === q.id);
+              // Drag-to-reorder only makes sense on the flat, unfiltered list:
+              // once filtered or grouped by module, the visible order no longer
+              // maps 1:1 to persisted positions, so dropping would be ambiguous.
+              const dndEnabled = !showModuleGroups && !anyFilterActive;
+              const renderCard = (q: InterviewQuestionAuthoring) => {
+                const displayIndex = sorted.findIndex((s) => s.id === q.id);
+                return (
+                  <QuestionCard
+                    key={q.id}
+                    q={q}
+                    index={displayIndex}
+                    total={sorted.length}
+                    expanded={expanded.has(q.id)}
+                    editing={editingId === q.id}
+                    editingText={editingText}
+                    editingAnswer={editingAnswer}
+                    outcomeOptions={outcomeOptions}
+                    deleting={deletingIds.has(q.id)}
+                    saving={savingId === q.id}
+                    reordering={reordering}
+                    onToggleExpand={() => toggleExpanded(q.id)}
+                    onSetStatus={(s) => void setStatus(q, s)}
+                    onSetOutcome={(o) => void setOutcome(q, o)}
+                    onBeginEdit={() => beginEdit(q)}
+                    onCancelEdit={cancelEdit}
+                    onSaveEdit={() => void saveEdit()}
+                    onChangeEditingText={(v) => {
+                      setEditingText(v);
+                      setEditDirty(true);
+                    }}
+                    onChangeEditingAnswer={(v) => {
+                      setEditingAnswer(v);
+                      setEditDirty(true);
+                    }}
+                    onDelete={() => void handleDelete(q)}
+                    onMoveUp={() => void handleReorder(displayIndex, -1)}
+                    onMoveDown={() => void handleReorder(displayIndex, 1)}
+                    onMoveToTop={() => void handleMoveTo(displayIndex, 0)}
+                    onMoveToBottom={() =>
+                      void handleMoveTo(displayIndex, sorted.length - 1)
+                    }
+                    onAddToBank={() => void handleAddToBank(q)}
+                    banking={bankingId === q.id}
+                    alreadyInBank={bankedPrompts.has(
+                      q.prompt_text.trim().toLowerCase(),
+                    )}
+                    selected={selectedIds.has(q.id)}
+                    onToggleSelect={() => toggleSelected(q.id)}
+                    compact={compact}
+                    dndEnabled={dndEnabled}
+                    dragging={dragIndex === displayIndex}
+                    showLineBefore={
+                      dragOverIndex === displayIndex && dropBefore
+                    }
+                    showLineAfter={
+                      dragOverIndex === displayIndex && !dropBefore
+                    }
+                    onDragStartCard={() => setDragIndex(displayIndex)}
+                    onDragOverCard={(before) =>
+                      handleDragOverCard(displayIndex, before)
+                    }
+                    onDragEndCard={() => {
+                      setDragIndex(null);
+                      setDragOverIndex(null);
+                    }}
+                    onDropCard={handleDrop}
+                  />
+                );
+              };
+              // Flat list when there's only one module group (or no module
+              // data); grouped sections with headers otherwise.
+              if (!showModuleGroups) {
+                return (
+                  <ul className="space-y-2" role="list">
+                    {filtered.map(renderCard)}
+                  </ul>
+                );
+              }
               return (
-                <QuestionCard
-                  key={q.id}
-                  q={q}
-                  index={displayIndex}
-                  total={sorted.length}
-                  expanded={expanded.has(q.id)}
-                  editing={editingId === q.id}
-                  editingText={editingText}
-                  editingAnswer={editingAnswer}
-                  outcomeOptions={outcomeOptions}
-                  deleting={deletingIds.has(q.id)}
-                  saving={savingId === q.id}
-                  reordering={reordering}
-                  onToggleExpand={() => toggleExpanded(q.id)}
-                  onSetStatus={(s) => void setStatus(q, s)}
-                  onSetOutcome={(o) => void setOutcome(q, o)}
-                  onBeginEdit={() => beginEdit(q)}
-                  onCancelEdit={cancelEdit}
-                  onSaveEdit={() => void saveEdit()}
-                  onChangeEditingText={(v) => {
-                    setEditingText(v);
-                    setEditDirty(true);
-                  }}
-                  onChangeEditingAnswer={(v) => {
-                    setEditingAnswer(v);
-                    setEditDirty(true);
-                  }}
-                  onDelete={() => void handleDelete(q)}
-                  onMoveUp={() => void handleReorder(displayIndex, -1)}
-                  onMoveDown={() => void handleReorder(displayIndex, 1)}
-                  onMoveToTop={() => void handleMoveTo(displayIndex, 0)}
-                  onMoveToBottom={() =>
-                    void handleMoveTo(displayIndex, sorted.length - 1)
-                  }
-                  onAddToBank={() => void handleAddToBank(q)}
-                  banking={bankingId === q.id}
-                  alreadyInBank={bankedPrompts.has(
-                    q.prompt_text.trim().toLowerCase(),
-                  )}
-                  selected={selectedIds.has(q.id)}
-                  onToggleSelect={() => toggleSelected(q.id)}
-                  compact={compact}
-                  dndEnabled={dndEnabled}
-                  dragging={dragIndex === displayIndex}
-                  showLineBefore={
-                    dragOverIndex === displayIndex && dropBefore
-                  }
-                  showLineAfter={
-                    dragOverIndex === displayIndex && !dropBefore
-                  }
-                  onDragStartCard={() => setDragIndex(displayIndex)}
-                  onDragOverCard={(before) =>
-                    handleDragOverCard(displayIndex, before)
-                  }
-                  onDragEndCard={() => {
-                    setDragIndex(null);
-                    setDragOverIndex(null);
-                  }}
-                  onDropCard={handleDrop}
-                />
-              );
-            };
-            // Flat list when there's only one module group (or no module
-            // data); grouped sections with headers otherwise.
-            if (!showModuleGroups) {
-              return (
-                <ul className="space-y-2" role="list">
-                  {filtered.map(renderCard)}
-                </ul>
-              );
-            }
-            return (
-              <div className="space-y-5">
-                {groupedByModule.map((g) => (
-                  <div key={g.key} className="space-y-2">
-                    <div className="flex items-center gap-1.5">
-                      {g.kind === "multi" ? (
-                        <Layers className="h-3.5 w-3.5 text-m3-secondary" />
-                      ) : (
-                        <Library className="h-3.5 w-3.5 text-m3-secondary" />
-                      )}
-                      <h4 className="text-xs font-bold uppercase tracking-wide text-m3-secondary">
-                        {g.title}
-                      </h4>
-                      <span className="text-[11px] text-m3-on-surface-variant">
-                        ({g.items.length})
-                      </span>
+                <div className="space-y-5">
+                  {groupedByModule.map((g) => (
+                    <div key={g.key} className="space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        {g.kind === "multi" ? (
+                          <Layers className="h-3.5 w-3.5 text-m3-secondary" />
+                        ) : (
+                          <Library className="h-3.5 w-3.5 text-m3-secondary" />
+                        )}
+                        <h4 className="text-xs font-bold uppercase tracking-wide text-m3-secondary">
+                          {g.title}
+                        </h4>
+                        <span className="text-[11px] text-m3-on-surface-variant">
+                          ({g.items.length})
+                        </span>
+                      </div>
+                      <ul className="space-y-2" role="list">
+                        {g.items.map(renderCard)}
+                      </ul>
                     </div>
-                    <ul className="space-y-2" role="list">
-                      {g.items.map(renderCard)}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            );
+                  ))}
+                </div>
+              );
             })()}
           </div>
         )}
@@ -1603,7 +1658,10 @@ function ImportFromBankPanel({
   return (
     <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
       <div className="flex items-start gap-2">
-        <Library className="h-4 w-4 text-primary mt-0.5 shrink-0" aria-hidden="true" />
+        <Library
+          className="h-4 w-4 text-primary mt-0.5 shrink-0"
+          aria-hidden="true"
+        />
         <div className="space-y-0.5">
           <p className="text-sm font-bold text-m3-on-surface">
             {t("teacher_interview_config.qbank.import_title")}
@@ -1773,8 +1831,14 @@ function BulkActionBar({
             {t("teacher_interview_config.qbank.bulk.set_outcome")}
             <ChevronDown className="h-3 w-3" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="max-h-64 w-52 overflow-y-auto">
-            <DropdownMenuItem onClick={() => onSetOutcome(null)} className="gap-2">
+          <DropdownMenuContent
+            align="start"
+            className="max-h-64 w-52 overflow-y-auto"
+          >
+            <DropdownMenuItem
+              onClick={() => onSetOutcome(null)}
+              className="gap-2"
+            >
               {t("teacher_interview_config.qbank.no_outcome_option")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -2113,54 +2177,56 @@ function QuestionCard({
           {/* Metadata row (real fields only). Hidden in compact mode unless
               the card is expanded, so triage lists stay dense. */}
           {(!compact || expanded) && (
-          <div className="flex items-center gap-x-2 gap-y-1 flex-wrap pl-5.5 text-[11px] text-m3-on-surface-variant/80">
-            <span>{t(`teacher_interview_config.question_type.${q.question_type}`)}</span>
-            {q.difficulty && (
-              <>
-                <Sep />
-                <span
-                  className={cn(
-                    "rounded-full px-1.5 py-0.5 font-semibold",
-                    difficultyChipClass(q.difficulty),
-                  )}
-                >
-                  {t(`teacher_interview_config.difficulty.${q.difficulty}`)}
-                </span>
-              </>
-            )}
-            <Sep />
-            <OutcomeControl
-              value={q.linked_outcome_id ?? null}
-              options={outcomeOptions}
-              saving={saving}
-              onSetOutcome={onSetOutcome}
-            />
-            <Sep />
-            <span className="inline-flex items-center gap-1">
-              {q.ai_generated ? (
+            <div className="flex items-center gap-x-2 gap-y-1 flex-wrap pl-5.5 text-[11px] text-m3-on-surface-variant/80">
+              <span>
+                {t(`teacher_interview_config.question_type.${q.question_type}`)}
+              </span>
+              {q.difficulty && (
                 <>
-                  <Bot className="h-3 w-3" aria-hidden="true" />
-                  {t("teacher_interview_config.qbank.source.ai")}
-                </>
-              ) : (
-                <>
-                  <User className="h-3 w-3" aria-hidden="true" />
-                  {t("teacher_interview_config.qbank.source.manual")}
+                  <Sep />
+                  <span
+                    className={cn(
+                      "rounded-full px-1.5 py-0.5 font-semibold",
+                      difficultyChipClass(q.difficulty),
+                    )}
+                  >
+                    {t(`teacher_interview_config.difficulty.${q.difficulty}`)}
+                  </span>
                 </>
               )}
-            </span>
-            {sourceCount > 0 && (
-              <>
-                <Sep />
-                <span className="inline-flex items-center gap-1">
-                  <FileText className="h-3 w-3" aria-hidden="true" />
-                  {t("teacher_interview_config.qbank.source_count", {
-                    count: sourceCount,
-                  })}
-                </span>
-              </>
-            )}
-          </div>
+              <Sep />
+              <OutcomeControl
+                value={q.linked_outcome_id ?? null}
+                options={outcomeOptions}
+                saving={saving}
+                onSetOutcome={onSetOutcome}
+              />
+              <Sep />
+              <span className="inline-flex items-center gap-1">
+                {q.ai_generated ? (
+                  <>
+                    <Bot className="h-3 w-3" aria-hidden="true" />
+                    {t("teacher_interview_config.qbank.source.ai")}
+                  </>
+                ) : (
+                  <>
+                    <User className="h-3 w-3" aria-hidden="true" />
+                    {t("teacher_interview_config.qbank.source.manual")}
+                  </>
+                )}
+              </span>
+              {sourceCount > 0 && (
+                <>
+                  <Sep />
+                  <span className="inline-flex items-center gap-1">
+                    <FileText className="h-3 w-3" aria-hidden="true" />
+                    {t("teacher_interview_config.qbank.source_count", {
+                      count: sourceCount,
+                    })}
+                  </span>
+                </>
+              )}
+            </div>
           )}
         </div>
 
@@ -2191,7 +2257,10 @@ function QuestionCard({
                   <MoreVertical className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem onClick={onBeginEdit} className="sm:hidden gap-2">
+                  <DropdownMenuItem
+                    onClick={onBeginEdit}
+                    className="sm:hidden gap-2"
+                  >
                     <Pencil className="h-4 w-4" />
                     {t("common.edit")}
                   </DropdownMenuItem>
@@ -2272,12 +2341,19 @@ function QuestionCard({
                   value={editingAnswer}
                   onChange={(e) => onChangeEditingAnswer(e.target.value)}
                   rows={4}
-                  placeholder={t("teacher_interview_config.questions.add_answer_placeholder")}
+                  placeholder={t(
+                    "teacher_interview_config.questions.add_answer_placeholder",
+                  )}
                   className="w-full rounded-xl border border-dashed border-m3-secondary/30 bg-m3-secondary/[0.03] px-3 py-2 text-sm placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
                 />
               </div>
               <div className="flex items-center justify-end gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={onCancelEdit}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onCancelEdit}
+                >
                   {t("common.cancel")}
                 </Button>
                 <Button
@@ -2371,11 +2447,11 @@ function OutcomeControl({
           : t("teacher_interview_config.qbank.no_outcome_short")}
         <ChevronDown className="h-3 w-3" aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-72 max-w-[calc(100vw-2rem)]">
-        <DropdownMenuItem
-          onClick={() => onSetOutcome(null)}
-          className="gap-2"
-        >
+      <DropdownMenuContent
+        align="start"
+        className="w-72 max-w-[calc(100vw-2rem)]"
+      >
+        <DropdownMenuItem onClick={() => onSetOutcome(null)} className="gap-2">
           <span className={cn("truncate", !value && "font-bold")}>
             {t("teacher_interview_config.qbank.no_outcome_option")}
           </span>
@@ -2394,7 +2470,9 @@ function OutcomeControl({
             <span className={cn("truncate", o.id === value && "font-bold")}>
               {o.text}
             </span>
-            {o.id === value && <Check className="h-3.5 w-3.5 ml-auto shrink-0" />}
+            {o.id === value && (
+              <Check className="h-3.5 w-3.5 ml-auto shrink-0" />
+            )}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

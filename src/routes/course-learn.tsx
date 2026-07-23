@@ -1,5 +1,10 @@
 import { useMemo, useState, useEffect, useRef } from "react";
-import { Link, useParams, useSearch, useLocation } from "@tanstack/react-router";
+import {
+  Link,
+  useParams,
+  useSearch,
+  useLocation,
+} from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQueries } from "@tanstack/react-query";
 import {
@@ -36,7 +41,11 @@ import {
   useResourceDownloadUrl,
 } from "@/lib/api/hooks/courses";
 import { useStreamUrl } from "@/lib/api/hooks/materials";
-import { useMyCourseProgress, useMarkLessonComplete, useUnmarkLessonComplete } from "@/lib/api/hooks/progress";
+import {
+  useMyCourseProgress,
+  useMarkLessonComplete,
+  useUnmarkLessonComplete,
+} from "@/lib/api/hooks/progress";
 import { useMyInterviewSessions } from "@/lib/api/hooks/interviews";
 // import { useCourseSrOverview } from "@/lib/api/hooks/spaced-repetition";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
@@ -111,7 +120,8 @@ export default function CourseLearnPage() {
   const courseQuery = useCourseBySlug(slug);
   const course = courseQuery.data;
   const courseId = course?.id;
-  const { data: content, isLoading: contentLoading } = useCourseContent(courseId);
+  const { data: content, isLoading: contentLoading } =
+    useCourseContent(courseId);
 
   const sortedModules = useMemo<ModulePublic[]>(() => {
     if (!content) return [];
@@ -175,7 +185,8 @@ function CourseLearnView({
           </p>
           <Link to="/courses">
             <Button className="gradient-primary text-white rounded-xl gap-2">
-              {t("course_detail.browse_courses")} <ArrowRight className="h-4 w-4" />
+              {t("course_detail.browse_courses")}{" "}
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -217,7 +228,10 @@ function CourseLearnLoaded({
   );
 
   const lessonItems = useMemo(
-    () => flatItems.filter((fi) => fi.item.item_type === "lesson" && fi.item.target),
+    () =>
+      flatItems.filter(
+        (fi) => fi.item.item_type === "lesson" && fi.item.target,
+      ),
     [flatItems],
   );
 
@@ -312,7 +326,8 @@ function CourseLearnLoaded({
     lessonQuery.error instanceof ApiError &&
     lessonQuery.error.status === 404;
 
-  const lessonIdForResources = activeTab === "Resources" ? (activeLessonId ?? undefined) : undefined;
+  const lessonIdForResources =
+    activeTab === "Resources" ? (activeLessonId ?? undefined) : undefined;
   const { data: resources } = useLessonResources(lessonIdForResources);
 
   const courseProgressQuery = useMyCourseProgress(course.id);
@@ -324,7 +339,10 @@ function CourseLearnLoaded({
     return map;
   }, [courseProgressQuery.data]);
 
-  const search = useSearch({ strict: false }) as { t?: string | number; p?: string | number };
+  const search = useSearch({ strict: false }) as {
+    t?: string | number;
+    p?: string | number;
+  };
   const { hash } = useLocation();
   const playerRef = useRef<HTMLDivElement | null>(null);
 
@@ -340,7 +358,10 @@ function CourseLearnLoaded({
     return Number.isFinite(n) && n >= 1 ? Math.floor(n) : null;
   }, [search.p]);
 
-  const targetAnchor = useMemo(() => (hash ? hash.replace(/^#/, "") : null), [hash]);
+  const targetAnchor = useMemo(
+    () => (hash ? hash.replace(/^#/, "") : null),
+    [hash],
+  );
 
   // Course-home landing: when the student arrives WITHOUT a content deep-link
   // (?t= seek / ?p= page / #anchor), show a course-home overview (progress +
@@ -408,7 +429,10 @@ function CourseLearnLoaded({
     if (targetAnchor) {
       const el = container.querySelector(`#${CSS.escape(targetAnchor)}`);
       if (el && "scrollIntoView" in el) {
-        (el as HTMLElement).scrollIntoView({ behavior: "smooth", block: "start" });
+        (el as HTMLElement).scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
       }
     }
   }, [activeLessonId, seekSeconds, targetPage, targetAnchor]);
@@ -416,11 +440,18 @@ function CourseLearnLoaded({
   const hasPrev = activeIdx > 0;
   const hasNext = activeIdx < lessonItems.length - 1;
 
-  function goPrev() { if (hasPrev) setActiveIdx(activeIdx - 1); }
-  function goNext() { if (hasNext) setActiveIdx(activeIdx + 1); }
+  function goPrev() {
+    if (hasPrev) setActiveIdx(activeIdx - 1);
+  }
+  function goNext() {
+    if (hasNext) setActiveIdx(activeIdx + 1);
+  }
 
   function itemState(fi: FlatItem): LessonState {
-    if (fi.item.item_type === "lesson" && fi.item.target?.id === activeLessonId) {
+    if (
+      fi.item.item_type === "lesson" &&
+      fi.item.target?.id === activeLessonId
+    ) {
       return "active";
     }
     if (fi.item.item_type === "lesson" && fi.item.target?.id) {
@@ -435,7 +466,9 @@ function CourseLearnLoaded({
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
         <div className="text-center space-y-4 max-w-md">
-          <p className="text-m3-on-surface font-headline font-bold text-xl">No lessons available yet</p>
+          <p className="text-m3-on-surface font-headline font-bold text-xl">
+            No lessons available yet
+          </p>
           <p className="text-sm text-m3-on-surface-variant">
             This course does not have any lesson content ready for students yet.
           </p>
@@ -453,11 +486,18 @@ function CourseLearnLoaded({
     <div className="min-h-screen pb-24">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         <nav className="flex items-center gap-2 text-xs text-m3-on-surface-variant mb-5">
-          <Link to="/courses" className="hover:text-m3-primary transition-colors">
+          <Link
+            to="/courses"
+            className="hover:text-m3-primary transition-colors"
+          >
             Courses
           </Link>
           <span>/</span>
-          <Link to="/courses/$slug" params={{ slug }} className="hover:text-m3-primary transition-colors truncate max-w-[160px]">
+          <Link
+            to="/courses/$slug"
+            params={{ slug }}
+            className="hover:text-m3-primary transition-colors truncate max-w-[160px]"
+          >
             {course.title}
           </Link>
           <span>/</span>
@@ -486,7 +526,6 @@ function CourseLearnLoaded({
 
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           <div className="flex-1 min-w-0 flex flex-col gap-6">
-
             {/* ── DEV: lock overlay (commented out) ──
             {lessonLocked ? (
               <GlassCard className="p-8">
@@ -579,10 +618,7 @@ function CourseLearnLoaded({
                 </p>
               </GlassCard>
             ) : activeLesson?.lesson_type === "reading" ? (
-              <ReadingLessonPane
-                lesson={activeLesson}
-                courseId={course.id}
-              />
+              <ReadingLessonPane lesson={activeLesson} courseId={course.id} />
             ) : activeLesson ? (
               <>
                 <VideoEngagementTracker
@@ -622,7 +658,9 @@ function CourseLearnLoaded({
                   {activeLesson?.title ?? activeEntry.label}
                 </h1>
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-xs text-m3-on-surface-variant">{activeEntry.moduleTitle}</span>
+                  <span className="text-xs text-m3-on-surface-variant">
+                    {activeEntry.moduleTitle}
+                  </span>
                   {activeLessonId && (
                     <MarkCompleteButton
                       lessonId={activeLessonId}
@@ -641,89 +679,100 @@ function CourseLearnLoaded({
             )}
 
             {!showHome && (
-            <>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-m3-outline-variant/20">
-              <div className="flex gap-1 flex-wrap">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={cn(
-                      "px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200",
-                      activeTab === tab
-                        ? "bg-m3-secondary text-white shadow-ai-glow"
-                        : "text-m3-on-surface-variant hover:text-m3-primary hover:bg-m3-surface-container"
-                    )}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-m3-outline-variant/20">
+                  <div className="flex gap-1 flex-wrap">
+                    {TABS.map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={cn(
+                          "px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200",
+                          activeTab === tab
+                            ? "bg-m3-secondary text-white shadow-ai-glow"
+                            : "text-m3-on-surface-variant hover:text-m3-primary hover:bg-m3-surface-container",
+                        )}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
 
-              <div className="flex items-center gap-3 shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl ghost-border text-xs font-bold"
-                  onClick={goPrev}
-                  disabled={!hasPrev}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  {hasPrev ? (
-                    <span className="max-w-[120px] truncate">{lessonItems[activeIdx - 1]?.label}</span>
-                  ) : (
-                    "Previous"
+                  <div className="flex items-center gap-3 shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl ghost-border text-xs font-bold"
+                      onClick={goPrev}
+                      disabled={!hasPrev}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      {hasPrev ? (
+                        <span className="max-w-[120px] truncate">
+                          {lessonItems[activeIdx - 1]?.label}
+                        </span>
+                      ) : (
+                        "Previous"
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="rounded-xl gradient-primary text-white text-xs font-bold flex items-center gap-1.5"
+                      onClick={goNext}
+                      disabled={!hasNext}
+                    >
+                      {hasNext ? (
+                        <span className="max-w-[120px] truncate">
+                          Next: {lessonItems[activeIdx + 1]?.label}
+                        </span>
+                      ) : (
+                        "Finished"
+                      )}
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="pb-4">
+                  {activeTab === "Lesson Notes" && (
+                    <GlassCard className="p-6 sm:p-8">
+                      <div className="flex items-center gap-2 mb-4">
+                        <FileText className="h-4 w-4 text-m3-secondary" />
+                        <h4 className="font-headline font-bold text-m3-on-surface text-sm">
+                          Lesson Notes
+                        </h4>
+                      </div>
+                      <p className="text-m3-on-surface-variant text-sm leading-relaxed">
+                        Lesson notes will appear here once the material is
+                        processed.
+                      </p>
+                    </GlassCard>
                   )}
-                </Button>
-                <Button
-                  size="sm"
-                  className="rounded-xl gradient-primary text-white text-xs font-bold flex items-center gap-1.5"
-                  onClick={goNext}
-                  disabled={!hasNext}
-                >
-                  {hasNext ? (
-                    <span className="max-w-[120px] truncate">Next: {lessonItems[activeIdx + 1]?.label}</span>
-                  ) : (
-                    "Finished"
+
+                  {activeTab === "Discussion" && (
+                    <GlassCard className="p-6 sm:p-8">
+                      <div className="flex items-center gap-2 mb-5">
+                        <HelpCircle className="h-4 w-4 text-m3-secondary" />
+                        <h4 className="font-headline font-bold text-m3-on-surface text-sm">
+                          Discussion
+                        </h4>
+                      </div>
+                      <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
+                        <p className="text-sm font-semibold text-m3-on-surface">
+                          Discussion coming soon
+                        </p>
+                        <p className="text-xs text-m3-on-surface-variant">
+                          Lesson-level discussion threads are under development.
+                        </p>
+                      </div>
+                    </GlassCard>
                   )}
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
 
-            <div className="pb-4">
-              {activeTab === "Lesson Notes" && (
-                <GlassCard className="p-6 sm:p-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <FileText className="h-4 w-4 text-m3-secondary" />
-                    <h4 className="font-headline font-bold text-m3-on-surface text-sm">Lesson Notes</h4>
-                  </div>
-                  <p className="text-m3-on-surface-variant text-sm leading-relaxed">
-                    Lesson notes will appear here once the material is processed.
-                  </p>
-                </GlassCard>
-              )}
-
-              {activeTab === "Discussion" && (
-                <GlassCard className="p-6 sm:p-8">
-                  <div className="flex items-center gap-2 mb-5">
-                    <HelpCircle className="h-4 w-4 text-m3-secondary" />
-                    <h4 className="font-headline font-bold text-m3-on-surface text-sm">Discussion</h4>
-                  </div>
-                  <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
-                    <p className="text-sm font-semibold text-m3-on-surface">Discussion coming soon</p>
-                    <p className="text-xs text-m3-on-surface-variant">
-                      Lesson-level discussion threads are under development.
-                    </p>
-                  </div>
-                </GlassCard>
-              )}
-
-              {activeTab === "Resources" && (
-                <ResourcesPanel resources={resources} />
-              )}
-            </div>
-            </>
+                  {activeTab === "Resources" && (
+                    <ResourcesPanel resources={resources} />
+                  )}
+                </div>
+              </>
             )}
           </div>
 
@@ -734,7 +783,9 @@ function CourseLearnLoaded({
             <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-4">
               <GlassCard className="flex flex-col overflow-hidden">
                 <div className="px-5 py-4 border-b border-m3-outline-variant/20 bg-m3-primary/5">
-                  <h3 className="font-headline font-bold text-m3-primary text-sm">Curriculum</h3>
+                  <h3 className="font-headline font-bold text-m3-primary text-sm">
+                    Curriculum
+                  </h3>
                 </div>
                 <div className="overflow-y-auto max-h-[520px] p-3 space-y-4">
                   {sortedModules.map((mod) => (
@@ -895,11 +946,10 @@ function CourseHome({
   );
 }
 
-function useModuleItemsMap(modules: ModulePublic[]): Record<string, ModuleItemPublic[] | undefined> {
-  const moduleIds = useMemo(
-    () => modules.map((m) => m.id),
-    [modules],
-  );
+function useModuleItemsMap(
+  modules: ModulePublic[],
+): Record<string, ModuleItemPublic[] | undefined> {
+  const moduleIds = useMemo(() => modules.map((m) => m.id), [modules]);
 
   const results = useQueries({
     queries: moduleIds.map((moduleId) => ({
@@ -1010,7 +1060,9 @@ function ReadingLessonPane({
     courseId,
   });
 
-  const hasNotes = Boolean(lesson.notes_markdown && lesson.notes_markdown.trim().length > 0);
+  const hasNotes = Boolean(
+    lesson.notes_markdown && lesson.notes_markdown.trim().length > 0,
+  );
   const hasMaterial = Boolean(materialId);
 
   const openFullscreen = () => {
@@ -1020,7 +1072,10 @@ function ReadingLessonPane({
   };
 
   return (
-    <GlassCard className="p-6 sm:p-8 space-y-6" data-testid="course-learn-reading">
+    <GlassCard
+      className="p-6 sm:p-8 space-y-6"
+      data-testid="course-learn-reading"
+    >
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-m3-secondary" />
@@ -1048,8 +1103,8 @@ function ReadingLessonPane({
         </p>
       )}
 
-      {hasMaterial && (
-        streamQuery.isLoading ? (
+      {hasMaterial &&
+        (streamQuery.isLoading ? (
           <div className="h-[600px] rounded-xl bg-m3-surface-container-low animate-pulse" />
         ) : streamUrl ? (
           <div className="mt-2 rounded-xl overflow-hidden border border-m3-outline-variant/30">
@@ -1064,8 +1119,7 @@ function ReadingLessonPane({
           <div className="rounded-xl border border-dashed border-m3-outline-variant/40 p-6 text-sm text-m3-on-surface-variant">
             {t("course_learn.reading_material_unavailable")}
           </div>
-        )
-      )}
+        ))}
 
       {hasNotes && (
         <article className="prose prose-sm max-w-none prose-headings:font-headline prose-headings:text-m3-on-surface prose-p:text-m3-on-surface-variant prose-a:text-m3-primary">
@@ -1082,7 +1136,11 @@ function ReadingLessonPane({
   );
 }
 
-function ResourcesPanel({ resources }: { resources: LessonResourcePublic[] | undefined }) {
+function ResourcesPanel({
+  resources,
+}: {
+  resources: LessonResourcePublic[] | undefined;
+}) {
   return (
     <GlassCard className="p-6 sm:p-8">
       <div className="flex items-center gap-2 mb-5">
@@ -1100,7 +1158,10 @@ function ResourcesPanel({ resources }: { resources: LessonResourcePublic[] | und
       {!resources ? (
         <div className="space-y-2">
           {[1, 2].map((i) => (
-            <div key={i} className="h-12 rounded-xl bg-m3-surface-container animate-pulse" />
+            <div
+              key={i}
+              className="h-12 rounded-xl bg-m3-surface-container animate-pulse"
+            />
           ))}
         </div>
       ) : resources.length === 0 ? (
@@ -1108,7 +1169,9 @@ function ResourcesPanel({ resources }: { resources: LessonResourcePublic[] | und
           <div className="w-12 h-12 rounded-full bg-m3-surface-container flex items-center justify-center">
             <FileText className="h-5 w-5 text-m3-outline" />
           </div>
-          <p className="text-sm font-semibold text-m3-on-surface">No resources for this lesson</p>
+          <p className="text-sm font-semibold text-m3-on-surface">
+            No resources for this lesson
+          </p>
         </div>
       ) : (
         resources.map((file) => <ResourceRow key={file.id} resource={file} />)
@@ -1120,7 +1183,9 @@ function ResourcesPanel({ resources }: { resources: LessonResourcePublic[] | und
 function ResourceRow({ resource }: { resource: LessonResourcePublic }) {
   const { t } = useTranslation();
   const [requested, setRequested] = useState(false);
-  const downloadQuery = useResourceDownloadUrl(requested ? resource.id : undefined);
+  const downloadQuery = useResourceDownloadUrl(
+    requested ? resource.id : undefined,
+  );
   const downloadUnavailable =
     downloadQuery.isError &&
     downloadQuery.error instanceof ApiError &&
@@ -1139,17 +1204,27 @@ function ResourceRow({ resource }: { resource: LessonResourcePublic }) {
         <FileText className="h-4 w-4 text-m3-secondary" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-m3-on-surface truncate">{resource.title}</p>
-        <p className="text-[10px] text-m3-outline uppercase">{resource.resource_type}</p>
+        <p className="text-sm font-semibold text-m3-on-surface truncate">
+          {resource.title}
+        </p>
+        <p className="text-[10px] text-m3-outline uppercase">
+          {resource.resource_type}
+        </p>
         {downloadUnavailable && (
-          <p className="text-[10px] text-amber-600 mt-0.5">{t("course_learn.resource_unavailable")}</p>
+          <p className="text-[10px] text-amber-600 mt-0.5">
+            {t("course_learn.resource_unavailable")}
+          </p>
         )}
       </div>
       <Button
         size="icon"
         variant="ghost"
         className="h-8 w-8 rounded-xl text-m3-secondary hover:bg-m3-secondary/10"
-        title={downloadUnavailable ? t("course_learn.resource_unavailable") : t("course_learn.download")}
+        title={
+          downloadUnavailable
+            ? t("course_learn.resource_unavailable")
+            : t("course_learn.download")
+        }
         onClick={() => setRequested(true)}
         disabled={downloadQuery.isFetching}
       >
@@ -1164,7 +1239,10 @@ function InstructorBlock({ instructor }: { instructor: InstructorRead }) {
     <div className="glass ghost-border rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 shadow-sm">
       <Avatar className="h-20 w-20 shrink-0 ring-4 ring-white shadow-xl">
         {instructor.avatar_url ? (
-          <AvatarImage src={instructor.avatar_url} alt={instructor.display_name} />
+          <AvatarImage
+            src={instructor.avatar_url}
+            alt={instructor.display_name}
+          />
         ) : null}
         <AvatarFallback className="gradient-primary text-white text-xl font-bold font-headline">
           {initials(instructor.display_name)}
@@ -1174,7 +1252,9 @@ function InstructorBlock({ instructor }: { instructor: InstructorRead }) {
         <h3 className="text-lg font-headline font-bold text-m3-primary">
           {instructor.display_name}
         </h3>
-        <p className="text-m3-secondary font-semibold text-xs mt-0.5 mb-2">Instructor</p>
+        <p className="text-m3-secondary font-semibold text-xs mt-0.5 mb-2">
+          Instructor
+        </p>
         {instructor.headline && (
           <p className="text-m3-on-surface-variant text-sm leading-relaxed">
             {instructor.headline}
@@ -1206,7 +1286,10 @@ function ModuleSection({
 }) {
   const { t } = useTranslation();
   const modItems = flatItems
-    .map((fi) => ({ fi, idx: lessonItems.findIndex((lesson) => lesson.item.id === fi.item.id) }))
+    .map((fi) => ({
+      fi,
+      idx: lessonItems.findIndex((lesson) => lesson.item.id === fi.item.id),
+    }))
     .filter(({ fi }) => fi.moduleId === mod.id);
 
   const [open, setOpen] = useState(isActiveModule);
@@ -1229,7 +1312,7 @@ function ModuleSection({
         <ChevronDown
           className={cn(
             "h-3 w-3 text-m3-outline shrink-0 transition-transform duration-300 group-hover:text-m3-primary",
-            open ? "rotate-0" : "-rotate-90"
+            open ? "rotate-0" : "-rotate-90",
           )}
         />
         <span className="text-[10px] font-bold text-m3-outline uppercase tracking-tight transition-colors group-hover:text-m3-primary">
@@ -1239,124 +1322,138 @@ function ModuleSection({
       <div
         className={cn(
           "grid transition-[grid-template-rows] duration-300 ease-in-out",
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
         )}
       >
         <div className="overflow-hidden min-h-0 space-y-1">
-      {modItems.map(({ fi, idx }) => {
-        const state = itemState(fi);
-        const isQuiz = fi.item.item_type === "quiz";
-        const isInterview = fi.item.item_type === "interview";
-        const LessonIcon = PlayCircle;
-        const quizId = isQuiz ? fi.item.target?.id : null;
+          {modItems.map(({ fi, idx }) => {
+            const state = itemState(fi);
+            const isQuiz = fi.item.item_type === "quiz";
+            const isInterview = fi.item.item_type === "interview";
+            const LessonIcon = PlayCircle;
+            const quizId = isQuiz ? fi.item.target?.id : null;
 
-        const className = cn(
-          "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
-          state === "active" && "bg-m3-primary text-white shadow-md font-bold",
-          state === "completed" && "bg-m3-surface-container-lowest text-m3-primary shadow-sm font-medium hover:bg-m3-surface-container",
-          state === "pending" && "text-m3-on-surface-variant hover:bg-white/50 font-medium",
-          // state === "locked" && "opacity-40 cursor-not-allowed text-m3-outline", // DEV: comment out to disable lock
-        );
+            const className = cn(
+              "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
+              state === "active" &&
+                "bg-m3-primary text-white shadow-md font-bold",
+              state === "completed" &&
+                "bg-m3-surface-container-lowest text-m3-primary shadow-sm font-medium hover:bg-m3-surface-container",
+              state === "pending" &&
+                "text-m3-on-surface-variant hover:bg-white/50 font-medium",
+              // state === "locked" && "opacity-40 cursor-not-allowed text-m3-outline", // DEV: comment out to disable lock
+            );
 
-        const inner = (
-          <>
-            {state === "completed" && <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500 fill-emerald-100" />}
-            {/* {state === "locked" && <Lock className="h-4 w-4 flex-shrink-0" />} */}{/* DEV: comment out to disable lock */}
-            {state === "active" && <LessonIcon className="h-4 w-4 flex-shrink-0" />}
-            {state === "pending" && !isQuiz && !isInterview && <LessonIcon className="h-4 w-4 flex-shrink-0 opacity-40" />}
-            {state === "pending" && isQuiz && <HelpCircle className="h-4 w-4 flex-shrink-0 opacity-60" />}
-            {isInterview && <Mic className="h-4 w-4 flex-shrink-0" />}
-            {isQuiz && state !== "active" && <Sparkles className="h-3 w-3 ml-auto text-m3-secondary" />}
+            const inner = (
+              <>
+                {state === "completed" && (
+                  <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500 fill-emerald-100" />
+                )}
+                {/* {state === "locked" && <Lock className="h-4 w-4 flex-shrink-0" />} */}
+                {/* DEV: comment out to disable lock */}
+                {state === "active" && (
+                  <LessonIcon className="h-4 w-4 flex-shrink-0" />
+                )}
+                {state === "pending" && !isQuiz && !isInterview && (
+                  <LessonIcon className="h-4 w-4 flex-shrink-0 opacity-40" />
+                )}
+                {state === "pending" && isQuiz && (
+                  <HelpCircle className="h-4 w-4 flex-shrink-0 opacity-60" />
+                )}
+                {isInterview && <Mic className="h-4 w-4 flex-shrink-0" />}
+                {isQuiz && state !== "active" && (
+                  <Sparkles className="h-3 w-3 ml-auto text-m3-secondary" />
+                )}
 
-            <span className="truncate leading-snug flex-1">{fi.label}</span>
-            <BookOpen className="h-3 w-3 opacity-0" />
-          </>
-        );
+                <span className="truncate leading-snug flex-1">{fi.label}</span>
+                <BookOpen className="h-3 w-3 opacity-0" />
+              </>
+            );
 
-        if (isQuiz && quizId) {
-          return (
-            <Link
-              key={fi.item.id}
-              to="/courses/$slug/quiz/$quizId"
-              params={{ slug, quizId }}
-              className={className}
-            >
-              {inner}
-            </Link>
-          );
-        }
-
-        if (isInterview && fi.item.target?.id) {
-          const configId = fi.item.target.id;
-          const activeSession = inProgressByConfigId.get(configId);
-
-          // An interview session is still occurring for this config: disable
-          // the item (block starting a second session) and surface a compact
-          // "in progress" card with a Continue action below it.
-          if (activeSession) {
-            return (
-              <div key={fi.item.id} className="space-y-1">
-                <div
-                  className={cn(className, "opacity-60 cursor-not-allowed")}
-                  aria-disabled="true"
+            if (isQuiz && quizId) {
+              return (
+                <Link
+                  key={fi.item.id}
+                  to="/courses/$slug/quiz/$quizId"
+                  params={{ slug, quizId }}
+                  className={className}
                 >
                   {inner}
-                </div>
-                <div
-                  className="ml-2 rounded-lg border border-m3-primary/30 bg-m3-primary/5 p-3"
-                  role="status"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className="h-2 w-2 shrink-0 rounded-full bg-m3-primary motion-safe:animate-pulse"
-                      aria-hidden="true"
-                    />
-                    <span className="text-[10px] font-bold uppercase tracking-tight text-m3-primary">
-                      {t("course_learn.interview_in_progress.badge")}
-                    </span>
+                </Link>
+              );
+            }
+
+            if (isInterview && fi.item.target?.id) {
+              const configId = fi.item.target.id;
+              const activeSession = inProgressByConfigId.get(configId);
+
+              // An interview session is still occurring for this config: disable
+              // the item (block starting a second session) and surface a compact
+              // "in progress" card with a Continue action below it.
+              if (activeSession) {
+                return (
+                  <div key={fi.item.id} className="space-y-1">
+                    <div
+                      className={cn(className, "opacity-60 cursor-not-allowed")}
+                      aria-disabled="true"
+                    >
+                      {inner}
+                    </div>
+                    <div
+                      className="ml-2 rounded-lg border border-m3-primary/30 bg-m3-primary/5 p-3"
+                      role="status"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="h-2 w-2 shrink-0 rounded-full bg-m3-primary motion-safe:animate-pulse"
+                          aria-hidden="true"
+                        />
+                        <span className="text-[10px] font-bold uppercase tracking-tight text-m3-primary">
+                          {t("course_learn.interview_in_progress.badge")}
+                        </span>
+                      </div>
+                      <p className="mt-1.5 text-xs font-semibold text-m3-on-surface">
+                        {t("course_learn.interview_in_progress.title")}
+                      </p>
+                      <p className="mt-0.5 text-[11px] leading-4 text-m3-on-surface-variant">
+                        {t("course_learn.interview_in_progress.body")}
+                      </p>
+                      <Link
+                        to="/courses/$slug/interview/$moduleId"
+                        params={{ slug, moduleId: configId }}
+                        className="mt-2.5 inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-m3-primary px-3 text-xs font-bold text-white transition-colors hover:bg-m3-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
+                      >
+                        <Play className="h-3.5 w-3.5" />
+                        {t("course_learn.interview_in_progress.continue")}
+                      </Link>
+                    </div>
                   </div>
-                  <p className="mt-1.5 text-xs font-semibold text-m3-on-surface">
-                    {t("course_learn.interview_in_progress.title")}
-                  </p>
-                  <p className="mt-0.5 text-[11px] leading-4 text-m3-on-surface-variant">
-                    {t("course_learn.interview_in_progress.body")}
-                  </p>
-                  <Link
-                    to="/courses/$slug/interview/$moduleId"
-                    params={{ slug, moduleId: configId }}
-                    className="mt-2.5 inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-m3-primary px-3 text-xs font-bold text-white transition-colors hover:bg-m3-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
-                  >
-                    <Play className="h-3.5 w-3.5" />
-                    {t("course_learn.interview_in_progress.continue")}
-                  </Link>
-                </div>
-              </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={fi.item.id}
+                  to="/courses/$slug/interview/$moduleId"
+                  params={{ slug, moduleId: configId }}
+                  className={className}
+                >
+                  {inner}
+                </Link>
+              );
+            }
+
+            return (
+              <button
+                key={fi.item.id}
+                onClick={() => idx >= 0 && onSelect(idx)}
+                disabled={idx < 0 /* || state === "locked" */} // DEV: uncomment state check to re-enable lock
+                className={className}
+              >
+                {inner}
+              </button>
             );
-          }
-
-          return (
-            <Link
-              key={fi.item.id}
-              to="/courses/$slug/interview/$moduleId"
-              params={{ slug, moduleId: configId }}
-              className={className}
-            >
-              {inner}
-            </Link>
-          );
-        }
-
-        return (
-          <button
-            key={fi.item.id}
-            onClick={() => idx >= 0 && onSelect(idx)}
-            disabled={idx < 0 /* || state === "locked" */} // DEV: uncomment state check to re-enable lock
-            className={className}
-          >
-            {inner}
-          </button>
-        );
-      })}
+          })}
         </div>
       </div>
     </div>

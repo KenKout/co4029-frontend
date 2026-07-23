@@ -161,8 +161,16 @@ function ModeToggle({
   onChange: (mode: GenerationMode) => void;
 }) {
   const options: Array<{ key: GenerationMode; label: string; hint: string }> = [
-    { key: "topic", label: "Topic", hint: "Balanced spread across all lessons" },
-    { key: "coverage", label: "Coverage", hint: "One+ question per lesson section" },
+    {
+      key: "topic",
+      label: "Topic",
+      hint: "Balanced spread across all lessons",
+    },
+    {
+      key: "coverage",
+      label: "Coverage",
+      hint: "One+ question per lesson section",
+    },
   ];
 
   return (
@@ -230,7 +238,9 @@ function AppendToggle({
               : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
           )}
         >
-          <span className="text-sm font-semibold text-m3-on-surface">Replace</span>
+          <span className="text-sm font-semibold text-m3-on-surface">
+            Replace
+          </span>
           <span className="text-[11px] text-m3-on-surface-variant">
             Wipe current questions and start fresh
           </span>
@@ -246,7 +256,9 @@ function AppendToggle({
               : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
           )}
         >
-          <span className="text-sm font-semibold text-m3-on-surface">Append</span>
+          <span className="text-sm font-semibold text-m3-on-surface">
+            Append
+          </span>
           <span className="text-[11px] text-m3-on-surface-variant">
             Add new questions next to existing ones
           </span>
@@ -255,7 +267,8 @@ function AppendToggle({
       {hasExistingQuestions && !append && (
         <p className="text-[11px] text-amber-700 flex items-start gap-1.5 mt-1">
           <AlertCircle className="h-3 w-3 shrink-0 mt-0.5" />
-          This quiz already has questions. Replace will delete them before generating.
+          This quiz already has questions. Replace will delete them before
+          generating.
         </p>
       )}
     </div>
@@ -418,7 +431,11 @@ export function QuizGenerationPanel({
   useEffect(() => {
     if (!activeRun || !activeRunId) return;
     const status = activeRun.status;
-    if (status !== "completed" && status !== "failed" && status !== "cancelled") {
+    if (
+      status !== "completed" &&
+      status !== "failed" &&
+      status !== "cancelled"
+    ) {
       return;
     }
     if (toastedRunIdRef.current === activeRunId) return;
@@ -427,10 +444,9 @@ export function QuizGenerationPanel({
     if (status === "completed") {
       toast.success("Quiz generation completed");
     } else if (status === "failed") {
-      toast.error(
-        activeRun.error_message ?? "Quiz generation failed",
-        { duration: 8000 },
-      );
+      toast.error(activeRun.error_message ?? "Quiz generation failed", {
+        duration: 8000,
+      });
     } else {
       toast.info("Quiz generation cancelled");
     }
@@ -518,9 +534,7 @@ export function QuizGenerationPanel({
         );
         return;
       }
-      toast.error(
-        (err as Error).message || "Failed to start quiz generation",
-      );
+      toast.error((err as Error).message || "Failed to start quiz generation");
     }
   }
 
@@ -712,7 +726,9 @@ export function QuizGenerationPanel({
                     setForm((current) => {
                       const next = e.target.checked
                         ? [...current.question_types, type]
-                        : current.question_types.filter((entry) => entry !== type);
+                        : current.question_types.filter(
+                            (entry) => entry !== type,
+                          );
                       return { ...current, question_types: next };
                     })
                   }

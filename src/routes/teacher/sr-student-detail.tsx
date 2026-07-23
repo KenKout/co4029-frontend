@@ -30,18 +30,24 @@ const STATUS_BADGE: Record<StudentSrDetailLesson["status"], string> = {
 
 function useFormatRelative() {
   const { t, i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   return (iso: string): string => {
     const now = Date.now();
     const ts = new Date(iso).getTime();
     const diff = now - ts;
     if (diff < 60_000) return t("teacher_sr_student_detail.just_now");
     const minutes = Math.round(diff / 60_000);
-    if (minutes < 60) return t("teacher_sr_student_detail.minutes_ago", { count: minutes });
+    if (minutes < 60)
+      return t("teacher_sr_student_detail.minutes_ago", { count: minutes });
     const hours = Math.round(minutes / 60);
-    if (hours < 24) return t("teacher_sr_student_detail.hours_ago", { count: hours });
+    if (hours < 24)
+      return t("teacher_sr_student_detail.hours_ago", { count: hours });
     const days = Math.round(hours / 24);
-    if (days < 30) return t("teacher_sr_student_detail.days_ago", { count: days });
+    if (days < 30)
+      return t("teacher_sr_student_detail.days_ago", { count: days });
     return new Date(iso).toLocaleDateString(locale);
   };
 }
@@ -89,7 +95,10 @@ export default function TeacherSrStudentDetailPage() {
       <div className="max-w-5xl mx-auto pb-6 space-y-6">
         <Breadcrumbs
           items={[
-            { label: t("teacher_sr_cohort.breadcrumb_teaching"), to: "/teacher/courses" },
+            {
+              label: t("teacher_sr_cohort.breadcrumb_teaching"),
+              to: "/teacher/courses",
+            },
             {
               label: course?.title ?? t("teacher_sr_cohort.breadcrumb_course"),
               to: "/teacher/courses/$courseId",
@@ -100,7 +109,10 @@ export default function TeacherSrStudentDetailPage() {
               to: "/teacher/courses/$courseId/at-risk",
               params: { courseId },
             },
-            { label: data?.name ?? t("teacher_sr_student_detail.breadcrumb_detail") },
+            {
+              label:
+                data?.name ?? t("teacher_sr_student_detail.breadcrumb_detail"),
+            },
           ]}
         />
 
@@ -221,7 +233,9 @@ export default function TeacherSrStudentDetailPage() {
             </h2>
             <p className="text-xs text-m3-on-surface-variant mt-0.5">
               {reviews.length > 0
-                ? t("teacher_sr_student_detail.recent_count", { count: reviews.length })
+                ? t("teacher_sr_student_detail.recent_count", {
+                    count: reviews.length,
+                  })
                 : t("teacher_sr_student_detail.no_history")}
             </p>
           </div>
@@ -269,8 +283,12 @@ export default function TeacherSrStudentDetailPage() {
                       {review.prompt_text?.trim()
                         ? review.prompt_text
                         : review.correct
-                          ? t("teacher_sr_student_detail.review.answered_correct")
-                          : t("teacher_sr_student_detail.review.answered_incorrect")}
+                          ? t(
+                              "teacher_sr_student_detail.review.answered_correct",
+                            )
+                          : t(
+                              "teacher_sr_student_detail.review.answered_incorrect",
+                            )}
                     </p>
                     <p className="text-xs text-m3-on-surface-variant mt-0.5">
                       {formatRelative(review.created_at)}

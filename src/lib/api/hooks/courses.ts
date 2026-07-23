@@ -17,7 +17,11 @@ import type {
   TagPublic,
 } from "../types";
 
-function buildPagedUrl(base: string, cursor: string | undefined, limit: number) {
+function buildPagedUrl(
+  base: string,
+  cursor: string | undefined,
+  limit: number,
+) {
   const params = new URLSearchParams();
   if (cursor) params.set("cursor", cursor);
   if (limit) params.set("limit", String(limit));
@@ -38,7 +42,9 @@ export function useMyCourses(limit = 20) {
   return useInfinitePage<Course>({
     queryKey: queryKeys.courses.myList(),
     fetch: (cursor, lim = limit) =>
-      apiFetch<Page<Course>>(buildPagedUrl("/me/courses", cursor, lim ?? limit)),
+      apiFetch<Page<Course>>(
+        buildPagedUrl("/me/courses", cursor, lim ?? limit),
+      ),
     limit,
   });
 }
@@ -86,7 +92,8 @@ export function useCourse(courseId: string | undefined) {
 export function useCourseContent(courseId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.courses.content(courseId ?? ""),
-    queryFn: () => apiFetch<CourseContentPublic>(`/courses/${courseId}/content`),
+    queryFn: () =>
+      apiFetch<CourseContentPublic>(`/courses/${courseId}/content`),
     enabled: !!courseId,
     retry: (failureCount, error) => {
       if (error instanceof ApiError && error.status === 404) return false;
@@ -119,8 +126,7 @@ export function useCourseOutcomes(courseId: string | undefined) {
 export function useCourseModules(courseId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.courses.modules(courseId ?? ""),
-    queryFn: () =>
-      apiFetch<ModulePublic[]>(`/courses/${courseId}/modules`),
+    queryFn: () => apiFetch<ModulePublic[]>(`/courses/${courseId}/modules`),
     enabled: !!courseId,
   });
 }
@@ -140,8 +146,7 @@ export function useModule(moduleId: string | undefined) {
 export function useModuleItems(moduleId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.courses.moduleItems(moduleId ?? ""),
-    queryFn: () =>
-      apiFetch<ModuleItemPublic[]>(`/modules/${moduleId}/items`),
+    queryFn: () => apiFetch<ModuleItemPublic[]>(`/modules/${moduleId}/items`),
     enabled: !!moduleId,
   });
 }
@@ -149,8 +154,7 @@ export function useModuleItems(moduleId: string | undefined) {
 export function useModuleLessons(moduleId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.courses.moduleLessons(moduleId ?? ""),
-    queryFn: () =>
-      apiFetch<LessonPublic[]>(`/modules/${moduleId}/lessons`),
+    queryFn: () => apiFetch<LessonPublic[]>(`/modules/${moduleId}/lessons`),
     enabled: !!moduleId,
   });
 }
@@ -161,7 +165,11 @@ export function useLesson(lessonId: string | undefined) {
     queryFn: () => apiFetch<LessonPublic>(`/lessons/${lessonId}`),
     enabled: !!lessonId,
     retry: (failureCount, error) => {
-      if (error instanceof ApiError && (error.status === 404 || error.status === 403)) return false;
+      if (
+        error instanceof ApiError &&
+        (error.status === 404 || error.status === 403)
+      )
+        return false;
       return failureCount < 3;
     },
   });

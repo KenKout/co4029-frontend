@@ -361,7 +361,9 @@ export default function CourseQuestionBankPage() {
                       className="gap-1.5"
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">{t("common.edit")}</span>
+                      <span className="hidden sm:inline">
+                        {t("common.edit")}
+                      </span>
                     </Button>
                     <Button
                       type="button"
@@ -508,7 +510,9 @@ function ItemEditor({
             }
             className="block rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-2.5 py-1.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="none">{t("teacher_question_bank.no_difficulty")}</option>
+            <option value="none">
+              {t("teacher_question_bank.no_difficulty")}
+            </option>
             {DIFFICULTIES.map((d) => (
               <option key={d} value={d}>
                 {t(`teacher_interview_config.qbank.difficulty.${d}`)}

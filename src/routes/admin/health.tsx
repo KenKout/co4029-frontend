@@ -14,7 +14,9 @@ function StatusBadge({ status }: { status: string | undefined }) {
         : "bg-red-100 text-red-700";
 
   return (
-    <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-md ${color}`}>
+    <span
+      className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-md ${color}`}
+    >
       {t(`admin.health.status.${status}`, { defaultValue: status })}
     </span>
   );
@@ -52,7 +54,10 @@ function HealthCard({
   dataUpdatedAt: number;
 }) {
   const { t, i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   const status = deriveStatus(data);
   const lastFetched = dataUpdatedAt
     ? new Date(dataUpdatedAt).toLocaleTimeString(locale)
@@ -62,7 +67,10 @@ function HealthCard({
   if (data && typeof data === "object") {
     for (const [k, v] of Object.entries(data)) {
       if (k === "status") continue;
-      detailRows.push([k, typeof v === "boolean" ? (v ? "ok" : "down") : String(v)]);
+      detailRows.push([
+        k,
+        typeof v === "boolean" ? (v ? "ok" : "down") : String(v),
+      ]);
     }
   }
 
@@ -80,7 +88,9 @@ function HealthCard({
     return (
       <div className="bg-surface-elev border border-border rounded-lg p-5">
         <h3 className="text-sm font-semibold text-text-strong">{title}</h3>
-        <p className="text-xs text-red-600 mt-2">{t("admin.health.cannot_connect")}</p>
+        <p className="text-xs text-red-600 mt-2">
+          {t("admin.health.cannot_connect")}
+        </p>
       </div>
     );
   }

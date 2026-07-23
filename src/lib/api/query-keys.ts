@@ -31,7 +31,8 @@ export const queryKeys = {
     moduleLessonsAuthoring: (id: string) =>
       ["courses", "module-lessons-authoring", id] as const,
     lesson: (id: string) => ["courses", "lesson", id] as const,
-    lessonResources: (id: string) => ["courses", "lesson-resources", id] as const,
+    lessonResources: (id: string) =>
+      ["courses", "lesson-resources", id] as const,
     resourceDownload: (id: string) =>
       ["courses", "resource-download", id] as const,
   },
@@ -145,7 +146,8 @@ export const queryKeys = {
       ] as const,
     organizationMemberships: (orgId: string) =>
       ["admin", "organizations", orgId, "memberships"] as const,
-    orgUnitDetail: (id: string) => ["admin", "org-units", "detail", id] as const,
+    orgUnitDetail: (id: string) =>
+      ["admin", "org-units", "detail", id] as const,
   },
 
   dept: {
@@ -169,8 +171,7 @@ export const queryKeys = {
     list: (courseId: string) => ["quizzes", "list", courseId] as const,
     detail: (id: string) => ["quizzes", "detail", id] as const,
     attempt: (attemptId: string) => ["quizzes", "attempt", attemptId] as const,
-    myAttempts: (quizId: string) =>
-      ["quizzes", "my-attempts", quizId] as const,
+    myAttempts: (quizId: string) => ["quizzes", "my-attempts", quizId] as const,
     attemptProgress: (attemptId: string) =>
       ["quizzes", "attempt-progress", attemptId] as const,
     authoring: (quizId: string) => ["quizzes", "authoring", quizId] as const,
@@ -250,8 +251,7 @@ export const queryKeys = {
 
   me: {
     enrollments: () => ["me", "enrollments"] as const,
-    enrollment: (courseId: string) =>
-      ["me", "enrollments", courseId] as const,
+    enrollment: (courseId: string) => ["me", "enrollments", courseId] as const,
   },
 
   careerPaths: {

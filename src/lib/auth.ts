@@ -71,8 +71,14 @@ function notifyAuthChanged() {
   window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 }
 
-function isSafeRedirectTarget(value: string | null | undefined): value is string {
-  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//");
+function isSafeRedirectTarget(
+  value: string | null | undefined,
+): value is string {
+  return (
+    typeof value === "string" &&
+    value.startsWith("/") &&
+    !value.startsWith("//")
+  );
 }
 
 function withDefaultHeaders(init: RequestInit = {}) {
@@ -158,12 +164,24 @@ export async function exchangeGoogleCode(code: string) {
 export function storeAuthSession(tokenResponse: TokenResponse) {
   const expiresAt = Date.now() + tokenResponse.expires_in * 1000;
 
-  localStorage.setItem(AUTH_STORAGE_KEYS.accessToken, tokenResponse.access_token);
-  localStorage.setItem(AUTH_STORAGE_KEYS.refreshToken, tokenResponse.refresh_token);
+  localStorage.setItem(
+    AUTH_STORAGE_KEYS.accessToken,
+    tokenResponse.access_token,
+  );
+  localStorage.setItem(
+    AUTH_STORAGE_KEYS.refreshToken,
+    tokenResponse.refresh_token,
+  );
   localStorage.setItem(AUTH_STORAGE_KEYS.tokenType, tokenResponse.token_type);
   localStorage.setItem(AUTH_STORAGE_KEYS.expiresAt, String(expiresAt));
-  localStorage.setItem(AUTH_STORAGE_KEYS.requiresMfa, String(tokenResponse.requires_mfa));
-  localStorage.setItem(AUTH_STORAGE_KEYS.user, JSON.stringify(tokenResponse.user));
+  localStorage.setItem(
+    AUTH_STORAGE_KEYS.requiresMfa,
+    String(tokenResponse.requires_mfa),
+  );
+  localStorage.setItem(
+    AUTH_STORAGE_KEYS.user,
+    JSON.stringify(tokenResponse.user),
+  );
 
   notifyAuthChanged();
 }
@@ -171,7 +189,8 @@ export function storeAuthSession(tokenResponse: TokenResponse) {
 export function getStoredAuthSession(): StoredAuthSession | null {
   const accessToken = localStorage.getItem(AUTH_STORAGE_KEYS.accessToken);
   const refreshToken = localStorage.getItem(AUTH_STORAGE_KEYS.refreshToken);
-  const tokenType = localStorage.getItem(AUTH_STORAGE_KEYS.tokenType) ?? "bearer";
+  const tokenType =
+    localStorage.getItem(AUTH_STORAGE_KEYS.tokenType) ?? "bearer";
   const expiresAt = Number(localStorage.getItem(AUTH_STORAGE_KEYS.expiresAt));
   const user = getStoredUser();
 
@@ -312,7 +331,10 @@ export async function refreshAuthSession() {
       // Cross-tab race: another tab may have already rotated the refresh
       // token and stored the newer session while this request was in flight.
       // In that case this stale 401 must not wipe the newer shared session.
-      if (latestSession && latestSession.refreshToken !== attemptedRefreshToken) {
+      if (
+        latestSession &&
+        latestSession.refreshToken !== attemptedRefreshToken
+      ) {
         return latestSession;
       }
 
@@ -366,7 +388,11 @@ export async function getValidAuthSession() {
   }
 }
 
-export async function authenticatedFetch(path: string, init: RequestInit = {}, retry = true) {
+export async function authenticatedFetch(
+  path: string,
+  init: RequestInit = {},
+  retry = true,
+) {
   const session = await getValidAuthSession();
 
   if (!session) {
@@ -430,7 +456,9 @@ export async function logout() {
   const session = getStoredAuthSession();
 
   try {
-    const validSession = session ? await getValidAuthSession().catch(() => session) : null;
+    const validSession = session
+      ? await getValidAuthSession().catch(() => session)
+      : null;
 
     if (validSession) {
       await apiRequest("/auth/logout", {
