@@ -131,7 +131,7 @@ export default function CourseNewPage() {
               Level
             </label>
             <select
-              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full cursor-pointer rounded-xl border border-input bg-background px-3 py-2 text-sm transition-colors hover:border-m3-primary/50 hover:bg-m3-primary-fixed/20 focus:outline-none focus:ring-2 focus:ring-ring"
               value={form.level}
               onChange={(e) =>
                 setForm((f) => ({ ...f, level: e.target.value }))
