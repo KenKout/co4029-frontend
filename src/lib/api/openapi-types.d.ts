@@ -6410,6 +6410,8 @@ export interface components {
         InterviewForTakingPublic: {
             config: components["schemas"]["InterviewConfigPublic"];
             first_question?: components["schemas"]["InterviewQuestionPublic"] | null;
+            /** Outcome Count */
+            outcome_count?: number;
         };
         /**
          * InterviewGenerationRequest

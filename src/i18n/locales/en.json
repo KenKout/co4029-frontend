@@ -2055,6 +2055,10 @@
       "in_review": "In review",
       "none": "No attempts yet — this will be your first."
     },
+    "criteria": {
+      "assessed_on": "Assessed on {{count}} criterion",
+      "assessed_on_plural": "Assessed on {{count}} criteria"
+    },
     "actions": {
       "starting": "Starting...",
       "start": "Start interview",

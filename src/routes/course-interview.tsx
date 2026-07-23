@@ -10,6 +10,7 @@ import {
   Clock,
   History,
   Infinity as InfinityIcon,
+  ListChecks,
   Loader2,
   Mic,
   MicOff,
@@ -1592,6 +1593,17 @@ export default function CourseInterviewPage() {
             <p className="text-m3-on-surface-variant mb-6">
               {t("course_interview.intro.description")}
             </p>
+
+            {/* Criteria count — a safe expectation-setting signal (count only,
+                no rubric text / weights / threshold, per the learner contract). */}
+            {(takingPayload?.outcome_count ?? 0) > 0 && (
+              <div className="mb-6 inline-flex items-center gap-1.5 rounded-full bg-m3-primary-fixed px-3 py-1 text-xs font-semibold text-m3-primary">
+                <ListChecks className="h-3.5 w-3.5" />
+                {t("course_interview.criteria.assessed_on", {
+                  count: takingPayload?.outcome_count ?? 0,
+                })}
+              </div>
+            )}
 
             {resumableSession && (
               <div
