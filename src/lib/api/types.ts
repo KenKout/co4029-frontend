@@ -186,7 +186,12 @@ export type InterviewOutcomeCreate = Schemas["InterviewOutcomeCreate"];
 export type InterviewGenerationRequest = Schemas["InterviewGenerationRequest"];
 export type InterviewGenerationRunPublic = Schemas["InterviewGenerationRunPublic"];
 export type GapReportRead = Schemas["GapReportRead"];
-export type GapReportAuthoringRead = Schemas["GapReportAuthoringRead"];
+// Widen with the teacher-context fields the backend already returns
+// (student_name, interview_title) until the OpenAPI snapshot is regenerated.
+export type GapReportAuthoringRead = Schemas["GapReportAuthoringRead"] & {
+  student_name?: string | null;
+  interview_title?: string | null;
+};
 
 // Adaptive readiness (Slice 5) — advisory authoring analysis. Manually typed
 // until the OpenAPI snapshot is regenerated; the backend returns these from

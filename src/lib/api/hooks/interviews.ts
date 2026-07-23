@@ -633,6 +633,28 @@ export function useTeacherGapReport(sessionId: string | null | undefined) {
 }
 
 /**
+ * PATCH /teacher/interview-sessions/{session_id}/gap-report/notes — save the
+ * teacher-authored note (teacher_summary). Returns the refreshed authoring
+ * projection; we seed the gap-report cache with it so the UI updates instantly.
+ */
+export function useSaveGapReportNotes(sessionId: string | null | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (teacher_summary: string | null) =>
+      apiPatch<GapReportAuthoringRead>(
+        `/teacher/interview-sessions/${sessionId}/gap-report/notes`,
+        { teacher_summary },
+      ),
+    onSuccess: (data) => {
+      queryClient.setQueryData(
+        queryKeys.interviews.teacherGapReport(sessionId ?? ""),
+        data,
+      );
+    },
+  });
+}
+
+/**
  * GET /teacher/interview-configs/{config_id}/sessions — all student attempts
  * for one interview config (teacher review list).
  */

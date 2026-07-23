@@ -1,11 +1,14 @@
 import { useNavigate, useParams, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, FileText, Loader2, Pencil, Save, X } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import {
   useInterviewTranscript,
+  useSaveGapReportNotes,
   useTeacherGapReport,
   useTeacherInterviewSession,
 } from "@/lib/api/hooks/interviews";
@@ -42,6 +45,18 @@ function formatDate(value: string): string {
   } catch {
     return value;
   }
+}
+
+const TRANSCRIPT_PAGE_SIZE = 8;
+
+// Bare UUID matcher: study-plan "suggested_resources" sometimes carries raw
+// resource UUIDs that have no human label yet. Rendering those verbatim looks
+// like broken data, so we hide them rather than show a wall of hex.
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function humanResources(resources: string[]): string[] {
+  return resources.filter((r) => !UUID_RE.test(r.trim()));
 }
 
 export default function InterviewGapReportPage() {
@@ -118,6 +133,7 @@ export default function InterviewGapReportPage() {
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-7 space-y-4">
           <SummaryCard
+            sessionId={sessionId}
             summary={report.discrepancy_summary}
             teacherSummary={report.teacher_summary}
           />
@@ -142,12 +158,30 @@ function TranscriptCard({ sessionId }: { sessionId: string }) {
   const { t } = useTranslation();
   const { data, isLoading } = useInterviewTranscript(sessionId);
   const turns = data?.turns ?? [];
+  const [page, setPage] = useState(0);
+
+  const total = turns.length;
+  const pageCount = Math.max(1, Math.ceil(total / TRANSCRIPT_PAGE_SIZE));
+  const safePage = Math.min(page, pageCount - 1);
+  const start = safePage * TRANSCRIPT_PAGE_SIZE;
+  const pageTurns = turns.slice(start, start + TRANSCRIPT_PAGE_SIZE);
 
   return (
     <GlassCard className="p-6 space-y-4">
-      <h3 className="font-headline font-bold text-m3-primary">
-        {t("teacher_interview_gap_report.transcript.title")}
-      </h3>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-headline font-bold text-m3-primary">
+          {t("teacher_interview_gap_report.transcript.title")}
+        </h3>
+        {total > TRANSCRIPT_PAGE_SIZE && (
+          <span className="text-xs text-m3-on-surface-variant tabular-nums">
+            {t("teacher_interview_gap_report.transcript.page_status", {
+              start: start + 1,
+              end: Math.min(start + TRANSCRIPT_PAGE_SIZE, total),
+              total,
+            })}
+          </span>
+        )}
+      </div>
       {isLoading && (
         <p className="text-sm text-m3-on-surface-variant">{t("common.loading")}</p>
       )}
@@ -157,29 +191,58 @@ function TranscriptCard({ sessionId }: { sessionId: string }) {
         </p>
       )}
       {turns.length > 0 && (
-        <ul className="space-y-3">
-          {turns.map((turn, idx) => (
-            <li
-              key={idx}
-              className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-1"
-            >
-              {turn.question_prompt && (
-                <p className="text-[11px] font-semibold text-m3-outline uppercase tracking-widest">
-                  {turn.question_prompt}
+        <>
+          <ul className="space-y-3">
+            {pageTurns.map((turn, idx) => (
+              <li
+                key={start + idx}
+                className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-1"
+              >
+                {turn.question_prompt && (
+                  <p className="text-[11px] font-semibold text-m3-outline uppercase tracking-widest">
+                    {turn.question_prompt}
+                  </p>
+                )}
+                <p className="text-sm text-m3-on-surface leading-relaxed">
+                  <span className="font-bold mr-1.5">
+                    {t(`teacher_interview_gap_report.transcript.role.${turn.role}`)}:
+                  </span>
+                  {turn.content_text ??
+                    (turn.has_audio
+                      ? t("teacher_interview_gap_report.transcript.audio_only")
+                      : "—")}
                 </p>
-              )}
-              <p className="text-sm text-m3-on-surface leading-relaxed">
-                <span className="font-bold mr-1.5">
-                  {t(`teacher_interview_gap_report.transcript.role.${turn.role}`)}:
-                </span>
-                {turn.content_text ??
-                  (turn.has_audio
-                    ? t("teacher_interview_gap_report.transcript.audio_only")
-                    : "—")}
-              </p>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+          {pageCount > 1 && (
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1"
+                disabled={safePage === 0}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                {t("teacher_interview_gap_report.transcript.prev")}
+              </Button>
+              <span className="text-xs text-m3-on-surface-variant tabular-nums px-1">
+                {safePage + 1} / {pageCount}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1"
+                disabled={safePage >= pageCount - 1}
+                onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+              >
+                {t("teacher_interview_gap_report.transcript.next")}
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </GlassCard>
   );
@@ -195,7 +258,14 @@ function Header({
   onBack: () => void;
 }) {
   const { t } = useTranslation();
-  const configId = session?.interview_config_id;
+  // Prefer a human title (interview name) over the raw session UUID. Fall back
+  // to the short session id only when no title is available.
+  const title =
+    report.interview_title ||
+    session?.interview_title ||
+    t("teacher_interview_gap_report.labels.session_id", {
+      id: report.id.slice(0, 8),
+    });
   return (
     <div className="flex items-start gap-3">
       <Button
@@ -213,18 +283,27 @@ function Header({
           {t("teacher_interview_gap_report.sections.title")}
         </p>
         <h1 className="text-2xl lg:text-3xl font-extrabold font-headline tracking-tight text-gradient-primary leading-tight">
-          {t("teacher_interview_gap_report.labels.session_id", {
-            id: report.id.slice(0, 8),
-          })}
+          {title}
         </h1>
+        {/* Human context row: student name + interview title chips, so the
+            teacher immediately knows whose report this is. */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          {report.student_name && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-m3-primary/10 px-2.5 py-1 font-semibold text-m3-primary">
+              {t("teacher_interview_gap_report.labels.student")}: {report.student_name}
+            </span>
+          )}
+          {(report.interview_title || session?.interview_title) && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-m3-surface-container-high px-2.5 py-1 font-medium text-m3-on-surface-variant">
+              {t("teacher_interview_gap_report.labels.interview")}:{" "}
+              {report.interview_title || session?.interview_title}
+            </span>
+          )}
+        </div>
         <p className="text-xs text-m3-on-surface-variant">
           {t("teacher_interview_gap_report.labels.updated_at", {
             date: formatDate(report.generated_at),
           })}
-          {configId &&
-            t("teacher_interview_gap_report.labels.related_interview", {
-              id: configId.slice(0, 8),
-            })}
         </p>
       </div>
     </div>
@@ -232,13 +311,37 @@ function Header({
 }
 
 function SummaryCard({
+  sessionId,
   summary,
   teacherSummary,
 }: {
+  sessionId: string;
   summary: string | null | undefined;
   teacherSummary: string | null | undefined;
 }) {
   const { t } = useTranslation();
+  const saveNotes = useSaveGapReportNotes(sessionId);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(teacherSummary ?? "");
+
+  function startEditing() {
+    setDraft(teacherSummary ?? "");
+    setEditing(true);
+  }
+
+  async function handleSave() {
+    try {
+      await saveNotes.mutateAsync(draft.trim() || null);
+      toast.success(t("teacher_interview_gap_report.labels.saved"));
+      setEditing(false);
+    } catch (err) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_interview_gap_report.labels.save_failed"),
+      );
+    }
+  }
+
   return (
     <GlassCard className="p-6 space-y-4">
       <div>
@@ -255,16 +358,76 @@ function SummaryCard({
           </p>
         )}
       </div>
-      {teacherSummary && (
-        <div className="rounded-xl bg-m3-surface-container-low p-4 border border-m3-outline-variant/20">
-          <p className="text-[11px] uppercase font-bold tracking-widest text-m3-on-surface-variant mb-1.5">
-            {t("teacher_interview_gap_report.labels.teacher_notes")}
+
+      <div className="rounded-xl bg-m3-surface-container-low p-4 border border-m3-outline-variant/20 space-y-2.5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[11px] uppercase font-bold tracking-widest text-m3-on-surface-variant">
+            {t("teacher_interview_gap_report.labels.notes")}
           </p>
+          {!editing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 text-xs"
+              onClick={startEditing}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              {t("teacher_interview_gap_report.labels.edit")}
+            </Button>
+          )}
+        </div>
+
+        {editing ? (
+          <div className="space-y-2.5">
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              rows={4}
+              maxLength={5000}
+              autoFocus
+              placeholder={t(
+                "teacher_interview_gap_report.labels.notes_placeholder",
+              )}
+              className="w-full resize-y rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-m3-primary/30"
+            />
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-xs"
+                disabled={saveNotes.isPending}
+                onClick={() => setEditing(false)}
+              >
+                <X className="h-3.5 w-3.5" />
+                {t("teacher_interview_gap_report.labels.cancel")}
+              </Button>
+              <Button
+                size="sm"
+                className="gap-1 text-xs"
+                disabled={saveNotes.isPending}
+                onClick={() => void handleSave()}
+              >
+                {saveNotes.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Save className="h-3.5 w-3.5" />
+                )}
+                {saveNotes.isPending
+                  ? t("teacher_interview_gap_report.labels.saving")
+                  : t("teacher_interview_gap_report.labels.save")}
+              </Button>
+            </div>
+          </div>
+        ) : teacherSummary ? (
           <p className="text-sm text-m3-on-surface leading-relaxed whitespace-pre-wrap">
             {teacherSummary}
           </p>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm italic text-m3-on-surface-variant">
+            {t("teacher_interview_gap_report.labels.notes_empty")}
+          </p>
+        )}
+      </div>
     </GlassCard>
   );
 }
@@ -379,9 +542,9 @@ function StudyPlanCard({ items }: { items: StudyPlanItem[] }) {
                   <p className="text-sm font-bold text-m3-on-surface">
                     {item.topic}
                   </p>
-                  {item.suggested_resources.length > 0 && (
+                  {humanResources(item.suggested_resources).length > 0 && (
                     <p className="text-xs text-m3-on-surface-variant mt-1">
-                      {item.suggested_resources.join(" • ")}
+                      {humanResources(item.suggested_resources).join(" • ")}
                     </p>
                   )}
                 </div>
@@ -420,9 +583,9 @@ function SourceLinksCard({ report }: { report: GapReportAuthoringRead }) {
             key={s.value}
             className="flex items-center justify-between gap-3 rounded-xl bg-m3-surface-container-low px-3 py-2 text-xs"
           >
-            <span className="text-m3-on-surface-variant">{s.label}</span>
+            <span className="text-m3-on-surface-variant shrink-0">{s.label}</span>
             <span className="font-mono font-bold text-m3-on-surface truncate">
-              {s.value}
+              {s.value.slice(0, 8)}
             </span>
           </li>
         ))}
