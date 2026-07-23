@@ -2701,6 +2701,7 @@
       "import_help": "Select the course-level outcomes to copy into this interview. Imported outcomes default to Knowledge / weight 3 — you can edit each one afterwards.",
       "import_selected": "Import {{count}} selected",
       "imported": "Imported {{count}} outcome(s)",
+      "import_all_added": "All course outcomes are already added here. Define more at the course level to import them.",
       "course_lo_code": "L.O.{{n}}",
     },
     "review_status": {

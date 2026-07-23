@@ -2691,6 +2691,7 @@
       "import_help": "Chọn các chuẩn đầu ra cấp khóa học để sao chép vào buổi phỏng vấn này. Chuẩn đầu ra được nhập mặc định là Kiến thức / trọng số 3 — bạn có thể chỉnh sửa từng mục sau đó.",
       "import_selected": "Nhập {{count}} đã chọn",
       "imported": "Đã nhập {{count}} chuẩn đầu ra",
+      "import_all_added": "Tất cả chuẩn đầu ra của khóa học đã được thêm ở đây. Hãy định nghĩa thêm ở cấp khóa học để nhập vào.",
       "course_lo_code": "L.O.{{n}}",
       }
     },

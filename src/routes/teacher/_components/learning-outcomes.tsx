@@ -357,7 +357,7 @@ export function LearningOutcomes({
         </div>
         {hasOutcomes && !adding && !importing && (
           <div className="flex items-center gap-2 shrink-0">
-            {importableOutcomes.length > 0 && (
+            {(courseOutcomes?.length ?? 0) > 0 && (
               <Button
                 type="button"
                 variant="outline"
@@ -721,6 +721,12 @@ function ImportFromCoursePanel({
           </p>
         </div>
       </div>
+
+      {outcomes.length === 0 && (
+        <p className="rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-3 py-2 text-xs text-m3-on-surface-variant">
+          {t("teacher_interview_config.outcomes.import_all_added")}
+        </p>
+      )}
 
       <ul className="space-y-1.5 max-h-64 overflow-y-auto">
         {outcomes.map((co, idx) => {
