@@ -40,12 +40,17 @@ export function TeacherCourseCard({
   const gradientClass = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
 
   return (
-    <Link
-      to="/teacher/courses/$courseId"
-      params={{ courseId: course.id }}
-      className="group block h-full"
-    >
-      <div className="flex h-full flex-col bg-card rounded-xl overflow-hidden shadow-editorial ghost-border transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-glass">
+    <div className="group relative flex h-full flex-col bg-card rounded-xl overflow-hidden shadow-editorial ghost-border transition-all duration-300 hover:-translate-y-1 hover:shadow-glass">
+      {/* Stretched card link — covers the whole card for the primary click
+          (course overview). Sits above the passive content but below the
+          interactive students stat below, which layers over it (z-20). */}
+      <Link
+        to="/teacher/courses/$courseId"
+        params={{ courseId: course.id }}
+        aria-label={course.title}
+        className="absolute inset-0 z-10"
+      />
+      <div className="flex h-full flex-col">
         {/* Banner — the uploaded thumbnail when present, else a gradient. */}
         <div className="relative aspect-video overflow-hidden shrink-0">
           {course.thumbnail_url ? (
@@ -106,12 +111,21 @@ export function TeacherCourseCard({
           {/* Course-health line: active students + module count — gives the
               teacher an at-a-glance read of engagement + build progress. */}
           <div className="flex items-center gap-3 text-[11px] text-m3-on-surface-variant border-t border-m3-outline-variant/15 pt-2.5">
-            <span className="flex items-center gap-1" title={t("teacher_courses_list.students_label", "Students")}>
+            {/* Students stat deep-links to the roster. Layered above the
+                stretched card link (z-20) so it wins the click, and stops
+                propagation so the card's overview link doesn't also fire. */}
+            <Link
+              to="/teacher/courses/$courseId/students"
+              params={{ courseId: course.id }}
+              onClick={(e) => e.stopPropagation()}
+              title={t("teacher_courses_list.students_label", "Students")}
+              className="relative z-20 flex items-center gap-1 rounded-md px-1 -mx-1 transition-colors hover:bg-m3-secondary/10 hover:text-m3-secondary"
+            >
               <Users className="h-3.5 w-3.5 text-m3-secondary" />
               <span className="font-semibold text-m3-on-surface tabular-nums">
                 {course.student_count ?? 0}
               </span>
-            </span>
+            </Link>
             <span className="flex items-center gap-1" title={t("teacher_courses_list.modules_label", "Modules")}>
               <Layers className="h-3.5 w-3.5 text-m3-secondary" />
               <span className="font-semibold text-m3-on-surface tabular-nums">
@@ -138,6 +152,6 @@ export function TeacherCourseCard({
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
