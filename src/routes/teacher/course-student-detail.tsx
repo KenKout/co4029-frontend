@@ -217,14 +217,24 @@ export default function CourseStudentDetailPage() {
       <div className="bg-m3-surface-container-lowest rounded-xl p-6 ghost-border shadow-editorial mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div className="flex items-center gap-5">
-            <div
-              className={cn(
-                "w-16 h-16 rounded-xl flex items-center justify-center text-xl font-bold shrink-0 uppercase",
-                aColor,
-              )}
-            >
-              {initials || "?"}
-            </div>
+            {/* Show the uploaded avatar when present, otherwise the
+                colour-coded initials fallback. */}
+            {student.avatar_url ? (
+              <img
+                src={student.avatar_url}
+                alt=""
+                className="w-16 h-16 rounded-xl object-cover shrink-0"
+              />
+            ) : (
+              <div
+                className={cn(
+                  "w-16 h-16 rounded-xl flex items-center justify-center text-xl font-bold shrink-0 uppercase",
+                  aColor,
+                )}
+              >
+                {initials || "?"}
+              </div>
+            )}
             <div className="space-y-1">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl font-headline font-bold text-m3-on-surface">
