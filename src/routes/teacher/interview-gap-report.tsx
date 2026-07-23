@@ -162,20 +162,16 @@ export default function InterviewGapReportPage() {
 
       <ContextCard report={report} session={session ?? null} />
 
-      <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 lg:col-span-7 space-y-4">
-          <NotesCard
-            sessionId={sessionId}
-            teacherSummary={report.teacher_summary}
-            studyPlan={report.study_plan}
-            courseId={report.course_id}
-          />
-        </div>
+      {/* Full-width like Analysis by criterion + Interview transcript so the
+          notes and study plan have room to breathe. */}
+      <NotesCard
+        sessionId={sessionId}
+        teacherSummary={report.teacher_summary}
+        studyPlan={report.study_plan}
+        courseId={report.course_id}
+      />
 
-        <div className="col-span-12 lg:col-span-5 space-y-4">
-          <SourceLinksCard report={report} />
-        </div>
-      </div>
+      <SourceLinksCard report={report} />
 
       {/* Full-width like Session context + Interview transcript so the charts
           and per-criterion notes have room to breathe. */}
