@@ -24,6 +24,7 @@ import {
 } from "@/lib/api/hooks/teacher-courses";
 import type { RosterStudent } from "@/lib/api/types/teacher";
 import { GradientProgress } from "@/components/ui/gradient-progress";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { cn } from "@/lib/utils";
 
 /* ── Risk / status helpers ── */
@@ -336,42 +337,23 @@ export default function CourseStudentsPage() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex gap-2 flex-wrap">
-                {STATUS_FILTERS.map((f) => {
-                  const count =
+              {/* Status segmented control — shared component, per-status counts. */}
+              <SegmentedFilter
+                ariaLabel="Student status"
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={STATUS_FILTERS.map((f) => ({
+                  key: f.key,
+                  label: f.label,
+                  count:
                     f.key === "all"
                       ? students.length
                       : f.key === "at_risk"
                         ? atRiskCount
                         : students.filter((s) => s.enrollment_status === f.key)
-                            .length;
-                  return (
-                    <button
-                      key={f.key}
-                      type="button"
-                      onClick={() => setStatusFilter(f.key)}
-                      className={cn(
-                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer",
-                        statusFilter === f.key
-                          ? "bg-m3-primary text-white"
-                          : "bg-m3-surface-container-high text-m3-on-surface-variant hover:bg-m3-surface-container-highest",
-                      )}
-                    >
-                      {f.label}
-                      <span
-                        className={cn(
-                          "ml-1.5 px-1.5 py-0.5 rounded text-[10px]",
-                          statusFilter === f.key
-                            ? "bg-white/20"
-                            : "bg-m3-surface-container-highest",
-                        )}
-                      >
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                            .length,
+                }))}
+              />
 
               <div className="flex items-center gap-2 text-xs text-m3-on-surface-variant">
                 <Filter className="h-3.5 w-3.5" />

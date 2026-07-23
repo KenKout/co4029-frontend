@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Plus, BookOpen, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { useTeacherCourses } from "@/lib/api/hooks/teacher-courses";
 import { TeacherCourseCard } from "@/routes/teacher/_components/TeacherCourseCard";
 
@@ -102,34 +102,19 @@ export default function TeacherCoursesPage() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Status segmented control — one container, per-status counts. */}
-          <div className="inline-flex items-center gap-1 rounded-xl bg-m3-surface-container-low p-1">
-            {(["all", "published", "draft", "archived"] as const).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setStatusFilter(s)}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
-                  statusFilter === s
-                    ? "bg-card text-m3-primary shadow-sm"
-                    : "text-m3-on-surface-variant hover:bg-card/60 hover:text-m3-on-surface",
-                )}
-              >
-                {t(`teacher_courses_list.filter_${s}`)}
-                <span
-                  className={cn(
-                    "rounded-full px-1.5 text-[10px] font-bold tabular-nums",
-                    statusFilter === s
-                      ? "bg-m3-primary-fixed text-m3-primary"
-                      : "bg-m3-surface-container text-m3-on-surface-variant",
-                  )}
-                >
-                  {counts[s]}
-                </span>
-              </button>
-            ))}
-          </div>
+          {/* Status segmented control — shared component, per-status counts. */}
+          <SegmentedFilter
+            ariaLabel={t("teacher_courses_list.filter_all")}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={(["all", "published", "draft", "archived"] as const).map(
+              (s) => ({
+                key: s,
+                label: t(`teacher_courses_list.filter_${s}`),
+                count: counts[s],
+              }),
+            )}
+          />
 
           {/* Sort */}
           <label className="flex items-center gap-2 text-xs text-m3-on-surface-variant">
