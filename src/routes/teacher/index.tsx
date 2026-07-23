@@ -90,11 +90,11 @@ export default function TeacherDashboard() {
         />
 
         {isLoading ? (
-          <div className="grid md:grid-cols-2 gap-4 mt-4">
-            {[1, 2, 3, 4].map((i) => (
+          <div className="grid gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-28 bg-m3-surface-container animate-pulse rounded-xl"
+                className="h-40 bg-m3-surface-container animate-pulse rounded-xl"
               />
             ))}
           </div>
@@ -115,26 +115,19 @@ export default function TeacherDashboard() {
             </Link>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-4 mt-4">
+          <div className="grid gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-3">
             {courses.slice(0, 6).map((course) => (
               <Link
                 key={course.id}
                 to="/teacher/courses/$courseId"
                 params={{ courseId: course.id }}
-                className="group block"
+                className="group block h-full"
               >
-                <div className="bg-card rounded-xl p-5 shadow-editorial ghost-border hover:-translate-y-0.5 transition-all duration-200">
+                <div className="flex h-full flex-col bg-card rounded-xl p-5 shadow-editorial ghost-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-headline font-semibold text-sm text-m3-on-surface truncate">
-                        {course.title}
-                      </h3>
-                      {course.description && (
-                        <p className="text-xs text-m3-on-surface-variant mt-1 line-clamp-2">
-                          {course.description}
-                        </p>
-                      )}
-                    </div>
+                    <h3 className="flex-1 min-w-0 font-headline font-semibold text-sm text-m3-on-surface line-clamp-2">
+                      {course.title}
+                    </h3>
                     <Badge
                       className={cn(
                         "shrink-0 text-[10px] font-semibold border-0",
@@ -147,7 +140,15 @@ export default function TeacherDashboard() {
                       })}
                     </Badge>
                   </div>
-                  <div className="mt-3 flex items-center gap-2 text-[11px] text-m3-on-surface-variant">
+                  {/* Fixed-height description slot so cards with and without a
+                      description keep the same overall height and the meta row
+                      lines up across the grid. */}
+                  <p className="text-xs text-m3-on-surface-variant mt-1.5 line-clamp-2 min-h-[2rem]">
+                    {course.description ?? ""}
+                  </p>
+                  {/* Meta row pinned to the bottom via mt-auto so every card's
+                      footer aligns regardless of title/description length. */}
+                  <div className="mt-auto pt-3 flex items-center gap-2 text-[11px] text-m3-on-surface-variant">
                     {course.level && (
                       <span className="px-1.5 py-0.5 bg-m3-surface-container rounded-md font-medium">
                         {t(`teacher_dashboard.level.${course.level}`, {
