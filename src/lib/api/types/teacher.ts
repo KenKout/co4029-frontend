@@ -36,6 +36,16 @@ export interface LessonKnowledgeGraph {
   total_concepts: number;
 }
 
+export interface MaterialLatestVersion {
+  id: string;
+  material_id: string;
+  version_no: number;
+  storage_object_id: string;
+  is_current: boolean;
+  processing_status: string;
+  processing_error: string | null;
+}
+
 export interface LearningMaterial {
   id: string;
   lesson_id: string;
@@ -44,6 +54,10 @@ export interface LearningMaterial {
   ai_processing_enabled: boolean;
   visible_to_students: boolean;
   current_version_id: string | null;
+  // Present on the teacher-facing list endpoint (MaterialAuthoring). Carries
+  // the current version's storage_object_id — the join key to a LessonResource
+  // uploaded from the same file — plus its processing_status for status badges.
+  latest_version?: MaterialLatestVersion | null;
   created_at: string;
   updated_at: string;
 }

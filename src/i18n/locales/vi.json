@@ -3030,6 +3030,18 @@
       "start_button": "Bắt đầu sinh"
     }
   },
+  "teacher_lesson_manage": {
+    "ai_optin": {
+      "label": "Dùng cho AI",
+      "hint": "Đồng thời thêm tài liệu vào AI Hub cho trắc nghiệm, tìm kiếm và đồ thị tri thức. Tắt với video, tệp nén và hình ảnh."
+    },
+    "ai_badge": {
+      "off": "Không dùng AI",
+      "processing": "AI: đang xử lý",
+      "ready": "AI: sẵn sàng",
+      "failed": "AI: thất bại"
+    }
+  },
   "teacher_lesson_materials": {
     "versions": {
       "toggle": "Lịch sử phiên bản",

@@ -61,11 +61,14 @@ import {
   useTeacherMaterialStreamUrl,
   useInitMaterialUpload,
   useCompleteMaterialUpload,
+  useTeacherLessonMaterials,
+  useDeleteMaterialById,
 } from "@/lib/api/hooks/materials";
 import type {
   CourseContentLesson,
   LessonResource,
 } from "@/lib/api/types/common";
+import type { LearningMaterial } from "@/lib/api/types/teacher";
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { cn } from "@/lib/utils";
 
@@ -87,6 +90,25 @@ const RESOURCE_STYLES: Record<string, { bg: string; text: string }> = {
 function resourceStyle(filename: string) {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "pdf";
   return RESOURCE_STYLES[ext] ?? RESOURCE_STYLES.pdf;
+}
+
+/* File types that carry teachable text worth feeding to the AI (quizzes,
+   search, knowledge graph). Everything else — archives, video, images,
+   spreadsheets — defaults AI OFF: ingesting them burns LLM spend and pollutes
+   the knowledge graph with no useful extraction. Teacher can still opt in. */
+const AI_DEFAULT_EXTS = new Set([
+  "pdf",
+  "docx",
+  "doc",
+  "pptx",
+  "ppt",
+  "txt",
+  "md",
+]);
+
+function aiDefaultForFile(file: File): boolean {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return AI_DEFAULT_EXTS.has(ext);
 }
 
 function ToolbarBtn({
@@ -155,12 +177,54 @@ function makeMarkdownApplier(
   return { applyMarkdown, applyBlock };
 }
 
+/** AI-processing status badge shown on a resource that's also in the AI Hub.
+    `status` is the correlated material's version processing_status; `undefined`
+    means the resource is NOT synced to AI (no badge → rendered as "off"). */
+function AiStatusBadge({ status }: { status: string | undefined }) {
+  const { t } = useTranslation();
+  if (!status) {
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-m3-surface-container-high text-m3-on-surface-variant">
+        {t("teacher_lesson_manage.ai_badge.off")}
+      </span>
+    );
+  }
+  const ready = status === "ready";
+  const failed = status === "failed" || status === "cancelled";
+  const cls = ready
+    ? "bg-emerald-100 text-emerald-700"
+    : failed
+      ? "bg-red-100 text-red-700"
+      : "bg-amber-100 text-amber-700";
+  const label = ready
+    ? t("teacher_lesson_manage.ai_badge.ready")
+    : failed
+      ? t("teacher_lesson_manage.ai_badge.failed")
+      : t("teacher_lesson_manage.ai_badge.processing");
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold",
+        cls,
+      )}
+    >
+      {!ready && !failed && (
+        <Loader2 className="h-2.5 w-2.5 animate-spin" aria-hidden="true" />
+      )}
+      {label}
+    </span>
+  );
+}
+
 function ResourceCard({
   resource,
   onDelete,
+  aiStatus,
 }: {
   resource: LessonResource;
   onDelete: (id: string) => void;
+  /** Correlated AI-material processing_status, or undefined if not synced. */
+  aiStatus: string | undefined;
 }) {
   const style = resourceStyle(resource.title);
   const [downloading, setDownloading] = useState(false);
@@ -194,9 +258,12 @@ function ResourceCard({
           <p className="font-bold text-m3-on-surface text-sm truncate">
             {resource.title}
           </p>
-          <p className="text-xs text-m3-on-surface-variant mt-0.5 capitalize">
-            {resource.resource_type}
-          </p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-xs text-m3-on-surface-variant capitalize">
+              {resource.resource_type}
+            </p>
+            <AiStatusBadge status={aiStatus} />
+          </div>
         </div>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
@@ -500,6 +567,8 @@ export default function LessonManagePage() {
   const moduleId = lesson?.module_id ?? "";
   const courseModule = (content?.modules ?? []).find((m) => m.id === moduleId);
   const createMaterial = useCreateMaterial(courseId, moduleId, lessonId);
+  const { data: aiMaterials = [] } = useTeacherLessonMaterials(lessonId);
+  const deleteMaterialById = useDeleteMaterialById(lessonId);
   const initVideoUpload = useInitMaterialUpload(lessonId);
   const completeVideoUpload = useCompleteMaterialUpload();
   const { data: videoStreamData } = useTeacherMaterialStreamUrl(
@@ -537,6 +606,10 @@ export default function LessonManagePage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [attachingResource, setAttachingResource] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  // Whether a newly-uploaded resource is also sent to the AI Hub (quizzes,
+  // search, KG). Smart-defaulted per file type on drop (see aiDefaultForFile);
+  // teacher can override before the next upload.
+  const [aiEnabled, setAiEnabled] = useState(true);
 
   /* ── All lessons in the course (for prerequisite picker) ── */
   const allLessons: CourseContentLesson[] = (content?.modules ?? []).flatMap(
@@ -714,6 +787,11 @@ export default function LessonManagePage() {
 
   async function handleResourceFile(file: File) {
     if (!file) return;
+    // Effective AI decision for THIS upload: the checkbox is the master switch
+    // (teacher's preference); when it's on we still apply the per-file-type
+    // smart default, so a ZIP/video/image won't be force-fed to the AI even
+    // with the box checked (no teachable text → wasted spend + KG noise).
+    const useAi = aiEnabled && aiDefaultForFile(file);
     setAttachingResource(true);
     try {
       const { storage_object, upload_url } = await requestUpload.mutateAsync({
@@ -755,9 +833,11 @@ export default function LessonManagePage() {
       });
       showFeedback(`"${file.name}" attached successfully.`);
 
-      // Best-effort: also add to AI Material Hub (no processing until teacher enables it)
+      // Opt-in: only sync to the AI Material Hub (and kick off ingestion) when
+      // the teacher left the "Use for AI" toggle on. Skipping it avoids wasted
+      // LLM spend + KG pollution for files with no teachable text (zip/video/…).
       const currentModuleId = lesson?.module_id;
-      if (currentModuleId) {
+      if (useAi && currentModuleId) {
         const materialType = file.type.startsWith("video/")
           ? "video"
           : ext === "pdf"
@@ -793,10 +873,41 @@ export default function LessonManagePage() {
   }
 
   function handleDeleteResource(resourceId: string) {
+    // Find the resource's AI Hub twin (same storage_object_id) so we don't
+    // orphan it: deleting only the LessonResource used to leave the AI material
+    // behind, still feeding quizzes/search off a file the teacher removed.
+    const resource = resources.find((r) => r.id === resourceId);
+    const twin =
+      resource?.storage_object_id != null
+        ? aiMaterials.find(
+            (m) =>
+              m.latest_version?.storage_object_id ===
+              resource.storage_object_id,
+          )
+        : undefined;
     deleteResource.mutate(resourceId, {
-      onSuccess: () => showFeedback("Resource removed."),
+      onSuccess: () => {
+        showFeedback("Resource removed.");
+        if (twin) {
+          // Best-effort cleanup — the resource is already gone; a failed twin
+          // delete shouldn't surface as a hard error.
+          deleteMaterialById.mutate(twin.id);
+        }
+      },
       onError: (err) => toast.error((err as Error).message),
     });
+  }
+
+  // Correlate a resource to its AI Hub twin (same storage_object_id) and
+  // return the twin's processing_status, or undefined when the resource was
+  // never synced to AI. Drives the per-card status badge.
+  function aiStatusForResource(resource: LessonResource): string | undefined {
+    if (resource.storage_object_id == null) return undefined;
+    const twin = aiMaterials.find(
+      (m: LearningMaterial) =>
+        m.latest_version?.storage_object_id === resource.storage_object_id,
+    );
+    return twin?.latest_version?.processing_status;
   }
 
   function togglePrerequisite(id: string) {
@@ -1001,6 +1112,7 @@ export default function LessonManagePage() {
                     key={resource.id}
                     resource={resource}
                     onDelete={handleDeleteResource}
+                    aiStatus={aiStatusForResource(resource)}
                   />
                 ))}
               </div>
@@ -1020,6 +1132,24 @@ export default function LessonManagePage() {
               idleTitle="Attach New Resource"
               hint="PDF, ZIP, MP4, XLSX, PPTX, DOCX, and more"
             />
+
+            {/* Opt-in AI sync. Controls whether the NEXT upload is also added
+                to the AI Hub (quizzes, search, knowledge graph). Smart-defaulted
+                per file type on drop, but the teacher can flip it here first. */}
+            <label className="flex items-start gap-2.5 px-1 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={aiEnabled}
+                onChange={(e) => setAiEnabled(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-m3-outline-variant accent-m3-secondary cursor-pointer"
+              />
+              <span className="text-sm text-m3-on-surface-variant">
+                <span className="font-semibold text-m3-on-surface">
+                  {t("teacher_lesson_manage.ai_optin.label")}
+                </span>{" "}
+                {t("teacher_lesson_manage.ai_optin.hint")}
+              </span>
+            </label>
           </section>
         </div>
 

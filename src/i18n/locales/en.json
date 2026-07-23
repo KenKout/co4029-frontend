@@ -3040,6 +3040,18 @@
       "start_button": "Start generation"
     }
   },
+  "teacher_lesson_manage": {
+    "ai_optin": {
+      "label": "Use for AI",
+      "hint": "Also add documents to the AI Hub for quizzes, search, and the knowledge graph. Off for videos, archives, and images."
+    },
+    "ai_badge": {
+      "off": "Not in AI",
+      "processing": "AI: processing",
+      "ready": "AI: ready",
+      "failed": "AI: failed"
+    }
+  },
   "teacher_lesson_materials": {
     "versions": {
       "toggle": "Version history",
