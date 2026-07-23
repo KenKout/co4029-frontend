@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Sparkles,
   Trash2,
+  TriangleAlert,
   Upload,
   X,
 } from "lucide-react";
@@ -29,7 +30,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
-  SectionNav,
   type SectionNavItem,
   type SectionStatus,
 } from "@/components/ui/section-nav";
@@ -73,6 +73,13 @@ type SecurityResponsePolicy =
   | "continue_and_log"
   | "warn_and_continue"
   | "end_and_flag";
+
+type TabId =
+  | "settings"
+  | "learning-outcomes"
+  | "generate"
+  | "questions"
+  | "adaptive-readiness";
 
 interface GenerationFormState {
   mode: GenerationMode;
@@ -181,6 +188,11 @@ export default function InterviewConfigPage() {
   const [justSaved, setJustSaved] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
+  // Which config section is shown. The page is a tabbed workspace (Settings →
+  // Outcomes → Generate → Review → Readiness); all panels stay MOUNTED and
+  // inactive ones are hidden, so in-progress edits, generation polling and
+  // Question Bank state survive tab switches (no unmount = no data loss).
+  const [activeTab, setActiveTab] = useState<TabId>("settings");
   // "View questions" from a Learning Outcome sets this signal; the Question
   // Bank reacts by filtering to that outcome. `nonce` lets the same outcome be
   // re-requested (each click re-triggers the effect even if the id is unchanged).
@@ -193,18 +205,8 @@ export default function InterviewConfigPage() {
       id: outcomeId,
       nonce: (prev?.nonce ?? 0) + 1,
     }));
-    const el = document.getElementById("questions");
-    if (el) {
-      const prefersReduced = window.matchMedia?.(
-        "(prefers-reduced-motion: reduce)",
-      ).matches;
-      const top =
-        el.getBoundingClientRect().top + window.scrollY - 128;
-      window.scrollTo({
-        top: Math.max(0, top),
-        behavior: prefersReduced ? "auto" : "smooth",
-      });
-    }
+    // Switch to the Review tab so the filtered questions are visible.
+    setActiveTab("questions");
   }
   const [generationForm, setGenerationForm] = useState<GenerationFormState>({
     mode: "outcome-based" as GenerationMode,
@@ -693,16 +695,33 @@ export default function InterviewConfigPage() {
         </div>
       </div>
 
-      <SectionNav
+      <TabBar
         items={navItems}
+        activeTab={activeTab}
+        onSelect={setActiveTab}
         ariaLabel={t("teacher_interview_config.section_nav.aria_label")}
       />
+
+      {!isPublished && !isArchived && (
+        <PublishReadiness
+          settingsComplete={settingsComplete}
+          outcomeCount={outcomeCount}
+          approvedCount={approvedCount}
+          draftCount={draftCount}
+          onGoTo={setActiveTab}
+        />
+      )}
 
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 space-y-6">
           {draft && (
             <>
-              <section id="settings" className="scroll-mt-32">
+              <section
+                id="settings"
+                hidden={activeTab !== "settings"}
+                role="tabpanel"
+                aria-labelledby="tab-settings"
+              >
                 <SettingsForm
                   draft={draft}
                   setDraft={setDraft}
@@ -713,7 +732,12 @@ export default function InterviewConfigPage() {
                   updatedAt={config?.updated_at ?? null}
                 />
               </section>
-              <section id="learning-outcomes" className="scroll-mt-32">
+              <section
+                id="learning-outcomes"
+                hidden={activeTab !== "learning-outcomes"}
+                role="tabpanel"
+                aria-labelledby="tab-learning-outcomes"
+              >
                 <LearningOutcomes
                   configId={configId}
                   courseId={courseId}
@@ -723,7 +747,12 @@ export default function InterviewConfigPage() {
                   onViewQuestions={handleViewOutcomeQuestions}
                 />
               </section>
-              <section id="generate" className="scroll-mt-32">
+              <section
+                id="generate"
+                hidden={activeTab !== "generate"}
+                role="tabpanel"
+                aria-labelledby="tab-generate"
+              >
                 <GenerationSection
                   generationForm={generationForm}
                   setGenerationForm={setGenerationForm}
@@ -735,7 +764,12 @@ export default function InterviewConfigPage() {
                   ownModuleId={config.module_id}
                 />
               </section>
-              <section id="questions" className="scroll-mt-32">
+              <section
+                id="questions"
+                hidden={activeTab !== "questions"}
+                role="tabpanel"
+                aria-labelledby="tab-questions"
+              >
                 <QuestionBank
                   configId={configId}
                   courseId={courseId}
@@ -746,7 +780,12 @@ export default function InterviewConfigPage() {
                   outcomeFilterSignal={outcomeFilterSignal}
                 />
               </section>
-              <section id="adaptive-readiness" className="scroll-mt-32">
+              <section
+                id="adaptive-readiness"
+                hidden={activeTab !== "adaptive-readiness"}
+                role="tabpanel"
+                aria-labelledby="tab-adaptive-readiness"
+              >
                 <AdaptiveReadinessPanel configId={configId} />
               </section>
             </>
@@ -858,6 +897,185 @@ function readGenerationProgress(
   }
 
   return null;
+}
+
+// Tabbed navigation for the interview-config workspace. Replaces the old
+// scroll-spy SectionNav: clicking a tab swaps which panel is shown (panels
+// stay mounted, hidden via `hidden`, so state/edits survive). Reuses the
+// SectionNavItem status model to render a small per-tab status affix.
+function TabBar({
+  items,
+  activeTab,
+  onSelect,
+  ariaLabel,
+}: {
+  items: SectionNavItem[];
+  activeTab: TabId;
+  onSelect: (id: TabId) => void;
+  ariaLabel: string;
+}) {
+  function statusDot(status: SectionNavItem["status"]) {
+    const kind = status?.kind ?? "none";
+    if (kind === "completed")
+      return <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />;
+    if (kind === "warning")
+      return <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />;
+    if (kind === "info")
+      return <span className="h-1.5 w-1.5 rounded-full bg-m3-secondary" aria-hidden="true" />;
+    return null;
+  }
+
+  return (
+    <nav
+      aria-label={ariaLabel}
+      className="sticky z-10 -mx-1 px-1"
+      style={{ top: 64 }}
+    >
+      <div
+        role="tablist"
+        aria-label={ariaLabel}
+        className="flex items-stretch gap-1 overflow-x-auto no-scrollbar rounded-lg border border-border bg-white/95 p-1 shadow-sm backdrop-blur-sm lg:overflow-visible"
+      >
+        {items.map((item) => {
+          const isActive = item.id === activeTab;
+          const status = item.status ?? { kind: "none" as const };
+          return (
+            <button
+              key={item.id}
+              id={`tab-${item.id}`}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={item.id}
+              onClick={() => onSelect(item.id as TabId)}
+              className={cn(
+                "group min-w-fit flex-1 rounded-md px-3 py-2 text-left transition-colors",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+                "whitespace-nowrap cursor-pointer",
+                isActive
+                  ? "bg-primary-soft text-primary"
+                  : "text-m3-on-surface hover:bg-surface-muted",
+              )}
+            >
+              <span className="flex items-center gap-2">
+                {statusDot(status)}
+                <span className="text-[13px] font-bold">
+                  <span className="lg:hidden xl:inline">{item.label}</span>
+                  <span className="hidden lg:inline xl:hidden">
+                    {item.shortLabel ?? item.label}
+                  </span>
+                </span>
+              </span>
+              {status.kind !== "none" && (
+                <span className="mt-0.5 block text-[11px] leading-tight text-m3-on-surface-variant">
+                  {status.label}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+// Compact "ready to publish" checklist shown above the panels while a config
+// is still a draft. Surfaces the exact publish gates (settings title, ≥1
+// outcome, ≥1 approved question) right where the Publish button lives, so the
+// teacher sees what's missing instead of hitting a disabled-button tooltip.
+// Each unmet item links to its tab.
+function PublishReadiness({
+  settingsComplete,
+  outcomeCount,
+  approvedCount,
+  draftCount,
+  onGoTo,
+}: {
+  settingsComplete: boolean;
+  outcomeCount: number;
+  approvedCount: number;
+  draftCount: number;
+  onGoTo: (id: TabId) => void;
+}) {
+  const { t } = useTranslation();
+  const items: {
+    key: string;
+    done: boolean;
+    label: string;
+    tab: TabId;
+  }[] = [
+    {
+      key: "settings",
+      done: settingsComplete,
+      label: t("teacher_interview_config.publish_readiness.settings"),
+      tab: "settings",
+    },
+    {
+      key: "outcomes",
+      done: outcomeCount > 0,
+      label: t("teacher_interview_config.publish_readiness.outcomes", {
+        count: outcomeCount,
+      }),
+      tab: "learning-outcomes",
+    },
+    {
+      key: "questions",
+      done: approvedCount > 0,
+      label: t("teacher_interview_config.publish_readiness.questions", {
+        approved: approvedCount,
+        total: draftCount,
+      }),
+      tab: "questions",
+    },
+  ];
+  const allDone = items.every((i) => i.done);
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl border px-4 py-3",
+        allDone
+          ? "border-emerald-200 bg-emerald-50/60"
+          : "border-amber-200 bg-amber-50/60",
+      )}
+    >
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-m3-on-surface">
+          {allDone ? (
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+          ) : (
+            <ShieldCheck className="h-4 w-4 text-amber-600" />
+          )}
+          {allDone
+            ? t("teacher_interview_config.publish_readiness.ready")
+            : t("teacher_interview_config.publish_readiness.title")}
+        </span>
+        <ul className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {items.map((item) => (
+            <li key={item.key}>
+              <button
+                type="button"
+                onClick={() => onGoTo(item.tab)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors cursor-pointer",
+                  item.done
+                    ? "text-emerald-700 hover:bg-emerald-100"
+                    : "text-amber-800 hover:bg-amber-100",
+                )}
+              >
+                {item.done ? (
+                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                ) : (
+                  <TriangleAlert className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
 }
 
 function SettingsForm({

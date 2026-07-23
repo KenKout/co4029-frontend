@@ -2535,6 +2535,13 @@
       "published": "Published",
       "archived": "Archived"
     },
+    "publish_readiness": {
+      "title": "Ready to publish?",
+      "ready": "Ready to publish",
+      "settings": "Settings complete",
+      "outcomes": "{{count}} learning outcome(s)",
+      "questions": "{{approved}}/{{total}} questions approved"
+    },
     "readiness": {
       "title": "Adaptive readiness",
       "subtitle": "Advisory checks on whether the adaptive interviewer has enough structured material to adapt well. These never block publishing.",

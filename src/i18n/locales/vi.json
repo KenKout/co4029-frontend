@@ -2525,6 +2525,13 @@
       "published": "Đã xuất bản",
       "archived": "Đã lưu trữ"
     },
+    "publish_readiness": {
+      "title": "Sẵn sàng xuất bản?",
+      "ready": "Sẵn sàng xuất bản",
+      "settings": "Cài đặt hoàn tất",
+      "outcomes": "{{count}} chuẩn đầu ra",
+      "questions": "Đã duyệt {{approved}}/{{total}} câu hỏi"
+    },
     "readiness": {
       "title": "Mức sẵn sàng thích ứng",
       "subtitle": "Các kiểm tra mang tính tư vấn về việc người phỏng vấn thích ứng đã có đủ tài liệu có cấu trúc để thích ứng tốt hay chưa. Chúng không bao giờ chặn việc xuất bản.",
