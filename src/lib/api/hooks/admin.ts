@@ -169,6 +169,22 @@ export function useRestoreCourse() {
   });
 }
 
+// Soft-delete a course (reversible cascade tombstone). Mirror of
+// useRestoreCourse — the deleted row stays visible in the admin table
+// (include_deleted=true) with its Restore action, so a mistaken delete
+// is undoable.
+export function useDeleteCourse() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (courseId: string) =>
+      apiDelete(`/admin/courses/${courseId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["admin", "courses"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.admin.courseStats() });
+    },
+  });
+}
+
 export function useCourseAudit(courseId: string) {
   return useQuery({
     queryKey: queryKeys.admin.courseAudit(courseId),

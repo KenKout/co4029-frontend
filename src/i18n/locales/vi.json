@@ -1095,6 +1095,9 @@
       "back_to_list": "Quay lại danh sách",
       "restore": "Khôi phục khoá học",
       "restoring": "Đang khôi phục…",
+      "delete": "Xoá",
+      "deleting": "Đang xoá…",
+      "delete_confirm": "Xoá \"{{title}}\" cùng các chương và bài học? Có thể hoàn tác bằng Khôi phục.",
       "audit_load_failed": "Không thể tải dữ liệu audit.",
       "jobs_load_failed": "Không thể tải danh sách job.",
       "no_jobs": "Chưa có job xử lý nào cho khoá học này.",
@@ -1119,7 +1122,9 @@
       },
       "toasts": {
         "restored": "Đã khôi phục khoá học",
-        "restore_failed": "Không thể khôi phục"
+        "restore_failed": "Không thể khôi phục",
+        "deleted": "Đã xoá khoá học",
+        "delete_failed": "Không thể xoá"
       }
     },
     "processing_job": {

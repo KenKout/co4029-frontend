@@ -1105,6 +1105,9 @@
       "back_to_list": "Back to list",
       "restore": "Restore course",
       "restoring": "Restoring…",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "delete_confirm": "Delete \"{{title}}\" and its modules and lessons? This can be undone with Restore.",
       "audit_load_failed": "Couldn't load audit data.",
       "jobs_load_failed": "Couldn't load jobs.",
       "no_jobs": "No processing jobs for this course yet.",
@@ -1129,7 +1132,9 @@
       },
       "toasts": {
         "restored": "Course restored",
-        "restore_failed": "Couldn't restore"
+        "restore_failed": "Couldn't restore",
+        "deleted": "Course deleted",
+        "delete_failed": "Couldn't delete"
       }
     },
     "processing_job": {
