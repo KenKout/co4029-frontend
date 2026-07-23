@@ -647,6 +647,14 @@
     "toasts": {
       "saved": "Đã lưu hồ sơ",
       "save_failed": "Không thể lưu hồ sơ. Vui lòng thử lại."
+    },
+    "avatar": {
+      "change": "Đổi ảnh",
+      "hint": "JPEG, PNG, WebP hoặc GIF · tối đa 2 MB",
+      "updated": "Đã cập nhật ảnh đại diện",
+      "upload_failed": "Không thể tải ảnh đại diện lên. Vui lòng thử lại.",
+      "invalid_type": "Vui lòng chọn ảnh JPEG, PNG, WebP hoặc GIF.",
+      "too_large": "Ảnh phải có dung lượng 2 MB trở xuống."
     }
   },
   "notifications": {

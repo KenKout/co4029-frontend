@@ -193,3 +193,40 @@ export function useUpdateProfile() {
     },
   });
 }
+
+// Uploads the raw image bytes as the PUT body with the file's MIME type in the
+// Content-Type header (the backend reads request.body(), no multipart wrapper).
+export function useUploadAvatar() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (file: File): Promise<User> => {
+      const response = await authenticatedFetch("/users/me/avatar", {
+        method: "PUT",
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+        body: file,
+      });
+      if (!response.ok) {
+        let detail = response.statusText;
+        try {
+          const payload: unknown = await response.json();
+          if (
+            payload &&
+            typeof payload === "object" &&
+            "detail" in payload &&
+            typeof (payload as { detail: unknown }).detail === "string"
+          ) {
+            detail = (payload as { detail: string }).detail;
+          }
+        } catch {
+          // keep statusText
+        }
+        throw new Error(detail);
+      }
+      return (await response.json()) as User;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.auth.me() });
+    },
+  });
+}

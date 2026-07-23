@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -108,6 +108,9 @@ export default function TopNavBar() {
                   aria-label="User menu"
                 >
                   <Avatar className="h-9 w-9 ring-2 ring-white shadow-sm">
+                    {user?.profile?.avatar_url && (
+                      <AvatarImage src={user.profile.avatar_url} alt="" />
+                    )}
                     <AvatarFallback className="bg-m3-primary text-white text-xs font-bold">
                       {getAuthUserInitials(user)}
                     </AvatarFallback>

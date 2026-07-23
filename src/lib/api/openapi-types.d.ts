@@ -11122,6 +11122,8 @@ export interface components {
             display_name: string;
             /** Avatar Object Id */
             avatar_object_id?: string | null;
+            /** Avatar Url */
+            avatar_url?: string | null;
             /** Bio */
             bio?: string | null;
             /** Locale */

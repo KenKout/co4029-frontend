@@ -640,6 +640,14 @@
     "save": "Save profile",
     "saving": "Saving…",
     "back": "Back",
+    "avatar": {
+      "change": "Change photo",
+      "hint": "JPEG, PNG, WebP or GIF · up to 2 MB",
+      "updated": "Avatar updated",
+      "upload_failed": "Couldn't upload your avatar. Please try again.",
+      "invalid_type": "Please choose a JPEG, PNG, WebP, or GIF image.",
+      "too_large": "Image must be 2 MB or smaller."
+    },
     "errors": {
       "display_name_required": "Display name cannot be empty.",
       "display_name_max": "Display name must be at most 100 characters.",

@@ -26,6 +26,9 @@ export interface AuthUserProfile {
   family_name?: string | null;
   display_name: string;
   avatar_object_id?: string | null;
+  // Presigned GET URL for the avatar image (short TTL, minted server-side on
+  // each /users/me read). NULL when no avatar is set.
+  avatar_url?: string | null;
   bio?: string | null;
   // Preferred UI + notification language ('en' | 'vi'). NULL = not set;
   // AuthProvider hydrates i18n from this on load, LanguageSwitcher
