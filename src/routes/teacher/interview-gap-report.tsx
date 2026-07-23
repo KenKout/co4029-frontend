@@ -14,7 +14,7 @@ import {
   Save,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bar,
@@ -35,6 +35,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
+import { cn } from "@/lib/utils";
 import {
   useInterviewTranscript,
   useSaveGapReportNotes,
@@ -85,6 +86,116 @@ function humanResources(resources: string[]): string[] {
   return resources.filter((r) => !UUID_RE.test(r.trim()));
 }
 
+type GapTabId = "overview" | "analysis" | "transcript" | "sources";
+
+// Tabbed navigation for the gap-report page, mirroring the interview-config
+// workspace: an absolutely-positioned pill measures the active tab and glides
+// to it via CSS transform, so the colored indicator slides between tabs.
+function GapTabBar({
+  activeTab,
+  onSelect,
+  ariaLabel,
+}: {
+  activeTab: GapTabId;
+  onSelect: (id: GapTabId) => void;
+  ariaLabel: string;
+}) {
+  const { t } = useTranslation();
+  const items: { id: GapTabId; label: string }[] = [
+    { id: "overview", label: t("teacher_interview_gap_report.tabs.overview") },
+    { id: "analysis", label: t("teacher_interview_gap_report.tabs.analysis") },
+    {
+      id: "transcript",
+      label: t("teacher_interview_gap_report.tabs.transcript"),
+    },
+    { id: "sources", label: t("teacher_interview_gap_report.tabs.sources") },
+  ];
+
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [indicator, setIndicator] = useState<{
+    left: number;
+    width: number;
+    ready: boolean;
+  }>({ left: 0, width: 0, ready: false });
+
+  useLayoutEffect(() => {
+    function measure() {
+      const el = tabRefs.current.get(activeTab);
+      const list = listRef.current;
+      if (!el || !list) return;
+      setIndicator({ left: el.offsetLeft, width: el.offsetWidth, ready: true });
+    }
+    measure();
+    const list = listRef.current;
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(measure)
+        : null;
+    if (ro && list) {
+      ro.observe(list);
+      for (const el of tabRefs.current.values()) ro.observe(el);
+    }
+    window.addEventListener("resize", measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [activeTab]);
+
+  return (
+    <nav aria-label={ariaLabel} className="sticky z-10 -mx-1 px-1" style={{ top: 64 }}>
+      <div
+        ref={listRef}
+        role="tablist"
+        aria-label={ariaLabel}
+        className="relative flex items-stretch gap-1 overflow-x-auto no-scrollbar rounded-lg border border-border bg-white/95 p-1 shadow-sm backdrop-blur-sm lg:overflow-visible"
+      >
+        <span
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute top-1 bottom-1 rounded-md bg-m3-primary shadow-sm ring-1 ring-m3-primary",
+            "motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out",
+            indicator.ready ? "opacity-100" : "opacity-0",
+          )}
+          style={{
+            transform: `translateX(${indicator.left}px)`,
+            width: indicator.width,
+          }}
+        />
+        {items.map((item) => {
+          const isActive = item.id === activeTab;
+          return (
+            <button
+              key={item.id}
+              id={`tab-${item.id}`}
+              ref={(el) => {
+                if (el) tabRefs.current.set(item.id, el);
+                else tabRefs.current.delete(item.id);
+              }}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={item.id}
+              onClick={() => onSelect(item.id)}
+              className={cn(
+                "group relative z-10 min-w-fit flex-1 rounded-md px-3 py-2 text-center transition-colors duration-300",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+                "whitespace-nowrap cursor-pointer text-[13px] font-bold",
+                isActive
+                  ? "text-white"
+                  : "text-m3-on-surface hover:bg-surface-muted",
+              )}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 export default function InterviewGapReportPage() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -97,6 +208,11 @@ export default function InterviewGapReportPage() {
     error,
   } = useTeacherGapReport(sessionId);
   const { data: session } = useTeacherInterviewSession(sessionId);
+
+  // Tabbed workspace (Overview → Analysis → Transcript → Sources), mirroring
+  // the interview-config page. Panels stay mounted (hidden via `hidden`) so
+  // in-progress note edits survive tab switches.
+  const [activeTab, setActiveTab] = useState<GapTabId>("overview");
 
   const configId = session?.interview_config_id;
   const courseId = report?.course_id;
@@ -160,27 +276,61 @@ export default function InterviewGapReportPage() {
     <div className="space-y-6 pb-12 max-w-[1100px] mx-auto">
       <Header report={report} session={session ?? null} onBack={goBack} />
 
-      <ContextCard report={report} session={session ?? null} />
-
-      {/* Full-width like Analysis by criterion + Interview transcript so the
-          notes and study plan have room to breathe. */}
-      <NotesCard
-        sessionId={sessionId}
-        teacherSummary={report.teacher_summary}
-        studyPlan={report.study_plan}
-        courseId={report.course_id}
+      <GapTabBar
+        activeTab={activeTab}
+        onSelect={setActiveTab}
+        ariaLabel={t("teacher_interview_gap_report.sections.title")}
       />
 
-      <SourceLinksCard report={report} />
+      {/* Overview — session context + notes/study plan. */}
+      <div
+        id="overview"
+        role="tabpanel"
+        aria-labelledby="tab-overview"
+        hidden={activeTab !== "overview"}
+        className="space-y-6"
+      >
+        <ContextCard report={report} session={session ?? null} />
+        <NotesCard
+          sessionId={sessionId}
+          teacherSummary={report.teacher_summary}
+          studyPlan={report.study_plan}
+          courseId={report.course_id}
+        />
+      </div>
 
-      {/* Full-width like Session context + Interview transcript so the charts
-          and per-criterion notes have room to breathe. */}
-      <CriterionBreakdown report={report} />
+      {/* Analysis — criterion charts + per-criterion breakdown. */}
+      <div
+        id="analysis"
+        role="tabpanel"
+        aria-labelledby="tab-analysis"
+        hidden={activeTab !== "analysis"}
+      >
+        <CriterionBreakdown report={report} />
+      </div>
 
-      <TranscriptCard
-        sessionId={sessionId}
-        studentName={report.student_name ?? null}
-      />
+      {/* Transcript — full interview turn-by-turn. */}
+      <div
+        id="transcript"
+        role="tabpanel"
+        aria-labelledby="tab-transcript"
+        hidden={activeTab !== "transcript"}
+      >
+        <TranscriptCard
+          sessionId={sessionId}
+          studentName={report.student_name ?? null}
+        />
+      </div>
+
+      {/* Sources — cross-links to the source quiz attempt, etc. */}
+      <div
+        id="sources"
+        role="tabpanel"
+        aria-labelledby="tab-sources"
+        hidden={activeTab !== "sources"}
+      >
+        <SourceLinksCard report={report} />
+      </div>
     </div>
   );
 }

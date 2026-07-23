@@ -1510,6 +1510,12 @@
       "study_plan": "Study plan",
       "sources": "Source links"
     },
+    "tabs": {
+      "overview": "Overview",
+      "analysis": "Analysis",
+      "transcript": "Transcript",
+      "sources": "Sources"
+    },
     "criteria": {
       "technical_accuracy": "Technical accuracy",
       "problem_solving": "Problem solving",

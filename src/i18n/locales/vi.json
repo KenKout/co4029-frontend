@@ -1500,6 +1500,12 @@
       "study_plan": "Kế hoạch học tập",
       "sources": "Liên kết nguồn"
     },
+    "tabs": {
+      "overview": "Tổng quan",
+      "analysis": "Phân tích",
+      "transcript": "Bản ghi",
+      "sources": "Nguồn"
+    },
     "labels": {
       "session_id": "Phiên #{{id}}",
       "updated_at": "Cập nhật lần cuối: {{date}}",
