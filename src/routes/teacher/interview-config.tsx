@@ -825,7 +825,13 @@ export default function InterviewConfigPage() {
                 role="tabpanel"
                 aria-labelledby="tab-adaptive-readiness"
               >
-                <AdaptiveReadinessPanel configId={configId} />
+                <AdaptiveReadinessPanel
+                  configId={configId}
+                  questions={questions ?? []}
+                  outcomes={outcomes ?? []}
+                  timeLimitMinutes={config.time_limit_minutes ?? null}
+                  onGoTo={setActiveTab}
+                />
               </section>
             </>
           )}
