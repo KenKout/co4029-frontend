@@ -1524,6 +1524,12 @@
       "study_plan": "Study plan",
       "sources": "Source links"
     },
+    "criteria": {
+      "technical_accuracy": "Technical accuracy",
+      "problem_solving": "Problem solving",
+      "communication": "Communication",
+      "professionalism": "Professionalism"
+    },
     "labels": {
       "session_id": "Session #{{id}}",
       "updated_at": "Last updated: {{date}}",
@@ -1542,7 +1548,7 @@
       "started_at": "Started",
       "ended_at": "Ended",
       "duration": "Duration",
-      "duration_value": "{{minutes}} min",
+      "duration_value": "{{minutes}}m {{seconds}}s",
       "status": "Status",
       "attempt": "Attempt",
       "attempt_value": "#{{n}}",
@@ -1554,6 +1560,11 @@
       "failed": "Not passed",
       "quote": "Quote:",
       "analysis": "Analysis:",
+      "total_score": "Total score",
+      "outcomes_met": "Outcomes met",
+      "answered": "Answered",
+      "weight": "· {{pct}}% weight",
+      "other_notes": "Other notes",
       "view": "View",
       "source_quiz_attempt": "Source quiz attempt",
       "source_interview_session": "Source interview session"

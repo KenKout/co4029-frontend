@@ -1532,7 +1532,7 @@
       "started_at": "Bắt đầu",
       "ended_at": "Kết thúc",
       "duration": "Thời lượng",
-      "duration_value": "{{minutes}} phút",
+      "duration_value": "{{minutes}} phút {{seconds}} giây",
       "status": "Trạng thái",
       "attempt": "Lượt",
       "attempt_value": "#{{n}}",
@@ -1546,7 +1546,18 @@
       "analysis": "Phân tích:",
       "view": "Xem",
       "source_quiz_attempt": "Lượt làm quiz nguồn",
-      "source_interview_session": "Phiên phỏng vấn nguồn"
+      "source_interview_session": "Phiên phỏng vấn nguồn",
+      "total_score": "Tổng điểm",
+      "outcomes_met": "Chuẩn đầu ra đạt",
+      "answered": "Đã trả lời",
+      "weight": "· trọng số {{pct}}%",
+      "other_notes": "Ghi chú khác"
+    },
+    "criteria": {
+      "technical_accuracy": "Độ chính xác kỹ thuật",
+      "problem_solving": "Giải quyết vấn đề",
+      "communication": "Giao tiếp",
+      "professionalism": "Tính chuyên nghiệp"
     }
   },
   "course_quiz_review": {

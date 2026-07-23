@@ -16,6 +16,21 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -31,21 +46,6 @@ import type {
   InterviewSessionPublic,
   StudyPlanItem,
 } from "@/lib/api/types";
-
-interface CriterionEntry {
-  outcome_text?: unknown;
-  verdict_met?: unknown;
-  evidence_excerpt?: unknown;
-  rationale?: unknown;
-}
-
-function asCriterionEntry(value: unknown): CriterionEntry | null {
-  return value && typeof value === "object" ? (value as CriterionEntry) : null;
-}
-
-function asString(value: unknown): string | null {
-  return typeof value === "string" && value.trim() ? value : null;
-}
 
 function formatDate(value: string): string {
   try {
@@ -167,13 +167,14 @@ export default function InterviewGapReportPage() {
           <NotesCard
             sessionId={sessionId}
             teacherSummary={report.teacher_summary}
+            studyPlan={report.study_plan}
+            courseId={report.course_id}
           />
 
-          <CriterionBreakdown breakdown={report.per_criterion_breakdown} />
+          <CriterionBreakdown report={report} />
         </div>
 
         <div className="col-span-12 lg:col-span-5 space-y-4">
-          <StudyPlanCard items={report.study_plan} />
           <SourceLinksCard report={report} />
         </div>
       </div>
@@ -374,13 +375,15 @@ function ContextCard({
 
   const startedAt = session?.started_at ?? null;
   const endedAt = session?.ended_at ?? null;
-  const durationMin =
+  // Exact duration in whole seconds (not rounded to minutes) so the teacher
+  // sees the true attempt length, e.g. "2m 23s".
+  const durationSec =
     startedAt && endedAt
       ? Math.max(
           0,
           Math.round(
             (new Date(endedAt).getTime() - new Date(startedAt).getTime()) /
-              60000,
+              1000,
           ),
         )
       : null;
@@ -442,11 +445,12 @@ function ContextCard({
               : t("teacher_interview_gap_report.labels.in_progress")
           }
         />
-        {durationMin != null && (
+        {durationSec != null && (
           <ContextRow
             label={t("teacher_interview_gap_report.labels.duration")}
             value={t("teacher_interview_gap_report.labels.duration_value", {
-              minutes: durationMin,
+              minutes: Math.floor(durationSec / 60),
+              seconds: String(durationSec % 60).padStart(2, "0"),
             })}
           />
         )}
@@ -504,9 +508,13 @@ function ContextCard({
 function NotesCard({
   sessionId,
   teacherSummary,
+  studyPlan,
+  courseId,
 }: {
   sessionId: string;
   teacherSummary: string | null | undefined;
+  studyPlan: StudyPlanItem[];
+  courseId: string | null | undefined;
 }) {
   const { t } = useTranslation();
   const saveNotes = useSaveGapReportNotes(sessionId);
@@ -614,17 +622,180 @@ function NotesCard({
             </p>
           ))}
       </div>
+
+      {/* Study plan — merged into the Notes card as its own section. Each
+          suggestion links to its lesson's materials page when a lesson is
+          known, so the teacher can jump straight to the remediation content. */}
+      <div className="mt-4 space-y-2.5">
+        <p className="text-[11px] uppercase font-bold tracking-widest text-m3-on-surface-variant">
+          {t("teacher_interview_gap_report.sections.study_plan")}
+        </p>
+        {studyPlan.length === 0 ? (
+          <p className="text-sm italic text-m3-on-surface-variant">
+            {t("teacher_interview_gap_report.empty_states.no_study_plan")}
+          </p>
+        ) : (
+          <ol className="space-y-2.5">
+            {studyPlan.map((item, idx) => {
+              const resources = humanResources(item.suggested_resources);
+              const canLink = Boolean(courseId && item.lesson_id);
+              const body = (
+                <div className="flex items-start gap-2">
+                  <span className="shrink-0 h-6 w-6 rounded-full bg-m3-primary text-white flex items-center justify-center text-xs font-extrabold">
+                    {idx + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-m3-on-surface inline-flex items-center gap-1">
+                      {item.topic}
+                      {canLink && (
+                        <ChevronRight className="h-3.5 w-3.5 text-m3-primary shrink-0" />
+                      )}
+                    </p>
+                    {resources.length > 0 && (
+                      <p className="text-xs text-m3-on-surface-variant mt-1">
+                        {resources.join(" • ")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+              return (
+                <li
+                  key={`${item.topic}-${idx}`}
+                  className="rounded-xl bg-m3-surface-container-low p-3"
+                >
+                  {canLink ? (
+                    <Link
+                      to="/teacher/courses/$courseId/lessons/$lessonId/materials"
+                      params={{
+                        courseId: courseId as string,
+                        lessonId: item.lesson_id as string,
+                      }}
+                      className="block transition-colors hover:bg-m3-surface-container rounded-lg -m-1 p-1"
+                    >
+                      {body}
+                    </Link>
+                  ) : (
+                    body
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </div>
     </GlassCard>
   );
 }
 
+// Split criterion-tagged bullets ("technical_accuracy: Cited bounds") into a
+// map of criterion → note phrases. Bullets without a recognizable "tag:" prefix
+// (or tagged with a non-rubric key like "theory_performance") are collected
+// under a null key so they still surface as general notes.
+function groupNotesByCriterion(
+  bullets: string[],
+): { byCriterion: Map<string, string[]>; untagged: string[] } {
+  const byCriterion = new Map<string, string[]>();
+  const untagged: string[] = [];
+  for (const bullet of bullets) {
+    const idx = bullet.indexOf(":");
+    if (idx > 0) {
+      const tag = bullet.slice(0, idx).trim();
+      const note = bullet.slice(idx + 1).trim();
+      if (tag && note && !tag.includes(" ")) {
+        const arr = byCriterion.get(tag) ?? [];
+        arr.push(note);
+        byCriterion.set(tag, arr);
+        continue;
+      }
+    }
+    const cleaned = bullet.trim();
+    if (cleaned) untagged.push(cleaned);
+  }
+  return { byCriterion, untagged };
+}
+
+// 0–5 mean → band + tailwind classes for the score bar + label.
+function scoreBand(score: number): {
+  labelKey: string;
+  bar: string;
+  text: string;
+} {
+  if (score >= 4)
+    return { labelKey: "band_strong", bar: "bg-emerald-500", text: "text-emerald-700" };
+  if (score >= 2.5)
+    return { labelKey: "band_developing", bar: "bg-amber-500", text: "text-amber-700" };
+  return { labelKey: "band_weak", bar: "bg-red-500", text: "text-red-600" };
+}
+
+function criterionLabel(
+  key: string,
+  t: (k: string, opts?: Record<string, unknown>) => string,
+): string {
+  // Known rubric criteria get proper i18n labels; unknown keys are humanized
+  // (snake_case → Title Case) so the card never shows a raw machine key.
+  const label = t(`teacher_interview_gap_report.criteria.${key}`, {
+    defaultValue: "",
+  });
+  if (label) return label;
+  return key
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 function CriterionBreakdown({
-  breakdown,
+  report,
 }: {
-  breakdown: GapReportAuthoringRead["per_criterion_breakdown"];
+  report: GapReportAuthoringRead;
 }) {
   const { t } = useTranslation();
-  const entries = Object.entries(breakdown ?? {});
+  const breakdown = report.per_criterion_breakdown ?? {};
+  const weights = (report.rubric_weights ?? {}) as Record<string, number>;
+  const summary = (report.score_summary ?? {}) as Record<string, unknown>;
+  const strengths = groupNotesByCriterion(report.strengths ?? []);
+  const weaknesses = groupNotesByCriterion(report.weaknesses ?? []);
+
+  const entries = Object.entries(breakdown).map(([key, value]) => ({
+    key,
+    score: typeof value === "number" ? value : Number(value) || 0,
+  }));
+
+  const asNum = (v: unknown): number | null =>
+    typeof v === "number" ? v : typeof v === "string" && v.trim() ? Number(v) : null;
+  const totalScore = asNum(summary.total_score);
+  const outcomesMet = asNum(summary.outcomes_met);
+  const outcomesTotal = asNum(summary.outcomes_total);
+  const answered = asNum(summary.questions_answered);
+  const questionsTotal = asNum(summary.questions_total);
+
+  // Notes tagged with a non-rubric criterion (e.g. "theory_performance") plus
+  // any untagged bullets — shown once at the bottom so nothing is dropped.
+  const rubricKeys = new Set(entries.map((e) => e.key));
+  const extraStrengths = [
+    ...[...strengths.byCriterion.entries()]
+      .filter(([k]) => !rubricKeys.has(k))
+      .flatMap(([k, notes]) => notes.map((n) => `${criterionLabel(k, t)}: ${n}`)),
+    ...strengths.untagged,
+  ];
+  const extraWeaknesses = [
+    ...[...weaknesses.byCriterion.entries()]
+      .filter(([k]) => !rubricKeys.has(k))
+      .flatMap(([k, notes]) => notes.map((n) => `${criterionLabel(k, t)}: ${n}`)),
+    ...weaknesses.untagged,
+  ];
+
+  // Chart data: one row per rubric criterion with its 0–5 mean. Shared by the
+  // radar (shape at a glance) and the horizontal bar (exact comparison).
+  const chartData = entries.map(({ key, score }) => ({
+    key,
+    label: criterionLabel(key, t),
+    score: Number(score.toFixed(2)),
+  }));
+  // Radar needs 3+ axes to form a shape; with 1–2 criteria a bar chart alone
+  // reads better, so only show the radar when there are enough axes.
+  const showRadar = chartData.length >= 3;
+
   return (
     <GlassCard className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -638,106 +809,247 @@ function CriterionBreakdown({
         </span>
       </div>
 
+      {/* Quantitative rollup: the numbers that contextualize the per-criterion
+          means (weighted total, outcomes met, questions answered). */}
+      {(totalScore !== null ||
+        outcomesTotal !== null ||
+        questionsTotal !== null) && (
+        <div className="grid grid-cols-3 gap-2">
+          {totalScore !== null && (
+            <div className="rounded-xl bg-m3-surface-container-low p-3 text-center">
+              <p className="text-lg font-extrabold text-m3-primary tabular-nums">
+                {Math.round(totalScore)}
+                <span className="text-xs font-medium text-m3-on-surface-variant">
+                  /100
+                </span>
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-m3-on-surface-variant mt-0.5">
+                {t("teacher_interview_gap_report.labels.total_score")}
+              </p>
+            </div>
+          )}
+          {outcomesTotal !== null && (
+            <div className="rounded-xl bg-m3-surface-container-low p-3 text-center">
+              <p className="text-lg font-extrabold text-m3-on-surface tabular-nums">
+                {outcomesMet ?? 0}
+                <span className="text-xs font-medium text-m3-on-surface-variant">
+                  /{outcomesTotal}
+                </span>
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-m3-on-surface-variant mt-0.5">
+                {t("teacher_interview_gap_report.labels.outcomes_met")}
+              </p>
+            </div>
+          )}
+          {questionsTotal !== null && (
+            <div className="rounded-xl bg-m3-surface-container-low p-3 text-center">
+              <p className="text-lg font-extrabold text-m3-on-surface tabular-nums">
+                {answered ?? 0}
+                <span className="text-xs font-medium text-m3-on-surface-variant">
+                  /{questionsTotal}
+                </span>
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-m3-on-surface-variant mt-0.5">
+                {t("teacher_interview_gap_report.labels.answered")}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Visual per-criterion score charts: radar for the overall shape and a
+          horizontal bar for exact comparison. Both read the same 0–5 means. */}
+      {chartData.length > 0 && (
+        <div
+          className={
+            showRadar ? "grid gap-4 sm:grid-cols-2" : "grid gap-4"
+          }
+        >
+          {showRadar && (
+            <div className="rounded-xl bg-m3-surface-container-lowest p-2">
+              <ResponsiveContainer width="100%" height={220}>
+                <RadarChart data={chartData} outerRadius="72%">
+                  <PolarGrid stroke="var(--border)" opacity={0.6} />
+                  <PolarAngleAxis
+                    dataKey="label"
+                    tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+                  />
+                  <PolarRadiusAxis
+                    domain={[0, 5]}
+                    tickCount={6}
+                    tick={{ fill: "var(--text-muted)", fontSize: 9 }}
+                    stroke="var(--border)"
+                  />
+                  <Radar
+                    dataKey="score"
+                    stroke="var(--primary)"
+                    fill="var(--primary)"
+                    fillOpacity={0.35}
+                    isAnimationActive={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--surface-elev)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 8,
+                      fontSize: 12,
+                      color: "var(--text-strong)",
+                    }}
+                    formatter={(value) => [`${value} / 5`, ""]}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          <div className="rounded-xl bg-m3-surface-container-lowest p-2">
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart
+                data={chartData}
+                layout="vertical"
+                margin={{ top: 8, right: 16, bottom: 8, left: 8 }}
+              >
+                <CartesianGrid
+                  horizontal={false}
+                  strokeDasharray="3 3"
+                  stroke="var(--border)"
+                  opacity={0.5}
+                />
+                <XAxis
+                  type="number"
+                  domain={[0, 5]}
+                  tickCount={6}
+                  tick={{ fill: "var(--text-muted)", fontSize: 10 }}
+                  stroke="var(--border)"
+                />
+                <YAxis
+                  type="category"
+                  dataKey="label"
+                  width={110}
+                  tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+                  stroke="var(--border)"
+                />
+                <Tooltip
+                  cursor={{ fill: "var(--surface-muted)", opacity: 0.4 }}
+                  contentStyle={{
+                    backgroundColor: "var(--surface-elev)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    color: "var(--text-strong)",
+                  }}
+                  formatter={(value) => [`${value} / 5`, ""]}
+                />
+                <Bar dataKey="score" radius={[0, 6, 6, 0]} isAnimationActive={false}>
+                  {chartData.map((row) => {
+                    const band = scoreBand(row.score);
+                    return (
+                      <Cell
+                        key={row.key}
+                        fill={
+                          band.bar === "bg-emerald-500"
+                            ? "var(--success)"
+                            : band.bar === "bg-amber-500"
+                              ? "var(--warning)"
+                              : "var(--danger)"
+                        }
+                      />
+                    );
+                  })}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
       {entries.length === 0 ? (
         <p className="text-sm italic text-m3-on-surface-variant">
           {t("teacher_interview_gap_report.empty_states.no_detail")}
         </p>
       ) : (
         <ul className="space-y-3">
-          {entries.map(([key, value]) => {
-            const entry = asCriterionEntry(value);
-            const verdict =
-              entry && typeof entry.verdict_met === "boolean"
-                ? entry.verdict_met
-                : null;
-            const text = asString(entry?.outcome_text) ?? key;
-            const evidence = asString(entry?.evidence_excerpt);
-            const rationale = asString(entry?.rationale);
-
+          {entries.map(({ key, score }) => {
+            const band = scoreBand(score);
+            const pct = Math.max(0, Math.min(100, (score / 5) * 100));
+            const weight = weights[key];
+            const good = strengths.byCriterion.get(key) ?? [];
+            const bad = weaknesses.byCriterion.get(key) ?? [];
             return (
               <li
                 key={key}
-                className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-4 space-y-2"
+                className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-4 space-y-2.5"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-bold text-m3-on-surface leading-snug flex-1">
-                    {text}
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-bold text-m3-on-surface leading-snug">
+                    {criterionLabel(key, t)}
+                    {typeof weight === "number" && weight > 0 && (
+                      <span className="ml-2 text-[10px] font-medium text-m3-on-surface-variant">
+                        {t("teacher_interview_gap_report.labels.weight", {
+                          pct: Math.round(weight * 100),
+                        })}
+                      </span>
+                    )}
                   </p>
-                  {verdict !== null && (
-                    <span
-                      className={
-                        verdict
-                          ? "shrink-0 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1"
-                          : "shrink-0 rounded-full bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1"
-                      }
-                    >
-                      {verdict
-                        ? t("teacher_interview_gap_report.labels.passed")
-                        : t("teacher_interview_gap_report.labels.failed")}
+                  <span
+                    className={`shrink-0 text-sm font-extrabold tabular-nums ${band.text}`}
+                  >
+                    {score.toFixed(1)}
+                    <span className="text-[10px] font-medium text-m3-on-surface-variant">
+                      /5
                     </span>
-                  )}
+                  </span>
                 </div>
-                {evidence && (
-                  <p className="text-xs text-m3-on-surface-variant leading-relaxed pl-1 border-l-2 border-m3-outline-variant/30">
-                    <span className="font-bold not-italic mr-1">
-                      {t("teacher_interview_gap_report.labels.quote")}
-                    </span>
-                    <span className="italic">{evidence}</span>
+                {/* Quantitative score bar */}
+                <div className="h-2 w-full rounded-full bg-m3-outline-variant/20 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${band.bar} transition-all`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                {/* Qualitative per-criterion notes from the judge */}
+                {good.map((note, i) => (
+                  <p
+                    key={`g-${i}`}
+                    className="text-xs text-emerald-700 leading-relaxed pl-2 border-l-2 border-emerald-300"
+                  >
+                    <span className="font-bold mr-1">+</span>
+                    {note}
                   </p>
-                )}
-                {rationale && (
-                  <p className="text-xs text-m3-on-surface-variant leading-relaxed">
-                    <span className="font-bold mr-1">
-                      {t("teacher_interview_gap_report.labels.analysis")}
-                    </span>
-                    {rationale}
+                ))}
+                {bad.map((note, i) => (
+                  <p
+                    key={`b-${i}`}
+                    className="text-xs text-red-600 leading-relaxed pl-2 border-l-2 border-red-300"
+                  >
+                    <span className="font-bold mr-1">−</span>
+                    {note}
                   </p>
-                )}
+                ))}
               </li>
             );
           })}
         </ul>
       )}
-    </GlassCard>
-  );
-}
 
-function StudyPlanCard({ items }: { items: StudyPlanItem[] }) {
-  const { t } = useTranslation();
-  return (
-    <GlassCard className="p-6 space-y-3">
-      <h2 className="font-headline font-bold text-base text-m3-primary mb-2">
-        {t("teacher_interview_gap_report.sections.study_plan")}
-      </h2>
-      {items.length === 0 ? (
-        <p className="text-sm italic text-m3-on-surface-variant">
-          {t("teacher_interview_gap_report.empty_states.no_study_plan")}
-        </p>
-      ) : (
-        <ol className="space-y-2.5">
-          {items.map((item, idx) => (
-            <li
-              key={`${item.topic}-${idx}`}
-              className="rounded-xl bg-m3-surface-container-low p-3"
-            >
-              <div className="flex items-start gap-2">
-                <span className="shrink-0 h-6 w-6 rounded-full bg-m3-primary text-white flex items-center justify-center text-xs font-extrabold">
-                  {idx + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-m3-on-surface">
-                    {item.topic}
-                  </p>
-                  {humanResources(item.suggested_resources).length > 0 && (
-                    <p className="text-xs text-m3-on-surface-variant mt-1">
-                      {humanResources(item.suggested_resources).join(" • ")}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </li>
+      {/* Notes not tied to a rubric criterion (e.g. theory/practice gap) */}
+      {(extraStrengths.length > 0 || extraWeaknesses.length > 0) && (
+        <div className="rounded-xl bg-m3-surface-container-low p-4 space-y-1.5">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-m3-on-surface-variant">
+            {t("teacher_interview_gap_report.labels.other_notes")}
+          </p>
+          {extraStrengths.map((note, i) => (
+            <p key={`eg-${i}`} className="text-xs text-emerald-700 leading-relaxed">
+              <span className="font-bold mr-1">+</span>
+              {note}
+            </p>
           ))}
-        </ol>
+          {extraWeaknesses.map((note, i) => (
+            <p key={`eb-${i}`} className="text-xs text-red-600 leading-relaxed">
+              <span className="font-bold mr-1">−</span>
+              {note}
+            </p>
+          ))}
+        </div>
       )}
     </GlassCard>
   );
