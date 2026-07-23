@@ -282,6 +282,9 @@ export interface RosterStudent {
   at_risk_level: string;
   last_activity_at: string | null;
   final_grade: string | null;
+  // Short-TTL presigned GET URL for the student's uploaded avatar (minted
+  // server-side). NULL when no avatar is set — the UI falls back to initials.
+  avatar_url: string | null;
 }
 
 export interface CourseRoster {

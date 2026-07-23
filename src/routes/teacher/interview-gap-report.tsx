@@ -387,43 +387,58 @@ function TranscriptCard({
       {turns.length > 0 && (
         <>
           <ul className="space-y-3">
-            {pageTurns.map((turn, idx) => (
-              <li
-                key={start + idx}
-                className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-1"
-              >
-                {/* Header line: speaker on the left, timestamp on the far
-                    right. The speaker label is on its own line so the timer
-                    can never collide with a long question prompt or answer. */}
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-m3-primary">
-                    {turn.role === "user" && studentName
-                      ? studentName
-                      : t(
-                          `teacher_interview_gap_report.transcript.role.${turn.role}`,
-                        )}
-                  </span>
-                  {/* Relative timestamp (0:00 = first turn), pushed to the far right. */}
-                  <time className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-m3-primary">
-                    {formatRelativeTime(
-                      (new Date(turn.created_at).getTime() - baseline) / 1000,
-                    )}
-                  </time>
-                </div>
-                {turn.question_prompt && (
-                  <p className="text-[11px] font-semibold text-m3-outline uppercase tracking-widest">
-                    {turn.question_prompt}
+            {pageTurns.map((turn, idx) => {
+              // Only show the question prompt when a NEW question starts —
+              // i.e. when this turn's prompt differs from the previous turn's.
+              // The same prompt is attached to every turn of a question
+              // (the answer, clarify requests, AI rephrases), so rendering it
+              // each time repeats the full question and makes the log messy.
+              const absoluteIdx = start + idx;
+              const prevPrompt =
+                absoluteIdx > 0
+                  ? (turns[absoluteIdx - 1].question_prompt ?? null)
+                  : null;
+              const showPrompt =
+                Boolean(turn.question_prompt) &&
+                turn.question_prompt !== prevPrompt;
+              return (
+                <li
+                  key={absoluteIdx}
+                  className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-1"
+                >
+                  {/* Header line: speaker on the left, timestamp on the far
+                      right. The speaker label is on its own line so the timer
+                      can never collide with a long question prompt or answer. */}
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-m3-primary">
+                      {turn.role === "user" && studentName
+                        ? studentName
+                        : t(
+                            `teacher_interview_gap_report.transcript.role.${turn.role}`,
+                          )}
+                    </span>
+                    {/* Relative timestamp (0:00 = first turn), pushed to the far right. */}
+                    <time className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-m3-primary">
+                      {formatRelativeTime(
+                        (new Date(turn.created_at).getTime() - baseline) / 1000,
+                      )}
+                    </time>
+                  </div>
+                  {showPrompt && (
+                    <p className="text-[11px] font-semibold text-m3-outline uppercase tracking-widest">
+                      {turn.question_prompt}
+                    </p>
+                  )}
+                  {/* Content always begins below the header line. */}
+                  <p className="text-sm text-m3-on-surface leading-relaxed">
+                    {turn.content_text ??
+                      (turn.has_audio
+                        ? t("teacher_interview_gap_report.transcript.audio_only")
+                        : "—")}
                   </p>
-                )}
-                {/* Content always begins below the header line. */}
-                <p className="text-sm text-m3-on-surface leading-relaxed">
-                  {turn.content_text ??
-                    (turn.has_audio
-                      ? t("teacher_interview_gap_report.transcript.audio_only")
-                      : "—")}
-                </p>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
           {pageCount > 1 && (
             <div className="flex items-center justify-end gap-2 pt-1">

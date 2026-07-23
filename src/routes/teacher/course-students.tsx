@@ -451,15 +451,24 @@ export default function CourseStudentsPage() {
                       params={{ courseId, studentId: student.student_id }}
                       className="flex sm:grid sm:grid-cols-[auto_1fr_130px_100px_90px_40px] gap-4 items-center px-5 py-4 hover:bg-m3-surface-container-low transition-colors cursor-pointer group"
                     >
-                      {/* Avatar */}
-                      <div
-                        className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 uppercase",
-                          aColor,
-                        )}
-                      >
-                        {initials || "?"}
-                      </div>
+                      {/* Avatar — show the uploaded image when present,
+                          otherwise the colour-coded initials fallback. */}
+                      {student.avatar_url ? (
+                        <img
+                          src={student.avatar_url}
+                          alt=""
+                          className="w-10 h-10 rounded-full object-cover shrink-0"
+                        />
+                      ) : (
+                        <div
+                          className={cn(
+                            "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 uppercase",
+                            aColor,
+                          )}
+                        >
+                          {initials || "?"}
+                        </div>
+                      )}
 
                       {/* Name + email + enrollment status */}
                       <div className="min-w-0">
@@ -669,13 +678,17 @@ export default function CourseStudentsPage() {
                       Top Performer
                     </h4>
                     <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold uppercase bg-white/20 text-white",
-                        )}
-                      >
-                        {avatarInitials(top.display_name) || "?"}
-                      </div>
+                      {top.avatar_url ? (
+                        <img
+                          src={top.avatar_url}
+                          alt=""
+                          className="w-10 h-10 rounded-full object-cover shrink-0 ring-2 ring-white/40"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold uppercase bg-white/20 text-white shrink-0">
+                          {avatarInitials(top.display_name) || "?"}
+                        </div>
+                      )}
                       <div>
                         <p className="font-bold text-sm">{top.display_name}</p>
                         <p className="text-xs text-white/70">
