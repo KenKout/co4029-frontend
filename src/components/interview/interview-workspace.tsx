@@ -508,38 +508,6 @@ export function ConversationMessage({
                 {relativeTime}
               </time>
             )}
-          </div>
-        )}
-
-        {!isAi && (
-          <div className="mb-1.5 flex items-center justify-between gap-3 text-[11px] font-medium text-text-muted">
-            <span>{t("course_interview.workspace.you")}</span>
-            {showTimestamp && (
-              <time className="tabular-nums text-text-subtle">{relativeTime}</time>
-            )}
-          </div>
-        )}
-
-        {isAi ? (
-          <div className="flex items-end gap-1.5">
-            <AiTypingMessage
-              text={turn.text}
-              animate={isLatest}
-              speak={speak}
-              onTick={onTick}
-              onTypingChange={onSpeakingChange}
-              onTextComplete={() => setTextComplete(true)}
-              onPresentationComplete={onPresentationComplete}
-              presentationKind={
-                turn.kind === "opening" || turn.kind === "closing"
-                  ? turn.kind
-                  : "question"
-              }
-              className={cn(
-                "min-w-0 text-text-strong",
-                isLatest ? "text-lg leading-8 sm:text-xl" : "text-base leading-7",
-              )}
-            />
             {replayVisible && (
               <Button
                 type="button"
@@ -557,7 +525,10 @@ export function ConversationMessage({
                     ? t("course_interview.workspace.replaying_message")
                     : t("course_interview.workspace.replay_message")
                 }
-                className="mb-0.5 size-7 shrink-0 rounded-full text-text-muted hover:bg-primary-soft hover:text-primary disabled:opacity-40"
+                className={cn(
+                  "size-7 shrink-0 rounded-full text-text-muted hover:bg-primary-soft hover:text-primary disabled:opacity-40",
+                  !showTimestamp && "ml-auto",
+                )}
               >
                 {isReplaying ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -567,6 +538,36 @@ export function ConversationMessage({
               </Button>
             )}
           </div>
+        )}
+
+        {!isAi && (
+          <div className="mb-1.5 flex items-center justify-between gap-3 text-[11px] font-medium text-text-muted">
+            <span>{t("course_interview.workspace.you")}</span>
+            {showTimestamp && (
+              <time className="tabular-nums text-text-subtle">{relativeTime}</time>
+            )}
+          </div>
+        )}
+
+        {isAi ? (
+          <AiTypingMessage
+            text={turn.text}
+            animate={isLatest}
+            speak={speak}
+            onTick={onTick}
+            onTypingChange={onSpeakingChange}
+            onTextComplete={() => setTextComplete(true)}
+            onPresentationComplete={onPresentationComplete}
+            presentationKind={
+              turn.kind === "opening" || turn.kind === "closing"
+                ? turn.kind
+                : "question"
+            }
+            className={cn(
+              "min-w-0 text-text-strong",
+              isLatest ? "text-lg leading-8 sm:text-xl" : "text-base leading-7",
+            )}
+          />
         ) : (
           <p className="whitespace-pre-wrap text-sm leading-6 sm:text-base">{turn.text}</p>
         )}
@@ -2117,40 +2118,44 @@ export function AnswerControls({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div
-          className="inline-flex rounded-lg border border-border bg-surface-muted p-1"
+          className="relative inline-flex rounded-lg border border-border bg-surface-muted p-0.5"
           role="group"
           aria-label={t("course_interview.workspace.answer_mode")}
         >
-          <Button
+          {/* Sliding indicator: animates left↔right as the mode changes. */}
+          <span
+            aria-hidden="true"
+            className={cn(
+              "pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(50%-0.125rem)] rounded-md bg-white shadow-sm transition-transform duration-300 ease-out",
+              mode === "type" && "translate-x-full",
+            )}
+          />
+          <button
             type="button"
-            variant="ghost"
-            size="lg"
             onClick={() => onModeChange("voice")}
             disabled={!micAvailable || disabled}
             aria-pressed={mode === "voice"}
             className={cn(
-              "min-h-11 rounded-md px-3",
-              mode === "voice" && "bg-white text-primary shadow-sm hover:bg-white",
+              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+              mode === "voice" ? "text-primary" : "text-text-muted hover:text-text-strong",
             )}
           >
-            <Mic className="h-4 w-4" />
+            <Mic className="h-3.5 w-3.5" />
             {t("course_interview.workspace.voice_mode")}
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
-            variant="ghost"
-            size="lg"
             onClick={() => onModeChange("type")}
             disabled={disabled}
             aria-pressed={mode === "type"}
             className={cn(
-              "min-h-11 rounded-md px-3",
-              mode === "type" && "bg-white text-primary shadow-sm hover:bg-white",
+              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+              mode === "type" ? "text-primary" : "text-text-muted hover:text-text-strong",
             )}
           >
-            <MessageSquareText className="h-4 w-4" />
+            <MessageSquareText className="h-3.5 w-3.5" />
             {t("course_interview.workspace.type_mode")}
-          </Button>
+          </button>
         </div>
 
         <DropdownMenu>
