@@ -135,8 +135,8 @@ export default function TeacherDashboard() {
         />
 
         {isLoading ? (
-          <div className="grid gap-5 mt-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
+          <div className="grid gap-5 mt-4 sm:grid-cols-2 xl:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="rounded-xl ghost-border overflow-hidden">
                 <div className="aspect-video bg-m3-surface-container animate-pulse" />
                 <div className="p-4 space-y-3">
@@ -163,7 +163,7 @@ export default function TeacherDashboard() {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-5 mt-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 mt-4 sm:grid-cols-2 xl:grid-cols-3">
             {courses.slice(0, 6).map((course, i) => (
               <TeacherCourseCard key={course.id} course={course} index={i} />
             ))}

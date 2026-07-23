@@ -546,3 +546,40 @@
     scrollbar-width: none;
   }
 }
+
+/* ────────────────────────────────────────────────────────────────────
+   Accessibility sweep (#22 focus-visible, #23 reduced-motion)
+   Plain CSS outside @layer so these are authoritative global rules.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* #22 — Consistent keyboard focus ring across all interactive elements.
+   Only shows for keyboard navigation (:focus-visible), never on mouse
+   click, so it doesn't add visual noise for pointer users. Elements that
+   set their own focus-visible ring (e.g. inputs) are unaffected — this is
+   the baseline for anything that doesn't. */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+/* #23 — Honour prefers-reduced-motion globally. Users who opt out of
+   motion get near-instant transitions/animations everywhere (card hover
+   lifts, image zooms, reveal animations, spinners degrade to a single
+   frame), rather than gating each animation utility one at a time. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
