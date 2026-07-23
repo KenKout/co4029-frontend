@@ -310,8 +310,9 @@ export function SetupChecklist({
         </ChecklistRow>
       </ol>
 
-      {/* Preparation + readiness collapse into a single primary Start action so
-          the candidate isn't gated behind extra AI messages. */}
+      {/* Preparation + readiness each offer a primary "advance" action and a
+          secondary "hold" action, so when the interviewer asks whether the
+          candidate needs a moment, both answers are available (not just Start). */}
       {(stage === "preparation" || isReady) && (
         <div className="mt-5 border-t border-border pt-5">
           <Button
@@ -327,6 +328,20 @@ export function SetupChecklist({
               <Sparkles className="h-4 w-4" />
             )}
             {t("course_interview.onboarding.ready")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            disabled={disabled}
+            onClick={() => onAction(isReady ? "not_ready" : "needs_adjustment")}
+            className="mt-2 min-h-11 w-full rounded-xl text-sm font-semibold"
+          >
+            {t(
+              isReady
+                ? "course_interview.onboarding.not_ready"
+                : "course_interview.onboarding.need_moment",
+            )}
           </Button>
           <p className="mt-2 text-center text-xs text-text-muted">
             {t("course_interview.onboarding.timer_waiting")}

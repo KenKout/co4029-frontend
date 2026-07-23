@@ -1545,6 +1545,7 @@
       "transcript": "Bản ghi phỏng vấn",
       "answer_composer": "Trình soạn câu trả lời",
       "answer_placeholder": "Nhập câu trả lời hoặc bắt đầu nói…",
+      "answer_locked": "Vui lòng đợi người phỏng vấn nói xong…",
       "send_hint": "Enter để gửi · Shift + Enter để xuống dòng",
       "start_speaking": "Bắt đầu nói",
       "mute_microphone": "Dừng nghe",

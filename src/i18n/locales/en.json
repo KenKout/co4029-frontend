@@ -1554,6 +1554,7 @@
       "transcript": "Interview transcript",
       "answer_composer": "Answer composer",
       "answer_placeholder": "Type your answer or start speaking…",
+      "answer_locked": "Please wait for the interviewer to finish…",
       "send_hint": "Enter to send · Shift + Enter for a new line",
       "start_speaking": "Start speaking",
       "mute_microphone": "Stop listening",

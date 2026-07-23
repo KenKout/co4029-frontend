@@ -2357,6 +2357,10 @@ export function FocusedAnswerComposer({
     status !== "disconnected";
   const voiceDisabled =
     sending || status === "thinking" || status === "speaking" || status === "disconnected";
+  // While the AI is thinking or speaking (or the turn is submitting), lock the
+  // text field so the candidate can't type over the interviewer's message.
+  const inputDisabled =
+    sending || status === "thinking" || status === "speaking" || status === "disconnected";
 
   useEffect(() => {
     if (!micAvailable && mode === "voice") setMode("type");
@@ -2424,9 +2428,13 @@ export function FocusedAnswerComposer({
             value={value}
             onChange={(event) => onChange(event.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={sending}
+            disabled={inputDisabled}
             rows={3}
-            placeholder={placeholder ?? t("course_interview.workspace.answer_placeholder")}
+            placeholder={
+              status === "thinking" || status === "speaking"
+                ? t("course_interview.workspace.answer_locked")
+                : (placeholder ?? t("course_interview.workspace.answer_placeholder"))
+            }
             className="block min-h-20 w-full resize-none overflow-y-auto rounded-xl border border-border bg-surface px-3.5 py-3 pr-14 text-[15px] leading-6 text-text-strong outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/10 disabled:cursor-wait disabled:opacity-70"
           />
           <span className="sr-only" aria-live="polite">
