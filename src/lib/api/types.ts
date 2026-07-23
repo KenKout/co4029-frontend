@@ -144,7 +144,8 @@ export type InterviewSessionStartResponse = Schemas["InterviewSessionStartRespon
 export type InterviewOnboardingAction =
   | NonNullable<Schemas["InterviewOnboardingRespondRequest"]["action"]>
   | "reject_identity"
-  | "set_name";
+  | "set_name"
+  | "skip_setup";
 export type InterviewOnboardingRespondRequest = Omit<
   Schemas["InterviewOnboardingRespondRequest"],
   "action"

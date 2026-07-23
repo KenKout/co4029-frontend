@@ -1716,6 +1716,7 @@
       "save_name": "Save name",
       "ready": "Start interview",
       "not_ready": "Not ready yet",
+      "skip_setup": "Skip setup",
       "reply_placeholder": "Reply to the interviewer or use a quick response…",
       "timer_waiting": "The assessed timer starts when you confirm you are ready.",
       "response_required": "Type a response or choose one of the options.",
@@ -1730,7 +1731,8 @@
         "confirm_setup": "Yes, that's me. The audio is clear.",
         "needs_adjustment": "I need a moment to adjust my audio.",
         "ready": "I'm ready to begin.",
-        "not_ready": "I'm not ready yet."
+        "not_ready": "I'm not ready yet.",
+        "skip_setup": "Skip the setup."
       }
     },
     "transitions": {

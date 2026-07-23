@@ -1,4 +1,12 @@
-import { Check, Loader2, Mic, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import {
+  Check,
+  FastForward,
+  Loader2,
+  Mic,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -29,7 +37,8 @@ export type SetupAction =
   | "confirm_language"
   | "continue_setup"
   | "ready"
-  | "not_ready";
+  | "not_ready"
+  | "skip_setup";
 
 type ChecklistItemState = "done" | "active" | "upcoming";
 
@@ -346,6 +355,25 @@ export function SetupChecklist({
           <p className="mt-2 text-center text-xs text-text-muted">
             {t("course_interview.onboarding.timer_waiting")}
           </p>
+        </div>
+      )}
+
+      {/* Skip fast-forwards the remaining setup checks straight to the readiness
+          briefing. Shown only before readiness; it never starts the assessed
+          timer (the candidate still confirms "ready" on the briefing). */}
+      {!isReady && stage !== "preparation" && (
+        <div className="mt-4 border-t border-border pt-4 text-center">
+          <Button
+            type="button"
+            variant="ghost"
+            size="lg"
+            disabled={disabled}
+            onClick={() => onAction("skip_setup")}
+            className="min-h-11 rounded-xl text-sm font-medium text-text-muted"
+          >
+            <FastForward className="h-4 w-4" />
+            {t("course_interview.onboarding.skip_setup")}
+          </Button>
         </div>
       )}
     </section>

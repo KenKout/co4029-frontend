@@ -1707,6 +1707,7 @@
       "save_name": "Lưu tên",
       "ready": "Bắt đầu phỏng vấn",
       "not_ready": "Chưa sẵn sàng",
+      "skip_setup": "Bỏ qua thiết lập",
       "reply_placeholder": "Trả lời người phỏng vấn hoặc chọn phản hồi nhanh…",
       "timer_waiting": "Đồng hồ đánh giá bắt đầu khi bạn xác nhận đã sẵn sàng.",
       "response_required": "Hãy nhập phản hồi hoặc chọn một tùy chọn.",
@@ -1721,7 +1722,8 @@
         "confirm_setup": "Đúng là tôi. Âm thanh rõ ràng.",
         "needs_adjustment": "Tôi cần thêm một chút thời gian để chỉnh âm thanh.",
         "ready": "Tôi đã sẵn sàng bắt đầu.",
-        "not_ready": "Tôi chưa sẵn sàng."
+        "not_ready": "Tôi chưa sẵn sàng.",
+        "skip_setup": "Bỏ qua phần thiết lập."
       }
     },
     "transitions": {
