@@ -1188,7 +1188,7 @@ function SettingsForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl p-6 lg:p-8 space-y-8 shadow-glass"
+      className="bg-m3-surface-container-lowest border border-m3-outline-variant/60 rounded-xl p-6 lg:p-8 space-y-8 shadow-glass"
     >
       <Section
         title={t("teacher_interview_config.sections.general.title")}

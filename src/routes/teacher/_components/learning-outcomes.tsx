@@ -344,7 +344,7 @@ export function LearningOutcomes({
   const hasOutcomes = sorted.length > 0;
 
   return (
-    <div className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl p-6 lg:p-8 space-y-4 shadow-glass">
+    <div className="bg-m3-surface-container-lowest border border-m3-outline-variant/60 rounded-xl p-6 lg:p-8 space-y-4 shadow-glass">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0 space-y-1">

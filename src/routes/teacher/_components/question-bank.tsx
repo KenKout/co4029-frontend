@@ -728,7 +728,7 @@ export function QuestionBank({
   const hasQuestions = sorted.length > 0;
 
   return (
-    <div className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl shadow-glass">
+    <div className="bg-m3-surface-container-lowest border border-m3-outline-variant/60 rounded-xl shadow-glass">
       {/* Sticky toolbar: title + count + search + collapse-all + add. Sits
           below the section-nav (top-16 bar + ~52px nav ≈ top-32). */}
       <div className="sticky top-32 z-[5] rounded-t-xl border-b border-m3-outline-variant/20 bg-m3-surface-container-lowest/95 backdrop-blur-sm px-4 lg:px-6 py-3 space-y-3">
