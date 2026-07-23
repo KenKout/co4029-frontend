@@ -1,4 +1,4 @@
-import { useNavigate, useParams, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, ChevronLeft, ChevronRight, FileText, Loader2, Pencil, Save, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -48,6 +48,18 @@ function formatDate(value: string): string {
 }
 
 const TRANSCRIPT_PAGE_SIZE = 8;
+
+// Format seconds elapsed since the interview's first turn as m:ss (or h:mm:ss),
+// mirroring the live interview session's relative timestamp (starts at 0:00).
+function formatRelativeTime(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const seconds = safe % 60;
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+    : `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
 
 // Bare UUID matcher: study-plan "suggested_resources" sometimes carries raw
 // resource UUIDs that have no human label yet. Rendering those verbatim looks
@@ -161,6 +173,10 @@ function TranscriptCard({ sessionId }: { sessionId: string }) {
   const turns = data?.turns ?? [];
   const [page, setPage] = useState(0);
 
+  // Baseline for relative timestamps: the first turn is 0:00, every later turn
+  // is its offset from that first turn (matches the live interview session).
+  const baseline = turns.length > 0 ? new Date(turns[0].created_at).getTime() : 0;
+
   const total = turns.length;
   const pageCount = Math.max(1, Math.ceil(total / TRANSCRIPT_PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
@@ -199,11 +215,21 @@ function TranscriptCard({ sessionId }: { sessionId: string }) {
                 key={start + idx}
                 className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-1"
               >
-                {turn.question_prompt && (
-                  <p className="text-[11px] font-semibold text-m3-outline uppercase tracking-widest">
-                    {turn.question_prompt}
-                  </p>
-                )}
+                <div className="flex items-start justify-between gap-3">
+                  {turn.question_prompt ? (
+                    <p className="text-[11px] font-semibold text-m3-outline uppercase tracking-widest">
+                      {turn.question_prompt}
+                    </p>
+                  ) : (
+                    <span />
+                  )}
+                  {/* Relative timestamp (0:00 = first turn), pushed to the far right. */}
+                  <time className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-m3-primary">
+                    {formatRelativeTime(
+                      (new Date(turn.created_at).getTime() - baseline) / 1000,
+                    )}
+                  </time>
+                </div>
                 <p className="text-sm text-m3-on-surface leading-relaxed">
                   <span className="font-bold mr-1.5">
                     {t(`teacher_interview_gap_report.transcript.role.${turn.role}`)}:
@@ -341,7 +367,22 @@ function ContextCard({
         {report.student_name && (
           <ContextRow
             label={t("teacher_interview_gap_report.labels.student")}
-            value={report.student_name}
+            value={
+              report.course_id && report.student_id ? (
+                <Link
+                  to="/teacher/courses/$courseId/students/$studentId"
+                  params={{
+                    courseId: report.course_id,
+                    studentId: report.student_id,
+                  }}
+                  className="text-m3-primary underline decoration-m3-primary/30 underline-offset-2 transition-colors hover:decoration-m3-primary hover:text-m3-primary/80"
+                >
+                  {report.student_name}
+                </Link>
+              ) : (
+                report.student_name
+              )
+            }
           />
         )}
         {(report.interview_title || session?.interview_title) && (
