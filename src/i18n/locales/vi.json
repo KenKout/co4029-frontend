@@ -321,7 +321,13 @@
     "filter_draft": "Bản nháp",
     "filter_archived": "Đã lưu trữ",
     "no_match": "Không có khóa học nào khớp tìm kiếm",
-    "no_courses_yet": "Chưa có khóa học nào"
+    "no_courses_yet": "Chưa có khóa học nào",
+    "clear_search": "Xóa tìm kiếm",
+    "sort_label": "Sắp xếp",
+    "sort_recent": "Mới nhất",
+    "sort_oldest": "Cũ nhất",
+    "sort_title": "Tiêu đề (A–Z)",
+    "showing_count": "Hiển thị {{count}} trên {{total}}"
   },
   "course_learn": {
     "lesson_unavailable_title": "Bài học không khả dụng",

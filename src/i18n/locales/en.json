@@ -320,7 +320,13 @@
     "filter_draft": "Draft",
     "filter_archived": "Archived",
     "no_match": "No courses match your search",
-    "no_courses_yet": "No courses yet"
+    "no_courses_yet": "No courses yet",
+    "clear_search": "Clear search",
+    "sort_label": "Sort",
+    "sort_recent": "Newest first",
+    "sort_oldest": "Oldest first",
+    "sort_title": "Title (A–Z)",
+    "showing_count": "Showing {{count}} of {{total}}"
   },
   "course_learn": {
     "lesson_unavailable_title": "Lesson unavailable",
