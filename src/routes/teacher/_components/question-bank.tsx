@@ -2277,10 +2277,20 @@ function QuestionCard({
         </div>
       </div>
 
-      {/* Expanded / editing body */}
-      {(expanded || editing) && (
-        <div className="px-3 pb-3 pl-11 space-y-2 border-t border-m3-outline-variant/10 pt-3">
-          {editing ? (
+      {/* Expanded / editing body — slides open/closed via a grid-rows
+          transition (0fr → 1fr) so "View answer"/"Hide answer" animates up and
+          down instead of snapping. */}
+      <div
+        className={cn(
+          "grid transition-all duration-300 ease-out motion-reduce:transition-none",
+          expanded || editing
+            ? "grid-rows-[1fr] opacity-100"
+            : "grid-rows-[0fr] opacity-0",
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="px-3 pb-3 pl-11 space-y-2 border-t border-m3-outline-variant/10 pt-3">
+            {editing ? (
             <>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
@@ -2341,13 +2351,14 @@ function QuestionCard({
                 {q.model_answer}
               </p>
             </div>
-          ) : (
-            <p className="text-[11px] text-m3-on-surface-variant/60 italic">
-              {t("teacher_interview_config.questions.model_answer_missing")}
-            </p>
-          )}
+            ) : (
+              <p className="text-[11px] text-m3-on-surface-variant/60 italic">
+                {t("teacher_interview_config.questions.model_answer_missing")}
+              </p>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </li>
   );
 }

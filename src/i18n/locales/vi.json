@@ -1487,7 +1487,8 @@
       "no_report": "Chưa có báo cáo lỗ hổng",
       "no_overview": "AI chưa sinh phần tổng quan.",
       "no_detail": "Không có dữ liệu chi tiết theo tiêu chí.",
-      "no_study_plan": "AI chưa đề xuất bước học cụ thể."
+      "no_study_plan": "AI chưa đề xuất bước học cụ thể.",
+      "no_source_quiz": "Buổi phỏng vấn này không đi kèm với một lượt làm quiz, nên không có quiz nguồn để đối chiếu."
     },
     "errors": {
       "no_view_permission_or_ungraded": "Phiên phỏng vấn này chưa được chấm hoặc bạn không có quyền xem báo cáo."

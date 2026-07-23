@@ -1497,7 +1497,8 @@
       "no_report": "No gap report yet",
       "no_overview": "AI hasn't generated an overview yet.",
       "no_detail": "No detailed criterion data.",
-      "no_study_plan": "AI hasn't suggested specific learning steps yet."
+      "no_study_plan": "AI hasn't suggested specific learning steps yet.",
+      "no_source_quiz": "This interview wasn't paired with a quiz attempt, so there's no source quiz to compare against."
     },
     "errors": {
       "no_view_permission_or_ungraded": "This interview session hasn't been graded or you don't have permission to view the report."
