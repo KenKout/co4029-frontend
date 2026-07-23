@@ -1518,7 +1518,7 @@
       "started_at": "Bắt đầu",
       "ended_at": "Kết thúc",
       "duration": "Thời lượng",
-      "duration_value": "{{minutes}} phút",
+      "duration_value": "{{minutes}} phút {{seconds}} giây",
       "status": "Trạng thái",
       "attempt": "Lượt",
       "attempt_value": "#{{n}}",

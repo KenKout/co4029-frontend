@@ -1534,7 +1534,7 @@
       "started_at": "Started",
       "ended_at": "Ended",
       "duration": "Duration",
-      "duration_value": "{{minutes}} min",
+      "duration_value": "{{minutes}}m {{seconds}}s",
       "status": "Status",
       "attempt": "Attempt",
       "attempt_value": "#{{n}}",
