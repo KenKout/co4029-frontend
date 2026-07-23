@@ -412,6 +412,19 @@ function CourseLearnLoaded({
     });
   }
 
+  // Return to the course-home summary: clear ?item= (so the restore effect
+  // below doesn't immediately re-open a lesson) and flip back to the home view.
+  // Backs the clickable "Learn" breadcrumb crumb.
+  function goHome() {
+    setShowHome(true);
+    void navigate({
+      to: "/courses/$slug/learn",
+      params: { slug },
+      search: (prev) => ({ ...prev, item: undefined }),
+      replace: true,
+    });
+  }
+
   // Restore / follow the ?item= param: when it changes (initial mount, browser
   // back from a quiz, or a deep-link) move activeIdx to the matching lesson and
   // leave the home view. Matches by lesson id first, then by numeric index
@@ -541,7 +554,27 @@ function CourseLearnLoaded({
             {course.title}
           </Link>
           <span>/</span>
-          <span className="text-m3-on-surface font-medium truncate">Learn</span>
+          {showHome ? (
+            <span className="text-m3-on-surface font-medium truncate">
+              Learn
+            </span>
+          ) : (
+            <>
+              {/* In content view, "Learn" becomes a link back to the course-home
+                  summary and the active item's name is the final crumb. */}
+              <button
+                type="button"
+                onClick={goHome}
+                className="hover:text-m3-primary transition-colors cursor-pointer"
+              >
+                Learn
+              </button>
+              <span>/</span>
+              <span className="text-m3-on-surface font-medium truncate max-w-[200px]">
+                {activeLesson?.title ?? activeEntry?.label}
+              </span>
+            </>
+          )}
         </nav>
 
         {/* ── DEV: lock-bypass toggle (commented out) ──
