@@ -4,6 +4,7 @@ import {
   useParams,
   useSearch,
   useLocation,
+  useNavigate,
 } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQueries } from "@tanstack/react-query";
@@ -342,7 +343,9 @@ function CourseLearnLoaded({
   const search = useSearch({ strict: false }) as {
     t?: string | number;
     p?: string | number;
+    item?: string;
   };
+  const navigate = useNavigate();
   const { hash } = useLocation();
   const playerRef = useRef<HTMLDivElement | null>(null);
 
@@ -371,7 +374,11 @@ function CourseLearnLoaded({
   // surface the cramped sidebar can't, and makes the full curriculum visible
   // on arrival (the reason the tiny sidebar felt like the only navigation).
   const [showHome, setShowHome] = useState(
-    () => seekSeconds === null && targetPage === null && !targetAnchor,
+    () =>
+      seekSeconds === null &&
+      targetPage === null &&
+      !targetAnchor &&
+      !search.item,
   );
   // Resume target = first non-completed lesson (falls back to the first).
   const resumeIdx = useMemo(() => {
@@ -391,7 +398,40 @@ function CourseLearnLoaded({
   function openLesson(idx: number) {
     setActiveIdx(idx);
     setShowHome(false);
+    // Persist the opened lesson id in the URL (?item=<lessonId>) so that
+    // returning from a quiz/interview sub-route — or refreshing — restores
+    // this content view at the right lesson instead of bouncing back to the
+    // course-home summary (Moodle-authentic resume behavior). Falls back to
+    // the lesson index when the target id is missing.
+    const openedId = lessonItems[idx]?.item.target?.id;
+    void navigate({
+      to: "/courses/$slug/learn",
+      params: { slug },
+      search: (prev) => ({ ...prev, item: openedId ?? String(idx) }),
+      replace: true,
+    });
   }
+
+  // Restore / follow the ?item= param: when it changes (initial mount, browser
+  // back from a quiz, or a deep-link) move activeIdx to the matching lesson and
+  // leave the home view. Matches by lesson id first, then by numeric index
+  // fallback. No-op when the param is absent so the home landing is preserved.
+  useEffect(() => {
+    if (!search.item || lessonItems.length === 0) return;
+    let idx = lessonItems.findIndex(
+      (li) => li.item.target?.id === search.item,
+    );
+    if (idx < 0) {
+      const asNum = Number(search.item);
+      if (Number.isInteger(asNum) && asNum >= 0 && asNum < lessonItems.length) {
+        idx = asNum;
+      }
+    }
+    if (idx >= 0) {
+      setActiveIdx(idx);
+      setShowHome(false);
+    }
+  }, [search.item, lessonItems]);
 
   useEffect(() => {
     const container = playerRef.current;
