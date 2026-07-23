@@ -183,7 +183,13 @@ export type InterviewQuestionAuthoring = Schemas["InterviewQuestionAuthoring"];
 export type InterviewQuestionCreate = Schemas["InterviewQuestionCreate"];
 export type InterviewOutcomeAuthoring = Schemas["InterviewOutcomeAuthoring"];
 export type InterviewOutcomeCreate = Schemas["InterviewOutcomeCreate"];
-export type InterviewGenerationRequest = Schemas["InterviewGenerationRequest"];
+// Widen with source_module_ids (module-scoped generation) until the OpenAPI
+// snapshot is regenerated. Each selected module expands to its lessons on the
+// backend to scope retrieval.
+export type InterviewGenerationRequest =
+  Schemas["InterviewGenerationRequest"] & {
+    source_module_ids?: string[];
+  };
 export type InterviewGenerationRunPublic = Schemas["InterviewGenerationRunPublic"];
 export type GapReportRead = Schemas["GapReportRead"];
 

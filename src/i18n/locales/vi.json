@@ -2832,6 +2832,7 @@
       "pdf": "PDF / Tài liệu",
       "text": "Văn bản / Markdown",
       "code": "Mã nguồn",
+      "module_badge_tooltip": "Chương mà buổi phỏng vấn này thuộc về",
       "image": "Hình ảnh",
       "audio": "Âm thanh"
     },
@@ -2894,6 +2895,10 @@
       "enable_ai": "Bật xử lý AI",
       "reprocess": "Xử lý lại",
       "confirm_delete": "Xác nhận xoá"
+      "modules_label": "Chương nguồn",
+      "modules_hint": "Câu hỏi sẽ lấy nội dung từ những chương nào. Không chọn chương nào để dùng chương của chính buổi phỏng vấn này.",
+      "modules_empty": "Không có chương nào.",
+      "modules_own": "(buổi phỏng vấn này)",
     },
     "breadcrumb": {
       "lesson_fallback": "Bài học",

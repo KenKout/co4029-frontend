@@ -2842,6 +2842,7 @@
       "pdf": "PDF / Document",
       "text": "Text / Markdown",
       "code": "Source code",
+      "module_badge_tooltip": "The module this interview belongs to",
       "image": "Image",
       "audio": "Audio"
     },
@@ -2904,6 +2905,10 @@
       "enable_ai": "Enable AI processing",
       "reprocess": "Reprocess",
       "confirm_delete": "Confirm delete"
+      "modules_label": "Source modules",
+      "modules_hint": "Which modules' content the questions draw from. Leave none selected to use this interview's own module.",
+      "modules_empty": "No modules available.",
+      "modules_own": "(this interview)",
     },
     "breadcrumb": {
       "lesson_fallback": "Lesson",

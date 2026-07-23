@@ -124,6 +124,8 @@ interface QuestionBankProps {
   configId: string;
   /** Parent course id — enables the course-scoped shared question bank. */
   courseId: string;
+  /** Title of the module this interview belongs to (shown as a badge). */
+  moduleTitle?: string | null;
   questions: InterviewQuestionAuthoring[];
   outcomes: InterviewOutcomeAuthoring[];
   /**
@@ -137,6 +139,7 @@ interface QuestionBankProps {
 export function QuestionBank({
   configId,
   courseId,
+  moduleTitle,
   questions,
   outcomes,
   outcomeFilterSignal,
@@ -654,9 +657,20 @@ export function QuestionBank({
       <div className="sticky top-32 z-[5] rounded-t-xl border-b border-m3-outline-variant/20 bg-m3-surface-container-lowest/95 backdrop-blur-sm px-4 lg:px-6 py-3 space-y-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="min-w-0">
-            <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
-              {t("teacher_interview_config.questions.list_title")}
-            </h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
+                {t("teacher_interview_config.questions.list_title")}
+              </h3>
+              {moduleTitle && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full bg-m3-secondary/10 px-2 py-0.5 text-[11px] font-semibold text-m3-secondary"
+                  title={t("teacher_interview_config.qbank.module_badge_tooltip")}
+                >
+                  <Library className="h-3 w-3" />
+                  {moduleTitle}
+                </span>
+              )}
+            </div>
             <p className="text-xs text-m3-on-surface-variant mt-0.5">
               {anyFilterActive
                 ? t("teacher_interview_config.qbank.showing_filtered", {

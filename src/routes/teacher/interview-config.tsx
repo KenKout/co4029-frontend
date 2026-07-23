@@ -78,6 +78,10 @@ interface GenerationFormState {
   question_count: number;
   focus_topics: string;
   avoid_topics: string;
+  // Modules the generation should draw from. Empty = the interview's own
+  // module (backend default). Multi-select lets a teacher scope one interview
+  // across several modules.
+  source_module_ids: string[];
 }
 
 interface SettingsDraft {
@@ -200,11 +204,12 @@ export default function InterviewConfigPage() {
       });
     }
   }
-  const [generationForm, setGenerationForm] = useState({
+  const [generationForm, setGenerationForm] = useState<GenerationFormState>({
     mode: "outcome-based" as GenerationMode,
     question_count: 5,
     focus_topics: "",
     avoid_topics: "",
+    source_module_ids: [],
   });
   const generate = useGenerateInterviewQuestions(configId);
 
@@ -503,6 +508,7 @@ export default function InterviewConfigPage() {
         question_count: generationForm.question_count,
         focus_topics: splitTopics(generationForm.focus_topics),
         avoid_topics: splitTopics(generationForm.avoid_topics),
+        source_module_ids: generationForm.source_module_ids,
         source_lesson_ids: [],
         persona: draft?.persona,
         supplementary_instructions:
@@ -722,12 +728,15 @@ export default function InterviewConfigPage() {
                   generating={generate.isPending}
                   activeRunId={activeRunId}
                   run={activeRun}
+                  modules={content?.modules ?? []}
+                  ownModuleId={config.module_id}
                 />
               </section>
               <section id="questions" className="scroll-mt-32">
                 <QuestionBank
                   configId={configId}
                   courseId={courseId}
+                  moduleTitle={courseModule?.title ?? null}
                   questions={questions ?? []}
                   outcomes={outcomes ?? []}
                   outcomeFilterSignal={outcomeFilterSignal}
@@ -1234,6 +1243,8 @@ function GenerationSection({
   generating,
   activeRunId,
   run,
+  modules,
+  ownModuleId,
 }: {
   generationForm: GenerationFormState;
   setGenerationForm: React.Dispatch<React.SetStateAction<GenerationFormState>>;
@@ -1241,6 +1252,8 @@ function GenerationSection({
   generating: boolean;
   activeRunId: string | null;
   run: InterviewGenerationRunPublic | undefined;
+  modules: { id: string; title: string }[];
+  ownModuleId: string;
 }) {
   const { t } = useTranslation();
   function updateGeneration<K extends keyof GenerationFormState>(
@@ -1306,6 +1319,59 @@ function GenerationSection({
             />
           </Field>
         </div>
+
+        <Field
+          label={t("teacher_interview_config.generate.modules_label")}
+          hint={t("teacher_interview_config.generate.modules_hint")}
+        >
+          <div className="flex flex-wrap gap-1.5">
+            {modules.length === 0 ? (
+              <p className="text-xs text-m3-on-surface-variant">
+                {t("teacher_interview_config.generate.modules_empty")}
+              </p>
+            ) : (
+              modules.map((m) => {
+                const selected = generationForm.source_module_ids.includes(
+                  m.id,
+                );
+                const isOwn = m.id === ownModuleId;
+                const effectiveSelected =
+                  selected ||
+                  (generationForm.source_module_ids.length === 0 && isOwn);
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    aria-pressed={effectiveSelected}
+                    onClick={() =>
+                      updateGeneration(
+                        "source_module_ids",
+                        selected
+                          ? generationForm.source_module_ids.filter(
+                              (id) => id !== m.id,
+                            )
+                          : [...generationForm.source_module_ids, m.id],
+                      )
+                    }
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors",
+                      effectiveSelected
+                        ? "border-m3-secondary bg-m3-secondary/10 text-m3-secondary font-semibold"
+                        : "border-m3-outline-variant/40 bg-m3-surface text-m3-on-surface-variant hover:bg-m3-surface-container-low",
+                    )}
+                  >
+                    {m.title}
+                    {isOwn && (
+                      <span className="text-[10px] opacity-70">
+                        {t("teacher_interview_config.generate.modules_own")}
+                      </span>
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </Field>
 
         <Field
           label={t("teacher_interview_config.generate.focus_label")}
