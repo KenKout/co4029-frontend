@@ -469,11 +469,27 @@ const teacherCourseAssessmentsRoute = createRoute({
   ),
 });
 
+const teacherCourseQuizAttemptDetailRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/teacher/courses/$courseId/quiz-attempts/$attemptId",
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/course-quiz-attempt-detail"),
+  ),
+});
+
 const teacherSrStudentDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/students/$studentId/sr",
   component: lazyRouteComponent(
     () => import("@/routes/teacher/sr-student-detail"),
+  ),
+});
+
+const teacherCourseQuestionBankRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/teacher/courses/$courseId/question-bank",
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/course-question-bank"),
   ),
 });
 
@@ -552,7 +568,9 @@ const routeTree = rootRoute.addChildren([
     teacherSrAtRiskRoute,
     teacherCourseProgressRoute,
     teacherCourseAssessmentsRoute,
+    teacherCourseQuizAttemptDetailRoute,
     teacherSrStudentDetailRoute,
+    teacherCourseQuestionBankRoute,
   ]),
   callbackRoute,
 ]);

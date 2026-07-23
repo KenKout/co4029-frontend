@@ -22,6 +22,7 @@ import type {
   InterviewQuestionAuthoring,
   InterviewQuestionBankItemCreate,
   InterviewQuestionBankItemRead,
+  InterviewQuestionBankItemUpdate,
   InterviewQuestionCreate,
   InterviewSessionFinishResponse,
   InterviewSessionFinishRequest,
@@ -740,6 +741,34 @@ export function useDeleteInterviewQuestionBankItem(
     mutationFn: (itemId: string) =>
       apiDelete(
         `/teacher/courses/${courseId}/interview-question-bank/${itemId}`,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.interviews.questionBank(courseId ?? ""),
+      });
+    },
+  });
+}
+
+/**
+ * PATCH /teacher/courses/{course_id}/interview-question-bank/{item_id} —
+ * edit a bank item (management page).
+ */
+export function useUpdateInterviewQuestionBankItem(
+  courseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      itemId,
+      patch,
+    }: {
+      itemId: string;
+      patch: InterviewQuestionBankItemUpdate;
+    }) =>
+      apiPatch<InterviewQuestionBankItemRead>(
+        `/teacher/courses/${courseId}/interview-question-bank/${itemId}`,
+        patch,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({

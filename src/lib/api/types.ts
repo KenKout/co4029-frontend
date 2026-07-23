@@ -214,6 +214,13 @@ export interface InterviewQuestionBankItemCreate {
   tags?: string[];
   source_config_id?: string | null;
 }
+export interface InterviewQuestionBankItemUpdate {
+  prompt_text?: string;
+  question_type?: InterviewQuestionType;
+  difficulty?: InterviewDifficulty | null;
+  model_answer?: string | null;
+  tags?: string[];
+}
 // Widen with the teacher-context fields the backend already returns
 // (student_name, interview_title) until the OpenAPI snapshot is regenerated.
 export type GapReportAuthoringRead = Schemas["GapReportAuthoringRead"] & {

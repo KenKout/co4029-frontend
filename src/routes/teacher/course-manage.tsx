@@ -6,7 +6,7 @@ import {
   Video, BookOpen, GripVertical, HelpCircle, Mic,
   Pencil, Loader2, ArrowRight, Check, Users, UserPlus, Activity,
   Settings, Save, ExternalLink, Brain, ClipboardList,
-  ListChecks, Trash2, X,
+  ListChecks, Trash2, X, Library,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -1127,6 +1127,12 @@ export default function CourseManagePage() {
           <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
             <ClipboardList className="h-4 w-4 text-m3-secondary" />
             <span className="hidden sm:inline">{t("teacher_common.nav_assessments")}</span>
+          </Button>
+        </Link>
+        <Link to="/teacher/courses/$courseId/question-bank" params={{ courseId }}>
+          <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+            <Library className="h-4 w-4 text-m3-secondary" />
+            <span className="hidden sm:inline">{t("teacher_common.nav_question_bank")}</span>
           </Button>
         </Link>
         <Link to="/teacher/courses/$courseId/sr-cohort" params={{ courseId }}>
