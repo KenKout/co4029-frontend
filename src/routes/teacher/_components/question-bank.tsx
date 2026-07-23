@@ -10,6 +10,7 @@ import {
   ChevronDown,
   CircleDashed,
   CircleDot,
+  ClipboardList,
   FileText,
   GripVertical,
   Layers,
@@ -18,6 +19,8 @@ import {
   MoreVertical,
   Pencil,
   Plus,
+  Rows2,
+  Rows3,
   Save,
   Search,
   Target,
@@ -204,6 +207,26 @@ export function QuestionBank({
   // guards the contextual action bar while a batch mutation runs.
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  // Compact/density mode: tighter cards + hidden metadata rows for fast triage
+  // of large banks. Persisted to localStorage so the choice sticks per teacher.
+  const [compact, setCompact] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("qbank.compact") === "1";
+    } catch {
+      return false;
+    }
+  });
+  function toggleCompact() {
+    setCompact((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("qbank.compact", next ? "1" : "0");
+      } catch {
+        // ignore storage failures (private mode etc.)
+      }
+      return next;
+    });
+  }
   // Question-bank state.
   const [bankingId, setBankingId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
@@ -1049,6 +1072,32 @@ export function QuestionBank({
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {hasQuestions && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={toggleCompact}
+                aria-pressed={compact}
+                title={t(
+                  compact
+                    ? "teacher_interview_config.qbank.density_comfortable"
+                    : "teacher_interview_config.qbank.density_compact",
+                )}
+                className="gap-1.5 text-xs"
+              >
+                {compact ? (
+                  <Rows2 className="h-3.5 w-3.5" />
+                ) : (
+                  <Rows3 className="h-3.5 w-3.5" />
+                )}
+                {t(
+                  compact
+                    ? "teacher_interview_config.qbank.density_comfortable"
+                    : "teacher_interview_config.qbank.density_compact",
+                )}
+              </Button>
+            )}
             {expanded.size > 0 && (
               <Button
                 type="button"
@@ -1341,9 +1390,31 @@ export function QuestionBank({
 
         {/* Empty states */}
         {!hasQuestions ? (
-          <p className="text-[11px] text-amber-700 bg-amber-50 rounded-xl px-3 py-2 leading-relaxed">
-            {t("teacher_interview_config.questions.empty")}
-          </p>
+          <div className="text-center py-12 px-4 space-y-3">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft">
+              <ClipboardList className="h-6 w-6 text-m3-primary" aria-hidden="true" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-m3-on-surface">
+                {t("teacher_interview_config.qbank.empty_title")}
+              </p>
+              <p className="mx-auto max-w-md text-xs text-m3-on-surface-variant leading-relaxed">
+                {t("teacher_interview_config.qbank.empty_body")}
+              </p>
+            </div>
+            {!adding && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setAdding(true)}
+                className="gap-1.5"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t("teacher_interview_config.questions.add_manual")}
+              </Button>
+            )}
+          </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-10 space-y-3">
             <p className="text-sm text-m3-on-surface-variant">
@@ -1445,6 +1516,7 @@ export function QuestionBank({
                   )}
                   selected={selectedIds.has(q.id)}
                   onToggleSelect={() => toggleSelected(q.id)}
+                  compact={compact}
                   dndEnabled={dndEnabled}
                   dragging={dragIndex === displayIndex}
                   showLineBefore={
@@ -1843,6 +1915,8 @@ interface QuestionCardProps {
   alreadyInBank: boolean;
   selected: boolean;
   onToggleSelect: () => void;
+  // Compact mode: tighter padding + hidden metadata row (unless expanded).
+  compact: boolean;
   // Drag-to-reorder (native HTML5 DnD; desktop-only, off when filtered/grouped).
   dndEnabled: boolean;
   dragging: boolean;
@@ -1887,6 +1961,7 @@ function QuestionCard({
   alreadyInBank,
   selected,
   onToggleSelect,
+  compact,
   dndEnabled,
   dragging,
   showLineBefore,
@@ -1953,7 +2028,7 @@ function QuestionCard({
         />
       )}
       {/* Collapsed header row */}
-      <div className="flex items-start gap-2 p-3">
+      <div className={cn("flex items-start gap-2", compact ? "p-2" : "p-3")}>
         {/* Selection checkbox */}
         <input
           type="checkbox"
@@ -2022,14 +2097,23 @@ function QuestionCard({
                 )}
                 aria-hidden="true"
               />
-              <span className="text-sm text-m3-on-surface font-medium leading-relaxed group-hover:text-m3-primary transition-colors">
+              <span
+                className={cn(
+                  "text-m3-on-surface font-semibold leading-relaxed group-hover:text-m3-primary transition-colors",
+                  // The prompt is the content — give it more weight than its
+                  // surrounding chrome. Slightly smaller in compact mode.
+                  compact ? "text-sm" : "text-[15px]",
+                )}
+              >
                 {q.prompt_text}
               </span>
             </span>
           </button>
 
-          {/* Metadata row (real fields only) */}
-          <div className="flex items-center gap-x-2 gap-y-1 flex-wrap pl-5.5 text-[11px] text-m3-on-surface-variant">
+          {/* Metadata row (real fields only). Hidden in compact mode unless
+              the card is expanded, so triage lists stay dense. */}
+          {(!compact || expanded) && (
+          <div className="flex items-center gap-x-2 gap-y-1 flex-wrap pl-5.5 text-[11px] text-m3-on-surface-variant/80">
             <span>{t(`teacher_interview_config.question_type.${q.question_type}`)}</span>
             {q.difficulty && (
               <>
@@ -2077,6 +2161,7 @@ function QuestionCard({
               </>
             )}
           </div>
+          )}
         </div>
 
         {/* Right-side controls: status + actions */}
