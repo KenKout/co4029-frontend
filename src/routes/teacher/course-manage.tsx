@@ -100,11 +100,8 @@ const ADD_PILL_CLS =
 
 function CourseSettingsPanel({ courseId }: { courseId: string }) {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
   const { data: course } = useTeacherCourseById(courseId);
   const updateCourse = useUpdateCourse(courseId);
-  const deleteCourse = useDeleteTeacherCourse(courseId);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
@@ -257,19 +254,6 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
     } catch (err: unknown) {
       toast.error(
         (err as Error).message || t("teacher_course_settings.save_failed"),
-      );
-    }
-  }
-
-  async function handleDelete() {
-    try {
-      await deleteCourse.mutateAsync();
-      toast.success(t("teacher_course_settings.delete.deleted"));
-      setConfirmDelete(false);
-      void navigate({ to: "/teacher/courses" });
-    } catch (err: unknown) {
-      toast.error(
-        (err as Error).message || t("teacher_course_settings.delete.failed"),
       );
     }
   }
@@ -535,22 +519,7 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3 pt-1">
-              {/* Delete — destructive, kept far from Save. Red hover fill +
-                  subtle lift so the destructive intent is unmistakable. */}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmDelete(true)}
-                disabled={deleteCourse.isPending}
-                className="gap-2 border-destructive/40 text-destructive transition-all hover:-translate-y-0.5 hover:bg-destructive hover:text-white hover:shadow-md active:translate-y-0 active:scale-95"
-              >
-                <Trash2 className="h-4 w-4" />
-                {t("teacher_course_settings.delete.button")}
-              </Button>
-
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-end gap-3 pt-1">
               {/* Save-state indicator beside the button — Saving… / Unsaved
                   changes / Saved — so the teacher always knows whether their
                   edits are persisted (mirrors the interview-config save UX). */}
@@ -608,25 +577,10 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                 )}
                 {t("teacher_course_settings.save")}
               </Button>
-              </div>
             </div>
           </form>
         </div>
       </div>
-
-      <ConfirmDialog
-        open={confirmDelete}
-        onOpenChange={setConfirmDelete}
-        title={t("teacher_course_settings.delete.title")}
-        description={t("teacher_course_settings.delete.body", {
-          title: course?.title ?? "",
-        })}
-        confirmLabel={t("teacher_course_settings.delete.button")}
-        cancelLabel={t("common.cancel", "Cancel")}
-        confirmVariant="destructive"
-        onConfirm={handleDelete}
-        isPending={deleteCourse.isPending}
-      />
     </div>
   );
 }
@@ -1580,12 +1534,28 @@ function AddModuleForm({
 
 export default function CourseManagePage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
   const { data: course } = useTeacherCourseById(courseId);
   const { data: content, isLoading } = useTeacherCourseContent(courseId);
   const [addingModule, setAddingModule] = useState(false);
+  const deleteCourse = useDeleteTeacherCourse(courseId);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const modules = content?.modules ?? [];
+
+  async function handleDeleteCourse() {
+    try {
+      await deleteCourse.mutateAsync();
+      toast.success(t("teacher_course_settings.delete.deleted"));
+      setConfirmDelete(false);
+      void navigate({ to: "/teacher/courses" });
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message || t("teacher_course_settings.delete.failed"),
+      );
+    }
+  }
 
   return (
     <div className="space-y-6 pb-12">
@@ -1607,9 +1577,24 @@ export default function CourseManagePage() {
             <ArrowRight className="h-3 w-3" />
             <span className="truncate">{course?.title ?? "…"}</span>
           </div>
-          <h1 className="text-xl font-headline font-bold text-m3-on-surface truncate">
-            {course?.title ?? t("teacher_common.curriculum_fallback_title")}
-          </h1>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="min-w-0 flex-1 text-xl font-headline font-bold text-m3-on-surface truncate">
+              {course?.title ?? t("teacher_common.curriculum_fallback_title")}
+            </h1>
+            {/* Delete — destructive, pushed to the right of the course name.
+                Red hover fill + subtle lift; press-down on click. */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmDelete(true)}
+              disabled={deleteCourse.isPending}
+              className="shrink-0 gap-2 border-destructive/40 text-destructive transition-all hover:-translate-y-0.5 hover:bg-destructive hover:text-white hover:shadow-md active:translate-y-0 active:scale-95"
+            >
+              <Trash2 className="h-4 w-4" />
+              {t("teacher_course_settings.delete.button")}
+            </Button>
+          </div>
           <p className="text-xs text-m3-on-surface-variant mt-0.5">
             {t("teacher_common.module_count", { count: modules.length })}
             {modules.length > 0 &&
@@ -1791,6 +1776,20 @@ export default function CourseManagePage() {
           </div>
         )}
       </section>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title={t("teacher_course_settings.delete.title")}
+        description={t("teacher_course_settings.delete.body", {
+          title: course?.title ?? "",
+        })}
+        confirmLabel={t("teacher_course_settings.delete.button")}
+        cancelLabel={t("common.cancel", "Cancel")}
+        confirmVariant="destructive"
+        onConfirm={handleDeleteCourse}
+        isPending={deleteCourse.isPending}
+      />
     </div>
   );
 }
