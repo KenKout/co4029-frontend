@@ -1105,28 +1105,26 @@ function SettingsForm({
       onSubmit={onSubmit}
       className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl p-6 lg:p-8 space-y-8 shadow-glass"
     >
-      {/* General + Style hold one short field each — pair them side by side
-          on wide screens so the form isn't a tall single column. */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-        <Section
-          title={t("teacher_interview_config.sections.general.title")}
-          description={t(
-            "teacher_interview_config.sections.general.description",
-          )}
-        >
-          <Field label={t("teacher_interview_config.fields.title")}>
-            <Input
-              value={draft.title}
-              onChange={(e) => update("title", e.target.value)}
-              placeholder={t(
-                "teacher_interview_config.fields.title_placeholder",
-              )}
-              className="bg-m3-surface text-sm"
-            />
-          </Field>
-        </Section>
+      <Section
+        title={t("teacher_interview_config.sections.general.title")}
+        description={t(
+          "teacher_interview_config.sections.general.description",
+        )}
+      >
+        <Field label={t("teacher_interview_config.fields.title")}>
+          <Input
+            value={draft.title}
+            onChange={(e) => update("title", e.target.value)}
+            placeholder={t(
+              "teacher_interview_config.fields.title_placeholder",
+            )}
+            className="bg-m3-surface text-sm"
+          />
+        </Field>
+      </Section>
 
-        <Section title={t("teacher_interview_config.sections.style.title")}>
+      <Section title={t("teacher_interview_config.sections.style.title")}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label={t("teacher_interview_config.fields.persona")}>
             <select
               value={draft.persona}
@@ -1140,8 +1138,8 @@ function SettingsForm({
               ))}
             </select>
           </Field>
-        </Section>
-      </div>
+        </div>
+      </Section>
 
       <Section title={t("teacher_interview_config.sections.rules.title")}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
