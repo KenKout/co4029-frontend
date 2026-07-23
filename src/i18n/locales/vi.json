@@ -207,7 +207,7 @@
     "thumbnail": {
       "label": "Ảnh khóa học",
       "change": "Đổi ảnh",
-      "hint": "JPEG, PNG, WebP hoặc GIF · tối đa 5 MB. Hiển thị trên thẻ khóa học.",
+      "hint": "JPEG, PNG, WebP hoặc GIF · tối đa 5 MB. Hiển thị trên thẻ khóa học. Áp dụng khi bạn nhấn Lưu.",
       "updated": "Đã cập nhật ảnh khóa học",
       "upload_failed": "Không thể tải ảnh lên. Vui lòng thử lại.",
       "invalid_type": "Vui lòng chọn ảnh JPEG, PNG, WebP hoặc GIF.",
@@ -244,7 +244,8 @@
     "save_status": {
       "saving": "Đang lưu…",
       "saved": "Đã lưu",
-      "unsaved": "Có thay đổi chưa lưu"
+      "unsaved": "Có thay đổi chưa lưu",
+      "last_saved": "Lưu lần cuối {{when}}"
     }
   },
   "teacher_quiz_attempt": {

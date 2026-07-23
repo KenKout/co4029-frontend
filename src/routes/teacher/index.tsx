@@ -28,7 +28,7 @@ export default function TeacherDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-headline font-bold text-m3-on-surface">
+          <h1 className="text-2xl font-headline font-bold text-m3-primary">
             {t("teacher_dashboard.title")}
           </h1>
           <p className="text-sm text-m3-on-surface-variant mt-1">

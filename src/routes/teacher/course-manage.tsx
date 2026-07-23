@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -28,6 +28,7 @@ import {
   Library,
   ImageIcon,
   Camera,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,7 @@ import type {
   CourseContentItem,
   CourseContentModule,
 } from "@/lib/api/types/common";
+import { useFileDrop } from "@/lib/use-file-drop";
 import { cn } from "@/lib/utils";
 
 const LESSON_TYPE_CONFIG: Record<
@@ -95,7 +97,7 @@ const ADD_PILL_CLS =
   "hover:bg-m3-primary-fixed hover:text-m3-primary hover:border-m3-primary/20 transition-colors cursor-pointer";
 
 function CourseSettingsPanel({ courseId }: { courseId: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: course } = useTeacherCourseById(courseId);
   const updateCourse = useUpdateCourse(courseId);
   const [open, setOpen] = useState(false);
@@ -110,14 +112,17 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
   const initialized = useRef(false);
   const uploadThumbnail = useUploadCourseThumbnail(courseId);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  // Thumbnail is STAGED locally (with an object-URL preview) and only sent to
+  // the server when the user presses Save — so the image change is applied to
+  // the database on Save, in step with the other settings fields.
+  const [stagedThumbnail, setStagedThumbnail] = useState<File | null>(null);
+  const [stagedPreview, setStagedPreview] = useState<string | null>(null);
 
   // Client-side guardrails mirroring the backend (JPEG/PNG/WebP/GIF, ≤ 5 MiB).
   const THUMB_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
   const THUMB_MAX_BYTES = 5 * 1024 * 1024;
 
-  function handleThumbnailFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // allow re-selecting the same file
+  function stageThumbnailFile(file: File) {
     if (!file) return;
     if (!THUMB_ACCEPT.split(",").includes(file.type)) {
       toast.error(t("teacher_course_settings.thumbnail.invalid_type"));
@@ -127,21 +132,41 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
       toast.error(t("teacher_course_settings.thumbnail.too_large"));
       return;
     }
-    uploadThumbnail.mutate(file, {
-      onSuccess: () =>
-        toast.success(t("teacher_course_settings.thumbnail.updated")),
-      onError: (err) =>
-        toast.error(
-          (err as Error).message ||
-            t("teacher_course_settings.thumbnail.upload_failed"),
-        ),
+    // Revoke any previous preview URL before replacing it (avoid a leak).
+    setStagedPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
     });
+    setStagedThumbnail(file);
   }
+
+  function handleThumbnailFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (file) stageThumbnailFile(file);
+  }
+
+  // Drag-and-drop onto the thumbnail tile — same flicker-proof lifecycle as
+  // every other upload surface; keeps the live image preview.
+  const { dragging: thumbDragging, dropProps: thumbDropProps } = useFileDrop({
+    onFile: stageThumbnailFile,
+    disabled: uploadThumbnail.isPending,
+  });
+
+  // Clean up the object URL when the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (stagedPreview) URL.revokeObjectURL(stagedPreview);
+    };
+  }, [stagedPreview]);
 
   // Briefly true right after a successful save so the header can show a
   // transient "Saved" confirmation (cleared once edits resume or the timer
   // elapses) — mirrors the interview-config save UX.
   const [justSaved, setJustSaved] = useState(false);
+  // Timestamp of the last successful save, seeded from the course's updated_at
+  // so the "Last saved" indicator is populated on first load.
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
 
   if (course && !initialized.current) {
     initialized.current = true;
@@ -153,6 +178,7 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
     setEstimatedMinutes(course.estimated_minutes?.toString() ?? "");
     setEnrollmentCap(course.enrollment_cap?.toString() ?? "");
     setCompletionDays(course.expected_completion_days?.toString() ?? "");
+    setLastSaved(course.updated_at ?? null);
   }
 
   // Compare the current form against the saved course so the button can show
@@ -161,6 +187,7 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
   const settingsDirty = useMemo(() => {
     if (!course) return false;
     return (
+      stagedThumbnail !== null ||
       title.trim() !== (course.title ?? "") ||
       slug.trim() !== (course.slug ?? "") ||
       description.trim() !== (course.description ?? "") ||
@@ -172,6 +199,7 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
     );
   }, [
     course,
+    stagedThumbnail,
     title,
     slug,
     description,
@@ -207,7 +235,18 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
           ? Number(completionDays)
           : undefined,
       });
+      // Upload the staged thumbnail (if any) as part of the same Save action,
+      // so the image change is persisted to the DB only on Save.
+      if (stagedThumbnail) {
+        await uploadThumbnail.mutateAsync(stagedThumbnail);
+        setStagedThumbnail(null);
+        setStagedPreview((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return null;
+        });
+      }
       setJustSaved(true);
+      setLastSaved(new Date().toISOString());
       window.setTimeout(() => setJustSaved(false), 2500);
       toast.success(t("teacher_course_settings.saved"));
     } catch (err: unknown) {
@@ -281,9 +320,9 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                     aria-label={t("teacher_course_settings.thumbnail.change")}
                     className="group relative aspect-video w-40 shrink-0 cursor-pointer overflow-hidden rounded-lg ghost-border transition-transform hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed"
                   >
-                    {course?.thumbnail_url ? (
+                    {stagedPreview ?? course?.thumbnail_url ? (
                       <img
-                        src={course.thumbnail_url}
+                        src={stagedPreview ?? course?.thumbnail_url ?? ""}
                         alt=""
                         className="h-full w-full object-cover"
                       />
@@ -511,6 +550,16 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                 >
                   <Check className="h-3.5 w-3.5" aria-hidden />
                   {t("teacher_course_settings.save_status.saved")}
+                </span>
+              ) : lastSaved ? (
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-m3-on-surface-variant">
+                  <Clock className="h-3.5 w-3.5" aria-hidden />
+                  {t("teacher_course_settings.save_status.last_saved", {
+                    when: new Date(lastSaved).toLocaleString(
+                      i18n.language?.startsWith("vi") ? "vi-VN" : "en-US",
+                      { dateStyle: "medium", timeStyle: "short" },
+                    ),
+                  })}
                 </span>
               ) : null}
               <Button
