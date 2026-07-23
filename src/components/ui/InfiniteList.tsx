@@ -23,7 +23,9 @@ function DefaultSentinel({ visible }: { visible: boolean }) {
   );
 }
 
-export function InfiniteList<T>(props: InfiniteListProps<T>): React.JSX.Element {
+export function InfiniteList<T>(
+  props: InfiniteListProps<T>,
+): React.JSX.Element {
   const {
     items,
     hasNextPage,
@@ -62,13 +64,17 @@ export function InfiniteList<T>(props: InfiniteListProps<T>): React.JSX.Element 
     return <>{empty}</>;
   }
 
-  const sentinelNode =
-    sentinel ?? <DefaultSentinel visible={isFetchingNextPage || hasNextPage} />;
+  const sentinelNode = sentinel ?? (
+    <DefaultSentinel visible={isFetchingNextPage || hasNextPage} />
+  );
 
   return (
     <div className={className} data-slot="infinite-list">
       {items.map((item, index) => (
-        <div key={keyOf ? keyOf(item, index) : index} data-slot="infinite-list-item">
+        <div
+          key={keyOf ? keyOf(item, index) : index}
+          data-slot="infinite-list-item"
+        >
           {renderItem(item, index)}
         </div>
       ))}

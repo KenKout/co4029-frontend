@@ -22,6 +22,8 @@ export const queryKeys = {
     content: (id: string) => ["courses", "content", id] as const,
     tags: (id: string) => ["courses", "tags", id] as const,
     outcomes: (id: string) => ["courses", "outcomes", id] as const,
+    teacherOutcomes: (id: string) =>
+      ["courses", "teacher-outcomes", id] as const,
     modules: (id: string) => ["courses", "modules", id] as const,
     moduleDetail: (id: string) => ["courses", "module-detail", id] as const,
     moduleItems: (id: string) => ["courses", "module-items", id] as const,
@@ -29,7 +31,8 @@ export const queryKeys = {
     moduleLessonsAuthoring: (id: string) =>
       ["courses", "module-lessons-authoring", id] as const,
     lesson: (id: string) => ["courses", "lesson", id] as const,
-    lessonResources: (id: string) => ["courses", "lesson-resources", id] as const,
+    lessonResources: (id: string) =>
+      ["courses", "lesson-resources", id] as const,
     resourceDownload: (id: string) =>
       ["courses", "resource-download", id] as const,
   },
@@ -143,7 +146,8 @@ export const queryKeys = {
       ] as const,
     organizationMemberships: (orgId: string) =>
       ["admin", "organizations", orgId, "memberships"] as const,
-    orgUnitDetail: (id: string) => ["admin", "org-units", "detail", id] as const,
+    orgUnitDetail: (id: string) =>
+      ["admin", "org-units", "detail", id] as const,
   },
 
   dept: {
@@ -167,8 +171,7 @@ export const queryKeys = {
     list: (courseId: string) => ["quizzes", "list", courseId] as const,
     detail: (id: string) => ["quizzes", "detail", id] as const,
     attempt: (attemptId: string) => ["quizzes", "attempt", attemptId] as const,
-    myAttempts: (quizId: string) =>
-      ["quizzes", "my-attempts", quizId] as const,
+    myAttempts: (quizId: string) => ["quizzes", "my-attempts", quizId] as const,
     attemptProgress: (attemptId: string) =>
       ["quizzes", "attempt-progress", attemptId] as const,
     authoring: (quizId: string) => ["quizzes", "authoring", quizId] as const,
@@ -194,6 +197,9 @@ export const queryKeys = {
       ["quizzes", "course-attempts", courseId] as const,
     studentAttempts: (courseId: string, studentId: string) =>
       ["quizzes", "student-attempts", courseId, studentId] as const,
+    attemptDetail: (courseId: string, attemptId: string) =>
+      ["quizzes", "attempt-detail", courseId, attemptId] as const,
+    results: (quizId: string) => ["quizzes", "results", quizId] as const,
   },
 
   interviews: {
@@ -210,6 +216,8 @@ export const queryKeys = {
       ["interviews", "adaptive-readiness", configId] as const,
     teacherGapReport: (sessionId: string) =>
       ["interviews", "teacher-gap-report", sessionId] as const,
+    questionBank: (courseId: string) =>
+      ["interviews", "question-bank", courseId] as const,
     generationRun: (configId: string, runId: string) =>
       ["interviews", "generation-run", configId, runId] as const,
     teacherSession: (sessionId: string) =>
@@ -243,8 +251,7 @@ export const queryKeys = {
 
   me: {
     enrollments: () => ["me", "enrollments"] as const,
-    enrollment: (courseId: string) =>
-      ["me", "enrollments", courseId] as const,
+    enrollment: (courseId: string) => ["me", "enrollments", courseId] as const,
   },
 
   careerPaths: {

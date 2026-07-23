@@ -7,7 +7,9 @@ export function formatMinutes(mins: number | null | undefined): string {
   return `${h}h ${m}m`;
 }
 
-export function deriveCourseStatus(progressPercent: number): "not_started" | "in_progress" | "completed" {
+export function deriveCourseStatus(
+  progressPercent: number,
+): "not_started" | "in_progress" | "completed" {
   if (progressPercent >= 100) return "completed";
   if (progressPercent > 0) return "in_progress";
   return "not_started";

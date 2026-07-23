@@ -18,9 +18,7 @@ import {
 const BATCH_DELAY_MS = 2000; // debounce window before sending
 const MAX_BATCH = 50; // backend cap
 
-export function useQuizIntegrityReporter(
-  attemptId: string | null | undefined,
-) {
+export function useQuizIntegrityReporter(attemptId: string | null | undefined) {
   const report = useReportQuizIntegrityEvents(attemptId);
   const pendingRef = useRef<QuizIntegrityEvent[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

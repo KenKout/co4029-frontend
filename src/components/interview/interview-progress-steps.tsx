@@ -13,7 +13,11 @@ import { cn } from "@/lib/utils";
  */
 export type InterviewStep = "setup" | "interview" | "completed";
 
-const STEP_ORDER: readonly InterviewStep[] = ["setup", "interview", "completed"];
+const STEP_ORDER: readonly InterviewStep[] = [
+  "setup",
+  "interview",
+  "completed",
+];
 
 /**
  * Compact, accessible step indicator for the interview header.
@@ -33,12 +37,14 @@ export function InterviewProgressSteps({
   const { t } = useTranslation();
   const currentIndex = STEP_ORDER.indexOf(current);
 
-  const label = (step: InterviewStep) =>
-    t(`course_interview.steps.${step}`);
+  const label = (step: InterviewStep) => t(`course_interview.steps.${step}`);
 
   return (
     <ol
-      className={cn("flex items-center gap-1.5 text-xs font-semibold", className)}
+      className={cn(
+        "flex items-center gap-1.5 text-xs font-semibold",
+        className,
+      )}
       aria-label={t("course_interview.steps.aria_label")}
     >
       {STEP_ORDER.map((step, index) => {
@@ -59,7 +65,8 @@ export function InterviewProgressSteps({
                 aria-hidden="true"
                 className={cn(
                   "inline-flex size-4 items-center justify-center rounded-full border text-[10px] font-bold tabular-nums",
-                  isCurrent && "border-primary bg-primary text-primary-foreground",
+                  isCurrent &&
+                    "border-primary bg-primary text-primary-foreground",
                   isComplete && "border-success bg-success text-white",
                   !isCurrent &&
                     !isComplete &&

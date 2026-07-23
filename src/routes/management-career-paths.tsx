@@ -27,7 +27,9 @@ const STATUS_COLOR: Record<string, string> = {
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
   const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
-  const label = t(`management_career_paths.status.${status}`, { defaultValue: status });
+  const label = t(`management_career_paths.status.${status}`, {
+    defaultValue: status,
+  });
   return (
     <span
       className={`inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md ${cls}`}
@@ -63,11 +65,7 @@ function PathRow({ path }: { path: CareerPathAuthoring }) {
   );
 }
 
-function CreateDialog({
-  onClose,
-}: {
-  onClose: () => void;
-}) {
+function CreateDialog({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const create = useCreateCareerPath();
@@ -92,7 +90,9 @@ function CreateDialog({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !slug.trim()) {
-      toast.error(t("management_career_paths.create_dialog.errors.need_name_slug"));
+      toast.error(
+        t("management_career_paths.create_dialog.errors.need_name_slug"),
+      );
       return;
     }
     create.mutate(
@@ -103,7 +103,9 @@ function CreateDialog({
       },
       {
         onSuccess: (path) => {
-          toast.success(t("management_career_paths.create_dialog.success.created"));
+          toast.success(
+            t("management_career_paths.create_dialog.success.created"),
+          );
           void navigate({
             to: "/management/career-paths/$id",
             params: { id: path.id },
@@ -146,12 +148,15 @@ function CreateDialog({
 
         <div className="space-y-1.5">
           <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            {t("management_career_paths.create_dialog.name")} <span className="text-red-600">*</span>
+            {t("management_career_paths.create_dialog.name")}{" "}
+            <span className="text-red-600">*</span>
           </label>
           <Input
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
-            placeholder={t("management_career_paths.create_dialog.name_placeholder")}
+            placeholder={t(
+              "management_career_paths.create_dialog.name_placeholder",
+            )}
             required
             autoFocus
           />
@@ -159,12 +164,15 @@ function CreateDialog({
 
         <div className="space-y-1.5">
           <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            {t("management_career_paths.create_dialog.slug")} <span className="text-red-600">*</span>
+            {t("management_career_paths.create_dialog.slug")}{" "}
+            <span className="text-red-600">*</span>
           </label>
           <Input
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
-            placeholder={t("management_career_paths.create_dialog.slug_placeholder")}
+            placeholder={t(
+              "management_career_paths.create_dialog.slug_placeholder",
+            )}
             className="font-mono text-sm"
             required
           />
@@ -181,7 +189,9 @@ function CreateDialog({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            placeholder={t("management_career_paths.create_dialog.description_placeholder")}
+            placeholder={t(
+              "management_career_paths.create_dialog.description_placeholder",
+            )}
             className="w-full px-3 py-2 text-sm bg-m3-surface-container-low border border-m3-outline-variant/30 rounded-xl text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-primary/30 placeholder:text-m3-on-surface-variant/40"
           />
         </div>
@@ -218,8 +228,7 @@ export default function ManagementCareerPathsPage() {
 
   const perms = permissions.data?.permissions ?? [];
   const canManage =
-    perms.includes("career_path.manage") ||
-    perms.includes("system.administer");
+    perms.includes("career_path.manage") || perms.includes("system.administer");
 
   useEffect(() => {
     if (permissions.isLoading) return;
@@ -334,11 +343,7 @@ export default function ManagementCareerPathsPage() {
         </div>
       )}
 
-      {creating && (
-        <CreateDialog
-          onClose={() => setCreating(false)}
-        />
-      )}
+      {creating && <CreateDialog onClose={() => setCreating(false)} />}
     </div>
   );
 }

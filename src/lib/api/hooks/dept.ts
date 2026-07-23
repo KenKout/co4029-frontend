@@ -21,9 +21,7 @@ export function useCourseTeachers(courseId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.dept.teachers(courseId ?? ""),
     queryFn: () =>
-      apiFetch<TeacherAssignmentRead[]>(
-        `/dept/courses/${courseId}/teachers`,
-      ),
+      apiFetch<TeacherAssignmentRead[]>(`/dept/courses/${courseId}/teachers`),
     enabled: Boolean(courseId),
     staleTime: 1000 * 60,
   });
@@ -61,8 +59,7 @@ export function useRemoveTeacher(courseId: string) {
 export function useCourseRoster(courseId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.dept.roster(courseId ?? ""),
-    queryFn: () =>
-      apiFetch<RosterEntry[]>(`/dept/courses/${courseId}/roster`),
+    queryFn: () => apiFetch<RosterEntry[]>(`/dept/courses/${courseId}/roster`),
     enabled: Boolean(courseId),
     staleTime: 1000 * 60,
   });

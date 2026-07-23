@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 
-export function AnimatedBentoRow({ children, defaultFlex = [2, 1] }: { children: [React.ReactNode, React.ReactNode], defaultFlex?: [number, number] }) {
+export function AnimatedBentoRow({
+  children,
+  defaultFlex = [2, 1],
+}: {
+  children: [React.ReactNode, React.ReactNode];
+  defaultFlex?: [number, number];
+}) {
   const [flexValues, setFlexValues] = useState(defaultFlex);
   const [isHovered, setIsHovered] = useState(false);
 

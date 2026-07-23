@@ -3,10 +3,7 @@ import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, RefreshCw } from "lucide-react";
-import {
-  useProcessingJob,
-  useRetryProcessingJob,
-} from "@/lib/api/hooks/admin";
+import { useProcessingJob, useRetryProcessingJob } from "@/lib/api/hooks/admin";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import { ApiError } from "@/lib/api/client";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -33,7 +30,10 @@ function JobStatusBadge({ status }: { status: string }) {
 
 function useFormatDate() {
   const { i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   return (iso: string | null | undefined): string => {
     if (!iso) return "—";
     return new Intl.DateTimeFormat(locale, {
@@ -109,7 +109,9 @@ export default function AdminProcessingJobPage() {
         if (err instanceof ApiError && err.status === 409) {
           toast.error(t("admin.processing.toasts.only_failed"));
         } else {
-          toast.error((err as Error).message || t("admin.processing.toasts.retry_failed"));
+          toast.error(
+            (err as Error).message || t("admin.processing.toasts.retry_failed"),
+          );
         }
       },
     });
@@ -137,7 +139,9 @@ export default function AdminProcessingJobPage() {
 
       {job.isError ? (
         <div className="bg-surface-elev border border-border rounded-lg p-5">
-          <p className="text-sm text-danger">{t("admin.processing_job.load_failed")}</p>
+          <p className="text-sm text-danger">
+            {t("admin.processing_job.load_failed")}
+          </p>
         </div>
       ) : job.isLoading ? (
         <div className="space-y-3">

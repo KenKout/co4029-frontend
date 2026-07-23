@@ -15,9 +15,7 @@ export function useDeptEnrollments(courseId: string) {
   return useQuery({
     queryKey: queryKeys.enrollments.list(courseId),
     queryFn: () =>
-      apiFetch<EnrollmentAuthoring[]>(
-        `/dept/courses/${courseId}/enrollments`,
-      ),
+      apiFetch<EnrollmentAuthoring[]>(`/dept/courses/${courseId}/enrollments`),
     enabled: Boolean(courseId),
     staleTime: 1000 * 30,
   });
@@ -75,9 +73,7 @@ export function useDropEnrollment(courseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (userId: string) =>
-      apiDelete(
-        `/management/courses/${courseId}/enrollments/${userId}`,
-      ),
+      apiDelete(`/management/courses/${courseId}/enrollments/${userId}`),
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: queryKeys.enrollments.list(courseId),
@@ -139,8 +135,7 @@ export function usePatchInvitationCode(codeId: string, courseId?: string) {
 export function useDeleteInvitationCode(codeId: string, courseId?: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      apiDelete(`/management/invitation-codes/${codeId}`),
+    mutationFn: () => apiDelete(`/management/invitation-codes/${codeId}`),
     onSuccess: () => {
       if (courseId) {
         void qc.invalidateQueries({

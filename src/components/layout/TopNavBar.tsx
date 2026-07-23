@@ -1,6 +1,13 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
-import { Bell, Loader2, LayoutDashboard, Settings, User, LogOut } from "lucide-react";
+import {
+  Bell,
+  Loader2,
+  LayoutDashboard,
+  Settings,
+  User,
+  LogOut,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -43,7 +50,10 @@ export default function TopNavBar() {
     <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-border">
       <div className="flex items-center justify-between px-8 h-16 w-full max-w-7xl mx-auto">
         <div className="flex items-center gap-8">
-          <Link to="/" className="text-2xl font-bold tracking-tight text-primary font-heading cursor-pointer">
+          <Link
+            to="/"
+            className="text-2xl font-bold tracking-tight text-primary font-heading cursor-pointer"
+          >
             aBridgeAI
           </Link>
           <div className="hidden md:flex gap-2 items-center">
@@ -56,7 +66,7 @@ export default function TopNavBar() {
                   "px-3 py-1.5 rounded-md hover:bg-m3-primary-fixed/40 hover:opacity-90",
                   location.pathname === link.href
                     ? "text-primary"
-                    : "text-text-muted hover:text-primary"
+                    : "text-text-muted hover:text-primary",
                 )}
               >
                 {link.label}
@@ -79,7 +89,9 @@ export default function TopNavBar() {
                         count: unreadCount,
                         defaultValue: "Notifications, {{count}} unread",
                       })
-                    : t("notifications.bell_aria", { defaultValue: "Notifications" })
+                    : t("notifications.bell_aria", {
+                        defaultValue: "Notifications",
+                      })
                 }
               >
                 <Bell className="h-5 w-5" />
@@ -108,7 +120,9 @@ export default function TopNavBar() {
                   className="w-56 rounded-lg bg-card shadow-editorial border border-border p-1.5"
                 >
                   <div className="px-3 py-2.5">
-                    <p className="text-sm font-semibold text-m3-on-surface truncate">{displayName}</p>
+                    <p className="text-sm font-semibold text-m3-on-surface truncate">
+                      {displayName}
+                    </p>
                     <p className="text-xs text-m3-on-surface-variant truncate mt-0.5">
                       {user?.primary_email}
                     </p>
@@ -118,23 +132,38 @@ export default function TopNavBar() {
 
                   <DropdownMenuGroup>
                     <DropdownMenuItem className="rounded-lg px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-m3-primary-fixed focus:bg-m3-primary-fixed focus:text-m3-primary">
-                      <Link to="/dashboard" className="flex items-center gap-3 w-full">
+                      <Link
+                        to="/dashboard"
+                        className="flex items-center gap-3 w-full"
+                      >
                         <LayoutDashboard className="h-4 w-4 text-m3-on-surface-variant" />
-                        <span className="text-sm font-medium">{t("nav.dashboard")}</span>
+                        <span className="text-sm font-medium">
+                          {t("nav.dashboard")}
+                        </span>
                       </Link>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem className="rounded-lg px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-m3-primary-fixed focus:bg-m3-primary-fixed focus:text-m3-primary">
-                      <Link to="/settings" className="flex items-center gap-3 w-full">
+                      <Link
+                        to="/settings"
+                        className="flex items-center gap-3 w-full"
+                      >
                         <Settings className="h-4 w-4 text-m3-on-surface-variant" />
-                        <span className="text-sm font-medium">{t("nav.settings")}</span>
+                        <span className="text-sm font-medium">
+                          {t("nav.settings")}
+                        </span>
                       </Link>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem className="rounded-lg px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-m3-primary-fixed focus:bg-m3-primary-fixed focus:text-m3-primary">
-                      <Link to="/profile" className="flex items-center gap-3 w-full">
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-3 w-full"
+                      >
                         <User className="h-4 w-4 text-m3-on-surface-variant" />
-                        <span className="text-sm font-medium">{t("nav.profile")}</span>
+                        <span className="text-sm font-medium">
+                          {t("nav.profile")}
+                        </span>
                       </Link>
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
@@ -152,14 +181,18 @@ export default function TopNavBar() {
                     ) : (
                       <LogOut className="h-4 w-4" />
                     )}
-                    <span className="text-sm font-medium">{t("nav.logout")}</span>
+                    <span className="text-sm font-medium">
+                      {t("nav.logout")}
+                    </span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
           ) : (
             <Link to="/login" search={{ next: undefined }}>
-              <Button className="rounded-full px-5 font-semibold">Sign In</Button>
+              <Button className="rounded-full px-5 font-semibold">
+                Sign In
+              </Button>
             </Link>
           )}
         </div>

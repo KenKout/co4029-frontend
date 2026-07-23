@@ -21,6 +21,7 @@ import type {
 import type { StreamUrlResponse } from "../types/common";
 import type {
   LearningMaterial,
+  LessonKnowledgeGraph,
   MaterialStatus,
   ProcessingSummary,
   UploadUrlResponse,
@@ -66,9 +67,7 @@ export function useChunksPreview(
   return useQuery({
     queryKey: queryKeys.materials.chunksPreview(materialId ?? "", clampedLimit),
     queryFn: () =>
-      apiFetch<ChunkPreview[]>(
-        `/materials/${materialId}/chunks/preview${qs}`,
-      ),
+      apiFetch<ChunkPreview[]>(`/materials/${materialId}/chunks/preview${qs}`),
     enabled: !!materialId,
     staleTime: 5 * 60_000,
     retry: retryUnless404,
@@ -78,7 +77,8 @@ export function useChunksPreview(
 export function useTeacherLessonMaterials(lessonId: string | undefined) {
   return useQuery({
     queryKey: ["teacher", "lessons", lessonId, "materials"],
-    queryFn: () => apiFetch<LearningMaterial[]>(`/teacher/lessons/${lessonId}/materials`),
+    queryFn: () =>
+      apiFetch<LearningMaterial[]>(`/teacher/lessons/${lessonId}/materials`),
     enabled: !!lessonId,
     staleTime: 1000 * 30,
   });
@@ -98,11 +98,25 @@ export function useTeacherMaterial(materialId: string | null | undefined) {
 export function useTeacherMaterialStatus(materialId: string | undefined) {
   return useQuery({
     queryKey: ["teacher", "materials", materialId, "status"],
-    queryFn: () => apiFetch<MaterialStatus>(`/teacher/materials/${materialId}/processing-summary`),
+    queryFn: () =>
+      apiFetch<MaterialStatus>(
+        `/teacher/materials/${materialId}/processing-summary`,
+      ),
     enabled: !!materialId,
     refetchInterval: (query) => {
       const status = query.state.data?.processing_status;
-      if (status && ["pending", "extracting", "chunking", "embedding", "building_kg"].includes(status)) return 3000;
+      if (
+        status &&
+        [
+          "pending",
+          "extracting",
+          "chunking",
+          "embedding",
+          "enriching",
+          "building_kg",
+        ].includes(status)
+      )
+        return 3000;
       return false;
     },
   });
@@ -111,15 +125,43 @@ export function useTeacherMaterialStatus(materialId: string | undefined) {
 export function useTeacherProcessingSummary(lessonId: string | undefined) {
   return useQuery({
     queryKey: ["teacher", "lessons", lessonId, "processing-summary"],
-    queryFn: () => apiFetch<ProcessingSummary>(`/teacher/lessons/${lessonId}/processing-summary`),
+    queryFn: () =>
+      apiFetch<ProcessingSummary>(
+        `/teacher/lessons/${lessonId}/processing-summary`,
+      ),
     enabled: !!lessonId,
   });
 }
 
-export function useTeacherMaterialStreamUrl(materialId: string | null | undefined) {
+export function useTeacherLessonKnowledgeGraph(
+  lessonId: string | undefined,
+  readyCount: number,
+) {
+  return useQuery({
+    // readyCount is part of the key so the graph refetches when a new
+    // material finishes processing (the KG only exists post-ingest).
+    queryKey: ["teacher", "lessons", lessonId, "knowledge-graph", readyCount],
+    queryFn: () =>
+      apiFetch<LessonKnowledgeGraph>(
+        `/teacher/lessons/${lessonId}/knowledge-graph`,
+      ),
+    enabled: !!lessonId,
+    staleTime: 1000 * 60 * 2,
+    // Keep the prior graph visible while refetching so it doesn't flicker
+    // to empty when readyCount ticks.
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useTeacherMaterialStreamUrl(
+  materialId: string | null | undefined,
+) {
   return useQuery({
     queryKey: ["teacher", "materials", materialId, "stream-url"],
-    queryFn: () => apiFetch<StreamUrlResponse>(`/teacher/materials/${materialId}/stream-url`),
+    queryFn: () =>
+      apiFetch<StreamUrlResponse>(
+        `/teacher/materials/${materialId}/stream-url`,
+      ),
     enabled: !!materialId,
     staleTime: 1000 * 60 * 4,
   });
@@ -133,8 +175,11 @@ export function useTeacherMaterialStreamUrl(materialId: string | null | undefine
  */
 export function useTeacherRequestUploadUrl() {
   return useMutation({
-    mutationFn: (payload: { original_filename: string; mime_type: string; size_bytes?: number }) =>
-      apiPost<UploadUrlResponse>("/materials/upload-url", payload),
+    mutationFn: (payload: {
+      original_filename: string;
+      mime_type: string;
+      size_bytes?: number;
+    }) => apiPost<UploadUrlResponse>("/materials/upload-url", payload),
   });
 }
 
@@ -142,7 +187,11 @@ export function useTeacherRequestUploadUrl() {
  * Link an existing storage object to the AI Material Hub for a lesson.
  * No upload flow, no AI processing triggered.
  */
-export function useCreateMaterial(courseId: string, moduleId: string, lessonId: string) {
+export function useCreateMaterial(
+  courseId: string,
+  moduleId: string,
+  lessonId: string,
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: {
@@ -157,7 +206,9 @@ export function useCreateMaterial(courseId: string, moduleId: string, lessonId: 
         payload,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["teacher", "lessons", lessonId, "materials"] });
+      qc.invalidateQueries({
+        queryKey: ["teacher", "lessons", lessonId, "materials"],
+      });
     },
   });
 }
@@ -189,7 +240,9 @@ export function useCompleteMaterialUpload() {
         payload,
       ),
     onSuccess: (_data, { materialId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.materials.detail(materialId) });
+      qc.invalidateQueries({
+        queryKey: queryKeys.materials.detail(materialId),
+      });
       qc.invalidateQueries({ queryKey: ["teacher", "lessons"] });
       qc.invalidateQueries({ queryKey: ["teacher", "materials", materialId] });
     },
@@ -247,7 +300,9 @@ export function useCompleteMultipartUpload() {
       }
     },
     onSuccess: (_data, { materialId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.materials.detail(materialId) });
+      qc.invalidateQueries({
+        queryKey: queryKeys.materials.detail(materialId),
+      });
       qc.invalidateQueries({ queryKey: ["teacher", "lessons"] });
       qc.invalidateQueries({ queryKey: ["teacher", "materials", materialId] });
     },
@@ -287,8 +342,12 @@ export function useReprocessMaterial(materialId: string) {
     mutationFn: () =>
       apiPost<ReprocessOut>(`/teacher/materials/${materialId}/reprocess`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.materials.detail(materialId) });
-      qc.invalidateQueries({ queryKey: queryKeys.materials.processing(materialId) });
+      qc.invalidateQueries({
+        queryKey: queryKeys.materials.detail(materialId),
+      });
+      qc.invalidateQueries({
+        queryKey: queryKeys.materials.processing(materialId),
+      });
       qc.invalidateQueries({ queryKey: ["teacher", "lessons"] });
       qc.invalidateQueries({ queryKey: ["teacher", "materials", materialId] });
     },
@@ -317,9 +376,15 @@ export function useRollbackMaterialVersion(materialId: string) {
         `/teacher/materials/${materialId}/versions/${versionId}/rollback`,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.materials.versions(materialId) });
-      qc.invalidateQueries({ queryKey: queryKeys.materials.detail(materialId) });
-      qc.invalidateQueries({ queryKey: queryKeys.materials.processing(materialId) });
+      qc.invalidateQueries({
+        queryKey: queryKeys.materials.versions(materialId),
+      });
+      qc.invalidateQueries({
+        queryKey: queryKeys.materials.detail(materialId),
+      });
+      qc.invalidateQueries({
+        queryKey: queryKeys.materials.processing(materialId),
+      });
       qc.invalidateQueries({ queryKey: ["teacher", "lessons"] });
       qc.invalidateQueries({ queryKey: ["teacher", "materials", materialId] });
     },
@@ -332,7 +397,9 @@ export function useUpdateMaterial(materialId: string) {
     mutationFn: (payload: MaterialUpdate) =>
       apiPatch<MaterialAuthoring>(`/teacher/materials/${materialId}`, payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.materials.detail(materialId) });
+      qc.invalidateQueries({
+        queryKey: queryKeys.materials.detail(materialId),
+      });
       qc.invalidateQueries({ queryKey: ["teacher", "lessons"] });
       qc.invalidateQueries({ queryKey: ["teacher", "materials", materialId] });
     },
@@ -344,7 +411,9 @@ export function useDeleteMaterial(materialId: string) {
   return useMutation({
     mutationFn: () => apiDelete(`/teacher/materials/${materialId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.materials.detail(materialId) });
+      qc.invalidateQueries({
+        queryKey: queryKeys.materials.detail(materialId),
+      });
       qc.invalidateQueries({ queryKey: ["teacher", "lessons"] });
       qc.invalidateQueries({ queryKey: ["teacher", "materials", materialId] });
     },

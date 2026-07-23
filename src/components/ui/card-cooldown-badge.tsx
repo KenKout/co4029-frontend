@@ -9,7 +9,10 @@ interface CardCooldownBadgeProps {
   className?: string;
 }
 
-export function CardCooldownBadge({ retryAt, className }: CardCooldownBadgeProps) {
+export function CardCooldownBadge({
+  retryAt,
+  className,
+}: CardCooldownBadgeProps) {
   const { t } = useTranslation();
   const { isExpired, formatRemaining } = useCardCooldown(retryAt);
 

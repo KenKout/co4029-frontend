@@ -1,6 +1,12 @@
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, ChevronDown, Loader2, RotateCcw, TriangleAlert } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Loader2,
+  RotateCcw,
+  TriangleAlert,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,7 +26,10 @@ import { cn } from "@/lib/utils";
  *  - `processing`  → success rail with an "Analyzing your answer…" note
  *  - `failed`      → danger rail, preserved-answer note, Try again / keep editing
  */
-export type SubmittedAnswerConfirmationStatus = "submitted" | "processing" | "failed";
+export type SubmittedAnswerConfirmationStatus =
+  | "submitted"
+  | "processing"
+  | "failed";
 
 export interface SubmittedAnswerConfirmationProps {
   status: SubmittedAnswerConfirmationStatus;

@@ -13,8 +13,8 @@
 /* ── Tailwind v4 Theme ── */
 @theme inline {
   /* Fonts */
- --font-sans: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
- --font-heading: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+  --font-sans: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+  --font-heading: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
   --font-headline: var(--font-heading);
   --font-body: var(--font-sans);
 
@@ -124,7 +124,8 @@
   --radius-pill: 9999px;
 
   /* Shadows — softer, more modern */
-  --shadow-editorial: 0px 1px 2px rgba(15, 23, 42, 0.04), 0px 4px 12px rgba(15, 23, 42, 0.04);
+  --shadow-editorial: 0px 1px 2px rgba(15, 23, 42, 0.04),
+    0px 4px 12px rgba(15, 23, 42, 0.04);
   --shadow-glass: 0px 8px 24px rgba(30, 64, 175, 0.06);
   --shadow-ai-glow: 0px 0px 24px rgba(245, 158, 11, 0.18);
 
@@ -134,7 +135,8 @@
   --animate-ai-pulse: ai-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-fade-in-up: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-slide-in-left: slide-in-left 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-slide-in-right: slide-in-right 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-in-right: slide-in-right 0.7s cubic-bezier(0.16, 1, 0.3, 1)
+    both;
   --animate-scale-in: scale-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-shimmer: shimmer 8s linear infinite;
 }
@@ -142,46 +144,46 @@
 /* ── Light mode tokens ── */
 :root {
   /* Primary (academic blue) */
-  --primary: #1e40af;            /* blue-800 */
-  --primary-hover: #1d4ed8;       /* blue-700 */
-  --primary-soft: #dbeafe;        /* blue-100 */
-  --primary-soft-dim: #bfdbfe;    /* blue-200 */
+  --primary: #1e40af; /* blue-800 */
+  --primary-hover: #1d4ed8; /* blue-700 */
+  --primary-soft: #dbeafe; /* blue-100 */
+  --primary-soft-dim: #bfdbfe; /* blue-200 */
   --primary-foreground: #ffffff;
 
   /* Secondary */
-  --secondary: #3b82f6;           /* blue-500 */
-  --secondary-soft: #dbeafe;      /* blue-100 */
-  --secondary-soft-dim: #bfdbfe;  /* blue-200 */
+  --secondary: #3b82f6; /* blue-500 */
+  --secondary-soft: #dbeafe; /* blue-100 */
+  --secondary-soft-dim: #bfdbfe; /* blue-200 */
   --secondary-foreground: #ffffff;
 
   /* Accent / CTA (amber) */
-  --accent: #f59e0b;              /* amber-500 */
-  --accent-hover: #d97706;        /* amber-600 */
-  --accent-soft: #fef3c7;         /* amber-100 */
+  --accent: #f59e0b; /* amber-500 */
+  --accent-hover: #d97706; /* amber-600 */
+  --accent-soft: #fef3c7; /* amber-100 */
   --accent-soft-foreground: #78350f;
   --accent-foreground: #1f2937;
 
   /* Status */
-  --success: #16a34a;             /* green-600 */
-  --danger: #dc2626;              /* red-600 */
-  --danger-soft: #fee2e2;         /* red-100 */
+  --success: #16a34a; /* green-600 */
+  --danger: #dc2626; /* red-600 */
+  --danger-soft: #fee2e2; /* red-100 */
   --destructive: #dc2626;
-  --warning: #ea580c;             /* orange-600 */
+  --warning: #ea580c; /* orange-600 */
 
   /* Surfaces */
-  --surface: #f8fafc;             /* slate-50 */
+  --surface: #f8fafc; /* slate-50 */
   --surface-elev: #ffffff;
-  --surface-muted: #f1f5f9;       /* slate-100 */
+  --surface-muted: #f1f5f9; /* slate-100 */
 
   /* Text */
-  --text-strong: #0f172a;         /* slate-900 — strong contrast for headers */
-  --text-body: #1e293b;           /* slate-800 — body copy */
-  --text-muted: #475569;          /* slate-600 — muted captions */
-  --text-subtle: #64748b;         /* slate-500 — subtlest hints */
+  --text-strong: #0f172a; /* slate-900 — strong contrast for headers */
+  --text-body: #1e293b; /* slate-800 — body copy */
+  --text-muted: #475569; /* slate-600 — muted captions */
+  --text-subtle: #64748b; /* slate-500 — subtlest hints */
 
   /* Borders */
-  --border: #e2e8f0;              /* slate-200 */
-  --border-strong: #cbd5e1;       /* slate-300 */
+  --border: #e2e8f0; /* slate-200 */
+  --border-strong: #cbd5e1; /* slate-300 */
 
   /* shadcn shape */
   --background: var(--surface);
@@ -208,13 +210,13 @@
 /* ── Dark mode tokens (parity) ── */
 .dark,
 [data-theme="dark"] {
-  --primary: #1e40af;             /* keep same — works in both modes */
+  --primary: #1e40af; /* keep same — works in both modes */
   --primary-hover: #1d4ed8;
-  --primary-soft: #1e3a8a;        /* blue-900 */
+  --primary-soft: #1e3a8a; /* blue-900 */
   --primary-soft-dim: #1e40af;
   --primary-foreground: #ffffff;
 
-  --secondary: #60a5fa;            /* blue-400 — lighter for dark surface */
+  --secondary: #60a5fa; /* blue-400 — lighter for dark surface */
   --secondary-soft: #1e3a8a;
   --secondary-soft-dim: #1e40af;
   --secondary-foreground: #0f172a;
@@ -231,17 +233,17 @@
   --destructive: #ef4444;
   --warning: #ea580c;
 
-  --surface: #0f172a;             /* slate-900 */
-  --surface-elev: #1e293b;        /* slate-800 */
+  --surface: #0f172a; /* slate-900 */
+  --surface-elev: #1e293b; /* slate-800 */
   --surface-muted: #1e293b;
 
-  --text-strong: #f8fafc;          /* slate-50 */
-  --text-body: #e2e8f0;            /* slate-200 */
-  --text-muted: #94a3b8;           /* slate-400 */
-  --text-subtle: #64748b;          /* slate-500 */
+  --text-strong: #f8fafc; /* slate-50 */
+  --text-body: #e2e8f0; /* slate-200 */
+  --text-muted: #94a3b8; /* slate-400 */
+  --text-subtle: #64748b; /* slate-500 */
 
-  --border: #334155;               /* slate-700 */
-  --border-strong: #475569;        /* slate-600 */
+  --border: #334155; /* slate-700 */
+  --border-strong: #475569; /* slate-600 */
 
   --background: var(--surface);
   --foreground: var(--text-body);
@@ -263,18 +265,33 @@
 
 /* ── Keyframes ── */
 @keyframes pulse-slow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes ai-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.85; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
 }
 
 @keyframes fade-in-up {
@@ -331,12 +348,19 @@
 }
 
 @keyframes progress-fill {
-  from { width: 0%; }
+  from {
+    width: 0%;
+  }
 }
 
 @keyframes counter-glow {
-  0%, 100% { text-shadow: 0 0 0 transparent; }
-  50% { text-shadow: 0 0 20px rgba(30, 64, 175, 0.3); }
+  0%,
+  100% {
+    text-shadow: 0 0 0 transparent;
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(30, 64, 175, 0.3);
+  }
 }
 
 /* ── Base styles ── */
@@ -347,17 +371,34 @@
   body {
     background-color: var(--surface);
     color: var(--text-body);
-    font-family: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+    font-family:
+      "Be Vietnam Pro",
+      system-ui,
+      -apple-system,
+      sans-serif;
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   html {
-    font-family: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+    font-family:
+      "Be Vietnam Pro",
+      system-ui,
+      -apple-system,
+      sans-serif;
   }
-  h1, h2, h3, h4, h5, h6 {
-    font-family: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family:
+      "Be Vietnam Pro",
+      system-ui,
+      -apple-system,
+      sans-serif;
     font-weight: 600;
     color: var(--text-strong);
     letter-spacing: -0.01em;
@@ -400,21 +441,40 @@
     will-change: transform, opacity;
   }
   .reveal.visible {
-    animation: var(--reveal-animation, fade-in-up) var(--reveal-duration, 0.7s) cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: var(--reveal-animation, fade-in-up) var(--reveal-duration, 0.7s)
+      cubic-bezier(0.16, 1, 0.3, 1) both;
     animation-delay: var(--reveal-delay, 0s);
   }
-  .reveal-up { --reveal-animation: fade-in-up; }
-  .reveal-left { --reveal-animation: slide-in-left; }
-  .reveal-right { --reveal-animation: slide-in-right; }
-  .reveal-scale { --reveal-animation: scale-in; }
+  .reveal-up {
+    --reveal-animation: fade-in-up;
+  }
+  .reveal-left {
+    --reveal-animation: slide-in-left;
+  }
+  .reveal-right {
+    --reveal-animation: slide-in-right;
+  }
+  .reveal-scale {
+    --reveal-animation: scale-in;
+  }
 
   .shimmer-line {
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 100%
+    );
     background-size: 200% 100%;
     animation: shimmer 8s linear infinite;
   }
   .bridge-line {
-    background: linear-gradient(90deg, transparent, rgba(30, 64, 175, 0.2), transparent);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(30, 64, 175, 0.2),
+      transparent
+    );
     height: 1px;
     width: 100%;
   }
@@ -424,10 +484,12 @@
   }
   .hover-entity:hover {
     transform: translateY(-6px) scale(1.015);
-    box-shadow: 0 20px 40px -10px rgba(30, 64, 175, 0.15), 0 0 20px rgba(59, 130, 246, 0.15);
+    box-shadow:
+      0 20px 40px -10px rgba(30, 64, 175, 0.15),
+      0 0 20px rgba(59, 130, 246, 0.15);
     z-index: 10;
   }
-  
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }

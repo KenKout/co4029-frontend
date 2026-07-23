@@ -20,7 +20,9 @@ describe("SubmittedAnswerConfirmation", () => {
     // Preview text present.
     expect(screen.getByText(/A fact table contains/)).toBeInTheDocument();
     // Collapsed by default: line-clamp-3 applied.
-    expect(screen.getByText(/A fact table contains/)).toHaveClass("line-clamp-3");
+    expect(screen.getByText(/A fact table contains/)).toHaveClass(
+      "line-clamp-3",
+    );
   });
 
   it("expands and collapses the preview via an accessible toggle", () => {

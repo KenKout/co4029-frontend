@@ -101,7 +101,9 @@ function stripWrappers(input: string): string {
 /** Split into sentences while preserving their trailing punctuation. */
 function splitSentences(text: string): string[] {
   const matches = text.match(/[^.!?]+[.!?]+(?:["'”’)\]]+)?|\S[^.!?]*$/g);
-  return matches ? matches.map((sentence) => sentence.trim()).filter(Boolean) : [];
+  return matches
+    ? matches.map((sentence) => sentence.trim()).filter(Boolean)
+    : [];
 }
 
 function isGuardrailSentence(sentence: string): boolean {
@@ -119,7 +121,9 @@ export interface NormalizedQuestionText {
  * Strip guardrail / policy / wrapper content from a raw question string,
  * keeping any legitimate question sentences that were mixed in.
  */
-export function normalizeQuestionText(raw: string | null | undefined): NormalizedQuestionText {
+export function normalizeQuestionText(
+  raw: string | null | undefined,
+): NormalizedQuestionText {
   if (!raw) return { text: "", sanitized: false };
 
   const unwrapped = stripWrappers(raw);
@@ -132,7 +136,8 @@ export function normalizeQuestionText(raw: string | null | undefined): Normalize
   }
 
   const kept = sentences.filter((sentence) => !isGuardrailSentence(sentence));
-  const removedAny = kept.length !== sentences.length || unwrapped !== raw.trim();
+  const removedAny =
+    kept.length !== sentences.length || unwrapped !== raw.trim();
   const text = kept.join(" ").replace(/\s+/g, " ").trim();
 
   return { text, sanitized: removedAny && kept.length !== sentences.length };
@@ -146,7 +151,11 @@ export function normalizeQuestionText(raw: string | null | undefined): Normalize
  */
 export function toInterviewQuestion(
   raw: RawInterviewQuestion,
-  meta: { number: number; totalQuestions?: number | null; category?: string | null },
+  meta: {
+    number: number;
+    totalQuestions?: number | null;
+    category?: string | null;
+  },
 ): InterviewQuestion {
   const { text } = normalizeQuestionText(raw.prompt_text);
   return {

@@ -1,6 +1,9 @@
 /** Focused live transcript for the LiveKit voice interview. */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useTranscriptions, useVoiceAssistant } from "@livekit/components-react";
+import {
+  useTranscriptions,
+  useVoiceAssistant,
+} from "@livekit/components-react";
 import { Bot, Check, MessageSquareText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -137,24 +140,28 @@ export function VoiceTranscript({
     if (fingerprint === emittedFingerprintRef.current) return;
     emittedFingerprintRef.current = fingerprint;
     onTranscriptChange(
-      displayItems.map((item) =>
-        item.historyTurn ?? {
-          id: item.key,
-          role: item.role === "agent" ? "ai" : "user",
-          text: item.text,
-          elapsedSeconds: item.elapsedSeconds,
-          kind: item.role === "agent" ? "question" : "answer",
-        },
+      displayItems.map(
+        (item) =>
+          item.historyTurn ?? {
+            id: item.key,
+            role: item.role === "agent" ? "ai" : "user",
+            text: item.text,
+            elapsedSeconds: item.elapsedSeconds,
+            kind: item.role === "agent" ? "question" : "answer",
+          },
       ),
     );
   }, [displayItems, onTranscriptChange]);
 
   const currentAi = useMemo(
-    () => [...displayItems].reverse().find((item) => item.role === "agent") ?? null,
+    () =>
+      [...displayItems].reverse().find((item) => item.role === "agent") ?? null,
     [displayItems],
   );
   const currentCandidate = useMemo(
-    () => [...displayItems].reverse().find((item) => item.role === "student") ?? null,
+    () =>
+      [...displayItems].reverse().find((item) => item.role === "student") ??
+      null,
     [displayItems],
   );
 
@@ -183,14 +190,23 @@ export function VoiceTranscript({
           </p>
         </article>
       ) : (
-        <div className="rounded-2xl border border-border bg-white px-6 py-12 text-center text-sm text-text-muted" role="status">
-          <span className="mr-2 inline-block h-2 w-2 rounded-full bg-success" aria-hidden="true" />
+        <div
+          className="rounded-2xl border border-border bg-white px-6 py-12 text-center text-sm text-text-muted"
+          role="status"
+        >
+          <span
+            className="mr-2 inline-block h-2 w-2 rounded-full bg-success"
+            aria-hidden="true"
+          />
           {t("course_interview.workspace.status.idle")}
         </div>
       )}
 
       {currentCandidate && (
-        <div className="rounded-xl border border-border bg-white px-4 py-3" aria-live="polite">
+        <div
+          className="rounded-xl border border-border bg-white px-4 py-3"
+          aria-live="polite"
+        >
           <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-text-muted">
             <Check className="h-3.5 w-3.5 text-success" />
             {t("course_interview.workspace.latest_answer")}
@@ -204,7 +220,14 @@ export function VoiceTranscript({
       <div className="flex justify-end">
         <Sheet open={transcriptOpen} onOpenChange={setTranscriptOpen}>
           <SheetTrigger
-            render={<Button type="button" variant="outline" size="lg" className="min-h-11" />}
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="min-h-11"
+              />
+            }
           >
             <MessageSquareText className="h-4 w-4" />
             {t("course_interview.workspace.view_transcript")}
@@ -212,7 +235,10 @@ export function VoiceTranscript({
               {displayItems.length}
             </span>
           </SheetTrigger>
-          <SheetContent side="right" className="w-full max-w-none gap-0 bg-white sm:max-w-lg">
+          <SheetContent
+            side="right"
+            className="w-full max-w-none gap-0 bg-white sm:max-w-lg"
+          >
             <header className="border-b border-border px-5 py-5 pr-14">
               <h2 className="text-base font-semibold text-text-strong">
                 {t("course_interview.workspace.transcript")}

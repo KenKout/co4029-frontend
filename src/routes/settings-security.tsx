@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Loader2, ShieldCheck, KeyRound, Copy, RefreshCw, ShieldOff, ArrowLeft } from "lucide-react";
+import {
+  Loader2,
+  ShieldCheck,
+  KeyRound,
+  Copy,
+  RefreshCw,
+  ShieldOff,
+  ArrowLeft,
+} from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -38,7 +46,8 @@ function useCopyToClipboard() {
   const { t } = useTranslation();
   return (value: string, label: string) => {
     void navigator.clipboard.writeText(value).then(
-      () => toast.success(t("settings_security.toasts.copied_label", { label })),
+      () =>
+        toast.success(t("settings_security.toasts.copied_label", { label })),
       () => toast.error(t("settings_security.toasts.copy_failed")),
     );
   };
@@ -401,9 +410,7 @@ function RegenerateSection() {
           <Button
             type="submit"
             disabled={
-              verifyMfa.isPending ||
-              regenerate.isPending ||
-              !state.code.trim()
+              verifyMfa.isPending || regenerate.isPending || !state.code.trim()
             }
             className="gap-2"
           >
@@ -454,9 +461,7 @@ function DisableSection({ onDisabled }: { onDisabled: () => void }) {
     if (!trimmed) return;
 
     const payload =
-      state.mode === "totp"
-        ? { code: trimmed }
-        : { recovery_code: trimmed };
+      state.mode === "totp" ? { code: trimmed } : { recovery_code: trimmed };
 
     disable.mutate(payload, {
       onSuccess: () => {
@@ -580,9 +585,7 @@ function DisableSection({ onDisabled }: { onDisabled: () => void }) {
     <Button
       type="button"
       variant="outline"
-      onClick={() =>
-        setState({ phase: "confirm", mode: "totp", code: "" })
-      }
+      onClick={() => setState({ phase: "confirm", mode: "totp", code: "" })}
       className="gap-2 border-rose-200 text-rose-700 hover:bg-rose-50"
     >
       <ShieldOff className="h-4 w-4" />

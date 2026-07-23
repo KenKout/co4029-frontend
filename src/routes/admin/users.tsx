@@ -63,7 +63,8 @@ export default function AdminUsersPage() {
         header: t("admin.users.cols.user", { defaultValue: "User" }),
         sortable: true,
         cell: (u) => {
-          const displayName = u.profile?.display_name?.trim() || u.primary_email;
+          const displayName =
+            u.profile?.display_name?.trim() || u.primary_email;
           return (
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-full bg-m3-primary-fixed flex items-center justify-center shrink-0">
@@ -143,7 +144,10 @@ export default function AdminUsersPage() {
           getRowId={(u) => u.id}
           loading={table.isLoading}
           onRowClick={(u) =>
-            void navigate({ to: "/admin/users/$userId", params: { userId: u.id } })
+            void navigate({
+              to: "/admin/users/$userId",
+              params: { userId: u.id },
+            })
           }
           pagination
           manualPagination
@@ -158,7 +162,9 @@ export default function AdminUsersPage() {
           onSortChange={table.setSort}
           emptyState={
             table.search
-              ? t("admin.users.empty_search", { defaultValue: "No matching users" })
+              ? t("admin.users.empty_search", {
+                  defaultValue: "No matching users",
+                })
               : t("admin.users.empty_title", { defaultValue: "No users yet" })
           }
           toolbar={

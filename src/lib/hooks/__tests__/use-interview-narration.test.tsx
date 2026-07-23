@@ -106,7 +106,9 @@ class MockAudioContext {
       getChannelData: () => this.protectedChannel,
     } as unknown as AudioBuffer;
   });
-  createBufferSource = vi.fn(() => this.source as unknown as AudioBufferSourceNode);
+  createBufferSource = vi.fn(
+    () => this.source as unknown as AudioBufferSourceNode,
+  );
   resume = mocks.contextResume;
   close = mocks.contextClose;
 }
@@ -249,7 +251,9 @@ describe("useInterviewNarration", () => {
     // The lead-in keep-alive samples must sit well above the old ~-84 dBFS
     // noise floor (±2/32768) so power-managed DACs / Bluetooth routes don't
     // auto-mute and clip the first syllable. Lock in the louder amplitude.
-    expect(Math.abs(context?.protectedChannel?.[0] ?? 0)).toBeCloseTo(48 / 32_768);
+    expect(Math.abs(context?.protectedChannel?.[0] ?? 0)).toBeCloseTo(
+      48 / 32_768,
+    );
     expect(context?.protectedChannel?.[500]).toBeCloseTo(0.1);
     expect(await presentation.durationMs).toBe(4);
     expect(MockAudio.instances).toHaveLength(1);

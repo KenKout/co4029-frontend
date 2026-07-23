@@ -82,7 +82,7 @@ const authenticatedRoute = createRoute({
 
     if (!session) {
       const next = location.pathname.startsWith("/login")
-        ? new URLSearchParams(location.search).get("next") ?? undefined
+        ? (new URLSearchParams(location.search).get("next") ?? undefined)
         : location.href;
 
       throw redirect({
@@ -229,6 +229,12 @@ const teacherQuizManageRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/teacher/quiz-manage")),
 });
 
+const teacherQuizResultsRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/teacher/courses/$courseId/quizzes/$quizId/results",
+  component: lazyRouteComponent(() => import("@/routes/teacher/quiz-results")),
+});
+
 const teacherInterviewConfigRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/interview-configs/$configId",
@@ -248,9 +254,7 @@ const teacherInterviewGapReportRoute = createRoute({
 const teacherStudentsHubRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/students",
-  component: lazyRouteComponent(
-    () => import("@/routes/teacher/students-hub"),
-  ),
+  component: lazyRouteComponent(() => import("@/routes/teacher/students-hub")),
 });
 
 const teacherCourseStudentsRoute = createRoute({
@@ -346,9 +350,7 @@ const adminProcessingRoute = createRoute({
 const adminProcessingJobRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/processing/$jobId",
-  component: lazyRouteComponent(
-    () => import("@/routes/admin/processing-job"),
-  ),
+  component: lazyRouteComponent(() => import("@/routes/admin/processing-job")),
 });
 
 const adminAiCostsRoute = createRoute({
@@ -463,11 +465,27 @@ const teacherCourseAssessmentsRoute = createRoute({
   ),
 });
 
+const teacherCourseQuizAttemptDetailRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/teacher/courses/$courseId/quiz-attempts/$attemptId",
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/course-quiz-attempt-detail"),
+  ),
+});
+
 const teacherSrStudentDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/students/$studentId/sr",
   component: lazyRouteComponent(
     () => import("@/routes/teacher/sr-student-detail"),
+  ),
+});
+
+const teacherCourseQuestionBankRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/teacher/courses/$courseId/question-bank",
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/course-question-bank"),
   ),
 });
 
@@ -510,6 +528,7 @@ const routeTree = rootRoute.addChildren([
     teacherLessonMaterialsRoute,
     teacherModuleManageRoute,
     teacherQuizManageRoute,
+    teacherQuizResultsRoute,
     teacherInterviewConfigRoute,
     teacherInterviewGapReportRoute,
     teacherStudentsHubRoute,
@@ -545,7 +564,9 @@ const routeTree = rootRoute.addChildren([
     teacherSrAtRiskRoute,
     teacherCourseProgressRoute,
     teacherCourseAssessmentsRoute,
+    teacherCourseQuizAttemptDetailRoute,
     teacherSrStudentDetailRoute,
+    teacherCourseQuestionBankRoute,
   ]),
   callbackRoute,
 ]);

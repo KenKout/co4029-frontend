@@ -31,7 +31,10 @@ function StatusBadge({ status }: { status: string }) {
 
 function useFormatDate() {
   const { i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   return (iso: string | null | undefined): string => {
     if (!iso) return "—";
     return new Intl.DateTimeFormat(locale, {
@@ -51,10 +54,12 @@ function RestoreButton({ course }: { course: CourseAuthoring }) {
         e.preventDefault();
         e.stopPropagation();
         restore.mutate(course.id, {
-          onSuccess: () => toast.success(t("admin.course_detail.toasts.restored")),
+          onSuccess: () =>
+            toast.success(t("admin.course_detail.toasts.restored")),
           onError: (err) =>
             toast.error(
-              (err as Error).message || t("admin.course_detail.toasts.restore_failed"),
+              (err as Error).message ||
+                t("admin.course_detail.toasts.restore_failed"),
             ),
         });
       }}
@@ -146,7 +151,9 @@ export default function AdminCoursesPage() {
       },
       {
         id: "created_at",
-        header: t("admin.courses_list.cols.created", { defaultValue: "Created" }),
+        header: t("admin.courses_list.cols.created", {
+          defaultValue: "Created",
+        }),
         sortable: true,
         align: "right",
         cell: (course) => (

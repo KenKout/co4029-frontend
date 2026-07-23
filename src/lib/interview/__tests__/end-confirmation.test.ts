@@ -11,13 +11,19 @@ const FALLBACK = "Would you like to end and submit, or continue?";
 
 describe("isAwaitingEndConfirmation", () => {
   it("is true when the backend flags pending_confirmation", () => {
-    expect(isAwaitingEndConfirmation({ pending_confirmation: true })).toBe(true);
+    expect(isAwaitingEndConfirmation({ pending_confirmation: true })).toBe(
+      true,
+    );
   });
 
   it("is false when not pending (normal advance/probe turn)", () => {
-    expect(isAwaitingEndConfirmation({ pending_confirmation: false })).toBe(false);
+    expect(isAwaitingEndConfirmation({ pending_confirmation: false })).toBe(
+      false,
+    );
     expect(isAwaitingEndConfirmation({})).toBe(false);
-    expect(isAwaitingEndConfirmation({ pending_confirmation: null })).toBe(false);
+    expect(isAwaitingEndConfirmation({ pending_confirmation: null })).toBe(
+      false,
+    );
   });
 });
 
@@ -25,7 +31,10 @@ describe("endConfirmationPrompt", () => {
   it("prefers the server ai_turn_text", () => {
     expect(
       endConfirmationPrompt(
-        { pending_confirmation: true, ai_turn_text: "End and submit, or continue?" },
+        {
+          pending_confirmation: true,
+          ai_turn_text: "End and submit, or continue?",
+        },
         FALLBACK,
       ),
     ).toBe("End and submit, or continue?");
@@ -38,12 +47,17 @@ describe("endConfirmationPrompt", () => {
         FALLBACK,
       ),
     ).toBe("Confirm end?");
-    expect(endConfirmationPrompt({ pending_confirmation: true }, FALLBACK)).toBe(FALLBACK);
+    expect(
+      endConfirmationPrompt({ pending_confirmation: true }, FALLBACK),
+    ).toBe(FALLBACK);
   });
 
   it("trims whitespace and uses the fallback for blank server text", () => {
     expect(
-      endConfirmationPrompt({ pending_confirmation: true, ai_turn_text: "   " }, FALLBACK),
+      endConfirmationPrompt(
+        { pending_confirmation: true, ai_turn_text: "   " },
+        FALLBACK,
+      ),
     ).toBe(FALLBACK);
   });
 });

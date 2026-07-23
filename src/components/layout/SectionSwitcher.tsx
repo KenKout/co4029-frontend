@@ -53,12 +53,14 @@ export default function SectionSwitcher() {
   const visible = SECTIONS.filter((s) => s.show(perms));
   if (visible.length <= 1) return null;
 
-  const activePrefix =
-    TEACHER_EXTRA_PREFIXES.some((p) => location.pathname.startsWith(p))
-      ? "/teacher"
-      : ([...visible].sort((a, b) => b.prefix.length - a.prefix.length).find((s) =>
-          location.pathname.startsWith(s.prefix),
-        )?.prefix ?? "/dashboard");
+  const activePrefix = TEACHER_EXTRA_PREFIXES.some((p) =>
+    location.pathname.startsWith(p),
+  )
+    ? "/teacher"
+    : ([...visible]
+        .sort((a, b) => b.prefix.length - a.prefix.length)
+        .find((s) => location.pathname.startsWith(s.prefix))?.prefix ??
+      "/dashboard");
 
   return (
     <nav

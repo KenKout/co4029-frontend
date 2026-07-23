@@ -66,7 +66,8 @@ describe("normalizeQuestionText", () => {
   });
 
   it("does not over-match ordinary question wording", () => {
-    const raw = "Which system design would you choose for a rubric scoring app?";
+    const raw =
+      "Which system design would you choose for a rubric scoring app?";
     // "system design" and "rubric" appear, but not as guardrail phrases.
     expect(normalizeQuestionText(raw).text).toBe(raw);
   });

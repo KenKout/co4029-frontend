@@ -133,10 +133,7 @@ export function useCreateOrganization() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: OrganizationCreate) =>
-      apiPost<OrganizationRead>(
-        `/admin/organizations`,
-        body,
-      ),
+      apiPost<OrganizationRead>(`/admin/organizations`, body),
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: ["admin", "organizations"] as const,
@@ -149,10 +146,7 @@ export function usePatchOrganization(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: OrganizationPatch) =>
-      apiPatch<OrganizationRead>(
-        `/admin/organizations/${orgId}`,
-        body,
-      ),
+      apiPatch<OrganizationRead>(`/admin/organizations/${orgId}`, body),
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: ["admin", "organizations"] as const,
@@ -164,8 +158,7 @@ export function usePatchOrganization(orgId: string) {
 export function useDeleteOrganization() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (orgId: string) =>
-      apiDelete(`/admin/organizations/${orgId}`),
+    mutationFn: (orgId: string) => apiDelete(`/admin/organizations/${orgId}`),
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: ["admin", "organizations"] as const,
@@ -280,10 +273,7 @@ export function useCreateOrgUnit(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: OrgUnitCreate) =>
-      apiPost<OrgUnitRead>(
-        `/admin/organizations/${orgId}/units`,
-        body,
-      ),
+      apiPost<OrgUnitRead>(`/admin/organizations/${orgId}/units`, body),
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: ["admin", "organizations", orgId, "units"] as const,
@@ -296,10 +286,7 @@ export function usePatchOrgUnit(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ unitId, body }: { unitId: string; body: OrgUnitPatch }) =>
-      apiPatch<OrgUnitRead>(
-        `/admin/org-units/${unitId}`,
-        body,
-      ),
+      apiPatch<OrgUnitRead>(`/admin/org-units/${unitId}`, body),
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: ["admin", "organizations", orgId, "units"] as const,
@@ -331,9 +318,7 @@ export function useOrganizationMemberships(orgId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.admin.organizationMemberships(orgId ?? ""),
     queryFn: () =>
-      apiFetch<MembershipRead[]>(
-        `/admin/organizations/${orgId}/memberships`,
-      ),
+      apiFetch<MembershipRead[]>(`/admin/organizations/${orgId}/memberships`),
     enabled: Boolean(orgId),
   });
 }

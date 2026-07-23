@@ -1,10 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { ApiError, apiFetch } from "../client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ApiError, apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import { useInfinitePage } from "../use-infinite-page";
 import type {
   Course,
   CourseContentPublic,
+  CourseLearningOutcomeAuthoring,
   CourseLearningOutcomePublic,
   CoursePublic,
   LessonPublic,
@@ -16,7 +17,11 @@ import type {
   TagPublic,
 } from "../types";
 
-function buildPagedUrl(base: string, cursor: string | undefined, limit: number) {
+function buildPagedUrl(
+  base: string,
+  cursor: string | undefined,
+  limit: number,
+) {
   const params = new URLSearchParams();
   if (cursor) params.set("cursor", cursor);
   if (limit) params.set("limit", String(limit));
@@ -37,7 +42,9 @@ export function useMyCourses(limit = 20) {
   return useInfinitePage<Course>({
     queryKey: queryKeys.courses.myList(),
     fetch: (cursor, lim = limit) =>
-      apiFetch<Page<Course>>(buildPagedUrl("/me/courses", cursor, lim ?? limit)),
+      apiFetch<Page<Course>>(
+        buildPagedUrl("/me/courses", cursor, lim ?? limit),
+      ),
     limit,
   });
 }
@@ -85,7 +92,8 @@ export function useCourse(courseId: string | undefined) {
 export function useCourseContent(courseId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.courses.content(courseId ?? ""),
-    queryFn: () => apiFetch<CourseContentPublic>(`/courses/${courseId}/content`),
+    queryFn: () =>
+      apiFetch<CourseContentPublic>(`/courses/${courseId}/content`),
     enabled: !!courseId,
     retry: (failureCount, error) => {
       if (error instanceof ApiError && error.status === 404) return false;
@@ -118,8 +126,7 @@ export function useCourseOutcomes(courseId: string | undefined) {
 export function useCourseModules(courseId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.courses.modules(courseId ?? ""),
-    queryFn: () =>
-      apiFetch<ModulePublic[]>(`/courses/${courseId}/modules`),
+    queryFn: () => apiFetch<ModulePublic[]>(`/courses/${courseId}/modules`),
     enabled: !!courseId,
   });
 }
@@ -139,8 +146,7 @@ export function useModule(moduleId: string | undefined) {
 export function useModuleItems(moduleId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.courses.moduleItems(moduleId ?? ""),
-    queryFn: () =>
-      apiFetch<ModuleItemPublic[]>(`/modules/${moduleId}/items`),
+    queryFn: () => apiFetch<ModuleItemPublic[]>(`/modules/${moduleId}/items`),
     enabled: !!moduleId,
   });
 }
@@ -148,8 +154,7 @@ export function useModuleItems(moduleId: string | undefined) {
 export function useModuleLessons(moduleId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.courses.moduleLessons(moduleId ?? ""),
-    queryFn: () =>
-      apiFetch<LessonPublic[]>(`/modules/${moduleId}/lessons`),
+    queryFn: () => apiFetch<LessonPublic[]>(`/modules/${moduleId}/lessons`),
     enabled: !!moduleId,
   });
 }
@@ -160,7 +165,11 @@ export function useLesson(lessonId: string | undefined) {
     queryFn: () => apiFetch<LessonPublic>(`/lessons/${lessonId}`),
     enabled: !!lessonId,
     retry: (failureCount, error) => {
-      if (error instanceof ApiError && (error.status === 404 || error.status === 403)) return false;
+      if (
+        error instanceof ApiError &&
+        (error.status === 404 || error.status === 403)
+      )
+        return false;
       return failureCount < 3;
     },
   });
@@ -197,4 +206,73 @@ export async function fetchResourceDownloadUrl(
     `/lesson-resources/${resourceId}/download-url`,
   );
   return data.url;
+}
+
+/* ── Teacher-side learning-outcome CRUD (§LO-1/2) ──
+ * The `L.O.x` code is derived from `position` (1-based, contiguous) at
+ * display time; the server renumbers on delete so positions never gap.
+ */
+export function useTeacherCourseOutcomes(courseId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.courses.teacherOutcomes(courseId ?? ""),
+    queryFn: async () => {
+      const list = await apiFetch<CourseLearningOutcomeAuthoring[]>(
+        `/teacher/courses/${courseId}/outcomes`,
+      );
+      return [...list].sort((a, b) => a.position - b.position);
+    },
+    enabled: !!courseId,
+  });
+}
+
+function useOutcomeInvalidation(courseId: string | undefined) {
+  const qc = useQueryClient();
+  return () => {
+    void qc.invalidateQueries({
+      queryKey: queryKeys.courses.teacherOutcomes(courseId ?? ""),
+    });
+    // The learner-facing (published) list shares the same rows.
+    void qc.invalidateQueries({
+      queryKey: queryKeys.courses.outcomes(courseId ?? ""),
+    });
+  };
+}
+
+export function useCreateCourseOutcome(courseId: string | undefined) {
+  const invalidate = useOutcomeInvalidation(courseId);
+  return useMutation({
+    mutationFn: (outcome_text: string) =>
+      apiPost<CourseLearningOutcomeAuthoring>(
+        `/teacher/courses/${courseId}/outcomes`,
+        { outcome_text },
+      ),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateCourseOutcome(courseId: string | undefined) {
+  const invalidate = useOutcomeInvalidation(courseId);
+  return useMutation({
+    mutationFn: ({
+      outcomeId,
+      outcome_text,
+    }: {
+      outcomeId: string;
+      outcome_text: string;
+    }) =>
+      apiPatch<CourseLearningOutcomeAuthoring>(
+        `/teacher/courses/${courseId}/outcomes/${outcomeId}`,
+        { outcome_text },
+      ),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteCourseOutcome(courseId: string | undefined) {
+  const invalidate = useOutcomeInvalidation(courseId);
+  return useMutation({
+    mutationFn: (outcomeId: string) =>
+      apiDelete(`/teacher/courses/${courseId}/outcomes/${outcomeId}`),
+    onSuccess: invalidate,
+  });
 }

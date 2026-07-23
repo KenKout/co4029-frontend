@@ -88,7 +88,9 @@ function StatusAffix({ status }: { status: SectionStatus }) {
         <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span>
           {status.label}
-          {status.srLabel && <span className="sr-only"> — {status.srLabel}</span>}
+          {status.srLabel && (
+            <span className="sr-only"> — {status.srLabel}</span>
+          )}
         </span>
       </span>
     );
@@ -100,7 +102,9 @@ function StatusAffix({ status }: { status: SectionStatus }) {
         <TriangleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span>
           {status.label}
-          {status.srLabel && <span className="sr-only"> — {status.srLabel}</span>}
+          {status.srLabel && (
+            <span className="sr-only"> — {status.srLabel}</span>
+          )}
         </span>
       </span>
     );
@@ -200,14 +204,25 @@ export function SectionNav({
         if (e.activateAt <= scrollY) current = e.id;
       }
 
-      const firstUnreachable = entries.findIndex((e) => e.activateAt > maxScroll);
+      const firstUnreachable = entries.findIndex(
+        (e) => e.activateAt > maxScroll,
+      );
       if (firstUnreachable > 0 && maxScroll > 0) {
-        const zoneStart = Math.min(entries[firstUnreachable - 1].activateAt, maxScroll);
+        const zoneStart = Math.min(
+          entries[firstUnreachable - 1].activateAt,
+          maxScroll,
+        );
         const span = maxScroll - zoneStart;
         if (span > 0 && scrollY >= zoneStart) {
           const tail = entries.slice(firstUnreachable - 1);
-          const progress = Math.min(1, Math.max(0, (scrollY - zoneStart) / span));
-          const step = Math.min(tail.length - 1, Math.floor(progress * tail.length));
+          const progress = Math.min(
+            1,
+            Math.max(0, (scrollY - zoneStart) / span),
+          );
+          const step = Math.min(
+            tail.length - 1,
+            Math.floor(progress * tail.length),
+          );
           current = tail[step].id;
         }
       }
@@ -252,10 +267,7 @@ export function SectionNav({
     <nav
       ref={navRef}
       aria-label={ariaLabel}
-      className={cn(
-        "sticky z-10 -mx-1 px-1",
-        className,
-      )}
+      className={cn("sticky z-10 -mx-1 px-1", className)}
       style={{ top: topOffset }}
     >
       <div className="rounded-lg border border-border bg-white/95 backdrop-blur-sm shadow-sm">

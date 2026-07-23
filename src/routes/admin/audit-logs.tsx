@@ -5,7 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { useAuditHttp, useAuditRoleChanges, useAuditDataChanges } from "@/lib/api/hooks/admin";
+import {
+  useAuditHttp,
+  useAuditRoleChanges,
+  useAuditDataChanges,
+} from "@/lib/api/hooks/admin";
 import { ApiError } from "@/lib/api/client";
 import { DATA_CHANGE_TABLES, type DataChangeTable } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -15,7 +19,9 @@ type TabKey = "role_changes" | "http" | "data_changes";
 type RoleChangeRow = NonNullable<
   ReturnType<typeof useAuditRoleChanges>["data"]
 >[number];
-type HttpAuditRow = NonNullable<ReturnType<typeof useAuditHttp>["data"]>[number];
+type HttpAuditRow = NonNullable<
+  ReturnType<typeof useAuditHttp>["data"]
+>[number];
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -53,7 +59,9 @@ export default function AdminAuditLogsPage() {
             min={1}
             max={90}
             value={sinceDays}
-            onChange={(e) => setSinceDays(Math.max(1, Number(e.target.value) || 7))}
+            onChange={(e) =>
+              setSinceDays(Math.max(1, Number(e.target.value) || 7))
+            }
             className="w-20 h-8"
           />
         </label>
@@ -116,7 +124,9 @@ function RoleChangesTable({ sinceIso }: { sinceIso: string }) {
     {
       id: "scope",
       header: t("admin.audit.cols.scope"),
-      cell: (r) => <span className="text-m3-on-surface-variant">{r.scope_kind}</span>,
+      cell: (r) => (
+        <span className="text-m3-on-surface-variant">{r.scope_kind}</span>
+      ),
     },
     {
       id: "user",
@@ -172,10 +182,11 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
     const handle = setTimeout(() => setDebouncedPath(pathFilter), 400);
     return () => clearTimeout(handle);
   }, [pathFilter]);
-  const { data: rows, isLoading, isError } = useAuditHttp(
-    sinceIso,
-    debouncedPath ? `${debouncedPath}%` : undefined,
-  );
+  const {
+    data: rows,
+    isLoading,
+    isError,
+  } = useAuditHttp(sinceIso, debouncedPath ? `${debouncedPath}%` : undefined);
 
   const columns: DataTableColumn<HttpAuditRow>[] = [
     {
@@ -190,13 +201,17 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
     {
       id: "method",
       header: t("admin.audit.cols.method"),
-      cell: (r) => <span className="font-mono text-xs font-bold">{r.method}</span>,
+      cell: (r) => (
+        <span className="font-mono text-xs font-bold">{r.method}</span>
+      ),
     },
     {
       id: "path",
       header: t("admin.audit.cols.path"),
       cell: (r) => (
-        <span className="font-mono text-xs max-w-xs truncate block">{r.path}</span>
+        <span className="font-mono text-xs max-w-xs truncate block">
+          {r.path}
+        </span>
       ),
     },
     {
@@ -229,12 +244,16 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
     {
       id: "user",
       header: t("admin.audit.cols.user"),
-      cell: (r) => <span className="font-mono text-xs">{r.user_id ?? "—"}</span>,
+      cell: (r) => (
+        <span className="font-mono text-xs">{r.user_id ?? "—"}</span>
+      ),
     },
     {
       id: "ip",
       header: t("admin.audit.cols.ip"),
-      cell: (r) => <span className="font-mono text-xs">{r.ip_address ?? "—"}</span>,
+      cell: (r) => (
+        <span className="font-mono text-xs">{r.ip_address ?? "—"}</span>
+      ),
     },
   ];
 
@@ -278,7 +297,12 @@ function DataChangesPanel() {
   const trimmed = entityIdInput.trim();
   const isValidUuid = trimmed.length === 0 || UUID_RE.test(trimmed);
 
-  const { data: row, isFetching, isError, error } = useAuditDataChanges(table, submittedId);
+  const {
+    data: row,
+    isFetching,
+    isError,
+    error,
+  } = useAuditDataChanges(table, submittedId);
 
   const submit = () => {
     if (UUID_RE.test(trimmed)) setSubmittedId(trimmed);
@@ -303,7 +327,8 @@ function DataChangesPanel() {
     "subject_user_id",
   ];
 
-  const isNotFound = isError && error instanceof ApiError && error.status === 404;
+  const isNotFound =
+    isError && error instanceof ApiError && error.status === 404;
 
   return (
     <div className="space-y-4">
@@ -337,16 +362,24 @@ function DataChangesPanel() {
             className="h-9 font-mono text-xs normal-case"
           />
         </label>
-        <Button onClick={submit} disabled={!trimmed || !isValidUuid} className="h-9 gap-2">
+        <Button
+          onClick={submit}
+          disabled={!trimmed || !isValidUuid}
+          className="h-9 gap-2"
+        >
           <Search className="h-4 w-4" />
           {t("admin.audit.data_changes.lookup")}
         </Button>
       </div>
 
       {!isValidUuid ? (
-        <p className="text-sm text-m3-error">{t("admin.audit.data_changes.invalid_id")}</p>
+        <p className="text-sm text-m3-error">
+          {t("admin.audit.data_changes.invalid_id")}
+        </p>
       ) : !submittedId ? (
-        <p className="text-sm text-m3-on-surface-variant">{t("admin.audit.data_changes.hint")}</p>
+        <p className="text-sm text-m3-on-surface-variant">
+          {t("admin.audit.data_changes.hint")}
+        </p>
       ) : isFetching ? (
         <p className="text-sm text-m3-on-surface-variant">…</p>
       ) : isNotFound ? (
@@ -362,7 +395,9 @@ function DataChangesPanel() {
                 <dt className="text-[11px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
                   {t(`admin.audit.data_changes.fields.${f}`)}
                 </dt>
-                <dd className="text-sm font-mono break-all">{String(row[f])}</dd>
+                <dd className="text-sm font-mono break-all">
+                  {String(row[f])}
+                </dd>
               </div>
             ))}
         </dl>

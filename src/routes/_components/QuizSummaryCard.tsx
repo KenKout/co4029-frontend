@@ -94,7 +94,8 @@ export function QuizSummaryCard({
               aria-current={item.state === "active"}
               className={cn(
                 "aspect-square w-full flex items-center justify-center rounded-xl font-bold text-sm transition-all duration-150 hover:scale-110 relative cursor-pointer",
-                item.state === "completed" && "bg-m3-primary text-white shadow-md",
+                item.state === "completed" &&
+                  "bg-m3-primary text-white shadow-md",
                 item.state === "active" &&
                   "bg-surface-elev text-m3-primary ring-2 ring-m3-primary shadow-md",
                 item.state === "flagged" &&

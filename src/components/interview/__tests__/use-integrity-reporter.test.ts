@@ -37,15 +37,15 @@ describe("useIntegrityReporter", () => {
     // Verify listeners were attached
     expect(addEventListenerSpy).toHaveBeenCalledWith(
       "visibilitychange",
-      expect.any(Function)
+      expect.any(Function),
     );
     expect(addEventListenerSpy).toHaveBeenCalledWith(
       "fullscreenchange",
-      expect.any(Function)
+      expect.any(Function),
     );
     expect(windowAddEventListenerSpy).toHaveBeenCalledWith(
       "blur",
-      expect.any(Function)
+      expect.any(Function),
     );
 
     addEventListenerSpy.mockRestore();
@@ -54,7 +54,10 @@ describe("useIntegrityReporter", () => {
 
   it("detaches all listeners on unmount", () => {
     const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
-    const windowRemoveEventListenerSpy = vi.spyOn(window, "removeEventListener");
+    const windowRemoveEventListenerSpy = vi.spyOn(
+      window,
+      "removeEventListener",
+    );
 
     const { unmount } = renderHook(() => useIntegrityReporter("session-123"));
 
@@ -65,15 +68,15 @@ describe("useIntegrityReporter", () => {
     // Verify listeners were removed
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
       "visibilitychange",
-      expect.any(Function)
+      expect.any(Function),
     );
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
       "fullscreenchange",
-      expect.any(Function)
+      expect.any(Function),
     );
     expect(windowRemoveEventListenerSpy).toHaveBeenCalledWith(
       "blur",
-      expect.any(Function)
+      expect.any(Function),
     );
 
     removeEventListenerSpy.mockRestore();

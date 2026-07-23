@@ -68,8 +68,7 @@ export default function ManagementCareerPathDetailPage() {
   const permissions = useMyPermissions();
   const perms = permissions.data?.permissions ?? [];
   const canManage =
-    perms.includes("career_path.manage") ||
-    perms.includes("system.administer");
+    perms.includes("career_path.manage") || perms.includes("system.administer");
 
   useEffect(() => {
     if (permissions.isLoading) return;
@@ -111,10 +110,9 @@ export default function ManagementCareerPathDetailPage() {
 
   const data = path.data;
   const statusCls = STATUS_COLOR[data.status] ?? "bg-slate-100 text-slate-700";
-  const statusLabel =
-    t(`management_career_path_detail.status.${data.status}`, {
-      defaultValue: data.status,
-    });
+  const statusLabel = t(`management_career_path_detail.status.${data.status}`, {
+    defaultValue: data.status,
+  });
 
   return (
     <div className="max-w-[1200px] mx-auto pb-16 space-y-6 px-4 sm:px-6 lg:px-8">
@@ -369,7 +367,9 @@ function EditForm({
       },
       {
         onSuccess: () =>
-          toast.success(t("management_career_path_detail.toasts.saved_changes")),
+          toast.success(
+            t("management_career_path_detail.toasts.saved_changes"),
+          ),
         onError: (err) =>
           toast.error(
             (err as Error).message ||
@@ -518,7 +518,9 @@ function CoursesTab({ id }: { id: string }) {
       order.map((r) => r.course_id),
       {
         onSuccess: () => {
-          toast.success(t("management_career_path_detail.toasts.order_updated"));
+          toast.success(
+            t("management_career_path_detail.toasts.order_updated"),
+          );
           setOrder(null);
         },
         onError: (err) =>
@@ -583,7 +585,9 @@ function CoursesTab({ id }: { id: string }) {
           }}
           isSubmitting={submitting}
           emptyText={t("management_career_path_detail.course_picker.empty")}
-          alreadyAddedLabel={t("management_career_path_detail.course_picker.added")}
+          alreadyAddedLabel={t(
+            "management_career_path_detail.course_picker.added",
+          )}
         />
       )}
 
@@ -634,7 +638,8 @@ function CoursesTab({ id }: { id: string }) {
               onMoveUp={() => move(idx, -1)}
               onMoveDown={() => move(idx, 1)}
               onLocalRemove={() => {
-                if (order) setOrder(order.filter((r) => r.course_id !== row.course_id));
+                if (order)
+                  setOrder(order.filter((r) => r.course_id !== row.course_id));
               }}
             />
           ))}
@@ -720,8 +725,9 @@ function CourseInPathRow({
                 : "text-[10px] font-bold uppercase text-m3-on-surface-variant"
             }
           >
-            {t("management_career_path_detail.labels.required_or_optional")
-              .split(" / ")[row.is_required ? 0 : 1] ??
+            {t(
+              "management_career_path_detail.labels.required_or_optional",
+            ).split(" / ")[row.is_required ? 0 : 1] ??
               t("management_career_path_detail.labels.required_or_optional")}
           </span>
         </div>
@@ -1026,7 +1032,9 @@ function ProgressTab({ id }: { id: string }) {
     return (
       <div className="rounded-xl bg-m3-error-container border border-m3-error/20 p-6 text-center">
         <p className="text-m3-on-error-container text-sm font-semibold">
-          {t("management_career_path_detail.errors.load_student_progress_failed")}
+          {t(
+            "management_career_path_detail.errors.load_student_progress_failed",
+          )}
         </p>
       </div>
     );
@@ -1039,7 +1047,9 @@ function ProgressTab({ id }: { id: string }) {
       <div className="rounded-xl bg-m3-surface-container-lowest ghost-border p-10 text-center">
         <Users className="h-8 w-8 mx-auto mb-3 text-m3-outline" />
         <p className="text-sm text-m3-on-surface-variant">
-          {t("management_career_path_detail.empty_states.no_student_path_progress")}
+          {t(
+            "management_career_path_detail.empty_states.no_student_path_progress",
+          )}
         </p>
       </div>
     );

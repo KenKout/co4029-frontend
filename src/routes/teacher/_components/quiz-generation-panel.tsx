@@ -33,6 +33,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   AlertCircle,
@@ -48,6 +49,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ApiError } from "@/lib/api/client";
 import { useAuthoringModuleLessons } from "@/lib/api/hooks/teacher-courses";
+import { useTeacherCourseOutcomes } from "@/lib/api/hooks/courses";
 import {
   useGenerateQuiz,
   useLatestQuizGenerationRun,
@@ -64,6 +66,7 @@ import {
   EMPTY_BLOOM_DISTRIBUTION,
   TopicTagInput,
 } from "./quiz-generation-form-controls";
+import { GenerationProgress } from "./quiz-results/GenerationProgress";
 
 /**
  * Difficulty levels accepted by the backend's
@@ -122,6 +125,8 @@ interface FormState {
   selected_section_ids: Record<string, string[]>;
   bloom_enabled: boolean;
   bloom_distribution: BloomDistribution;
+  /** Course learning-outcome ids the generated questions should target. */
+  target_outcome_ids: string[];
 }
 
 const INITIAL_FORM: FormState = {
@@ -141,6 +146,7 @@ const INITIAL_FORM: FormState = {
   selected_section_ids: {},
   bloom_enabled: false,
   bloom_distribution: { ...EMPTY_BLOOM_DISTRIBUTION },
+  target_outcome_ids: [],
 };
 
 /**
@@ -155,8 +161,16 @@ function ModeToggle({
   onChange: (mode: GenerationMode) => void;
 }) {
   const options: Array<{ key: GenerationMode; label: string; hint: string }> = [
-    { key: "topic", label: "Topic", hint: "Balanced spread across all lessons" },
-    { key: "coverage", label: "Coverage", hint: "One+ question per lesson section" },
+    {
+      key: "topic",
+      label: "Topic",
+      hint: "Balanced spread across all lessons",
+    },
+    {
+      key: "coverage",
+      label: "Coverage",
+      hint: "One+ question per lesson section",
+    },
   ];
 
   return (
@@ -224,7 +238,9 @@ function AppendToggle({
               : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
           )}
         >
-          <span className="text-sm font-semibold text-m3-on-surface">Replace</span>
+          <span className="text-sm font-semibold text-m3-on-surface">
+            Replace
+          </span>
           <span className="text-[11px] text-m3-on-surface-variant">
             Wipe current questions and start fresh
           </span>
@@ -240,7 +256,9 @@ function AppendToggle({
               : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
           )}
         >
-          <span className="text-sm font-semibold text-m3-on-surface">Append</span>
+          <span className="text-sm font-semibold text-m3-on-surface">
+            Append
+          </span>
           <span className="text-[11px] text-m3-on-surface-variant">
             Add new questions next to existing ones
           </span>
@@ -249,7 +267,8 @@ function AppendToggle({
       {hasExistingQuestions && !append && (
         <p className="text-[11px] text-amber-700 flex items-start gap-1.5 mt-1">
           <AlertCircle className="h-3 w-3 shrink-0 mt-0.5" />
-          This quiz already has questions. Replace will delete them before generating.
+          This quiz already has questions. Replace will delete them before
+          generating.
         </p>
       )}
     </div>
@@ -339,29 +358,47 @@ function buildCoverageOptions(
 export function QuizGenerationPanel({
   quizId,
   moduleId,
+  courseId,
   hasExistingQuestions,
   onRunStarted,
 }: {
   quizId: string;
   moduleId: string;
+  courseId?: string;
   hasExistingQuestions: boolean;
   onRunStarted?: (runId: string) => void;
 }) {
+  const { t } = useTranslation();
   const generateQuiz = useGenerateQuiz(quizId);
   const { data: lessons = [] } = useAuthoringModuleLessons(moduleId);
+  const { data: outcomes = [] } = useTeacherCourseOutcomes(courseId);
   // Reattach to the latest server-side run on mount instead of
   // persisting the run id in the browser. Survives cross-device
   // sessions, tab closes, and lets two teachers viewing the same
   // quiz both see the in-flight run.
+  //
+  // Only auto-reattach a NON-TERMINAL run (pending/running). A completed
+  // or failed run is shown as a dismissible "last result" via
+  // `displayRun` below — reattaching it to `activeRunId` was the bug
+  // where clicking Generate just surfaced an already-finished run's data
+  // instead of starting fresh.
   const { data: latestRun } = useLatestQuizGenerationRun(quizId);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   useEffect(() => {
     if (activeRunId) return;
-    if (latestRun?.id) {
+    if (
+      latestRun?.id &&
+      (latestRun.status === "pending" || latestRun.status === "running")
+    ) {
       setActiveRunId(latestRun.id);
     }
-  }, [latestRun?.id, activeRunId]);
+  }, [latestRun?.id, latestRun?.status, activeRunId]);
   const { data: activeRun } = useQuizGenerationRun(quizId, activeRunId);
+
+  // The run to visualise: the live one if attached, else the most recent
+  // finished run so the teacher still sees "last generation" context
+  // (stepper collapsed to done + logs) without it blocking a new run.
+  const displayRun = activeRun ?? (activeRunId ? undefined : latestRun) ?? null;
 
   const [selectedLessonIds, setSelectedLessonIds] = useState<string[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -386,7 +423,6 @@ export function QuizGenerationPanel({
           activeRun.status === "pending" ||
           activeRun.status === "running"),
     );
-  const generationFailed = activeRun?.status === "failed";
 
   // Surface terminal-state toasts exactly once per run id (the
   // polling hook re-runs on every refetch — without the ref guard
@@ -395,7 +431,11 @@ export function QuizGenerationPanel({
   useEffect(() => {
     if (!activeRun || !activeRunId) return;
     const status = activeRun.status;
-    if (status !== "completed" && status !== "failed" && status !== "cancelled") {
+    if (
+      status !== "completed" &&
+      status !== "failed" &&
+      status !== "cancelled"
+    ) {
       return;
     }
     if (toastedRunIdRef.current === activeRunId) return;
@@ -404,10 +444,9 @@ export function QuizGenerationPanel({
     if (status === "completed") {
       toast.success("Quiz generation completed");
     } else if (status === "failed") {
-      toast.error(
-        activeRun.error_message ?? "Quiz generation failed",
-        { duration: 8000 },
-      );
+      toast.error(activeRun.error_message ?? "Quiz generation failed", {
+        duration: 8000,
+      });
     } else {
       toast.info("Quiz generation cancelled");
     }
@@ -419,6 +458,15 @@ export function QuizGenerationPanel({
         ? current.filter((id) => id !== lessonId)
         : [...current, lessonId],
     );
+  }
+
+  function toggleOutcome(outcomeId: string) {
+    setForm((current) => ({
+      ...current,
+      target_outcome_ids: current.target_outcome_ids.includes(outcomeId)
+        ? current.target_outcome_ids.filter((id) => id !== outcomeId)
+        : [...current.target_outcome_ids, outcomeId],
+    }));
   }
 
   function setSelectedSectionIds(lessonId: string, sectionIds: string[]) {
@@ -474,6 +522,7 @@ export function QuizGenerationPanel({
           form.bloom_enabled,
           form.bloom_distribution,
         ),
+        target_outcome_ids: form.target_outcome_ids,
       });
       setActiveRunId(run.id);
       onRunStarted?.(run.id);
@@ -485,9 +534,7 @@ export function QuizGenerationPanel({
         );
         return;
       }
-      toast.error(
-        (err as Error).message || "Failed to start quiz generation",
-      );
+      toast.error((err as Error).message || "Failed to start quiz generation");
     }
   }
 
@@ -542,6 +589,71 @@ export function QuizGenerationPanel({
           )}
         </div>
       </div>
+
+      {/* ── Target learning outcomes ── */}
+      {courseId && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              {t("quiz_generation.outcomes.label", "Target learning outcomes")}
+            </label>
+            {outcomes.length > 0 && (
+              <button
+                type="button"
+                onClick={() =>
+                  setForm((current) => ({
+                    ...current,
+                    target_outcome_ids: outcomes.map((o) => o.id),
+                  }))
+                }
+                className="text-xs font-semibold text-m3-secondary hover:text-m3-primary cursor-pointer"
+              >
+                {t("quiz_generation.outcomes.select_all", "Select all")}
+              </button>
+            )}
+          </div>
+          <div className="space-y-2">
+            {outcomes.length === 0 ? (
+              <div className="rounded-xl bg-m3-surface p-4 text-sm text-m3-on-surface-variant text-center">
+                {t(
+                  "quiz_generation.outcomes.empty",
+                  "No learning outcomes defined for this course yet. Questions will be generated without outcome tagging.",
+                )}
+              </div>
+            ) : (
+              outcomes.map((outcome, index) => {
+                const checked = form.target_outcome_ids.includes(outcome.id);
+                return (
+                  <label
+                    key={outcome.id}
+                    className={cn(
+                      "flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer transition-all",
+                      checked
+                        ? "border-m3-secondary bg-m3-secondary-fixed/30"
+                        : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleOutcome(outcome.id)}
+                      className="h-4 w-4"
+                    />
+                    <span className="shrink-0 rounded-md bg-violet-100 px-1.5 py-0.5 text-[11px] font-bold text-violet-700">
+                      {t("quiz_generation.outcomes.badge", "L.O.{{n}}", {
+                        n: index + 1,
+                      })}
+                    </span>
+                    <span className="flex-1 text-sm text-m3-on-surface">
+                      {outcome.outcome_text}
+                    </span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Question count + difficulty ── */}
       <div className="grid grid-cols-2 gap-3">
@@ -614,7 +726,9 @@ export function QuizGenerationPanel({
                     setForm((current) => {
                       const next = e.target.checked
                         ? [...current.question_types, type]
-                        : current.question_types.filter((entry) => entry !== type);
+                        : current.question_types.filter(
+                            (entry) => entry !== type,
+                          );
                       return { ...current, question_types: next };
                     })
                   }
@@ -764,28 +878,8 @@ export function QuizGenerationPanel({
         </p>
       </div>
 
-      {/* ── Run status / failure ── */}
-      {generationInProgress && (
-        <div className="rounded-xl bg-m3-surface p-4 border border-m3-secondary/10 text-center space-y-2">
-          <Loader2 className="h-6 w-6 animate-spin text-m3-secondary mx-auto" />
-          <p className="font-headline font-bold text-sm text-m3-on-surface">
-            Building quiz draft
-          </p>
-          <p className="text-xs text-m3-on-surface-variant">
-            Retrieval → knowledge graph → ideation → generation → validation.
-          </p>
-        </div>
-      )}
-
-      {generationFailed && (
-        <div className="rounded-xl bg-red-50 p-3 border border-red-100 text-red-700 text-sm flex gap-2">
-          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-semibold">Generation failed</p>
-            <p>{activeRun?.error_message ?? "Try again or adjust your inputs."}</p>
-          </div>
-        </div>
-      )}
+      {/* ── Live run status: stage stepper + stepped % + elapsed + logs ── */}
+      {displayRun && <GenerationProgress run={displayRun} />}
 
       <Button
         type="submit"

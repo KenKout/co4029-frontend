@@ -37,10 +37,23 @@ export function isAwaitingEndConfirmation(
   return Boolean(result.pending_confirmation);
 }
 
+/**
+ * Whether this response is a rich-closing sub-step (self-reflection prompt or
+ * invite-candidate-questions). The backend sets `interaction_state: "closing"`
+ * on these NON-assessed ceremony turns. The client tags them `kind: "closing"`
+ * so the transcript groups them under a "Wrap-up" section instead of the last
+ * numbered question, and can offer a Skip-and-finish control.
+ */
+export function isClosingTurn(result: RespondEndConfirmationFields): boolean {
+  return result.interaction_state === "closing";
+}
+
 /** The prompt text to display while confirming (server text, else caller fallback). */
 export function endConfirmationPrompt(
   result: RespondEndConfirmationFields,
   fallback: string,
 ): string {
-  return (result.ai_turn_text || result.ai_followup_text || "").trim() || fallback;
+  return (
+    (result.ai_turn_text || result.ai_followup_text || "").trim() || fallback
+  );
 }

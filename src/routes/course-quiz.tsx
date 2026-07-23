@@ -34,7 +34,10 @@ import {
 import { useCardCooldown } from "@/lib/api/cooldown";
 import { isApiErrorCode } from "@/lib/api/error-codes";
 import { QuestionRenderer } from "@/routes/_components/QuestionRenderer";
-import { QuizSummaryCard, type QuizSummaryItem } from "@/routes/_components/QuizSummaryCard";
+import {
+  QuizSummaryCard,
+  type QuizSummaryItem,
+} from "@/routes/_components/QuizSummaryCard";
 import { QuizConfigPopover } from "@/routes/_components/QuizConfigPopover";
 import { QuizIntegrityNotice } from "@/routes/_components/QuizIntegrityNotice";
 import type {
@@ -58,7 +61,9 @@ interface QuestionStatus {
 }
 
 function formatTime(seconds: number) {
-  const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+  const m = Math.floor(seconds / 60)
+    .toString()
+    .padStart(2, "0");
   const s = (seconds % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 }
@@ -78,10 +83,16 @@ function formatDuration(seconds: number) {
 }
 
 function hasAnswer(status: QuestionStatus): boolean {
-  return status.selectedOptionId !== null || (status.answerText ?? "").length > 0;
+  return (
+    status.selectedOptionId !== null || (status.answerText ?? "").length > 0
+  );
 }
 
-function questionState(idx: number, activeIdx: number, status: QuestionStatus): QuestionState {
+function questionState(
+  idx: number,
+  activeIdx: number,
+  status: QuestionStatus,
+): QuestionState {
   if (status.flagged) return "flagged";
   if (hasAnswer(status)) return "completed";
   if (idx === activeIdx) return "active";
@@ -143,7 +154,11 @@ function HintDialog({
             </div>
             <DialogPrimitive.Close
               render={
-                <Button variant="ghost" size="icon-sm" aria-label={t("course_quiz.actions.close_hint", "Close")} />
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t("course_quiz.actions.close_hint", "Close")}
+                />
               }
             >
               <X className="h-4 w-4" />
@@ -193,7 +208,9 @@ function QuizStudyModeCard({
           <span className="font-semibold text-m3-on-surface">
             {allowRetakes
               ? maxAttempts != null
-                ? t("course_quiz.values.retake_max_attempts", { count: maxAttempts })
+                ? t("course_quiz.values.retake_max_attempts", {
+                    count: maxAttempts,
+                  })
                 : t("course_quiz.values.allowed")
               : t("course_quiz.values.disallowed")}
           </span>
@@ -233,7 +250,9 @@ function QuizIntroPanel({
   slug: string;
 }) {
   const { t } = useTranslation();
-  const completed = attempts.filter((a) => a.status === "submitted" || a.status === "graded").length;
+  const completed = attempts.filter(
+    (a) => a.status === "submitted" || a.status === "graded",
+  ).length;
   const passingScore = Math.round(Number(quiz.passing_score_percent));
   const maxAttemptsReached =
     quiz.max_attempts != null && completed >= quiz.max_attempts;
@@ -274,237 +293,241 @@ function QuizIntroPanel({
 
       <div className="w-full space-y-6">
         <GlassCard className="p-8 sm:p-10 text-center">
-        <h1 className="font-headline font-extrabold text-3xl text-m3-primary mb-3">
-          {quiz.title}
-        </h1>
-        {quiz.description && (
-          <p className="text-m3-on-surface-variant mb-6">{quiz.description}</p>
-        )}
+          <h1 className="font-headline font-extrabold text-3xl text-m3-primary mb-3">
+            {quiz.title}
+          </h1>
+          {quiz.description && (
+            <p className="text-m3-on-surface-variant mb-6">
+              {quiz.description}
+            </p>
+          )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 text-left">
-          <div className="rounded-xl bg-m3-surface-container-low p-4">
-            <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-              {t("course_quiz.labels.passing_score")}
-            </span>
-            <span className="text-xl font-black font-headline text-m3-primary">
-              {passingScore}%
-            </span>
-          </div>
-          <div className="rounded-xl bg-m3-surface-container-low p-4">
-            <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-              {t("course_quiz.labels.time")}
-            </span>
-            <span className="text-xl font-black font-headline text-m3-on-surface">
-              {quiz.time_limit_seconds
-                ? formatTime(quiz.time_limit_seconds)
-                : t("course_quiz.values.no_limit")}
-            </span>
-          </div>
-          <div className="rounded-xl bg-m3-surface-container-low p-4">
-            <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-              {t("course_quiz.labels.attempts")}
-            </span>
-            <span className="text-xl font-black font-headline text-m3-secondary">
-              {completed}
-              {quiz.max_attempts != null && (
-                <span className="text-sm text-m3-outline-variant font-medium">
-                  /{quiz.max_attempts}
-                </span>
-              )}
-            </span>
-          </div>
-        </div>
-
-        {(openAt || closeAt || dueAt) && (
-          <div className="mb-8 flex flex-col gap-2 text-left">
-            {openAt && (
-              <div className="flex items-center gap-2 text-sm text-m3-on-surface-variant">
-                <Clock className="h-4 w-4 shrink-0 text-m3-primary" />
-                <span>
-                  {t(
-                    notYetOpen
-                      ? "course_quiz.schedule.opens_at"
-                      : "course_quiz.schedule.opened_at",
-                    { when: openAt.toLocaleString() },
-                  )}
-                </span>
-              </div>
-            )}
-            {closeAt && (
-              <div className="flex items-center gap-2 text-sm text-m3-on-surface-variant">
-                <Clock className="h-4 w-4 shrink-0 text-amber-600" />
-                <span>
-                  {t(
-                    windowClosed
-                      ? "course_quiz.schedule.closed_at"
-                      : "course_quiz.schedule.closes_at",
-                    { when: closeAt.toLocaleString() },
-                  )}
-                </span>
-              </div>
-            )}
-            {dueAt && (
-              <div
-                className={cn(
-                  "flex items-center gap-2 text-sm",
-                  pastDue ? "text-amber-700 font-medium" : "text-m3-on-surface-variant",
-                )}
-              >
-                <Flag className="h-4 w-4 shrink-0" />
-                <span>
-                  {t(
-                    pastDue
-                      ? "course_quiz.schedule.was_due"
-                      : "course_quiz.schedule.due_by",
-                    { when: dueAt.toLocaleString() },
-                  )}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {inProgressAttempt ? (
-          <div className="space-y-4">
-            <div className="rounded-xl bg-m3-primary-fixed/30 border border-m3-primary/20 px-4 py-3 text-sm text-m3-on-surface flex items-center justify-center gap-2">
-              <RotateCcw className="h-4 w-4 text-m3-primary shrink-0" />
-              <span>
-                {t("course_quiz.resume.pending_notice", {
-                  number: inProgressAttempt.attempt_number,
-                })}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 text-left">
+            <div className="rounded-xl bg-m3-surface-container-low p-4">
+              <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
+                {t("course_quiz.labels.passing_score")}
+              </span>
+              <span className="text-xl font-black font-headline text-m3-primary">
+                {passingScore}%
               </span>
             </div>
-            <div className="flex items-center gap-3 justify-center flex-wrap">
-              <Button
-                onClick={onResume}
-                disabled={resuming || starting}
-                className="gradient-primary text-white rounded-xl font-bold gap-2 px-8 py-3 h-auto"
-              >
-                {resuming
-                  ? t("course_quiz.resume.resuming")
-                  : t("course_quiz.resume.resume")}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+            <div className="rounded-xl bg-m3-surface-container-low p-4">
+              <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
+                {t("course_quiz.labels.time")}
+              </span>
+              <span className="text-xl font-black font-headline text-m3-on-surface">
+                {quiz.time_limit_seconds
+                  ? formatTime(quiz.time_limit_seconds)
+                  : t("course_quiz.values.no_limit")}
+              </span>
+            </div>
+            <div className="rounded-xl bg-m3-surface-container-low p-4">
+              <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
+                {t("course_quiz.labels.attempts")}
+              </span>
+              <span className="text-xl font-black font-headline text-m3-secondary">
+                {completed}
+                {quiz.max_attempts != null && (
+                  <span className="text-sm text-m3-outline-variant font-medium">
+                    /{quiz.max_attempts}
+                  </span>
+                )}
+              </span>
             </div>
           </div>
-        ) : blocked ? (
-          <div className="rounded-xl bg-m3-surface-container-low px-4 py-3 text-sm text-m3-on-surface-variant">
-            {notYetOpen &&
-              t("course_quiz.messages.not_yet_open", {
-                when: openAt ? openAt.toLocaleString() : "",
-              })}
-            {windowClosed &&
-              t("course_quiz.messages.window_closed", {
-                when: closeAt ? closeAt.toLocaleString() : "",
-              })}
-            {noRetakesLeft &&
-              !notYetOpen &&
-              !windowClosed &&
-              t("course_quiz.messages.no_retakes")}
-            {maxAttemptsReached &&
-              !notYetOpen &&
-              !windowClosed &&
-              ` ${t("course_quiz.messages.max_attempts_reached", { count: quiz.max_attempts ?? 0 })}`}
-          </div>
-        ) : (
-          <Button
-            onClick={onStart}
-            disabled={starting}
-            className="gradient-primary text-white rounded-xl font-bold gap-2 px-8 py-3 h-auto"
-          >
-            {starting
-              ? t("course_quiz.actions.starting")
-              : t("course_quiz.actions.start")}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        )}
-      </GlassCard>
 
-      {(reviewableAttempts.length > 0 || inProgressAttempt) && (
-        <GlassCard className="p-6 sm:p-8">
-          <h2 className="font-headline font-bold text-base text-m3-on-surface mb-4">
-            {t("course_quiz.history.title")}
-          </h2>
-          <div className="space-y-2">
-            {inProgressAttempt && (
-              <button
-                type="button"
-                onClick={onResume}
-                disabled={resuming || starting}
-                className="w-full flex items-center gap-4 p-3 rounded-xl bg-m3-primary-fixed/20 hover:bg-m3-primary-fixed/40 transition-colors group text-left disabled:opacity-60"
-              >
-                <span className="text-xs font-headline font-black text-m3-primary tabular-nums shrink-0 w-8">
-                  #{inProgressAttempt.attempt_number}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-m3-primary/10 text-m3-primary">
-                      {t("course_quiz.status.currently_doing")}
-                    </span>
-                  </div>
-                  <p className="text-xs text-m3-on-surface-variant mt-0.5">
-                    {new Date(inProgressAttempt.started_at).toLocaleString()}
-                  </p>
+          {(openAt || closeAt || dueAt) && (
+            <div className="mb-8 flex flex-col gap-2 text-left">
+              {openAt && (
+                <div className="flex items-center gap-2 text-sm text-m3-on-surface-variant">
+                  <Clock className="h-4 w-4 shrink-0 text-m3-primary" />
+                  <span>
+                    {t(
+                      notYetOpen
+                        ? "course_quiz.schedule.opens_at"
+                        : "course_quiz.schedule.opened_at",
+                      { when: openAt.toLocaleString() },
+                    )}
+                  </span>
                 </div>
-                <span className="text-xs font-bold text-m3-primary group-hover:underline shrink-0 flex items-center gap-1">
-                  <RotateCcw className="h-3.5 w-3.5" />
+              )}
+              {closeAt && (
+                <div className="flex items-center gap-2 text-sm text-m3-on-surface-variant">
+                  <Clock className="h-4 w-4 shrink-0 text-amber-600" />
+                  <span>
+                    {t(
+                      windowClosed
+                        ? "course_quiz.schedule.closed_at"
+                        : "course_quiz.schedule.closes_at",
+                      { when: closeAt.toLocaleString() },
+                    )}
+                  </span>
+                </div>
+              )}
+              {dueAt && (
+                <div
+                  className={cn(
+                    "flex items-center gap-2 text-sm",
+                    pastDue
+                      ? "text-amber-700 font-medium"
+                      : "text-m3-on-surface-variant",
+                  )}
+                >
+                  <Flag className="h-4 w-4 shrink-0" />
+                  <span>
+                    {t(
+                      pastDue
+                        ? "course_quiz.schedule.was_due"
+                        : "course_quiz.schedule.due_by",
+                      { when: dueAt.toLocaleString() },
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {inProgressAttempt ? (
+            <div className="space-y-4">
+              <div className="rounded-xl bg-m3-primary-fixed/30 border border-m3-primary/20 px-4 py-3 text-sm text-m3-on-surface flex items-center justify-center gap-2">
+                <RotateCcw className="h-4 w-4 text-m3-primary shrink-0" />
+                <span>
+                  {t("course_quiz.resume.pending_notice", {
+                    number: inProgressAttempt.attempt_number,
+                  })}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 justify-center flex-wrap">
+                <Button
+                  onClick={onResume}
+                  disabled={resuming || starting}
+                  className="gradient-primary text-white rounded-xl font-bold gap-2 px-8 py-3 h-auto"
+                >
                   {resuming
                     ? t("course_quiz.resume.resuming")
                     : t("course_quiz.resume.resume")}
-                </span>
-              </button>
-            )}
-            {reviewableAttempts.map((a) => {
-              const score =
-                a.score_percent != null ? Number(a.score_percent) : null;
-              const passed = a.passed === true;
-              return (
-                <Link
-                  key={a.id}
-                  to="/courses/$slug/quiz/$quizId/attempts/$attemptId"
-                  params={{ slug, quizId: quiz.id, attemptId: a.id }}
-                  className="flex items-center gap-4 p-3 rounded-xl bg-m3-surface-container-low hover:bg-m3-surface-container transition-colors group"
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ) : blocked ? (
+            <div className="rounded-xl bg-m3-surface-container-low px-4 py-3 text-sm text-m3-on-surface-variant">
+              {notYetOpen &&
+                t("course_quiz.messages.not_yet_open", {
+                  when: openAt ? openAt.toLocaleString() : "",
+                })}
+              {windowClosed &&
+                t("course_quiz.messages.window_closed", {
+                  when: closeAt ? closeAt.toLocaleString() : "",
+                })}
+              {noRetakesLeft &&
+                !notYetOpen &&
+                !windowClosed &&
+                t("course_quiz.messages.no_retakes")}
+              {maxAttemptsReached &&
+                !notYetOpen &&
+                !windowClosed &&
+                ` ${t("course_quiz.messages.max_attempts_reached", { count: quiz.max_attempts ?? 0 })}`}
+            </div>
+          ) : (
+            <Button
+              onClick={onStart}
+              disabled={starting}
+              className="gradient-primary text-white rounded-xl font-bold gap-2 px-8 py-3 h-auto"
+            >
+              {starting
+                ? t("course_quiz.actions.starting")
+                : t("course_quiz.actions.start")}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+        </GlassCard>
+
+        {(reviewableAttempts.length > 0 || inProgressAttempt) && (
+          <GlassCard className="p-6 sm:p-8">
+            <h2 className="font-headline font-bold text-base text-m3-on-surface mb-4">
+              {t("course_quiz.history.title")}
+            </h2>
+            <div className="space-y-2">
+              {inProgressAttempt && (
+                <button
+                  type="button"
+                  onClick={onResume}
+                  disabled={resuming || starting}
+                  className="w-full flex items-center gap-4 p-3 rounded-xl bg-m3-primary-fixed/20 hover:bg-m3-primary-fixed/40 transition-colors group text-left disabled:opacity-60"
                 >
-                  <span className="text-xs font-headline font-black text-m3-secondary tabular-nums shrink-0 w-8">
-                    #{a.attempt_number}
+                  <span className="text-xs font-headline font-black text-m3-primary tabular-nums shrink-0 w-8">
+                    #{inProgressAttempt.attempt_number}
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-bold text-m3-on-surface">
-                        {score != null
-                          ? `${score.toFixed(0)}%`
-                          : t("course_quiz.history.no_score")}
+                      <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-m3-primary/10 text-m3-primary">
+                        {t("course_quiz.status.currently_doing")}
                       </span>
-                      {a.passed != null && (
-                        <span
-                          className={cn(
-                            "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
-                            passed
-                              ? "bg-emerald-50 text-emerald-700"
-                              : "bg-amber-50 text-amber-700",
-                          )}
-                        >
-                          {passed
-                            ? t("course_quiz.history.passed")
-                            : t("course_quiz.history.failed")}
+                    </div>
+                    <p className="text-xs text-m3-on-surface-variant mt-0.5">
+                      {new Date(inProgressAttempt.started_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold text-m3-primary group-hover:underline shrink-0 flex items-center gap-1">
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    {resuming
+                      ? t("course_quiz.resume.resuming")
+                      : t("course_quiz.resume.resume")}
+                  </span>
+                </button>
+              )}
+              {reviewableAttempts.map((a) => {
+                const score =
+                  a.score_percent != null ? Number(a.score_percent) : null;
+                const passed = a.passed === true;
+                return (
+                  <Link
+                    key={a.id}
+                    to="/courses/$slug/quiz/$quizId/attempts/$attemptId"
+                    params={{ slug, quizId: quiz.id, attemptId: a.id }}
+                    className="flex items-center gap-4 p-3 rounded-xl bg-m3-surface-container-low hover:bg-m3-surface-container transition-colors group"
+                  >
+                    <span className="text-xs font-headline font-black text-m3-secondary tabular-nums shrink-0 w-8">
+                      #{a.attempt_number}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-bold text-m3-on-surface">
+                          {score != null
+                            ? `${score.toFixed(0)}%`
+                            : t("course_quiz.history.no_score")}
                         </span>
+                        {a.passed != null && (
+                          <span
+                            className={cn(
+                              "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
+                              passed
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-amber-50 text-amber-700",
+                            )}
+                          >
+                            {passed
+                              ? t("course_quiz.history.passed")
+                              : t("course_quiz.history.failed")}
+                          </span>
+                        )}
+                      </div>
+                      {a.submitted_at && (
+                        <p className="text-xs text-m3-on-surface-variant mt-0.5">
+                          {new Date(a.submitted_at).toLocaleString()}
+                        </p>
                       )}
                     </div>
-                    {a.submitted_at && (
-                      <p className="text-xs text-m3-on-surface-variant mt-0.5">
-                        {new Date(a.submitted_at).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                  <span className="text-xs font-bold text-m3-primary group-hover:underline shrink-0">
-                    {t("course_quiz.history.review")}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </GlassCard>
-      )}
+                    <span className="text-xs font-bold text-m3-primary group-hover:underline shrink-0">
+                      {t("course_quiz.history.review")}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </GlassCard>
+        )}
       </div>
     </div>
   );
@@ -592,11 +615,15 @@ function QuestionSubmitButton({
 
 export default function CourseQuizPage() {
   const { t } = useTranslation();
-  const { slug, quizId } = useParams({ strict: false }) as { slug: string; quizId: string };
+  const { slug, quizId } = useParams({ strict: false }) as {
+    slug: string;
+    quizId: string;
+  };
 
   const { data: course, isLoading: courseLoading } = useCourseBySlug(slug);
   const { data: quiz, isLoading: quizLoading } = useStudentQuiz(quizId);
-  const { data: attempts = [], isLoading: attemptsLoading } = useMyQuizAttempts(quizId);
+  const { data: attempts = [], isLoading: attemptsLoading } =
+    useMyQuizAttempts(quizId);
 
   const startAttempt = useStartQuizAttempt(quizId);
 
@@ -613,7 +640,7 @@ export default function CourseQuizPage() {
   // how this quiz accumulated 13 empty in_progress duplicates.
   const [resumeRequested, setResumeRequested] = useState(false);
   const attemptProgress = useQuizAttemptProgress(
-    resumeRequested ? inProgressAttempt?.id ?? null : null,
+    resumeRequested ? (inProgressAttempt?.id ?? null) : null,
   );
 
   const [taking, setTaking] = useState<QuizForTakingPublic | null>(null);
@@ -621,8 +648,11 @@ export default function CourseQuizPage() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [statuses, setStatuses] = useState<QuestionStatus[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [submittedSummary, setSubmittedSummary] = useState<QuizAttemptRead | null>(null);
-  const [perQuestionCooldown, setPerQuestionCooldown] = useState<Record<string, string>>({});
+  const [submittedSummary, setSubmittedSummary] =
+    useState<QuizAttemptRead | null>(null);
+  const [perQuestionCooldown, setPerQuestionCooldown] = useState<
+    Record<string, string>
+  >({});
   const [hintDialogOpen, setHintDialogOpen] = useState(false);
   const [activeQuestionElapsed, setActiveQuestionElapsed] = useState(0);
   // Wall-clock start of the whole attempt (epoch ms). Drives the "Started at"
@@ -653,14 +683,17 @@ export default function CourseQuizPage() {
   // exists, so answers already saved via /answers aren't shown as blank.
   useEffect(() => {
     if (!attemptProgress.data || taking) return;
-    if (hydratedAttemptIdRef.current === attemptProgress.data.attempt_id) return;
+    if (hydratedAttemptIdRef.current === attemptProgress.data.attempt_id)
+      return;
     hydratedAttemptIdRef.current = attemptProgress.data.attempt_id;
 
     const progress = attemptProgress.data;
     const sortedQuestions = [...progress.take.questions].sort(
       (a, b) => a.position - b.position,
     );
-    const answersByQuestion = new Map(progress.answers.map((a) => [a.question_id, a]));
+    const answersByQuestion = new Map(
+      progress.answers.map((a) => [a.question_id, a]),
+    );
 
     setTaking(progress.take);
     setActiveAttemptId(progress.attempt_id);
@@ -698,7 +731,10 @@ export default function CourseQuizPage() {
   }, [attemptProgress.data, taking]);
 
   const displayQuestions: QuizQuestionPublic[] = useMemo(
-    () => (taking ? [...taking.questions].sort((a, b) => a.position - b.position) : []),
+    () =>
+      taking
+        ? [...taking.questions].sort((a, b) => a.position - b.position)
+        : [],
     [taking],
   );
 
@@ -722,9 +758,17 @@ export default function CourseQuizPage() {
       }
     }
     const interval = window.setInterval(() => {
-      setActiveQuestionElapsed(Math.floor((Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000));
+      setActiveQuestionElapsed(
+        Math.floor(
+          (Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000,
+        ),
+      );
     }, 1000);
-    setActiveQuestionElapsed(Math.floor((Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000));
+    setActiveQuestionElapsed(
+      Math.floor(
+        (Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000,
+      ),
+    );
     return () => window.clearInterval(interval);
   }, [activeIdx, displayQuestions, activeAttemptId]);
 
@@ -742,7 +786,9 @@ export default function CourseQuizPage() {
   useEffect(() => {
     if (quizStartedAt == null || !sessionReady || submittedSummary) return;
     const tick = () =>
-      setQuizElapsed(Math.max(0, Math.floor((Date.now() - quizStartedAt) / 1000)));
+      setQuizElapsed(
+        Math.max(0, Math.floor((Date.now() - quizStartedAt) / 1000)),
+      );
     tick();
     const timerId = window.setInterval(tick, 1000);
     return () => window.clearInterval(timerId);
@@ -810,7 +856,9 @@ export default function CourseQuizPage() {
         t_actual_ms: tActualMs,
       });
       setStatuses((current) =>
-        current.map((s, i) => (i === questionIdx ? { ...s, savedToServer: true } : s)),
+        current.map((s, i) =>
+          i === questionIdx ? { ...s, savedToServer: true } : s,
+        ),
       );
       setPerQuestionCooldown((prev) => {
         if (!prev[question.id]) return prev;
@@ -823,7 +871,10 @@ export default function CourseQuizPage() {
       if (isApiErrorCode(err, "card_cooldown_active")) {
         const retryAt = extractRetryAt(err);
         if (retryAt) {
-          setPerQuestionCooldown((prev) => ({ ...prev, [question.id]: retryAt }));
+          setPerQuestionCooldown((prev) => ({
+            ...prev,
+            [question.id]: retryAt,
+          }));
         }
         toast.error(t("course_quiz.errors.cooldown_active"));
         return false;
@@ -832,7 +883,9 @@ export default function CourseQuizPage() {
         toast.error(t("course_quiz.errors.rate_limited"));
         return false;
       }
-      toast.error((err as Error).message || t("course_quiz.errors.save_answer_failed"));
+      toast.error(
+        (err as Error).message || t("course_quiz.errors.save_answer_failed"),
+      );
       return false;
     }
   }
@@ -848,7 +901,9 @@ export default function CourseQuizPage() {
   async function handleSaveNext() {
     const ok = await persistAnswer(activeIdx);
     if (ok) {
-      setActiveIdx((current) => Math.min(displayQuestions.length - 1, current + 1));
+      setActiveIdx((current) =>
+        Math.min(displayQuestions.length - 1, current + 1),
+      );
     }
   }
 
@@ -873,7 +928,9 @@ export default function CourseQuizPage() {
         toast.error(t("course_quiz.errors.auto_submitted_timeout"));
       }
     } catch (err) {
-      toast.error((err as Error).message || t("course_quiz.errors.submit_failed"));
+      toast.error(
+        (err as Error).message || t("course_quiz.errors.submit_failed"),
+      );
     }
   }
 
@@ -902,7 +959,10 @@ export default function CourseQuizPage() {
   // Once the user clicks Resume, hold on the skeleton while the resume
   // payload loads instead of flashing the intro panel before hydrating.
   const resuming =
-    resumeRequested && !!inProgressAttempt && attemptProgress.isLoading && !taking;
+    resumeRequested &&
+    !!inProgressAttempt &&
+    attemptProgress.isLoading &&
+    !taking;
 
   if (courseLoading || quizLoading || attemptsLoading || resuming) {
     return (
@@ -977,13 +1037,17 @@ export default function CourseQuizPage() {
               {t("course_quiz.labels.attempt_summary", {
                 attempt: submittedSummary.attempt_number,
                 correct: submittedSummary.correct_count ?? 0,
-                total: submittedSummary.total_questions ?? displayQuestions.length,
+                total:
+                  submittedSummary.total_questions ?? displayQuestions.length,
               })}
             </p>
 
             <div className="flex gap-3 justify-center flex-wrap">
               <Link to="/courses/$slug/learn" params={{ slug }}>
-                <Button variant="outline" className="rounded-xl ghost-border font-bold text-sm gap-2">
+                <Button
+                  variant="outline"
+                  className="rounded-xl ghost-border font-bold text-sm gap-2"
+                >
                   <ArrowLeft className="h-4 w-4" />
                   {t("course_quiz.actions.back_to_course")}
                 </Button>
@@ -1064,7 +1128,7 @@ export default function CourseQuizPage() {
   const isTimeLow = Boolean(quiz.time_limit_seconds) && timeLeft < 120;
   const passingScore = Math.round(Number(quiz.passing_score_percent));
   const activeQuestionCooldown = activeQuestion
-    ? perQuestionCooldown[activeQuestion.id] ?? null
+    ? (perQuestionCooldown[activeQuestion.id] ?? null)
     : null;
 
   const summaryItems: QuizSummaryItem[] = displayQuestions.map(
@@ -1092,7 +1156,11 @@ export default function CourseQuizPage() {
         <div className="w-full flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3 flex-wrap -ml-3">
             <Link to="/courses/$slug/learn" params={{ slug }}>
-              <Button variant="ghost" size="sm" className="rounded-xl text-m3-on-surface-variant hover:text-m3-primary gap-1.5 text-xs font-bold px-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-xl text-m3-on-surface-variant hover:text-m3-primary gap-1.5 text-xs font-bold px-3"
+              >
                 <ArrowLeft className="h-4 w-4" />
                 {t("course_interview.actions.course")}
               </Button>
@@ -1137,7 +1205,9 @@ export default function CourseQuizPage() {
               <div
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold text-sm",
-                  isTimeLow ? "bg-red-50 text-red-600 animate-pulse" : "bg-m3-primary-fixed/40 text-m3-primary",
+                  isTimeLow
+                    ? "bg-red-50 text-red-600 animate-pulse"
+                    : "bg-m3-primary-fixed/40 text-m3-primary",
                 )}
               >
                 <Timer className="h-4 w-4" />
@@ -1172,7 +1242,9 @@ export default function CourseQuizPage() {
                 </span>
               </span>
               <span className="text-[10px] uppercase tracking-widest font-bold text-m3-outline">
-                {t("course_quiz.labels.attempts_before", { count: attempts.length })}
+                {t("course_quiz.labels.attempts_before", {
+                  count: attempts.length,
+                })}
               </span>
             </div>
           </div>
@@ -1183,7 +1255,10 @@ export default function CourseQuizPage() {
           <div className="lg:col-span-9 xl:col-span-10">
             <div className="bg-m3-surface-container-lowest rounded-xl p-6 sm:p-10 relative overflow-hidden shadow-editorial">
               <div className="absolute top-0 right-0 m-5 flex items-center gap-2">
-                <Badge variant="outline" className="text-m3-outline border-m3-outline-variant font-mono text-[10px] bg-white">
+                <Badge
+                  variant="outline"
+                  className="text-m3-outline border-m3-outline-variant font-mono text-[10px] bg-white"
+                >
                   <Timer className="h-3 w-3 mr-1" />
                   {formatTime(activeQuestionElapsed)}
                 </Badge>
@@ -1241,8 +1316,14 @@ export default function CourseQuizPage() {
             <div className="flex items-center justify-between mt-6 flex-wrap gap-3">
               <Button
                 variant="ghost"
-                onClick={() => setActiveIdx((current) => Math.max(0, current - 1))}
-                disabled={activeIdx === 0 || submitAnswer.isPending || submitAttempt.isPending}
+                onClick={() =>
+                  setActiveIdx((current) => Math.max(0, current - 1))
+                }
+                disabled={
+                  activeIdx === 0 ||
+                  submitAnswer.isPending ||
+                  submitAttempt.isPending
+                }
                 className="font-bold text-m3-primary hover:bg-m3-primary-fixed/30 rounded-xl gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -1255,7 +1336,9 @@ export default function CourseQuizPage() {
                   onClick={() => {
                     setStatuses((current) =>
                       current.map((status, index) =>
-                        index === activeIdx ? { ...status, flagged: !status.flagged } : status,
+                        index === activeIdx
+                          ? { ...status, flagged: !status.flagged }
+                          : status,
                       ),
                     );
                   }}
@@ -1279,7 +1362,9 @@ export default function CourseQuizPage() {
                     onClick={() => {
                       setStatuses((current) =>
                         current.map((status, index) =>
-                          index === activeIdx ? { ...status, hintViewed: true } : status,
+                          index === activeIdx
+                            ? { ...status, hintViewed: true }
+                            : status,
                         ),
                       );
                       setHintDialogOpen(true);

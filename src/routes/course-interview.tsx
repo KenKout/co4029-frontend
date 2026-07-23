@@ -69,12 +69,16 @@ import {
   CONFIRM_END_REPLY,
   endConfirmationPrompt,
   isAwaitingEndConfirmation,
+  isClosingTurn,
 } from "@/lib/interview/end-confirmation";
 import { useAnswerState } from "@/lib/interview/use-answer-state";
 import { normalizeQuestionText } from "@/lib/interview/question-content";
 import { planTransition } from "@/lib/interview/transition-sequencing";
 
-function questionTypeLabel(type: string | null | undefined, t: (k: string) => string) {
+function questionTypeLabel(
+  type: string | null | undefined,
+  t: (k: string) => string,
+) {
   switch (type) {
     case "conceptual":
       return t("course_interview.question_types.conceptual");
@@ -138,7 +142,12 @@ function makeUserTurn(
   return { id: `a-${key}`, role: "user", text, elapsedSeconds, kind };
 }
 
-type InterviewTurnAction = "answer" | "repeat" | "clarify" | "explain_term" | "hint";
+type InterviewTurnAction =
+  | "answer"
+  | "repeat"
+  | "clarify"
+  | "explain_term"
+  | "hint";
 
 type InterviewPhase =
   | "prestart"
@@ -166,7 +175,9 @@ function makeCeremonyTurn(
   };
 }
 
-function restoreHistoryTurn(turn: InterviewSessionHistoryTurn): ConversationTurn {
+function restoreHistoryTurn(
+  turn: InterviewSessionHistoryTurn,
+): ConversationTurn {
   return {
     id: turn.id,
     role: turn.role,
@@ -180,7 +191,10 @@ function restoreHistoryTurn(turn: InterviewSessionHistoryTurn): ConversationTurn
 
 /** A stable idempotency key for one answer submission (adaptive safeguard #1). */
 function newTurnKey(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
   return `tk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -197,7 +211,8 @@ export default function CourseInterviewPage() {
   const configId = moduleId;
 
   const { data: course, isLoading: courseLoading } = useCourseBySlug(slug);
-  const { data: takingPayload, isLoading: configLoading } = useInterviewForTaking(configId);
+  const { data: takingPayload, isLoading: configLoading } =
+    useInterviewForTaking(configId);
   const config = takingPayload?.config;
 
   const startSession = useStartInterviewSession(configId);
@@ -230,7 +245,8 @@ export default function CourseInterviewPage() {
   );
 
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [currentQuestion, setCurrentQuestion] = useState<InterviewQuestionPublic | null>(null);
+  const [currentQuestion, setCurrentQuestion] =
+    useState<InterviewQuestionPublic | null>(null);
   const [transcript, setTranscript] = useState<ConversationTurn[]>([]);
   const [answerText, setAnswerText] = useState("");
   // Structured submission status for the CURRENT question's answer (spec §7):
@@ -262,8 +278,16 @@ export default function CourseInterviewPage() {
     questionId: string;
     submissionId: string;
   } | null>(null);
-  const [finishResult, setFinishResult] = useState<InterviewSessionFinishResponse | null>(null);
-  const [inputMode, setInputMode] = useState<"voice" | "text" | "hybrid">("text");
+  const [finishResult, setFinishResult] =
+    useState<InterviewSessionFinishResponse | null>(null);
+  // True once a rich-closing sub-step (self-reflection / invite-questions) has
+  // been surfaced. The assessed questions are already complete at this point,
+  // so the composer offers a Skip-and-finish control that ends the interview
+  // and goes straight to the Evaluation screen (grading is unaffected).
+  const [closingCeremonyActive, setClosingCeremonyActive] = useState(false);
+  const [inputMode, setInputMode] = useState<"voice" | "text" | "hybrid">(
+    "text",
+  );
   // true = voice session started and LiveKitRoom is active
   const [voiceActive, setVoiceActive] = useState(false);
   // polling active when voice session is completing
@@ -308,7 +332,9 @@ export default function CourseInterviewPage() {
     useState<InterviewSessionFinishResponse | null>(null);
   const sessionStartedAtRef = useRef<number | null>(null);
   const voiceInitialTranscriptRef = useRef<ConversationTurn[]>([]);
-  const [assessmentStartedAtMs, setAssessmentStartedAtMs] = useState<number | null>(null);
+  const [assessmentStartedAtMs, setAssessmentStartedAtMs] = useState<
+    number | null
+  >(null);
   const sessionDeadlineAtRef = useRef<number | null>(null);
   const timeoutTriggeredRef = useRef(false);
 
@@ -350,7 +376,10 @@ export default function CourseInterviewPage() {
   const currentElapsedSeconds = () =>
     sessionStartedAtRef.current === null
       ? 0
-      : Math.max(0, Math.floor((Date.now() - sessionStartedAtRef.current) / 1000));
+      : Math.max(
+          0,
+          Math.floor((Date.now() - sessionStartedAtRef.current) / 1000),
+        );
 
   const respond = useInterviewRespond(sessionId);
   const onboarding = useInterviewOnboarding(sessionId);
@@ -383,8 +412,7 @@ export default function CourseInterviewPage() {
   // status here, this poll would keep asking for a pass_verdict that will
   // never arrive and the student would wait forever.
   const finishVerdict = finishResult?.pass_verdict ?? null;
-  const evaluationTerminallyFailed =
-    finishResult?.status === "failed" || false;
+  const evaluationTerminallyFailed = finishResult?.status === "failed" || false;
   const { data: verdictPoll } = useInterviewSession(
     finishResult &&
       finishVerdict === null &&
@@ -396,7 +424,7 @@ export default function CourseInterviewPage() {
   );
   // Live verdict: prefer the polled value once it lands, else the finish value.
   const liveVerdict: boolean | null =
-    (verdictPoll?.pass_verdict ?? null) ?? finishVerdict;
+    verdictPoll?.pass_verdict ?? finishVerdict;
   const evaluationFailed =
     evaluationTerminallyFailed || verdictPoll?.status === "failed";
   const verdictPending =
@@ -518,7 +546,9 @@ export default function CourseInterviewPage() {
   // Id of the most recently-added AI turn — only this one animates (types) and
   // speaks. Earlier AI turns render their full text immediately and silently.
   const elapsed = useInterviewTimer(
-    assessmentStartedAtMs !== null && phase !== "closing" && phase !== "results",
+    assessmentStartedAtMs !== null &&
+      phase !== "closing" &&
+      phase !== "results",
     assessmentStartedAtMs,
   );
   const currentQuestionNumber = useMemo(() => {
@@ -604,14 +634,14 @@ export default function CourseInterviewPage() {
         restoredTranscript.length > 0
           ? restoredTranscript
           : payload.opening_text
-          ? [
-              makeCeremonyTurn(
-                stage === "readiness" ? "briefing" : "opening",
-                payload.opening_text,
-                payload.session_id,
-              ),
-            ]
-          : [],
+            ? [
+                makeCeremonyTurn(
+                  stage === "readiness" ? "briefing" : "opening",
+                  payload.opening_text,
+                  payload.session_id,
+                ),
+              ]
+            : [],
       );
     }
     window.dispatchEvent(new CustomEvent("abridge:interview-started"));
@@ -635,11 +665,15 @@ export default function CourseInterviewPage() {
     if (isVoice) {
       const granted = await checkMicPermission();
       if (!granted) {
-        toast.error("Microphone access denied. Falling back to text interview.");
+        toast.error(
+          "Microphone access denied. Falling back to text interview.",
+        );
         setInputMode("text");
         // Fall through to start a text session
         try {
-          const payload = await startSession.mutateAsync({ input_mode: "text" });
+          const payload = await startSession.mutateAsync({
+            input_mode: "text",
+          });
           handleStartSuccess(payload);
         } catch (err) {
           toast.error(
@@ -749,12 +783,19 @@ export default function CourseInterviewPage() {
         setPendingFirstQuestion(result.first_question);
         setPhase("transition");
       } else {
-        setPhase(result.onboarding_stage === "readiness" ? "readiness" : "opening");
+        setPhase(
+          result.onboarding_stage === "readiness" ? "readiness" : "opening",
+        );
       }
     } catch (error) {
-      setTranscript((previous) => previous.filter((turn) => turn.id !== `a-${turnKey}`));
+      setTranscript((previous) =>
+        previous.filter((turn) => turn.id !== `a-${turnKey}`),
+      );
       setAnswerText(naturalText);
-      toast.error((error as Error).message || t("course_interview.onboarding.send_failed"));
+      toast.error(
+        (error as Error).message ||
+          t("course_interview.onboarding.send_failed"),
+      );
     }
   }
 
@@ -792,7 +833,8 @@ export default function CourseInterviewPage() {
       } catch (error) {
         setPhase("questioning");
         toast.error(
-          (error as Error).message || t("course_interview.errors.finish_failed"),
+          (error as Error).message ||
+            t("course_interview.errors.finish_failed"),
         );
       }
     },
@@ -810,17 +852,18 @@ export default function CourseInterviewPage() {
       return;
     }
     if (sessionId) {
-      finish.mutate(
-        { reason: "natural" },
-        { onError: () => undefined },
-      );
+      finish.mutate({ reason: "natural" }, { onError: () => undefined });
     }
     setPollingCompletion(true);
   }
 
   const handleTurnPresented = useCallback(
     (turn: ConversationTurn) => {
-      if (turn.kind === "transition" && phase === "transition" && pendingFirstQuestion) {
+      if (
+        turn.kind === "transition" &&
+        phase === "transition" &&
+        pendingFirstQuestion
+      ) {
         const question = pendingFirstQuestion;
         setCurrentQuestion(question);
         setPendingFirstQuestion(null);
@@ -838,7 +881,11 @@ export default function CourseInterviewPage() {
       // Mid-interview advance: the transition finished presenting/narrating, so
       // now reveal the held next Question Card (spec §Frontend Sequencing —
       // the card never appears at the same time as its transition).
-      if (turn.kind === "transition" && phase === "transition" && pendingNextQuestion) {
+      if (
+        turn.kind === "transition" &&
+        phase === "transition" &&
+        pendingNextQuestion
+      ) {
         const question = pendingNextQuestion;
         setPendingNextQuestion(null);
         setCurrentQuestion(question);
@@ -853,12 +900,20 @@ export default function CourseInterviewPage() {
       }
       // Final-question transition finished: now run the existing finish flow so
       // the separate goodbye follows (spec §ending — two short turns).
-      if (turn.kind === "transition" && phase === "transition" && pendingFinalTransition) {
+      if (
+        turn.kind === "transition" &&
+        phase === "transition" &&
+        pendingFinalTransition
+      ) {
         setPendingFinalTransition(false);
         void beginClosing("natural");
         return;
       }
-      if (turn.kind === "closing" && phase === "closing" && pendingFinishResult) {
+      if (
+        turn.kind === "closing" &&
+        phase === "closing" &&
+        pendingFinishResult
+      ) {
         setPhase("results");
         setFinishResult(pendingFinishResult);
         setPendingFinishResult(null);
@@ -920,7 +975,12 @@ export default function CourseInterviewPage() {
     const localTurnKind = turnAction === "hint" ? "hint" : "clarification";
     setTranscript((prev) => [
       ...prev,
-      makeUserTurn(displayText, userTurnKey, currentElapsedSeconds(), localTurnKind),
+      makeUserTurn(
+        displayText,
+        userTurnKey,
+        currentElapsedSeconds(),
+        localTurnKind,
+      ),
     ]);
 
     try {
@@ -982,7 +1042,9 @@ export default function CourseInterviewPage() {
       if (err instanceof ApiError && err.status === 429) {
         toast.error(t("course_interview.errors.rate_limited"));
       } else {
-        toast.error((err as Error).message || t("course_interview.errors.send_failed"));
+        toast.error(
+          (err as Error).message || t("course_interview.errors.send_failed"),
+        );
       }
     }
   }
@@ -1006,7 +1068,10 @@ export default function CourseInterviewPage() {
   ) {
     if (!currentQuestion || !sessionId || respond.isPending) return;
     // Guard against duplicate submissions from the state machine itself.
-    if (answer.state.status === "submitting" || answer.state.status === "submitted") {
+    if (
+      answer.state.status === "submitting" ||
+      answer.state.status === "submitted"
+    ) {
       return;
     }
     const pendingInterim = dictation.listening ? dictation.stop() : "";
@@ -1047,7 +1112,10 @@ export default function CourseInterviewPage() {
         restoreDraft(trimmed);
         setAnswerText(trimmed);
         setEndConfirmPrompt(
-          endConfirmationPrompt(result, t("course_interview.end_confirm.prompt")),
+          endConfirmationPrompt(
+            result,
+            t("course_interview.end_confirm.prompt"),
+          ),
         );
         setEndConfirming(true);
         return;
@@ -1062,7 +1130,12 @@ export default function CourseInterviewPage() {
           ? prev
           : [
               ...prev,
-              makeUserTurn(trimmed, submissionId, currentElapsedSeconds(), "answer"),
+              makeUserTurn(
+                trimmed,
+                submissionId,
+                currentElapsedSeconds(),
+                "answer",
+              ),
             ],
       );
       submitSucceeded(trimmed);
@@ -1079,32 +1152,56 @@ export default function CourseInterviewPage() {
           : result.ai_followup_text || null;
 
       if (standaloneText && !finished) {
-        const assistanceTurnKind =
-          result.assistance_kind === "hint"
-            ? "hint"
-            : result.assistance_kind === "clarification" ||
-                result.assistance_kind === "term"
-              ? "clarification"
-              : "followup";
-        setTranscript((prev) => [
-          ...prev,
-          makeFollowUpTurn(
-            standaloneText,
-            `${submissionId}-fu`,
-            currentElapsedSeconds(),
-            assistanceTurnKind,
-          ),
-        ]);
-        // A probe/clarification on the SAME question re-opens the answer so the
-        // candidate can respond again; the confirmation collapses to "previous".
-        if (!isAdvance) reopenForFollowUp();
+        const closing = isClosingTurn(result);
+        if (closing) {
+          // Rich-closing sub-step (self-reflection / invite-questions): NON-
+          // assessed ceremony. Tag it `kind: "closing"` so the transcript
+          // groups it under a "Wrap-up" section (never "Question N"), and flag
+          // the ceremony so the composer offers a Skip-and-finish control.
+          setTranscript((prev) => [
+            ...prev,
+            {
+              id: `c-${submissionId}`,
+              role: "ai",
+              text: standaloneText,
+              elapsedSeconds: currentElapsedSeconds(),
+              kind: "closing",
+            },
+          ]);
+          setClosingCeremonyActive(true);
+          reopenForFollowUp();
+        } else {
+          const assistanceTurnKind =
+            result.assistance_kind === "hint"
+              ? "hint"
+              : result.assistance_kind === "clarification" ||
+                  result.assistance_kind === "term"
+                ? "clarification"
+                : "followup";
+          setTranscript((prev) => [
+            ...prev,
+            makeFollowUpTurn(
+              standaloneText,
+              `${submissionId}-fu`,
+              currentElapsedSeconds(),
+              assistanceTurnKind,
+            ),
+          ]);
+          // A probe/clarification on the SAME question re-opens the answer so
+          // the candidate can respond again; the confirmation collapses to
+          // "previous".
+          if (!isAdvance) reopenForFollowUp();
+        }
       }
 
       // Decide the transition to present (spec §Frontend Sequencing + §ending).
       // Pure helper keeps the sequencing rules unit-testable and identical to
       // what ships. A null plan on a finished turn means no transition text was
       // available → close immediately (mixed-version safety).
-      const plan = planTransition(result, t("course_interview.transitions.next_question"));
+      const plan = planTransition(
+        result,
+        t("course_interview.transitions.next_question"),
+      );
 
       if (finished) {
         if (plan && plan.target === "closing") {
@@ -1156,7 +1253,9 @@ export default function CourseInterviewPage() {
       if (err instanceof ApiError && err.status === 429) {
         toast.error(t("course_interview.errors.rate_limited"));
       } else {
-        toast.error((err as Error).message || t("course_interview.errors.send_failed"));
+        toast.error(
+          (err as Error).message || t("course_interview.errors.send_failed"),
+        );
       }
     }
   }
@@ -1185,7 +1284,9 @@ export default function CourseInterviewPage() {
         await beginClosing("ended_early");
       }
     } catch (err) {
-      toast.error((err as Error).message || t("course_interview.errors.send_failed"));
+      toast.error(
+        (err as Error).message || t("course_interview.errors.send_failed"),
+      );
     }
   }
 
@@ -1279,11 +1380,11 @@ export default function CourseInterviewPage() {
                   ? "bg-gradient-to-br from-danger to-red-600 text-white"
                   : evaluationUnavailable
                     ? "bg-m3-surface-container text-m3-on-surface-variant"
-                  : verdictPending
-                    ? "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary"
-                    : liveVerdict
-                      ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
-                      : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white",
+                    : verdictPending
+                      ? "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary"
+                      : liveVerdict
+                        ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
+                        : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white",
               )}
             >
               {evaluationFailed ? (
@@ -1303,39 +1404,45 @@ export default function CourseInterviewPage() {
                 ? t("course_interview.results.evaluation_failed")
                 : evaluationUnavailable
                   ? t("course_interview.results.abandoned")
-                : verdictPending
-                  ? t("course_interview.results.evaluating")
-                  : liveVerdict
-                    ? t("course_interview.results.passed")
-                    : t("course_interview.results.completed")}
+                  : verdictPending
+                    ? t("course_interview.results.evaluating")
+                    : liveVerdict
+                      ? t("course_interview.results.passed")
+                      : t("course_interview.results.completed")}
             </h2>
             <p className="text-m3-on-surface-variant text-sm mb-6">
               {evaluationFailed
                 ? t("course_interview.results.evaluation_failed_summary")
                 : evaluationUnavailable
                   ? t("course_interview.results.abandoned_summary")
-                : verdictPending
-                  ? t("course_interview.results.evaluating_summary")
-                  : liveVerdict
-                    ? t("course_interview.results.pass_summary")
-                    : t("course_interview.results.fail_summary")}
+                  : verdictPending
+                    ? t("course_interview.results.evaluating_summary")
+                    : liveVerdict
+                      ? t("course_interview.results.pass_summary")
+                      : t("course_interview.results.fail_summary")}
             </p>
 
             <Link to="/courses/$slug/learn" params={{ slug }}>
-              <Button variant="outline" className="rounded-xl ghost-border font-bold text-sm gap-2">
+              <Button
+                variant="outline"
+                className="rounded-xl ghost-border font-bold text-sm gap-2"
+              >
                 <ArrowLeft className="h-4 w-4" />
                 {t("course_interview.actions.back_to_course")}
               </Button>
             </Link>
           </GlassCard>
 
-          {finishResult && !gapReport && gapReportPending && !evaluationFailed && (
-            <GlassCard className="p-6 text-center">
-              <p className="text-sm text-m3-on-surface-variant">
-                {t("course_interview.sections.gap_report_pending")}
-              </p>
-            </GlassCard>
-          )}
+          {finishResult &&
+            !gapReport &&
+            gapReportPending &&
+            !evaluationFailed && (
+              <GlassCard className="p-6 text-center">
+                <p className="text-sm text-m3-on-surface-variant">
+                  {t("course_interview.sections.gap_report_pending")}
+                </p>
+              </GlassCard>
+            )}
 
           {gapReport && (
             <GlassCard className="p-6">
@@ -1358,7 +1465,9 @@ export default function CourseInterviewPage() {
                         key={idx}
                         className="rounded-xl bg-m3-surface-container-low p-3 text-sm text-m3-on-surface"
                       >
-                        <span className="block font-semibold mb-0.5">{item.topic}</span>
+                        <span className="block font-semibold mb-0.5">
+                          {item.topic}
+                        </span>
                         {item.suggested_resources.length > 0 && (
                           <span className="block text-xs text-m3-on-surface-variant">
                             {item.suggested_resources.join(" • ")}
@@ -1524,7 +1633,11 @@ export default function CourseInterviewPage() {
                       inputMode === mode && "gradient-primary text-white",
                     )}
                   >
-                    {mode === "voice" ? <Mic className="h-3 w-3" /> : <MicOff className="h-3 w-3" />}
+                    {mode === "voice" ? (
+                      <Mic className="h-3 w-3" />
+                    ) : (
+                      <MicOff className="h-3 w-3" />
+                    )}
                     {mode === "voice"
                       ? t("course_interview.values.mode.voice")
                       : t("course_interview.values.mode.text")}
@@ -1542,9 +1655,9 @@ export default function CourseInterviewPage() {
                 ? t("course_interview.actions.starting")
                 : resumableSession
                   ? t("course_interview.resume_dialog.continue")
-                : inputMode === "voice"
-                  ? "Start voice interview"
-                  : t("course_interview.actions.start")}
+                  : inputMode === "voice"
+                    ? "Start voice interview"
+                    : t("course_interview.actions.start")}
               {resumableSession ? (
                 <History className="h-4 w-4" />
               ) : (
@@ -1648,164 +1761,193 @@ export default function CourseInterviewPage() {
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="flex min-w-0 flex-1 flex-col">
-      <FocusedInterviewStage
-        transcript={transcript}
-        status={agentStatus}
-        transcriptOpen={transcriptOpen}
-        onTranscriptOpenChange={setTranscriptOpen}
-        submissionSlot={submissionSlot}
-        transcriptDocked
-        assessmentActive={phase === "questioning"}
-        currentQuestionNumber={currentQuestionNumber}
-        totalQuestions={totalQuestions}
-        currentQuestionType={currentQuestion?.question_type}
-        isUserTyping={
-          !respond.isPending &&
-          !onboarding.isPending &&
-          (answerText.trim().length > 0 || dictation.interim.trim().length > 0)
-        }
-        questionTypeLabel={(type) => questionTypeLabel(type, t)}
-        speak={speakIfOn}
-        onSpeakingChange={(speaking) => setAiSpeaking(voiceOn && speaking)}
-        onTurnPresented={handleTurnPresented}
-        onClarifyQuestion={
-          phase === "questioning"
-            ? () =>
-                void handleAssistance(
-                  t("course_interview.workspace.clarification_request"),
-                  "clarify",
-                  t("course_interview.workspace.clarification_request"),
-                )
-            : undefined
-        }
-        onRequestHint={
-          phase === "questioning"
-            ? () =>
-                void handleAssistance(
-                  t("course_interview.workspace.hint_request"),
-                  "hint",
-                  t("course_interview.workspace.hint_request"),
-                )
-            : undefined
-        }
-        onExplainTerm={
-          phase === "questioning"
-            ? (term) =>
-                void handleAssistance(
-                  t("course_interview.workspace.term_request", { term }),
-                  "explain_term",
-                  t("course_interview.workspace.term_request", { term }),
-                )
-            : undefined
-        }
-        statusMessage={
-          agentStatus === "error"
-            ? dictationHasError && dictation.error
-              ? t(
-                  `course_interview.workspace.microphone_errors.${dictation.error}`,
-                )
-              : t("course_interview.workspace.answer_recovery_error")
-            : undefined
-        }
-        onRetry={() => {
-          if (!connected) {
-            setConnected(navigator.onLine);
-          } else if (dictationHasError) {
-            dictation.retry();
-          } else {
-            void (phase === "opening" || phase === "readiness"
-              ? handleOnboarding()
-              : handleRespond());
-          }
-        }}
-        replayAvailable={voiceOn}
-        activeTurnActions={
-          (phase === "opening" || phase === "readiness") &&
-          onboardingStage !== "completed" ? (
-            <SetupChecklist
-              stage={onboardingStage}
-              candidateName={candidateName}
-              language={interviewLanguage}
-              micConnected={dictation.supported}
-              disabled={onboarding.isPending || aiSpeaking}
-              pending={onboarding.isPending}
-              onLanguageChange={(language) => {
-                setInterviewLanguage(language);
-                void i18n.changeLanguage(language);
-              }}
-              onAction={(action, payload) =>
-                void handleOnboarding(action, payload?.language, payload?.name)
+          <FocusedInterviewStage
+            transcript={transcript}
+            status={agentStatus}
+            transcriptOpen={transcriptOpen}
+            onTranscriptOpenChange={setTranscriptOpen}
+            submissionSlot={submissionSlot}
+            transcriptDocked
+            assessmentActive={phase === "questioning"}
+            currentQuestionNumber={currentQuestionNumber}
+            totalQuestions={totalQuestions}
+            currentQuestionType={currentQuestion?.question_type}
+            isUserTyping={
+              !respond.isPending &&
+              !onboarding.isPending &&
+              (answerText.trim().length > 0 ||
+                dictation.interim.trim().length > 0)
+            }
+            questionTypeLabel={(type) => questionTypeLabel(type, t)}
+            speak={speakIfOn}
+            onSpeakingChange={(speaking) => setAiSpeaking(voiceOn && speaking)}
+            onTurnPresented={handleTurnPresented}
+            onClarifyQuestion={
+              phase === "questioning"
+                ? () =>
+                    void handleAssistance(
+                      t("course_interview.workspace.clarification_request"),
+                      "clarify",
+                      t("course_interview.workspace.clarification_request"),
+                    )
+                : undefined
+            }
+            onRequestHint={
+              phase === "questioning"
+                ? () =>
+                    void handleAssistance(
+                      t("course_interview.workspace.hint_request"),
+                      "hint",
+                      t("course_interview.workspace.hint_request"),
+                    )
+                : undefined
+            }
+            onExplainTerm={
+              phase === "questioning"
+                ? (term) =>
+                    void handleAssistance(
+                      t("course_interview.workspace.term_request", { term }),
+                      "explain_term",
+                      t("course_interview.workspace.term_request", { term }),
+                    )
+                : undefined
+            }
+            statusMessage={
+              agentStatus === "error"
+                ? dictationHasError && dictation.error
+                  ? t(
+                      `course_interview.workspace.microphone_errors.${dictation.error}`,
+                    )
+                  : t("course_interview.workspace.answer_recovery_error")
+                : undefined
+            }
+            onRetry={() => {
+              if (!connected) {
+                setConnected(navigator.onLine);
+              } else if (dictationHasError) {
+                dictation.retry();
+              } else {
+                void (phase === "opening" || phase === "readiness"
+                  ? handleOnboarding()
+                  : handleRespond());
+              }
+            }}
+            replayAvailable={voiceOn}
+            activeTurnActions={
+              (phase === "opening" || phase === "readiness") &&
+              onboardingStage !== "completed" ? (
+                <SetupChecklist
+                  stage={onboardingStage}
+                  candidateName={candidateName}
+                  language={interviewLanguage}
+                  micConnected={dictation.supported}
+                  disabled={onboarding.isPending || aiSpeaking}
+                  pending={onboarding.isPending}
+                  onLanguageChange={(language) => {
+                    setInterviewLanguage(language);
+                    void i18n.changeLanguage(language);
+                  }}
+                  onAction={(action, payload) =>
+                    void handleOnboarding(
+                      action,
+                      payload?.language,
+                      payload?.name,
+                    )
+                  }
+                />
+              ) : undefined
+            }
+            activeTurnActionsVisible={
+              (phase === "opening" || phase === "readiness") &&
+              onboardingStage !== "completed" &&
+              !onboarding.isPending
+            }
+          />
+
+          {closingCeremonyActive && phase === "questioning" && (
+            <div className="shrink-0 border-t border-border bg-primary-soft/40 px-4 py-3">
+              <div className="mx-auto flex max-w-[840px] flex-wrap items-center justify-between gap-3">
+                <p className="text-xs text-text-muted">
+                  {t("course_interview.workspace.wrap_up_hint")}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={respond.isPending}
+                  onClick={() => void beginClosing("natural")}
+                  className="gap-1.5 bg-white"
+                >
+                  {t("course_interview.workspace.skip_and_finish")}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {(currentQuestion && phase === "questioning") ||
+          phase === "opening" ||
+          phase === "readiness" ? (
+            <FocusedAnswerComposer
+              value={
+                dictation.listening && dictation.interim
+                  ? `${answerText}${answerText.trim().length > 0 ? " " : ""}${dictation.interim}`
+                  : answerText
+              }
+              draftLength={answerText.length}
+              onChange={setAnswerText}
+              onSubmit={() =>
+                void (phase === "opening" || phase === "readiness"
+                  ? handleOnboarding()
+                  : handleRespond())
+              }
+              onFinishRecording={() =>
+                void (phase === "opening" || phase === "readiness"
+                  ? handleOnboarding()
+                  : handleRespond())
+              }
+              sending={respond.isPending || onboarding.isPending}
+              micAvailable={Boolean(
+                (phase === "opening" || phase === "readiness" || isHybrid) &&
+                  dictation.supported,
+              )}
+              micActive={dictation.listening}
+              micPaused={dictation.paused}
+              micError={
+                dictation.error === "unsupported" ? undefined : dictation.error
+              }
+              onMicStart={dictation.start}
+              onMicPause={dictation.pause}
+              onMicResume={dictation.resume}
+              onMicCancel={dictation.cancel}
+              onMicRetry={dictation.retry}
+              transcriptOpen={transcriptOpen}
+              onTranscriptToggle={() => setTranscriptOpen((open) => !open)}
+              elapsed={elapsed}
+              status={agentStatus}
+              onEndInterview={() => setEndDialogOpen(true)}
+              placeholder={
+                phase === "opening" || phase === "readiness"
+                  ? t("course_interview.onboarding.reply_placeholder")
+                  : undefined
               }
             />
-          ) : undefined
-        }
-        activeTurnActionsVisible={
-          (phase === "opening" || phase === "readiness") &&
-          onboardingStage !== "completed" &&
-          !onboarding.isPending
-        }
-      />
-
-      {(currentQuestion && phase === "questioning") ||
-      phase === "opening" ||
-      phase === "readiness" ? (
-        <FocusedAnswerComposer
-          value={
-            dictation.listening && dictation.interim
-              ? `${answerText}${answerText.trim().length > 0 ? " " : ""}${dictation.interim}`
-              : answerText
-          }
-          draftLength={answerText.length}
-          onChange={setAnswerText}
-          onSubmit={() =>
-            void (phase === "opening" || phase === "readiness"
-              ? handleOnboarding()
-              : handleRespond())
-          }
-          onFinishRecording={() =>
-            void (phase === "opening" || phase === "readiness"
-              ? handleOnboarding()
-              : handleRespond())
-          }
-          sending={respond.isPending || onboarding.isPending}
-          micAvailable={Boolean(
-            (phase === "opening" || phase === "readiness" || isHybrid) &&
-              dictation.supported,
+          ) : (
+            <div className="shrink-0 border-t border-border bg-white px-4 py-6 text-center">
+              <p
+                className="text-sm text-text-muted"
+                role="status"
+                aria-live="polite"
+              >
+                {phase === "transition"
+                  ? pendingNextQuestion || pendingFinalTransition
+                    ? t("course_interview.transitions.status")
+                    : t("course_interview.onboarding.starting_assessment")
+                  : phase === "closing"
+                    ? t("course_interview.workspace.preparing_goodbye")
+                    : t("course_interview.status.compiling_results")}
+              </p>
+            </div>
           )}
-          micActive={dictation.listening}
-          micPaused={dictation.paused}
-          micError={
-            dictation.error === "unsupported" ? undefined : dictation.error
-          }
-          onMicStart={dictation.start}
-          onMicPause={dictation.pause}
-          onMicResume={dictation.resume}
-          onMicCancel={dictation.cancel}
-          onMicRetry={dictation.retry}
-          transcriptOpen={transcriptOpen}
-          onTranscriptToggle={() => setTranscriptOpen((open) => !open)}
-          elapsed={elapsed}
-          status={agentStatus}
-          onEndInterview={() => setEndDialogOpen(true)}
-          placeholder={
-            phase === "opening" || phase === "readiness"
-              ? t("course_interview.onboarding.reply_placeholder")
-              : undefined
-          }
-        />
-      ) : (
-        <div className="shrink-0 border-t border-border bg-white px-4 py-6 text-center">
-          <p className="text-sm text-text-muted" role="status" aria-live="polite">
-            {phase === "transition"
-              ? pendingNextQuestion || pendingFinalTransition
-                ? t("course_interview.transitions.status")
-                : t("course_interview.onboarding.starting_assessment")
-              : phase === "closing"
-                ? t("course_interview.workspace.preparing_goodbye")
-                : t("course_interview.status.compiling_results")}
-          </p>
-        </div>
-      )}
         </div>
 
         <TranscriptPanel

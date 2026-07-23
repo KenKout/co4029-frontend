@@ -1,7 +1,10 @@
 import { CheckCircle2, XCircle, Loader2, MinusCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import type { InterviewSessionTeacherRead, QuizAttemptTeacherRead } from "@/lib/api/types";
+import type {
+  InterviewSessionTeacherRead,
+  QuizAttemptTeacherRead,
+} from "@/lib/api/types";
 
 /**
  * Shared teacher-facing tables for quiz attempts + interview sessions.
@@ -48,7 +51,11 @@ function QuizStatusBadge({ attempt }: { attempt: QuizAttemptTeacherRead }) {
       </Badge>
     );
   }
-  return <Badge className="text-[10px] border-0 bg-amber-50 text-amber-700">Grading…</Badge>;
+  return (
+    <Badge className="text-[10px] border-0 bg-amber-50 text-amber-700">
+      Grading…
+    </Badge>
+  );
 }
 
 export interface QuizAttemptsTableProps {
@@ -88,7 +95,9 @@ export function QuizAttemptsTable({
             id: "quiz",
             header: "Quiz",
             cell: (a: QuizAttemptTeacherRead) => (
-              <span className="font-medium text-m3-on-surface">{a.quiz_title}</span>
+              <span className="font-medium text-m3-on-surface">
+                {a.quiz_title}
+              </span>
             ),
           } satisfies DataTableColumn<QuizAttemptTeacherRead>,
         ]
@@ -96,14 +105,18 @@ export function QuizAttemptsTable({
     {
       id: "attempt",
       header: "Attempt",
-      cell: (a) => <span className="text-m3-on-surface-variant">#{a.attempt_number}</span>,
+      cell: (a) => (
+        <span className="text-m3-on-surface-variant">#{a.attempt_number}</span>
+      ),
     },
     {
       id: "score",
       header: "Score",
       cell: (a) =>
         a.score_percent != null ? (
-          <span className="font-bold text-m3-primary">{Number(a.score_percent).toFixed(0)}%</span>
+          <span className="font-bold text-m3-primary">
+            {Number(a.score_percent).toFixed(0)}%
+          </span>
         ) : (
           <span className="text-m3-on-surface-variant">—</span>
         ),
@@ -138,7 +151,11 @@ export function QuizAttemptsTable({
   );
 }
 
-function InterviewVerdictBadge({ session }: { session: InterviewSessionTeacherRead }) {
+function InterviewVerdictBadge({
+  session,
+}: {
+  session: InterviewSessionTeacherRead;
+}) {
   if (session.status === "in_progress") {
     return (
       <Badge className="text-[10px] border-0 bg-slate-100 text-slate-600 gap-1">
@@ -179,7 +196,11 @@ function InterviewVerdictBadge({ session }: { session: InterviewSessionTeacherRe
       </Badge>
     );
   }
-  return <Badge className="text-[10px] border-0 bg-amber-50 text-amber-700">Evaluating…</Badge>;
+  return (
+    <Badge className="text-[10px] border-0 bg-amber-50 text-amber-700">
+      Evaluating…
+    </Badge>
+  );
 }
 
 export interface InterviewSessionsTableProps {
@@ -217,7 +238,9 @@ export function InterviewSessionsTable({
             id: "config",
             header: "Interview",
             cell: (s: InterviewSessionTeacherRead) => (
-              <span className="font-medium text-m3-on-surface">{s.interview_config_title}</span>
+              <span className="font-medium text-m3-on-surface">
+                {s.interview_config_title}
+              </span>
             ),
           } satisfies DataTableColumn<InterviewSessionTeacherRead>,
         ]
@@ -225,12 +248,18 @@ export function InterviewSessionsTable({
     {
       id: "attempt",
       header: "Attempt",
-      cell: (s) => <span className="text-m3-on-surface-variant">#{s.attempt_number}</span>,
+      cell: (s) => (
+        <span className="text-m3-on-surface-variant">#{s.attempt_number}</span>
+      ),
     },
     {
       id: "mode",
       header: "Mode",
-      cell: (s) => <span className="text-m3-on-surface-variant capitalize">{s.input_mode}</span>,
+      cell: (s) => (
+        <span className="text-m3-on-surface-variant capitalize">
+          {s.input_mode}
+        </span>
+      ),
     },
     {
       id: "status",

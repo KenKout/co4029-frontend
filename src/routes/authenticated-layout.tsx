@@ -11,12 +11,7 @@ import {
   teacherNavGroups,
 } from "@/lib/navigation";
 
-const DESKTOP_FIRST_PREFIXES = [
-  "/admin",
-  "/teacher",
-  "/dept",
-  "/management",
-];
+const DESKTOP_FIRST_PREFIXES = ["/admin", "/teacher", "/dept", "/management"];
 
 // URL prefixes that require elevated permissions.
 const ADMIN_PREFIXES = ["/admin"];
@@ -27,7 +22,10 @@ const TEACHER_PREFIXES = ["/teacher", "/dept", "/management"];
 const ADMIN_PERMS = ["system.administer"];
 const TEACHER_PERMS = ["course.create", "lesson.manage"];
 
-function hasAny(perms: readonly string[], required: readonly string[]): boolean {
+function hasAny(
+  perms: readonly string[],
+  required: readonly string[],
+): boolean {
   return required.some((p) => perms.includes(p));
 }
 

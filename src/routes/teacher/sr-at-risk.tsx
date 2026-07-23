@@ -25,7 +25,11 @@ import {
 import type { AtRiskStudent } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
-const FLAG_KEYS = ["low_compliance", "frozen_kr", "high_theory_practice_gap"] as const;
+const FLAG_KEYS = [
+  "low_compliance",
+  "frozen_kr",
+  "high_theory_practice_gap",
+] as const;
 type FlagKey = (typeof FLAG_KEYS)[number];
 
 const FLAG_ICONS: Record<FlagKey, typeof TrendingDown> = {
@@ -74,7 +78,8 @@ function useRelDate() {
     if (days <= 0) return t("teacher_sr_at_risk.today");
     if (days === 1) return t("teacher_sr_at_risk.yesterday");
     if (days < 7) return t("teacher_sr_at_risk.days_ago", { count: days });
-    if (days < 30) return t("teacher_sr_at_risk.weeks_ago", { count: Math.floor(days / 7) });
+    if (days < 30)
+      return t("teacher_sr_at_risk.weeks_ago", { count: Math.floor(days / 7) });
     return t("teacher_sr_at_risk.months_ago", { count: Math.floor(days / 30) });
   };
 }
@@ -197,7 +202,10 @@ export default function TeacherSrAtRiskPage() {
       <div className="max-w-5xl mx-auto pb-6 space-y-6">
         <Breadcrumbs
           items={[
-            { label: t("teacher_sr_cohort.breadcrumb_teaching"), to: "/teacher/courses" },
+            {
+              label: t("teacher_sr_cohort.breadcrumb_teaching"),
+              to: "/teacher/courses",
+            },
             {
               label: course?.title ?? t("teacher_sr_cohort.breadcrumb_course"),
               to: "/teacher/courses/$courseId",

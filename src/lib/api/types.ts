@@ -15,7 +15,8 @@ export type CourseContent = Schemas["CourseContentPublic"];
 export type CourseContentPublic = Schemas["CourseContentPublic"];
 export type CourseProgressSummary = Schemas["CourseProgressSummary"];
 export type CourseLearningOutcome = Schemas["CourseLearningOutcomePublic"];
-export type CourseLearningOutcomePublic = Schemas["CourseLearningOutcomePublic"];
+export type CourseLearningOutcomePublic =
+  Schemas["CourseLearningOutcomePublic"];
 export type CourseLearningOutcomeAuthoring =
   Schemas["CourseLearningOutcomeAuthoring"];
 
@@ -52,7 +53,8 @@ export type LessonResourcePublic = Schemas["LessonResourcePublic"];
 export type LessonResourceAuthoring = Schemas["LessonResourceAuthoring"];
 export type LessonResourceCreate = Schemas["LessonResourceCreate"];
 
-export type ResourceDownloadUrlResponse = Schemas["ResourceDownloadUrlResponse"];
+export type ResourceDownloadUrlResponse =
+  Schemas["ResourceDownloadUrlResponse"];
 
 export type Material = Schemas["MaterialPublic"];
 export type MaterialPublic = Schemas["MaterialPublic"];
@@ -107,42 +109,54 @@ export type QuizQuestion = Schemas["QuizQuestionPublic"];
 export type QuizQuestionPublic = Schemas["QuizQuestionPublic"];
 export type QuizQuestionAuthoring = Schemas["QuizQuestionAuthoring"];
 export type QuizQuestionOptionPublic = Schemas["QuizQuestionOptionPublic"];
-export type QuizQuestionOptionAuthoring = Schemas["QuizQuestionOptionAuthoring"];
+export type QuizQuestionOptionAuthoring =
+  Schemas["QuizQuestionOptionAuthoring"];
 export type QuestionBankEntry = Schemas["QuestionBankEntry"];
 export type QuestionBankImportRequest = Schemas["QuestionBankImportRequest"];
 
 export type GenerationRunRead = Schemas["QuizGenerationRunRead"];
 export type QuizGenerationRunRead = Schemas["QuizGenerationRunRead"];
 export type QuizGenerationRequest = Schemas["QuizGenerationRequest"];
+export type QuizGenerationProgress = Schemas["QuizGenerationProgress"];
+export type QuizGenerationStageEvent = Schemas["QuizGenerationStageEvent"];
 export type BulkSetExpectedTimeRequest = Schemas["BulkSetExpectedTimeRequest"];
-export type BulkSetExpectedTimeResponse = Schemas["BulkSetExpectedTimeResponse"];
+export type BulkSetExpectedTimeResponse =
+  Schemas["BulkSetExpectedTimeResponse"];
 export type BulkSetItem = Schemas["BulkSetItem"];
 
 export type InterviewConfigPublic = Schemas["InterviewConfigPublic"];
-export type InterviewConfigAuthoring = Schemas["InterviewConfigAuthoring"];
+// Widen with published_at (last-published timestamp) until the OpenAPI
+// snapshot is regenerated.
+export type InterviewConfigAuthoring = Schemas["InterviewConfigAuthoring"] & {
+  published_at?: string | null;
+};
 export type InterviewConfigCreate = Schemas["InterviewConfigCreate"];
 export type InterviewConfigUpdate = Schemas["InterviewConfigUpdate"];
 export type InterviewForTakingPublic = Schemas["InterviewForTakingPublic"];
 export type InterviewSessionPublic = Schemas["InterviewSessionPublic"];
-export type InterviewSessionStartRequest = Schemas["InterviewSessionStartRequest"];
+export type InterviewSessionStartRequest =
+  Schemas["InterviewSessionStartRequest"];
 export type InterviewLanguage = NonNullable<
   Schemas["InterviewOnboardingRespondRequest"]["language"]
 >;
 export type InterviewOnboardingStage =
   Schemas["InterviewOnboardingRespondResponse"]["onboarding_stage"];
-export type InterviewSessionHistoryTurn = Schemas["InterviewSessionHistoryTurn"];
-export type InterviewSessionStartResponse = Schemas["InterviewSessionStartResponse"] & {
-  onboarding_stage?: InterviewOnboardingStage;
-  interview_language?: InterviewLanguage;
-  assessment_started_at?: string | null;
-};
+export type InterviewSessionHistoryTurn =
+  Schemas["InterviewSessionHistoryTurn"];
+export type InterviewSessionStartResponse =
+  Schemas["InterviewSessionStartResponse"] & {
+    onboarding_stage?: InterviewOnboardingStage;
+    interview_language?: InterviewLanguage;
+    assessment_started_at?: string | null;
+  };
 // The generated schema is regenerated from the backend OpenAPI doc; until that
 // regen runs, widen the union to include the in-session identity-correction
 // actions the backend already accepts (reject_identity / set_name).
 export type InterviewOnboardingAction =
   | NonNullable<Schemas["InterviewOnboardingRespondRequest"]["action"]>
   | "reject_identity"
-  | "set_name";
+  | "set_name"
+  | "skip_setup";
 export type InterviewOnboardingRespondRequest = Omit<
   Schemas["InterviewOnboardingRespondRequest"],
   "action"
@@ -153,12 +167,14 @@ export type InterviewOnboardingRespondRequest = Omit<
 };
 export type InterviewOnboardingRespondResponse =
   Schemas["InterviewOnboardingRespondResponse"];
-export type InterviewSessionFinishResponse = Schemas["InterviewSessionFinishResponse"];
+export type InterviewSessionFinishResponse =
+  Schemas["InterviewSessionFinishResponse"];
 export interface InterviewSessionFinishRequest {
   reason?: "natural" | "ended_early" | "timed_out";
 }
 export type InterviewRespondRequest = Schemas["InterviewSubmitAnswerRequest"];
-export type InterviewSubmitAnswerRequest = Schemas["InterviewSubmitAnswerRequest"];
+export type InterviewSubmitAnswerRequest =
+  Schemas["InterviewSubmitAnswerRequest"];
 // Widen with the Natural Interview Transitions fields until the OpenAPI
 // snapshot is regenerated — the backend already returns these additive,
 // optional fields (transition text/id/target) on an advance or final turn.
@@ -176,14 +192,66 @@ export type InterviewSubmitAnswerResponse =
     interaction_state?: string | null;
   };
 export type InterviewQuestionPublic = Schemas["InterviewQuestionPublic"];
-export type InterviewQuestionAuthoring = Schemas["InterviewQuestionAuthoring"];
+// Widen with source_module_ids (module attribution for question-bank grouping)
+// until the OpenAPI snapshot is regenerated.
+export type InterviewQuestionAuthoring =
+  Schemas["InterviewQuestionAuthoring"] & {
+    source_module_ids?: string[];
+  };
 export type InterviewQuestionCreate = Schemas["InterviewQuestionCreate"];
 export type InterviewOutcomeAuthoring = Schemas["InterviewOutcomeAuthoring"];
 export type InterviewOutcomeCreate = Schemas["InterviewOutcomeCreate"];
-export type InterviewGenerationRequest = Schemas["InterviewGenerationRequest"];
-export type InterviewGenerationRunPublic = Schemas["InterviewGenerationRunPublic"];
+// Widen with source_module_ids (module-scoped generation) until the OpenAPI
+// snapshot is regenerated. Each selected module expands to its lessons on the
+// backend to scope retrieval.
+export type InterviewGenerationRequest =
+  Schemas["InterviewGenerationRequest"] & {
+    source_module_ids?: string[];
+  };
+export type InterviewGenerationRunPublic =
+  Schemas["InterviewGenerationRunPublic"];
 export type GapReportRead = Schemas["GapReportRead"];
-export type GapReportAuthoringRead = Schemas["GapReportAuthoringRead"];
+
+// Course-scoped interview question bank (§QBank-1). Manually typed until the
+// OpenAPI snapshot is regenerated; matches the backend authoring schemas.
+export type InterviewQuestionType =
+  Schemas["InterviewQuestionCreate"]["question_type"];
+export type InterviewDifficulty = NonNullable<
+  Schemas["InterviewQuestionCreate"]["difficulty"]
+>;
+export interface InterviewQuestionBankItemRead {
+  id: string;
+  course_id: string;
+  prompt_text: string;
+  question_type: InterviewQuestionType;
+  difficulty?: InterviewDifficulty | null;
+  model_answer?: string | null;
+  tags: string[];
+  source_config_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+export interface InterviewQuestionBankItemCreate {
+  prompt_text: string;
+  question_type: InterviewQuestionType;
+  difficulty?: InterviewDifficulty | null;
+  model_answer?: string | null;
+  tags?: string[];
+  source_config_id?: string | null;
+}
+export interface InterviewQuestionBankItemUpdate {
+  prompt_text?: string;
+  question_type?: InterviewQuestionType;
+  difficulty?: InterviewDifficulty | null;
+  model_answer?: string | null;
+  tags?: string[];
+}
+// Widen with the teacher-context fields the backend already returns
+// (student_name, interview_title) until the OpenAPI snapshot is regenerated.
+export type GapReportAuthoringRead = Schemas["GapReportAuthoringRead"] & {
+  student_name?: string | null;
+  interview_title?: string | null;
+};
 
 // Adaptive readiness (Slice 5) — advisory authoring analysis. Manually typed
 // until the OpenAPI snapshot is regenerated; the backend returns these from
@@ -225,8 +293,17 @@ export interface InterviewSessionSummary {
   ended_at: string | null;
 }
 
-export type InterviewSessionTeacherRead = Schemas["InterviewSessionTeacherRead"];
+export type InterviewSessionTeacherRead =
+  Schemas["InterviewSessionTeacherRead"];
 export type QuizAttemptTeacherRead = Schemas["QuizAttemptTeacherRead"];
+
+// Teacher quiz results & analytics dashboard (GET /teacher/quizzes/{id}/results).
+export type QuizResultsRead = Schemas["QuizResultsRead"];
+export type QuizResultsSummary = Schemas["QuizResultsSummary"];
+export type QuizScoreBucket = Schemas["QuizScoreBucket"];
+export type QuizPerStudentRow = Schemas["QuizPerStudentRow"];
+export type QuizQuestionBreakdown = Schemas["QuizQuestionBreakdown"];
+export type QuizOptionDistribution = Schemas["QuizOptionDistribution"];
 
 export interface InterviewTranscriptTurn {
   role: "user" | "ai" | "system";
@@ -265,7 +342,8 @@ export type Notification = Schemas["NotificationRead"] & {
 };
 export type NotificationPreference = Schemas["NotificationPreferenceRead"];
 export type NotificationPreferenceRead = Schemas["NotificationPreferenceRead"];
-export type NotificationPreferenceUpdate = Schemas["NotificationPreferenceUpdate"];
+export type NotificationPreferenceUpdate =
+  Schemas["NotificationPreferenceUpdate"];
 
 /**
  * Notification category literals.
@@ -287,7 +365,8 @@ export type User = Schemas["UserRead"];
 export type UserProfile = Schemas["UserProfileRead"];
 export type UserProfileUpdate = Schemas["UserProfileUpdate"];
 export type UserListRow = Schemas["UserListRow"];
-export type UserListPage = Schemas["abridgeai__features__identity__schemas__profile__UserListPage"];
+export type UserListPage =
+  Schemas["abridgeai__features__identity__schemas__profile__UserListPage"];
 export type MyPermissions = Schemas["UserPermissionsRead"];
 export type GoogleLoginResponse = Schemas["GoogleLoginResponse"];
 export type TokenResponse = Schemas["TokenResponse"];

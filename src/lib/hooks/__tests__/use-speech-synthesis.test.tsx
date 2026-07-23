@@ -21,10 +21,12 @@ class MockSpeechSynthesisUtterance {
 describe("useSpeechSynthesis", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    speechSpeak.mockImplementation((utterance: MockSpeechSynthesisUtterance) => {
-      utterance.onstart?.();
-      utterance.onend?.();
-    });
+    speechSpeak.mockImplementation(
+      (utterance: MockSpeechSynthesisUtterance) => {
+        utterance.onstart?.();
+        utterance.onend?.();
+      },
+    );
     Object.defineProperty(window, "speechSynthesis", {
       configurable: true,
       value: {
@@ -58,7 +60,8 @@ describe("useSpeechSynthesis", () => {
       });
     });
 
-    const utterance = speechSpeak.mock.calls[0][0] as MockSpeechSynthesisUtterance;
+    const utterance = speechSpeak.mock
+      .calls[0][0] as MockSpeechSynthesisUtterance;
     expect(utterance.text).toBe("Thank you and goodbye");
     expect(onStart).toHaveBeenCalledTimes(1);
     expect(speechCancel).not.toHaveBeenCalled();

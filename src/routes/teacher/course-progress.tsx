@@ -11,10 +11,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import {
-  useAtRiskRoster,
-  useCohortProgress,
-} from "@/lib/api/hooks/progress";
+import { useAtRiskRoster, useCohortProgress } from "@/lib/api/hooks/progress";
 import {
   useTeacherCourseById,
   useTeacherCourseRoster,
@@ -47,8 +44,7 @@ export default function TeacherCourseProgressPage() {
     useTeacherCourseRoster(courseId);
   const { data: cohort, isLoading: cohortLoading } =
     useCohortProgress(courseId);
-  const { data: atRisk, isLoading: atRiskLoading } =
-    useAtRiskRoster(courseId);
+  const { data: atRisk, isLoading: atRiskLoading } = useAtRiskRoster(courseId);
 
   // Roster gives us display_name + email; cohort gives per-lesson counts.
   const studentNames = useMemo(() => {
@@ -83,7 +79,9 @@ export default function TeacherCourseProgressPage() {
     const total = rows.length;
     const completed = rows.filter((r) => r.completion_percent >= 100).length;
     const inProgress = rows.filter(
-      (r) => r.in_progress_lessons > 0 || (r.completed_lessons > 0 && r.completion_percent < 100),
+      (r) =>
+        r.in_progress_lessons > 0 ||
+        (r.completed_lessons > 0 && r.completion_percent < 100),
     ).length;
     const notStarted = rows.filter(
       (r) => r.completed_lessons === 0 && r.in_progress_lessons === 0,
@@ -92,7 +90,14 @@ export default function TeacherCourseProgressPage() {
       ? rows.reduce((acc, r) => acc + r.completion_percent, 0) / total
       : 0;
     const totalHours = rows.reduce((acc, r) => acc + r.total_time_seconds, 0);
-    return { total, completed, inProgress, notStarted, avgCompletion, totalHours };
+    return {
+      total,
+      completed,
+      inProgress,
+      notStarted,
+      avgCompletion,
+      totalHours,
+    };
   }, [rows]);
 
   const atRiskById = useMemo(() => {

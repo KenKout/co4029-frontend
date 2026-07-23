@@ -41,11 +41,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-} from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent } from "@/components/ui/sheet";
 import { ApiError } from "@/lib/api/client";
 import type {
   AiCostsByPipeline as AiCostsByPipelineRow,
@@ -63,7 +59,10 @@ const PERIOD_VALUES: AiCostsPeriod[] = ["24h", "7d", "30d"];
 
 function useFormatters() {
   const { i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   return useMemo(
     () => ({
       usd: new Intl.NumberFormat("en-US", {
@@ -158,18 +157,28 @@ function TrendTooltip({
         {t("admin.ai_costs.trend_legend.cost")}: {fmt.usd.format(point.usd)}
       </p>
       <p className="text-xs text-text-muted">
-        {t("admin.ai_costs.trend_legend.tokens")}: {fmt.number.format(point.tokens)}
+        {t("admin.ai_costs.trend_legend.tokens")}:{" "}
+        {fmt.number.format(point.tokens)}
       </p>
     </div>
   );
 }
 
-function TrendAreaChart({ data, period }: { data: AiCostsTimeBucket[]; period: AiCostsPeriod }) {
+function TrendAreaChart({
+  data,
+  period,
+}: {
+  data: AiCostsTimeBucket[];
+  period: AiCostsPeriod;
+}) {
   const { t, i18n } = useTranslation();
   const fmt = useFormatters();
   const reducedMotion = useReducedMotion();
 
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   const labelFmt = useMemo(
     () =>
       new Intl.DateTimeFormat(locale, {
@@ -192,7 +201,9 @@ function TrendAreaChart({ data, period }: { data: AiCostsTimeBucket[]; period: A
   if (data.length === 0) {
     return (
       <div className="bg-surface-elev border border-border rounded-lg p-8 text-center">
-        <p className="text-sm text-text-muted">{t("admin.ai_costs.empty.trend")}</p>
+        <p className="text-sm text-text-muted">
+          {t("admin.ai_costs.empty.trend")}
+        </p>
       </div>
     );
   }
@@ -200,14 +211,29 @@ function TrendAreaChart({ data, period }: { data: AiCostsTimeBucket[]; period: A
   return (
     <div className="bg-surface-elev border border-border rounded-lg p-4">
       <ResponsiveContainer width="100%" height={280}>
-        <AreaChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+        <AreaChart
+          data={chartData}
+          margin={{ top: 8, right: 16, left: 0, bottom: 8 }}
+        >
           <defs>
             <linearGradient id="aiCostTrendFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.35} />
-              <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0.02} />
+              <stop
+                offset="0%"
+                stopColor="var(--color-primary)"
+                stopOpacity={0.35}
+              />
+              <stop
+                offset="100%"
+                stopColor="var(--color-primary)"
+                stopOpacity={0.02}
+              />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
+          <CartesianGrid
+            stroke="var(--color-border)"
+            strokeDasharray="3 3"
+            vertical={false}
+          />
           <XAxis
             dataKey="label"
             tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
@@ -219,7 +245,10 @@ function TrendAreaChart({ data, period }: { data: AiCostsTimeBucket[]; period: A
             tickFormatter={(value: number) => fmt.usd.format(value)}
             width={80}
           />
-          <Tooltip content={<TrendTooltip />} cursor={{ stroke: "var(--color-primary)", strokeWidth: 1 }} />
+          <Tooltip
+            content={<TrendTooltip />}
+            cursor={{ stroke: "var(--color-primary)", strokeWidth: 1 }}
+          />
           <Area
             type="monotone"
             dataKey="usd"
@@ -242,24 +271,45 @@ function RoleBarChart({ data }: { data: AiCostsRoleBreakdown[] }) {
   if (data.length === 0) {
     return (
       <div className="bg-surface-elev border border-border rounded-lg p-8 text-center">
-        <p className="text-sm text-text-muted">{t("admin.ai_costs.empty.by_role")}</p>
+        <p className="text-sm text-text-muted">
+          {t("admin.ai_costs.empty.by_role")}
+        </p>
       </div>
     );
   }
   return (
     <div className="bg-surface-elev border border-border rounded-lg p-4">
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-          <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="role" tick={{ fill: "var(--color-text-muted)", fontSize: 12 }} stroke="var(--color-border)" />
+        <BarChart
+          data={data}
+          margin={{ top: 8, right: 16, left: 0, bottom: 8 }}
+        >
+          <CartesianGrid
+            stroke="var(--color-border)"
+            strokeDasharray="3 3"
+            vertical={false}
+          />
+          <XAxis
+            dataKey="role"
+            tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
+            stroke="var(--color-border)"
+          />
           <YAxis
             tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
             stroke="var(--color-border)"
             tickFormatter={(value: number) => fmt.usd.format(value)}
             width={80}
           />
-          <Tooltip content={<ChartTooltipUsd />} cursor={{ fill: "var(--color-surface-muted)" }} />
-          <Bar dataKey="usd" fill="var(--color-primary)" radius={[6, 6, 0, 0]} isAnimationActive={!reducedMotion} />
+          <Tooltip
+            content={<ChartTooltipUsd />}
+            cursor={{ fill: "var(--color-surface-muted)" }}
+          />
+          <Bar
+            dataKey="usd"
+            fill="var(--color-primary)"
+            radius={[6, 6, 0, 0]}
+            isAnimationActive={!reducedMotion}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -273,24 +323,45 @@ function StageBarChart({ data }: { data: AiCostsStageBreakdown[] }) {
   if (data.length === 0) {
     return (
       <div className="bg-surface-elev border border-border rounded-lg p-8 text-center">
-        <p className="text-sm text-text-muted">{t("admin.ai_costs.empty.by_stage")}</p>
+        <p className="text-sm text-text-muted">
+          {t("admin.ai_costs.empty.by_stage")}
+        </p>
       </div>
     );
   }
   return (
     <div className="bg-surface-elev border border-border rounded-lg p-4">
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-          <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="stage_name" tick={{ fill: "var(--color-text-muted)", fontSize: 12 }} stroke="var(--color-border)" />
+        <BarChart
+          data={data}
+          margin={{ top: 8, right: 16, left: 0, bottom: 8 }}
+        >
+          <CartesianGrid
+            stroke="var(--color-border)"
+            strokeDasharray="3 3"
+            vertical={false}
+          />
+          <XAxis
+            dataKey="stage_name"
+            tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
+            stroke="var(--color-border)"
+          />
           <YAxis
             tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
             stroke="var(--color-border)"
             tickFormatter={(value: number) => fmt.usd.format(value)}
             width={80}
           />
-          <Tooltip content={<ChartTooltipUsd />} cursor={{ fill: "var(--color-surface-muted)" }} />
-          <Bar dataKey="usd" fill="var(--color-primary)" radius={[6, 6, 0, 0]} isAnimationActive={!reducedMotion} />
+          <Tooltip
+            content={<ChartTooltipUsd />}
+            cursor={{ fill: "var(--color-surface-muted)" }}
+          />
+          <Bar
+            dataKey="usd"
+            fill="var(--color-primary)"
+            radius={[6, 6, 0, 0]}
+            isAnimationActive={!reducedMotion}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -304,14 +375,18 @@ function TopUsersTable({ rows }: { rows: AiCostsByUserRow[] }) {
     {
       id: "user",
       header: t("admin.ai_costs.cols.user"),
-      cell: (r) => <span className="font-medium text-text-strong">{r.display_name}</span>,
+      cell: (r) => (
+        <span className="font-medium text-text-strong">{r.display_name}</span>
+      ),
     },
     {
       id: "cost",
       header: t("admin.ai_costs.cols.cost"),
       align: "right",
       cell: (r) => (
-        <span className="tabular-nums text-text-strong">{fmt.usd.format(r.total_usd ?? 0)}</span>
+        <span className="tabular-nums text-text-strong">
+          {fmt.usd.format(r.total_usd ?? 0)}
+        </span>
       ),
     },
     {
@@ -319,7 +394,9 @@ function TopUsersTable({ rows }: { rows: AiCostsByUserRow[] }) {
       header: t("admin.ai_costs.cols.tokens"),
       align: "right",
       cell: (r) => (
-        <span className="tabular-nums text-text-muted">{fmt.number.format(r.total_tokens ?? 0)}</span>
+        <span className="tabular-nums text-text-muted">
+          {fmt.number.format(r.total_tokens ?? 0)}
+        </span>
       ),
     },
     {
@@ -327,7 +404,9 @@ function TopUsersTable({ rows }: { rows: AiCostsByUserRow[] }) {
       header: t("admin.ai_costs.cols.calls"),
       align: "right",
       cell: (r) => (
-        <span className="tabular-nums text-text-muted">{fmt.number.format(r.call_count ?? 0)}</span>
+        <span className="tabular-nums text-text-muted">
+          {fmt.number.format(r.call_count ?? 0)}
+        </span>
       ),
     },
   ];
@@ -360,14 +439,18 @@ function PipelineTable({ rows }: { rows: AiCostsByPipelineRow[] }) {
     {
       id: "type",
       header: t("admin.ai_costs.cols.type"),
-      cell: (r) => <span className="text-text-muted">{r.generation_type ?? "—"}</span>,
+      cell: (r) => (
+        <span className="text-text-muted">{r.generation_type ?? "—"}</span>
+      ),
     },
     {
       id: "calls",
       header: t("admin.ai_costs.cols.calls"),
       align: "right",
       cell: (r) => (
-        <span className="tabular-nums text-text-muted">{fmt.number.format(r.call_count ?? 0)}</span>
+        <span className="tabular-nums text-text-muted">
+          {fmt.number.format(r.call_count ?? 0)}
+        </span>
       ),
     },
     {
@@ -375,7 +458,9 @@ function PipelineTable({ rows }: { rows: AiCostsByPipelineRow[] }) {
       header: t("admin.ai_costs.cols.tokens"),
       align: "right",
       cell: (r) => (
-        <span className="tabular-nums text-text-muted">{fmt.number.format(r.total_tokens ?? 0)}</span>
+        <span className="tabular-nums text-text-muted">
+          {fmt.number.format(r.total_tokens ?? 0)}
+        </span>
       ),
     },
     {
@@ -383,7 +468,9 @@ function PipelineTable({ rows }: { rows: AiCostsByPipelineRow[] }) {
       header: t("admin.ai_costs.cols.cost"),
       align: "right",
       cell: (r) => (
-        <span className="tabular-nums text-text-strong">{fmt.usd.format(r.total_usd ?? 0)}</span>
+        <span className="tabular-nums text-text-strong">
+          {fmt.usd.format(r.total_usd ?? 0)}
+        </span>
       ),
     },
   ];
@@ -416,7 +503,11 @@ function RecentCallsTable({ rows }: { rows: AiCostsRecentCall[] }) {
     {
       id: "model",
       header: t("admin.ai_costs.cols.model"),
-      cell: (r) => <span className="font-mono text-xs text-text-strong">{r.model ?? "—"}</span>,
+      cell: (r) => (
+        <span className="font-mono text-xs text-text-strong">
+          {r.model ?? "—"}
+        </span>
+      ),
     },
     {
       id: "role",
@@ -426,7 +517,9 @@ function RecentCallsTable({ rows }: { rows: AiCostsRecentCall[] }) {
     {
       id: "stage",
       header: t("admin.ai_costs.cols.stage"),
-      cell: (r) => <span className="text-text-muted">{r.stage_name ?? "—"}</span>,
+      cell: (r) => (
+        <span className="text-text-muted">{r.stage_name ?? "—"}</span>
+      ),
     },
     {
       id: "latency",
@@ -445,7 +538,9 @@ function RecentCallsTable({ rows }: { rows: AiCostsRecentCall[] }) {
       header: t("admin.ai_costs.cols.tokens_short"),
       align: "right",
       cell: (r) => (
-        <span className="tabular-nums text-text-muted">{fmt.number.format(r.tokens ?? 0)}</span>
+        <span className="tabular-nums text-text-muted">
+          {fmt.number.format(r.tokens ?? 0)}
+        </span>
       ),
     },
     {
@@ -453,7 +548,9 @@ function RecentCallsTable({ rows }: { rows: AiCostsRecentCall[] }) {
       header: t("admin.ai_costs.cols.cost_short"),
       align: "right",
       cell: (r) => (
-        <span className="tabular-nums text-text-strong">{fmt.usd.format(r.usd ?? 0)}</span>
+        <span className="tabular-nums text-text-strong">
+          {fmt.usd.format(r.usd ?? 0)}
+        </span>
       ),
     },
   ];
@@ -518,7 +615,11 @@ function PricingFormSheet({
     e.preventDefault();
     const inputRate = Number(form.input_usd_per_1k);
     const outputRate = Number(form.output_usd_per_1k);
-    if (!form.model_name.trim() || Number.isNaN(inputRate) || Number.isNaN(outputRate)) {
+    if (
+      !form.model_name.trim() ||
+      Number.isNaN(inputRate) ||
+      Number.isNaN(outputRate)
+    ) {
       return;
     }
     onSubmit({
@@ -533,7 +634,9 @@ function PricingFormSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="p-6">
         <h2 className="font-headline text-lg font-bold text-text-strong">
-          {editing ? t("admin.ai_costs.pricing.edit_title") : t("admin.ai_costs.pricing.add_title")}
+          {editing
+            ? t("admin.ai_costs.pricing.edit_title")
+            : t("admin.ai_costs.pricing.add_title")}
         </h2>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div className="space-y-1.5">
@@ -543,7 +646,9 @@ function PricingFormSheet({
             <Input
               value={form.model_name}
               disabled={Boolean(editing)}
-              onChange={(e) => setForm((f) => ({ ...f, model_name: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, model_name: e.target.value }))
+              }
               placeholder="gpt-4o-mini"
               required
             />
@@ -557,7 +662,9 @@ function PricingFormSheet({
               step="0.000001"
               min="0"
               value={form.input_usd_per_1k}
-              onChange={(e) => setForm((f) => ({ ...f, input_usd_per_1k: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, input_usd_per_1k: e.target.value }))
+              }
               required
             />
           </div>
@@ -570,7 +677,9 @@ function PricingFormSheet({
               step="0.000001"
               min="0"
               value={form.output_usd_per_1k}
-              onChange={(e) => setForm((f) => ({ ...f, output_usd_per_1k: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, output_usd_per_1k: e.target.value }))
+              }
               required
             />
           </div>
@@ -580,7 +689,9 @@ function PricingFormSheet({
             </label>
             <Input
               value={form.notes}
-              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, notes: e.target.value }))
+              }
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -660,8 +771,12 @@ function PricingSection() {
       header: t("admin.ai_costs.cols.model"),
       cell: (r) => (
         <div>
-          <span className="font-mono text-xs text-text-strong">{r.model_name}</span>
-          {r.notes ? <p className="mt-0.5 text-xs text-text-muted">{r.notes}</p> : null}
+          <span className="font-mono text-xs text-text-strong">
+            {r.model_name}
+          </span>
+          {r.notes ? (
+            <p className="mt-0.5 text-xs text-text-muted">{r.notes}</p>
+          ) : null}
         </div>
       ),
     },
@@ -670,7 +785,9 @@ function PricingSection() {
       header: t("admin.ai_costs.pricing.cols.input_rate"),
       align: "right",
       cell: (r) => (
-        <span className="tabular-nums text-text-strong">{fmt.usd.format(r.input_usd_per_1k)}</span>
+        <span className="tabular-nums text-text-strong">
+          {fmt.usd.format(r.input_usd_per_1k)}
+        </span>
       ),
     },
     {
@@ -678,7 +795,9 @@ function PricingSection() {
       header: t("admin.ai_costs.pricing.cols.output_rate"),
       align: "right",
       cell: (r) => (
-        <span className="tabular-nums text-text-strong">{fmt.usd.format(r.output_usd_per_1k)}</span>
+        <span className="tabular-nums text-text-strong">
+          {fmt.usd.format(r.output_usd_per_1k)}
+        </span>
       ),
     },
     {
@@ -695,7 +814,9 @@ function PricingSection() {
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <p className="text-sm text-text-muted">{t("admin.ai_costs.pricing.subtitle")}</p>
+        <p className="text-sm text-text-muted">
+          {t("admin.ai_costs.pricing.subtitle")}
+        </p>
         <Button
           size="sm"
           onClick={() => {
@@ -710,7 +831,9 @@ function PricingSection() {
 
       {pricing.isError ? (
         <div className="bg-surface-elev border border-border rounded-lg p-5">
-          <p className="text-sm text-danger">{t("admin.ai_costs.pricing.load_failed")}</p>
+          <p className="text-sm text-danger">
+            {t("admin.ai_costs.pricing.load_failed")}
+          </p>
         </div>
       ) : (
         <DataTable
@@ -822,29 +945,46 @@ export default function AdminAiCostsPage() {
 
       {summary.isError ? (
         <div className="bg-surface-elev border border-border rounded-lg p-5">
-          <p className="text-sm text-danger">{t("admin.ai_costs.summary_load_failed")}</p>
+          <p className="text-sm text-danger">
+            {t("admin.ai_costs.summary_load_failed")}
+          </p>
         </div>
       ) : summary.isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 bg-surface-muted animate-pulse rounded-xl" />
+            <div
+              key={i}
+              className="h-24 bg-surface-muted animate-pulse rounded-xl"
+            />
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
             label={t("admin.ai_costs.stats.total_cost")}
-            value={totals?.usd !== undefined && totals?.usd !== null ? fmt.usd.format(totals.usd) : "—"}
+            value={
+              totals?.usd !== undefined && totals?.usd !== null
+                ? fmt.usd.format(totals.usd)
+                : "—"
+            }
             icon={CircleDollarSign}
           />
           <StatCard
             label={t("admin.ai_costs.stats.total_tokens")}
-            value={totals?.tokens !== undefined && totals?.tokens !== null ? fmt.number.format(totals.tokens) : "—"}
+            value={
+              totals?.tokens !== undefined && totals?.tokens !== null
+                ? fmt.number.format(totals.tokens)
+                : "—"
+            }
             icon={Cpu}
           />
           <StatCard
             label={t("admin.ai_costs.stats.call_count")}
-            value={totals?.call_count !== undefined && totals?.call_count !== null ? fmt.number.format(totals.call_count) : "—"}
+            value={
+              totals?.call_count !== undefined && totals?.call_count !== null
+                ? fmt.number.format(totals.call_count)
+                : "—"
+            }
             icon={Activity}
           />
           <StatCard
@@ -894,12 +1034,17 @@ export default function AdminAiCostsPage() {
         </h2>
         {byUser.isError ? (
           <div className="bg-surface-elev border border-border rounded-lg p-5">
-            <p className="text-sm text-danger">{t("admin.ai_costs.users_load_failed")}</p>
+            <p className="text-sm text-danger">
+              {t("admin.ai_costs.users_load_failed")}
+            </p>
           </div>
         ) : byUser.isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 bg-surface-muted animate-pulse rounded-lg" />
+              <div
+                key={i}
+                className="h-12 bg-surface-muted animate-pulse rounded-lg"
+              />
             ))}
           </div>
         ) : (
@@ -913,12 +1058,17 @@ export default function AdminAiCostsPage() {
         </h2>
         {byPipeline.isError ? (
           <div className="bg-surface-elev border border-border rounded-lg p-5">
-            <p className="text-sm text-danger">{t("admin.ai_costs.pipelines_load_failed")}</p>
+            <p className="text-sm text-danger">
+              {t("admin.ai_costs.pipelines_load_failed")}
+            </p>
           </div>
         ) : byPipeline.isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 bg-surface-muted animate-pulse rounded-lg" />
+              <div
+                key={i}
+                className="h-12 bg-surface-muted animate-pulse rounded-lg"
+              />
             ))}
           </div>
         ) : (
@@ -932,12 +1082,17 @@ export default function AdminAiCostsPage() {
         </h2>
         {recent.isError ? (
           <div className="bg-surface-elev border border-border rounded-lg p-5">
-            <p className="text-sm text-danger">{t("admin.ai_costs.recent_load_failed")}</p>
+            <p className="text-sm text-danger">
+              {t("admin.ai_costs.recent_load_failed")}
+            </p>
           </div>
         ) : recent.isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-12 bg-surface-muted animate-pulse rounded-lg" />
+              <div
+                key={i}
+                className="h-12 bg-surface-muted animate-pulse rounded-lg"
+              />
             ))}
           </div>
         ) : (

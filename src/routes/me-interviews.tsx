@@ -47,12 +47,19 @@ const BADGE_CLASS: Record<VerdictState, string> = {
 
 function useFormatDate() {
   const { i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   return (iso: string | null | undefined): string => {
     if (!iso) return "—";
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString(locale, { year: "numeric", month: "2-digit", day: "2-digit" });
+    return d.toLocaleDateString(locale, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
   };
 }
 
@@ -76,7 +83,9 @@ function SessionRow({ item }: { item: InterviewSessionPublic }) {
             className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${BADGE_CLASS[state]}`}
           >
             {state === "passed" && <CheckCircle2 className="h-3 w-3" />}
-            {state === "evaluating" && <Loader2 className="h-3 w-3 animate-spin" />}
+            {state === "evaluating" && (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            )}
             {state === "evaluation_failed" && <XCircle className="h-3 w-3" />}
             {state === "not_graded" && <MinusCircle className="h-3 w-3" />}
             {t(`me_interviews.state.${state}`)}
@@ -119,7 +128,11 @@ export default function MyInterviewsPage() {
             title={t("me_interviews.load_failed_title")}
             description={t("me_interviews.load_failed_body")}
             cta={
-              <Button variant="outline" onClick={() => list.refetch()} className="cursor-pointer">
+              <Button
+                variant="outline"
+                onClick={() => list.refetch()}
+                className="cursor-pointer"
+              >
                 {t("me_interviews.retry")}
               </Button>
             }
@@ -140,7 +153,10 @@ export default function MyInterviewsPage() {
             title={t("me_interviews.empty_title")}
             description={t("me_interviews.empty_body")}
             cta={
-              <Link to="/courses" className="text-sm font-semibold text-m3-primary hover:underline">
+              <Link
+                to="/courses"
+                className="text-sm font-semibold text-m3-primary hover:underline"
+              >
                 {t("me_interviews.empty_cta")}
               </Link>
             }

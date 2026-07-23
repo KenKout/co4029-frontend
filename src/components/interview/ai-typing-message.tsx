@@ -52,9 +52,7 @@ function normalizePresentation(
 export interface AiTypingMessageProps {
   text: string;
   animate: boolean;
-  speak: (
-    text: string,
-  ) => LegacyNarration | NarrationPresentation;
+  speak: (text: string) => LegacyNarration | NarrationPresentation;
   onTick?: () => void;
   onTypingChange?: (typing: boolean) => void;
   onTextComplete?: () => void;
@@ -172,9 +170,17 @@ export function AiTypingMessage({
         if (cancelled) return;
         if (duration !== null && Number.isFinite(duration) && duration > 0) {
           const elapsedSinceNarrationStart =
-            narrationStartedAt === null ? 0 : Math.max(0, nowMs() - narrationStartedAt);
-          const remainingDuration = Math.max(0, duration - elapsedSinceNarrationStart);
-          const totalWeight = baseDelays.reduce((total, delay) => total + delay, 0);
+            narrationStartedAt === null
+              ? 0
+              : Math.max(0, nowMs() - narrationStartedAt);
+          const remainingDuration = Math.max(
+            0,
+            duration - elapsedSinceNarrationStart,
+          );
+          const totalWeight = baseDelays.reduce(
+            (total, delay) => total + delay,
+            0,
+          );
           delays = baseDelays.map((delay) =>
             Math.max(1, (remainingDuration * delay) / totalWeight),
           );
@@ -228,7 +234,9 @@ export function AiTypingMessage({
         : "course_interview.workspace.preparing_question";
 
   return (
-    <p className={cn("whitespace-pre-wrap text-base leading-relaxed", className)}>
+    <p
+      className={cn("whitespace-pre-wrap text-base leading-relaxed", className)}
+    >
       {phase === "preparing" ? (
         <span
           role="status"

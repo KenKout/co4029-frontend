@@ -64,7 +64,10 @@ function RoomContent({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-white">
-      <section className="min-h-0 flex-1 overflow-hidden" aria-label="Voice interview conversation">
+      <section
+        className="min-h-0 flex-1 overflow-hidden"
+        aria-label="Voice interview conversation"
+      >
         <div className="mx-auto flex h-full w-full max-w-[900px] flex-col px-4 sm:px-8">
           <div className="flex shrink-0 flex-col items-center pb-4 pt-5 text-center sm:pt-7">
             <div
@@ -79,7 +82,9 @@ function RoomContent({
               )}
               <Bot className="h-7 w-7 sm:h-8 sm:w-8" />
             </div>
-            <p className="mt-3 text-sm font-semibold text-text-strong">AI interviewer</p>
+            <p className="mt-3 text-sm font-semibold text-text-strong">
+              AI interviewer
+            </p>
             {connecting && (
               <p className="mt-1 text-xs text-text-muted motion-safe:animate-pulse">
                 Connecting to voice interview…
@@ -115,7 +120,9 @@ export function VoiceRoom({
   onCompleted,
   onTranscriptChange,
 }: VoiceRoomProps) {
-  const [tokenData, setTokenData] = useState<RealtimeTokenResponse | null>(null);
+  const [tokenData, setTokenData] = useState<RealtimeTokenResponse | null>(
+    null,
+  );
   const [isEnding, setIsEnding] = useState(false);
   const [isFetchingToken, setIsFetchingToken] = useState(false);
   const fetchToken = useInterviewRealtimeToken(sessionId);
@@ -128,7 +135,8 @@ export function VoiceRoom({
       const data = await fetchToken.mutateAsync();
       setTokenData(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to get voice token";
+      const message =
+        err instanceof Error ? err.message : "Failed to get voice token";
       toast.error(message);
     } finally {
       setIsFetchingToken(false);

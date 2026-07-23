@@ -165,8 +165,8 @@ export default function CourseAssessmentsPage() {
               showStudentColumn
               onRowClick={(a) =>
                 void navigate({
-                  to: "/teacher/courses/$courseId/quizzes/$quizId",
-                  params: { courseId, quizId: a.quiz_id },
+                  to: "/teacher/courses/$courseId/quiz-attempts/$attemptId",
+                  params: { courseId, attemptId: a.id },
                 })
               }
             />

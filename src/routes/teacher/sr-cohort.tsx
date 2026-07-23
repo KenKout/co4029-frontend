@@ -74,8 +74,7 @@ function useAllLessonsForCourse(courseId: string | undefined) {
     }
   });
 
-  const isLoading =
-    modulesLoading || lessonQueries.some((q) => q.isLoading);
+  const isLoading = modulesLoading || lessonQueries.some((q) => q.isLoading);
 
   return { lessons, isLoading };
 }
@@ -135,7 +134,10 @@ function CohortHistogram({
             fontSize: 12,
             color: "var(--text-strong)",
           }}
-          formatter={(value) => [String(value), t("teacher_sr_cohort.students_axis")]}
+          formatter={(value) => [
+            String(value),
+            t("teacher_sr_cohort.students_axis"),
+          ]}
           labelFormatter={(label) =>
             `${t("teacher_sr_cohort.kr_tooltip_label")}: ${String(label ?? "")}`
           }
@@ -322,7 +324,10 @@ function CardStudentResultsPanel({
             key={r.student_id}
             className="grid grid-cols-[1fr_90px_110px_120px] gap-3 px-4 py-2.5 items-center"
           >
-            <span className="text-sm text-m3-on-surface truncate" title={r.name}>
+            <span
+              className="text-sm text-m3-on-surface truncate"
+              title={r.name}
+            >
               {r.name}
             </span>
             <span className="flex justify-center">
@@ -385,9 +390,7 @@ export default function TeacherSrCohortPage() {
     10,
   );
 
-  const selectedLesson = lessons.find(
-    (l) => l.lesson_id === selectedLessonId,
-  );
+  const selectedLesson = lessons.find((l) => l.lesson_id === selectedLessonId);
   const histogramTotal =
     cohort?.histogram?.reduce((acc, b) => acc + b.count, 0) ?? 0;
 
@@ -396,7 +399,10 @@ export default function TeacherSrCohortPage() {
       <div className="max-w-6xl mx-auto space-y-6">
         <Breadcrumbs
           items={[
-            { label: t("teacher_sr_cohort.breadcrumb_teaching"), to: "/teacher/courses" },
+            {
+              label: t("teacher_sr_cohort.breadcrumb_teaching"),
+              to: "/teacher/courses",
+            },
             {
               label: course?.title ?? t("teacher_sr_cohort.breadcrumb_course"),
               to: "/teacher/courses/$courseId",
@@ -425,7 +431,9 @@ export default function TeacherSrCohortPage() {
             className="ml-auto shrink-0 inline-flex items-center gap-2 rounded-xl bg-m3-surface-container-low hover:bg-m3-surface-container-high border border-m3-outline-variant/20 px-3 py-2 text-sm font-semibold text-m3-on-surface transition-colors cursor-pointer"
           >
             <AlertTriangle className="h-4 w-4 text-amber-500" />
-            <span className="hidden sm:inline">{t("teacher_sr_cohort.view_at_risk")}</span>
+            <span className="hidden sm:inline">
+              {t("teacher_sr_cohort.view_at_risk")}
+            </span>
           </Link>
         </div>
 
@@ -444,7 +452,9 @@ export default function TeacherSrCohortPage() {
               disabled={lessonsLoading || lessons.length === 0}
               className="w-full appearance-none px-4 py-2.5 pr-10 rounded-xl bg-m3-surface-container-low border border-m3-outline-variant/20 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-primary/20 disabled:opacity-50 cursor-pointer"
             >
-              {lessonsLoading && <option>{t("teacher_sr_cohort.lesson_loading")}</option>}
+              {lessonsLoading && (
+                <option>{t("teacher_sr_cohort.lesson_loading")}</option>
+              )}
               {!lessonsLoading && lessons.length === 0 && (
                 <option>{t("teacher_sr_cohort.lesson_empty")}</option>
               )}

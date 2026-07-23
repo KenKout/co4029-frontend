@@ -115,9 +115,7 @@ export default function DeptCoursesPage() {
         </div>
       ) : list.isError ? (
         <div className="bg-surface-elev border border-border rounded-lg p-5">
-          <p className="text-sm text-danger">
-            {t("dept_courses.load_failed")}
-          </p>
+          <p className="text-sm text-danger">{t("dept_courses.load_failed")}</p>
         </div>
       ) : courses.length === 0 ? (
         <div className="bg-surface-elev border border-border rounded-lg p-10 text-center">

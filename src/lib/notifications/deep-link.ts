@@ -1,6 +1,8 @@
 import type { Notification } from "@/lib/api/types";
 
-export function notificationDeepLink(notification: Notification): string | null {
+export function notificationDeepLink(
+  notification: Notification,
+): string | null {
   // Option B: prefer the precomputed action_url built by the backend, which
   // holds the full routing context (course slug + nested ids) at creation
   // time. A single entity_id can't express a nested route, so this is the
@@ -37,7 +39,9 @@ const MARKDOWN_LINK_RE = /\[([^\]]+)\]\(([^)\s]+)\)/g;
  * Minimal `[label](url)` parser for SR remediation notification bodies
  * (phase-7-5-sr.md §5). A full Markdown dependency is intentionally avoided.
  */
-export function parseNotificationBody(body: string | null | undefined): MarkdownSegment[] {
+export function parseNotificationBody(
+  body: string | null | undefined,
+): MarkdownSegment[] {
   if (!body) return [];
   const segments: MarkdownSegment[] = [];
   let cursor = 0;
@@ -69,7 +73,9 @@ export interface RemediationDeepLink {
  *   `.../resources/{mid}?t={s}` | `?p={page}` | `#{anchor}`.
  * Uses a placeholder base because the spec mandates relative paths.
  */
-export function parseRemediationDeepLink(url: string): RemediationDeepLink | null {
+export function parseRemediationDeepLink(
+  url: string,
+): RemediationDeepLink | null {
   try {
     const u = new URL(url, "http://placeholder.local");
     const t = u.searchParams.get("t");

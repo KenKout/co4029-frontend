@@ -4,9 +4,11 @@
     "error": "Something went wrong",
     "save": "Save",
     "cancel": "Cancel",
+    "undo": "Undo",
     "delete": "Delete",
     "edit": "Edit",
     "confirm": "Confirm",
+    "create": "Create",
     "back": "Back",
     "next": "Next",
     "previous": "Previous",
@@ -194,6 +196,80 @@
       "advanced": "Advanced"
     }
   },
+  "teacher_course_settings": {
+    "title": "Course Settings",
+    "status_summary_published": "Published",
+    "status_summary_draft": "Draft",
+    "no_level": "No level",
+    "course_title": "Course Title",
+    "course_title_placeholder": "e.g. Machine Learning Fundamentals",
+    "course_slug": "Course Slug",
+    "course_slug_placeholder": "e.g. ml-fundamentals",
+    "course_slug_help": "Used in the course URL. Must be unique.",
+    "description": "Description",
+    "description_placeholder": "Brief overview of what students will learn…",
+    "level": "Level",
+    "level_not_set": "— Not set —",
+    "level_beginner": "Beginner",
+    "level_intermediate": "Intermediate",
+    "level_advanced": "Advanced",
+    "status": "Status",
+    "status_draft": "Draft",
+    "status_published": "Published",
+    "status_archived": "Archived",
+    "estimated_duration": "Estimated Duration (min)",
+    "estimated_duration_placeholder": "e.g. 480",
+    "enrollment_cap": "Enrollment Cap",
+    "enrollment_cap_placeholder": "Leave empty for unlimited",
+    "expected_completion": "Expected Completion (days)",
+    "expected_completion_placeholder": "e.g. 30",
+    "save": "Save Course Settings",
+    "saved": "Course settings saved",
+    "save_failed": "Save failed"
+  },
+  "teacher_quiz_attempt": {
+    "load_failed": "Couldn't load this attempt.",
+    "back_to_assessments": "Back to Assessments",
+    "breadcrumb_assessments": "Assessments",
+    "breadcrumb_attempt": "Attempt",
+    "subtitle": "{{student}} · Attempt #{{number}}",
+    "started": "Started",
+    "submitted": "Submitted",
+    "tiles": {
+      "status": "Status",
+      "score": "Score",
+      "correct": "Correct",
+      "time_taken": "Time taken"
+    },
+    "status": {
+      "passed": "Passed",
+      "failed": "Failed",
+      "in_progress": "In progress",
+      "grading": "Grading…"
+    },
+    "integrity": {
+      "clean_title": "No integrity flags",
+      "clean_body": "This student stayed on the quiz page the whole time — no tab switches or focus loss recorded.",
+      "flagged_title": "Integrity signals detected",
+      "summary": "Left the page {{tab}}× (tab switch), lost focus {{focus}}×. Recorded for your review — never auto-penalized.",
+      "event": {
+        "tab_switch": "Switched away from the quiz tab",
+        "focus_lost": "Quiz window lost focus",
+        "fullscreen_exit": "Exited fullscreen"
+      },
+      "severity": {
+        "critical": "Critical",
+        "warning": "Warning",
+        "info": "Info"
+      }
+    },
+    "questions": {
+      "title": "Answers",
+      "q_label": "Question {{index}}",
+      "skipped": "Skipped",
+      "their_answer": "Their answer"
+    }
+  },
   "teacher_students_hub": {
     "eyebrow": "Student Management",
     "title": "Students",
@@ -289,6 +365,33 @@
       "created": "Interview question set created"
     }
   },
+  "teacher_question_bank": {
+    "title": "Question bank",
+    "subtitle": "Reusable interview questions",
+    "subtitle_course": "Reusable interview questions · {{course}}",
+    "back_to_course": "Back to course",
+    "how_to_add": "This is your course's shared pool of interview questions. To add questions, open any interview, then use \"Add to question bank\" on a question. Import them into other interviews from the interview's Questions tab.",
+    "search_placeholder": "Search questions, answers, tags…",
+    "filter_type": "Type",
+    "filter_difficulty": "Difficulty",
+    "filter_tag": "Tag",
+    "all": "All",
+    "no_difficulty": "No difficulty",
+    "showing_all": "{{count}} question(s)",
+    "showing_filtered": "Showing {{shown}} of {{total}} questions",
+    "empty_title": "No questions in the bank yet",
+    "empty_body": "Add questions to the bank from inside any interview using \"Add to question bank\". They'll appear here for reuse across the course.",
+    "empty_filtered": "No questions match the current filters.",
+    "model_answer": "Model answer",
+    "prompt_label": "Question prompt",
+    "tags_label": "Tags",
+    "add_tag_placeholder": "Add tag…",
+    "remove_tag": "Remove tag {{tag}}",
+    "saved": "Question updated",
+    "deleted": "Question removed from bank",
+    "delete_title": "Remove from question bank?",
+    "delete_body": "This removes the question from the course bank. Questions already imported into interviews are not affected."
+  },
   "teacher_common": {
     "back_to_course": "Back to course",
     "breadcrumb_teaching": "My Courses",
@@ -296,6 +399,41 @@
     "lesson_fallback": "Lesson",
     "quiz_label": "Quiz",
     "interview_label": "Interview",
+    "video_label": "Video",
+    "reading_label": "Reading",
+    "add_quiz_pill": "Quiz",
+    "add_interview_pill": "Interview",
+    "new_item_title": "New {{label}}",
+    "new_quiz_title": "New Quiz {{number}}",
+    "new_quiz_description": "Draft quiz for this module.",
+    "lesson_added": "{{label}} added",
+    "add_lesson_failed": "Failed to add lesson",
+    "quiz_added": "Quiz added",
+    "add_quiz_failed": "Failed to add quiz",
+    "module_created": "Module created",
+    "create_module_failed": "Failed to create module",
+    "module_title_placeholder": "Module title (e.g. Foundations of ML)",
+    "no_items_yet": "No items yet.",
+    "edit_module": "Edit module",
+    "edit_button": "Edit",
+    "rename_module": "Rename module",
+    "reorder_failed": "Reorder failed",
+    "module_status_set": "Module {{status}}",
+    "mark_module_as": "Click to mark as {{status}}",
+    "curriculum_fallback_title": "Curriculum Structure",
+    "module_count": "{{count}} module",
+    "module_count_plural": "{{count}} modules",
+    "lesson_count_suffix": " · {{count}} lessons",
+    "nav_students": "Students",
+    "nav_progress": "Progress",
+    "nav_assessments": "Assessments",
+    "nav_question_bank": "Question bank",
+    "section_course_settings": "Course settings",
+    "section_learning_outcomes": "Learning outcomes",
+    "section_curriculum": "Curriculum",
+    "nav_retention": "Retention",
+    "nav_manage_enrollments": "Manage Enrollments",
+    "add_module": "Add Module",
     "search_courses": "Search courses...",
     "search_students": "Search by name or email…",
     "search_lessons": "Search lessons…",
@@ -566,7 +704,11 @@
     "recent_title": "Recent review history",
     "recent_count": "{{count}} most recent reviews",
     "no_history": "No history yet",
-    "empty_reviews": "Student has no review activity yet."
+    "empty_reviews": "Student has no review activity yet.",
+    "review": {
+      "answered_correct": "Answered correctly",
+      "answered_incorrect": "Answered incorrectly"
+    }
   },
   "teacher_progress": {
     "breadcrumb": "Lesson progress",
@@ -1356,6 +1498,9 @@
       "title": "Interview transcript",
       "empty": "No transcript recorded for this session.",
       "audio_only": "(voice answer — no text transcription)",
+      "page_status": "{{start}}–{{end}} of {{total}}",
+      "prev": "Previous",
+      "next": "Next",
       "role": {
         "user": "Student",
         "ai": "Interviewer",
@@ -1373,6 +1518,7 @@
     },
     "sections": {
       "title": "Interview gap report",
+      "context": "Session context",
       "overview": "Gap overview",
       "by_criterion": "Analysis by criterion",
       "study_plan": "Study plan",
@@ -1382,12 +1528,33 @@
       "session_id": "Session #{{id}}",
       "updated_at": "Last updated: {{date}}",
       "related_interview": " · Interview {{id}}",
-      "teacher_notes": "Teacher notes",
+      "notes": "Notes",
+      "notes_placeholder": "Add your notes about this interview…",
+      "notes_empty": "No notes yet. Click Edit to add your observations.",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "saved": "Notes saved",
+      "save_failed": "Couldn't save notes",
+      "student": "Student",
+      "interview": "Interview",
+      "started_at": "Started",
+      "ended_at": "Ended",
+      "duration": "Duration",
+      "duration_value": "{{minutes}} min",
+      "status": "Status",
+      "attempt": "Attempt",
+      "attempt_value": "#{{n}}",
+      "mode": "Mode",
+      "verdict": "Result",
+      "in_progress": "In progress",
       "criteria_count": "{{count}} criteria",
       "passed": "Passed",
       "failed": "Not passed",
       "quote": "Quote:",
       "analysis": "Analysis:",
+      "view": "View",
       "source_quiz_attempt": "Source quiz attempt",
       "source_interview_session": "Source interview session"
     }
@@ -1565,9 +1732,12 @@
       "preparing_question": "AI interviewer is preparing the question…",
       "preparing_greeting": "AI interviewer is joining you…",
       "preparing_goodbye": "AI interviewer is wrapping up…",
+      "wrap_up_hint": "These closing questions aren't graded. Answer them, or skip straight to your results.",
+      "skip_and_finish": "Skip & finish",
       "transcript": "Interview transcript",
       "answer_composer": "Answer composer",
       "answer_placeholder": "Type your answer or start speaking…",
+      "answer_locked": "Please wait for the interviewer to finish…",
       "send_hint": "Enter to send · Shift + Enter for a new line",
       "start_speaking": "Start speaking",
       "mute_microphone": "Stop listening",
@@ -1729,6 +1899,7 @@
       "save_name": "Save name",
       "ready": "Start interview",
       "not_ready": "Not ready yet",
+      "skip_setup": "Skip setup",
       "reply_placeholder": "Reply to the interviewer or use a quick response…",
       "timer_waiting": "The assessed timer starts when you confirm you are ready.",
       "response_required": "Type a response or choose one of the options.",
@@ -1743,7 +1914,8 @@
         "confirm_setup": "Yes, that's me. The audio is clear.",
         "needs_adjustment": "I need a moment to adjust my audio.",
         "ready": "I'm ready to begin.",
-        "not_ready": "I'm not ready yet."
+        "not_ready": "I'm not ready yet.",
+        "skip_setup": "Skip the setup."
       }
     },
     "transitions": {
@@ -1754,7 +1926,8 @@
       "gap_report": "Gap report",
       "gap_report_pending": "Preparing your personalized gap report… this can take a minute.",
       "study_plan": "Study plan",
-      "follow_up": "Follow-up"
+      "follow_up": "Follow-up",
+      "wrap_up": "Wrap-up"
     },
     "labels": {
       "persona": "Persona",
@@ -2024,11 +2197,118 @@
       "max_uses_label_short": "Max uses"
     }
   },
+  "teacher_quiz_results": {
+    "title": "Quiz results",
+    "breadcrumb": "Results",
+    "actions": {
+      "back_to_editor": "Back to editor"
+    },
+    "empty": {
+      "title": "No attempts yet",
+      "description": "Once students start taking this quiz, their scores and question-level performance will show up here."
+    },
+    "errors": {
+      "not_found_title": "Quiz not found",
+      "not_found_description": "This quiz may have been moved or deleted."
+    },
+    "summary": {
+      "students": "Students",
+      "attempts": "Attempts",
+      "mean": "Mean score",
+      "median": "Median score",
+      "pass_rate": "Pass rate",
+      "avg_time": "Avg. time",
+      "iqr": "Middle 50%: {{lower}}–{{upper}}",
+      "grading_method_label": "Counting {{method}} attempt · pass ≥ {{passing}}%"
+    },
+    "histogram": {
+      "title": "Score distribution",
+      "x_axis": "Score band",
+      "y_axis": "Students",
+      "tooltip_students": "students",
+      "pass_line": "Pass"
+    },
+    "tabs": {
+      "by_student": "By student",
+      "by_question": "By question"
+    },
+    "per_student": {
+      "col_student": "Student",
+      "col_best": "Best",
+      "col_latest": "Latest",
+      "col_attempts": "Attempts",
+      "col_status": "Status",
+      "col_last_attempt": "Last attempt",
+      "passed": "Passed",
+      "failed": "Failed",
+      "toggle_best": "Best score",
+      "toggle_latest": "Latest score",
+      "empty": "No students have attempted this quiz yet."
+    },
+    "per_question": {
+      "col_question": "Question",
+      "col_answered": "Answered",
+      "col_correct": "Correct",
+      "answered": "{{count}} answered",
+      "chosen_count": "{{count}} ({{pct}}%)",
+      "empty": "This quiz has no questions yet."
+    },
+    "generation": {
+      "starting": "Starting generation…",
+      "running_stage": "Working: {{stage}}",
+      "done": "Generation complete",
+      "failed": "Generation failed",
+      "cancelled": "Generation cancelled",
+      "elapsed": "Elapsed time",
+      "logs_toggle": "Activity log ({{count}})",
+      "stages": {
+        "retrieval": "Retrieval",
+        "outline": "Outline",
+        "ideation": "Ideation",
+        "generation": "Generation",
+        "validation": "Validation",
+        "dedup": "Dedup",
+        "persistence": "Saving"
+      }
+    }
+  },
+  "teacher_outcomes": {
+    "title": "Learning Outcomes",
+    "count": "{{count}} defined",
+    "code": "L.O.{{n}}",
+    "add": "Add outcome",
+    "add_placeholder": "Describe a learning outcome…",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "empty": "No learning outcomes yet. Add one to describe what students will achieve.",
+    "added": "Learning outcome added",
+    "updated": "Learning outcome updated",
+    "deleted": "Learning outcome deleted",
+    "add_failed": "Failed to add outcome",
+    "update_failed": "Failed to update outcome",
+    "delete_failed": "Failed to delete outcome",
+    "delete_title": "Delete learning outcome?",
+    "delete_description": "Questions tagged with it revert to no outcome. Remaining outcomes renumber automatically."
+  },
+  "quiz_generation": {
+    "outcomes": {
+      "label": "Target learning outcomes",
+      "select_all": "Select all",
+      "empty": "No learning outcomes defined for this course yet. Questions will be generated without outcome tagging.",
+      "badge": "L.O.{{n}}"
+    }
+  },
   "teacher_quiz_manage": {
+    "outcome": {
+      "label": "Learning outcome",
+      "none": "No outcome"
+    },
     "tabs": {
       "questions": "Questions",
       "settings": "Settings",
-      "preview": "Preview"
+      "preview": "Student preview"
     },
     "errors": {
       "not_found_title": "Quiz not found",
@@ -2084,7 +2364,8 @@
       "publish": "Publish",
       "delete_quiz_tooltip": "Delete quiz, questions, attempts, and module item",
       "add_question": "Add question",
-      "view_as_student": "View as student"
+      "view_as_student": "View as student",
+      "view_results": "Results"
     },
     "status": {
       "published": "Published",
@@ -2108,7 +2389,7 @@
     },
     "banners": {
       "missing_expected_time": "{{count}} questions are missing an expected time. Set them before publishing.",
-      "pending_review": "{{count}} questions are pending review. Approve them before publishing."
+      "pending_review": "{{count}} question(s) are not approved and won't be shown to students. Approve them to include them; they're kept as drafts either way."
     },
     "empty": {
       "no_questions_title": "No questions yet",
@@ -2118,6 +2399,9 @@
       "title": "Generate with AI",
       "description": "Generate questions from prepared lesson materials.",
       "open_generator": "Open generator"
+    },
+    "question_nav": {
+      "title": "Jump to question"
     },
     "bulk_time": {
       "title": "Quick set time",
@@ -2174,7 +2458,13 @@
         "pass_score": "Passing score",
         "time_label": "Time (minutes)",
         "time_hint": "Leave blank for unlimited.",
-        "time_placeholder": "e.g. 30"
+        "time_placeholder": "e.g. 30",
+        "grading_method_label": "Grading method",
+        "grading_method_hint": "Which attempt counts as the student's score when retakes are allowed.",
+        "grading_method_highest": "Highest score",
+        "grading_method_average": "Average score",
+        "grading_method_first": "First attempt",
+        "grading_method_last": "Last attempt"
       },
       "attempts": {
         "title": "Attempts",
@@ -2260,15 +2550,17 @@
       "neutral": "Neutral",
       "supportive": "Supportive"
     },
-    "mode": {
-      "hybrid": "Text + voice",
-      "text": "Text only",
-      "voice": "Voice only"
-    },
     "status": {
       "draft": "Draft",
       "published": "Published",
       "archived": "Archived"
+    },
+    "publish_readiness": {
+      "title": "Ready to publish?",
+      "ready": "Ready to publish",
+      "settings": "Settings complete",
+      "outcomes": "{{count}} learning outcome(s)",
+      "questions": "{{approved}}/{{total}} questions approved"
     },
     "readiness": {
       "title": "Adaptive readiness",
@@ -2276,6 +2568,19 @@
       "loading": "Checking readiness…",
       "error": "Could not load the readiness report.",
       "all_clear": "Everything looks ready for adaptive interviewing.",
+      "status_ready": "Ready",
+      "status_review": "{{count}} to review",
+      "no_questions_yet": "No approved questions yet. Approve questions in the Questions tab to see coverage here.",
+      "stat_approved_questions": "Approved questions",
+      "stat_outcomes_covered": "Outcomes covered",
+      "stat_est_length": "Est. length",
+      "est_length_value": "~{{minutes}} min",
+      "est_length_untimed": "Untimed",
+      "est_length_limit": "of {{minutes}} min limit",
+      "stat_difficulty_mix": "Difficulty mix",
+      "difficulty_unlabeled": "Unlabeled",
+      "fix_action": "Fix",
+      "rollout_hint": "Which input modes currently run the adaptive interviewer. Controlled at deployment level, shown read-only.",
       "rollout_title": "Adaptive rollout status",
       "rollout_on": "On",
       "rollout_off": "Off",
@@ -2337,6 +2642,7 @@
       "unpublish_label": "Revert to draft — hides the interview from students",
       "unpublish_short": "Unpublish",
       "archive": "Archive",
+      "more_tooltip": "More actions",
       "delete_tooltip": "Permanently delete this interview set",
       "save_config": "Save settings",
       "save_config_scope_hint": "Saves the general settings above only — does not start question generation."
@@ -2344,11 +2650,13 @@
     "save_status": {
       "saving": "Saving…",
       "saved": "Saved",
-      "unsaved": "Unsaved changes"
+      "unsaved": "Unsaved changes",
+      "last_saved": "Last saved {{when}}"
     },
     "header": {
       "draft_count": "{{count}} questions",
-      "chip_label": "AI interview"
+      "chip_label": "AI interview",
+      "last_published": "Last published {{when}}"
     },
     "section_nav": {
       "aria_label": "Interview sections",
@@ -2396,13 +2704,14 @@
       "title": "Title",
       "title_placeholder": "Enter interview title…",
       "persona": "AI persona",
-      "mode": "Response format",
-      "mode_hint": "Text = typed answers. Voice = live spoken interview. Text + voice = one text session where students can type or dictate each answer.",
       "duration_label": "Duration (minutes)",
       "duration_hint": "Blank = unlimited",
+      "duration_placeholder": "e.g. 30",
       "attempts_label": "Attempts",
+      "attempts_placeholder": "e.g. 3",
       "criteria_label": "Required criteria count",
       "criteria_hint": "Minimum rubric outcomes to pass",
+      "criteria_placeholder": "e.g. 2",
       "lock_ef_label": "Lock quiz EF growth until pass",
       "lock_ef_desc": "Students must pass the interview before spaced repetition expands review intervals.",
       "supplementary_label": "Supplementary instructions",
@@ -2458,6 +2767,13 @@
       "added": "Outcome added",
       "saved": "Outcome saved",
       "deleted": "Outcome deleted",
+      "import_from_course": "Import from course",
+      "import_title": "Import course learning outcomes",
+      "import_help": "Select the course-level outcomes to copy into this interview. Imported outcomes default to Knowledge / weight 3 — you can edit each one afterwards.",
+      "import_selected": "Import {{count}} selected",
+      "imported": "Imported {{count}} outcome(s)",
+      "import_all_added": "All course outcomes are already added here. Define more at the course level to import them.",
+      "course_lo_code": "L.O.{{n}}",
       "section_help": "Define what students must demonstrate to pass the interview. AI-generated questions and evaluation criteria are aligned with these outcomes.",
       "statement_label": "Outcome statement",
       "summary_outcomes": "{{count}} outcomes",
@@ -2544,6 +2860,24 @@
     },
     "qbank": {
       "search_placeholder": "Search questions, answers, outcomes…",
+      "pending_only": "Pending only ({{count}})",
+      "bulk": {
+        "select_all": "Select all",
+        "select_one": "Select question",
+        "selected": "{{count}} selected",
+        "count": "{{count}} selected",
+        "set_status": "Set status",
+        "set_outcome": "Set outcome",
+        "add_to_bank": "Add to bank",
+        "clear": "Clear",
+        "delete_confirm": "Delete {{count}} selected question(s)? This cannot be undone.",
+        "status_done": "Updated {{count}} question(s)",
+        "outcome_done": "Reassigned {{count}} question(s)",
+        "bank_done": "Added {{count}} question(s) to the course bank",
+        "delete_done": "Deleted {{count}} question(s)",
+        "partial": "{{ok}} done, {{failed}} failed",
+        "failed": "Bulk action failed"
+      },
       "collapse_all": "Collapse all",
       "view_answer": "View answer",
       "hide_answer": "Hide answer",
@@ -2559,6 +2893,10 @@
       "clear_all": "Clear all",
       "clear_filters": "Clear filters",
       "empty_filtered": "No questions match the current filters.",
+      "empty_title": "No questions yet",
+      "empty_body": "Generate questions from the Generate tab, or add one manually to start building this interview.",
+      "density_compact": "Compact",
+      "density_comfortable": "Comfortable",
       "unsaved_confirm": "You have unsaved changes. Discard them?",
       "missing_lo": "Missing learning outcome",
       "ai_generated": "AI-generated",
@@ -2568,7 +2906,33 @@
       "no_answer": "No model answer yet",
       "move_to_top": "Move to top",
       "move_to_bottom": "Move to bottom",
+      "drag_hint": "Drag to reorder",
       "duplicate_hint": "Duplicate is not available yet",
+      "module_badge_tooltip": "The module this interview belongs to",
+      "module_multi": "Multiple modules",
+      "module_none": "No module",
+      "module_unknown": "Other module",
+      "add_to_bank": "Add to question bank",
+      "already_in_bank": "Already in question bank",
+      "bank_added": "Added to the course question bank",
+      "import_from_bank": "Import from bank",
+      "import_title": "Import from course question bank",
+      "import_help": "Select questions from the course bank to copy into this interview. Imported questions become editable copies — later edits here don't change the bank.",
+      "import_selected": "Import {{count}} selected",
+      "imported": "Imported {{count}} question(s)",
+      "import_all_added": "All bank questions are already in this interview. Add more to the bank from other interviews to reuse them here.",
+      "type": {
+        "conceptual": "Conceptual",
+        "behavioral": "Behavioral",
+        "technical": "Technical",
+        "situational": "Situational",
+        "system_design": "System design"
+      },
+      "difficulty": {
+        "junior": "Junior",
+        "mid_level": "Mid-level",
+        "senior": "Senior"
+      },
       "status": {
         "draft": "Draft",
         "needs_review": "Needs review",
@@ -2582,6 +2946,7 @@
         "type": "Type",
         "source": "Source",
         "all": "All",
+        "all_count": "All ({{count}})",
         "no_outcome": "No outcome"
       },
       "source": {
@@ -2611,6 +2976,10 @@
       "section_title": "AI Question Generation",
       "section_description": "Configure how AI should generate questions, then start generation when ready. Persona and supplementary instructions above are reused for this run.",
       "reuses_settings_hint": "Persona and supplementary instructions from the sections above are used for this generation run.",
+      "modules_label": "Source modules",
+      "modules_hint": "Which modules' content the questions draw from. Leave none selected to use this interview's own module.",
+      "modules_empty": "No modules available.",
+      "modules_own": "(this interview)",
       "independent_action_hint": "This starts generation right away — it does not save the settings above.",
       "mode_label": "Generation mode",
       "mode_outcome": "By rubric outcome",
@@ -2652,6 +3021,7 @@
       "extracting": "Extracting",
       "chunking": "Chunking",
       "embedding": "Embedding",
+      "enriching": "Enriching",
       "building_kg": "Building KG",
       "ready": "Ready",
       "failed": "Failed"
@@ -2685,6 +3055,7 @@
       "shown_to_students": "Visible to students",
       "deleted": "Material deleted",
       "delete_forbidden": "You do not have permission to delete this material",
+      "delete_busy": "This material is still being processed and can't be deleted right now. Try again in a moment.",
       "delete_failed": "Delete failed"
     },
     "phase": {
@@ -2705,6 +3076,7 @@
     "processing": {
       "building_kg": "Extracting concepts and building knowledge graph…",
       "embedding": "Generating embeddings…",
+      "enriching": "Enriching and saving chunks…",
       "chunking": "Splitting content into semantic chunks…",
       "extracting": "Extracting text from file…",
       "queued": "Awaiting processing…",
@@ -2738,7 +3110,12 @@
     "kg": {
       "title": "Knowledge graph",
       "indexed_count": "Indexed {{count}} materials · concepts extracted",
-      "empty_hint": "Upload and process materials to build your knowledge graph",
+      "empty_hint": "No concepts extracted yet for this lesson",
+      "awaiting_hint": "Upload and process materials to build your knowledge graph",
+      "disabled_hint": "Knowledge graph is not enabled for this environment",
+      "legend_prereq": "Prerequisite",
+      "legend_related": "Related",
+      "showing_top": "Top {{shown}} of {{total}} concepts",
       "open_full": "Open full graph",
       "viewer_coming_soon": "Knowledge graph viewer coming soon"
     },
@@ -2811,14 +3188,14 @@
     "confirming": "Signing out…",
     "cancel": "Cancel"
   },
-   "nav_groups": {
-   "learning": "Learning",
-   "my_journey": "My Journey",
-   "overview": "Overview",
-   "content": "Content",
-   "pathways": "Pathways",
-   "analytics": "Analytics",
-   "management": "Management",
-   "system": "System"
+  "nav_groups": {
+    "learning": "Learning",
+    "my_journey": "My Journey",
+    "overview": "Overview",
+    "content": "Content",
+    "pathways": "Pathways",
+    "analytics": "Analytics",
+    "management": "Management",
+    "system": "System"
   }
 }

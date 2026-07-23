@@ -108,7 +108,9 @@ function JobsTable({
     {
       id: "progress",
       header: t("admin.processing.cols.progress"),
-      cell: (job) => <span className="text-text-strong">{job.progress_percent}%</span>,
+      cell: (job) => (
+        <span className="text-text-strong">{job.progress_percent}%</span>
+      ),
     },
     {
       id: "retries",
@@ -119,7 +121,9 @@ function JobsTable({
       id: "updated",
       header: t("admin.processing.cols.updated"),
       cell: (job) => (
-        <span className="text-xs text-text-muted">{formatDate(job.updated_at, locale)}</span>
+        <span className="text-xs text-text-muted">
+          {formatDate(job.updated_at, locale)}
+        </span>
       ),
     },
   ];
@@ -129,14 +133,21 @@ function JobsTable({
       columns={columns}
       data={jobs}
       getRowId={(job) => job.id}
-      onRowClick={(job) => void navigate({ to: "/admin/processing/$jobId", params: { jobId: job.id } })}
+      onRowClick={(job) =>
+        void navigate({
+          to: "/admin/processing/$jobId",
+          params: { jobId: job.id },
+        })
+      }
       pagination
       pageSize={15}
       pageSizeOptions={[15, 30, 50]}
       emptyState={
         <div className="flex flex-col items-center gap-2">
           <Activity className="h-8 w-8 text-text-subtle" />
-          <p className="text-sm text-text-muted">{t("admin.processing.no_jobs_match")}</p>
+          <p className="text-sm text-text-muted">
+            {t("admin.processing.no_jobs_match")}
+          </p>
         </div>
       }
       actionsHeader={t("admin.processing.cols.actions")}
@@ -206,7 +217,9 @@ export default function AdminProcessingPage() {
         if (err instanceof ApiError && err.status === 409) {
           toast.error(t("admin.processing.toasts.only_failed"));
         } else {
-          toast.error((err as Error).message || t("admin.processing.toasts.retry_failed"));
+          toast.error(
+            (err as Error).message || t("admin.processing.toasts.retry_failed"),
+          );
         }
       },
       onSettled: () => setRetryingId(null),
@@ -305,7 +318,9 @@ export default function AdminProcessingPage() {
         </h2>
         {jobs.isError ? (
           <div className="bg-surface-elev border border-border rounded-lg p-5">
-            <p className="text-sm text-danger">{t("admin.processing.jobs_load_failed")}</p>
+            <p className="text-sm text-danger">
+              {t("admin.processing.jobs_load_failed")}
+            </p>
           </div>
         ) : jobs.isLoading ? (
           <div className="space-y-2">

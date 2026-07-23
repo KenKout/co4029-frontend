@@ -11,7 +11,9 @@ export function ComingSoonPage({ title }: { title: string }) {
         <div className="w-16 h-16 rounded-xl bg-m3-primary-fixed flex items-center justify-center mx-auto">
           <Construction className="h-8 w-8 text-m3-primary" />
         </div>
-        <h1 className="font-headline font-bold text-2xl text-m3-on-surface">{title}</h1>
+        <h1 className="font-headline font-bold text-2xl text-m3-on-surface">
+          {title}
+        </h1>
         <p className="text-m3-on-surface-variant text-sm">
           {t("placeholder.body")}
         </p>
@@ -45,4 +47,3 @@ export function QuizPage() {
 export function InterviewPage() {
   return <PageWithKey titleKey="placeholder.interview" />;
 }
-

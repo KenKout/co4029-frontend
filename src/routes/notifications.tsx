@@ -20,7 +20,15 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { Notification } from "@/lib/api/types";
-import { ArrowRight, Check, CheckCheck, Eye, EyeOff, Mail, Trash2 } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  CheckCheck,
+  Eye,
+  EyeOff,
+  Mail,
+  Trash2,
+} from "lucide-react";
 
 const SNIPPET_LIMIT = 200;
 
@@ -214,13 +222,8 @@ export default function NotificationsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const {
-    items,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-    isLoading,
-  } = useNotifications(20);
+  const { items, hasNextPage, fetchNextPage, isFetchingNextPage, isLoading } =
+    useNotifications(20);
 
   const { data: unread } = useUnreadCount();
   const unreadCount = unread?.unread ?? 0;
@@ -232,14 +235,18 @@ export default function NotificationsPage() {
   function handleMarkRead(id: string) {
     markRead.mutate(id, {
       onError: (err) =>
-        toast.error((err as Error).message || t("notifications.errors.mark_read_failed")),
+        toast.error(
+          (err as Error).message || t("notifications.errors.mark_read_failed"),
+        ),
     });
   }
 
   function handleDelete(id: string) {
     deleteNotification.mutate(id, {
       onError: (err) =>
-        toast.error((err as Error).message || t("notifications.errors.delete_failed")),
+        toast.error(
+          (err as Error).message || t("notifications.errors.delete_failed"),
+        ),
     });
   }
 
@@ -247,7 +254,9 @@ export default function NotificationsPage() {
     markAllRead.mutate(undefined, {
       onSuccess: () => toast.success(t("notifications.success.all_marked")),
       onError: (err) =>
-        toast.error((err as Error).message || t("notifications.errors.mark_all_failed")),
+        toast.error(
+          (err as Error).message || t("notifications.errors.mark_all_failed"),
+        ),
     });
   }
 

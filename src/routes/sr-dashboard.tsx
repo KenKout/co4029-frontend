@@ -181,7 +181,8 @@ export default function SrDashboardPage() {
 
   const overviewsLoading = overviews.some((q) => q.isLoading);
   const matureLessons = overviews.reduce(
-    (acc, q) => acc + (q.data?.filter((l) => l.status === "mature").length ?? 0),
+    (acc, q) =>
+      acc + (q.data?.filter((l) => l.status === "mature").length ?? 0),
     0,
   );
 
@@ -253,7 +254,10 @@ export default function SrDashboardPage() {
               description={t("sr_dashboard.no_courses_body")}
               cta={
                 <Link to="/courses">
-                  <Button variant="default" className="gap-2 font-semibold cursor-pointer">
+                  <Button
+                    variant="default"
+                    className="gap-2 font-semibold cursor-pointer"
+                  >
                     {t("sr_dashboard.discover_courses")}
                     <ArrowRight className="h-4 w-4" />
                   </Button>

@@ -70,7 +70,10 @@ export function useServerTable<T>({
   }, [debouncedSearch, sort?.columnId, sort?.direction, pageSize, filterKey]);
 
   const query = useQuery({
-    queryKey: [...queryKey, { search: debouncedSearch, sort, page, pageSize, filterKey }],
+    queryKey: [
+      ...queryKey,
+      { search: debouncedSearch, sort, page, pageSize, filterKey },
+    ],
     queryFn: () => {
       const params = new URLSearchParams();
       params.set("page", String(page));

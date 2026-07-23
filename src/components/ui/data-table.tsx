@@ -177,8 +177,11 @@ export function DataTable<T>({
   const hierarchical = Boolean(getSubRows);
 
   // ── Sort state ─────────────────────────────────────────────────────────
-  const [internalSort, setInternalSort] = React.useState<SortState | null>(null);
-  const activeSort = controlledSort !== undefined ? controlledSort : internalSort;
+  const [internalSort, setInternalSort] = React.useState<SortState | null>(
+    null,
+  );
+  const activeSort =
+    controlledSort !== undefined ? controlledSort : internalSort;
   const setSort = React.useCallback(
     (next: SortState | null) => {
       onSortChange?.(next);
@@ -220,8 +223,10 @@ export function DataTable<T>({
   const [internalSize, setInternalSize] = React.useState(pageSize);
   const [internalPage, setInternalPage] = React.useState(0);
   const size = manualPagination ? pageSize : internalSize;
-  const page = manualPagination ? controlledPage ?? 0 : internalPage;
-  const total = manualPagination ? rowCount ?? sortedData.length : sortedData.length;
+  const page = manualPagination ? (controlledPage ?? 0) : internalPage;
+  const total = manualPagination
+    ? (rowCount ?? sortedData.length)
+    : sortedData.length;
   const pageCount = pagination ? Math.max(1, Math.ceil(total / size)) : 1;
 
   const setPage = React.useCallback(
@@ -243,7 +248,8 @@ export function DataTable<T>({
   );
 
   React.useEffect(() => {
-    if (!manualPagination && internalPage > pageCount - 1) setInternalPage(pageCount - 1);
+    if (!manualPagination && internalPage > pageCount - 1)
+      setInternalPage(pageCount - 1);
   }, [manualPagination, internalPage, pageCount]);
 
   const pageRows = React.useMemo(() => {
@@ -302,7 +308,8 @@ export function DataTable<T>({
 
   const topLevelIds = React.useMemo(() => data.map(getRowId), [data, getRowId]);
   const selectedCount = topLevelIds.filter((id) => selected.has(id)).length;
-  const allSelected = topLevelIds.length > 0 && selectedCount === topLevelIds.length;
+  const allSelected =
+    topLevelIds.length > 0 && selectedCount === topLevelIds.length;
   const someSelected = selectedCount > 0 && !allSelected;
 
   const toggleRowSelected = React.useCallback(
@@ -334,172 +341,186 @@ export function DataTable<T>({
             "overflow-hidden rounded-xl bg-m3-surface-container-lowest ghost-border",
         )}
       >
-      <Table className={className}>
-        <TableHeader>
-          <TableRow className="bg-m3-surface-container-low">
-            {selectable && (
-              <TableHead className="w-10">
-                <Checkbox
-                  checked={allSelected}
-                  indeterminate={someSelected}
-                  onCheckedChange={toggleSelectAll}
-                  aria-label="Select all rows"
-                />
-              </TableHead>
-            )}
-            {columns.map((col) => {
-              const isSorted = activeSort?.columnId === col.id;
-              const dir = isSorted ? activeSort?.direction : null;
-              return (
-                <TableHead
-                  key={col.id}
-                  title={col.headerTitle}
-                  style={col.width ? { width: col.width } : undefined}
-                  className={cn(
-                    col.align && ALIGN_CLASS[col.align],
-                    col.headerClassName,
-                    col.sortable && "cursor-pointer select-none",
-                  )}
-                  onClick={col.sortable ? () => handleHeaderSort(col.id) : undefined}
-                >
-                  {col.sortable ? (
-                    <span className="inline-flex items-center gap-1">
-                      {col.header}
-                      <span className={cn("inline-flex h-4 w-4 shrink-0 items-center justify-center", isSorted ? "text-m3-primary" : "text-m3-on-surface-variant/40")}>
-                        {dir === "asc" ? (
-                          <ArrowUp className="h-3.5 w-3.5" />
-                        ) : dir === "desc" ? (
-                          <ArrowDown className="h-3.5 w-3.5" />
-                        ) : (
-                          <ArrowUpDown className="h-3 w-3" />
-                        )}
-                      </span>
-                    </span>
-                  ) : (
-                    col.header
-                  )}
+        <Table className={className}>
+          <TableHeader>
+            <TableRow className="bg-m3-surface-container-low">
+              {selectable && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={someSelected}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all rows"
+                  />
                 </TableHead>
-              );
-            })}
-            {hasActions && (
-              <TableHead
-                className={cn(
-                  stickyActionBase,
-                  "w-px bg-m3-surface-container-low text-right",
-                )}
-              >
-                {actionsHeader}
-              </TableHead>
-            )}
-          </TableRow>
-        </TableHeader>
+              )}
+              {columns.map((col) => {
+                const isSorted = activeSort?.columnId === col.id;
+                const dir = isSorted ? activeSort?.direction : null;
+                return (
+                  <TableHead
+                    key={col.id}
+                    title={col.headerTitle}
+                    style={col.width ? { width: col.width } : undefined}
+                    className={cn(
+                      col.align && ALIGN_CLASS[col.align],
+                      col.headerClassName,
+                      col.sortable && "cursor-pointer select-none",
+                    )}
+                    onClick={
+                      col.sortable ? () => handleHeaderSort(col.id) : undefined
+                    }
+                  >
+                    {col.sortable ? (
+                      <span className="inline-flex items-center gap-1">
+                        {col.header}
+                        <span
+                          className={cn(
+                            "inline-flex h-4 w-4 shrink-0 items-center justify-center",
+                            isSorted
+                              ? "text-m3-primary"
+                              : "text-m3-on-surface-variant/40",
+                          )}
+                        >
+                          {dir === "asc" ? (
+                            <ArrowUp className="h-3.5 w-3.5" />
+                          ) : dir === "desc" ? (
+                            <ArrowDown className="h-3.5 w-3.5" />
+                          ) : (
+                            <ArrowUpDown className="h-3 w-3" />
+                          )}
+                        </span>
+                      </span>
+                    ) : (
+                      col.header
+                    )}
+                  </TableHead>
+                );
+              })}
+              {hasActions && (
+                <TableHead
+                  className={cn(
+                    stickyActionBase,
+                    "w-px bg-m3-surface-container-low text-right",
+                  )}
+                >
+                  {actionsHeader}
+                </TableHead>
+              )}
+            </TableRow>
+          </TableHeader>
 
-        <TableBody>
-          {loading ? (
-            Array.from({ length: loadingRowCount }).map((_, i) => (
-              <TableRow key={`skeleton-${i}`}>
+          <TableBody>
+            {loading ? (
+              Array.from({ length: loadingRowCount }).map((_, i) => (
+                <TableRow key={`skeleton-${i}`}>
+                  <TableCell colSpan={totalCols}>
+                    <div className="h-9 animate-pulse rounded-lg bg-m3-surface-container-low" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : flatRows.length === 0 ? (
+              <TableRow>
                 <TableCell colSpan={totalCols}>
-                  <div className="h-9 animate-pulse rounded-lg bg-m3-surface-container-low" />
+                  <div className="py-10 text-center text-sm text-m3-on-surface-variant">
+                    {emptyState ?? "No data"}
+                  </div>
                 </TableCell>
               </TableRow>
-            ))
-          ) : flatRows.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={totalCols}>
-                <div className="py-10 text-center text-sm text-m3-on-surface-variant">
-                  {emptyState ?? "No data"}
-                </div>
-              </TableCell>
-            </TableRow>
-          ) : (
-            flatRows.map(({ row, id, depth, hasChildren, expanded: isExp }) => (
-              <TableRow
-                key={id}
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-                className={cn(
-                  "group hover:bg-m3-surface-container-low",
-                  onRowClick && "cursor-pointer",
-                  rowClassName?.(row),
-                )}
-              >
-                {selectable && (
-                  <TableCell
-                    className="w-10"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {depth === 0 && (
-                      <Checkbox
-                        checked={selected.has(id)}
-                        onCheckedChange={() => toggleRowSelected(id)}
-                        aria-label="Select row"
-                      />
-                    )}
-                  </TableCell>
-                )}
-
-                {columns.map((col, colIdx) => {
-                  const isFirst = colIdx === 0;
-                  return (
-                    <TableCell
-                      key={col.id}
-                      className={cn(
-                        col.align && ALIGN_CLASS[col.align],
-                        col.cellClassName,
-                      )}
-                      style={
-                        isFirst && hierarchical && depth > 0
-                          ? { paddingLeft: 16 + depth * 24 }
-                          : undefined
-                      }
-                    >
-                      {isFirst && hierarchical ? (
-                        <span className="flex items-center gap-1.5">
-                          {hasChildren ? (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleExpanded(id);
-                              }}
-                              aria-label={isExp ? "Collapse row" : "Expand row"}
-                              aria-expanded={isExp}
-                              className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-m3-on-surface-variant hover:bg-m3-surface-container-high cursor-pointer"
-                            >
-                              {isExp ? (
-                                <ChevronDown className="h-4 w-4" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4" />
-                              )}
-                            </button>
-                          ) : (
-                            <span className="inline-block h-5 w-5 shrink-0" />
-                          )}
-                          <span className="min-w-0">{col.cell(row)}</span>
-                        </span>
-                      ) : (
-                        col.cell(row)
-                      )}
-                    </TableCell>
-                  );
-                })}
-
-                {hasActions && (
-                  <TableCell
-                    onClick={(e) => e.stopPropagation()}
+            ) : (
+              flatRows.map(
+                ({ row, id, depth, hasChildren, expanded: isExp }) => (
+                  <TableRow
+                    key={id}
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
                     className={cn(
-                      stickyActionBase,
-                      "w-px bg-m3-surface-container-lowest text-right",
-                      onRowClick && "group-hover:bg-m3-surface-container-low",
+                      "group hover:bg-m3-surface-container-low",
+                      onRowClick && "cursor-pointer",
+                      rowClassName?.(row),
                     )}
                   >
-                    {actions?.(row)}
-                  </TableCell>
-                )}
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+                    {selectable && (
+                      <TableCell
+                        className="w-10"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {depth === 0 && (
+                          <Checkbox
+                            checked={selected.has(id)}
+                            onCheckedChange={() => toggleRowSelected(id)}
+                            aria-label="Select row"
+                          />
+                        )}
+                      </TableCell>
+                    )}
+
+                    {columns.map((col, colIdx) => {
+                      const isFirst = colIdx === 0;
+                      return (
+                        <TableCell
+                          key={col.id}
+                          className={cn(
+                            col.align && ALIGN_CLASS[col.align],
+                            col.cellClassName,
+                          )}
+                          style={
+                            isFirst && hierarchical && depth > 0
+                              ? { paddingLeft: 16 + depth * 24 }
+                              : undefined
+                          }
+                        >
+                          {isFirst && hierarchical ? (
+                            <span className="flex items-center gap-1.5">
+                              {hasChildren ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleExpanded(id);
+                                  }}
+                                  aria-label={
+                                    isExp ? "Collapse row" : "Expand row"
+                                  }
+                                  aria-expanded={isExp}
+                                  className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-m3-on-surface-variant hover:bg-m3-surface-container-high cursor-pointer"
+                                >
+                                  {isExp ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                  )}
+                                </button>
+                              ) : (
+                                <span className="inline-block h-5 w-5 shrink-0" />
+                              )}
+                              <span className="min-w-0">{col.cell(row)}</span>
+                            </span>
+                          ) : (
+                            col.cell(row)
+                          )}
+                        </TableCell>
+                      );
+                    })}
+
+                    {hasActions && (
+                      <TableCell
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn(
+                          stickyActionBase,
+                          "w-px bg-m3-surface-container-lowest text-right",
+                          onRowClick &&
+                            "group-hover:bg-m3-surface-container-low",
+                        )}
+                      >
+                        {actions?.(row)}
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ),
+              )
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {pagination && !loading && total > 0 && (

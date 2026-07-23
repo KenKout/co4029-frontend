@@ -42,7 +42,10 @@ function JobStatusBadge({ status }: { status: string }) {
 
 function useFormatters() {
   const { i18n } = useTranslation();
-  const locale = (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi" ? "vi-VN" : "en-US";
+  const locale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
+      ? "vi-VN"
+      : "en-US";
   return {
     formatDate: (iso: string | null | undefined): string => {
       if (!iso) return "—";
@@ -74,7 +77,9 @@ function JobsTable({ jobs }: { jobs: ProcessingJobRow[] }) {
     {
       id: "job_type",
       header: t("admin.course_detail.cols.job_type"),
-      cell: (job) => <span className="font-medium text-text-strong">{job.job_type}</span>,
+      cell: (job) => (
+        <span className="font-medium text-text-strong">{job.job_type}</span>
+      ),
     },
     {
       id: "entity",
@@ -93,7 +98,9 @@ function JobsTable({ jobs }: { jobs: ProcessingJobRow[] }) {
     {
       id: "progress",
       header: t("admin.course_detail.cols.progress"),
-      cell: (job) => <span className="text-text-strong">{job.progress_percent}%</span>,
+      cell: (job) => (
+        <span className="text-text-strong">{job.progress_percent}%</span>
+      ),
     },
     {
       id: "retries",
@@ -103,7 +110,11 @@ function JobsTable({ jobs }: { jobs: ProcessingJobRow[] }) {
     {
       id: "updated",
       header: t("admin.course_detail.cols.updated"),
-      cell: (job) => <span className="text-xs text-text-muted">{formatDate(job.updated_at)}</span>,
+      cell: (job) => (
+        <span className="text-xs text-text-muted">
+          {formatDate(job.updated_at)}
+        </span>
+      ),
     },
   ];
   return (
@@ -117,7 +128,9 @@ function JobsTable({ jobs }: { jobs: ProcessingJobRow[] }) {
       emptyState={
         <div className="flex flex-col items-center gap-2">
           <ActivityIcon className="h-8 w-8 text-text-subtle" />
-          <p className="text-sm text-text-muted">{t("admin.course_detail.no_jobs")}</p>
+          <p className="text-sm text-text-muted">
+            {t("admin.course_detail.no_jobs")}
+          </p>
         </div>
       }
     />
@@ -161,7 +174,10 @@ export default function AdminCourseDetailPage() {
     restore.mutate(courseId, {
       onSuccess: () => toast.success(t("admin.course_detail.toasts.restored")),
       onError: (err) =>
-        toast.error((err as Error).message || t("admin.course_detail.toasts.restore_failed")),
+        toast.error(
+          (err as Error).message ||
+            t("admin.course_detail.toasts.restore_failed"),
+        ),
     });
   };
 
@@ -198,18 +214,25 @@ export default function AdminCourseDetailPage() {
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          {restore.isPending ? t("admin.course_detail.restoring") : t("admin.course_detail.restore")}
+          {restore.isPending
+            ? t("admin.course_detail.restoring")
+            : t("admin.course_detail.restore")}
         </button>
       </div>
 
       {audit.isError ? (
         <div className="bg-surface-elev border border-border rounded-lg p-5">
-          <p className="text-sm text-danger">{t("admin.course_detail.audit_load_failed")}</p>
+          <p className="text-sm text-danger">
+            {t("admin.course_detail.audit_load_failed")}
+          </p>
         </div>
       ) : audit.isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 bg-surface-muted animate-pulse rounded-xl" />
+            <div
+              key={i}
+              className="h-24 bg-surface-muted animate-pulse rounded-xl"
+            />
           ))}
         </div>
       ) : (
@@ -283,12 +306,17 @@ export default function AdminCourseDetailPage() {
         </h2>
         {jobs.isError ? (
           <div className="bg-surface-elev border border-border rounded-lg p-5">
-            <p className="text-sm text-danger">{t("admin.course_detail.jobs_load_failed")}</p>
+            <p className="text-sm text-danger">
+              {t("admin.course_detail.jobs_load_failed")}
+            </p>
           </div>
         ) : jobs.isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 bg-surface-muted animate-pulse rounded-lg" />
+              <div
+                key={i}
+                className="h-12 bg-surface-muted animate-pulse rounded-lg"
+              />
             ))}
           </div>
         ) : (

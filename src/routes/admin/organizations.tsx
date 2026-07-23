@@ -193,8 +193,12 @@ export default function AdminOrganizationsPage() {
             <Building2 className="h-4 w-4 text-m3-primary" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-text-strong truncate">{o.name}</p>
-            <p className="text-xs text-text-muted font-mono truncate">{o.slug}</p>
+            <p className="text-sm font-semibold text-text-strong truncate">
+              {o.name}
+            </p>
+            <p className="text-xs text-text-muted font-mono truncate">
+              {o.slug}
+            </p>
           </div>
         </div>
       ),
@@ -207,7 +211,9 @@ export default function AdminOrganizationsPage() {
     },
     {
       id: "created_at",
-      header: t("admin.organizations.cols.created", { defaultValue: "Created" }),
+      header: t("admin.organizations.cols.created", {
+        defaultValue: "Created",
+      }),
       sortable: true,
       align: "right",
       cell: (o) => (
@@ -241,7 +247,11 @@ export default function AdminOrganizationsPage() {
             {t("admin.organizations.list_subtitle")}
           </p>
         </div>
-        <Button type="button" onClick={() => setShowCreate(true)} className="gap-2">
+        <Button
+          type="button"
+          onClick={() => setShowCreate(true)}
+          className="gap-2"
+        >
           <Plus className="h-4 w-4" />
           {t("admin.organizations.create_button")}
         </Button>
@@ -249,7 +259,9 @@ export default function AdminOrganizationsPage() {
 
       {table.isError ? (
         <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
-          {t("admin.organizations.load_failed", { defaultValue: "Failed to load organizations" })}
+          {t("admin.organizations.load_failed", {
+            defaultValue: "Failed to load organizations",
+          })}
         </div>
       ) : (
         <DataTable
@@ -258,7 +270,10 @@ export default function AdminOrganizationsPage() {
           getRowId={(o) => o.id}
           loading={table.isLoading}
           onRowClick={(o) =>
-            void navigate({ to: "/admin/organizations/$orgId", params: { orgId: o.id } })
+            void navigate({
+              to: "/admin/organizations/$orgId",
+              params: { orgId: o.id },
+            })
           }
           pagination
           manualPagination

@@ -25,7 +25,10 @@ function Table({
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom border-collapse text-sm", className)}
+        className={cn(
+          "w-full caption-bottom border-collapse text-sm",
+          className,
+        )}
         {...props}
       />
     </div>
@@ -91,7 +94,10 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   );
 }
 
-function TableCaption({ className, ...props }: React.ComponentProps<"caption">) {
+function TableCaption({
+  className,
+  ...props
+}: React.ComponentProps<"caption">) {
   return (
     <caption
       data-slot="table-caption"

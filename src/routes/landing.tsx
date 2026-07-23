@@ -87,7 +87,6 @@ export default function LandingPage() {
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
               {/* Left copy */}
               <div className="space-y-8 reveal reveal-left">
                 <AIInsightChip>Next-Gen Learning Platform</AIInsightChip>
@@ -96,18 +95,18 @@ export default function LandingPage() {
                   <h1 className="font-headline font-extrabold text-4xl sm:text-5xl xl:text-6xl leading-[1.08] tracking-tight text-white min-h-[90px] sm:min-h-[110px] xl:min-h-[130px]">
                     <Typewriter text="The Bridge to" speed={45} delay={200} />
                     <br />
-                    <Typewriter 
-                      text="Human Mastery" 
-                      speed={55} 
-                      delay={1000} 
-                      className="text-transparent bg-clip-text bg-gradient-to-r from-[#bfdbfe] to-[#dbeafe]" 
+                    <Typewriter
+                      text="Human Mastery"
+                      speed={55}
+                      delay={1000}
+                      className="text-transparent bg-clip-text bg-gradient-to-r from-[#bfdbfe] to-[#dbeafe]"
                     />
                   </h1>
                   <div className="min-h-[85px]">
-                    <Typewriter 
-                      text="Unlock your potential with AI-powered courses crafted by world-class instructors. Personalised learning paths that adapt to you — at every step of the journey." 
-                      speed={20} 
-                      delay={1800} 
+                    <Typewriter
+                      text="Unlock your potential with AI-powered courses crafted by world-class instructors. Personalised learning paths that adapt to you — at every step of the journey."
+                      speed={20}
+                      delay={1800}
                       className="text-lg text-white/70 max-w-md leading-relaxed font-body"
                       cursor={true}
                     />
@@ -153,13 +152,18 @@ export default function LandingPage() {
                     ))}
                   </div>
                   <p className="text-sm text-white/60 font-body">
-                    Joined by <span className="text-white font-semibold">500,000+</span> learners worldwide
+                    Joined by{" "}
+                    <span className="text-white font-semibold">500,000+</span>{" "}
+                    learners worldwide
                   </p>
                 </div>
               </div>
 
               {/* Right visual */}
-              <div className="relative flex items-center justify-center reveal reveal-right" style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
+              <div
+                className="relative flex items-center justify-center reveal reveal-right"
+                style={{ "--reveal-delay": "0.2s" } as React.CSSProperties}
+              >
                 <div className="relative w-full max-w-md aspect-[4/3] rounded-xl overflow-hidden shadow-2xl">
                   <div className="absolute inset-0 bg-gradient-to-br from-[#172554] via-[#1e40af] to-[#3b82f6]" />
                   <div
@@ -175,12 +179,19 @@ export default function LandingPage() {
                       <GraduationCap className="w-10 h-10 text-white" />
                     </div>
                     <div className="text-center">
-                      <p className="text-white font-headline font-bold text-xl">AI Curriculum</p>
-                      <p className="text-white/60 text-sm mt-1">Personalised to your goals</p>
+                      <p className="text-white font-headline font-bold text-xl">
+                        AI Curriculum
+                      </p>
+                      <p className="text-white/60 text-sm mt-1">
+                        Personalised to your goals
+                      </p>
                     </div>
                     <div className="w-full space-y-2">
                       {[80, 65, 90].map((w, i) => (
-                        <div key={i} className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          key={i}
+                          className="h-1.5 bg-white/10 rounded-full overflow-hidden"
+                        >
                           <div
                             className="h-full bg-gradient-to-r from-[#bfdbfe] to-[#3b82f6] rounded-full"
                             style={{ width: `${w}%` }}
@@ -200,10 +211,14 @@ export default function LandingPage() {
                         <Sparkles className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-m3-on-surface">AI Insight</p>
+                        <p className="text-xs font-semibold text-m3-on-surface">
+                          AI Insight
+                        </p>
                         <p className="text-xs text-m3-on-surface-variant mt-0.5 leading-snug">
                           Next skill gap:{" "}
-                          <span className="text-m3-secondary font-semibold">TypeScript Generics</span>
+                          <span className="text-m3-secondary font-semibold">
+                            TypeScript Generics
+                          </span>
                         </p>
                         <div className="mt-2 h-1 bg-m3-surface-container rounded-full overflow-hidden">
                           <div className="h-full w-2/3 gradient-secondary rounded-full animate-pulse-slow" />
@@ -214,10 +229,17 @@ export default function LandingPage() {
                 </div>
 
                 {/* Top-right stat badge */}
-                <div className="absolute -top-4 -right-2 sm:right-0 animate-float" style={{ animationDelay: '3s' }}>
+                <div
+                  className="absolute -top-4 -right-2 sm:right-0 animate-float"
+                  style={{ animationDelay: "3s" }}
+                >
                   <div className="glass ghost-border shadow-glass rounded-xl px-4 py-3 text-center">
-                    <p className="text-2xl font-headline font-extrabold text-m3-primary">94%</p>
-                    <p className="text-xs text-m3-on-surface-variant mt-0.5">Completion Rate</p>
+                    <p className="text-2xl font-headline font-extrabold text-m3-primary">
+                      94%
+                    </p>
+                    <p className="text-xs text-m3-on-surface-variant mt-0.5">
+                      Completion Rate
+                    </p>
                   </div>
                 </div>
               </div>
@@ -230,12 +252,20 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4">
               {stats.map((stat, i) => (
-                <div key={i} className="text-center space-y-1.5 reveal reveal-up" style={{ '--reveal-delay': `${i * 0.1}s` } as React.CSSProperties}>
+                <div
+                  key={i}
+                  className="text-center space-y-1.5 reveal reveal-up"
+                  style={
+                    { "--reveal-delay": `${i * 0.1}s` } as React.CSSProperties
+                  }
+                >
                   <AnimatedCounter
                     value={stat.value}
                     className="font-headline font-extrabold text-3xl sm:text-4xl text-gradient-primary inline-block"
                   />
-                  <p className="text-sm text-m3-on-surface-variant font-medium">{stat.label}</p>
+                  <p className="text-sm text-m3-on-surface-variant font-medium">
+                    {stat.label}
+                  </p>
                 </div>
               ))}
             </div>
@@ -255,12 +285,22 @@ export default function LandingPage() {
           <div className="flex flex-col gap-4">
             <AnimatedBentoRow defaultFlex={[2, 1]}>
               {/* Software Engineering */}
-              <div className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial reveal reveal-scale w-full h-full" style={{ '--reveal-delay': '0s' } as React.CSSProperties}>
+              <div
+                className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial reveal reveal-scale w-full h-full"
+                style={{ "--reveal-delay": "0s" } as React.CSSProperties}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a] via-[#1e40af] to-[#1d4ed8]" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                 <div className="absolute top-7 right-7 space-y-2 opacity-25 group-hover:opacity-40 transition-opacity">
                   {[32, 20, 28, 16, 24].map((w, i) => (
-                    <div key={i} className="h-2 bg-white/60 rounded-full" style={{ width: `${w * 4}px`, marginLeft: i % 2 === 0 ? 0 : "1rem" }} />
+                    <div
+                      key={i}
+                      className="h-2 bg-white/60 rounded-full"
+                      style={{
+                        width: `${w * 4}px`,
+                        marginLeft: i % 2 === 0 ? 0 : "1rem",
+                      }}
+                    />
                   ))}
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-7">
@@ -270,10 +310,17 @@ export default function LandingPage() {
                         <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
                           <Terminal className="w-4 h-4 text-white" />
                         </div>
-                        <Badge className="bg-white/15 text-white border-0 text-xs">2,400+ Courses</Badge>
+                        <Badge className="bg-white/15 text-white border-0 text-xs">
+                          2,400+ Courses
+                        </Badge>
                       </div>
-                      <h3 className="font-headline font-bold text-2xl text-white">Software Engineering</h3>
-                      <p className="text-white/60 text-sm mt-1 max-w-xs">From algorithms to system design — master the full engineering stack.</p>
+                      <h3 className="font-headline font-bold text-2xl text-white">
+                        Software Engineering
+                      </h3>
+                      <p className="text-white/60 text-sm mt-1 max-w-xs">
+                        From algorithms to system design — master the full
+                        engineering stack.
+                      </p>
                     </div>
                     <div className="shrink-0 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                       <ArrowRight className="w-4 h-4 text-white" />
@@ -283,7 +330,10 @@ export default function LandingPage() {
               </div>
 
               {/* Creative Arts */}
-              <div className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial reveal reveal-scale w-full h-full" style={{ '--reveal-delay': '0.1s' } as React.CSSProperties}>
+              <div
+                className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial reveal reveal-scale w-full h-full"
+                style={{ "--reveal-delay": "0.1s" } as React.CSSProperties}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#004a57] to-[#00796b]" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -291,32 +341,50 @@ export default function LandingPage() {
                     <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
                       <Palette className="w-4 h-4 text-white" />
                     </div>
-                    <Badge className="bg-white/15 text-white border-0 text-xs">820+ Courses</Badge>
+                    <Badge className="bg-white/15 text-white border-0 text-xs">
+                      820+ Courses
+                    </Badge>
                   </div>
-                  <h3 className="font-headline font-bold text-xl text-white">Creative Arts</h3>
-                  <p className="text-white/60 text-sm mt-1">Design, animation &amp; generative art.</p>
+                  <h3 className="font-headline font-bold text-xl text-white">
+                    Creative Arts
+                  </h3>
+                  <p className="text-white/60 text-sm mt-1">
+                    Design, animation &amp; generative art.
+                  </p>
                 </div>
               </div>
             </AnimatedBentoRow>
 
             <AnimatedBentoRow defaultFlex={[1, 2]}>
               {/* Digital Business */}
-              <div className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial bg-m3-primary-fixed reveal reveal-scale w-full h-full" style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
+              <div
+                className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial bg-m3-primary-fixed reveal reveal-scale w-full h-full"
+                style={{ "--reveal-delay": "0.2s" } as React.CSSProperties}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-m3-primary-fixed via-m3-secondary-fixed/40 to-m3-primary-fixed" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
                       <BarChart3 className="w-4 h-4 text-white" />
                     </div>
-                    <Badge className="bg-m3-primary/10 text-m3-primary border-0 text-xs">1,100+ Courses</Badge>
+                    <Badge className="bg-m3-primary/10 text-m3-primary border-0 text-xs">
+                      1,100+ Courses
+                    </Badge>
                   </div>
-                  <h3 className="font-headline font-bold text-xl text-m3-on-surface">Digital Business</h3>
-                  <p className="text-m3-on-surface-variant text-sm mt-1">Marketing, growth &amp; entrepreneurship.</p>
+                  <h3 className="font-headline font-bold text-xl text-m3-on-surface">
+                    Digital Business
+                  </h3>
+                  <p className="text-m3-on-surface-variant text-sm mt-1">
+                    Marketing, growth &amp; entrepreneurship.
+                  </p>
                 </div>
               </div>
 
               {/* Data Science */}
-              <div className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial reveal reveal-scale w-full h-full" style={{ '--reveal-delay': '0.3s' } as React.CSSProperties}>
+              <div
+                className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial reveal reveal-scale w-full h-full"
+                style={{ "--reveal-delay": "0.3s" } as React.CSSProperties}
+              >
                 <div className="absolute inset-0 gradient-secondary" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -326,10 +394,16 @@ export default function LandingPage() {
                         <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
                           <FlaskConical className="w-4 h-4 text-white" />
                         </div>
-                        <Badge className="bg-white/15 text-white border-0 text-xs">3,200+ Courses</Badge>
+                        <Badge className="bg-white/15 text-white border-0 text-xs">
+                          3,200+ Courses
+                        </Badge>
                       </div>
-                      <h3 className="font-headline font-bold text-xl text-white">Data Science</h3>
-                      <p className="text-white/60 text-sm mt-1">ML, analytics, AI &amp; data engineering.</p>
+                      <h3 className="font-headline font-bold text-xl text-white">
+                        Data Science
+                      </h3>
+                      <p className="text-white/60 text-sm mt-1">
+                        ML, analytics, AI &amp; data engineering.
+                      </p>
                     </div>
                     <div className="shrink-0 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                       <ArrowRight className="w-4 h-4 text-white" />
@@ -342,7 +416,10 @@ export default function LandingPage() {
 
           <div className="mt-8 flex justify-center">
             <Link to="/courses">
-              <Button variant="outline" className="ghost-border gap-2 font-medium px-6 hover-entity">
+              <Button
+                variant="outline"
+                className="ghost-border gap-2 font-medium px-6 hover-entity"
+              >
                 Browse All Categories
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -356,19 +433,29 @@ export default function LandingPage() {
             <div className="mb-2 reveal reveal-up">
               <AIInsightChip className="mb-4">AI-Curated Picks</AIInsightChip>
             </div>
-            <div className="flex items-center gap-4 mb-10 reveal reveal-up" style={{ '--reveal-delay': '0.1s' } as React.CSSProperties}>
+            <div
+              className="flex items-center gap-4 mb-10 reveal reveal-up"
+              style={{ "--reveal-delay": "0.1s" } as React.CSSProperties}
+            >
               <h2 className="font-headline font-bold text-2xl lg:text-3xl text-m3-on-surface whitespace-nowrap">
                 Trending Now
               </h2>
               <BridgeLine className="flex-1" />
               <Link to="/courses">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-m3-secondary shrink-0 font-medium">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 text-m3-secondary shrink-0 font-medium"
+                >
                   See All <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </Link>
             </div>
 
-            <div className="reveal reveal-up" style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
+            <div
+              className="reveal reveal-up"
+              style={{ "--reveal-delay": "0.2s" } as React.CSSProperties}
+            >
               <TrendingCarousel courses={featuredCourses} />
             </div>
           </div>
@@ -389,7 +476,8 @@ export default function LandingPage() {
                 </div>
                 <blockquote>
                   <p className="font-headline font-bold text-2xl sm:text-3xl lg:text-4xl text-white leading-tight">
-                    &ldquo;aBridgeAI didn&apos;t just teach me to code — it taught me{" "}
+                    &ldquo;aBridgeAI didn&apos;t just teach me to code — it
+                    taught me{" "}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#bfdbfe] to-[#dbeafe]">
                       how to think like an engineer.
                     </span>{" "}
@@ -399,32 +487,49 @@ export default function LandingPage() {
 
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-full gradient-secondary flex items-center justify-center shrink-0 ring-2 ring-[#1d4ed8]/40">
-                    <span className="font-headline font-bold text-white text-lg">JR</span>
+                    <span className="font-headline font-bold text-white text-lg">
+                      JR
+                    </span>
                   </div>
                   <div>
-                    <p className="font-headline font-semibold text-white">James Rivera</p>
-                    <p className="text-sm text-white/50">Senior Engineer @ Meta &nbsp;·&nbsp; aBridgeAI Graduate</p>
+                    <p className="font-headline font-semibold text-white">
+                      James Rivera
+                    </p>
+                    <p className="text-sm text-white/50">
+                      Senior Engineer @ Meta &nbsp;·&nbsp; aBridgeAI Graduate
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <span key={i} className="text-yellow-400 text-xl">★</span>
+                    <span key={i} className="text-yellow-400 text-xl">
+                      ★
+                    </span>
                   ))}
                 </div>
               </div>
 
-              <div className="relative flex justify-center lg:justify-end reveal reveal-right" style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
+              <div
+                className="relative flex justify-center lg:justify-end reveal reveal-right"
+                style={{ "--reveal-delay": "0.2s" } as React.CSSProperties}
+              >
                 <div className="relative">
                   <div className="relative w-72 h-80 rounded-xl overflow-hidden shadow-2xl rotate-3 hover:rotate-1 transition-transform duration-500">
                     <div className="absolute inset-0 bg-gradient-to-br from-[#1e40af] via-[#1d4ed8] to-[#3b82f6]" />
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8">
                       <div className="w-20 h-20 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center">
-                        <span className="font-headline font-bold text-white text-3xl">JR</span>
+                        <span className="font-headline font-bold text-white text-3xl">
+                          JR
+                        </span>
                       </div>
                       <div className="text-center">
-                        <p className="text-white font-semibold">Full-Stack Engineer</p>
-                        <p className="text-white/50 text-sm">Completed 14 courses</p>
+                        <p className="text-white font-semibold">
+                          Full-Stack Engineer
+                        </p>
+                        <p className="text-white/50 text-sm">
+                          Completed 14 courses
+                        </p>
                       </div>
                       <div className="w-full space-y-1.5">
                         <div className="flex justify-between text-xs text-white/60">
@@ -440,7 +545,9 @@ export default function LandingPage() {
                   <div className="absolute inset-0 w-72 h-80 rounded-xl bg-gradient-to-br from-[#1e3a8a]/50 to-[#3b82f6]/30 -rotate-3 -z-10 blur-sm" />
                   <div className="absolute -top-4 -left-6 animate-float">
                     <div className="glass-dark ghost-border rounded-xl px-4 py-2.5 text-center">
-                      <p className="font-headline font-bold text-white text-lg">4.9</p>
+                      <p className="font-headline font-bold text-white text-lg">
+                        4.9
+                      </p>
                       <p className="text-xs text-white/50">Avg. rating</p>
                     </div>
                   </div>
@@ -464,12 +571,16 @@ export default function LandingPage() {
                 Ready to Build the Bridge?
               </h2>
               <p className="text-white/70 text-lg max-w-xl mx-auto leading-relaxed font-body">
-                Join thousands of world-class instructors bringing knowledge to life with
-                AI-powered tools, real-time analytics, and a global audience of eager learners.
+                Join thousands of world-class instructors bringing knowledge to
+                life with AI-powered tools, real-time analytics, and a global
+                audience of eager learners.
               </p>
               <div className="flex flex-wrap gap-3 justify-center pt-2">
                 <Link to="/login" search={{ next: undefined }}>
-                  <Button size="lg" className="bg-white text-m3-primary hover:bg-white/90 border-0 gap-2 px-8 h-12 font-semibold hover-entity">
+                  <Button
+                    size="lg"
+                    className="bg-white text-m3-primary hover:bg-white/90 border-0 gap-2 px-8 h-12 font-semibold hover-entity"
+                  >
                     Get Started
                     <ArrowRight className="h-4 w-4" />
                   </Button>

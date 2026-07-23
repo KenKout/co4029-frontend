@@ -29,9 +29,17 @@ const PERSONA_PROSODY: Record<
   SpeechPersona,
   { rate: number; pitch: number; voiceHints: string[] }
 > = {
-  strict: { rate: 0.9, pitch: 0.85, voiceHints: ["daniel", "male", "google uk english male"] },
+  strict: {
+    rate: 0.9,
+    pitch: 0.85,
+    voiceHints: ["daniel", "male", "google uk english male"],
+  },
   neutral: { rate: 1.0, pitch: 1.0, voiceHints: [] },
-  supportive: { rate: 1.04, pitch: 1.12, voiceHints: ["samantha", "female", "google uk english female"] },
+  supportive: {
+    rate: 1.04,
+    pitch: 1.12,
+    voiceHints: ["samantha", "female", "google uk english female"],
+  },
 };
 
 export interface SpeakOptions {

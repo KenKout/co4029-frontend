@@ -1,21 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
+  Archive,
   ArrowLeft,
   ArrowRight,
   ArrowUp,
   ArrowDown,
   Check,
   CheckCircle2,
+  ChevronDown,
+  Clock,
   HelpCircle,
   Loader2,
+  MoreVertical,
   Pencil,
   Plus,
   Save,
   ShieldCheck,
   Sparkles,
   Trash2,
+  TriangleAlert,
   Upload,
   X,
 } from "lucide-react";
@@ -26,8 +31,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
-  SectionNav,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
   type SectionNavItem,
   type SectionStatus,
 } from "@/components/ui/section-nav";
@@ -72,11 +84,22 @@ type SecurityResponsePolicy =
   | "warn_and_continue"
   | "end_and_flag";
 
+type TabId =
+  | "settings"
+  | "learning-outcomes"
+  | "generate"
+  | "questions"
+  | "adaptive-readiness";
+
 interface GenerationFormState {
   mode: GenerationMode;
   question_count: number;
   focus_topics: string;
   avoid_topics: string;
+  // Modules the generation should draw from. Empty = the interview's own
+  // module (backend default). Multi-select lets a teacher scope one interview
+  // across several modules.
+  source_module_ids: string[];
 }
 
 interface SettingsDraft {
@@ -99,9 +122,13 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
   return {
     title: config.title ?? "",
     persona: (config.persona ?? "neutral") as Persona,
-    supported_modes: config.supported_modes,
+    // All interviews are hybrid (type-or-voice). The mode selector was removed;
+    // any legacy text/voice config is normalized to hybrid on load.
+    supported_modes: "hybrid",
     time_limit_minutes:
-      config.time_limit_minutes == null ? "" : String(config.time_limit_minutes),
+      config.time_limit_minutes == null
+        ? ""
+        : String(config.time_limit_minutes),
     max_attempts:
       config.max_attempts == null ? "" : String(config.max_attempts),
     min_outcomes_to_pass:
@@ -130,10 +157,9 @@ function integerOrNull(value: string): number | null {
 }
 
 const PERSONA_KEYS: Persona[] = ["strict", "neutral", "supportive"];
-const MODE_KEYS: SupportedMode[] = ["hybrid", "text", "voice"];
 
 export default function InterviewConfigPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { courseId, configId } = useParams({ strict: false }) as {
     courseId: string;
@@ -156,7 +182,8 @@ export default function InterviewConfigPage() {
 
   const draftCount = questions?.length ?? config?.draft_question_count ?? 0;
   const approvedCount = useMemo(
-    () => (questions ?? []).filter((q) => q.review_status === "approved").length,
+    () =>
+      (questions ?? []).filter((q) => q.review_status === "approved").length,
     [questions],
   );
 
@@ -174,6 +201,11 @@ export default function InterviewConfigPage() {
   const [justSaved, setJustSaved] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
+  // Which config section is shown. The page is a tabbed workspace (Settings →
+  // Outcomes → Generate → Review → Readiness); all panels stay MOUNTED and
+  // inactive ones are hidden, so in-progress edits, generation polling and
+  // Question Bank state survive tab switches (no unmount = no data loss).
+  const [activeTab, setActiveTab] = useState<TabId>("settings");
   // "View questions" from a Learning Outcome sets this signal; the Question
   // Bank reacts by filtering to that outcome. `nonce` lets the same outcome be
   // re-requested (each click re-triggers the effect even if the id is unchanged).
@@ -186,24 +218,15 @@ export default function InterviewConfigPage() {
       id: outcomeId,
       nonce: (prev?.nonce ?? 0) + 1,
     }));
-    const el = document.getElementById("questions");
-    if (el) {
-      const prefersReduced = window.matchMedia?.(
-        "(prefers-reduced-motion: reduce)",
-      ).matches;
-      const top =
-        el.getBoundingClientRect().top + window.scrollY - 128;
-      window.scrollTo({
-        top: Math.max(0, top),
-        behavior: prefersReduced ? "auto" : "smooth",
-      });
-    }
+    // Switch to the Review tab so the filtered questions are visible.
+    setActiveTab("questions");
   }
-  const [generationForm, setGenerationForm] = useState({
+  const [generationForm, setGenerationForm] = useState<GenerationFormState>({
     mode: "outcome-based" as GenerationMode,
     question_count: 5,
     focus_topics: "",
     avoid_topics: "",
+    source_module_ids: [],
   });
   const generate = useGenerateInterviewQuestions(configId);
 
@@ -255,16 +278,21 @@ export default function InterviewConfigPage() {
         }
       : {
           kind: "warning",
-          label: t("teacher_interview_config.section_nav.status.settings_incomplete"),
+          label: t(
+            "teacher_interview_config.section_nav.status.settings_incomplete",
+          ),
         };
 
     const outcomesStatus: SectionStatus =
       outcomeCount > 0
         ? {
             kind: "completed",
-            label: t("teacher_interview_config.section_nav.status.outcomes_count", {
-              count: outcomeCount,
-            }),
+            label: t(
+              "teacher_interview_config.section_nav.status.outcomes_count",
+              {
+                count: outcomeCount,
+              },
+            ),
           }
         : {
             kind: "warning",
@@ -275,9 +303,12 @@ export default function InterviewConfigPage() {
       draftCount > 0
         ? {
             kind: "info",
-            label: t("teacher_interview_config.section_nav.status.generated_count", {
-              count: draftCount,
-            }),
+            label: t(
+              "teacher_interview_config.section_nav.status.generated_count",
+              {
+                count: draftCount,
+              },
+            ),
           }
         : { kind: "none" };
 
@@ -285,14 +316,19 @@ export default function InterviewConfigPage() {
       draftCount > 0
         ? {
             kind: approvedCount === draftCount ? "completed" : "info",
-            label: t("teacher_interview_config.section_nav.status.approved_ratio", {
-              approved: approvedCount,
-              total: draftCount,
-            }),
+            label: t(
+              "teacher_interview_config.section_nav.status.approved_ratio",
+              {
+                approved: approvedCount,
+                total: draftCount,
+              },
+            ),
           }
         : {
             kind: "warning",
-            label: t("teacher_interview_config.section_nav.status.no_questions"),
+            label: t(
+              "teacher_interview_config.section_nav.status.no_questions",
+            ),
           };
 
     return [
@@ -305,7 +341,9 @@ export default function InterviewConfigPage() {
       {
         id: "learning-outcomes",
         label: t("teacher_interview_config.section_nav.learning_outcomes"),
-        shortLabel: t("teacher_interview_config.section_nav.learning_outcomes_short"),
+        shortLabel: t(
+          "teacher_interview_config.section_nav.learning_outcomes_short",
+        ),
         status: outcomesStatus,
       },
       {
@@ -323,7 +361,9 @@ export default function InterviewConfigPage() {
       {
         id: "adaptive-readiness",
         label: t("teacher_interview_config.section_nav.adaptive_readiness"),
-        shortLabel: t("teacher_interview_config.section_nav.adaptive_readiness_short"),
+        shortLabel: t(
+          "teacher_interview_config.section_nav.adaptive_readiness_short",
+        ),
         status: { kind: "none" },
       },
     ];
@@ -426,12 +466,16 @@ export default function InterviewConfigPage() {
     } catch (err: unknown) {
       const message = (err as Error).message || "";
       if (isArchived || /archived/i.test(message)) {
-        toast.error(t("teacher_interview_config.errors.publish_blocked_archived"));
+        toast.error(
+          t("teacher_interview_config.errors.publish_blocked_archived"),
+        );
       } else if (/interview_no_outcomes|outcome/i.test(message)) {
         toast.error(t("teacher_interview_config.errors.outcomes_required"));
       } else if (
         approvedCount === 0 ||
-        /interview_no_approved_questions|question|insufficient|empty/i.test(message)
+        /interview_no_approved_questions|question|insufficient|empty/i.test(
+          message,
+        )
       ) {
         toast.error(t("teacher_interview_config.errors.questions_required"));
       } else {
@@ -502,6 +546,7 @@ export default function InterviewConfigPage() {
         question_count: generationForm.question_count,
         focus_topics: splitTopics(generationForm.focus_topics),
         avoid_topics: splitTopics(generationForm.avoid_topics),
+        source_module_ids: generationForm.source_module_ids,
         source_lesson_ids: [],
         persona: draft?.persona,
         supplementary_instructions:
@@ -536,7 +581,10 @@ export default function InterviewConfigPage() {
     <div className="space-y-6 pb-12 max-w-[1400px] mx-auto">
       <Breadcrumbs
         items={[
-          { label: t("teacher_common.breadcrumb_teaching"), to: "/teacher/courses" },
+          {
+            label: t("teacher_common.breadcrumb_teaching"),
+            to: "/teacher/courses",
+          },
           {
             label: course?.title ?? t("teacher_common.breadcrumb_course"),
             to: "/teacher/courses/$courseId",
@@ -588,6 +636,17 @@ export default function InterviewConfigPage() {
                 {t("teacher_interview_config.header.chip_label")}
               </AIInsightChip>
             </div>
+            {isPublished && config.published_at && (
+              <p className="inline-flex items-center gap-1.5 text-[11px] text-m3-on-surface-variant">
+                <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                {t("teacher_interview_config.header.last_published", {
+                  when: new Date(config.published_at).toLocaleString(
+                    i18n.language?.startsWith("vi") ? "vi-VN" : "en-US",
+                    { dateStyle: "medium", timeStyle: "short" },
+                  ),
+                })}
+              </p>
+            )}
           </div>
         </div>
 
@@ -640,60 +699,97 @@ export default function InterviewConfigPage() {
               {t("teacher_interview_config.actions.unpublish_short")}
             </Button>
           )}
-          {!isArchived && (
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2"
-              onClick={handleArchive}
-              disabled={archiveConfig.isPending}
-            >
-              {archiveConfig.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : null}
-              {t("teacher_interview_config.actions.archive")}
-            </Button>
-          )}
-          {isArchived && (
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2"
-              onClick={handleUnarchive}
-              disabled={unarchiveConfig.isPending}
-            >
-              {unarchiveConfig.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="h-4 w-4 rotate-180" />
+          {/* Rare / destructive actions (archive, unarchive, delete) live in
+              an overflow menu so they don't compete with the primary Publish
+              action. */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  title={t("teacher_interview_config.actions.more_tooltip")}
+                  aria-label={t(
+                    "teacher_interview_config.actions.more_tooltip",
+                  )}
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="min-w-44">
+              {!isArchived && (
+                <DropdownMenuItem
+                  onClick={handleArchive}
+                  disabled={archiveConfig.isPending}
+                  className="gap-2"
+                >
+                  {archiveConfig.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Archive className="h-4 w-4" />
+                  )}
+                  {t("teacher_interview_config.actions.archive")}
+                </DropdownMenuItem>
               )}
-              {t("teacher_interview_config.actions.unarchive")}
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700"
-            onClick={() => setConfirmDelete(true)}
-            disabled={deleteConfig.isPending}
-            title={t("teacher_interview_config.actions.delete_tooltip")}
-          >
-            <Trash2 className="h-4 w-4" />
-            {t("common.delete")}
-          </Button>
+              {isArchived && (
+                <DropdownMenuItem
+                  onClick={handleUnarchive}
+                  disabled={unarchiveConfig.isPending}
+                  className="gap-2"
+                >
+                  {unarchiveConfig.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4 rotate-180" />
+                  )}
+                  {t("teacher_interview_config.actions.unarchive")}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setConfirmDelete(true)}
+                disabled={deleteConfig.isPending}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                {t("common.delete")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
-      <SectionNav
+      <TabBar
         items={navItems}
+        activeTab={activeTab}
+        onSelect={setActiveTab}
         ariaLabel={t("teacher_interview_config.section_nav.aria_label")}
       />
+
+      {!isPublished && !isArchived && (
+        <PublishReadiness
+          settingsComplete={settingsComplete}
+          outcomeCount={outcomeCount}
+          approvedCount={approvedCount}
+          draftCount={draftCount}
+          onGoTo={setActiveTab}
+        />
+      )}
 
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 space-y-6">
           {draft && (
             <>
-              <section id="settings" className="scroll-mt-32">
+              <section
+                id="settings"
+                hidden={activeTab !== "settings"}
+                role="tabpanel"
+                aria-labelledby="tab-settings"
+              >
                 <SettingsForm
                   draft={draft}
                   setDraft={setDraft}
@@ -701,18 +797,30 @@ export default function InterviewConfigPage() {
                   saving={updateConfig.isPending}
                   dirty={settingsDirty}
                   justSaved={justSaved}
+                  updatedAt={config?.updated_at ?? null}
                 />
               </section>
-              <section id="learning-outcomes" className="scroll-mt-32">
+              <section
+                id="learning-outcomes"
+                hidden={activeTab !== "learning-outcomes"}
+                role="tabpanel"
+                aria-labelledby="tab-learning-outcomes"
+              >
                 <LearningOutcomes
                   configId={configId}
+                  courseId={courseId}
                   outcomes={outcomes ?? []}
                   questions={questions ?? []}
                   minOutcomesToPass={config.min_outcomes_to_pass ?? null}
                   onViewQuestions={handleViewOutcomeQuestions}
                 />
               </section>
-              <section id="generate" className="scroll-mt-32">
+              <section
+                id="generate"
+                hidden={activeTab !== "generate"}
+                role="tabpanel"
+                aria-labelledby="tab-generate"
+              >
                 <GenerationSection
                   generationForm={generationForm}
                   setGenerationForm={setGenerationForm}
@@ -720,68 +828,57 @@ export default function InterviewConfigPage() {
                   generating={generate.isPending}
                   activeRunId={activeRunId}
                   run={activeRun}
+                  modules={content?.modules ?? []}
+                  ownModuleId={config.module_id}
                 />
               </section>
-              <section id="questions" className="scroll-mt-32">
+              <section
+                id="questions"
+                hidden={activeTab !== "questions"}
+                role="tabpanel"
+                aria-labelledby="tab-questions"
+              >
                 <QuestionBank
                   configId={configId}
+                  courseId={courseId}
+                  moduleTitle={courseModule?.title ?? null}
+                  modules={content?.modules ?? []}
                   questions={questions ?? []}
                   outcomes={outcomes ?? []}
                   outcomeFilterSignal={outcomeFilterSignal}
                 />
               </section>
-              <section id="adaptive-readiness" className="scroll-mt-32">
-                <AdaptiveReadinessPanel configId={configId} />
+              <section
+                id="adaptive-readiness"
+                hidden={activeTab !== "adaptive-readiness"}
+                role="tabpanel"
+                aria-labelledby="tab-adaptive-readiness"
+              >
+                <AdaptiveReadinessPanel
+                  configId={configId}
+                  questions={questions ?? []}
+                  outcomes={outcomes ?? []}
+                  timeLimitMinutes={config.time_limit_minutes ?? null}
+                  onGoTo={setActiveTab}
+                />
               </section>
             </>
           )}
         </div>
       </div>
 
-      {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-md rounded-xl bg-m3-surface p-6 shadow-xl space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center shrink-0">
-                <Trash2 className="h-5 w-5" />
-              </div>
-              <div className="space-y-1">
-                <h2 className="font-headline font-bold text-base text-m3-on-surface">
-                  {t("teacher_interview_config.confirm_delete.title")}
-                </h2>
-                <p className="text-sm text-m3-on-surface-variant">
-                  {t("teacher_interview_config.confirm_delete.body", {
-                    title: config.title,
-                  })}
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setConfirmDelete(false)}
-                disabled={deleteConfig.isPending}
-              >
-                {t("common.cancel")}
-              </Button>
-              <Button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleteConfig.isPending}
-                className="bg-red-600 text-white hover:bg-red-700 border-0 gap-2"
-              >
-                {deleteConfig.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-                {t("common.delete")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title={t("teacher_interview_config.confirm_delete.title")}
+        description={t("teacher_interview_config.confirm_delete.body", {
+          title: config.title,
+        })}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={handleDelete}
+        isPending={deleteConfig.isPending}
+      />
     </div>
   );
 }
@@ -806,7 +903,9 @@ function readGenerationProgress(
   if (!cfg) return null;
 
   const toInt = (v: unknown): number | null =>
-    typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.floor(v)) : null;
+    typeof v === "number" && Number.isFinite(v)
+      ? Math.max(0, Math.floor(v))
+      : null;
 
   // Completed summary takes precedence so the bar always finishes at target.
   const pipeline = cfg.pipeline as Record<string, unknown> | undefined;
@@ -819,7 +918,10 @@ function readGenerationProgress(
         phase: "completed",
         accepted,
         target,
-        percent: target > 0 ? Math.round((Math.min(accepted, target) / target) * 100) : 100,
+        percent:
+          target > 0
+            ? Math.round((Math.min(accepted, target) / target) * 100)
+            : 100,
       };
     }
   }
@@ -830,18 +932,283 @@ function readGenerationProgress(
     const accepted = toInt(live.accepted);
     const phaseRaw = live.phase;
     const phase =
-      phaseRaw === "saving" || phaseRaw === "completed" ? phaseRaw : "generating";
+      phaseRaw === "saving" || phaseRaw === "completed"
+        ? phaseRaw
+        : "generating";
     if (target !== null && accepted !== null) {
       return {
         phase,
         accepted,
         target,
-        percent: target > 0 ? Math.round((Math.min(accepted, target) / target) * 100) : 0,
+        percent:
+          target > 0
+            ? Math.round((Math.min(accepted, target) / target) * 100)
+            : 0,
       };
     }
   }
 
   return null;
+}
+
+// Tabbed navigation for the interview-config workspace. Replaces the old
+// scroll-spy SectionNav: clicking a tab swaps which panel is shown (panels
+// stay mounted, hidden via `hidden`, so state/edits survive). Reuses the
+// SectionNavItem status model to render a small per-tab status affix.
+function TabBar({
+  items,
+  activeTab,
+  onSelect,
+  ariaLabel,
+}: {
+  items: SectionNavItem[];
+  activeTab: TabId;
+  onSelect: (id: TabId) => void;
+  ariaLabel: string;
+}) {
+  function statusDot(status: SectionNavItem["status"]) {
+    const kind = status?.kind ?? "none";
+    if (kind === "completed")
+      return (
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-emerald-500"
+          aria-hidden="true"
+        />
+      );
+    if (kind === "warning")
+      return (
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-amber-500"
+          aria-hidden="true"
+        />
+      );
+    if (kind === "info")
+      return (
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-m3-secondary"
+          aria-hidden="true"
+        />
+      );
+    return null;
+  }
+
+  // Sliding colored indicator: an absolutely-positioned pill that measures the
+  // active tab's offset/width and animates to it via CSS transform, so the
+  // color glides between sections instead of snapping. Recomputed on tab
+  // change, container resize, and font/label (language) changes.
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [indicator, setIndicator] = useState<{
+    left: number;
+    width: number;
+    ready: boolean;
+  }>({ left: 0, width: 0, ready: false });
+
+  useLayoutEffect(() => {
+    function measure() {
+      const el = tabRefs.current.get(activeTab);
+      const list = listRef.current;
+      if (!el || !list) return;
+      setIndicator({
+        left: el.offsetLeft,
+        width: el.offsetWidth,
+        ready: true,
+      });
+    }
+    measure();
+    const list = listRef.current;
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(measure)
+        : null;
+    if (ro && list) {
+      ro.observe(list);
+      for (const el of tabRefs.current.values()) ro.observe(el);
+    }
+    window.addEventListener("resize", measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [activeTab, items]);
+
+  return (
+    <nav
+      aria-label={ariaLabel}
+      className="sticky z-10 -mx-1 px-1"
+      style={{ top: 64 }}
+    >
+      <div
+        ref={listRef}
+        role="tablist"
+        aria-label={ariaLabel}
+        className="relative flex items-stretch gap-1 overflow-x-auto no-scrollbar rounded-lg border border-border bg-white/95 p-1 shadow-sm backdrop-blur-sm lg:overflow-visible"
+      >
+        {/* The sliding pill — sits behind the tab labels and glides to the
+            active tab. Hidden until first measured to avoid a flash at 0,0. */}
+        <span
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute top-1 bottom-1 rounded-md bg-m3-primary shadow-sm ring-1 ring-m3-primary",
+            "motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out",
+            indicator.ready ? "opacity-100" : "opacity-0",
+          )}
+          style={{
+            transform: `translateX(${indicator.left}px)`,
+            width: indicator.width,
+          }}
+        />
+        {items.map((item) => {
+          const isActive = item.id === activeTab;
+          const status = item.status ?? { kind: "none" as const };
+          return (
+            <button
+              key={item.id}
+              id={`tab-${item.id}`}
+              ref={(el) => {
+                if (el) tabRefs.current.set(item.id, el);
+                else tabRefs.current.delete(item.id);
+              }}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={item.id}
+              onClick={() => onSelect(item.id as TabId)}
+              className={cn(
+                "group relative z-10 min-w-fit flex-1 rounded-md px-3 py-2 text-left transition-colors duration-300",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+                "whitespace-nowrap cursor-pointer",
+                // Text color switches with the sliding pill; the pill itself
+                // provides the colored background.
+                isActive
+                  ? "text-white"
+                  : "text-m3-on-surface hover:bg-surface-muted",
+              )}
+            >
+              <span className="flex items-center gap-2">
+                {statusDot(status)}
+                <span className="text-[13px] font-bold">
+                  <span className="lg:hidden xl:inline">{item.label}</span>
+                  <span className="hidden lg:inline xl:hidden">
+                    {item.shortLabel ?? item.label}
+                  </span>
+                </span>
+              </span>
+              {status.kind !== "none" && (
+                <span
+                  className={cn(
+                    "mt-0.5 block text-[11px] leading-tight transition-colors duration-300",
+                    isActive ? "text-white/80" : "text-m3-on-surface-variant",
+                  )}
+                >
+                  {status.label}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+// Compact "ready to publish" checklist shown above the panels while a config
+// is still a draft. Surfaces the exact publish gates (settings title, ≥1
+// outcome, ≥1 approved question) right where the Publish button lives, so the
+// teacher sees what's missing instead of hitting a disabled-button tooltip.
+// Each unmet item links to its tab.
+function PublishReadiness({
+  settingsComplete,
+  outcomeCount,
+  approvedCount,
+  draftCount,
+  onGoTo,
+}: {
+  settingsComplete: boolean;
+  outcomeCount: number;
+  approvedCount: number;
+  draftCount: number;
+  onGoTo: (id: TabId) => void;
+}) {
+  const { t } = useTranslation();
+  const items: {
+    key: string;
+    done: boolean;
+    label: string;
+    tab: TabId;
+  }[] = [
+    {
+      key: "settings",
+      done: settingsComplete,
+      label: t("teacher_interview_config.publish_readiness.settings"),
+      tab: "settings",
+    },
+    {
+      key: "outcomes",
+      done: outcomeCount > 0,
+      label: t("teacher_interview_config.publish_readiness.outcomes", {
+        count: outcomeCount,
+      }),
+      tab: "learning-outcomes",
+    },
+    {
+      key: "questions",
+      done: approvedCount > 0,
+      label: t("teacher_interview_config.publish_readiness.questions", {
+        approved: approvedCount,
+        total: draftCount,
+      }),
+      tab: "questions",
+    },
+  ];
+  const allDone = items.every((i) => i.done);
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl border px-4 py-3",
+        allDone
+          ? "border-emerald-200 bg-emerald-50/60"
+          : "border-amber-200 bg-amber-50/60",
+      )}
+    >
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-m3-on-surface">
+          {allDone ? (
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+          ) : (
+            <ShieldCheck className="h-4 w-4 text-amber-600" />
+          )}
+          {allDone
+            ? t("teacher_interview_config.publish_readiness.ready")
+            : t("teacher_interview_config.publish_readiness.title")}
+        </span>
+        <ul className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {items.map((item) => (
+            <li key={item.key}>
+              <button
+                type="button"
+                onClick={() => onGoTo(item.tab)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors cursor-pointer",
+                  item.done
+                    ? "text-emerald-700 hover:bg-emerald-100"
+                    : "text-amber-800 hover:bg-amber-100",
+                )}
+              >
+                {item.done ? (
+                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                ) : (
+                  <TriangleAlert className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
 }
 
 function SettingsForm({
@@ -851,6 +1218,7 @@ function SettingsForm({
   saving,
   dirty,
   justSaved,
+  updatedAt,
 }: {
   draft: SettingsDraft;
   setDraft: React.Dispatch<React.SetStateAction<SettingsDraft | null>>;
@@ -858,8 +1226,10 @@ function SettingsForm({
   saving: boolean;
   dirty: boolean;
   justSaved: boolean;
+  updatedAt: string | null;
 }) {
   const { t } = useTranslation();
+  const [securityOpen, setSecurityOpen] = useState(false);
   function update<K extends keyof SettingsDraft>(
     key: K,
     value: SettingsDraft[K],
@@ -870,21 +1240,17 @@ function SettingsForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl p-6 lg:p-8 space-y-8 shadow-glass"
+      className="bg-m3-surface-container-lowest border border-m3-outline-variant/60 rounded-xl p-6 lg:p-8 space-y-8 shadow-glass"
     >
       <Section
         title={t("teacher_interview_config.sections.general.title")}
-        description={t(
-          "teacher_interview_config.sections.general.description",
-        )}
+        description={t("teacher_interview_config.sections.general.description")}
       >
         <Field label={t("teacher_interview_config.fields.title")}>
           <Input
             value={draft.title}
             onChange={(e) => update("title", e.target.value)}
-            placeholder={t(
-              "teacher_interview_config.fields.title_placeholder",
-            )}
+            placeholder={t("teacher_interview_config.fields.title_placeholder")}
             className="bg-m3-surface text-sm"
           />
         </Field>
@@ -905,24 +1271,6 @@ function SettingsForm({
               ))}
             </select>
           </Field>
-          <Field
-            label={t("teacher_interview_config.fields.mode")}
-            hint={t("teacher_interview_config.fields.mode_hint")}
-          >
-            <select
-              value={draft.supported_modes}
-              onChange={(e) =>
-                update("supported_modes", e.target.value as SupportedMode)
-              }
-              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-            >
-              {MODE_KEYS.map((m) => (
-                <option key={m} value={m}>
-                  {t(`teacher_interview_config.mode.${m}`)}
-                </option>
-              ))}
-            </select>
-          </Field>
         </div>
       </Section>
 
@@ -938,7 +1286,9 @@ function SettingsForm({
               max={180}
               value={draft.time_limit_minutes}
               onChange={(e) => update("time_limit_minutes", e.target.value)}
-              placeholder="e.g. 30"
+              placeholder={t(
+                "teacher_interview_config.fields.duration_placeholder",
+              )}
               className="bg-m3-surface text-sm"
             />
           </Field>
@@ -951,7 +1301,9 @@ function SettingsForm({
               min={1}
               value={draft.max_attempts}
               onChange={(e) => update("max_attempts", e.target.value)}
-              placeholder="e.g. 3"
+              placeholder={t(
+                "teacher_interview_config.fields.attempts_placeholder",
+              )}
               className="bg-m3-surface text-sm"
             />
           </Field>
@@ -964,7 +1316,9 @@ function SettingsForm({
               min={1}
               value={draft.min_outcomes_to_pass}
               onChange={(e) => update("min_outcomes_to_pass", e.target.value)}
-              placeholder="e.g. 2"
+              placeholder={t(
+                "teacher_interview_config.fields.criteria_placeholder",
+              )}
               className="bg-m3-surface text-sm"
             />
           </Field>
@@ -984,9 +1338,7 @@ function SettingsForm({
           "teacher_interview_config.sections.guidance.description",
         )}
       >
-        <Field
-          label={t("teacher_interview_config.fields.supplementary_label")}
-        >
+        <Field label={t("teacher_interview_config.fields.supplementary_label")}>
           <textarea
             value={draft.supplementary_instructions}
             onChange={(e) =>
@@ -1001,8 +1353,13 @@ function SettingsForm({
         </Field>
       </Section>
 
-      <details className="group rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-4">
-        <summary className="flex cursor-pointer list-none items-center gap-3">
+      <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-4">
+        <button
+          type="button"
+          aria-expanded={securityOpen}
+          onClick={() => setSecurityOpen((open) => !open)}
+          className="flex w-full cursor-pointer list-none items-center gap-3 text-left"
+        >
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-500/10 text-emerald-700">
             <ShieldCheck className="h-5 w-5" />
           </span>
@@ -1017,117 +1374,149 @@ function SettingsForm({
           <span className="text-xs font-bold text-emerald-700">
             {t("teacher_interview_config.security.mandatory")}
           </span>
-        </summary>
-
-        <div className="mt-5 space-y-5 border-t border-m3-outline-variant/20 pt-5">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t("teacher_interview_config.security.protected_by_platform")}
-            </p>
-            <ul className="mt-2 grid gap-2 text-sm text-m3-on-surface sm:grid-cols-2">
-              {["questions", "answers", "rubrics", "prompts", "state"].map(
-                (item) => (
-                  <li key={item} className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-emerald-600" />
-                    {t(`teacher_interview_config.security.protected.${item}`)}
-                  </li>
-                ),
-              )}
-            </ul>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t("teacher_interview_config.security.response_policy")}>
-              <select
-                value={draft.security_response_policy}
-                onChange={(e) =>
-                  update(
-                    "security_response_policy",
-                    e.target.value as SecurityResponsePolicy,
-                  )
-                }
-                className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-              >
-                {[
-                  "continue_and_log",
-                  "warn_and_continue",
-                  "end_and_flag",
-                ].map((policy) => (
-                  <option key={policy} value={policy}>
-                    {t(`teacher_interview_config.security.policy.${policy}`)}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label={t("teacher_interview_config.security.max_attempts")}>
-              <Input
-                type="number"
-                min={2}
-                max={20}
-                value={draft.security_max_consecutive_attempts}
-                onChange={(e) =>
-                  update("security_max_consecutive_attempts", e.target.value)
-                }
-                className="bg-m3-surface text-sm"
-              />
-            </Field>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Field label={t("teacher_interview_config.security.custom_en")}>
-              <textarea
-                rows={3}
-                maxLength={500}
-                value={draft.security_custom_refusal_en}
-                onChange={(e) =>
-                  update("security_custom_refusal_en", e.target.value)
-                }
-                className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-              />
-              <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
-                {draft.security_custom_refusal_en.trim() ||
-                  t("teacher_interview_config.security.preview_en")}
-              </p>
-            </Field>
-            <Field label={t("teacher_interview_config.security.custom_vi")}>
-              <textarea
-                rows={3}
-                maxLength={500}
-                value={draft.security_custom_refusal_vi}
-                onChange={(e) =>
-                  update("security_custom_refusal_vi", e.target.value)
-                }
-                className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-              />
-              <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
-                {draft.security_custom_refusal_vi.trim() ||
-                  t("teacher_interview_config.security.preview_vi")}
-              </p>
-            </Field>
-          </div>
-
-          <ToggleRow
-            label={t("teacher_interview_config.security.incident_summary")}
-            description={t(
-              "teacher_interview_config.security.incident_summary_description",
-            )}
-            value={draft.security_incident_summary_enabled}
-            onChange={(value) =>
-              update("security_incident_summary_enabled", value)
-            }
+          <ChevronDown
+            className={`h-5 w-5 shrink-0 text-m3-on-surface-variant transition-transform duration-300 ${
+              securityOpen ? "rotate-180" : ""
+            }`}
+            aria-hidden="true"
           />
-          <p className="text-[11px] text-m3-on-surface-variant">
-            {t("teacher_interview_config.security.rules_hidden")}
-          </p>
+        </button>
+
+        <div
+          className={`grid transition-all duration-300 ease-in-out ${
+            securityOpen
+              ? "grid-rows-[1fr] opacity-100"
+              : "grid-rows-[0fr] opacity-0"
+          }`}
+        >
+          <div className="overflow-hidden">
+            <div className="mt-5 space-y-5 border-t border-m3-outline-variant/20 pt-5">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("teacher_interview_config.security.protected_by_platform")}
+                </p>
+                <ul className="mt-2 grid gap-2 text-sm text-m3-on-surface sm:grid-cols-2">
+                  {["questions", "answers", "rubrics", "prompts", "state"].map(
+                    (item) => (
+                      <li key={item} className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-emerald-600" />
+                        {t(
+                          `teacher_interview_config.security.protected.${item}`,
+                        )}
+                      </li>
+                    ),
+                  )}
+                </ul>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field
+                  label={t("teacher_interview_config.security.response_policy")}
+                >
+                  <select
+                    value={draft.security_response_policy}
+                    onChange={(e) =>
+                      update(
+                        "security_response_policy",
+                        e.target.value as SecurityResponsePolicy,
+                      )
+                    }
+                    className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+                  >
+                    {[
+                      "continue_and_log",
+                      "warn_and_continue",
+                      "end_and_flag",
+                    ].map((policy) => (
+                      <option key={policy} value={policy}>
+                        {t(
+                          `teacher_interview_config.security.policy.${policy}`,
+                        )}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field
+                  label={t("teacher_interview_config.security.max_attempts")}
+                >
+                  <Input
+                    type="number"
+                    min={2}
+                    max={20}
+                    value={draft.security_max_consecutive_attempts}
+                    onChange={(e) =>
+                      update(
+                        "security_max_consecutive_attempts",
+                        e.target.value,
+                      )
+                    }
+                    className="bg-m3-surface text-sm"
+                  />
+                </Field>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Field label={t("teacher_interview_config.security.custom_en")}>
+                  <textarea
+                    rows={3}
+                    maxLength={500}
+                    value={draft.security_custom_refusal_en}
+                    onChange={(e) =>
+                      update("security_custom_refusal_en", e.target.value)
+                    }
+                    className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+                  />
+                  <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
+                    {draft.security_custom_refusal_en.trim() ||
+                      t("teacher_interview_config.security.preview_en")}
+                  </p>
+                </Field>
+                <Field label={t("teacher_interview_config.security.custom_vi")}>
+                  <textarea
+                    rows={3}
+                    maxLength={500}
+                    value={draft.security_custom_refusal_vi}
+                    onChange={(e) =>
+                      update("security_custom_refusal_vi", e.target.value)
+                    }
+                    className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+                  />
+                  <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
+                    {draft.security_custom_refusal_vi.trim() ||
+                      t("teacher_interview_config.security.preview_vi")}
+                  </p>
+                </Field>
+              </div>
+
+              <ToggleRow
+                label={t("teacher_interview_config.security.incident_summary")}
+                description={t(
+                  "teacher_interview_config.security.incident_summary_description",
+                )}
+                value={draft.security_incident_summary_enabled}
+                onChange={(value) =>
+                  update("security_incident_summary_enabled", value)
+                }
+              />
+              <p className="text-[11px] text-m3-on-surface-variant">
+                {t("teacher_interview_config.security.rules_hidden")}
+              </p>
+            </div>
+          </div>
         </div>
-      </details>
+      </div>
 
       <div className="flex items-center justify-between gap-3 pt-4 border-t border-m3-outline-variant/20">
         <p className="text-[11px] text-m3-on-surface-variant">
           {t("teacher_interview_config.actions.save_config_scope_hint")}
         </p>
         <div className="flex items-center gap-3 shrink-0">
-          <SaveStatus saving={saving} dirty={dirty} justSaved={justSaved} />
+          <SaveStatus
+            saving={saving}
+            dirty={dirty}
+            justSaved={justSaved}
+            updatedAt={updatedAt}
+          />
           <Button
             type="submit"
             disabled={saving || !dirty}
@@ -1154,12 +1543,14 @@ function SaveStatus({
   saving,
   dirty,
   justSaved,
+  updatedAt,
 }: {
   saving: boolean;
   dirty: boolean;
   justSaved: boolean;
+  updatedAt: string | null;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   if (saving) {
     return (
       <span
@@ -1199,6 +1590,18 @@ function SaveStatus({
       </span>
     );
   }
+  if (updatedAt) {
+    const when = new Date(updatedAt).toLocaleString(
+      i18n.language?.startsWith("vi") ? "vi-VN" : "en-US",
+      { dateStyle: "medium", timeStyle: "short" },
+    );
+    return (
+      <span className="inline-flex items-center gap-1.5 text-[11px] text-m3-on-surface-variant">
+        <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+        {t("teacher_interview_config.save_status.last_saved", { when })}
+      </span>
+    );
+  }
   return null;
 }
 
@@ -1209,6 +1612,8 @@ function GenerationSection({
   generating,
   activeRunId,
   run,
+  modules,
+  ownModuleId,
 }: {
   generationForm: GenerationFormState;
   setGenerationForm: React.Dispatch<React.SetStateAction<GenerationFormState>>;
@@ -1216,6 +1621,8 @@ function GenerationSection({
   generating: boolean;
   activeRunId: string | null;
   run: InterviewGenerationRunPublic | undefined;
+  modules: { id: string; title: string }[];
+  ownModuleId: string;
 }) {
   const { t } = useTranslation();
   function updateGeneration<K extends keyof GenerationFormState>(
@@ -1281,6 +1688,59 @@ function GenerationSection({
             />
           </Field>
         </div>
+
+        <Field
+          label={t("teacher_interview_config.generate.modules_label")}
+          hint={t("teacher_interview_config.generate.modules_hint")}
+        >
+          <div className="flex flex-wrap gap-1.5">
+            {modules.length === 0 ? (
+              <p className="text-xs text-m3-on-surface-variant">
+                {t("teacher_interview_config.generate.modules_empty")}
+              </p>
+            ) : (
+              modules.map((m) => {
+                const selected = generationForm.source_module_ids.includes(
+                  m.id,
+                );
+                const isOwn = m.id === ownModuleId;
+                const effectiveSelected =
+                  selected ||
+                  (generationForm.source_module_ids.length === 0 && isOwn);
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    aria-pressed={effectiveSelected}
+                    onClick={() =>
+                      updateGeneration(
+                        "source_module_ids",
+                        selected
+                          ? generationForm.source_module_ids.filter(
+                              (id) => id !== m.id,
+                            )
+                          : [...generationForm.source_module_ids, m.id],
+                      )
+                    }
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors",
+                      effectiveSelected
+                        ? "border-m3-secondary bg-m3-secondary/10 text-m3-secondary font-semibold"
+                        : "border-m3-outline-variant/40 bg-m3-surface text-m3-on-surface-variant hover:bg-m3-surface-container-low",
+                    )}
+                  >
+                    {m.title}
+                    {isOwn && (
+                      <span className="text-[10px] opacity-70">
+                        {t("teacher_interview_config.generate.modules_own")}
+                      </span>
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </Field>
 
         <Field
           label={t("teacher_interview_config.generate.focus_label")}
@@ -1353,7 +1813,9 @@ function GenerationSection({
                       ? t("teacher_interview_config.generate.phase_done")
                       : progress.phase === "saving"
                         ? t("teacher_interview_config.generate.phase_saving")
-                        : t("teacher_interview_config.generate.phase_generating")}
+                        : t(
+                            "teacher_interview_config.generate.phase_generating",
+                          )}
                   </span>
                   <span className="tabular-nums">{progress.percent}%</span>
                 </div>
@@ -1363,7 +1825,9 @@ function GenerationSection({
                       "h-full rounded-full transition-[width] duration-500 ease-out",
                       completed ? "bg-emerald-500" : "bg-blue-500",
                     )}
-                    style={{ width: `${Math.max(progress.percent, inProgress ? 6 : 0)}%` }}
+                    style={{
+                      width: `${Math.max(progress.percent, inProgress ? 6 : 0)}%`,
+                    }}
                   />
                 </div>
               </div>

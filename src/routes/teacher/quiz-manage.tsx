@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
+  BarChart3,
   BookOpen,
   CheckCircle2,
   Clock,
@@ -44,7 +45,9 @@ import {
   useTeacherCourseById,
   useTeacherCourseContent,
 } from "@/lib/api/hooks/teacher-courses";
+import { useTeacherCourseOutcomes } from "@/lib/api/hooks/courses";
 import type {
+  CourseLearningOutcomeAuthoring,
   QuizAuthoring,
   QuizQuestionAuthoring,
 } from "@/lib/api/types";
@@ -72,6 +75,8 @@ interface SettingsDraft {
   shuffle_options: boolean;
   show_hints: boolean;
   reminders_enabled: boolean;
+  // Moodle-style headline-score policy (migration 0033).
+  grading_method: "highest" | "average" | "first" | "last";
   // Scheduling window (migration 0032). Held as `datetime-local` strings
   // ("YYYY-MM-DDTHH:mm", local time) or "" when unset.
   available_from: string;
@@ -147,6 +152,7 @@ function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
     shuffle_options: quiz.shuffle_options,
     show_hints: quiz.show_hints,
     reminders_enabled: quiz.reminders_enabled,
+    grading_method: quiz.grading_method ?? "highest",
     available_from: isoToLocalInput(quiz.available_from),
     available_until: isoToLocalInput(quiz.available_until),
     due_at: isoToLocalInput(quiz.due_at),
@@ -166,6 +172,7 @@ export default function QuizManagePage() {
     useQuizAuthoring(quizId);
   const { data: content, isLoading: contentLoading } =
     useTeacherCourseContent(courseId);
+  const { data: outcomes } = useTeacherCourseOutcomes(courseId);
 
   const quiz = authoring?.quiz;
   const allQuestions = useMemo(() => authoring?.questions ?? [], [authoring]);
@@ -260,7 +267,11 @@ export default function QuizManagePage() {
             {t("teacher_quiz_manage.errors.not_found_description")}
           </p>
         </div>
-        <Link to="/teacher/courses/$courseId" params={{ courseId }} className="inline-flex">
+        <Link
+          to="/teacher/courses/$courseId"
+          params={{ courseId }}
+          className="inline-flex"
+        >
           <Button variant="outline" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             {t("teacher_quiz_manage.errors.back_to_course")}
@@ -272,18 +283,19 @@ export default function QuizManagePage() {
 
   const moduleId = courseModule.id;
   const isPublished = quiz.status === "published";
-  // Hard approval gate: every question must be review_status="approved"
-  // before publish. This mirrors the backend publish_gate assertion — the
-  // "pending review" banner is now enforced, not just advisory.
-  const pendingReviewCount = questions.filter(
-    (q) => q.review_status !== "approved",
+  // Partial publish: students only ever see approved questions, so publish is
+  // allowed as soon as at least ONE question is approved. Un-approved
+  // questions stay on the quiz as reusable drafts and are never served to
+  // students. This mirrors the backend publish_gate (needs ≥1 approved).
+  const approvedCount = questions.filter(
+    (q) => q.review_status === "approved",
   ).length;
-  const hasPendingReview = questions.length > 0 && pendingReviewCount > 0;
+  const pendingReviewCount = questions.length - approvedCount;
+  // Advisory only — surfaces "N pending" so the teacher knows some questions
+  // won't be published, but it no longer blocks publishing.
+  const hasPendingReview = pendingReviewCount > 0;
   const publishDisabled =
-    publishQuiz.isPending ||
-    isPublished ||
-    questions.length === 0 ||
-    hasPendingReview;
+    publishQuiz.isPending || isPublished || approvedCount === 0;
 
   function returnToModule() {
     void navigate({
@@ -336,7 +348,8 @@ export default function QuizManagePage() {
         return;
       }
       toast.error(
-        (err as Error).message || t("teacher_quiz_manage.toasts.publish_failed"),
+        (err as Error).message ||
+          t("teacher_quiz_manage.toasts.publish_failed"),
       );
     }
   }
@@ -408,6 +421,7 @@ export default function QuizManagePage() {
         shuffle_options: draft.shuffle_options,
         show_hints: draft.show_hints,
         reminders_enabled: draft.reminders_enabled,
+        grading_method: draft.grading_method,
         available_from: localInputToIso(draft.available_from),
         available_until: localInputToIso(draft.available_until),
         due_at: localInputToIso(draft.due_at),
@@ -442,7 +456,10 @@ export default function QuizManagePage() {
     <div className="space-y-6 pb-12 max-w-[1500px] mx-auto">
       <Breadcrumbs
         items={[
-          { label: t("teacher_common.breadcrumb_teaching"), to: "/teacher/courses" },
+          {
+            label: t("teacher_common.breadcrumb_teaching"),
+            to: "/teacher/courses",
+          },
           {
             label: course?.title ?? t("teacher_common.breadcrumb_course"),
             to: "/teacher/courses/$courseId",
@@ -502,7 +519,6 @@ export default function QuizManagePage() {
             )}
           </div>
         </div>
-
       </div>
 
       {/* Zero-height sentinel: when it scrolls up under the global top bar,
@@ -548,22 +564,27 @@ export default function QuizManagePage() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {course?.slug && (
-              <Link
-                to="/courses/$slug/quiz/$quizId"
-                params={{ slug: course.slug, quizId }}
+            <Link
+              to="/teacher/courses/$courseId/quizzes/$quizId/results"
+              params={{ courseId, quizId }}
+            >
+              <Button
+                variant="outline"
+                className="gap-2"
+                type="button"
+                title={t("teacher_quiz_manage.actions.view_results")}
               >
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  type="button"
-                  title={t("teacher_quiz_manage.actions.view_as_student")}
-                >
-                  <Eye className="h-4 w-4" />
-                  {!actionsStuck && t("teacher_quiz_manage.actions.view_as_student")}
-                </Button>
-              </Link>
-            )}
+                <BarChart3 className="h-4 w-4" />
+                {!actionsStuck && t("teacher_quiz_manage.actions.view_results")}
+              </Button>
+            </Link>
+            {/* "View as student" used to be a button here, but it was
+                redundant with the Preview tab (both open the same in-app
+                WYSIWYG PreviewTab). Removed the button; the Preview tab is
+                now the single entry point (plus a jump-to-preview button in
+                the publish dialog). The tab intentionally does NOT link to
+                the live student route (/courses/$slug/quiz/$quizId) — that
+                serves only PUBLISHED quizzes, so previewing a draft 404s. */}
             <Button
               type="button"
               disabled={publishDisabled}
@@ -613,6 +634,7 @@ export default function QuizManagePage() {
         <QuestionsTab
           quizId={quizId}
           questions={questions}
+          outcomes={outcomes ?? []}
           selectedIds={selectedQuestionIds}
           onToggleSelect={toggleQuestionSelection}
           onSelectAll={selectAllQuestions}
@@ -636,21 +658,18 @@ export default function QuizManagePage() {
           setDraft={setDraft}
           onSubmit={handleSaveSettings}
           saving={patchQuiz.isPending}
-          dirty={
-            JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))
-          }
+          dirty={JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))}
           onReset={() => setDraft(draftFromQuiz(quiz))}
         />
       )}
 
-      {tab === "preview" && (
-        <PreviewTab quiz={quiz} questions={questions} />
-      )}
+      {tab === "preview" && <PreviewTab quiz={quiz} questions={questions} />}
 
       {showGenerateModal && quiz?.module_id && (
         <GenerateModal
           quizId={quizId}
           moduleId={quiz.module_id}
+          courseId={courseId}
           hasExistingQuestions={questions.length > 0}
           onClose={() => setShowGenerateModal(false)}
         />
@@ -721,7 +740,7 @@ export default function QuizManagePage() {
                 </h2>
                 <p className="text-sm text-m3-on-surface-variant">
                   {t("teacher_quiz_manage.confirm_publish.body", {
-                    count: questions.length,
+                    count: approvedCount,
                   })}
                 </p>
               </div>
@@ -735,22 +754,22 @@ export default function QuizManagePage() {
               >
                 {t("common.cancel")}
               </Button>
-              {course?.slug && (
-                <Link
-                  to="/courses/$slug/quiz/$quizId"
-                  params={{ slug: course.slug, quizId }}
-                >
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                    disabled={publishQuiz.isPending}
-                  >
-                    <Eye className="h-4 w-4" />
-                    {t("teacher_quiz_manage.actions.view_as_student")}
-                  </Button>
-                </Link>
-              )}
+              {/* Preview before publishing: open the in-app WYSIWYG tab
+                  rather than the live student route (which 404s on a
+                  not-yet-published quiz). Close the dialog first. */}
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                disabled={publishQuiz.isPending}
+                onClick={() => {
+                  setConfirmPublish(false);
+                  setTab("preview");
+                }}
+              >
+                <Eye className="h-4 w-4" />
+                {t("teacher_quiz_manage.actions.view_as_student")}
+              </Button>
               <Button
                 type="button"
                 onClick={handlePublish}
@@ -775,6 +794,7 @@ export default function QuizManagePage() {
 function QuestionsTab({
   quizId,
   questions,
+  outcomes,
   selectedIds,
   onToggleSelect,
   onSelectAll,
@@ -792,6 +812,7 @@ function QuestionsTab({
 }: {
   quizId: string;
   questions: QuizQuestionAuthoring[];
+  outcomes: CourseLearningOutcomeAuthoring[];
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onSelectAll: () => void;
@@ -821,9 +842,7 @@ function QuestionsTab({
 
   const secondsValue = Number(bulkSeconds);
   const bulkValid =
-    selectedIds.size > 0 &&
-    Number.isFinite(secondsValue) &&
-    secondsValue > 0;
+    selectedIds.size > 0 && Number.isFinite(secondsValue) && secondsValue > 0;
 
   async function handleApplyBulk() {
     try {
@@ -876,7 +895,10 @@ function QuestionsTab({
         {comboCount > 0 && (
           <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 flex items-center gap-3 rounded-xl bg-m3-inverse-surface text-m3-inverse-on-surface px-4 py-3 shadow-lg max-w-[calc(100vw-2rem)]">
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center">
-              <svg className="absolute inset-0 h-8 w-8 -rotate-90" viewBox="0 0 32 32">
+              <svg
+                className="absolute inset-0 h-8 w-8 -rotate-90"
+                viewBox="0 0 32 32"
+              >
                 <circle
                   cx="16"
                   cy="16"
@@ -976,6 +998,7 @@ function QuestionsTab({
               key={question.id}
               quizId={quizId}
               question={question}
+              outcomes={outcomes}
               selected={selectedIds.has(question.id)}
               onToggleSelect={() => onToggleSelect(question.id)}
               onQueueDelete={onQueueDelete}
@@ -1029,9 +1052,16 @@ function QuestionsTab({
               className="w-full gap-2"
             >
               <BookOpen className="h-4 w-4" />
-              {t("teacher_quiz_manage.ai_panel.import_from_bank", "Import from bank")}
+              {t(
+                "teacher_quiz_manage.ai_panel.import_from_bank",
+                "Import from bank",
+              )}
             </Button>
           </div>
+
+          {/* Quick question navigation — jumps (auto-scrolls) to a question
+              card. Reuses the numbered-box design from the student quiz. */}
+          <QuestionNavigator questions={questions} />
         </div>
       </div>
     </div>
@@ -1165,12 +1195,14 @@ function BulkSetExpectedTimeBar({
 function QuestionCard({
   quizId,
   question,
+  outcomes,
   selected,
   onToggleSelect,
   onQueueDelete,
 }: {
   quizId: string;
   question: QuizQuestionAuthoring;
+  outcomes: CourseLearningOutcomeAuthoring[];
   selected: boolean;
   onToggleSelect: () => void;
   onQueueDelete: (item: PendingQuestionDelete) => void;
@@ -1226,10 +1258,9 @@ function QuestionCard({
             ? null
             : Math.max(1, Math.round(draft.expected_response_seconds)) * 1000,
         expected_ef_ceiling:
-          draft.expected_ef_ceiling == null
-            ? null
-            : draft.expected_ef_ceiling,
+          draft.expected_ef_ceiling == null ? null : draft.expected_ef_ceiling,
         review_status: reviewStatus,
+        learning_outcome_id: draft.learning_outcome_id || null,
         ...(hasOptions
           ? {
               options: draft.options.map((o) => ({
@@ -1276,16 +1307,18 @@ function QuestionCard({
         return;
       }
       toast.error(
-        (err as Error).message ||
-          t("teacher_quiz_manage.toasts.regen_failed"),
+        (err as Error).message || t("teacher_quiz_manage.toasts.regen_failed"),
       );
     }
   }
 
   return (
     <div
+      id={`qcard-${question.id}`}
+      // scroll-margin keeps the card clear of the sticky header when the
+      // question navigator scrolls it into view.
       className={cn(
-        "rounded-xl border bg-m3-surface p-4 space-y-3",
+        "rounded-xl border bg-m3-surface p-4 space-y-3 scroll-mt-[9.5rem]",
         selected
           ? "border-m3-primary shadow-sm"
           : "border-m3-outline-variant/20",
@@ -1352,7 +1385,39 @@ function QuestionCard({
 
       <div className="space-y-1.5">
         <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          {t("teacher_quiz_manage.editor.hint_label", "Hint (shown to learner on request)")}
+          {t("teacher_quiz_manage.outcome.label", "Learning outcome")}
+        </label>
+        <select
+          value={draft.learning_outcome_id ?? ""}
+          onChange={(e) =>
+            setDraft((current) => ({
+              ...current,
+              learning_outcome_id: e.target.value || null,
+            }))
+          }
+          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+        >
+          <option value="">
+            {t("teacher_quiz_manage.outcome.none", "No outcome")}
+          </option>
+          {outcomes.map((outcome) => (
+            <option key={outcome.id} value={outcome.id}>
+              {`L.O.${outcome.position} — ${
+                outcome.outcome_text.length > 60
+                  ? `${outcome.outcome_text.slice(0, 60)}…`
+                  : outcome.outcome_text
+              }`}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+          {t(
+            "teacher_quiz_manage.editor.hint_label",
+            "Hint (shown to learner on request)",
+          )}
         </label>
         <textarea
           value={draft.hint_text}
@@ -1369,7 +1434,7 @@ function QuestionCard({
         <p className="text-[11px] text-m3-on-surface-variant">
           {t(
             "teacher_quiz_manage.editor.hint_help",
-            "Optional. Only shown to learners if \"Show hints\" is enabled in Quiz Settings. Must not reveal the answer.",
+            'Optional. Only shown to learners if "Show hints" is enabled in Quiz Settings. Must not reveal the answer.',
           )}
         </p>
       </div>
@@ -1429,7 +1494,10 @@ function QuestionCard({
       {question.question_type === "short_answer" && (
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            {t("teacher_quiz_manage.editor.correct_answer_label", "Correct answer")}
+            {t(
+              "teacher_quiz_manage.editor.correct_answer_label",
+              "Correct answer",
+            )}
           </label>
           <div className="rounded-xl border-2 border-emerald-300 bg-emerald-50/60 px-3 py-2.5 text-sm text-m3-on-surface">
             {typeof correctAnswer === "string" && correctAnswer.length > 0 ? (
@@ -1556,10 +1624,7 @@ function QuestionCard({
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t(
-                "teacher_quiz_manage.editor.t_exp_label",
-                "Expected time (s)",
-              )}
+              {t("teacher_quiz_manage.editor.t_exp_label", "Expected time (s)")}
             </label>
             <Input
               type="number"
@@ -1582,10 +1647,7 @@ function QuestionCard({
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t(
-                "teacher_quiz_manage.editor.ef_ceiling_label",
-                "EF ceiling",
-              )}
+              {t("teacher_quiz_manage.editor.ef_ceiling_label", "EF ceiling")}
             </label>
             <Input
               type="number"
@@ -1608,12 +1670,6 @@ function QuestionCard({
             />
           </div>
         </div>
-        <p className="text-[10px] text-m3-on-surface-variant">
-          {t(
-            "teacher_quiz_manage.editor.metadata_hint",
-            "Bloom + difficulty drive analytics. Expected time gates publishing. EF ceiling caps the SR scheduler's mastery factor (1.30–3.50).",
-          )}
-        </p>
       </div>
 
       <div className="space-y-1.5">
@@ -1697,6 +1753,7 @@ interface QuestionDraft {
   expected_response_seconds: number | null;
   expected_ef_ceiling: number | null;
   review_status: string;
+  learning_outcome_id: string | null;
   options: Array<{
     id: string;
     option_key: string;
@@ -1712,7 +1769,9 @@ interface QuestionDraft {
  * (string for short_answer, array of strings for fill_blank). The
  * payload field is read-only in the v1 authoring UI; teachers edit
  * stem + explanation, and regenerate to change the answer. */
-function readCorrectAnswer(question: QuizQuestionAuthoring): string | string[] | null {
+function readCorrectAnswer(
+  question: QuizQuestionAuthoring,
+): string | string[] | null {
   const payload = question.original_generated_payload as
     | { correct_answer?: unknown }
     | null
@@ -1744,6 +1803,7 @@ function buildQuestionDraft(question: QuizQuestionAuthoring): QuestionDraft {
         ? null
         : Number(question.expected_ef_ceiling),
     review_status: question.review_status ?? "pending",
+    learning_outcome_id: question.learning_outcome_id ?? null,
     options: (question.options ?? []).map((o) => ({
       id: o.id,
       option_key: o.option_key,
@@ -1756,11 +1816,13 @@ function buildQuestionDraft(question: QuizQuestionAuthoring): QuestionDraft {
 function GenerateModal({
   quizId,
   moduleId,
+  courseId,
   hasExistingQuestions,
   onClose,
 }: {
   quizId: string;
   moduleId: string;
+  courseId?: string;
   hasExistingQuestions: boolean;
   onClose: () => void;
 }) {
@@ -1797,13 +1859,13 @@ function GenerateModal({
         <QuizGenerationPanel
           quizId={quizId}
           moduleId={moduleId}
+          courseId={courseId}
           hasExistingQuestions={hasExistingQuestions}
         />
       </div>
     </div>
   );
 }
-
 
 function SettingsTab({
   draft,
@@ -1864,7 +1926,9 @@ function SettingsTab({
         <Field
           label={
             <span className="flex items-center justify-between">
-              <span>{t("teacher_quiz_manage.settings.scoring.pass_score")}</span>
+              <span>
+                {t("teacher_quiz_manage.settings.scoring.pass_score")}
+              </span>
               <span className="text-m3-primary font-extrabold text-sm">
                 {draft.passing_score_percent}%
               </span>
@@ -1898,6 +1962,34 @@ function SettingsTab({
             )}
             className="bg-m3-surface text-sm w-40"
           />
+        </Field>
+        <Field
+          label={t("teacher_quiz_manage.settings.scoring.grading_method_label")}
+          hint={t("teacher_quiz_manage.settings.scoring.grading_method_hint")}
+        >
+          <select
+            value={draft.grading_method}
+            onChange={(e) =>
+              update(
+                "grading_method",
+                e.target.value as SettingsDraft["grading_method"],
+              )
+            }
+            className="w-full sm:w-72 rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+          >
+            <option value="highest">
+              {t("teacher_quiz_manage.settings.scoring.grading_method_highest")}
+            </option>
+            <option value="average">
+              {t("teacher_quiz_manage.settings.scoring.grading_method_average")}
+            </option>
+            <option value="first">
+              {t("teacher_quiz_manage.settings.scoring.grading_method_first")}
+            </option>
+            <option value="last">
+              {t("teacher_quiz_manage.settings.scoring.grading_method_last")}
+            </option>
+          </select>
         </Field>
       </SettingsSection>
 
@@ -2088,6 +2180,111 @@ function SettingsTab({
   );
 }
 
+function QuestionNavigator({
+  questions,
+}: {
+  questions: QuizQuestionAuthoring[];
+}) {
+  const { t } = useTranslation();
+  const [activeId, setActiveId] = useState<string | null>(null);
+  // Suppress scroll-spy briefly after a click so the highlight doesn't
+  // flicker through intermediate cards during the smooth scroll.
+  const suppressSpyUntil = useRef<number>(0);
+
+  const scrollToQuestion = useCallback((id: string) => {
+    const el = document.getElementById(`qcard-${id}`);
+    if (!el) return;
+    suppressSpyUntil.current = Date.now() + 700;
+    setActiveId(id);
+    const reduceMotion =
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  }, []);
+
+  // Scroll-spy: highlight the last card whose top has scrolled above a line
+  // just below the sticky header (matches the card's scroll-mt offset).
+  useEffect(() => {
+    if (questions.length === 0) return;
+    let frame = 0;
+    const recompute = () => {
+      frame = 0;
+      if (Date.now() < suppressSpyUntil.current) return;
+      const line = 160; // ~9.5rem sticky-header clearance + a little margin
+      let current: string | null = questions[0]?.id ?? null;
+      for (const q of questions) {
+        const el = document.getElementById(`qcard-${q.id}`);
+        if (!el) continue;
+        const top = el.getBoundingClientRect().top;
+        if (top <= line) current = q.id;
+      }
+      setActiveId((prev) => (prev === current ? prev : current));
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(recompute);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    recompute();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [questions]);
+
+  if (questions.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-m3-secondary/10 bg-m3-surface-container-low p-5 shadow-glass space-y-3">
+      <h2 className="font-headline font-bold text-sm text-m3-on-surface">
+        {t("teacher_quiz_manage.question_nav.title")}
+      </h2>
+      {/* Numbered grid — reuses the student QuizSummaryCard box design.
+          Inner-scrollable so a quiz with many questions doesn't blow out
+          the sticky sidebar height. */}
+      <div className="max-h-[22rem] overflow-y-auto overflow-x-hidden">
+        <div className="grid grid-cols-6 gap-1.5 p-1.5">
+          {questions.map((question, index) => {
+            const isActive = question.id === activeId;
+            const approved = question.review_status === "approved";
+            return (
+              <button
+                key={question.id}
+                type="button"
+                onClick={() => scrollToQuestion(question.id)}
+                aria-current={isActive ? "location" : undefined}
+                title={question.prompt_text ?? undefined}
+                className={cn(
+                  "aspect-square w-full flex items-center justify-center rounded-lg font-bold text-xs transition-colors duration-150 relative cursor-pointer",
+                  isActive
+                    ? "bg-surface-elev text-m3-primary ring-2 ring-m3-primary shadow-sm"
+                    : approved
+                      ? "bg-m3-primary text-white hover:bg-m3-primary/90"
+                      : "bg-m3-surface-container-high text-m3-outline hover:bg-m3-surface-container-highest",
+                )}
+              >
+                {index + 1}
+                {!approved && (
+                  <span
+                    className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-amber-500 rounded-full"
+                    aria-hidden="true"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SettingsSection({
   title,
   description,
@@ -2193,7 +2390,9 @@ function PreviewTab({
             {t("teacher_quiz_manage.preview.title")}
           </h2>
           <p className="text-sm text-m3-on-surface-variant mt-1">
-            {t("teacher_quiz_manage.preview.description", { title: quiz.title })}
+            {t("teacher_quiz_manage.preview.description", {
+              title: quiz.title,
+            })}
           </p>
         </div>
         <Badge className="border border-m3-outline-variant/40 bg-m3-surface-container-low text-m3-on-surface-variant rounded-full text-[11px] font-medium px-3 py-1 self-start sm:self-auto">
@@ -2214,7 +2413,11 @@ function PreviewTab({
       ) : (
         <div className="space-y-5">
           {approvedQuestions.map((question, idx) => (
-            <PreviewQuestion key={question.id} index={idx} question={question} />
+            <PreviewQuestion
+              key={question.id}
+              index={idx}
+              question={question}
+            />
           ))}
         </div>
       )}
@@ -2243,6 +2446,11 @@ function PreviewQuestion({
           {index + 1}
         </span>
         <p className="text-sm font-semibold text-m3-on-surface leading-relaxed">
+          {question.outcome_position != null && (
+            <span className="mr-1.5 inline-flex items-center rounded-md bg-violet-50 px-1.5 py-0.5 text-[11px] font-bold text-violet-600 align-middle">
+              (L.O.{question.outcome_position})
+            </span>
+          )}
           {question.prompt_text || (
             <span className="italic text-m3-on-surface-variant">
               {t("teacher_quiz_manage.preview.no_content")}

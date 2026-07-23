@@ -1,10 +1,6 @@
 import * as React from "react";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import {
-  Search,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,7 +176,10 @@ export function DataTableToolbar({
             <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
             Filters
             {activeDialogCount > 0 && (
-              <Badge variant="default" className="ml-1.5 h-4 min-w-4 px-1 text-[10px]">
+              <Badge
+                variant="default"
+                className="ml-1.5 h-4 min-w-4 px-1 text-[10px]"
+              >
                 {activeDialogCount}
               </Badge>
             )}
@@ -197,7 +196,9 @@ export function DataTableToolbar({
       )}
 
       {/* Trailing */}
-      {trailing && <div className="ml-auto flex items-center gap-2">{trailing}</div>}
+      {trailing && (
+        <div className="ml-auto flex items-center gap-2">{trailing}</div>
+      )}
     </div>
   );
 }
@@ -308,7 +309,9 @@ function FilterDialog({
                 </label>
                 <select
                   value={values[f.id] ?? ""}
-                  onChange={(e) => onChange?.(f.id, e.target.value || undefined)}
+                  onChange={(e) =>
+                    onChange?.(f.id, e.target.value || undefined)
+                  }
                   className="w-full rounded-md border border-m3-outline-variant/30 bg-m3-surface-container-low px-2.5 py-1.5 text-sm cursor-pointer outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20"
                 >
                   <option value="">All</option>
@@ -333,9 +336,7 @@ function FilterDialog({
             >
               Reset all
             </Button>
-            <DialogPrimitive.Close
-              render={<Button size="sm">Done</Button>}
-            />
+            <DialogPrimitive.Close render={<Button size="sm">Done</Button>} />
           </div>
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>

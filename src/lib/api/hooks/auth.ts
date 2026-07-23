@@ -94,8 +94,7 @@ export function useGoogleCallback() {
 
 export function useEnrollTotp() {
   return useMutation({
-    mutationFn: () =>
-      apiPost<MfaEnrollResponse>("/auth/me/mfa/totp/enroll"),
+    mutationFn: () => apiPost<MfaEnrollResponse>("/auth/me/mfa/totp/enroll"),
   });
 }
 
@@ -121,8 +120,7 @@ export function useVerifyTotp() {
 
 export function useMfaChallenge() {
   return useMutation({
-    mutationFn: () =>
-      apiPost<MfaChallengeResponse>("/auth/me/mfa/challenge"),
+    mutationFn: () => apiPost<MfaChallengeResponse>("/auth/me/mfa/challenge"),
   });
 }
 

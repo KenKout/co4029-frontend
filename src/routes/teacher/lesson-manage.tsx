@@ -2,14 +2,40 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft, ArrowRight, Play, FileText, Download, Trash2, Plus,
-  Paperclip, Bold, Italic, List, Link as LinkIcon, Code, Image,
-  Upload, Sparkles, BookOpen, Video,
-  X, Archive, Loader2, Save, Brain, Pencil, Check,
-  Hash, AlignLeft, Search,
+  ArrowLeft,
+  ArrowRight,
+  Play,
+  FileText,
+  Download,
+  Trash2,
+  Plus,
+  Paperclip,
+  Bold,
+  Italic,
+  List,
+  Link as LinkIcon,
+  Code,
+  Image,
+  Upload,
+  Sparkles,
+  BookOpen,
+  Video,
+  X,
+  Archive,
+  Loader2,
+  Save,
+  Brain,
+  Pencil,
+  Check,
+  Hash,
+  AlignLeft,
+  Search,
 } from "lucide-react";
 import { MediaPlayer, MediaProvider } from "@vidstack/react";
-import { DefaultVideoLayout, defaultLayoutIcons } from "@vidstack/react/player/layouts/default";
+import {
+  DefaultVideoLayout,
+  defaultLayoutIcons,
+} from "@vidstack/react/player/layouts/default";
 import "@vidstack/react/player/styles/base.css";
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
@@ -36,21 +62,24 @@ import {
   useInitMaterialUpload,
   useCompleteMaterialUpload,
 } from "@/lib/api/hooks/materials";
-import type { CourseContentLesson, LessonResource } from "@/lib/api/types/common";
+import type {
+  CourseContentLesson,
+  LessonResource,
+} from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
 
 /* ── Lesson type options ── */
 const LESSON_TYPE_OPTIONS = [
-  { value: "video",    label: "Video",    icon: Video },
-  { value: "reading",  label: "Reading",  icon: BookOpen },
+  { value: "video", label: "Video", icon: Video },
+  { value: "reading", label: "Reading", icon: BookOpen },
 ] as const;
 
 /* ── Resource file-type style map ── */
 const RESOURCE_STYLES: Record<string, { bg: string; text: string }> = {
-  pdf:  { bg: "bg-red-50",    text: "text-red-600" },
-  zip:  { bg: "bg-blue-50",   text: "text-blue-600" },
-  mp4:  { bg: "bg-blue-50", text: "text-blue-700" },
-  xlsx: { bg: "bg-green-50",  text: "text-green-600" },
+  pdf: { bg: "bg-red-50", text: "text-red-600" },
+  zip: { bg: "bg-blue-50", text: "text-blue-600" },
+  mp4: { bg: "bg-blue-50", text: "text-blue-700" },
+  xlsx: { bg: "bg-green-50", text: "text-green-600" },
   pptx: { bg: "bg-orange-50", text: "text-orange-600" },
 };
 
@@ -59,12 +88,21 @@ function resourceStyle(filename: string) {
   return RESOURCE_STYLES[ext] ?? RESOURCE_STYLES.pdf;
 }
 
-function ToolbarBtn({ icon: Icon, label, onClick }: {
-  icon: React.ElementType; label: string; onClick?: () => void;
+function ToolbarBtn({
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  icon: React.ElementType;
+  label: string;
+  onClick?: () => void;
 }) {
   return (
     <button
-      type="button" aria-label={label} title={label} onClick={onClick}
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
       className="p-2 rounded-lg transition-colors text-m3-on-surface-variant cursor-pointer hover:bg-m3-surface-container-high"
     >
       <Icon className="h-4 w-4" />
@@ -87,7 +125,10 @@ function makeMarkdownApplier(
     setNotes(getNotes().slice(0, start) + inserted + getNotes().slice(end));
     setTimeout(() => {
       el.focus();
-      el.setSelectionRange(start + before.length, start + before.length + selected.length);
+      el.setSelectionRange(
+        start + before.length,
+        start + before.length + selected.length,
+      );
     }, 0);
   }
 
@@ -97,7 +138,12 @@ function makeMarkdownApplier(
     const start = el.selectionStart;
     const end = el.selectionEnd;
     const selected = getNotes().slice(start, end);
-    const lines = selected ? selected.split("\n").map((l) => prefix + l).join("\n") : prefix;
+    const lines = selected
+      ? selected
+          .split("\n")
+          .map((l) => prefix + l)
+          .join("\n")
+      : prefix;
     setNotes(getNotes().slice(0, start) + lines + getNotes().slice(end));
     setTimeout(() => {
       el.focus();
@@ -108,7 +154,13 @@ function makeMarkdownApplier(
   return { applyMarkdown, applyBlock };
 }
 
-function ResourceCard({ resource, onDelete }: { resource: LessonResource; onDelete: (id: string) => void }) {
+function ResourceCard({
+  resource,
+  onDelete,
+}: {
+  resource: LessonResource;
+  onDelete: (id: string) => void;
+}) {
   const style = resourceStyle(resource.title);
   const [downloading, setDownloading] = useState(false);
 
@@ -128,12 +180,22 @@ function ResourceCard({ resource, onDelete }: { resource: LessonResource; onDele
   return (
     <div className="flex items-center justify-between p-4 bg-m3-surface-container-low rounded-xl group hover:bg-m3-surface-container-high transition-colors">
       <div className="flex items-center gap-3 min-w-0">
-        <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center shrink-0", style.bg, style.text)}>
+        <div
+          className={cn(
+            "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
+            style.bg,
+            style.text,
+          )}
+        >
           <FileText className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <p className="font-bold text-m3-on-surface text-sm truncate">{resource.title}</p>
-          <p className="text-xs text-m3-on-surface-variant mt-0.5 capitalize">{resource.resource_type}</p>
+          <p className="font-bold text-m3-on-surface text-sm truncate">
+            {resource.title}
+          </p>
+          <p className="text-xs text-m3-on-surface-variant mt-0.5 capitalize">
+            {resource.resource_type}
+          </p>
         </div>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
@@ -144,9 +206,17 @@ function ResourceCard({ resource, onDelete }: { resource: LessonResource; onDele
           title={resource.storage_object_id ? "Download" : "No file attached"}
           className="p-2 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-highest transition-colors cursor-pointer disabled:opacity-40"
         >
-          {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          {downloading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
         </button>
-        <button type="button" onClick={() => onDelete(resource.id)} className="p-2 rounded-lg text-m3-error hover:bg-m3-error-container/30 transition-colors cursor-pointer">
+        <button
+          type="button"
+          onClick={() => onDelete(resource.id)}
+          className="p-2 rounded-lg text-m3-error hover:bg-m3-error-container/30 transition-colors cursor-pointer"
+        >
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
@@ -156,7 +226,13 @@ function ResourceCard({ resource, onDelete }: { resource: LessonResource; onDele
 
 /* ── Video type content ── */
 function VideoContent({
-  notes, setNotes, notesRef, estimatedMinutes, streamUrl, onVideoUpload, uploading,
+  notes,
+  setNotes,
+  notesRef,
+  estimatedMinutes,
+  streamUrl,
+  onVideoUpload,
+  uploading,
 }: {
   notes: string;
   setNotes: (v: string) => void;
@@ -166,7 +242,11 @@ function VideoContent({
   onVideoUpload: (file: File) => Promise<void>;
   uploading?: boolean;
 }) {
-  const { applyMarkdown, applyBlock } = makeMarkdownApplier(() => notesRef.current, () => notes, setNotes);
+  const { applyMarkdown, applyBlock } = makeMarkdownApplier(
+    () => notesRef.current,
+    () => notes,
+    setNotes,
+  );
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -187,13 +267,22 @@ function VideoContent({
           <div className="absolute inset-0 bg-gradient-to-br from-m3-primary/20 via-m3-secondary/10 to-transparent" />
           <div
             className="absolute inset-0 opacity-10"
-            style={{ backgroundImage: "radial-gradient(circle, #5654a8 1px, transparent 1px)", backgroundSize: "28px 28px" }}
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, #5654a8 1px, transparent 1px)",
+              backgroundSize: "28px 28px",
+            }}
           />
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
             <div className="w-20 h-20 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-2xl">
-              <Play className="h-8 w-8 text-m3-primary ml-1" fill="currentColor" />
+              <Play
+                className="h-8 w-8 text-m3-primary ml-1"
+                fill="currentColor"
+              />
             </div>
-            <p className="text-sm text-m3-on-surface-variant font-medium">No video uploaded yet</p>
+            <p className="text-sm text-m3-on-surface-variant font-medium">
+              No video uploaded yet
+            </p>
           </div>
         </div>
       )}
@@ -201,7 +290,10 @@ function VideoContent({
       <div className="flex justify-between items-center">
         {estimatedMinutes && (
           <span className="text-xs text-m3-on-surface-variant font-medium">
-            <span className="font-bold text-m3-on-surface">{estimatedMinutes}</span> min estimated
+            <span className="font-bold text-m3-on-surface">
+              {estimatedMinutes}
+            </span>{" "}
+            min estimated
           </span>
         )}
         <button
@@ -210,8 +302,16 @@ function VideoContent({
           onClick={() => videoInputRef.current?.click()}
           className="ml-auto flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border border-m3-outline-variant/30 bg-m3-surface hover:bg-m3-surface-container transition-colors cursor-pointer disabled:opacity-50"
         >
-          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-          {uploading ? "Uploading…" : streamUrl ? "Replace Video" : "Upload Video"}
+          {uploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Upload className="h-4 w-4" />
+          )}
+          {uploading
+            ? "Uploading…"
+            : streamUrl
+              ? "Replace Video"
+              : "Upload Video"}
         </button>
       </div>
 
@@ -223,27 +323,58 @@ function VideoContent({
         disabled={uploading}
         onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) { onVideoUpload(file); e.target.value = ""; }
+          if (file) {
+            onVideoUpload(file);
+            e.target.value = "";
+          }
         }}
       />
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-headline font-bold text-2xl text-m3-primary">Lesson Notes</h2>
+          <h2 className="font-headline font-bold text-2xl text-m3-primary">
+            Lesson Notes
+          </h2>
           <div className="flex items-center gap-1 p-1.5 bg-m3-surface-container-low rounded-xl">
-            <ToolbarBtn icon={Bold}     label="Bold"         onClick={() => applyMarkdown("**")} />
-            <ToolbarBtn icon={Italic}   label="Italic"       onClick={() => applyMarkdown("*")} />
+            <ToolbarBtn
+              icon={Bold}
+              label="Bold"
+              onClick={() => applyMarkdown("**")}
+            />
+            <ToolbarBtn
+              icon={Italic}
+              label="Italic"
+              onClick={() => applyMarkdown("*")}
+            />
             <span className="w-px h-4 bg-m3-outline-variant/30 mx-0.5" />
-            <ToolbarBtn icon={List}     label="Bullet List"  onClick={() => applyBlock("- ")} />
-            <ToolbarBtn icon={LinkIcon} label="Insert Link"  onClick={() => applyMarkdown("[", "](url)")} />
-            <ToolbarBtn icon={Code}     label="Inline Code"  onClick={() => applyMarkdown("`")} />
-            <ToolbarBtn icon={Image}    label="Insert Image" onClick={() => applyMarkdown("![alt](", ")")} />
+            <ToolbarBtn
+              icon={List}
+              label="Bullet List"
+              onClick={() => applyBlock("- ")}
+            />
+            <ToolbarBtn
+              icon={LinkIcon}
+              label="Insert Link"
+              onClick={() => applyMarkdown("[", "](url)")}
+            />
+            <ToolbarBtn
+              icon={Code}
+              label="Inline Code"
+              onClick={() => applyMarkdown("`")}
+            />
+            <ToolbarBtn
+              icon={Image}
+              label="Insert Image"
+              onClick={() => applyMarkdown("![alt](", ")")}
+            />
           </div>
         </div>
         <textarea
           ref={notesRef}
           className="min-h-[400px] w-full p-8 rounded-xl bg-m3-surface-container-lowest text-m3-on-surface leading-relaxed text-base outline-none shadow-sm focus:ring-2 focus:ring-m3-secondary/20 transition-all resize-none font-body border border-m3-outline-variant/10 placeholder:text-m3-on-surface-variant/40"
-          placeholder={"Write lesson notes in Markdown…\n\nYou can use **bold**, *italic*, lists, code blocks, and more."}
+          placeholder={
+            "Write lesson notes in Markdown…\n\nYou can use **bold**, *italic*, lists, code blocks, and more."
+          }
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
@@ -253,44 +384,90 @@ function VideoContent({
 }
 
 /* ── Reading type content ── */
-function ReadingContent({ notes, setNotes, notesRef }: {
+function ReadingContent({
+  notes,
+  setNotes,
+  notesRef,
+}: {
   notes: string;
   setNotes: (v: string) => void;
   notesRef: React.RefObject<HTMLTextAreaElement | null>;
 }) {
-  const { applyMarkdown, applyBlock } = makeMarkdownApplier(() => notesRef.current, () => notes, setNotes);
+  const { applyMarkdown, applyBlock } = makeMarkdownApplier(
+    () => notesRef.current,
+    () => notes,
+    setNotes,
+  );
   const wordCount = notes.trim() ? notes.trim().split(/\s+/).length : 0;
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-headline font-bold text-2xl text-m3-primary">Reading Content</h2>
+          <h2 className="font-headline font-bold text-2xl text-m3-primary">
+            Reading Content
+          </h2>
           <p className="text-sm text-m3-on-surface-variant mt-0.5">
-            {wordCount > 0 ? `~${wordCount} words · ${readTime} min read` : "Write in Markdown or plain text"}
+            {wordCount > 0
+              ? `~${wordCount} words · ${readTime} min read`
+              : "Write in Markdown or plain text"}
           </p>
         </div>
         <div className="flex items-center gap-1 p-1.5 bg-m3-surface-container-low rounded-xl">
-          <ToolbarBtn icon={Bold}     label="Bold"         onClick={() => applyMarkdown("**")} />
-          <ToolbarBtn icon={Italic}   label="Italic"       onClick={() => applyMarkdown("*")} />
-          <ToolbarBtn icon={List}     label="Bullet List"  onClick={() => applyBlock("- ")} />
-          <ToolbarBtn icon={Hash}     label="Heading"      onClick={() => applyBlock("# ")} />
+          <ToolbarBtn
+            icon={Bold}
+            label="Bold"
+            onClick={() => applyMarkdown("**")}
+          />
+          <ToolbarBtn
+            icon={Italic}
+            label="Italic"
+            onClick={() => applyMarkdown("*")}
+          />
+          <ToolbarBtn
+            icon={List}
+            label="Bullet List"
+            onClick={() => applyBlock("- ")}
+          />
+          <ToolbarBtn
+            icon={Hash}
+            label="Heading"
+            onClick={() => applyBlock("# ")}
+          />
           <span className="w-px h-4 bg-m3-outline-variant/30 mx-0.5" />
-          <ToolbarBtn icon={LinkIcon} label="Insert Link"  onClick={() => applyMarkdown("[", "](url)")} />
-          <ToolbarBtn icon={Image}    label="Insert Image" onClick={() => applyMarkdown("![alt](", ")")} />
-          <ToolbarBtn icon={Code}     label="Code Block"   onClick={() => applyMarkdown("```\n", "\n```")} />
+          <ToolbarBtn
+            icon={LinkIcon}
+            label="Insert Link"
+            onClick={() => applyMarkdown("[", "](url)")}
+          />
+          <ToolbarBtn
+            icon={Image}
+            label="Insert Image"
+            onClick={() => applyMarkdown("![alt](", ")")}
+          />
+          <ToolbarBtn
+            icon={Code}
+            label="Code Block"
+            onClick={() => applyMarkdown("```\n", "\n```")}
+          />
         </div>
       </div>
       <div className="rounded-xl border border-m3-outline-variant/20 overflow-hidden shadow-sm">
         <div className="bg-m3-primary/5 border-b border-m3-outline-variant/10 px-4 py-2 flex items-center gap-2">
           <AlignLeft className="h-3.5 w-3.5 text-m3-secondary" />
-          <span className="text-xs font-bold text-m3-on-surface-variant uppercase tracking-widest">Markdown Editor</span>
-          <span className="ml-auto text-xs text-m3-on-surface-variant/50">Plain text or Markdown</span>
+          <span className="text-xs font-bold text-m3-on-surface-variant uppercase tracking-widest">
+            Markdown Editor
+          </span>
+          <span className="ml-auto text-xs text-m3-on-surface-variant/50">
+            Plain text or Markdown
+          </span>
         </div>
         <textarea
           ref={notesRef}
           className="min-h-[600px] w-full p-8 bg-m3-surface-container-lowest text-m3-on-surface leading-relaxed text-base outline-none resize-none font-body placeholder:text-m3-on-surface-variant/40"
-          placeholder={"# Introduction\n\nWrite your reading material here.\n\n## Key Concepts\n\n- Concept 1\n- Concept 2\n\n**Bold text**, *italic text*, `inline code`"}
+          placeholder={
+            "# Introduction\n\nWrite your reading material here.\n\n## Key Concepts\n\n- Concept 1\n- Concept 2\n\n**Bold text**, *italic text*, `inline code`"
+          }
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
@@ -304,7 +481,10 @@ function ReadingContent({ notes, setNotes, notesRef }: {
    ════════════════════════════════════════ */
 export default function LessonManagePage() {
   const { t } = useTranslation();
-  const params = useParams({ strict: false }) as { courseId: string; lessonId: string };
+  const params = useParams({ strict: false }) as {
+    courseId: string;
+    lessonId: string;
+  };
   const { courseId, lessonId } = params;
 
   const { data: course } = useTeacherCourseById(courseId);
@@ -321,7 +501,9 @@ export default function LessonManagePage() {
   const createMaterial = useCreateMaterial(courseId, moduleId, lessonId);
   const initVideoUpload = useInitMaterialUpload(lessonId);
   const completeVideoUpload = useCompleteMaterialUpload();
-  const { data: videoStreamData } = useTeacherMaterialStreamUrl(lesson?.primary_material_id);
+  const { data: videoStreamData } = useTeacherMaterialStreamUrl(
+    lesson?.primary_material_id,
+  );
   const deleteLesson = useDeleteLesson(courseId);
   const updateModuleItem = useUpdateModuleItem(courseId);
 
@@ -357,14 +539,18 @@ export default function LessonManagePage() {
   const resourceInputRef = useRef<HTMLInputElement>(null);
 
   /* ── All lessons in the course (for prerequisite picker) ── */
-  const allLessons: CourseContentLesson[] = (content?.modules ?? []).flatMap((m) =>
-    m.items
-      .filter((i) => i.item_type === "lesson" && i.lesson && i.lesson.id !== lessonId)
-      .map((i) => i.lesson!)
+  const allLessons: CourseContentLesson[] = (content?.modules ?? []).flatMap(
+    (m) =>
+      m.items
+        .filter(
+          (i) =>
+            i.item_type === "lesson" && i.lesson && i.lesson.id !== lessonId,
+        )
+        .map((i) => i.lesson!),
   );
 
   const filteredLessons = allLessons.filter((l) =>
-    l.title.toLowerCase().includes(prereqSearch.toLowerCase())
+    l.title.toLowerCase().includes(prereqSearch.toLowerCase()),
   );
 
   /* ── Sync server data once ── */
@@ -386,7 +572,9 @@ export default function LessonManagePage() {
   useEffect(() => {
     if (moduleItem && !prereqInitialized.current) {
       prereqInitialized.current = true;
-      const stored = moduleItem.unlock_rule_json as { prerequisites?: string[] } | undefined;
+      const stored = moduleItem.unlock_rule_json as
+        | { prerequisites?: string[] }
+        | undefined;
       setPrerequisites(stored?.prerequisites ?? []);
     }
   }, [moduleItem]);
@@ -395,15 +583,13 @@ export default function LessonManagePage() {
     initialized.current &&
     !saving &&
     !!lesson &&
-    (
-      title !== (lesson.title ?? "") ||
+    (title !== (lesson.title ?? "") ||
       summary !== (lesson.summary ?? "") ||
       lessonType !== (lesson.lesson_type ?? "video") ||
       status !== (lesson.status === "published" ? "published" : "draft") ||
       difficulty !== (lesson.difficulty ?? "intermediate") ||
       estimatedMinutes !== (lesson.estimated_minutes?.toString() ?? "") ||
-      notes !== (lesson.notes_markdown ?? "")
-    );
+      notes !== (lesson.notes_markdown ?? ""));
 
   useUnsavedChangesWarning(isDirty);
 
@@ -422,7 +608,9 @@ export default function LessonManagePage() {
           lesson_type: lessonType as "video" | "reading",
           status,
           difficulty: difficulty || undefined,
-          estimated_minutes: estimatedMinutes ? Number(estimatedMinutes) : undefined,
+          estimated_minutes: estimatedMinutes
+            ? Number(estimatedMinutes)
+            : undefined,
           notes_markdown: notes || undefined,
         }),
       ];
@@ -431,7 +619,7 @@ export default function LessonManagePage() {
           updateModuleItem.mutateAsync({
             itemId: moduleItem.id,
             payload: { unlock_rule_json: { prerequisites } },
-          })
+          }),
         );
       }
       await Promise.all(saves);
@@ -446,7 +634,10 @@ export default function LessonManagePage() {
   }
 
   async function handleArchive() {
-    if (!archiveConfirm) { setArchiveConfirm(true); return; }
+    if (!archiveConfirm) {
+      setArchiveConfirm(true);
+      return;
+    }
     try {
       await updateLesson.mutateAsync({ status: "archived" });
       toast.success("Lesson archived");
@@ -456,7 +647,10 @@ export default function LessonManagePage() {
   }
 
   async function handleDelete() {
-    if (!deleteConfirm) { setDeleteConfirm(true); return; }
+    if (!deleteConfirm) {
+      setDeleteConfirm(true);
+      return;
+    }
     try {
       await deleteLesson.mutateAsync(lessonId);
       toast.success("Lesson deleted");
@@ -509,7 +703,9 @@ export default function LessonManagePage() {
       if (err instanceof TypeError) {
         toast.error(t("teacher_common.storage_unavailable"));
       } else {
-        toast.error((err as Error).message || t("teacher_common.upload_failed"));
+        toast.error(
+          (err as Error).message || t("teacher_common.upload_failed"),
+        );
       }
     } finally {
       setUploadingVideo(false);
@@ -531,14 +727,28 @@ export default function LessonManagePage() {
         await fetch(upload_url, { method: "PUT", body: file });
       }
       const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-      const resourceType: "pdf" | "zip" | "mp4" | "xlsx" | "pptx" | "docx" | "link" | "other" =
-        ext === "pdf" ? "pdf"
-        : ext === "zip" ? "zip"
-        : ext === "mp4" ? "mp4"
-        : ext === "xlsx" ? "xlsx"
-        : ext === "pptx" ? "pptx"
-        : ext === "docx" ? "docx"
-        : "other";
+      const resourceType:
+        | "pdf"
+        | "zip"
+        | "mp4"
+        | "xlsx"
+        | "pptx"
+        | "docx"
+        | "link"
+        | "other" =
+        ext === "pdf"
+          ? "pdf"
+          : ext === "zip"
+            ? "zip"
+            : ext === "mp4"
+              ? "mp4"
+              : ext === "xlsx"
+                ? "xlsx"
+                : ext === "pptx"
+                  ? "pptx"
+                  : ext === "docx"
+                    ? "docx"
+                    : "other";
       await createResource.mutateAsync({
         title: file.name,
         resource_type: resourceType,
@@ -550,21 +760,31 @@ export default function LessonManagePage() {
       // Best-effort: also add to AI Material Hub (no processing until teacher enables it)
       const currentModuleId = lesson?.module_id;
       if (currentModuleId) {
-        const materialType = file.type.startsWith("video/") ? "video"
-          : ext === "pdf" ? "pdf"
-          : ["pptx", "ppt"].includes(ext) ? "slides"
-          : ["py", "js", "ts", "jsx", "tsx", "java", "c", "cpp"].includes(ext) ? "code"
-          : "other";
+        const materialType = file.type.startsWith("video/")
+          ? "video"
+          : ext === "pdf"
+            ? "pdf"
+            : ["pptx", "ppt"].includes(ext)
+              ? "slides"
+              : ["py", "js", "ts", "jsx", "tsx", "java", "c", "cpp"].includes(
+                    ext,
+                  )
+                ? "code"
+                : "other";
         try {
           await createMaterial.mutateAsync({
             title: file.name.replace(/\.[^.]+$/, ""),
             material_type: materialType,
             storage_object_id: storage_object.id,
-            ai_processing_enabled: false,
+            // Kick off ingestion so the document gets a viewable rendition
+            // instead of sitting "pending" forever with only a raw download.
+            ai_processing_enabled: true,
             visible_to_students: false,
           });
         } catch {
-          toast.error("Resource attached, but couldn't sync to AI Material Hub");
+          toast.error(
+            "Resource attached, but couldn't sync to AI Material Hub",
+          );
         }
       }
     } catch (err: unknown) {
@@ -583,7 +803,7 @@ export default function LessonManagePage() {
 
   function togglePrerequisite(id: string) {
     setPrerequisites((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
     );
   }
 
@@ -595,15 +815,19 @@ export default function LessonManagePage() {
     );
   }
 
-  const typeLabel = LESSON_TYPE_OPTIONS.find((t) => t.value === lessonType)?.label ?? t("teacher_common.lesson_fallback");
+  const typeLabel =
+    LESSON_TYPE_OPTIONS.find((t) => t.value === lessonType)?.label ??
+    t("teacher_common.lesson_fallback");
 
   return (
     <div className="max-w-[1440px] mx-auto pb-20">
-
       <div className="pt-4 pb-2">
         <Breadcrumbs
           items={[
-            { label: t("teacher_common.breadcrumb_teaching"), to: "/teacher/courses" },
+            {
+              label: t("teacher_common.breadcrumb_teaching"),
+              to: "/teacher/courses",
+            },
             {
               label: course?.title ?? t("teacher_common.breadcrumb_course"),
               to: "/teacher/courses/$courseId",
@@ -618,24 +842,44 @@ export default function LessonManagePage() {
                   },
                 ]
               : []),
-            { label: title || lesson?.title || t("teacher_common.lesson_fallback") },
+            {
+              label:
+                title || lesson?.title || t("teacher_common.lesson_fallback"),
+            },
           ]}
         />
       </div>
 
       <div className="py-3 mb-8 flex items-center justify-between gap-3">
         <Link
-          to={moduleId ? "/teacher/courses/$courseId/modules/$moduleId" : "/teacher/courses/$courseId"}
+          to={
+            moduleId
+              ? "/teacher/courses/$courseId/modules/$moduleId"
+              : "/teacher/courses/$courseId"
+          }
           params={moduleId ? { courseId, moduleId } : { courseId }}
         >
-          <Button variant="ghost" size="sm" className="-ml-2.5 gap-2 text-m3-on-surface-variant">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-2.5 gap-2 text-m3-on-surface-variant"
+          >
             <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("teacher_common.back_to_course")}</span>
+            <span className="hidden sm:inline">
+              {t("teacher_common.back_to_course")}
+            </span>
           </Button>
         </Link>
         <div className="flex items-center gap-2">
-          <Link to="/teacher/courses/$courseId/lessons/$lessonId/materials" params={{ courseId, lessonId }}>
-            <Button variant="outline" size="sm" className="gap-2 hidden sm:flex border-m3-outline-variant/30">
+          <Link
+            to="/teacher/courses/$courseId/lessons/$lessonId/materials"
+            params={{ courseId, lessonId }}
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 hidden sm:flex border-m3-outline-variant/30"
+            >
               <Brain className="h-4 w-4 text-m3-secondary" />
               AI Material Hub
             </Button>
@@ -648,23 +892,29 @@ export default function LessonManagePage() {
               "gap-2 transition-all cursor-pointer",
               saved
                 ? "bg-green-500 hover:bg-green-600 text-white border-0"
-                : "gradient-primary text-white border-0 shadow-ai-glow hover:opacity-90 active:scale-95"
+                : "gradient-primary text-white border-0 shadow-ai-glow hover:opacity-90 active:scale-95",
             )}
           >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            <span className="hidden sm:inline">{saved ? t("teacher_common.saved_check") : t("teacher_common.save_changes")}</span>
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">
+              {saved
+                ? t("teacher_common.saved_check")
+                : t("teacher_common.save_changes")}
+            </span>
           </Button>
         </div>
       </div>
 
       {/* ── 12-col grid ── */}
       <div className="grid grid-cols-12 gap-8 items-start">
-
         {/* ═══════════════════════════════════
             Main editor — 8 cols
         ═══════════════════════════════════ */}
         <div className="col-span-12 lg:col-span-8 space-y-10">
-
           {/* ── Editable lesson header ── */}
           <section className="space-y-3">
             <span className="block text-m3-secondary font-headline font-bold text-sm tracking-widest uppercase">
@@ -678,18 +928,31 @@ export default function LessonManagePage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={() => setTitleEditing(false)}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setTitleEditing(false); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === "Escape")
+                    setTitleEditing(false);
+                }}
                 className="w-full font-headline font-extrabold text-4xl lg:text-5xl text-m3-primary tracking-tight leading-tight bg-transparent border-b-2 border-m3-primary outline-none py-1"
                 placeholder="Lesson title…"
               />
             ) : (
-              <div className="group flex items-start gap-3 cursor-text" onClick={() => setTitleEditing(true)}>
+              <div
+                className="group flex items-start gap-3 cursor-text"
+                onClick={() => setTitleEditing(true)}
+              >
                 <h1 className="font-headline font-extrabold text-4xl lg:text-5xl text-m3-primary tracking-tight leading-tight flex-1">
-                  {title || <span className="text-m3-on-surface-variant/40">Untitled Lesson</span>}
+                  {title || (
+                    <span className="text-m3-on-surface-variant/40">
+                      Untitled Lesson
+                    </span>
+                  )}
                 </h1>
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); setTitleEditing(true); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTitleEditing(true);
+                  }}
                   className="opacity-0 group-hover:opacity-100 transition-opacity mt-2 p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant shrink-0 cursor-pointer"
                 >
                   <Pencil className="h-4 w-4" />
@@ -710,7 +973,8 @@ export default function LessonManagePage() {
           {/* ── Per-type content area ── */}
           {lessonType === "video" && (
             <VideoContent
-              notes={notes} setNotes={setNotes}
+              notes={notes}
+              setNotes={setNotes}
               notesRef={notesRef}
               estimatedMinutes={estimatedMinutes}
               streamUrl={videoStreamData?.stream_url}
@@ -719,27 +983,44 @@ export default function LessonManagePage() {
             />
           )}
           {lessonType === "reading" && (
-            <ReadingContent notes={notes} setNotes={setNotes} notesRef={notesRef} />
+            <ReadingContent
+              notes={notes}
+              setNotes={setNotes}
+              notesRef={notesRef}
+            />
           )}
 
           {/* ── Downloadable Resources (all types) ── */}
           <section className="space-y-5">
-            <h2 className="font-headline font-bold text-2xl text-m3-primary">Downloadable Resources</h2>
+            <h2 className="font-headline font-bold text-2xl text-m3-primary">
+              Downloadable Resources
+            </h2>
 
             {resources.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {resources.map((resource) => (
-                  <ResourceCard key={resource.id} resource={resource} onDelete={handleDeleteResource} />
+                  <ResourceCard
+                    key={resource.id}
+                    resource={resource}
+                    onDelete={handleDeleteResource}
+                  />
                 ))}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-10 rounded-xl bg-m3-surface-container-lowest ghost-border">
                 <Paperclip className="h-8 w-8 text-m3-on-surface-variant/40 mb-2" />
-                <p className="text-sm text-m3-on-surface-variant">No resources attached yet.</p>
+                <p className="text-sm text-m3-on-surface-variant">
+                  No resources attached yet.
+                </p>
               </div>
             )}
 
-            <input ref={resourceInputRef} type="file" className="sr-only" onChange={handleResourceFile} />
+            <input
+              ref={resourceInputRef}
+              type="file"
+              className="sr-only"
+              onChange={handleResourceFile}
+            />
             <button
               type="button"
               onClick={() => resourceInputRef.current?.click()}
@@ -747,9 +1028,13 @@ export default function LessonManagePage() {
               className="w-full py-4 border-2 border-dashed border-m3-outline-variant/40 rounded-xl text-m3-on-surface-variant font-bold hover:bg-m3-surface-container-lowest hover:border-m3-secondary/40 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 cursor-pointer"
             >
               {attachingResource ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</>
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Uploading…
+                </>
               ) : (
-                <><Plus className="h-4 w-4" /> Attach New Resource</>
+                <>
+                  <Plus className="h-4 w-4" /> Attach New Resource
+                </>
               )}
             </button>
           </section>
@@ -759,21 +1044,28 @@ export default function LessonManagePage() {
             Sidebar — 4 cols, sticky
         ═══════════════════════════════════ */}
         <aside className="col-span-12 lg:col-span-4 space-y-6 lg:sticky lg:top-32 self-start">
-
           {/* ── Lesson Settings ── */}
           <div className="bg-m3-surface-container-low rounded-xl p-6 space-y-6 shadow-sm">
-            <h3 className="font-headline font-bold text-xl text-m3-primary">Lesson Settings</h3>
+            <h3 className="font-headline font-bold text-xl text-m3-primary">
+              Lesson Settings
+            </h3>
 
             {/* Visibility */}
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Visibility</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                Visibility
+              </label>
               <div className="flex gap-2 p-1 bg-m3-surface-container rounded-xl">
                 {(["published", "draft"] as const).map((s) => (
                   <button
-                    key={s} type="button" onClick={() => setStatus(s)}
+                    key={s}
+                    type="button"
+                    onClick={() => setStatus(s)}
                     className={cn(
                       "flex-1 py-2 rounded-lg text-sm font-bold capitalize transition-all cursor-pointer",
-                      status === s ? "bg-surface-elev text-m3-primary shadow-sm" : "text-m3-on-surface-variant hover:text-m3-on-surface"
+                      status === s
+                        ? "bg-surface-elev text-m3-primary shadow-sm"
+                        : "text-m3-on-surface-variant hover:text-m3-on-surface",
                     )}
                   >
                     {s}
@@ -784,16 +1076,20 @@ export default function LessonManagePage() {
 
             {/* Lesson type */}
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Lesson Type</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                Lesson Type
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 {LESSON_TYPE_OPTIONS.map(({ value, label, icon: Icon }) => (
                   <button
-                    key={value} type="button" onClick={() => setLessonType(value)}
+                    key={value}
+                    type="button"
+                    onClick={() => setLessonType(value)}
                     className={cn(
                       "flex items-center gap-2 p-3 rounded-xl border text-sm font-bold transition-all cursor-pointer",
                       lessonType === value
                         ? "border-m3-primary/30 bg-m3-primary-fixed text-m3-primary"
-                        : "border-m3-outline-variant/20 bg-surface-elev text-m3-on-surface-variant hover:bg-m3-surface-container-high"
+                        : "border-m3-outline-variant/20 bg-surface-elev text-m3-on-surface-variant hover:bg-m3-surface-container-high",
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
@@ -809,7 +1105,8 @@ export default function LessonManagePage() {
                 Estimated Duration (minutes)
               </label>
               <input
-                type="number" min={0}
+                type="number"
+                min={0}
                 value={estimatedMinutes}
                 onChange={(e) => setEstimatedMinutes(e.target.value)}
                 className="w-full bg-surface-elev border border-m3-outline-variant/20 rounded-xl px-4 py-3 text-sm font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all"
@@ -837,25 +1134,40 @@ export default function LessonManagePage() {
           {/* ── Prerequisites ── */}
           <div className="bg-m3-surface-container-low rounded-xl p-6 space-y-4 shadow-sm">
             <div>
-              <h3 className="font-headline font-bold text-base text-m3-primary">Prerequisites</h3>
-              <p className="text-xs text-m3-on-surface-variant mt-0.5">Lessons students should complete first.</p>
+              <h3 className="font-headline font-bold text-base text-m3-primary">
+                Prerequisites
+              </h3>
+              <p className="text-xs text-m3-on-surface-variant mt-0.5">
+                Lessons students should complete first.
+              </p>
             </div>
 
             {/* Selected */}
             {prerequisites.length === 0 && !prereqOpen && (
-              <p className="text-sm text-m3-on-surface-variant/60 text-center py-2">No prerequisites added.</p>
+              <p className="text-sm text-m3-on-surface-variant/60 text-center py-2">
+                No prerequisites added.
+              </p>
             )}
             {prerequisites.map((id) => {
               const l = allLessons.find((x) => x.id === id);
               if (!l) return null;
-              const TypeIcon = LESSON_TYPE_OPTIONS.find((t) => t.value === l.lesson_type)?.icon ?? BookOpen;
+              const TypeIcon =
+                LESSON_TYPE_OPTIONS.find((t) => t.value === l.lesson_type)
+                  ?.icon ?? BookOpen;
               return (
-                <div key={id} className="flex items-center justify-between gap-2 bg-m3-primary-fixed text-m3-primary px-3 py-2.5 rounded-xl text-sm font-medium">
+                <div
+                  key={id}
+                  className="flex items-center justify-between gap-2 bg-m3-primary-fixed text-m3-primary px-3 py-2.5 rounded-xl text-sm font-medium"
+                >
                   <div className="flex items-center gap-2 min-w-0">
                     <TypeIcon className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate">{l.title}</span>
                   </div>
-                  <button type="button" onClick={() => togglePrerequisite(id)} className="shrink-0 p-0.5 rounded-md hover:bg-m3-primary/10 transition-colors cursor-pointer">
+                  <button
+                    type="button"
+                    onClick={() => togglePrerequisite(id)}
+                    className="shrink-0 p-0.5 rounded-md hover:bg-m3-primary/10 transition-colors cursor-pointer"
+                  >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -871,7 +1183,12 @@ export default function LessonManagePage() {
                     autoFocus
                     value={prereqSearch}
                     onChange={(e) => setPrereqSearch(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Escape") { setPrereqOpen(false); setPrereqSearch(""); } }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") {
+                        setPrereqOpen(false);
+                        setPrereqSearch("");
+                      }
+                    }}
                     placeholder={t("teacher_common.search_lessons")}
                     className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-m3-outline-variant/20 bg-surface-elev focus:outline-none focus:ring-2 focus:ring-m3-secondary/20"
                   />
@@ -879,19 +1196,26 @@ export default function LessonManagePage() {
                 <div className="max-h-48 overflow-y-auto space-y-0.5 rounded-xl border border-m3-outline-variant/10 bg-surface-elev p-1">
                   {filteredLessons.length === 0 && (
                     <p className="text-xs text-m3-on-surface-variant/60 text-center py-3">
-                      {allLessons.length === 0 ? "No other lessons in this course." : "No lessons match."}
+                      {allLessons.length === 0
+                        ? "No other lessons in this course."
+                        : "No lessons match."}
                     </p>
                   )}
                   {filteredLessons.map((l) => {
                     const selected = prerequisites.includes(l.id);
-                    const TypeIcon = LESSON_TYPE_OPTIONS.find((t) => t.value === l.lesson_type)?.icon ?? BookOpen;
+                    const TypeIcon =
+                      LESSON_TYPE_OPTIONS.find((t) => t.value === l.lesson_type)
+                        ?.icon ?? BookOpen;
                     return (
                       <button
-                        key={l.id} type="button"
+                        key={l.id}
+                        type="button"
                         onClick={() => togglePrerequisite(l.id)}
                         className={cn(
                           "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer text-left",
-                          selected ? "bg-m3-primary-fixed text-m3-primary" : "hover:bg-m3-surface-container-low text-m3-on-surface"
+                          selected
+                            ? "bg-m3-primary-fixed text-m3-primary"
+                            : "hover:bg-m3-surface-container-low text-m3-on-surface",
                         )}
                       >
                         <TypeIcon className="h-3.5 w-3.5 shrink-0 text-m3-on-surface-variant" />
@@ -903,7 +1227,10 @@ export default function LessonManagePage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => { setPrereqOpen(false); setPrereqSearch(""); }}
+                  onClick={() => {
+                    setPrereqOpen(false);
+                    setPrereqSearch("");
+                  }}
                   className="w-full text-xs text-m3-on-surface-variant py-1.5 hover:text-m3-on-surface transition-colors cursor-pointer font-bold"
                 >
                   Done
@@ -927,12 +1254,21 @@ export default function LessonManagePage() {
               <Sparkles className="h-4 w-4 text-m3-secondary" />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold text-m3-on-surface">AI Material Hub</p>
-              <p className="text-xs text-m3-on-surface-variant mt-0.5 leading-relaxed">
-                Upload videos or PDFs to generate quizzes, extract knowledge graphs, and track student readiness.
+              <p className="text-sm font-bold text-m3-on-surface">
+                AI Material Hub
               </p>
-              <Link to="/teacher/courses/$courseId/lessons/$lessonId/materials" params={{ courseId, lessonId }}>
-                <button type="button" className="mt-2.5 text-xs font-bold text-m3-secondary hover:text-m3-primary transition-colors cursor-pointer">
+              <p className="text-xs text-m3-on-surface-variant mt-0.5 leading-relaxed">
+                Upload videos or PDFs to generate quizzes, extract knowledge
+                graphs, and track student readiness.
+              </p>
+              <Link
+                to="/teacher/courses/$courseId/lessons/$lessonId/materials"
+                params={{ courseId, lessonId }}
+              >
+                <button
+                  type="button"
+                  className="mt-2.5 text-xs font-bold text-m3-secondary hover:text-m3-primary transition-colors cursor-pointer"
+                >
                   Go to AI Hub →
                 </button>
               </Link>
@@ -942,15 +1278,25 @@ export default function LessonManagePage() {
           {/* ── Danger zone ── */}
           {archiveConfirm ? (
             <div className="w-full rounded-xl border border-m3-error/30 bg-m3-error/5 p-4 space-y-3">
-              <p className="text-sm font-bold text-m3-error text-center">Archive this lesson?</p>
+              <p className="text-sm font-bold text-m3-error text-center">
+                Archive this lesson?
+              </p>
               <p className="text-xs text-m3-on-surface-variant text-center">
                 Students will no longer see it. You can restore it later.
               </p>
               <div className="flex gap-2">
-                <button type="button" onClick={() => setArchiveConfirm(false)} className="flex-1 py-2.5 rounded-xl border border-m3-outline-variant/30 text-sm font-bold text-m3-on-surface-variant hover:bg-m3-surface-container transition-colors cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => setArchiveConfirm(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-m3-outline-variant/30 text-sm font-bold text-m3-on-surface-variant hover:bg-m3-surface-container transition-colors cursor-pointer"
+                >
                   Cancel
                 </button>
-                <button type="button" onClick={handleArchive} className="flex-1 py-2.5 rounded-xl bg-m3-error text-white text-sm font-bold hover:opacity-90 cursor-pointer">
+                <button
+                  type="button"
+                  onClick={handleArchive}
+                  className="flex-1 py-2.5 rounded-xl bg-m3-error text-white text-sm font-bold hover:opacity-90 cursor-pointer"
+                >
                   Yes, Archive
                 </button>
               </div>
@@ -968,15 +1314,26 @@ export default function LessonManagePage() {
 
           {deleteConfirm ? (
             <div className="w-full rounded-xl border border-m3-error/50 bg-m3-error/5 p-4 space-y-3">
-              <p className="text-sm font-bold text-m3-error text-center">Permanently delete this lesson?</p>
+              <p className="text-sm font-bold text-m3-error text-center">
+                Permanently delete this lesson?
+              </p>
               <p className="text-xs text-m3-on-surface-variant text-center">
-                This cannot be undone. All resources and materials will be removed.
+                This cannot be undone. All resources and materials will be
+                removed.
               </p>
               <div className="flex gap-2">
-                <button type="button" onClick={() => setDeleteConfirm(false)} className="flex-1 py-2.5 rounded-xl border border-m3-outline-variant/30 text-sm font-bold text-m3-on-surface-variant hover:bg-m3-surface-container transition-colors cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-m3-outline-variant/30 text-sm font-bold text-m3-on-surface-variant hover:bg-m3-surface-container transition-colors cursor-pointer"
+                >
                   Cancel
                 </button>
-                <button type="button" onClick={handleDelete} className="flex-1 py-2.5 rounded-xl bg-m3-error text-white text-sm font-bold hover:opacity-90 cursor-pointer">
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="flex-1 py-2.5 rounded-xl bg-m3-error text-white text-sm font-bold hover:opacity-90 cursor-pointer"
+                >
                   Yes, Delete
                 </button>
               </div>
@@ -999,7 +1356,9 @@ export default function LessonManagePage() {
         aria-live="polite"
         className={cn(
           "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-xl bg-m3-on-surface text-m3-surface text-sm font-bold transition-all duration-300",
-          feedback ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"
+          feedback
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 translate-y-4 pointer-events-none",
         )}
       >
         {feedback}

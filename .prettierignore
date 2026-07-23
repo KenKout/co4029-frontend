@@ -1,0 +1,8 @@
+dist
+node_modules
+coverage
+playwright-report
+test-results
+src/lib/api/openapi-types.d.ts
+src/lib/api/openapi-snapshot.json
+openapi-snapshot.json

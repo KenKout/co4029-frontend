@@ -24,7 +24,9 @@ export default function ProgressPage() {
           <BarChart3 className="h-6 w-6 text-m3-primary" />
           {t("progress_page.title")}
         </h1>
-        <p className="text-sm text-m3-on-surface-variant mt-1">{t("progress_page.subtitle")}</p>
+        <p className="text-sm text-m3-on-surface-variant mt-1">
+          {t("progress_page.subtitle")}
+        </p>
       </div>
 
       <div className="rounded-xl bg-card ghost-border p-5 flex flex-wrap items-center gap-6">
@@ -33,7 +35,9 @@ export default function ProgressPage() {
             <Brain className="h-5 w-5 text-m3-primary" />
           </div>
           <div>
-            <p className="text-2xl font-headline font-bold text-m3-on-surface">{dueLabel}</p>
+            <p className="text-2xl font-headline font-bold text-m3-on-surface">
+              {dueLabel}
+            </p>
             <p className="text-xs text-m3-on-surface-variant">
               {t("progress_page.cards_due")}
             </p>
@@ -41,7 +45,10 @@ export default function ProgressPage() {
         </div>
         <div className="ml-auto flex gap-2">
           <Link to="/study/cards-due">
-            <Button size="sm" className="gradient-primary text-white border-0 gap-2">
+            <Button
+              size="sm"
+              className="gradient-primary text-white border-0 gap-2"
+            >
               {t("progress_page.review_now")} <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
@@ -60,12 +67,17 @@ export default function ProgressPage() {
         {courses.isLoading ? (
           <div className="space-y-2">
             {[1, 2].map((i) => (
-              <div key={i} className="h-20 bg-m3-surface-container animate-pulse rounded-xl" />
+              <div
+                key={i}
+                className="h-20 bg-m3-surface-container animate-pulse rounded-xl"
+              />
             ))}
           </div>
         ) : courses.isError ? (
           <div className="rounded-xl bg-m3-surface-container-lowest ghost-border p-10 text-center">
-            <p className="text-sm text-m3-error">{t("progress_page.load_failed")}</p>
+            <p className="text-sm text-m3-error">
+              {t("progress_page.load_failed")}
+            </p>
           </div>
         ) : !courses.items?.length ? (
           <div className="rounded-xl bg-m3-surface-container-lowest ghost-border p-10 text-center">
@@ -74,13 +86,19 @@ export default function ProgressPage() {
               {t("progress_page.no_courses")}
             </p>
             <Link to="/courses">
-              <Button size="sm" className="gradient-primary text-white border-0 gap-2">
-                {t("progress_page.browse_courses")} <ArrowRight className="h-4 w-4" />
+              <Button
+                size="sm"
+                className="gradient-primary text-white border-0 gap-2"
+              >
+                {t("progress_page.browse_courses")}{" "}
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
         ) : (
-          courses.items.map((course) => <CourseProgressCard key={course.id} course={course} />)
+          courses.items.map((course) => (
+            <CourseProgressCard key={course.id} course={course} />
+          ))
         )}
       </div>
     </div>
@@ -91,14 +109,18 @@ function CourseProgressCard({ course }: { course: Course }) {
   const { t } = useTranslation();
   const { data: progress } = useMyCourseProgress(course.id);
 
-  const percent = progress ? Math.min(100, Number(progress.completion_percent) || 0) : null;
+  const percent = progress
+    ? Math.min(100, Number(progress.completion_percent) || 0)
+    : null;
   const hours = progress ? progress.total_time_seconds / 3600 : 0;
 
   return (
     <div className="rounded-xl bg-card ghost-border p-5 space-y-3">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="font-medium text-m3-on-surface truncate">{course.title}</p>
+          <p className="font-medium text-m3-on-surface truncate">
+            {course.title}
+          </p>
           {progress && (
             <p className="text-xs text-m3-on-surface-variant mt-0.5 flex items-center gap-3 flex-wrap">
               <span>

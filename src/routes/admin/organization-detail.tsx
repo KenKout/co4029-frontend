@@ -294,9 +294,7 @@ function DomainsTab({ orgId }: { orgId: string }) {
               className="px-4 py-3 flex items-center justify-between gap-3"
             >
               <div className="min-w-0">
-                <p className="font-mono text-sm text-text-strong">
-                  {d.domain}
-                </p>
+                <p className="font-mono text-sm text-text-strong">{d.domain}</p>
                 {d.auto_provision && (
                   <p className="text-xs text-emerald-700 mt-0.5">
                     {t("admin.organizations.fields.auto_provision")}
@@ -481,13 +479,7 @@ function UnitsTab({ orgId }: { orgId: string }) {
 }
 
 // Membership row with inline status edit
-function MembershipRow({
-  m,
-  orgId,
-}: {
-  m: MembershipRead;
-  orgId: string;
-}) {
+function MembershipRow({ m, orgId }: { m: MembershipRead; orgId: string }) {
   const { t, i18n } = useTranslation();
   const patch = usePatchMembership(orgId);
   const remove = useDeleteMembership(orgId);
@@ -687,7 +679,9 @@ function UserSearchCombobox({
           }}
           onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
-          placeholder={t("admin.organizations.memberships.user_search_placeholder")}
+          placeholder={t(
+            "admin.organizations.memberships.user_search_placeholder",
+          )}
           className="pl-10"
         />
       </div>
@@ -741,17 +735,23 @@ function MembershipsTab({ orgId }: { orgId: string }) {
   const { data: members, isLoading } = useOrganizationMemberships(orgId);
   const create = useCreateMembership(orgId);
   const [mode, setMode] = useState<"list" | "add" | "bulk">("list");
-  const [selectedUser, setSelectedUser] = useState<AdminUserSearchRow | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUserSearchRow | null>(
+    null,
+  );
   const [studentCode, setStudentCode] = useState("");
   const [employeeCode, setEmployeeCode] = useState("");
   const [memStatus, setMemStatus] = useState<MembershipStatus>("active");
 
   // Bulk add state
   const [bulkText, setBulkText] = useState("");
-  const [bulkResults, setBulkResults] = useState<{ ok: string[]; failed: string[] } | null>(null);
+  const [bulkResults, setBulkResults] = useState<{
+    ok: string[];
+    failed: string[];
+  } | null>(null);
   const [bulkPending, setBulkPending] = useState(false);
 
-  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const UUID_RE =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   const parsedBulk = useMemo(() => {
     const userIds: string[] = [];
@@ -847,7 +847,9 @@ function MembershipsTab({ orgId }: { orgId: string }) {
             className="gap-2"
           >
             <Users className="h-4 w-4" />
-            {t("admin.organizations.memberships.bulk_add_title", { defaultValue: "Bulk Add" })}
+            {t("admin.organizations.memberships.bulk_add_title", {
+              defaultValue: "Bulk Add",
+            })}
           </Button>
         </div>
         {mode !== "list" && (
@@ -855,7 +857,10 @@ function MembershipsTab({ orgId }: { orgId: string }) {
             type="button"
             size="sm"
             variant="ghost"
-            onClick={() => { setMode("list"); setBulkResults(null); }}
+            onClick={() => {
+              setMode("list");
+              setBulkResults(null);
+            }}
             className="gap-1"
           >
             <X className="h-4 w-4" />
@@ -939,10 +944,7 @@ function MembershipsTab({ orgId }: { orgId: string }) {
             </label>
           </div>
           <div className="flex justify-end">
-            <Button
-              type="submit"
-              disabled={create.isPending || !selectedUser}
-            >
+            <Button type="submit" disabled={create.isPending || !selectedUser}>
               {create.isPending
                 ? t("admin.organizations.actions.adding")
                 : t("admin.organizations.actions.add")}
@@ -958,11 +960,14 @@ function MembershipsTab({ orgId }: { orgId: string }) {
         >
           <div>
             <p className="text-sm font-semibold text-text-strong">
-              {t("admin.organizations.memberships.bulk_add_title", { defaultValue: "Bulk Add Members" })}
+              {t("admin.organizations.memberships.bulk_add_title", {
+                defaultValue: "Bulk Add Members",
+              })}
             </p>
             <p className="text-xs text-text-muted mt-1">
               {t("admin.organizations.memberships.bulk_add_hint", {
-                defaultValue: "Paste one user UUID per line. All will be added as active members. Find user UUIDs on the Users page.",
+                defaultValue:
+                  "Paste one user UUID per line. All will be added as active members. Find user UUIDs on the Users page.",
               })}
             </p>
           </div>
@@ -970,12 +975,16 @@ function MembershipsTab({ orgId }: { orgId: string }) {
             value={bulkText}
             onChange={(e) => setBulkText(e.target.value)}
             rows={8}
-            placeholder={"550e8400-e29b-41d4-a716-446655440000\na1b2c3d4-e5f6-7890-abcd-ef1234567890"}
+            placeholder={
+              "550e8400-e29b-41d4-a716-446655440000\na1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            }
             className="w-full px-4 py-3 text-sm font-mono bg-white border border-m3-outline-variant/40 rounded-xl text-text-strong focus:outline-none focus:ring-2 focus:ring-m3-primary/30 placeholder:text-text-muted/40"
           />
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-text-muted">
             <div className="flex gap-3">
-              <span>UUID: <strong>{parsedBulk.userIds.length}</strong></span>
+              <span>
+                UUID: <strong>{parsedBulk.userIds.length}</strong>
+              </span>
               {parsedBulk.invalid.length > 0 && (
                 <span className="text-amber-700">
                   {parsedBulk.invalid.length} invalid line(s) will be skipped
@@ -985,16 +994,15 @@ function MembershipsTab({ orgId }: { orgId: string }) {
             <Button
               type="submit"
               size="sm"
-              disabled={
-                bulkPending ||
-                parsedBulk.userIds.length === 0
-              }
+              disabled={bulkPending || parsedBulk.userIds.length === 0}
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
               {bulkPending
                 ? t("admin.organizations.actions.adding")
-                : t("admin.organizations.memberships.bulk_add_title", { defaultValue: "Add All" })}
+                : t("admin.organizations.memberships.bulk_add_title", {
+                    defaultValue: "Add All",
+                  })}
             </Button>
           </div>
 

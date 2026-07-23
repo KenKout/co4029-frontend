@@ -81,8 +81,12 @@ export default function SettingsNotificationsPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const navigate = useNavigate();
-  const { data: prefs, isLoading, isError, error } =
-    useNotificationPreferences();
+  const {
+    data: prefs,
+    isLoading,
+    isError,
+    error,
+  } = useNotificationPreferences();
   const patch = usePatchNotificationPreference();
 
   // Settings sub-pages are typically reached from /settings; fall back there
@@ -119,7 +123,8 @@ export default function SettingsNotificationsPage() {
       {
         onError: (err) =>
           toast.error(
-            (err as Error).message || t("settings_notifications.errors.patch_failed"),
+            (err as Error).message ||
+              t("settings_notifications.errors.patch_failed"),
           ),
       },
     );
@@ -162,7 +167,8 @@ export default function SettingsNotificationsPage() {
                 {t("settings_notifications.load_failed")}
               </p>
               <p className="text-xs text-m3-on-surface-variant">
-                {(error as Error)?.message ?? t("settings_notifications.retry_hint")}
+                {(error as Error)?.message ??
+                  t("settings_notifications.retry_hint")}
               </p>
             </div>
           ) : (
@@ -171,7 +177,9 @@ export default function SettingsNotificationsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-m3-surface-container-low">
-                      <TableHead>{t("settings_notifications.category_col")}</TableHead>
+                      <TableHead>
+                        {t("settings_notifications.category_col")}
+                      </TableHead>
                       {CHANNEL_IDS.map((ch) => (
                         <TableHead key={ch} className="text-center w-32">
                           {t(`settings_notifications.channel.${ch}`)}
@@ -186,7 +194,10 @@ export default function SettingsNotificationsPage() {
                           {row.label}
                         </TableCell>
                         {row.cells.map((cell) => (
-                          <TableCell key={cell.channel} className="py-4 text-center">
+                          <TableCell
+                            key={cell.channel}
+                            className="py-4 text-center"
+                          >
                             <div className="inline-flex">
                               <ToggleSwitch
                                 checked={cell.enabled}

@@ -68,9 +68,7 @@ export function useLessonSrSummary(lessonId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.sr.lessonSummary(lessonId ?? ""),
     queryFn: () =>
-      apiFetch<StudentLessonSummaryRead>(
-        `/me/lessons/${lessonId}/sr-summary`,
-      ),
+      apiFetch<StudentLessonSummaryRead>(`/me/lessons/${lessonId}/sr-summary`),
     enabled: !!lessonId,
     staleTime: STALE_5M,
   });
@@ -80,9 +78,7 @@ export function useCourseSrOverview(courseId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.sr.courseOverview(courseId ?? ""),
     queryFn: () =>
-      apiFetch<LessonOverviewItem[]>(
-        `/me/courses/${courseId}/sr-overview`,
-      ),
+      apiFetch<LessonOverviewItem[]>(`/me/courses/${courseId}/sr-overview`),
     enabled: !!courseId,
     staleTime: STALE_60S,
   });
@@ -123,11 +119,7 @@ export function useDifficultCards(
   topN = 10,
 ) {
   return useQuery({
-    queryKey: queryKeys.sr.difficultCards(
-      courseId ?? "",
-      lessonId ?? "",
-      topN,
-    ),
+    queryKey: queryKeys.sr.difficultCards(courseId ?? "", lessonId ?? "", topN),
     queryFn: () =>
       apiFetch<DifficultCardWithPrompt[]>(
         `/teacher/courses/${courseId}/lessons/${lessonId}/difficult-cards?top_n=${topN}`,
@@ -157,9 +149,7 @@ export function useAtRiskStudents(courseId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.sr.atRisk(courseId ?? ""),
     queryFn: () =>
-      apiFetch<AtRiskStudent[]>(
-        `/teacher/courses/${courseId}/at-risk`,
-      ),
+      apiFetch<AtRiskStudent[]>(`/teacher/courses/${courseId}/at-risk`),
     enabled: !!courseId,
     staleTime: STALE_5M,
   });
@@ -176,10 +166,7 @@ export function useStudentSrDetail(
 ) {
   const { recentReviewsLimit = 20 } = opts;
   return useQuery({
-    queryKey: queryKeys.sr.studentDetail(
-      courseId ?? "",
-      studentId ?? "",
-    ),
+    queryKey: queryKeys.sr.studentDetail(courseId ?? "", studentId ?? ""),
     queryFn: () =>
       apiFetch<StudentSrDetail>(
         `/teacher/courses/${courseId}/students/${studentId}/sr-detail?recent_reviews_limit=${recentReviewsLimit}`,

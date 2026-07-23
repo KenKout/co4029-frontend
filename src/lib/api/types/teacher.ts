@@ -5,6 +5,35 @@ export interface MaterialStatus {
   processing_error: string | null;
   active_job_id: string | null;
   active_job_status: string | null;
+  // Live-progress fields from the /processing-summary endpoint
+  // (ProcessingProgress). `progress_percent` is the real 0–100 waypoint the
+  // worker publishes to Redis per stage; `latest_log_line` carries the
+  // current stage label. Optional because older payloads / list rows may
+  // omit them.
+  progress_percent?: number;
+  latest_log_line?: string | null;
+}
+
+export interface KGNode {
+  id: string;
+  label: string;
+  type: string;
+  definition: string | null;
+  weight: number;
+}
+
+export interface KGEdge {
+  source: string;
+  target: string;
+  relation: "PREREQUISITE_OF" | "RELATED_TO";
+}
+
+export interface LessonKnowledgeGraph {
+  lesson_id: string;
+  enabled: boolean;
+  nodes: KGNode[];
+  edges: KGEdge[];
+  total_concepts: number;
 }
 
 export interface LearningMaterial {
@@ -64,18 +93,18 @@ export interface QuizGeneratePayload {
   // Defaults preserve topic-mode behaviour, so existing callers continue
   // to work unchanged.
   generation_mode?: "topic" | "coverage";
-  focus_topics?: string[];     // each <= 200 chars, list <= 10
-  avoid_topics?: string[];     // each <= 200 chars, list <= 10
-  extra_instructions?: string | null;  // <= 1000 chars
-  append?: boolean;            // default false: replace existing questions
+  focus_topics?: string[]; // each <= 200 chars, list <= 10
+  avoid_topics?: string[]; // each <= 200 chars, list <= 10
+  extra_instructions?: string | null; // <= 1000 chars
+  append?: boolean; // default false: replace existing questions
   coverage_options?: CoverageOptions | null;
 }
 
 export interface CoverageOptions {
-  min_per_section?: number;       // default 1, 0..10
-  max_per_section?: number;       // default 5, 1..10
-  skip_summaries?: boolean;       // default true
-  section_ids?: string[] | null;  // null = all sections
+  min_per_section?: number; // default 1, 0..10
+  max_per_section?: number; // default 5, 1..10
+  skip_summaries?: boolean; // default true
+  section_ids?: string[] | null; // null = all sections
 }
 
 // --- Lesson outline preview (FR-3, FR-4) -----------------------------------

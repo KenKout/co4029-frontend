@@ -1,4 +1,12 @@
-import { Check, Loader2, Mic, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import {
+  Check,
+  FastForward,
+  Loader2,
+  Mic,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -29,7 +37,8 @@ export type SetupAction =
   | "confirm_language"
   | "continue_setup"
   | "ready"
-  | "not_ready";
+  | "not_ready"
+  | "skip_setup";
 
 type ChecklistItemState = "done" | "active" | "upcoming";
 
@@ -42,7 +51,10 @@ const STAGE_ORDER: readonly SetupStage[] = [
 ];
 
 /** Which checklist rows are considered satisfied once we reach a given stage. */
-function itemState(rowStage: SetupStage, current: SetupStage): ChecklistItemState {
+function itemState(
+  rowStage: SetupStage,
+  current: SetupStage,
+): ChecklistItemState {
   const rowIndex = STAGE_ORDER.indexOf(rowStage);
   const currentIndex = STAGE_ORDER.indexOf(current);
   if (rowIndex < currentIndex) return "done";
@@ -68,7 +80,8 @@ function ChecklistRow({
       className={cn(
         "flex items-start gap-3 rounded-xl border px-4 py-3 transition-colors",
         state === "done" && "border-success/30 bg-success/5",
-        state === "active" && "border-primary/40 bg-primary-soft/40 shadow-editorial",
+        state === "active" &&
+          "border-primary/40 bg-primary-soft/40 shadow-editorial",
         state === "upcoming" && "border-border bg-surface-muted/40 opacity-70",
       )}
     >
@@ -78,7 +91,8 @@ function ChecklistRow({
           "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full border",
           state === "done" && "border-success bg-success text-white",
           state === "active" && "border-primary/30 bg-white text-primary",
-          state === "upcoming" && "border-border-strong bg-white text-text-subtle",
+          state === "upcoming" &&
+            "border-border-strong bg-white text-text-subtle",
         )}
       >
         {state === "done" ? <Check className="h-4 w-4" /> : icon}
@@ -141,7 +155,7 @@ export function SetupChecklist({
   return (
     <section
       aria-labelledby="setup-checklist-title"
-      className="mx-auto w-full max-w-[520px] rounded-2xl border border-border bg-white px-5 py-6 shadow-editorial motion-safe:animate-fade-in-up sm:px-7 sm:py-7"
+      className="mx-auto mt-6 w-full max-w-[520px] rounded-2xl border border-border bg-white px-5 py-6 shadow-editorial motion-safe:animate-fade-in-up sm:mt-8 sm:px-7 sm:py-7"
     >
       <div className="mb-5 text-center">
         <span className="mb-3 inline-flex size-12 items-center justify-center rounded-full border border-primary/15 bg-primary-soft text-primary">
@@ -218,7 +232,9 @@ export function SetupChecklist({
                   maxLength={60}
                   autoFocus
                   autoComplete="off"
-                  placeholder={t("course_interview.onboarding.name_placeholder")}
+                  placeholder={t(
+                    "course_interview.onboarding.name_placeholder",
+                  )}
                   className="h-11 max-w-[220px] flex-1"
                   aria-label={t("course_interview.onboarding.ask_name")}
                 />
@@ -310,8 +326,9 @@ export function SetupChecklist({
         </ChecklistRow>
       </ol>
 
-      {/* Preparation + readiness collapse into a single primary Start action so
-          the candidate isn't gated behind extra AI messages. */}
+      {/* Preparation + readiness each offer a primary "advance" action and a
+          secondary "hold" action, so when the interviewer asks whether the
+          candidate needs a moment, both answers are available (not just Start). */}
       {(stage === "preparation" || isReady) && (
         <div className="mt-5 border-t border-border pt-5">
           <Button
@@ -328,9 +345,42 @@ export function SetupChecklist({
             )}
             {t("course_interview.onboarding.ready")}
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            disabled={disabled}
+            onClick={() => onAction(isReady ? "not_ready" : "needs_adjustment")}
+            className="mt-2 min-h-11 w-full rounded-xl text-sm font-semibold"
+          >
+            {t(
+              isReady
+                ? "course_interview.onboarding.not_ready"
+                : "course_interview.onboarding.need_moment",
+            )}
+          </Button>
           <p className="mt-2 text-center text-xs text-text-muted">
             {t("course_interview.onboarding.timer_waiting")}
           </p>
+        </div>
+      )}
+
+      {/* Skip fast-forwards the remaining setup checks straight to the readiness
+          briefing. Shown only before readiness; it never starts the assessed
+          timer (the candidate still confirms "ready" on the briefing). */}
+      {!isReady && stage !== "preparation" && (
+        <div className="mt-4 border-t border-border pt-4 text-center">
+          <Button
+            type="button"
+            variant="ghost"
+            size="lg"
+            disabled={disabled}
+            onClick={() => onAction("skip_setup")}
+            className="min-h-11 rounded-xl text-sm font-medium text-text-muted"
+          >
+            <FastForward className="h-4 w-4" />
+            {t("course_interview.onboarding.skip_setup")}
+          </Button>
         </div>
       )}
     </section>
