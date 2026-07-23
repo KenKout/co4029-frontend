@@ -181,6 +181,11 @@
       "drafts": "Drafts",
       "ai_enabled": "AI Enabled"
     },
+    "actions": {
+      "ungraded_quizzes": "quiz attempts to grade",
+      "pending_interviews": "interviews awaiting evaluation",
+      "draft_courses": "drafts to publish"
+    },
     "your_courses": {
       "title": "Your Courses",
       "subtitle": "Click to manage modules, lessons, and materials",

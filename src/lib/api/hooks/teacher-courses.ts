@@ -37,6 +37,23 @@ export function useTeacherCourses() {
   });
 }
 
+export interface TeacherDashboardStats {
+  draft_courses: number;
+  ungraded_quizzes: number;
+  pending_interviews: number;
+}
+
+// Actionable counts for the teacher dashboard's clickable widgets. Scoped
+// server-side to the caller's authorable courses.
+export function useTeacherDashboardStats() {
+  return useQuery({
+    queryKey: ["teacher", "dashboard", "stats"],
+    queryFn: () =>
+      apiFetch<TeacherDashboardStats>("/teacher/dashboard/stats"),
+    staleTime: 1000 * 60,
+  });
+}
+
 export function useTeacherCourseById(courseId: string | undefined) {
   return useQuery({
     queryKey: ["teacher", "courses", courseId],

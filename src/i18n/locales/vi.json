@@ -200,6 +200,11 @@
       "beginner": "Cơ bản",
       "intermediate": "Trung cấp",
       "advanced": "Nâng cao"
+    },
+    "actions": {
+      "ungraded_quizzes": "bài kiểm tra cần chấm",
+      "pending_interviews": "phỏng vấn chờ đánh giá",
+      "draft_courses": "bản nháp cần xuất bản"
     }
   },
   "teacher_course_settings": {
