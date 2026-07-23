@@ -2840,6 +2840,24 @@
     },
     "qbank": {
       "search_placeholder": "Search questions, answers, outcomes…",
+      "pending_only": "Pending only ({{count}})",
+      "bulk": {
+        "select_all": "Select all",
+        "select_one": "Select question",
+        "selected": "{{count}} selected",
+        "count": "{{count}} selected",
+        "set_status": "Set status",
+        "set_outcome": "Set outcome",
+        "add_to_bank": "Add to bank",
+        "clear": "Clear",
+        "delete_confirm": "Delete {{count}} selected question(s)? This cannot be undone.",
+        "status_done": "Updated {{count}} question(s)",
+        "outcome_done": "Reassigned {{count}} question(s)",
+        "bank_done": "Added {{count}} question(s) to the course bank",
+        "delete_done": "Deleted {{count}} question(s)",
+        "partial": "{{ok}} done, {{failed}} failed",
+        "failed": "Bulk action failed"
+      },
       "collapse_all": "Collapse all",
       "view_answer": "View answer",
       "hide_answer": "Hide answer",
@@ -2903,6 +2921,7 @@
         "type": "Type",
         "source": "Source",
         "all": "All",
+        "all_count": "All ({{count}})",
         "no_outcome": "No outcome"
       },
       "source": {

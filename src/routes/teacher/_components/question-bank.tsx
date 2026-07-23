@@ -199,6 +199,10 @@ export function QuestionBank({
   const [reordering, setReordering] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [savingId, setSavingId] = useState<string | null>(null);
+  // Bulk selection: ids of questions ticked for a batch action. `bulkBusy`
+  // guards the contextual action bar while a batch mutation runs.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
   // Question-bank state.
   const [bankingId, setBankingId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
@@ -385,6 +389,205 @@ export function QuestionBank({
     setDifficultyFilter("all");
     setTypeFilter("all");
     setSourceFilter("all");
+  }
+
+  // Count of questions per review status (over the full pool, not the filtered
+  // view) so filter options and the "pending only" quick filter can show how
+  // many they'll surface before you click.
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const q of sorted) {
+      counts[q.review_status] = (counts[q.review_status] ?? 0) + 1;
+    }
+    return counts;
+  }, [sorted]);
+  const pendingCount = statusCounts.pending ?? 0;
+  // Whether the view is currently narrowed to just the pending status (the
+  // quick-filter's active state).
+  const pendingOnlyActive = statusFilter === "pending";
+  function togglePendingOnly() {
+    setStatusFilter((prev) => (prev === "pending" ? "all" : "pending"));
+  }
+
+  // ── Bulk selection ──────────────────────────────────────────────────────
+  // Selection operates over the currently FILTERED, non-deleting questions, so
+  // "select all" means "all I can currently see". Selecting then changing a
+  // filter keeps prior picks that are still visible and drops the rest.
+  const selectableIds = useMemo(
+    () => filtered.filter((q) => !deletingIds.has(q.id)).map((q) => q.id),
+    [filtered, deletingIds],
+  );
+  const selectedVisibleIds = useMemo(
+    () => selectableIds.filter((id) => selectedIds.has(id)),
+    [selectableIds, selectedIds],
+  );
+  const allVisibleSelected =
+    selectableIds.length > 0 &&
+    selectedVisibleIds.length === selectableIds.length;
+  const someVisibleSelected =
+    selectedVisibleIds.length > 0 && !allVisibleSelected;
+
+  function toggleSelected(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function toggleSelectAll() {
+    setSelectedIds((prev) => {
+      if (
+        selectableIds.length > 0 &&
+        selectableIds.every((id) => prev.has(id))
+      ) {
+        // Everything visible is selected → clear the visible ones.
+        const next = new Set(prev);
+        for (const id of selectableIds) next.delete(id);
+        return next;
+      }
+      // Otherwise select all visible (union with any off-screen picks).
+      return new Set([...prev, ...selectableIds]);
+    });
+  }
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  // Resolve the currently-selected, still-present question objects.
+  const selectedQuestions = useMemo(
+    () => sorted.filter((q) => selectedIds.has(q.id) && !deletingIds.has(q.id)),
+    [sorted, selectedIds, deletingIds],
+  );
+
+  // Run a PATCH over every selected question, report a combined toast, and
+  // clear selection. Used by set-status / set-outcome bulk actions.
+  async function bulkPatch(
+    patch: Partial<{
+      review_status: ReviewStatus;
+      linked_outcome_id: string | null;
+    }>,
+    successKey: string,
+  ) {
+    const targets = selectedQuestions;
+    if (targets.length === 0 || bulkBusy) return;
+    setBulkBusy(true);
+    try {
+      const results = await Promise.allSettled(
+        targets.map((q) =>
+          updateQuestion.mutateAsync({ questionId: q.id, patch }),
+        ),
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+      const ok = results.length - failed;
+      if (failed === 0) {
+        toast.success(t(successKey, { count: ok }));
+      } else if (ok > 0) {
+        toast.error(
+          t("teacher_interview_config.qbank.bulk.partial", {
+            ok,
+            failed,
+          }),
+        );
+      } else {
+        toast.error(t("teacher_interview_config.qbank.bulk.failed"));
+      }
+      clearSelection();
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  async function bulkSetStatus(next: ReviewStatus) {
+    await bulkPatch(
+      { review_status: next },
+      "teacher_interview_config.qbank.bulk.status_done",
+    );
+  }
+  async function bulkSetOutcome(next: string | null) {
+    await bulkPatch(
+      { linked_outcome_id: next },
+      "teacher_interview_config.qbank.bulk.outcome_done",
+    );
+  }
+  async function bulkAddToBank() {
+    const targets = selectedQuestions;
+    if (targets.length === 0 || bulkBusy) return;
+    setBulkBusy(true);
+    try {
+      let ok = 0;
+      let failed = 0;
+      // Sequential: keeps load gentle and matches import semantics.
+      for (const q of targets) {
+        // Skip anything already banked (by normalized prompt).
+        if (bankedPrompts.has(q.prompt_text.trim().toLowerCase())) continue;
+        try {
+          await addToBank.mutateAsync({
+            prompt_text: q.prompt_text,
+            question_type: q.question_type,
+            difficulty: q.difficulty ?? null,
+            model_answer: q.model_answer ?? null,
+            source_config_id: configId,
+          });
+          ok += 1;
+        } catch {
+          failed += 1;
+        }
+      }
+      if (failed === 0) {
+        toast.success(
+          t("teacher_interview_config.qbank.bulk.bank_done", { count: ok }),
+        );
+      } else {
+        toast.error(
+          t("teacher_interview_config.qbank.bulk.partial", { ok, failed }),
+        );
+      }
+      clearSelection();
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+  async function bulkDelete() {
+    const targets = selectedQuestions;
+    if (targets.length === 0 || bulkBusy) return;
+    if (
+      !window.confirm(
+        t("teacher_interview_config.qbank.bulk.delete_confirm", {
+          count: targets.length,
+        }),
+      )
+    )
+      return;
+    setBulkBusy(true);
+    // Animate all selected out together, then delete.
+    setDeletingIds((prev) => {
+      const next = new Set(prev);
+      for (const q of targets) next.add(q.id);
+      return next;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 280));
+    try {
+      const results = await Promise.allSettled(
+        targets.map((q) => deleteQuestion.mutateAsync(q.id)),
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+      const ok = results.length - failed;
+      if (failed === 0) {
+        toast.success(
+          t("teacher_interview_config.qbank.bulk.delete_done", { count: ok }),
+        );
+      } else {
+        toast.error(
+          t("teacher_interview_config.qbank.bulk.partial", { ok, failed }),
+        );
+        // The query refetch reconciles reality — any rows that failed to
+        // delete reappear on the next invalidation.
+      }
+      clearSelection();
+    } finally {
+      setBulkBusy(false);
+    }
   }
 
   // ── Expand / collapse ──────────────────────────────────────────────────────
@@ -852,15 +1055,40 @@ export function QuestionBank({
             </div>
             {/* Filter selects below the search bar */}
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Quick filter: jump straight to the pending-review pile — the
+                  primary curation workflow. Shows the pending count. */}
+              {pendingCount > 0 && (
+                <button
+                  type="button"
+                  onClick={togglePendingOnly}
+                  aria-pressed={pendingOnlyActive}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer",
+                    pendingOnlyActive
+                      ? "bg-amber-500 text-white"
+                      : "bg-amber-50 text-amber-700 hover:bg-amber-100",
+                  )}
+                >
+                  <CircleDot className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t("teacher_interview_config.qbank.pending_only", {
+                    count: pendingCount,
+                  })}
+                </button>
+              )}
               <FilterSelect
                 label={t("teacher_interview_config.qbank.filter.status")}
                 value={statusFilter}
                 onChange={(v) => setStatusFilter(v as ReviewStatus | "all")}
                 options={[
-                  { value: "all", label: t("teacher_interview_config.qbank.filter.all") },
+                  {
+                    value: "all",
+                    label: t("teacher_interview_config.qbank.filter.all_count", {
+                      count: sorted.length,
+                    }),
+                  },
                   ...STATUS_ORDER.map((s) => ({
                     value: s,
-                    label: t(`teacher_interview_config.qbank.status.${statusMeta(s).key}`),
+                    label: `${t(`teacher_interview_config.qbank.status.${statusMeta(s).key}`)} (${statusCounts[s] ?? 0})`,
                   })),
                 ]}
               />
@@ -1048,7 +1276,42 @@ export function QuestionBank({
             </Button>
           </div>
         ) : (
-          (() => {
+          <div className="space-y-2">
+            {/* Select-all row + contextual bulk-action bar */}
+            <div className="flex items-center justify-between gap-2 flex-wrap px-1">
+              <label className="inline-flex items-center gap-2 text-xs font-medium text-m3-on-surface-variant cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = someVisibleSelected;
+                  }}
+                  onChange={toggleSelectAll}
+                  className="h-4 w-4 rounded border-m3-outline-variant/60 text-m3-primary focus:ring-2 focus:ring-m3-primary/30 cursor-pointer"
+                  aria-label={t("teacher_interview_config.qbank.bulk.select_all")}
+                />
+                {selectedVisibleIds.length > 0
+                  ? t("teacher_interview_config.qbank.bulk.selected", {
+                      count: selectedVisibleIds.length,
+                    })
+                  : t("teacher_interview_config.qbank.bulk.select_all")}
+              </label>
+            </div>
+
+            {selectedQuestions.length > 0 && (
+              <BulkActionBar
+                count={selectedQuestions.length}
+                busy={bulkBusy}
+                outcomeOptions={outcomeOptions}
+                onSetStatus={(s) => void bulkSetStatus(s)}
+                onSetOutcome={(o) => void bulkSetOutcome(o)}
+                onAddToBank={() => void bulkAddToBank()}
+                onDelete={() => void bulkDelete()}
+                onClear={clearSelection}
+              />
+            )}
+
+            {(() => {
             const renderCard = (q: InterviewQuestionAuthoring) => {
               const displayIndex = sorted.findIndex((s) => s.id === q.id);
               return (
@@ -1087,6 +1350,8 @@ export function QuestionBank({
                   alreadyInBank={bankedPrompts.has(
                     q.prompt_text.trim().toLowerCase(),
                   )}
+                  selected={selectedIds.has(q.id)}
+                  onToggleSelect={() => toggleSelected(q.id)}
                 />
               );
             };
@@ -1123,7 +1388,8 @@ export function QuestionBank({
                 ))}
               </div>
             );
-          })()
+            })()}
+          </div>
         )}
       </div>
 
@@ -1258,6 +1524,129 @@ function ImportFromBankPanel({
   );
 }
 
+// ── Bulk action bar ──────────────────────────────────────────────────────────
+
+// Sticky contextual toolbar shown when one or more questions are selected.
+// Batches the per-question actions (set status, set outcome, add to bank,
+// delete) across the whole selection. All actions reuse the same mutations
+// as the single-question controls, so behaviour stays consistent.
+function BulkActionBar({
+  count,
+  busy,
+  outcomeOptions,
+  onSetStatus,
+  onSetOutcome,
+  onAddToBank,
+  onDelete,
+  onClear,
+}: {
+  count: number;
+  busy: boolean;
+  outcomeOptions: { id: string; label: string; text: string }[];
+  onSetStatus: (s: ReviewStatus) => void;
+  onSetOutcome: (o: string | null) => void;
+  onAddToBank: () => void;
+  onDelete: () => void;
+  onClear: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="sticky top-32 z-[6] flex items-center gap-2 flex-wrap rounded-xl border border-m3-primary/40 bg-primary-soft px-3 py-2 shadow-sm">
+      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-m3-primary">
+        {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+        {t("teacher_interview_config.qbank.bulk.count", { count })}
+      </span>
+
+      {/* Set status */}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          disabled={busy}
+          className="inline-flex items-center gap-1 rounded-md bg-white/70 px-2 py-1 text-xs font-semibold text-m3-on-surface hover:bg-white cursor-pointer disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          {t("teacher_interview_config.qbank.bulk.set_status")}
+          <ChevronDown className="h-3 w-3" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-44">
+          {STATUS_ORDER.map((s) => (
+            <DropdownMenuItem
+              key={s}
+              onClick={() => onSetStatus(s)}
+              className="gap-2"
+            >
+              {t(`teacher_interview_config.qbank.status.${statusMeta(s).key}`)}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Set outcome */}
+      {outcomeOptions.length > 0 && (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            disabled={busy}
+            className="inline-flex items-center gap-1 rounded-md bg-white/70 px-2 py-1 text-xs font-semibold text-m3-on-surface hover:bg-white cursor-pointer disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <Target className="h-3.5 w-3.5" />
+            {t("teacher_interview_config.qbank.bulk.set_outcome")}
+            <ChevronDown className="h-3 w-3" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="max-h-64 w-52 overflow-y-auto">
+            <DropdownMenuItem onClick={() => onSetOutcome(null)} className="gap-2">
+              {t("teacher_interview_config.qbank.no_outcome_option")}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {outcomeOptions.map((o) => (
+              <DropdownMenuItem
+                key={o.id}
+                onClick={() => onSetOutcome(o.id)}
+                className="gap-2"
+              >
+                <span className="font-semibold shrink-0">{o.label}</span>
+                <span className="truncate text-m3-on-surface-variant">
+                  {o.text}
+                </span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      {/* Add to bank */}
+      <button
+        type="button"
+        disabled={busy}
+        onClick={onAddToBank}
+        className="inline-flex items-center gap-1 rounded-md bg-white/70 px-2 py-1 text-xs font-semibold text-m3-on-surface hover:bg-white cursor-pointer disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        <BookMarked className="h-3.5 w-3.5" />
+        {t("teacher_interview_config.qbank.bulk.add_to_bank")}
+      </button>
+
+      {/* Delete */}
+      <button
+        type="button"
+        disabled={busy}
+        onClick={onDelete}
+        className="inline-flex items-center gap-1 rounded-md bg-white/70 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-50 cursor-pointer disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+        {t("common.delete")}
+      </button>
+
+      {/* Clear selection */}
+      <button
+        type="button"
+        onClick={onClear}
+        className="ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-on-surface cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        <X className="h-3.5 w-3.5" />
+        {t("teacher_interview_config.qbank.bulk.clear")}
+      </button>
+    </div>
+  );
+}
+
 // ── Filter primitives ────────────────────────────────────────────────────────
 
 function FilterSelect({
@@ -1340,6 +1729,8 @@ interface QuestionCardProps {
   onAddToBank: () => void;
   banking: boolean;
   alreadyInBank: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
 }
 
 function QuestionCard({
@@ -1368,6 +1759,8 @@ function QuestionCard({
   onAddToBank,
   banking,
   alreadyInBank,
+  selected,
+  onToggleSelect,
 }: QuestionCardProps) {
   const { t } = useTranslation();
   const meta = statusMeta(q.review_status);
@@ -1380,7 +1773,10 @@ function QuestionCard({
     <li
       aria-selected={expanded}
       className={cn(
-        "rounded-xl border border-m3-outline-variant/20 bg-m3-surface origin-top overflow-hidden transition-all duration-300 ease-in motion-reduce:transition-none",
+        "rounded-xl border bg-m3-surface origin-top overflow-hidden transition-all duration-300 ease-in motion-reduce:transition-none",
+        selected
+          ? "border-m3-primary/50 ring-1 ring-m3-primary/30"
+          : "border-m3-outline-variant/20",
         deleting
           ? "opacity-0 scale-95 -translate-x-4 max-h-0 !p-0 !my-0 border-transparent"
           : "max-h-[1200px]",
@@ -1388,6 +1784,14 @@ function QuestionCard({
     >
       {/* Collapsed header row */}
       <div className="flex items-start gap-2 p-3">
+        {/* Selection checkbox */}
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggleSelect}
+          aria-label={t("teacher_interview_config.qbank.bulk.select_one")}
+          className="mt-1 h-4 w-4 shrink-0 rounded border-m3-outline-variant/60 text-m3-primary focus:ring-2 focus:ring-m3-primary/30 cursor-pointer"
+        />
         {/* Drag handle + number + reorder */}
         <div className="flex flex-col items-center gap-1 shrink-0 pt-0.5">
           <span

@@ -2830,6 +2830,24 @@
     },
     "qbank": {
       "search_placeholder": "Tìm câu hỏi, câu trả lời, chuẩn đầu ra…",
+      "pending_only": "Chỉ chờ duyệt ({{count}})",
+      "bulk": {
+        "select_all": "Chọn tất cả",
+        "select_one": "Chọn câu hỏi",
+        "selected": "Đã chọn {{count}}",
+        "count": "Đã chọn {{count}}",
+        "set_status": "Đặt trạng thái",
+        "set_outcome": "Gán chuẩn đầu ra",
+        "add_to_bank": "Thêm vào ngân hàng",
+        "clear": "Bỏ chọn",
+        "delete_confirm": "Xoá {{count}} câu hỏi đã chọn? Không thể hoàn tác.",
+        "status_done": "Đã cập nhật {{count}} câu hỏi",
+        "outcome_done": "Đã gán lại {{count}} câu hỏi",
+        "bank_done": "Đã thêm {{count}} câu hỏi vào ngân hàng khóa học",
+        "delete_done": "Đã xoá {{count}} câu hỏi",
+        "partial": "{{ok}} thành công, {{failed}} thất bại",
+        "failed": "Thao tác hàng loạt thất bại"
+      },
       "collapse_all": "Thu gọn tất cả",
       "view_answer": "Xem câu trả lời",
       "hide_answer": "Ẩn câu trả lời",
@@ -2893,6 +2911,7 @@
         "type": "Loại",
         "source": "Nguồn",
         "all": "Tất cả",
+        "all_count": "Tất cả ({{count}})",
         "no_outcome": "Chưa gán"
       },
       "source": {
