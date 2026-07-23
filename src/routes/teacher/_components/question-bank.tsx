@@ -987,15 +987,30 @@ export function QuestionBank({
   }
 
   // Drag-and-drop reorder state (desktop, native HTML5 DnD). `dragIndex` is the
-  // grabbed row; `dragOverIndex` drives the drop-line indicator.
+  // grabbed row; `dragOverIndex` + `dropBefore` place the insertion LINE at the
+  // top (dropBefore) or bottom edge of the hovered card, so the teacher sees
+  // exactly which gap the drop will land in.
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  function handleDrop(toIndex: number) {
+  const [dropBefore, setDropBefore] = useState<boolean>(true);
+  function handleDragOverCard(cardIndex: number, before: boolean) {
+    setDragOverIndex(cardIndex);
+    setDropBefore(before);
+  }
+  function handleDrop() {
     const from = dragIndex;
+    const over = dragOverIndex;
+    const before = dropBefore;
     setDragIndex(null);
     setDragOverIndex(null);
-    if (from === null) return;
-    void handleMoveTo(from, toIndex);
+    if (from === null || over === null) return;
+    // Gap in original-array coordinates (0..length): the slot the line marks.
+    const insertionIndex = before ? over : over + 1;
+    // Translate the gap to handleMoveTo's post-removal target index: removing
+    // the dragged row shifts everything after it left by one.
+    let to = from < insertionIndex ? insertionIndex - 1 : insertionIndex;
+    to = Math.max(0, Math.min(sorted.length - 1, to));
+    void handleMoveTo(from, to);
   }
 
   const hasQuestions = sorted.length > 0;
@@ -1432,14 +1447,21 @@ export function QuestionBank({
                   onToggleSelect={() => toggleSelected(q.id)}
                   dndEnabled={dndEnabled}
                   dragging={dragIndex === displayIndex}
-                  dragOver={dragOverIndex === displayIndex}
+                  showLineBefore={
+                    dragOverIndex === displayIndex && dropBefore
+                  }
+                  showLineAfter={
+                    dragOverIndex === displayIndex && !dropBefore
+                  }
                   onDragStartCard={() => setDragIndex(displayIndex)}
-                  onDragEnterCard={() => setDragOverIndex(displayIndex)}
+                  onDragOverCard={(before) =>
+                    handleDragOverCard(displayIndex, before)
+                  }
                   onDragEndCard={() => {
                     setDragIndex(null);
                     setDragOverIndex(null);
                   }}
-                  onDropCard={() => handleDrop(displayIndex)}
+                  onDropCard={handleDrop}
                 />
               );
             };
@@ -1824,9 +1846,13 @@ interface QuestionCardProps {
   // Drag-to-reorder (native HTML5 DnD; desktop-only, off when filtered/grouped).
   dndEnabled: boolean;
   dragging: boolean;
-  dragOver: boolean;
+  // Insertion-line indicators: a line renders at this card's top edge
+  // (showLineBefore) or bottom edge (showLineAfter) to mark the drop gap.
+  showLineBefore: boolean;
+  showLineAfter: boolean;
   onDragStartCard: () => void;
-  onDragEnterCard: () => void;
+  // `before` = cursor is in the top half of the card (insert above).
+  onDragOverCard: (before: boolean) => void;
   onDragEndCard: () => void;
   onDropCard: () => void;
 }
@@ -1863,9 +1889,10 @@ function QuestionCard({
   onToggleSelect,
   dndEnabled,
   dragging,
-  dragOver,
+  showLineBefore,
+  showLineAfter,
   onDragStartCard,
-  onDragEnterCard,
+  onDragOverCard,
   onDragEndCard,
   onDropCard,
 }: QuestionCardProps) {
@@ -1886,7 +1913,11 @@ function QuestionCard({
       onDragOver={(e) => {
         if (!canDrag) return;
         e.preventDefault();
-        onDragEnterCard();
+        // Which half of the card is the cursor in? Top half → insert above,
+        // bottom half → insert below. Drives the between-cards insertion line.
+        const rect = e.currentTarget.getBoundingClientRect();
+        const before = e.clientY < rect.top + rect.height / 2;
+        onDragOverCard(before);
       }}
       onDrop={(e) => {
         if (!canDrag) return;
@@ -1894,17 +1925,33 @@ function QuestionCard({
         onDropCard();
       }}
       className={cn(
-        "rounded-xl border bg-m3-surface origin-top overflow-hidden transition-all duration-300 ease-in motion-reduce:transition-none",
+        // relative so the absolutely-positioned insertion lines anchor here.
+        "relative rounded-xl border bg-m3-surface origin-top overflow-hidden transition-all duration-300 ease-in motion-reduce:transition-none",
         selected
           ? "border-m3-primary/50 ring-1 ring-m3-primary/30"
           : "border-m3-outline-variant/20",
-        dragging && "opacity-50",
-        dragOver && !dragging && "ring-2 ring-m3-primary/50",
+        dragging && "opacity-40",
         deleting
           ? "opacity-0 scale-95 -translate-x-4 max-h-0 !p-0 !my-0 border-transparent"
           : "max-h-[1200px]",
       )}
     >
+      {/* Between-cards insertion line — marks exactly which gap a drop lands
+          in. Anchored just inside the card edge (the card has overflow-hidden
+          for the delete animation, so a line in the outer gap would be
+          clipped). A glow makes it read as sitting in the gap. */}
+      {showLineBefore && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute top-0 left-2 right-2 z-10 h-0.5 rounded-full bg-m3-primary shadow-[0_0_0_2px_rgba(103,80,164,0.25)]"
+        />
+      )}
+      {showLineAfter && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-0 left-2 right-2 z-10 h-0.5 rounded-full bg-m3-primary shadow-[0_0_0_2px_rgba(103,80,164,0.25)]"
+        />
+      )}
       {/* Collapsed header row */}
       <div className="flex items-start gap-2 p-3">
         {/* Selection checkbox */}
