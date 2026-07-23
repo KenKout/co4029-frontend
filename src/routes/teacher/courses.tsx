@@ -1,14 +1,11 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Plus, BookOpen, Clock, Search, ChevronRight } from "lucide-react";
+import { Plus, BookOpen, Clock, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import {
-  useTeacherCourseContent,
-  useTeacherCourses,
-} from "@/lib/api/hooks/teacher-courses";
+import { useTeacherCourses } from "@/lib/api/hooks/teacher-courses";
 import type { Course } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
 
@@ -18,108 +15,60 @@ const STATUS_COLORS: Record<string, string> = {
   archived: "bg-slate-100 text-slate-500",
 };
 
-function ModuleChips({ courseId }: { courseId: string }) {
-  const { data: content } = useTeacherCourseContent(courseId);
-  const modules = content?.modules ?? [];
-  if (modules.length === 0) return null;
-  return (
-    <div className="flex flex-wrap gap-1.5 mt-2">
-      {modules.slice(0, 3).map((m) => (
-        <span
-          key={m.id}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-m3-surface-container text-[11px] text-m3-on-surface-variant font-medium"
-        >
-          <ChevronRight className="h-3 w-3 opacity-50" />
-          {m.title}
-        </span>
-      ))}
-      {modules.length > 3 && (
-        <span className="px-2 py-0.5 rounded-md bg-m3-surface-container text-[11px] text-m3-on-surface-variant">
-          +{modules.length - 3} more
-        </span>
-      )}
-    </div>
-  );
-}
-
 function CourseCard({ course }: { course: Course }) {
-  const totalMins = course.estimated_minutes ?? 0;
-  const hours = totalMins ? Math.round(totalMins / 60) : null;
-
+  const { t } = useTranslation();
   return (
-    <div className="group bg-card rounded-xl shadow-editorial ghost-border hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 overflow-hidden">
-      {/* Top accent bar */}
-      <div
-        className={cn(
-          "h-1 w-full",
-          course.status === "published"
-            ? "bg-gradient-to-r from-m3-primary to-m3-secondary"
-            : "bg-m3-outline-variant",
-        )}
-      />
-      <div className="p-5">
-        {/* Title row */}
-        <div className="flex items-start justify-between gap-3 mb-1">
-          <Link
-            to="/teacher/courses/$courseId"
-            params={{ courseId: course.id }}
-            className="font-headline font-bold text-base text-m3-on-surface hover:text-m3-primary transition-colors leading-snug"
-          >
+    // Whole card is a single link, so the entire surface is the hover/click
+    // target (matches the teacher dashboard card).
+    <Link
+      to="/teacher/courses/$courseId"
+      params={{ courseId: course.id }}
+      className="group block h-full"
+    >
+      <div className="flex h-full flex-col bg-card rounded-xl p-5 shadow-editorial ghost-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="flex-1 min-w-0 font-headline font-semibold text-sm text-m3-on-surface line-clamp-2">
             {course.title}
-          </Link>
+          </h3>
           <Badge
             className={cn(
-              "text-[10px] font-semibold border-0 shrink-0 mt-0.5",
+              "shrink-0 text-[10px] font-semibold border-0",
               STATUS_COLORS[course.status] ?? "bg-slate-100 text-slate-500",
             )}
           >
-            {course.status}
+            {t(`teacher_dashboard.status.${course.status}`, {
+              defaultValue: course.status,
+            })}
           </Badge>
         </div>
-
-        {/* Description */}
-        {course.description && (
-          <p className="text-xs text-m3-on-surface-variant line-clamp-2 leading-relaxed mb-3">
-            {course.description}
-          </p>
-        )}
-
-        {/* Module chips */}
-        <ModuleChips courseId={course.id} />
-
-        {/* Meta row */}
-        <div className="flex items-center gap-4 mt-3 text-[11px] text-m3-on-surface-variant">
+        {/* Fixed-height description slot so cards with and without a
+            description keep the same overall height and the meta row lines up
+            across the grid. */}
+        <p className="text-xs text-m3-on-surface-variant mt-1.5 line-clamp-2 min-h-[2rem]">
+          {course.description ?? ""}
+        </p>
+        {/* Meta row pinned to the bottom via mt-auto so every card's footer
+            aligns regardless of title/description length. */}
+        <div className="mt-auto pt-3 flex items-center gap-2 text-[11px] text-m3-on-surface-variant">
           {course.level && (
             <span className="px-1.5 py-0.5 bg-m3-surface-container rounded-md font-medium">
-              {course.level}
+              {t(`teacher_dashboard.level.${course.level}`, {
+                defaultValue: course.level,
+              })}
             </span>
           )}
-          {hours && (
+          {course.estimated_minutes && (
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              {hours}h
+              {Math.round(course.estimated_minutes / 60)}h
             </span>
           )}
-        </div>
-
-        {/* Action */}
-        <div className="mt-4 flex justify-end">
-          <Link
-            to="/teacher/courses/$courseId"
-            params={{ courseId: course.id }}
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              Manage
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </Link>
+          <span className="ml-auto text-m3-primary font-medium group-hover:underline">
+            {t("teacher_dashboard.your_courses.manage")} &rarr;
+          </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
