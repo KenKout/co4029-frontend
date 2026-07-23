@@ -363,6 +363,23 @@
   }
 }
 
+/* Spinning conic-gradient border for the active (drag-over) file dropzone.
+   Drives the --dropzone-angle custom property so the gradient sweep rotates.
+   Registered via @property so the angle can be animated (a bare CSS custom
+   property is not interpolatable). Falls back gracefully in browsers without
+   @property support — the border just shows a static gradient. */
+@property --dropzone-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes dropzone-border-spin {
+  to {
+    --dropzone-angle: 360deg;
+  }
+}
+
 /* ── Base styles ── */
 @layer base {
   * {
@@ -433,6 +450,37 @@
   }
   .ai-pulse {
     animation: ai-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Active file-dropzone: a rotating conic-gradient ring painted in the
+     element's border box. Uses the border-box/padding-box mask trick so only
+     the 2px border area shows the gradient (the interior stays the dropzone
+     fill). Pair with `border-2 border-transparent`. Honors reduced motion. */
+  .dropzone-spin-border {
+    border-color: transparent;
+    background-image: conic-gradient(
+      from var(--dropzone-angle),
+      var(--secondary),
+      var(--primary),
+      var(--accent),
+      var(--secondary)
+    );
+    background-origin: border-box;
+    background-clip: border-box;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) padding-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#fff 0 0) padding-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    animation: dropzone-border-spin 2s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dropzone-spin-border {
+      animation: none;
+    }
   }
 
   /* Scroll-reveal base: hidden until IntersectionObserver triggers */

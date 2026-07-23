@@ -1,4 +1,8 @@
 {
+  "file_dropzone": {
+    "idle_title": "Drag & drop or click to choose a file",
+    "drop_active": "Drop to upload"
+  },
   "common": {
     "loading": "Loading…",
     "error": "Something went wrong",

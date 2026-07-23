@@ -16,7 +16,6 @@ import {
   EyeOff,
   Trash2,
   Brain,
-  CloudUpload,
   X,
   History,
   Undo2,
@@ -57,6 +56,7 @@ import type {
 } from "@/lib/api/types";
 import { uploadMultipart } from "@/lib/upload/multipart";
 import { ApiError } from "@/lib/api/client";
+import { FileDropzone } from "@/components/ui/file-dropzone";
 import { cn } from "@/lib/utils";
 
 const PROC_STATUS: Record<string, { color: string; spin?: boolean }> = {
@@ -138,82 +138,6 @@ function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024 * 1024)
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
   return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
-}
-
-function UploadDropzone({
-  onFile,
-  disabled,
-}: {
-  onFile: (file: File) => void;
-  disabled?: boolean;
-}) {
-  const { t } = useTranslation();
-  const [dragging, setDragging] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setDragging(false);
-      if (disabled) return;
-      const file = e.dataTransfer.files[0];
-      if (file) onFile(file);
-    },
-    [onFile, disabled],
-  );
-
-  return (
-    <div
-      onDragOver={(e) => {
-        e.preventDefault();
-        if (!disabled) setDragging(true);
-      }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={handleDrop}
-      onClick={() => !disabled && inputRef.current?.click()}
-      className={cn(
-        "relative cursor-pointer rounded-xl border-2 border-dashed p-10 text-center transition-all",
-        dragging
-          ? "border-m3-secondary bg-m3-secondary-fixed/20 scale-[1.01]"
-          : "border-m3-outline-variant/40 hover:border-m3-secondary/50 hover:bg-m3-surface-container-low/60",
-        disabled && "pointer-events-none opacity-50",
-      )}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        className="hidden"
-        accept=".pdf,.mp4,.mov,.txt,.md,.pptx,.docx,.xlsx,.py,.js,.ts,.jsx,.tsx,.java,.c,.cpp,.png,.jpg,.jpeg,.mp3,.wav"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            onFile(file);
-            e.target.value = "";
-          }
-        }}
-      />
-      <div className="flex items-center justify-center gap-3 mb-5">
-        <div className="w-12 h-12 rounded-xl bg-m3-primary-fixed flex items-center justify-center">
-          <FileText className="h-6 w-6 text-m3-primary" />
-        </div>
-        <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center shadow-ai-glow">
-          <CloudUpload className="h-7 w-7 text-white" />
-        </div>
-        <div className="w-12 h-12 rounded-xl bg-m3-secondary-fixed flex items-center justify-center">
-          <Video className="h-6 w-6 text-m3-secondary" />
-        </div>
-      </div>
-
-      <p className="font-headline font-bold text-m3-on-surface text-base mb-1">
-        {dragging
-          ? t("teacher_lesson_materials.dropzone.drop_active")
-          : t("teacher_lesson_materials.dropzone.drop_idle")}
-      </p>
-      <p className="text-sm text-m3-on-surface-variant">
-        {t("teacher_lesson_materials.dropzone.formats")}
-      </p>
-    </div>
-  );
 }
 
 function ProgressBar({ value, label }: { value: number; label: string }) {
@@ -1470,7 +1394,12 @@ export default function LessonMaterialsPage() {
               onCancel={() => setSelectedFile(null)}
             />
           ) : (
-            <UploadDropzone onFile={setSelectedFile} />
+            <FileDropzone
+              onFile={setSelectedFile}
+              accept=".pdf,.mp4,.mov,.txt,.md,.pptx,.docx,.xlsx,.py,.js,.ts,.jsx,.tsx,.java,.c,.cpp,.png,.jpg,.jpeg,.mp3,.wav"
+              idleTitle={t("teacher_lesson_materials.dropzone.drop_idle")}
+              hint={t("teacher_lesson_materials.dropzone.formats")}
+            />
           )}
 
           {processingCount > 0 && processingMaterial ? (

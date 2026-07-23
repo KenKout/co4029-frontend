@@ -1,4 +1,8 @@
 {
+  "file_dropzone": {
+    "idle_title": "Kéo thả hoặc nhấp để chọn tệp",
+    "drop_active": "Thả để tải lên"
+  },
   "common": {
     "loading": "Đang tải…",
     "error": "Đã xảy ra lỗi",
