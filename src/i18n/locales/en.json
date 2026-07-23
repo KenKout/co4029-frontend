@@ -1398,6 +1398,7 @@
       "failed": "Not passed",
       "quote": "Quote:",
       "analysis": "Analysis:",
+      "view": "View",
       "source_quiz_attempt": "Source quiz attempt",
       "source_interview_session": "Source interview session"
     }

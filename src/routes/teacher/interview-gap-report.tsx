@@ -712,37 +712,30 @@ function StudyPlanCard({ items }: { items: StudyPlanItem[] }) {
 
 function SourceLinksCard({ report }: { report: GapReportAuthoringRead }) {
   const { t } = useTranslation();
-  const sources = [
-    report.source_quiz_attempt_id && {
-      label: t("teacher_interview_gap_report.labels.source_quiz_attempt"),
-      value: report.source_quiz_attempt_id,
-    },
-    report.source_interview_session_id && {
-      label: t("teacher_interview_gap_report.labels.source_interview_session"),
-      value: report.source_interview_session_id,
-    },
-  ].filter(Boolean) as Array<{ label: string; value: string }>;
-
-  if (sources.length === 0) return null;
+  // Only the source quiz attempt is a meaningful cross-link: the interview
+  // session this report was built from IS the page we're already on (the
+  // gap report is opened via that session), so linking to it is circular.
+  const quizAttemptId = report.source_quiz_attempt_id;
+  if (!quizAttemptId || !report.course_id) return null;
 
   return (
     <GlassCard className="p-6 space-y-3">
       <h2 className="font-headline font-bold text-base text-m3-primary mb-2">
         {t("teacher_interview_gap_report.sections.sources")}
       </h2>
-      <ul className="space-y-2">
-        {sources.map((s) => (
-          <li
-            key={s.value}
-            className="flex items-center justify-between gap-3 rounded-xl bg-m3-surface-container-low px-3 py-2 text-xs"
-          >
-            <span className="text-m3-on-surface-variant shrink-0">{s.label}</span>
-            <span className="font-mono font-bold text-m3-on-surface truncate">
-              {s.value.slice(0, 8)}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <Link
+        to="/teacher/courses/$courseId/quiz-attempts/$attemptId"
+        params={{ courseId: report.course_id, attemptId: quizAttemptId }}
+        className="flex items-center justify-between gap-3 rounded-xl bg-m3-surface-container-low px-3 py-2 text-xs transition-colors hover:bg-m3-surface-container"
+      >
+        <span className="text-m3-on-surface-variant shrink-0">
+          {t("teacher_interview_gap_report.labels.source_quiz_attempt")}
+        </span>
+        <span className="inline-flex items-center gap-1 font-semibold text-m3-primary underline decoration-m3-primary/30 underline-offset-2">
+          {t("teacher_interview_gap_report.labels.view")}
+          <ChevronRight className="h-3.5 w-3.5" />
+        </span>
+      </Link>
     </GlassCard>
   );
 }
