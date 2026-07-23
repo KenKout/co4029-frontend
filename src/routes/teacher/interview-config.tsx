@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
@@ -921,6 +921,46 @@ function TabBar({
     return null;
   }
 
+  // Sliding colored indicator: an absolutely-positioned pill that measures the
+  // active tab's offset/width and animates to it via CSS transform, so the
+  // color glides between sections instead of snapping. Recomputed on tab
+  // change, container resize, and font/label (language) changes.
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [indicator, setIndicator] = useState<{
+    left: number;
+    width: number;
+    ready: boolean;
+  }>({ left: 0, width: 0, ready: false });
+
+  useLayoutEffect(() => {
+    function measure() {
+      const el = tabRefs.current.get(activeTab);
+      const list = listRef.current;
+      if (!el || !list) return;
+      setIndicator({
+        left: el.offsetLeft,
+        width: el.offsetWidth,
+        ready: true,
+      });
+    }
+    measure();
+    const list = listRef.current;
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(measure)
+        : null;
+    if (ro && list) {
+      ro.observe(list);
+      for (const el of tabRefs.current.values()) ro.observe(el);
+    }
+    window.addEventListener("resize", measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [activeTab, items]);
+
   return (
     <nav
       aria-label={ariaLabel}
@@ -928,10 +968,25 @@ function TabBar({
       style={{ top: 64 }}
     >
       <div
+        ref={listRef}
         role="tablist"
         aria-label={ariaLabel}
-        className="flex items-stretch gap-1 overflow-x-auto no-scrollbar rounded-lg border border-border bg-white/95 p-1 shadow-sm backdrop-blur-sm lg:overflow-visible"
+        className="relative flex items-stretch gap-1 overflow-x-auto no-scrollbar rounded-lg border border-border bg-white/95 p-1 shadow-sm backdrop-blur-sm lg:overflow-visible"
       >
+        {/* The sliding pill — sits behind the tab labels and glides to the
+            active tab. Hidden until first measured to avoid a flash at 0,0. */}
+        <span
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute top-1 bottom-1 rounded-md bg-m3-primary shadow-sm ring-1 ring-m3-primary",
+            "motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out",
+            indicator.ready ? "opacity-100" : "opacity-0",
+          )}
+          style={{
+            transform: `translateX(${indicator.left}px)`,
+            width: indicator.width,
+          }}
+        />
         {items.map((item) => {
           const isActive = item.id === activeTab;
           const status = item.status ?? { kind: "none" as const };
@@ -939,19 +994,23 @@ function TabBar({
             <button
               key={item.id}
               id={`tab-${item.id}`}
+              ref={(el) => {
+                if (el) tabRefs.current.set(item.id, el);
+                else tabRefs.current.delete(item.id);
+              }}
               type="button"
               role="tab"
               aria-selected={isActive}
               aria-controls={item.id}
               onClick={() => onSelect(item.id as TabId)}
               className={cn(
-                "group min-w-fit flex-1 rounded-md px-3 py-2 text-left transition-colors",
+                "group relative z-10 min-w-fit flex-1 rounded-md px-3 py-2 text-left transition-colors duration-300",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
                 "whitespace-nowrap cursor-pointer",
-                // Active tab is strongly colored (filled primary) so the
-                // current section is unmistakable; inactive tabs stay muted.
+                // Text color switches with the sliding pill; the pill itself
+                // provides the colored background.
                 isActive
-                  ? "bg-m3-primary text-white shadow-sm ring-1 ring-m3-primary"
+                  ? "text-white"
                   : "text-m3-on-surface hover:bg-surface-muted",
               )}
             >
@@ -967,7 +1026,7 @@ function TabBar({
               {status.kind !== "none" && (
                 <span
                   className={cn(
-                    "mt-0.5 block text-[11px] leading-tight",
+                    "mt-0.5 block text-[11px] leading-tight transition-colors duration-300",
                     isActive
                       ? "text-white/80"
                       : "text-m3-on-surface-variant",
