@@ -206,6 +206,30 @@
       "advanced": "Advanced"
     }
   },
+  "teacher_course_new": {
+    "title": "New Course",
+    "section_basics": "Basics",
+    "section_details": "Details",
+    "field_title": "Title",
+    "title_placeholder": "e.g. Introduction to Algorithms",
+    "field_slug": "Slug",
+    "slug_hint": "Course URL: …/courses/{{slug}}",
+    "slug_available": "This slug is available",
+    "slug_taken": "This slug is already taken",
+    "slug_reset": "Reset to auto",
+    "field_description": "Description",
+    "description_placeholder": "A short summary helps students choose. What will they learn?",
+    "field_level": "Level",
+    "field_duration": "Estimated duration",
+    "minutes_suffix": "min",
+    "create": "Create Course",
+    "creating": "Creating…",
+    "created": "Course created",
+    "create_failed": "Failed to create course",
+    "preview_label": "Preview",
+    "preview_title_placeholder": "Your course title",
+    "preview_desc_placeholder": "Your course description will appear here."
+  },
   "teacher_course_settings": {
     "title": "Course Settings",
     "thumbnail": {

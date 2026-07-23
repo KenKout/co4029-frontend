@@ -145,6 +145,21 @@ export async function fetchTeacherResourceDownloadUrl(
   return data.stream_url;
 }
 
+// Pre-flight slug availability check for the new-course form. Enabled only
+// when a non-empty slug is supplied; the caller debounces the slug value.
+export function useSlugAvailability(slug: string) {
+  return useQuery({
+    queryKey: ["teacher", "courses", "check-slug", slug],
+    queryFn: () =>
+      apiFetch<{ available: boolean }>(
+        `/teacher/courses/check-slug?slug=${encodeURIComponent(slug)}`,
+      ),
+    enabled: slug.trim().length > 0,
+    staleTime: 1000 * 30,
+    retry: false,
+  });
+}
+
 export function useCreateCourse() {
   const qc = useQueryClient();
   return useMutation({

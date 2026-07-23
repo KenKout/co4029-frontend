@@ -1,14 +1,33 @@
-import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import {
+  ArrowLeft,
+  Check,
+  Loader2,
+  X,
+  GraduationCap,
+  Sparkles,
+  Clock,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useCreateCourse } from "@/lib/api/hooks/teacher-courses";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
+import { cn } from "@/lib/utils";
+import {
+  useCreateCourse,
+  useSlugAvailability,
+} from "@/lib/api/hooks/teacher-courses";
 import { useMe } from "@/lib/api/hooks/auth";
 
+type Level = "" | "beginner" | "intermediate" | "advanced";
+
+const DESCRIPTION_MAX = 500;
+
 export default function CourseNewPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: me } = useMe();
   const createCourse = useCreateCourse();
@@ -17,10 +36,28 @@ export default function CourseNewPage() {
     title: "",
     slug: "",
     description: "",
-    level: "beginner",
+    level: "beginner" as Level,
     estimated_minutes: "",
   });
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+
+  // Debounce the slug before hitting the availability endpoint so we don't
+  // fire a request on every keystroke.
+  const [debouncedSlug, setDebouncedSlug] = useState("");
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebouncedSlug(form.slug.trim()), 400);
+    return () => window.clearTimeout(id);
+  }, [form.slug]);
+
+  const slugQuery = useSlugAvailability(debouncedSlug);
+  // Only trust the result when the debounced value matches the current input
+  // (avoids a stale ✓/✗ flashing while the user is still typing).
+  const slugSettled = debouncedSlug === form.slug.trim() && debouncedSlug.length > 0;
+  const slugAvailable = slugSettled && slugQuery.data?.available === true;
+  const slugTaken = slugSettled && slugQuery.data?.available === false;
+  const slugChecking =
+    form.slug.trim().length > 0 &&
+    (!slugSettled || slugQuery.isFetching);
 
   function slugify(title: string) {
     return title
@@ -42,9 +79,21 @@ export default function CourseNewPage() {
     setForm((f) => ({ ...f, slug }));
   }
 
+  function resetSlugToAuto() {
+    setSlugManuallyEdited(false);
+    setForm((f) => ({ ...f, slug: slugify(f.title) }));
+  }
+
+  const canSubmit =
+    !!form.title.trim() &&
+    !!form.slug.trim() &&
+    !slugTaken &&
+    !slugChecking &&
+    !createCourse.isPending;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!me) return;
+    if (!me || !canSubmit) return;
 
     try {
       const course = await createCourse.mutateAsync({
@@ -60,120 +109,274 @@ export default function CourseNewPage() {
           ? parseInt(form.estimated_minutes)
           : undefined,
       });
-      toast.success("Course created");
+      toast.success(t("teacher_course_new.created"));
       navigate({
         to: "/teacher/courses/$courseId",
         params: { courseId: course.id },
       });
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Failed to create course");
+      toast.error((err as Error).message || t("teacher_course_new.create_failed"));
     }
   }
 
+  const levelOptions = useMemo(
+    () =>
+      (["beginner", "intermediate", "advanced"] as const).map((lvl) => ({
+        key: lvl,
+        label: t(`teacher_dashboard.level.${lvl}`, { defaultValue: lvl }),
+      })),
+    [t],
+  );
+
   return (
-    <div className="max-w-xl space-y-6 pb-12">
+    <div className="max-w-5xl space-y-6 pb-12">
+      <Breadcrumbs
+        items={[
+          { label: t("teacher_courses_list.title"), to: "/teacher/courses" },
+          { label: t("teacher_course_new.title") },
+        ]}
+      />
+
       <div className="flex items-center gap-3">
         <Link to="/teacher/courses">
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <h1 className="text-xl font-headline font-bold text-m3-on-surface">
-          New Course
+        <h1 className="text-2xl font-headline font-bold text-m3-primary">
+          {t("teacher_course_new.title")}
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-m3-on-surface">
-            Title *
-          </label>
-          <Input
-            required
-            placeholder="e.g. Introduction to Algorithms"
-            value={form.title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-          />
-        </div>
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        {/* Form card */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-card ghost-border shadow-editorial rounded-xl p-6 space-y-6"
+        >
+          {/* Section: Basics */}
+          <div className="space-y-4">
+            <h2 className="text-sm font-headline font-bold text-m3-on-surface">
+              {t("teacher_course_new.section_basics")}
+            </h2>
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-m3-on-surface">
-            Slug *
-          </label>
-          <Input
-            required
-            placeholder="e.g. intro-to-algorithms"
-            value={form.slug}
-            onChange={(e) => handleSlugChange(e.target.value)}
-          />
-          <p className="text-[11px] text-m3-on-surface-variant">
-            Used in the course URL. Must be unique.
-          </p>
-        </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-m3-on-surface">
+                {t("teacher_course_new.field_title")} *
+              </label>
+              <Input
+                required
+                autoFocus
+                placeholder={t("teacher_course_new.title_placeholder")}
+                value={form.title}
+                onChange={(e) => handleTitleChange(e.target.value)}
+              />
+            </div>
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-m3-on-surface">
-            Description
-          </label>
-          <textarea
-            className="w-full min-h-[80px] rounded-xl border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="What will students learn?"
-            value={form.description}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, description: e.target.value }))
-            }
-          />
-        </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-m3-on-surface">
+                {t("teacher_course_new.field_slug")} *
+              </label>
+              <div className="relative">
+                <Input
+                  required
+                  placeholder="intro-to-algorithms"
+                  value={form.slug}
+                  onChange={(e) => handleSlugChange(e.target.value)}
+                  className={cn(
+                    "pr-9",
+                    slugTaken && "border-danger focus:ring-danger/30",
+                    slugAvailable && "border-success focus:ring-success/30",
+                  )}
+                />
+                <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                  {slugChecking && (
+                    <Loader2 className="h-4 w-4 animate-spin text-m3-on-surface-variant" />
+                  )}
+                  {!slugChecking && slugAvailable && (
+                    <Check className="h-4 w-4 text-success" />
+                  )}
+                  {!slugChecking && slugTaken && (
+                    <X className="h-4 w-4 text-danger" />
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <p
+                  className={cn(
+                    "text-[11px]",
+                    slugTaken
+                      ? "text-danger"
+                      : slugAvailable
+                        ? "text-success"
+                        : "text-m3-on-surface-variant",
+                  )}
+                >
+                  {slugTaken
+                    ? t("teacher_course_new.slug_taken")
+                    : slugAvailable
+                      ? t("teacher_course_new.slug_available")
+                      : t("teacher_course_new.slug_hint", {
+                          slug: form.slug || "your-course",
+                        })}
+                </p>
+                {slugManuallyEdited && form.title.trim() && (
+                  <button
+                    type="button"
+                    onClick={resetSlugToAuto}
+                    className="shrink-0 text-[11px] font-medium text-m3-primary hover:underline"
+                  >
+                    {t("teacher_course_new.slug_reset")}
+                  </button>
+                )}
+              </div>
+            </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-m3-on-surface">
-              Level
-            </label>
-            <select
-              className="w-full cursor-pointer rounded-xl border border-input bg-background px-3 py-2 text-sm transition-colors hover:border-m3-primary/50 hover:bg-m3-primary-fixed/20 focus:outline-none focus:ring-2 focus:ring-ring"
-              value={form.level}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, level: e.target.value }))
-              }
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-m3-on-surface">
+                {t("teacher_course_new.field_description")}
+              </label>
+              <textarea
+                className="w-full min-h-[90px] rounded-xl border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder={t("teacher_course_new.description_placeholder")}
+                maxLength={DESCRIPTION_MAX}
+                value={form.description}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, description: e.target.value }))
+                }
+              />
+              <div className="flex justify-end">
+                <span className="text-[11px] text-m3-on-surface-variant tabular-nums">
+                  {form.description.length}/{DESCRIPTION_MAX}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Details */}
+          <div className="space-y-4 border-t border-m3-outline-variant/15 pt-5">
+            <h2 className="text-sm font-headline font-bold text-m3-on-surface">
+              {t("teacher_course_new.section_details")}
+            </h2>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-m3-on-surface">
+                {t("teacher_course_new.field_level")}
+              </label>
+              <div>
+                <SegmentedFilter
+                  ariaLabel={t("teacher_course_new.field_level")}
+                  value={(form.level || "beginner") as
+                    | "beginner"
+                    | "intermediate"
+                    | "advanced"}
+                  onChange={(lvl) => setForm((f) => ({ ...f, level: lvl }))}
+                  options={levelOptions}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-m3-on-surface">
+                {t("teacher_course_new.field_duration")}
+              </label>
+              <div className="relative max-w-[200px]">
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="120"
+                  value={form.estimated_minutes}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      estimated_minutes: e.target.value,
+                    }))
+                  }
+                  className="pr-12"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-m3-on-surface-variant">
+                  {t("teacher_course_new.minutes_suffix")}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 border-t border-m3-outline-variant/15 pt-5">
+            <Button
+              type="submit"
+              disabled={!canSubmit}
+              className="gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md"
             >
-              <option value="">None</option>
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-            </select>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-m3-on-surface">
-              Estimated minutes
-            </label>
-            <Input
-              type="number"
-              min="0"
-              placeholder="e.g. 120"
-              value={form.estimated_minutes}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, estimated_minutes: e.target.value }))
-              }
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-2">
-          <Button
-            type="submit"
-            disabled={createCourse.isPending || !form.title}
-          >
-            {createCourse.isPending ? "Creating…" : "Create Course"}
-          </Button>
-          <Link to="/teacher/courses">
-            <Button type="button" variant="outline">
-              Cancel
+              {createCourse.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
+              {createCourse.isPending
+                ? t("teacher_course_new.creating")
+                : t("teacher_course_new.create")}
             </Button>
-          </Link>
+            <Link to="/teacher/courses">
+              <Button type="button" variant="outline">
+                {t("common.cancel", "Cancel")}
+              </Button>
+            </Link>
+          </div>
+        </form>
+
+        {/* Live card preview — shows what the course card will look like as
+            the teacher fills the form, so the abstract form becomes concrete. */}
+        <div className="hidden lg:block">
+          <div className="sticky top-4 space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-m3-on-surface-variant">
+              {t("teacher_course_new.preview_label")}
+            </p>
+            <div className="flex flex-col bg-card rounded-xl overflow-hidden shadow-editorial ghost-border">
+              <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-blue-500 via-blue-700 to-blue-800">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                  <GraduationCap className="h-16 w-16 text-white" />
+                </div>
+                <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 rounded-md bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white backdrop-blur-sm border border-white/20">
+                    <Sparkles className="h-2.5 w-2.5" />
+                    {t("courses_list.ai_boost")}
+                  </span>
+                  <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                    {t("teacher_dashboard.status.draft")}
+                  </span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <div>
+                  <h3 className="font-headline font-semibold text-sm text-m3-on-surface line-clamp-2 leading-snug">
+                    {form.title.trim() ||
+                      t("teacher_course_new.preview_title_placeholder")}
+                  </h3>
+                  <p className="text-xs text-m3-on-surface-variant mt-1 line-clamp-2 leading-relaxed min-h-[2rem]">
+                    {form.description.trim() ||
+                      t("teacher_course_new.preview_desc_placeholder")}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-m3-on-surface-variant">
+                  {form.level && (
+                    <span className="px-1.5 py-0.5 bg-m3-surface-container rounded-md font-medium">
+                      {t(`teacher_dashboard.level.${form.level}`, {
+                        defaultValue: form.level,
+                      })}
+                    </span>
+                  )}
+                  {form.estimated_minutes && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {Math.round(Number(form.estimated_minutes) / 60)}h
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

@@ -3275,5 +3275,29 @@
     "analytics": "Phân tích",
     "management": "Quản lý",
     "system": "Hệ thống"
+  },
+  "teacher_course_new": {
+    "title": "Khóa học mới",
+    "section_basics": "Thông tin cơ bản",
+    "section_details": "Chi tiết",
+    "field_title": "Tiêu đề",
+    "title_placeholder": "vd. Nhập môn Thuật toán",
+    "field_slug": "Slug",
+    "slug_hint": "URL khóa học: …/courses/{{slug}}",
+    "slug_available": "Slug này khả dụng",
+    "slug_taken": "Slug này đã được sử dụng",
+    "slug_reset": "Đặt lại tự động",
+    "field_description": "Mô tả",
+    "description_placeholder": "Mô tả ngắn giúp học viên lựa chọn. Họ sẽ học được gì?",
+    "field_level": "Cấp độ",
+    "field_duration": "Thời lượng ước tính",
+    "minutes_suffix": "phút",
+    "create": "Tạo khóa học",
+    "creating": "Đang tạo…",
+    "created": "Đã tạo khóa học",
+    "create_failed": "Không thể tạo khóa học",
+    "preview_label": "Xem trước",
+    "preview_title_placeholder": "Tiêu đề khóa học của bạn",
+    "preview_desc_placeholder": "Mô tả khóa học sẽ hiển thị ở đây."
   }
 }
