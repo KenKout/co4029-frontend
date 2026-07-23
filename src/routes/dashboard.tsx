@@ -6,7 +6,7 @@ import { useMyCourses } from "@/lib/api/hooks/courses";
 import { useNotifications } from "@/lib/api/hooks/notifications";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StatCard } from "@/components/ui/stat-card";
@@ -167,6 +167,9 @@ export default function DashboardPage() {
           <div className="space-y-1">
             <div className="flex items-center gap-3 mb-1">
               <Avatar className="h-10 w-10">
+                {user?.profile?.avatar_url && (
+                  <AvatarImage src={user.profile.avatar_url} alt="" />
+                )}
                 <AvatarFallback className="bg-m3-primary text-white text-sm font-bold">
                   {initials}
                 </AvatarFallback>

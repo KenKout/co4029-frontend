@@ -63,9 +63,6 @@ function CourseCard({ course }: { course: Course }) {
               {Math.round(course.estimated_minutes / 60)}h
             </span>
           )}
-          <span className="ml-auto text-m3-primary font-medium group-hover:underline">
-            {t("teacher_dashboard.your_courses.manage")} &rarr;
-          </span>
         </div>
       </div>
     </Link>
