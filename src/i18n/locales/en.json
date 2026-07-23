@@ -2665,6 +2665,26 @@
       "move_to_top": "Move to top",
       "move_to_bottom": "Move to bottom",
       "duplicate_hint": "Duplicate is not available yet",
+      "add_to_bank": "Add to question bank",
+      "bank_added": "Added to the course question bank",
+      "import_from_bank": "Import from bank",
+      "import_title": "Import from course question bank",
+      "import_help": "Select questions from the course bank to copy into this interview. Imported questions become editable copies — later edits here don't change the bank.",
+      "import_selected": "Import {{count}} selected",
+      "imported": "Imported {{count}} question(s)",
+      "import_all_added": "All bank questions are already in this interview. Add more to the bank from other interviews to reuse them here.",
+      "type": {
+        "conceptual": "Conceptual",
+        "behavioral": "Behavioral",
+        "technical": "Technical",
+        "situational": "Situational",
+        "system_design": "System design"
+      },
+      "difficulty": {
+        "junior": "Junior",
+        "mid_level": "Mid-level",
+        "senior": "Senior"
+      },
       "status": {
         "draft": "Draft",
         "needs_review": "Needs review",

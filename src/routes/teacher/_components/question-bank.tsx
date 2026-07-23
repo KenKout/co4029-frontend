@@ -4,12 +4,14 @@ import {
   ArrowDown,
   ArrowUp,
   Bot,
+  BookMarked,
   Check,
   CheckCircle2,
   ChevronDown,
   CircleDashed,
   CircleDot,
   FileText,
+  Library,
   Loader2,
   MoreVertical,
   Pencil,
@@ -35,13 +37,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  useAddToInterviewQuestionBank,
   useCreateInterviewQuestion,
   useDeleteInterviewQuestion,
+  useInterviewQuestionBank,
   useUpdateInterviewQuestion,
 } from "@/lib/api/hooks/interviews";
 import type {
   InterviewOutcomeAuthoring,
   InterviewQuestionAuthoring,
+  InterviewQuestionBankItemRead,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
@@ -117,6 +122,8 @@ function difficultyChipClass(
 
 interface QuestionBankProps {
   configId: string;
+  /** Parent course id — enables the course-scoped shared question bank. */
+  courseId: string;
   questions: InterviewQuestionAuthoring[];
   outcomes: InterviewOutcomeAuthoring[];
   /**
@@ -129,6 +136,7 @@ interface QuestionBankProps {
 
 export function QuestionBank({
   configId,
+  courseId,
   questions,
   outcomes,
   outcomeFilterSignal,
@@ -137,6 +145,8 @@ export function QuestionBank({
   const updateQuestion = useUpdateInterviewQuestion(configId);
   const deleteQuestion = useDeleteInterviewQuestion(configId);
   const createQuestion = useCreateInterviewQuestion(configId);
+  const addToBank = useAddToInterviewQuestionBank(courseId);
+  const { data: bankItems } = useInterviewQuestionBank(courseId);
 
   // Position-ordered view; positions map to the visible "01, 02…" numbers.
   const sorted = useMemo(
@@ -182,6 +192,11 @@ export function QuestionBank({
   const [reordering, setReordering] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [savingId, setSavingId] = useState<string | null>(null);
+  // Question-bank state.
+  const [bankingId, setBankingId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [selectedBank, setSelectedBank] = useState<Set<string>>(new Set());
+  const [importBusy, setImportBusy] = useState(false);
 
   // Filter state
   const [search, setSearch] = useState("");
@@ -504,16 +519,91 @@ export function QuestionBank({
         question_type: "conceptual",
         model_answer: newAnswer.trim() || null,
       });
+      setAdding(false);
       setNewText("");
       setNewAnswer("");
-      setAdding(false);
-      toast.success(t("teacher_interview_config.toasts.question_added"));
     } catch (err: unknown) {
       toast.error((err as Error).message);
     }
   }
 
-  // ── Reorder (position swap through a temp parking slot; see note) ───────────
+  // ── Question bank: add-to-bank + import-from-bank (copy semantics) ─────────
+  async function handleAddToBank(q: InterviewQuestionAuthoring) {
+    setBankingId(q.id);
+    try {
+      await addToBank.mutateAsync({
+        prompt_text: q.prompt_text,
+        question_type: q.question_type,
+        difficulty: q.difficulty ?? null,
+        model_answer: q.model_answer ?? null,
+        source_config_id: configId,
+      });
+      announce(t("teacher_interview_config.qbank.bank_added"));
+      toast.success(t("teacher_interview_config.qbank.bank_added"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    } finally {
+      setBankingId(null);
+    }
+  }
+
+  // Items already present in THIS config (by normalized prompt) are hidden
+  // from the import picker so a teacher can't obviously double-add.
+  const existingPrompts = useMemo(
+    () => new Set(sorted.map((q) => q.prompt_text.trim().toLowerCase())),
+    [sorted],
+  );
+  const importableBankItems = useMemo(
+    () =>
+      (bankItems ?? []).filter(
+        (b) => !existingPrompts.has(b.prompt_text.trim().toLowerCase()),
+      ),
+    [bankItems, existingPrompts],
+  );
+
+  function toggleBankSelection(id: string) {
+    setSelectedBank((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleImportFromBank() {
+    const chosen = importableBankItems.filter((b) => selectedBank.has(b.id));
+    if (chosen.length === 0) return;
+    setImportBusy(true);
+    let created = 0;
+    try {
+      // Sequential creates: the (config_id, position) unique constraint means
+      // parallel POSTs at the same position collide. Copy semantics — each
+      // becomes a fresh interview question the teacher can edit independently.
+      let position = sorted.length;
+      for (const b of chosen) {
+        position += 1;
+        await createQuestion.mutateAsync({
+          prompt_text: b.prompt_text,
+          question_type: b.question_type,
+          difficulty: b.difficulty ?? null,
+          model_answer: b.model_answer ?? null,
+          position,
+        });
+        created += 1;
+      }
+      announce(t("teacher_interview_config.qbank.imported", { count: created }));
+      toast.success(
+        t("teacher_interview_config.qbank.imported", { count: created }),
+      );
+      setImporting(false);
+      setSelectedBank(new Set());
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    } finally {
+      setImportBusy(false);
+    }
+  }
+
   // The (config_id, position) unique constraint + per-PATCH commit means we
   // can't set A→B and B→A directly (first write collides). Swap through a
   // temp position above the current max: current→temp, neighbour→current,
@@ -611,6 +701,21 @@ export function QuestionBank({
                 })}
               </Button>
             )}
+            {!adding && !importing && (bankItems?.length ?? 0) > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSelectedBank(new Set());
+                  setImporting(true);
+                }}
+                className="gap-1.5 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
+              >
+                <Library className="h-3.5 w-3.5" />
+                {t("teacher_interview_config.qbank.import_from_bank")}
+              </Button>
+            )}
             {!adding && (
               <Button
                 type="button"
@@ -625,6 +730,19 @@ export function QuestionBank({
             )}
           </div>
         </div>
+
+        {/* Import-from-bank picker: multi-select course bank questions to copy
+            in. Already-present questions (by prompt) are filtered out. */}
+        {importing && (
+          <ImportFromBankPanel
+            items={importableBankItems}
+            selected={selectedBank}
+            onToggle={toggleBankSelection}
+            busy={importBusy}
+            onCancel={() => setImporting(false)}
+            onConfirm={() => void handleImportFromBank()}
+          />
+        )}
 
         {/* Search + filters — only when there are questions to filter. */}
         {hasQuestions && (
@@ -871,6 +989,8 @@ export function QuestionBank({
                   onDelete={() => void handleDelete(q)}
                   onMoveUp={() => void handleReorder(displayIndex, -1)}
                   onMoveDown={() => void handleReorder(displayIndex, 1)}
+                  onAddToBank={() => void handleAddToBank(q)}
+                  banking={bankingId === q.id}
                 />
               );
             })}
@@ -880,6 +1000,131 @@ export function QuestionBank({
 
       {/* Screen-reader live region for status/reorder announcements */}
       <div ref={liveRegionRef} aria-live="polite" className="sr-only" />
+    </div>
+  );
+}
+
+// ── Import-from-bank picker ───────────────────────────────────────────────────
+
+function ImportFromBankPanel({
+  items,
+  selected,
+  onToggle,
+  busy,
+  onCancel,
+  onConfirm,
+}: {
+  items: InterviewQuestionBankItemRead[];
+  selected: Set<string>;
+  onToggle: (id: string) => void;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const { t } = useTranslation();
+  const count = selected.size;
+  return (
+    <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+      <div className="flex items-start gap-2">
+        <Library className="h-4 w-4 text-primary mt-0.5 shrink-0" aria-hidden="true" />
+        <div className="space-y-0.5">
+          <p className="text-sm font-bold text-m3-on-surface">
+            {t("teacher_interview_config.qbank.import_title")}
+          </p>
+          <p className="text-xs text-m3-on-surface-variant max-w-prose">
+            {t("teacher_interview_config.qbank.import_help")}
+          </p>
+        </div>
+      </div>
+
+      {items.length === 0 ? (
+        <p className="rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-3 py-2 text-xs text-m3-on-surface-variant">
+          {t("teacher_interview_config.qbank.import_all_added")}
+        </p>
+      ) : (
+        <ul className="space-y-1.5 max-h-72 overflow-y-auto">
+          {items.map((b) => {
+            const isSel = selected.has(b.id);
+            return (
+              <li key={b.id}>
+                <button
+                  type="button"
+                  onClick={() => onToggle(b.id)}
+                  aria-pressed={isSel}
+                  className={cn(
+                    "flex w-full items-start gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors",
+                    isSel
+                      ? "border-primary bg-primary/10"
+                      : "border-m3-outline-variant/30 bg-m3-surface hover:bg-m3-surface-container-low",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
+                      isSel
+                        ? "border-primary bg-primary text-white"
+                        : "border-m3-outline-variant",
+                    )}
+                  >
+                    {isSel && <Check className="h-3 w-3" />}
+                  </span>
+                  <span className="min-w-0 flex-1 space-y-1">
+                    <span className="block text-sm text-m3-on-surface leading-relaxed">
+                      {b.prompt_text}
+                    </span>
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant="outline" className="text-[10px]">
+                        {t(
+                          `teacher_interview_config.qbank.type.${b.question_type}`,
+                        )}
+                      </Badge>
+                      {b.difficulty && (
+                        <span
+                          className={cn(
+                            "inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                            difficultyChipClass(b.difficulty),
+                          )}
+                        >
+                          {t(
+                            `teacher_interview_config.qbank.difficulty.${b.difficulty}`,
+                          )}
+                        </span>
+                      )}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={busy}
+          onClick={onCancel}
+        >
+          <X className="h-4 w-4" />
+          {t("common.cancel")}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          className="gap-1.5"
+          disabled={busy || count === 0}
+          onClick={onConfirm}
+        >
+          {busy ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Plus className="h-4 w-4" />
+          )}
+          {t("teacher_interview_config.qbank.import_selected", { count })}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -963,6 +1208,8 @@ interface QuestionCardProps {
   onDelete: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  onAddToBank: () => void;
+  banking: boolean;
 }
 
 function QuestionCard({
@@ -988,6 +1235,8 @@ function QuestionCard({
   onDelete,
   onMoveUp,
   onMoveDown,
+  onAddToBank,
+  banking,
 }: QuestionCardProps) {
   const { t } = useTranslation();
   const meta = statusMeta(q.review_status);
@@ -1149,6 +1398,18 @@ function QuestionCard({
                     {expanded
                       ? t("teacher_interview_config.qbank.hide_answer")
                       : t("teacher_interview_config.qbank.view_answer")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={onAddToBank}
+                    disabled={banking}
+                    className="gap-2"
+                  >
+                    {banking ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <BookMarked className="h-4 w-4" />
+                    )}
+                    {t("teacher_interview_config.qbank.add_to_bank")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

@@ -727,6 +727,7 @@ export default function InterviewConfigPage() {
               <section id="questions" className="scroll-mt-32">
                 <QuestionBank
                   configId={configId}
+                  courseId={courseId}
                   questions={questions ?? []}
                   outcomes={outcomes ?? []}
                   outcomeFilterSignal={outcomeFilterSignal}

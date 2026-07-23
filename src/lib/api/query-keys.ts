@@ -211,6 +211,8 @@ export const queryKeys = {
       ["interviews", "adaptive-readiness", configId] as const,
     teacherGapReport: (sessionId: string) =>
       ["interviews", "teacher-gap-report", sessionId] as const,
+    questionBank: (courseId: string) =>
+      ["interviews", "question-bank", courseId] as const,
     generationRun: (configId: string, runId: string) =>
       ["interviews", "generation-run", configId, runId] as const,
     teacherSession: (sessionId: string) =>

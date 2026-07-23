@@ -186,6 +186,34 @@ export type InterviewOutcomeCreate = Schemas["InterviewOutcomeCreate"];
 export type InterviewGenerationRequest = Schemas["InterviewGenerationRequest"];
 export type InterviewGenerationRunPublic = Schemas["InterviewGenerationRunPublic"];
 export type GapReportRead = Schemas["GapReportRead"];
+
+// Course-scoped interview question bank (§QBank-1). Manually typed until the
+// OpenAPI snapshot is regenerated; matches the backend authoring schemas.
+export type InterviewQuestionType =
+  Schemas["InterviewQuestionCreate"]["question_type"];
+export type InterviewDifficulty = NonNullable<
+  Schemas["InterviewQuestionCreate"]["difficulty"]
+>;
+export interface InterviewQuestionBankItemRead {
+  id: string;
+  course_id: string;
+  prompt_text: string;
+  question_type: InterviewQuestionType;
+  difficulty?: InterviewDifficulty | null;
+  model_answer?: string | null;
+  tags: string[];
+  source_config_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+export interface InterviewQuestionBankItemCreate {
+  prompt_text: string;
+  question_type: InterviewQuestionType;
+  difficulty?: InterviewDifficulty | null;
+  model_answer?: string | null;
+  tags?: string[];
+  source_config_id?: string | null;
+}
 // Widen with the teacher-context fields the backend already returns
 // (student_name, interview_title) until the OpenAPI snapshot is regenerated.
 export type GapReportAuthoringRead = Schemas["GapReportAuthoringRead"] & {
