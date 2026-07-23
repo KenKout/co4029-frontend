@@ -45,7 +45,9 @@ import {
   useTeacherCourseById,
   useTeacherCourseContent,
 } from "@/lib/api/hooks/teacher-courses";
+import { useTeacherCourseOutcomes } from "@/lib/api/hooks/courses";
 import type {
+  CourseLearningOutcomeAuthoring,
   QuizAuthoring,
   QuizQuestionAuthoring,
 } from "@/lib/api/types";
@@ -170,6 +172,7 @@ export default function QuizManagePage() {
     useQuizAuthoring(quizId);
   const { data: content, isLoading: contentLoading } =
     useTeacherCourseContent(courseId);
+  const { data: outcomes } = useTeacherCourseOutcomes(courseId);
 
   const quiz = authoring?.quiz;
   const allQuestions = useMemo(() => authoring?.questions ?? [], [authoring]);
@@ -632,6 +635,7 @@ export default function QuizManagePage() {
         <QuestionsTab
           quizId={quizId}
           questions={questions}
+          outcomes={outcomes ?? []}
           selectedIds={selectedQuestionIds}
           onToggleSelect={toggleQuestionSelection}
           onSelectAll={selectAllQuestions}
@@ -670,6 +674,7 @@ export default function QuizManagePage() {
         <GenerateModal
           quizId={quizId}
           moduleId={quiz.module_id}
+          courseId={courseId}
           hasExistingQuestions={questions.length > 0}
           onClose={() => setShowGenerateModal(false)}
         />
@@ -794,6 +799,7 @@ export default function QuizManagePage() {
 function QuestionsTab({
   quizId,
   questions,
+  outcomes,
   selectedIds,
   onToggleSelect,
   onSelectAll,
@@ -811,6 +817,7 @@ function QuestionsTab({
 }: {
   quizId: string;
   questions: QuizQuestionAuthoring[];
+  outcomes: CourseLearningOutcomeAuthoring[];
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onSelectAll: () => void;
@@ -995,6 +1002,7 @@ function QuestionsTab({
               key={question.id}
               quizId={quizId}
               question={question}
+              outcomes={outcomes}
               selected={selectedIds.has(question.id)}
               onToggleSelect={() => onToggleSelect(question.id)}
               onQueueDelete={onQueueDelete}
@@ -1184,12 +1192,14 @@ function BulkSetExpectedTimeBar({
 function QuestionCard({
   quizId,
   question,
+  outcomes,
   selected,
   onToggleSelect,
   onQueueDelete,
 }: {
   quizId: string;
   question: QuizQuestionAuthoring;
+  outcomes: CourseLearningOutcomeAuthoring[];
   selected: boolean;
   onToggleSelect: () => void;
   onQueueDelete: (item: PendingQuestionDelete) => void;
@@ -1249,6 +1259,7 @@ function QuestionCard({
             ? null
             : draft.expected_ef_ceiling,
         review_status: reviewStatus,
+        learning_outcome_id: draft.learning_outcome_id || null,
         ...(hasOptions
           ? {
               options: draft.options.map((o) => ({
@@ -1367,6 +1378,33 @@ function QuestionCard({
           rows={3}
           className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
         />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+          {t("teacher_quiz_manage.outcome.label", "Learning outcome")}
+        </label>
+        <select
+          value={draft.learning_outcome_id ?? ""}
+          onChange={(e) =>
+            setDraft((current) => ({
+              ...current,
+              learning_outcome_id: e.target.value || null,
+            }))
+          }
+          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+        >
+          <option value="">{t("teacher_quiz_manage.outcome.none", "No outcome")}</option>
+          {outcomes.map((outcome) => (
+            <option key={outcome.id} value={outcome.id}>
+              {`L.O.${outcome.position} — ${
+                outcome.outcome_text.length > 60
+                  ? `${outcome.outcome_text.slice(0, 60)}…`
+                  : outcome.outcome_text
+              }`}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="space-y-1.5">
@@ -1627,12 +1665,6 @@ function QuestionCard({
             />
           </div>
         </div>
-        <p className="text-[10px] text-m3-on-surface-variant">
-          {t(
-            "teacher_quiz_manage.editor.metadata_hint",
-            "Bloom + difficulty drive analytics. Expected time gates publishing. EF ceiling caps the SR scheduler's mastery factor (1.30–3.50).",
-          )}
-        </p>
       </div>
 
       <div className="space-y-1.5">
@@ -1716,6 +1748,7 @@ interface QuestionDraft {
   expected_response_seconds: number | null;
   expected_ef_ceiling: number | null;
   review_status: string;
+  learning_outcome_id: string | null;
   options: Array<{
     id: string;
     option_key: string;
@@ -1763,6 +1796,7 @@ function buildQuestionDraft(question: QuizQuestionAuthoring): QuestionDraft {
         ? null
         : Number(question.expected_ef_ceiling),
     review_status: question.review_status ?? "pending",
+    learning_outcome_id: question.learning_outcome_id ?? null,
     options: (question.options ?? []).map((o) => ({
       id: o.id,
       option_key: o.option_key,
@@ -1775,11 +1809,13 @@ function buildQuestionDraft(question: QuizQuestionAuthoring): QuestionDraft {
 function GenerateModal({
   quizId,
   moduleId,
+  courseId,
   hasExistingQuestions,
   onClose,
 }: {
   quizId: string;
   moduleId: string;
+  courseId?: string;
   hasExistingQuestions: boolean;
   onClose: () => void;
 }) {
@@ -1816,6 +1852,7 @@ function GenerateModal({
         <QuizGenerationPanel
           quizId={quizId}
           moduleId={moduleId}
+          courseId={courseId}
           hasExistingQuestions={hasExistingQuestions}
         />
       </div>
@@ -2290,6 +2327,11 @@ function PreviewQuestion({
           {index + 1}
         </span>
         <p className="text-sm font-semibold text-m3-on-surface leading-relaxed">
+          {question.outcome_position != null && (
+            <span className="mr-1.5 inline-flex items-center rounded-md bg-violet-50 px-1.5 py-0.5 text-[11px] font-bold text-violet-600 align-middle">
+              (L.O.{question.outcome_position})
+            </span>
+          )}
           {question.prompt_text || (
             <span className="italic text-m3-on-surface-variant">
               {t("teacher_quiz_manage.preview.no_content")}

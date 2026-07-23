@@ -14,6 +14,7 @@ import type {
   QuestionBankImportRequest,
   QuizAttemptAnswerRead,
   QuizAttemptRead,
+  QuizAttemptReviewQuestion,
   QuizAttemptReviewRead,
   QuizAttemptStart,
   QuizAttemptSubmitAnswer,
@@ -111,6 +112,40 @@ export function useCourseQuizAttempts(courseId: string | null | undefined) {
         `/teacher/courses/${courseId}/quiz-attempts`,
       ),
     enabled: !!courseId,
+  });
+}
+
+/**
+ * Teacher-facing per-attempt detail. The endpoint
+ * (`GET /teacher/courses/{courseId}/quiz-attempts/{attemptId}`) post-dates
+ * the committed OpenAPI snapshot, so types are declared locally following
+ * this file's convention.
+ */
+export interface QuizAttemptIntegrityEvent {
+  id: string;
+  event_type: string;
+  severity: string;
+  metadata_json: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface QuizAttemptTeacherReview {
+  attempt: QuizAttemptTeacherRead;
+  questions: QuizAttemptReviewQuestion[];
+  integrity_events: QuizAttemptIntegrityEvent[];
+}
+
+export function useCourseQuizAttemptDetail(
+  courseId: string | null | undefined,
+  attemptId: string | null | undefined,
+) {
+  return useQuery({
+    queryKey: queryKeys.quizzes.attemptDetail(courseId ?? "", attemptId ?? ""),
+    queryFn: () =>
+      apiFetch<QuizAttemptTeacherReview>(
+        `/teacher/courses/${courseId}/quiz-attempts/${attemptId}`,
+      ),
+    enabled: !!courseId && !!attemptId,
   });
 }
 

@@ -560,7 +560,9 @@ export default function LessonManagePage() {
             title: file.name.replace(/\.[^.]+$/, ""),
             material_type: materialType,
             storage_object_id: storage_object.id,
-            ai_processing_enabled: false,
+            // Kick off ingestion so the document gets a viewable rendition
+            // instead of sitting "pending" forever with only a raw download.
+            ai_processing_enabled: true,
             visible_to_students: false,
           });
         } catch {

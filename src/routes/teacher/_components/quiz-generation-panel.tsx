@@ -33,6 +33,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   AlertCircle,
@@ -48,6 +49,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ApiError } from "@/lib/api/client";
 import { useAuthoringModuleLessons } from "@/lib/api/hooks/teacher-courses";
+import { useTeacherCourseOutcomes } from "@/lib/api/hooks/courses";
 import {
   useGenerateQuiz,
   useLatestQuizGenerationRun,
@@ -123,6 +125,8 @@ interface FormState {
   selected_section_ids: Record<string, string[]>;
   bloom_enabled: boolean;
   bloom_distribution: BloomDistribution;
+  /** Course learning-outcome ids the generated questions should target. */
+  target_outcome_ids: string[];
 }
 
 const INITIAL_FORM: FormState = {
@@ -142,6 +146,7 @@ const INITIAL_FORM: FormState = {
   selected_section_ids: {},
   bloom_enabled: false,
   bloom_distribution: { ...EMPTY_BLOOM_DISTRIBUTION },
+  target_outcome_ids: [],
 };
 
 /**
@@ -340,16 +345,20 @@ function buildCoverageOptions(
 export function QuizGenerationPanel({
   quizId,
   moduleId,
+  courseId,
   hasExistingQuestions,
   onRunStarted,
 }: {
   quizId: string;
   moduleId: string;
+  courseId?: string;
   hasExistingQuestions: boolean;
   onRunStarted?: (runId: string) => void;
 }) {
+  const { t } = useTranslation();
   const generateQuiz = useGenerateQuiz(quizId);
   const { data: lessons = [] } = useAuthoringModuleLessons(moduleId);
+  const { data: outcomes = [] } = useTeacherCourseOutcomes(courseId);
   // Reattach to the latest server-side run on mount instead of
   // persisting the run id in the browser. Survives cross-device
   // sessions, tab closes, and lets two teachers viewing the same
@@ -435,6 +444,15 @@ export function QuizGenerationPanel({
     );
   }
 
+  function toggleOutcome(outcomeId: string) {
+    setForm((current) => ({
+      ...current,
+      target_outcome_ids: current.target_outcome_ids.includes(outcomeId)
+        ? current.target_outcome_ids.filter((id) => id !== outcomeId)
+        : [...current.target_outcome_ids, outcomeId],
+    }));
+  }
+
   function setSelectedSectionIds(lessonId: string, sectionIds: string[]) {
     setForm((current) => ({
       ...current,
@@ -488,6 +506,7 @@ export function QuizGenerationPanel({
           form.bloom_enabled,
           form.bloom_distribution,
         ),
+        target_outcome_ids: form.target_outcome_ids,
       });
       setActiveRunId(run.id);
       onRunStarted?.(run.id);
@@ -556,6 +575,71 @@ export function QuizGenerationPanel({
           )}
         </div>
       </div>
+
+      {/* ── Target learning outcomes ── */}
+      {courseId && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              {t("quiz_generation.outcomes.label", "Target learning outcomes")}
+            </label>
+            {outcomes.length > 0 && (
+              <button
+                type="button"
+                onClick={() =>
+                  setForm((current) => ({
+                    ...current,
+                    target_outcome_ids: outcomes.map((o) => o.id),
+                  }))
+                }
+                className="text-xs font-semibold text-m3-secondary hover:text-m3-primary cursor-pointer"
+              >
+                {t("quiz_generation.outcomes.select_all", "Select all")}
+              </button>
+            )}
+          </div>
+          <div className="space-y-2">
+            {outcomes.length === 0 ? (
+              <div className="rounded-xl bg-m3-surface p-4 text-sm text-m3-on-surface-variant text-center">
+                {t(
+                  "quiz_generation.outcomes.empty",
+                  "No learning outcomes defined for this course yet. Questions will be generated without outcome tagging.",
+                )}
+              </div>
+            ) : (
+              outcomes.map((outcome, index) => {
+                const checked = form.target_outcome_ids.includes(outcome.id);
+                return (
+                  <label
+                    key={outcome.id}
+                    className={cn(
+                      "flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer transition-all",
+                      checked
+                        ? "border-m3-secondary bg-m3-secondary-fixed/30"
+                        : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleOutcome(outcome.id)}
+                      className="h-4 w-4"
+                    />
+                    <span className="shrink-0 rounded-md bg-violet-100 px-1.5 py-0.5 text-[11px] font-bold text-violet-700">
+                      {t("quiz_generation.outcomes.badge", "L.O.{{n}}", {
+                        n: index + 1,
+                      })}
+                    </span>
+                    <span className="flex-1 text-sm text-m3-on-surface">
+                      {outcome.outcome_text}
+                    </span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Question count + difficulty ── */}
       <div className="grid grid-cols-2 gap-3">

@@ -21,6 +21,7 @@ import type {
 import type { StreamUrlResponse } from "../types/common";
 import type {
   LearningMaterial,
+  LessonKnowledgeGraph,
   MaterialStatus,
   ProcessingSummary,
   UploadUrlResponse,
@@ -102,7 +103,7 @@ export function useTeacherMaterialStatus(materialId: string | undefined) {
     enabled: !!materialId,
     refetchInterval: (query) => {
       const status = query.state.data?.processing_status;
-      if (status && ["pending", "extracting", "chunking", "embedding", "building_kg"].includes(status)) return 3000;
+      if (status && ["pending", "extracting", "chunking", "embedding", "enriching", "building_kg"].includes(status)) return 3000;
       return false;
     },
   });
@@ -113,6 +114,24 @@ export function useTeacherProcessingSummary(lessonId: string | undefined) {
     queryKey: ["teacher", "lessons", lessonId, "processing-summary"],
     queryFn: () => apiFetch<ProcessingSummary>(`/teacher/lessons/${lessonId}/processing-summary`),
     enabled: !!lessonId,
+  });
+}
+
+export function useTeacherLessonKnowledgeGraph(
+  lessonId: string | undefined,
+  readyCount: number,
+) {
+  return useQuery({
+    // readyCount is part of the key so the graph refetches when a new
+    // material finishes processing (the KG only exists post-ingest).
+    queryKey: ["teacher", "lessons", lessonId, "knowledge-graph", readyCount],
+    queryFn: () =>
+      apiFetch<LessonKnowledgeGraph>(`/teacher/lessons/${lessonId}/knowledge-graph`),
+    enabled: !!lessonId,
+    staleTime: 1000 * 60 * 2,
+    // Keep the prior graph visible while refetching so it doesn't flicker
+    // to empty when readyCount ticks.
+    placeholderData: (prev) => prev,
   });
 }
 

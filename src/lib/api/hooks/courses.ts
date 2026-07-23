@@ -1,10 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { ApiError, apiFetch } from "../client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ApiError, apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import { useInfinitePage } from "../use-infinite-page";
 import type {
   Course,
   CourseContentPublic,
+  CourseLearningOutcomeAuthoring,
   CourseLearningOutcomePublic,
   CoursePublic,
   LessonPublic,
@@ -197,4 +198,73 @@ export async function fetchResourceDownloadUrl(
     `/lesson-resources/${resourceId}/download-url`,
   );
   return data.url;
+}
+
+/* ── Teacher-side learning-outcome CRUD (§LO-1/2) ──
+ * The `L.O.x` code is derived from `position` (1-based, contiguous) at
+ * display time; the server renumbers on delete so positions never gap.
+ */
+export function useTeacherCourseOutcomes(courseId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.courses.teacherOutcomes(courseId ?? ""),
+    queryFn: async () => {
+      const list = await apiFetch<CourseLearningOutcomeAuthoring[]>(
+        `/teacher/courses/${courseId}/outcomes`,
+      );
+      return [...list].sort((a, b) => a.position - b.position);
+    },
+    enabled: !!courseId,
+  });
+}
+
+function useOutcomeInvalidation(courseId: string | undefined) {
+  const qc = useQueryClient();
+  return () => {
+    void qc.invalidateQueries({
+      queryKey: queryKeys.courses.teacherOutcomes(courseId ?? ""),
+    });
+    // The learner-facing (published) list shares the same rows.
+    void qc.invalidateQueries({
+      queryKey: queryKeys.courses.outcomes(courseId ?? ""),
+    });
+  };
+}
+
+export function useCreateCourseOutcome(courseId: string | undefined) {
+  const invalidate = useOutcomeInvalidation(courseId);
+  return useMutation({
+    mutationFn: (outcome_text: string) =>
+      apiPost<CourseLearningOutcomeAuthoring>(
+        `/teacher/courses/${courseId}/outcomes`,
+        { outcome_text },
+      ),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateCourseOutcome(courseId: string | undefined) {
+  const invalidate = useOutcomeInvalidation(courseId);
+  return useMutation({
+    mutationFn: ({
+      outcomeId,
+      outcome_text,
+    }: {
+      outcomeId: string;
+      outcome_text: string;
+    }) =>
+      apiPatch<CourseLearningOutcomeAuthoring>(
+        `/teacher/courses/${courseId}/outcomes/${outcomeId}`,
+        { outcome_text },
+      ),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteCourseOutcome(courseId: string | undefined) {
+  const invalidate = useOutcomeInvalidation(courseId);
+  return useMutation({
+    mutationFn: (outcomeId: string) =>
+      apiDelete(`/teacher/courses/${courseId}/outcomes/${outcomeId}`),
+    onSuccess: invalidate,
+  });
 }

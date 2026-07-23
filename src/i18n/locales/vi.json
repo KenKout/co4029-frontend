@@ -4,6 +4,7 @@
     "error": "Đã xảy ra lỗi",
     "save": "Lưu",
     "cancel": "Huỷ",
+    "create": "Tạo",
     "delete": "Xoá",
     "edit": "Chỉnh sửa",
     "confirm": "Xác nhận",
@@ -193,6 +194,80 @@
       "beginner": "Cơ bản",
       "intermediate": "Trung cấp",
       "advanced": "Nâng cao"
+    }
+  },
+  "teacher_course_settings": {
+    "title": "Cài đặt khóa học",
+    "status_summary_published": "Đã xuất bản",
+    "status_summary_draft": "Bản nháp",
+    "no_level": "Chưa đặt cấp độ",
+    "course_title": "Tên khóa học",
+    "course_title_placeholder": "vd. Nền tảng Máy học",
+    "course_slug": "Đường dẫn khóa học",
+    "course_slug_placeholder": "vd. ml-fundamentals",
+    "course_slug_help": "Dùng trong URL của khóa học. Phải là duy nhất.",
+    "description": "Mô tả",
+    "description_placeholder": "Tóm tắt ngắn gọn về những gì học viên sẽ học…",
+    "level": "Cấp độ",
+    "level_not_set": "— Chưa đặt —",
+    "level_beginner": "Cơ bản",
+    "level_intermediate": "Trung cấp",
+    "level_advanced": "Nâng cao",
+    "status": "Trạng thái",
+    "status_draft": "Bản nháp",
+    "status_published": "Đã xuất bản",
+    "status_archived": "Lưu trữ",
+    "estimated_duration": "Thời lượng ước tính (phút)",
+    "estimated_duration_placeholder": "vd. 480",
+    "enrollment_cap": "Giới hạn ghi danh",
+    "enrollment_cap_placeholder": "Để trống nếu không giới hạn",
+    "expected_completion": "Thời gian hoàn thành dự kiến (ngày)",
+    "expected_completion_placeholder": "vd. 30",
+    "save": "Lưu cài đặt khóa học",
+    "saved": "Đã lưu cài đặt khóa học",
+    "save_failed": "Lưu thất bại"
+  },
+  "teacher_quiz_attempt": {
+    "load_failed": "Không tải được lượt làm này.",
+    "back_to_assessments": "Quay lại Đánh giá",
+    "breadcrumb_assessments": "Đánh giá",
+    "breadcrumb_attempt": "Lượt làm",
+    "subtitle": "{{student}} · Lượt #{{number}}",
+    "started": "Bắt đầu",
+    "submitted": "Đã nộp",
+    "tiles": {
+      "status": "Trạng thái",
+      "score": "Điểm",
+      "correct": "Đúng",
+      "time_taken": "Thời gian làm"
+    },
+    "status": {
+      "passed": "Đạt",
+      "failed": "Không đạt",
+      "in_progress": "Đang làm",
+      "grading": "Đang chấm…"
+    },
+    "integrity": {
+      "clean_title": "Không có cảnh báo gian lận",
+      "clean_body": "Sinh viên này ở lại trang làm bài suốt thời gian — không ghi nhận chuyển tab hay mất tiêu điểm.",
+      "flagged_title": "Phát hiện tín hiệu bất thường",
+      "summary": "Rời khỏi trang {{tab}} lần (chuyển tab), mất tiêu điểm {{focus}} lần. Được ghi lại để bạn xem xét — không tự động trừ điểm.",
+      "event": {
+        "tab_switch": "Chuyển khỏi tab làm bài",
+        "focus_lost": "Cửa sổ làm bài mất tiêu điểm",
+        "fullscreen_exit": "Thoát toàn màn hình"
+      },
+      "severity": {
+        "critical": "Nghiêm trọng",
+        "warning": "Cảnh báo",
+        "info": "Thông tin"
+      }
+    },
+    "questions": {
+      "title": "Câu trả lời",
+      "q_label": "Câu {{index}}",
+      "skipped": "Bỏ qua",
+      "their_answer": "Câu trả lời của sinh viên"
     }
   },
   "teacher_students_hub": {
@@ -619,7 +694,11 @@
     "recent_title": "Lịch sử ôn tập gần đây",
     "recent_count": "{{count}} lượt ôn tập gần nhất",
     "no_history": "Chưa có lịch sử",
-    "empty_reviews": "Sinh viên chưa có hoạt động ôn tập nào."
+    "empty_reviews": "Sinh viên chưa có hoạt động ôn tập nào.",
+    "review": {
+      "answered_correct": "Trả lời đúng",
+      "answered_incorrect": "Trả lời sai"
+    }
   },
   "teacher_progress": {
     "breadcrumb": "Tiến độ bài học",
@@ -2162,7 +2241,39 @@
       }
     }
   },
+  "teacher_outcomes": {
+    "title": "Chuẩn đầu ra",
+    "count": "Đã định nghĩa {{count}}",
+    "code": "L.O.{{n}}",
+    "add": "Thêm chuẩn đầu ra",
+    "add_placeholder": "Mô tả một chuẩn đầu ra…",
+    "edit": "Sửa",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "empty": "Chưa có chuẩn đầu ra nào. Thêm một chuẩn để mô tả điều sinh viên sẽ đạt được.",
+    "added": "Đã thêm chuẩn đầu ra",
+    "updated": "Đã cập nhật chuẩn đầu ra",
+    "deleted": "Đã xóa chuẩn đầu ra",
+    "add_failed": "Không thể thêm chuẩn đầu ra",
+    "update_failed": "Không thể cập nhật chuẩn đầu ra",
+    "delete_failed": "Không thể xóa chuẩn đầu ra",
+    "delete_title": "Xóa chuẩn đầu ra này?",
+    "delete_description": "Các câu hỏi được gắn với nó sẽ trở về không có chuẩn đầu ra. Các chuẩn còn lại được đánh số lại tự động."
+  },
+  "quiz_generation": {
+    "outcomes": {
+      "label": "Chuẩn đầu ra mục tiêu",
+      "select_all": "Chọn tất cả",
+      "empty": "Khóa học này chưa có chuẩn đầu ra nào. Câu hỏi sẽ được tạo mà không gắn nhãn chuẩn đầu ra.",
+      "badge": "L.O.{{n}}"
+    }
+  },
   "teacher_quiz_manage": {
+    "outcome": {
+      "label": "Chuẩn đầu ra",
+      "none": "Không có chuẩn đầu ra"
+    },
     "tabs": {
       "questions": "Câu hỏi",
       "settings": "Cấu hình",
@@ -2603,6 +2714,13 @@
       "added": "Đã thêm chuẩn đầu ra",
       "saved": "Đã lưu chuẩn đầu ra",
       "deleted": "Đã xoá chuẩn đầu ra",
+      "import_from_course": "Nhập từ khóa học",
+      "import_title": "Nhập chuẩn đầu ra của khóa học",
+      "import_help": "Chọn các chuẩn đầu ra cấp khóa học để sao chép vào buổi phỏng vấn này. Chuẩn đầu ra được nhập mặc định là Kiến thức / trọng số 3 — bạn có thể chỉnh sửa từng mục sau đó.",
+      "import_selected": "Nhập {{count}} đã chọn",
+      "imported": "Đã nhập {{count}} chuẩn đầu ra",
+      "import_all_added": "Tất cả chuẩn đầu ra của khóa học đã được thêm ở đây. Hãy định nghĩa thêm ở cấp khóa học để nhập vào.",
+      "course_lo_code": "L.O.{{n}}",
       "section_help": "Xác định điều sinh viên phải thể hiện để đạt phỏng vấn. Câu hỏi do AI tạo và tiêu chí đánh giá được căn chỉnh theo các chuẩn đầu ra này.",
       "statement_label": "Nội dung chuẩn đầu ra",
       "summary_outcomes": "{{count}} chuẩn đầu ra",
@@ -2714,6 +2832,7 @@
       "move_to_top": "Chuyển lên đầu",
       "move_to_bottom": "Chuyển xuống cuối",
       "duplicate_hint": "Chưa hỗ trợ nhân bản",
+      "module_badge_tooltip": "Chương mà buổi phỏng vấn này thuộc về",
       "add_to_bank": "Thêm vào ngân hàng câu hỏi",
       "bank_added": "Đã thêm vào ngân hàng câu hỏi của khóa học",
       "import_from_bank": "Nhập từ ngân hàng",
@@ -2764,13 +2883,6 @@
         "status_changed": "Đã đổi trạng thái sang {{status}}",
         "outcome_changed": "Đã gán chuẩn đầu ra: {{outcome}}",
         "moved": "Đã chuyển câu hỏi tới vị trí {{position}}"
-      "import_from_course": "Nhập từ khóa học",
-      "import_title": "Nhập chuẩn đầu ra của khóa học",
-      "import_help": "Chọn các chuẩn đầu ra cấp khóa học để sao chép vào buổi phỏng vấn này. Chuẩn đầu ra được nhập mặc định là Kiến thức / trọng số 3 — bạn có thể chỉnh sửa từng mục sau đó.",
-      "import_selected": "Nhập {{count}} đã chọn",
-      "imported": "Đã nhập {{count}} chuẩn đầu ra",
-      "import_all_added": "Tất cả chuẩn đầu ra của khóa học đã được thêm ở đây. Hãy định nghĩa thêm ở cấp khóa học để nhập vào.",
-      "course_lo_code": "L.O.{{n}}",
       }
     },
     "review_status": {
@@ -2783,6 +2895,10 @@
       "section_title": "Sinh câu hỏi bằng AI",
       "section_description": "Cấu hình cách AI sinh câu hỏi, sau đó bắt đầu sinh khi đã sẵn sàng. Phong cách hỏi và hướng dẫn bổ sung ở trên sẽ được dùng lại cho lần sinh này.",
       "reuses_settings_hint": "Phong cách hỏi và hướng dẫn bổ sung ở các mục trên sẽ được dùng cho lần sinh câu hỏi này.",
+      "modules_label": "Chương nguồn",
+      "modules_hint": "Câu hỏi sẽ lấy nội dung từ những chương nào. Không chọn chương nào để dùng chương của chính buổi phỏng vấn này.",
+      "modules_empty": "Không có chương nào.",
+      "modules_own": "(buổi phỏng vấn này)",
       "independent_action_hint": "Nút này bắt đầu sinh câu hỏi ngay — không lưu các cấu hình ở trên.",
       "mode_label": "Chế độ sinh",
       "mode_outcome": "Theo tiêu chí (rubric)",
@@ -2824,6 +2940,7 @@
       "extracting": "Trích xuất",
       "chunking": "Phân đoạn",
       "embedding": "Nhúng vector",
+      "enriching": "Làm giàu dữ liệu",
       "building_kg": "Xây dựng KG",
       "ready": "Sẵn sàng",
       "failed": "Thất bại"
@@ -2832,7 +2949,6 @@
       "pdf": "PDF / Tài liệu",
       "text": "Văn bản / Markdown",
       "code": "Mã nguồn",
-      "module_badge_tooltip": "Chương mà buổi phỏng vấn này thuộc về",
       "image": "Hình ảnh",
       "audio": "Âm thanh"
     },
@@ -2858,6 +2974,7 @@
       "shown_to_students": "Đã hiển thị cho học viên",
       "deleted": "Đã xoá tài liệu",
       "delete_forbidden": "Bạn không có quyền xoá tài liệu này",
+      "delete_busy": "Tài liệu này vẫn đang được xử lý nên chưa thể xoá. Vui lòng thử lại sau giây lát.",
       "delete_failed": "Xoá thất bại"
     },
     "phase": {
@@ -2878,6 +2995,7 @@
     "processing": {
       "building_kg": "Trích xuất khái niệm và xây dựng đồ thị tri thức…",
       "embedding": "Tạo vector nhúng…",
+      "enriching": "Làm giàu và lưu các chunk…",
       "chunking": "Phân đoạn nội dung thành các chunk ngữ nghĩa…",
       "extracting": "Trích xuất văn bản từ tệp…",
       "queued": "Đang chờ xử lý…",
@@ -2895,10 +3013,6 @@
       "enable_ai": "Bật xử lý AI",
       "reprocess": "Xử lý lại",
       "confirm_delete": "Xác nhận xoá"
-      "modules_label": "Chương nguồn",
-      "modules_hint": "Câu hỏi sẽ lấy nội dung từ những chương nào. Không chọn chương nào để dùng chương của chính buổi phỏng vấn này.",
-      "modules_empty": "Không có chương nào.",
-      "modules_own": "(buổi phỏng vấn này)",
     },
     "breadcrumb": {
       "lesson_fallback": "Bài học",
@@ -2915,7 +3029,12 @@
     "kg": {
       "title": "Đồ thị Tri thức",
       "indexed_count": "Đã lập chỉ mục {{count}} tài liệu · khái niệm đã trích xuất",
-      "empty_hint": "Tải lên & xử lý tài liệu để xây dựng đồ thị tri thức của bạn",
+      "empty_hint": "Chưa trích xuất được khái niệm nào cho bài học này",
+      "awaiting_hint": "Tải lên & xử lý tài liệu để xây dựng đồ thị tri thức của bạn",
+      "disabled_hint": "Đồ thị tri thức chưa được bật cho môi trường này",
+      "legend_prereq": "Tiên quyết",
+      "legend_related": "Liên quan",
+      "showing_top": "Top {{shown}} trong {{total}} khái niệm",
       "open_full": "Mở đồ thị đầy đủ",
       "viewer_coming_soon": "Trình xem đồ thị tri thức sẽ sớm có"
     },

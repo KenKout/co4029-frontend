@@ -5,6 +5,35 @@ export interface MaterialStatus {
   processing_error: string | null;
   active_job_id: string | null;
   active_job_status: string | null;
+  // Live-progress fields from the /processing-summary endpoint
+  // (ProcessingProgress). `progress_percent` is the real 0–100 waypoint the
+  // worker publishes to Redis per stage; `latest_log_line` carries the
+  // current stage label. Optional because older payloads / list rows may
+  // omit them.
+  progress_percent?: number;
+  latest_log_line?: string | null;
+}
+
+export interface KGNode {
+  id: string;
+  label: string;
+  type: string;
+  definition: string | null;
+  weight: number;
+}
+
+export interface KGEdge {
+  source: string;
+  target: string;
+  relation: "PREREQUISITE_OF" | "RELATED_TO";
+}
+
+export interface LessonKnowledgeGraph {
+  lesson_id: string;
+  enabled: boolean;
+  nodes: KGNode[];
+  edges: KGEdge[];
+  total_concepts: number;
 }
 
 export interface LearningMaterial {

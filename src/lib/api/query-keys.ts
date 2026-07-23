@@ -22,6 +22,8 @@ export const queryKeys = {
     content: (id: string) => ["courses", "content", id] as const,
     tags: (id: string) => ["courses", "tags", id] as const,
     outcomes: (id: string) => ["courses", "outcomes", id] as const,
+    teacherOutcomes: (id: string) =>
+      ["courses", "teacher-outcomes", id] as const,
     modules: (id: string) => ["courses", "modules", id] as const,
     moduleDetail: (id: string) => ["courses", "module-detail", id] as const,
     moduleItems: (id: string) => ["courses", "module-items", id] as const,
@@ -194,6 +196,8 @@ export const queryKeys = {
       ["quizzes", "course-attempts", courseId] as const,
     studentAttempts: (courseId: string, studentId: string) =>
       ["quizzes", "student-attempts", courseId, studentId] as const,
+    attemptDetail: (courseId: string, attemptId: string) =>
+      ["quizzes", "attempt-detail", courseId, attemptId] as const,
     results: (quizId: string) => ["quizzes", "results", quizId] as const,
   },
 

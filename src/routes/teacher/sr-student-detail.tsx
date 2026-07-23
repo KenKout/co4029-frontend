@@ -5,6 +5,7 @@ import {
   Brain,
   CheckCircle2,
   Clock,
+  Info,
   Lock,
   XCircle,
 } from "lucide-react";
@@ -42,6 +43,29 @@ function useFormatRelative() {
     const days = Math.round(hours / 24);
     if (days < 30) return t("teacher_sr_student_detail.days_ago", { count: days });
     return new Date(iso).toLocaleDateString(locale);
+  };
+}
+
+// Maps a spaced-repetition easiness factor (EF) to a human difficulty
+// bucket + colour, identical to the cohort page's efMeta so teachers see
+// the same "Hard / Medium / Easier" language everywhere instead of a raw
+// EF number. Lower EF = the student gets it wrong more often.
+function efMeta(ef: number) {
+  if (ef < 1.6) {
+    return {
+      cls: "bg-red-100 text-red-700 border-red-200",
+      labelKey: "teacher_sr_cohort.difficulty.hard",
+    };
+  }
+  if (ef < 2.0) {
+    return {
+      cls: "bg-amber-100 text-amber-700 border-amber-200",
+      labelKey: "teacher_sr_cohort.difficulty.medium",
+    };
+  }
+  return {
+    cls: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    labelKey: "teacher_sr_cohort.difficulty.easier",
   };
 }
 
@@ -124,12 +148,19 @@ export default function TeacherSrStudentDetailPage() {
             </div>
           ) : (
             <div className="divide-y divide-m3-outline-variant/10">
-              <div className="hidden sm:grid grid-cols-[1fr_120px_120px_120px_120px] gap-3 px-6 py-2.5 bg-m3-surface-container-low">
+              <div className="hidden sm:grid grid-cols-[1fr_160px_120px_120px_120px] gap-3 px-6 py-2.5 bg-m3-surface-container-low">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
                   {t("teacher_sr_student_detail.cols.lesson")}
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                  KR
+                <span className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant inline-flex items-center gap-1">
+                  {t("teacher_sr_cohort.kr_axis")}
+                  <Info
+                    className="h-3 w-3 text-m3-on-surface-variant/60 cursor-help shrink-0"
+                    aria-label={t("teacher_sr_cohort.kr_hint")}
+                    tabIndex={0}
+                  >
+                    <title>{t("teacher_sr_cohort.kr_hint")}</title>
+                  </Info>
                 </span>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
                   {t("teacher_sr_student_detail.cols.cards_total")}
@@ -146,7 +177,7 @@ export default function TeacherSrStudentDetailPage() {
                 return (
                   <div
                     key={lesson.lesson_id}
-                    className="grid sm:grid-cols-[1fr_120px_120px_120px_120px] gap-3 px-6 py-3 items-center hover:bg-m3-surface-container-low transition-colors"
+                    className="grid sm:grid-cols-[1fr_160px_120px_120px_120px] gap-3 px-6 py-3 items-center hover:bg-m3-surface-container-low transition-colors"
                   >
                     <p className="text-sm font-medium text-m3-on-surface truncate">
                       {lesson.lesson_title}
@@ -231,28 +262,45 @@ export default function TeacherSrStudentDetailPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-mono text-m3-on-surface truncate">
-                      {review.question_id.slice(0, 8)}…
+                    <p
+                      className="text-sm font-medium text-m3-on-surface truncate"
+                      title={review.prompt_text || undefined}
+                    >
+                      {review.prompt_text?.trim()
+                        ? review.prompt_text
+                        : review.correct
+                          ? t("teacher_sr_student_detail.review.answered_correct")
+                          : t("teacher_sr_student_detail.review.answered_incorrect")}
                     </p>
                     <p className="text-xs text-m3-on-surface-variant mt-0.5">
                       {formatRelative(review.created_at)}
                     </p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-xs text-m3-on-surface-variant">
-                      {t("teacher_sr_student_detail.cols.q_recent")}
-                    </p>
-                    <p className="text-sm font-bold text-m3-primary">
-                      {review.q_derived}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0 hidden sm:block">
-                    <p className="text-xs text-m3-on-surface-variant">
-                      {t("teacher_sr_student_detail.cols.ef_after")}
-                    </p>
-                    <p className="text-sm font-bold text-m3-on-surface">
-                      {review.ef_after.toFixed(2)}
-                    </p>
+                  <div className="shrink-0 flex items-center gap-1.5">
+                    {(() => {
+                      const meta = efMeta(review.ef_after);
+                      return (
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold px-2.5 py-1 rounded-full border w-fit inline-flex items-center gap-1.5",
+                            meta.cls,
+                          )}
+                          title={t("teacher_sr_cohort.ef_hint")}
+                        >
+                          {t(meta.labelKey)}
+                          <span className="font-mono font-medium opacity-70">
+                            EF {review.ef_after.toFixed(2)}
+                          </span>
+                        </span>
+                      );
+                    })()}
+                    <Info
+                      className="h-3 w-3 text-m3-on-surface-variant/60 cursor-help shrink-0 hidden sm:block"
+                      aria-label={t("teacher_sr_cohort.ef_hint")}
+                      tabIndex={0}
+                    >
+                      <title>{t("teacher_sr_cohort.ef_hint")}</title>
+                    </Info>
                   </div>
                 </div>
               ))}

@@ -13,6 +13,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
   useTeacherLessonMaterials,
   useTeacherProcessingSummary,
+  useTeacherLessonKnowledgeGraph,
   useTeacherMaterialStatus,
   useInitMaterialUpload,
   useCompleteMaterialUpload,
@@ -28,8 +29,9 @@ import {
 import {
   useTeacherCourseById,
   useTeacherLesson,
+  useUpdateLesson,
 } from "@/lib/api/hooks/teacher-courses";
-import type { LearningMaterial } from "@/lib/api/types/teacher";
+import type { LearningMaterial, LessonKnowledgeGraph } from "@/lib/api/types/teacher";
 import type {
   MaterialUploadInit,
   MaterialUploadInitOut,
@@ -40,7 +42,7 @@ import { cn } from "@/lib/utils";
 
 const PROC_STATUS: Record<string, { color: string; spin?: boolean }> = {
   not_queued:  { color: "bg-amber-50 text-amber-600" },
-  pending:     { color: "bg-slate-100 text-slate-500" },
+  pending:     { color: "bg-blue-50 text-blue-700", spin: true },
   extracting:  { color: "bg-blue-100 text-blue-700",     spin: true },
   chunking:    { color: "bg-blue-100 text-blue-800",     spin: true },
   embedding:   { color: "bg-blue-100 text-blue-800",     spin: true },
@@ -204,17 +206,22 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
 function SelectedFileForm({
   file,
   lessonId,
+  courseId,
+  lessonPrimaryMaterialId,
   onDone,
   onCancel,
 }: {
   file: File;
   lessonId: string;
+  courseId: string;
+  lessonPrimaryMaterialId: string | null;
   onDone: () => void;
   onCancel: () => void;
 }) {
   const { t } = useTranslation();
   const initUpload = useInitMaterialUpload(lessonId);
   const completeUpload = useCompleteMaterialUpload();
+  const updateLesson = useUpdateLesson(lessonId, courseId);
   const fetchParts = useFetchMultipartParts();
   const completeMultipart = useCompleteMultipartUpload();
   const abortMultipart = useAbortMultipartUpload();
@@ -344,6 +351,21 @@ function SelectedFileForm({
         await runSingleUpload(init, contentType);
       } else {
         await runMultipartUpload(init);
+      }
+
+      // Wire this material as the lesson's primary so the student reading
+      // pane has something to render. Without this, an AI-Hub upload lands
+      // fine but leaves lessons.primary_material_id NULL, so the learner
+      // page shows nothing (or a download-only fallback). Only claim the
+      // slot when it's empty — don't stomp an existing primary the teacher
+      // already chose. Best-effort: a failure here shouldn't fail the
+      // upload the teacher just completed successfully.
+      if (!lessonPrimaryMaterialId) {
+        try {
+          await updateLesson.mutateAsync({ primary_material_id: init.material_id });
+        } catch {
+          /* non-fatal — material uploaded; primary link can be set later */
+        }
       }
 
       toast.success(t("teacher_lesson_materials.toasts.upload_complete"));
@@ -495,8 +517,30 @@ function ProcessingStatusCard({ material }: { material: LearningMaterial }) {
   const procKey = status?.processing_status ?? "pending";
   const Icon = materialIcon(material.material_type);
 
-  const steps = ["extracting", "chunking", "embedding", "building_kg"];
-  const currentStep = steps.indexOf(status?.processing_status ?? "");
+  const rawStatus = status?.processing_status ?? "pending";
+  // Live percent published by the worker per stage (Redis-backed, real-time).
+  // Falls back to a per-stage floor when the number isn't present yet so the
+  // bar never reads 0% once a stage is underway.
+  const STAGE_FLOOR: Record<string, number> = {
+    pending: 5,
+    extracting: 10,
+    chunking: 30,
+    embedding: 60,
+    enriching: 80,
+    building_kg: 95,
+    ready: 100,
+  };
+  const livePercent = status?.progress_percent ?? 0;
+  const floor = STAGE_FLOOR[rawStatus] ?? 0;
+  const percent = Math.max(livePercent, floor);
+  const inFlight = ["pending", "extracting", "chunking", "embedding", "enriching", "building_kg"].includes(
+    rawStatus,
+  );
+  // Live sub-progress the worker publishes for looping stages, surfaced by
+  // the endpoint on latest_log_line as "kg_build · 42/85". Pull out the
+  // "N/M" count so the KG line can show a running tally instead of a
+  // frozen 95%.
+  const kgDetail = /(\d+\/\d+)/.exec(status?.latest_log_line ?? "")?.[1] ?? "";
 
   return (
     <div className="p-6 bg-m3-surface-container-low rounded-xl border border-m3-secondary/10 space-y-4">
@@ -511,32 +555,33 @@ function ProcessingStatusCard({ material }: { material: LearningMaterial }) {
             {t(`teacher_lesson_materials.proc_status.${procKey}`)}
           </Badge>
         </div>
+        {inFlight && (
+          <span className="text-sm font-bold text-m3-secondary tabular-nums shrink-0">
+            {percent}%
+          </span>
+        )}
       </div>
 
       <div className="space-y-1.5">
-        <div className="flex gap-1">
-          {steps.map((step, i) => (
-            <div
-              key={step}
-              className={cn(
-                "flex-1 h-1.5 rounded-full transition-all",
-                i < currentStep
-                  ? "bg-m3-secondary"
-                  : i === currentStep
-                  ? "bg-m3-secondary ai-pulse"
-                  : "bg-m3-outline-variant/30"
-              )}
-            />
-          ))}
+        <div className="h-1.5 rounded-full bg-m3-outline-variant/30 overflow-hidden">
+          <div
+            className={cn(
+              "h-full rounded-full bg-m3-secondary transition-all duration-500 ease-out",
+              inFlight && "ai-pulse",
+            )}
+            style={{ width: `${percent}%` }}
+          />
         </div>
         <p className="text-[11px] text-m3-on-surface-variant">
-          {status?.processing_status === "building_kg"
-            ? t("teacher_lesson_materials.processing.building_kg")
-            : status?.processing_status === "embedding"
+          {rawStatus === "building_kg"
+            ? `${t("teacher_lesson_materials.processing.building_kg")}${kgDetail ? ` (${kgDetail})` : ""}`
+            : rawStatus === "enriching"
+            ? t("teacher_lesson_materials.processing.enriching")
+            : rawStatus === "embedding"
             ? t("teacher_lesson_materials.processing.embedding")
-            : status?.processing_status === "chunking"
+            : rawStatus === "chunking"
             ? t("teacher_lesson_materials.processing.chunking")
-            : status?.processing_status === "extracting"
+            : rawStatus === "extracting"
             ? t("teacher_lesson_materials.processing.extracting")
             : t("teacher_lesson_materials.processing.queued")}
         </p>
@@ -826,6 +871,10 @@ function MaterialDeleteButton({ id, onDeleted }: { id: string; onDeleted: () => 
               toast.error(t("teacher_lesson_materials.toasts.delete_forbidden"));
               return;
             }
+            if (err instanceof ApiError && err.status === 409 && err.code === "material_busy") {
+              toast.error(t("teacher_lesson_materials.toasts.delete_busy"));
+              return;
+            }
             toast.error((err as Error).message || t("teacher_lesson_materials.toasts.delete_failed"));
           },
         })
@@ -836,12 +885,70 @@ function MaterialDeleteButton({ id, onDeleted }: { id: string; onDeleted: () => 
   );
 }
 
-function KnowledgeGraphPreview({ readyCount }: { readyCount: number }) {
+// Deterministic radial layout for the KG preview: the most-central concept
+// (highest weight, index 0) sits at the centre, the rest fan out on rings by
+// rank. No physics sim, no new deps — stable positions that don't jitter
+// between renders, and legible for the bounded top-N node set.
+function layoutKgNodes(
+  nodes: LessonKnowledgeGraph["nodes"],
+  width: number,
+  height: number,
+): Map<string, { x: number; y: number; r: number }> {
+  const positions = new Map<string, { x: number; y: number; r: number }>();
+  const cx = width / 2;
+  const cy = height / 2;
+  const maxW = Math.max(...nodes.map((n) => n.weight), 1);
+  const minW = Math.min(...nodes.map((n) => n.weight), 1);
+  const radiusFor = (w: number) => {
+    // 7–18px by relative weight.
+    const t = maxW === minW ? 1 : (w - minW) / (maxW - minW);
+    return 7 + t * 11;
+  };
+
+  nodes.forEach((node, i) => {
+    if (i === 0) {
+      positions.set(node.id, { x: cx, y: cy, r: radiusFor(node.weight) });
+      return;
+    }
+    // Two rings: nodes 1..8 inner, rest outer. Golden-angle spacing so
+    // neighbours don't stack even at high counts.
+    const isInner = i <= 8;
+    const ring = isInner ? Math.min(width, height) * 0.26 : Math.min(width, height) * 0.42;
+    const angle = i * 2.399963; // golden angle (radians)
+    positions.set(node.id, {
+      x: cx + ring * Math.cos(angle),
+      y: cy + ring * Math.sin(angle),
+      r: radiusFor(node.weight),
+    });
+  });
+  return positions;
+}
+
+function KnowledgeGraphPreview({
+  lessonId,
+  readyCount,
+}: {
+  lessonId: string;
+  readyCount: number;
+}) {
   const { t } = useTranslation();
-  const [toastVisible, setToastVisible] = useState(false);
+  const { data, isLoading } = useTeacherLessonKnowledgeGraph(lessonId, readyCount);
+  const [hovered, setHovered] = useState<string | null>(null);
+
+  const W = 340;
+  const H = 240;
+
+  const nodes = data?.nodes ?? [];
+  const edges = data?.edges ?? [];
+  const positions =
+    nodes.length > 0
+      ? layoutKgNodes(nodes, W, H)
+      : new Map<string, { x: number; y: number; r: number }>();
+  const nodeById = new Map(nodes.map((n) => [n.id, n]));
+  const hoveredNode = hovered ? nodeById.get(hovered) : null;
 
   return (
-    <div className="glass ghost-border shadow-glass rounded-xl p-8 text-center space-y-4">
+    <div className="glass ghost-border shadow-glass rounded-xl p-6 space-y-4">
       <div className="flex items-center justify-center gap-2">
         <Brain className="h-5 w-5 text-m3-secondary" />
         <h3 className="font-headline font-bold text-lg text-m3-on-surface">
@@ -849,60 +956,121 @@ function KnowledgeGraphPreview({ readyCount }: { readyCount: number }) {
         </h3>
       </div>
 
-      <div className="flex justify-center">
-        <svg
-          width="260"
-          height="170"
-          viewBox="0 0 260 170"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-          className={cn(readyCount === 0 && "opacity-30")}
-        >
-          <line x1="130" y1="85" x2="55" y2="38"  stroke="#c5c5d4" strokeWidth="1" />
-          <line x1="130" y1="85" x2="205" y2="38" stroke="#c5c5d4" strokeWidth="1" />
-          <line x1="130" y1="85" x2="38"  y2="105" stroke="#c5c5d4" strokeWidth="1" />
-          <line x1="130" y1="85" x2="222" y2="112" stroke="#c5c5d4" strokeWidth="1" />
-          <line x1="130" y1="85" x2="95"  y2="148" stroke="#c5c5d4" strokeWidth="1" />
-          <line x1="130" y1="85" x2="178" y2="148" stroke="#c5c5d4" strokeWidth="1" />
-          <line x1="55"  y1="38"  x2="205" y2="38"  stroke="#c5c5d4" strokeWidth="1" />
-          <line x1="38"  y1="105" x2="95"  y2="148" stroke="#c5c5d4" strokeWidth="1" />
-          <line x1="222" y1="112" x2="178" y2="148" stroke="#c5c5d4" strokeWidth="1" />
-          <circle cx="55"  cy="38"  r="17" fill="#dbeafe" stroke="#1e40af" strokeWidth="1.5" />
-          <circle cx="205" cy="38"  r="17" fill="#dbeafe" stroke="#1e40af" strokeWidth="1.5" />
-          <circle cx="38"  cy="105" r="15" fill="#dbeafe" stroke="#1e40af" strokeWidth="1.5" />
-          <circle cx="222" cy="112" r="15" fill="#dbeafe" stroke="#1e40af" strokeWidth="1.5" />
-          <circle cx="95"  cy="148" r="13" fill="#dbeafe" stroke="#1e40af" strokeWidth="1.5" />
-          <circle cx="178" cy="148" r="13" fill="#dbeafe" stroke="#1e40af" strokeWidth="1.5" />
-          <circle cx="240" cy="62"  r="11" fill="#dbeafe" stroke="#1e40af" strokeWidth="1.5" />
-          <circle cx="130" cy="85"  r="26" fill="#1e40af" />
-          <text x="130" y="89" textAnchor="middle" fill="white" fontSize="9" fontWeight="700" fontFamily="Epilogue, sans-serif">
-            Core
-          </text>
-        </svg>
-      </div>
-
-      {readyCount > 0 ? (
-        <p className="text-xs text-m3-on-surface-variant font-medium">
-          {t("teacher_lesson_materials.kg.indexed_count", { count: readyCount })}
+      {isLoading ? (
+        <div className="h-[240px] rounded-xl bg-m3-surface-container-low animate-pulse" />
+      ) : data?.enabled === false ? (
+        <p className="text-xs text-m3-on-surface-variant font-medium text-center py-16">
+          {t("teacher_lesson_materials.kg.disabled_hint")}
+        </p>
+      ) : nodes.length === 0 ? (
+        <p className="text-xs text-m3-on-surface-variant font-medium text-center py-16">
+          {readyCount > 0
+            ? t("teacher_lesson_materials.kg.empty_hint")
+            : t("teacher_lesson_materials.kg.awaiting_hint")}
         </p>
       ) : (
-        <p className="text-xs text-m3-on-surface-variant font-medium">
-          {t("teacher_lesson_materials.kg.empty_hint")}
-        </p>
-      )}
+        <>
+          <div className="relative">
+            <svg
+              width="100%"
+              viewBox={`0 0 ${W} ${H}`}
+              className="rounded-xl bg-m3-surface-container-lowest/40"
+              role="img"
+              aria-label={t("teacher_lesson_materials.kg.title")}
+            >
+              {/* Edges — dashed amber for prerequisites, solid grey for related. */}
+              {edges.map((e, i) => {
+                const a = positions.get(e.source);
+                const b = positions.get(e.target);
+                if (!a || !b) return null;
+                const isPrereq = e.relation === "PREREQUISITE_OF";
+                const dim = hovered && hovered !== e.source && hovered !== e.target;
+                return (
+                  <line
+                    key={i}
+                    x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                    stroke={isPrereq ? "#d97706" : "#c5c5d4"}
+                    strokeWidth={isPrereq ? 1.4 : 1}
+                    strokeDasharray={isPrereq ? "4 3" : undefined}
+                    opacity={dim ? 0.12 : isPrereq ? 0.7 : 0.45}
+                  />
+                );
+              })}
+              {/* Nodes — size by weight (centrality), centre node highlighted. */}
+              {nodes.map((n, i) => {
+                const p = positions.get(n.id);
+                if (!p) return null;
+                const isCenter = i === 0;
+                const dim = hovered && hovered !== n.id;
+                return (
+                  <g
+                    key={n.id}
+                    onMouseEnter={() => setHovered(n.id)}
+                    onMouseLeave={() => setHovered(null)}
+                    className="cursor-pointer"
+                    opacity={dim ? 0.35 : 1}
+                  >
+                    <circle
+                      cx={p.x} cy={p.y} r={p.r}
+                      fill={isCenter ? "#1e40af" : "#dbeafe"}
+                      stroke={isCenter ? "#1e3a8a" : "#3b82f6"}
+                      strokeWidth={1.5}
+                    />
+                    {(isCenter || p.r > 12 || hovered === n.id) && (
+                      <text
+                        x={p.x}
+                        y={p.y + p.r + 9}
+                        textAnchor="middle"
+                        fontSize="8"
+                        fontWeight="600"
+                        fill="currentColor"
+                        className="text-m3-on-surface-variant pointer-events-none"
+                      >
+                        {n.label.length > 18 ? `${n.label.slice(0, 17)}…` : n.label}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+            {/* Hover detail card */}
+            {hoveredNode && (
+              <div className="absolute top-2 left-2 max-w-[70%] rounded-lg bg-m3-surface-container-high/95 backdrop-blur px-3 py-2 shadow-lg pointer-events-none">
+                <p className="text-xs font-bold text-m3-on-surface">{hoveredNode.label}</p>
+                <p className="text-[10px] text-m3-secondary font-semibold uppercase tracking-wide">
+                  {hoveredNode.type}
+                </p>
+                {hoveredNode.definition && (
+                  <p className="text-[10px] text-m3-on-surface-variant mt-0.5 line-clamp-3">
+                    {hoveredNode.definition}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
-      <button
-        type="button"
-        onClick={() => { setToastVisible(true); setTimeout(() => setToastVisible(false), 2500); }}
-        className="border border-m3-outline-variant/20 rounded-xl px-5 py-2.5 text-sm font-bold text-m3-on-surface hover:bg-m3-surface-container-low transition-colors"
-      >
-        {t("teacher_lesson_materials.kg.open_full")}
-      </button>
-      {toastVisible && (
-        <p className="text-xs text-m3-secondary font-semibold animate-pulse">
-          {t("teacher_lesson_materials.kg.viewer_coming_soon")}
-        </p>
+          {/* Legend + count */}
+          <div className="flex items-center justify-between flex-wrap gap-2 text-[10px] text-m3-on-surface-variant">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1">
+                <span className="inline-block w-4 border-t border-dashed border-amber-600" />
+                {t("teacher_lesson_materials.kg.legend_prereq")}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="inline-block w-4 border-t border-m3-outline-variant" />
+                {t("teacher_lesson_materials.kg.legend_related")}
+              </span>
+            </div>
+            {data && data.total_concepts > nodes.length && (
+              <span className="font-medium">
+                {t("teacher_lesson_materials.kg.showing_top", {
+                  shown: nodes.length,
+                  total: data.total_concepts,
+                })}
+              </span>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
@@ -993,6 +1161,8 @@ export default function LessonMaterialsPage() {
             <SelectedFileForm
               file={selectedFile}
               lessonId={lessonId}
+              courseId={courseId}
+              lessonPrimaryMaterialId={lesson?.primary_material_id ?? null}
               onDone={() => setSelectedFile(null)}
               onCancel={() => setSelectedFile(null)}
             />
@@ -1082,7 +1252,7 @@ export default function LessonMaterialsPage() {
             </div>
           )}
 
-          <KnowledgeGraphPreview readyCount={readyCount} />
+          <KnowledgeGraphPreview lessonId={lessonId} readyCount={readyCount} />
         </div>
 
       </div>

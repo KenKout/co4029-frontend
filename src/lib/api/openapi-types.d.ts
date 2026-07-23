@@ -1869,7 +1869,12 @@ export interface paths {
         put?: never;
         /**
          * Link Existing Material
-         * @description Link an already-uploaded storage object as a material (no upload, no AI processing).
+         * @description Link an already-uploaded storage object as a material.
+         *
+         *     When ``ai_processing_enabled`` is set, a ``ProcessingJob`` is created
+         *     and ``ingest_material_version_task`` is enqueued so the document gets a
+         *     viewable rendition. When disabled, the version is parked in a terminal
+         *     state (not a misleading ``pending``) and the teacher can enable AI later.
          */
         post: operations["link_existing_material_api_v1_teacher_lessons__lesson_id__materials_link_post"];
         delete?: never;
@@ -2366,6 +2371,34 @@ export interface paths {
          *     Powers the teacher's per-student profile page.
          */
         get: operations["list_student_quiz_attempts_api_v1_teacher_courses__course_id__students__student_id__quiz_attempts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/{course_id}/quiz-attempts/{attempt_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Course Quiz Attempt Detail
+         * @description Teacher-facing detail for a single attempt.
+         *
+         *     Powers the quiz-attempt detail page. Combines the attempt summary
+         *     (student name + quiz title), the full per-question review (prompt,
+         *     options, the student's answer, correctness), and any integrity events.
+         *
+         *     404s when the attempt doesn't exist or belongs to a quiz outside this
+         *     course (enforced by the course-scoped query + the ``course.update``
+         *     permission guard).
+         */
+        get: operations["get_course_quiz_attempt_detail_api_v1_teacher_courses__course_id__quiz_attempts__attempt_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3224,6 +3257,30 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/interview-sessions/{session_id}/gap-report/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Session Gap Report Notes
+         * @description Persist the teacher-authored note (``teacher_summary``) on the report.
+         *
+         *     Course-scoped teacher access only (same gate as the GET). Empty/blank input
+         *     clears the note. Returns the full refreshed authoring projection so the
+         *     client re-renders with the saved value.
+         */
+        patch: operations["update_session_gap_report_notes_api_v1_teacher_interview_sessions__session_id__gap_report_notes_patch"];
         trace?: never;
     };
     "/api/v1/me/enrollments": {
@@ -5804,6 +5861,18 @@ export interface components {
             source_quiz_attempt_id?: string | null;
             /** Source Interview Session Id */
             source_interview_session_id?: string | null;
+            /** Student Name */
+            student_name?: string | null;
+            /** Interview Title */
+            interview_title?: string | null;
+        };
+        /**
+         * GapReportNotesUpdate
+         * @description Teacher edit of the instructor-authored ``teacher_summary`` note.
+         */
+        GapReportNotesUpdate: {
+            /** Teacher Summary */
+            teacher_summary?: string | null;
         };
         /**
          * GapReportRead
@@ -6414,7 +6483,7 @@ export interface components {
             /** Response Text */
             response_text?: string | null;
             /** Action */
-            action?: ("confirm_identity" | "audio_clear" | "confirm_language" | "continue_setup" | "confirm_setup" | "needs_adjustment" | "ready" | "not_ready" | "reject_identity" | "set_name") | null;
+            action?: ("confirm_identity" | "audio_clear" | "confirm_language" | "continue_setup" | "confirm_setup" | "needs_adjustment" | "ready" | "not_ready" | "reject_identity" | "set_name" | "skip_setup") | null;
             /** Language */
             language?: ("en" | "vi") | null;
             /** Turn Key */
@@ -9175,6 +9244,37 @@ export interface components {
             selected_option_id?: string | null;
         };
         /**
+         * QuizAttemptIntegrityEvent
+         * @description One proctoring signal recorded during an attempt (teacher review).
+         *
+         *     Projection of :class:`features.interviews.models.AssessmentIntegrityEvent`
+         *     rows scoped to ``assessment_kind='quiz'``. Surfaced only in the
+         *     teacher-facing attempt detail — never to the student.
+         */
+        QuizAttemptIntegrityEvent: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Event Type */
+            event_type: string;
+            /** Severity */
+            severity: string;
+            /**
+             * Metadata Json
+             * @default {}
+             */
+            metadata_json: {
+                [key: string]: unknown;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
          * QuizAttemptProgressAnswer
          * @description One saved answer for an in-progress attempt (resume payload).
          *
@@ -9437,6 +9537,25 @@ export interface components {
             score_percent?: string | null;
             /** Passed */
             passed?: boolean | null;
+        };
+        /**
+         * QuizAttemptTeacherReview
+         * @description Teacher-facing detail for a single attempt.
+         *
+         *     Backs ``GET /teacher/courses/{course_id}/quiz-attempts/{attempt_id}``.
+         *     Combines the self-describing attempt summary (student name + quiz title),
+         *     the full per-question review (prompt, options, the student's answer,
+         *     correctness), and any integrity events captured during the take.
+         */
+        QuizAttemptTeacherReview: {
+            attempt: components["schemas"]["QuizAttemptTeacherRead"];
+            /** Questions */
+            questions: components["schemas"]["QuizAttemptReviewQuestion"][];
+            /**
+             * Integrity Events
+             * @default []
+             */
+            integrity_events: components["schemas"]["QuizAttemptIntegrityEvent"][];
         };
         /**
          * QuizAuthoring
@@ -10718,6 +10837,11 @@ export interface components {
              */
             question_id: string;
             /**
+             * Prompt Text
+             * @default
+             */
+            prompt_text: string;
+            /**
              * Created At
              * Format: date-time
              */
@@ -11197,6 +11321,7 @@ export type SchemaEnrollmentAuthoring = components['schemas']['EnrollmentAuthori
 export type SchemaEnrollmentPatch = components['schemas']['EnrollmentPatch'];
 export type SchemaEnrollmentRead = components['schemas']['EnrollmentRead'];
 export type SchemaGapReportAuthoringRead = components['schemas']['GapReportAuthoringRead'];
+export type SchemaGapReportNotesUpdate = components['schemas']['GapReportNotesUpdate'];
 export type SchemaGapReportRead = components['schemas']['GapReportRead'];
 export type SchemaGoogleLoginResponse = components['schemas']['GoogleLoginResponse'];
 export type SchemaGrantCreate = components['schemas']['GrantCreate'];
@@ -11324,6 +11449,7 @@ export type SchemaQuestionBankPage = components['schemas']['QuestionBankPage'];
 export type SchemaQueueDepthOut = components['schemas']['QueueDepthOut'];
 export type SchemaQuizAttemptAnswerInput = components['schemas']['QuizAttemptAnswerInput'];
 export type SchemaQuizAttemptAnswerRead = components['schemas']['QuizAttemptAnswerRead'];
+export type SchemaQuizAttemptIntegrityEvent = components['schemas']['QuizAttemptIntegrityEvent'];
 export type SchemaQuizAttemptProgressAnswer = components['schemas']['QuizAttemptProgressAnswer'];
 export type SchemaQuizAttemptProgressRead = components['schemas']['QuizAttemptProgressRead'];
 export type SchemaQuizAttemptRead = components['schemas']['QuizAttemptRead'];
@@ -11332,6 +11458,7 @@ export type SchemaQuizAttemptReviewQuestion = components['schemas']['QuizAttempt
 export type SchemaQuizAttemptReviewRead = components['schemas']['QuizAttemptReviewRead'];
 export type SchemaQuizAttemptStart = components['schemas']['QuizAttemptStart'];
 export type SchemaQuizAttemptTeacherRead = components['schemas']['QuizAttemptTeacherRead'];
+export type SchemaQuizAttemptTeacherReview = components['schemas']['QuizAttemptTeacherReview'];
 export type SchemaQuizAuthoring = components['schemas']['QuizAuthoring'];
 export type SchemaQuizForAuthoringPublic = components['schemas']['QuizForAuthoringPublic'];
 export type SchemaQuizForTakingPublic = components['schemas']['QuizForTakingPublic'];
@@ -15596,6 +15723,38 @@ export interface operations {
             };
         };
     };
+    get_course_quiz_attempt_detail_api_v1_teacher_courses__course_id__quiz_attempts__attempt_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizAttemptTeacherReview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_quiz_results_api_v1_teacher_quizzes__quiz_id__results_get: {
         parameters: {
             query?: never;
@@ -17162,6 +17321,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GapReportAuthoringRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_session_gap_report_notes_api_v1_teacher_interview_sessions__session_id__gap_report_notes_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GapReportNotesUpdate"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
