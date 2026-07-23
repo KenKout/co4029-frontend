@@ -185,7 +185,7 @@ function TranscriptCard({ sessionId }: { sessionId: string }) {
 
   return (
     <GlassCard className="p-6 space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 mb-2">
         <h3 className="font-headline font-bold text-m3-primary">
           {t("teacher_interview_gap_report.transcript.title")}
         </h3>
