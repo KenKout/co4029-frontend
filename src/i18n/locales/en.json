@@ -2372,7 +2372,7 @@
     },
     "banners": {
       "missing_expected_time": "{{count}} questions are missing an expected time. Set them before publishing.",
-      "pending_review": "{{count}} questions are pending review. Approve them before publishing."
+      "pending_review": "{{count}} question(s) are not approved and won't be shown to students. Approve them to include them; they're kept as drafts either way."
     },
     "empty": {
       "no_questions_title": "No questions yet",
@@ -2382,6 +2382,9 @@
       "title": "Generate with AI",
       "description": "Generate questions from prepared lesson materials.",
       "open_generator": "Open generator"
+    },
+    "question_nav": {
+      "title": "Jump to question"
     },
     "bulk_time": {
       "title": "Quick set time",

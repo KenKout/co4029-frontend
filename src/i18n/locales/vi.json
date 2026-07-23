@@ -2362,7 +2362,7 @@
     },
     "banners": {
       "missing_expected_time": "{{count}} câu chưa có thời gian dự kiến. Cần đặt thời gian trước khi xuất bản.",
-      "pending_review": "{{count}} câu hỏi đang chờ duyệt. Hãy duyệt trước khi xuất bản."
+      "pending_review": "{{count}} câu hỏi chưa được duyệt và sẽ không hiển thị cho học viên. Hãy duyệt để thêm vào; dù sao chúng vẫn được giữ làm bản nháp."
     },
     "empty": {
       "no_questions_title": "Chưa có câu hỏi",
@@ -2372,6 +2372,9 @@
       "title": "Tạo bằng AI",
       "description": "Sinh câu hỏi từ tài liệu bài học đã sẵn sàng.",
       "open_generator": "Mở trình tạo"
+    },
+    "question_nav": {
+      "title": "Nhảy tới câu hỏi"
     },
     "bulk_time": {
       "title": "Đặt nhanh thời gian",

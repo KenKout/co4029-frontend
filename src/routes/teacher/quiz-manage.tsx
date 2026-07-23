@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -279,18 +279,19 @@ export default function QuizManagePage() {
 
   const moduleId = courseModule.id;
   const isPublished = quiz.status === "published";
-  // Hard approval gate: every question must be review_status="approved"
-  // before publish. This mirrors the backend publish_gate assertion — the
-  // "pending review" banner is now enforced, not just advisory.
-  const pendingReviewCount = questions.filter(
-    (q) => q.review_status !== "approved",
+  // Partial publish: students only ever see approved questions, so publish is
+  // allowed as soon as at least ONE question is approved. Un-approved
+  // questions stay on the quiz as reusable drafts and are never served to
+  // students. This mirrors the backend publish_gate (needs ≥1 approved).
+  const approvedCount = questions.filter(
+    (q) => q.review_status === "approved",
   ).length;
-  const hasPendingReview = questions.length > 0 && pendingReviewCount > 0;
+  const pendingReviewCount = questions.length - approvedCount;
+  // Advisory only — surfaces "N pending" so the teacher knows some questions
+  // won't be published, but it no longer blocks publishing.
+  const hasPendingReview = pendingReviewCount > 0;
   const publishDisabled =
-    publishQuiz.isPending ||
-    isPublished ||
-    questions.length === 0 ||
-    hasPendingReview;
+    publishQuiz.isPending || isPublished || approvedCount === 0;
 
   function returnToModule() {
     void navigate({
@@ -570,22 +571,21 @@ export default function QuizManagePage() {
                 {!actionsStuck && t("teacher_quiz_manage.actions.view_results")}
               </Button>
             </Link>
-            {course?.slug && (
-              <Link
-                to="/courses/$slug/quiz/$quizId"
-                params={{ slug: course.slug, quizId }}
-              >
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  type="button"
-                  title={t("teacher_quiz_manage.actions.view_as_student")}
-                >
-                  <Eye className="h-4 w-4" />
-                  {!actionsStuck && t("teacher_quiz_manage.actions.view_as_student")}
-                </Button>
-              </Link>
-            )}
+            {/* View as student opens the in-app WYSIWYG preview tab (approved
+                questions only). It must NOT link to the live student route
+                (/courses/$slug/quiz/$quizId) — that route serves only
+                PUBLISHED quizzes, so previewing a draft 404s ("Quiz not
+                found"), which is exactly when a teacher wants to preview. */}
+            <Button
+              variant="outline"
+              className="gap-2"
+              type="button"
+              onClick={() => setTab("preview")}
+              title={t("teacher_quiz_manage.actions.view_as_student")}
+            >
+              <Eye className="h-4 w-4" />
+              {!actionsStuck && t("teacher_quiz_manage.actions.view_as_student")}
+            </Button>
             <Button
               type="button"
               disabled={publishDisabled}
@@ -745,7 +745,7 @@ export default function QuizManagePage() {
                 </h2>
                 <p className="text-sm text-m3-on-surface-variant">
                   {t("teacher_quiz_manage.confirm_publish.body", {
-                    count: questions.length,
+                    count: approvedCount,
                   })}
                 </p>
               </div>
@@ -759,22 +759,22 @@ export default function QuizManagePage() {
               >
                 {t("common.cancel")}
               </Button>
-              {course?.slug && (
-                <Link
-                  to="/courses/$slug/quiz/$quizId"
-                  params={{ slug: course.slug, quizId }}
-                >
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                    disabled={publishQuiz.isPending}
-                  >
-                    <Eye className="h-4 w-4" />
-                    {t("teacher_quiz_manage.actions.view_as_student")}
-                  </Button>
-                </Link>
-              )}
+              {/* Preview before publishing: open the in-app WYSIWYG tab
+                  rather than the live student route (which 404s on a
+                  not-yet-published quiz). Close the dialog first. */}
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                disabled={publishQuiz.isPending}
+                onClick={() => {
+                  setConfirmPublish(false);
+                  setTab("preview");
+                }}
+              >
+                <Eye className="h-4 w-4" />
+                {t("teacher_quiz_manage.actions.view_as_student")}
+              </Button>
               <Button
                 type="button"
                 onClick={handlePublish}
@@ -1059,6 +1059,10 @@ function QuestionsTab({
               {t("teacher_quiz_manage.ai_panel.import_from_bank", "Import from bank")}
             </Button>
           </div>
+
+          {/* Quick question navigation — jumps (auto-scrolls) to a question
+              card. Reuses the numbered-box design from the student quiz. */}
+          <QuestionNavigator questions={questions} />
         </div>
       </div>
     </div>
@@ -1314,8 +1318,11 @@ function QuestionCard({
 
   return (
     <div
+      id={`qcard-${question.id}`}
+      // scroll-margin keeps the card clear of the sticky header when the
+      // question navigator scrolls it into view.
       className={cn(
-        "rounded-xl border bg-m3-surface p-4 space-y-3",
+        "rounded-xl border bg-m3-surface p-4 space-y-3 scroll-mt-[9.5rem]",
         selected
           ? "border-m3-primary shadow-sm"
           : "border-m3-outline-variant/20",
@@ -2169,6 +2176,111 @@ function SettingsTab({
         </div>
       </div>
     </form>
+  );
+}
+
+function QuestionNavigator({
+  questions,
+}: {
+  questions: QuizQuestionAuthoring[];
+}) {
+  const { t } = useTranslation();
+  const [activeId, setActiveId] = useState<string | null>(null);
+  // Suppress scroll-spy briefly after a click so the highlight doesn't
+  // flicker through intermediate cards during the smooth scroll.
+  const suppressSpyUntil = useRef<number>(0);
+
+  const scrollToQuestion = useCallback((id: string) => {
+    const el = document.getElementById(`qcard-${id}`);
+    if (!el) return;
+    suppressSpyUntil.current = Date.now() + 700;
+    setActiveId(id);
+    const reduceMotion =
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  }, []);
+
+  // Scroll-spy: highlight the last card whose top has scrolled above a line
+  // just below the sticky header (matches the card's scroll-mt offset).
+  useEffect(() => {
+    if (questions.length === 0) return;
+    let frame = 0;
+    const recompute = () => {
+      frame = 0;
+      if (Date.now() < suppressSpyUntil.current) return;
+      const line = 160; // ~9.5rem sticky-header clearance + a little margin
+      let current: string | null = questions[0]?.id ?? null;
+      for (const q of questions) {
+        const el = document.getElementById(`qcard-${q.id}`);
+        if (!el) continue;
+        const top = el.getBoundingClientRect().top;
+        if (top <= line) current = q.id;
+      }
+      setActiveId((prev) => (prev === current ? prev : current));
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(recompute);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    recompute();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [questions]);
+
+  if (questions.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-m3-secondary/10 bg-m3-surface-container-low p-5 shadow-glass space-y-3">
+      <h2 className="font-headline font-bold text-sm text-m3-on-surface">
+        {t("teacher_quiz_manage.question_nav.title")}
+      </h2>
+      {/* Numbered grid — reuses the student QuizSummaryCard box design.
+          Inner-scrollable so a quiz with many questions doesn't blow out
+          the sticky sidebar height. */}
+      <div className="max-h-[22rem] overflow-y-auto overflow-x-hidden">
+        <div className="grid grid-cols-6 gap-1.5 p-1.5">
+          {questions.map((question, index) => {
+            const isActive = question.id === activeId;
+            const approved = question.review_status === "approved";
+            return (
+              <button
+                key={question.id}
+                type="button"
+                onClick={() => scrollToQuestion(question.id)}
+                aria-current={isActive ? "location" : undefined}
+                title={question.prompt_text ?? undefined}
+                className={cn(
+                  "aspect-square w-full flex items-center justify-center rounded-lg font-bold text-xs transition-colors duration-150 relative cursor-pointer",
+                  isActive
+                    ? "bg-surface-elev text-m3-primary ring-2 ring-m3-primary shadow-sm"
+                    : approved
+                      ? "bg-m3-primary text-white hover:bg-m3-primary/90"
+                      : "bg-m3-surface-container-high text-m3-outline hover:bg-m3-surface-container-highest",
+                )}
+              >
+                {index + 1}
+                {!approved && (
+                  <span
+                    className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-amber-500 rounded-full"
+                    aria-hidden="true"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
