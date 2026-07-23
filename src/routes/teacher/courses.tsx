@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Plus, BookOpen, Search, X } from "lucide-react";
+import { Plus, BookOpen, Search, X, CheckCircle, FileEdit, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
@@ -50,22 +50,11 @@ export default function TeacherCoursesPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-headline font-bold text-m3-primary">
-            {t("teacher_courses_list.title")}
-          </h1>
-          <p className="text-sm text-m3-on-surface-variant mt-1">
-            {t("teacher_courses_list.n_courses", { count: courses.length })}
-            {counts.published > 0 &&
-              t("teacher_courses_list.published_suffix", {
-                count: counts.published,
-              })}
-            {counts.draft > 0 &&
-              t("teacher_courses_list.draft_suffix", { count: counts.draft })}
-          </p>
-        </div>
-        <Link to="/teacher/courses/new">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-2xl font-headline font-bold text-m3-primary">
+          {t("teacher_courses_list.title")}
+        </h1>
+        <Link to="/teacher/courses/new" className="shrink-0">
           <Button
             size="sm"
             className="gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md"
@@ -74,6 +63,36 @@ export default function TeacherCoursesPage() {
             {t("teacher_courses_list.new_course")}
           </Button>
         </Link>
+      </div>
+
+      {/* Stat strip — the per-status breakdown promoted out of the subtitle
+          into scannable tiles (same visual family as the dashboard). */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {(
+          [
+            { key: "total", value: counts.all, icon: BookOpen },
+            { key: "published", value: counts.published, icon: CheckCircle },
+            { key: "draft", value: counts.draft, icon: FileEdit },
+            { key: "archived", value: counts.archived, icon: Archive },
+          ] as const
+        ).map(({ key, value, icon: Icon }) => (
+          <div
+            key={key}
+            className="flex items-center gap-3 rounded-xl bg-card ghost-border shadow-editorial p-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed">
+              <Icon className="h-4 w-4 text-m3-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg font-headline font-bold text-m3-on-surface leading-none">
+                {value}
+              </p>
+              <p className="text-[11px] text-m3-on-surface-variant mt-0.5 truncate">
+                {t(`teacher_courses_list.stat_${key}`)}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Toolbar: search (own row) + status segmented control + sort */}
@@ -152,22 +171,53 @@ export default function TeacherCoursesPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-m3-on-surface-variant">
-          <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-20" />
-          <p className="text-sm font-medium">
-            {search
-              ? t("teacher_courses_list.no_match")
-              : t("teacher_courses_list.no_courses_yet")}
-          </p>
-          {!search && (
+        courses.length === 0 ? (
+          /* First-run — no courses exist yet. Warm intro + primary CTA. */
+          <div className="text-center py-16 max-w-md mx-auto">
+            <div className="flex h-14 w-14 mx-auto mb-4 items-center justify-center rounded-2xl bg-m3-primary-fixed">
+              <BookOpen className="h-7 w-7 text-m3-primary" />
+            </div>
+            <p className="text-base font-headline font-bold text-m3-on-surface">
+              {t("teacher_courses_list.empty_first_title")}
+            </p>
+            <p className="text-sm text-m3-on-surface-variant mt-2">
+              {t("teacher_courses_list.empty_first_body")}
+            </p>
             <Link to="/teacher/courses/new">
-              <Button size="sm" className="mt-4 gap-2">
+              <Button
+                size="sm"
+                className="mt-5 gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md"
+              >
                 <Plus className="h-4 w-4" />
                 {t("teacher_courses_list.create_course")}
               </Button>
             </Link>
-          )}
-        </div>
+          </div>
+        ) : (
+          /* No-match — courses exist but the search/filter excluded them all.
+             Offer a Clear filters escape hatch right where the teacher looks. */
+          <div className="text-center py-16 text-m3-on-surface-variant">
+            <Search className="h-12 w-12 mx-auto mb-3 opacity-20" />
+            <p className="text-sm font-medium text-m3-on-surface">
+              {t("teacher_courses_list.no_match_title")}
+            </p>
+            <p className="text-xs mt-1">
+              {t("teacher_courses_list.no_match_body")}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4 gap-2"
+              onClick={() => {
+                setSearch("");
+                setStatusFilter("all");
+              }}
+            >
+              <X className="h-4 w-4" />
+              {t("teacher_courses_list.clear_filters")}
+            </Button>
+          </div>
+        )
       ) : (
         <>
           {/* Result count — orients the teacher once the list is filtered. */}

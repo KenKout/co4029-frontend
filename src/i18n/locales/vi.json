@@ -327,7 +327,16 @@
     "sort_recent": "Mới nhất",
     "sort_oldest": "Cũ nhất",
     "sort_title": "Tiêu đề (A–Z)",
-    "showing_count": "Hiển thị {{count}} trên {{total}}"
+    "showing_count": "Hiển thị {{count}} trên {{total}}",
+    "stat_total": "Tổng",
+    "stat_published": "Đã xuất bản",
+    "stat_draft": "Bản nháp",
+    "stat_archived": "Đã lưu trữ",
+    "empty_first_title": "Tạo khóa học đầu tiên của bạn",
+    "empty_first_body": "Khóa học là nơi bạn tổ chức bài học, bài kiểm tra và phỏng vấn AI cho học viên. Hãy bắt đầu với một tiêu đề — bạn có thể xây dựng phần còn lại bất cứ lúc nào.",
+    "no_match_title": "Không có khóa học nào khớp",
+    "no_match_body": "Hãy thử từ khóa khác hoặc xóa bộ lọc.",
+    "clear_filters": "Xóa bộ lọc"
   },
   "course_learn": {
     "lesson_unavailable_title": "Bài học không khả dụng",

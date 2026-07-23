@@ -326,7 +326,16 @@
     "sort_recent": "Newest first",
     "sort_oldest": "Oldest first",
     "sort_title": "Title (A–Z)",
-    "showing_count": "Showing {{count}} of {{total}}"
+    "showing_count": "Showing {{count}} of {{total}}",
+    "stat_total": "Total",
+    "stat_published": "Published",
+    "stat_draft": "Draft",
+    "stat_archived": "Archived",
+    "empty_first_title": "Create your first course",
+    "empty_first_body": "A course is where you organize lessons, quizzes, and AI interviews for your students. Start with a title — you can build out the rest anytime.",
+    "no_match_title": "No courses match",
+    "no_match_body": "Try a different search term or clear your filters.",
+    "clear_filters": "Clear filters"
   },
   "course_learn": {
     "lesson_unavailable_title": "Lesson unavailable",
