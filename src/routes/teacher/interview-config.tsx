@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
+  Archive,
   ArrowLeft,
   ArrowRight,
   ArrowUp,
@@ -12,6 +13,7 @@ import {
   Clock,
   HelpCircle,
   Loader2,
+  MoreVertical,
   Pencil,
   Plus,
   Save,
@@ -29,6 +31,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import {
   type SectionNavItem,
   type SectionStatus,
@@ -651,47 +661,65 @@ export default function InterviewConfigPage() {
               {t("teacher_interview_config.actions.unpublish_short")}
             </Button>
           )}
-          {!isArchived && (
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2"
-              onClick={handleArchive}
-              disabled={archiveConfig.isPending}
-            >
-              {archiveConfig.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : null}
-              {t("teacher_interview_config.actions.archive")}
-            </Button>
-          )}
-          {isArchived && (
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2"
-              onClick={handleUnarchive}
-              disabled={unarchiveConfig.isPending}
-            >
-              {unarchiveConfig.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="h-4 w-4 rotate-180" />
+          {/* Rare / destructive actions (archive, unarchive, delete) live in
+              an overflow menu so they don't compete with the primary Publish
+              action. */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  title={t("teacher_interview_config.actions.more_tooltip")}
+                  aria-label={t("teacher_interview_config.actions.more_tooltip")}
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="min-w-44">
+              {!isArchived && (
+                <DropdownMenuItem
+                  onClick={handleArchive}
+                  disabled={archiveConfig.isPending}
+                  className="gap-2"
+                >
+                  {archiveConfig.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Archive className="h-4 w-4" />
+                  )}
+                  {t("teacher_interview_config.actions.archive")}
+                </DropdownMenuItem>
               )}
-              {t("teacher_interview_config.actions.unarchive")}
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700"
-            onClick={() => setConfirmDelete(true)}
-            disabled={deleteConfig.isPending}
-            title={t("teacher_interview_config.actions.delete_tooltip")}
-          >
-            <Trash2 className="h-4 w-4" />
-            {t("common.delete")}
-          </Button>
+              {isArchived && (
+                <DropdownMenuItem
+                  onClick={handleUnarchive}
+                  disabled={unarchiveConfig.isPending}
+                  className="gap-2"
+                >
+                  {unarchiveConfig.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4 rotate-180" />
+                  )}
+                  {t("teacher_interview_config.actions.unarchive")}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setConfirmDelete(true)}
+                disabled={deleteConfig.isPending}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                {t("common.delete")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -793,50 +821,18 @@ export default function InterviewConfigPage() {
         </div>
       </div>
 
-      {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-md rounded-xl bg-m3-surface p-6 shadow-xl space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center shrink-0">
-                <Trash2 className="h-5 w-5" />
-              </div>
-              <div className="space-y-1">
-                <h2 className="font-headline font-bold text-base text-m3-on-surface">
-                  {t("teacher_interview_config.confirm_delete.title")}
-                </h2>
-                <p className="text-sm text-m3-on-surface-variant">
-                  {t("teacher_interview_config.confirm_delete.body", {
-                    title: config.title,
-                  })}
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setConfirmDelete(false)}
-                disabled={deleteConfig.isPending}
-              >
-                {t("common.cancel")}
-              </Button>
-              <Button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleteConfig.isPending}
-                className="bg-red-600 text-white hover:bg-red-700 border-0 gap-2"
-              >
-                {deleteConfig.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-                {t("common.delete")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title={t("teacher_interview_config.confirm_delete.title")}
+        description={t("teacher_interview_config.confirm_delete.body", {
+          title: config.title,
+        })}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={handleDelete}
+        isPending={deleteConfig.isPending}
+      />
     </div>
   );
 }
@@ -1109,26 +1105,28 @@ function SettingsForm({
       onSubmit={onSubmit}
       className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl p-6 lg:p-8 space-y-8 shadow-glass"
     >
-      <Section
-        title={t("teacher_interview_config.sections.general.title")}
-        description={t(
-          "teacher_interview_config.sections.general.description",
-        )}
-      >
-        <Field label={t("teacher_interview_config.fields.title")}>
-          <Input
-            value={draft.title}
-            onChange={(e) => update("title", e.target.value)}
-            placeholder={t(
-              "teacher_interview_config.fields.title_placeholder",
-            )}
-            className="bg-m3-surface text-sm"
-          />
-        </Field>
-      </Section>
+      {/* General + Style hold one short field each — pair them side by side
+          on wide screens so the form isn't a tall single column. */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        <Section
+          title={t("teacher_interview_config.sections.general.title")}
+          description={t(
+            "teacher_interview_config.sections.general.description",
+          )}
+        >
+          <Field label={t("teacher_interview_config.fields.title")}>
+            <Input
+              value={draft.title}
+              onChange={(e) => update("title", e.target.value)}
+              placeholder={t(
+                "teacher_interview_config.fields.title_placeholder",
+              )}
+              className="bg-m3-surface text-sm"
+            />
+          </Field>
+        </Section>
 
-      <Section title={t("teacher_interview_config.sections.style.title")}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Section title={t("teacher_interview_config.sections.style.title")}>
           <Field label={t("teacher_interview_config.fields.persona")}>
             <select
               value={draft.persona}
@@ -1142,8 +1140,8 @@ function SettingsForm({
               ))}
             </select>
           </Field>
-        </div>
-      </Section>
+        </Section>
+      </div>
 
       <Section title={t("teacher_interview_config.sections.rules.title")}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1157,7 +1155,9 @@ function SettingsForm({
               max={180}
               value={draft.time_limit_minutes}
               onChange={(e) => update("time_limit_minutes", e.target.value)}
-              placeholder="e.g. 30"
+              placeholder={t(
+                "teacher_interview_config.fields.duration_placeholder",
+              )}
               className="bg-m3-surface text-sm"
             />
           </Field>
@@ -1170,7 +1170,9 @@ function SettingsForm({
               min={1}
               value={draft.max_attempts}
               onChange={(e) => update("max_attempts", e.target.value)}
-              placeholder="e.g. 3"
+              placeholder={t(
+                "teacher_interview_config.fields.attempts_placeholder",
+              )}
               className="bg-m3-surface text-sm"
             />
           </Field>
@@ -1183,7 +1185,9 @@ function SettingsForm({
               min={1}
               value={draft.min_outcomes_to_pass}
               onChange={(e) => update("min_outcomes_to_pass", e.target.value)}
-              placeholder="e.g. 2"
+              placeholder={t(
+                "teacher_interview_config.fields.criteria_placeholder",
+              )}
               className="bg-m3-surface text-sm"
             />
           </Field>
