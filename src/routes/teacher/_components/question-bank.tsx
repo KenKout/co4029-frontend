@@ -1572,6 +1572,14 @@ export function QuestionBank({
                     selected={selectedIds.has(q.id)}
                     onToggleSelect={() => toggleSelected(q.id)}
                     compact={compact}
+                    moduleTitles={(Array.isArray(q.source_module_ids)
+                      ? q.source_module_ids
+                      : []
+                    ).map(
+                      (id) =>
+                        moduleTitleById.get(id) ??
+                        t("teacher_interview_config.qbank.module_unknown"),
+                    )}
                     dndEnabled={dndEnabled}
                     dragging={dragIndex === displayIndex}
                     showLineBefore={
@@ -1981,6 +1989,9 @@ interface QuestionCardProps {
   onToggleSelect: () => void;
   // Compact mode: tighter padding + hidden metadata row (unless expanded).
   compact: boolean;
+  // Resolved titles of the module(s) this question was sourced from. A badge
+  // renders per module; when 2+ they're shown as separate module chips.
+  moduleTitles: string[];
   // Drag-to-reorder (native HTML5 DnD; desktop-only, off when filtered/grouped).
   dndEnabled: boolean;
   dragging: boolean;
@@ -2026,6 +2037,7 @@ function QuestionCard({
   selected,
   onToggleSelect,
   compact,
+  moduleTitles,
   dndEnabled,
   dragging,
   showLineBefore,
@@ -2181,6 +2193,18 @@ function QuestionCard({
               <span>
                 {t(`teacher_interview_config.question_type.${q.question_type}`)}
               </span>
+              {/* Module attribution: one chip per source module. A question
+                  sourced from 2+ modules therefore shows a separate chip for
+                  each, making cross-module questions visible at a glance. */}
+              {moduleTitles.map((title, i) => (
+                <span key={`${title}-${i}`} className="contents">
+                  <Sep />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-m3-primary-fixed/60 px-1.5 py-0.5 font-medium text-m3-primary">
+                    <Layers className="h-3 w-3" aria-hidden="true" />
+                    {title}
+                  </span>
+                </span>
+              ))}
               {q.difficulty && (
                 <>
                   <Sep />
