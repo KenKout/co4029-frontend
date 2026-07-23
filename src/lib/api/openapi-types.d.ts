@@ -5483,6 +5483,8 @@ export interface components {
              * @constant
              */
             status: "published";
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
             /**
              * Tags
              * @default []

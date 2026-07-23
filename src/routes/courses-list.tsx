@@ -41,17 +41,34 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
     >
       <div className="bg-card rounded-xl overflow-hidden shadow-editorial ghost-border transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-glass h-full flex flex-col">
         <div className="relative aspect-video overflow-hidden shrink-0">
-          <div
-            className={cn("absolute inset-0 bg-gradient-to-br", gradientClass)}
-          />
+          {course.thumbnail_url ? (
+            <img
+              src={course.thumbnail_url}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <div
+              className={cn(
+                "absolute inset-0 bg-gradient-to-br",
+                gradientClass,
+              )}
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-          <Badge className="absolute top-3 left-3 z-10 bg-black/40 text-white border border-white/20 backdrop-blur-sm text-[10px] font-semibold tracking-wide">
+          {/* AI Boost badge moved bottom-right so an uploaded image's top area
+              stays clear (matches the teacher card). */}
+          <Badge className="absolute bottom-3 right-3 z-10 bg-black/40 text-white border border-white/20 backdrop-blur-sm text-[10px] font-semibold tracking-wide">
             <Sparkles className="h-2.5 w-2.5 mr-1" />
             {t("courses_list.ai_boost")}
           </Badge>
-          <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity">
-            <GraduationCap className="h-16 w-16 text-white" />
-          </div>
+          {/* GraduationCap motif only on the gradient placeholder — a real
+              thumbnail shouldn't have an icon overlaid on it. */}
+          {!course.thumbnail_url && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity">
+              <GraduationCap className="h-16 w-16 text-white" />
+            </div>
+          )}
         </div>
 
         <div className="p-4 space-y-3 flex-1 flex flex-col">
