@@ -333,7 +333,7 @@ function ContextCard({
 
   return (
     <GlassCard className="p-6 space-y-4">
-      <h2 className="font-headline font-bold text-base text-m3-on-surface">
+      <h2 className="font-headline font-bold text-base text-m3-primary mb-2">
         {t("teacher_interview_gap_report.sections.context")}
       </h2>
 
@@ -554,7 +554,7 @@ function CriterionBreakdown({
   return (
     <GlassCard className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-headline font-bold text-base text-m3-on-surface">
+        <h2 className="font-headline font-bold text-base text-m3-primary mb-2">
           {t("teacher_interview_gap_report.sections.by_criterion")}
         </h2>
         <span className="text-xs text-m3-on-surface-variant">
@@ -632,7 +632,7 @@ function StudyPlanCard({ items }: { items: StudyPlanItem[] }) {
   const { t } = useTranslation();
   return (
     <GlassCard className="p-6 space-y-3">
-      <h2 className="font-headline font-bold text-base text-m3-on-surface">
+      <h2 className="font-headline font-bold text-base text-m3-primary mb-2">
         {t("teacher_interview_gap_report.sections.study_plan")}
       </h2>
       {items.length === 0 ? (
@@ -686,7 +686,7 @@ function SourceLinksCard({ report }: { report: GapReportAuthoringRead }) {
 
   return (
     <GlassCard className="p-6 space-y-3">
-      <h2 className="font-headline font-bold text-base text-m3-on-surface">
+      <h2 className="font-headline font-bold text-base text-m3-primary mb-2">
         {t("teacher_interview_gap_report.sections.sources")}
       </h2>
       <ul className="space-y-2">
