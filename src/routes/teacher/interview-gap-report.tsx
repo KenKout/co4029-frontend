@@ -86,7 +86,7 @@ function humanResources(resources: string[]): string[] {
   return resources.filter((r) => !UUID_RE.test(r.trim()));
 }
 
-type GapTabId = "overview" | "analysis" | "transcript" | "sources";
+type GapTabId = "overview" | "analysis" | "transcript";
 
 // Tabbed navigation for the gap-report page, mirroring the interview-config
 // workspace: an absolutely-positioned pill measures the active tab and glides
@@ -108,7 +108,6 @@ function GapTabBar({
       id: "transcript",
       label: t("teacher_interview_gap_report.tabs.transcript"),
     },
-    { id: "sources", label: t("teacher_interview_gap_report.tabs.sources") },
   ];
 
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -320,16 +319,6 @@ export default function InterviewGapReportPage() {
           sessionId={sessionId}
           studentName={report.student_name ?? null}
         />
-      </div>
-
-      {/* Sources — cross-links to the source quiz attempt, etc. */}
-      <div
-        id="sources"
-        role="tabpanel"
-        aria-labelledby="tab-sources"
-        hidden={activeTab !== "sources"}
-      >
-        <SourceLinksCard report={report} />
       </div>
     </div>
   );
@@ -1230,71 +1219,3 @@ function CriterionBreakdown({
   );
 }
 
-function SourceLinksCard({ report }: { report: GapReportAuthoringRead }) {
-  const { t } = useTranslation();
-  const courseId = report.course_id;
-  const quizAttemptId = report.source_quiz_attempt_id;
-  // The interview session this report was built from IS the page we're on, so
-  // it's not linked (circular). The meaningful cross-links are: the student's
-  // profile in this course (always available) and the source quiz attempt that
-  // seeded the theory-vs-practice discrepancy (only when the interview was
-  // paired with a quiz). Many interviews have no source quiz, so the card must
-  // still render something rather than vanishing.
-  const hasStudentLink = Boolean(courseId && report.student_id);
-  const hasQuizLink = Boolean(courseId && quizAttemptId);
-
-  return (
-    <GlassCard className="p-6 space-y-3">
-      <h2 className="font-headline font-bold text-base text-m3-primary mb-2">
-        {t("teacher_interview_gap_report.sections.sources")}
-      </h2>
-
-      {hasStudentLink && (
-        <Link
-          to="/teacher/courses/$courseId/students/$studentId"
-          params={{
-            courseId: courseId as string,
-            studentId: report.student_id,
-          }}
-          className="flex items-center justify-between gap-3 rounded-xl bg-m3-surface-container-low px-3 py-2 text-xs transition-colors hover:bg-m3-surface-container"
-        >
-          <span className="text-m3-on-surface-variant shrink-0">
-            {report.student_name ??
-              t("teacher_interview_gap_report.labels.student")}
-          </span>
-          <span className="inline-flex items-center gap-1 font-semibold text-m3-primary underline decoration-m3-primary/30 underline-offset-2">
-            {t("teacher_interview_gap_report.labels.view")}
-            <ChevronRight className="h-3.5 w-3.5" />
-          </span>
-        </Link>
-      )}
-
-      {hasQuizLink && (
-        <Link
-          to="/teacher/courses/$courseId/quiz-attempts/$attemptId"
-          params={{
-            courseId: courseId as string,
-            attemptId: quizAttemptId as string,
-          }}
-          className="flex items-center justify-between gap-3 rounded-xl bg-m3-surface-container-low px-3 py-2 text-xs transition-colors hover:bg-m3-surface-container"
-        >
-          <span className="text-m3-on-surface-variant shrink-0">
-            {t("teacher_interview_gap_report.labels.source_quiz_attempt")}
-          </span>
-          <span className="inline-flex items-center gap-1 font-semibold text-m3-primary underline decoration-m3-primary/30 underline-offset-2">
-            {t("teacher_interview_gap_report.labels.view")}
-            <ChevronRight className="h-3.5 w-3.5" />
-          </span>
-        </Link>
-      )}
-
-      {/* No source quiz was paired with this interview — say so explicitly
-          instead of leaving the tab blank. */}
-      {!hasQuizLink && (
-        <p className="text-sm italic text-m3-on-surface-variant">
-          {t("teacher_interview_gap_report.empty_states.no_source_quiz")}
-        </p>
-      )}
-    </GlassCard>
-  );
-}
