@@ -121,7 +121,12 @@ export type BulkSetExpectedTimeResponse = Schemas["BulkSetExpectedTimeResponse"]
 export type BulkSetItem = Schemas["BulkSetItem"];
 
 export type InterviewConfigPublic = Schemas["InterviewConfigPublic"];
-export type InterviewConfigAuthoring = Schemas["InterviewConfigAuthoring"];
+// Widen with published_at (last-published timestamp) until the OpenAPI
+// snapshot is regenerated.
+export type InterviewConfigAuthoring =
+  Schemas["InterviewConfigAuthoring"] & {
+    published_at?: string | null;
+  };
 export type InterviewConfigCreate = Schemas["InterviewConfigCreate"];
 export type InterviewConfigUpdate = Schemas["InterviewConfigUpdate"];
 export type InterviewForTakingPublic = Schemas["InterviewForTakingPublic"];

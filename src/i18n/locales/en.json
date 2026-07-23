@@ -2622,7 +2622,8 @@
     },
     "header": {
       "draft_count": "{{count}} questions",
-      "chip_label": "AI interview"
+      "chip_label": "AI interview",
+      "last_published": "Last published {{when}}"
     },
     "section_nav": {
       "aria_label": "Interview sections",

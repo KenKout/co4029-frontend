@@ -157,7 +157,7 @@ function integerOrNull(value: string): number | null {
 const PERSONA_KEYS: Persona[] = ["strict", "neutral", "supportive"];
 
 export default function InterviewConfigPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { courseId, configId } = useParams({ strict: false }) as {
     courseId: string;
@@ -609,6 +609,17 @@ export default function InterviewConfigPage() {
                 {t("teacher_interview_config.header.chip_label")}
               </AIInsightChip>
             </div>
+            {isPublished && config.published_at && (
+              <p className="inline-flex items-center gap-1.5 text-[11px] text-m3-on-surface-variant">
+                <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                {t("teacher_interview_config.header.last_published", {
+                  when: new Date(config.published_at).toLocaleString(
+                    i18n.language?.startsWith("vi") ? "vi-VN" : "en-US",
+                    { dateStyle: "medium", timeStyle: "short" },
+                  ),
+                })}
+              </p>
+            )}
           </div>
         </div>
 

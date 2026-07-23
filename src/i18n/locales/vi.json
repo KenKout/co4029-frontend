@@ -2612,7 +2612,8 @@
     },
     "header": {
       "draft_count": "{{count}} câu hỏi",
-      "chip_label": "Phỏng vấn AI"
+      "chip_label": "Phỏng vấn AI",
+      "last_published": "Xuất bản lần cuối {{when}}"
     },
     "section_nav": {
       "aria_label": "Các mục phỏng vấn",
