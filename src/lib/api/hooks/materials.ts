@@ -420,21 +420,3 @@ export function useDeleteMaterial(materialId: string) {
   });
 }
 
-/**
- * Delete a material whose id is only known at call time (e.g. cleaning up the
- * AI Hub twin of a lesson resource being deleted). Unlike `useDeleteMaterial`,
- * the id is passed to `mutate(materialId)` rather than fixed at hook creation.
- */
-export function useDeleteMaterialById(lessonId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (materialId: string) =>
-      apiDelete(`/teacher/materials/${materialId}`),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["teacher", "lessons", lessonId, "materials"],
-      });
-      qc.invalidateQueries({ queryKey: ["teacher", "lessons"] });
-    },
-  });
-}

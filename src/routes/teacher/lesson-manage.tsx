@@ -62,7 +62,6 @@ import {
   useInitMaterialUpload,
   useCompleteMaterialUpload,
   useTeacherLessonMaterials,
-  useDeleteMaterialById,
 } from "@/lib/api/hooks/materials";
 import type {
   CourseContentLesson,
@@ -591,7 +590,6 @@ export default function LessonManagePage() {
   const courseModule = (content?.modules ?? []).find((m) => m.id === moduleId);
   const createMaterial = useCreateMaterial(courseId, moduleId, lessonId);
   const { data: aiMaterials = [] } = useTeacherLessonMaterials(lessonId);
-  const deleteMaterialById = useDeleteMaterialById(lessonId);
   const initVideoUpload = useInitMaterialUpload(lessonId);
   const completeVideoUpload = useCompleteMaterialUpload();
   const { data: videoStreamData } = useTeacherMaterialStreamUrl(
@@ -896,27 +894,14 @@ export default function LessonManagePage() {
   }
 
   function handleDeleteResource(resourceId: string) {
-    // Find the resource's AI Hub twin (same storage_object_id) so we don't
-    // orphan it: deleting only the LessonResource used to leave the AI material
-    // behind, still feeding quizzes/search off a file the teacher removed.
-    const resource = resources.find((r) => r.id === resourceId);
-    const twin =
-      resource?.storage_object_id != null
-        ? aiMaterials.find(
-            (m) =>
-              m.latest_version?.storage_object_id ===
-              resource.storage_object_id,
-          )
-        : undefined;
+    // Delete ONLY the downloadable resource. Do NOT cascade into the AI Hub
+    // material that may share this file's storage_object_id: that material is a
+    // separate, teacher-managed entity (already processed into quizzes/search/
+    // KG). Auto-deleting it here silently destroyed live, working documents —
+    // the teacher removed a student download and lost their processed doc. If
+    // they want the AI copy gone too, they remove it explicitly in the AI Hub.
     deleteResource.mutate(resourceId, {
-      onSuccess: () => {
-        showFeedback("Resource removed.");
-        if (twin) {
-          // Best-effort cleanup — the resource is already gone; a failed twin
-          // delete shouldn't surface as a hard error.
-          deleteMaterialById.mutate(twin.id);
-        }
-      },
+      onSuccess: () => showFeedback("Resource removed."),
       onError: (err) => toast.error((err as Error).message),
     });
   }
