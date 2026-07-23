@@ -32,21 +32,6 @@ import type {
   StudyPlanItem,
 } from "@/lib/api/types";
 
-interface CriterionEntry {
-  outcome_text?: unknown;
-  verdict_met?: unknown;
-  evidence_excerpt?: unknown;
-  rationale?: unknown;
-}
-
-function asCriterionEntry(value: unknown): CriterionEntry | null {
-  return value && typeof value === "object" ? (value as CriterionEntry) : null;
-}
-
-function asString(value: unknown): string | null {
-  return typeof value === "string" && value.trim() ? value : null;
-}
-
 function formatDate(value: string): string {
   try {
     return new Date(value).toLocaleString("vi-VN", {
@@ -169,7 +154,7 @@ export default function InterviewGapReportPage() {
             teacherSummary={report.teacher_summary}
           />
 
-          <CriterionBreakdown breakdown={report.per_criterion_breakdown} />
+          <CriterionBreakdown report={report} />
         </div>
 
         <div className="col-span-12 lg:col-span-5 space-y-4">
@@ -618,13 +603,103 @@ function NotesCard({
   );
 }
 
+// Split criterion-tagged bullets ("technical_accuracy: Cited bounds") into a
+// map of criterion → note phrases. Bullets without a recognizable "tag:" prefix
+// (or tagged with a non-rubric key like "theory_performance") are collected
+// under a null key so they still surface as general notes.
+function groupNotesByCriterion(
+  bullets: string[],
+): { byCriterion: Map<string, string[]>; untagged: string[] } {
+  const byCriterion = new Map<string, string[]>();
+  const untagged: string[] = [];
+  for (const bullet of bullets) {
+    const idx = bullet.indexOf(":");
+    if (idx > 0) {
+      const tag = bullet.slice(0, idx).trim();
+      const note = bullet.slice(idx + 1).trim();
+      if (tag && note && !tag.includes(" ")) {
+        const arr = byCriterion.get(tag) ?? [];
+        arr.push(note);
+        byCriterion.set(tag, arr);
+        continue;
+      }
+    }
+    const cleaned = bullet.trim();
+    if (cleaned) untagged.push(cleaned);
+  }
+  return { byCriterion, untagged };
+}
+
+// 0–5 mean → band + tailwind classes for the score bar + label.
+function scoreBand(score: number): {
+  labelKey: string;
+  bar: string;
+  text: string;
+} {
+  if (score >= 4)
+    return { labelKey: "band_strong", bar: "bg-emerald-500", text: "text-emerald-700" };
+  if (score >= 2.5)
+    return { labelKey: "band_developing", bar: "bg-amber-500", text: "text-amber-700" };
+  return { labelKey: "band_weak", bar: "bg-red-500", text: "text-red-600" };
+}
+
+function criterionLabel(
+  key: string,
+  t: (k: string, opts?: Record<string, unknown>) => string,
+): string {
+  // Known rubric criteria get proper i18n labels; unknown keys are humanized
+  // (snake_case → Title Case) so the card never shows a raw machine key.
+  const label = t(`teacher_interview_gap_report.criteria.${key}`, {
+    defaultValue: "",
+  });
+  if (label) return label;
+  return key
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 function CriterionBreakdown({
-  breakdown,
+  report,
 }: {
-  breakdown: GapReportAuthoringRead["per_criterion_breakdown"];
+  report: GapReportAuthoringRead;
 }) {
   const { t } = useTranslation();
-  const entries = Object.entries(breakdown ?? {});
+  const breakdown = report.per_criterion_breakdown ?? {};
+  const weights = (report.rubric_weights ?? {}) as Record<string, number>;
+  const summary = (report.score_summary ?? {}) as Record<string, unknown>;
+  const strengths = groupNotesByCriterion(report.strengths ?? []);
+  const weaknesses = groupNotesByCriterion(report.weaknesses ?? []);
+
+  const entries = Object.entries(breakdown).map(([key, value]) => ({
+    key,
+    score: typeof value === "number" ? value : Number(value) || 0,
+  }));
+
+  const asNum = (v: unknown): number | null =>
+    typeof v === "number" ? v : typeof v === "string" && v.trim() ? Number(v) : null;
+  const totalScore = asNum(summary.total_score);
+  const outcomesMet = asNum(summary.outcomes_met);
+  const outcomesTotal = asNum(summary.outcomes_total);
+  const answered = asNum(summary.questions_answered);
+  const questionsTotal = asNum(summary.questions_total);
+
+  // Notes tagged with a non-rubric criterion (e.g. "theory_performance") plus
+  // any untagged bullets — shown once at the bottom so nothing is dropped.
+  const rubricKeys = new Set(entries.map((e) => e.key));
+  const extraStrengths = [
+    ...[...strengths.byCriterion.entries()]
+      .filter(([k]) => !rubricKeys.has(k))
+      .flatMap(([k, notes]) => notes.map((n) => `${criterionLabel(k, t)}: ${n}`)),
+    ...strengths.untagged,
+  ];
+  const extraWeaknesses = [
+    ...[...weaknesses.byCriterion.entries()]
+      .filter(([k]) => !rubricKeys.has(k))
+      .flatMap(([k, notes]) => notes.map((n) => `${criterionLabel(k, t)}: ${n}`)),
+    ...weaknesses.untagged,
+  ];
+
   return (
     <GlassCard className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -638,65 +713,142 @@ function CriterionBreakdown({
         </span>
       </div>
 
+      {/* Quantitative rollup: the numbers that contextualize the per-criterion
+          means (weighted total, outcomes met, questions answered). */}
+      {(totalScore !== null ||
+        outcomesTotal !== null ||
+        questionsTotal !== null) && (
+        <div className="grid grid-cols-3 gap-2">
+          {totalScore !== null && (
+            <div className="rounded-xl bg-m3-surface-container-low p-3 text-center">
+              <p className="text-lg font-extrabold text-m3-primary tabular-nums">
+                {Math.round(totalScore)}
+                <span className="text-xs font-medium text-m3-on-surface-variant">
+                  /100
+                </span>
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-m3-on-surface-variant mt-0.5">
+                {t("teacher_interview_gap_report.labels.total_score")}
+              </p>
+            </div>
+          )}
+          {outcomesTotal !== null && (
+            <div className="rounded-xl bg-m3-surface-container-low p-3 text-center">
+              <p className="text-lg font-extrabold text-m3-on-surface tabular-nums">
+                {outcomesMet ?? 0}
+                <span className="text-xs font-medium text-m3-on-surface-variant">
+                  /{outcomesTotal}
+                </span>
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-m3-on-surface-variant mt-0.5">
+                {t("teacher_interview_gap_report.labels.outcomes_met")}
+              </p>
+            </div>
+          )}
+          {questionsTotal !== null && (
+            <div className="rounded-xl bg-m3-surface-container-low p-3 text-center">
+              <p className="text-lg font-extrabold text-m3-on-surface tabular-nums">
+                {answered ?? 0}
+                <span className="text-xs font-medium text-m3-on-surface-variant">
+                  /{questionsTotal}
+                </span>
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-m3-on-surface-variant mt-0.5">
+                {t("teacher_interview_gap_report.labels.answered")}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {entries.length === 0 ? (
         <p className="text-sm italic text-m3-on-surface-variant">
           {t("teacher_interview_gap_report.empty_states.no_detail")}
         </p>
       ) : (
         <ul className="space-y-3">
-          {entries.map(([key, value]) => {
-            const entry = asCriterionEntry(value);
-            const verdict =
-              entry && typeof entry.verdict_met === "boolean"
-                ? entry.verdict_met
-                : null;
-            const text = asString(entry?.outcome_text) ?? key;
-            const evidence = asString(entry?.evidence_excerpt);
-            const rationale = asString(entry?.rationale);
-
+          {entries.map(({ key, score }) => {
+            const band = scoreBand(score);
+            const pct = Math.max(0, Math.min(100, (score / 5) * 100));
+            const weight = weights[key];
+            const good = strengths.byCriterion.get(key) ?? [];
+            const bad = weaknesses.byCriterion.get(key) ?? [];
             return (
               <li
                 key={key}
-                className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-4 space-y-2"
+                className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-4 space-y-2.5"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-bold text-m3-on-surface leading-snug flex-1">
-                    {text}
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-bold text-m3-on-surface leading-snug">
+                    {criterionLabel(key, t)}
+                    {typeof weight === "number" && weight > 0 && (
+                      <span className="ml-2 text-[10px] font-medium text-m3-on-surface-variant">
+                        {t("teacher_interview_gap_report.labels.weight", {
+                          pct: Math.round(weight * 100),
+                        })}
+                      </span>
+                    )}
                   </p>
-                  {verdict !== null && (
-                    <span
-                      className={
-                        verdict
-                          ? "shrink-0 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1"
-                          : "shrink-0 rounded-full bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1"
-                      }
-                    >
-                      {verdict
-                        ? t("teacher_interview_gap_report.labels.passed")
-                        : t("teacher_interview_gap_report.labels.failed")}
+                  <span
+                    className={`shrink-0 text-sm font-extrabold tabular-nums ${band.text}`}
+                  >
+                    {score.toFixed(1)}
+                    <span className="text-[10px] font-medium text-m3-on-surface-variant">
+                      /5
                     </span>
-                  )}
+                  </span>
                 </div>
-                {evidence && (
-                  <p className="text-xs text-m3-on-surface-variant leading-relaxed pl-1 border-l-2 border-m3-outline-variant/30">
-                    <span className="font-bold not-italic mr-1">
-                      {t("teacher_interview_gap_report.labels.quote")}
-                    </span>
-                    <span className="italic">{evidence}</span>
+                {/* Quantitative score bar */}
+                <div className="h-2 w-full rounded-full bg-m3-outline-variant/20 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${band.bar} transition-all`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                {/* Qualitative per-criterion notes from the judge */}
+                {good.map((note, i) => (
+                  <p
+                    key={`g-${i}`}
+                    className="text-xs text-emerald-700 leading-relaxed pl-2 border-l-2 border-emerald-300"
+                  >
+                    <span className="font-bold mr-1">+</span>
+                    {note}
                   </p>
-                )}
-                {rationale && (
-                  <p className="text-xs text-m3-on-surface-variant leading-relaxed">
-                    <span className="font-bold mr-1">
-                      {t("teacher_interview_gap_report.labels.analysis")}
-                    </span>
-                    {rationale}
+                ))}
+                {bad.map((note, i) => (
+                  <p
+                    key={`b-${i}`}
+                    className="text-xs text-red-600 leading-relaxed pl-2 border-l-2 border-red-300"
+                  >
+                    <span className="font-bold mr-1">−</span>
+                    {note}
                   </p>
-                )}
+                ))}
               </li>
             );
           })}
         </ul>
+      )}
+
+      {/* Notes not tied to a rubric criterion (e.g. theory/practice gap) */}
+      {(extraStrengths.length > 0 || extraWeaknesses.length > 0) && (
+        <div className="rounded-xl bg-m3-surface-container-low p-4 space-y-1.5">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-m3-on-surface-variant">
+            {t("teacher_interview_gap_report.labels.other_notes")}
+          </p>
+          {extraStrengths.map((note, i) => (
+            <p key={`eg-${i}`} className="text-xs text-emerald-700 leading-relaxed">
+              <span className="font-bold mr-1">+</span>
+              {note}
+            </p>
+          ))}
+          {extraWeaknesses.map((note, i) => (
+            <p key={`eb-${i}`} className="text-xs text-red-600 leading-relaxed">
+              <span className="font-bold mr-1">−</span>
+              {note}
+            </p>
+          ))}
+        </div>
       )}
     </GlassCard>
   );

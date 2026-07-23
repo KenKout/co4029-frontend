@@ -5849,6 +5849,30 @@ export interface components {
                 [key: string]: unknown;
             };
             /**
+             * Strengths
+             * @default []
+             */
+            strengths: string[];
+            /**
+             * Weaknesses
+             * @default []
+             */
+            weaknesses: string[];
+            /**
+             * Score Summary
+             * @default {}
+             */
+            score_summary: {
+                [key: string]: unknown;
+            };
+            /**
+             * Rubric Weights
+             * @default {}
+             */
+            rubric_weights: {
+                [key: string]: number;
+            };
+            /**
              * Raw Evaluation Json
              * @default {}
              */
