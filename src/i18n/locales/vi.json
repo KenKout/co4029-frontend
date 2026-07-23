@@ -1,7 +1,8 @@
 {
   "file_dropzone": {
     "idle_title": "Kéo thả hoặc nhấp để chọn tệp",
-    "drop_active": "Thả để tải lên"
+    "drop_active": "Thả để tải lên",
+    "uploading": "Đang tải lên…"
   },
   "common": {
     "loading": "Đang tải…",

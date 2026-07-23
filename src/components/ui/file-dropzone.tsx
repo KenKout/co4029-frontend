@@ -16,7 +16,7 @@
  * (lesson materials, video, avatar, CSV, …) can share one component.
  */
 import { useCallback, useRef, useState } from "react";
-import { CloudUpload } from "lucide-react";
+import { CloudUpload, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { fileKind } from "@/lib/file-icons";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,10 @@ export interface FileDropzoneProps {
   className?: string;
   /** Compact variant: smaller padding + single-row layout. */
   compact?: boolean;
+  /** Show an uploading spinner + label; also blocks interaction. */
+  busy?: boolean;
+  /** Label shown while `busy` (defaults to a generic i18n string). */
+  busyLabel?: string;
 }
 
 export function FileDropzone({
@@ -43,6 +47,8 @@ export function FileDropzone({
   hint,
   className,
   compact,
+  busy,
+  busyLabel,
 }: FileDropzoneProps) {
   const { t } = useTranslation();
   const [dragging, setDragging] = useState(false);
@@ -79,21 +85,24 @@ export function FileDropzone({
 
   const kind = fileKind({ mime: dragMime });
   const KindIcon = kind.Icon;
+  // `busy` (upload in flight) also blocks interaction, like `disabled`.
+  const blocked = disabled || busy;
 
   return (
     <div
       role="button"
-      tabIndex={disabled ? -1 : 0}
-      aria-disabled={disabled}
+      tabIndex={blocked ? -1 : 0}
+      aria-disabled={blocked}
+      aria-busy={busy}
       onDragOver={handleDragOver}
       onDragLeave={() => {
         setDragging(false);
         setDragMime(null);
       }}
       onDrop={handleDrop}
-      onClick={() => !disabled && inputRef.current?.click()}
+      onClick={() => !blocked && inputRef.current?.click()}
       onKeyDown={(e) => {
-        if ((e.key === "Enter" || e.key === " ") && !disabled) {
+        if ((e.key === "Enter" || e.key === " ") && !blocked) {
           e.preventDefault();
           inputRef.current?.click();
         }
@@ -105,7 +114,7 @@ export function FileDropzone({
         dragging
           ? "dropzone-spin-border bg-m3-secondary-fixed/25 scale-[1.01]"
           : "border-dashed border-m3-outline-variant/40 hover:border-m3-secondary hover:bg-m3-surface-container-low/60",
-        disabled && "pointer-events-none opacity-50",
+        blocked && "pointer-events-none opacity-50",
         className,
       )}
     >
@@ -114,7 +123,7 @@ export function FileDropzone({
         type="file"
         className="hidden"
         accept={accept}
-        disabled={disabled}
+        disabled={blocked}
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) {
@@ -124,7 +133,25 @@ export function FileDropzone({
         }}
       />
 
-      {dragging ? (
+      {busy ? (
+        // Upload in flight: spinner + label, no drag/click affordance.
+        <div
+          className={cn(
+            "flex items-center justify-center",
+            compact ? "gap-3" : "flex-col gap-3",
+          )}
+        >
+          <Loader2
+            className={cn(
+              "animate-spin text-m3-secondary",
+              compact ? "h-5 w-5" : "h-8 w-8",
+            )}
+          />
+          <p className="font-headline font-bold text-m3-on-surface text-base">
+            {busyLabel ?? t("file_dropzone.uploading")}
+          </p>
+        </div>
+      ) : dragging ? (
         // Drag-active: file-type logo (from MIME) + drop prompt. The spinning
         // ring is the border; the logo pulses to signal "release here".
         <div

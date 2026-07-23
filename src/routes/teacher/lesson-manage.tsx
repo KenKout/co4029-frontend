@@ -66,6 +66,7 @@ import type {
   CourseContentLesson,
   LessonResource,
 } from "@/lib/api/types/common";
+import { FileDropzone } from "@/components/ui/file-dropzone";
 import { cn } from "@/lib/utils";
 
 /* ── Lesson type options ── */
@@ -536,7 +537,6 @@ export default function LessonManagePage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [attachingResource, setAttachingResource] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
-  const resourceInputRef = useRef<HTMLInputElement>(null);
 
   /* ── All lessons in the course (for prerequisite picker) ── */
   const allLessons: CourseContentLesson[] = (content?.modules ?? []).flatMap(
@@ -712,10 +712,8 @@ export default function LessonManagePage() {
     }
   }
 
-  async function handleResourceFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  async function handleResourceFile(file: File) {
     if (!file) return;
-    e.target.value = "";
     setAttachingResource(true);
     try {
       const { storage_object, upload_url } = await requestUpload.mutateAsync({
@@ -1015,28 +1013,13 @@ export default function LessonManagePage() {
               </div>
             )}
 
-            <input
-              ref={resourceInputRef}
-              type="file"
-              className="sr-only"
-              onChange={handleResourceFile}
+            <FileDropzone
+              onFile={handleResourceFile}
+              busy={attachingResource}
+              busyLabel="Uploading…"
+              idleTitle="Attach New Resource"
+              hint="PDF, ZIP, MP4, XLSX, PPTX, DOCX, and more"
             />
-            <button
-              type="button"
-              onClick={() => resourceInputRef.current?.click()}
-              disabled={attachingResource}
-              className="w-full py-4 border-2 border-dashed border-m3-outline-variant/40 rounded-xl text-m3-on-surface-variant font-bold hover:bg-m3-surface-container-lowest hover:border-m3-secondary/40 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 cursor-pointer"
-            >
-              {attachingResource ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" /> Uploading…
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4" /> Attach New Resource
-                </>
-              )}
-            </button>
           </section>
         </div>
 

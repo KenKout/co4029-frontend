@@ -1,7 +1,8 @@
 {
   "file_dropzone": {
     "idle_title": "Drag & drop or click to choose a file",
-    "drop_active": "Drop to upload"
+    "drop_active": "Drop to upload",
+    "uploading": "Uploading…"
   },
   "common": {
     "loading": "Loading…",
