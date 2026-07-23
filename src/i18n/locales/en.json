@@ -245,6 +245,13 @@
       "saved": "Saved",
       "unsaved": "Unsaved changes",
       "last_saved": "Last saved {{when}}"
+    },
+    "delete": {
+      "button": "Delete",
+      "title": "Delete this course?",
+      "body": "\"{{title}}\" and its modules, lessons, and content will be removed. This can be restored by an administrator.",
+      "deleted": "Course deleted",
+      "failed": "Couldn't delete the course. Please try again."
     }
   },
   "teacher_quiz_attempt": {

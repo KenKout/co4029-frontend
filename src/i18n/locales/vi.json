@@ -246,6 +246,13 @@
       "saved": "Đã lưu",
       "unsaved": "Có thay đổi chưa lưu",
       "last_saved": "Lưu lần cuối {{when}}"
+    },
+    "delete": {
+      "button": "Xóa",
+      "title": "Xóa khóa học này?",
+      "body": "\"{{title}}\" và các mô-đun, bài học, nội dung của khóa học sẽ bị xóa. Quản trị viên có thể khôi phục.",
+      "deleted": "Đã xóa khóa học",
+      "failed": "Không thể xóa khóa học. Vui lòng thử lại."
     }
   },
   "teacher_quiz_attempt": {
