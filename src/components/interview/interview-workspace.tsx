@@ -2136,8 +2136,10 @@ export function AnswerControls({
             disabled={!micAvailable || disabled}
             aria-pressed={mode === "voice"}
             className={cn(
-              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-              mode === "voice" ? "text-primary" : "text-text-muted hover:text-text-strong",
+              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50",
+              mode === "voice"
+                ? "text-primary"
+                : "text-text-muted hover:bg-white/50 hover:text-text-strong",
             )}
           >
             <Mic className="h-3.5 w-3.5" />
@@ -2149,8 +2151,10 @@ export function AnswerControls({
             disabled={disabled}
             aria-pressed={mode === "type"}
             className={cn(
-              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-              mode === "type" ? "text-primary" : "text-text-muted hover:text-text-strong",
+              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50",
+              mode === "type"
+                ? "text-primary"
+                : "text-text-muted hover:bg-white/50 hover:text-text-strong",
             )}
           >
             <MessageSquareText className="h-3.5 w-3.5" />
