@@ -3041,6 +3041,9 @@
       "processing": "AI: đang xử lý",
       "ready": "AI: sẵn sàng",
       "failed": "AI: thất bại"
+    },
+    "video": {
+      "empty": "Kéo thả video vào đây, hoặc nhấp để chọn"
     }
   },
   "teacher_lesson_materials": {

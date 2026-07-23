@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getAuthUserInitials } from "@/lib/auth";
+import { useFileDrop } from "@/lib/use-file-drop";
 import { cn } from "@/lib/utils";
 
 // Client-side guardrails mirroring the backend (JPEG/PNG/WebP/GIF, ≤ 2 MiB) so
@@ -46,10 +47,7 @@ export default function SettingsProfilePage() {
   const avatarUrl = me?.profile?.avatar_url ?? undefined;
   const initials = getAuthUserInitials(me ?? null);
 
-  function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    // Reset the input so re-selecting the same file fires onChange again.
-    e.target.value = "";
+  function uploadAvatarFile(file: File) {
     if (!file) return;
     if (!AVATAR_ACCEPT.split(",").includes(file.type)) {
       toast.error(t("settings_profile.avatar.invalid_type"));
@@ -67,6 +65,20 @@ export default function SettingsProfilePage() {
         ),
     });
   }
+
+  function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Reset the input so re-selecting the same file fires onChange again.
+    e.target.value = "";
+    if (file) uploadAvatarFile(file);
+  }
+
+  // Drag-and-drop onto the avatar tile — same flicker-proof lifecycle as
+  // every other upload surface; keeps the live image preview.
+  const { dragging: avatarDragging, dropProps: avatarDropProps } = useFileDrop({
+    onFile: uploadAvatarFile,
+    disabled: uploadAvatar.isPending,
+  });
 
   // Go back to previous page if available, fall back to settings hub.
   // Direct deep-links / refreshes have no useful history entry, so the
@@ -168,10 +180,15 @@ export default function SettingsProfilePage() {
             <div className="flex items-center gap-4">
               <button
                 type="button"
+                {...avatarDropProps}
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadAvatar.isPending}
                 aria-label={t("settings_profile.avatar.change")}
-                className="group relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed"
+                className={cn(
+                  "group relative rounded-full transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed",
+                  avatarDragging &&
+                    "ring-2 ring-m3-secondary ring-offset-2 shadow-ai-glow",
+                )}
               >
                 <Avatar size="lg" className="size-16">
                   {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}

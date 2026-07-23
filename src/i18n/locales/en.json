@@ -3051,6 +3051,9 @@
       "processing": "AI: processing",
       "ready": "AI: ready",
       "failed": "AI: failed"
+    },
+    "video": {
+      "empty": "Drag & drop a video here, or click to choose"
     }
   },
   "teacher_lesson_materials": {

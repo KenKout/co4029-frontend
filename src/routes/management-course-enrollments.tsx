@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { FileDropzone } from "@/components/ui/file-dropzone";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import {
   useBulkEnroll,
@@ -404,8 +405,7 @@ function BulkTab({ courseId }: { courseId: string }) {
     );
   }
 
-  function handleCsvChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  function handleCsvChange(file: File) {
     if (!file) return;
     setCsvFileName(file.name);
     const reader = new FileReader();
@@ -434,7 +434,6 @@ function BulkTab({ courseId }: { courseId: string }) {
     reader.onerror = () =>
       toast.error(t("management_course_enrollments.toasts.read_file_failed"));
     reader.readAsText(file);
-    e.target.value = "";
   }
 
   const submitting = bulk.isPending || csv.isPending;
@@ -504,33 +503,15 @@ function BulkTab({ courseId }: { courseId: string }) {
         <p className="text-xs text-m3-on-surface-variant">
           {t("management_course_enrollments.bulk.csv_hint")}
         </p>
-        <label className="inline-flex items-center gap-2 cursor-pointer">
-          <input
-            type="file"
-            accept=".csv,text/csv"
-            onChange={handleCsvChange}
-            disabled={submitting}
-            className="hidden"
-          />
-          <span
-            className={cn(
-              "inline-flex items-center gap-2 rounded-lg border border-m3-outline-variant/30 bg-m3-surface-container px-3 py-1.5 text-sm font-medium text-m3-on-surface hover:bg-m3-surface-container-high transition-colors",
-              submitting && "opacity-60 pointer-events-none",
-            )}
-          >
-            {csv.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Upload className="h-4 w-4" />
-            )}
-            {t("management_course_enrollments.bulk.choose_csv")}
-          </span>
-          {csvFileName && (
-            <span className="text-xs text-m3-on-surface-variant">
-              {csvFileName}
-            </span>
-          )}
-        </label>
+        <FileDropzone
+          onFile={handleCsvChange}
+          accept=".csv,text/csv"
+          compact
+          disabled={submitting}
+          busy={csv.isPending}
+          idleTitle={t("management_course_enrollments.bulk.choose_csv")}
+          hint={csvFileName ?? undefined}
+        />
       </div>
 
       {result && (

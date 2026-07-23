@@ -70,6 +70,7 @@ import type {
 } from "@/lib/api/types/common";
 import type { LearningMaterial } from "@/lib/api/types/teacher";
 import { FileDropzone } from "@/components/ui/file-dropzone";
+import { useFileDrop } from "@/lib/use-file-drop";
 import { cn } from "@/lib/utils";
 
 /* ── Lesson type options ── */
@@ -310,12 +311,23 @@ function VideoContent({
   onVideoUpload: (file: File) => Promise<void>;
   uploading?: boolean;
 }) {
+  const { t } = useTranslation();
   const { applyMarkdown, applyBlock } = makeMarkdownApplier(
     () => notesRef.current,
     () => notes,
     setNotes,
   );
   const videoInputRef = useRef<HTMLInputElement>(null);
+  // Drag-and-drop onto the empty-state placeholder (same flicker-proof drag
+  // lifecycle as every other upload surface). Only active when there's no
+  // video yet; once a video exists the player takes the space and the
+  // Replace button is the affordance.
+  const { dragging: videoDragging, dropProps: videoDropProps } = useFileDrop({
+    onFile: (file) => {
+      if (!uploading) void onVideoUpload(file);
+    },
+    disabled: uploading,
+  });
 
   return (
     <>
@@ -331,7 +343,16 @@ function VideoContent({
           </MediaPlayer>
         </div>
       ) : (
-        <div className="relative aspect-video rounded-xl overflow-hidden bg-m3-surface-container-highest shadow-xl shadow-m3-primary/5">
+        <div
+          {...videoDropProps}
+          onClick={() => !uploading && videoInputRef.current?.click()}
+          className={cn(
+            "relative aspect-video rounded-xl overflow-hidden bg-m3-surface-container-highest shadow-xl shadow-m3-primary/5 cursor-pointer border-2 transition-colors",
+            videoDragging
+              ? "dropzone-spin-border"
+              : "border-transparent hover:border-m3-secondary/40",
+          )}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-m3-primary/20 via-m3-secondary/10 to-transparent" />
           <div
             className="absolute inset-0 opacity-10"
@@ -341,7 +362,7 @@ function VideoContent({
               backgroundSize: "28px 28px",
             }}
           />
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4">
             <div className="w-20 h-20 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-2xl">
               <Play
                 className="h-8 w-8 text-m3-primary ml-1"
@@ -349,7 +370,9 @@ function VideoContent({
               />
             </div>
             <p className="text-sm text-m3-on-surface-variant font-medium">
-              No video uploaded yet
+              {videoDragging
+                ? t("file_dropzone.drop_active")
+                : t("teacher_lesson_manage.video.empty")}
             </p>
           </div>
         </div>

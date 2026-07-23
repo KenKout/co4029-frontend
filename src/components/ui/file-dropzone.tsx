@@ -15,10 +15,11 @@
  * Kept dependency-free of any feature layer so every upload surface
  * (lesson materials, video, avatar, CSV, …) can share one component.
  */
-import { useCallback, useRef, useState } from "react";
+import { useRef } from "react";
 import { CloudUpload, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { fileKind } from "@/lib/file-icons";
+import { useFileDrop } from "@/lib/use-file-drop";
 import { cn } from "@/lib/utils";
 
 export interface FileDropzoneProps {
@@ -51,77 +52,19 @@ export function FileDropzone({
   busyLabel,
 }: FileDropzoneProps) {
   const { t } = useTranslation();
-  const [dragging, setDragging] = useState(false);
-  // MIME sniffed from the drag payload (the only file info the browser
-  // exposes during dragover). Drives the file-type logo while dragging.
-  const [dragMime, setDragMime] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  // Drag-enter/leave nesting counter. dragenter/dragleave fire for EVERY
-  // element the cursor crosses (root AND its children), so a naive
-  // setDragging(false) on dragleave flickers wildly as you move over the
-  // inner icon/text. Counting enters minus leaves means we only clear the
-  // dragging state when the count returns to zero — i.e. the cursor has
-  // truly left the whole dropzone, not just moved onto a child.
-  const dragDepth = useRef(0);
-
-  const resetDrag = useCallback(() => {
-    dragDepth.current = 0;
-    setDragging(false);
-    setDragMime(null);
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      resetDrag();
-      if (disabled) return;
-      const file = e.dataTransfer.files[0];
-      if (file) onFile(file);
-    },
-    [onFile, disabled, resetDrag],
-  );
-
-  const handleDragEnter = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      if (disabled) return;
-      dragDepth.current += 1;
-      setDragging(true);
-      // dataTransfer.items carries the kind/type during drag; files[] is empty
-      // until drop. Read the first item's MIME to pick the logo.
-      const item = e.dataTransfer.items?.[0];
-      const mime = item && item.kind === "file" ? item.type : null;
-      setDragMime((prev) => (prev === mime ? prev : mime));
-    },
-    [disabled],
-  );
-
-  const handleDragOver = useCallback(
-    (e: React.DragEvent) => {
-      // Must preventDefault on every dragover or the browser rejects the drop
-      // (and navigates to / opens the file instead). Show the copy cursor.
-      e.preventDefault();
-      if (!disabled) e.dataTransfer.dropEffect = "copy";
-    },
-    [disabled],
-  );
-
-  const handleDragLeave = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      dragDepth.current = Math.max(0, dragDepth.current - 1);
-      if (dragDepth.current === 0) {
-        setDragging(false);
-        setDragMime(null);
-      }
-    },
-    [],
-  );
+  // `busy` (upload in flight) also blocks interaction, like `disabled`.
+  const blocked = disabled || busy;
+  // Shared flicker-proof drag lifecycle (drag-depth counter + MIME sniff),
+  // identical to the preview-tile pickers so every upload surface behaves
+  // the same. See useFileDrop.
+  const { dragging, dragMime, dropProps } = useFileDrop({
+    onFile,
+    disabled: blocked,
+  });
 
   const kind = fileKind({ mime: dragMime });
   const KindIcon = kind.Icon;
-  // `busy` (upload in flight) also blocks interaction, like `disabled`.
-  const blocked = disabled || busy;
 
   return (
     <div
@@ -129,10 +72,7 @@ export function FileDropzone({
       tabIndex={blocked ? -1 : 0}
       aria-disabled={blocked}
       aria-busy={busy}
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      {...dropProps}
       onClick={() => !blocked && inputRef.current?.click()}
       onKeyDown={(e) => {
         if ((e.key === "Enter" || e.key === " ") && !blocked) {
