@@ -335,7 +335,9 @@
     "empty_first_body": "A course is where you organize lessons, quizzes, and AI interviews for your students. Start with a title — you can build out the rest anytime.",
     "no_match_title": "No courses match",
     "no_match_body": "Try a different search term or clear your filters.",
-    "clear_filters": "Clear filters"
+    "clear_filters": "Clear filters",
+    "students_label": "Students",
+    "modules_label": "Modules"
   },
   "course_learn": {
     "lesson_unavailable_title": "Lesson unavailable",

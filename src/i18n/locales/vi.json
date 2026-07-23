@@ -336,7 +336,9 @@
     "empty_first_body": "Khóa học là nơi bạn tổ chức bài học, bài kiểm tra và phỏng vấn AI cho học viên. Hãy bắt đầu với một tiêu đề — bạn có thể xây dựng phần còn lại bất cứ lúc nào.",
     "no_match_title": "Không có khóa học nào khớp",
     "no_match_body": "Hãy thử từ khóa khác hoặc xóa bộ lọc.",
-    "clear_filters": "Xóa bộ lọc"
+    "clear_filters": "Xóa bộ lọc",
+    "students_label": "Học viên",
+    "modules_label": "Mô-đun"
   },
   "course_learn": {
     "lesson_unavailable_title": "Bài học không khả dụng",

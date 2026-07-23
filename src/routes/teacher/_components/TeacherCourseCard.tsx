@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Sparkles, GraduationCap, Clock } from "lucide-react";
+import { Sparkles, GraduationCap, Clock, Users, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Course } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
@@ -101,6 +101,23 @@ export function TeacherCourseCard({
             <p className="text-xs text-m3-on-surface-variant mt-1 line-clamp-2 leading-relaxed min-h-[2rem]">
               {course.description ?? ""}
             </p>
+          </div>
+
+          {/* Course-health line: active students + module count — gives the
+              teacher an at-a-glance read of engagement + build progress. */}
+          <div className="flex items-center gap-3 text-[11px] text-m3-on-surface-variant border-t border-m3-outline-variant/15 pt-2.5">
+            <span className="flex items-center gap-1" title={t("teacher_courses_list.students_label", "Students")}>
+              <Users className="h-3.5 w-3.5 text-m3-secondary" />
+              <span className="font-semibold text-m3-on-surface tabular-nums">
+                {course.student_count ?? 0}
+              </span>
+            </span>
+            <span className="flex items-center gap-1" title={t("teacher_courses_list.modules_label", "Modules")}>
+              <Layers className="h-3.5 w-3.5 text-m3-secondary" />
+              <span className="font-semibold text-m3-on-surface tabular-nums">
+                {course.module_count ?? 0}
+              </span>
+            </span>
           </div>
 
           {/* Meta footer: level + duration. */}
