@@ -838,18 +838,20 @@ export function QuestionBank({
         {/* Search + filters — only when there are questions to filter. */}
         {hasQuestions && (
           <div className="space-y-2">
+            {/* Search bar on its own row */}
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-m3-on-surface-variant/60" />
+              <Input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t("teacher_interview_config.qbank.search_placeholder")}
+                aria-label={t("teacher_interview_config.qbank.search_placeholder")}
+                className="bg-m3-surface text-sm pl-9"
+              />
+            </div>
+            {/* Filter selects below the search bar */}
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-m3-on-surface-variant/60" />
-                <Input
-                  type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder={t("teacher_interview_config.qbank.search_placeholder")}
-                  aria-label={t("teacher_interview_config.qbank.search_placeholder")}
-                  className="bg-m3-surface text-sm pl-9"
-                />
-              </div>
               <FilterSelect
                 label={t("teacher_interview_config.qbank.filter.status")}
                 value={statusFilter}
