@@ -355,7 +355,7 @@ export function LearningOutcomes({
             {t("teacher_interview_config.outcomes.section_help")}
           </p>
         </div>
-        {!adding && !importing && (
+        {hasOutcomes && !adding && !importing && (
           <div className="flex items-center gap-2 shrink-0">
             {importableOutcomes.length > 0 && (
               <Button
@@ -473,7 +473,7 @@ export function LearningOutcomes({
 
       {/* Empty state with editable templates */}
       {!hasOutcomes ? (
-        !adding && (
+        !adding && !importing && (
           <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
             <div className="flex items-start gap-2">
               <TriangleAlert
@@ -489,15 +489,29 @@ export function LearningOutcomes({
                 </p>
               </div>
             </div>
-            <Button
-              type="button"
-              onClick={() => openAdd()}
-              className="gap-2"
-              size="sm"
-            >
-              <Plus className="h-4 w-4" />
-              {t("teacher_interview_config.outcomes.add")}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                onClick={() => openAdd()}
+                className="gap-2"
+                size="sm"
+              >
+                <Plus className="h-4 w-4" />
+                {t("teacher_interview_config.outcomes.add")}
+              </Button>
+              {importableOutcomes.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={openImport}
+                  className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
+                  size="sm"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  {t("teacher_interview_config.outcomes.import_from_course")}
+                </Button>
+              )}
+            </div>
             <TemplateRow onPick={pickTemplate} />
           </div>
         )
