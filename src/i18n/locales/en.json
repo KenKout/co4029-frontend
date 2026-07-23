@@ -2882,6 +2882,7 @@
       "no_answer": "No model answer yet",
       "move_to_top": "Move to top",
       "move_to_bottom": "Move to bottom",
+      "drag_hint": "Drag to reorder",
       "duplicate_hint": "Duplicate is not available yet",
       "module_badge_tooltip": "The module this interview belongs to",
       "module_multi": "Multiple modules",

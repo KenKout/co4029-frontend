@@ -11,6 +11,7 @@ import {
   CircleDashed,
   CircleDot,
   FileText,
+  GripVertical,
   Layers,
   Library,
   Loader2,
@@ -928,6 +929,75 @@ export function QuestionBank({
     }
   }
 
+  // Move a question from one index to an arbitrary target index (drag-drop or
+  // move-to-top/bottom). Renumbers only the affected span, using a two-phase
+  // temp-then-final assignment so the (config_id, position) unique constraint
+  // is never violated mid-reorder. Mirrors the 3-PATCH swap `handleReorder`
+  // does, generalized to any distance.
+  async function handleMoveTo(fromIndex: number, toIndex: number) {
+    if (reordering) return;
+    if (fromIndex === toIndex) return;
+    if (fromIndex < 0 || fromIndex >= sorted.length) return;
+    if (toIndex < 0 || toIndex >= sorted.length) return;
+
+    // The ordered list of existing position values — slot i keeps positions[i];
+    // items move between slots.
+    const positions = sorted.map((q, i) => q.position ?? i + 1);
+    const newOrder = [...sorted];
+    const [moved] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, moved);
+
+    // Only the items whose slot changed need a PATCH.
+    const changed = newOrder
+      .map((q, i) => ({ id: q.id, desired: positions[i], prev: q.position ?? 0 }))
+      .filter((c) => c.desired !== c.prev);
+    if (changed.length === 0) return;
+
+    const maxPos = Math.max(...positions);
+    setReordering(true);
+    try {
+      // Phase 1: park every changed item at a unique temp position above the
+      // current max, freeing their final slots without collision.
+      let temp = maxPos + 1;
+      for (const c of changed) {
+        await updateQuestion.mutateAsync({
+          questionId: c.id,
+          patch: { position: temp },
+        });
+        temp += 1;
+      }
+      // Phase 2: drop each into its final position.
+      for (const c of changed) {
+        await updateQuestion.mutateAsync({
+          questionId: c.id,
+          patch: { position: c.desired },
+        });
+      }
+      announce(
+        t("teacher_interview_config.qbank.sr.moved", { position: toIndex + 1 }),
+      );
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_interview_config.toasts.question_reorder_failed"),
+      );
+    } finally {
+      setReordering(false);
+    }
+  }
+
+  // Drag-and-drop reorder state (desktop, native HTML5 DnD). `dragIndex` is the
+  // grabbed row; `dragOverIndex` drives the drop-line indicator.
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  function handleDrop(toIndex: number) {
+    const from = dragIndex;
+    setDragIndex(null);
+    setDragOverIndex(null);
+    if (from === null) return;
+    void handleMoveTo(from, toIndex);
+  }
+
   const hasQuestions = sorted.length > 0;
 
   return (
@@ -1312,6 +1382,10 @@ export function QuestionBank({
             )}
 
             {(() => {
+            // Drag-to-reorder only makes sense on the flat, unfiltered list:
+            // once filtered or grouped by module, the visible order no longer
+            // maps 1:1 to persisted positions, so dropping would be ambiguous.
+            const dndEnabled = !showModuleGroups && !anyFilterActive;
             const renderCard = (q: InterviewQuestionAuthoring) => {
               const displayIndex = sorted.findIndex((s) => s.id === q.id);
               return (
@@ -1345,6 +1419,10 @@ export function QuestionBank({
                   onDelete={() => void handleDelete(q)}
                   onMoveUp={() => void handleReorder(displayIndex, -1)}
                   onMoveDown={() => void handleReorder(displayIndex, 1)}
+                  onMoveToTop={() => void handleMoveTo(displayIndex, 0)}
+                  onMoveToBottom={() =>
+                    void handleMoveTo(displayIndex, sorted.length - 1)
+                  }
                   onAddToBank={() => void handleAddToBank(q)}
                   banking={bankingId === q.id}
                   alreadyInBank={bankedPrompts.has(
@@ -1352,6 +1430,16 @@ export function QuestionBank({
                   )}
                   selected={selectedIds.has(q.id)}
                   onToggleSelect={() => toggleSelected(q.id)}
+                  dndEnabled={dndEnabled}
+                  dragging={dragIndex === displayIndex}
+                  dragOver={dragOverIndex === displayIndex}
+                  onDragStartCard={() => setDragIndex(displayIndex)}
+                  onDragEnterCard={() => setDragOverIndex(displayIndex)}
+                  onDragEndCard={() => {
+                    setDragIndex(null);
+                    setDragOverIndex(null);
+                  }}
+                  onDropCard={() => handleDrop(displayIndex)}
                 />
               );
             };
@@ -1726,11 +1814,21 @@ interface QuestionCardProps {
   onDelete: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  onMoveToTop: () => void;
+  onMoveToBottom: () => void;
   onAddToBank: () => void;
   banking: boolean;
   alreadyInBank: boolean;
   selected: boolean;
   onToggleSelect: () => void;
+  // Drag-to-reorder (native HTML5 DnD; desktop-only, off when filtered/grouped).
+  dndEnabled: boolean;
+  dragging: boolean;
+  dragOver: boolean;
+  onDragStartCard: () => void;
+  onDragEnterCard: () => void;
+  onDragEndCard: () => void;
+  onDropCard: () => void;
 }
 
 function QuestionCard({
@@ -1756,11 +1854,20 @@ function QuestionCard({
   onDelete,
   onMoveUp,
   onMoveDown,
+  onMoveToTop,
+  onMoveToBottom,
   onAddToBank,
   banking,
   alreadyInBank,
   selected,
   onToggleSelect,
+  dndEnabled,
+  dragging,
+  dragOver,
+  onDragStartCard,
+  onDragEnterCard,
+  onDragEndCard,
+  onDropCard,
 }: QuestionCardProps) {
   const { t } = useTranslation();
   const meta = statusMeta(q.review_status);
@@ -1769,14 +1876,30 @@ function QuestionCard({
     ? q.source_refs_json.length
     : 0;
 
+  // Drag is enabled only outside edit mode (so text selection in the editor
+  // isn't hijacked) and only when the parent allows it (flat, unfiltered list).
+  const canDrag = dndEnabled && !editing && !deleting;
+
   return (
     <li
       aria-selected={expanded}
+      onDragOver={(e) => {
+        if (!canDrag) return;
+        e.preventDefault();
+        onDragEnterCard();
+      }}
+      onDrop={(e) => {
+        if (!canDrag) return;
+        e.preventDefault();
+        onDropCard();
+      }}
       className={cn(
         "rounded-xl border bg-m3-surface origin-top overflow-hidden transition-all duration-300 ease-in motion-reduce:transition-none",
         selected
           ? "border-m3-primary/50 ring-1 ring-m3-primary/30"
           : "border-m3-outline-variant/20",
+        dragging && "opacity-50",
+        dragOver && !dragging && "ring-2 ring-m3-primary/50",
         deleting
           ? "opacity-0 scale-95 -translate-x-4 max-h-0 !p-0 !my-0 border-transparent"
           : "max-h-[1200px]",
@@ -1794,6 +1917,18 @@ function QuestionCard({
         />
         {/* Drag handle + number + reorder */}
         <div className="flex flex-col items-center gap-1 shrink-0 pt-0.5">
+          {canDrag && (
+            <span
+              draggable
+              onDragStart={onDragStartCard}
+              onDragEnd={onDragEndCard}
+              title={t("teacher_interview_config.qbank.drag_hint")}
+              aria-label={t("teacher_interview_config.qbank.drag_hint")}
+              className="text-m3-on-surface-variant/50 hover:text-m3-primary cursor-grab active:cursor-grabbing"
+            >
+              <GripVertical className="h-3.5 w-3.5" />
+            </span>
+          )}
           <span
             className="flex h-6 w-6 items-center justify-center rounded-full bg-m3-primary-fixed text-xs font-extrabold tabular-nums text-m3-primary"
             aria-hidden="true"
@@ -1933,6 +2068,22 @@ function QuestionCard({
                     {expanded
                       ? t("teacher_interview_config.qbank.hide_answer")
                       : t("teacher_interview_config.qbank.view_answer")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={onMoveToTop}
+                    disabled={reordering || index === 0}
+                    className="gap-2"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                    {t("teacher_interview_config.qbank.move_to_top")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={onMoveToBottom}
+                    disabled={reordering || index === total - 1}
+                    className="gap-2"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                    {t("teacher_interview_config.qbank.move_to_bottom")}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={onAddToBank}

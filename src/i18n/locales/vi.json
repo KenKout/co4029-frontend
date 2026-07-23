@@ -2872,6 +2872,7 @@
       "no_answer": "Chưa có câu trả lời mẫu",
       "move_to_top": "Chuyển lên đầu",
       "move_to_bottom": "Chuyển xuống cuối",
+      "drag_hint": "Kéo để sắp xếp",
       "duplicate_hint": "Chưa hỗ trợ nhân bản",
       "module_badge_tooltip": "Chương mà buổi phỏng vấn này thuộc về",
       "module_multi": "Nhiều chương",
