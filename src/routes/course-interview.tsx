@@ -418,7 +418,7 @@ export default function CourseInterviewPage() {
   );
   // Live verdict: prefer the polled value once it lands, else the finish value.
   const liveVerdict: boolean | null =
-    verdictPoll?.pass_verdict ?? null ?? finishVerdict;
+    verdictPoll?.pass_verdict ?? finishVerdict;
   const evaluationFailed =
     evaluationTerminallyFailed || verdictPoll?.status === "failed";
   const verdictPending =
