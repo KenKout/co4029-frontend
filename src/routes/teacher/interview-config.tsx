@@ -707,6 +707,7 @@ export default function InterviewConfigPage() {
               <section id="learning-outcomes" className="scroll-mt-32">
                 <LearningOutcomes
                   configId={configId}
+                  courseId={courseId}
                   outcomes={outcomes ?? []}
                   questions={questions ?? []}
                   minOutcomesToPass={config.min_outcomes_to_pass ?? null}

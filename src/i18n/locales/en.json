@@ -2696,6 +2696,12 @@
         "outcome_changed": "Outcome set to {{outcome}}",
         "moved": "Question moved to position {{position}}"
       }
+      "import_from_course": "Import from course",
+      "import_title": "Import course learning outcomes",
+      "import_help": "Select the course-level outcomes to copy into this interview. Imported outcomes default to Knowledge / weight 3 — you can edit each one afterwards.",
+      "import_selected": "Import {{count}} selected",
+      "imported": "Imported {{count}} outcome(s)",
+      "course_lo_code": "L.O.{{n}}",
     },
     "review_status": {
       "pending": "Pending review",

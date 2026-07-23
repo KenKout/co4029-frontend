@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   ArrowDown,
   ArrowUp,
+  BookOpen,
   Check,
   CheckCircle2,
   CircleHelp,
@@ -30,7 +31,9 @@ import {
   useDeleteInterviewOutcome,
   useUpdateInterviewOutcome,
 } from "@/lib/api/hooks/interviews";
+import { useTeacherCourseOutcomes } from "@/lib/api/hooks/courses";
 import type {
+  CourseLearningOutcomeAuthoring,
   InterviewOutcomeAuthoring,
   InterviewQuestionAuthoring,
 } from "@/lib/api/types";
@@ -65,6 +68,8 @@ function coverageOf(count: number): "none" | "limited" | "covered" {
 
 interface LearningOutcomesProps {
   configId: string;
+  /** Parent course id — lets the teacher import course-level outcomes. */
+  courseId: string;
   outcomes: InterviewOutcomeAuthoring[];
   questions: InterviewQuestionAuthoring[];
   /** Config-level pass threshold (min outcomes a student must satisfy). */
@@ -83,6 +88,7 @@ const EMPTY_EDITOR: EditorState = { text: "", type: "knowledge", weight: 3 };
 
 export function LearningOutcomes({
   configId,
+  courseId,
   outcomes,
   questions,
   minOutcomesToPass,
@@ -92,6 +98,7 @@ export function LearningOutcomes({
   const createOutcome = useCreateInterviewOutcome(configId);
   const updateOutcome = useUpdateInterviewOutcome(configId);
   const deleteOutcome = useDeleteInterviewOutcome(configId);
+  const { data: courseOutcomes } = useTeacherCourseOutcomes(courseId);
 
   const sorted = useMemo(
     () => [...outcomes].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
@@ -130,6 +137,10 @@ export function LearningOutcomes({
   const [savingId, setSavingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] =
     useState<InterviewOutcomeAuthoring | null>(null);
+  // Import-from-course picker state.
+  const [importing, setImporting] = useState(false);
+  const [selectedImport, setSelectedImport] = useState<Set<string>>(new Set());
+  const [importBusy, setImportBusy] = useState(false);
 
   const addTextRef = useRef<HTMLTextAreaElement | null>(null);
   const liveRegionRef = useRef<HTMLDivElement | null>(null);
@@ -171,6 +182,72 @@ export function LearningOutcomes({
       type: tpl.type,
       weight: tpl.weight,
     });
+  }
+
+  // ── Import from course-level outcomes ──────────────────────────────────────
+  // Course outcomes carry only text; interview outcomes also need a type +
+  // weight, so imported rows get sensible defaults (knowledge / weight 3) the
+  // teacher can edit afterwards. Already-imported outcomes are hidden from the
+  // picker by comparing normalized text (course outcomes have no interview id).
+  const existingTexts = useMemo(
+    () =>
+      new Set(sorted.map((o) => o.outcome_text.trim().toLowerCase())),
+    [sorted],
+  );
+  const importableOutcomes = useMemo(
+    () =>
+      (courseOutcomes ?? []).filter(
+        (co) => !existingTexts.has(co.outcome_text.trim().toLowerCase()),
+      ),
+    [courseOutcomes, existingTexts],
+  );
+
+  function openImport() {
+    setSelectedImport(new Set());
+    setImporting(true);
+  }
+  function toggleImportSelection(id: string) {
+    setSelectedImport((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  async function submitImport() {
+    const chosen = importableOutcomes.filter((co) =>
+      selectedImport.has(co.id),
+    );
+    if (chosen.length === 0) return;
+    setImportBusy(true);
+    let created = 0;
+    try {
+      // Sequential creates: the (config_id, position) unique constraint means
+      // parallel POSTs at the same position would collide.
+      let position = sorted.length;
+      for (const co of chosen) {
+        position += 1;
+        await createOutcome.mutateAsync({
+          position,
+          outcome_text: co.outcome_text.trim(),
+          outcome_type: "knowledge",
+          importance_weight: 3,
+        });
+        created += 1;
+      }
+      announce(
+        t("teacher_interview_config.outcomes.imported", { count: created }),
+      );
+      toast.success(
+        t("teacher_interview_config.outcomes.imported", { count: created }),
+      );
+      setImporting(false);
+      setSelectedImport(new Set());
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    } finally {
+      setImportBusy(false);
+    }
   }
 
   // ── Edit ──────────────────────────────────────────────────────────────────
@@ -278,18 +355,44 @@ export function LearningOutcomes({
             {t("teacher_interview_config.outcomes.section_help")}
           </p>
         </div>
-        {!adding && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => openAdd()}
-            className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            {t("teacher_interview_config.outcomes.add")}
-          </Button>
+        {!adding && !importing && (
+          <div className="flex items-center gap-2 shrink-0">
+            {importableOutcomes.length > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={openImport}
+                className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
+              >
+                <BookOpen className="h-4 w-4" />
+                {t("teacher_interview_config.outcomes.import_from_course")}
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => openAdd()}
+              className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
+            >
+              <Plus className="h-4 w-4" />
+              {t("teacher_interview_config.outcomes.add")}
+            </Button>
+          </div>
         )}
       </div>
+
+      {/* Import-from-course picker: multi-select the course-level outcomes to
+          copy in. Already-imported ones are filtered out upstream. */}
+      {importing && (
+        <ImportFromCoursePanel
+          outcomes={importableOutcomes}
+          selected={selectedImport}
+          onToggle={toggleImportSelection}
+          busy={importBusy}
+          onCancel={() => setImporting(false)}
+          onConfirm={() => void submitImport()}
+        />
+      )}
 
       {/* Status summary (real, derived counts) */}
       {hasOutcomes && (
@@ -568,6 +671,111 @@ export function LearningOutcomes({
       )}
 
       <div ref={liveRegionRef} aria-live="polite" className="sr-only" />
+    </div>
+  );
+}
+
+// ── Import-from-course picker ─────────────────────────────────────────────────
+
+function ImportFromCoursePanel({
+  outcomes,
+  selected,
+  onToggle,
+  busy,
+  onCancel,
+  onConfirm,
+}: {
+  outcomes: CourseLearningOutcomeAuthoring[];
+  selected: Set<string>;
+  onToggle: (id: string) => void;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const { t } = useTranslation();
+  const count = selected.size;
+  return (
+    <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+      <div className="flex items-start gap-2">
+        <BookOpen className="h-4 w-4 text-primary mt-0.5 shrink-0" aria-hidden="true" />
+        <div className="space-y-0.5">
+          <p className="text-sm font-bold text-m3-on-surface">
+            {t("teacher_interview_config.outcomes.import_title")}
+          </p>
+          <p className="text-xs text-m3-on-surface-variant max-w-prose">
+            {t("teacher_interview_config.outcomes.import_help")}
+          </p>
+        </div>
+      </div>
+
+      <ul className="space-y-1.5 max-h-64 overflow-y-auto">
+        {outcomes.map((co, idx) => {
+          const isSel = selected.has(co.id);
+          return (
+            <li key={co.id}>
+              <button
+                type="button"
+                onClick={() => onToggle(co.id)}
+                aria-pressed={isSel}
+                className={cn(
+                  "flex w-full items-start gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors",
+                  isSel
+                    ? "border-primary bg-primary/10"
+                    : "border-m3-outline-variant/30 bg-m3-surface hover:bg-m3-surface-container-low",
+                )}
+              >
+                <span
+                  className={cn(
+                    "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
+                    isSel
+                      ? "border-primary bg-primary text-white"
+                      : "border-m3-outline-variant",
+                  )}
+                >
+                  {isSel && <Check className="h-3 w-3" />}
+                </span>
+                <span className="min-w-0 flex-1 space-y-0.5">
+                  <span className="inline-flex items-center rounded-full bg-m3-primary-fixed px-1.5 py-0.5 text-[10px] font-extrabold text-m3-primary mr-1.5">
+                    {t("teacher_interview_config.outcomes.course_lo_code", {
+                      n: co.position ?? idx + 1,
+                    })}
+                  </span>
+                  <span className="text-sm text-m3-on-surface leading-relaxed">
+                    {co.outcome_text}
+                  </span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={busy}
+          onClick={onCancel}
+        >
+          <X className="h-4 w-4" />
+          {t("common.cancel")}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          className="gap-1.5"
+          disabled={busy || count === 0}
+          onClick={onConfirm}
+        >
+          {busy ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Plus className="h-4 w-4" />
+          )}
+          {t("teacher_interview_config.outcomes.import_selected", { count })}
+        </Button>
+      </div>
     </div>
   );
 }

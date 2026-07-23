@@ -2686,6 +2686,12 @@
         "status_changed": "Đã đổi trạng thái sang {{status}}",
         "outcome_changed": "Đã gán chuẩn đầu ra: {{outcome}}",
         "moved": "Đã chuyển câu hỏi tới vị trí {{position}}"
+      "import_from_course": "Nhập từ khóa học",
+      "import_title": "Nhập chuẩn đầu ra của khóa học",
+      "import_help": "Chọn các chuẩn đầu ra cấp khóa học để sao chép vào buổi phỏng vấn này. Chuẩn đầu ra được nhập mặc định là Kiến thức / trọng số 3 — bạn có thể chỉnh sửa từng mục sau đó.",
+      "import_selected": "Nhập {{count}} đã chọn",
+      "imported": "Đã nhập {{count}} chuẩn đầu ra",
+      "course_lo_code": "L.O.{{n}}",
       }
     },
     "review_status": {
