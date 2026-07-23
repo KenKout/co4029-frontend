@@ -104,7 +104,9 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
   return {
     title: config.title ?? "",
     persona: (config.persona ?? "neutral") as Persona,
-    supported_modes: config.supported_modes,
+    // All interviews are hybrid (type-or-voice). The mode selector was removed;
+    // any legacy text/voice config is normalized to hybrid on load.
+    supported_modes: "hybrid",
     time_limit_minutes:
       config.time_limit_minutes == null ? "" : String(config.time_limit_minutes),
     max_attempts:
@@ -135,7 +137,6 @@ function integerOrNull(value: string): number | null {
 }
 
 const PERSONA_KEYS: Persona[] = ["strict", "neutral", "supportive"];
-const MODE_KEYS: SupportedMode[] = ["hybrid", "text", "voice"];
 
 export default function InterviewConfigPage() {
   const { t } = useTranslation();
@@ -914,24 +915,6 @@ function SettingsForm({
               {PERSONA_KEYS.map((p) => (
                 <option key={p} value={p}>
                   {t(`teacher_interview_config.persona.${p}`)}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field
-            label={t("teacher_interview_config.fields.mode")}
-            hint={t("teacher_interview_config.fields.mode_hint")}
-          >
-            <select
-              value={draft.supported_modes}
-              onChange={(e) =>
-                update("supported_modes", e.target.value as SupportedMode)
-              }
-              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-            >
-              {MODE_KEYS.map((m) => (
-                <option key={m} value={m}>
-                  {t(`teacher_interview_config.mode.${m}`)}
                 </option>
               ))}
             </select>

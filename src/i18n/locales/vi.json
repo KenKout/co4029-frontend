@@ -2516,11 +2516,6 @@
       "neutral": "Trung lập",
       "supportive": "Hỗ trợ"
     },
-    "mode": {
-      "hybrid": "Văn bản + giọng nói",
-      "text": "Chỉ văn bản",
-      "voice": "Chỉ giọng nói"
-    },
     "status": {
       "draft": "Bản nháp",
       "published": "Đã xuất bản",
@@ -2652,8 +2647,6 @@
       "title": "Tiêu đề",
       "title_placeholder": "Nhập tiêu đề phỏng vấn…",
       "persona": "Phong cách AI",
-      "mode": "Hình thức trả lời",
-      "mode_hint": "Văn bản = gõ câu trả lời. Giọng nói = phỏng vấn nói trực tiếp. Văn bản + giọng nói = một phiên văn bản, học viên có thể gõ hoặc đọc từng câu trả lời.",
       "duration_label": "Thời lượng (phút)",
       "duration_hint": "Để trống = không giới hạn",
       "attempts_label": "Số lần thử",

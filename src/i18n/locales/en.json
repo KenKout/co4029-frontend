@@ -2526,11 +2526,6 @@
       "neutral": "Neutral",
       "supportive": "Supportive"
     },
-    "mode": {
-      "hybrid": "Text + voice",
-      "text": "Text only",
-      "voice": "Voice only"
-    },
     "status": {
       "draft": "Draft",
       "published": "Published",
@@ -2662,8 +2657,6 @@
       "title": "Title",
       "title_placeholder": "Enter interview title…",
       "persona": "AI persona",
-      "mode": "Response format",
-      "mode_hint": "Text = typed answers. Voice = live spoken interview. Text + voice = one text session where students can type or dictate each answer.",
       "duration_label": "Duration (minutes)",
       "duration_hint": "Blank = unlimited",
       "attempts_label": "Attempts",
