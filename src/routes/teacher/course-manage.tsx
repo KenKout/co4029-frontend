@@ -6,6 +6,7 @@ import {
   Video, BookOpen, GripVertical, HelpCircle, Mic,
   Pencil, Loader2, ArrowRight, Check, Users, UserPlus, Activity,
   Settings, Save, ExternalLink, Brain, ClipboardList,
+  ListChecks, Trash2, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -21,14 +22,20 @@ import {
   useUpdateCourse,
   useReorderModuleItems,
 } from "@/lib/api/hooks/teacher-courses";
+import {
+  useTeacherCourseOutcomes,
+  useCreateCourseOutcome,
+  useUpdateCourseOutcome,
+  useDeleteCourseOutcome,
+} from "@/lib/api/hooks/courses";
 import { useCreateQuiz } from "@/lib/api/hooks/quizzes";
 import { useCreateInterviewConfig } from "@/lib/api/hooks/interviews";
 import type { CourseContentItem, CourseContentModule } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
 
 const LESSON_TYPE_CONFIG: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; badge: string }> = {
-  video:    { label: "Video",    icon: Video,       badge: "bg-blue-50 text-blue-700" },
-  reading:  { label: "Reading",  icon: BookOpen,    badge: "bg-emerald-50 text-emerald-700" },
+  video:    { label: "teacher_common.video_label",    icon: Video,       badge: "bg-blue-50 text-blue-700" },
+  reading:  { label: "teacher_common.reading_label",  icon: BookOpen,    badge: "bg-emerald-50 text-emerald-700" },
 };
 
 const QUIZ_ITEM_CONFIG = { label: "teacher_common.quiz_label", icon: HelpCircle, badge: "bg-blue-50 text-blue-800" };
@@ -40,6 +47,7 @@ const ADD_PILL_CLS =
   "hover:bg-m3-primary-fixed hover:text-m3-primary hover:border-m3-primary/20 transition-colors cursor-pointer";
 
 function CourseSettingsPanel({ courseId }: { courseId: string }) {
+  const { t } = useTranslation();
   const { data: course } = useTeacherCourseById(courseId);
   const updateCourse = useUpdateCourse(courseId);
   const [open, setOpen] = useState(false);
@@ -78,9 +86,9 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
         enrollment_cap: enrollmentCap ? Number(enrollmentCap) : undefined,
         expected_completion_days: completionDays ? Number(completionDays) : undefined,
       });
-      toast.success("Course settings saved");
+      toast.success(t("teacher_course_settings.saved"));
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Save failed");
+      toast.error((err as Error).message || t("teacher_course_settings.save_failed"));
     }
   }
 
@@ -103,10 +111,15 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
       >
         <Settings className="h-4 w-4 text-m3-secondary shrink-0" />
         <span className="flex-1 text-sm font-bold text-m3-on-surface transition-colors group-hover:text-m3-primary">
-          Course Settings
+          {t("teacher_course_settings.title")}
         </span>
         <span className="text-xs text-m3-on-surface-variant mr-2 hidden sm:block">
-          {course?.status === "published" ? "Published" : "Draft"} · {course?.level ?? "No level"}
+          {course?.status === "published"
+            ? t("teacher_course_settings.status_summary_published")
+            : t("teacher_course_settings.status_summary_draft")}{" "}
+          · {course?.level
+            ? t(`teacher_course_settings.level_${course.level}`)
+            : t("teacher_course_settings.no_level")}
         </span>
         <ChevronDown
           className={cn(
@@ -127,102 +140,102 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Title */}
             <div className="sm:col-span-2 space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Course Title</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.course_title")}</label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Machine Learning Fundamentals"
+                placeholder={t("teacher_course_settings.course_title_placeholder")}
                 className="text-sm"
               />
             </div>
 
             {/* Slug */}
             <div className="sm:col-span-2 space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Course Slug</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.course_slug")}</label>
               <Input
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
-                placeholder="e.g. ml-fundamentals"
+                placeholder={t("teacher_course_settings.course_slug_placeholder")}
                 className="text-sm"
               />
               <p className="text-[11px] text-m3-on-surface-variant">
-                Used in the course URL. Must be unique.
+                {t("teacher_course_settings.course_slug_help")}
               </p>
             </div>
 
             {/* Description */}
             <div className="sm:col-span-2 space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.description")}</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                placeholder="Brief overview of what students will learn…"
+                placeholder={t("teacher_course_settings.description_placeholder")}
                 className="w-full px-4 py-3 text-sm bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all placeholder:text-m3-on-surface-variant/40"
               />
             </div>
 
             {/* Level */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Level</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.level")}</label>
               <select
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
                 className="w-full px-4 py-3 text-sm bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer"
               >
-                <option value="">— Not set —</option>
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
+                <option value="">{t("teacher_course_settings.level_not_set")}</option>
+                <option value="beginner">{t("teacher_course_settings.level_beginner")}</option>
+                <option value="intermediate">{t("teacher_course_settings.level_intermediate")}</option>
+                <option value="advanced">{t("teacher_course_settings.level_advanced")}</option>
               </select>
             </div>
 
             {/* Status */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Status</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.status")}</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 className="w-full px-4 py-3 text-sm bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer"
               >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-                <option value="archived">Archived</option>
+                <option value="draft">{t("teacher_course_settings.status_draft")}</option>
+                <option value="published">{t("teacher_course_settings.status_published")}</option>
+                <option value="archived">{t("teacher_course_settings.status_archived")}</option>
               </select>
             </div>
 
             {/* Estimated minutes */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Estimated Duration (min)</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.estimated_duration")}</label>
               <Input
                 type="number" min={0}
                 value={estimatedMinutes}
                 onChange={(e) => setEstimatedMinutes(e.target.value)}
-                placeholder="e.g. 480"
+                placeholder={t("teacher_course_settings.estimated_duration_placeholder")}
                 className="text-sm"
               />
             </div>
 
             {/* Enrollment cap */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Enrollment Cap</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.enrollment_cap")}</label>
               <Input
                 type="number" min={0}
                 value={enrollmentCap}
                 onChange={(e) => setEnrollmentCap(e.target.value)}
-                placeholder="Leave empty for unlimited"
+                placeholder={t("teacher_course_settings.enrollment_cap_placeholder")}
                 className="text-sm"
               />
             </div>
 
             {/* Completion days */}
             <div className="sm:col-span-2 space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Expected Completion (days)</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("teacher_course_settings.expected_completion")}</label>
               <Input
                 type="number" min={0}
                 value={completionDays}
                 onChange={(e) => setCompletionDays(e.target.value)}
-                placeholder="e.g. 30"
+                placeholder={t("teacher_course_settings.expected_completion_placeholder")}
                 className="text-sm"
               />
             </div>
@@ -231,12 +244,253 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
           <div className="flex justify-end pt-1">
             <Button type="submit" size="sm" disabled={updateCourse.isPending} className="gap-2 gradient-primary text-white border-0 shadow-sm">
               {updateCourse.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Save Course Settings
+              {t("teacher_course_settings.save")}
             </Button>
           </div>
         </form>
         </div>
       </div>
+    </div>
+  );
+}
+
+function LearningOutcomesPanel({ courseId }: { courseId: string }) {
+  const { t } = useTranslation();
+  const { data: outcomes = [] } = useTeacherCourseOutcomes(courseId);
+  const createOutcome = useCreateCourseOutcome(courseId);
+  const updateOutcome = useUpdateCourseOutcome(courseId);
+  const deleteOutcome = useDeleteCourseOutcome(courseId);
+
+  const [open, setOpen] = useState(false);
+  const [newText, setNewText] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    const text = newText.trim();
+    if (!text) return;
+    try {
+      await createOutcome.mutateAsync(text);
+      setNewText("");
+      toast.success(t("teacher_outcomes.added", "Learning outcome added"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t("teacher_outcomes.add_failed", "Failed to add outcome"));
+    }
+  }
+
+  function startEdit(id: string, text: string) {
+    setEditingId(id);
+    setEditText(text);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditText("");
+  }
+
+  async function handleSaveEdit(id: string) {
+    const text = editText.trim();
+    if (!text) return;
+    try {
+      await updateOutcome.mutateAsync({ outcomeId: id, outcome_text: text });
+      cancelEdit();
+      toast.success(t("teacher_outcomes.updated", "Learning outcome updated"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t("teacher_outcomes.update_failed", "Failed to update outcome"));
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await deleteOutcome.mutateAsync(id);
+      setPendingDeleteId(null);
+      toast.success(t("teacher_outcomes.deleted", "Learning outcome deleted"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t("teacher_outcomes.delete_failed", "Failed to delete outcome"));
+    }
+  }
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-l-4 border-m3-outline-variant/20 overflow-hidden transition-colors",
+        open ? "border-l-m3-primary" : "border-l-m3-outline-variant"
+      )}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          "group w-full flex items-center gap-3 px-5 py-4 text-left cursor-pointer transition-colors",
+          open
+            ? "bg-m3-surface-container-low hover:bg-m3-surface-container"
+            : "hover:bg-m3-primary/5"
+        )}
+      >
+        <ListChecks className="h-4 w-4 text-m3-secondary shrink-0" />
+        <span className="flex-1 text-sm font-bold text-m3-on-surface transition-colors group-hover:text-m3-primary">
+          {t("teacher_outcomes.title", "Learning Outcomes")}
+        </span>
+        <span className="text-xs text-m3-on-surface-variant mr-2 hidden sm:block">
+          {t("teacher_outcomes.count", "{{count}} defined", { count: outcomes.length })}
+        </span>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 text-m3-on-surface-variant transition-transform duration-300",
+            open ? "rotate-0" : "-rotate-90"
+          )}
+        />
+      </button>
+
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-300 ease-in-out",
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        )}
+      >
+        <div className="overflow-hidden min-h-0">
+          <div className="p-5 border-t border-m3-outline-variant/10 bg-m3-surface space-y-4">
+            {outcomes.length === 0 ? (
+              <p className="text-sm text-m3-on-surface-variant">
+                {t(
+                  "teacher_outcomes.empty",
+                  "No learning outcomes yet. Add one to describe what students will achieve."
+                )}
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {outcomes.map((outcome, idx) => {
+                  const code = t("teacher_outcomes.code", "L.O.{{n}}", { n: idx + 1 });
+                  const isEditing = editingId === outcome.id;
+                  return (
+                    <li
+                      key={outcome.id}
+                      className="flex items-start gap-3 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5"
+                    >
+                      <Badge className="mt-0.5 shrink-0 bg-violet-100 text-violet-700 border-transparent">
+                        {code}
+                      </Badge>
+                      {isEditing ? (
+                        <>
+                          <Input
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                void handleSaveEdit(outcome.id);
+                              } else if (e.key === "Escape") {
+                                cancelEdit();
+                              }
+                            }}
+                            autoFocus
+                            className="flex-1 text-sm"
+                          />
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              type="button"
+                              size="icon-sm"
+                              variant="ghost"
+                              disabled={updateOutcome.isPending || !editText.trim()}
+                              onClick={() => void handleSaveEdit(outcome.id)}
+                              aria-label={t("teacher_outcomes.save", "Save")}
+                            >
+                              {updateOutcome.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Check className="h-4 w-4 text-m3-primary" />
+                              )}
+                            </Button>
+                            <Button
+                              type="button"
+                              size="icon-sm"
+                              variant="ghost"
+                              onClick={cancelEdit}
+                              aria-label={t("teacher_outcomes.cancel", "Cancel")}
+                            >
+                              <X className="h-4 w-4 text-m3-on-surface-variant" />
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <span className="flex-1 text-sm text-m3-on-surface leading-relaxed">
+                            {outcome.outcome_text}
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              type="button"
+                              size="icon-sm"
+                              variant="ghost"
+                              onClick={() => startEdit(outcome.id, outcome.outcome_text)}
+                              aria-label={t("teacher_outcomes.edit", "Edit")}
+                            >
+                              <Pencil className="h-4 w-4 text-m3-on-surface-variant" />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="icon-sm"
+                              variant="ghost"
+                              onClick={() => setPendingDeleteId(outcome.id)}
+                              aria-label={t("teacher_outcomes.delete", "Delete")}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            <form onSubmit={handleAdd} className="flex items-center gap-2 pt-1">
+              <Input
+                value={newText}
+                onChange={(e) => setNewText(e.target.value)}
+                placeholder={t(
+                  "teacher_outcomes.add_placeholder",
+                  "e.g. Explain the core principles of…"
+                )}
+                className="flex-1 text-sm"
+              />
+              <Button
+                type="submit"
+                size="sm"
+                disabled={createOutcome.isPending || !newText.trim()}
+                className="gap-2 shrink-0"
+              >
+                {createOutcome.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                {t("teacher_outcomes.add", "Add outcome")}
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <PromptDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={(o) => {
+          if (!o) setPendingDeleteId(null);
+        }}
+        title={t("teacher_outcomes.delete_title", "Delete learning outcome?")}
+        description={t(
+          "teacher_outcomes.delete_description",
+          "The remaining outcomes will be renumbered automatically."
+        )}
+        confirmLabel={t("teacher_outcomes.delete", "Delete")}
+        isPending={deleteOutcome.isPending}
+        onConfirm={() => {
+          if (pendingDeleteId) void handleDelete(pendingDeleteId);
+        }}
+      />
     </div>
   );
 }
@@ -267,8 +521,9 @@ function AddLessonPills({
 
   async function handleAdd(lessonType: string) {
     if (adding) return;
-    const label = LESSON_TYPE_CONFIG[lessonType]?.label ?? lessonType;
-    const title = `New ${label}`;
+    const labelKey = LESSON_TYPE_CONFIG[lessonType]?.label;
+    const label = labelKey ? t(labelKey) : lessonType;
+    const title = t("teacher_common.new_item_title", { label });
     setAdding(true);
     try {
       await createLesson.mutateAsync({
@@ -276,9 +531,9 @@ function AddLessonPills({
         slug: `${slugify(title)}-${Date.now().toString(36)}`,
         lesson_type: lessonType as "video" | "reading",
       });
-      toast.success(`${label} added`);
+      toast.success(t("teacher_common.lesson_added", { label }));
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Failed to add lesson");
+      toast.error((err as Error).message || t("teacher_common.add_lesson_failed"));
     } finally {
       setAdding(false);
     }
@@ -290,16 +545,16 @@ function AddLessonPills({
     try {
       const quiz = await createQuiz.mutateAsync({
         module_id: moduleId,
-        title: `New Quiz ${itemCount + 1}`,
-        description: "Draft quiz for this module.",
+        title: t("teacher_common.new_quiz_title", { number: itemCount + 1 }),
+        description: t("teacher_common.new_quiz_description"),
       });
       void navigate({
         to: "/teacher/courses/$courseId/quizzes/$quizId",
         params: { courseId, quizId: quiz.id },
       });
-      toast.success("Quiz added");
+      toast.success(t("teacher_common.quiz_added"));
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Failed to add quiz");
+      toast.error((err as Error).message || t("teacher_common.add_quiz_failed"));
     } finally {
       setAdding(false);
     }
@@ -354,7 +609,7 @@ function AddLessonPills({
           >
             <Icon className="h-3.5 w-3.5" />
             <Plus className="h-3 w-3 -ml-0.5" />
-            {cfg.label}
+            {t(cfg.label)}
           </button>
         );
       })}
@@ -366,7 +621,7 @@ function AddLessonPills({
       >
         <HelpCircle className="h-3.5 w-3.5" />
         <Plus className="h-3 w-3 -ml-0.5" />
-        Quiz
+        {t("teacher_common.add_quiz_pill")}
       </button>
       <button
         type="button"
@@ -376,7 +631,7 @@ function AddLessonPills({
       >
         <Mic className="h-3.5 w-3.5" />
         <Plus className="h-3 w-3 -ml-0.5" />
-        Interview
+        {t("teacher_common.add_interview_pill")}
       </button>
 
       <PromptDialog
@@ -441,9 +696,9 @@ function ModuleItemRow({
     : INTERVIEW_ITEM_CONFIG;
   const Icon = cfg?.icon ?? BookOpen;
   const rawLabel = cfg?.label ?? item.item_type;
-  const label = item.item_type === "lesson"
-    ? (cfg?.label ?? t("teacher_common.lesson_fallback"))
-    : (rawLabel.startsWith("teacher_common.") ? t(rawLabel) : rawLabel);
+  const label = rawLabel.startsWith("teacher_common.")
+    ? t(rawLabel)
+    : (item.item_type === "lesson" ? t("teacher_common.lesson_fallback") : rawLabel);
   const title = item.target?.title ?? lesson?.title ?? quiz?.title ?? interview?.title ?? label;
   const status = lesson?.status ?? quiz?.status ?? interview?.status;
 
@@ -557,6 +812,7 @@ function ModuleAccordion({
   courseId: string;
   defaultOpen?: boolean;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(module.title);
@@ -583,7 +839,7 @@ function ModuleAccordion({
     newOrder.splice(dropIdx, 0, moved);
     const allIds = newOrder.map((item) => item.id);
     reorderItems.mutate(allIds, {
-      onError: (err) => toast.error((err as Error).message || "Reorder failed"),
+      onError: (err) => toast.error((err as Error).message || t("teacher_common.reorder_failed")),
     });
     setDragSourceIdx(null);
     setDragOverIdx(null);
@@ -610,7 +866,12 @@ function ModuleAccordion({
     e.stopPropagation();
     const next = module.status === "published" ? "draft" : "published";
     updateModule.mutate({ status: next }, {
-      onSuccess: () => toast.success(`Module ${next}`),
+      onSuccess: () =>
+        toast.success(
+          t("teacher_common.module_status_set", {
+            status: t(`teacher_dashboard.status.${next}`),
+          }),
+        ),
       onError: (err) => toast.error((err as Error).message),
     });
   }
@@ -626,9 +887,7 @@ function ModuleAccordion({
       <div
         className={cn(
           "group w-full flex items-center gap-3 p-4 text-left cursor-pointer transition-colors",
-          open
-            ? "bg-m3-surface-container-low hover:bg-m3-surface-container"
-            : "hover:bg-m3-primary/5"
+          "bg-m3-surface-container-low hover:bg-m3-surface-container"
         )}
         onClick={() => !editingTitle && setOpen((o) => !o)}
       >
@@ -660,20 +919,24 @@ function ModuleAccordion({
         <Link
           to="/teacher/courses/$courseId/modules/$moduleId"
           params={{ courseId, moduleId: module.id }}
-          title="Edit module"
+          title={t("teacher_common.edit_module")}
           onClick={(e) => e.stopPropagation()}
           className="shrink-0"
         >
           <Button variant="outline" size="sm" className="gap-1.5 h-7 px-2.5 text-xs border-m3-outline-variant/30">
             <ExternalLink className="h-3 w-3" />
-            <span className="hidden sm:inline">Edit</span>
+            <span className="hidden sm:inline">{t("teacher_common.edit_button")}</span>
           </Button>
         </Link>
 
         {/* Status badge — click to toggle */}
         <button
           type="button"
-          title={`Click to mark as ${module.status === "published" ? "draft" : "published"}`}
+          title={t("teacher_common.mark_module_as", {
+            status: t(
+              `teacher_dashboard.status.${module.status === "published" ? "draft" : "published"}`,
+            ),
+          })}
           onClick={toggleStatus}
           disabled={updateModule.isPending}
           className={cn(
@@ -683,7 +946,11 @@ function ModuleAccordion({
               : "bg-amber-50 text-amber-700 hover:bg-amber-100"
           )}
         >
-          {updateModule.isPending ? "…" : module.status}
+          {updateModule.isPending
+            ? "…"
+            : module.status
+              ? t(`teacher_dashboard.status.${module.status}`)
+              : module.status}
         </button>
 
         {/* Meta counts */}
@@ -696,7 +963,7 @@ function ModuleAccordion({
         {/* Pencil to edit title */}
         <button
           type="button"
-          title="Rename module"
+          title={t("teacher_common.rename_module")}
           onClick={startEditTitle}
           className="shrink-0 p-1 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors"
         >
@@ -728,7 +995,7 @@ function ModuleAccordion({
           <div className="border-t border-m3-outline-variant bg-card">
             <div className="p-4 flex flex-col gap-1">
               {allItemsSorted.length === 0 && (
-                <p className="text-xs text-m3-on-surface-variant py-2 pl-1">No items yet.</p>
+                <p className="text-xs text-m3-on-surface-variant py-2 pl-1">{t("teacher_common.no_items_yet")}</p>
               )}
               {allItemsSorted.map((item, idx) => (
                 <ModuleItemRow
@@ -771,6 +1038,7 @@ function AddModuleForm({
   nextPosition: number;
   onDone: () => void;
 }) {
+  const { t } = useTranslation();
   const createModule = useCreateModule(courseId);
   const [title, setTitle] = useState("");
 
@@ -779,10 +1047,10 @@ function AddModuleForm({
     if (!title.trim()) return;
     try {
       await createModule.mutateAsync({ title, position: nextPosition });
-      toast.success("Module created");
+      toast.success(t("teacher_common.module_created"));
       onDone();
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Failed to create module");
+      toast.error((err as Error).message || t("teacher_common.create_module_failed"));
     }
   }
 
@@ -791,16 +1059,16 @@ function AddModuleForm({
       <Input
         autoFocus
         required
-        placeholder="Module title (e.g. Foundations of ML)"
+        placeholder={t("teacher_common.module_title_placeholder")}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         className="flex-1 text-sm"
       />
       <Button type="submit" size="sm" disabled={createModule.isPending}>
-        {createModule.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create"}
+        {createModule.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t("common.create")}
       </Button>
       <Button type="button" variant="ghost" size="sm" onClick={onDone}>
-        Cancel
+        {t("common.cancel")}
       </Button>
     </form>
   );
@@ -833,49 +1101,53 @@ export default function CourseManagePage() {
             <span className="truncate">{course?.title ?? "…"}</span>
           </div>
           <h1 className="text-xl font-headline font-bold text-m3-on-surface truncate">
-            {course?.title ?? "Curriculum Structure"}
+            {course?.title ?? t("teacher_common.curriculum_fallback_title")}
           </h1>
           <p className="text-xs text-m3-on-surface-variant mt-0.5">
-            {modules.length} module{modules.length !== 1 ? "s" : ""}
-            {modules.length > 0 && (
-              <> · {modules.reduce((acc, m) => acc + (m.items ?? []).filter(i => i.item_type === "lesson").length, 0)} lessons</>
-            )}
+            {t("teacher_common.module_count", { count: modules.length })}
+            {modules.length > 0 &&
+              t("teacher_common.lesson_count_suffix", {
+                count: modules.reduce((acc, m) => acc + (m.items ?? []).filter(i => i.item_type === "lesson").length, 0),
+              })}
           </p>
         </div>
         <Link to="/teacher/courses/$courseId/students" params={{ courseId }}>
           <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
             <Users className="h-4 w-4 text-m3-secondary" />
-            <span className="hidden sm:inline">Students</span>
+            <span className="hidden sm:inline">{t("teacher_common.nav_students")}</span>
           </Button>
         </Link>
         <Link to="/teacher/courses/$courseId/progress" params={{ courseId }}>
           <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
             <Activity className="h-4 w-4 text-m3-secondary" />
-            <span className="hidden sm:inline">Progress</span>
+            <span className="hidden sm:inline">{t("teacher_common.nav_progress")}</span>
           </Button>
         </Link>
         <Link to="/teacher/courses/$courseId/assessments" params={{ courseId }}>
           <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
             <ClipboardList className="h-4 w-4 text-m3-secondary" />
-            <span className="hidden sm:inline">Assessments</span>
+            <span className="hidden sm:inline">{t("teacher_common.nav_assessments")}</span>
           </Button>
         </Link>
         <Link to="/teacher/courses/$courseId/sr-cohort" params={{ courseId }}>
           <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
             <Brain className="h-4 w-4 text-m3-secondary" />
-            <span className="hidden sm:inline">Retention</span>
+            <span className="hidden sm:inline">{t("teacher_common.nav_retention")}</span>
           </Button>
         </Link>
         <Link to="/management/courses/$courseId/enrollments" params={{ courseId }}>
           <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
             <UserPlus className="h-4 w-4 text-m3-secondary" />
-            <span className="hidden sm:inline">Manage Enrollments</span>
+            <span className="hidden sm:inline">{t("teacher_common.nav_manage_enrollments")}</span>
           </Button>
         </Link>
       </div>
 
       {/* Course Settings */}
       <CourseSettingsPanel courseId={courseId} />
+
+      {/* Learning Outcomes */}
+      <LearningOutcomesPanel courseId={courseId} />
 
       {/* Curriculum */}
       {isLoading ? (
@@ -908,7 +1180,7 @@ export default function CourseManagePage() {
               onClick={() => setAddingModule(true)}
             >
               <Plus className="h-4 w-4" />
-              Add Module
+              {t("teacher_common.add_module")}
             </Button>
           )}
         </div>
