@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Bot,
+  CheckCircle2,
   Clock,
   History,
   Infinity as InfinityIcon,
@@ -14,6 +15,7 @@ import {
   MicOff,
   Sparkles,
   User,
+  XCircle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -246,6 +248,26 @@ export default function CourseInterviewPage() {
       }) ?? null,
     [configId, previousSessions],
   );
+
+  // Completed (graded/terminal) past attempts for THIS config, newest first —
+  // powers the lobby's attempt-history block. The learner session contract
+  // exposes pass_verdict + ended_at (no score %), so we show verdict + date.
+  const pastAttempts = useMemo(
+    () =>
+      (previousSessions ?? [])
+        .filter(
+          (s) =>
+            s.interview_config_id === configId &&
+            (s.status === "completed" || s.status === "timed_out"),
+        )
+        .sort((a, b) => {
+          const at = new Date(a.ended_at ?? a.started_at).getTime();
+          const bt = new Date(b.ended_at ?? b.started_at).getTime();
+          return bt - at;
+        }),
+    [configId, previousSessions],
+  );
+  const lastAttempt = pastAttempts[0] ?? null;
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] =
@@ -1655,6 +1677,73 @@ export default function CourseInterviewPage() {
                 </div>
               </div>
             </div>
+
+            {/* Attempt history — the learner session contract exposes verdict
+                + date (no score %), so we surface a compact pass/fail list so
+                the lobby is a hub, not just a start button. Hidden while a
+                resumable session banner is showing to avoid double context. */}
+            {!resumableSession && pastAttempts.length > 0 && (
+              <div className="mb-6 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 text-left">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-m3-on-surface-variant">
+                  {t("course_interview.attempts.history_title")}
+                </p>
+                <ul className="space-y-1.5">
+                  {pastAttempts.slice(0, 3).map((s) => {
+                    const passed = s.pass_verdict === true;
+                    const failed = s.pass_verdict === false;
+                    return (
+                      <li
+                        key={s.session_id}
+                        className="flex items-center justify-between gap-2 text-xs"
+                      >
+                        <span className="flex items-center gap-1.5 text-m3-on-surface-variant">
+                          {passed ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                          ) : failed ? (
+                            <XCircle className="h-3.5 w-3.5 text-danger" />
+                          ) : (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-m3-outline" />
+                          )}
+                          {t("course_interview.attempts.attempt_n", {
+                            n: s.attempt_number,
+                          })}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <span
+                            className={cn(
+                              "font-semibold",
+                              passed
+                                ? "text-success"
+                                : failed
+                                  ? "text-danger"
+                                  : "text-m3-on-surface-variant",
+                            )}
+                          >
+                            {passed
+                              ? t("course_interview.attempts.passed")
+                              : failed
+                                ? t("course_interview.attempts.not_passed")
+                                : t("course_interview.attempts.in_review")}
+                          </span>
+                          {(s.ended_at || s.started_at) && (
+                            <span className="text-m3-outline tabular-nums">
+                              {new Date(
+                                s.ended_at ?? s.started_at,
+                              ).toLocaleDateString(
+                                i18n.language?.startsWith("vi")
+                                  ? "vi-VN"
+                                  : "en-US",
+                                { month: "short", day: "numeric" },
+                              )}
+                            </span>
+                          )}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
 
             {!resumableSession && isHybrid && (
               <div className="flex items-center justify-center gap-2 mb-6 text-xs text-m3-on-surface-variant">

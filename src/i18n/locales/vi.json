@@ -2013,6 +2013,14 @@
         "text": "Văn bản"
       }
     },
+    "attempts": {
+      "history_title": "Lượt làm của bạn",
+      "attempt_n": "Lượt {{n}}",
+      "passed": "Đạt",
+      "not_passed": "Chưa đạt",
+      "in_review": "Đang chấm",
+      "none": "Chưa có lượt nào — đây sẽ là lượt đầu tiên của bạn."
+    },
     "actions": {
       "starting": "Đang khởi tạo...",
       "start": "Bắt đầu phỏng vấn",

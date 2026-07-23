@@ -2047,6 +2047,14 @@
         "text": "Text"
       }
     },
+    "attempts": {
+      "history_title": "Your attempts",
+      "attempt_n": "Attempt {{n}}",
+      "passed": "Passed",
+      "not_passed": "Not passed",
+      "in_review": "In review",
+      "none": "No attempts yet — this will be your first."
+    },
     "actions": {
       "starting": "Starting...",
       "start": "Start interview",
