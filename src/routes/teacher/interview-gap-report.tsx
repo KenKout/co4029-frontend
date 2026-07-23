@@ -130,11 +130,12 @@ export default function InterviewGapReportPage() {
     <div className="space-y-6 pb-12 max-w-[1100px] mx-auto">
       <Header report={report} session={session ?? null} onBack={goBack} />
 
+      <ContextCard report={report} session={session ?? null} />
+
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-7 space-y-4">
-          <SummaryCard
+          <NotesCard
             sessionId={sessionId}
-            summary={report.discrepancy_summary}
             teacherSummary={report.teacher_summary}
           />
 
@@ -285,21 +286,6 @@ function Header({
         <h1 className="text-2xl lg:text-3xl font-extrabold font-headline tracking-tight text-gradient-primary leading-tight">
           {title}
         </h1>
-        {/* Human context row: student name + interview title chips, so the
-            teacher immediately knows whose report this is. */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          {report.student_name && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-m3-primary/10 px-2.5 py-1 font-semibold text-m3-primary">
-              {t("teacher_interview_gap_report.labels.student")}: {report.student_name}
-            </span>
-          )}
-          {(report.interview_title || session?.interview_title) && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-m3-surface-container-high px-2.5 py-1 font-medium text-m3-on-surface-variant">
-              {t("teacher_interview_gap_report.labels.interview")}:{" "}
-              {report.interview_title || session?.interview_title}
-            </span>
-          )}
-        </div>
         <p className="text-xs text-m3-on-surface-variant">
           {t("teacher_interview_gap_report.labels.updated_at", {
             date: formatDate(report.generated_at),
@@ -310,13 +296,144 @@ function Header({
   );
 }
 
-function SummaryCard({
+function ContextRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] uppercase font-bold tracking-widest text-m3-on-surface-variant/70">
+        {label}
+      </p>
+      <p className="text-sm font-semibold text-m3-on-surface truncate">{value}</p>
+    </div>
+  );
+}
+
+function ContextCard({
+  report,
+  session,
+}: {
+  report: GapReportAuthoringRead;
+  session: InterviewSessionPublic | null;
+}) {
+  const { t } = useTranslation();
+
+  const startedAt = session?.started_at ?? null;
+  const endedAt = session?.ended_at ?? null;
+  const durationMin =
+    startedAt && endedAt
+      ? Math.max(
+          0,
+          Math.round(
+            (new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 60000,
+          ),
+        )
+      : null;
+
+  const status = session?.status ?? null;
+  const verdict = session?.pass_verdict ?? null;
+
+  return (
+    <GlassCard className="p-6 space-y-4">
+      <h2 className="font-headline font-bold text-base text-m3-on-surface">
+        {t("teacher_interview_gap_report.sections.context")}
+      </h2>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
+        {report.student_name && (
+          <ContextRow
+            label={t("teacher_interview_gap_report.labels.student")}
+            value={report.student_name}
+          />
+        )}
+        {(report.interview_title || session?.interview_title) && (
+          <ContextRow
+            label={t("teacher_interview_gap_report.labels.interview")}
+            value={report.interview_title || session?.interview_title}
+          />
+        )}
+        {session?.attempt_number != null && (
+          <ContextRow
+            label={t("teacher_interview_gap_report.labels.attempt")}
+            value={t("teacher_interview_gap_report.labels.attempt_value", {
+              n: session.attempt_number,
+            })}
+          />
+        )}
+        <ContextRow
+          label={t("teacher_interview_gap_report.labels.started_at")}
+          value={startedAt ? formatDate(startedAt) : "—"}
+        />
+        <ContextRow
+          label={t("teacher_interview_gap_report.labels.ended_at")}
+          value={
+            endedAt
+              ? formatDate(endedAt)
+              : t("teacher_interview_gap_report.labels.in_progress")
+          }
+        />
+        {durationMin != null && (
+          <ContextRow
+            label={t("teacher_interview_gap_report.labels.duration")}
+            value={t("teacher_interview_gap_report.labels.duration_value", {
+              minutes: durationMin,
+            })}
+          />
+        )}
+        {session?.input_mode && (
+          <ContextRow
+            label={t("teacher_interview_gap_report.labels.mode")}
+            value={session.input_mode}
+          />
+        )}
+        {status && (
+          <ContextRow
+            label={t("teacher_interview_gap_report.labels.status")}
+            value={status}
+          />
+        )}
+        {verdict !== null && (
+          <ContextRow
+            label={t("teacher_interview_gap_report.labels.verdict")}
+            value={
+              <span
+                className={
+                  verdict
+                    ? "inline-flex rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5"
+                    : "inline-flex rounded-full bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5"
+                }
+              >
+                {verdict
+                  ? t("teacher_interview_gap_report.labels.passed")
+                  : t("teacher_interview_gap_report.labels.failed")}
+              </span>
+            }
+          />
+        )}
+      </div>
+
+      {/* Gap overview merged into the context section. */}
+      <div className="border-t border-m3-outline-variant/20 pt-4">
+        <p className="text-[11px] uppercase font-bold tracking-widest text-m3-on-surface-variant mb-1.5">
+          {t("teacher_interview_gap_report.sections.overview")}
+        </p>
+        {report.discrepancy_summary ? (
+          <p className="text-sm text-m3-on-surface-variant leading-relaxed">
+            {report.discrepancy_summary}
+          </p>
+        ) : (
+          <p className="text-sm italic text-m3-on-surface-variant">
+            {t("teacher_interview_gap_report.empty_states.no_overview")}
+          </p>
+        )}
+      </div>
+    </GlassCard>
+  );
+}
+
+function NotesCard({
   sessionId,
-  summary,
   teacherSummary,
 }: {
   sessionId: string;
-  summary: string | null | undefined;
   teacherSummary: string | null | undefined;
 }) {
   const { t } = useTranslation();
@@ -343,90 +460,85 @@ function SummaryCard({
   }
 
   return (
-    <GlassCard className="p-6 space-y-4">
-      <div>
-        <h2 className="font-headline font-bold text-base text-m3-on-surface mb-2">
-          {t("teacher_interview_gap_report.sections.overview")}
-        </h2>
-        {summary ? (
-          <p className="text-sm text-m3-on-surface-variant leading-relaxed">
-            {summary}
-          </p>
-        ) : (
-          <p className="text-sm italic text-m3-on-surface-variant">
-            {t("teacher_interview_gap_report.empty_states.no_overview")}
-          </p>
-        )}
-      </div>
-
+    <GlassCard className="p-6">
       <div className="rounded-xl bg-m3-surface-container-low p-4 border border-m3-outline-variant/20 space-y-2.5">
         <div className="flex items-center justify-between gap-3">
           <p className="text-[11px] uppercase font-bold tracking-widest text-m3-on-surface-variant">
             {t("teacher_interview_gap_report.labels.notes")}
           </p>
-          {!editing && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1 text-xs"
-              onClick={startEditing}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              {t("teacher_interview_gap_report.labels.edit")}
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-7 gap-1 text-xs transition-all duration-200 hover:bg-m3-primary/10 hover:scale-105 active:scale-95 ${
+              editing ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+            onClick={startEditing}
+          >
+            <Pencil className="h-3.5 w-3.5 transition-transform duration-200 group-hover:rotate-12" />
+            {t("teacher_interview_gap_report.labels.edit")}
+          </Button>
         </div>
 
-        {editing ? (
-          <div className="space-y-2.5">
-            <textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              rows={4}
-              maxLength={5000}
-              autoFocus
-              placeholder={t(
-                "teacher_interview_gap_report.labels.notes_placeholder",
-              )}
-              className="w-full resize-y rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-m3-primary/30"
-            />
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1 text-xs"
-                disabled={saveNotes.isPending}
-                onClick={() => setEditing(false)}
-              >
-                <X className="h-3.5 w-3.5" />
-                {t("teacher_interview_gap_report.labels.cancel")}
-              </Button>
-              <Button
-                size="sm"
-                className="gap-1 text-xs"
-                disabled={saveNotes.isPending}
-                onClick={() => void handleSave()}
-              >
-                {saveNotes.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Save className="h-3.5 w-3.5" />
+        {/* Animated expand/collapse for the editor. */}
+        <div
+          className={`grid transition-all duration-300 ease-out ${
+            editing ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+          }`}
+        >
+          <div className="overflow-hidden">
+            <div className="space-y-2.5">
+              <textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                rows={4}
+                maxLength={5000}
+                placeholder={t(
+                  "teacher_interview_gap_report.labels.notes_placeholder",
                 )}
-                {saveNotes.isPending
-                  ? t("teacher_interview_gap_report.labels.saving")
-                  : t("teacher_interview_gap_report.labels.save")}
-              </Button>
+                className="w-full resize-y rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-m3-primary/30"
+              />
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-xs"
+                  disabled={saveNotes.isPending}
+                  onClick={() => setEditing(false)}
+                >
+                  <X className="h-3.5 w-3.5" />
+                  {t("teacher_interview_gap_report.labels.cancel")}
+                </Button>
+                <Button
+                  size="sm"
+                  className="gap-1 text-xs"
+                  disabled={saveNotes.isPending}
+                  onClick={() => void handleSave()}
+                >
+                  {saveNotes.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Save className="h-3.5 w-3.5" />
+                  )}
+                  {saveNotes.isPending
+                    ? t("teacher_interview_gap_report.labels.saving")
+                    : t("teacher_interview_gap_report.labels.save")}
+                </Button>
+              </div>
             </div>
           </div>
-        ) : teacherSummary ? (
-          <p className="text-sm text-m3-on-surface leading-relaxed whitespace-pre-wrap">
-            {teacherSummary}
-          </p>
-        ) : (
-          <p className="text-sm italic text-m3-on-surface-variant">
-            {t("teacher_interview_gap_report.labels.notes_empty")}
-          </p>
-        )}
+        </div>
+
+        {/* Saved note (or empty hint) — shown only when not editing. */}
+        {!editing &&
+          (teacherSummary ? (
+            <p className="text-sm text-m3-on-surface leading-relaxed whitespace-pre-wrap">
+              {teacherSummary}
+            </p>
+          ) : (
+            <p className="text-sm italic text-m3-on-surface-variant">
+              {t("teacher_interview_gap_report.labels.notes_empty")}
+            </p>
+          ))}
       </div>
     </GlassCard>
   );
