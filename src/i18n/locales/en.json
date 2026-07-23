@@ -3192,6 +3192,13 @@
     },
     "confirm_delete": {
       "inline": "Delete this material?"
+    },
+    "recently_deleted": {
+      "title": "Recently deleted",
+      "hint": "Deleted materials are kept for 30 days. Restore one to bring back its processed AI index (quizzes, search, knowledge graph) — no reprocessing needed.",
+      "restore": "Restore",
+      "restored": "Material restored.",
+      "restore_failed": "Couldn't restore the material"
     }
   },
   "cooldown": {

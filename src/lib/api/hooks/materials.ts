@@ -84,6 +84,46 @@ export function useTeacherLessonMaterials(lessonId: string | undefined) {
   });
 }
 
+/**
+ * Soft-deleted materials on a lesson within the backend retention window
+ * (30 days). Backs the "Recently deleted" recovery view in the AI Hub.
+ */
+export function useTeacherDeletedMaterials(lessonId: string | undefined) {
+  return useQuery({
+    queryKey: ["teacher", "lessons", lessonId, "materials", "deleted"],
+    queryFn: () =>
+      apiFetch<LearningMaterial[]>(
+        `/teacher/lessons/${lessonId}/materials/deleted`,
+      ),
+    enabled: !!lessonId,
+    staleTime: 1000 * 30,
+  });
+}
+
+/**
+ * Restore (undelete) a soft-deleted material. Auth is lesson-scoped on the
+ * backend because a tombstoned material can't resolve course context via the
+ * material-level dependency. Refreshes both the active and deleted lists.
+ */
+export function useRestoreMaterial(lessonId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (materialId: string) =>
+      apiPost<MaterialAuthoring>(
+        `/teacher/lessons/${lessonId}/materials/${materialId}/restore`,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["teacher", "lessons", lessonId, "materials"],
+      });
+      qc.invalidateQueries({
+        queryKey: ["teacher", "lessons", lessonId, "materials", "deleted"],
+      });
+      qc.invalidateQueries({ queryKey: ["teacher", "lessons"] });
+    },
+  });
+}
+
 export function useTeacherMaterial(materialId: string | null | undefined) {
   return useQuery({
     queryKey: ["teacher", "materials", materialId, "detail"],

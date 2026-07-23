@@ -3182,6 +3182,13 @@
     },
     "confirm_delete": {
       "inline": "Xoá tài liệu này?"
+    },
+    "recently_deleted": {
+      "title": "Đã xoá gần đây",
+      "hint": "Tài liệu đã xoá được giữ trong 30 ngày. Khôi phục để lấy lại chỉ mục AI đã xử lý (trắc nghiệm, tìm kiếm, đồ thị tri thức) — không cần xử lý lại.",
+      "restore": "Khôi phục",
+      "restored": "Đã khôi phục tài liệu.",
+      "restore_failed": "Không thể khôi phục tài liệu"
     }
   },
   "cooldown": {
