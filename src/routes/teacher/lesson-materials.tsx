@@ -946,6 +946,16 @@ function KnowledgeGraphPreview({
       : new Map<string, { x: number; y: number; r: number }>();
   const nodeById = new Map(nodes.map((n) => [n.id, n]));
   const hoveredNode = hovered ? nodeById.get(hovered) : null;
+  // Direct neighbours of the hovered node (either edge direction) — kept
+  // bright while the rest dim, so the hovered concept's connections read
+  // clearly.
+  const neighborIds = new Set<string>();
+  if (hovered) {
+    for (const e of edges) {
+      if (e.source === hovered) neighborIds.add(e.target);
+      else if (e.target === hovered) neighborIds.add(e.source);
+    }
+  }
 
   return (
     <div className="glass ghost-border shadow-glass rounded-xl p-6 space-y-4">
@@ -978,53 +988,128 @@ function KnowledgeGraphPreview({
               role="img"
               aria-label={t("teacher_lesson_materials.kg.title")}
             >
-              {/* Edges — dashed amber for prerequisites, solid grey for related. */}
+              <defs>
+                <marker id="kg-arrow-prereq" viewBox="0 0 10 10" refX="9" refY="5"
+                        markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
+                  <path d="M0,1 L9,5 L0,9 z" fill="#d97706" />
+                </marker>
+                <marker id="kg-arrow-prereq-active" viewBox="0 0 10 10" refX="9" refY="5"
+                        markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                  <path d="M0,1 L9,5 L0,9 z" fill="#b45309" />
+                </marker>
+                <marker id="kg-arrow-related" viewBox="0 0 10 10" refX="9" refY="5"
+                        markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+                  <path d="M0,1 L9,5 L0,9 z" fill="#94a3b8" />
+                </marker>
+                <marker id="kg-arrow-related-active" viewBox="0 0 10 10" refX="9" refY="5"
+                        markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
+                  <path d="M0,1 L9,5 L0,9 z" fill="#475569" />
+                </marker>
+              </defs>
+              {/* Edges — dashed amber for prerequisites, solid grey for related.
+                  Directed source → target with an arrowhead. On node hover the
+                  connected edges keep their relation colour but shift to a
+                  higher-contrast shade and thicken; the rest dim. */}
               {edges.map((e, i) => {
                 const a = positions.get(e.source);
                 const b = positions.get(e.target);
                 if (!a || !b) return null;
                 const isPrereq = e.relation === "PREREQUISITE_OF";
-                const dim = hovered && hovered !== e.source && hovered !== e.target;
+                const connected = hovered === e.source || hovered === e.target;
+                const dim = hovered && !connected;
+                // Shorten the segment so the arrowhead lands on the target's
+                // rim, not buried under the circle.
+                const dx = b.x - a.x;
+                const dy = b.y - a.y;
+                const len = Math.hypot(dx, dy) || 1;
+                const ux = dx / len;
+                const uy = dy / len;
+                const x2 = b.x - ux * (b.r + 2);
+                const y2 = b.y - uy * (b.r + 2);
+                const x1 = a.x + ux * (a.r + 2);
+                const y1 = a.y + uy * (a.r + 2);
+                const nx = uy; // right-hand normal (SVG y-down): (uy, -ux)
+                const ny = -ux;
+                const curve = Math.min(len * 0.16, 24);
+                const mx = (x1 + x2) / 2 + nx * curve;
+                const my = (y1 + y2) / 2 + ny * curve;
+                const path = `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`;
+                // Keep the relation's colour identity on hover; just deepen it
+                // for contrast (orange → darker amber, grey → slate).
+                const stroke = connected
+                  ? isPrereq
+                    ? "#b45309"
+                    : "#475569"
+                  : isPrereq
+                  ? "#d97706"
+                  : "#94a3b8";
+                const marker = connected
+                  ? isPrereq
+                    ? "url(#kg-arrow-prereq-active)"
+                    : "url(#kg-arrow-related-active)"
+                  : isPrereq
+                  ? "url(#kg-arrow-prereq)"
+                  : "url(#kg-arrow-related)";
                 return (
-                  <line
+                  <path
                     key={i}
-                    x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-                    stroke={isPrereq ? "#d97706" : "#c5c5d4"}
-                    strokeWidth={isPrereq ? 1.4 : 1}
-                    strokeDasharray={isPrereq ? "4 3" : undefined}
-                    opacity={dim ? 0.12 : isPrereq ? 0.7 : 0.45}
+                    d={path}
+                    fill="none"
+                    stroke={stroke}
+                    strokeWidth={connected ? (isPrereq ? 1.8 : 1.6) : isPrereq ? 1.4 : 1}
+                    strokeDasharray={isPrereq && !connected ? "4 3" : undefined}
+                    markerEnd={marker}
+                    opacity={dim ? 0.1 : connected ? 0.95 : isPrereq ? 0.7 : 0.4}
+                    className="transition-opacity"
                   />
                 );
               })}
-              {/* Nodes — size by weight (centrality), centre node highlighted. */}
               {nodes.map((n, i) => {
                 const p = positions.get(n.id);
                 if (!p) return null;
                 const isCenter = i === 0;
-                const dim = hovered && hovered !== n.id;
+                const isHovered = hovered === n.id;
+                const isNeighbor =
+                  !!hovered &&
+                  !isHovered &&
+                  neighborIds.has(n.id);
+                const dim = !!hovered && !isHovered && !isNeighbor;
                 return (
                   <g
                     key={n.id}
                     onMouseEnter={() => setHovered(n.id)}
                     onMouseLeave={() => setHovered(null)}
-                    className="cursor-pointer"
-                    opacity={dim ? 0.35 : 1}
+                    className="cursor-pointer transition-opacity"
+                    opacity={dim ? 0.25 : 1}
                   >
+                    {/* Halo behind the hovered node so it stands out clearly. */}
+                    {isHovered && (
+                      <circle
+                        cx={p.x} cy={p.y} r={p.r + 5}
+                        fill="none"
+                        stroke="#1e40af"
+                        strokeWidth={2}
+                        opacity={0.35}
+                      />
+                    )}
                     <circle
                       cx={p.x} cy={p.y} r={p.r}
-                      fill={isCenter ? "#1e40af" : "#dbeafe"}
-                      stroke={isCenter ? "#1e3a8a" : "#3b82f6"}
-                      strokeWidth={1.5}
+                      fill={isCenter || isHovered ? "#1e40af" : isNeighbor ? "#bfdbfe" : "#dbeafe"}
+                      stroke={isHovered ? "#1e3a8a" : isCenter ? "#1e3a8a" : "#3b82f6"}
+                      strokeWidth={isHovered ? 2.5 : 1.5}
                     />
-                    {(isCenter || p.r > 12 || hovered === n.id) && (
+                    {(isCenter || p.r > 12 || isHovered || isNeighbor) && (
                       <text
                         x={p.x}
                         y={p.y + p.r + 9}
                         textAnchor="middle"
-                        fontSize="8"
-                        fontWeight="600"
+                        fontSize={isHovered ? "9" : "8"}
+                        fontWeight={isHovered ? "700" : "600"}
                         fill="currentColor"
-                        className="text-m3-on-surface-variant pointer-events-none"
+                        className={cn(
+                          "pointer-events-none",
+                          isHovered ? "text-m3-on-surface" : "text-m3-on-surface-variant",
+                        )}
                       >
                         {n.label.length > 18 ? `${n.label.slice(0, 17)}…` : n.label}
                       </text>

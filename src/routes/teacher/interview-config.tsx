@@ -948,8 +948,10 @@ function TabBar({
                 "group min-w-fit flex-1 rounded-md px-3 py-2 text-left transition-colors",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
                 "whitespace-nowrap cursor-pointer",
+                // Active tab is strongly colored (filled primary) so the
+                // current section is unmistakable; inactive tabs stay muted.
                 isActive
-                  ? "bg-primary-soft text-primary"
+                  ? "bg-m3-primary text-white shadow-sm ring-1 ring-m3-primary"
                   : "text-m3-on-surface hover:bg-surface-muted",
               )}
             >
@@ -963,7 +965,14 @@ function TabBar({
                 </span>
               </span>
               {status.kind !== "none" && (
-                <span className="mt-0.5 block text-[11px] leading-tight text-m3-on-surface-variant">
+                <span
+                  className={cn(
+                    "mt-0.5 block text-[11px] leading-tight",
+                    isActive
+                      ? "text-white/80"
+                      : "text-m3-on-surface-variant",
+                  )}
+                >
                   {status.label}
                 </span>
               )}
