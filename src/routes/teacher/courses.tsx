@@ -110,10 +110,10 @@ export default function TeacherCoursesPage() {
                 type="button"
                 onClick={() => setStatusFilter(s)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
+                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                   statusFilter === s
                     ? "bg-card text-m3-primary shadow-sm"
-                    : "text-m3-on-surface-variant hover:text-m3-on-surface",
+                    : "text-m3-on-surface-variant hover:bg-card/60 hover:text-m3-on-surface",
                 )}
               >
                 {t(`teacher_courses_list.filter_${s}`)}
