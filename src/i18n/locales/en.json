@@ -4,6 +4,7 @@
     "error": "Something went wrong",
     "save": "Save",
     "cancel": "Cancel",
+    "undo": "Undo",
     "delete": "Delete",
     "edit": "Edit",
     "confirm": "Confirm",
@@ -427,6 +428,9 @@
     "nav_progress": "Progress",
     "nav_assessments": "Assessments",
     "nav_question_bank": "Question bank",
+    "section_course_settings": "Course settings",
+    "section_learning_outcomes": "Learning outcomes",
+    "section_curriculum": "Curriculum",
     "nav_retention": "Retention",
     "nav_manage_enrollments": "Manage Enrollments",
     "add_module": "Add Module",
@@ -2605,7 +2609,8 @@
     "save_status": {
       "saving": "Saving…",
       "saved": "Saved",
-      "unsaved": "Unsaved changes"
+      "unsaved": "Unsaved changes",
+      "last_saved": "Last saved {{when}}"
     },
     "header": {
       "draft_count": "{{count}} questions",
@@ -2837,6 +2842,7 @@
       "duplicate_hint": "Duplicate is not available yet",
       "module_badge_tooltip": "The module this interview belongs to",
       "add_to_bank": "Add to question bank",
+      "already_in_bank": "Already in question bank",
       "bank_added": "Added to the course question bank",
       "import_from_bank": "Import from bank",
       "import_title": "Import from course question bank",

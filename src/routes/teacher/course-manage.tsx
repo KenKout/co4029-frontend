@@ -1086,7 +1086,7 @@ export default function CourseManagePage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <Link to="/teacher/courses">
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <ArrowLeft className="h-4 w-4" />
@@ -1110,87 +1110,117 @@ export default function CourseManagePage() {
                 count: modules.reduce((acc, m) => acc + (m.items ?? []).filter(i => i.item_type === "lesson").length, 0),
               })}
           </p>
+
+          {/* Course navigation — moved below the course name so the header
+              stays clean and the nav wraps as its own row. */}
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            <Link to="/teacher/courses/$courseId/students" params={{ courseId }}>
+              <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+                <Users className="h-4 w-4 text-m3-secondary" />
+                <span className="hidden sm:inline">{t("teacher_common.nav_students")}</span>
+              </Button>
+            </Link>
+            <Link to="/teacher/courses/$courseId/progress" params={{ courseId }}>
+              <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+                <Activity className="h-4 w-4 text-m3-secondary" />
+                <span className="hidden sm:inline">{t("teacher_common.nav_progress")}</span>
+              </Button>
+            </Link>
+            <Link to="/teacher/courses/$courseId/assessments" params={{ courseId }}>
+              <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+                <ClipboardList className="h-4 w-4 text-m3-secondary" />
+                <span className="hidden sm:inline">{t("teacher_common.nav_assessments")}</span>
+              </Button>
+            </Link>
+            <Link to="/teacher/courses/$courseId/question-bank" params={{ courseId }}>
+              <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+                <Library className="h-4 w-4 text-m3-secondary" />
+                <span className="hidden sm:inline">{t("teacher_common.nav_question_bank")}</span>
+              </Button>
+            </Link>
+            <Link to="/teacher/courses/$courseId/sr-cohort" params={{ courseId }}>
+              <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+                <Brain className="h-4 w-4 text-m3-secondary" />
+                <span className="hidden sm:inline">{t("teacher_common.nav_retention")}</span>
+              </Button>
+            </Link>
+            <Link to="/management/courses/$courseId/enrollments" params={{ courseId }}>
+              <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
+                <UserPlus className="h-4 w-4 text-m3-secondary" />
+                <span className="hidden sm:inline">{t("teacher_common.nav_manage_enrollments")}</span>
+              </Button>
+            </Link>
+          </div>
         </div>
-        <Link to="/teacher/courses/$courseId/students" params={{ courseId }}>
-          <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
-            <Users className="h-4 w-4 text-m3-secondary" />
-            <span className="hidden sm:inline">{t("teacher_common.nav_students")}</span>
-          </Button>
-        </Link>
-        <Link to="/teacher/courses/$courseId/progress" params={{ courseId }}>
-          <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
-            <Activity className="h-4 w-4 text-m3-secondary" />
-            <span className="hidden sm:inline">{t("teacher_common.nav_progress")}</span>
-          </Button>
-        </Link>
-        <Link to="/teacher/courses/$courseId/assessments" params={{ courseId }}>
-          <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
-            <ClipboardList className="h-4 w-4 text-m3-secondary" />
-            <span className="hidden sm:inline">{t("teacher_common.nav_assessments")}</span>
-          </Button>
-        </Link>
-        <Link to="/teacher/courses/$courseId/question-bank" params={{ courseId }}>
-          <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
-            <Library className="h-4 w-4 text-m3-secondary" />
-            <span className="hidden sm:inline">{t("teacher_common.nav_question_bank")}</span>
-          </Button>
-        </Link>
-        <Link to="/teacher/courses/$courseId/sr-cohort" params={{ courseId }}>
-          <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
-            <Brain className="h-4 w-4 text-m3-secondary" />
-            <span className="hidden sm:inline">{t("teacher_common.nav_retention")}</span>
-          </Button>
-        </Link>
-        <Link to="/management/courses/$courseId/enrollments" params={{ courseId }}>
-          <Button variant="outline" size="sm" className="gap-2 border-m3-outline-variant/30 shrink-0">
-            <UserPlus className="h-4 w-4 text-m3-secondary" />
-            <span className="hidden sm:inline">{t("teacher_common.nav_manage_enrollments")}</span>
-          </Button>
-        </Link>
       </div>
 
       {/* Course Settings */}
-      <CourseSettingsPanel courseId={courseId} />
+      <section className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Settings className="h-4 w-4 text-m3-primary" />
+          <h2 className="text-base font-headline font-bold text-m3-primary">
+            {t("teacher_common.section_course_settings")}
+          </h2>
+        </div>
+        <CourseSettingsPanel courseId={courseId} />
+      </section>
 
       {/* Learning Outcomes */}
-      <LearningOutcomesPanel courseId={courseId} />
+      <section className="space-y-2">
+        <div className="flex items-center gap-2">
+          <ListChecks className="h-4 w-4 text-m3-primary" />
+          <h2 className="text-base font-headline font-bold text-m3-primary">
+            {t("teacher_common.section_learning_outcomes")}
+          </h2>
+        </div>
+        <LearningOutcomesPanel courseId={courseId} />
+      </section>
 
       {/* Curriculum */}
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2].map((i) => (
-            <div key={i} className="h-16 bg-m3-surface-container animate-pulse rounded-xl" />
-          ))}
+      <section className="space-y-2">
+        <div className="flex items-center gap-2">
+          <GripVertical className="h-4 w-4 text-m3-primary" />
+          <h2 className="text-base font-headline font-bold text-m3-primary">
+            {t("teacher_common.section_curriculum")}
+          </h2>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {modules.map((module, idx) => (
-            <ModuleAccordion
-              key={module.id}
-              module={module}
-              courseId={courseId}
-              defaultOpen={idx === 0}
-            />
-          ))}
 
-          {addingModule ? (
-            <AddModuleForm
-              courseId={courseId}
-              nextPosition={modules.length + 1}
-              onDone={() => setAddingModule(false)}
-            />
-          ) : (
-            <Button
-              variant="outline"
-              className="w-full gap-2 text-sm"
-              onClick={() => setAddingModule(true)}
-            >
-              <Plus className="h-4 w-4" />
-              {t("teacher_common.add_module")}
-            </Button>
-          )}
-        </div>
-      )}
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2].map((i) => (
+              <div key={i} className="h-16 bg-m3-surface-container animate-pulse rounded-xl" />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {modules.map((module, idx) => (
+              <ModuleAccordion
+                key={module.id}
+                module={module}
+                courseId={courseId}
+                defaultOpen={idx === 0}
+              />
+            ))}
+
+            {addingModule ? (
+              <AddModuleForm
+                courseId={courseId}
+                nextPosition={modules.length + 1}
+                onDone={() => setAddingModule(false)}
+              />
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full gap-2 text-sm"
+                onClick={() => setAddingModule(true)}
+              >
+                <Plus className="h-4 w-4" />
+                {t("teacher_common.add_module")}
+              </Button>
+            )}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

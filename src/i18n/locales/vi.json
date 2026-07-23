@@ -4,6 +4,7 @@
     "error": "Đã xảy ra lỗi",
     "save": "Lưu",
     "cancel": "Huỷ",
+    "undo": "Hoàn tác",
     "create": "Tạo",
     "delete": "Xoá",
     "edit": "Chỉnh sửa",
@@ -427,6 +428,9 @@
     "nav_progress": "Tiến độ",
     "nav_assessments": "Đánh giá",
     "nav_question_bank": "Ngân hàng câu hỏi",
+    "section_course_settings": "Cài đặt khóa học",
+    "section_learning_outcomes": "Chuẩn đầu ra",
+    "section_curriculum": "Nội dung khóa học",
     "nav_retention": "Ghi nhớ",
     "nav_manage_enrollments": "Quản lý ghi danh",
     "add_module": "Thêm chương",
@@ -2595,7 +2599,8 @@
     "save_status": {
       "saving": "Đang lưu…",
       "saved": "Đã lưu",
-      "unsaved": "Có thay đổi chưa lưu"
+      "unsaved": "Có thay đổi chưa lưu",
+      "last_saved": "Lưu lần cuối {{when}}"
     },
     "header": {
       "draft_count": "{{count}} câu hỏi",
@@ -2827,6 +2832,7 @@
       "duplicate_hint": "Chưa hỗ trợ nhân bản",
       "module_badge_tooltip": "Chương mà buổi phỏng vấn này thuộc về",
       "add_to_bank": "Thêm vào ngân hàng câu hỏi",
+      "already_in_bank": "Đã có trong ngân hàng câu hỏi",
       "bank_added": "Đã thêm vào ngân hàng câu hỏi của khóa học",
       "import_from_bank": "Nhập từ ngân hàng",
       "import_title": "Nhập từ ngân hàng câu hỏi của khóa học",

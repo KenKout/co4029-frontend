@@ -564,6 +564,16 @@ export function QuestionBank({
     [bankItems, existingPrompts],
   );
 
+  // Prompts already present in the course bank (normalized). Drives the
+  // per-question "Add to bank" disabled state + "Already in bank" label.
+  const bankedPrompts = useMemo(
+    () =>
+      new Set(
+        (bankItems ?? []).map((b) => b.prompt_text.trim().toLowerCase()),
+      ),
+    [bankItems],
+  );
+
   function toggleBankSelection(id: string) {
     setSelectedBank((prev) => {
       const next = new Set(prev);
@@ -1005,6 +1015,9 @@ export function QuestionBank({
                   onMoveDown={() => void handleReorder(displayIndex, 1)}
                   onAddToBank={() => void handleAddToBank(q)}
                   banking={bankingId === q.id}
+                  alreadyInBank={bankedPrompts.has(
+                    q.prompt_text.trim().toLowerCase(),
+                  )}
                 />
               );
             })}
@@ -1224,6 +1237,7 @@ interface QuestionCardProps {
   onMoveDown: () => void;
   onAddToBank: () => void;
   banking: boolean;
+  alreadyInBank: boolean;
 }
 
 function QuestionCard({
@@ -1251,6 +1265,7 @@ function QuestionCard({
   onMoveDown,
   onAddToBank,
   banking,
+  alreadyInBank,
 }: QuestionCardProps) {
   const { t } = useTranslation();
   const meta = statusMeta(q.review_status);
@@ -1415,15 +1430,19 @@ function QuestionCard({
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={onAddToBank}
-                    disabled={banking}
+                    disabled={banking || alreadyInBank}
                     className="gap-2"
                   >
                     {banking ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : alreadyInBank ? (
+                      <Check className="h-4 w-4 text-emerald-600" />
                     ) : (
                       <BookMarked className="h-4 w-4" />
                     )}
-                    {t("teacher_interview_config.qbank.add_to_bank")}
+                    {alreadyInBank
+                      ? t("teacher_interview_config.qbank.already_in_bank")
+                      : t("teacher_interview_config.qbank.add_to_bank")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

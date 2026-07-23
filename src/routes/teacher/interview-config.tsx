@@ -9,6 +9,7 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
+  Clock,
   HelpCircle,
   Loader2,
   Pencil,
@@ -709,6 +710,7 @@ export default function InterviewConfigPage() {
                   saving={updateConfig.isPending}
                   dirty={settingsDirty}
                   justSaved={justSaved}
+                  updatedAt={config?.updated_at ?? null}
                 />
               </section>
               <section id="learning-outcomes" className="scroll-mt-32">
@@ -864,6 +866,7 @@ function SettingsForm({
   saving,
   dirty,
   justSaved,
+  updatedAt,
 }: {
   draft: SettingsDraft;
   setDraft: React.Dispatch<React.SetStateAction<SettingsDraft | null>>;
@@ -871,6 +874,7 @@ function SettingsForm({
   saving: boolean;
   dirty: boolean;
   justSaved: boolean;
+  updatedAt: string | null;
 }) {
   const { t } = useTranslation();
   const [securityOpen, setSecurityOpen] = useState(false);
@@ -1144,7 +1148,12 @@ function SettingsForm({
           {t("teacher_interview_config.actions.save_config_scope_hint")}
         </p>
         <div className="flex items-center gap-3 shrink-0">
-          <SaveStatus saving={saving} dirty={dirty} justSaved={justSaved} />
+          <SaveStatus
+            saving={saving}
+            dirty={dirty}
+            justSaved={justSaved}
+            updatedAt={updatedAt}
+          />
           <Button
             type="submit"
             disabled={saving || !dirty}
@@ -1171,12 +1180,14 @@ function SaveStatus({
   saving,
   dirty,
   justSaved,
+  updatedAt,
 }: {
   saving: boolean;
   dirty: boolean;
   justSaved: boolean;
+  updatedAt: string | null;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   if (saving) {
     return (
       <span
@@ -1213,6 +1224,18 @@ function SaveStatus({
       >
         <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
         {t("teacher_interview_config.save_status.saved")}
+      </span>
+    );
+  }
+  if (updatedAt) {
+    const when = new Date(updatedAt).toLocaleString(
+      i18n.language?.startsWith("vi") ? "vi-VN" : "en-US",
+      { dateStyle: "medium", timeStyle: "short" },
+    );
+    return (
+      <span className="inline-flex items-center gap-1.5 text-[11px] text-m3-on-surface-variant">
+        <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+        {t("teacher_interview_config.save_status.last_saved", { when })}
       </span>
     );
   }
