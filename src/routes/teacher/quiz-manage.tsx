@@ -254,8 +254,8 @@ export default function QuizManagePage() {
     if (!node) return;
     const observer = new IntersectionObserver(
       ([entry]) => setActionsStuck(!entry.isIntersecting),
-      // rootMargin top offset = global ContentTopBar height (64px / top-16)
-      { rootMargin: "-64px 0px 0px 0px", threshold: 0 },
+      // rootMargin top offset = pin offset of the sticky strip (80px / top-20)
+      { rootMargin: "-80px 0px 0px 0px", threshold: 0 },
     );
     observer.observe(node);
     stickyObserverRef.current = observer;
@@ -552,7 +552,7 @@ export default function QuizManagePage() {
           (icons only) to stay compact. */}
       {/* `relative` so the condensed vertical tab rail can be absolutely
           positioned into the left gutter (out of content flow) once stuck. */}
-      <div className="sticky top-16 z-20 -mx-1 px-1">
+      <div className="sticky top-20 z-20 -mx-1 px-1">
         <div
           className={cn(
             "flex items-center justify-between gap-3 rounded-xl transition-all",
