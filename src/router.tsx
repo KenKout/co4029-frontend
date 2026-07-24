@@ -43,7 +43,16 @@ function Root() {
       <MfaGate>
         <Outlet />
       </MfaGate>
-      <Toaster position="top-right" richColors />
+      {/* closeButton: every toast gets a dismiss (X) so it can be collapsed
+          on demand — without it a top-right toast sits over the notification
+          bell in ContentTopBar and blocks tapping it. offset pushes the stack
+          below the 64px (h-16) top bar so it never overlaps the bell/avatar. */}
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        offset={72}
+      />
     </AuthProvider>
   );
 }
