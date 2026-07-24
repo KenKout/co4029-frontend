@@ -71,7 +71,6 @@ import {
 import type { LessonResource } from "@/lib/api/types/common";
 import type { LearningMaterial } from "@/lib/api/types/teacher";
 import {
-  SelectedFileForm,
   ProcessingStatusCard,
   MaterialCard,
   MaterialDeleteButton,
@@ -692,21 +691,12 @@ function ReadingContent({
    both reading and video lessons (same component). Uses the extracted
    components from _components/material-hub.tsx verbatim.
    ════════════════════════════════════════ */
-function MaterialHistorySection({
-  lessonId,
-  courseId,
-  lessonPrimaryMaterialId,
-}: {
-  lessonId: string;
-  courseId: string;
-  lessonPrimaryMaterialId: string | null;
-}) {
+function MaterialHistorySection({ lessonId }: { lessonId: string }) {
   const { t } = useTranslation();
   const { data: materials = [], isLoading: materialsLoading } =
     useTeacherLessonMaterials(lessonId);
   const { data: summary } = useTeacherProcessingSummary(lessonId);
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const readyCount = summary?.completed_versions ?? 0;
@@ -742,25 +732,11 @@ function MaterialHistorySection({
         </div>
       </div>
 
-      {/* Upload — collapsed to a dropzone by default; expands into the full
-          upload form once a file is picked so it doesn't dominate the page. */}
-      {selectedFile ? (
-        <SelectedFileForm
-          file={selectedFile}
-          lessonId={lessonId}
-          courseId={courseId}
-          lessonPrimaryMaterialId={lessonPrimaryMaterialId}
-          onDone={() => setSelectedFile(null)}
-          onCancel={() => setSelectedFile(null)}
-        />
-      ) : (
-        <FileDropzone
-          onFile={setSelectedFile}
-          accept=".pdf,.mp4,.mov,.txt,.md,.pptx,.docx,.xlsx,.py,.js,.ts,.jsx,.tsx,.java,.c,.cpp,.png,.jpg,.jpeg,.mp3,.wav"
-          idleTitle={t("teacher_lesson_materials.dropzone.drop_idle")}
-          hint={t("teacher_lesson_materials.dropzone.formats")}
-        />
-      )}
+      {/* Upload removed here — files are attached once via "Downloadable
+          Resources" below (its "Use for AI" toggle routes a file into AI
+          processing, after which it appears in this history with the live
+          progress card). This section is now history/management only, so the
+          teacher never sees two competing upload fields. */}
 
       {/* Live processing status (the "AI progress" pattern the user liked). */}
       {processingCount > 0 && processingMaterial && (
@@ -1317,7 +1293,7 @@ export default function LessonManagePage() {
           the main-column danger-zone are removed so no action is duplicated.
           Archive/Delete reuse the existing two-click confirm: the first click
           arms (button turns red + label changes), the second executes. */}
-      <div className="sticky top-0 z-10 -mx-1 mb-8 flex items-center justify-between gap-3 border-b border-m3-outline-variant/15 bg-m3-surface/85 px-1 py-3 backdrop-blur-md">
+      <div className="sticky top-16 z-10 -mx-1 mb-8 flex items-center justify-between gap-3 border-b border-m3-outline-variant/15 bg-m3-surface/85 px-1 py-3 backdrop-blur-md">
         <Link
           to={
             moduleId
@@ -1592,13 +1568,10 @@ export default function LessonManagePage() {
           </section>
 
           {/* ── Material history (folded in from the former AI Material Hub) ──
-              Upload + live processing progress + processed-material list +
-              recently-deleted. Same component for reading and video lessons. */}
-          <MaterialHistorySection
-            lessonId={lessonId}
-            courseId={courseId}
-            lessonPrimaryMaterialId={lesson?.primary_material_id ?? null}
-          />
+              Live processing progress + processed-material list +
+              recently-deleted. Upload happens once via Downloadable Resources
+              above. Same component for reading and video lessons. */}
+          <MaterialHistorySection lessonId={lessonId} />
 
           {/* ── Knowledge Graph (brought over from the AI hub) ── */}
           <section className="space-y-5">
@@ -1618,9 +1591,14 @@ export default function LessonManagePage() {
         <aside className="col-span-12 lg:col-span-4 space-y-6 lg:sticky lg:top-32 self-start">
           {/* ── Lesson Settings ── */}
           <div className="bg-m3-surface-container-low rounded-xl p-6 space-y-6 shadow-sm">
-            <h3 className="font-headline font-bold text-xl text-m3-primary">
-              Lesson Settings
-            </h3>
+            <div>
+              <h3 className="font-headline font-bold text-xl text-m3-primary">
+                Lesson Settings
+              </h3>
+              <p className="text-xs text-m3-on-surface-variant mt-0.5">
+                Duration and difficulty shown to students.
+              </p>
+            </div>
 
             {/* Visibility (published/draft) moved to the sticky action bar as
                 the Publish/Unpublish toggle. Lesson Type selector removed —
@@ -1659,9 +1637,9 @@ export default function LessonManagePage() {
           </div>
 
           {/* ── Prerequisites ── */}
-          <div className="bg-m3-surface-container-low rounded-xl p-6 space-y-4 shadow-sm">
+          <div className="bg-m3-surface-container-low rounded-xl p-6 space-y-6 shadow-sm">
             <div>
-              <h3 className="font-headline font-bold text-base text-m3-primary">
+              <h3 className="font-headline font-bold text-xl text-m3-primary">
                 Prerequisites
               </h3>
               <p className="text-xs text-m3-on-surface-variant mt-0.5">
