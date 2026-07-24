@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Clock,
   Eye,
+  FileUp,
   HelpCircle,
   ListChecks,
   Loader2,
@@ -61,6 +62,7 @@ import {
   ReviewOptionsMatrix,
   defaultReviewOptions,
 } from "./_components/quiz-manage/ReviewOptionsMatrix";
+import { ImportExportPanel } from "./_components/quiz-manage/ImportExportPanel";
 
 type TabKey = "questions" | "settings" | "preview";
 
@@ -240,6 +242,7 @@ export default function QuizManagePage() {
   const [confirmPublish, setConfirmPublish] = useState(false);
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
   const [showBankModal, setShowBankModal] = useState(false);
+  const [showImportExport, setShowImportExport] = useState(false);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(
     new Set(),
   );
@@ -767,6 +770,7 @@ export default function QuizManagePage() {
             })
           }
           onOpenBank={() => setShowBankModal(true)}
+          onOpenImportExport={() => setShowImportExport(true)}
           onQueueDelete={pendingDeletes.queueDelete}
         />
       )}
@@ -858,6 +862,13 @@ export default function QuizManagePage() {
           quizId={quizId}
           defaultModuleId={quiz.module_id}
           onClose={() => setShowBankModal(false)}
+        />
+      )}
+
+      {showImportExport && (
+        <ImportExportPanel
+          quizId={quizId}
+          onClose={() => setShowImportExport(false)}
         />
       )}
 
@@ -982,6 +993,7 @@ function QuestionsTab({
   addPending,
   onOpenGenerator,
   onOpenBank,
+  onOpenImportExport,
   onQueueDelete,
 }: {
   quizId: string;
@@ -997,6 +1009,7 @@ function QuestionsTab({
   addPending: boolean;
   onOpenGenerator: () => void;
   onOpenBank: () => void;
+  onOpenImportExport: () => void;
   onQueueDelete: (item: PendingQuestionDelete) => void;
 }) {
   const { t } = useTranslation();
@@ -1173,6 +1186,15 @@ function QuestionsTab({
                 "teacher_quiz_manage.ai_panel.import_from_bank",
                 "Import from bank",
               )}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onOpenImportExport}
+              className="w-full gap-2"
+            >
+              <FileUp className="h-4 w-4" />
+              {t("teacher_quiz_manage.ai_panel.import_export_file")}
             </Button>
           </div>
 

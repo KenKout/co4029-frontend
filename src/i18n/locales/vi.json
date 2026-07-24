@@ -2680,7 +2680,8 @@
     "ai_panel": {
       "title": "Tạo bằng AI",
       "description": "Sinh câu hỏi từ tài liệu bài học đã sẵn sàng.",
-      "open_generator": "Mở trình tạo"
+      "open_generator": "Mở trình tạo",
+      "import_export_file": "Nhập / Xuất file"
     },
     "question_nav": {
       "title": "Nhảy tới câu hỏi"
@@ -2864,6 +2865,20 @@
       "no_content": "(Chưa có nội dung)",
       "correct": "Đúng",
       "edit_question": "Chỉnh sửa"
+    },
+    "import_export": {
+      "title": "Nhập / Xuất câu hỏi",
+      "description": "Nhập câu hỏi từ file Moodle GIFT hoặc XML, hoặc xuất câu hỏi của quiz này.",
+      "export_title": "Xuất",
+      "import_title": "Nhập",
+      "format_label": "Định dạng",
+      "upload": "Tải file lên",
+      "import_action": "Nhập",
+      "empty_content": "Hãy dán hoặc tải nội dung file trước.",
+      "imported": "Đã nhập {{count}} câu hỏi.",
+      "import_failed": "Nhập thất bại — file có thể bị lỗi định dạng.",
+      "export_failed": "Xuất thất bại.",
+      "result_summary": "Đã nhập {{imported}}, bỏ qua {{skipped}}."
     }
   },
   "teacher_interview_config": {

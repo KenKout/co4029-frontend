@@ -2768,7 +2768,8 @@
     "ai_panel": {
       "title": "Generate with AI",
       "description": "Generate questions from prepared lesson materials.",
-      "open_generator": "Open generator"
+      "open_generator": "Open generator",
+      "import_export_file": "Import / Export file"
     },
     "question_nav": {
       "title": "Jump to question"
@@ -2952,6 +2953,20 @@
       "no_content": "(No content)",
       "correct": "Correct",
       "edit_question": "Edit"
+    },
+    "import_export": {
+      "title": "Import / Export questions",
+      "description": "Import questions from a Moodle GIFT or XML file, or export this quiz's questions.",
+      "export_title": "Export",
+      "import_title": "Import",
+      "format_label": "Format",
+      "upload": "Upload file",
+      "import_action": "Import",
+      "empty_content": "Paste or upload file content first.",
+      "imported": "Imported {{count}} question(s).",
+      "import_failed": "Import failed — the file may be malformed.",
+      "export_failed": "Export failed.",
+      "result_summary": "Imported {{imported}}, skipped {{skipped}}."
     }
   },
   "teacher_interview_config": {
