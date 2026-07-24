@@ -50,6 +50,7 @@ import {
   useUploadCourseThumbnail,
   useDeleteTeacherCourse,
   useReorderModuleItems,
+  useReorderModules,
   useUpdateLesson,
 } from "@/lib/api/hooks/teacher-courses";
 import { usePublishQuiz } from "@/lib/api/hooks/quizzes";
@@ -1063,6 +1064,9 @@ function ModuleItemRow({
   const lesson = item.lesson;
   const quiz = item.quiz;
   const interview = item.interview;
+  // Dragging is armed only while the grip handle is held (see the handle
+  // button below) so the row's title link + buttons remain clickable.
+  const [dragEnabled, setDragEnabled] = useState(false);
   // Inline publish (T#2): publish a draft item without opening it. Publishing
   // is the stated pain point and every item type supports it; unpublish is not
   // uniformly exposed (quizzes have no unpublish route), so the inline control
@@ -1092,7 +1096,15 @@ function ModuleItemRow({
     quiz?.title ??
     interview?.title ??
     label;
-  const status = lesson?.status ?? quiz?.status ?? interview?.status;
+  // Status lives on `item.target` in the teacher content payload (the
+  // `item.lesson/quiz/interview` fields are only populated on the public/learner
+  // payload). Reading the wrong field left `status` undefined, so the inline
+  // publish control never rendered — the \"no quick publish\" bug.
+  const status =
+    item.target?.status ??
+    lesson?.status ??
+    quiz?.status ??
+    interview?.status;
   const publishing =
     publishLesson.isPending ||
     publishQuiz.isPending ||
@@ -1118,20 +1130,35 @@ function ModuleItemRow({
 
   return (
     <div
-      draggable
+      draggable={dragEnabled}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      onDragEnd={onDragEnd}
+      onDragEnd={() => {
+        setDragEnabled(false);
+        onDragEnd();
+      }}
       className={cn(
-        "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all group select-none cursor-grab active:cursor-grabbing",
+        "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all group select-none",
         isDragging ? "opacity-40" : "",
         isDragOver
           ? "ring-2 ring-m3-primary/40 bg-m3-primary-fixed shadow-sm"
           : "bg-m3-surface hover:bg-m3-surface-container",
       )}
     >
-      <GripVertical className="h-3.5 w-3.5 text-m3-outline-variant shrink-0" />
+      {/* Drag handle: dragging is enabled ONLY while grabbing this grip, so the
+          title link + action buttons stay clickable. Previously the whole row
+          was draggable but the title <Link draggable={false}> covered most of
+          it and swallowed drag-starts — the \"item drag doesn't work\" bug. */}
+      <button
+        type="button"
+        aria-label={t("teacher_common.drag_to_reorder")}
+        onMouseDown={() => setDragEnabled(true)}
+        onMouseUp={() => setDragEnabled(false)}
+        className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 text-m3-outline-variant hover:text-m3-on-surface-variant"
+      >
+        <GripVertical className="h-3.5 w-3.5" />
+      </button>
       <div
         className={cn(
           "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
@@ -1264,6 +1291,12 @@ function ModuleAccordion({
   open,
   onToggle,
   registerRef,
+  isDragOver,
+  isDragging,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
 }: {
   module: CourseContentModule;
   courseId: string;
@@ -1271,6 +1304,12 @@ function ModuleAccordion({
   onToggle: () => void;
   /** Registers this module's DOM node so the quick-nav rail can scroll to it. */
   registerRef: (id: string, el: HTMLDivElement | null) => void;
+  isDragOver: boolean;
+  isDragging: boolean;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: () => void;
+  onDragEnd: () => void;
 }) {
   const { t } = useTranslation();
   const [editingTitle, setEditingTitle] = useState(false);
@@ -1282,6 +1321,9 @@ function ModuleAccordion({
 
   const [dragSourceIdx, setDragSourceIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  // Module dragging is armed only while the header grip is held so the title
+  // edit / edit-link / publish controls in the header stay clickable.
+  const [moduleDragEnabled, setModuleDragEnabled] = useState(false);
 
   const allItemsSorted = [...(module.items ?? [])].sort(
     (a, b) => a.position - b.position,
@@ -1300,7 +1342,14 @@ function ModuleAccordion({
   // "N/M published" chip and the "Publish all" action. An item's status lives
   // on its target (lesson/quiz/interview); items with no status are ignored.
   function itemStatus(i: CourseContentItem): string | undefined {
-    return i.lesson?.status ?? i.quiz?.status ?? i.interview?.status;
+    // Teacher payload carries status on `target`; the typed lesson/quiz/
+    // interview fields are learner-payload-only. Check target first.
+    return (
+      i.target?.status ??
+      i.lesson?.status ??
+      i.quiz?.status ??
+      i.interview?.status
+    );
   }
   const statusedItems = (module.items ?? []).filter(
     (i) => itemStatus(i) !== undefined,
@@ -1418,8 +1467,20 @@ function ModuleAccordion({
     <div
       ref={(el) => registerRef(module.id, el)}
       id={`module-${module.id}`}
+      draggable={moduleDragEnabled}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={() => {
+        setModuleDragEnabled(false);
+        onDragEnd();
+      }}
       className={cn(
-        "flex flex-col rounded-xl border-l-4 overflow-hidden scroll-mt-24",
+        "flex flex-col rounded-xl border-l-4 overflow-hidden scroll-mt-24 transition-all",
+        isDragging ? "opacity-40" : "",
+        isDragOver
+          ? "ring-2 ring-m3-primary/40 shadow-sm"
+          : "",
         open ? "border-m3-primary" : "border-m3-outline-variant",
       )}
     >
@@ -1431,7 +1492,18 @@ function ModuleAccordion({
         )}
         onClick={() => !editingTitle && onToggle()}
       >
-        <GripVertical className="h-4 w-4 text-m3-outline-variant shrink-0 cursor-grab" />
+        {/* Drag handle — dragging armed only while grabbing this grip so the
+            title / edit / publish controls in the header stay clickable. */}
+        <button
+          type="button"
+          aria-label={t("teacher_common.drag_to_reorder")}
+          onMouseDown={() => setModuleDragEnabled(true)}
+          onMouseUp={() => setModuleDragEnabled(false)}
+          onClick={(e) => e.stopPropagation()}
+          className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 text-m3-outline-variant hover:text-m3-on-surface-variant"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
 
         {/* Title — editable inline */}
         {editingTitle ? (
@@ -1738,6 +1810,33 @@ export default function CourseManagePage() {
   function registerModuleRef(id: string, el: HTMLDivElement | null) {
     moduleRefs.current[id] = el;
   }
+
+  // Module drag-reorder. dragEnabled is armed only while the module grip is
+  // held (same pattern as item rows) so the header's title/buttons stay usable.
+  const reorderModules = useReorderModules(courseId);
+  const [modDragIdx, setModDragIdx] = useState<number | null>(null);
+  const [modDragOverIdx, setModDragOverIdx] = useState<number | null>(null);
+  function handleModuleDrop(dropIdx: number) {
+    if (modDragIdx === null || modDragIdx === dropIdx) {
+      setModDragIdx(null);
+      setModDragOverIdx(null);
+      return;
+    }
+    const newOrder = [...modules];
+    const [moved] = newOrder.splice(modDragIdx, 1);
+    newOrder.splice(dropIdx, 0, moved);
+    reorderModules.mutate(
+      newOrder.map((m) => m.id),
+      {
+        onError: (err) =>
+          toast.error(
+            (err as Error).message || t("teacher_common.reorder_failed"),
+          ),
+      },
+    );
+    setModDragIdx(null);
+    setModDragOverIdx(null);
+  }
   function scrollToModule(id: string) {
     // Ensure it's open before scrolling so the target has its full height.
     setOpenMap((m) => (m[id] ? m : { ...m, [id]: true }));
@@ -1985,17 +2084,16 @@ export default function CourseManagePage() {
                   {t("teacher_common.jump_to")}
                 </p>
                 {modules.map((module) => {
+                  const st = (i: CourseContentItem) =>
+                    i.target?.status ??
+                    i.lesson?.status ??
+                    i.quiz?.status ??
+                    i.interview?.status;
                   const items = (module.items ?? []).filter(
-                    (i) =>
-                      (i.lesson?.status ??
-                        i.quiz?.status ??
-                        i.interview?.status) !== undefined,
+                    (i) => st(i) !== undefined,
                   );
                   const pub = items.filter(
-                    (i) =>
-                      (i.lesson?.status ??
-                        i.quiz?.status ??
-                        i.interview?.status) === "published",
+                    (i) => st(i) === "published",
                   ).length;
                   const done = items.length > 0 && pub === items.length;
                   return (
@@ -2025,7 +2123,7 @@ export default function CourseManagePage() {
             )}
 
             <div className="space-y-3 min-w-0">
-              {modules.map((module) => (
+              {modules.map((module, idx) => (
                 <ModuleAccordion
                   key={module.id}
                   module={module}
@@ -2033,6 +2131,27 @@ export default function CourseManagePage() {
                   open={!!openMap[module.id]}
                   onToggle={() => toggleModule(module.id)}
                   registerRef={registerModuleRef}
+                  isDragOver={modDragOverIdx === idx}
+                  isDragging={modDragIdx === idx}
+                  onDragStart={(e) => {
+                    setModDragIdx(idx);
+                    const el = e.currentTarget as HTMLElement;
+                    const rect = el.getBoundingClientRect();
+                    e.dataTransfer.setDragImage(
+                      el,
+                      e.clientX - rect.left,
+                      e.clientY - rect.top,
+                    );
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setModDragOverIdx(idx);
+                  }}
+                  onDrop={() => handleModuleDrop(idx)}
+                  onDragEnd={() => {
+                    setModDragIdx(null);
+                    setModDragOverIdx(null);
+                  }}
                 />
               ))}
 

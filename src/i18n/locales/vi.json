@@ -443,6 +443,7 @@
     "delete_body": "Thao tác này xóa câu hỏi khỏi ngân hàng của khóa học. Các câu hỏi đã nhập vào buổi phỏng vấn không bị ảnh hưởng."
   },
   "teacher_common": {
+    "drag_to_reorder": "Kéo để sắp xếp",
     "publish_item": "Xuất bản",
     "publish_failed": "Không thể xuất bản",
     "item_published": "Đã xuất bản \"{{title}}\".",

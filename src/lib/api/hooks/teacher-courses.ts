@@ -349,6 +349,28 @@ export function useReorderModuleItems(moduleId: string, courseId: string) {
   });
 }
 
+/**
+ * Reorder modules within a course. Sends the FULL ordered list of module ids;
+ * the backend applies the OFFSET two-phase swap to avoid the
+ * uq_modules_course_position unique-constraint collision mid-update.
+ */
+export function useReorderModules(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (newOrder: string[]) =>
+      apiPut<ModuleAuthoring[]>(`/teacher/courses/${courseId}/modules/reorder`, {
+        course_id: courseId,
+        new_order: newOrder,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.courses.content(courseId) });
+      qc.invalidateQueries({
+        queryKey: ["teacher", "courses", courseId, "content"],
+      });
+    },
+  });
+}
+
 export function useSetModulePrerequisites(moduleId: string, courseId: string) {
   const qc = useQueryClient();
   return useMutation({

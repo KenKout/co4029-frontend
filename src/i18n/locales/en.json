@@ -466,6 +466,7 @@
     "delete_body": "This removes the question from the course bank. Questions already imported into interviews are not affected."
   },
   "teacher_common": {
+    "drag_to_reorder": "Drag to reorder",
     "publish_item": "Publish",
     "publish_failed": "Couldn't publish",
     "item_published": "\"{{title}}\" published.",
