@@ -1527,7 +1527,7 @@ function SettingsForm({
                 </Field>
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="grid gap-4">
                 <Field label={t("teacher_interview_config.security.custom_en")}>
                   <textarea
                     rows={3}
@@ -1541,21 +1541,6 @@ function SettingsForm({
                   <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
                     {draft.security_custom_refusal_en.trim() ||
                       t("teacher_interview_config.security.preview_en")}
-                  </p>
-                </Field>
-                <Field label={t("teacher_interview_config.security.custom_vi")}>
-                  <textarea
-                    rows={3}
-                    maxLength={500}
-                    value={draft.security_custom_refusal_vi}
-                    onChange={(e) =>
-                      update("security_custom_refusal_vi", e.target.value)
-                    }
-                    className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-                  />
-                  <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
-                    {draft.security_custom_refusal_vi.trim() ||
-                      t("teacher_interview_config.security.preview_vi")}
                   </p>
                 </Field>
               </div>
