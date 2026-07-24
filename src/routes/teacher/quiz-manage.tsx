@@ -108,6 +108,13 @@ interface SettingsDraft {
   due_at: string;
   // Review-visibility matrix (Phase 2). Always a full 3×5 matrix in the draft.
   review_options: ReviewOptions;
+  // Access rules (Phase 12). Empty string = no restriction.
+  require_password: string;
+  require_subnet: string;
+  browser_security: boolean;
+  // Timing enforcement (Phase 6).
+  overdue_handling: "autosubmit" | "graceperiod" | "autoabandon";
+  grace_period_seconds: string;
 }
 
 function toDraftString(value: string | number | null | undefined) {
@@ -183,6 +190,11 @@ function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
     available_until: isoToLocalInput(quiz.available_until),
     due_at: isoToLocalInput(quiz.due_at),
     review_options: quiz.review_options ?? defaultReviewOptions(),
+    require_password: quiz.require_password ?? "",
+    require_subnet: quiz.require_subnet ?? "",
+    browser_security: quiz.browser_security ?? false,
+    overdue_handling: quiz.overdue_handling ?? "autosubmit",
+    grace_period_seconds: toDraftString(quiz.grace_period_seconds),
   };
 }
 
@@ -479,6 +491,11 @@ export default function QuizManagePage() {
         available_until: localInputToIso(draft.available_until),
         due_at: localInputToIso(draft.due_at),
         review_options: draft.review_options,
+        require_password: draft.require_password.trim() || null,
+        require_subnet: draft.require_subnet.trim() || null,
+        browser_security: draft.browser_security,
+        overdue_handling: draft.overdue_handling,
+        grace_period_seconds: integerOrNull(draft.grace_period_seconds),
       });
       toast.success(t("teacher_quiz_manage.toasts.settings_saved"));
     } catch (err: unknown) {
@@ -2166,6 +2183,97 @@ function SettingsTab({
           value={draft.review_options}
           onChange={(next) => update("review_options", next)}
         />
+      </SettingsSection>
+
+      <SettingsSection
+        title={t("teacher_quiz_manage.settings.access.title")}
+        description={t("teacher_quiz_manage.settings.access.description")}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label={t("teacher_quiz_manage.settings.access.password_label")}
+            hint={t("teacher_quiz_manage.settings.access.password_hint")}
+          >
+            <Input
+              type="text"
+              value={draft.require_password}
+              onChange={(e) => update("require_password", e.target.value)}
+              className="bg-m3-surface text-sm w-full"
+              placeholder={t(
+                "teacher_quiz_manage.settings.access.password_placeholder",
+              )}
+            />
+          </Field>
+          <Field
+            label={t("teacher_quiz_manage.settings.access.subnet_label")}
+            hint={t("teacher_quiz_manage.settings.access.subnet_hint")}
+          >
+            <Input
+              type="text"
+              value={draft.require_subnet}
+              onChange={(e) => update("require_subnet", e.target.value)}
+              className="bg-m3-surface text-sm w-full"
+              placeholder="10.0.0.0/8, 192.168.1.5"
+            />
+          </Field>
+        </div>
+        <ToggleRow
+          label={t("teacher_quiz_manage.settings.access.browser_security_label")}
+          description={t(
+            "teacher_quiz_manage.settings.access.browser_security_desc",
+          )}
+          value={draft.browser_security}
+          onChange={(v) => update("browser_security", v)}
+        />
+      </SettingsSection>
+
+      <SettingsSection
+        title={t("teacher_quiz_manage.settings.timing.title")}
+        description={t("teacher_quiz_manage.settings.timing.description")}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label={t("teacher_quiz_manage.settings.timing.overdue_label")}
+            hint={t("teacher_quiz_manage.settings.timing.overdue_hint")}
+          >
+            <select
+              value={draft.overdue_handling}
+              onChange={(e) =>
+                update(
+                  "overdue_handling",
+                  e.target.value as SettingsDraft["overdue_handling"],
+                )
+              }
+              className="bg-m3-surface text-sm w-full rounded-lg border border-m3-outline-variant px-3 py-2"
+            >
+              <option value="autosubmit">
+                {t("teacher_quiz_manage.settings.timing.overdue_autosubmit")}
+              </option>
+              <option value="graceperiod">
+                {t("teacher_quiz_manage.settings.timing.overdue_graceperiod")}
+              </option>
+              <option value="autoabandon">
+                {t("teacher_quiz_manage.settings.timing.overdue_autoabandon")}
+              </option>
+            </select>
+          </Field>
+          {draft.overdue_handling === "graceperiod" && (
+            <Field
+              label={t("teacher_quiz_manage.settings.timing.grace_label")}
+              hint={t("teacher_quiz_manage.settings.timing.grace_hint")}
+            >
+              <Input
+                type="number"
+                min={1}
+                value={draft.grace_period_seconds}
+                onChange={(e) =>
+                  update("grace_period_seconds", e.target.value)
+                }
+                className="bg-m3-surface text-sm w-full"
+              />
+            </Field>
+          )}
+        </div>
       </SettingsSection>
 
       <SettingsSection

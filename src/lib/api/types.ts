@@ -91,6 +91,13 @@ export interface QuizScheduleWindow {
   // Review-visibility matrix (backend Phase 2, migration 0046). Post-dates the
   // OpenAPI snapshot; optional so it stays compatible with the generated shape.
   review_options?: import("./hooks/quizzes").ReviewOptions | null;
+  // Access rules (backend Phase 12) + timing enforcement (Phase 6). Post-date
+  // the OpenAPI snapshot; optional for forward-compatibility.
+  require_password?: string | null;
+  require_subnet?: string | null;
+  browser_security?: boolean | null;
+  overdue_handling?: "autosubmit" | "graceperiod" | "autoabandon" | null;
+  grace_period_seconds?: number | null;
 }
 
 export type Quiz = Schemas["QuizPublic"] & QuizScheduleWindow;

@@ -2831,6 +2831,28 @@
           "show_explanation": "Giải thích",
           "show_points": "Điểm mỗi câu"
         }
+      },
+      "access": {
+        "title": "Quy tắc truy cập",
+        "description": "Giới hạn ai được bắt đầu làm bài.",
+        "password_label": "Mật khẩu",
+        "password_hint": "Học viên phải nhập để bắt đầu. Để trống nếu không cần.",
+        "password_placeholder": "Không có mật khẩu",
+        "subnet_label": "IP / subnet cho phép",
+        "subnet_hint": "CIDR hoặc IP, cách nhau bằng dấu phẩy. Trống = mọi mạng.",
+        "browser_security_label": "Chế độ bảo mật trình duyệt",
+        "browser_security_desc": "Yêu cầu cửa sổ trình duyệt an toàn/khóa khi làm bài."
+      },
+      "timing": {
+        "title": "Kiểm soát thời gian",
+        "description": "Điều gì xảy ra khi bài làm có giới hạn thời gian hết giờ.",
+        "overdue_label": "Khi hết giờ",
+        "overdue_hint": "Cách đóng bài chưa nộp khi quá hạn.",
+        "overdue_autosubmit": "Tự nộp (chấm phần đã trả lời)",
+        "overdue_graceperiod": "Gia hạn thêm, rồi tự nộp",
+        "overdue_autoabandon": "Bỏ (không chấm điểm)",
+        "grace_label": "Thời gian gia hạn (giây)",
+        "grace_hint": "Thời gian thêm sau hạn chót trước khi tự nộp."
       }
     },
     "preview": {

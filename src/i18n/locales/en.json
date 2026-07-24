@@ -2919,6 +2919,28 @@
           "show_explanation": "Explanations",
           "show_points": "Points per question"
         }
+      },
+      "access": {
+        "title": "Access rules",
+        "description": "Restrict who can start an attempt.",
+        "password_label": "Password",
+        "password_hint": "Students must enter this to start. Leave blank for none.",
+        "password_placeholder": "No password",
+        "subnet_label": "Allowed IP / subnet",
+        "subnet_hint": "Comma-separated CIDR or IPs. Blank = any network.",
+        "browser_security_label": "Browser security mode",
+        "browser_security_desc": "Signal a safe/locked-down browser window during the attempt."
+      },
+      "timing": {
+        "title": "Time enforcement",
+        "description": "What happens when a timed attempt runs out.",
+        "overdue_label": "When time expires",
+        "overdue_hint": "How an unsubmitted attempt is closed past its deadline.",
+        "overdue_autosubmit": "Auto-submit (grade what was answered)",
+        "overdue_graceperiod": "Grace period, then auto-submit",
+        "overdue_autoabandon": "Abandon (no grade)",
+        "grace_label": "Grace period (seconds)",
+        "grace_hint": "Extra time allowed after the deadline before auto-submit."
       }
     },
     "preview": {
