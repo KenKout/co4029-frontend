@@ -64,6 +64,7 @@ import {
   useTeacherLessonMaterials,
   useReprocessMaterial,
   useUpdateMaterial,
+  useBulkSetMaterialVisibility,
 } from "@/lib/api/hooks/materials";
 import type { LessonResource } from "@/lib/api/types/common";
 import type { LearningMaterial } from "@/lib/api/types/teacher";
@@ -679,6 +680,7 @@ export default function LessonManagePage() {
   const courseModule = (content?.modules ?? []).find((m) => m.id === moduleId);
   const createMaterial = useCreateMaterial(courseId, moduleId, lessonId);
   const { data: aiMaterials = [] } = useTeacherLessonMaterials(lessonId);
+  const bulkSetVisibility = useBulkSetMaterialVisibility(lessonId);
   const initVideoUpload = useInitMaterialUpload(lessonId);
   const completeVideoUpload = useCompleteMaterialUpload();
   const { data: videoStreamData } = useTeacherMaterialStreamUrl(
@@ -1013,6 +1015,49 @@ export default function LessonManagePage() {
     );
   }
 
+  // Ready-but-hidden AI twins that back a downloadable resource. These are the
+  // docs whose student-side live preview is off — the "Show all" bulk target.
+  // Scoped to twins of actual resources (not stray AI Hub materials) and only
+  // ready ones (a not-ready doc can't preview even when visible).
+  const hiddenReadyTwins = resources
+    .map((r) => twinForResource(r))
+    .filter(
+      (m): m is LearningMaterial =>
+        m != null &&
+        !m.visible_to_students &&
+        m.latest_version?.processing_status === "ready",
+    );
+  // De-dupe by material id (two resources could share a twin).
+  const hiddenReadyTwinIds = Array.from(
+    new Set(hiddenReadyTwins.map((m) => m.id)),
+  );
+
+  function handleShowAll() {
+    if (hiddenReadyTwinIds.length === 0) return;
+    bulkSetVisibility.mutate(
+      { materialIds: hiddenReadyTwinIds, visible: true },
+      {
+        onSuccess: ({ succeeded, failed }) => {
+          if (failed > 0) {
+            toast.warning(
+              t("teacher_lesson_manage.resource_ai.show_all_partial", {
+                succeeded,
+                failed,
+              }),
+            );
+          } else {
+            toast.success(
+              t("teacher_lesson_manage.resource_ai.show_all_done", {
+                count: succeeded,
+              }),
+            );
+          }
+        },
+        onError: (err) => toast.error((err as Error).message),
+      },
+    );
+  }
+
   function togglePrerequisite(id: string) {
     setPrerequisites((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
@@ -1204,9 +1249,29 @@ export default function LessonManagePage() {
 
           {/* ── Downloadable Resources (all types) ── */}
           <section className="space-y-5">
-            <h2 className="font-headline font-bold text-2xl text-m3-primary">
-              Downloadable Resources
-            </h2>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h2 className="font-headline font-bold text-2xl text-m3-primary">
+                Downloadable Resources
+              </h2>
+              {hiddenReadyTwinIds.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 shrink-0"
+                  disabled={bulkSetVisibility.isPending}
+                  onClick={handleShowAll}
+                >
+                  {bulkSetVisibility.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Eye className="h-3.5 w-3.5" />
+                  )}
+                  {t("teacher_lesson_manage.resource_ai.show_all", {
+                    count: hiddenReadyTwinIds.length,
+                  })}
+                </Button>
+              )}
+            </div>
 
             {resources.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

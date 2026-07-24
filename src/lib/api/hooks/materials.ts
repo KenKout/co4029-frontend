@@ -460,3 +460,38 @@ export function useDeleteMaterial(materialId: string) {
   });
 }
 
+/**
+ * Bulk-set `visible_to_students` on many materials at once (one PATCH each,
+ * fired in parallel). Backs the lesson-page "Show all to students" action so a
+ * teacher doesn't have to flip every AI-synced doc individually. Resolves with
+ * the count actually updated; rejects only if every PATCH fails (partial
+ * success still resolves so the UI can report "N of M").
+ */
+export function useBulkSetMaterialVisibility(lessonId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { materialIds: string[]; visible: boolean }) => {
+      const results = await Promise.allSettled(
+        input.materialIds.map((id) =>
+          apiPatch<MaterialAuthoring>(`/teacher/materials/${id}`, {
+            visible_to_students: input.visible,
+          }),
+        ),
+      );
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.length - succeeded;
+      // All failed → surface as an error so onError fires.
+      if (succeeded === 0 && results.length > 0) {
+        throw new Error("Failed to update visibility for any material");
+      }
+      return { succeeded, failed, total: results.length };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["teacher", "lessons", lessonId, "materials"],
+      });
+      qc.invalidateQueries({ queryKey: ["teacher", "lessons"] });
+    },
+  });
+}
+

@@ -3093,7 +3093,10 @@
       "now_visible": "Đã hiện cho học viên.",
       "now_hidden": "Đã ẩn khỏi học viên.",
       "retry": "Thử xử lý lại",
-      "retry_started": "Đã bắt đầu xử lý lại."
+      "retry_started": "Đã bắt đầu xử lý lại.",
+      "show_all": "Hiện tất cả cho học viên ({{count}})",
+      "show_all_done": "{{count}} tài liệu đã hiện cho học viên.",
+      "show_all_partial": "Đã hiện {{succeeded}}, {{failed}} thất bại — thử lại."
     }
   },
   "teacher_lesson_materials": {

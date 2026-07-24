@@ -3127,7 +3127,10 @@
       "now_visible": "Now visible to students.",
       "now_hidden": "Hidden from students.",
       "retry": "Retry processing",
-      "retry_started": "Reprocessing started."
+      "retry_started": "Reprocessing started.",
+      "show_all": "Show all to students ({{count}})",
+      "show_all_done": "{{count}} document(s) now visible to students.",
+      "show_all_partial": "{{succeeded}} shown, {{failed}} failed — try again."
     }
   },
   "teacher_lesson_materials": {
