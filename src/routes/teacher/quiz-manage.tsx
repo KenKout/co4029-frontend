@@ -572,10 +572,13 @@ export default function QuizManagePage() {
               sliding in from the left with tooltips for each tab. */}
           <div
             className={cn(
-              "border border-m3-outline-variant/20 transition-all duration-300 ease-out",
+              "transition-all duration-300 ease-out",
               actionsStuck
-                ? "absolute left-0 top-1 z-10 flex flex-col gap-1.5 rounded-2xl bg-surface-elev/90 backdrop-blur-md p-1.5 shadow-glass animate-in fade-in slide-in-from-left-3"
-                : "bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 shadow-lg shadow-m3-primary/5",
+                // Stuck rail floats over white content, so it needs a strong,
+                // opaque background + a solid darker border to read as a
+                // distinct card and not blend into the content behind it.
+                ? "absolute left-0 top-1 z-10 flex flex-col gap-1.5 rounded-2xl border-2 border-m3-outline-variant/50 bg-surface-elev p-1.5 shadow-xl ring-1 ring-black/5 animate-in fade-in slide-in-from-left-3"
+                : "border border-m3-outline-variant/20 bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 shadow-lg shadow-m3-primary/5",
             )}
           >
             {TAB_KEYS.map((key) => {
