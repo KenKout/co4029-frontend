@@ -60,7 +60,14 @@ import { MasterySelector } from "./_components/MasterySelector";
 
 type TabKey = "questions" | "settings" | "preview";
 
-const TAB_KEYS: ReadonlyArray<TabKey> = ["questions", "settings", "preview"];
+// Tab order: Settings first (configure the quiz), then Questions (author the
+// content), then Preview (see it as a student). Matches the natural authoring
+// flow teachers follow.
+const TAB_KEYS: ReadonlyArray<TabKey> = ["settings", "questions", "preview"];
+
+// Default expected response time (seconds) pre-filled on questions that don't
+// have one set, so teachers start from a sensible value instead of blank.
+const DEFAULT_EXPECTED_SECONDS = 60;
 
 // Icon per tab — used for the condensed icon-only vertical rail that the tab
 // strip morphs into once it sticks under the global top bar.
@@ -209,7 +216,7 @@ export default function QuizManagePage() {
   const patchQuiz = usePatchQuiz(quizId);
   const addQuestion = useAddQuizQuestion(quizId);
 
-  const [tab, setTab] = useState<TabKey>("questions");
+  const [tab, setTab] = useState<TabKey>("settings");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmPublish, setConfirmPublish] = useState(false);
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
@@ -1276,6 +1283,7 @@ function QuestionCard({
   const regenerate = useRegenerateQuestion(quizId, question.id);
 
   const [draft, setDraft] = useState(() => buildQuestionDraft(question));
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     setDraft(buildQuestionDraft(question));
@@ -1316,13 +1324,13 @@ function QuestionCard({
         hint_text: draft.hint_text.trim() || null,
         explanation: draft.explanation.trim() || null,
         difficulty: draft.difficulty,
-        bloom_level: draft.bloom_level,
+        // bloom_level and expected_ef_ceiling are no longer teacher-editable
+        // (removed from the question editor). This is a partial PATCH, so
+        // omitting them leaves any existing backend values untouched.
         expected_response_time_ms:
           draft.expected_response_seconds == null
             ? null
             : Math.max(1, Math.round(draft.expected_response_seconds)) * 1000,
-        expected_ef_ceiling:
-          draft.expected_ef_ceiling == null ? null : draft.expected_ef_ceiling,
         review_status: reviewStatus,
         learning_outcome_id: draft.learning_outcome_id || null,
         ...(hasOptions
@@ -1630,41 +1638,10 @@ function QuestionCard({
         <div className="flex items-center gap-1.5">
           <Sparkles className="h-3 w-3 text-m3-secondary" />
           <p className="text-[10px] font-bold uppercase tracking-widest text-m3-secondary">
-            {t(
-              "teacher_quiz_manage.editor.metadata_label",
-              "Cognitive metadata",
-            )}
+            {t("teacher_quiz_manage.editor.metadata_label", "Configuration")}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2.5">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t("teacher_quiz_manage.editor.bloom_label", "Bloom level")}
-            </label>
-            <select
-              value={draft.bloom_level}
-              onChange={(e) =>
-                setDraft((current) => ({
-                  ...current,
-                  bloom_level: e.target.value,
-                }))
-              }
-              className="h-8 w-full rounded-md border border-m3-outline-variant/30 bg-m3-surface px-2 text-xs text-m3-on-surface focus:border-m3-secondary focus:outline-none capitalize"
-            >
-              {[
-                "remember",
-                "understand",
-                "apply",
-                "analyze",
-                "evaluate",
-                "create",
-              ].map((level) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
-          </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
               {t("teacher_quiz_manage.editor.difficulty_label", "Difficulty")}
@@ -1703,30 +1680,6 @@ function QuestionCard({
                 setDraft((current) => ({
                   ...current,
                   expected_response_seconds:
-                    e.target.value === "" ? null : Number(e.target.value),
-                }))
-              }
-              className="h-8 bg-m3-surface text-xs"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t("teacher_quiz_manage.editor.ef_ceiling_label", "EF ceiling")}
-            </label>
-            <Input
-              type="number"
-              step={0.05}
-              min={1.3}
-              max={2.5}
-              value={draft.expected_ef_ceiling ?? ""}
-              placeholder={t(
-                "teacher_quiz_manage.editor.ef_ceiling_placeholder",
-                "e.g. 2.50",
-              )}
-              onChange={(e) =>
-                setDraft((current) => ({
-                  ...current,
-                  expected_ef_ceiling:
                     e.target.value === "" ? null : Number(e.target.value),
                 }))
               }
@@ -1797,13 +1750,63 @@ function QuestionCard({
           type="button"
           size="sm"
           variant="outline"
-          onClick={handleDelete}
+          onClick={() => setConfirmDelete(true)}
           className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700 ml-auto"
         >
           <Trash2 className="h-3.5 w-3.5" />
           {t("common.delete")}
         </Button>
       </div>
+
+      {/* Delete confirmation. On confirm we still route through the deferred
+          queue + undo banner (the real DELETE fires when the 5s combo commits),
+          but the teacher now has an explicit confirm step before the question
+          disappears. */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-xl bg-m3-surface p-6 shadow-xl space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center shrink-0">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="font-headline font-bold text-base text-m3-on-surface">
+                  {t(
+                    "teacher_quiz_manage.confirm_delete_question.title",
+                    "Delete this question?",
+                  )}
+                </h2>
+                <p className="text-sm text-m3-on-surface-variant">
+                  {t(
+                    "teacher_quiz_manage.confirm_delete_question.body",
+                    "The question will be removed. You'll have a few seconds to undo before it's permanently deleted.",
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setConfirmDelete(false)}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  setConfirmDelete(false);
+                  handleDelete();
+                }}
+                className="bg-red-600 text-white hover:bg-red-700 border-0 gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                {t("common.delete")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1813,9 +1816,7 @@ interface QuestionDraft {
   hint_text: string;
   explanation: string;
   difficulty: string;
-  bloom_level: string;
   expected_response_seconds: number | null;
-  expected_ef_ceiling: number | null;
   review_status: string;
   learning_outcome_id: string | null;
   options: Array<{
@@ -1857,15 +1858,13 @@ function buildQuestionDraft(question: QuizQuestionAuthoring): QuestionDraft {
     hint_text: question.hint_text ?? "",
     explanation: question.explanation ?? "",
     difficulty: question.difficulty ?? "medium",
-    bloom_level: question.bloom_level ?? "understand",
+    // Default the expected response time to DEFAULT_EXPECTED_SECONDS when the
+    // question has none, so new/AI-generated questions come pre-filled with a
+    // sensible value instead of blank (teachers can still override or clear).
     expected_response_seconds:
       question.expected_response_time_ms == null
-        ? null
+        ? DEFAULT_EXPECTED_SECONDS
         : Math.round(question.expected_response_time_ms / 1000),
-    expected_ef_ceiling:
-      question.expected_ef_ceiling == null
-        ? null
-        : Number(question.expected_ef_ceiling),
     review_status: question.review_status ?? "pending",
     learning_outcome_id: question.learning_outcome_id ?? null,
     options: (question.options ?? []).map((o) => ({
@@ -2133,6 +2132,10 @@ function SettingsTab({
         title={t("teacher_quiz_manage.settings.schedule.title")}
         description={t("teacher_quiz_manage.settings.schedule.description")}
       >
+        {/* All three date pickers share one 2-col grid so they line up on a
+            common left edge and column width. The inputs are w-full so each
+            fills its cell uniformly (previously "due" was a fixed sm:w-72,
+            which broke alignment with the open/close fields above it). */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field
             label={t("teacher_quiz_manage.settings.schedule.open_label")}
@@ -2142,7 +2145,7 @@ function SettingsTab({
               type="datetime-local"
               value={draft.available_from}
               onChange={(e) => update("available_from", e.target.value)}
-              className="bg-m3-surface text-sm"
+              className="bg-m3-surface text-sm w-full"
             />
           </Field>
           <Field
@@ -2153,21 +2156,21 @@ function SettingsTab({
               type="datetime-local"
               value={draft.available_until}
               onChange={(e) => update("available_until", e.target.value)}
-              className="bg-m3-surface text-sm"
+              className="bg-m3-surface text-sm w-full"
+            />
+          </Field>
+          <Field
+            label={t("teacher_quiz_manage.settings.schedule.due_label")}
+            hint={t("teacher_quiz_manage.settings.schedule.due_hint")}
+          >
+            <Input
+              type="datetime-local"
+              value={draft.due_at}
+              onChange={(e) => update("due_at", e.target.value)}
+              className="bg-m3-surface text-sm w-full"
             />
           </Field>
         </div>
-        <Field
-          label={t("teacher_quiz_manage.settings.schedule.due_label")}
-          hint={t("teacher_quiz_manage.settings.schedule.due_hint")}
-        >
-          <Input
-            type="datetime-local"
-            value={draft.due_at}
-            onChange={(e) => update("due_at", e.target.value)}
-            className="bg-m3-surface text-sm w-full sm:w-72"
-          />
-        </Field>
       </SettingsSection>
 
       <SettingsSection title={t("teacher_quiz_manage.settings.behavior.title")}>

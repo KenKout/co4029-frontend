@@ -2580,7 +2580,10 @@
       "title": "Xuất bản bài kiểm tra này?",
       "body": "Thao tác này sẽ xuất bản {{count}} câu hỏi và hiển thị bài kiểm tra cho học viên. Bạn có thể xem thử như học viên trước, hoặc xuất bản ngay."
     },
-    "confirm_delete_question": "Xoá câu hỏi này? Không thể hoàn tác.",
+    "confirm_delete_question": {
+      "title": "Xóa câu hỏi này?",
+      "body": "Câu hỏi sẽ bị xóa. Bạn sẽ có vài giây để hoàn tác trước khi nó bị xóa vĩnh viễn."
+    },
     "combo_undo": {
       "message": "Đang xoá {{count}} câu hỏi…",
       "undo": "Hoàn tác ({{count}})"

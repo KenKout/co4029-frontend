@@ -2668,7 +2668,10 @@
       "title": "Publish this quiz?",
       "body": "This will publish {{count}} question(s) and make the quiz visible to students. You can preview it as a student first, or publish now."
     },
-    "confirm_delete_question": "Delete this question? This cannot be undone.",
+    "confirm_delete_question": {
+      "title": "Delete this question?",
+      "body": "The question will be removed. You'll have a few seconds to undo before it's permanently deleted."
+    },
     "combo_undo": {
       "message": "Deleting {{count}} question(s)…",
       "undo": "Undo ({{count}})"
