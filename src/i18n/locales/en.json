@@ -3303,6 +3303,55 @@
       "show_all": "Show all to students ({{count}})",
       "show_all_done": "{{count}} document(s) now visible to students.",
       "show_all_partial": "{{succeeded}} shown, {{failed}} failed — try again."
+    },
+    "sections": {
+      "reading_content": "Reading Content",
+      "reading_content_hint": "Write in Markdown or plain text",
+      "read_stats": "~{{words}} words · {{minutes}} min read",
+      "downloadable_resources": "Downloadable Resources",
+      "material_history": "Material history",
+      "knowledge_graph": "Knowledge Graph"
+    },
+    "editor": {
+      "label": "Markdown Editor",
+      "hint": "Plain text or Markdown"
+    },
+    "actions": {
+      "archive": "Archive",
+      "archive_confirm": "Confirm archive?",
+      "archive_title": "Archive lesson",
+      "delete": "Delete",
+      "delete_confirm": "Confirm delete?",
+      "delete_title": "Delete lesson",
+      "published": "Published",
+      "draft": "Draft",
+      "publish_title": "Publish lesson",
+      "unpublish_title": "Unpublish (set to draft)"
+    },
+    "settings": {
+      "title": "Lesson Settings",
+      "subtitle": "Duration and difficulty shown to students.",
+      "duration_label": "Estimated Duration (minutes)",
+      "duration_placeholder": "e.g. 24",
+      "difficulty_label": "Difficulty Level",
+      "difficulty_beginner": "Beginner",
+      "difficulty_intermediate": "Intermediate",
+      "difficulty_advanced": "Advanced"
+    },
+    "prerequisites": {
+      "title": "Prerequisites",
+      "subtitle": "Lessons students should complete first.",
+      "empty": "No prerequisites added."
+    },
+    "toasts": {
+      "download_failed": "Download failed",
+      "save_failed": "Save failed",
+      "lesson_archived": "Lesson archived",
+      "archive_failed": "Archive failed",
+      "lesson_deleted": "Lesson deleted",
+      "delete_failed": "Delete failed",
+      "attach_failed": "Attach failed",
+      "attach_sync_failed": "Resource attached, but couldn't sync to AI"
     }
   },
   "teacher_lesson_materials": {

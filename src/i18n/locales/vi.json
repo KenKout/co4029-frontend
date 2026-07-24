@@ -3215,6 +3215,55 @@
       "show_all": "Hiện tất cả cho học viên ({{count}})",
       "show_all_done": "{{count}} tài liệu đã hiện cho học viên.",
       "show_all_partial": "Đã hiện {{succeeded}}, {{failed}} thất bại — thử lại."
+    },
+    "sections": {
+      "reading_content": "Nội dung bài đọc",
+      "reading_content_hint": "Viết bằng Markdown hoặc văn bản thuần túy",
+      "read_stats": "~{{words}} từ · {{minutes}} phút đọc",
+      "downloadable_resources": "Tài nguyên tải xuống",
+      "material_history": "Lịch sử tài liệu",
+      "knowledge_graph": "Đồ thị tri thức"
+    },
+    "editor": {
+      "label": "Trình soạn thảo Markdown",
+      "hint": "Văn bản thuần hoặc Markdown"
+    },
+    "actions": {
+      "archive": "Lưu trữ",
+      "archive_confirm": "Xác nhận lưu trữ?",
+      "archive_title": "Lưu trữ bài học",
+      "delete": "Xóa",
+      "delete_confirm": "Xác nhận xóa?",
+      "delete_title": "Xóa bài học",
+      "published": "Đã xuất bản",
+      "draft": "Bản nháp",
+      "publish_title": "Xuất bản bài học",
+      "unpublish_title": "Hủy xuất bản (chuyển về nháp)"
+    },
+    "settings": {
+      "title": "Cài đặt bài học",
+      "subtitle": "Thời lượng và độ khó hiển thị cho học viên.",
+      "duration_label": "Thời lượng ước tính (phút)",
+      "duration_placeholder": "vd: 24",
+      "difficulty_label": "Mức độ khó",
+      "difficulty_beginner": "Cơ bản",
+      "difficulty_intermediate": "Trung cấp",
+      "difficulty_advanced": "Nâng cao"
+    },
+    "prerequisites": {
+      "title": "Điều kiện tiên quyết",
+      "subtitle": "Các bài học học viên nên hoàn thành trước.",
+      "empty": "Chưa thêm điều kiện tiên quyết nào."
+    },
+    "toasts": {
+      "download_failed": "Tải xuống thất bại",
+      "save_failed": "Lưu thất bại",
+      "lesson_archived": "Đã lưu trữ bài học",
+      "archive_failed": "Lưu trữ thất bại",
+      "lesson_deleted": "Đã xóa bài học",
+      "delete_failed": "Xóa thất bại",
+      "attach_failed": "Đính kèm thất bại",
+      "attach_sync_failed": "Đã đính kèm tài nguyên, nhưng không thể đồng bộ với AI"
     }
   },
   "teacher_lesson_materials": {

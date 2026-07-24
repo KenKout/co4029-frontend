@@ -339,6 +339,7 @@ function ResourceCard({
   /** Claim the lesson's primary-material slot after a doc is made visible. */
   onShown: (materialId: string) => void;
 }) {
+  const { t } = useTranslation();
   const style = resourceStyle(resource.title);
   const [downloading, setDownloading] = useState(false);
   const aiStatus = twin?.latest_version?.processing_status;
@@ -350,7 +351,7 @@ function ResourceCard({
       const url = await fetchTeacherResourceDownloadUrl(resource.id);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch {
-      toast.error("Download failed");
+      toast.error(t("teacher_lesson_manage.toasts.download_failed"));
     } finally {
       setDownloading(false);
     }
@@ -598,6 +599,7 @@ function ReadingContent({
   setNotes: (v: string) => void;
   notesRef: React.RefObject<HTMLTextAreaElement | null>;
 }) {
+  const { t } = useTranslation();
   const { applyMarkdown, applyBlock } = makeMarkdownApplier(
     () => notesRef.current,
     () => notes,
@@ -610,12 +612,15 @@ function ReadingContent({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-headline font-bold text-2xl text-m3-primary">
-            Reading Content
+            {t("teacher_lesson_manage.sections.reading_content")}
           </h2>
           <p className="text-sm text-m3-on-surface-variant mt-0.5">
             {wordCount > 0
-              ? `~${wordCount} words · ${readTime} min read`
-              : "Write in Markdown or plain text"}
+              ? t("teacher_lesson_manage.sections.read_stats", {
+                  words: wordCount,
+                  minutes: readTime,
+                })
+              : t("teacher_lesson_manage.sections.reading_content_hint")}
           </p>
         </div>
         <div className="flex items-center gap-1 p-1.5 bg-m3-surface-container-low rounded-xl">
@@ -661,10 +666,10 @@ function ReadingContent({
         <div className="bg-m3-primary/5 border-b border-m3-outline-variant/10 px-4 py-2 flex items-center gap-2">
           <AlignLeft className="h-3.5 w-3.5 text-m3-secondary" />
           <span className="text-xs font-bold text-m3-on-surface-variant uppercase tracking-widest">
-            Markdown Editor
+            {t("teacher_lesson_manage.editor.label")}
           </span>
           <span className="ml-auto text-xs text-m3-on-surface-variant/50">
-            Plain text or Markdown
+            {t("teacher_lesson_manage.editor.hint")}
           </span>
         </div>
         {/* Default to a compact height so the editor doesn't dominate the
@@ -710,7 +715,7 @@ function MaterialHistorySection({ lessonId }: { lessonId: string }) {
     <section className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="font-headline font-bold text-2xl text-m3-primary">
-          Material history
+          {t("teacher_lesson_manage.sections.material_history")}
         </h2>
         <div className="flex gap-2 flex-wrap shrink-0">
           {processingCount > 0 && (
@@ -961,7 +966,10 @@ export default function LessonManagePage() {
       setTimeout(() => setSaved(false), 2000);
       toast.success(t("teacher_common.lesson_saved"));
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Save failed");
+      toast.error(
+        (err as Error).message ||
+          t("teacher_lesson_manage.toasts.save_failed"),
+      );
     } finally {
       setSaving(false);
     }
@@ -974,9 +982,12 @@ export default function LessonManagePage() {
     }
     try {
       await updateLesson.mutateAsync({ status: "archived" });
-      toast.success("Lesson archived");
+      toast.success(t("teacher_lesson_manage.toasts.lesson_archived"));
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Archive failed");
+      toast.error(
+        (err as Error).message ||
+          t("teacher_lesson_manage.toasts.archive_failed"),
+      );
     }
   }
 
@@ -987,7 +998,7 @@ export default function LessonManagePage() {
     }
     try {
       await deleteLesson.mutateAsync(lessonId);
-      toast.success("Lesson deleted");
+      toast.success(t("teacher_lesson_manage.toasts.lesson_deleted"));
       // Redirect back to the parent module (or course) — the lesson page no
       // longer exists, so staying here would show a broken/empty view.
       if (moduleId) {
@@ -1002,7 +1013,10 @@ export default function LessonManagePage() {
         });
       }
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Delete failed");
+      toast.error(
+        (err as Error).message ||
+          t("teacher_lesson_manage.toasts.delete_failed"),
+      );
     }
   }
 
@@ -1140,13 +1154,14 @@ export default function LessonManagePage() {
           // claim an empty slot — never stomp a primary the teacher chose.
           if (material?.id) claimPrimaryIfEmpty(material.id);
         } catch {
-          toast.error(
-            "Resource attached, but couldn't sync to AI Material Hub",
-          );
+          toast.error(t("teacher_lesson_manage.toasts.attach_sync_failed"));
         }
       }
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Attach failed");
+      toast.error(
+        (err as Error).message ||
+          t("teacher_lesson_manage.toasts.attach_failed"),
+      );
     } finally {
       setAttachingResource(false);
     }
@@ -1340,11 +1355,13 @@ export default function LessonManagePage() {
                 ? "bg-amber-500 hover:bg-amber-600 text-white border-0"
                 : "text-m3-on-surface-variant hover:text-amber-600",
             )}
-            title="Archive lesson"
+            title={t("teacher_lesson_manage.actions.archive_title")}
           >
             <Archive className="h-4 w-4" />
             <span className="hidden sm:inline">
-              {archiveConfirm ? "Confirm archive?" : "Archive"}
+              {archiveConfirm
+                ? t("teacher_lesson_manage.actions.archive_confirm")
+                : t("teacher_lesson_manage.actions.archive")}
             </span>
           </Button>
 
@@ -1360,11 +1377,13 @@ export default function LessonManagePage() {
                 ? "bg-m3-error hover:opacity-90 text-white border-0"
                 : "text-m3-on-surface-variant hover:text-m3-error",
             )}
-            title="Delete lesson"
+            title={t("teacher_lesson_manage.actions.delete_title")}
           >
             <Trash2 className="h-4 w-4" />
             <span className="hidden sm:inline">
-              {deleteConfirm ? "Confirm delete?" : "Delete"}
+              {deleteConfirm
+                ? t("teacher_lesson_manage.actions.delete_confirm")
+                : t("teacher_lesson_manage.actions.delete")}
             </span>
           </Button>
 
@@ -1386,8 +1405,8 @@ export default function LessonManagePage() {
             )}
             title={
               status === "published"
-                ? "Unpublish (set to draft)"
-                : "Publish lesson"
+                ? t("teacher_lesson_manage.actions.unpublish_title")
+                : t("teacher_lesson_manage.actions.publish_title")
             }
           >
             {status === "published" ? (
@@ -1396,7 +1415,9 @@ export default function LessonManagePage() {
               <EyeOff className="h-4 w-4" />
             )}
             <span className="hidden sm:inline">
-              {status === "published" ? "Published" : "Draft"}
+              {status === "published"
+                ? t("teacher_lesson_manage.actions.published")
+                : t("teacher_lesson_manage.actions.draft")}
             </span>
           </Button>
 
@@ -1511,7 +1532,7 @@ export default function LessonManagePage() {
           <section className="space-y-5">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <h2 className="font-headline font-bold text-2xl text-m3-primary">
-                Downloadable Resources
+                {t("teacher_lesson_manage.sections.downloadable_resources")}
               </h2>
               {needsPreviewFix && (
                 <Button
@@ -1590,7 +1611,7 @@ export default function LessonManagePage() {
           {/* ── Knowledge Graph (brought over from the AI hub) ── */}
           <section className="space-y-5">
             <h2 className="font-headline font-bold text-2xl text-m3-primary">
-              Knowledge Graph
+              {t("teacher_lesson_manage.sections.knowledge_graph")}
             </h2>
             <KnowledgeGraphPreview
               lessonId={lessonId}
@@ -1607,10 +1628,10 @@ export default function LessonManagePage() {
           <div className="bg-m3-surface-container-low rounded-xl p-6 space-y-6 shadow-sm">
             <div>
               <h3 className="font-headline font-bold text-xl text-m3-primary">
-                Lesson Settings
+                {t("teacher_lesson_manage.settings.title")}
               </h3>
               <p className="text-xs text-m3-on-surface-variant mt-0.5">
-                Duration and difficulty shown to students.
+                {t("teacher_lesson_manage.settings.subtitle")}
               </p>
             </div>
 
@@ -1621,7 +1642,7 @@ export default function LessonManagePage() {
             {/* Estimated duration */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                Estimated Duration (minutes)
+                {t("teacher_lesson_manage.settings.duration_label")}
               </label>
               <input
                 type="number"
@@ -1629,23 +1650,31 @@ export default function LessonManagePage() {
                 value={estimatedMinutes}
                 onChange={(e) => setEstimatedMinutes(e.target.value)}
                 className="w-full bg-surface-elev border border-m3-outline-variant/20 rounded-xl px-4 py-3 text-sm font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all"
-                placeholder="e.g. 24"
+                placeholder={t(
+                  "teacher_lesson_manage.settings.duration_placeholder",
+                )}
               />
             </div>
 
             {/* Difficulty */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                Difficulty Level
+                {t("teacher_lesson_manage.settings.difficulty_label")}
               </label>
               <select
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value)}
                 className="w-full bg-surface-elev border border-m3-outline-variant/20 rounded-xl px-4 py-3 text-sm font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer"
               >
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
+                <option value="beginner">
+                  {t("teacher_lesson_manage.settings.difficulty_beginner")}
+                </option>
+                <option value="intermediate">
+                  {t("teacher_lesson_manage.settings.difficulty_intermediate")}
+                </option>
+                <option value="advanced">
+                  {t("teacher_lesson_manage.settings.difficulty_advanced")}
+                </option>
               </select>
             </div>
           </div>
@@ -1654,17 +1683,17 @@ export default function LessonManagePage() {
           <div className="bg-m3-surface-container-low rounded-xl p-6 space-y-6 shadow-sm">
             <div>
               <h3 className="font-headline font-bold text-xl text-m3-primary">
-                Prerequisites
+                {t("teacher_lesson_manage.prerequisites.title")}
               </h3>
               <p className="text-xs text-m3-on-surface-variant mt-0.5">
-                Lessons students should complete first.
+                {t("teacher_lesson_manage.prerequisites.subtitle")}
               </p>
             </div>
 
             {/* Selected */}
             {prerequisites.length === 0 && (
               <p className="text-sm text-m3-on-surface-variant/60 text-center py-2">
-                No prerequisites added.
+                {t("teacher_lesson_manage.prerequisites.empty")}
               </p>
             )}
             {prerequisites.map((id) => {
