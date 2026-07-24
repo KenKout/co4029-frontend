@@ -19,7 +19,6 @@ import type { RealtimeTokenResponse } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { VoiceControls } from "./voice-controls";
 import { VoiceTranscript } from "./voice-transcript";
-import { useIntegrityReporter } from "./use-integrity-reporter";
 import type { ConversationTurn } from "./interview-workspace";
 
 interface VoiceRoomProps {
@@ -134,8 +133,6 @@ export function VoiceRoom({
   const [isEnding, setIsEnding] = useState(false);
   const [isFetchingToken, setIsFetchingToken] = useState(false);
   const fetchToken = useInterviewRealtimeToken(sessionId);
-
-  useIntegrityReporter(sessionId);
 
   const acquireToken = useCallback(async () => {
     setIsFetchingToken(true);

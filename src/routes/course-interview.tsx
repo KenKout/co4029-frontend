@@ -87,6 +87,7 @@ import {
   useQuestionPacing,
   clearQuestionPacing,
 } from "@/lib/interview/use-question-pacing";
+import { useIntegrityReporter } from "@/components/interview/use-integrity-reporter";
 import { normalizeQuestionText } from "@/lib/interview/question-content";
 import { planTransition } from "@/lib/interview/transition-sequencing";
 
@@ -703,6 +704,12 @@ export default function CourseInterviewPage() {
     phase === "questioning" ? (currentQuestion?.id ?? null) : null,
     phase === "questioning",
   );
+  // FR-5.8: record integrity signals (focus_lost / tab_switch / fullscreen_exit)
+  // for the whole in-progress session in EVERY mode (text / hybrid / voice),
+  // not just the voice room. The hook no-ops until sessionId exists, so it stays
+  // inert on the prestart screen. This is the single mount point — VoiceRoom no
+  // longer mounts its own (avoids duplicate POSTs when the voice branch renders).
+  useIntegrityReporter(sessionId);
   const dictationHasError = Boolean(
     dictation.error && dictation.error !== "unsupported",
   );
