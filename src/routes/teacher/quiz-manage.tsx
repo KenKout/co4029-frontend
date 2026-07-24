@@ -562,7 +562,13 @@ export default function QuizManagePage() {
             // off into an absolute left rail" trick floated them OVER the
             // content (the overlay bug). One in-flow band = no overlay.
             actionsStuck
-              ? "border border-m3-outline-variant/30 bg-m3-surface/95 backdrop-blur-md shadow-sm px-2 py-2"
+              // FULLY OPAQUE band (no /95, no blur): a translucent+blurred
+              // strip let the question card's badges and text ghost THROUGH it
+              // both above and below the icons, so it read as a floating
+              // popover overlaying content. A solid surface is what makes a
+              // sticky toolbar look like a toolbar — content scrolls cleanly
+              // beneath it, nothing shows through.
+              ? "border border-m3-outline-variant/30 bg-m3-surface shadow-sm px-2 py-2"
               : "border border-transparent px-0 py-0",
           )}
         >
