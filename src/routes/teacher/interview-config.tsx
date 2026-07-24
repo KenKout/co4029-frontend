@@ -1344,21 +1344,6 @@ function SettingsForm({
             />
           </Field>
           <Field
-            label={t("teacher_interview_config.fields.cooldown_label")}
-            hint={t("teacher_interview_config.fields.cooldown_hint")}
-          >
-            <Input
-              type="number"
-              min={1}
-              value={draft.cooldown_hours}
-              onChange={(e) => update("cooldown_hours", e.target.value)}
-              placeholder={t(
-                "teacher_interview_config.fields.cooldown_placeholder",
-              )}
-              className="bg-m3-surface text-sm"
-            />
-          </Field>
-          <Field
             label={t("teacher_interview_config.fields.criteria_label")}
             hint={t("teacher_interview_config.fields.criteria_hint")}
           >
