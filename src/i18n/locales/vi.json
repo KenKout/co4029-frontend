@@ -1370,14 +1370,14 @@
         "delete_success": "Đã xoá giá.",
         "fields": {
           "model_name": "Tên mô hình",
-          "input_rate": "Giá input $ / 1K tokens",
-          "output_rate": "Giá output $ / 1K tokens",
+          "input_rate": "Giá input $ / 1M tokens",
+          "output_rate": "Giá output $ / 1M tokens",
           "notes": "Ghi chú (tùy chọn)"
         },
         "cols": {
           "model": "Mô hình",
-          "input_rate": "Input / 1K",
-          "output_rate": "Output / 1K",
+          "input_rate": "Input / 1M",
+          "output_rate": "Output / 1M",
           "updated": "Cập nhật",
           "actions": "Hành động"
         }
@@ -1401,9 +1401,10 @@
         "input_tokens": "Input",
         "output_tokens": "Output",
         "cached_tokens": "Cache",
-        "usd_per_1k": "$ / 1K tok",
+        "usd_per_1m": "$ / 1M tok",
         "latency_p50": "p50",
-        "latency_p95": "p95"
+        "latency_p95": "p95",
+        "actions": "Hành động"
       }
     },
     "users": {
@@ -1592,6 +1593,10 @@
     "student": "Học viên",
     "teacher": "Giảng viên",
     "admin": "Quản trị"
+  },
+  "sidebar": {
+    "collapse": "Thu gọn",
+    "expand": "Mở rộng"
   },
   "teacher_interview_gap_report": {
     "transcript": {

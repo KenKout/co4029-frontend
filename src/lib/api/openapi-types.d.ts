@@ -5231,7 +5231,7 @@ export interface components {
             /** Latency P95 Ms */
             latency_p95_ms: number;
             /** Usd Per 1K Tokens */
-            usd_per_1k_tokens: number;
+            usd_per_1m_tokens: number;
         };
         /**
          * CourseAuthoring
@@ -8259,10 +8259,10 @@ export interface components {
         ModelPricingCreate: {
             /** Model Name */
             model_name: string;
-            /** Input Usd Per 1K */
-            input_usd_per_1k: number;
-            /** Output Usd Per 1K */
-            output_usd_per_1k: number;
+            /** Input Usd Per 1M */
+            input_usd_per_1m: number;
+            /** Output Usd Per 1M */
+            output_usd_per_1m: number;
             /** Notes */
             notes?: string | null;
         };
@@ -8275,10 +8275,10 @@ export interface components {
             id: string;
             /** Model Name */
             model_name: string;
-            /** Input Usd Per 1K */
-            input_usd_per_1k: number;
-            /** Output Usd Per 1K */
-            output_usd_per_1k: number;
+            /** Input Usd Per 1M */
+            input_usd_per_1m: number;
+            /** Output Usd Per 1M */
+            output_usd_per_1m: number;
             /** Notes */
             notes?: string | null;
             /** Updated By */
@@ -8296,10 +8296,10 @@ export interface components {
         };
         /** ModelPricingUpdate */
         ModelPricingUpdate: {
-            /** Input Usd Per 1K */
-            input_usd_per_1k?: number | null;
-            /** Output Usd Per 1K */
-            output_usd_per_1k?: number | null;
+            /** Input Usd Per 1M */
+            input_usd_per_1m?: number | null;
+            /** Output Usd Per 1M */
+            output_usd_per_1m?: number | null;
             /** Notes */
             notes?: string | null;
         };

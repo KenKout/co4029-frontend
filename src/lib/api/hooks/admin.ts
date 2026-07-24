@@ -511,8 +511,8 @@ export function useAiModelPricing() {
 
 export interface AiModelPricingInput {
   model_name: string;
-  input_usd_per_1k: number;
-  output_usd_per_1k: number;
+  input_usd_per_1m: number;
+  output_usd_per_1m: number;
   notes?: string | null;
 }
 

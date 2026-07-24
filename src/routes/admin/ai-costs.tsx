@@ -633,15 +633,15 @@ function RecentCallsTable({ rows }: { rows: AiCostsRecentCall[] }) {
 
 interface PricingFormState {
   model_name: string;
-  input_usd_per_1k: string;
-  output_usd_per_1k: string;
+  input_usd_per_1m: string;
+  output_usd_per_1m: string;
   notes: string;
 }
 
 const EMPTY_PRICING_FORM: PricingFormState = {
   model_name: "",
-  input_usd_per_1k: "",
-  output_usd_per_1k: "",
+  input_usd_per_1m: "",
+  output_usd_per_1m: "",
   notes: "",
 };
 
@@ -667,8 +667,8 @@ function PricingFormSheet({
       editing
         ? {
             model_name: editing.model_name,
-            input_usd_per_1k: String(editing.input_usd_per_1k),
-            output_usd_per_1k: String(editing.output_usd_per_1k),
+            input_usd_per_1m: String(editing.input_usd_per_1m),
+            output_usd_per_1m: String(editing.output_usd_per_1m),
             notes: editing.notes ?? "",
           }
         : EMPTY_PRICING_FORM,
@@ -677,8 +677,8 @@ function PricingFormSheet({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const inputRate = Number(form.input_usd_per_1k);
-    const outputRate = Number(form.output_usd_per_1k);
+    const inputRate = Number(form.input_usd_per_1m);
+    const outputRate = Number(form.output_usd_per_1m);
     if (
       !form.model_name.trim() ||
       Number.isNaN(inputRate) ||
@@ -688,8 +688,8 @@ function PricingFormSheet({
     }
     onSubmit({
       model_name: form.model_name.trim(),
-      input_usd_per_1k: inputRate,
-      output_usd_per_1k: outputRate,
+      input_usd_per_1m: inputRate,
+      output_usd_per_1m: outputRate,
       notes: form.notes.trim() || null,
     });
   };
@@ -725,9 +725,9 @@ function PricingFormSheet({
               type="number"
               step="0.000001"
               min="0"
-              value={form.input_usd_per_1k}
+              value={form.input_usd_per_1m}
               onChange={(e) =>
-                setForm((f) => ({ ...f, input_usd_per_1k: e.target.value }))
+                setForm((f) => ({ ...f, input_usd_per_1m: e.target.value }))
               }
               required
             />
@@ -740,9 +740,9 @@ function PricingFormSheet({
               type="number"
               step="0.000001"
               min="0"
-              value={form.output_usd_per_1k}
+              value={form.output_usd_per_1m}
               onChange={(e) =>
-                setForm((f) => ({ ...f, output_usd_per_1k: e.target.value }))
+                setForm((f) => ({ ...f, output_usd_per_1m: e.target.value }))
               }
               required
             />
@@ -793,8 +793,8 @@ function PricingSection() {
       updateMutation.mutate(
         {
           id: editing.id,
-          input_usd_per_1k: values.input_usd_per_1k,
-          output_usd_per_1k: values.output_usd_per_1k,
+          input_usd_per_1m: values.input_usd_per_1m,
+          output_usd_per_1m: values.output_usd_per_1m,
           notes: values.notes,
         },
         {
@@ -850,7 +850,7 @@ function PricingSection() {
       align: "right",
       cell: (r) => (
         <span className="tabular-nums text-text-strong">
-          {fmt.usd.format(r.input_usd_per_1k)}
+          {fmt.usd.format(r.input_usd_per_1m)}
         </span>
       ),
     },
@@ -860,7 +860,7 @@ function PricingSection() {
       align: "right",
       cell: (r) => (
         <span className="tabular-nums text-text-strong">
-          {fmt.usd.format(r.output_usd_per_1k)}
+          {fmt.usd.format(r.output_usd_per_1m)}
         </span>
       ),
     },
@@ -1178,14 +1178,14 @@ function ModelEfficiencyTable({ rows }: { rows: AiCostsByModelRow[] }) {
       ),
     },
     {
-      id: "per1k",
-      header: t("admin.ai_costs.cols.usd_per_1k"),
+      id: "per1m",
+      header: t("admin.ai_costs.cols.usd_per_1m"),
       align: "right",
       sortable: true,
-      sortValue: (r) => r.usd_per_1k_tokens,
+      sortValue: (r) => r.usd_per_1m_tokens,
       cell: (r) => (
         <span className="tabular-nums text-text-strong">
-          {fmt.usd.format(r.usd_per_1k_tokens)}
+          {fmt.usd.format(r.usd_per_1m_tokens)}
         </span>
       ),
     },
@@ -1675,7 +1675,7 @@ export default function AdminAiCostsPage() {
               downloadCsv("ai-costs-by-model", byModel.data ?? [], [
                 { header: "model_name", value: (r) => r.model_name },
                 { header: "total_usd", value: (r) => r.total_usd },
-                { header: "usd_per_1k_tokens", value: (r) => r.usd_per_1k_tokens },
+                { header: "usd_per_1m_tokens", value: (r) => r.usd_per_1m_tokens },
                 { header: "latency_p50_ms", value: (r) => r.latency_p50_ms },
                 { header: "latency_p95_ms", value: (r) => r.latency_p95_ms },
                 { header: "total_tokens", value: (r) => r.total_tokens },

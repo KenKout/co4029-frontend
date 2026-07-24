@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import {
-  ChevronLeft,
-  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
   Loader2,
   LogOut,
   LayoutDashboard,
@@ -131,11 +131,11 @@ export default function SideNavBar({
           className,
         )}
       >
-        {/* Logo + toggle */}
+        {/* Logo */}
         <div
           className={cn(
             "h-16 flex items-center border-b border-border px-4 shrink-0",
-            collapsed ? "justify-center" : "justify-between gap-2",
+            collapsed ? "justify-center" : "justify-start",
           )}
         >
           {collapsed ? (
@@ -154,19 +154,6 @@ export default function SideNavBar({
                 The Cognitive Conduit
               </span>
             </Link>
-          )}
-          {onToggle && (
-            <button
-              onClick={onToggle}
-              className="cursor-pointer p-1.5 rounded-md hover:bg-surface-muted text-text-subtle hover:text-text-strong transition-colors shrink-0"
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {collapsed ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
-              )}
-            </button>
           )}
         </div>
 
@@ -252,6 +239,42 @@ export default function SideNavBar({
             );
           })}
         </div>
+
+        {/* Collapse toggle — bottom row */}
+        {onToggle && (
+          <div
+            className={cn(
+              "px-2 py-3 border-t border-border shrink-0",
+              collapsed && "flex justify-center",
+            )}
+          >
+            <button
+              type="button"
+              onClick={onToggle}
+              title={collapsed ? t("sidebar.expand", { defaultValue: "Expand" }) : undefined}
+              aria-label={
+                collapsed
+                  ? t("sidebar.expand", { defaultValue: "Expand" })
+                  : t("sidebar.collapse", { defaultValue: "Collapse" })
+              }
+              className={cn(
+                "cursor-pointer flex items-center gap-3 py-2 rounded-md transition-colors duration-150 text-text-subtle hover:text-primary hover:bg-surface-muted bg-transparent border-0",
+                collapsed ? "justify-center w-10 h-10 px-0" : "w-full px-3",
+              )}
+            >
+              {collapsed ? (
+                <PanelLeftOpen className="h-4 w-4 flex-shrink-0" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4 flex-shrink-0" />
+              )}
+              {!collapsed && (
+                <span className="text-sm font-medium">
+                  {t("sidebar.collapse", { defaultValue: "Collapse" })}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
       </aside>
 
       <ConfirmDialog

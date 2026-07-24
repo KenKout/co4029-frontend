@@ -1421,14 +1421,14 @@
         "delete_success": "Pricing deleted.",
         "fields": {
           "model_name": "Model name",
-          "input_rate": "Input $ / 1K tokens",
-          "output_rate": "Output $ / 1K tokens",
+          "input_rate": "Input $ / 1M tokens",
+          "output_rate": "Output $ / 1M tokens",
           "notes": "Notes (optional)"
         },
         "cols": {
           "model": "Model",
-          "input_rate": "Input / 1K",
-          "output_rate": "Output / 1K",
+          "input_rate": "Input / 1M",
+          "output_rate": "Output / 1M",
           "updated": "Updated",
           "actions": "Actions"
         }
@@ -1452,9 +1452,10 @@
         "input_tokens": "Input",
         "output_tokens": "Output",
         "cached_tokens": "Cached",
-        "usd_per_1k": "$ / 1K tok",
+        "usd_per_1m": "$ / 1M tok",
         "latency_p50": "p50",
-        "latency_p95": "p95"
+        "latency_p95": "p95",
+        "actions": "Actions"
       }
     },
     "users": {
@@ -1643,6 +1644,10 @@
     "student": "Student",
     "teacher": "Teacher",
     "admin": "Admin"
+  },
+  "sidebar": {
+    "collapse": "Collapse",
+    "expand": "Expand"
   },
   "teacher_interview_gap_report": {
     "transcript": {
