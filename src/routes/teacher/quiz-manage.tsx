@@ -242,18 +242,23 @@ export default function QuizManagePage() {
   // NOTE: these hooks MUST stay above the early returns below (loading /
   // not-found guards) — hooks after a conditional return violate the rules
   // of hooks and throw React error #310 once the data loads.
-  const stickySentinelRef = useRef<HTMLDivElement | null>(null);
   const [actionsStuck, setActionsStuck] = useState(false);
-  useEffect(() => {
-    const sentinel = stickySentinelRef.current;
-    if (!sentinel) return;
+  const stickyObserverRef = useRef<IntersectionObserver | null>(null);
+  // CALLBACK ref (not useRef + useEffect): the sentinel only mounts AFTER the
+  // loading / not-found early returns pass, so an effect with [] deps would
+  // run once while the node is still null and never re-attach. A callback ref
+  // fires exactly when the node mounts (and unmounts), so the observer always
+  // attaches once the real content renders.
+  const stickySentinelRef = useCallback((node: HTMLDivElement | null) => {
+    stickyObserverRef.current?.disconnect();
+    if (!node) return;
     const observer = new IntersectionObserver(
       ([entry]) => setActionsStuck(!entry.isIntersecting),
       // rootMargin top offset = global ContentTopBar height (64px / top-16)
       { rootMargin: "-64px 0px 0px 0px", threshold: 0 },
     );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
+    observer.observe(node);
+    stickyObserverRef.current = observer;
   }, []);
 
   if (authoringLoading || contentLoading) {
