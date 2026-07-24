@@ -1226,6 +1226,36 @@ function PublishReadiness({
   );
 }
 
+/**
+ * A titled settings group rendered as its own bordered card. Groups related
+ * fields under one heading so the Settings tab reads as a set of tidy cards
+ * (FormBold-style grouping) instead of one long scrolling column — keeps the
+ * existing Material 3 tokens.
+ */
+function SettingsCard({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low/40 p-5 lg:p-6 space-y-4">
+      <div className="space-y-1">
+        <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
+          {title}
+        </h3>
+        {description && (
+          <p className="text-xs text-m3-on-surface-variant">{description}</p>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 function SettingsForm({
   draft,
   setDraft,
@@ -1253,11 +1283,10 @@ function SettingsForm({
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="bg-m3-surface-container-lowest border border-m3-outline-variant/60 rounded-xl p-6 lg:p-8 space-y-8 shadow-glass"
-    >
-      <Section
+    <form onSubmit={onSubmit} className="space-y-6">
+      {/* Card 1 — Basics: identity + interviewer style grouped together, with
+          persona/voice on one row (FormBold-style two-up layout). */}
+      <SettingsCard
         title={t("teacher_interview_config.sections.general.title")}
         description={t("teacher_interview_config.sections.general.description")}
       >
@@ -1269,9 +1298,6 @@ function SettingsForm({
             className="bg-m3-surface text-sm"
           />
         </Field>
-      </Section>
-
-      <Section title={t("teacher_interview_config.sections.style.title")}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label={t("teacher_interview_config.fields.persona")}>
             <select
@@ -1308,10 +1334,11 @@ function SettingsForm({
             <VoicePersonaGuideSheet focus="voice" />
           </Field>
         </div>
-      </Section>
+      </SettingsCard>
 
-      <Section title={t("teacher_interview_config.sections.rules.title")}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Card 2 — Scoring & timing: the three numeric knobs on one 3-up row. */}
+      <SettingsCard title={t("teacher_interview_config.sections.rules.title")}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Field
             label={t("teacher_interview_config.fields.duration_label")}
             hint={t("teacher_interview_config.fields.duration_hint")}
@@ -1359,16 +1386,15 @@ function SettingsForm({
             />
           </Field>
         </div>
-      </Section>
+      </SettingsCard>
 
-      <Section
+      {/* Card 3 — Guidance for AI: single free-text box under its heading. */}
+      <SettingsCard
         title={t("teacher_interview_config.sections.guidance.title")}
         description={t(
           "teacher_interview_config.sections.guidance.description",
         )}
       >
-        {/* Merged into the single "Guidance for AI" section — the textarea
-            sits directly under the section title, no separate field label. */}
         <textarea
           value={draft.supplementary_instructions}
           onChange={(e) =>
@@ -1380,7 +1406,7 @@ function SettingsForm({
           )}
           className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
         />
-      </Section>
+      </SettingsCard>
 
       <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-4">
         <button
