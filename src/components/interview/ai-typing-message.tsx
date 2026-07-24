@@ -10,9 +10,10 @@ const MIN_PREPARATION_MS = 600;
 // the text racing ahead while server TTS (Deepgram) is still fetching/decoding.
 // This is a safety cap only: presentation.started resolves the moment audio (or
 // the browser-voice fallback) begins, so in the normal case there is no extra
-// wait. The cap must exceed the narration server timeout (6s) + fallback so a
-// slow/failed TTS still releases the typing; keep a small margin over that.
-const MAX_NARRATION_READY_WAIT_MS = 8_000;
+// wait. The cap must exceed the narration client timeout (20s, matching the
+// worst-case Deepgram synth of long onboarding turns) so a slow/failed TTS
+// still releases the typing; keep a small margin over that.
+const MAX_NARRATION_READY_WAIT_MS = 22_000;
 const MAX_DURATION_READY_WAIT_MS = 250;
 const MAX_PLAYOUT_WAIT_MS = 30_000;
 const TYPING_INTERVAL_MS = 44;

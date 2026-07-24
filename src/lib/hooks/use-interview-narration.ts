@@ -16,7 +16,13 @@ export interface UseInterviewNarration {
   cancel: () => void;
 }
 
-const SERVER_NARRATION_TIMEOUT_MS = 6_000;
+// Deepgram Aura synthesis of long utterances (e.g. the multi-sentence
+// onboarding greeting) can take 12-13s server-side — measured 200-OK responses
+// at latency_ms ~13000. A 6s client timeout gave up before that audio arrived
+// and fell back to the browser voice, so long turns spoke in a DIFFERENT voice
+// than short ones. Raise the cap above the observed worst case so every turn
+// uses the same server (Deepgram) voice; short turns still return in ~2-4s.
+const SERVER_NARRATION_TIMEOUT_MS = 20_000;
 const AUDIO_READY_TIMEOUT_MS = 1_500;
 const AUDIO_OUTPUT_WARMUP_MS = 400;
 // Keep the warm-up loop running well into the real audio so the physical
