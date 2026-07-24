@@ -2748,6 +2748,37 @@
       "aura-2-zeus-en": "Zeus (Nam, uy quyền)",
       "aura-2-vesta-en": "Vesta (Nữ, ổn định)"
     },
+    "voice_guide": {
+      "open": "Xem hướng dẫn giọng & phong cách",
+      "title": "Hướng dẫn giọng đọc & phong cách AI",
+      "subtitle": "Mô tả cách hành xử của từng phong cách và âm sắc của từng giọng tiếng Anh. Phong cách quyết định thái độ; giọng quyết định âm thanh khi đọc (chỉ áp dụng phiên tiếng Anh).",
+      "persona_heading": "Phong cách (thái độ & hành vi)",
+      "persona_desc": {
+        "strict": "Nghiêm khắc, trang trọng. Truy vấn câu trả lời chính xác, ít động viên — hợp cho đánh giá khắt khe, quan trọng.",
+        "neutral": "Cân bằng, chuyên nghiệp. Đặt câu hỏi đều tay, không nóng không lạnh — lựa chọn mặc định an toàn.",
+        "supportive": "Ấm áp, khích lệ. Gợi mở nhẹ nhàng và trấn an — hợp cho người học giai đoạn đầu hoặc ít áp lực."
+      },
+      "voice_heading": "Giọng đọc (chỉ tiếng Anh)",
+      "voice_note": "Phiên tiếng Việt dùng giọng trình duyệt, nên lựa chọn này chỉ ảnh hưởng phỏng vấn tiếng Anh.",
+      "voice_desc": {
+        "aura-2-thalia-en": "Nữ, rõ và sắc. Giọng Mỹ trung tính, dễ nghe.",
+        "aura-2-andromeda-en": "Nữ, ấm và tròn. Thân thiện, thong thả.",
+        "aura-2-helena-en": "Nữ, nhẹ và dịu. Âm sắc êm, ít áp lực.",
+        "aura-2-apollo-en": "Nam, tự tin và rõ ràng. Quả quyết nhưng không gắt.",
+        "aura-2-arcas-en": "Nam, tự nhiên như trò chuyện. Giọng đời thường thoải mái.",
+        "aura-2-aries-en": "Nam, sôi nổi và tươi. Nhịp đọc nhanh, hoạt bát.",
+        "aura-2-asteria-en": "Nữ, thân thiện và sáng. Dễ gần, niềm nở.",
+        "aura-2-athena-en": "Nữ, điềm tĩnh và chừng mực. Nhịp đọc ổn định, bình thản.",
+        "aura-2-hera-en": "Nữ, chững chạc và tự tin. Uy tín mà vẫn ấm.",
+        "aura-2-hyperion-en": "Nam, trầm và vang. Âm sắc nghiêm, nặng.",
+        "aura-2-luna-en": "Nữ, trẻ trung và nhẹ. Cảm giác tươi mới, thoải mái.",
+        "aura-2-orion-en": "Nam, dễ gần và đều. Giọng nam trung tính, mặc định dễ chịu.",
+        "aura-2-orpheus-en": "Nam, biểu cảm và linh hoạt. Nhiều ngữ điệu và nhấn nhá.",
+        "aura-2-ophelia-en": "Nữ, chuyên nghiệp và chỉn chu. Rõ ràng, chuẩn công việc (mặc định hiện tại).",
+        "aura-2-zeus-en": "Nam, uy quyền và mạnh mẽ. Hiện diện trang trọng, chắc chắn.",
+        "aura-2-vesta-en": "Nữ, ổn định và đáng tin. Đọc đều, không màu mè."
+      }
+    },
     "status": {
       "draft": "Bản nháp",
       "published": "Đã xuất bản",

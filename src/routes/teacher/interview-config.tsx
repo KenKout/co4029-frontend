@@ -33,6 +33,11 @@ import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
@@ -1308,6 +1313,7 @@ function SettingsForm({
                 </option>
               ))}
             </select>
+            <VoicePersonaGuideSheet focus="persona" />
           </Field>
           <Field
             label={t("teacher_interview_config.fields.voice_label")}
@@ -1327,6 +1333,7 @@ function SettingsForm({
                 </option>
               ))}
             </select>
+            <VoicePersonaGuideSheet focus="voice" />
           </Field>
         </div>
       </Section>
@@ -2060,6 +2067,105 @@ function Field({
       {children}
       {hint && <p className="text-[11px] text-m3-on-surface-variant">{hint}</p>}
     </div>
+  );
+}
+
+/**
+ * A small "View guide" link that opens a side sheet describing every AI
+ * persona and every AI voice in one place. Shown under both the AI persona and
+ * AI voice fields so a teacher can look up what each option sounds like before
+ * choosing. ``focus`` scrolls/hints which table is most relevant to the field
+ * the link sits under, but both tables are always present.
+ */
+function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
+  const { t } = useTranslation();
+  return (
+    <Sheet>
+      <SheetTrigger
+        render={
+          <button
+            type="button"
+            className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-m3-primary hover:underline cursor-pointer"
+          />
+        }
+      >
+        <HelpCircle className="h-3 w-3" aria-hidden="true" />
+        {t("teacher_interview_config.voice_guide.open")}
+      </SheetTrigger>
+      <SheetContent className="w-full overflow-y-auto p-6 sm:max-w-md">
+        <div className="space-y-6">
+          <header className="space-y-1 pr-8">
+            <h2 className="font-headline text-lg font-extrabold text-m3-on-surface">
+              {t("teacher_interview_config.voice_guide.title")}
+            </h2>
+            <p className="text-xs text-m3-on-surface-variant">
+              {t("teacher_interview_config.voice_guide.subtitle")}
+            </p>
+          </header>
+
+          {/* Persona table */}
+          <section
+            className={cn(
+              "space-y-2",
+              focus === "persona" && "rounded-lg ring-1 ring-m3-primary/30 p-2 -m-2",
+            )}
+          >
+            <h3 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              {t("teacher_interview_config.voice_guide.persona_heading")}
+            </h3>
+            <table className="w-full text-left text-xs">
+              <tbody>
+                {PERSONA_KEYS.map((p) => (
+                  <tr key={p} className="border-b border-m3-outline-variant/20 align-top">
+                    <th
+                      scope="row"
+                      className="whitespace-nowrap py-2 pr-3 font-semibold text-m3-on-surface"
+                    >
+                      {t(`teacher_interview_config.persona.${p}`)}
+                    </th>
+                    <td className="py-2 text-m3-on-surface-variant">
+                      {t(`teacher_interview_config.voice_guide.persona_desc.${p}`)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          {/* Voice table */}
+          <section
+            className={cn(
+              "space-y-2",
+              focus === "voice" && "rounded-lg ring-1 ring-m3-primary/30 p-2 -m-2",
+            )}
+          >
+            <h3 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              {t("teacher_interview_config.voice_guide.voice_heading")}
+            </h3>
+            <p className="text-[11px] text-m3-on-surface-variant">
+              {t("teacher_interview_config.voice_guide.voice_note")}
+            </p>
+            <table className="w-full text-left text-xs">
+              <tbody>
+                {VOICE_KEYS.map((v) => (
+                  <tr key={v} className="border-b border-m3-outline-variant/20 align-top">
+                    <th
+                      scope="row"
+                      className="whitespace-nowrap py-2 pr-3 font-semibold text-m3-on-surface"
+                    >
+                      {t(`teacher_interview_config.voice.${v}`)}
+                    </th>
+                    <td className="py-2 text-m3-on-surface-variant">
+                      {t(`teacher_interview_config.voice_guide.voice_desc.${v}`)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 

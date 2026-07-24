@@ -2836,6 +2836,37 @@
       "aura-2-zeus-en": "Zeus (M, authoritative)",
       "aura-2-vesta-en": "Vesta (F, steady)"
     },
+    "voice_guide": {
+      "open": "View voice & persona guide",
+      "title": "AI voice & persona guide",
+      "subtitle": "How each persona behaves and how each English voice sounds. Persona shapes tone and behaviour; voice sets the spoken sound (English sessions only).",
+      "persona_heading": "Persona (tone & behaviour)",
+      "persona_desc": {
+        "strict": "Firm and formal. Presses for precise answers, minimal encouragement — best for rigorous, high-stakes assessment.",
+        "neutral": "Balanced and professional. Even-handed follow-ups, neither warm nor cold — a safe default.",
+        "supportive": "Warm and encouraging. Gentle prompts and reassurance — best for lower-pressure or early-stage learners."
+      },
+      "voice_heading": "Voice (English only)",
+      "voice_note": "Vietnamese sessions use the browser voice, so this selection only affects English interviews.",
+      "voice_desc": {
+        "aura-2-thalia-en": "Female, clear and crisp. Neutral American accent, easy to follow.",
+        "aura-2-andromeda-en": "Female, warm and rounded. Friendly, unhurried delivery.",
+        "aura-2-helena-en": "Female, soft and gentle. Low-pressure, calming tone.",
+        "aura-2-apollo-en": "Male, confident and clear. Assertive without being harsh.",
+        "aura-2-arcas-en": "Male, natural and conversational. Relaxed everyday tone.",
+        "aura-2-aries-en": "Male, energetic and upbeat. Lively pacing.",
+        "aura-2-asteria-en": "Female, friendly and bright. Approachable, welcoming.",
+        "aura-2-athena-en": "Female, calm and measured. Composed, steady pacing.",
+        "aura-2-hera-en": "Female, mature and assured. Authoritative yet warm.",
+        "aura-2-hyperion-en": "Male, deep and resonant. Serious, weighty tone.",
+        "aura-2-luna-en": "Female, youthful and light. Casual, fresh feel.",
+        "aura-2-orion-en": "Male, approachable and even. Neutral, easy default male voice.",
+        "aura-2-orpheus-en": "Male, expressive and dynamic. More vocal range and emphasis.",
+        "aura-2-ophelia-en": "Female, professional and polished. Clear, business-like (current default).",
+        "aura-2-zeus-en": "Male, authoritative and commanding. Strong, formal presence.",
+        "aura-2-vesta-en": "Female, steady and dependable. Consistent, no-frills delivery."
+      }
+    },
     "status": {
       "draft": "Draft",
       "published": "Published",
