@@ -2074,15 +2074,16 @@ export default function CourseManagePage() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-5 items-start">
-            {/* Sticky quick-nav rail (T#3/#4): jump to any module, see its
-                publish progress at a glance, stays pinned while scrolling deep.
-                Hidden on narrow screens where a single column reads better. */}
-            {modules.length > 0 && (
-              <nav className="hidden lg:block sticky top-20 space-y-1 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant/70 px-2 pb-1">
+          <div className="space-y-3">
+            {/* Horizontal quick-nav bar (T#3/#4): jump to any module + see its
+                publish progress at a glance. Was a 220px left rail that squeezed
+                the module cards; now a full-width horizontal chip row that
+                scrolls on overflow, so modules get the full width. */}
+            {modules.length > 1 && (
+              <nav className="flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-m3-outline-variant/40 pb-2">
+                <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant/70">
                   {t("teacher_common.jump_to")}
-                </p>
+                </span>
                 {modules.map((module) => {
                   const st = (i: CourseContentItem) =>
                     i.target?.status ??
@@ -2101,14 +2102,14 @@ export default function CourseManagePage() {
                       key={module.id}
                       type="button"
                       onClick={() => scrollToModule(module.id)}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-xs text-m3-on-surface hover:bg-m3-surface-container transition-colors cursor-pointer group"
+                      className="flex shrink-0 items-center gap-1.5 rounded-full border border-m3-outline-variant/60 px-3 py-1 text-left text-xs text-m3-on-surface hover:border-m3-primary hover:bg-m3-surface-container transition-colors cursor-pointer group"
                     >
                       {done ? (
                         <CheckCheck className="h-3 w-3 shrink-0 text-emerald-600" />
                       ) : (
                         <CircleDot className="h-3 w-3 shrink-0 text-m3-outline-variant group-hover:text-m3-primary" />
                       )}
-                      <span className="flex-1 truncate group-hover:text-m3-primary transition-colors">
+                      <span className="max-w-[12rem] truncate group-hover:text-m3-primary transition-colors">
                         {module.title}
                       </span>
                       {items.length > 0 && (
