@@ -1634,6 +1634,42 @@ function SaveStatus({
   return null;
 }
 
+/** Format seconds as m:ss (matches the quiz generation progress readout). */
+function formatElapsedSeconds(seconds: number): string {
+  if (seconds < 0) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+/**
+ * Live-ticking elapsed timer for a generation run (mirrors the quiz
+ * GenerationProgress behaviour). Ticks locally off `startedAt` while running
+ * and freezes at `frozenEnd` once the run reaches a terminal state.
+ */
+function useGenerationElapsed(
+  startedAt: string | null | undefined,
+  frozenEnd: string | null | undefined,
+): number {
+  const [now, setNow] = useState(() => Date.now());
+  const running = Boolean(startedAt) && !frozenEnd;
+
+  useEffect(() => {
+    if (!running) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [running]);
+
+  return useMemo(() => {
+    if (!startedAt) return 0;
+    const start = new Date(startedAt).getTime();
+    if (Number.isNaN(start)) return 0;
+    const endMs = frozenEnd ? new Date(frozenEnd).getTime() : now;
+    const end = Number.isNaN(endMs) ? now : endMs;
+    return Math.max(0, (end - start) / 1000);
+  }, [startedAt, frozenEnd, now]);
+}
+
 function GenerationSection({
   generationForm,
   setGenerationForm,
@@ -1676,6 +1712,13 @@ function GenerationSection({
   // ({ phase, accepted, target }). Falls back to the completed summary's
   // questions_persisted / question_count_requested once the run finishes.
   const progress = readGenerationProgress(run);
+
+  // Live elapsed timer (quiz-style): ticks while running, freezes on finish.
+  const isTerminal = failed || completed || run?.status === "cancelled";
+  const elapsed = useGenerationElapsed(
+    run?.started_at,
+    isTerminal ? (run?.finished_at ?? null) : null,
+  );
 
   return (
     <div className="rounded-xl border-2 border-dashed border-m3-secondary/30 bg-m3-secondary/[0.03] p-6 lg:p-8 space-y-5">
@@ -1892,50 +1935,72 @@ function GenerationSection({
                   : "border-blue-200 bg-blue-50 text-blue-800",
             )}
           >
-            <div className="flex items-center gap-2 font-bold">
-              {inProgress ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : failed ? (
-                <X className="h-4 w-4" />
-              ) : (
-                <CheckCircle2 className="h-4 w-4" />
-              )}
-              {inProgress
-                ? t("teacher_interview_config.generate.in_progress")
-                : failed
-                  ? t("teacher_interview_config.generate.failed")
-                  : t("teacher_interview_config.generate.completed")}
-              {progress && !failed && (
-                <span className="ml-auto tabular-nums font-extrabold">
-                  {progress.accepted}/{progress.target}
+            {/* Header: status icon + headline on the left; stepped % (when
+                known) + live elapsed timer on the right — mirrors the quiz
+                GenerationProgress layout. */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2 font-bold">
+                {inProgress ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                ) : failed ? (
+                  <X className="h-4 w-4 shrink-0" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                )}
+                <span className="truncate">
+                  {inProgress
+                    ? t("teacher_interview_config.generate.in_progress")
+                    : failed
+                      ? t("teacher_interview_config.generate.failed")
+                      : t("teacher_interview_config.generate.completed")}
                 </span>
-              )}
+              </div>
+              <div className="flex shrink-0 items-center gap-3 text-xs tabular-nums">
+                {progress && !failed && (
+                  <span className="font-extrabold">
+                    {progress.accepted}/{progress.target}
+                  </span>
+                )}
+                <span
+                  className="opacity-80"
+                  title={t("teacher_interview_config.generate.elapsed")}
+                >
+                  {formatElapsedSeconds(elapsed)}
+                </span>
+              </div>
             </div>
 
-            {progress && !failed && (
+            {!failed && (
               <div className="mt-2 space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
                   <span>
                     {completed
                       ? t("teacher_interview_config.generate.phase_done")
-                      : progress.phase === "saving"
+                      : progress?.phase === "saving"
                         ? t("teacher_interview_config.generate.phase_saving")
                         : t(
                             "teacher_interview_config.generate.phase_generating",
                           )}
                   </span>
-                  <span className="tabular-nums">{progress.percent}%</span>
+                  {progress && (
+                    <span className="tabular-nums">{progress.percent}%</span>
+                  )}
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-current/15">
-                  <div
-                    className={cn(
-                      "h-full rounded-full transition-[width] duration-500 ease-out",
-                      completed ? "bg-emerald-500" : "bg-blue-500",
-                    )}
-                    style={{
-                      width: `${Math.max(progress.percent, inProgress ? 6 : 0)}%`,
-                    }}
-                  />
+                  {progress ? (
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-[width] duration-500 ease-out",
+                        completed ? "bg-emerald-500" : "bg-blue-500",
+                      )}
+                      style={{
+                        width: `${Math.max(progress.percent, inProgress ? 6 : 0)}%`,
+                      }}
+                    />
+                  ) : (
+                    /* No checkpoint yet — indeterminate pulse instead of a fake 0%. */
+                    <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-500/60" />
+                  )}
                 </div>
               </div>
             )}

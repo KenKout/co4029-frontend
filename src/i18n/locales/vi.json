@@ -3259,6 +3259,7 @@
       "success_body": "Câu hỏi mới đã được thêm vào bộ nháp. Đóng cửa sổ để xem.",
       "processing": "Đang xử lý…",
       "start_button": "Bắt đầu sinh",
+      "elapsed": "Thời gian đã trôi",
       "outcomes_label": "Chuẩn đầu ra mục tiêu (tùy chọn)",
       "outcomes_hint": "Chọn những chuẩn đầu ra rubric mà lượt tạo này nên tập trung. Bỏ trống tất cả để bao quát mọi chuẩn đầu ra.",
       "outcomes_empty": "Chưa có chuẩn đầu ra nào cho bài phỏng vấn này. Thêm ở tab Chuẩn đầu ra — việc tạo sẽ bao quát tất cả.",

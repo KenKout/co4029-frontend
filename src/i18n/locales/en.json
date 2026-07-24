@@ -3352,7 +3352,8 @@
       "phase_done": "All questions generated",
       "success_body": "New questions were added to the draft set. Close to view them.",
       "processing": "Processing…",
-      "start_button": "Start generation"
+      "start_button": "Start generation",
+      "elapsed": "Elapsed time"
     }
   },
   "teacher_lesson_manage": {
