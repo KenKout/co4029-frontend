@@ -2107,9 +2107,9 @@ export default function CourseInterviewPage() {
                         <Link
                           to="/me/interviews/$sessionId"
                           params={{ sessionId: s.session_id }}
-                          className="flex items-center justify-between gap-2 rounded-lg px-1.5 py-1 text-xs outline-none transition-colors hover:bg-m3-surface-container focus-visible:ring-2 focus-visible:ring-m3-primary/40"
+                          className="group flex items-center justify-between gap-2 rounded-lg px-1.5 py-1 text-xs outline-none transition-colors hover:bg-m3-surface-container focus-visible:ring-2 focus-visible:ring-m3-primary/40"
                         >
-                        <span className="flex items-center gap-1.5 text-m3-on-surface-variant">
+                        <span className="flex items-center gap-1.5 text-m3-on-surface-variant transition-colors group-hover:text-m3-primary">
                           {passed ? (
                             <CheckCircle2 className="h-3.5 w-3.5 text-success" />
                           ) : failed ? (
