@@ -1279,7 +1279,35 @@
       "users_load_failed": "Không thể tải bảng người dùng.",
       "pipelines_load_failed": "Không thể tải bảng pipeline.",
       "recent_load_failed": "Không thể tải danh sách lượt gọi.",
+      "category_load_failed": "Không thể tải phân tích theo nhóm.",
+      "model_load_failed": "Không thể tải bảng hiệu quả mô hình.",
+      "export_csv": "Xuất CSV",
       "period_aria": "Khoảng thời gian",
+      "dimension_aria": "Nhóm chi phí theo",
+      "dimension_options": {
+        "operation": "Loại thao tác",
+        "role": "Vai trò",
+        "tier": "Bậc",
+        "stage_name": "Bước",
+        "model_name": "Mô hình",
+        "status": "Trạng thái"
+      },
+      "filters": {
+        "model": "Mô hình",
+        "role": "Vai trò",
+        "operation": "Loại thao tác",
+        "status": "Trạng thái",
+        "model_placeholder": "vd: gpt-4o",
+        "role_placeholder": "vd: generator_main",
+        "any": "Tất cả",
+        "clear": "Xoá bộ lọc"
+      },
+      "drilldown": {
+        "title": "Chi tiết pipeline",
+        "stages": "Phân tích theo bước",
+        "no_stages": "Không có dữ liệu bước cho pipeline này.",
+        "close": "Đóng"
+      },
       "period_options": {
         "24h": "24 giờ qua",
         "7d": "7 ngày qua",
@@ -1294,12 +1322,16 @@
         "total_cost": "Tổng chi phí",
         "total_tokens": "Tổng tokens",
         "call_count": "Số lượt gọi",
-        "period": "Khoảng thời gian"
+        "period": "Khoảng thời gian",
+        "failed_spend": "Chi phí lượt gọi lỗi",
+        "failed_spend_hint": "{{count}} lượt gọi lỗi"
       },
       "sections": {
         "trend": "Xu hướng chi phí",
         "by_role": "Chi phí theo vai trò",
         "by_stage": "Chi phí theo bước xử lý",
+        "by_category": "Chi phí theo nhóm",
+        "by_model": "Hiệu quả mô hình",
         "top_users": "Người dùng tốn chi phí cao nhất",
         "top_pipelines": "Pipeline tốn chi phí cao nhất",
         "recent_calls": "Lượt gọi AI",
@@ -1309,6 +1341,8 @@
         "trend": "Chưa có dữ liệu chi phí trong khoảng thời gian này.",
         "by_role": "Chưa có dữ liệu chi phí theo vai trò.",
         "by_stage": "Chưa có dữ liệu chi phí theo bước.",
+        "by_category": "Chưa có dữ liệu chi phí cho cách nhóm này.",
+        "by_model": "Chưa có mô hình nào được dùng trong khoảng thời gian này.",
         "users": "Chưa có người dùng nào phát sinh chi phí.",
         "pipelines": "Chưa có pipeline nào trong khoảng thời gian này.",
         "recent": "Chưa có lượt gọi AI nào gần đây.",
@@ -1361,7 +1395,15 @@
         "stage": "Bước",
         "latency": "Độ trễ",
         "tokens_short": "Tokens",
-        "cost_short": "Chi phí"
+        "cost_short": "Chi phí",
+        "status": "Trạng thái",
+        "category": "Nhóm",
+        "input_tokens": "Input",
+        "output_tokens": "Output",
+        "cached_tokens": "Cache",
+        "usd_per_1k": "$ / 1K tok",
+        "latency_p50": "p50",
+        "latency_p95": "p95"
       }
     },
     "users": {

@@ -112,12 +112,23 @@ export const queryKeys = {
     auditDataChanges: (table: string, entityId: string) =>
       ["admin", "audit", "data-changes", table, entityId] as const,
     aiCosts: {
-      summary: (period: string) =>
-        ["admin", "ai-costs", "summary", period] as const,
+      summary: (period: string, filters?: string) =>
+        ["admin", "ai-costs", "summary", period, filters ?? ""] as const,
       byUser: (topN: number, period: string) =>
         ["admin", "ai-costs", "by-user", topN, period] as const,
       byPipeline: (period: string) =>
         ["admin", "ai-costs", "by-pipeline", period] as const,
+      byCategory: (dimension: string, period: string, filters?: string) =>
+        [
+          "admin",
+          "ai-costs",
+          "by-category",
+          dimension,
+          period,
+          filters ?? "",
+        ] as const,
+      byModel: (period: string, filters?: string) =>
+        ["admin", "ai-costs", "by-model", period, filters ?? ""] as const,
       recent: (limit: number) =>
         ["admin", "ai-costs", "recent", limit] as const,
     },

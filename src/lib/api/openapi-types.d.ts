@@ -5181,10 +5181,57 @@ export interface components {
         CostTotals: {
             /** Tokens */
             tokens: number;
+            /** Input Tokens */
+            input_tokens?: number;
+            /** Output Tokens */
+            output_tokens?: number;
+            /** Cached Tokens */
+            cached_tokens?: number;
             /** Usd */
             usd: number;
             /** Call Count */
             call_count: number;
+        };
+        /** FailedSpend */
+        FailedSpend: {
+            /** Call Count */
+            call_count?: number;
+            /** Usd */
+            usd?: number;
+        };
+        /** CategorySpendOut */
+        CategorySpendOut: {
+            /** Dimension Value */
+            dimension_value: string;
+            /** Call Count */
+            call_count: number;
+            /** Total Tokens */
+            total_tokens: number;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Output Tokens */
+            output_tokens: number;
+            /** Cached Tokens */
+            cached_tokens: number;
+            /** Total Usd */
+            total_usd: number;
+        };
+        /** ModelEfficiencyOut */
+        ModelEfficiencyOut: {
+            /** Model Name */
+            model_name: string;
+            /** Call Count */
+            call_count: number;
+            /** Total Tokens */
+            total_tokens: number;
+            /** Total Usd */
+            total_usd: number;
+            /** Latency P50 Ms */
+            latency_p50_ms: number;
+            /** Latency P95 Ms */
+            latency_p95_ms: number;
+            /** Usd Per 1K Tokens */
+            usd_per_1k_tokens: number;
         };
         /**
          * CourseAuthoring
@@ -10374,10 +10421,18 @@ export interface components {
             model?: string | null;
             /** Tokens */
             tokens: number;
+            /** Input Tokens */
+            input_tokens?: number;
+            /** Output Tokens */
+            output_tokens?: number;
+            /** Cached Tokens */
+            cached_tokens?: number;
             /** Usd */
             usd: number;
             /** Latency Ms */
             latency_ms?: number | null;
+            /** Status */
+            status?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -10903,6 +10958,7 @@ export interface components {
         /** SummaryOut */
         SummaryOut: {
             totals: components["schemas"]["CostTotals"];
+            failed?: components["schemas"]["FailedSpend"];
             /** By Role */
             by_role: components["schemas"]["RoleBreakdown"][];
             /** By Stage */

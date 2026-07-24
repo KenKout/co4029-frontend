@@ -4,12 +4,15 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import {
   Activity,
+  AlertTriangle,
   CircleDollarSign,
   Clock,
   Cpu,
+  Download,
   Pencil,
   Plus,
   Trash2,
+  X,
 } from "lucide-react";
 import {
   Area,
@@ -23,6 +26,8 @@ import {
   YAxis,
 } from "recharts";
 import {
+  useAiCostsByCategory,
+  useAiCostsByModel,
   useAiCostsByPipeline,
   useAiCostsByUser,
   useAiCostsSummary,
@@ -31,11 +36,14 @@ import {
   useDeleteAiModelPricing,
   useRecentAiCalls,
   useUpdateAiModelPricing,
+  type AiCostsDimension,
+  type AiCostsFilters,
   type AiCostsPeriod,
   type AiModelPricingInput,
 } from "@/lib/api/hooks/admin";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
+import { downloadCsv } from "@/lib/csv-export";
 import { StatCard } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -44,6 +52,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet, SheetClose, SheetContent } from "@/components/ui/sheet";
 import { ApiError } from "@/lib/api/client";
 import type {
+  AiCostsByCategory as AiCostsByCategoryRow,
+  AiCostsByModel as AiCostsByModelRow,
   AiCostsByPipeline as AiCostsByPipelineRow,
   AiCostsByUser as AiCostsByUserRow,
   AiCostsRecentCall,
@@ -375,6 +385,8 @@ function TopUsersTable({ rows }: { rows: AiCostsByUserRow[] }) {
     {
       id: "user",
       header: t("admin.ai_costs.cols.user"),
+      sortable: true,
+      sortValue: (r) => r.display_name ?? "",
       cell: (r) => (
         <span className="font-medium text-text-strong">{r.display_name}</span>
       ),
@@ -383,6 +395,8 @@ function TopUsersTable({ rows }: { rows: AiCostsByUserRow[] }) {
       id: "cost",
       header: t("admin.ai_costs.cols.cost"),
       align: "right",
+      sortable: true,
+      sortValue: (r) => r.total_usd ?? 0,
       cell: (r) => (
         <span className="tabular-nums text-text-strong">
           {fmt.usd.format(r.total_usd ?? 0)}
@@ -393,6 +407,8 @@ function TopUsersTable({ rows }: { rows: AiCostsByUserRow[] }) {
       id: "tokens",
       header: t("admin.ai_costs.cols.tokens"),
       align: "right",
+      sortable: true,
+      sortValue: (r) => r.total_tokens ?? 0,
       cell: (r) => (
         <span className="tabular-nums text-text-muted">
           {fmt.number.format(r.total_tokens ?? 0)}
@@ -403,6 +419,8 @@ function TopUsersTable({ rows }: { rows: AiCostsByUserRow[] }) {
       id: "calls",
       header: t("admin.ai_costs.cols.calls"),
       align: "right",
+      sortable: true,
+      sortValue: (r) => r.call_count ?? 0,
       cell: (r) => (
         <span className="tabular-nums text-text-muted">
           {fmt.number.format(r.call_count ?? 0)}
@@ -423,7 +441,13 @@ function TopUsersTable({ rows }: { rows: AiCostsByUserRow[] }) {
   );
 }
 
-function PipelineTable({ rows }: { rows: AiCostsByPipelineRow[] }) {
+function PipelineTable({
+  rows,
+  onRowClick,
+}: {
+  rows: AiCostsByPipelineRow[];
+  onRowClick: (row: AiCostsByPipelineRow) => void;
+}) {
   const { t } = useTranslation();
   const fmt = useFormatters();
   const columns: DataTableColumn<AiCostsByPipelineRow>[] = [
@@ -439,6 +463,8 @@ function PipelineTable({ rows }: { rows: AiCostsByPipelineRow[] }) {
     {
       id: "type",
       header: t("admin.ai_costs.cols.type"),
+      sortable: true,
+      sortValue: (r) => r.generation_type ?? "",
       cell: (r) => (
         <span className="text-text-muted">{r.generation_type ?? "—"}</span>
       ),
@@ -447,6 +473,8 @@ function PipelineTable({ rows }: { rows: AiCostsByPipelineRow[] }) {
       id: "calls",
       header: t("admin.ai_costs.cols.calls"),
       align: "right",
+      sortable: true,
+      sortValue: (r) => r.call_count ?? 0,
       cell: (r) => (
         <span className="tabular-nums text-text-muted">
           {fmt.number.format(r.call_count ?? 0)}
@@ -457,6 +485,8 @@ function PipelineTable({ rows }: { rows: AiCostsByPipelineRow[] }) {
       id: "tokens",
       header: t("admin.ai_costs.cols.tokens"),
       align: "right",
+      sortable: true,
+      sortValue: (r) => r.total_tokens ?? 0,
       cell: (r) => (
         <span className="tabular-nums text-text-muted">
           {fmt.number.format(r.total_tokens ?? 0)}
@@ -467,6 +497,8 @@ function PipelineTable({ rows }: { rows: AiCostsByPipelineRow[] }) {
       id: "cost",
       header: t("admin.ai_costs.cols.cost"),
       align: "right",
+      sortable: true,
+      sortValue: (r) => r.total_usd ?? 0,
       cell: (r) => (
         <span className="tabular-nums text-text-strong">
           {fmt.usd.format(r.total_usd ?? 0)}
@@ -479,6 +511,7 @@ function PipelineTable({ rows }: { rows: AiCostsByPipelineRow[] }) {
       columns={columns}
       data={rows}
       getRowId={(r) => r.pipeline_run_id}
+      onRowClick={onRowClick}
       pagination
       pageSize={10}
       pageSizeOptions={[10, 20, 50]}
@@ -494,6 +527,8 @@ function RecentCallsTable({ rows }: { rows: AiCostsRecentCall[] }) {
     {
       id: "time",
       header: t("admin.ai_costs.cols.time"),
+      sortable: true,
+      sortValue: (r) => (r.created_at ? new Date(r.created_at) : new Date(0)),
       cell: (r) => (
         <span className="whitespace-nowrap text-xs text-text-muted">
           {r.created_at ? fmt.datetime.format(new Date(r.created_at)) : "—"}
@@ -503,6 +538,8 @@ function RecentCallsTable({ rows }: { rows: AiCostsRecentCall[] }) {
     {
       id: "model",
       header: t("admin.ai_costs.cols.model"),
+      sortable: true,
+      sortValue: (r) => r.model ?? "",
       cell: (r) => (
         <span className="font-mono text-xs text-text-strong">
           {r.model ?? "—"}
@@ -512,6 +549,8 @@ function RecentCallsTable({ rows }: { rows: AiCostsRecentCall[] }) {
     {
       id: "role",
       header: t("admin.ai_costs.cols.role"),
+      sortable: true,
+      sortValue: (r) => r.role ?? "",
       cell: (r) => <span className="text-text-muted">{r.role ?? "—"}</span>,
     },
     {
@@ -522,9 +561,30 @@ function RecentCallsTable({ rows }: { rows: AiCostsRecentCall[] }) {
       ),
     },
     {
+      id: "status",
+      header: t("admin.ai_costs.cols.status"),
+      cell: (r) => {
+        const s = r.status ?? "—";
+        const failed = s === "failed";
+        return (
+          <span
+            className={
+              failed
+                ? "inline-flex items-center rounded-full bg-danger/10 px-2 py-0.5 text-xs font-medium text-danger"
+                : "text-text-muted text-xs"
+            }
+          >
+            {s}
+          </span>
+        );
+      },
+    },
+    {
       id: "latency",
       header: t("admin.ai_costs.cols.latency"),
       align: "right",
+      sortable: true,
+      sortValue: (r) => r.latency_ms ?? 0,
       cell: (r) => (
         <span className="tabular-nums text-text-muted">
           {r.latency_ms !== null && r.latency_ms !== undefined
@@ -537,6 +597,8 @@ function RecentCallsTable({ rows }: { rows: AiCostsRecentCall[] }) {
       id: "tokens",
       header: t("admin.ai_costs.cols.tokens_short"),
       align: "right",
+      sortable: true,
+      sortValue: (r) => r.tokens ?? 0,
       cell: (r) => (
         <span className="tabular-nums text-text-muted">
           {fmt.number.format(r.tokens ?? 0)}
@@ -547,6 +609,8 @@ function RecentCallsTable({ rows }: { rows: AiCostsRecentCall[] }) {
       id: "cost",
       header: t("admin.ai_costs.cols.cost_short"),
       align: "right",
+      sortable: true,
+      sortValue: (r) => r.usd ?? 0,
       cell: (r) => (
         <span className="tabular-nums text-text-strong">
           {fmt.usd.format(r.usd ?? 0)}
@@ -895,6 +959,457 @@ function PricingSection() {
   );
 }
 
+const DIMENSION_VALUES: AiCostsDimension[] = [
+  "operation",
+  "role",
+  "tier",
+  "stage_name",
+  "model_name",
+  "status",
+];
+
+function DimensionSwitcher({
+  value,
+  onChange,
+}: {
+  value: AiCostsDimension;
+  onChange: (next: AiCostsDimension) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div
+      role="radiogroup"
+      aria-label={t("admin.ai_costs.dimension_aria")}
+      className="inline-flex flex-wrap gap-2 bg-surface-elev border border-border rounded-lg p-1"
+    >
+      {DIMENSION_VALUES.map((d) => {
+        const active = d === value;
+        return (
+          <button
+            key={d}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(d)}
+            className={
+              active
+                ? "px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white cursor-pointer"
+                : "px-3 py-1.5 text-xs font-semibold rounded-md text-text-strong hover:bg-surface-muted cursor-pointer transition-colors duration-200"
+            }
+          >
+            {t(`admin.ai_costs.dimension_options.${d}`)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function CategoryBarChart({ data }: { data: AiCostsByCategoryRow[] }) {
+  const { t } = useTranslation();
+  const fmt = useFormatters();
+  const reducedMotion = useReducedMotion();
+  if (data.length === 0) {
+    return (
+      <div className="bg-surface-elev border border-border rounded-lg p-8 text-center">
+        <p className="text-sm text-text-muted">
+          {t("admin.ai_costs.empty.by_category")}
+        </p>
+      </div>
+    );
+  }
+  const chartData = data.slice(0, 15);
+  return (
+    <div className="bg-surface-elev border border-border rounded-lg p-4">
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart
+          data={chartData}
+          layout="vertical"
+          margin={{ top: 8, right: 24, left: 8, bottom: 8 }}
+        >
+          <CartesianGrid
+            stroke="var(--color-border)"
+            strokeDasharray="3 3"
+            horizontal={false}
+          />
+          <XAxis
+            type="number"
+            tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
+            stroke="var(--color-border)"
+            tickFormatter={(value: number) => fmt.usd.format(value)}
+          />
+          <YAxis
+            type="category"
+            dataKey="dimension_value"
+            tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
+            stroke="var(--color-border)"
+            width={140}
+          />
+          <Tooltip
+            content={<ChartTooltipUsd />}
+            cursor={{ fill: "var(--color-surface-muted)" }}
+          />
+          <Bar
+            dataKey="total_usd"
+            fill="var(--color-primary)"
+            radius={[0, 6, 6, 0]}
+            isAnimationActive={!reducedMotion}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function CategoryTable({ rows }: { rows: AiCostsByCategoryRow[] }) {
+  const { t } = useTranslation();
+  const fmt = useFormatters();
+  const columns: DataTableColumn<AiCostsByCategoryRow>[] = [
+    {
+      id: "value",
+      header: t("admin.ai_costs.cols.category"),
+      sortable: true,
+      sortValue: (r) => r.dimension_value,
+      cell: (r) => (
+        <span className="font-medium text-text-strong">
+          {r.dimension_value}
+        </span>
+      ),
+    },
+    {
+      id: "cost",
+      header: t("admin.ai_costs.cols.cost"),
+      align: "right",
+      sortable: true,
+      sortValue: (r) => r.total_usd,
+      cell: (r) => (
+        <span className="tabular-nums text-text-strong">
+          {fmt.usd.format(r.total_usd)}
+        </span>
+      ),
+    },
+    {
+      id: "in",
+      header: t("admin.ai_costs.cols.input_tokens"),
+      align: "right",
+      sortable: true,
+      sortValue: (r) => r.input_tokens,
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">
+          {fmt.number.format(r.input_tokens)}
+        </span>
+      ),
+    },
+    {
+      id: "out",
+      header: t("admin.ai_costs.cols.output_tokens"),
+      align: "right",
+      sortable: true,
+      sortValue: (r) => r.output_tokens,
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">
+          {fmt.number.format(r.output_tokens)}
+        </span>
+      ),
+    },
+    {
+      id: "cached",
+      header: t("admin.ai_costs.cols.cached_tokens"),
+      align: "right",
+      sortable: true,
+      sortValue: (r) => r.cached_tokens,
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">
+          {fmt.number.format(r.cached_tokens)}
+        </span>
+      ),
+    },
+    {
+      id: "calls",
+      header: t("admin.ai_costs.cols.calls"),
+      align: "right",
+      sortable: true,
+      sortValue: (r) => r.call_count,
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">
+          {fmt.number.format(r.call_count)}
+        </span>
+      ),
+    },
+  ];
+  return (
+    <DataTable
+      columns={columns}
+      data={rows}
+      getRowId={(r) => r.dimension_value}
+      pagination
+      pageSize={10}
+      pageSizeOptions={[10, 20, 50]}
+      emptyState={t("admin.ai_costs.empty.by_category")}
+    />
+  );
+}
+
+function ModelEfficiencyTable({ rows }: { rows: AiCostsByModelRow[] }) {
+  const { t } = useTranslation();
+  const fmt = useFormatters();
+  const columns: DataTableColumn<AiCostsByModelRow>[] = [
+    {
+      id: "model",
+      header: t("admin.ai_costs.cols.model"),
+      sortable: true,
+      sortValue: (r) => r.model_name,
+      cell: (r) => (
+        <span className="font-mono text-xs text-text-strong">
+          {r.model_name}
+        </span>
+      ),
+    },
+    {
+      id: "cost",
+      header: t("admin.ai_costs.cols.cost"),
+      align: "right",
+      sortable: true,
+      sortValue: (r) => r.total_usd,
+      cell: (r) => (
+        <span className="tabular-nums text-text-strong">
+          {fmt.usd.format(r.total_usd)}
+        </span>
+      ),
+    },
+    {
+      id: "per1k",
+      header: t("admin.ai_costs.cols.usd_per_1k"),
+      align: "right",
+      sortable: true,
+      sortValue: (r) => r.usd_per_1k_tokens,
+      cell: (r) => (
+        <span className="tabular-nums text-text-strong">
+          {fmt.usd.format(r.usd_per_1k_tokens)}
+        </span>
+      ),
+    },
+    {
+      id: "p50",
+      header: t("admin.ai_costs.cols.latency_p50"),
+      align: "right",
+      sortable: true,
+      sortValue: (r) => r.latency_p50_ms,
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">
+          {fmt.number.format(r.latency_p50_ms)} ms
+        </span>
+      ),
+    },
+    {
+      id: "p95",
+      header: t("admin.ai_costs.cols.latency_p95"),
+      align: "right",
+      sortable: true,
+      sortValue: (r) => r.latency_p95_ms,
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">
+          {fmt.number.format(r.latency_p95_ms)} ms
+        </span>
+      ),
+    },
+    {
+      id: "calls",
+      header: t("admin.ai_costs.cols.calls"),
+      align: "right",
+      sortable: true,
+      sortValue: (r) => r.call_count,
+      cell: (r) => (
+        <span className="tabular-nums text-text-muted">
+          {fmt.number.format(r.call_count)}
+        </span>
+      ),
+    },
+  ];
+  return (
+    <DataTable
+      columns={columns}
+      data={rows}
+      getRowId={(r) => r.model_name}
+      pagination
+      pageSize={10}
+      pageSizeOptions={[10, 20, 50]}
+      emptyState={t("admin.ai_costs.empty.by_model")}
+    />
+  );
+}
+
+function FilterBar({
+  filters,
+  onChange,
+}: {
+  filters: AiCostsFilters;
+  onChange: (next: AiCostsFilters) => void;
+}) {
+  const { t } = useTranslation();
+  const active = Object.values(filters).some((v) => v);
+  const set = (key: keyof AiCostsFilters, value: string) =>
+    onChange({ ...filters, [key]: value.trim() || null });
+  return (
+    <div className="flex flex-wrap items-end gap-3 bg-surface-elev border border-border rounded-lg p-4">
+      <div className="space-y-1">
+        <label className="text-xs font-semibold text-text-muted">
+          {t("admin.ai_costs.filters.model")}
+        </label>
+        <Input
+          value={filters.model ?? ""}
+          onChange={(e) => set("model", e.target.value)}
+          placeholder={t("admin.ai_costs.filters.model_placeholder")}
+          className="w-40 h-9"
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-semibold text-text-muted">
+          {t("admin.ai_costs.filters.role")}
+        </label>
+        <Input
+          value={filters.role ?? ""}
+          onChange={(e) => set("role", e.target.value)}
+          placeholder={t("admin.ai_costs.filters.role_placeholder")}
+          className="w-40 h-9"
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-semibold text-text-muted">
+          {t("admin.ai_costs.filters.operation")}
+        </label>
+        <select
+          value={filters.operation ?? ""}
+          onChange={(e) => set("operation", e.target.value)}
+          className="w-40 h-9 rounded-md border border-border bg-surface px-2 text-sm text-text-strong"
+        >
+          <option value="">{t("admin.ai_costs.filters.any")}</option>
+          <option value="chat_completion">chat_completion</option>
+          <option value="embedding">embedding</option>
+        </select>
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-semibold text-text-muted">
+          {t("admin.ai_costs.filters.status")}
+        </label>
+        <select
+          value={filters.status ?? ""}
+          onChange={(e) => set("status", e.target.value)}
+          className="w-40 h-9 rounded-md border border-border bg-surface px-2 text-sm text-text-strong"
+        >
+          <option value="">{t("admin.ai_costs.filters.any")}</option>
+          <option value="success">success</option>
+          <option value="failed">failed</option>
+        </select>
+      </div>
+      {active ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() =>
+            onChange({ model: null, role: null, operation: null, status: null })
+          }
+        >
+          <X className="h-4 w-4 mr-1" />
+          {t("admin.ai_costs.filters.clear")}
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+function PipelineDrilldownSheet({
+  pipeline,
+  onOpenChange,
+}: {
+  pipeline: AiCostsByPipelineRow | null;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { t } = useTranslation();
+  const fmt = useFormatters();
+  return (
+    <Sheet open={Boolean(pipeline)} onOpenChange={onOpenChange}>
+      <SheetContent className="p-6 overflow-y-auto">
+        <h2 className="font-headline text-lg font-bold text-text-strong">
+          {t("admin.ai_costs.drilldown.title")}
+        </h2>
+        {pipeline ? (
+          <div className="mt-4 space-y-4">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-xs text-text-muted">
+                  {t("admin.ai_costs.cols.pipeline")}
+                </p>
+                <p className="font-mono text-xs text-text-strong break-all">
+                  {pipeline.pipeline_run_id}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted">
+                  {t("admin.ai_costs.cols.type")}
+                </p>
+                <p className="text-text-strong">
+                  {pipeline.generation_type ?? "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted">
+                  {t("admin.ai_costs.cols.cost")}
+                </p>
+                <p className="tabular-nums text-text-strong">
+                  {fmt.usd.format(pipeline.total_usd ?? 0)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted">
+                  {t("admin.ai_costs.cols.calls")}
+                </p>
+                <p className="tabular-nums text-text-strong">
+                  {fmt.number.format(pipeline.call_count ?? 0)}
+                </p>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-widest text-text-muted mb-2">
+                {t("admin.ai_costs.drilldown.stages")}
+              </p>
+              <div className="space-y-1.5">
+                {pipeline.stages_breakdown.length === 0 ? (
+                  <p className="text-sm text-text-muted">
+                    {t("admin.ai_costs.drilldown.no_stages")}
+                  </p>
+                ) : (
+                  pipeline.stages_breakdown.map((s) => (
+                    <div
+                      key={s.stage_name}
+                      className="flex items-center justify-between rounded-md bg-surface-muted px-3 py-2"
+                    >
+                      <span className="text-sm text-text-strong">
+                        {s.stage_name}
+                      </span>
+                      <span className="flex items-center gap-4">
+                        <span className="tabular-nums text-xs text-text-muted">
+                          {fmt.number.format(s.tokens)} tok
+                        </span>
+                        <span className="tabular-nums text-sm text-text-strong">
+                          {fmt.usd.format(s.usd)}
+                        </span>
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            <SheetClose render={<Button variant="ghost" className="w-full" />}>
+              {t("admin.ai_costs.drilldown.close")}
+            </SheetClose>
+          </div>
+        ) : null}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 export default function AdminAiCostsPage() {
   const { t } = useTranslation();
   const fmt = useFormatters();
@@ -904,6 +1419,14 @@ export default function AdminAiCostsPage() {
     permissions.data?.permissions.includes("system.administer") ?? false;
 
   const [period, setPeriod] = useState<AiCostsPeriod>("30d");
+  const [dimension, setDimension] = useState<AiCostsDimension>("operation");
+  const [filters, setFilters] = useState<AiCostsFilters>({
+    model: null,
+    role: null,
+    operation: null,
+    status: null,
+  });
+  const [drilldown, setDrilldown] = useState<AiCostsByPipelineRow | null>(null);
 
   useEffect(() => {
     if (permissions.isLoading) return;
@@ -913,7 +1436,9 @@ export default function AdminAiCostsPage() {
     }
   }, [permissions.isLoading, canAdmin, navigate, t]);
 
-  const summary = useAiCostsSummary(period);
+  const summary = useAiCostsSummary(period, filters);
+  const byCategory = useAiCostsByCategory({ period, dimension, filters });
+  const byModel = useAiCostsByModel({ period, filters });
   const byUser = useAiCostsByUser({ period, topN: 20 });
   const byPipeline = useAiCostsByPipeline({ period });
   const recent = useRecentAiCalls({ limit: 50 });
@@ -928,6 +1453,8 @@ export default function AdminAiCostsPage() {
   }
 
   const totals = summary.data?.totals;
+  const failedCallCount = summary.data?.failed?.call_count ?? 0;
+  const failedUsd = summary.data?.failed?.usd ?? 0;
 
   return (
     <div className="space-y-6 pb-12">
@@ -942,6 +1469,8 @@ export default function AdminAiCostsPage() {
         </div>
         <PeriodSelector value={period} onChange={setPeriod} />
       </div>
+
+      <FilterBar filters={filters} onChange={setFilters} />
 
       {summary.isError ? (
         <div className="bg-surface-elev border border-border rounded-lg p-5">
@@ -992,6 +1521,16 @@ export default function AdminAiCostsPage() {
             value={t(`admin.ai_costs.period_short.${period}`)}
             icon={Clock}
           />
+          {failedCallCount > 0 ? (
+            <StatCard
+              label={t("admin.ai_costs.stats.failed_spend")}
+              value={fmt.usd.format(failedUsd)}
+              sublabel={t("admin.ai_costs.stats.failed_spend_hint", {
+                count: failedCallCount,
+              })}
+              icon={AlertTriangle}
+            />
+          ) : null}
         </div>
       )}
 
@@ -1025,6 +1564,50 @@ export default function AdminAiCostsPage() {
           <div className="h-[300px] bg-surface-muted animate-pulse rounded-lg" />
         ) : (
           <StageBarChart data={summary.data?.by_stage ?? []} />
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-headline font-bold text-text-strong">
+            {t("admin.ai_costs.sections.by_category")}
+          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <DimensionSwitcher value={dimension} onChange={setDimension} />
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={(byCategory.data ?? []).length === 0}
+              onClick={() =>
+                downloadCsv("ai-costs-by-" + dimension, byCategory.data ?? [], [
+                  { header: "category", value: (r) => r.dimension_value },
+                  { header: "total_usd", value: (r) => r.total_usd },
+                  { header: "input_tokens", value: (r) => r.input_tokens },
+                  { header: "output_tokens", value: (r) => r.output_tokens },
+                  { header: "cached_tokens", value: (r) => r.cached_tokens },
+                  { header: "total_tokens", value: (r) => r.total_tokens },
+                  { header: "call_count", value: (r) => r.call_count },
+                ])
+              }
+            >
+              <Download className="h-4 w-4 mr-1" />
+              {t("admin.ai_costs.export_csv")}
+            </Button>
+          </div>
+        </div>
+        {byCategory.isError ? (
+          <div className="bg-surface-elev border border-border rounded-lg p-5">
+            <p className="text-sm text-danger">
+              {t("admin.ai_costs.category_load_failed")}
+            </p>
+          </div>
+        ) : byCategory.isLoading ? (
+          <div className="h-[300px] bg-surface-muted animate-pulse rounded-lg" />
+        ) : (
+          <div className="space-y-4">
+            <CategoryBarChart data={byCategory.data ?? []} />
+            <CategoryTable rows={byCategory.data ?? []} />
+          </div>
         )}
       </section>
 
@@ -1072,7 +1655,48 @@ export default function AdminAiCostsPage() {
             ))}
           </div>
         ) : (
-          <PipelineTable rows={byPipeline.data ?? []} />
+          <PipelineTable
+            rows={byPipeline.data ?? []}
+            onRowClick={setDrilldown}
+          />
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-headline font-bold text-text-strong">
+            {t("admin.ai_costs.sections.by_model")}
+          </h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={(byModel.data ?? []).length === 0}
+            onClick={() =>
+              downloadCsv("ai-costs-by-model", byModel.data ?? [], [
+                { header: "model_name", value: (r) => r.model_name },
+                { header: "total_usd", value: (r) => r.total_usd },
+                { header: "usd_per_1k_tokens", value: (r) => r.usd_per_1k_tokens },
+                { header: "latency_p50_ms", value: (r) => r.latency_p50_ms },
+                { header: "latency_p95_ms", value: (r) => r.latency_p95_ms },
+                { header: "total_tokens", value: (r) => r.total_tokens },
+                { header: "call_count", value: (r) => r.call_count },
+              ])
+            }
+          >
+            <Download className="h-4 w-4 mr-1" />
+            {t("admin.ai_costs.export_csv")}
+          </Button>
+        </div>
+        {byModel.isError ? (
+          <div className="bg-surface-elev border border-border rounded-lg p-5">
+            <p className="text-sm text-danger">
+              {t("admin.ai_costs.model_load_failed")}
+            </p>
+          </div>
+        ) : byModel.isLoading ? (
+          <div className="h-[300px] bg-surface-muted animate-pulse rounded-lg" />
+        ) : (
+          <ModelEfficiencyTable rows={byModel.data ?? []} />
         )}
       </section>
 
@@ -1106,6 +1730,13 @@ export default function AdminAiCostsPage() {
         </h2>
         <PricingSection />
       </section>
+
+      <PipelineDrilldownSheet
+        pipeline={drilldown}
+        onOpenChange={(open) => {
+          if (!open) setDrilldown(null);
+        }}
+      />
     </div>
   );
 }

@@ -6,6 +6,8 @@ import type {
   ActiveUsersOut,
   AdminCoursePage,
   AiCostsByPipeline,
+  AiCostsByCategory,
+  AiCostsByModel,
   AiCostsByUser,
   AiCostsRecentCall,
   AiCostsSummary,
@@ -39,6 +41,22 @@ import type { CourseEnrollmentRead } from "../types/teacher";
 
 export type AiCostsPeriod = "24h" | "7d" | "30d";
 
+export type AiCostsDimension =
+  | "operation"
+  | "role"
+  | "tier"
+  | "stage_name"
+  | "model_name"
+  | "status";
+
+/** Optional cross-dashboard filters (all narrow the same audit rows). */
+export interface AiCostsFilters {
+  model?: string | null;
+  role?: string | null;
+  operation?: string | null;
+  status?: string | null;
+}
+
 const AI_COSTS_PERIOD_MS: Record<AiCostsPeriod, number> = {
   "24h": 1000 * 60 * 60 * 24,
   "7d": 1000 * 60 * 60 * 24 * 7,
@@ -47,6 +65,28 @@ const AI_COSTS_PERIOD_MS: Record<AiCostsPeriod, number> = {
 
 function aiCostsSinceIso(period: AiCostsPeriod): string {
   return new Date(Date.now() - AI_COSTS_PERIOD_MS[period]).toISOString();
+}
+
+/** Append only the set filter params; returns a stable key fragment too. */
+function applyAiCostsFilters(
+  params: URLSearchParams,
+  filters?: AiCostsFilters,
+): void {
+  if (!filters) return;
+  if (filters.model) params.set("model", filters.model);
+  if (filters.role) params.set("role", filters.role);
+  if (filters.operation) params.set("operation", filters.operation);
+  if (filters.status) params.set("status", filters.status);
+}
+
+function aiCostsFilterKey(filters?: AiCostsFilters): string {
+  if (!filters) return "";
+  return [
+    filters.model ?? "",
+    filters.role ?? "",
+    filters.operation ?? "",
+    filters.status ?? "",
+  ].join("|");
 }
 
 export function useMyRoles() {
@@ -327,14 +367,77 @@ export function useRetryProcessingJob() {
   });
 }
 
-export function useAiCostsSummary(period: AiCostsPeriod = "30d") {
+export function useAiCostsSummary(
+  period: AiCostsPeriod = "30d",
+  filters?: AiCostsFilters,
+) {
   return useQuery({
-    queryKey: queryKeys.admin.aiCosts.summary(period),
+    queryKey: queryKeys.admin.aiCosts.summary(
+      period,
+      aiCostsFilterKey(filters),
+    ),
     queryFn: () => {
       const params = new URLSearchParams();
       params.set("since", aiCostsSinceIso(period));
+      applyAiCostsFilters(params, filters);
       return apiFetch<AiCostsSummary>(
         `/admin/ai/costs/summary?${params.toString()}`,
+      );
+    },
+    staleTime: 1000 * 60,
+  });
+}
+
+export function useAiCostsByCategory(opts?: {
+  dimension?: AiCostsDimension;
+  topN?: number;
+  period?: AiCostsPeriod;
+  filters?: AiCostsFilters;
+}) {
+  const dimension = opts?.dimension ?? "operation";
+  const topN = opts?.topN ?? 20;
+  const period = opts?.period ?? "30d";
+  const filters = opts?.filters;
+  return useQuery({
+    queryKey: queryKeys.admin.aiCosts.byCategory(
+      dimension,
+      period,
+      aiCostsFilterKey(filters),
+    ),
+    queryFn: () => {
+      const params = new URLSearchParams();
+      params.set("dimension", dimension);
+      params.set("since", aiCostsSinceIso(period));
+      params.set("top_n", String(topN));
+      applyAiCostsFilters(params, filters);
+      return apiFetch<AiCostsByCategory[]>(
+        `/admin/ai/costs/by-category?${params.toString()}`,
+      );
+    },
+    staleTime: 1000 * 60,
+  });
+}
+
+export function useAiCostsByModel(opts?: {
+  topN?: number;
+  period?: AiCostsPeriod;
+  filters?: AiCostsFilters;
+}) {
+  const topN = opts?.topN ?? 20;
+  const period = opts?.period ?? "30d";
+  const filters = opts?.filters;
+  return useQuery({
+    queryKey: queryKeys.admin.aiCosts.byModel(
+      period,
+      aiCostsFilterKey(filters),
+    ),
+    queryFn: () => {
+      const params = new URLSearchParams();
+      params.set("since", aiCostsSinceIso(period));
+      params.set("top_n", String(topN));
+      applyAiCostsFilters(params, filters);
+      return apiFetch<AiCostsByModel[]>(
+        `/admin/ai/costs/by-model?${params.toString()}`,
       );
     },
     staleTime: 1000 * 60,

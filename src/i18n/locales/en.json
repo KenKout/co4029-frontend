@@ -1330,7 +1330,35 @@
       "users_load_failed": "Couldn't load users table.",
       "pipelines_load_failed": "Couldn't load pipelines table.",
       "recent_load_failed": "Couldn't load recent calls.",
+      "category_load_failed": "Couldn't load category breakdown.",
+      "model_load_failed": "Couldn't load model efficiency table.",
+      "export_csv": "Export CSV",
       "period_aria": "Time range",
+      "dimension_aria": "Group cost by",
+      "dimension_options": {
+        "operation": "Operation",
+        "role": "Role",
+        "tier": "Tier",
+        "stage_name": "Stage",
+        "model_name": "Model",
+        "status": "Status"
+      },
+      "filters": {
+        "model": "Model",
+        "role": "Role",
+        "operation": "Operation",
+        "status": "Status",
+        "model_placeholder": "e.g. gpt-4o",
+        "role_placeholder": "e.g. generator_main",
+        "any": "Any",
+        "clear": "Clear filters"
+      },
+      "drilldown": {
+        "title": "Pipeline detail",
+        "stages": "Stage breakdown",
+        "no_stages": "No stage data for this pipeline.",
+        "close": "Close"
+      },
       "period_options": {
         "24h": "Last 24 hours",
         "7d": "Last 7 days",
@@ -1345,12 +1373,16 @@
         "total_cost": "Total cost",
         "total_tokens": "Total tokens",
         "call_count": "Calls",
-        "period": "Period"
+        "period": "Period",
+        "failed_spend": "Failed-call spend",
+        "failed_spend_hint": "{{count}} failed calls"
       },
       "sections": {
         "trend": "Cost trend",
         "by_role": "Cost by role",
         "by_stage": "Cost by pipeline stage",
+        "by_category": "Cost by category",
+        "by_model": "Model efficiency",
         "top_users": "Top spenders",
         "top_pipelines": "Top pipelines",
         "recent_calls": "AI calls",
@@ -1360,6 +1392,8 @@
         "trend": "No cost data for this period yet.",
         "by_role": "No cost data by role yet.",
         "by_stage": "No cost data by stage yet.",
+        "by_category": "No cost data for this grouping yet.",
+        "by_model": "No model usage in this period yet.",
         "users": "No users have generated AI costs yet.",
         "pipelines": "No pipelines in this period yet.",
         "recent": "No recent AI calls.",
@@ -1412,7 +1446,15 @@
         "stage": "Stage",
         "latency": "Latency",
         "tokens_short": "Tokens",
-        "cost_short": "Cost"
+        "cost_short": "Cost",
+        "status": "Status",
+        "category": "Category",
+        "input_tokens": "Input",
+        "output_tokens": "Output",
+        "cached_tokens": "Cached",
+        "usd_per_1k": "$ / 1K tok",
+        "latency_p50": "p50",
+        "latency_p95": "p95"
       }
     },
     "users": {
