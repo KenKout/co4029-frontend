@@ -2036,7 +2036,7 @@ export default function CourseInterviewPage() {
             {/* Stat tiles — icon chip + label + value. Values share one
                 consistent color/weight (the earlier design had one stat
                 arbitrarily blue); a hairline border lifts them off the card. */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+            <div className="grid grid-cols-2 gap-3 mb-8">
               <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
                   <User className="h-4 w-4" />
