@@ -664,6 +664,12 @@ export default function CourseInterviewPage() {
     sessionId,
     persona: speakPersona,
     lang: speakLang,
+    // Server TTS only works for English on this deployment (Deepgram Aura is
+    // English-only; the gateway serves no TTS model). Gate by the SESSION
+    // language — not the UI locale — so a VI session skips the always-503
+    // server call and narrates with the browser voice directly, while an EN
+    // session viewed under a VI UI still gets server (Deepgram) narration.
+    serverNarrationEnabled: interviewLanguage !== "vi",
   });
   const speakIfOn = useCallback(
     (text: string) => {

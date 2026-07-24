@@ -139,8 +139,18 @@ export function useInterviewNarration(params: {
   sessionId: string | null;
   persona: SpeechPersona;
   lang: string;
+  /**
+   * When false, skip the server ``/narration`` call entirely and go straight
+   * to the browser's local speech synthesizer. Used for Vietnamese sessions:
+   * Deepgram Aura TTS is English-only and the OpenAI-compatible gateway serves
+   * no TTS model on this deployment, so the server would always 503 for VI —
+   * calling it just spams the console with failed requests before the same
+   * browser-voice fallback kicks in. Gated by the SESSION language (not the UI
+   * locale) so an English session viewed with a VI UI still uses server TTS.
+   */
+  serverNarrationEnabled?: boolean;
 }): UseInterviewNarration {
-  const { sessionId, persona, lang } = params;
+  const { sessionId, persona, lang, serverNarrationEnabled = true } = params;
   const browser = useSpeechSynthesis();
   const browserSpeak = browser.speak;
   const browserCancel = browser.cancel;
@@ -320,7 +330,10 @@ export function useInterviewNarration(params: {
       };
 
       void (async () => {
-        if (!sessionId) {
+        if (!sessionId || !serverNarrationEnabled) {
+          // No session yet, or server TTS is known-unavailable for this
+          // session's language (e.g. Vietnamese) — skip the server call that
+          // would only 503, and narrate with the browser voice directly.
           browserFallback();
           return;
         }
@@ -478,6 +491,7 @@ export function useInterviewNarration(params: {
       sessionId,
       persona,
       lang,
+      serverNarrationEnabled,
       browserSpeak,
       cancel,
       releaseUrl,
