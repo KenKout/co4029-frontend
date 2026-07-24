@@ -324,6 +324,7 @@ export function InterviewHeader({
   interviewTitle,
   elapsed,
   timerActive = true,
+  assessmentStartedAtMs,
   expectedDurationMinutes,
   currentQuestion,
   totalQuestions,
@@ -341,6 +342,10 @@ export function InterviewHeader({
   interviewTitle: string;
   elapsed: string;
   timerActive?: boolean;
+  /** Epoch ms when the assessed timer started; drives the time-based progress
+   * fallback used when the question total is unknown (always, on the learner
+   * API). Null before the assessment begins. */
+  assessmentStartedAtMs?: number | null;
   expectedDurationMinutes?: number | null;
   currentQuestion?: number | null;
   totalQuestions?: number | null;
@@ -361,9 +366,31 @@ export function InterviewHeader({
   const safeTotal = totalQuestions
     ? Math.max(safeCurrent, totalQuestions)
     : null;
+  // The learner API intentionally reveals questions one at a time and never
+  // exposes a question total, so `safeTotal` is effectively always null and the
+  // question-count progress below never applies. Without a fallback the bar sat
+  // frozen on the indeterminate 1/3 pulse for the WHOLE session. When the
+  // interview has a time limit and the assessed timer is running, drive the bar
+  // off elapsed/limit instead so it actually advances. Derived at render time;
+  // the header already re-renders every second via the `elapsed` string.
+  const timeProgress =
+    timerActive &&
+    assessmentStartedAtMs != null &&
+    expectedDurationMinutes != null &&
+    expectedDurationMinutes > 0
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            ((Date.now() - assessmentStartedAtMs) /
+              (expectedDurationMinutes * 60_000)) *
+              100,
+          ),
+        )
+      : null;
   const progress = safeTotal
     ? Math.min(100, (safeCurrent / safeTotal) * 100)
-    : null;
+    : timeProgress;
   const expected = expectedDurationMinutes
     ? formatRelativeInterviewTime(expectedDurationMinutes * 60)
     : null;

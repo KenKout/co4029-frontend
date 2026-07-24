@@ -1976,6 +1976,7 @@ export default function CourseInterviewPage() {
           interviewTitle={config.title}
           elapsed={elapsed}
           timerActive={assessmentStartedAtMs !== null}
+          assessmentStartedAtMs={assessmentStartedAtMs}
           expectedDurationMinutes={config.time_limit_minutes}
           currentQuestion={null}
           totalQuestions={totalQuestions}
@@ -2343,6 +2344,7 @@ export default function CourseInterviewPage() {
         interviewTitle={config.title}
         elapsed={elapsed}
         timerActive={assessmentStartedAtMs !== null}
+        assessmentStartedAtMs={assessmentStartedAtMs}
         expectedDurationMinutes={config.time_limit_minutes}
         currentQuestion={phase === "questioning" ? currentQuestionNumber : null}
         totalQuestions={totalQuestions}
