@@ -1948,6 +1948,7 @@
       "listening_short": "Listening…",
       "recording_paused": "Recording paused",
       "live_transcript_hint": "Your live transcript stays editable below.",
+      "listening_silent_hint": "We can't hear you yet — check your mic is unmuted and speak a little louder.",
       "pause_recording": "Pause",
       "resume_recording": "Resume",
       "finish_answer": "Finish answer",
@@ -2039,7 +2040,8 @@
       "microphone": "Microphone",
       "mic_connected": "Connected",
       "mic_unavailable": "Not detected",
-      "language": "Interview language"
+      "language": "Interview language",
+      "eyebrow": "AI interview setup"
     },
     "recovery": {
       "connection_lost_title": "Connection lost",

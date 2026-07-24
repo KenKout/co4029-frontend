@@ -158,6 +158,12 @@ export function SetupChecklist({
       className="mx-auto mt-6 w-full max-w-[520px] rounded-2xl border border-border bg-white px-5 py-6 shadow-editorial motion-safe:animate-fade-in-up sm:mt-8 sm:px-7 sm:py-7"
     >
       <div className="mb-5 text-center">
+        {/* Module-context eyebrow — consistency with the lobby / results / quiz
+            screens so the setup step reads as the same calm family (#15). */}
+        <div className="mb-3 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-m3-secondary">
+          <Sparkles className="h-3.5 w-3.5" />
+          <span>{t("course_interview.setup.eyebrow")}</span>
+        </div>
         <span className="mb-3 inline-flex size-12 items-center justify-center rounded-full border border-primary/15 bg-primary-soft text-primary">
           <ShieldCheck className="h-6 w-6" aria-hidden="true" />
         </span>

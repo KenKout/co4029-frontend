@@ -1885,7 +1885,8 @@
         "error": "Đã xảy ra lỗi. Câu trả lời của bạn vẫn được giữ lại.",
         "disconnected": "Kết nối bị gián đoạn",
         "ready": "Sẵn sàng gửi"
-      }
+      },
+      "listening_silent_hint": "Chưa nghe thấy bạn — hãy kiểm tra micro đã bật tiếng và nói to hơn một chút."
     },
     "submission": {
       "submitting_title": "Đang gửi câu trả lời…",
@@ -1948,7 +1949,8 @@
       "microphone": "Micro",
       "mic_connected": "Đã kết nối",
       "mic_unavailable": "Không phát hiện",
-      "language": "Ngôn ngữ phỏng vấn"
+      "language": "Ngôn ngữ phỏng vấn",
+      "eyebrow": "Chuẩn bị phỏng vấn AI"
     },
     "recovery": {
       "connection_lost_title": "Mất kết nối",

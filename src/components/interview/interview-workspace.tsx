@@ -1630,11 +1630,44 @@ export function FocusedInterviewStage({
     [onTurnPresented],
   );
 
+  // A11y (#9): announce the newest AI turn to screen readers. The visible
+  // transcript re-renders silently on submit, so without a live region a SR
+  // user never learns a new question / follow-up / hint arrived. We mirror the
+  // latest AI turn's text (prefixed with its kind + question number when known)
+  // into a polite, visually-hidden region. Only announce once a turn has been
+  // presented so the typing animation and the announcement don't fight.
+  const announceTurn = assistanceTurn ?? activeTurn;
+  const announcement = useMemo(() => {
+    if (!announceTurn || announceTurn.role !== "ai") return "";
+    if (!presentedAiTurnIds.has(announceTurn.id)) return "";
+    const kindPrefix =
+      announceTurn.kind === "hint"
+        ? `${t("course_interview.workspace.small_hint")}: `
+        : announceTurn.kind === "clarification"
+          ? `${t("course_interview.workspace.interviewer_clarification")}: `
+          : announceTurn.kind === "followup"
+            ? `${t("course_interview.sections.follow_up")}: `
+            : assessmentActive && currentQuestionNumber
+              ? `${t("course_interview.workspace.question_number", { current: currentQuestionNumber })}: `
+              : "";
+    return `${kindPrefix}${announceTurn.text}`;
+  }, [
+    announceTurn,
+    presentedAiTurnIds,
+    assessmentActive,
+    currentQuestionNumber,
+    t,
+  ]);
+
   return (
     <main
       className="min-h-0 flex-1 overflow-y-auto bg-surface"
       aria-label={t("course_interview.workspace.interview_room")}
     >
+      {/* Polite SR announcement of the newest interviewer turn (#9). */}
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </p>
       <div className="mx-auto flex min-h-full w-full max-w-[1000px] flex-col justify-center gap-5 px-4 py-6 sm:px-8 sm:py-8">
         {assessmentActive &&
           transcript.some(
@@ -2286,6 +2319,7 @@ export function AnswerControls({
   onFinish,
   onCancel,
   onRetry,
+  speechDetected,
 }: {
   mode: "voice" | "type";
   onModeChange: (mode: "voice" | "type") => void;
@@ -2301,12 +2335,20 @@ export function AnswerControls({
   onFinish: () => void;
   onCancel: () => void;
   onRetry?: () => void;
+  /** True once any speech/interim has been captured this session (drives the
+   *  "listening but silent" nudge — #10). */
+  speechDetected?: boolean;
 }) {
   const { t } = useTranslation();
   const recordingSeconds = useRecordingTimer(micActive, micPaused);
   const errorKey = micError
     ? `course_interview.workspace.microphone_errors.${micError}`
     : null;
+  // A11y (#10): after a few seconds of active listening with nothing captured,
+  // surface a "we can't hear you" nudge so a voice user isn't left wondering
+  // whether the mic is working.
+  const listeningSilent =
+    micActive && !speechDetected && recordingSeconds >= 4;
 
   return (
     <div className="space-y-4">
@@ -2434,8 +2476,17 @@ export function AnswerControls({
                       ? t("course_interview.workspace.listening_short")
                       : t("course_interview.workspace.recording_paused")}
                   </p>
-                  <p className="text-xs text-text-muted">
-                    {t("course_interview.workspace.live_transcript_hint")}
+                  <p
+                    className={cn(
+                      "text-xs",
+                      listeningSilent
+                        ? "font-medium text-warning"
+                        : "text-text-muted",
+                    )}
+                  >
+                    {listeningSilent
+                      ? t("course_interview.workspace.listening_silent_hint")
+                      : t("course_interview.workspace.live_transcript_hint")}
                   </p>
                 </div>
                 <time className="font-mono text-sm font-semibold tabular-nums text-primary">
@@ -2638,6 +2689,7 @@ export function FocusedAnswerComposer({
         <AnswerControls
           mode={mode}
           onModeChange={changeMode}
+          speechDetected={value.trim().length > 0}
           micAvailable={micAvailable}
           micActive={micActive}
           micPaused={micPaused}
@@ -2710,8 +2762,16 @@ export function FocusedAnswerComposer({
         </div>
 
         <div className="mt-2 flex items-center gap-2 text-[11px] text-text-subtle">
-          <span className="hidden sm:inline">
-            {t("course_interview.workspace.send_hint")}
+          {/* A11y (#8): keyboard-shortcut hint is discoverable at every
+              breakpoint (was hidden on mobile). Kbd styling makes the keys read
+              as keys, not prose. */}
+          <span className="inline-flex items-center gap-1">
+            <kbd className="rounded border border-border bg-surface-muted px-1 py-0.5 font-mono text-[10px] font-semibold text-text-muted">
+              Enter
+            </kbd>
+            <span className="hidden sm:inline">
+              {t("course_interview.workspace.send_hint")}
+            </span>
           </span>
           <span className="ml-auto font-mono font-semibold tabular-nums sm:hidden">
             {elapsed}

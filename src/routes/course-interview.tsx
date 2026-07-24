@@ -2467,7 +2467,25 @@ export default function CourseInterviewPage() {
               }
             />
           ) : (
-            <div className="shrink-0 border-t border-border bg-white px-4 py-6 text-center">
+            <div className="shrink-0 border-t border-border bg-white px-4 py-6 text-center motion-safe:animate-fade-in-up">
+              {/* Calm pacing on the closing wind-down (#15): a gentle pulsing
+                  dot trio so the goodbye/results transition reads as a graceful
+                  wind-down rather than an abrupt cut. */}
+              <span
+                className="mb-3 inline-flex items-center justify-center gap-1.5"
+                aria-hidden="true"
+              >
+                {[0, 1, 2].map((dot) => (
+                  <span
+                    key={dot}
+                    className="size-1.5 rounded-full bg-m3-primary/70 motion-safe:animate-pulse"
+                    style={{
+                      animationDelay: `${dot * 200}ms`,
+                      animationDuration: "1s",
+                    }}
+                  />
+                ))}
+              </span>
               <p
                 className="text-sm text-text-muted"
                 role="status"
