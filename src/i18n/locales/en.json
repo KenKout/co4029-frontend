@@ -2516,7 +2516,9 @@
     },
     "tabs": {
       "by_student": "By student",
-      "by_question": "By question"
+      "by_question": "By question",
+      "responses": "Responses",
+      "statistics": "Statistics"
     },
     "per_student": {
       "col_student": "Student",
@@ -2555,6 +2557,33 @@
         "validation": "Validation",
         "dedup": "Dedup",
         "persistence": "Saving"
+      }
+    },
+    "reports": {
+      "download": "Download",
+      "download_csv": "Current view → CSV",
+      "download_xlsx": "Current view → XLSX",
+      "download_started": "Download started",
+      "download_failed": "Download failed",
+      "responses": {
+        "student": "Student",
+        "attempt": "Attempt #",
+        "question": "Question",
+        "their_answer": "Their answer",
+        "correct_answer": "Correct answer",
+        "is_correct": "Correct?",
+        "points": "Points",
+        "empty": "No responses yet."
+      },
+      "statistics": {
+        "question": "Question",
+        "facility": "Facility (% correct)",
+        "discrimination": "Discrimination",
+        "no_data": "—",
+        "legend_title": "About these metrics",
+        "legend_facility": "Facility = the share of students who answered correctly. Lower means harder.",
+        "legend_discrimination": "Discrimination = how well a question separates high scorers from low scorers (point-biserial, -1..+1). ≥0.3 is good; near 0 or negative is weak.",
+        "empty": "Not enough attempts to compute statistics."
       }
     }
   },

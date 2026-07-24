@@ -1,12 +1,28 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, BarChart3, HelpCircle, Loader2, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  BarChart3,
+  Download,
+  FileText,
+  HelpCircle,
+  Loader2,
+  Sigma,
+  Users,
+} from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { cn } from "@/lib/utils";
-import { useQuizAuthoring, useQuizResults } from "@/lib/api/hooks/quizzes";
+import {
+  downloadQuizReport,
+  useQuizAuthoring,
+  useQuizResults,
+  useResponsesReport,
+  useStatisticsReport,
+} from "@/lib/api/hooks/quizzes";
 import {
   useTeacherCourseById,
   useTeacherCourseContent,
@@ -15,8 +31,10 @@ import { ResultsSummaryCards } from "./_components/quiz-results/ResultsSummaryCa
 import { ScoreHistogram } from "./_components/quiz-results/ScoreHistogram";
 import { PerStudentTable } from "./_components/quiz-results/PerStudentTable";
 import { PerQuestionTable } from "./_components/quiz-results/PerQuestionTable";
+import { ResponsesReport } from "./_components/quiz-results/ResponsesReport";
+import { StatisticsReport } from "./_components/quiz-results/StatisticsReport";
 
-type ResultsTab = "students" | "questions";
+type ResultsTab = "students" | "questions" | "responses" | "statistics";
 type HeadlineMetric = "best" | "latest";
 
 export default function QuizResultsPage() {
@@ -39,6 +57,27 @@ export default function QuizResultsPage() {
 
   const [tab, setTab] = useState<ResultsTab>("students");
   const [headlineMetric, setHeadlineMetric] = useState<HeadlineMetric>("best");
+  const [downloading, setDownloading] = useState(false);
+
+  // Phase 10 report data — only fetched when the matching tab is open.
+  const { data: responsesReport } = useResponsesReport(
+    tab === "responses" ? quizId : undefined,
+  );
+  const { data: statisticsReport } = useStatisticsReport(
+    tab === "statistics" ? quizId : undefined,
+  );
+
+  async function handleDownload(format: "csv" | "xlsx") {
+    if (tab !== "responses" && tab !== "statistics") return;
+    setDownloading(true);
+    try {
+      await downloadQuizReport(quizId, tab, format);
+    } catch {
+      toast.error(t("teacher_quiz_results.reports.download_failed"));
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -207,9 +246,62 @@ export default function QuizResultsPage() {
                 <HelpCircle className="h-4 w-4" />
                 {t("teacher_quiz_results.tabs.by_question")}
               </button>
+              <button
+                type="button"
+                onClick={() => setTab("responses")}
+                aria-pressed={tab === "responses"}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer",
+                  tab === "responses"
+                    ? "bg-surface-elev text-m3-primary shadow-sm"
+                    : "text-m3-on-surface-variant hover:text-m3-primary/80",
+                )}
+              >
+                <FileText className="h-4 w-4" />
+                {t("teacher_quiz_results.tabs.responses")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("statistics")}
+                aria-pressed={tab === "statistics"}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer",
+                  tab === "statistics"
+                    ? "bg-surface-elev text-m3-primary shadow-sm"
+                    : "text-m3-on-surface-variant hover:text-m3-primary/80",
+                )}
+              >
+                <Sigma className="h-4 w-4" />
+                {t("teacher_quiz_results.tabs.statistics")}
+              </button>
+
+              {(tab === "responses" || tab === "statistics") && (
+                <div className="ml-auto flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={downloading}
+                    onClick={() => void handleDownload("csv")}
+                  >
+                    <Download className="h-4 w-4" />
+                    CSV
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={downloading}
+                    onClick={() => void handleDownload("xlsx")}
+                  >
+                    <Download className="h-4 w-4" />
+                    XLSX
+                  </Button>
+                </div>
+              )}
             </div>
 
-            {tab === "students" ? (
+            {tab === "students" && (
               <PerStudentTable
                 rows={results.per_student}
                 passingScorePercent={passingScorePercent}
@@ -217,9 +309,26 @@ export default function QuizResultsPage() {
                 onHeadlineMetricChange={setHeadlineMetric}
                 onStudentClick={goToStudentDetail}
               />
-            ) : (
+            )}
+            {tab === "questions" && (
               <PerQuestionTable questions={results.per_question} />
             )}
+            {tab === "responses" &&
+              (responsesReport ? (
+                <ResponsesReport report={responsesReport} />
+              ) : (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-m3-secondary" />
+                </div>
+              ))}
+            {tab === "statistics" &&
+              (statisticsReport ? (
+                <StatisticsReport report={statisticsReport} />
+              ) : (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-m3-secondary" />
+                </div>
+              ))}
           </div>
         </>
       )}

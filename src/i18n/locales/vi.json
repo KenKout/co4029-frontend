@@ -2428,7 +2428,9 @@
     },
     "tabs": {
       "by_student": "Theo học viên",
-      "by_question": "Theo câu hỏi"
+      "by_question": "Theo câu hỏi",
+      "responses": "Câu trả lời",
+      "statistics": "Thống kê"
     },
     "per_student": {
       "col_student": "Học viên",
@@ -2467,6 +2469,33 @@
         "validation": "Kiểm định",
         "dedup": "Lọc trùng",
         "persistence": "Lưu"
+      }
+    },
+    "reports": {
+      "download": "Tải xuống",
+      "download_csv": "Bảng hiện tại → CSV",
+      "download_xlsx": "Bảng hiện tại → XLSX",
+      "download_started": "Đã bắt đầu tải xuống",
+      "download_failed": "Tải xuống thất bại",
+      "responses": {
+        "student": "Học viên",
+        "attempt": "Lần #",
+        "question": "Câu hỏi",
+        "their_answer": "Câu trả lời",
+        "correct_answer": "Đáp án đúng",
+        "is_correct": "Đúng?",
+        "points": "Điểm",
+        "empty": "Chưa có câu trả lời nào."
+      },
+      "statistics": {
+        "question": "Câu hỏi",
+        "facility": "Độ dễ (% đúng)",
+        "discrimination": "Độ phân biệt",
+        "no_data": "—",
+        "legend_title": "Về các chỉ số này",
+        "legend_facility": "Độ dễ = tỷ lệ học viên trả lời đúng. Thấp hơn nghĩa là khó hơn.",
+        "legend_discrimination": "Độ phân biệt = mức độ câu hỏi phân tách học viên giỏi với học viên yếu (point-biserial, -1..+1). ≥0.3 là tốt; gần 0 hoặc âm là yếu.",
+        "empty": "Chưa đủ lượt làm để tính thống kê."
       }
     }
   },
