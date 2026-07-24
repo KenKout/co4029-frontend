@@ -402,7 +402,14 @@ export function QuizGenerationPanel({
 
   const [selectedLessonIds, setSelectedLessonIds] = useState<string[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [form, setForm] = useState<FormState>(INITIAL_FORM);
+  // Default to APPEND when the quiz already has questions — replacing (wiping)
+  // existing questions is the destructive, rarely-wanted choice, so it should
+  // never be the default. INITIAL_FORM.append is false; override at init time
+  // based on whether questions exist.
+  const [form, setForm] = useState<FormState>(() => ({
+    ...INITIAL_FORM,
+    append: hasExistingQuestions,
+  }));
 
   const isCoverageMode = form.generation_mode === "coverage";
   const bloomTotal = useMemo(
@@ -540,6 +547,14 @@ export function QuizGenerationPanel({
 
   return (
     <form onSubmit={handleGenerate} className="space-y-4">
+      {/* Two-column layout on large screens so the config isn't one very long
+          vertical scroll. Left = what to pull from (lessons + outcomes); right
+          = how to generate (count, difficulty, types, mode, append). Wide/
+          complex sections (coverage picker, advanced, progress) stay full width
+          below the grid. */}
+      <div className="grid gap-4 lg:grid-cols-2 lg:gap-6 items-start">
+        {/* ── Left column ── */}
+        <div className="space-y-4">
       {/* ── Source lessons picker ── */}
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
@@ -654,7 +669,9 @@ export function QuizGenerationPanel({
           </div>
         </div>
       )}
-
+        </div>
+        {/* ── Right column ── */}
+        <div className="space-y-4">
       {/* ── Question count + difficulty ── */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
@@ -763,6 +780,9 @@ export function QuizGenerationPanel({
           }
         />
       )}
+        </div>
+      </div>
+      {/* ── Full-width sections below the two-column grid ── */}
 
       {isCoverageMode && (
         <CoverageSectionPicker

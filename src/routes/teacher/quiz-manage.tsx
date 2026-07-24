@@ -1827,10 +1827,36 @@ function GenerateModal({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+
+  // ESC closes the modal. Registered once while mounted; the parent unmounts
+  // this component on close so no manual cleanup dance is needed beyond the
+  // effect teardown.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8 overflow-y-auto">
-      <div className="w-full max-w-2xl rounded-xl bg-m3-surface p-6 shadow-xl space-y-4 my-auto">
-        <div className="flex items-start justify-between gap-3">
+    // Backdrop click closes; the inner panel stops propagation so clicks inside
+    // the form never bubble up to trigger a close.
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 py-8 overflow-y-auto"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="w-full max-w-4xl rounded-xl bg-m3-surface shadow-xl my-auto flex max-h-[calc(100vh-4rem)] flex-col"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        {/* Sticky header so the close button is ALWAYS reachable regardless of
+            how far the form body is scrolled — fixes "have to scroll way back
+            to close". */}
+        <div className="flex items-start justify-between gap-3 border-b border-m3-outline-variant/15 p-6 pb-4 shrink-0">
           <div className="flex items-start gap-3">
             <div className="h-10 w-10 rounded-xl gradient-primary flex items-center justify-center shadow-ai-glow shrink-0">
               <Sparkles className="h-5 w-5 text-white" />
@@ -1856,12 +1882,15 @@ function GenerateModal({
           </Button>
         </div>
 
-        <QuizGenerationPanel
-          quizId={quizId}
-          moduleId={moduleId}
-          courseId={courseId}
-          hasExistingQuestions={hasExistingQuestions}
-        />
+        {/* Only the form body scrolls; header stays pinned. */}
+        <div className="overflow-y-auto p-6 pt-4">
+          <QuizGenerationPanel
+            quizId={quizId}
+            moduleId={moduleId}
+            courseId={courseId}
+            hasExistingQuestions={hasExistingQuestions}
+          />
+        </div>
       </div>
     </div>
   );
