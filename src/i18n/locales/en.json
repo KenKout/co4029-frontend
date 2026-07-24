@@ -2942,6 +2942,10 @@
         "overdue_autoabandon": "Abandon (no grade)",
         "grace_label": "Grace period (seconds)",
         "grace_hint": "Extra time allowed after the deadline before auto-submit."
+      },
+      "overrides": {
+        "title": "Overrides",
+        "description": "Grant individual students exceptions to attempts and time limit. User overrides beat the base quiz settings."
       }
     },
     "preview": {
@@ -2967,6 +2971,23 @@
       "import_failed": "Import failed — the file may be malformed.",
       "export_failed": "Export failed.",
       "result_summary": "Imported {{imported}}, skipped {{skipped}}."
+    },
+    "overrides": {
+      "user_id_label": "Student user ID",
+      "user_id_placeholder": "UUID of the student",
+      "user_required": "A student user ID is required",
+      "max_attempts_label": "Max attempts",
+      "time_limit_label": "Time limit (seconds)",
+      "add_action": "Add override",
+      "added": "Override added",
+      "add_failed": "Could not add override",
+      "deleted": "Override removed",
+      "delete_failed": "Could not remove override",
+      "delete_action": "Remove override",
+      "empty": "No overrides yet.",
+      "attempts_badge": "{{count}} attempts",
+      "title": "Overrides",
+      "description": "Grant individual students exceptions to attempts and time limit. User overrides beat the base quiz settings."
     }
   },
   "teacher_interview_config": {

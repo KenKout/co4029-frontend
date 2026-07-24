@@ -2854,6 +2854,10 @@
         "overdue_autoabandon": "Bỏ (không chấm điểm)",
         "grace_label": "Thời gian gia hạn (giây)",
         "grace_hint": "Thời gian thêm sau hạn chót trước khi tự nộp."
+      },
+      "overrides": {
+        "title": "Ngoại lệ",
+        "description": "Cấp cho từng học viên ngoại lệ về số lần làm và giới hạn thời gian. Ngoại lệ theo học viên được ưu tiên hơn cài đặt gốc."
       }
     },
     "preview": {
@@ -2879,6 +2883,23 @@
       "import_failed": "Nhập thất bại — file có thể bị lỗi định dạng.",
       "export_failed": "Xuất thất bại.",
       "result_summary": "Đã nhập {{imported}}, bỏ qua {{skipped}}."
+    },
+    "overrides": {
+      "user_id_label": "ID học viên",
+      "user_id_placeholder": "UUID của học viên",
+      "user_required": "Cần ID học viên",
+      "max_attempts_label": "Số lần tối đa",
+      "time_limit_label": "Giới hạn thời gian (giây)",
+      "add_action": "Thêm ngoại lệ",
+      "added": "Đã thêm ngoại lệ",
+      "add_failed": "Không thể thêm ngoại lệ",
+      "deleted": "Đã xóa ngoại lệ",
+      "delete_failed": "Không thể xóa ngoại lệ",
+      "delete_action": "Xóa ngoại lệ",
+      "empty": "Chưa có ngoại lệ nào.",
+      "attempts_badge": "{{count}} lần",
+      "title": "Ngoại lệ",
+      "description": "Cấp cho từng học viên ngoại lệ về số lần làm và giới hạn thời gian. Ngoại lệ theo học viên được ưu tiên hơn cài đặt gốc."
     }
   },
   "teacher_interview_config": {

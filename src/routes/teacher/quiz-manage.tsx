@@ -63,6 +63,7 @@ import {
   defaultReviewOptions,
 } from "./_components/quiz-manage/ReviewOptionsMatrix";
 import { ImportExportPanel } from "./_components/quiz-manage/ImportExportPanel";
+import { OverridesPanel } from "./_components/quiz-manage/OverridesPanel";
 
 type TabKey = "questions" | "settings" | "preview";
 
@@ -777,6 +778,7 @@ export default function QuizManagePage() {
 
       {tab === "settings" && draft && quiz && (
         <SettingsTab
+          quizId={quizId}
           draft={draft}
           setDraft={setDraft}
           onSubmit={handleSaveSettings}
@@ -1949,6 +1951,7 @@ function buildQuestionDraft(question: QuizQuestionAuthoring): QuestionDraft {
    the form outgrew the dialog. QuizGenerationPanel is imported by that page. */
 
 function SettingsTab({
+  quizId,
   draft,
   setDraft,
   onSubmit,
@@ -1956,6 +1959,7 @@ function SettingsTab({
   dirty,
   onReset,
 }: {
+  quizId: string;
   draft: SettingsDraft;
   setDraft: React.Dispatch<React.SetStateAction<SettingsDraft | null>>;
   onSubmit: (e: React.FormEvent) => void;
@@ -2296,6 +2300,13 @@ function SettingsTab({
             </Field>
           )}
         </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title={t("teacher_quiz_manage.settings.overrides.title")}
+        description={t("teacher_quiz_manage.settings.overrides.description")}
+      >
+        <OverridesPanel quizId={quizId} />
       </SettingsSection>
 
       <SettingsSection
