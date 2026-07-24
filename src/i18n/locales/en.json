@@ -1688,6 +1688,43 @@
       "correct": "Correct answer"
     }
   },
+  "discussion": {
+    "title": "Discussion",
+    "unknown_author": "Unknown",
+    "comment_count_one": "{{count}} comment",
+    "comment_count_other": "{{count}} comments",
+    "comment_placeholder": "Write a comment…",
+    "topic_title_placeholder": "Topic title (e.g. an open question)",
+    "topic_body_placeholder": "Add context or the question(s) to discuss (optional, Markdown supported)",
+    "new_topic_title": "New discussion topic",
+    "topic_posted": "Topic posted",
+    "no_comments": "No comments yet — be the first to reply.",
+    "closed_no_comments": "This topic is closed for new comments.",
+    "load_failed": "Couldn't load the discussion. Please try again.",
+    "empty_title": "No discussion topics yet",
+    "empty_teacher": "Post a topic to start a discussion with your students.",
+    "empty_student": "Your teacher hasn't posted a topic yet. Check back soon.",
+    "status": {
+      "closed": "Closed"
+    },
+    "actions": {
+      "new_topic": "New topic",
+      "post_topic": "Post topic",
+      "post_comment": "Post comment",
+      "delete_comment": "Delete comment",
+      "delete_topic": "Delete",
+      "close": "Close",
+      "reopen": "Reopen",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "post_topic": "Couldn't post the topic. Please try again.",
+      "update_topic": "Couldn't update the topic. Please try again.",
+      "delete_topic": "Couldn't delete the topic. Please try again.",
+      "post_comment": "Couldn't post your comment. Please try again.",
+      "delete_comment": "Couldn't delete the comment. Please try again."
+    }
+  },
   "course_quiz": {
     "empty": {
       "no_questions_title": "No questions available",

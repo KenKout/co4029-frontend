@@ -505,3 +505,46 @@ export const DATA_CHANGE_TABLES = [
   "role_assignments",
 ] as const;
 export type DataChangeTable = (typeof DATA_CHANGE_TABLES)[number];
+
+/**
+ * Lesson discussion feature (backend `features/discussions`). Hand-written
+ * because the committed OpenAPI snapshot predates the feature; mirrors the
+ * Pydantic DTOs in `abridgeai/features/discussions/schemas.py` exactly.
+ */
+export interface DiscussionTopic {
+  id: string;
+  lesson_id: string;
+  title: string;
+  body_markdown: string | null;
+  status: "open" | "closed";
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  comment_count: number;
+  can_manage: boolean;
+}
+
+/** Envelope returned by `GET /lessons/{id}/discussion/topics`. */
+export interface DiscussionTopicList {
+  can_manage: boolean;
+  topics: DiscussionTopic[];
+}
+
+export interface DiscussionCommentAuthor {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
+export interface DiscussionComment {
+  id: string;
+  topic_id: string;
+  author_id: string;
+  body: string;
+  parent_comment_id: string | null;
+  created_at: string;
+  updated_at: string;
+  author: DiscussionCommentAuthor | null;
+  is_own: boolean;
+  can_delete: boolean;
+}

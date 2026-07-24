@@ -3341,5 +3341,42 @@
     "preview_label": "Xem trước",
     "preview_title_placeholder": "Tiêu đề khóa học của bạn",
     "preview_desc_placeholder": "Mô tả khóa học sẽ hiển thị ở đây."
+  },
+  "discussion": {
+    "title": "Thảo luận",
+    "unknown_author": "Không rõ",
+    "comment_count_one": "{{count}} bình luận",
+    "comment_count_other": "{{count}} bình luận",
+    "comment_placeholder": "Viết bình luận…",
+    "topic_title_placeholder": "Tiêu đề chủ đề (ví dụ: một câu hỏi mở)",
+    "topic_body_placeholder": "Thêm bối cảnh hoặc (các) câu hỏi để thảo luận (không bắt buộc, hỗ trợ Markdown)",
+    "new_topic_title": "Chủ đề thảo luận mới",
+    "topic_posted": "Đã đăng chủ đề",
+    "no_comments": "Chưa có bình luận nào — hãy là người trả lời đầu tiên.",
+    "closed_no_comments": "Chủ đề này đã đóng, không nhận bình luận mới.",
+    "load_failed": "Không tải được phần thảo luận. Vui lòng thử lại.",
+    "empty_title": "Chưa có chủ đề thảo luận nào",
+    "empty_teacher": "Đăng một chủ đề để bắt đầu thảo luận với học viên của bạn.",
+    "empty_student": "Giảng viên chưa đăng chủ đề nào. Hãy quay lại sau.",
+    "status": {
+      "closed": "Đã đóng"
+    },
+    "actions": {
+      "new_topic": "Chủ đề mới",
+      "post_topic": "Đăng chủ đề",
+      "post_comment": "Đăng bình luận",
+      "delete_comment": "Xóa bình luận",
+      "delete_topic": "Xóa",
+      "close": "Đóng",
+      "reopen": "Mở lại",
+      "cancel": "Hủy"
+    },
+    "errors": {
+      "post_topic": "Không đăng được chủ đề. Vui lòng thử lại.",
+      "update_topic": "Không cập nhật được chủ đề. Vui lòng thử lại.",
+      "delete_topic": "Không xóa được chủ đề. Vui lòng thử lại.",
+      "post_comment": "Không đăng được bình luận. Vui lòng thử lại.",
+      "delete_comment": "Không xóa được bình luận. Vui lòng thử lại."
+    }
   }
 }

@@ -52,6 +52,13 @@ export const queryKeys = {
     preferences: () => ["notifications", "preferences"] as const,
   },
 
+  discussions: {
+    topics: (lessonId: string) =>
+      ["discussions", "topics", lessonId] as const,
+    comments: (topicId: string) =>
+      ["discussions", "comments", topicId] as const,
+  },
+
   sr: {
     cardsDue: (lessonId?: string, limit?: number) =>
       ["sr", "cards-due", lessonId, limit] as const,
