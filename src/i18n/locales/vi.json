@@ -1629,7 +1629,27 @@
       "overview": "Tổng quan",
       "analysis": "Phân tích",
       "transcript": "Bản ghi",
+      "integrity": "Liêm chính",
       "sources": "Nguồn"
+    },
+    "integrity": {
+      "clean_title": "Không có cảnh báo liêm chính",
+      "clean_body": "Không ghi nhận việc mất tiêu điểm, chuyển tab hay thoát toàn màn hình trong buổi phỏng vấn này.",
+      "flagged_title": "Đã ghi nhận tín hiệu liêm chính",
+      "summary": "{{tab}} lần chuyển tab, {{focus}} lần mất tiêu điểm, {{fullscreen}} lần thoát toàn màn hình trong phiên này.",
+      "event": {
+        "tab_switch": "Đã chuyển khỏi tab phỏng vấn",
+        "focus_lost": "Cửa sổ phỏng vấn mất tiêu điểm",
+        "fullscreen_exit": "Đã thoát toàn màn hình",
+        "reconnect": "Đã kết nối lại",
+        "disconnect": "Đã ngắt kết nối",
+        "warning_issued": "Đã phát cảnh báo"
+      },
+      "severity": {
+        "info": "Thông tin",
+        "warning": "Cảnh báo",
+        "critical": "Nghiêm trọng"
+      }
     },
     "labels": {
       "session_id": "Phiên #{{id}}",

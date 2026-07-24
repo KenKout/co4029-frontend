@@ -819,6 +819,38 @@ export function useInterviewTranscript(sessionId: string | null | undefined) {
   });
 }
 
+/** One FR-5.8 proctoring signal recorded during an interview session. */
+export type InterviewIntegrityEvent = {
+  id: string;
+  event_type: string;
+  severity: string;
+  metadata_json: Record<string, unknown>;
+  created_at: string;
+};
+
+type InterviewIntegrityRead = {
+  session_id: string;
+  events: InterviewIntegrityEvent[];
+};
+
+/**
+ * GET /teacher/interview-sessions/{session_id}/integrity-events — FR-5.8
+ * proctoring timeline (focus_lost / tab_switch / fullscreen_exit / reconnect /
+ * disconnect) for teacher post-session integrity review. Teacher-only.
+ */
+export function useInterviewIntegrityEvents(
+  sessionId: string | null | undefined,
+) {
+  return useQuery({
+    queryKey: queryKeys.interviews.integrityEvents(sessionId ?? ""),
+    queryFn: () =>
+      apiFetch<InterviewIntegrityRead>(
+        `/teacher/interview-sessions/${sessionId}/integrity-events`,
+      ),
+    enabled: !!sessionId,
+  });
+}
+
 /**
  * GET /teacher/interview-sessions/{session_id} — read-only session detail,
  * course-scoped teacher access (require_session_authoring_access).

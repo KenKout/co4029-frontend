@@ -5,13 +5,18 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import {
+  AlertTriangle,
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Eye,
   FileText,
   Loader2,
+  MonitorX,
   Pencil,
   Save,
+  ShieldCheck,
   X,
 } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -37,6 +42,7 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { cn } from "@/lib/utils";
 import {
+  useInterviewIntegrityEvents,
   useInterviewTranscript,
   useSaveGapReportNotes,
   useTeacherGapReport,
@@ -86,7 +92,7 @@ function humanResources(resources: string[]): string[] {
   return resources.filter((r) => !UUID_RE.test(r.trim()));
 }
 
-type GapTabId = "overview" | "analysis" | "transcript";
+type GapTabId = "overview" | "analysis" | "transcript" | "integrity";
 
 // Tabbed navigation for the gap-report page, mirroring the interview-config
 // workspace: an absolutely-positioned pill measures the active tab and glides
@@ -107,6 +113,10 @@ function GapTabBar({
     {
       id: "transcript",
       label: t("teacher_interview_gap_report.tabs.transcript"),
+    },
+    {
+      id: "integrity",
+      label: t("teacher_interview_gap_report.tabs.integrity"),
     },
   ];
 
@@ -320,7 +330,134 @@ export default function InterviewGapReportPage() {
           studentName={report.student_name ?? null}
         />
       </div>
+
+      {/* Integrity — FR-5.8 proctoring signal timeline. */}
+      <div
+        id="integrity"
+        role="tabpanel"
+        aria-labelledby="tab-integrity"
+        hidden={activeTab !== "integrity"}
+      >
+        <IntegrityCard sessionId={sessionId} />
+      </div>
     </div>
+  );
+}
+
+/* ── Integrity severity → colour (mirrors the quiz attempt-detail panel) ── */
+const INTEGRITY_SEVERITY_META: Record<
+  string,
+  { badge: string; dot: string }
+> = {
+  critical: { badge: "bg-red-100 text-red-700", dot: "bg-red-500" },
+  warning: { badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
+  info: { badge: "bg-blue-100 text-blue-700", dot: "bg-blue-400" },
+};
+
+// FR-5.8 teacher review surface: the proctoring-signal timeline for a session.
+// Signals are recorded across every mode (text / hybrid / voice) — see Gap 1.
+// A clean session shows a reassuring green state rather than an empty box.
+function IntegrityCard({ sessionId }: { sessionId: string }) {
+  const { t } = useTranslation();
+  const { data, isLoading } = useInterviewIntegrityEvents(sessionId);
+  const events = data?.events ?? [];
+
+  const counts = {
+    total: events.length,
+    tabSwitch: events.filter((e) => e.event_type === "tab_switch").length,
+    focusLost: events.filter((e) => e.event_type === "focus_lost").length,
+    fullscreenExit: events.filter((e) => e.event_type === "fullscreen_exit")
+      .length,
+  };
+
+  if (isLoading) {
+    return (
+      <GlassCard className="p-6">
+        <p className="text-sm text-m3-on-surface-variant">
+          {t("common.loading")}
+        </p>
+      </GlassCard>
+    );
+  }
+
+  if (counts.total === 0) {
+    return (
+      <GlassCard className="p-6">
+        <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+          <div className="shrink-0 rounded-lg bg-emerald-100 p-2 text-emerald-700">
+            <ShieldCheck className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="font-headline text-sm font-bold text-emerald-800">
+              {t("teacher_interview_gap_report.integrity.clean_title")}
+            </h3>
+            <p className="mt-0.5 text-xs text-emerald-700/80">
+              {t("teacher_interview_gap_report.integrity.clean_body")}
+            </p>
+          </div>
+        </div>
+      </GlassCard>
+    );
+  }
+
+  return (
+    <GlassCard className="overflow-hidden p-0">
+      <div className="flex items-center gap-2.5 border-b border-amber-200/60 bg-amber-50/50 px-5 py-3">
+        <div className="rounded-lg bg-amber-100 p-1.5 text-amber-700">
+          <AlertTriangle className="h-4 w-4" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-headline text-sm font-bold text-amber-800">
+            {t("teacher_interview_gap_report.integrity.flagged_title")}
+          </h3>
+          <p className="text-xs text-amber-700/80">
+            {t("teacher_interview_gap_report.integrity.summary", {
+              tab: counts.tabSwitch,
+              focus: counts.focusLost,
+              fullscreen: counts.fullscreenExit,
+            })}
+          </p>
+        </div>
+      </div>
+      <div className="max-h-96 divide-y divide-amber-200/40 overflow-y-auto">
+        {events.map((ev) => {
+          const meta =
+            INTEGRITY_SEVERITY_META[ev.severity] ??
+            INTEGRITY_SEVERITY_META.info;
+          const Icon =
+            ev.event_type === "tab_switch"
+              ? MonitorX
+              : ev.event_type === "focus_lost"
+                ? Eye
+                : Clock;
+          return (
+            <div key={ev.id} className="flex items-center gap-3 px-5 py-2.5">
+              <Icon className="h-4 w-4 shrink-0 text-amber-700" />
+              <span className="flex-1 text-sm text-m3-on-surface">
+                {t(
+                  `teacher_interview_gap_report.integrity.event.${ev.event_type}`,
+                  { defaultValue: ev.event_type },
+                )}
+              </span>
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  meta.badge,
+                )}
+              >
+                {t(
+                  `teacher_interview_gap_report.integrity.severity.${ev.severity}`,
+                  { defaultValue: ev.severity },
+                )}
+              </span>
+              <span className="whitespace-nowrap text-xs tabular-nums text-m3-on-surface-variant">
+                {formatDate(ev.created_at)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </GlassCard>
   );
 }
 

@@ -1680,7 +1680,27 @@
       "overview": "Overview",
       "analysis": "Analysis",
       "transcript": "Transcript",
+      "integrity": "Integrity",
       "sources": "Sources"
+    },
+    "integrity": {
+      "clean_title": "No integrity flags",
+      "clean_body": "No focus loss, tab switching, or fullscreen exits were recorded during this interview.",
+      "flagged_title": "Integrity signals recorded",
+      "summary": "{{tab}} tab switch(es), {{focus}} focus loss, {{fullscreen}} fullscreen exit(s) during this session.",
+      "event": {
+        "tab_switch": "Switched away from the interview tab",
+        "focus_lost": "Interview window lost focus",
+        "fullscreen_exit": "Exited fullscreen",
+        "reconnect": "Reconnected",
+        "disconnect": "Disconnected",
+        "warning_issued": "Warning issued"
+      },
+      "severity": {
+        "info": "Info",
+        "warning": "Warning",
+        "critical": "Critical"
+      }
     },
     "criteria": {
       "technical_accuracy": "Technical accuracy",
