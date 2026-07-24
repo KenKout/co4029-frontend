@@ -111,6 +111,7 @@ interface SettingsDraft {
   supported_modes: SupportedMode;
   time_limit_minutes: string;
   max_attempts: string;
+  cooldown_hours: string;
   min_outcomes_to_pass: string;
   lock_quiz_ef_until_pass: boolean;
   supplementary_instructions: string;
@@ -134,6 +135,8 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
         : String(config.time_limit_minutes),
     max_attempts:
       config.max_attempts == null ? "" : String(config.max_attempts),
+    cooldown_hours:
+      config.cooldown_hours == null ? "" : String(config.cooldown_hours),
     min_outcomes_to_pass:
       config.min_outcomes_to_pass == null
         ? ""
@@ -437,6 +440,7 @@ export default function InterviewConfigPage() {
         supported_modes: draft.supported_modes,
         time_limit_minutes: integerOrNull(draft.time_limit_minutes),
         max_attempts: integerOrNull(draft.max_attempts),
+        cooldown_hours: integerOrNull(draft.cooldown_hours),
         min_outcomes_to_pass: integerOrNull(draft.min_outcomes_to_pass),
         lock_quiz_ef_until_pass: draft.lock_quiz_ef_until_pass,
         supplementary_instructions:
@@ -1281,7 +1285,7 @@ function SettingsForm({
       </Section>
 
       <Section title={t("teacher_interview_config.sections.rules.title")}>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field
             label={t("teacher_interview_config.fields.duration_label")}
             hint={t("teacher_interview_config.fields.duration_hint")}
@@ -1309,6 +1313,21 @@ function SettingsForm({
               onChange={(e) => update("max_attempts", e.target.value)}
               placeholder={t(
                 "teacher_interview_config.fields.attempts_placeholder",
+              )}
+              className="bg-m3-surface text-sm"
+            />
+          </Field>
+          <Field
+            label={t("teacher_interview_config.fields.cooldown_label")}
+            hint={t("teacher_interview_config.fields.cooldown_hint")}
+          >
+            <Input
+              type="number"
+              min={1}
+              value={draft.cooldown_hours}
+              onChange={(e) => update("cooldown_hours", e.target.value)}
+              placeholder={t(
+                "teacher_interview_config.fields.cooldown_placeholder",
               )}
               className="bg-m3-surface text-sm"
             />
