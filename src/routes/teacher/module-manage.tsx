@@ -277,11 +277,9 @@ function ItemRow({
 function AddContentPills({
   moduleId,
   courseId,
-  itemCount,
 }: {
   moduleId: string;
   courseId: string;
-  itemCount: number;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -291,6 +289,8 @@ function AddContentPills({
   const [adding, setAdding] = useState(false);
   const [interviewModalOpen, setInterviewModalOpen] = useState(false);
   const [interviewTitle, setInterviewTitle] = useState("");
+  const [quizModalOpen, setQuizModalOpen] = useState(false);
+  const [quizTitle, setQuizTitle] = useState("");
 
   function slugify(title: string) {
     return title
@@ -318,24 +318,32 @@ function AddContentPills({
     }
   }
 
-  async function handleAddQuiz() {
-    if (adding) return;
-    setAdding(true);
+  function handleAddQuiz() {
+    setQuizTitle("");
+    setQuizModalOpen(true);
+  }
+
+  async function handleCreateQuiz() {
+    if (!quizTitle.trim()) {
+      toast.error(t("teacher_quiz_new.errors.title_required"));
+      return;
+    }
     try {
       const quiz = await createQuiz.mutateAsync({
         module_id: moduleId,
-        title: `New Quiz ${itemCount + 1}`,
+        title: quizTitle.trim(),
         description: "Draft quiz for this module.",
       });
+      setQuizModalOpen(false);
+      toast.success(t("teacher_quiz_new.success.created"));
       void navigate({
         to: "/teacher/courses/$courseId/quizzes/$quizId",
         params: { courseId, quizId: quiz.id },
       });
-      toast.success("Quiz added");
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Failed to add quiz");
-    } finally {
-      setAdding(false);
+      toast.error(
+        (err as Error).message || t("teacher_quiz_new.errors.create_failed"),
+      );
     }
   }
 
@@ -445,6 +453,39 @@ function AddContentPills({
               if (e.key === "Enter") {
                 e.preventDefault();
                 void handleCreateInterview();
+              }
+            }}
+          />
+        </div>
+      </PromptDialog>
+
+      <PromptDialog
+        open={quizModalOpen}
+        onOpenChange={setQuizModalOpen}
+        title={t("teacher_quiz_new.modal_title")}
+        description={t("teacher_quiz_new.modal_description")}
+        confirmLabel={
+          createQuiz.isPending
+            ? t("teacher_quiz_new.submitting")
+            : t("teacher_quiz_new.submit")
+        }
+        isPending={createQuiz.isPending}
+        onConfirm={handleCreateQuiz}
+      >
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-m3-on-surface">
+            {t("teacher_quiz_new.fields.title")} *
+          </label>
+          <Input
+            autoFocus
+            required
+            placeholder={t("teacher_quiz_new.fields.title_placeholder")}
+            value={quizTitle}
+            onChange={(e) => setQuizTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void handleCreateQuiz();
               }
             }}
           />
@@ -856,11 +897,7 @@ export default function ModuleManagePage() {
                 />
               ))}
 
-              <AddContentPills
-                moduleId={moduleId}
-                courseId={courseId}
-                itemCount={sortedItems.length}
-              />
+              <AddContentPills moduleId={moduleId} courseId={courseId} />
             </div>
           </div>
         </div>

@@ -207,6 +207,9 @@ export type InterviewOutcomeCreate = Schemas["InterviewOutcomeCreate"];
 export type InterviewGenerationRequest =
   Schemas["InterviewGenerationRequest"] & {
     source_module_ids?: string[];
+    // Interview rubric-outcome ids to target (empty = all). Manually typed
+    // until the OpenAPI snapshot is regenerated.
+    target_outcome_ids?: string[];
   };
 export type InterviewGenerationRunPublic =
   Schemas["InterviewGenerationRunPublic"];

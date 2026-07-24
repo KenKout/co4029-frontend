@@ -3087,7 +3087,13 @@
       "phase_done": "Đã sinh xong tất cả câu hỏi",
       "success_body": "Câu hỏi mới đã được thêm vào bộ nháp. Đóng cửa sổ để xem.",
       "processing": "Đang xử lý…",
-      "start_button": "Bắt đầu sinh"
+      "start_button": "Bắt đầu sinh",
+      "outcomes_label": "Chuẩn đầu ra mục tiêu (tùy chọn)",
+      "outcomes_hint": "Chọn những chuẩn đầu ra rubric mà lượt tạo này nên tập trung. Bỏ trống tất cả để bao quát mọi chuẩn đầu ra.",
+      "outcomes_empty": "Chưa có chuẩn đầu ra nào cho bài phỏng vấn này. Thêm ở tab Chuẩn đầu ra — việc tạo sẽ bao quát tất cả.",
+      "outcomes_select_all": "Chọn tất cả",
+      "outcomes_clear": "Bỏ chọn",
+      "outcomes_badge": "CĐR {{n}}"
     }
   },
   "teacher_lesson_manage": {
@@ -3377,6 +3383,23 @@
       "delete_topic": "Không xóa được chủ đề. Vui lòng thử lại.",
       "post_comment": "Không đăng được bình luận. Vui lòng thử lại.",
       "delete_comment": "Không xóa được bình luận. Vui lòng thử lại."
+    }
+  },
+  "teacher_quiz_new": {
+    "modal_title": "Bài kiểm tra mới",
+    "modal_description": "Đặt tên ngay bây giờ — bạn sẽ thiết lập câu hỏi, điểm đạt, giới hạn thời gian và tạo câu hỏi ở màn hình tiếp theo.",
+    "fields": {
+      "title": "Tên bài kiểm tra",
+      "title_placeholder": "ví dụ: Kiểm tra kiến thức Chương 3"
+    },
+    "submit": "Tạo bài kiểm tra",
+    "submitting": "Đang tạo…",
+    "errors": {
+      "title_required": "Vui lòng nhập tên bài kiểm tra",
+      "create_failed": "Không thể tạo bài kiểm tra"
+    },
+    "success": {
+      "created": "Đã tạo bài kiểm tra"
     }
   }
 }

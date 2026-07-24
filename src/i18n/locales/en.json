@@ -438,6 +438,23 @@
       "created": "Interview question set created"
     }
   },
+  "teacher_quiz_new": {
+    "modal_title": "New quiz",
+    "modal_description": "Give it a name now — you'll set questions, passing score, time limit and generate questions on the next screen.",
+    "fields": {
+      "title": "Quiz name",
+      "title_placeholder": "e.g., Chapter 3 knowledge check"
+    },
+    "submit": "Create quiz",
+    "submitting": "Creating…",
+    "errors": {
+      "title_required": "Please enter a quiz name",
+      "create_failed": "Couldn't create quiz"
+    },
+    "success": {
+      "created": "Quiz created"
+    }
+  },
   "teacher_question_bank": {
     "title": "Question bank",
     "subtitle": "Reusable interview questions",
@@ -3137,6 +3154,12 @@
       "modules_hint": "Which modules' content the questions draw from. Leave none selected to use this interview's own module.",
       "modules_empty": "No modules available.",
       "modules_own": "(this interview)",
+      "outcomes_label": "Target learning outcomes (optional)",
+      "outcomes_hint": "Pick which rubric outcomes this run should focus on. Leave all unchecked to cover every outcome.",
+      "outcomes_empty": "No learning outcomes defined for this interview yet. Add them on the Learning outcomes tab — generation will cover all of them.",
+      "outcomes_select_all": "Select all",
+      "outcomes_clear": "Clear",
+      "outcomes_badge": "L.O.{{n}}",
       "independent_action_hint": "This starts generation right away — it does not save the settings above.",
       "mode_label": "Generation mode",
       "mode_outcome": "By rubric outcome",

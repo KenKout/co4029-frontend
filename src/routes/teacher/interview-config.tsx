@@ -100,6 +100,9 @@ interface GenerationFormState {
   // module (backend default). Multi-select lets a teacher scope one interview
   // across several modules.
   source_module_ids: string[];
+  // Interview rubric-outcome ids to target. Empty = every outcome (backend
+  // default). Lets a teacher focus a run on specific learning outcomes.
+  target_outcome_ids: string[];
 }
 
 interface SettingsDraft {
@@ -227,6 +230,7 @@ export default function InterviewConfigPage() {
     focus_topics: "",
     avoid_topics: "",
     source_module_ids: [],
+    target_outcome_ids: [],
   });
   const generate = useGenerateInterviewQuestions(configId);
 
@@ -548,6 +552,7 @@ export default function InterviewConfigPage() {
         avoid_topics: splitTopics(generationForm.avoid_topics),
         source_module_ids: generationForm.source_module_ids,
         source_lesson_ids: [],
+        target_outcome_ids: generationForm.target_outcome_ids,
         persona: draft?.persona,
         supplementary_instructions:
           draft?.supplementary_instructions.trim() || null,
@@ -830,6 +835,7 @@ export default function InterviewConfigPage() {
                   run={activeRun}
                   modules={content?.modules ?? []}
                   ownModuleId={config.module_id}
+                  outcomes={outcomes ?? []}
                 />
               </section>
               <section
@@ -1614,6 +1620,7 @@ function GenerationSection({
   run,
   modules,
   ownModuleId,
+  outcomes,
 }: {
   generationForm: GenerationFormState;
   setGenerationForm: React.Dispatch<React.SetStateAction<GenerationFormState>>;
@@ -1623,6 +1630,7 @@ function GenerationSection({
   run: InterviewGenerationRunPublic | undefined;
   modules: { id: string; title: string }[];
   ownModuleId: string;
+  outcomes: InterviewOutcomeAuthoring[];
 }) {
   const { t } = useTranslation();
   function updateGeneration<K extends keyof GenerationFormState>(
@@ -1740,6 +1748,82 @@ function GenerationSection({
               })
             )}
           </div>
+        </Field>
+
+        <Field
+          label={t("teacher_interview_config.generate.outcomes_label")}
+          hint={t("teacher_interview_config.generate.outcomes_hint")}
+        >
+          {outcomes.length === 0 ? (
+            <p className="rounded-xl bg-m3-surface p-4 text-sm text-m3-on-surface-variant">
+              {t("teacher_interview_config.generate.outcomes_empty")}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateGeneration(
+                      "target_outcome_ids",
+                      generationForm.target_outcome_ids.length ===
+                        outcomes.length
+                        ? []
+                        : outcomes.map((o) => o.id),
+                    )
+                  }
+                  className="text-xs font-semibold text-m3-secondary hover:text-m3-primary cursor-pointer"
+                >
+                  {generationForm.target_outcome_ids.length === outcomes.length
+                    ? t("teacher_interview_config.generate.outcomes_clear")
+                    : t("teacher_interview_config.generate.outcomes_select_all")}
+                </button>
+              </div>
+              {outcomes.map((outcome, index) => {
+                const checked = generationForm.target_outcome_ids.includes(
+                  outcome.id,
+                );
+                return (
+                  <label
+                    key={outcome.id}
+                    className={cn(
+                      "flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer transition-all",
+                      checked
+                        ? "border-m3-secondary bg-m3-secondary-fixed/30"
+                        : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() =>
+                        updateGeneration(
+                          "target_outcome_ids",
+                          checked
+                            ? generationForm.target_outcome_ids.filter(
+                                (id) => id !== outcome.id,
+                              )
+                            : [
+                                ...generationForm.target_outcome_ids,
+                                outcome.id,
+                              ],
+                        )
+                      }
+                      className="h-4 w-4"
+                    />
+                    <span className="shrink-0 rounded-md bg-violet-100 px-1.5 py-0.5 text-[11px] font-bold text-violet-700">
+                      {t("teacher_interview_config.generate.outcomes_badge", {
+                        n: index + 1,
+                      })}
+                    </span>
+                    <span className="flex-1 text-sm text-m3-on-surface">
+                      {outcome.outcome_text}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
         </Field>
 
         <Field
