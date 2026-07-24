@@ -935,7 +935,7 @@ function QuestionsTab({
 
   return (
     <div className="grid grid-cols-12 gap-6">
-      <div className="col-span-12 lg:col-span-8 space-y-4">
+      <div className="col-span-12 lg:col-span-8 space-y-4 min-w-0">
         {/* Undo snackbar: fixed bottom-center so it's ALWAYS visible
             regardless of scroll position. It must NOT be a sticky element
             inside the list — a sticky banner would slide under the global
@@ -1071,7 +1071,7 @@ function QuestionsTab({
         </button>
       </div>
 
-      <div className="col-span-12 lg:col-span-4">
+      <div className="col-span-12 lg:col-span-4 min-w-0">
         <div className="lg:sticky lg:top-[8.5rem] space-y-4">
           <div className="rounded-xl border border-m3-secondary/10 bg-m3-surface-container-low p-5 shadow-glass space-y-3">
             <div className="flex items-center gap-2">
