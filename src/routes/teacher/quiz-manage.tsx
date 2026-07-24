@@ -471,7 +471,7 @@ export default function QuizManagePage() {
   }
 
   return (
-    <div className="space-y-6 pb-12 max-w-[1800px] mx-auto">
+    <div className="space-y-6 pt-4 lg:pt-6 pb-12 max-w-[1800px] mx-auto">
       <Breadcrumbs
         items={[
           {
