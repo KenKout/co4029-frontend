@@ -78,6 +78,7 @@ import { cn } from "@/lib/utils";
 
 type SupportedMode = NonNullable<InterviewConfigUpdate["supported_modes"]>;
 type Persona = NonNullable<InterviewConfigUpdate["persona"]>;
+type TtsVoice = NonNullable<InterviewConfigUpdate["tts_voice"]>;
 type GenerationMode = InterviewGenerationRequest["mode"];
 type SecurityResponsePolicy =
   | "continue_and_log"
@@ -108,6 +109,7 @@ interface GenerationFormState {
 interface SettingsDraft {
   title: string;
   persona: Persona;
+  tts_voice: string;
   supported_modes: SupportedMode;
   time_limit_minutes: string;
   max_attempts: string;
@@ -126,6 +128,8 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
   return {
     title: config.title ?? "",
     persona: (config.persona ?? "neutral") as Persona,
+    // "" = deployment default voice; only meaningful for English sessions.
+    tts_voice: config.tts_voice ?? "",
     // All interviews are hybrid (type-or-voice). The mode selector was removed;
     // any legacy text/voice config is normalized to hybrid on load.
     supported_modes: "hybrid",
@@ -163,6 +167,28 @@ function integerOrNull(value: string): number | null {
 }
 
 const PERSONA_KEYS: Persona[] = ["strict", "neutral", "supportive"];
+// Deepgram Aura-2 English voices. MUST stay in sync with the backend allow-list
+// (services.narration.ALLOWED_TTS_VOICES / schemas.authoring.TtsVoiceLiteral).
+// Empty value ("") = deployment default (settings.deepgram_tts_model_en).
+// English-only: Vietnamese sessions have no server TTS, so this is ignored there.
+const VOICE_KEYS: TtsVoice[] = [
+  "aura-2-thalia-en",
+  "aura-2-andromeda-en",
+  "aura-2-helena-en",
+  "aura-2-apollo-en",
+  "aura-2-arcas-en",
+  "aura-2-aries-en",
+  "aura-2-asteria-en",
+  "aura-2-athena-en",
+  "aura-2-hera-en",
+  "aura-2-hyperion-en",
+  "aura-2-luna-en",
+  "aura-2-orion-en",
+  "aura-2-orpheus-en",
+  "aura-2-ophelia-en",
+  "aura-2-zeus-en",
+  "aura-2-vesta-en",
+];
 
 export default function InterviewConfigPage() {
   const { t, i18n } = useTranslation();
@@ -437,6 +463,8 @@ export default function InterviewConfigPage() {
       await updateConfig.mutateAsync({
         title: draft.title.trim(),
         persona: draft.persona,
+        // Empty selection → null (deployment default voice).
+        tts_voice: (draft.tts_voice || null) as TtsVoice | null,
         supported_modes: draft.supported_modes,
         time_limit_minutes: integerOrNull(draft.time_limit_minutes),
         max_attempts: integerOrNull(draft.max_attempts),
@@ -1277,6 +1305,25 @@ function SettingsForm({
               {PERSONA_KEYS.map((p) => (
                 <option key={p} value={p}>
                   {t(`teacher_interview_config.persona.${p}`)}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field
+            label={t("teacher_interview_config.fields.voice_label")}
+            hint={t("teacher_interview_config.fields.voice_hint")}
+          >
+            <select
+              value={draft.tts_voice}
+              onChange={(e) => update("tts_voice", e.target.value)}
+              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+            >
+              <option value="">
+                {t("teacher_interview_config.fields.voice_default")}
+              </option>
+              {VOICE_KEYS.map((v) => (
+                <option key={v} value={v}>
+                  {t(`teacher_interview_config.voice.${v}`)}
                 </option>
               ))}
             </select>

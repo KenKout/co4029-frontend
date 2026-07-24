@@ -6203,6 +6203,8 @@ export interface components {
              * @enum {string}
              */
             supported_modes: "voice" | "text" | "hybrid";
+            /** Tts Voice */
+            tts_voice?: ("aura-2-thalia-en" | "aura-2-andromeda-en" | "aura-2-helena-en" | "aura-2-apollo-en" | "aura-2-arcas-en" | "aura-2-aries-en" | "aura-2-asteria-en" | "aura-2-athena-en" | "aura-2-hera-en" | "aura-2-hyperion-en" | "aura-2-luna-en" | "aura-2-orion-en" | "aura-2-orpheus-en" | "aura-2-ophelia-en" | "aura-2-zeus-en" | "aura-2-vesta-en") | null;
             /** Time Limit Minutes */
             time_limit_minutes?: number | null;
             /** Max Attempts */
@@ -6287,6 +6289,8 @@ export interface components {
              * @enum {string}
              */
             supported_modes: "voice" | "text" | "hybrid";
+            /** Tts Voice */
+            tts_voice?: ("aura-2-thalia-en" | "aura-2-andromeda-en" | "aura-2-helena-en" | "aura-2-apollo-en" | "aura-2-arcas-en" | "aura-2-aries-en" | "aura-2-asteria-en" | "aura-2-athena-en" | "aura-2-hera-en" | "aura-2-hyperion-en" | "aura-2-luna-en" | "aura-2-orion-en" | "aura-2-orpheus-en" | "aura-2-ophelia-en" | "aura-2-zeus-en" | "aura-2-vesta-en") | null;
             /** Time Limit Minutes */
             time_limit_minutes?: number | null;
             /** Max Attempts */
@@ -6395,6 +6399,8 @@ export interface components {
             persona?: ("strict" | "neutral" | "supportive") | null;
             /** Supported Modes */
             supported_modes?: ("voice" | "text" | "hybrid") | null;
+            /** Tts Voice */
+            tts_voice?: ("aura-2-thalia-en" | "aura-2-andromeda-en" | "aura-2-helena-en" | "aura-2-apollo-en" | "aura-2-arcas-en" | "aura-2-aries-en" | "aura-2-asteria-en" | "aura-2-athena-en" | "aura-2-hera-en" | "aura-2-hyperion-en" | "aura-2-luna-en" | "aura-2-orion-en" | "aura-2-orpheus-en" | "aura-2-ophelia-en" | "aura-2-zeus-en" | "aura-2-vesta-en") | null;
             /** Time Limit Minutes */
             time_limit_minutes?: number | null;
             /** Max Attempts */
