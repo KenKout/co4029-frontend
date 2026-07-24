@@ -471,7 +471,7 @@ export default function QuizManagePage() {
   }
 
   return (
-    <div className="space-y-6 pb-12 max-w-[1500px] mx-auto">
+    <div className="space-y-6 pb-12 max-w-[1800px] mx-auto">
       <Breadcrumbs
         items={[
           {
@@ -591,13 +591,19 @@ export default function QuizManagePage() {
                   aria-label={label}
                   title={actionsStuck ? label : undefined}
                   className={cn(
-                    "rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center",
+                    "rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center border",
                     actionsStuck
                       ? "h-10 w-10"
                       : "px-4 py-2 text-sm gap-2",
+                    // Active tab: in the stuck rail it needs a solid blue fill
+                    // with a WHITE icon + gray border so it doesn't blend into
+                    // the content showing through behind the rail. In the
+                    // normal (not-stuck) strip it keeps the subtle pill look.
                     active
-                      ? "bg-surface-elev text-m3-primary shadow-sm"
-                      : "text-m3-on-surface-variant hover:text-m3-primary/80",
+                      ? actionsStuck
+                        ? "bg-m3-primary text-white border-m3-outline-variant/40 shadow-sm"
+                        : "bg-surface-elev text-m3-primary border-transparent shadow-sm"
+                      : "border-transparent text-m3-on-surface-variant hover:text-m3-primary/80",
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
