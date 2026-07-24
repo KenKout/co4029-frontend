@@ -562,7 +562,7 @@ export default function QuizManagePage() {
             // off into an absolute left rail" trick floated them OVER the
             // content (the overlay bug). One in-flow band = no overlay.
             actionsStuck
-              ? "border border-m3-outline-variant/30 bg-m3-surface/95 backdrop-blur-md shadow-lg px-2 py-2"
+              ? "border border-m3-outline-variant/30 bg-m3-surface/95 backdrop-blur-md shadow-sm px-2 py-2"
               : "border border-transparent px-0 py-0",
           )}
         >
