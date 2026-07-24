@@ -552,17 +552,18 @@ export default function QuizManagePage() {
           (icons only) to stay compact. */}
       {/* `relative` so the condensed vertical tab rail can be absolutely
           positioned into the left gutter (out of content flow) once stuck. */}
-      <div className="sticky top-16 z-20 -mx-1 px-1 relative">
+      <div className="sticky top-16 z-20 -mx-1 px-1">
         <div
           className={cn(
-            "flex items-center justify-between gap-3 rounded-xl border transition-all",
-            // When stuck we DON'T paint a full-width opaque band anymore — that
-            // band was the eye-blocker overlaying the content. The tabs peel
-            // off to a vertical icon rail on the left instead; the action
-            // buttons keep a compact blurred pill of their own (below).
+            "flex items-center justify-between gap-3 rounded-xl transition-all",
+            // Once pinned, the strip becomes a single solid, blurred toolbar
+            // band that stays IN FLOW and horizontal. A solid background is
+            // what stops content bleeding through; the previous "peel the tabs
+            // off into an absolute left rail" trick floated them OVER the
+            // content (the overlay bug). One in-flow band = no overlay.
             actionsStuck
-              ? "border-transparent px-0 py-0"
-              : "border-transparent px-0 py-0",
+              ? "border border-m3-outline-variant/30 bg-m3-surface/95 backdrop-blur-md shadow-lg px-2 py-2"
+              : "border border-transparent px-0 py-0",
           )}
         >
           {/* Tab switcher. Not stuck → horizontal pills with text labels,
@@ -572,13 +573,12 @@ export default function QuizManagePage() {
               sliding in from the left with tooltips for each tab. */}
           <div
             className={cn(
-              "transition-all duration-300 ease-out",
+              "transition-all duration-300 ease-out inline-flex gap-1 rounded-xl p-1",
               actionsStuck
-                // Stuck rail floats over white content, so it needs a strong,
-                // opaque background + a solid darker border to read as a
-                // distinct card and not blend into the content behind it.
-                ? "absolute left-0 top-1 z-10 flex flex-col gap-1.5 rounded-2xl border-2 border-m3-outline-variant/50 bg-surface-elev p-1.5 shadow-xl ring-1 ring-black/5 animate-in fade-in slide-in-from-left-3"
-                : "border border-m3-outline-variant/20 bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 shadow-lg shadow-m3-primary/5",
+                // Stays in-flow inside the solid toolbar band — icon-only to
+                // stay compact, but horizontal and never floating over content.
+                ? "border border-transparent"
+                : "border border-m3-outline-variant/20 bg-m3-surface-container-low shadow-lg shadow-m3-primary/5",
             )}
           >
             {TAB_KEYS.map((key) => {
@@ -624,8 +624,8 @@ export default function QuizManagePage() {
           <div
             className={cn(
               "flex items-center gap-2 shrink-0 transition-all",
-              actionsStuck &&
-                "ml-auto rounded-xl border border-m3-outline-variant/30 bg-surface-elev/90 backdrop-blur-md shadow-glass px-2 py-1.5",
+              // The parent strip is now the solid band; actions just hug right.
+              actionsStuck && "ml-auto",
             )}
           >
             <Link
