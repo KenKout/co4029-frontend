@@ -3,8 +3,10 @@ import { Link, useBlocker, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  BookOpen,
   Bot,
   CheckCircle2,
   Clock,
@@ -14,7 +16,9 @@ import {
   Loader2,
   Mic,
   MicOff,
+  RotateCcw,
   Sparkles,
+  Timer,
   User,
   XCircle,
 } from "lucide-react";
@@ -205,6 +209,21 @@ function newTurnKey(): string {
     return crypto.randomUUID();
   }
   return `tk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+/**
+ * Human-readable elapsed label for the results facts row (#16), e.g. "12m 04s"
+ * or "1h 03m". Seconds are dropped once we're past an hour to keep it compact.
+ */
+function formatElapsedLabel(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const seconds = safe % 60;
+  if (hours > 0) {
+    return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+  }
+  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 }
 
 export default function CourseInterviewPage() {
@@ -804,6 +823,40 @@ export default function CourseInterviewPage() {
       // (e.g. config published with only pending questions), the toast in
       // handleStartSuccess already informed the user; staying on the
       // mode-selection screen lets them retry without joining an empty room.
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError && err.status === 429
+          ? t("course_interview.errors.rate_limited")
+          : t("course_interview.errors.start_failed"),
+      );
+    }
+  }
+
+  /**
+   * Retry from the results screen (#7). Clears the finished-session state back
+   * to a clean slate, then starts a fresh attempt via the normal start path.
+   * A backend cooldown / attempt-ceiling still guards it (429/409) — the UI
+   * only exposes this button when compute_retake_status said a retry is allowed,
+   * so the reactive error is a rare race-safety net rather than the norm.
+   */
+  async function handleRetry() {
+    if (startSession.isPending) return;
+    setFinishResult(null);
+    setPendingFinishResult(null);
+    setTranscript([]);
+    setCurrentQuestion(null);
+    setPendingFirstQuestion(null);
+    setPendingNextQuestion(null);
+    setSessionId(null);
+    setAnswerText("");
+    setPhase("prestart");
+    sessionStartedAtRef.current = null;
+    setAssessmentStartedAtMs(null);
+    sessionDeadlineAtRef.current = null;
+    timeoutTriggeredRef.current = false;
+    try {
+      const payload = await startSession.mutateAsync({ input_mode: "text" });
+      handleStartSuccess(payload);
     } catch (err) {
       toast.error(
         err instanceof ApiError && err.status === 429
@@ -1512,112 +1565,327 @@ export default function CourseInterviewPage() {
 
   // ── Results screen (text mode finish OR voice mode completion) ─────────────
   if (finishResult) {
+    // ── Results-screen derived state (#16/#7) ────────────────────────────────
+    // Verdict phase — drives the hero treatment. "retry" (failed verdict) is
+    // deliberately encouraging (primary, not red); red is reserved for an
+    // evaluation-system failure so a normal fail never feels punitive.
+    const resultPhase: "pass" | "retry" | "evaluating" | "eval_failed" | "abandoned" =
+      evaluationFailed
+        ? "eval_failed"
+        : evaluationUnavailable
+          ? "abandoned"
+          : verdictPending
+            ? "evaluating"
+            : liveVerdict
+              ? "pass"
+              : "retry";
+
+    // Session facts: elapsed (ended_at − assessment start), attempt #, date.
+    const finishedAtMs = finishResult.ended_at
+      ? new Date(finishResult.ended_at).getTime()
+      : null;
+    const elapsedResultSeconds =
+      finishedAtMs !== null && assessmentStartedAtMs !== null
+        ? Math.max(0, Math.floor((finishedAtMs - assessmentStartedAtMs) / 1000))
+        : null;
+    const resultLocale = i18n.language?.startsWith("vi") ? "vi-VN" : "en-US";
+    const resultDate = finishResult.ended_at
+      ? new Date(finishResult.ended_at).toLocaleDateString(resultLocale, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : null;
+
+    // Retake context (#7) — prefer the freshest source (verdict poll survives
+    // reload) then the finish response.
+    const retakeSource = verdictPoll ?? finishResult;
+    const remainingAttempts = retakeSource.remaining_attempts ?? null;
+    const retakeAvailableAt = retakeSource.retake_available_at ?? null;
+    const cooldownActive =
+      retakeAvailableAt !== null &&
+      new Date(retakeAvailableAt).getTime() > Date.now();
+    const outOfAttempts = remainingAttempts !== null && remainingAttempts <= 0;
+    const canRetry = resultPhase === "retry" && !cooldownActive && !outOfAttempts;
+    const cooldownLabel = retakeAvailableAt
+      ? new Date(retakeAvailableAt).toLocaleString(resultLocale, {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : null;
+
+    const heroToneClass =
+      resultPhase === "pass"
+        ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
+        : resultPhase === "eval_failed"
+          ? "bg-gradient-to-br from-danger to-red-600 text-white"
+          : resultPhase === "abandoned"
+            ? "bg-m3-surface-container text-m3-on-surface-variant"
+            : resultPhase === "evaluating"
+              ? "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary"
+              : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white";
+
+    const HeroIcon =
+      resultPhase === "pass"
+        ? CheckCircle2
+        : resultPhase === "eval_failed"
+          ? AlertTriangle
+          : resultPhase === "evaluating"
+            ? Loader2
+            : resultPhase === "retry"
+              ? RotateCcw
+              : History;
+
+    const heroTitleKey =
+      resultPhase === "eval_failed"
+        ? "course_interview.results.evaluation_failed"
+        : resultPhase === "abandoned"
+          ? "course_interview.results.abandoned"
+          : resultPhase === "evaluating"
+            ? "course_interview.results.evaluating"
+            : resultPhase === "pass"
+              ? "course_interview.results.passed"
+              : "course_interview.results.completed";
+
+    const heroSummaryKey =
+      resultPhase === "eval_failed"
+        ? "course_interview.results.evaluation_failed_summary"
+        : resultPhase === "abandoned"
+          ? "course_interview.results.abandoned_summary"
+          : resultPhase === "evaluating"
+            ? "course_interview.results.evaluating_summary"
+            : resultPhase === "pass"
+              ? "course_interview.results.pass_summary"
+              : "course_interview.results.fail_summary";
+
+    const studyPlan = gapReport?.study_plan ?? [];
+    // attempt_number lives on the session projection (verdictPoll), not the
+    // finish response; fall back to the resumable/last known attempt.
+    const resultAttemptNumber =
+      verdictPoll?.attempt_number ?? lastAttempt?.attempt_number ?? null;
+
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 sm:p-8">
         <div className="max-w-3xl w-full space-y-6">
-          <GlassCard className="p-8 sm:p-10 text-center">
-            <div
-              className={cn(
-                "w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl font-black font-headline shadow-lg",
-                evaluationFailed
-                  ? "bg-gradient-to-br from-danger to-red-600 text-white"
-                  : evaluationUnavailable
-                    ? "bg-m3-surface-container text-m3-on-surface-variant"
-                    : verdictPending
-                      ? "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary"
-                      : liveVerdict
-                        ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
-                        : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white",
-              )}
-            >
-              {evaluationFailed ? (
-                "!"
-              ) : evaluationUnavailable ? (
-                "—"
-              ) : verdictPending ? (
-                <Loader2 className="h-10 w-10 animate-spin" />
-              ) : liveVerdict ? (
-                "✓"
-              ) : (
-                "—"
+          {/* ── Verdict hero (#16) ── */}
+          <GlassCard className="p-8 sm:p-10 text-center motion-safe:animate-fade-in-up">
+            {/* Module-context eyebrow — consistency with lobby / quiz screens. */}
+            <div className="mb-4 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-m3-secondary">
+              <Bot className="h-3.5 w-3.5" />
+              <span>{t("course_interview.labels.ai_interview")}</span>
+              {config?.title && (
+                <>
+                  <span className="text-m3-outline">·</span>
+                  <span className="normal-case font-semibold text-m3-on-surface-variant truncate max-w-[220px]">
+                    {config.title}
+                  </span>
+                </>
               )}
             </div>
-            <h2 className="font-headline font-extrabold text-2xl text-m3-primary mb-1">
-              {evaluationFailed
-                ? t("course_interview.results.evaluation_failed")
-                : evaluationUnavailable
-                  ? t("course_interview.results.abandoned")
-                  : verdictPending
-                    ? t("course_interview.results.evaluating")
-                    : liveVerdict
-                      ? t("course_interview.results.passed")
-                      : t("course_interview.results.completed")}
+
+            <div
+              className={cn(
+                "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg",
+                heroToneClass,
+              )}
+            >
+              <HeroIcon
+                className={cn(
+                  "h-9 w-9",
+                  resultPhase === "evaluating" && "animate-spin",
+                )}
+                aria-hidden="true"
+              />
+            </div>
+            <h2 className="font-headline font-extrabold text-2xl text-m3-primary mb-1.5">
+              {t(heroTitleKey)}
             </h2>
-            <p className="text-m3-on-surface-variant text-sm mb-6">
-              {evaluationFailed
-                ? t("course_interview.results.evaluation_failed_summary")
-                : evaluationUnavailable
-                  ? t("course_interview.results.abandoned_summary")
-                  : verdictPending
-                    ? t("course_interview.results.evaluating_summary")
-                    : liveVerdict
-                      ? t("course_interview.results.pass_summary")
-                      : t("course_interview.results.fail_summary")}
+            <p className="text-m3-on-surface-variant text-sm mb-6 mx-auto max-w-md leading-relaxed">
+              {t(heroSummaryKey)}
             </p>
 
-            <Link to="/courses/$slug/learn" params={{ slug }}>
-              <Button
-                variant="outline"
-                className="rounded-xl ghost-border font-bold text-sm gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {t("course_interview.actions.back_to_course")}
-              </Button>
-            </Link>
+            {/* ── Session facts row (#16) ── */}
+            {(elapsedResultSeconds !== null || resultDate) && (
+              <div className="mb-6 flex flex-wrap items-center justify-center gap-2 text-xs">
+                {elapsedResultSeconds !== null && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-m3-surface-container px-3 py-1.5 font-semibold text-m3-on-surface-variant">
+                    <Timer className="h-3.5 w-3.5" />
+                    {formatElapsedLabel(elapsedResultSeconds)}
+                  </span>
+                )}
+                {resultAttemptNumber !== null && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-m3-surface-container px-3 py-1.5 font-semibold text-m3-on-surface-variant">
+                    <History className="h-3.5 w-3.5" />
+                    {t("course_interview.attempts.attempt_n", {
+                      n: resultAttemptNumber,
+                    })}
+                  </span>
+                )}
+                {resultDate && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-m3-surface-container px-3 py-1.5 font-semibold text-m3-on-surface-variant">
+                    {resultDate}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* ── What happens next (#7) ── */}
+            <div className="flex flex-col items-center gap-3">
+              {resultPhase === "pass" ? (
+                <Link to="/courses/$slug/learn" params={{ slug }}>
+                  <Button className="gradient-primary text-white rounded-xl font-bold text-sm gap-2 px-6">
+                    {t("course_interview.results.next.back_to_lesson")}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              ) : canRetry ? (
+                <>
+                  <Button
+                    onClick={() => void handleRetry()}
+                    disabled={startSession.isPending}
+                    className="gradient-primary text-white rounded-xl font-bold text-sm gap-2 px-6"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    {startSession.isPending
+                      ? t("course_interview.actions.starting")
+                      : t("course_interview.results.next.retry")}
+                  </Button>
+                  {remainingAttempts !== null && (
+                    <p className="text-xs font-medium text-m3-on-surface-variant">
+                      {t("course_interview.results.next.attempts_left", {
+                        count: remainingAttempts,
+                      })}
+                    </p>
+                  )}
+                </>
+              ) : resultPhase === "retry" && cooldownActive ? (
+                <>
+                  <div className="inline-flex items-center gap-2 rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low px-4 py-2.5 text-sm font-semibold text-m3-on-surface-variant">
+                    <Clock className="h-4 w-4" />
+                    {t("course_interview.results.next.cooldown", {
+                      when: cooldownLabel,
+                    })}
+                  </div>
+                  {remainingAttempts !== null && (
+                    <p className="text-xs font-medium text-m3-on-surface-variant">
+                      {t("course_interview.results.next.attempts_left", {
+                        count: remainingAttempts,
+                      })}
+                    </p>
+                  )}
+                </>
+              ) : resultPhase === "retry" && outOfAttempts ? (
+                <p className="text-sm font-medium text-m3-on-surface-variant">
+                  {t("course_interview.results.next.no_attempts")}
+                </p>
+              ) : null}
+
+              <Link to="/courses/$slug/learn" params={{ slug }}>
+                <Button
+                  variant="ghost"
+                  className="rounded-xl font-semibold text-sm gap-2 text-m3-on-surface-variant"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {t("course_interview.actions.back_to_course")}
+                </Button>
+              </Link>
+            </div>
           </GlassCard>
 
-          {finishResult &&
-            !gapReport &&
+          {/* ── Study plan pending skeleton (#6) ── */}
+          {!gapReport &&
             gapReportPending &&
-            !evaluationFailed && (
-              <GlassCard className="p-6 text-center">
-                <p className="text-sm text-m3-on-surface-variant">
+            resultPhase !== "eval_failed" &&
+            resultPhase !== "abandoned" && (
+              <GlassCard className="p-6">
+                <div className="flex items-center gap-2 text-sm font-semibold text-m3-primary">
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   {t("course_interview.sections.gap_report_pending")}
-                </p>
+                </div>
+                <div className="mt-4 space-y-2">
+                  {[0, 1].map((i) => (
+                    <div
+                      key={i}
+                      className="h-14 rounded-xl bg-m3-surface-container-low motion-safe:animate-pulse"
+                    />
+                  ))}
+                </div>
               </GlassCard>
             )}
 
+          {/* ── Study plan / gap report as the path forward (#6) ── */}
           {gapReport && (
-            <GlassCard className="p-6">
-              <h3 className="font-headline font-bold text-m3-primary mb-3">
-                {t("course_interview.sections.gap_report")}
-              </h3>
+            <GlassCard className="p-6 motion-safe:animate-fade-in-up">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="flex size-8 items-center justify-center rounded-full bg-m3-primary-fixed text-m3-primary">
+                  <BookOpen className="h-4 w-4" />
+                </span>
+                <h3 className="font-headline font-bold text-m3-primary">
+                  {resultPhase === "pass"
+                    ? t("course_interview.sections.keep_growing")
+                    : t("course_interview.sections.your_path_forward")}
+                </h3>
+              </div>
               {gapReport.discrepancy_summary && (
                 <p className="text-sm text-m3-on-surface-variant mb-4 leading-relaxed">
                   {gapReport.discrepancy_summary}
                 </p>
               )}
-              {gapReport.study_plan.length > 0 && (
+              {studyPlan.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold text-m3-outline uppercase tracking-widest">
                     {t("course_interview.sections.study_plan")}
                   </h4>
                   <ul className="space-y-2">
-                    {gapReport.study_plan.map((item, idx) => (
-                      <li
-                        key={idx}
-                        className="rounded-xl bg-m3-surface-container-low p-3 text-sm text-m3-on-surface"
-                      >
-                        <span className="block font-semibold mb-0.5">
-                          {item.topic}
-                        </span>
-                        {item.suggested_resources.length > 0 && (
-                          <span className="block text-xs text-m3-on-surface-variant">
-                            {item.suggested_resources.join(" • ")}
+                    {studyPlan.map((item, idx) => {
+                      const lessonId = item.lesson_id ?? null;
+                      const body = (
+                        <>
+                          <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-white text-m3-primary shadow-sm">
+                            <BookOpen className="h-3.5 w-3.5" />
                           </span>
-                        )}
-                      </li>
-                    ))}
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-center gap-1.5 font-semibold text-m3-on-surface">
+                              {item.topic}
+                              {lessonId && (
+                                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-m3-primary" />
+                              )}
+                            </span>
+                            {item.suggested_resources.length > 0 && (
+                              <span className="mt-1.5 flex flex-wrap gap-1.5">
+                                {item.suggested_resources.map((res, ri) => (
+                                  <span
+                                    key={ri}
+                                    className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-m3-on-surface-variant"
+                                  >
+                                    {res}
+                                  </span>
+                                ))}
+                              </span>
+                            )}
+                          </span>
+                        </>
+                      );
+                      return (
+                        <li key={idx}>
+                          {lessonId ? (
+                            <Link
+                              to="/courses/$slug/learn"
+                              params={{ slug }}
+                              className="flex items-start gap-2.5 rounded-xl bg-m3-surface-container-low p-3 text-sm outline-none transition-colors hover:bg-m3-surface-container focus-visible:ring-2 focus-visible:ring-m3-primary/40"
+                            >
+                              {body}
+                            </Link>
+                          ) : (
+                            <div className="flex items-start gap-2.5 rounded-xl bg-m3-surface-container-low p-3 text-sm">
+                              {body}
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               )}

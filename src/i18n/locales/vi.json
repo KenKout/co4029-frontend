@@ -2002,7 +2002,9 @@
       "gap_report_pending": "Đang chuẩn bị báo cáo lỗ hổng cá nhân hóa… có thể mất một phút.",
       "study_plan": "Kế hoạch học tập",
       "follow_up": "Tiếp theo",
-      "wrap_up": "Kết thúc"
+      "wrap_up": "Kết thúc",
+      "your_path_forward": "Lộ trình phía trước",
+      "keep_growing": "Tiếp tục phát triển"
     },
     "labels": {
       "persona": "Phong cách",
@@ -2073,7 +2075,15 @@
       "evaluation_failed": "Chấm điểm gặp lỗi",
       "evaluation_failed_summary": "Hệ thống AI gặp lỗi khi chấm bài phỏng vấn của bạn và không thể trả kết quả sau nhiều lần thử. Điều này không phản ánh chất lượng câu trả lời của bạn — vui lòng liên hệ giáo viên hoặc thử lại phỏng vấn sau.",
       "abandoned": "Buổi phỏng vấn đã kết thúc",
-      "abandoned_summary": "Buổi phỏng vấn kết thúc trước khi bạn gửi câu trả lời, vì vậy lần thử này không có kết quả đánh giá."
+      "abandoned_summary": "Buổi phỏng vấn kết thúc trước khi bạn gửi câu trả lời, vì vậy lần thử này không có kết quả đánh giá.",
+      "next": {
+        "back_to_lesson": "Tiếp tục vào bài học",
+        "retry": "Thử lại",
+        "attempts_left": "Còn {{count}} lần thử",
+        "attempts_left_plural": "Còn {{count}} lần thử",
+        "cooldown": "Bạn có thể thử lại sau {{when}}",
+        "no_attempts": "Bạn đã dùng hết số lần thử cho bài phỏng vấn này. Hãy xem lại kế hoạch học tập bên dưới và liên hệ giảng viên nếu cần thêm lượt thử."
+      }
     },
     "intro": {
       "description": "Phỏng vấn AI chấm điểm theo các tiêu chí của module. Trả lời từng câu một và xem phản hồi cuối phiên."

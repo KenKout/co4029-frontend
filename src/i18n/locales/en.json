@@ -2093,7 +2093,9 @@
       "gap_report_pending": "Preparing your personalized gap report… this can take a minute.",
       "study_plan": "Study plan",
       "follow_up": "Follow-up",
-      "wrap_up": "Wrap-up"
+      "wrap_up": "Wrap-up",
+      "your_path_forward": "Your path forward",
+      "keep_growing": "Keep growing"
     },
     "labels": {
       "persona": "Persona",
@@ -2168,7 +2170,15 @@
       "evaluation_failed": "Evaluation failed",
       "evaluation_failed_summary": "Our AI grader hit an error while scoring your interview and couldn't produce a result after several attempts. This is not a reflection of your answers — please contact your teacher or try the interview again later.",
       "abandoned": "Interview ended",
-      "abandoned_summary": "The interview ended before an answer was submitted, so there is no evaluation for this attempt."
+      "abandoned_summary": "The interview ended before an answer was submitted, so there is no evaluation for this attempt.",
+      "next": {
+        "back_to_lesson": "Continue to lesson",
+        "retry": "Try again",
+        "attempts_left": "{{count}} attempt left",
+        "attempts_left_plural": "{{count}} attempts left",
+        "cooldown": "You can try again after {{when}}",
+        "no_attempts": "You've used all your attempts for this interview. Review the study plan below and reach out to your teacher if you need another try."
+      }
     },
     "intro": {
       "description": "AI interview grades by module criteria. Answer one by one and review the final feedback."

@@ -133,7 +133,14 @@ export type InterviewConfigAuthoring = Schemas["InterviewConfigAuthoring"] & {
 export type InterviewConfigCreate = Schemas["InterviewConfigCreate"];
 export type InterviewConfigUpdate = Schemas["InterviewConfigUpdate"];
 export type InterviewForTakingPublic = Schemas["InterviewForTakingPublic"];
-export type InterviewSessionPublic = Schemas["InterviewSessionPublic"];
+export type InterviewSessionPublic = Schemas["InterviewSessionPublic"] & {
+  // Proactive retake context (#7) — manually typed until the OpenAPI snapshot
+  // is regenerated. remaining_attempts is null when unlimited; retake_available_at
+  // is null when no cooldown is active.
+  remaining_attempts?: number | null;
+  retake_available_at?: string | null;
+  can_retake?: boolean;
+};
 export type InterviewSessionStartRequest =
   Schemas["InterviewSessionStartRequest"];
 export type InterviewLanguage = NonNullable<
@@ -168,7 +175,13 @@ export type InterviewOnboardingRespondRequest = Omit<
 export type InterviewOnboardingRespondResponse =
   Schemas["InterviewOnboardingRespondResponse"];
 export type InterviewSessionFinishResponse =
-  Schemas["InterviewSessionFinishResponse"];
+  Schemas["InterviewSessionFinishResponse"] & {
+    // Proactive retake context (#7) — manually typed until the OpenAPI snapshot
+    // is regenerated.
+    remaining_attempts?: number | null;
+    retake_available_at?: string | null;
+    can_retake?: boolean;
+  };
 export interface InterviewSessionFinishRequest {
   reason?: "natural" | "ended_early" | "timed_out";
 }
