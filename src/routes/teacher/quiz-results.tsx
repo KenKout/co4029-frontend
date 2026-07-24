@@ -8,6 +8,7 @@ import {
   FileText,
   HelpCircle,
   Loader2,
+  RotateCcw,
   Sigma,
   Users,
 } from "lucide-react";
@@ -33,6 +34,7 @@ import { PerStudentTable } from "./_components/quiz-results/PerStudentTable";
 import { PerQuestionTable } from "./_components/quiz-results/PerQuestionTable";
 import { ResponsesReport } from "./_components/quiz-results/ResponsesReport";
 import { StatisticsReport } from "./_components/quiz-results/StatisticsReport";
+import { RegradePanel } from "./_components/quiz-results/RegradePanel";
 
 type ResultsTab = "students" | "questions" | "responses" | "statistics";
 type HeadlineMetric = "best" | "latest";
@@ -58,6 +60,7 @@ export default function QuizResultsPage() {
   const [tab, setTab] = useState<ResultsTab>("students");
   const [headlineMetric, setHeadlineMetric] = useState<HeadlineMetric>("best");
   const [downloading, setDownloading] = useState(false);
+  const [regradeOpen, setRegradeOpen] = useState(false);
 
   // Phase 10 report data — only fetched when the matching tab is open.
   const { data: responsesReport } = useResponsesReport(
@@ -182,7 +185,22 @@ export default function QuizResultsPage() {
             </p>
           </div>
         </div>
+        {hasAttempts && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 shrink-0"
+            onClick={() => setRegradeOpen(true)}
+          >
+            <RotateCcw className="h-4 w-4" />
+            {t("teacher_quiz_results.regrade.action")}
+          </Button>
+        )}
       </div>
+
+      {regradeOpen && (
+        <RegradePanel quizId={quizId} onClose={() => setRegradeOpen(false)} />
+      )}
 
       {!hasAttempts ? (
         <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-6 py-16 text-center space-y-3">

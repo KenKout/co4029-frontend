@@ -2585,6 +2585,23 @@
         "legend_discrimination": "Discrimination = how well a question separates high scorers from low scorers (point-biserial, -1..+1). ≥0.3 is good; near 0 or negative is weak.",
         "empty": "Not enough attempts to compute statistics."
       }
+    },
+    "regrade": {
+      "action": "Regrade",
+      "title": "Regrade attempts",
+      "description": "Recompute stored answers against the current question definitions. Preview changes first, then commit.",
+      "dry_run_hint": "Preview shows which answers would change. Nothing is saved until you commit.",
+      "scanned": "Answers scanned",
+      "changed": "Answers changed",
+      "attempts": "Attempts affected",
+      "col_change": "Attempt / Question",
+      "col_old": "Old",
+      "col_new": "New",
+      "preview_action": "Preview changes",
+      "commit_action": "Commit regrade",
+      "committed": "Regrade committed — {{count}} answer(s) changed.",
+      "dry_run_failed": "Could not preview the regrade.",
+      "commit_failed": "Could not commit the regrade."
     }
   },
   "teacher_outcomes": {

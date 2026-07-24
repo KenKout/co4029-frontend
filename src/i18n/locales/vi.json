@@ -2497,6 +2497,23 @@
         "legend_discrimination": "Độ phân biệt = mức độ câu hỏi phân tách học viên giỏi với học viên yếu (point-biserial, -1..+1). ≥0.3 là tốt; gần 0 hoặc âm là yếu.",
         "empty": "Chưa đủ lượt làm để tính thống kê."
       }
+    },
+    "regrade": {
+      "action": "Chấm lại",
+      "title": "Chấm lại các lượt làm",
+      "description": "Tính lại các câu trả lời đã lưu theo định nghĩa câu hỏi hiện tại. Xem trước thay đổi rồi mới áp dụng.",
+      "dry_run_hint": "Bản xem trước cho biết câu trả lời nào sẽ thay đổi. Không có gì được lưu cho đến khi bạn áp dụng.",
+      "scanned": "Câu trả lời đã quét",
+      "changed": "Câu trả lời thay đổi",
+      "attempts": "Lượt làm bị ảnh hưởng",
+      "col_change": "Lượt làm / Câu hỏi",
+      "col_old": "Cũ",
+      "col_new": "Mới",
+      "preview_action": "Xem trước thay đổi",
+      "commit_action": "Áp dụng chấm lại",
+      "committed": "Đã chấm lại — {{count}} câu trả lời thay đổi.",
+      "dry_run_failed": "Không thể xem trước việc chấm lại.",
+      "commit_failed": "Không thể áp dụng việc chấm lại."
     }
   },
   "teacher_outcomes": {
