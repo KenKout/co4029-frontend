@@ -1858,6 +1858,10 @@
     }
   },
   "course_interview": {
+    "integrity_warning": {
+      "title": "Bạn đã rời khỏi cửa sổ phỏng vấn",
+      "body": "Hành vi này được ghi lại để giáo viên xem lại. Vui lòng ở lại tab này cho đến khi kết thúc phỏng vấn."
+    },
     "hybrid": {
       "prestart_hint": "Phỏng vấn kết hợp — bạn có thể gõ hoặc nói câu trả lời",
       "speak_answer": "Nói câu trả lời",

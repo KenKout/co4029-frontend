@@ -731,7 +731,20 @@ export default function CourseInterviewPage() {
   // not just the voice room. The hook no-ops until sessionId exists, so it stays
   // inert on the prestart screen. This is the single mount point — VoiceRoom no
   // longer mounts its own (avoids duplicate POSTs when the voice branch renders).
-  useIntegrityReporter(sessionId);
+  // FR-5.8 level-1 deterrent: nudge the candidate in real time when a
+  // warning-level signal fires (tab switch / fullscreen exit). Throttled so a
+  // burst of switches shows at most one toast per window — the recording is
+  // unaffected, this is purely a visible reminder that the action is logged.
+  const lastIntegrityWarnRef = useRef(0);
+  const handleIntegrityWarning = useCallback(() => {
+    const now = Date.now();
+    if (now - lastIntegrityWarnRef.current < 10_000) return;
+    lastIntegrityWarnRef.current = now;
+    toast.warning(t("course_interview.integrity_warning.title"), {
+      description: t("course_interview.integrity_warning.body"),
+    });
+  }, [t]);
+  useIntegrityReporter(sessionId, { onWarning: handleIntegrityWarning });
   const dictationHasError = Boolean(
     dictation.error && dictation.error !== "unsupported",
   );
