@@ -629,6 +629,11 @@
       "not_graded": "Không chấm điểm"
     }
   },
+  "me_interview_result": {
+    "back_to_list": "Quay lại danh sách phỏng vấn",
+    "load_failed_title": "Không thể tải kết quả này",
+    "load_failed_body": "Kết quả phỏng vấn này hiện chưa khả dụng. Vui lòng thử lại."
+  },
   "career_path_detail": {
     "back": "Quay lại",
     "load_failed": "Không thể tải lộ trình",
@@ -1802,6 +1807,7 @@
     "workspace": {
       "in_progress": "Đang phỏng vấn",
       "elapsed_time": "Thời gian phỏng vấn đã trôi qua",
+      "time_on_question": "Thời gian cho câu hỏi này",
       "ai_interviewer": "Người phỏng vấn AI",
       "you": "Bạn",
       "replay_message": "Phát lại tin nhắn AI này",
@@ -2051,6 +2057,7 @@
     "actions": {
       "starting": "Đang khởi tạo...",
       "start": "Bắt đầu phỏng vấn",
+      "start_voice": "Bắt đầu phỏng vấn bằng giọng nói",
       "course": "Khoá học",
       "next": "Tiếp theo",
       "finish_early": "Kết thúc sớm",

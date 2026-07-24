@@ -332,6 +332,8 @@ export function InterviewHeader({
   onToggleVoice,
   onEndInterview,
   showVoiceControl = true,
+  questionElapsed,
+  questionLingering = false,
 }: {
   slug: string;
   courseName: string;
@@ -346,6 +348,10 @@ export function InterviewHeader({
   onToggleVoice: () => void;
   onEndInterview?: () => void;
   showVoiceControl?: boolean;
+  /** Whole seconds spent on the current question; null hides the per-question cue. */
+  questionElapsed?: number | null;
+  /** True once past the lingering threshold — switches the cue to a gentle nudge. */
+  questionLingering?: boolean;
 }) {
   const { t } = useTranslation();
   const safeCurrent = Math.max(1, currentQuestion ?? 1);
@@ -404,9 +410,23 @@ export function InterviewHeader({
                     })
                 : t("course_interview.workspace.interview_setup")}
             </span>
-            <span className="hidden shrink-0 text-text-muted sm:inline">
-              {t("course_interview.workspace.in_progress")}
-            </span>
+            {typeof questionElapsed === "number" && currentQuestion ? (
+              <span
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1 tabular-nums",
+                  questionLingering ? "text-amber-600" : "text-text-muted",
+                )}
+                title={t("course_interview.workspace.time_on_question")}
+                aria-label={t("course_interview.workspace.time_on_question")}
+              >
+                <Clock3 className="h-3 w-3" aria-hidden="true" />
+                {formatRelativeInterviewTime(questionElapsed)}
+              </span>
+            ) : (
+              <span className="hidden shrink-0 text-text-muted sm:inline">
+                {t("course_interview.workspace.in_progress")}
+              </span>
+            )}
           </div>
           {progress !== null ? (
             <Progress

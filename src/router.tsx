@@ -419,6 +419,12 @@ const myInterviewsRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/me-interviews")),
 });
 
+const myInterviewResultRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/me/interviews/$sessionId",
+  component: lazyRouteComponent(() => import("@/routes/me-interview-result")),
+});
+
 const managementCareerPathsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/career-paths",
@@ -566,6 +572,7 @@ const routeTree = rootRoute.addChildren([
     careerPathDetailRoute,
     myCareerPathsRoute,
     myInterviewsRoute,
+    myInterviewResultRoute,
     managementCareerPathsRoute,
     managementCareerPathDetailRoute,
     srDashboardRoute,

@@ -670,6 +670,11 @@
       "not_graded": "Not graded"
     }
   },
+  "me_interview_result": {
+    "back_to_list": "Back to my interviews",
+    "load_failed_title": "Couldn't load this result",
+    "load_failed_body": "This interview result isn't available right now. Please try again."
+  },
   "career_path_detail": {
     "back": "Back",
     "load_failed": "Couldn't load the path",
@@ -1893,6 +1898,7 @@
     "workspace": {
       "in_progress": "Interview in progress",
       "elapsed_time": "Elapsed interview time",
+      "time_on_question": "Time on this question",
       "ai_interviewer": "AI interviewer",
       "you": "You",
       "replay_message": "Play this AI message again",
@@ -2146,6 +2152,7 @@
     "actions": {
       "starting": "Starting...",
       "start": "Start interview",
+      "start_voice": "Start voice interview",
       "course": "Course",
       "next": "Next",
       "finish_early": "End early",

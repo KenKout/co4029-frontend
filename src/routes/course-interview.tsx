@@ -83,6 +83,10 @@ import {
 } from "@/lib/interview/end-confirmation";
 import { useAnswerState } from "@/lib/interview/use-answer-state";
 import { useDraftAutosave } from "@/lib/interview/use-draft-autosave";
+import {
+  useQuestionPacing,
+  clearQuestionPacing,
+} from "@/lib/interview/use-question-pacing";
 import { normalizeQuestionText } from "@/lib/interview/question-content";
 import { planTransition } from "@/lib/interview/transition-sequencing";
 
@@ -692,6 +696,13 @@ export default function CourseInterviewPage() {
   // currently does not expose a total. The header/card render an honest
   // indeterminate fallback until that existing nullable field is populated.
   const totalQuestions: number | null = null;
+  // Per-question pacing (#2): a gentle per-question elapsed cue in the header
+  // (the session timer alone gives no signal of lingering on one question).
+  const questionPacing = useQuestionPacing(
+    sessionId,
+    phase === "questioning" ? (currentQuestion?.id ?? null) : null,
+    phase === "questioning",
+  );
   const dictationHasError = Boolean(
     dictation.error && dictation.error !== "unsupported",
   );
@@ -975,6 +986,8 @@ export default function CourseInterviewPage() {
 
       try {
         const result = await finish.mutateAsync({ reason });
+        // Session is terminal — drop the per-question pacing anchors.
+        clearQuestionPacing(sessionId);
         setCurrentQuestion(null);
         setPendingFirstQuestion(null);
         setPendingFinishResult(result);
@@ -2090,10 +2103,12 @@ export default function CourseInterviewPage() {
                     const passed = s.pass_verdict === true;
                     const failed = s.pass_verdict === false;
                     return (
-                      <li
-                        key={s.session_id}
-                        className="flex items-center justify-between gap-2 text-xs"
-                      >
+                      <li key={s.session_id}>
+                        <Link
+                          to="/me/interviews/$sessionId"
+                          params={{ sessionId: s.session_id }}
+                          className="flex items-center justify-between gap-2 rounded-lg px-1.5 py-1 text-xs outline-none transition-colors hover:bg-m3-surface-container focus-visible:ring-2 focus-visible:ring-m3-primary/40"
+                        >
                         <span className="flex items-center gap-1.5 text-m3-on-surface-variant">
                           {passed ? (
                             <CheckCircle2 className="h-3.5 w-3.5 text-success" />
@@ -2136,6 +2151,7 @@ export default function CourseInterviewPage() {
                             </span>
                           )}
                         </span>
+                        </Link>
                       </li>
                     );
                   })}
@@ -2185,7 +2201,7 @@ export default function CourseInterviewPage() {
                 : resumableSession
                   ? t("course_interview.resume_dialog.continue")
                   : inputMode === "voice"
-                    ? "Start voice interview"
+                    ? t("course_interview.actions.start_voice")
                     : t("course_interview.actions.start")}
               {resumableSession ? (
                 <History className="h-4 w-4" />
@@ -2268,6 +2284,10 @@ export default function CourseInterviewPage() {
         expectedDurationMinutes={config.time_limit_minutes}
         currentQuestion={phase === "questioning" ? currentQuestionNumber : null}
         totalQuestions={totalQuestions}
+        questionElapsed={
+          phase === "questioning" ? questionPacing.elapsedSeconds : null
+        }
+        questionLingering={questionPacing.lingering}
         connected={connected}
         voiceOn={voiceOn}
         onToggleVoice={() =>

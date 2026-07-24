@@ -70,7 +70,11 @@ function SessionRow({ item }: { item: InterviewSessionPublic }) {
   const title = item.interview_title ?? t("me_interviews.untitled");
 
   return (
-    <div className="flex items-center gap-4 p-4 rounded-xl bg-card ghost-border transition-all duration-200">
+    <Link
+      to="/me/interviews/$sessionId"
+      params={{ sessionId: item.session_id }}
+      className="flex items-center gap-4 p-4 rounded-xl bg-card ghost-border transition-all duration-200 outline-none hover:bg-m3-surface-container focus-visible:ring-2 focus-visible:ring-m3-primary/40 cursor-pointer"
+    >
       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-m3-primary to-m3-secondary flex items-center justify-center shrink-0">
         <Mic className="h-6 w-6 text-white" />
       </div>
@@ -96,7 +100,7 @@ function SessionRow({ item }: { item: InterviewSessionPublic }) {
           <span>{formatDate(item.started_at)}</span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
