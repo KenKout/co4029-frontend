@@ -1367,19 +1367,19 @@ function SettingsForm({
           "teacher_interview_config.sections.guidance.description",
         )}
       >
-        <Field label={t("teacher_interview_config.fields.supplementary_label")}>
-          <textarea
-            value={draft.supplementary_instructions}
-            onChange={(e) =>
-              update("supplementary_instructions", e.target.value)
-            }
-            rows={4}
-            placeholder={t(
-              "teacher_interview_config.fields.supplementary_placeholder",
-            )}
-            className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-          />
-        </Field>
+        {/* Merged into the single "Guidance for AI" section — the textarea
+            sits directly under the section title, no separate field label. */}
+        <textarea
+          value={draft.supplementary_instructions}
+          onChange={(e) =>
+            update("supplementary_instructions", e.target.value)
+          }
+          rows={4}
+          placeholder={t(
+            "teacher_interview_config.fields.supplementary_placeholder",
+          )}
+          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+        />
       </Section>
 
       <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-4">
