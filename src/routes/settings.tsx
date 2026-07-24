@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, Bell, ChevronRight, Shield, User } from "lucide-react";
+import { Bell, ChevronRight, Shield, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 
 interface HubCard {
   to: "/settings/profile" | "/settings/security" | "/settings/notifications";
@@ -48,47 +48,29 @@ export default function SettingsHubPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6 p-6 pb-12">
-      <div className="flex items-center gap-3">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={goBack}
-          aria-label={t("settings_hub.back")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <span className="text-sm font-medium text-m3-on-surface-variant">
-          {t("settings_hub.back")}
-        </span>
-      </div>
-      <header>
-        <h1 className="font-headline text-3xl font-extrabold tracking-tight text-m3-on-surface">
-          {t("settings_hub.title")}
-        </h1>
-        <p className="mt-2 text-sm font-medium text-m3-on-surface-variant">
-          {t("settings_hub.subtitle")}
-        </p>
-      </header>
+      <PageHeader
+        title={t("settings_hub.title")}
+        subtitle={t("settings_hub.subtitle")}
+        onBack={goBack}
+      />
 
       <div className="space-y-3">
         {CARDS.map(({ to, icon: Icon, titleKey, bodyKey }) => (
           <Link
             key={to}
             to={to}
-            className="group flex items-center gap-4 rounded-xl bg-white border border-m3-outline-variant/40 p-5 hover:border-m3-primary/40 hover:shadow-sm transition-all duration-150"
+            className="group flex items-center gap-4 rounded-xl bg-card ghost-border p-5 shadow-editorial transition-all duration-200 hover:-translate-y-0.5 hover:border-m3-primary/40 hover:shadow-md"
           >
-            <div className="w-11 h-11 rounded-xl bg-m3-primary-fixed flex items-center justify-center shrink-0">
-              <Icon className="h-5 w-5 text-m3-primary" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-m3-primary-fixed text-m3-primary transition-colors group-hover:bg-m3-primary group-hover:text-white">
+              <Icon className="h-5 w-5" />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="font-headline font-bold text-text-strong">
                 {t(titleKey)}
               </p>
-              <p className="text-sm text-text-muted mt-0.5">{t(bodyKey)}</p>
+              <p className="mt-0.5 text-sm text-text-muted">{t(bodyKey)}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-text-muted group-hover:text-m3-primary transition-colors shrink-0" />
+            <ChevronRight className="h-5 w-5 shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-m3-primary" />
           </Link>
         ))}
       </div>

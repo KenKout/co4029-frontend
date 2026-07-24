@@ -2,20 +2,15 @@ import { type FormEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   useMe,
   useUpdateProfile,
   useUploadAvatar,
 } from "@/lib/api/hooks/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getAuthUserInitials } from "@/lib/auth";
@@ -152,28 +147,14 @@ export default function SettingsProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 p-6">
-      <div className="flex items-center gap-3">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={goBack}
-          aria-label={t("settings_profile.back")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <span className="text-sm font-medium text-m3-on-surface-variant">
-          {t("settings_profile.back")}
-        </span>
-      </div>
+    <div className="mx-auto max-w-2xl space-y-6 p-6">
+      <PageHeader
+        title={t("settings_profile.title")}
+        subtitle={t("settings_profile.subtitle")}
+        onBack={goBack}
+      />
       <Card>
-        <CardHeader>
-          <CardTitle>{t("settings_profile.title")}</CardTitle>
-          <CardDescription>{t("settings_profile.subtitle")}</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {/* Avatar upload — click the image (or the button) to pick a new
                 one; it uploads immediately and the presigned URL refreshes. */}

@@ -6,7 +6,6 @@ import {
   Copy,
   RefreshCw,
   ShieldOff,
-  ArrowLeft,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -15,6 +14,8 @@ import { useNavigate, useRouter } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   useDisableMfa,
   useEnrollTotp,
@@ -617,32 +618,14 @@ export default function SettingsSecurityPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-8 p-6">
-      <div className="flex items-center gap-3">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={goBack}
-          aria-label={t("settings_hub.back")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <span className="text-sm font-medium text-m3-on-surface-variant">
-          {t("settings_hub.back")}
-        </span>
-      </div>
-      <header>
-        <h1 className="font-headline text-3xl font-extrabold tracking-tight text-m3-on-surface">
-          {t("settings_security.title")}
-        </h1>
-        <p className="mt-2 text-sm font-medium text-m3-on-surface-variant">
-          {t("settings_security.intro")}
-        </p>
-      </header>
+    <div className="mx-auto w-full max-w-2xl space-y-6 p-6">
+      <PageHeader
+        title={t("settings_security.title")}
+        subtitle={t("settings_security.intro")}
+        onBack={goBack}
+      />
 
-      <section className="space-y-4 rounded-xl bg-white/70 p-6 shadow-[0_24px_80px_rgba(25,28,30,0.06)] ring-1 ring-m3-outline-variant/20">
+      <Card className="p-6 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="font-headline text-xl font-bold text-m3-on-surface">
@@ -685,10 +668,10 @@ export default function SettingsSecurityPage() {
             }}
           />
         )}
-      </section>
+      </Card>
 
       {showRegenerate && (
-        <section className="space-y-4 rounded-xl bg-white/70 p-6 shadow-[0_24px_80px_rgba(25,28,30,0.06)] ring-1 ring-m3-outline-variant/20">
+        <Card className="p-6 space-y-4">
           <div>
             <h2 className="font-headline text-xl font-bold text-m3-on-surface">
               {t("settings_security.recovery_codes_title")}
@@ -698,7 +681,7 @@ export default function SettingsSecurityPage() {
             </p>
           </div>
           <RegenerateSection />
-        </section>
+        </Card>
       )}
     </div>
   );
