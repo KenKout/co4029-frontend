@@ -2946,6 +2946,10 @@
       "overrides": {
         "title": "Overrides",
         "description": "Grant individual students exceptions to attempts and time limit. User overrides beat the base quiz settings."
+      },
+      "feedback": {
+        "title": "Grade-band feedback",
+        "description": "Show a message to students based on their final score. Bands must not overlap."
       }
     },
     "preview": {
@@ -2988,6 +2992,19 @@
       "attempts_badge": "{{count}} attempts",
       "title": "Overrides",
       "description": "Grant individual students exceptions to attempts and time limit. User overrides beat the base quiz settings."
+    },
+    "feedback_bands": {
+      "empty": "No feedback bands. Add one to show score-based messages.",
+      "min": "Min %",
+      "max": "Max %",
+      "text_placeholder": "Feedback message shown for this score range",
+      "remove": "Remove band",
+      "add": "Add band",
+      "save": "Save bands",
+      "saved": "Feedback bands saved",
+      "save_failed": "Could not save feedback bands",
+      "overlap": "Bands must not overlap",
+      "invalid": "Each band needs min < max"
     }
   },
   "teacher_interview_config": {

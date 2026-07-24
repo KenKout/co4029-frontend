@@ -64,6 +64,7 @@ import {
 } from "./_components/quiz-manage/ReviewOptionsMatrix";
 import { ImportExportPanel } from "./_components/quiz-manage/ImportExportPanel";
 import { OverridesPanel } from "./_components/quiz-manage/OverridesPanel";
+import { FeedbackBandsPanel } from "./_components/quiz-manage/FeedbackBandsPanel";
 
 type TabKey = "questions" | "settings" | "preview";
 
@@ -2307,6 +2308,13 @@ function SettingsTab({
         description={t("teacher_quiz_manage.settings.overrides.description")}
       >
         <OverridesPanel quizId={quizId} />
+      </SettingsSection>
+
+      <SettingsSection
+        title={t("teacher_quiz_manage.settings.feedback.title")}
+        description={t("teacher_quiz_manage.settings.feedback.description")}
+      >
+        <FeedbackBandsPanel quizId={quizId} />
       </SettingsSection>
 
       <SettingsSection

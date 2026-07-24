@@ -2858,6 +2858,10 @@
       "overrides": {
         "title": "Ngoại lệ",
         "description": "Cấp cho từng học viên ngoại lệ về số lần làm và giới hạn thời gian. Ngoại lệ theo học viên được ưu tiên hơn cài đặt gốc."
+      },
+      "feedback": {
+        "title": "Phản hồi theo dải điểm",
+        "description": "Hiển thị thông điệp cho học viên dựa trên điểm cuối. Các dải không được chồng nhau."
       }
     },
     "preview": {
@@ -2900,6 +2904,19 @@
       "attempts_badge": "{{count}} lần",
       "title": "Ngoại lệ",
       "description": "Cấp cho từng học viên ngoại lệ về số lần làm và giới hạn thời gian. Ngoại lệ theo học viên được ưu tiên hơn cài đặt gốc."
+    },
+    "feedback_bands": {
+      "empty": "Chưa có dải phản hồi. Thêm một dải để hiển thị thông điệp theo điểm.",
+      "min": "Tối thiểu %",
+      "max": "Tối đa %",
+      "text_placeholder": "Thông điệp phản hồi cho dải điểm này",
+      "remove": "Xóa dải",
+      "add": "Thêm dải",
+      "save": "Lưu dải",
+      "saved": "Đã lưu dải phản hồi",
+      "save_failed": "Không thể lưu dải phản hồi",
+      "overlap": "Các dải không được chồng nhau",
+      "invalid": "Mỗi dải cần tối thiểu < tối đa"
     }
   },
   "teacher_interview_config": {
