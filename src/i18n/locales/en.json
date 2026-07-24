@@ -719,7 +719,9 @@
       "lesson_unlock": "Lesson unlock",
       "interview_result": "Interview result",
       "course_announcement": "Course announcement",
-      "system": "System"
+      "system": "System",
+      "material_processing": "Material processing",
+      "quiz_generation": "Quiz generation"
     },
     "channel": {
       "email": "Email",
@@ -778,7 +780,9 @@
       "lesson_unlock": "Lesson unlock",
       "interview_result": "Interview result",
       "course_announcement": "Course announcement",
-      "system": "System"
+      "system": "System",
+      "material_processing": "Material processing",
+      "quiz_generation": "Quiz generation"
     },
     "errors": {
       "mark_read_failed": "Couldn't mark as read",

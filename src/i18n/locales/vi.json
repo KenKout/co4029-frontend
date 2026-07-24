@@ -675,7 +675,9 @@
       "lesson_unlock": "Mở khóa bài học",
       "interview_result": "Kết quả phỏng vấn",
       "course_announcement": "Thông báo khóa học",
-      "system": "Hệ thống"
+      "system": "Hệ thống",
+      "material_processing": "Xử lý tài liệu",
+      "quiz_generation": "Tạo câu hỏi"
     },
     "channel": {
       "email": "Email",
@@ -734,7 +736,9 @@
       "lesson_unlock": "Mở khóa bài học",
       "interview_result": "Kết quả phỏng vấn",
       "course_announcement": "Thông báo khóa học",
-      "system": "Hệ thống"
+      "system": "Hệ thống",
+      "material_processing": "Xử lý tài liệu",
+      "quiz_generation": "Tạo câu hỏi"
     },
     "errors": {
       "mark_read_failed": "Không thể đánh dấu đã đọc",
