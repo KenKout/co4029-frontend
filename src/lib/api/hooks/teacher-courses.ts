@@ -548,10 +548,19 @@ export function useDeleteModuleItem(courseId: string) {
   return useMutation({
     mutationFn: (itemId: string) =>
       apiDelete(`/teacher/module-items/${itemId}`),
-    onSuccess: () =>
+    onSuccess: () => {
       qc.invalidateQueries({
         queryKey: ["teacher", "courses", courseId, "content"],
-      }),
+      });
+      // Also refresh the authoring module-lessons lists (source pickers in the
+      // quiz-generation panel read from these). Invalidate by family prefix
+      // since this hook doesn't carry the moduleId — cheap, and covers whichever
+      // module the deleted item belonged to.
+      qc.invalidateQueries({
+        queryKey: ["courses", "module-lessons-authoring"],
+      });
+      qc.invalidateQueries({ queryKey: ["courses", "module-lessons"] });
+    },
   });
 }
 
