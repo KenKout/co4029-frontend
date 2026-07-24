@@ -3085,6 +3085,15 @@
     },
     "video": {
       "empty": "Kéo thả video vào đây, hoặc nhấp để chọn"
+    },
+    "resource_ai": {
+      "show": "Hiện cho học viên (bật xem trước trực tiếp trên trang của họ)",
+      "hide": "Ẩn khỏi học viên",
+      "not_ready": "Đang xử lý — chưa thể hiện cho học viên đến khi sẵn sàng",
+      "now_visible": "Đã hiện cho học viên.",
+      "now_hidden": "Đã ẩn khỏi học viên.",
+      "retry": "Thử xử lý lại",
+      "retry_started": "Đã bắt đầu xử lý lại."
     }
   },
   "teacher_lesson_materials": {

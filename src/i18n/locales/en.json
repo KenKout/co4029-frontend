@@ -3119,6 +3119,15 @@
     },
     "video": {
       "empty": "Drag & drop a video here, or click to choose"
+    },
+    "resource_ai": {
+      "show": "Show to students (enables the live preview on their page)",
+      "hide": "Hide from students",
+      "not_ready": "Still processing — can't show to students until it's ready",
+      "now_visible": "Now visible to students.",
+      "now_hidden": "Hidden from students.",
+      "retry": "Retry processing",
+      "retry_started": "Reprocessing started."
     }
   },
   "teacher_lesson_materials": {

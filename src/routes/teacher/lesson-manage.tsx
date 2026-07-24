@@ -27,6 +27,9 @@ import {
   Pencil,
   Hash,
   AlignLeft,
+  Eye,
+  EyeOff,
+  RefreshCw,
 } from "lucide-react";
 import { MediaPlayer, MediaProvider } from "@vidstack/react";
 import {
@@ -59,6 +62,8 @@ import {
   useInitMaterialUpload,
   useCompleteMaterialUpload,
   useTeacherLessonMaterials,
+  useReprocessMaterial,
+  useUpdateMaterial,
 } from "@/lib/api/hooks/materials";
 import type { LessonResource } from "@/lib/api/types/common";
 import type { LearningMaterial } from "@/lib/api/types/teacher";
@@ -210,18 +215,107 @@ function AiStatusBadge({ status }: { status: string | undefined }) {
   );
 }
 
+/* ── AI-twin actions on a resource card ──
+   A downloadable resource uploaded with "Use for AI" on has a correlated AI
+   Hub material (its "twin", same storage_object_id). These are the twin's
+   controls surfaced right here on the resource so the teacher doesn't have to
+   dig into the AI Hub:
+     - Hide/Show: flips `visible_to_students` — THIS is what makes the student-
+       side live preview appear. Twins default to hidden on upload, which is
+       why freshly-uploaded docs show nothing on the student page.
+     - Retry: reprocess a failed/cancelled ingestion so the preview can build.
+   Only rendered when a twin exists, so the hooks (which need the twin id) are
+   always called unconditionally. */
+function ResourceAiActions({ twin }: { twin: LearningMaterial }) {
+  const { t } = useTranslation();
+  const status = twin.latest_version?.processing_status;
+  const reprocess = useReprocessMaterial(twin.id);
+  const updateMaterial = useUpdateMaterial(twin.id);
+  const visible = twin.visible_to_students;
+  const failed = status === "failed" || status === "cancelled";
+  const ready = status === "ready";
+
+  function toggleVisible() {
+    updateMaterial.mutate(
+      { visible_to_students: !visible },
+      {
+        onSuccess: () =>
+          toast.success(
+            !visible
+              ? t("teacher_lesson_manage.resource_ai.now_visible")
+              : t("teacher_lesson_manage.resource_ai.now_hidden"),
+          ),
+        onError: (err) => toast.error((err as Error).message),
+      },
+    );
+  }
+
+  function handleRetry() {
+    reprocess.mutate(undefined, {
+      onSuccess: () =>
+        toast.success(t("teacher_lesson_manage.resource_ai.retry_started")),
+      onError: (err) => toast.error((err as Error).message),
+    });
+  }
+
+  return (
+    <>
+      {failed && (
+        <button
+          type="button"
+          onClick={handleRetry}
+          disabled={reprocess.isPending}
+          title={t("teacher_lesson_manage.resource_ai.retry")}
+          className="p-2 rounded-lg text-amber-600 hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-40"
+        >
+          <RefreshCw
+            className={cn("h-4 w-4", reprocess.isPending && "animate-spin")}
+          />
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={toggleVisible}
+        // Only a ready doc can actually preview for students; guard the toggle
+        // so hiding/showing a still-processing doc can't mislead.
+        disabled={updateMaterial.isPending || (!ready && !visible)}
+        title={
+          !ready && !visible
+            ? t("teacher_lesson_manage.resource_ai.not_ready")
+            : visible
+              ? t("teacher_lesson_manage.resource_ai.hide")
+              : t("teacher_lesson_manage.resource_ai.show")
+        }
+        className={cn(
+          "p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-40",
+          visible
+            ? "text-emerald-600 hover:bg-emerald-100"
+            : "text-m3-on-surface-variant hover:bg-m3-surface-container-highest",
+        )}
+      >
+        {visible ? (
+          <Eye className="h-4 w-4" />
+        ) : (
+          <EyeOff className="h-4 w-4" />
+        )}
+      </button>
+    </>
+  );
+}
+
 function ResourceCard({
   resource,
   onDelete,
-  aiStatus,
+  twin,
 }: {
   resource: LessonResource;
   onDelete: (id: string) => void;
-  /** Correlated AI-material processing_status, or undefined if not synced. */
-  aiStatus: string | undefined;
+  /** Correlated AI Hub material (same storage_object_id), or undefined. */
+  twin: LearningMaterial | undefined;
 }) {
   const style = resourceStyle(resource.title);
   const [downloading, setDownloading] = useState(false);
+  const aiStatus = twin?.latest_version?.processing_status;
 
   async function handleDownload() {
     if (!resource.storage_object_id || downloading) return;
@@ -261,6 +355,7 @@ function ResourceCard({
         </div>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
+        {twin && <ResourceAiActions twin={twin} />}
         <button
           type="button"
           onClick={handleDownload}
@@ -905,16 +1000,17 @@ export default function LessonManagePage() {
     });
   }
 
-  // Correlate a resource to its AI Hub twin (same storage_object_id) and
-  // return the twin's processing_status, or undefined when the resource was
-  // never synced to AI. Drives the per-card status badge.
-  function aiStatusForResource(resource: LessonResource): string | undefined {
+  // Correlate a resource to its AI Hub twin (same storage_object_id), or
+  // undefined when the resource was never synced to AI. Drives the per-card
+  // status badge AND the inline hide/show + retry actions.
+  function twinForResource(
+    resource: LessonResource,
+  ): LearningMaterial | undefined {
     if (resource.storage_object_id == null) return undefined;
-    const twin = aiMaterials.find(
+    return aiMaterials.find(
       (m: LearningMaterial) =>
         m.latest_version?.storage_object_id === resource.storage_object_id,
     );
-    return twin?.latest_version?.processing_status;
   }
 
   function togglePrerequisite(id: string) {
@@ -1119,7 +1215,7 @@ export default function LessonManagePage() {
                     key={resource.id}
                     resource={resource}
                     onDelete={handleDeleteResource}
-                    aiStatus={aiStatusForResource(resource)}
+                    twin={twinForResource(resource)}
                   />
                 ))}
               </div>
