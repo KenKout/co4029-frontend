@@ -10000,6 +10000,8 @@ export interface components {
             available_until?: string | null;
             /** Due At */
             due_at?: string | null;
+            /** Question Count */
+            question_count?: number;
         };
         /**
          * QuizQuestionAuthoring

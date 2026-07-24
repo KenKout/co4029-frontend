@@ -1772,6 +1772,13 @@
     },
     "instructions": {
       "choose_best": "Chọn đáp án phù hợp nhất; có thể đánh dấu để xem lại sau."
+    },
+    "overview": {
+      "eyebrow": "Bài kiểm tra",
+      "questions": "Câu hỏi",
+      "passed_banner_title": "Bạn đã vượt qua bài kiểm tra này",
+      "passed_banner_best": "Điểm cao nhất {{score}}%",
+      "best_label": "Cao nhất {{score}}%"
     }
   },
   "course_interview": {

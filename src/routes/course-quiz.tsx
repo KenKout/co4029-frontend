@@ -8,13 +8,17 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  CheckCircle2,
   Clock,
   Flag,
   Lightbulb,
+  ListChecks,
   RotateCcw,
   Sparkles,
+  Target,
   Timer,
   X,
+  XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -239,6 +243,7 @@ function QuizIntroPanel({
   starting,
   resuming,
   slug,
+  courseTitle,
 }: {
   quiz: QuizPublic;
   attempts: QuizAttemptRead[];
@@ -248,12 +253,27 @@ function QuizIntroPanel({
   starting: boolean;
   resuming: boolean;
   slug: string;
+  courseTitle?: string | null;
 }) {
   const { t } = useTranslation();
   const completed = attempts.filter(
     (a) => a.status === "submitted" || a.status === "graded",
   ).length;
   const passingScore = Math.round(Number(quiz.passing_score_percent));
+
+  // Best score across graded/submitted attempts + whether the student has
+  // already cleared the passing bar — powers the "you've passed" banner and
+  // the best-score chip. null when no scored attempt exists yet.
+  const scoredAttempts = attempts.filter(
+    (a) => a.status === "submitted" || a.status === "graded",
+  );
+  const bestScore = scoredAttempts.reduce<number | null>((best, a) => {
+    if (a.score_percent == null) return best;
+    const s = Number(a.score_percent);
+    return best == null || s > best ? s : best;
+  }, null);
+  const hasPassed = scoredAttempts.some((a) => a.passed === true);
+  const questionCount = quiz.question_count ?? 0;
   const maxAttemptsReached =
     quiz.max_attempts != null && completed >= quiz.max_attempts;
   const noRetakesLeft = completed > 0 && !quiz.allow_retakes;
@@ -293,6 +313,20 @@ function QuizIntroPanel({
 
       <div className="w-full space-y-6">
         <GlassCard className="p-8 sm:p-10 text-center">
+          {/* Module-context eyebrow — frames the bare title (which course /
+              that this is a quiz), matching the interview-lobby pattern. */}
+          <div className="mb-3 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-m3-secondary">
+            <BookOpen className="h-3.5 w-3.5" />
+            <span>{t("course_quiz.overview.eyebrow")}</span>
+            {courseTitle && (
+              <>
+                <span className="text-m3-outline">·</span>
+                <span className="max-w-[220px] truncate font-semibold normal-case text-m3-on-surface-variant">
+                  {courseTitle}
+                </span>
+              </>
+            )}
+          </div>
           <h1 className="font-headline font-extrabold text-3xl text-m3-primary mb-3">
             {quiz.title}
           </h1>
@@ -302,37 +336,85 @@ function QuizIntroPanel({
             </p>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 text-left">
-            <div className="rounded-xl bg-m3-surface-container-low p-4">
-              <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-                {t("course_quiz.labels.passing_score")}
-              </span>
-              <span className="text-xl font-black font-headline text-m3-primary">
-                {passingScore}%
-              </span>
+          {/* Already-passed banner — flips the page tone from "take it" to
+              "you're done, retake optional" when the student has cleared it. */}
+          {hasPassed && (
+            <div className="mb-6 flex items-center justify-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <span>{t("course_quiz.overview.passed_banner_title")}</span>
+              {bestScore != null && (
+                <span className="text-emerald-700">
+                  ·{" "}
+                  {t("course_quiz.overview.passed_banner_best", {
+                    score: bestScore.toFixed(0),
+                  })}
+                </span>
+              )}
             </div>
-            <div className="rounded-xl bg-m3-surface-container-low p-4">
-              <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-                {t("course_quiz.labels.time")}
-              </span>
-              <span className="text-xl font-black font-headline text-m3-on-surface">
-                {quiz.time_limit_seconds
-                  ? formatTime(quiz.time_limit_seconds)
-                  : t("course_quiz.values.no_limit")}
-              </span>
+          )}
+
+          {/* Stat tiles — icon chip + label + value, one consistent value
+              colour (the old design used three different colours for no
+              reason) and a hairline border for contrast. */}
+          <div className="mb-8 grid grid-cols-2 gap-3 text-left sm:grid-cols-4">
+            <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+                <Target className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-m3-on-surface-variant">
+                  {t("course_quiz.labels.passing_score")}
+                </span>
+                <span className="font-headline text-base font-black text-m3-on-surface">
+                  {passingScore}%
+                </span>
+              </div>
             </div>
-            <div className="rounded-xl bg-m3-surface-container-low p-4">
-              <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-                {t("course_quiz.labels.attempts")}
-              </span>
-              <span className="text-xl font-black font-headline text-m3-secondary">
-                {completed}
-                {quiz.max_attempts != null && (
-                  <span className="text-sm text-m3-outline-variant font-medium">
-                    /{quiz.max_attempts}
-                  </span>
-                )}
-              </span>
+            <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+                <ListChecks className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-m3-on-surface-variant">
+                  {t("course_quiz.overview.questions")}
+                </span>
+                <span className="font-headline text-base font-black text-m3-on-surface">
+                  {questionCount > 0 ? questionCount : "—"}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+                <Clock className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-m3-on-surface-variant">
+                  {t("course_quiz.labels.time")}
+                </span>
+                <span className="font-headline text-base font-black text-m3-on-surface">
+                  {quiz.time_limit_seconds
+                    ? formatTime(quiz.time_limit_seconds)
+                    : t("course_quiz.values.no_limit")}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+                <RotateCcw className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-m3-on-surface-variant">
+                  {t("course_quiz.labels.attempts")}
+                </span>
+                <span className="font-headline text-base font-black text-m3-on-surface">
+                  {completed}
+                  {quiz.max_attempts != null && (
+                    <span className="text-sm font-medium text-m3-outline-variant">
+                      /{quiz.max_attempts}
+                    </span>
+                  )}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -501,12 +583,17 @@ function QuizIntroPanel({
                         {a.passed != null && (
                           <span
                             className={cn(
-                              "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
+                              "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
                               passed
                                 ? "bg-emerald-50 text-emerald-700"
                                 : "bg-amber-50 text-amber-700",
                             )}
                           >
+                            {passed ? (
+                              <CheckCircle2 className="h-3 w-3" />
+                            ) : (
+                              <XCircle className="h-3 w-3" />
+                            )}
                             {passed
                               ? t("course_quiz.history.passed")
                               : t("course_quiz.history.failed")}
@@ -1078,6 +1165,7 @@ export default function CourseQuizPage() {
           starting={startAttempt.isPending}
           resuming={resumeRequested}
           slug={slug}
+          courseTitle={course?.title}
         />
       </div>
     );

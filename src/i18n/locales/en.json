@@ -1711,6 +1711,13 @@
       "failed": "Failed",
       "no_score": "No score"
     },
+    "overview": {
+      "eyebrow": "Quiz",
+      "questions": "Questions",
+      "passed_banner_title": "You've passed this quiz",
+      "passed_banner_best": "Best score {{score}}%",
+      "best_label": "Best {{score}}%"
+    },
     "sections": {
       "config": "Quiz configuration",
       "module_review": "Module review",
