@@ -1642,6 +1642,18 @@
       "clean_body": "Không ghi nhận việc mất tiêu điểm, chuyển tab hay thoát toàn màn hình trong buổi phỏng vấn này.",
       "flagged_title": "Đã ghi nhận tín hiệu liêm chính",
       "summary": "{{tab}} lần chuyển tab, {{focus}} lần mất tiêu điểm, {{fullscreen}} lần thoát toàn màn hình trong phiên này.",
+      "timeline_title": "Dòng thời gian sự kiện",
+      "risk": {
+        "low_title": "Liêm chính ổn định",
+        "low_badge": "Thấp",
+        "low_body": "Không ghi nhận chuyển tab hay thoát toàn màn hình. Việc mất tiêu điểm đơn lẻ ít đáng ngại.",
+        "moderate_title": "Có một vài tín hiệu",
+        "moderate_badge": "Trung bình",
+        "moderate_body": "{{count}} tín hiệu mức cảnh báo (chuyển tab / thoát toàn màn hình) trong phiên này. Nên xem qua.",
+        "high_title": "Tín hiệu lặp lại nhiều lần",
+        "high_badge": "Cao",
+        "high_body": "{{count}} tín hiệu mức cảnh báo (chuyển tab / thoát toàn màn hình) trong phiên này. Khuyến nghị xem xét kỹ."
+      },
       "event": {
         "tab_switch": "Đã chuyển khỏi tab phỏng vấn",
         "focus_lost": "Cửa sổ phỏng vấn mất tiêu điểm",

@@ -1693,6 +1693,18 @@
       "clean_body": "No focus loss, tab switching, or fullscreen exits were recorded during this interview.",
       "flagged_title": "Integrity signals recorded",
       "summary": "{{tab}} tab switch(es), {{focus}} focus loss, {{fullscreen}} fullscreen exit(s) during this session.",
+      "timeline_title": "Event timeline",
+      "risk": {
+        "low_title": "Integrity looks clean",
+        "low_badge": "Low",
+        "low_body": "No tab switches or fullscreen exits were recorded. Focus losses alone are low-signal.",
+        "moderate_title": "A few signals recorded",
+        "moderate_badge": "Moderate",
+        "moderate_body": "{{count}} warning-level signal(s) (tab switches / fullscreen exits) during this session. Worth a glance.",
+        "high_title": "Repeated signals recorded",
+        "high_badge": "High",
+        "high_body": "{{count}} warning-level signal(s) (tab switches / fullscreen exits) during this session. Review recommended."
+      },
       "event": {
         "tab_switch": "Switched away from the interview tab",
         "focus_lost": "Interview window lost focus",

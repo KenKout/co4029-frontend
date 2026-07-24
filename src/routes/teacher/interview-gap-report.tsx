@@ -13,9 +13,11 @@ import {
   Eye,
   FileText,
   Loader2,
+  Maximize,
   MonitorX,
   Pencil,
   Save,
+  ShieldAlert,
   ShieldCheck,
   X,
 } from "lucide-react";
@@ -354,6 +356,78 @@ const INTEGRITY_SEVERITY_META: Record<
   info: { badge: "bg-blue-100 text-blue-700", dot: "bg-blue-400" },
 };
 
+/* ── Integrity event type → icon + accent colour ──────────────────────────
+ * Each proctoring signal gets its own icon and colour so the timeline reads at
+ * a glance instead of a wall of identical amber rows. Colour follows the
+ * event's inherent severity (tab switch / fullscreen exit = warning amber,
+ * focus loss = informational blue). */
+const INTEGRITY_EVENT_META: Record<
+  string,
+  { icon: typeof MonitorX; tint: string; iconBg: string }
+> = {
+  tab_switch: {
+    icon: MonitorX,
+    tint: "text-amber-600",
+    iconBg: "bg-amber-50 text-amber-600",
+  },
+  focus_lost: {
+    icon: Eye,
+    tint: "text-blue-600",
+    iconBg: "bg-blue-50 text-blue-600",
+  },
+  fullscreen_exit: {
+    icon: Maximize,
+    tint: "text-amber-600",
+    iconBg: "bg-amber-50 text-amber-600",
+  },
+};
+
+/** One compact stat tile in the integrity breakdown row. */
+function IntegrityStat({
+  icon: Icon,
+  count,
+  label,
+  active,
+}: {
+  icon: typeof MonitorX;
+  count: number;
+  label: string;
+  active: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 rounded-xl border p-3",
+        active
+          ? "border-amber-200 bg-amber-50/50"
+          : "border-border bg-surface-muted/40",
+      )}
+    >
+      <div
+        className={cn(
+          "flex size-9 shrink-0 items-center justify-center rounded-lg",
+          active ? "bg-amber-100 text-amber-700" : "bg-white text-text-subtle",
+        )}
+      >
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p
+          className={cn(
+            "text-lg font-bold leading-none tabular-nums",
+            active ? "text-amber-800" : "text-text-subtle",
+          )}
+        >
+          {count}
+        </p>
+        <p className="mt-1 truncate text-[11px] font-medium text-m3-on-surface-variant">
+          {label}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // FR-5.8 teacher review surface: the proctoring-signal timeline for a session.
 // Signals are recorded across every mode (text / hybrid / voice) — see Gap 1.
 // A clean session shows a reassuring green state rather than an empty box.
@@ -369,13 +443,21 @@ function IntegrityCard({ sessionId }: { sessionId: string }) {
     fullscreenExit: events.filter((e) => e.event_type === "fullscreen_exit")
       .length,
   };
+  // Warning-level signals (tab switches + fullscreen exits) are what actually
+  // matter for integrity; focus losses alone are noisy/low-signal. Grade the
+  // overall risk off the warning count so the teacher gets an at-a-glance read
+  // rather than having to eyeball a long list.
+  const warningCount = counts.tabSwitch + counts.fullscreenExit;
+  const risk: "low" | "moderate" | "high" =
+    warningCount === 0 ? "low" : warningCount <= 3 ? "moderate" : "high";
 
   if (isLoading) {
     return (
       <GlassCard className="p-6">
-        <p className="text-sm text-m3-on-surface-variant">
+        <div className="flex items-center gap-2 text-sm text-m3-on-surface-variant">
+          <Loader2 className="h-4 w-4 animate-spin" />
           {t("common.loading")}
-        </p>
+        </div>
       </GlassCard>
     );
   }
@@ -385,7 +467,7 @@ function IntegrityCard({ sessionId }: { sessionId: string }) {
       <GlassCard className="p-6">
         <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
           <div className="shrink-0 rounded-lg bg-emerald-100 p-2 text-emerald-700">
-            <ShieldCheck className="h-4 w-4" />
+            <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
             <h3 className="font-headline text-sm font-bold text-emerald-800">
@@ -400,63 +482,154 @@ function IntegrityCard({ sessionId }: { sessionId: string }) {
     );
   }
 
+  const RISK_META = {
+    low: {
+      icon: ShieldCheck,
+      wrap: "border-emerald-200 bg-emerald-50/60",
+      iconBg: "bg-emerald-100 text-emerald-700",
+      title: "text-emerald-800",
+      body: "text-emerald-700/80",
+    },
+    moderate: {
+      icon: AlertTriangle,
+      wrap: "border-amber-200 bg-amber-50/60",
+      iconBg: "bg-amber-100 text-amber-700",
+      title: "text-amber-800",
+      body: "text-amber-700/80",
+    },
+    high: {
+      icon: ShieldAlert,
+      wrap: "border-red-200 bg-red-50/60",
+      iconBg: "bg-red-100 text-red-700",
+      title: "text-red-800",
+      body: "text-red-700/80",
+    },
+  } as const;
+  const riskMeta = RISK_META[risk];
+  const RiskIcon = riskMeta.icon;
+
   return (
     <GlassCard className="overflow-hidden p-0">
-      <div className="flex items-center gap-2.5 border-b border-amber-200/60 bg-amber-50/50 px-5 py-3">
-        <div className="rounded-lg bg-amber-100 p-1.5 text-amber-700">
-          <AlertTriangle className="h-4 w-4" />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-headline text-sm font-bold text-amber-800">
-            {t("teacher_interview_gap_report.integrity.flagged_title")}
-          </h3>
-          <p className="text-xs text-amber-700/80">
-            {t("teacher_interview_gap_report.integrity.summary", {
-              tab: counts.tabSwitch,
-              focus: counts.focusLost,
-              fullscreen: counts.fullscreenExit,
-            })}
-          </p>
-        </div>
-      </div>
-      <div className="max-h-96 divide-y divide-amber-200/40 overflow-y-auto">
-        {events.map((ev) => {
-          const meta =
-            INTEGRITY_SEVERITY_META[ev.severity] ??
-            INTEGRITY_SEVERITY_META.info;
-          const Icon =
-            ev.event_type === "tab_switch"
-              ? MonitorX
-              : ev.event_type === "focus_lost"
-                ? Eye
-                : Clock;
-          return (
-            <div key={ev.id} className="flex items-center gap-3 px-5 py-2.5">
-              <Icon className="h-4 w-4 shrink-0 text-amber-700" />
-              <span className="flex-1 text-sm text-m3-on-surface">
-                {t(
-                  `teacher_interview_gap_report.integrity.event.${ev.event_type}`,
-                  { defaultValue: ev.event_type },
-                )}
-              </span>
-              <span
+      {/* Risk banner: overall read graded off warning-level signals. */}
+      <div className="border-b border-border p-5">
+        <div
+          className={cn(
+            "flex items-start gap-3 rounded-xl border p-4",
+            riskMeta.wrap,
+          )}
+        >
+          <div className={cn("shrink-0 rounded-lg p-2", riskMeta.iconBg)}>
+            <RiskIcon className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3
                 className={cn(
-                  "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                  meta.badge,
+                  "font-headline text-sm font-bold",
+                  riskMeta.title,
                 )}
               >
-                {t(
-                  `teacher_interview_gap_report.integrity.severity.${ev.severity}`,
-                  { defaultValue: ev.severity },
+                {t(`teacher_interview_gap_report.integrity.risk.${risk}_title`)}
+              </h3>
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                  riskMeta.iconBg,
                 )}
-              </span>
-              <span className="whitespace-nowrap text-xs tabular-nums text-m3-on-surface-variant">
-                {formatDate(ev.created_at)}
+              >
+                {t(`teacher_interview_gap_report.integrity.risk.${risk}_badge`)}
               </span>
             </div>
+            <p className={cn("mt-1 text-xs", riskMeta.body)}>
+              {t(`teacher_interview_gap_report.integrity.risk.${risk}_body`, {
+                count: warningCount,
+              })}
+            </p>
+          </div>
+        </div>
+
+        {/* Per-type breakdown so the teacher sees WHAT happened, not just how
+            many rows. */}
+        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+          <IntegrityStat
+            icon={MonitorX}
+            count={counts.tabSwitch}
+            active={counts.tabSwitch > 0}
+            label={t("teacher_interview_gap_report.integrity.event.tab_switch")}
+          />
+          <IntegrityStat
+            icon={Maximize}
+            count={counts.fullscreenExit}
+            active={counts.fullscreenExit > 0}
+            label={t(
+              "teacher_interview_gap_report.integrity.event.fullscreen_exit",
+            )}
+          />
+          <IntegrityStat
+            icon={Eye}
+            count={counts.focusLost}
+            active={false}
+            label={t("teacher_interview_gap_report.integrity.event.focus_lost")}
+          />
+        </div>
+      </div>
+
+      {/* Chronological timeline. */}
+      <div className="px-5 pt-4">
+        <h4 className="text-[11px] font-bold uppercase tracking-wide text-text-subtle">
+          {t("teacher_interview_gap_report.integrity.timeline_title")}
+        </h4>
+      </div>
+      <ol className="max-h-80 overflow-y-auto px-5 py-3">
+        {events.map((ev, index) => {
+          const eventMeta =
+            INTEGRITY_EVENT_META[ev.event_type] ??
+            INTEGRITY_EVENT_META.focus_lost;
+          const severityMeta =
+            INTEGRITY_SEVERITY_META[ev.severity] ??
+            INTEGRITY_SEVERITY_META.info;
+          const Icon = eventMeta.icon;
+          const isLast = index === events.length - 1;
+          return (
+            <li key={ev.id} className="flex gap-3">
+              {/* Timeline rail: dot + connecting line. */}
+              <div className="flex flex-col items-center">
+                <span
+                  className={cn(
+                    "flex size-7 shrink-0 items-center justify-center rounded-full",
+                    eventMeta.iconBg,
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                </span>
+                {!isLast && <span className="w-px flex-1 bg-border" />}
+              </div>
+              <div className="flex min-w-0 flex-1 items-center justify-between gap-2 pb-4">
+                <span className="min-w-0 flex-1 truncate text-sm text-m3-on-surface">
+                  {t(
+                    `teacher_interview_gap_report.integrity.event.${ev.event_type}`,
+                    { defaultValue: ev.event_type },
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                    severityMeta.badge,
+                  )}
+                >
+                  {t(
+                    `teacher_interview_gap_report.integrity.severity.${ev.severity}`,
+                    { defaultValue: ev.severity },
+                  )}
+                </span>
+                <span className="shrink-0 whitespace-nowrap text-xs tabular-nums text-m3-on-surface-variant">
+                  {formatDate(ev.created_at)}
+                </span>
+              </div>
+            </li>
           );
         })}
-      </div>
+      </ol>
     </GlassCard>
   );
 }
