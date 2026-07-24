@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  AudioLines,
   BookOpen,
   Bot,
   CheckCircle2,
@@ -2035,7 +2036,7 @@ export default function CourseInterviewPage() {
             {/* Stat tiles — icon chip + label + value. Values share one
                 consistent color/weight (the earlier design had one stat
                 arbitrarily blue); a hairline border lifts them off the card. */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
               <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
                   <User className="h-4 w-4" />
@@ -2085,6 +2086,29 @@ export default function CourseInterviewPage() {
                   <span className="text-sm font-bold text-m3-on-surface">
                     {config.max_attempts ??
                       t("course_interview.values.no_limit")}
+                  </span>
+                </div>
+              </div>
+              {/* AI voice tile. tts_voice is a Deepgram Aura model id
+                  (e.g. 'aura-2-ophelia-en'); we surface just the human name
+                  ('Ophelia'). NULL = the deployment default voice. Only
+                  meaningful for English sessions (Vietnamese uses the browser
+                  voice), noted via the value label. */}
+              <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+                  <AudioLines className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-[10px] text-m3-on-surface-variant uppercase font-bold tracking-wider">
+                    {t("course_interview.labels.ai_voice")}
+                  </span>
+                  <span className="block text-sm font-bold text-m3-on-surface truncate">
+                    {config.tts_voice
+                      ? config.tts_voice
+                          .replace(/^aura-2-/, "")
+                          .replace(/-en$/, "")
+                          .replace(/^\w/, (c) => c.toUpperCase())
+                      : t("course_interview.values.ai_voice_default")}
                   </span>
                 </div>
               </div>

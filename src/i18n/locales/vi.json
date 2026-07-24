@@ -2089,6 +2089,7 @@
       "persona": "Phong cách",
       "time": "Thời gian",
       "max_attempts": "Lượt tối đa",
+      "ai_voice": "Giọng AI",
       "ai_interview": "Phỏng vấn AI",
       "answer": "Câu trả lời của bạn",
       "character_count": "{{count}} ký tự"
@@ -2108,6 +2109,7 @@
       },
       "time_limit_minutes": "{{minutes}} phút",
       "no_limit": "Không giới hạn",
+      "ai_voice_default": "Mặc định",
       "mode": {
         "voice": "Giọng nói",
         "text": "Văn bản"

@@ -2180,6 +2180,7 @@
       "persona": "Persona",
       "time": "Time",
       "max_attempts": "Max attempts",
+      "ai_voice": "AI voice",
       "ai_interview": "AI interview",
       "answer": "Your answer",
       "character_count": "{{count}} characters"
@@ -2199,6 +2200,7 @@
       },
       "time_limit_minutes": "{{minutes}} minutes",
       "no_limit": "Unlimited",
+      "ai_voice_default": "Default",
       "mode": {
         "voice": "Voice",
         "text": "Text"

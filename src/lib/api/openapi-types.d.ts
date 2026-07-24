@@ -6372,6 +6372,8 @@ export interface components {
              * @enum {string}
              */
             supported_modes: "voice" | "text" | "hybrid";
+            /** Tts Voice */
+            tts_voice?: string | null;
             /** Time Limit Minutes */
             time_limit_minutes?: number | null;
             /** Max Attempts */
