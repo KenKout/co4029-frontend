@@ -20,7 +20,7 @@ import type {
 import { cn } from "@/lib/utils";
 
 /** Tabs the panel can deep-link to when a warning is actionable. */
-type ReadinessTab = "settings" | "learning-outcomes" | "generate" | "questions";
+type ReadinessTab = "settings" | "generate" | "questions";
 
 // Rough authoring heuristic — mirrors the backend `_MINUTES_PER_QUESTION` so
 // the estimated-length readout matches the coverage warning's math.
@@ -30,7 +30,7 @@ const MINUTES_PER_QUESTION = 4;
 // jump-to action. Codes not in the map render without an action button.
 const WARNING_TAB: Record<string, ReadinessTab> = {
   questions_without_outcome: "questions",
-  outcomes_without_question: "learning-outcomes",
+  outcomes_without_question: "settings",
   questions_missing_difficulty: "questions",
   low_difficulty_diversity: "questions",
   insufficient_question_coverage: "generate",

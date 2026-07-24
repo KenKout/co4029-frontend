@@ -92,7 +92,6 @@ type SecurityResponsePolicy =
 
 type TabId =
   | "settings"
-  | "learning-outcomes"
   | "generate"
   | "questions"
   | "adaptive-readiness";
@@ -321,22 +320,6 @@ export default function InterviewConfigPage() {
           ),
         };
 
-    const outcomesStatus: SectionStatus =
-      outcomeCount > 0
-        ? {
-            kind: "completed",
-            label: t(
-              "teacher_interview_config.section_nav.status.outcomes_count",
-              {
-                count: outcomeCount,
-              },
-            ),
-          }
-        : {
-            kind: "warning",
-            label: t("teacher_interview_config.section_nav.status.not_added"),
-          };
-
     const generateStatus: SectionStatus =
       draftCount > 0
         ? {
@@ -375,14 +358,6 @@ export default function InterviewConfigPage() {
         label: t("teacher_interview_config.section_nav.settings"),
         shortLabel: t("teacher_interview_config.section_nav.settings_short"),
         status: settingsStatus,
-      },
-      {
-        id: "learning-outcomes",
-        label: t("teacher_interview_config.section_nav.learning_outcomes"),
-        shortLabel: t(
-          "teacher_interview_config.section_nav.learning_outcomes_short",
-        ),
-        status: outcomesStatus,
       },
       {
         id: "generate",
@@ -831,6 +806,7 @@ export default function InterviewConfigPage() {
                 hidden={activeTab !== "settings"}
                 role="tabpanel"
                 aria-labelledby="tab-settings"
+                className="space-y-6"
               >
                 <SettingsForm
                   draft={draft}
@@ -841,13 +817,9 @@ export default function InterviewConfigPage() {
                   justSaved={justSaved}
                   updatedAt={config?.updated_at ?? null}
                 />
-              </section>
-              <section
-                id="learning-outcomes"
-                hidden={activeTab !== "learning-outcomes"}
-                role="tabpanel"
-                aria-labelledby="tab-learning-outcomes"
-              >
+                {/* Learning outcomes now live inside Settings (merged from the
+                    old standalone tab) so all pre-generation config sits in one
+                    place. */}
                 <LearningOutcomes
                   configId={configId}
                   courseId={courseId}
@@ -1192,7 +1164,7 @@ function PublishReadiness({
       label: t("teacher_interview_config.publish_readiness.outcomes", {
         count: outcomeCount,
       }),
-      tab: "learning-outcomes",
+      tab: "settings",
     },
     {
       key: "questions",
