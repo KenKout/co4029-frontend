@@ -538,7 +538,7 @@ function CourseLearnLoaded({
 
   return (
     <div className="min-h-screen pb-24">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         <nav className="flex items-center gap-2 text-xs text-m3-on-surface-variant mb-5">
           <Link
             to="/courses"
