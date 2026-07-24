@@ -1877,6 +1877,9 @@
       "dictation_hint": "Your speech is transcribed into the answer box — edit before sending.",
       "unsupported": "Voice input isn't supported in this browser — type your answer instead."
     },
+    "voice": {
+      "dropped_fallback_text": "Voice connection lost — continuing in text. Your progress is saved."
+    },
     "narration": {
       "on": "Voice on",
       "off": "Voice off",

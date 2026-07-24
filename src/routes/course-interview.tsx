@@ -78,6 +78,7 @@ import {
   isClosingTurn,
 } from "@/lib/interview/end-confirmation";
 import { useAnswerState } from "@/lib/interview/use-answer-state";
+import { useDraftAutosave } from "@/lib/interview/use-draft-autosave";
 import { normalizeQuestionText } from "@/lib/interview/question-content";
 import { planTransition } from "@/lib/interview/transition-sequencing";
 
@@ -373,6 +374,38 @@ export default function CourseInterviewPage() {
     if (currentQuestion?.id) resetAnswerForQuestion(currentQuestion.id);
   }, [currentQuestion?.id, resetAnswerForQuestion]);
 
+  // Answer-draft autosave (resilience A-Tier-1 #2): mirror the composer text
+  // into localStorage keyed by session+question so a reload / crash / accidental
+  // navigation mid-question never loses a half-typed answer.
+  const draftAutosave = useDraftAutosave(
+    sessionId,
+    currentQuestion?.id ?? null,
+    answerText,
+  );
+  const { restore: restoreDraftAutosave, clear: clearDraftAutosave } =
+    draftAutosave;
+
+  // On (re)entering a question during active questioning, rehydrate any draft
+  // persisted for THIS session+question. Runs only while the composer is live
+  // and empty, so it restores after a reload without clobbering fresh typing or
+  // a just-submitted state. Keyed by question id so each question restores once.
+  const restoredQuestionRef = useRef<string | null>(null);
+  useEffect(() => {
+    const qid = currentQuestion?.id;
+    if (!qid || phase !== "questioning") return;
+    if (restoredQuestionRef.current === qid) return;
+    restoredQuestionRef.current = qid;
+    if (answer.state.status !== "draft" || answerText.trim()) return;
+    const saved = restoreDraftAutosave();
+    if (saved) {
+      setAnswerText(saved);
+      restoreDraft(saved);
+    }
+    // answerText/answer.state are read as a one-shot guard at question entry;
+    // re-running on their every change would fight live typing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestion?.id, phase, restoreDraftAutosave]);
+
   useEffect(() => {
     const handleOnline = () => setConnected(true);
     const handleOffline = () => setConnected(false);
@@ -407,6 +440,17 @@ export default function CourseInterviewPage() {
           Math.floor((Date.now() - sessionStartedAtRef.current) / 1000),
         );
 
+  // Server-authoritative timer reconciliation (resilience A-Tier-1 #4): the
+  // backend returns the true whole-second countdown on each turn. Re-anchor the
+  // locally computed deadline to the server clock so client clock skew or a
+  // throttled background tab can't drift the timeout. Ignored when the session
+  // has no time limit (server returns null) or the value is non-finite.
+  const reconcileDeadline = useCallback((remainingSeconds?: number | null) => {
+    if (remainingSeconds == null || !Number.isFinite(remainingSeconds)) return;
+    sessionDeadlineAtRef.current = Date.now() + remainingSeconds * 1000;
+    timeoutTriggeredRef.current = false;
+  }, []);
+
   const respond = useInterviewRespond(sessionId);
   const onboarding = useInterviewOnboarding(sessionId);
   const finish = useFinishInterview(sessionId);
@@ -426,6 +470,46 @@ export default function CourseInterviewPage() {
       setInputMode(resumableSession.input_mode);
     }
   }, [resumableSession, sessionId]);
+
+  // Auto-resume on reload (resilience A-Tier-1 #1). A mid-interview refresh
+  // otherwise dumps the student back to the lobby with a manual "Resume" button.
+  // We stamp a sessionStorage marker while the interview is live; on mount, if a
+  // resumable in-progress session exists AND its marker is present (i.e. this is
+  // a genuine reload of an active attempt, not a fresh lobby visit), we resume
+  // automatically. sessionStorage survives reload but not tab-close, so a fresh
+  // navigation still shows the lobby + Resume button (never surprises the user).
+  const ACTIVE_MARKER_KEY = `abridge:iv-active:${configId}`;
+  const autoResumeTriedRef = useRef(false);
+  useEffect(() => {
+    // Stamp / clear the "live attempt" marker as the session goes active/ends.
+    try {
+      if (sessionId && phase !== "prestart" && phase !== "results") {
+        window.sessionStorage.setItem(ACTIVE_MARKER_KEY, sessionId);
+      } else if (phase === "results") {
+        window.sessionStorage.removeItem(ACTIVE_MARKER_KEY);
+      }
+    } catch {
+      /* storage unavailable — auto-resume is best-effort */
+    }
+  }, [sessionId, phase, ACTIVE_MARKER_KEY]);
+
+  useEffect(() => {
+    if (autoResumeTriedRef.current) return;
+    if (sessionId || !resumableSession || previousSessionsLoading) return;
+    let marker: string | null = null;
+    try {
+      marker = window.sessionStorage.getItem(ACTIVE_MARKER_KEY);
+    } catch {
+      marker = null;
+    }
+    // Only auto-resume a genuine reload of THIS live attempt.
+    if (marker !== resumableSession.session_id) return;
+    autoResumeTriedRef.current = true;
+    void handleStart();
+    // handleStart is a stable declaration read at call time; resumableSession /
+    // loading are the real triggers. Guarded by the ref so it fires once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumableSession, sessionId, previousSessionsLoading, ACTIVE_MARKER_KEY]);
 
   // The pass/fail verdict is produced by an async worker (~1-2 min) AFTER
   // /finish returns. At finish time pass_verdict is still null, so we must NOT
@@ -883,6 +967,32 @@ export default function CourseInterviewPage() {
     setPollingCompletion(true);
   }
 
+  /**
+   * Voice room dropped for a transient reason (network / server), NOT a natural
+   * end (resilience A-Tier-1 #3). Do NOT finalize+grade the session. Tear down
+   * the room, switch the live session to text, restore the transcript captured
+   * so far, and resume questioning in place so the student keeps going instead
+   * of losing a graded attempt to a blip.
+   */
+  async function handleVoiceDropped() {
+    setVoiceActive(false);
+    setInputMode("text");
+    toast.warning(t("course_interview.voice.dropped_fallback_text"));
+    // Re-enter via the idempotent start path in TEXT mode: it returns the SAME
+    // in-progress session with full history + the current question, so the
+    // student resumes exactly where the voice room dropped — no finalize, no
+    // lost turns. (start_session is idempotent for a live session.) We call the
+    // mutation directly with input_mode:"text" rather than handleStart() because
+    // the setInputMode above hasn't flushed yet — handleStart's closure would
+    // still read the stale "voice" mode and re-enter the room.
+    try {
+      const payload = await startSession.mutateAsync({ input_mode: "text" });
+      handleStartSuccess(payload);
+    } catch {
+      toast.error(t("course_interview.errors.start_failed"));
+    }
+  }
+
   const handleTurnPresented = useCallback(
     (turn: ConversationTurn) => {
       if (
@@ -1018,6 +1128,8 @@ export default function CourseInterviewPage() {
         turn_key: newTurnKey(),
       });
 
+      reconcileDeadline(result.time_remaining_seconds);
+
       const finished = Boolean(result.should_finish ?? result.is_finished);
       const standaloneText =
         result.ai_turn_text || result.ai_followup_text || null;
@@ -1129,6 +1241,9 @@ export default function CourseInterviewPage() {
         turn_key: submissionId,
       });
 
+      // Re-anchor the timeout to the server's authoritative countdown (#4).
+      reconcileDeadline(result.time_remaining_seconds);
+
       // End-confirmation gate (Slice 4): the backend recognised this as a
       // natural-language end request and is asking the candidate to confirm
       // rather than closing. It is NOT an answer — roll the editor back to a
@@ -1165,6 +1280,8 @@ export default function CourseInterviewPage() {
             ],
       );
       submitSucceeded(trimmed);
+      // The answer is committed server-side — drop its autosaved draft (#2).
+      clearDraftAutosave();
       // Editor content is cleared ONLY after the server acknowledged (spec §2);
       // the compact confirmation now stands in for the answer on the main screen.
       setAnswerText("");
@@ -1548,6 +1665,7 @@ export default function CourseInterviewPage() {
           elapsed={elapsed}
           initialTranscript={voiceInitialTranscriptRef.current}
           onCompleted={handleVoiceCompleted}
+          onVoiceDropped={handleVoiceDropped}
           onTranscriptChange={setTranscript}
         />
         {leaveInterviewDialog}

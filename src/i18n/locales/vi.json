@@ -2086,6 +2086,9 @@
     "criteria": {
       "assessed_on": "Đánh giá trên {{count}} tiêu chí",
       "assessed_on_plural": "Đánh giá trên {{count}} tiêu chí"
+    },
+    "voice": {
+      "dropped_fallback_text": "Mất kết nối thoại — đang tiếp tục bằng văn bản. Tiến trình của bạn đã được lưu."
     }
   },
   "management_career_path_detail": {
