@@ -218,6 +218,21 @@ export const queryKeys = {
     attemptDetail: (courseId: string, attemptId: string) =>
       ["quizzes", "attempt-detail", courseId, attemptId] as const,
     results: (quizId: string) => ["quizzes", "results", quizId] as const,
+    // --- Moodle-parity phases (backend 0044-0057) ---
+    regradeRun: (quizId: string, runId: string) =>
+      ["quizzes", "regrade-run", quizId, runId] as const,
+    overrides: (quizId: string) => ["quizzes", "overrides", quizId] as const,
+    feedbackBands: (quizId: string) =>
+      ["quizzes", "feedback-bands", quizId] as const,
+    gradebook: (quizId: string) => ["quizzes", "gradebook", quizId] as const,
+    needsGrading: (quizId: string) =>
+      ["quizzes", "needs-grading", quizId] as const,
+    responsesReport: (quizId: string) =>
+      ["quizzes", "report-responses", quizId] as const,
+    statisticsReport: (quizId: string) =>
+      ["quizzes", "report-statistics", quizId] as const,
+    auditEvents: (quizId: string) =>
+      ["quizzes", "audit-events", quizId] as const,
   },
 
   interviews: {

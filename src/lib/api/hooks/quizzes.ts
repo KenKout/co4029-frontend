@@ -2,7 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import i18n from "@/i18n";
-import { apiDelete, apiFetch, apiPatch, apiPost } from "../client";
+import {
+  apiDelete,
+  apiFetch,
+  apiGetResponse,
+  apiPatch,
+  apiPost,
+  apiPut,
+} from "../client";
 import { ApiError } from "../client";
 import { queryKeys } from "../query-keys";
 import { useInfinitePage } from "../use-infinite-page";
@@ -822,4 +829,378 @@ export function usePendingQuestionDeletes(
     undo,
     flushNow,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Moodle-parity phase hooks (backend migrations 0044-0057).
+// Endpoints post-date the committed OpenAPI snapshot, so request/response
+// types are declared locally following this file's convention.
+// ---------------------------------------------------------------------------
+
+// --- Phase 1: regrade -------------------------------------------------------
+export interface RegradeScopeIn {
+  attempt_ids?: string[] | null;
+  question_ids?: string[] | null;
+}
+export interface RegradeItemRead {
+  attempt_id: string;
+  question_id: string;
+  old_points: number;
+  new_points: number;
+  old_is_correct: boolean;
+  new_is_correct: boolean;
+}
+export interface RegradeRunRead {
+  id: string;
+  quiz_id: string;
+  status: string;
+  answers_scanned: number;
+  answers_changed: number;
+  attempts_affected: number;
+  created_at: string;
+  committed_at: string | null;
+  items: RegradeItemRead[];
+}
+
+/** Phase 1: dry-run a regrade (no writes) — preview changed answers. */
+export function useRegradeDryRun(quizId: string | null | undefined) {
+  return useMutation({
+    mutationFn: (scope: RegradeScopeIn) =>
+      apiPost<RegradeRunRead>(
+        `/teacher/quizzes/${quizId}/regrade/dry-run`,
+        scope,
+      ),
+  });
+}
+
+/** Phase 1: commit a regrade — recomputes scores + gradebook. */
+export function useRegradeCommit(quizId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (scope: RegradeScopeIn) =>
+      apiPost<RegradeRunRead>(`/teacher/quizzes/${quizId}/regrade/commit`, scope),
+    onSuccess: () => {
+      if (quizId) {
+        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.results(quizId) });
+        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.gradebook(quizId) });
+      }
+    },
+  });
+}
+
+// --- Phase 2: review-visibility --------------------------------------------
+export interface ReviewOptions {
+  show_score: boolean;
+  show_correct_answers: boolean;
+  show_feedback: boolean;
+  show_explanation: boolean;
+  show_points: boolean;
+  during_attempt?: boolean;
+  immediately_after?: boolean;
+  later_while_open?: boolean;
+  after_close?: boolean;
+}
+
+// --- Phase 4: manual grading -----------------------------------------------
+export interface NeedsGradingRow {
+  answer_id: string;
+  attempt_id: string;
+  question_id: string;
+  student_id: string;
+  question_type: string;
+  prompt_text: string;
+  answer_text: string | null;
+  submitted_at: string | null;
+}
+export interface ManualGradeIn {
+  score: number;
+  feedback?: string | null;
+}
+
+export function useNeedsGrading(quizId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.quizzes.needsGrading(quizId ?? ""),
+    queryFn: () =>
+      apiFetch<NeedsGradingRow[]>(`/teacher/quizzes/${quizId}/needs-grading`),
+    enabled: !!quizId,
+  });
+}
+
+export function useGradeAnswer(quizId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ answerId, body }: { answerId: string; body: ManualGradeIn }) =>
+      apiPatch(`/teacher/quizzes/${quizId}/answers/${answerId}/grade`, body),
+    onSuccess: () => {
+      if (quizId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.needsGrading(quizId),
+        });
+        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.gradebook(quizId) });
+      }
+    },
+  });
+}
+
+// --- Phase 5: overrides -----------------------------------------------------
+export interface QuizOverrideIn {
+  scope: "user" | "group";
+  user_id?: string | null;
+  group_id?: string | null;
+  available_from?: string | null;
+  available_until?: string | null;
+  due_at?: string | null;
+  time_limit_seconds?: number | null;
+  max_attempts?: number | null;
+  allow_retakes?: boolean | null;
+  cooldown_hours?: number | null;
+}
+export interface QuizOverrideRead extends QuizOverrideIn {
+  id: string;
+  quiz_id: string;
+}
+
+export function useQuizOverrides(quizId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.quizzes.overrides(quizId ?? ""),
+    queryFn: () =>
+      apiFetch<QuizOverrideRead[]>(`/teacher/quizzes/${quizId}/overrides`),
+    enabled: !!quizId,
+  });
+}
+
+export function useCreateOverride(quizId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: QuizOverrideIn) =>
+      apiPost<QuizOverrideRead>(`/teacher/quizzes/${quizId}/overrides`, body),
+    onSuccess: () => {
+      if (quizId)
+        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.overrides(quizId) });
+    },
+  });
+}
+
+export function useDeleteOverride(quizId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (overrideId: string) =>
+      apiDelete(`/teacher/quizzes/${quizId}/overrides/${overrideId}`),
+    onSuccess: () => {
+      if (quizId)
+        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.overrides(quizId) });
+    },
+  });
+}
+
+// --- Phase 8: feedback bands -----------------------------------------------
+export interface FeedbackBandIn {
+  min_grade: number;
+  max_grade: number;
+  feedback_text: string;
+  feedback_format?: string;
+}
+export interface FeedbackBandRead extends FeedbackBandIn {
+  id: string;
+  quiz_id: string;
+}
+
+export function useFeedbackBands(quizId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.quizzes.feedbackBands(quizId ?? ""),
+    queryFn: () =>
+      apiFetch<FeedbackBandRead[]>(`/teacher/quizzes/${quizId}/feedback-bands`),
+    enabled: !!quizId,
+  });
+}
+
+export function useSetFeedbackBands(quizId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (bands: FeedbackBandIn[]) =>
+      apiPut<FeedbackBandRead[]>(`/teacher/quizzes/${quizId}/feedback-bands`, {
+        bands,
+      }),
+    onSuccess: () => {
+      if (quizId)
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.feedbackBands(quizId),
+        });
+    },
+  });
+}
+
+// --- Phase 9: gradebook -----------------------------------------------------
+export interface QuizGradeRow {
+  student_id: string;
+  grade_percent: number;
+  grade_points: number;
+  passed: boolean;
+  grading_method: string;
+  based_on_attempt_id: string | null;
+  attempts_counted: number;
+}
+
+export function useQuizGradebook(quizId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.quizzes.gradebook(quizId ?? ""),
+    queryFn: () =>
+      apiFetch<QuizGradeRow[]>(`/teacher/quizzes/${quizId}/gradebook`),
+    enabled: !!quizId,
+  });
+}
+
+// --- Phase 10: reports + export --------------------------------------------
+export interface ResponsesReportRow {
+  student_id: string;
+  attempt_id: string;
+  question_id: string;
+  prompt_text: string;
+  student_answer: string;
+  correct_answer: string;
+  is_correct: boolean;
+  points_awarded: number;
+}
+export interface ResponsesReportRead {
+  quiz_id: string;
+  total_attempts: number;
+  rows: ResponsesReportRow[];
+}
+export interface StatisticsReportRow {
+  question_id: string;
+  prompt_text: string;
+  facility_index: number | null;
+  discrimination_index: number | null;
+  discrimination_note: string | null;
+}
+export interface StatisticsReportRead {
+  quiz_id: string;
+  attempts_analyzed: number;
+  rows: StatisticsReportRow[];
+}
+
+export function useResponsesReport(quizId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.quizzes.responsesReport(quizId ?? ""),
+    queryFn: () =>
+      apiFetch<ResponsesReportRead>(
+        `/teacher/quizzes/${quizId}/reports/responses`,
+      ),
+    enabled: !!quizId,
+  });
+}
+
+export function useStatisticsReport(quizId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.quizzes.statisticsReport(quizId ?? ""),
+    queryFn: () =>
+      apiFetch<StatisticsReportRead>(
+        `/teacher/quizzes/${quizId}/reports/statistics`,
+      ),
+    enabled: !!quizId,
+  });
+}
+
+/** Filename from a Content-Disposition header, or a fallback. */
+function filenameFromDisposition(header: string | null, fallback: string): string {
+  if (!header) return fallback;
+  const match = /filename="?([^"]+)"?/.exec(header);
+  return match ? match[1] : fallback;
+}
+
+/**
+ * Download a report as CSV or XLSX. Not a query hook — fetches the
+ * `?format=` URL, reads the blob, and triggers a browser download.
+ */
+export async function downloadQuizReport(
+  quizId: string,
+  report: "responses" | "statistics",
+  format: "csv" | "xlsx",
+): Promise<void> {
+  const res = await apiGetResponse(
+    `/teacher/quizzes/${quizId}/reports/${report}?format=${format}`,
+  );
+  const blob = await res.blob();
+  const name = filenameFromDisposition(
+    res.headers.get("Content-Disposition"),
+    `quiz-${quizId}-${report}.${format}`,
+  );
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** Download a quiz's questions exported to GIFT (txt) or Moodle XML. */
+export async function downloadQuizExport(
+  quizId: string,
+  format: "gift" | "xml",
+): Promise<void> {
+  const res = await apiGetResponse(
+    `/teacher/quizzes/${quizId}/questions/export?format=${format}`,
+  );
+  const blob = await res.blob();
+  const ext = format === "gift" ? "txt" : "xml";
+  const name = filenameFromDisposition(
+    res.headers.get("Content-Disposition"),
+    `quiz-${quizId}-questions.${ext}`,
+  );
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// --- Phase 11: import ------------------------------------------------------
+export interface ImportResult {
+  imported: number;
+  skipped: number;
+  warnings: string[];
+}
+
+export function useImportQuestionsFromFile(quizId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ content, format }: { content: string; format: "gift" | "xml" }) =>
+      apiPost<ImportResult>(`/teacher/quizzes/${quizId}/questions/import-file`, {
+        content,
+        format,
+      }),
+    onSuccess: () => {
+      if (quizId) {
+        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.authoring(quizId) });
+        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.questions(quizId) });
+      }
+    },
+  });
+}
+
+// --- Phase 13: audit events ------------------------------------------------
+export interface AuditEventRow {
+  id: string;
+  event_name: string;
+  quiz_id: string;
+  actor_user_id: string | null;
+  subject_attempt_id: string | null;
+  subject_question_id: string | null;
+  subject_user_id: string | null;
+  payload_json: Record<string, unknown>;
+  occurred_at: string;
+}
+
+export function useQuizAuditEvents(quizId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.quizzes.auditEvents(quizId ?? ""),
+    queryFn: () =>
+      apiFetch<AuditEventRow[]>(`/teacher/quizzes/${quizId}/audit-events`),
+    enabled: !!quizId,
+  });
 }
