@@ -235,6 +235,12 @@ const teacherQuizManageRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/teacher/quiz-manage")),
 });
 
+const teacherQuizGenerateRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/teacher/courses/$courseId/quizzes/$quizId/generate",
+  component: lazyRouteComponent(() => import("@/routes/teacher/quiz-generate")),
+});
+
 const teacherQuizResultsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/quizzes/$quizId/results",
@@ -539,6 +545,7 @@ const routeTree = rootRoute.addChildren([
     teacherLessonManageRoute,
     teacherModuleManageRoute,
     teacherQuizManageRoute,
+    teacherQuizGenerateRoute,
     teacherQuizResultsRoute,
     teacherInterviewConfigRoute,
     teacherInterviewGapReportRoute,

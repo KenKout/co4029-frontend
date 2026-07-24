@@ -21,7 +21,6 @@ import {
   Sparkles,
   Trash2,
   Upload,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -55,7 +54,6 @@ import type {
   QuizQuestionAuthoring,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
-import { QuizGenerationPanel } from "./_components/quiz-generation-panel";
 import { QuestionBankModal } from "./_components/question-bank-modal";
 import { MasterySelector } from "./_components/MasterySelector";
 
@@ -221,7 +219,6 @@ export default function QuizManagePage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmPublish, setConfirmPublish] = useState(false);
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
-  const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(
     new Set(),
@@ -737,7 +734,12 @@ export default function QuizManagePage() {
           onBulkSecondsChange={setBulkSeconds}
           onAddQuestion={handleAddQuestion}
           addPending={addQuestion.isPending}
-          onOpenGenerator={() => setShowGenerateModal(true)}
+          onOpenGenerator={() =>
+            navigate({
+              to: "/teacher/courses/$courseId/quizzes/$quizId/generate",
+              params: { courseId, quizId },
+            })
+          }
           onOpenBank={() => setShowBankModal(true)}
           onQueueDelete={pendingDeletes.queueDelete}
         />
@@ -820,15 +822,9 @@ export default function QuizManagePage() {
         </div>
       )}
 
-      {showGenerateModal && quiz?.module_id && (
-        <GenerateModal
-          quizId={quizId}
-          moduleId={quiz.module_id}
-          courseId={courseId}
-          hasExistingQuestions={questions.length > 0}
-          onClose={() => setShowGenerateModal(false)}
-        />
-      )}
+      {/* The AI generator moved from a modal to its own full-page route
+          (/generate) — the form outgrew the dialog. onOpenGenerator now
+          navigates there instead of opening a modal. */}
 
       {showBankModal && quiz?.course_id && (
         <QuestionBankModal
@@ -1900,88 +1896,9 @@ function buildQuestionDraft(question: QuizQuestionAuthoring): QuestionDraft {
   };
 }
 
-function GenerateModal({
-  quizId,
-  moduleId,
-  courseId,
-  hasExistingQuestions,
-  onClose,
-}: {
-  quizId: string;
-  moduleId: string;
-  courseId?: string;
-  hasExistingQuestions: boolean;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation();
-
-  // ESC closes the modal. Registered once while mounted; the parent unmounts
-  // this component on close so no manual cleanup dance is needed beyond the
-  // effect teardown.
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
-
-  return (
-    // Backdrop click closes; the inner panel stops propagation so clicks inside
-    // the form never bubble up to trigger a close.
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 py-8 overflow-y-auto"
-      onClick={onClose}
-      role="presentation"
-    >
-      <div
-        className="w-full max-w-4xl rounded-xl bg-m3-surface shadow-xl my-auto flex max-h-[calc(100vh-4rem)] flex-col"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* Sticky header so the close button is ALWAYS reachable regardless of
-            how far the form body is scrolled — fixes "have to scroll way back
-            to close". */}
-        <div className="flex items-start justify-between gap-3 border-b border-m3-outline-variant/15 p-6 pb-4 shrink-0">
-          <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-xl gradient-primary flex items-center justify-center shadow-ai-glow shrink-0">
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
-            <div className="space-y-1">
-              <h2 className="font-headline font-bold text-base text-m3-on-surface">
-                {t("teacher_quiz_manage.generate_modal.title")}
-              </h2>
-              <p className="text-sm text-m3-on-surface-variant">
-                {t("teacher_quiz_manage.generate_modal.description")}
-              </p>
-            </div>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8 shrink-0"
-            title={t("common.close")}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Only the form body scrolls; header stays pinned. */}
-        <div className="overflow-y-auto p-6 pt-4">
-          <QuizGenerationPanel
-            quizId={quizId}
-            moduleId={moduleId}
-            courseId={courseId}
-            hasExistingQuestions={hasExistingQuestions}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
+/* GenerateModal removed: the AI generator is now its own full-page route
+   (src/routes/teacher/quiz-generate.tsx) reached via onOpenGenerator, since
+   the form outgrew the dialog. QuizGenerationPanel is imported by that page. */
 
 function SettingsTab({
   draft,
