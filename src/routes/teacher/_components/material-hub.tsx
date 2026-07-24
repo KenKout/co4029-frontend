@@ -1,15 +1,10 @@
-import { useState, useRef, useCallback } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { useState, useRef } from "react";
 import {
-  ArrowLeft,
-  ArrowRight,
   Upload,
   FileText,
   Video,
   FileCode,
   RefreshCw,
-  CheckCircle,
-  AlertCircle,
   Loader2,
   Sparkles,
   Eye,
@@ -24,10 +19,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
-  useTeacherLessonMaterials,
-  useTeacherProcessingSummary,
   useTeacherLessonKnowledgeGraph,
   useTeacherMaterialStatus,
   useInitMaterialUpload,
@@ -43,11 +35,7 @@ import {
   useTeacherDeletedMaterials,
   useRestoreMaterial,
 } from "@/lib/api/hooks/materials";
-import {
-  useTeacherCourseById,
-  useTeacherLesson,
-  useUpdateLesson,
-} from "@/lib/api/hooks/teacher-courses";
+import { useUpdateLesson } from "@/lib/api/hooks/teacher-courses";
 import type {
   LearningMaterial,
   LessonKnowledgeGraph,
@@ -58,10 +46,9 @@ import type {
 } from "@/lib/api/types";
 import { uploadMultipart } from "@/lib/upload/multipart";
 import { ApiError } from "@/lib/api/client";
-import { FileDropzone } from "@/components/ui/file-dropzone";
 import { cn } from "@/lib/utils";
 
-const PROC_STATUS: Record<string, { color: string; spin?: boolean }> = {
+export const PROC_STATUS: Record<string, { color: string; spin?: boolean }> = {
   not_queued: { color: "bg-amber-50 text-amber-600" },
   pending: { color: "bg-blue-50 text-blue-700", spin: true },
   extracting: { color: "bg-blue-100 text-blue-700", spin: true },
@@ -72,7 +59,7 @@ const PROC_STATUS: Record<string, { color: string; spin?: boolean }> = {
   failed: { color: "bg-red-100 text-red-700" },
 };
 
-const MATERIAL_TYPE_ICON: Record<
+export const MATERIAL_TYPE_ICON: Record<
   string,
   React.ComponentType<{ className?: string }>
 > = {
@@ -80,7 +67,7 @@ const MATERIAL_TYPE_ICON: Record<
   code: FileCode,
 };
 
-const MATERIAL_TYPE_OPTIONS: ReadonlyArray<{
+export const MATERIAL_TYPE_OPTIONS: ReadonlyArray<{
   value: MaterialUploadInit["material_type"];
   labelKey?: string;
   labelText?: string;
@@ -96,7 +83,9 @@ const MATERIAL_TYPE_OPTIONS: ReadonlyArray<{
   { value: "xlsx", labelText: "Excel (XLSX)" },
 ];
 
-function detectMaterialType(file: File): MaterialUploadInit["material_type"] {
+export function detectMaterialType(
+  file: File,
+): MaterialUploadInit["material_type"] {
   const name = file.name.toLowerCase();
   if (file.type.startsWith("video/")) return "video";
   if (file.type.startsWith("audio/")) return "audio";
@@ -111,11 +100,11 @@ function detectMaterialType(file: File): MaterialUploadInit["material_type"] {
   return "pdf";
 }
 
-function materialIcon(type: string) {
+export function materialIcon(type: string) {
   return MATERIAL_TYPE_ICON[type] ?? FileText;
 }
 
-async function sha256Hex(file: File): Promise<string> {
+export async function sha256Hex(file: File): Promise<string> {
   const buf = await file.arrayBuffer();
   const digest = await crypto.subtle.digest("SHA-256", buf);
   return Array.from(new Uint8Array(digest))
@@ -123,7 +112,7 @@ async function sha256Hex(file: File): Promise<string> {
     .join("");
 }
 
-function isLikelyCorsError(err: unknown): boolean {
+export function isLikelyCorsError(err: unknown): boolean {
   if (err instanceof TypeError) return true;
   if (
     err instanceof Error &&
@@ -134,7 +123,7 @@ function isLikelyCorsError(err: unknown): boolean {
   return false;
 }
 
-function formatBytes(bytes: number): string {
+export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   if (bytes < 1024 * 1024 * 1024)
@@ -142,7 +131,7 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
 }
 
-function ProgressBar({ value, label }: { value: number; label: string }) {
+export function ProgressBar({ value, label }: { value: number; label: string }) {
   const pct = Math.max(0, Math.min(100, Math.round(value)));
   return (
     <div className="space-y-1.5">
@@ -166,7 +155,7 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
   );
 }
 
-function SelectedFileForm({
+export function SelectedFileForm({
   file,
   lessonId,
   courseId,
@@ -516,7 +505,7 @@ function SelectedFileForm({
   );
 }
 
-function ProcessingStatusCard({ material }: { material: LearningMaterial }) {
+export function ProcessingStatusCard({ material }: { material: LearningMaterial }) {
   const { t } = useTranslation();
   const { data: status } = useTeacherMaterialStatus(material.id);
   const proc =
@@ -606,7 +595,7 @@ function ProcessingStatusCard({ material }: { material: LearningMaterial }) {
   );
 }
 
-function MaterialCard({
+export function MaterialCard({
   material,
   onDelete,
 }: {
@@ -831,7 +820,7 @@ function MaterialCard({
   );
 }
 
-function MaterialVersionsPanel({ materialId }: { materialId: string }) {
+export function MaterialVersionsPanel({ materialId }: { materialId: string }) {
   const { t } = useTranslation();
   const { data: versions, isLoading } = useMaterialVersions(materialId);
   const rollback = useRollbackMaterialVersion(materialId);
@@ -910,7 +899,7 @@ function MaterialVersionsPanel({ materialId }: { materialId: string }) {
   );
 }
 
-function MaterialDeleteButton({
+export function MaterialDeleteButton({
   id,
   onDeleted,
 }: {
@@ -1003,7 +992,7 @@ function layoutKgNodes(
   return positions;
 }
 
-function KnowledgeGraphPreview({
+export function KnowledgeGraphPreview({
   lessonId,
   readyCount,
 }: {
@@ -1291,7 +1280,7 @@ function KnowledgeGraphPreview({
   );
 }
 
-function RecentlyDeletedSection({ lessonId }: { lessonId: string }) {
+export function RecentlyDeletedSection({ lessonId }: { lessonId: string }) {
   const { t } = useTranslation();
   const { data: deleted = [] } = useTeacherDeletedMaterials(lessonId);
   const restore = useRestoreMaterial(lessonId);
@@ -1360,220 +1349,6 @@ function RecentlyDeletedSection({ lessonId }: { lessonId: string }) {
             </Button>
           </div>
         ))}
-      </div>
-    </div>
-  );
-}
-
-export default function LessonMaterialsPage() {
-  const { t } = useTranslation();
-  const params = useParams({ strict: false }) as {
-    courseId: string;
-    lessonId: string;
-  };
-  const { courseId, lessonId } = params;
-
-  const { data: course } = useTeacherCourseById(courseId);
-  const { data: lesson, isLoading: lessonLoading } = useTeacherLesson(lessonId);
-  const { data: materials = [], isLoading: materialsLoading } =
-    useTeacherLessonMaterials(lessonId);
-  const { data: summary } = useTeacherProcessingSummary(lessonId);
-
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-
-  const readyCount = summary?.completed_versions ?? 0;
-  const processingCount = summary?.processing_versions ?? 0;
-
-  const processingMaterial =
-    processingCount > 0
-      ? materials.find((m) => m.current_version_id !== null)
-      : undefined;
-
-  return (
-    <div className="space-y-8 pb-16 max-w-[1400px]">
-      <Breadcrumbs
-        items={[
-          {
-            label: t("teacher_common.breadcrumb_teaching"),
-            to: "/teacher/courses",
-          },
-          {
-            label: course?.title ?? t("teacher_common.breadcrumb_course"),
-            to: "/teacher/courses/$courseId",
-            params: { courseId },
-          },
-          { label: lesson?.title ?? t("teacher_common.lesson_fallback") },
-          { label: t("teacher_lesson_materials.breadcrumb.materials") },
-        ]}
-      />
-
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <Link to="/teacher/courses/$courseId" params={{ courseId }}>
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-            <h1 className="text-3xl lg:text-4xl font-extrabold font-headline tracking-tight text-m3-primary leading-tight">
-              {t("teacher_lesson_materials.header.title")}
-            </h1>
-          </div>
-          <p className="text-m3-on-surface-variant text-base leading-relaxed pl-11">
-            {lessonLoading
-              ? t("teacher_lesson_materials.header.subtitle_loading")
-              : lesson?.title}{" "}
-            {t("teacher_lesson_materials.header.subtitle_suffix")}
-          </p>
-        </div>
-
-        {summary && (processingCount > 0 || readyCount > 0) && (
-          <div className="flex gap-2 flex-wrap shrink-0">
-            {processingCount > 0 && (
-              <Badge className="bg-blue-100 text-blue-700 border-0 gap-1.5 text-xs">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                {t("teacher_lesson_materials.header.processing_count", {
-                  count: processingCount,
-                })}
-              </Badge>
-            )}
-            {readyCount > 0 && (
-              <Badge className="bg-emerald-100 text-emerald-700 border-0 gap-1.5 text-xs">
-                <CheckCircle className="h-3 w-3" />
-                {t("teacher_lesson_materials.header.ready_count", {
-                  count: readyCount,
-                })}
-              </Badge>
-            )}
-            {(summary.failed_versions ?? 0) > 0 && (
-              <Badge className="bg-red-100 text-red-700 border-0 gap-1.5 text-xs">
-                <AlertCircle className="h-3 w-3" />
-                {t("teacher_lesson_materials.header.failed_count", {
-                  count: summary.failed_versions,
-                })}
-              </Badge>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-8 items-start">
-        <div className="space-y-5">
-          {selectedFile ? (
-            <SelectedFileForm
-              file={selectedFile}
-              lessonId={lessonId}
-              courseId={courseId}
-              lessonPrimaryMaterialId={lesson?.primary_material_id ?? null}
-              onDone={() => setSelectedFile(null)}
-              onCancel={() => setSelectedFile(null)}
-            />
-          ) : (
-            <FileDropzone
-              onFile={setSelectedFile}
-              accept=".pdf,.mp4,.mov,.txt,.md,.pptx,.docx,.xlsx,.py,.js,.ts,.jsx,.tsx,.java,.c,.cpp,.png,.jpg,.jpeg,.mp3,.wav"
-              idleTitle={t("teacher_lesson_materials.dropzone.drop_idle")}
-              hint={t("teacher_lesson_materials.dropzone.formats")}
-            />
-          )}
-
-          {processingCount > 0 && processingMaterial ? (
-            <ProcessingStatusCard material={processingMaterial} />
-          ) : (
-            <div className="bg-m3-surface-container-low rounded-xl p-7 text-center">
-              <div className="w-12 h-12 rounded-xl bg-m3-surface-container flex items-center justify-center mx-auto mb-3">
-                <Brain className="h-6 w-6 text-m3-on-surface-variant" />
-              </div>
-              <p className="font-headline font-bold text-m3-on-surface text-sm mb-1">
-                {t("teacher_lesson_materials.processing.empty_title")}
-              </p>
-              <p className="text-xs text-m3-on-surface-variant">
-                {t("teacher_lesson_materials.processing.empty_body")}
-              </p>
-            </div>
-          )}
-
-          {readyCount > 0 && (
-            <div className="flex items-center gap-3 p-4 bg-m3-secondary-fixed/30 rounded-xl border border-m3-secondary/10">
-              <Sparkles className="h-5 w-5 text-m3-secondary shrink-0" />
-              <p className="text-sm font-medium text-m3-on-surface">
-                {t("teacher_lesson_materials.processing.indexed_summary", {
-                  count: readyCount,
-                })}
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-5">
-          <div className="flex items-center justify-between">
-            <h2 className="font-headline font-bold text-m3-on-surface text-lg">
-              {t("teacher_lesson_materials.history.title")}
-            </h2>
-            {summary && (
-              <span className="text-sm text-m3-on-surface-variant">
-                {t("teacher_lesson_materials.history.total", {
-                  count: summary.materials_total,
-                })}
-              </span>
-            )}
-          </div>
-
-          {materialsLoading ? (
-            <div className="space-y-3">
-              {[1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="h-16 bg-m3-surface-container animate-pulse rounded-xl"
-                />
-              ))}
-            </div>
-          ) : materials.length === 0 ? (
-            <div className="text-center py-10 text-m3-on-surface-variant bg-m3-surface-container-low/50 rounded-xl">
-              <FileText className="h-9 w-9 mx-auto mb-3 opacity-20" />
-              <p className="text-sm font-medium">
-                {t("teacher_lesson_materials.history.empty_title")}
-              </p>
-              <p className="text-xs mt-1 text-m3-on-surface-variant/70">
-                {t("teacher_lesson_materials.history.empty_body")}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {materials.map((material) => (
-                <div key={material.id}>
-                  <MaterialCard
-                    material={material}
-                    onDelete={(id) => setPendingDeleteId(id)}
-                  />
-                  {pendingDeleteId === material.id && (
-                    <div className="mt-2 flex items-center justify-end gap-2 px-4 py-3 rounded-xl bg-m3-error-container/20 border border-m3-error/20 text-xs text-m3-on-surface">
-                      <span className="text-m3-error font-medium">
-                        {t("teacher_lesson_materials.confirm_delete.inline")}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setPendingDeleteId(null)}
-                      >
-                        {t("common.cancel")}
-                      </Button>
-                      <MaterialDeleteButton
-                        id={material.id}
-                        onDeleted={() => setPendingDeleteId(null)}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <RecentlyDeletedSection lessonId={lessonId} />
-
-          <KnowledgeGraphPreview lessonId={lessonId} readyCount={readyCount} />
-        </div>
       </div>
     </div>
   );

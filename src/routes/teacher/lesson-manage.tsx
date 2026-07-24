@@ -23,13 +23,13 @@ import {
   Archive,
   Loader2,
   Save,
-  Brain,
   Pencil,
   Hash,
   AlignLeft,
   Eye,
   EyeOff,
   RefreshCw,
+  CheckCircle,
 } from "lucide-react";
 import { MediaPlayer, MediaProvider } from "@vidstack/react";
 import {
@@ -41,6 +41,7 @@ import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
 import {
@@ -65,9 +66,18 @@ import {
   useReprocessMaterial,
   useUpdateMaterial,
   useBulkSetMaterialVisibility,
+  useTeacherProcessingSummary,
 } from "@/lib/api/hooks/materials";
 import type { LessonResource } from "@/lib/api/types/common";
 import type { LearningMaterial } from "@/lib/api/types/teacher";
+import {
+  SelectedFileForm,
+  ProcessingStatusCard,
+  MaterialCard,
+  MaterialDeleteButton,
+  RecentlyDeletedSection,
+  KnowledgeGraphPreview,
+} from "./_components/material-hub";
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { useFileDrop } from "@/lib/use-file-drop";
 import { cn } from "@/lib/utils";
@@ -658,9 +668,12 @@ function ReadingContent({
             Plain text or Markdown
           </span>
         </div>
+        {/* Default to a compact height so the editor doesn't dominate the
+            page; teacher drags the bottom-right corner (native resize-y) to
+            grow it as needed. */}
         <textarea
           ref={notesRef}
-          className="min-h-[600px] w-full p-8 bg-m3-surface-container-lowest text-m3-on-surface leading-relaxed text-base outline-none resize-none font-body placeholder:text-m3-on-surface-variant/40"
+          className="min-h-[240px] w-full p-8 bg-m3-surface-container-lowest text-m3-on-surface leading-relaxed text-base outline-none resize-y font-body placeholder:text-m3-on-surface-variant/40"
           placeholder={
             "# Introduction\n\nWrite your reading material here.\n\n## Key Concepts\n\n- Concept 1\n- Concept 2\n\n**Bold text**, *italic text*, `inline code`"
           }
@@ -668,6 +681,144 @@ function ReadingContent({
           onChange={(e) => setNotes(e.target.value)}
         />
       </div>
+    </section>
+  );
+}
+
+/* ════════════════════════════════════════
+   Material history — folded in from the former AI Material Hub page.
+   Upload → live processing status → processed-material list (with the
+   two-click delete-confirm pattern) → recently-deleted restore. Shared with
+   both reading and video lessons (same component). Uses the extracted
+   components from _components/material-hub.tsx verbatim.
+   ════════════════════════════════════════ */
+function MaterialHistorySection({
+  lessonId,
+  courseId,
+  lessonPrimaryMaterialId,
+}: {
+  lessonId: string;
+  courseId: string;
+  lessonPrimaryMaterialId: string | null;
+}) {
+  const { t } = useTranslation();
+  const { data: materials = [], isLoading: materialsLoading } =
+    useTeacherLessonMaterials(lessonId);
+  const { data: summary } = useTeacherProcessingSummary(lessonId);
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const readyCount = summary?.completed_versions ?? 0;
+  const processingCount = summary?.processing_versions ?? 0;
+  const processingMaterial =
+    processingCount > 0
+      ? materials.find((m) => m.current_version_id !== null)
+      : undefined;
+
+  return (
+    <section className="space-y-5">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h2 className="font-headline font-bold text-2xl text-m3-primary">
+          Material history
+        </h2>
+        <div className="flex gap-2 flex-wrap shrink-0">
+          {processingCount > 0 && (
+            <Badge className="bg-blue-100 text-blue-700 border-0 gap-1.5 text-xs">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              {t("teacher_lesson_materials.header.processing_count", {
+                count: processingCount,
+              })}
+            </Badge>
+          )}
+          {readyCount > 0 && (
+            <Badge className="bg-emerald-100 text-emerald-700 border-0 gap-1.5 text-xs">
+              <CheckCircle className="h-3 w-3" />
+              {t("teacher_lesson_materials.header.ready_count", {
+                count: readyCount,
+              })}
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Upload — collapsed to a dropzone by default; expands into the full
+          upload form once a file is picked so it doesn't dominate the page. */}
+      {selectedFile ? (
+        <SelectedFileForm
+          file={selectedFile}
+          lessonId={lessonId}
+          courseId={courseId}
+          lessonPrimaryMaterialId={lessonPrimaryMaterialId}
+          onDone={() => setSelectedFile(null)}
+          onCancel={() => setSelectedFile(null)}
+        />
+      ) : (
+        <FileDropzone
+          onFile={setSelectedFile}
+          accept=".pdf,.mp4,.mov,.txt,.md,.pptx,.docx,.xlsx,.py,.js,.ts,.jsx,.tsx,.java,.c,.cpp,.png,.jpg,.jpeg,.mp3,.wav"
+          idleTitle={t("teacher_lesson_materials.dropzone.drop_idle")}
+          hint={t("teacher_lesson_materials.dropzone.formats")}
+        />
+      )}
+
+      {/* Live processing status (the "AI progress" pattern the user liked). */}
+      {processingCount > 0 && processingMaterial && (
+        <ProcessingStatusCard material={processingMaterial} />
+      )}
+
+      {/* Processed-material list with the two-click delete confirm. */}
+      {materialsLoading ? (
+        <div className="space-y-3">
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-16 bg-m3-surface-container animate-pulse rounded-xl"
+            />
+          ))}
+        </div>
+      ) : materials.length === 0 ? (
+        <div className="text-center py-10 text-m3-on-surface-variant bg-m3-surface-container-low/50 rounded-xl">
+          <FileText className="h-9 w-9 mx-auto mb-3 opacity-20" />
+          <p className="text-sm font-medium">
+            {t("teacher_lesson_materials.history.empty_title")}
+          </p>
+          <p className="text-xs mt-1 text-m3-on-surface-variant/70">
+            {t("teacher_lesson_materials.history.empty_body")}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {materials.map((material) => (
+            <div key={material.id}>
+              <MaterialCard
+                material={material}
+                onDelete={(id) => setPendingDeleteId(id)}
+              />
+              {pendingDeleteId === material.id && (
+                <div className="mt-2 flex items-center justify-end gap-2 px-4 py-3 rounded-xl bg-m3-error-container/20 border border-m3-error/20 text-xs text-m3-on-surface">
+                  <span className="text-m3-error font-medium">
+                    {t("teacher_lesson_materials.confirm_delete.inline")}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPendingDeleteId(null)}
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                  <MaterialDeleteButton
+                    id={material.id}
+                    onDeleted={() => setPendingDeleteId(null)}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <RecentlyDeletedSection lessonId={lessonId} />
     </section>
   );
 }
@@ -1158,7 +1309,15 @@ export default function LessonManagePage() {
         />
       </div>
 
-      <div className="py-3 mb-8 flex items-center justify-between gap-3">
+      {/* ── Sticky action bar ──
+          Sticky at top-0 z-10 (inside <main>, stays ≤ z-20 per frontend
+          AGENTS.md). Holds ALL lesson-level actions so they follow the teacher
+          while scrolling the (now long) page: Back · Archive · Delete ·
+          Publish/Unpublish · Save. The old sidebar published/draft toggle and
+          the main-column danger-zone are removed so no action is duplicated.
+          Archive/Delete reuse the existing two-click confirm: the first click
+          arms (button turns red + label changes), the second executes. */}
+      <div className="sticky top-0 z-10 -mx-1 mb-8 flex items-center justify-between gap-3 border-b border-m3-outline-variant/15 bg-m3-surface/85 px-1 py-3 backdrop-blur-md">
         <Link
           to={
             moduleId
@@ -1179,19 +1338,79 @@ export default function LessonManagePage() {
           </Button>
         </Link>
         <div className="flex items-center gap-2">
-          <Link
-            to="/teacher/courses/$courseId/lessons/$lessonId/materials"
-            params={{ courseId, lessonId }}
+          {/* Archive (two-click confirm) */}
+          <Button
+            variant={archiveConfirm ? "default" : "ghost"}
+            size="sm"
+            onClick={handleArchive}
+            onBlur={() => setArchiveConfirm(false)}
+            className={cn(
+              "gap-2 cursor-pointer",
+              archiveConfirm
+                ? "bg-amber-500 hover:bg-amber-600 text-white border-0"
+                : "text-m3-on-surface-variant hover:text-amber-600",
+            )}
+            title="Archive lesson"
           >
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 hidden sm:flex border-m3-outline-variant/30"
-            >
-              <Brain className="h-4 w-4 text-m3-secondary" />
-              AI Material Hub
-            </Button>
-          </Link>
+            <Archive className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {archiveConfirm ? "Confirm archive?" : "Archive"}
+            </span>
+          </Button>
+
+          {/* Delete (two-click confirm) */}
+          <Button
+            variant={deleteConfirm ? "default" : "ghost"}
+            size="sm"
+            onClick={handleDelete}
+            onBlur={() => setDeleteConfirm(false)}
+            className={cn(
+              "gap-2 cursor-pointer",
+              deleteConfirm
+                ? "bg-m3-error hover:opacity-90 text-white border-0"
+                : "text-m3-on-surface-variant hover:text-m3-error",
+            )}
+            title="Delete lesson"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {deleteConfirm ? "Confirm delete?" : "Delete"}
+            </span>
+          </Button>
+
+          <span className="mx-0.5 h-5 w-px bg-m3-outline-variant/30" />
+
+          {/* Publish / Unpublish — single toggle replacing the old sidebar
+              published/draft control. Flips local `status`; persisted on Save. */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setStatus((s) => (s === "published" ? "draft" : "published"))
+            }
+            className={cn(
+              "gap-2 cursor-pointer border-m3-outline-variant/30",
+              status === "published"
+                ? "text-emerald-600 hover:text-emerald-700"
+                : "text-m3-on-surface-variant",
+            )}
+            title={
+              status === "published"
+                ? "Unpublish (set to draft)"
+                : "Publish lesson"
+            }
+          >
+            {status === "published" ? (
+              <Eye className="h-4 w-4" />
+            ) : (
+              <EyeOff className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">
+              {status === "published" ? "Published" : "Draft"}
+            </span>
+          </Button>
+
+          {/* Save */}
           <Button
             size="sm"
             onClick={handleSave}
@@ -1371,6 +1590,26 @@ export default function LessonManagePage() {
               </span>
             </label>
           </section>
+
+          {/* ── Material history (folded in from the former AI Material Hub) ──
+              Upload + live processing progress + processed-material list +
+              recently-deleted. Same component for reading and video lessons. */}
+          <MaterialHistorySection
+            lessonId={lessonId}
+            courseId={courseId}
+            lessonPrimaryMaterialId={lesson?.primary_material_id ?? null}
+          />
+
+          {/* ── Knowledge Graph (brought over from the AI hub) ── */}
+          <section className="space-y-5">
+            <h2 className="font-headline font-bold text-2xl text-m3-primary">
+              Knowledge Graph
+            </h2>
+            <KnowledgeGraphPreview
+              lessonId={lessonId}
+              readyCount={aiMaterials.filter((m) => m.current_version_id).length}
+            />
+          </section>
         </div>
 
         {/* ═══════════════════════════════════
@@ -1383,54 +1622,9 @@ export default function LessonManagePage() {
               Lesson Settings
             </h3>
 
-            {/* Visibility */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                Visibility
-              </label>
-              <div className="flex gap-2 p-1 bg-m3-surface-container rounded-xl">
-                {(["published", "draft"] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setStatus(s)}
-                    className={cn(
-                      "flex-1 py-2 rounded-lg text-sm font-bold capitalize transition-all cursor-pointer",
-                      status === s
-                        ? "bg-surface-elev text-m3-primary shadow-sm"
-                        : "text-m3-on-surface-variant hover:text-m3-on-surface",
-                    )}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Lesson type */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                Lesson Type
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {LESSON_TYPE_OPTIONS.map(({ value, label, icon: Icon }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setLessonType(value)}
-                    className={cn(
-                      "flex items-center gap-2 p-3 rounded-xl border text-sm font-bold transition-all cursor-pointer",
-                      lessonType === value
-                        ? "border-m3-primary/30 bg-m3-primary-fixed text-m3-primary"
-                        : "border-m3-outline-variant/20 bg-surface-elev text-m3-on-surface-variant hover:bg-m3-surface-container-high",
-                    )}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Visibility (published/draft) moved to the sticky action bar as
+                the Publish/Unpublish toggle. Lesson Type selector removed —
+                type is fixed at lesson creation (reading/video). */}
 
             {/* Estimated duration */}
             <div className="space-y-2">
@@ -1541,106 +1735,9 @@ export default function LessonManagePage() {
             })()}
           </div>
 
-          {/* ── AI Material Hub teaser ── */}
-          <div className="ghost-border rounded-xl p-5 flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-m3-secondary-fixed flex items-center justify-center shrink-0">
-              <Sparkles className="h-4 w-4 text-m3-secondary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-m3-on-surface">
-                AI Material Hub
-              </p>
-              <p className="text-xs text-m3-on-surface-variant mt-0.5 leading-relaxed">
-                Upload videos or PDFs to generate quizzes, extract knowledge
-                graphs, and track student readiness.
-              </p>
-              <Link
-                to="/teacher/courses/$courseId/lessons/$lessonId/materials"
-                params={{ courseId, lessonId }}
-              >
-                <button
-                  type="button"
-                  className="mt-2.5 text-xs font-bold text-m3-secondary hover:text-m3-primary transition-colors cursor-pointer"
-                >
-                  Go to AI Hub →
-                </button>
-              </Link>
-            </div>
-          </div>
-
-          {/* ── Danger zone ── */}
-          {archiveConfirm ? (
-            <div className="w-full rounded-xl border border-m3-error/30 bg-m3-error/5 p-4 space-y-3">
-              <p className="text-sm font-bold text-m3-error text-center">
-                Archive this lesson?
-              </p>
-              <p className="text-xs text-m3-on-surface-variant text-center">
-                Students will no longer see it. You can restore it later.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setArchiveConfirm(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-m3-outline-variant/30 text-sm font-bold text-m3-on-surface-variant hover:bg-m3-surface-container transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleArchive}
-                  className="flex-1 py-2.5 rounded-xl bg-m3-error text-white text-sm font-bold hover:opacity-90 cursor-pointer"
-                >
-                  Yes, Archive
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handleArchive}
-              className="w-full py-3 flex items-center justify-center gap-2 rounded-xl text-m3-error font-bold text-sm hover:bg-m3-error/5 transition-colors cursor-pointer"
-            >
-              <Archive className="h-4 w-4" />
-              Archive Lesson
-            </button>
-          )}
-
-          {deleteConfirm ? (
-            <div className="w-full rounded-xl border border-m3-error/50 bg-m3-error/5 p-4 space-y-3">
-              <p className="text-sm font-bold text-m3-error text-center">
-                Permanently delete this lesson?
-              </p>
-              <p className="text-xs text-m3-on-surface-variant text-center">
-                This cannot be undone. All resources and materials will be
-                removed.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setDeleteConfirm(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-m3-outline-variant/30 text-sm font-bold text-m3-on-surface-variant hover:bg-m3-surface-container transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="flex-1 py-2.5 rounded-xl bg-m3-error text-white text-sm font-bold hover:opacity-90 cursor-pointer"
-                >
-                  Yes, Delete
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="w-full py-3 flex items-center justify-center gap-2 rounded-xl text-m3-error font-bold text-sm hover:bg-m3-error/5 transition-colors cursor-pointer"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete Lesson
-            </button>
-          )}
+          {/* AI Material Hub teaser + danger zone removed: material management
+              now lives inline as "Material history" in the main column, and
+              Archive/Delete moved to the sticky action bar at the top. */}
         </aside>
       </div>
 

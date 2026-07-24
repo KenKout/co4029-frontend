@@ -967,7 +967,7 @@ function NotesCard({
                 >
                   {canLink ? (
                     <Link
-                      to="/teacher/courses/$courseId/lessons/$lessonId/materials"
+                      to="/teacher/courses/$courseId/lessons/$lessonId"
                       params={{
                         courseId: courseId as string,
                         lessonId: item.lesson_id as string,

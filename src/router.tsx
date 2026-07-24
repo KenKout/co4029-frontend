@@ -219,13 +219,9 @@ const teacherLessonManageRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/teacher/lesson-manage")),
 });
 
-const teacherLessonMaterialsRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
-  path: "/teacher/courses/$courseId/lessons/$lessonId/materials",
-  component: lazyRouteComponent(
-    () => import("@/routes/teacher/lesson-materials"),
-  ),
-});
+/* lesson-materials route removed: the AI Material Hub is now folded into the
+   lesson-manage page as the inline "Material history" + "Knowledge Graph"
+   sections. */
 
 const teacherModuleManageRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
@@ -541,7 +537,6 @@ const routeTree = rootRoute.addChildren([
     teacherCourseNewRoute,
     teacherCourseManageRoute,
     teacherLessonManageRoute,
-    teacherLessonMaterialsRoute,
     teacherModuleManageRoute,
     teacherQuizManageRoute,
     teacherQuizResultsRoute,
