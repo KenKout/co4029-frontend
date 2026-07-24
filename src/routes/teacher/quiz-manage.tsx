@@ -13,6 +13,7 @@ import {
   HelpCircle,
   ListChecks,
   Loader2,
+  Pencil,
   Plus,
   RefreshCw,
   Save,
@@ -226,6 +227,28 @@ export default function QuizManagePage() {
     new Set(),
   );
   const [bulkSeconds, setBulkSeconds] = useState<string>("60");
+
+  // Jump from the Preview tab to a specific question in the Questions editor:
+  // switch tabs, then scroll the target card into view after it renders. The
+  // rAF chain waits one paint so the Questions tab (and its cards) are mounted
+  // before we look up the DOM node.
+  const goToQuestionInEditor = useCallback((questionId: string) => {
+    setTab("questions");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const el = document.getElementById(`qcard-${questionId}`);
+        if (!el) return;
+        const reduceMotion =
+          typeof window !== "undefined" &&
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        el.scrollIntoView({
+          behavior: reduceMotion ? "auto" : "smooth",
+          block: "start",
+        });
+      });
+    });
+  }, []);
 
   useEffect(() => {
     if (quiz) setDraft(draftFromQuiz(quiz));
@@ -717,9 +740,6 @@ export default function QuizManagePage() {
           onOpenGenerator={() => setShowGenerateModal(true)}
           onOpenBank={() => setShowBankModal(true)}
           onQueueDelete={pendingDeletes.queueDelete}
-          comboCount={pendingDeletes.comboCount}
-          comboSecondsLeft={pendingDeletes.secondsLeft}
-          onUndoDeletes={pendingDeletes.undo}
         />
       )}
 
@@ -734,7 +754,71 @@ export default function QuizManagePage() {
         />
       )}
 
-      {tab === "preview" && <PreviewTab quiz={quiz} questions={questions} />}
+      {tab === "preview" && (
+        <PreviewTab
+          quiz={quiz}
+          questions={questions}
+          onEditQuestion={goToQuestionInEditor}
+          onQueueDelete={pendingDeletes.queueDelete}
+        />
+      )}
+
+      {/* Page-level combo-undo banner. Lifted out of the Questions tab so it
+          stays visible when a delete is queued from the Preview tab too. Fixed
+          bottom-center, z-30 (above content + top bar, below sidebar per
+          frontend/AGENTS.md). */}
+      {pendingDeletes.comboCount > 0 && (
+        <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 flex items-center gap-3 rounded-xl bg-m3-inverse-surface text-m3-inverse-on-surface px-4 py-3 shadow-lg max-w-[calc(100vw-2rem)]">
+          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center">
+            <svg
+              className="absolute inset-0 h-8 w-8 -rotate-90"
+              viewBox="0 0 32 32"
+            >
+              <circle
+                cx="16"
+                cy="16"
+                r="14"
+                fill="none"
+                strokeWidth="3"
+                className="stroke-white/20"
+              />
+              <circle
+                cx="16"
+                cy="16"
+                r="14"
+                fill="none"
+                strokeWidth="3"
+                strokeLinecap="round"
+                className="stroke-current text-m3-primary transition-[stroke-dashoffset] duration-300 ease-linear"
+                strokeDasharray={2 * Math.PI * 14}
+                strokeDashoffset={
+                  2 * Math.PI * 14 * (1 - pendingDeletes.secondsLeft / 5)
+                }
+              />
+            </svg>
+            <span className="text-sm font-bold tabular-nums">
+              {pendingDeletes.secondsLeft}
+            </span>
+          </div>
+          <span className="flex-1 text-sm font-medium whitespace-nowrap">
+            {t("teacher_quiz_manage.combo_undo.message", {
+              count: pendingDeletes.comboCount,
+            })}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={pendingDeletes.undo}
+            className="gap-2 border-white/30 bg-transparent text-m3-inverse-on-surface hover:bg-white/10 hover:text-m3-inverse-on-surface shrink-0"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            {t("teacher_quiz_manage.combo_undo.undo", {
+              count: pendingDeletes.comboCount,
+            })}
+          </Button>
+        </div>
+      )}
 
       {showGenerateModal && quiz?.module_id && (
         <GenerateModal
@@ -877,9 +961,6 @@ function QuestionsTab({
   onOpenGenerator,
   onOpenBank,
   onQueueDelete,
-  comboCount,
-  comboSecondsLeft,
-  onUndoDeletes,
 }: {
   quizId: string;
   questions: QuizQuestionAuthoring[];
@@ -895,9 +976,6 @@ function QuestionsTab({
   onOpenGenerator: () => void;
   onOpenBank: () => void;
   onQueueDelete: (item: PendingQuestionDelete) => void;
-  comboCount: number;
-  comboSecondsLeft: number;
-  onUndoDeletes: () => void;
 }) {
   const { t } = useTranslation();
   const bulkSet = useBulkSetExpectedTime(quizId);
@@ -957,63 +1035,9 @@ function QuestionsTab({
   return (
     <div className="grid grid-cols-12 gap-6">
       <div className="col-span-12 lg:col-span-8 space-y-4 min-w-0">
-        {/* Undo snackbar: fixed bottom-center so it's ALWAYS visible
-            regardless of scroll position. It must NOT be a sticky element
-            inside the list — a sticky banner would slide under the global
-            ContentTopBar (z-20 per frontend/AGENTS.md) and be invisible,
-            which is exactly what happened. z-30 keeps it above page
-            content and the top bar but below the sidebar (z-40). */}
-        {comboCount > 0 && (
-          <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 flex items-center gap-3 rounded-xl bg-m3-inverse-surface text-m3-inverse-on-surface px-4 py-3 shadow-lg max-w-[calc(100vw-2rem)]">
-            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center">
-              <svg
-                className="absolute inset-0 h-8 w-8 -rotate-90"
-                viewBox="0 0 32 32"
-              >
-                <circle
-                  cx="16"
-                  cy="16"
-                  r="14"
-                  fill="none"
-                  strokeWidth="3"
-                  className="stroke-white/20"
-                />
-                <circle
-                  cx="16"
-                  cy="16"
-                  r="14"
-                  fill="none"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  className="stroke-current text-m3-primary transition-[stroke-dashoffset] duration-300 ease-linear"
-                  strokeDasharray={2 * Math.PI * 14}
-                  strokeDashoffset={
-                    2 * Math.PI * 14 * (1 - comboSecondsLeft / 5)
-                  }
-                />
-              </svg>
-              <span className="text-sm font-bold tabular-nums">
-                {comboSecondsLeft}
-              </span>
-            </div>
-            <span className="flex-1 text-sm font-medium whitespace-nowrap">
-              {t("teacher_quiz_manage.combo_undo.message", {
-                count: comboCount,
-              })}
-            </span>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={onUndoDeletes}
-              className="gap-2 border-white/30 bg-transparent text-m3-inverse-on-surface hover:bg-white/10 hover:text-m3-inverse-on-surface shrink-0"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              {t("teacher_quiz_manage.combo_undo.undo", { count: comboCount })}
-            </Button>
-          </div>
-        )}
-
+        {/* The combo-undo snackbar now lives at page level (see
+            QuizManagePage) so it stays visible when a delete is queued from
+            the Preview tab too. */}
         {questions.length > 0 && missingExpectedTimeCount > 0 && (
           <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2 text-xs text-amber-800">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
@@ -2467,9 +2491,15 @@ function ToggleRow({
 function PreviewTab({
   quiz,
   questions,
+  onEditQuestion,
+  onQueueDelete,
 }: {
   quiz: QuizAuthoring;
   questions: QuizQuestionAuthoring[];
+  /** Jump to this question in the Questions editor tab. */
+  onEditQuestion: (questionId: string) => void;
+  /** Queue this question for deletion (deferred + undo). */
+  onQueueDelete: (item: PendingQuestionDelete) => void;
 }) {
   const { t } = useTranslation();
   // Preview mirrors the student experience: only approved questions are
@@ -2513,6 +2543,8 @@ function PreviewTab({
               key={question.id}
               index={idx}
               question={question}
+              onEditQuestion={onEditQuestion}
+              onQueueDelete={onQueueDelete}
             />
           ))}
         </div>
@@ -2524,16 +2556,29 @@ function PreviewTab({
 function PreviewQuestion({
   index,
   question,
+  onEditQuestion,
+  onQueueDelete,
 }: {
   index: number;
   question: QuizQuestionAuthoring;
+  onEditQuestion: (questionId: string) => void;
+  onQueueDelete: (item: PendingQuestionDelete) => void;
 }) {
   const { t } = useTranslation();
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const hasOptions =
     (question.question_type === "multiple_choice" ||
       question.question_type === "true_false") &&
     question.options.length > 0;
   const correctAnswer = readCorrectAnswer(question);
+
+  function handleDelete() {
+    const prompt = (question.prompt_text ?? "").trim();
+    onQueueDelete({
+      id: question.id,
+      label: prompt.length > 60 ? `${prompt.slice(0, 60)}…` : prompt,
+    });
+  }
 
   return (
     <div className="rounded-xl bg-m3-surface-container-low border border-m3-outline-variant/15 p-5 space-y-3">
@@ -2541,7 +2586,7 @@ function PreviewQuestion({
         <span className="shrink-0 h-7 w-7 rounded-full gradient-primary text-white flex items-center justify-center text-xs font-extrabold">
           {index + 1}
         </span>
-        <p className="text-sm font-semibold text-m3-on-surface leading-relaxed">
+        <p className="flex-1 text-sm font-semibold text-m3-on-surface leading-relaxed">
           {question.outcome_position != null && (
             <span className="mr-1.5 inline-flex items-center rounded-md bg-violet-50 px-1.5 py-0.5 text-[11px] font-bold text-violet-600 align-middle">
               (L.O.{question.outcome_position})
@@ -2553,7 +2598,81 @@ function PreviewQuestion({
             </span>
           )}
         </p>
+        {/* Teacher-only preview actions: jump to this question in the editor,
+            or delete it (deferred + undo, gated by a confirm dialog). */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onEditQuestion(question.id)}
+            className="gap-1.5 h-8 px-2.5"
+            title={t("teacher_quiz_manage.preview.edit_question", "Edit")}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            <span className="text-xs">
+              {t("teacher_quiz_manage.preview.edit_question", "Edit")}
+            </span>
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setConfirmDelete(true)}
+            className="gap-1.5 h-8 px-2.5 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700"
+            title={t("common.delete")}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            <span className="text-xs">{t("common.delete")}</span>
+          </Button>
+        </div>
       </div>
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-xl bg-m3-surface p-6 shadow-xl space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center shrink-0">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="font-headline font-bold text-base text-m3-on-surface">
+                  {t(
+                    "teacher_quiz_manage.confirm_delete_question.title",
+                    "Delete this question?",
+                  )}
+                </h2>
+                <p className="text-sm text-m3-on-surface-variant">
+                  {t(
+                    "teacher_quiz_manage.confirm_delete_question.body",
+                    "The question will be removed. You'll have a few seconds to undo before it's permanently deleted.",
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setConfirmDelete(false)}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  setConfirmDelete(false);
+                  handleDelete();
+                }}
+                className="bg-red-600 text-white hover:bg-red-700 border-0 gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                {t("common.delete")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {hasOptions && (
         <div className="space-y-2 pl-10">

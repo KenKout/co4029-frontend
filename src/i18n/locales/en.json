@@ -2830,7 +2830,8 @@
       "empty_body": "Add questions in the Questions tab or use AI to generate them.",
       "empty_approved_body": "No approved questions yet. Approve questions in the Questions tab — students only see approved ones.",
       "no_content": "(No content)",
-      "correct": "Correct"
+      "correct": "Correct",
+      "edit_question": "Edit"
     }
   },
   "teacher_interview_config": {

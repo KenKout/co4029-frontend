@@ -2742,7 +2742,8 @@
       "empty_body": "Thêm câu hỏi trong tab Câu hỏi hoặc dùng AI để tạo nhanh.",
       "empty_approved_body": "Chưa có câu hỏi nào được duyệt. Hãy duyệt câu hỏi trong tab Câu hỏi — học viên chỉ thấy câu hỏi đã duyệt.",
       "no_content": "(Chưa có nội dung)",
-      "correct": "Đúng"
+      "correct": "Đúng",
+      "edit_question": "Chỉnh sửa"
     }
   },
   "teacher_interview_config": {
