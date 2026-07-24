@@ -2430,7 +2430,8 @@
       "by_student": "Theo học viên",
       "by_question": "Theo câu hỏi",
       "responses": "Câu trả lời",
-      "statistics": "Thống kê"
+      "statistics": "Thống kê",
+      "grading": "Chấm tay"
     },
     "per_student": {
       "col_student": "Học viên",
@@ -2514,6 +2515,29 @@
       "committed": "Đã chấm lại — {{count}} câu trả lời thay đổi.",
       "dry_run_failed": "Không thể xem trước việc chấm lại.",
       "commit_failed": "Không thể áp dụng việc chấm lại."
+    },
+    "grading_queue": {
+      "title": "Câu trả lời chờ chấm",
+      "empty": "Không có gì để chấm — tất cả đã được chấm tự động hoặc đã chấm.",
+      "col_student": "Học viên",
+      "col_question": "Câu hỏi",
+      "col_answer": "Câu trả lời",
+      "score_label": "Điểm",
+      "feedback_label": "Nhận xét (tùy chọn)",
+      "save": "Lưu điểm",
+      "saved": "Đã lưu điểm.",
+      "save_failed": "Không thể lưu điểm."
+    },
+    "grading": {
+      "empty": "Không có câu trả lời nào cần chấm tay.",
+      "invalid_score": "Nhập điểm hợp lệ.",
+      "graded": "Đã chấm điểm.",
+      "grade_failed": "Không thể lưu điểm.",
+      "no_answer": "(chưa có câu trả lời)",
+      "score_label": "Điểm",
+      "feedback_label": "Nhận xét",
+      "feedback_placeholder": "Nhận xét cho học viên (tuỳ chọn)…",
+      "grade_action": "Lưu điểm"
     }
   },
   "teacher_outcomes": {

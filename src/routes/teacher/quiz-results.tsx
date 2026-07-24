@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   BarChart3,
+  ClipboardCheck,
   Download,
   FileText,
   HelpCircle,
@@ -35,8 +36,14 @@ import { PerQuestionTable } from "./_components/quiz-results/PerQuestionTable";
 import { ResponsesReport } from "./_components/quiz-results/ResponsesReport";
 import { StatisticsReport } from "./_components/quiz-results/StatisticsReport";
 import { RegradePanel } from "./_components/quiz-results/RegradePanel";
+import { NeedsGradingTab } from "./_components/quiz-results/NeedsGradingTab";
 
-type ResultsTab = "students" | "questions" | "responses" | "statistics";
+type ResultsTab =
+  | "students"
+  | "questions"
+  | "responses"
+  | "statistics"
+  | "grading";
 type HeadlineMetric = "best" | "latest";
 
 export default function QuizResultsPage() {
@@ -292,6 +299,20 @@ export default function QuizResultsPage() {
                 <Sigma className="h-4 w-4" />
                 {t("teacher_quiz_results.tabs.statistics")}
               </button>
+              <button
+                type="button"
+                onClick={() => setTab("grading")}
+                aria-pressed={tab === "grading"}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer",
+                  tab === "grading"
+                    ? "bg-surface-elev text-m3-primary shadow-sm"
+                    : "text-m3-on-surface-variant hover:text-m3-primary/80",
+                )}
+              >
+                <ClipboardCheck className="h-4 w-4" />
+                {t("teacher_quiz_results.tabs.grading")}
+              </button>
 
               {(tab === "responses" || tab === "statistics") && (
                 <div className="ml-auto flex items-center gap-1">
@@ -347,6 +368,7 @@ export default function QuizResultsPage() {
                   <Loader2 className="h-6 w-6 animate-spin text-m3-secondary" />
                 </div>
               ))}
+            {tab === "grading" && <NeedsGradingTab quizId={quizId} />}
           </div>
         </>
       )}

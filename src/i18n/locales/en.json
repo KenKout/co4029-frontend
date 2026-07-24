@@ -2518,7 +2518,8 @@
       "by_student": "By student",
       "by_question": "By question",
       "responses": "Responses",
-      "statistics": "Statistics"
+      "statistics": "Statistics",
+      "grading": "Manual grading"
     },
     "per_student": {
       "col_student": "Student",
@@ -2602,6 +2603,29 @@
       "committed": "Regrade committed — {{count}} answer(s) changed.",
       "dry_run_failed": "Could not preview the regrade.",
       "commit_failed": "Could not commit the regrade."
+    },
+    "grading_queue": {
+      "title": "Answers awaiting grading",
+      "empty": "Nothing to grade — all answers are auto-graded or already marked.",
+      "col_student": "Student",
+      "col_question": "Question",
+      "col_answer": "Answer",
+      "score_label": "Score",
+      "feedback_label": "Feedback (optional)",
+      "save": "Save grade",
+      "saved": "Grade saved.",
+      "save_failed": "Could not save grade."
+    },
+    "grading": {
+      "empty": "No answers awaiting manual grading.",
+      "invalid_score": "Enter a valid score.",
+      "graded": "Answer graded.",
+      "grade_failed": "Could not save the grade.",
+      "no_answer": "(no answer submitted)",
+      "score_label": "Score",
+      "feedback_label": "Feedback",
+      "feedback_placeholder": "Optional feedback for the student…",
+      "grade_action": "Save grade"
     }
   },
   "teacher_outcomes": {
