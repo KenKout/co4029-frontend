@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
  *  - `failed`      → danger rail, preserved-answer note, Try again / keep editing
  */
 export type SubmittedAnswerConfirmationStatus =
+  | "submitting"
   | "submitted"
   | "processing"
   | "failed";
@@ -67,6 +68,37 @@ export function SubmittedAnswerConfirmation({
   const [expanded, setExpanded] = useState(false);
   const previewId = useId();
   const trimmed = answer.trim();
+
+  // B-Tier-1 #13: an unmistakable in-flight state so the student never wonders
+  // whether their answer went through. Shows a spinner rail + a dimmed preview
+  // of the answer being sent; the composer is disabled by the caller meanwhile.
+  if (status === "submitting") {
+    return (
+      <section
+        className={cn(
+          "rounded-xl border border-primary/25 bg-primary-soft/40 px-4 py-3 sm:px-5",
+          className,
+        )}
+        aria-label={t("course_interview.submission.submitting_title")}
+        aria-busy="true"
+      >
+        <div className="flex items-center gap-2">
+          <Loader2
+            className="h-4 w-4 shrink-0 animate-spin text-primary"
+            aria-hidden="true"
+          />
+          <p className="text-sm font-semibold text-primary">
+            {t("course_interview.submission.submitting_title")}
+          </p>
+        </div>
+        {trimmed && (
+          <p className="mt-2 line-clamp-2 whitespace-pre-wrap break-words text-sm leading-6 text-text-muted">
+            {trimmed}
+          </p>
+        )}
+      </section>
+    );
+  }
 
   if (status === "failed") {
     return (

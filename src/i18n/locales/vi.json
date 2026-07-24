@@ -1888,6 +1888,7 @@
       }
     },
     "submission": {
+      "submitting_title": "Đang gửi câu trả lời…",
       "submitted_title": "Đã gửi câu trả lời",
       "previous_submitted": "Đã gửi câu trả lời trước đó",
       "analyzing": "Đang phân tích câu trả lời…",

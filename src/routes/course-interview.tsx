@@ -1963,6 +1963,12 @@ export default function CourseInterviewPage() {
         onEndAndSubmit={() => void handleEndConfirm()}
         isPending={respond.isPending}
       />
+    ) : answerStatus.status === "submitting" ? (
+      // B-Tier-1 #13: unmistakable in-flight state while the answer is sent.
+      <SubmittedAnswerConfirmation
+        status="submitting"
+        answer={answerStatus.draft}
+      />
     ) : answerStatus.status === "failed" ? (
       <SubmittedAnswerConfirmation
         status="failed"

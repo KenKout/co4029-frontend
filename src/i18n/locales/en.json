@@ -1979,6 +1979,7 @@
       }
     },
     "submission": {
+      "submitting_title": "Sending your answer…",
       "submitted_title": "Answer submitted",
       "previous_submitted": "Previous answer submitted",
       "analyzing": "Analyzing your answer…",
