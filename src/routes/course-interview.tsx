@@ -1959,18 +1959,6 @@ export default function CourseInterviewPage() {
     return (
       <div className="relative flex min-h-screen items-center justify-center px-4 py-12 sm:px-6">
         <div className="max-w-xl w-full mx-auto space-y-4">
-          {/* Back link re-anchored just above the card so it reads as part of
-              the centered block rather than orphaned at the top of the page. */}
-          <Link
-            to="/courses/$slug/learn"
-            params={{ slug }}
-            className="inline-flex h-9 items-center gap-2 rounded-lg px-3 -ml-3 text-sm font-semibold text-text-muted outline-none transition-colors hover:bg-surface-muted hover:text-text-strong focus-visible:ring-2 focus-visible:ring-primary/60"
-            aria-label={t("course_interview.actions.back_to_course")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {t("course_interview.actions.back_to_course")}
-          </Link>
-
           <GlassCard className="p-8 sm:p-10 text-center">
             {/* Module-context eyebrow — gives the bare title a frame of
                 reference (which course / that this is an AI module interview). */}
@@ -2191,24 +2179,33 @@ export default function CourseInterviewPage() {
               </div>
             )}
 
-            <Button
-              onClick={() => setStartDialogOpen(true)}
-              disabled={startSession.isPending || previousSessionsLoading}
-              className="gradient-primary text-white rounded-xl font-bold gap-2 px-8 py-3 h-auto"
-            >
-              {startSession.isPending || previousSessionsLoading
-                ? t("course_interview.actions.starting")
-                : resumableSession
-                  ? t("course_interview.resume_dialog.continue")
-                  : inputMode === "voice"
-                    ? t("course_interview.actions.start_voice")
-                    : t("course_interview.actions.start")}
-              {resumableSession ? (
-                <History className="h-4 w-4" />
-              ) : (
-                <ArrowRight className="h-4 w-4" />
-              )}
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link
+                to="/courses/$slug/learn"
+                params={{ slug }}
+                className="inline-flex h-auto items-center rounded-xl px-6 py-3 text-sm font-bold text-m3-on-surface-variant outline-none transition-colors hover:bg-m3-surface-container hover:text-m3-on-surface focus-visible:ring-2 focus-visible:ring-m3-primary/40"
+              >
+                {t("course_interview.actions.back_to_course")}
+              </Link>
+              <Button
+                onClick={() => setStartDialogOpen(true)}
+                disabled={startSession.isPending || previousSessionsLoading}
+                className="gradient-primary text-white rounded-xl font-bold gap-2 px-8 py-3 h-auto"
+              >
+                {startSession.isPending || previousSessionsLoading
+                  ? t("course_interview.actions.starting")
+                  : resumableSession
+                    ? t("course_interview.resume_dialog.continue")
+                    : inputMode === "voice"
+                      ? t("course_interview.actions.start_voice")
+                      : t("course_interview.actions.start")}
+                {resumableSession ? (
+                  <History className="h-4 w-4" />
+                ) : (
+                  <ArrowRight className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </GlassCard>
         </div>
 
