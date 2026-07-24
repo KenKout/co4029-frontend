@@ -3043,6 +3043,7 @@ export function StartInterviewDialog({
       onConfirm={onConfirm}
       isPending={isPending}
       confirmVariant="default"
+      dismissOnBackdrop
     />
   );
 }

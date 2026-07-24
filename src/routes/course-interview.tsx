@@ -2235,7 +2235,7 @@ export default function CourseInterviewPage() {
               <Link
                 to="/courses/$slug/learn"
                 params={{ slug }}
-                className="inline-flex h-auto items-center rounded-xl px-6 py-3 text-sm font-bold text-m3-on-surface-variant outline-none transition-colors hover:bg-m3-surface-container hover:text-m3-on-surface focus-visible:ring-2 focus-visible:ring-m3-primary/40"
+                className="inline-flex h-auto items-center rounded-xl border border-m3-outline-variant/40 px-6 py-3 text-sm font-bold text-m3-on-surface-variant outline-none transition-colors hover:bg-m3-surface-container hover:text-m3-on-surface focus-visible:ring-2 focus-visible:ring-m3-primary/40"
               >
                 {t("course_interview.actions.back_to_course")}
               </Link>
