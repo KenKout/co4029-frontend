@@ -11,10 +11,12 @@ import {
   Clock,
   Eye,
   HelpCircle,
+  ListChecks,
   Loader2,
   Plus,
   RefreshCw,
   Save,
+  Settings,
   Sparkles,
   Trash2,
   Upload,
@@ -59,6 +61,17 @@ import { MasterySelector } from "./_components/MasterySelector";
 type TabKey = "questions" | "settings" | "preview";
 
 const TAB_KEYS: ReadonlyArray<TabKey> = ["questions", "settings", "preview"];
+
+// Icon per tab — used for the condensed icon-only vertical rail that the tab
+// strip morphs into once it sticks under the global top bar.
+const TAB_ICONS: Record<
+  TabKey,
+  React.ComponentType<{ className?: string }>
+> = {
+  questions: ListChecks,
+  settings: Settings,
+  preview: Eye,
+};
 
 interface SettingsDraft {
   title: string;
@@ -532,38 +545,75 @@ export default function QuizManagePage() {
           sidebar per frontend/AGENTS.md. Once stuck, it gains a solid blurred
           background + shadow and the action buttons drop their text labels
           (icons only) to stay compact. */}
-      <div className="sticky top-16 z-20 -mx-1 px-1">
+      {/* `relative` so the condensed vertical tab rail can be absolutely
+          positioned into the left gutter (out of content flow) once stuck. */}
+      <div className="sticky top-16 z-20 -mx-1 px-1 relative">
         <div
           className={cn(
             "flex items-center justify-between gap-3 rounded-xl border transition-all",
+            // When stuck we DON'T paint a full-width opaque band anymore — that
+            // band was the eye-blocker overlaying the content. The tabs peel
+            // off to a vertical icon rail on the left instead; the action
+            // buttons keep a compact blurred pill of their own (below).
             actionsStuck
-              ? "border-m3-outline-variant/30 bg-surface-elev/90 backdrop-blur-md shadow-glass px-2 py-1.5"
+              ? "border-transparent px-0 py-0"
               : "border-transparent px-0 py-0",
           )}
         >
-          <div className="bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 border border-m3-outline-variant/20 shadow-lg shadow-m3-primary/5">
+          {/* Tab switcher. Not stuck → horizontal pills with text labels,
+              in-flow. Stuck → animates into a vertical, icon-only rail parked
+              in the left gutter (absolute, so it respects the sidebar margin
+              via its in-flow parent and never covers the center content),
+              sliding in from the left with tooltips for each tab. */}
+          <div
+            className={cn(
+              "border border-m3-outline-variant/20 transition-all duration-300 ease-out",
+              actionsStuck
+                ? "absolute left-0 top-1 z-10 flex flex-col gap-1.5 rounded-2xl bg-surface-elev/90 backdrop-blur-md p-1.5 shadow-glass animate-in fade-in slide-in-from-left-3"
+                : "bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 shadow-lg shadow-m3-primary/5",
+            )}
+          >
             {TAB_KEYS.map((key) => {
               const active = key === tab;
+              const Icon = TAB_ICONS[key];
+              const label = t(`teacher_quiz_manage.tabs.${key}`);
               return (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setTab(key)}
                   aria-pressed={active}
+                  aria-label={label}
+                  title={actionsStuck ? label : undefined}
                   className={cn(
-                    "px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer",
+                    "rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center",
+                    actionsStuck
+                      ? "h-10 w-10"
+                      : "px-4 py-2 text-sm gap-2",
                     active
                       ? "bg-surface-elev text-m3-primary shadow-sm"
                       : "text-m3-on-surface-variant hover:text-m3-primary/80",
                   )}
                 >
-                  {t(`teacher_quiz_manage.tabs.${key}`)}
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {!actionsStuck && <span>{label}</span>}
                 </button>
               );
             })}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Actions stay pinned to the right. Once stuck, the tab rail peels
+              off to an absolute left-gutter position, leaving this as the only
+              in-flow child — `ml-auto` keeps it hard-right, and it gets its own
+              compact blurred pill so the buttons don't float bare over the
+              content (the old full-width band is gone). */}
+          <div
+            className={cn(
+              "flex items-center gap-2 shrink-0 transition-all",
+              actionsStuck &&
+                "ml-auto rounded-xl border border-m3-outline-variant/30 bg-surface-elev/90 backdrop-blur-md shadow-glass px-2 py-1.5",
+            )}
+          >
             <Link
               to="/teacher/courses/$courseId/quizzes/$quizId/results"
               params={{ courseId, quizId }}
