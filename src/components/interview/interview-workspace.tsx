@@ -331,6 +331,7 @@ export function InterviewHeader({
   voiceOn,
   onToggleVoice,
   onEndInterview,
+  endInterviewDisabled = false,
   showVoiceControl = true,
   questionElapsed,
   questionLingering = false,
@@ -347,6 +348,8 @@ export function InterviewHeader({
   voiceOn: boolean;
   onToggleVoice: () => void;
   onEndInterview?: () => void;
+  /** Disable the end button (e.g. while the closing is already underway). */
+  endInterviewDisabled?: boolean;
   showVoiceControl?: boolean;
   /** Whole seconds spent on the current question; null hides the per-question cue. */
   questionElapsed?: number | null;
@@ -512,7 +515,8 @@ export function InterviewHeader({
               variant="destructive"
               size="icon-lg"
               onClick={onEndInterview}
-              className="size-11 rounded-lg text-danger sm:size-9"
+              disabled={endInterviewDisabled}
+              className="size-11 rounded-lg text-danger disabled:cursor-not-allowed disabled:opacity-50 sm:size-9"
               aria-label={t("course_interview.actions.end_interview")}
               title={t("course_interview.actions.end_interview")}
             >
@@ -2392,7 +2396,7 @@ export function AnswerControls({
             disabled={!micAvailable || disabled}
             aria-pressed={mode === "voice"}
             className={cn(
-              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50",
+              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100",
               mode === "voice"
                 ? "text-primary"
                 : "text-text-muted hover:bg-white/50 hover:text-text-strong",
@@ -2407,7 +2411,7 @@ export function AnswerControls({
             disabled={disabled}
             aria-pressed={mode === "type"}
             className={cn(
-              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50",
+              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100",
               mode === "type"
                 ? "text-primary"
                 : "text-text-muted hover:bg-white/50 hover:text-text-strong",

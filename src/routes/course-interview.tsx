@@ -380,6 +380,15 @@ export default function CourseInterviewPage() {
       : phase === "questioning"
         ? "interview"
         : "setup";
+  // Once the interview is closing (student confirmed end / final transition /
+  // AI is reading the goodbye) or already showing results, the end button must
+  // be disabled so a second confirm can't re-submit the finish. Guard both the
+  // button (disabled) and the open handler (below) so neither path can fire.
+  const endInterviewDisabled = phase === "closing" || phase === "results";
+  const openEndDialog = useCallback(() => {
+    if (phase === "closing" || phase === "results") return;
+    setEndDialogOpen(true);
+  }, [phase]);
   const [pendingFinishResult, setPendingFinishResult] =
     useState<InterviewSessionFinishResponse | null>(null);
   const sessionStartedAtRef = useRef<number | null>(null);
@@ -2330,7 +2339,8 @@ export default function CourseInterviewPage() {
             return !current;
           })
         }
-        onEndInterview={() => setEndDialogOpen(true)}
+        onEndInterview={openEndDialog}
+        endInterviewDisabled={endInterviewDisabled}
       />
 
       {/* Coarse step indicator: Setup → Interview → Completed (spec §4). */}
@@ -2513,7 +2523,7 @@ export default function CourseInterviewPage() {
               onTranscriptToggle={() => setTranscriptOpen((open) => !open)}
               elapsed={elapsed}
               status={agentStatus}
-              onEndInterview={() => setEndDialogOpen(true)}
+              onEndInterview={openEndDialog}
               placeholder={
                 phase === "opening" || phase === "readiness"
                   ? t("course_interview.onboarding.reply_placeholder")

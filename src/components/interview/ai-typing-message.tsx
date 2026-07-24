@@ -240,7 +240,10 @@ export function AiTypingMessage({
 
   return (
     <p
-      className={cn("whitespace-pre-wrap text-base leading-relaxed", className)}
+      className={cn(
+        "whitespace-pre-wrap text-base leading-relaxed text-justify hyphens-auto",
+        className,
+      )}
     >
       {phase === "preparing" ? (
         <span
