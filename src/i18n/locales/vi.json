@@ -1859,7 +1859,7 @@
   },
   "course_interview": {
     "hybrid": {
-      "prestart_hint": "Phỏng vấn kết hợp — bạn có thể gõ hoặc nói câu trả lời, và kết hợp cả hai ở bất kỳ câu hỏi nào.",
+      "prestart_hint": "Phỏng vấn kết hợp — bạn có thể gõ hoặc nói câu trả lời",
       "speak_answer": "Nói câu trả lời",
       "listening": "Đang nghe… chạm để dừng",
       "dictation_hint": "Giọng nói của bạn được chuyển thành văn bản trong ô trả lời — hãy chỉnh sửa trước khi gửi.",

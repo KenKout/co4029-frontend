@@ -1947,7 +1947,7 @@
   },
   "course_interview": {
     "hybrid": {
-      "prestart_hint": "Hybrid interview — type your answers or speak them; you can mix both on any question.",
+      "prestart_hint": "Hybrid interview — type your answers or speak them",
       "speak_answer": "Speak answer",
       "listening": "Listening… tap to stop",
       "dictation_hint": "Your speech is transcribed into the answer box — edit before sending.",

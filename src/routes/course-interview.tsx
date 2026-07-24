@@ -347,6 +347,12 @@ export default function CourseInterviewPage() {
   const [endDialogOpen, setEndDialogOpen] = useState(false);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [aiSpeaking, setAiSpeaking] = useState(false);
+  // Whether the AI is actively presenting its turn (typing the text out and/or
+  // speaking). UNLIKE aiSpeaking this is NOT gated by voiceOn, so the status bar
+  // reflects "speaking" even when audio is muted or the session is Vietnamese
+  // (no server voice) — otherwise the bar sat frozen on "Waiting for your
+  // answer" the whole time the interviewer was clearly typing a reply.
+  const [aiPresenting, setAiPresenting] = useState(false);
   const [connected, setConnected] = useState(
     typeof navigator === "undefined" ? true : navigator.onLine,
   );
@@ -733,7 +739,7 @@ export default function CourseInterviewPage() {
     connected,
     hasError: respond.isError || onboarding.isError || dictationHasError,
     thinking: respond.isPending || onboarding.isPending,
-    speaking: aiSpeaking,
+    speaking: aiSpeaking || aiPresenting,
     listening: dictation.listening,
     paused: dictation.paused,
   });
@@ -1005,6 +1011,7 @@ export default function CourseInterviewPage() {
       setAnswerText("");
       setEndDialogOpen(false);
       setAiSpeaking(false);
+      setAiPresenting(false);
       setPhase("closing");
 
       try {
@@ -2195,7 +2202,6 @@ export default function CourseInterviewPage() {
 
             {!resumableSession && isHybrid && (
               <div className="flex items-center justify-center gap-2 mb-6 text-xs text-m3-on-surface-variant">
-                <Mic className="h-3.5 w-3.5 text-m3-primary" />
                 {t("course_interview.hybrid.prestart_hint")}
               </div>
             )}
@@ -2379,7 +2385,10 @@ export default function CourseInterviewPage() {
             }
             questionTypeLabel={(type) => questionTypeLabel(type, t)}
             speak={speakIfOn}
-            onSpeakingChange={(speaking) => setAiSpeaking(voiceOn && speaking)}
+            onSpeakingChange={(speaking) => {
+              setAiSpeaking(voiceOn && speaking);
+              setAiPresenting(speaking);
+            }}
             onTurnPresented={handleTurnPresented}
             onClarifyQuestion={
               phase === "questioning"
@@ -2483,9 +2492,13 @@ export default function CourseInterviewPage() {
             </div>
           )}
 
-          {(currentQuestion && phase === "questioning") ||
-          phase === "opening" ||
-          phase === "readiness" ? (
+          {/* The bottom composer (Voice/Type bar) is only the answer surface
+              during the assessed questioning phase. Throughout onboarding
+              (opening/readiness) the SetupChecklist above is the sole input —
+              name field, language, readiness — so the composer is hidden to
+              avoid a redundant/confusing second input, then reappears once
+              setup completes and the first question is asked. */}
+          {currentQuestion && phase === "questioning" ? (
             <FocusedAnswerComposer
               value={
                 dictation.listening && dictation.interim
@@ -2494,21 +2507,10 @@ export default function CourseInterviewPage() {
               }
               draftLength={answerText.length}
               onChange={setAnswerText}
-              onSubmit={() =>
-                void (phase === "opening" || phase === "readiness"
-                  ? handleOnboarding()
-                  : handleRespond())
-              }
-              onFinishRecording={() =>
-                void (phase === "opening" || phase === "readiness"
-                  ? handleOnboarding()
-                  : handleRespond())
-              }
+              onSubmit={() => void handleRespond()}
+              onFinishRecording={() => void handleRespond()}
               sending={respond.isPending || onboarding.isPending}
-              micAvailable={Boolean(
-                (phase === "opening" || phase === "readiness" || isHybrid) &&
-                  dictation.supported,
-              )}
+              micAvailable={Boolean(isHybrid && dictation.supported)}
               micActive={dictation.listening}
               micPaused={dictation.paused}
               micError={
@@ -2524,12 +2526,11 @@ export default function CourseInterviewPage() {
               elapsed={elapsed}
               status={agentStatus}
               onEndInterview={openEndDialog}
-              placeholder={
-                phase === "opening" || phase === "readiness"
-                  ? t("course_interview.onboarding.reply_placeholder")
-                  : undefined
-              }
             />
+          ) : phase === "opening" || phase === "readiness" ? (
+            // Onboarding: the SetupChecklist above is the sole input surface,
+            // so render no bottom bar at all (no composer, no wind-down).
+            null
           ) : (
             <div className="shrink-0 border-t border-border bg-white px-4 py-6 text-center motion-safe:animate-fade-in-up">
               {/* Calm pacing on the closing wind-down (#15): a gentle pulsing
@@ -2573,7 +2574,10 @@ export default function CourseInterviewPage() {
           transcript={transcript}
           questionTypeLabel={(type) => questionTypeLabel(type, t)}
           speak={speakIfOn}
-          onSpeakingChange={(speaking) => setAiSpeaking(voiceOn && speaking)}
+          onSpeakingChange={(speaking) => {
+            setAiSpeaking(voiceOn && speaking);
+            setAiPresenting(speaking);
+          }}
           onReplay={(turn) => void speakIfOn(turn.text)}
           replayDisabled={!voiceOn}
           replayingTurnId={null}
