@@ -889,16 +889,19 @@ export function useRegradeCommit(quizId: string | null | undefined) {
 }
 
 // --- Phase 2: review-visibility --------------------------------------------
-export interface ReviewOptions {
+// Backend shape: 3 time-windows × 5 flags (schemas/review_options.py). All-true
+// default preserves historical always-show behaviour.
+export interface ReviewWindowFlags {
   show_score: boolean;
+  show_correctness: boolean;
   show_correct_answers: boolean;
-  show_feedback: boolean;
   show_explanation: boolean;
   show_points: boolean;
-  during_attempt?: boolean;
-  immediately_after?: boolean;
-  later_while_open?: boolean;
-  after_close?: boolean;
+}
+export interface ReviewOptions {
+  immediately_after: ReviewWindowFlags;
+  later_while_open: ReviewWindowFlags;
+  after_close: ReviewWindowFlags;
 }
 
 // --- Phase 4: manual grading -----------------------------------------------

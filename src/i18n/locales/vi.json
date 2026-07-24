@@ -2762,7 +2762,24 @@
       },
       "save_button": "Lưu cấu hình",
       "unsaved_changes": "Bạn có thay đổi chưa lưu",
-      "reset_button": "Huỷ thay đổi"
+      "reset_button": "Huỷ thay đổi",
+      "review": {
+        "title": "Tùy chọn xem lại",
+        "description": "Kiểm soát những gì học viên thấy sau khi nộp bài, theo từng mốc thời gian. Bật hết = học viên thấy mọi thứ (hành vi hiện tại).",
+        "flag_col": "Học viên được thấy gì",
+        "windows": {
+          "immediately_after": "Ngay sau khi nộp",
+          "later_while_open": "Sau đó, khi còn mở",
+          "after_close": "Sau khi quiz đóng"
+        },
+        "flags": {
+          "show_score": "Điểm số",
+          "show_correctness": "Đúng/sai từng câu",
+          "show_correct_answers": "Đáp án đúng",
+          "show_explanation": "Giải thích",
+          "show_points": "Điểm mỗi câu"
+        }
+      }
     },
     "preview": {
       "title": "Xem trước cho học viên",

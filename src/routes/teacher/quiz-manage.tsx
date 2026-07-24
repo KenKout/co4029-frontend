@@ -42,6 +42,7 @@ import {
   useUpdateQuizQuestion,
   usePendingQuestionDeletes,
   type PendingQuestionDelete,
+  type ReviewOptions,
 } from "@/lib/api/hooks/quizzes";
 import {
   useTeacherCourseById,
@@ -56,6 +57,10 @@ import type {
 import { cn } from "@/lib/utils";
 import { QuestionBankModal } from "./_components/question-bank-modal";
 import { MasterySelector } from "./_components/MasterySelector";
+import {
+  ReviewOptionsMatrix,
+  defaultReviewOptions,
+} from "./_components/quiz-manage/ReviewOptionsMatrix";
 
 type TabKey = "questions" | "settings" | "preview";
 
@@ -101,6 +106,8 @@ interface SettingsDraft {
   available_from: string;
   available_until: string;
   due_at: string;
+  // Review-visibility matrix (Phase 2). Always a full 3×5 matrix in the draft.
+  review_options: ReviewOptions;
 }
 
 function toDraftString(value: string | number | null | undefined) {
@@ -175,6 +182,7 @@ function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
     available_from: isoToLocalInput(quiz.available_from),
     available_until: isoToLocalInput(quiz.available_until),
     due_at: isoToLocalInput(quiz.due_at),
+    review_options: quiz.review_options ?? defaultReviewOptions(),
   };
 }
 
@@ -470,6 +478,7 @@ export default function QuizManagePage() {
         available_from: localInputToIso(draft.available_from),
         available_until: localInputToIso(draft.available_until),
         due_at: localInputToIso(draft.due_at),
+        review_options: draft.review_options,
       });
       toast.success(t("teacher_quiz_manage.toasts.settings_saved"));
     } catch (err: unknown) {
@@ -2146,6 +2155,16 @@ function SettingsTab({
           )}
           value={draft.reminders_enabled}
           onChange={(v) => update("reminders_enabled", v)}
+        />
+      </SettingsSection>
+
+      <SettingsSection
+        title={t("teacher_quiz_manage.settings.review.title")}
+        description={t("teacher_quiz_manage.settings.review.description")}
+      >
+        <ReviewOptionsMatrix
+          value={draft.review_options}
+          onChange={(next) => update("review_options", next)}
         />
       </SettingsSection>
 

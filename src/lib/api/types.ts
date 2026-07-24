@@ -88,6 +88,9 @@ export interface QuizScheduleWindow {
   available_from?: string | null;
   available_until?: string | null;
   due_at?: string | null;
+  // Review-visibility matrix (backend Phase 2, migration 0046). Post-dates the
+  // OpenAPI snapshot; optional so it stays compatible with the generated shape.
+  review_options?: import("./hooks/quizzes").ReviewOptions | null;
 }
 
 export type Quiz = Schemas["QuizPublic"] & QuizScheduleWindow;

@@ -2850,7 +2850,24 @@
       },
       "save_button": "Save settings",
       "unsaved_changes": "You have unsaved changes",
-      "reset_button": "Discard"
+      "reset_button": "Discard",
+      "review": {
+        "title": "Review options",
+        "description": "Control what students see after they submit, per time window. All on = students see everything (current behaviour).",
+        "flag_col": "What the student sees",
+        "windows": {
+          "immediately_after": "Right after submit",
+          "later_while_open": "Later, while open",
+          "after_close": "After the quiz closes"
+        },
+        "flags": {
+          "show_score": "Score",
+          "show_correctness": "Whether each answer was right/wrong",
+          "show_correct_answers": "The correct answers",
+          "show_explanation": "Explanations",
+          "show_points": "Points per question"
+        }
+      }
     },
     "preview": {
       "title": "Student preview",
