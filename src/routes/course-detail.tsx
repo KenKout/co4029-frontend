@@ -492,12 +492,23 @@ function CtaCard({
   return (
     <div className="rounded-xl overflow-hidden shadow-editorial ghost-border bg-m3-surface-container-lowest">
       <div className={cn("relative h-44 bg-gradient-to-br", gradientClass)}>
+        {course.thumbnail_url && (
+          <img
+            src={course.thumbnail_url}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <GraduationCap className="h-8 w-8 text-white" />
+        {/* GraduationCap motif only on the gradient placeholder — a real
+            thumbnail shouldn't have an icon overlaid on it. */}
+        {!course.thumbnail_url && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <GraduationCap className="h-8 w-8 text-white" />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="p-5 space-y-5">
