@@ -2,20 +2,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { type LucideIcon } from "lucide-react";
 
-const statCardVariants = cva("rounded-xl p-5 transition-colors duration-200", {
-  variants: {
-    variant: {
-      default:
-        "bg-card shadow-editorial ghost-border hover:border-border-strong",
-      primary: "gradient-primary text-white",
-      glow: "bg-card shadow-ai-glow ghost-border",
-      surface: "bg-m3-surface-container-low",
+const statCardVariants = cva(
+  "rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg",
+  {
+    variants: {
+      variant: {
+        default:
+          "bg-card shadow-editorial ghost-border hover:border-border-strong",
+        primary: "gradient-primary text-white hover:shadow-ai-glow",
+        glow: "bg-card shadow-ai-glow ghost-border",
+        surface: "bg-m3-surface-container-low",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
     },
   },
-  defaultVariants: {
-    variant: "default",
-  },
-});
+);
 
 interface StatCardProps extends VariantProps<typeof statCardVariants> {
   label: string;

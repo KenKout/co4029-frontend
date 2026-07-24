@@ -1,4 +1,9 @@
 {
+  "file_dropzone": {
+    "idle_title": "Drag & drop or click to choose a file",
+    "drop_active": "Drop to upload",
+    "uploading": "Uploading…"
+  },
   "common": {
     "loading": "Loading…",
     "error": "Something went wrong",
@@ -176,6 +181,11 @@
       "drafts": "Drafts",
       "ai_enabled": "AI Enabled"
     },
+    "actions": {
+      "ungraded_quizzes": "quiz attempts to grade",
+      "pending_interviews": "interviews awaiting evaluation",
+      "draft_courses": "drafts to publish"
+    },
     "your_courses": {
       "title": "Your Courses",
       "subtitle": "Click to manage modules, lessons, and materials",
@@ -196,8 +206,41 @@
       "advanced": "Advanced"
     }
   },
+  "teacher_course_new": {
+    "title": "New Course",
+    "section_basics": "Basics",
+    "section_details": "Details",
+    "field_title": "Title",
+    "title_placeholder": "e.g. Introduction to Algorithms",
+    "field_slug": "Slug",
+    "slug_hint": "Course URL: …/courses/{{slug}}",
+    "slug_available": "This slug is available",
+    "slug_taken": "This slug is already taken",
+    "slug_reset": "Reset to auto",
+    "field_description": "Description",
+    "description_placeholder": "A short summary helps students choose. What will they learn?",
+    "field_level": "Level",
+    "field_duration": "Estimated duration",
+    "minutes_suffix": "min",
+    "create": "Create Course",
+    "creating": "Creating…",
+    "created": "Course created",
+    "create_failed": "Failed to create course",
+    "preview_label": "Preview",
+    "preview_title_placeholder": "Your course title",
+    "preview_desc_placeholder": "Your course description will appear here."
+  },
   "teacher_course_settings": {
     "title": "Course Settings",
+    "thumbnail": {
+      "label": "Course image",
+      "change": "Change image",
+      "hint": "JPEG, PNG, WebP or GIF · up to 5 MB. Shown on course cards. Applied when you press Save.",
+      "updated": "Course image updated",
+      "upload_failed": "Couldn't upload the image. Please try again.",
+      "invalid_type": "Please choose a JPEG, PNG, WebP, or GIF image.",
+      "too_large": "Image must be 5 MB or smaller."
+    },
     "status_summary_published": "Published",
     "status_summary_draft": "Draft",
     "no_level": "No level",
@@ -223,9 +266,22 @@
     "enrollment_cap_placeholder": "Leave empty for unlimited",
     "expected_completion": "Expected Completion (days)",
     "expected_completion_placeholder": "e.g. 30",
-    "save": "Save Course Settings",
+    "save": "Save",
     "saved": "Course settings saved",
-    "save_failed": "Save failed"
+    "save_failed": "Save failed",
+    "save_status": {
+      "saving": "Saving…",
+      "saved": "Saved",
+      "unsaved": "Unsaved changes",
+      "last_saved": "Last saved {{when}}"
+    },
+    "delete": {
+      "button": "Delete",
+      "title": "Delete this course?",
+      "body": "\"{{title}}\" and its modules, lessons, and content will be removed. This can be restored by an administrator.",
+      "deleted": "Course deleted",
+      "failed": "Couldn't delete the course. Please try again."
+    }
   },
   "teacher_quiz_attempt": {
     "load_failed": "Couldn't load this attempt.",
@@ -293,7 +349,24 @@
     "filter_draft": "Draft",
     "filter_archived": "Archived",
     "no_match": "No courses match your search",
-    "no_courses_yet": "No courses yet"
+    "no_courses_yet": "No courses yet",
+    "clear_search": "Clear search",
+    "sort_label": "Sort",
+    "sort_recent": "Newest first",
+    "sort_oldest": "Oldest first",
+    "sort_title": "Title (A–Z)",
+    "showing_count": "Showing {{count}} of {{total}}",
+    "stat_total": "Total",
+    "stat_published": "Published",
+    "stat_draft": "Draft",
+    "stat_archived": "Archived",
+    "empty_first_title": "Create your first course",
+    "empty_first_body": "A course is where you organize lessons, quizzes, and AI interviews for your students. Start with a title — you can build out the rest anytime.",
+    "no_match_title": "No courses match",
+    "no_match_body": "Try a different search term or clear your filters.",
+    "clear_filters": "Clear filters",
+    "students_label": "Students",
+    "modules_label": "Modules"
   },
   "course_learn": {
     "lesson_unavailable_title": "Lesson unavailable",
@@ -365,6 +438,23 @@
       "created": "Interview question set created"
     }
   },
+  "teacher_quiz_new": {
+    "modal_title": "New quiz",
+    "modal_description": "Give it a name now — you'll set questions, passing score, time limit and generate questions on the next screen.",
+    "fields": {
+      "title": "Quiz name",
+      "title_placeholder": "e.g., Chapter 3 knowledge check"
+    },
+    "submit": "Create quiz",
+    "submitting": "Creating…",
+    "errors": {
+      "title_required": "Please enter a quiz name",
+      "create_failed": "Couldn't create quiz"
+    },
+    "success": {
+      "created": "Quiz created"
+    }
+  },
   "teacher_question_bank": {
     "title": "Question bank",
     "subtitle": "Reusable interview questions",
@@ -393,6 +483,17 @@
     "delete_body": "This removes the question from the course bank. Questions already imported into interviews are not affected."
   },
   "teacher_common": {
+    "drag_to_reorder": "Drag to reorder",
+    "publish_item": "Publish",
+    "publish_failed": "Couldn't publish",
+    "item_published": "\"{{title}}\" published.",
+    "publish_progress": "{{published}} of {{total}} items published",
+    "publish_all": "Publish all ({{count}})",
+    "publish_all_done": "{{count}} item(s) published.",
+    "publish_all_partial": "{{ok}} published, {{failed}} failed — try again.",
+    "expand_all": "Expand all",
+    "collapse_all": "Collapse all",
+    "jump_to": "Jump to",
     "back_to_course": "Back to course",
     "breadcrumb_teaching": "My Courses",
     "breadcrumb_course": "Course",
@@ -569,6 +670,11 @@
       "not_graded": "Not graded"
     }
   },
+  "me_interview_result": {
+    "back_to_list": "Back to my interviews",
+    "load_failed_title": "Couldn't load this result",
+    "load_failed_body": "This interview result isn't available right now. Please try again."
+  },
   "career_path_detail": {
     "back": "Back",
     "load_failed": "Couldn't load the path",
@@ -618,7 +724,9 @@
       "lesson_unlock": "Lesson unlock",
       "interview_result": "Interview result",
       "course_announcement": "Course announcement",
-      "system": "System"
+      "system": "System",
+      "material_processing": "Material processing",
+      "quiz_generation": "Quiz generation"
     },
     "channel": {
       "email": "Email",
@@ -640,6 +748,14 @@
     "save": "Save profile",
     "saving": "Saving…",
     "back": "Back",
+    "avatar": {
+      "change": "Change photo",
+      "hint": "JPEG, PNG, WebP or GIF · up to 2 MB",
+      "updated": "Avatar updated",
+      "upload_failed": "Couldn't upload your avatar. Please try again.",
+      "invalid_type": "Please choose a JPEG, PNG, WebP, or GIF image.",
+      "too_large": "Image must be 2 MB or smaller."
+    },
     "errors": {
       "display_name_required": "Display name cannot be empty.",
       "display_name_max": "Display name must be at most 100 characters.",
@@ -669,7 +785,9 @@
       "lesson_unlock": "Lesson unlock",
       "interview_result": "Interview result",
       "course_announcement": "Course announcement",
-      "system": "System"
+      "system": "System",
+      "material_processing": "Material processing",
+      "quiz_generation": "Quiz generation"
     },
     "errors": {
       "mark_read_failed": "Couldn't mark as read",
@@ -1104,6 +1222,9 @@
       "back_to_list": "Back to list",
       "restore": "Restore course",
       "restoring": "Restoring…",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "delete_confirm": "Delete \"{{title}}\" and its modules and lessons? This can be undone with Restore.",
       "audit_load_failed": "Couldn't load audit data.",
       "jobs_load_failed": "Couldn't load jobs.",
       "no_jobs": "No processing jobs for this course yet.",
@@ -1128,7 +1249,9 @@
       },
       "toasts": {
         "restored": "Course restored",
-        "restore_failed": "Couldn't restore"
+        "restore_failed": "Couldn't restore",
+        "deleted": "Course deleted",
+        "delete_failed": "Couldn't delete"
       }
     },
     "processing_job": {
@@ -1214,7 +1337,35 @@
       "users_load_failed": "Couldn't load users table.",
       "pipelines_load_failed": "Couldn't load pipelines table.",
       "recent_load_failed": "Couldn't load recent calls.",
+      "category_load_failed": "Couldn't load category breakdown.",
+      "model_load_failed": "Couldn't load model efficiency table.",
+      "export_csv": "Export CSV",
       "period_aria": "Time range",
+      "dimension_aria": "Group cost by",
+      "dimension_options": {
+        "operation": "Operation",
+        "role": "Role",
+        "tier": "Tier",
+        "stage_name": "Stage",
+        "model_name": "Model",
+        "status": "Status"
+      },
+      "filters": {
+        "model": "Model",
+        "role": "Role",
+        "operation": "Operation",
+        "status": "Status",
+        "model_placeholder": "e.g. gpt-4o",
+        "role_placeholder": "e.g. generator_main",
+        "any": "Any",
+        "clear": "Clear filters"
+      },
+      "drilldown": {
+        "title": "Pipeline detail",
+        "stages": "Stage breakdown",
+        "no_stages": "No stage data for this pipeline.",
+        "close": "Close"
+      },
       "period_options": {
         "24h": "Last 24 hours",
         "7d": "Last 7 days",
@@ -1229,12 +1380,16 @@
         "total_cost": "Total cost",
         "total_tokens": "Total tokens",
         "call_count": "Calls",
-        "period": "Period"
+        "period": "Period",
+        "failed_spend": "Failed-call spend",
+        "failed_spend_hint": "{{count}} failed calls"
       },
       "sections": {
         "trend": "Cost trend",
         "by_role": "Cost by role",
         "by_stage": "Cost by pipeline stage",
+        "by_category": "Cost by category",
+        "by_model": "Model efficiency",
         "top_users": "Top spenders",
         "top_pipelines": "Top pipelines",
         "recent_calls": "AI calls",
@@ -1244,6 +1399,8 @@
         "trend": "No cost data for this period yet.",
         "by_role": "No cost data by role yet.",
         "by_stage": "No cost data by stage yet.",
+        "by_category": "No cost data for this grouping yet.",
+        "by_model": "No model usage in this period yet.",
         "users": "No users have generated AI costs yet.",
         "pipelines": "No pipelines in this period yet.",
         "recent": "No recent AI calls.",
@@ -1271,14 +1428,14 @@
         "delete_success": "Pricing deleted.",
         "fields": {
           "model_name": "Model name",
-          "input_rate": "Input $ / 1K tokens",
-          "output_rate": "Output $ / 1K tokens",
+          "input_rate": "Input $ / 1M tokens",
+          "output_rate": "Output $ / 1M tokens",
           "notes": "Notes (optional)"
         },
         "cols": {
           "model": "Model",
-          "input_rate": "Input / 1K",
-          "output_rate": "Output / 1K",
+          "input_rate": "Input / 1M",
+          "output_rate": "Output / 1M",
           "updated": "Updated",
           "actions": "Actions"
         }
@@ -1296,7 +1453,16 @@
         "stage": "Stage",
         "latency": "Latency",
         "tokens_short": "Tokens",
-        "cost_short": "Cost"
+        "cost_short": "Cost",
+        "status": "Status",
+        "category": "Category",
+        "input_tokens": "Input",
+        "output_tokens": "Output",
+        "cached_tokens": "Cached",
+        "usd_per_1m": "$ / 1M tok",
+        "latency_p50": "p50",
+        "latency_p95": "p95",
+        "actions": "Actions"
       }
     },
     "users": {
@@ -1493,6 +1659,10 @@
     "teacher": "Teacher",
     "admin": "Admin"
   },
+  "sidebar": {
+    "collapse": "Collapse",
+    "expand": "Expand"
+  },
   "teacher_interview_gap_report": {
     "transcript": {
       "title": "Interview transcript",
@@ -1511,7 +1681,8 @@
       "no_report": "No gap report yet",
       "no_overview": "AI hasn't generated an overview yet.",
       "no_detail": "No detailed criterion data.",
-      "no_study_plan": "AI hasn't suggested specific learning steps yet."
+      "no_study_plan": "AI hasn't suggested specific learning steps yet.",
+      "no_source_quiz": "This interview wasn't paired with a quiz attempt, so there's no source quiz to compare against."
     },
     "errors": {
       "no_view_permission_or_ungraded": "This interview session hasn't been graded or you don't have permission to view the report."
@@ -1523,6 +1694,32 @@
       "by_criterion": "Analysis by criterion",
       "study_plan": "Study plan",
       "sources": "Source links"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "analysis": "Analysis",
+      "transcript": "Transcript",
+      "integrity": "Integrity",
+      "sources": "Sources"
+    },
+    "integrity": {
+      "clean_title": "No integrity flags",
+      "clean_body": "No focus loss, tab switching, or fullscreen exits were recorded during this interview.",
+      "flagged_title": "Integrity signals recorded",
+      "summary": "{{tab}} tab switch(es), {{focus}} focus loss, {{fullscreen}} fullscreen exit(s) during this session.",
+      "event": {
+        "tab_switch": "Switched away from the interview tab",
+        "focus_lost": "Interview window lost focus",
+        "fullscreen_exit": "Exited fullscreen",
+        "reconnect": "Reconnected",
+        "disconnect": "Disconnected",
+        "warning_issued": "Warning issued"
+      },
+      "severity": {
+        "info": "Info",
+        "warning": "Warning",
+        "critical": "Critical"
+      }
     },
     "criteria": {
       "technical_accuracy": "Technical accuracy",
@@ -1598,6 +1795,43 @@
       "correct": "Correct answer"
     }
   },
+  "discussion": {
+    "title": "Discussion",
+    "unknown_author": "Unknown",
+    "comment_count_one": "{{count}} comment",
+    "comment_count_other": "{{count}} comments",
+    "comment_placeholder": "Write a comment…",
+    "topic_title_placeholder": "Topic title (e.g. an open question)",
+    "topic_body_placeholder": "Add context or the question(s) to discuss (optional, Markdown supported)",
+    "new_topic_title": "New discussion topic",
+    "topic_posted": "Topic posted",
+    "no_comments": "No comments yet — be the first to reply.",
+    "closed_no_comments": "This topic is closed for new comments.",
+    "load_failed": "Couldn't load the discussion. Please try again.",
+    "empty_title": "No discussion topics yet",
+    "empty_teacher": "Post a topic to start a discussion with your students.",
+    "empty_student": "Your teacher hasn't posted a topic yet. Check back soon.",
+    "status": {
+      "closed": "Closed"
+    },
+    "actions": {
+      "new_topic": "New topic",
+      "post_topic": "Post topic",
+      "post_comment": "Post comment",
+      "delete_comment": "Delete comment",
+      "delete_topic": "Delete",
+      "close": "Close",
+      "reopen": "Reopen",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "post_topic": "Couldn't post the topic. Please try again.",
+      "update_topic": "Couldn't update the topic. Please try again.",
+      "delete_topic": "Couldn't delete the topic. Please try again.",
+      "post_comment": "Couldn't post your comment. Please try again.",
+      "delete_comment": "Couldn't delete the comment. Please try again."
+    }
+  },
   "course_quiz": {
     "empty": {
       "no_questions_title": "No questions available",
@@ -1620,6 +1854,13 @@
       "passed": "Passed",
       "failed": "Failed",
       "no_score": "No score"
+    },
+    "overview": {
+      "eyebrow": "Quiz",
+      "questions": "Questions",
+      "passed_banner_title": "You've passed this quiz",
+      "passed_banner_best": "Best score {{score}}%",
+      "best_label": "Best {{score}}%"
     },
     "sections": {
       "config": "Quiz configuration",
@@ -1719,12 +1960,19 @@
     }
   },
   "course_interview": {
+    "integrity_warning": {
+      "title": "You left the interview window",
+      "body": "This is recorded for your teacher to review. Please stay on this tab until the interview ends."
+    },
     "hybrid": {
-      "prestart_hint": "Hybrid interview — type your answers or speak them; you can mix both on any question.",
+      "prestart_hint": "Hybrid interview — type your answers or speak them",
       "speak_answer": "Speak answer",
       "listening": "Listening… tap to stop",
       "dictation_hint": "Your speech is transcribed into the answer box — edit before sending.",
       "unsupported": "Voice input isn't supported in this browser — type your answer instead."
+    },
+    "voice": {
+      "dropped_fallback_text": "Voice connection lost — continuing in text. Your progress is saved."
     },
     "narration": {
       "on": "Voice on",
@@ -1735,6 +1983,7 @@
     "workspace": {
       "in_progress": "Interview in progress",
       "elapsed_time": "Elapsed interview time",
+      "time_on_question": "Time on this question",
       "ai_interviewer": "AI interviewer",
       "you": "You",
       "replay_message": "Play this AI message again",
@@ -1794,6 +2043,7 @@
       "listening_short": "Listening…",
       "recording_paused": "Recording paused",
       "live_transcript_hint": "Your live transcript stays editable below.",
+      "listening_silent_hint": "We can't hear you yet — check your mic is unmuted and speak a little louder.",
       "pause_recording": "Pause",
       "resume_recording": "Resume",
       "finish_answer": "Finish answer",
@@ -1825,6 +2075,7 @@
       }
     },
     "submission": {
+      "submitting_title": "Sending your answer…",
       "submitted_title": "Answer submitted",
       "previous_submitted": "Previous answer submitted",
       "analyzing": "Analyzing your answer…",
@@ -1884,7 +2135,8 @@
       "microphone": "Microphone",
       "mic_connected": "Connected",
       "mic_unavailable": "Not detected",
-      "language": "Interview language"
+      "language": "Interview language",
+      "eyebrow": "AI interview setup"
     },
     "recovery": {
       "connection_lost_title": "Connection lost",
@@ -1938,12 +2190,15 @@
       "gap_report_pending": "Preparing your personalized gap report… this can take a minute.",
       "study_plan": "Study plan",
       "follow_up": "Follow-up",
-      "wrap_up": "Wrap-up"
+      "wrap_up": "Wrap-up",
+      "your_path_forward": "Your path forward",
+      "keep_growing": "Keep growing"
     },
     "labels": {
       "persona": "Persona",
       "time": "Time",
       "max_attempts": "Max attempts",
+      "ai_voice": "AI voice",
       "ai_interview": "AI interview",
       "answer": "Your answer",
       "character_count": "{{count}} characters"
@@ -1963,14 +2218,28 @@
       },
       "time_limit_minutes": "{{minutes}} minutes",
       "no_limit": "Unlimited",
+      "ai_voice_default": "Default",
       "mode": {
         "voice": "Voice",
         "text": "Text"
       }
     },
+    "attempts": {
+      "history_title": "Your attempts",
+      "attempt_n": "Attempt {{n}}",
+      "passed": "Passed",
+      "not_passed": "Not passed",
+      "in_review": "In review",
+      "none": "No attempts yet — this will be your first."
+    },
+    "criteria": {
+      "assessed_on": "Assessed on {{count}} criterion",
+      "assessed_on_plural": "Assessed on {{count}} criteria"
+    },
     "actions": {
       "starting": "Starting...",
       "start": "Start interview",
+      "start_voice": "Start voice interview",
       "course": "Course",
       "next": "Next",
       "finish_early": "End early",
@@ -2001,7 +2270,15 @@
       "evaluation_failed": "Evaluation failed",
       "evaluation_failed_summary": "Our AI grader hit an error while scoring your interview and couldn't produce a result after several attempts. This is not a reflection of your answers — please contact your teacher or try the interview again later.",
       "abandoned": "Interview ended",
-      "abandoned_summary": "The interview ended before an answer was submitted, so there is no evaluation for this attempt."
+      "abandoned_summary": "The interview ended before an answer was submitted, so there is no evaluation for this attempt.",
+      "next": {
+        "back_to_lesson": "Continue to lesson",
+        "retry": "Try again",
+        "attempts_left": "{{count}} attempt left",
+        "attempts_left_plural": "{{count}} attempts left",
+        "cooldown": "You can try again after {{when}}",
+        "no_attempts": "You've used all your attempts for this interview. Review the study plan below and reach out to your teacher if you need another try."
+      }
     },
     "intro": {
       "description": "AI interview grades by module criteria. Answer one by one and review the final feedback."
@@ -2561,6 +2838,55 @@
       "neutral": "Neutral",
       "supportive": "Supportive"
     },
+    "voice": {
+      "aura-2-thalia-en": "Thalia (F, clear)",
+      "aura-2-andromeda-en": "Andromeda (F, warm)",
+      "aura-2-helena-en": "Helena (F, soft)",
+      "aura-2-apollo-en": "Apollo (M, confident)",
+      "aura-2-arcas-en": "Arcas (M, natural)",
+      "aura-2-aries-en": "Aries (M, energetic)",
+      "aura-2-asteria-en": "Asteria (F, friendly)",
+      "aura-2-athena-en": "Athena (F, calm)",
+      "aura-2-hera-en": "Hera (F, mature)",
+      "aura-2-hyperion-en": "Hyperion (M, deep)",
+      "aura-2-luna-en": "Luna (F, youthful)",
+      "aura-2-orion-en": "Orion (M, approachable)",
+      "aura-2-orpheus-en": "Orpheus (M, expressive)",
+      "aura-2-ophelia-en": "Ophelia (F, professional)",
+      "aura-2-zeus-en": "Zeus (M, authoritative)",
+      "aura-2-vesta-en": "Vesta (F, steady)"
+    },
+    "voice_guide": {
+      "open": "View voice & persona guide",
+      "title": "AI voice & persona guide",
+      "subtitle": "How each persona behaves and how each English voice sounds. Persona shapes tone and behaviour; voice sets the spoken sound (English sessions only).",
+      "persona_heading": "Persona (tone & behaviour)",
+      "persona_desc": {
+        "strict": "Firm and formal. Presses for precise answers, minimal encouragement — best for rigorous, high-stakes assessment.",
+        "neutral": "Balanced and professional. Even-handed follow-ups, neither warm nor cold — a safe default.",
+        "supportive": "Warm and encouraging. Gentle prompts and reassurance — best for lower-pressure or early-stage learners."
+      },
+      "voice_heading": "Voice (English only)",
+      "voice_note": "Vietnamese sessions use the browser voice, so this selection only affects English interviews.",
+      "voice_desc": {
+        "aura-2-thalia-en": "Female, clear and crisp. Neutral American accent, easy to follow.",
+        "aura-2-andromeda-en": "Female, warm and rounded. Friendly, unhurried delivery.",
+        "aura-2-helena-en": "Female, soft and gentle. Low-pressure, calming tone.",
+        "aura-2-apollo-en": "Male, confident and clear. Assertive without being harsh.",
+        "aura-2-arcas-en": "Male, natural and conversational. Relaxed everyday tone.",
+        "aura-2-aries-en": "Male, energetic and upbeat. Lively pacing.",
+        "aura-2-asteria-en": "Female, friendly and bright. Approachable, welcoming.",
+        "aura-2-athena-en": "Female, calm and measured. Composed, steady pacing.",
+        "aura-2-hera-en": "Female, mature and assured. Authoritative yet warm.",
+        "aura-2-hyperion-en": "Male, deep and resonant. Serious, weighty tone.",
+        "aura-2-luna-en": "Female, youthful and light. Casual, fresh feel.",
+        "aura-2-orion-en": "Male, approachable and even. Neutral, easy default male voice.",
+        "aura-2-orpheus-en": "Male, expressive and dynamic. More vocal range and emphasis.",
+        "aura-2-ophelia-en": "Female, professional and polished. Clear, business-like (current default).",
+        "aura-2-zeus-en": "Male, authoritative and commanding. Strong, formal presence.",
+        "aura-2-vesta-en": "Female, steady and dependable. Consistent, no-frills delivery."
+      }
+    },
     "status": {
       "draft": "Draft",
       "published": "Published",
@@ -2720,6 +3046,12 @@
       "duration_placeholder": "e.g. 30",
       "attempts_label": "Attempts",
       "attempts_placeholder": "e.g. 3",
+      "cooldown_label": "Cooldown (hours)",
+      "cooldown_hint": "Minimum wait between attempts; blank = none",
+      "cooldown_placeholder": "e.g. 24",
+      "voice_label": "AI voice (English)",
+      "voice_hint": "Deepgram voice for English sessions; Vietnamese uses the browser voice",
+      "voice_default": "Default voice",
       "criteria_label": "Required criteria count",
       "criteria_hint": "Minimum rubric outcomes to pass",
       "criteria_placeholder": "e.g. 2",
@@ -2991,6 +3323,12 @@
       "modules_hint": "Which modules' content the questions draw from. Leave none selected to use this interview's own module.",
       "modules_empty": "No modules available.",
       "modules_own": "(this interview)",
+      "outcomes_label": "Target learning outcomes (optional)",
+      "outcomes_hint": "Pick which rubric outcomes this run should focus on. Leave all unchecked to cover every outcome.",
+      "outcomes_empty": "No learning outcomes defined for this interview yet. Add them on the Learning outcomes tab — generation will cover all of them.",
+      "outcomes_select_all": "Select all",
+      "outcomes_clear": "Clear",
+      "outcomes_badge": "L.O.{{n}}",
       "independent_action_hint": "This starts generation right away — it does not save the settings above.",
       "mode_label": "Generation mode",
       "mode_outcome": "By rubric outcome",
@@ -3013,6 +3351,82 @@
       "success_body": "New questions were added to the draft set. Close to view them.",
       "processing": "Processing…",
       "start_button": "Start generation"
+    }
+  },
+  "teacher_lesson_manage": {
+    "ai_optin": {
+      "label": "Use for AI",
+      "hint": "Also add documents to the AI Hub for quizzes, search, and the knowledge graph. Off for videos, archives, and images."
+    },
+    "ai_badge": {
+      "off": "Not in AI",
+      "processing": "AI: processing",
+      "ready": "AI: ready",
+      "failed": "AI: failed"
+    },
+    "video": {
+      "empty": "Drag & drop a video here, or click to choose"
+    },
+    "resource_ai": {
+      "show": "Show to students (enables the live preview on their page)",
+      "hide": "Hide from students",
+      "not_ready": "Still processing — can't show to students until it's ready",
+      "now_visible": "Now visible to students.",
+      "now_hidden": "Hidden from students.",
+      "retry": "Retry processing",
+      "retry_started": "Reprocessing started.",
+      "show_all": "Show all to students ({{count}})",
+      "show_all_done": "{{count}} document(s) now visible to students.",
+      "show_all_partial": "{{succeeded}} shown, {{failed}} failed — try again."
+    },
+    "sections": {
+      "reading_content": "Reading Content",
+      "reading_content_hint": "Write in Markdown or plain text",
+      "read_stats": "~{{words}} words · {{minutes}} min read",
+      "downloadable_resources": "Downloadable Resources",
+      "material_history": "Material history",
+      "knowledge_graph": "Knowledge Graph"
+    },
+    "editor": {
+      "label": "Markdown Editor",
+      "hint": "Plain text or Markdown"
+    },
+    "actions": {
+      "archive": "Archive",
+      "archive_confirm": "Confirm archive?",
+      "archive_title": "Archive lesson",
+      "delete": "Delete",
+      "delete_confirm": "Confirm delete?",
+      "delete_title": "Delete lesson",
+      "published": "Published",
+      "draft": "Draft",
+      "publish_title": "Publish lesson",
+      "unpublish_title": "Unpublish (set to draft)"
+    },
+    "settings": {
+      "title": "Lesson Settings",
+      "subtitle": "Duration and difficulty shown to students.",
+      "duration_label": "Estimated Duration (minutes)",
+      "duration_placeholder": "e.g. 24",
+      "difficulty_label": "Difficulty Level",
+      "difficulty_beginner": "Beginner",
+      "difficulty_intermediate": "Intermediate",
+      "difficulty_advanced": "Advanced"
+    },
+    "prerequisites": {
+      "title": "Prerequisites",
+      "subtitle": "Lessons students should complete first.",
+      "empty": "No prerequisites added."
+    },
+    "toasts": {
+      "download_failed": "Download failed",
+      "save_failed": "Save failed",
+      "lesson_archived": "Lesson archived",
+      "archive_failed": "Archive failed",
+      "lesson_deleted": "Lesson deleted",
+      "delete_failed": "Delete failed",
+      "attach_failed": "Attach failed",
+      "attach_sync_failed": "Resource attached, but couldn't sync to AI"
     }
   },
   "teacher_lesson_materials": {
@@ -3138,6 +3552,13 @@
     },
     "confirm_delete": {
       "inline": "Delete this material?"
+    },
+    "recently_deleted": {
+      "title": "Recently deleted",
+      "hint": "Deleted materials are kept for 30 days. Restore one to bring back its processed AI index (quizzes, search, knowledge graph) — no reprocessing needed.",
+      "restore": "Restore",
+      "restored": "Material restored.",
+      "restore_failed": "Couldn't restore the material"
     }
   },
   "cooldown": {

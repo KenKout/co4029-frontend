@@ -363,6 +363,23 @@
   }
 }
 
+/* Spinning conic-gradient border for the active (drag-over) file dropzone.
+   Drives the --dropzone-angle custom property so the gradient sweep rotates.
+   Registered via @property so the angle can be animated (a bare CSS custom
+   property is not interpolatable). Falls back gracefully in browsers without
+   @property support — the border just shows a static gradient. */
+@property --dropzone-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes dropzone-border-spin {
+  to {
+    --dropzone-angle: 360deg;
+  }
+}
+
 /* ── Base styles ── */
 @layer base {
   * {
@@ -435,6 +452,37 @@
     animation: ai-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
+  /* Active file-dropzone: a rotating conic-gradient ring painted in the
+     element's border box. Uses the border-box/padding-box mask trick so only
+     the 2px border area shows the gradient (the interior stays the dropzone
+     fill). Pair with `border-2 border-transparent`. Honors reduced motion. */
+  .dropzone-spin-border {
+    border-color: transparent;
+    background-image: conic-gradient(
+      from var(--dropzone-angle),
+      var(--secondary),
+      var(--primary),
+      var(--accent),
+      var(--secondary)
+    );
+    background-origin: border-box;
+    background-clip: border-box;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) padding-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#fff 0 0) padding-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    animation: dropzone-border-spin 2s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dropzone-spin-border {
+      animation: none;
+    }
+  }
+
   /* Scroll-reveal base: hidden until IntersectionObserver triggers */
   .reveal {
     opacity: 0;
@@ -496,5 +544,42 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Accessibility sweep (#22 focus-visible, #23 reduced-motion)
+   Plain CSS outside @layer so these are authoritative global rules.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* #22 — Consistent keyboard focus ring across all interactive elements.
+   Only shows for keyboard navigation (:focus-visible), never on mouse
+   click, so it doesn't add visual noise for pointer users. Elements that
+   set their own focus-visible ring (e.g. inputs) are unaffected — this is
+   the baseline for anything that doesn't. */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+/* #23 — Honour prefers-reduced-motion globally. Users who opt out of
+   motion get near-instant transitions/animations everywhere (card hover
+   lifts, image zooms, reveal animations, spinners degrade to a single
+   frame), rather than gating each animation utility one at a time. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

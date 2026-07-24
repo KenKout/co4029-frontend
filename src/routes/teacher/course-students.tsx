@@ -17,13 +17,16 @@ import {
   ArrowUpRight,
   Award,
   UserPlus,
+  X,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   useTeacherCourseById,
   useTeacherCourseRoster,
 } from "@/lib/api/hooks/teacher-courses";
 import type { RosterStudent } from "@/lib/api/types/teacher";
 import { GradientProgress } from "@/components/ui/gradient-progress";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { cn } from "@/lib/utils";
 
 /* ── Risk / status helpers ── */
@@ -336,42 +339,23 @@ export default function CourseStudentsPage() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex gap-2 flex-wrap">
-                {STATUS_FILTERS.map((f) => {
-                  const count =
+              {/* Status segmented control — shared component, per-status counts. */}
+              <SegmentedFilter
+                ariaLabel="Student status"
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={STATUS_FILTERS.map((f) => ({
+                  key: f.key,
+                  label: f.label,
+                  count:
                     f.key === "all"
                       ? students.length
                       : f.key === "at_risk"
                         ? atRiskCount
                         : students.filter((s) => s.enrollment_status === f.key)
-                            .length;
-                  return (
-                    <button
-                      key={f.key}
-                      type="button"
-                      onClick={() => setStatusFilter(f.key)}
-                      className={cn(
-                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer",
-                        statusFilter === f.key
-                          ? "bg-m3-primary text-white"
-                          : "bg-m3-surface-container-high text-m3-on-surface-variant hover:bg-m3-surface-container-highest",
-                      )}
-                    >
-                      {f.label}
-                      <span
-                        className={cn(
-                          "ml-1.5 px-1.5 py-0.5 rounded text-[10px]",
-                          statusFilter === f.key
-                            ? "bg-white/20"
-                            : "bg-m3-surface-container-highest",
-                        )}
-                      >
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                            .length,
+                }))}
+              />
 
               <div className="flex items-center gap-2 text-xs text-m3-on-surface-variant">
                 <Filter className="h-3.5 w-3.5" />
@@ -426,14 +410,44 @@ export default function CourseStudentsPage() {
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 text-m3-on-surface-variant">
-                <Users className="h-10 w-10 opacity-30" />
-                <p className="text-sm font-medium">
-                  {students.length === 0
-                    ? "No students enrolled yet."
-                    : "No students match your filters."}
-                </p>
-              </div>
+              students.length === 0 ? (
+                /* First-run — no enrollments exist yet. */
+                <div className="flex flex-col items-center justify-center py-16 gap-3 text-center max-w-sm mx-auto">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-m3-primary-fixed">
+                    <Users className="h-7 w-7 text-m3-primary" />
+                  </div>
+                  <p className="text-base font-headline font-bold text-m3-on-surface">
+                    No students enrolled yet
+                  </p>
+                  <p className="text-sm text-m3-on-surface-variant">
+                    Once students enroll in this course, they'll appear here
+                    with their progress and risk signals.
+                  </p>
+                </div>
+              ) : (
+                /* No-match — enrollments exist but filters/search hid them. */
+                <div className="flex flex-col items-center justify-center py-16 gap-3 text-center text-m3-on-surface-variant">
+                  <Search className="h-10 w-10 opacity-30" />
+                  <p className="text-sm font-medium text-m3-on-surface">
+                    No students match
+                  </p>
+                  <p className="text-xs">
+                    Try a different search term or clear your filters.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-1 gap-2"
+                    onClick={() => {
+                      setSearch("");
+                      setStatusFilter("all");
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                    Clear filters
+                  </Button>
+                </div>
+              )
             ) : (
               <div className="divide-y divide-m3-outline-variant/10">
                 {filtered.map((student) => {
@@ -451,15 +465,24 @@ export default function CourseStudentsPage() {
                       params={{ courseId, studentId: student.student_id }}
                       className="flex sm:grid sm:grid-cols-[auto_1fr_130px_100px_90px_40px] gap-4 items-center px-5 py-4 hover:bg-m3-surface-container-low transition-colors cursor-pointer group"
                     >
-                      {/* Avatar */}
-                      <div
-                        className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 uppercase",
-                          aColor,
-                        )}
-                      >
-                        {initials || "?"}
-                      </div>
+                      {/* Avatar — show the uploaded image when present,
+                          otherwise the colour-coded initials fallback. */}
+                      {student.avatar_url ? (
+                        <img
+                          src={student.avatar_url}
+                          alt=""
+                          className="w-10 h-10 rounded-full object-cover shrink-0"
+                        />
+                      ) : (
+                        <div
+                          className={cn(
+                            "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 uppercase",
+                            aColor,
+                          )}
+                        >
+                          {initials || "?"}
+                        </div>
+                      )}
 
                       {/* Name + email + enrollment status */}
                       <div className="min-w-0">
@@ -669,13 +692,17 @@ export default function CourseStudentsPage() {
                       Top Performer
                     </h4>
                     <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold uppercase bg-white/20 text-white",
-                        )}
-                      >
-                        {avatarInitials(top.display_name) || "?"}
-                      </div>
+                      {top.avatar_url ? (
+                        <img
+                          src={top.avatar_url}
+                          alt=""
+                          className="w-10 h-10 rounded-full object-cover shrink-0 ring-2 ring-white/40"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold uppercase bg-white/20 text-white shrink-0">
+                          {avatarInitials(top.display_name) || "?"}
+                        </div>
+                      )}
                       <div>
                         <p className="font-bold text-sm">{top.display_name}</p>
                         <p className="text-xs text-white/70">

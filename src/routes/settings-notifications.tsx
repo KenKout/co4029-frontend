@@ -2,9 +2,8 @@ import { useMemo } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, Bell, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SectionHeader } from "@/components/ui/section-header";
+import { Bell, Loader2 } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   Table,
   TableBody,
@@ -132,25 +131,11 @@ export default function SettingsNotificationsPage() {
 
   return (
     <div className="min-h-screen pb-16">
-      <div className="max-w-3xl mx-auto pb-6 space-y-6 p-6">
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={goBack}
-            aria-label={t("settings_hub.back")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm font-medium text-m3-on-surface-variant">
-            {t("settings_hub.back")}
-          </span>
-        </div>
-        <SectionHeader
+      <div className="mx-auto max-w-2xl space-y-6 p-6 pb-6">
+        <PageHeader
           title={t("settings_notifications.title")}
           subtitle={t("settings_notifications.subtitle")}
+          onBack={goBack}
         />
 
         <div className="bg-m3-surface-container-lowest rounded-xl shadow-editorial ghost-border overflow-hidden">

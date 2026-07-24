@@ -33,6 +33,11 @@ import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
@@ -78,6 +83,7 @@ import { cn } from "@/lib/utils";
 
 type SupportedMode = NonNullable<InterviewConfigUpdate["supported_modes"]>;
 type Persona = NonNullable<InterviewConfigUpdate["persona"]>;
+type TtsVoice = NonNullable<InterviewConfigUpdate["tts_voice"]>;
 type GenerationMode = InterviewGenerationRequest["mode"];
 type SecurityResponsePolicy =
   | "continue_and_log"
@@ -100,14 +106,19 @@ interface GenerationFormState {
   // module (backend default). Multi-select lets a teacher scope one interview
   // across several modules.
   source_module_ids: string[];
+  // Interview rubric-outcome ids to target. Empty = every outcome (backend
+  // default). Lets a teacher focus a run on specific learning outcomes.
+  target_outcome_ids: string[];
 }
 
 interface SettingsDraft {
   title: string;
   persona: Persona;
+  tts_voice: string;
   supported_modes: SupportedMode;
   time_limit_minutes: string;
   max_attempts: string;
+  cooldown_hours: string;
   min_outcomes_to_pass: string;
   lock_quiz_ef_until_pass: boolean;
   supplementary_instructions: string;
@@ -122,6 +133,8 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
   return {
     title: config.title ?? "",
     persona: (config.persona ?? "neutral") as Persona,
+    // "" = deployment default voice; only meaningful for English sessions.
+    tts_voice: config.tts_voice ?? "",
     // All interviews are hybrid (type-or-voice). The mode selector was removed;
     // any legacy text/voice config is normalized to hybrid on load.
     supported_modes: "hybrid",
@@ -131,6 +144,8 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
         : String(config.time_limit_minutes),
     max_attempts:
       config.max_attempts == null ? "" : String(config.max_attempts),
+    cooldown_hours:
+      config.cooldown_hours == null ? "" : String(config.cooldown_hours),
     min_outcomes_to_pass:
       config.min_outcomes_to_pass == null
         ? ""
@@ -157,6 +172,28 @@ function integerOrNull(value: string): number | null {
 }
 
 const PERSONA_KEYS: Persona[] = ["strict", "neutral", "supportive"];
+// Deepgram Aura-2 English voices. MUST stay in sync with the backend allow-list
+// (services.narration.ALLOWED_TTS_VOICES / schemas.authoring.TtsVoiceLiteral).
+// Empty value ("") = deployment default (settings.deepgram_tts_model_en).
+// English-only: Vietnamese sessions have no server TTS, so this is ignored there.
+const VOICE_KEYS: TtsVoice[] = [
+  "aura-2-thalia-en",
+  "aura-2-andromeda-en",
+  "aura-2-helena-en",
+  "aura-2-apollo-en",
+  "aura-2-arcas-en",
+  "aura-2-aries-en",
+  "aura-2-asteria-en",
+  "aura-2-athena-en",
+  "aura-2-hera-en",
+  "aura-2-hyperion-en",
+  "aura-2-luna-en",
+  "aura-2-orion-en",
+  "aura-2-orpheus-en",
+  "aura-2-ophelia-en",
+  "aura-2-zeus-en",
+  "aura-2-vesta-en",
+];
 
 export default function InterviewConfigPage() {
   const { t, i18n } = useTranslation();
@@ -227,6 +264,7 @@ export default function InterviewConfigPage() {
     focus_topics: "",
     avoid_topics: "",
     source_module_ids: [],
+    target_outcome_ids: [],
   });
   const generate = useGenerateInterviewQuestions(configId);
 
@@ -430,9 +468,12 @@ export default function InterviewConfigPage() {
       await updateConfig.mutateAsync({
         title: draft.title.trim(),
         persona: draft.persona,
+        // Empty selection → null (deployment default voice).
+        tts_voice: (draft.tts_voice || null) as TtsVoice | null,
         supported_modes: draft.supported_modes,
         time_limit_minutes: integerOrNull(draft.time_limit_minutes),
         max_attempts: integerOrNull(draft.max_attempts),
+        cooldown_hours: integerOrNull(draft.cooldown_hours),
         min_outcomes_to_pass: integerOrNull(draft.min_outcomes_to_pass),
         lock_quiz_ef_until_pass: draft.lock_quiz_ef_until_pass,
         supplementary_instructions:
@@ -548,6 +589,7 @@ export default function InterviewConfigPage() {
         avoid_topics: splitTopics(generationForm.avoid_topics),
         source_module_ids: generationForm.source_module_ids,
         source_lesson_ids: [],
+        target_outcome_ids: generationForm.target_outcome_ids,
         persona: draft?.persona,
         supplementary_instructions:
           draft?.supplementary_instructions.trim() || null,
@@ -830,6 +872,7 @@ export default function InterviewConfigPage() {
                   run={activeRun}
                   modules={content?.modules ?? []}
                   ownModuleId={config.module_id}
+                  outcomes={outcomes ?? []}
                 />
               </section>
               <section
@@ -1270,12 +1313,33 @@ function SettingsForm({
                 </option>
               ))}
             </select>
+            <VoicePersonaGuideSheet focus="persona" />
+          </Field>
+          <Field
+            label={t("teacher_interview_config.fields.voice_label")}
+            hint={t("teacher_interview_config.fields.voice_hint")}
+          >
+            <select
+              value={draft.tts_voice}
+              onChange={(e) => update("tts_voice", e.target.value)}
+              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+            >
+              <option value="">
+                {t("teacher_interview_config.fields.voice_default")}
+              </option>
+              {VOICE_KEYS.map((v) => (
+                <option key={v} value={v}>
+                  {t(`teacher_interview_config.voice.${v}`)}
+                </option>
+              ))}
+            </select>
+            <VoicePersonaGuideSheet focus="voice" />
           </Field>
         </div>
       </Section>
 
       <Section title={t("teacher_interview_config.sections.rules.title")}>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field
             label={t("teacher_interview_config.fields.duration_label")}
             hint={t("teacher_interview_config.fields.duration_hint")}
@@ -1303,6 +1367,21 @@ function SettingsForm({
               onChange={(e) => update("max_attempts", e.target.value)}
               placeholder={t(
                 "teacher_interview_config.fields.attempts_placeholder",
+              )}
+              className="bg-m3-surface text-sm"
+            />
+          </Field>
+          <Field
+            label={t("teacher_interview_config.fields.cooldown_label")}
+            hint={t("teacher_interview_config.fields.cooldown_hint")}
+          >
+            <Input
+              type="number"
+              min={1}
+              value={draft.cooldown_hours}
+              onChange={(e) => update("cooldown_hours", e.target.value)}
+              placeholder={t(
+                "teacher_interview_config.fields.cooldown_placeholder",
               )}
               className="bg-m3-surface text-sm"
             />
@@ -1614,6 +1693,7 @@ function GenerationSection({
   run,
   modules,
   ownModuleId,
+  outcomes,
 }: {
   generationForm: GenerationFormState;
   setGenerationForm: React.Dispatch<React.SetStateAction<GenerationFormState>>;
@@ -1623,6 +1703,7 @@ function GenerationSection({
   run: InterviewGenerationRunPublic | undefined;
   modules: { id: string; title: string }[];
   ownModuleId: string;
+  outcomes: InterviewOutcomeAuthoring[];
 }) {
   const { t } = useTranslation();
   function updateGeneration<K extends keyof GenerationFormState>(
@@ -1740,6 +1821,82 @@ function GenerationSection({
               })
             )}
           </div>
+        </Field>
+
+        <Field
+          label={t("teacher_interview_config.generate.outcomes_label")}
+          hint={t("teacher_interview_config.generate.outcomes_hint")}
+        >
+          {outcomes.length === 0 ? (
+            <p className="rounded-xl bg-m3-surface p-4 text-sm text-m3-on-surface-variant">
+              {t("teacher_interview_config.generate.outcomes_empty")}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateGeneration(
+                      "target_outcome_ids",
+                      generationForm.target_outcome_ids.length ===
+                        outcomes.length
+                        ? []
+                        : outcomes.map((o) => o.id),
+                    )
+                  }
+                  className="text-xs font-semibold text-m3-secondary hover:text-m3-primary cursor-pointer"
+                >
+                  {generationForm.target_outcome_ids.length === outcomes.length
+                    ? t("teacher_interview_config.generate.outcomes_clear")
+                    : t("teacher_interview_config.generate.outcomes_select_all")}
+                </button>
+              </div>
+              {outcomes.map((outcome, index) => {
+                const checked = generationForm.target_outcome_ids.includes(
+                  outcome.id,
+                );
+                return (
+                  <label
+                    key={outcome.id}
+                    className={cn(
+                      "flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer transition-all",
+                      checked
+                        ? "border-m3-secondary bg-m3-secondary-fixed/30"
+                        : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() =>
+                        updateGeneration(
+                          "target_outcome_ids",
+                          checked
+                            ? generationForm.target_outcome_ids.filter(
+                                (id) => id !== outcome.id,
+                              )
+                            : [
+                                ...generationForm.target_outcome_ids,
+                                outcome.id,
+                              ],
+                        )
+                      }
+                      className="h-4 w-4"
+                    />
+                    <span className="shrink-0 rounded-md bg-violet-100 px-1.5 py-0.5 text-[11px] font-bold text-violet-700">
+                      {t("teacher_interview_config.generate.outcomes_badge", {
+                        n: index + 1,
+                      })}
+                    </span>
+                    <span className="flex-1 text-sm text-m3-on-surface">
+                      {outcome.outcome_text}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
         </Field>
 
         <Field
@@ -1910,6 +2067,105 @@ function Field({
       {children}
       {hint && <p className="text-[11px] text-m3-on-surface-variant">{hint}</p>}
     </div>
+  );
+}
+
+/**
+ * A small "View guide" link that opens a side sheet describing every AI
+ * persona and every AI voice in one place. Shown under both the AI persona and
+ * AI voice fields so a teacher can look up what each option sounds like before
+ * choosing. ``focus`` scrolls/hints which table is most relevant to the field
+ * the link sits under, but both tables are always present.
+ */
+function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
+  const { t } = useTranslation();
+  return (
+    <Sheet>
+      <SheetTrigger
+        render={
+          <button
+            type="button"
+            className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-m3-primary hover:underline cursor-pointer"
+          />
+        }
+      >
+        <HelpCircle className="h-3 w-3" aria-hidden="true" />
+        {t("teacher_interview_config.voice_guide.open")}
+      </SheetTrigger>
+      <SheetContent className="w-full overflow-y-auto p-6 sm:max-w-md">
+        <div className="space-y-6">
+          <header className="space-y-1 pr-8">
+            <h2 className="font-headline text-lg font-extrabold text-m3-on-surface">
+              {t("teacher_interview_config.voice_guide.title")}
+            </h2>
+            <p className="text-xs text-m3-on-surface-variant">
+              {t("teacher_interview_config.voice_guide.subtitle")}
+            </p>
+          </header>
+
+          {/* Persona table */}
+          <section
+            className={cn(
+              "space-y-2",
+              focus === "persona" && "rounded-lg ring-1 ring-m3-primary/30 p-2 -m-2",
+            )}
+          >
+            <h3 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              {t("teacher_interview_config.voice_guide.persona_heading")}
+            </h3>
+            <table className="w-full text-left text-xs">
+              <tbody>
+                {PERSONA_KEYS.map((p) => (
+                  <tr key={p} className="border-b border-m3-outline-variant/20 align-top">
+                    <th
+                      scope="row"
+                      className="whitespace-nowrap py-2 pr-3 font-semibold text-m3-on-surface"
+                    >
+                      {t(`teacher_interview_config.persona.${p}`)}
+                    </th>
+                    <td className="py-2 text-m3-on-surface-variant">
+                      {t(`teacher_interview_config.voice_guide.persona_desc.${p}`)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          {/* Voice table */}
+          <section
+            className={cn(
+              "space-y-2",
+              focus === "voice" && "rounded-lg ring-1 ring-m3-primary/30 p-2 -m-2",
+            )}
+          >
+            <h3 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              {t("teacher_interview_config.voice_guide.voice_heading")}
+            </h3>
+            <p className="text-[11px] text-m3-on-surface-variant">
+              {t("teacher_interview_config.voice_guide.voice_note")}
+            </p>
+            <table className="w-full text-left text-xs">
+              <tbody>
+                {VOICE_KEYS.map((v) => (
+                  <tr key={v} className="border-b border-m3-outline-variant/20 align-top">
+                    <th
+                      scope="row"
+                      className="whitespace-nowrap py-2 pr-3 font-semibold text-m3-on-surface"
+                    >
+                      {t(`teacher_interview_config.voice.${v}`)}
+                    </th>
+                    <td className="py-2 text-m3-on-surface-variant">
+                      {t(`teacher_interview_config.voice_guide.voice_desc.${v}`)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 

@@ -51,6 +51,11 @@ vi.mock("lucide-react", () => ({
   Volume2: () => <div data-testid="volume-icon" />,
   Clock3: () => <div data-testid="clock-icon" />,
   Loader2: () => <div data-testid="loader-icon" />,
+  // Referenced at module scope by interview-workspace's TURN_KIND_VISUALS
+  // (transitively imported here), so the full-replacement mock must stub them.
+  Sparkles: () => <div data-testid="sparkles-icon" />,
+  CircleHelp: () => <div data-testid="circle-help-icon" />,
+  MessageSquareText: () => <div data-testid="message-square-text-icon" />,
 }));
 
 // Import after mocking

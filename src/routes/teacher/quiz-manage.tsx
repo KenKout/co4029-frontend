@@ -11,10 +11,12 @@ import {
   Clock,
   Eye,
   HelpCircle,
+  ListChecks,
   Loader2,
   Plus,
   RefreshCw,
   Save,
+  Settings,
   Sparkles,
   Trash2,
   Upload,
@@ -59,6 +61,17 @@ import { MasterySelector } from "./_components/MasterySelector";
 type TabKey = "questions" | "settings" | "preview";
 
 const TAB_KEYS: ReadonlyArray<TabKey> = ["questions", "settings", "preview"];
+
+// Icon per tab — used for the condensed icon-only vertical rail that the tab
+// strip morphs into once it sticks under the global top bar.
+const TAB_ICONS: Record<
+  TabKey,
+  React.ComponentType<{ className?: string }>
+> = {
+  questions: ListChecks,
+  settings: Settings,
+  preview: Eye,
+};
 
 interface SettingsDraft {
   title: string;
@@ -229,18 +242,23 @@ export default function QuizManagePage() {
   // NOTE: these hooks MUST stay above the early returns below (loading /
   // not-found guards) — hooks after a conditional return violate the rules
   // of hooks and throw React error #310 once the data loads.
-  const stickySentinelRef = useRef<HTMLDivElement | null>(null);
   const [actionsStuck, setActionsStuck] = useState(false);
-  useEffect(() => {
-    const sentinel = stickySentinelRef.current;
-    if (!sentinel) return;
+  const stickyObserverRef = useRef<IntersectionObserver | null>(null);
+  // CALLBACK ref (not useRef + useEffect): the sentinel only mounts AFTER the
+  // loading / not-found early returns pass, so an effect with [] deps would
+  // run once while the node is still null and never re-attach. A callback ref
+  // fires exactly when the node mounts (and unmounts), so the observer always
+  // attaches once the real content renders.
+  const stickySentinelRef = useCallback((node: HTMLDivElement | null) => {
+    stickyObserverRef.current?.disconnect();
+    if (!node) return;
     const observer = new IntersectionObserver(
       ([entry]) => setActionsStuck(!entry.isIntersecting),
       // rootMargin top offset = global ContentTopBar height (64px / top-16)
       { rootMargin: "-64px 0px 0px 0px", threshold: 0 },
     );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
+    observer.observe(node);
+    stickyObserverRef.current = observer;
   }, []);
 
   if (authoringLoading || contentLoading) {
@@ -453,7 +471,7 @@ export default function QuizManagePage() {
   }
 
   return (
-    <div className="space-y-6 pb-12 max-w-[1500px] mx-auto">
+    <div className="space-y-6 pb-12 max-w-[1800px] mx-auto">
       <Breadcrumbs
         items={[
           {
@@ -532,38 +550,84 @@ export default function QuizManagePage() {
           sidebar per frontend/AGENTS.md. Once stuck, it gains a solid blurred
           background + shadow and the action buttons drop their text labels
           (icons only) to stay compact. */}
-      <div className="sticky top-16 z-20 -mx-1 px-1">
+      {/* `relative` so the condensed vertical tab rail can be absolutely
+          positioned into the left gutter (out of content flow) once stuck. */}
+      <div className="sticky top-16 z-20 -mx-1 px-1 relative">
         <div
           className={cn(
             "flex items-center justify-between gap-3 rounded-xl border transition-all",
+            // When stuck we DON'T paint a full-width opaque band anymore — that
+            // band was the eye-blocker overlaying the content. The tabs peel
+            // off to a vertical icon rail on the left instead; the action
+            // buttons keep a compact blurred pill of their own (below).
             actionsStuck
-              ? "border-m3-outline-variant/30 bg-surface-elev/90 backdrop-blur-md shadow-glass px-2 py-1.5"
+              ? "border-transparent px-0 py-0"
               : "border-transparent px-0 py-0",
           )}
         >
-          <div className="bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 border border-m3-outline-variant/20 shadow-lg shadow-m3-primary/5">
+          {/* Tab switcher. Not stuck → horizontal pills with text labels,
+              in-flow. Stuck → animates into a vertical, icon-only rail parked
+              in the left gutter (absolute, so it respects the sidebar margin
+              via its in-flow parent and never covers the center content),
+              sliding in from the left with tooltips for each tab. */}
+          <div
+            className={cn(
+              "transition-all duration-300 ease-out",
+              actionsStuck
+                // Stuck rail floats over white content, so it needs a strong,
+                // opaque background + a solid darker border to read as a
+                // distinct card and not blend into the content behind it.
+                ? "absolute left-0 top-1 z-10 flex flex-col gap-1.5 rounded-2xl border-2 border-m3-outline-variant/50 bg-surface-elev p-1.5 shadow-xl ring-1 ring-black/5 animate-in fade-in slide-in-from-left-3"
+                : "border border-m3-outline-variant/20 bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 shadow-lg shadow-m3-primary/5",
+            )}
+          >
             {TAB_KEYS.map((key) => {
               const active = key === tab;
+              const Icon = TAB_ICONS[key];
+              const label = t(`teacher_quiz_manage.tabs.${key}`);
               return (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setTab(key)}
                   aria-pressed={active}
+                  aria-label={label}
+                  title={actionsStuck ? label : undefined}
                   className={cn(
-                    "px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer",
+                    "rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center border",
+                    actionsStuck
+                      ? "h-10 w-10"
+                      : "px-4 py-2 text-sm gap-2",
+                    // Active tab: in the stuck rail it needs a solid blue fill
+                    // with a WHITE icon + gray border so it doesn't blend into
+                    // the content showing through behind the rail. In the
+                    // normal (not-stuck) strip it keeps the subtle pill look.
                     active
-                      ? "bg-surface-elev text-m3-primary shadow-sm"
-                      : "text-m3-on-surface-variant hover:text-m3-primary/80",
+                      ? actionsStuck
+                        ? "bg-m3-primary text-white border-m3-outline-variant/40 shadow-sm"
+                        : "bg-surface-elev text-m3-primary border-transparent shadow-sm"
+                      : "border-transparent text-m3-on-surface-variant hover:text-m3-primary/80",
                   )}
                 >
-                  {t(`teacher_quiz_manage.tabs.${key}`)}
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {!actionsStuck && <span>{label}</span>}
                 </button>
               );
             })}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Actions stay pinned to the right. Once stuck, the tab rail peels
+              off to an absolute left-gutter position, leaving this as the only
+              in-flow child — `ml-auto` keeps it hard-right, and it gets its own
+              compact blurred pill so the buttons don't float bare over the
+              content (the old full-width band is gone). */}
+          <div
+            className={cn(
+              "flex items-center gap-2 shrink-0 transition-all",
+              actionsStuck &&
+                "ml-auto rounded-xl border border-m3-outline-variant/30 bg-surface-elev/90 backdrop-blur-md shadow-glass px-2 py-1.5",
+            )}
+          >
             <Link
               to="/teacher/courses/$courseId/quizzes/$quizId/results"
               params={{ courseId, quizId }}
@@ -885,7 +949,7 @@ function QuestionsTab({
 
   return (
     <div className="grid grid-cols-12 gap-6">
-      <div className="col-span-12 lg:col-span-8 space-y-4">
+      <div className="col-span-12 lg:col-span-8 space-y-4 min-w-0">
         {/* Undo snackbar: fixed bottom-center so it's ALWAYS visible
             regardless of scroll position. It must NOT be a sticky element
             inside the list — a sticky banner would slide under the global
@@ -1021,7 +1085,7 @@ function QuestionsTab({
         </button>
       </div>
 
-      <div className="col-span-12 lg:col-span-4">
+      <div className="col-span-12 lg:col-span-4 min-w-0">
         <div className="lg:sticky lg:top-[8.5rem] space-y-4">
           <div className="rounded-xl border border-m3-secondary/10 bg-m3-surface-container-low p-5 shadow-glass space-y-3">
             <div className="flex items-center gap-2">
@@ -1827,10 +1891,36 @@ function GenerateModal({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+
+  // ESC closes the modal. Registered once while mounted; the parent unmounts
+  // this component on close so no manual cleanup dance is needed beyond the
+  // effect teardown.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8 overflow-y-auto">
-      <div className="w-full max-w-2xl rounded-xl bg-m3-surface p-6 shadow-xl space-y-4 my-auto">
-        <div className="flex items-start justify-between gap-3">
+    // Backdrop click closes; the inner panel stops propagation so clicks inside
+    // the form never bubble up to trigger a close.
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 py-8 overflow-y-auto"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="w-full max-w-4xl rounded-xl bg-m3-surface shadow-xl my-auto flex max-h-[calc(100vh-4rem)] flex-col"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        {/* Sticky header so the close button is ALWAYS reachable regardless of
+            how far the form body is scrolled — fixes "have to scroll way back
+            to close". */}
+        <div className="flex items-start justify-between gap-3 border-b border-m3-outline-variant/15 p-6 pb-4 shrink-0">
           <div className="flex items-start gap-3">
             <div className="h-10 w-10 rounded-xl gradient-primary flex items-center justify-center shadow-ai-glow shrink-0">
               <Sparkles className="h-5 w-5 text-white" />
@@ -1856,12 +1946,15 @@ function GenerateModal({
           </Button>
         </div>
 
-        <QuizGenerationPanel
-          quizId={quizId}
-          moduleId={moduleId}
-          courseId={courseId}
-          hasExistingQuestions={hasExistingQuestions}
-        />
+        {/* Only the form body scrolls; header stays pinned. */}
+        <div className="overflow-y-auto p-6 pt-4">
+          <QuizGenerationPanel
+            quizId={quizId}
+            moduleId={moduleId}
+            courseId={courseId}
+            hasExistingQuestions={hasExistingQuestions}
+          />
+        </div>
       </div>
     </div>
   );

@@ -1,19 +1,26 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useRouter } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import { useMe, useUpdateProfile } from "@/lib/api/hooks/auth";
+import { Camera, Loader2 } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+  useMe,
+  useUpdateProfile,
+  useUploadAvatar,
+} from "@/lib/api/hooks/auth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { getAuthUserInitials } from "@/lib/auth";
+import { useFileDrop } from "@/lib/use-file-drop";
 import { cn } from "@/lib/utils";
+
+// Client-side guardrails mirroring the backend (JPEG/PNG/WebP/GIF, ≤ 2 MiB) so
+// obviously-bad files are rejected before the upload round-trip.
+const AVATAR_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
 interface FieldErrors {
   display_name?: string;
@@ -28,7 +35,45 @@ export default function SettingsProfilePage() {
   const navigate = useNavigate();
   const { data: me } = useMe();
   const updateProfile = useUpdateProfile();
+  const uploadAvatar = useUploadAvatar();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
+
+  const avatarUrl = me?.profile?.avatar_url ?? undefined;
+  const initials = getAuthUserInitials(me ?? null);
+
+  function uploadAvatarFile(file: File) {
+    if (!file) return;
+    if (!AVATAR_ACCEPT.split(",").includes(file.type)) {
+      toast.error(t("settings_profile.avatar.invalid_type"));
+      return;
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      toast.error(t("settings_profile.avatar.too_large"));
+      return;
+    }
+    uploadAvatar.mutate(file, {
+      onSuccess: () => toast.success(t("settings_profile.avatar.updated")),
+      onError: (err) =>
+        toast.error(
+          (err as Error).message || t("settings_profile.avatar.upload_failed"),
+        ),
+    });
+  }
+
+  function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Reset the input so re-selecting the same file fires onChange again.
+    e.target.value = "";
+    if (file) uploadAvatarFile(file);
+  }
+
+  // Drag-and-drop onto the avatar tile — same flicker-proof lifecycle as
+  // every other upload surface; keeps the live image preview.
+  const { dragging: avatarDragging, dropProps: avatarDropProps } = useFileDrop({
+    onFile: uploadAvatarFile,
+    disabled: uploadAvatar.isPending,
+  });
 
   // Go back to previous page if available, fall back to settings hub.
   // Direct deep-links / refreshes have no useful history entry, so the
@@ -102,29 +147,74 @@ export default function SettingsProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 p-6">
-      <div className="flex items-center gap-3">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={goBack}
-          aria-label={t("settings_profile.back")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <span className="text-sm font-medium text-m3-on-surface-variant">
-          {t("settings_profile.back")}
-        </span>
-      </div>
+    <div className="mx-auto max-w-2xl space-y-6 p-6">
+      <PageHeader
+        title={t("settings_profile.title")}
+        subtitle={t("settings_profile.subtitle")}
+        onBack={goBack}
+      />
       <Card>
-        <CardHeader>
-          <CardTitle>{t("settings_profile.title")}</CardTitle>
-          <CardDescription>{t("settings_profile.subtitle")}</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            {/* Avatar upload — click the image (or the button) to pick a new
+                one; it uploads immediately and the presigned URL refreshes. */}
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                {...avatarDropProps}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadAvatar.isPending}
+                aria-label={t("settings_profile.avatar.change")}
+                className={cn(
+                  "group relative rounded-full transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed",
+                  avatarDragging &&
+                    "ring-2 ring-m3-secondary ring-offset-2 shadow-ai-glow",
+                )}
+              >
+                <Avatar size="lg" className="size-16">
+                  {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
+                  <AvatarFallback className="text-lg">
+                    {initials || "?"}
+                  </AvatarFallback>
+                </Avatar>
+                {/* Hover/upload overlay */}
+                <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                  {uploadAvatar.isPending ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-white" />
+                  ) : (
+                    <Camera className="h-5 w-5 text-white" />
+                  )}
+                </span>
+              </button>
+              <div className="min-w-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploadAvatar.isPending}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="gap-1.5"
+                >
+                  {uploadAvatar.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Camera className="h-3.5 w-3.5" />
+                  )}
+                  {t("settings_profile.avatar.change")}
+                </Button>
+                <p className="mt-1 text-xs text-m3-on-surface-variant">
+                  {t("settings_profile.avatar.hint")}
+                </p>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={AVATAR_ACCEPT}
+                onChange={handleAvatarFile}
+                className="hidden"
+              />
+            </div>
+
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="display_name"

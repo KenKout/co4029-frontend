@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -8,7 +8,6 @@ import {
   FileText,
   Download,
   Trash2,
-  Plus,
   Paperclip,
   Bold,
   Italic,
@@ -24,12 +23,13 @@ import {
   Archive,
   Loader2,
   Save,
-  Brain,
   Pencil,
-  Check,
   Hash,
   AlignLeft,
-  Search,
+  Eye,
+  EyeOff,
+  RefreshCw,
+  CheckCircle,
 } from "lucide-react";
 import { MediaPlayer, MediaProvider } from "@vidstack/react";
 import {
@@ -41,6 +41,7 @@ import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
 import {
@@ -61,11 +62,23 @@ import {
   useTeacherMaterialStreamUrl,
   useInitMaterialUpload,
   useCompleteMaterialUpload,
+  useTeacherLessonMaterials,
+  useReprocessMaterial,
+  useUpdateMaterial,
+  useBulkSetMaterialVisibility,
+  useTeacherProcessingSummary,
 } from "@/lib/api/hooks/materials";
-import type {
-  CourseContentLesson,
-  LessonResource,
-} from "@/lib/api/types/common";
+import type { LessonResource } from "@/lib/api/types/common";
+import type { LearningMaterial } from "@/lib/api/types/teacher";
+import {
+  ProcessingStatusCard,
+  MaterialCard,
+  MaterialDeleteButton,
+  RecentlyDeletedSection,
+  KnowledgeGraphPreview,
+} from "./_components/material-hub";
+import { FileDropzone } from "@/components/ui/file-dropzone";
+import { useFileDrop } from "@/lib/use-file-drop";
 import { cn } from "@/lib/utils";
 
 /* ── Lesson type options ── */
@@ -86,6 +99,25 @@ const RESOURCE_STYLES: Record<string, { bg: string; text: string }> = {
 function resourceStyle(filename: string) {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "pdf";
   return RESOURCE_STYLES[ext] ?? RESOURCE_STYLES.pdf;
+}
+
+/* File types that carry teachable text worth feeding to the AI (quizzes,
+   search, knowledge graph). Everything else — archives, video, images,
+   spreadsheets — defaults AI OFF: ingesting them burns LLM spend and pollutes
+   the knowledge graph with no useful extraction. Teacher can still opt in. */
+const AI_DEFAULT_EXTS = new Set([
+  "pdf",
+  "docx",
+  "doc",
+  "pptx",
+  "ppt",
+  "txt",
+  "md",
+]);
+
+function aiDefaultForFile(file: File): boolean {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return AI_DEFAULT_EXTS.has(ext);
 }
 
 function ToolbarBtn({
@@ -154,15 +186,163 @@ function makeMarkdownApplier(
   return { applyMarkdown, applyBlock };
 }
 
+/** AI-processing status badge shown on a resource that's also in the AI Hub.
+    `status` is the correlated material's version processing_status; `undefined`
+    means the resource is NOT synced to AI (no badge → rendered as "off"). */
+function AiStatusBadge({ status }: { status: string | undefined }) {
+  const { t } = useTranslation();
+  if (!status) {
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-m3-surface-container-high text-m3-on-surface-variant">
+        {t("teacher_lesson_manage.ai_badge.off")}
+      </span>
+    );
+  }
+  const ready = status === "ready";
+  const failed = status === "failed" || status === "cancelled";
+  const cls = ready
+    ? "bg-emerald-100 text-emerald-700"
+    : failed
+      ? "bg-red-100 text-red-700"
+      : "bg-amber-100 text-amber-700";
+  const label = ready
+    ? t("teacher_lesson_manage.ai_badge.ready")
+    : failed
+      ? t("teacher_lesson_manage.ai_badge.failed")
+      : t("teacher_lesson_manage.ai_badge.processing");
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold",
+        cls,
+      )}
+    >
+      {!ready && !failed && (
+        <Loader2 className="h-2.5 w-2.5 animate-spin" aria-hidden="true" />
+      )}
+      {label}
+    </span>
+  );
+}
+
+/* ── AI-twin actions on a resource card ──
+   A downloadable resource uploaded with "Use for AI" on has a correlated AI
+   Hub material (its "twin", same storage_object_id). These are the twin's
+   controls surfaced right here on the resource so the teacher doesn't have to
+   dig into the AI Hub:
+     - Hide/Show: flips `visible_to_students` — THIS is what makes the student-
+       side live preview appear. Twins default to hidden on upload, which is
+       why freshly-uploaded docs show nothing on the student page.
+     - Retry: reprocess a failed/cancelled ingestion so the preview can build.
+   Only rendered when a twin exists, so the hooks (which need the twin id) are
+   always called unconditionally. */
+function ResourceAiActions({
+  twin,
+  onShown,
+}: {
+  twin: LearningMaterial;
+  /** Called after a material is made visible, so the caller can claim the
+      lesson's primary-material slot (required for the student preview). */
+  onShown: (materialId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const status = twin.latest_version?.processing_status;
+  const reprocess = useReprocessMaterial(twin.id);
+  const updateMaterial = useUpdateMaterial(twin.id);
+  const visible = twin.visible_to_students;
+  const failed = status === "failed" || status === "cancelled";
+  const ready = status === "ready";
+
+  function toggleVisible() {
+    const showing = !visible;
+    updateMaterial.mutate(
+      { visible_to_students: showing },
+      {
+        onSuccess: () => {
+          // Showing a doc is only half the job — the student pane renders the
+          // lesson's primary_material_id, so claim that slot too when showing.
+          if (showing) onShown(twin.id);
+          toast.success(
+            showing
+              ? t("teacher_lesson_manage.resource_ai.now_visible")
+              : t("teacher_lesson_manage.resource_ai.now_hidden"),
+          );
+        },
+        onError: (err) => toast.error((err as Error).message),
+      },
+    );
+  }
+
+  function handleRetry() {
+    reprocess.mutate(undefined, {
+      onSuccess: () =>
+        toast.success(t("teacher_lesson_manage.resource_ai.retry_started")),
+      onError: (err) => toast.error((err as Error).message),
+    });
+  }
+
+  return (
+    <>
+      {failed && (
+        <button
+          type="button"
+          onClick={handleRetry}
+          disabled={reprocess.isPending}
+          title={t("teacher_lesson_manage.resource_ai.retry")}
+          className="p-2 rounded-lg text-amber-600 hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-40"
+        >
+          <RefreshCw
+            className={cn("h-4 w-4", reprocess.isPending && "animate-spin")}
+          />
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={toggleVisible}
+        // Only a ready doc can actually preview for students; guard the toggle
+        // so hiding/showing a still-processing doc can't mislead.
+        disabled={updateMaterial.isPending || (!ready && !visible)}
+        title={
+          !ready && !visible
+            ? t("teacher_lesson_manage.resource_ai.not_ready")
+            : visible
+              ? t("teacher_lesson_manage.resource_ai.hide")
+              : t("teacher_lesson_manage.resource_ai.show")
+        }
+        className={cn(
+          "p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-40",
+          visible
+            ? "text-emerald-600 hover:bg-emerald-100"
+            : "text-m3-on-surface-variant hover:bg-m3-surface-container-highest",
+        )}
+      >
+        {visible ? (
+          <Eye className="h-4 w-4" />
+        ) : (
+          <EyeOff className="h-4 w-4" />
+        )}
+      </button>
+    </>
+  );
+}
+
 function ResourceCard({
   resource,
   onDelete,
+  twin,
+  onShown,
 }: {
   resource: LessonResource;
   onDelete: (id: string) => void;
+  /** Correlated AI Hub material (same storage_object_id), or undefined. */
+  twin: LearningMaterial | undefined;
+  /** Claim the lesson's primary-material slot after a doc is made visible. */
+  onShown: (materialId: string) => void;
 }) {
+  const { t } = useTranslation();
   const style = resourceStyle(resource.title);
   const [downloading, setDownloading] = useState(false);
+  const aiStatus = twin?.latest_version?.processing_status;
 
   async function handleDownload() {
     if (!resource.storage_object_id || downloading) return;
@@ -171,7 +351,7 @@ function ResourceCard({
       const url = await fetchTeacherResourceDownloadUrl(resource.id);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch {
-      toast.error("Download failed");
+      toast.error(t("teacher_lesson_manage.toasts.download_failed"));
     } finally {
       setDownloading(false);
     }
@@ -193,12 +373,16 @@ function ResourceCard({
           <p className="font-bold text-m3-on-surface text-sm truncate">
             {resource.title}
           </p>
-          <p className="text-xs text-m3-on-surface-variant mt-0.5 capitalize">
-            {resource.resource_type}
-          </p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-xs text-m3-on-surface-variant capitalize">
+              {resource.resource_type}
+            </p>
+            <AiStatusBadge status={aiStatus} />
+          </div>
         </div>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
+        {twin && <ResourceAiActions twin={twin} onShown={onShown} />}
         <button
           type="button"
           onClick={handleDownload}
@@ -242,12 +426,23 @@ function VideoContent({
   onVideoUpload: (file: File) => Promise<void>;
   uploading?: boolean;
 }) {
+  const { t } = useTranslation();
   const { applyMarkdown, applyBlock } = makeMarkdownApplier(
     () => notesRef.current,
     () => notes,
     setNotes,
   );
   const videoInputRef = useRef<HTMLInputElement>(null);
+  // Drag-and-drop onto the empty-state placeholder (same flicker-proof drag
+  // lifecycle as every other upload surface). Only active when there's no
+  // video yet; once a video exists the player takes the space and the
+  // Replace button is the affordance.
+  const { dragging: videoDragging, dropProps: videoDropProps } = useFileDrop({
+    onFile: (file) => {
+      if (!uploading) void onVideoUpload(file);
+    },
+    disabled: uploading,
+  });
 
   return (
     <>
@@ -263,7 +458,16 @@ function VideoContent({
           </MediaPlayer>
         </div>
       ) : (
-        <div className="relative aspect-video rounded-xl overflow-hidden bg-m3-surface-container-highest shadow-xl shadow-m3-primary/5">
+        <div
+          {...videoDropProps}
+          onClick={() => !uploading && videoInputRef.current?.click()}
+          className={cn(
+            "relative aspect-video rounded-xl overflow-hidden bg-m3-surface-container-highest shadow-xl shadow-m3-primary/5 cursor-pointer border-2 transition-colors",
+            videoDragging
+              ? "dropzone-spin-border"
+              : "border-transparent hover:border-m3-secondary/40",
+          )}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-m3-primary/20 via-m3-secondary/10 to-transparent" />
           <div
             className="absolute inset-0 opacity-10"
@@ -273,7 +477,7 @@ function VideoContent({
               backgroundSize: "28px 28px",
             }}
           />
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4">
             <div className="w-20 h-20 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-2xl">
               <Play
                 className="h-8 w-8 text-m3-primary ml-1"
@@ -281,7 +485,9 @@ function VideoContent({
               />
             </div>
             <p className="text-sm text-m3-on-surface-variant font-medium">
-              No video uploaded yet
+              {videoDragging
+                ? t("file_dropzone.drop_active")
+                : t("teacher_lesson_manage.video.empty")}
             </p>
           </div>
         </div>
@@ -393,6 +599,7 @@ function ReadingContent({
   setNotes: (v: string) => void;
   notesRef: React.RefObject<HTMLTextAreaElement | null>;
 }) {
+  const { t } = useTranslation();
   const { applyMarkdown, applyBlock } = makeMarkdownApplier(
     () => notesRef.current,
     () => notes,
@@ -405,12 +612,15 @@ function ReadingContent({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-headline font-bold text-2xl text-m3-primary">
-            Reading Content
+            {t("teacher_lesson_manage.sections.reading_content")}
           </h2>
           <p className="text-sm text-m3-on-surface-variant mt-0.5">
             {wordCount > 0
-              ? `~${wordCount} words · ${readTime} min read`
-              : "Write in Markdown or plain text"}
+              ? t("teacher_lesson_manage.sections.read_stats", {
+                  words: wordCount,
+                  minutes: readTime,
+                })
+              : t("teacher_lesson_manage.sections.reading_content_hint")}
           </p>
         </div>
         <div className="flex items-center gap-1 p-1.5 bg-m3-surface-container-low rounded-xl">
@@ -456,15 +666,18 @@ function ReadingContent({
         <div className="bg-m3-primary/5 border-b border-m3-outline-variant/10 px-4 py-2 flex items-center gap-2">
           <AlignLeft className="h-3.5 w-3.5 text-m3-secondary" />
           <span className="text-xs font-bold text-m3-on-surface-variant uppercase tracking-widest">
-            Markdown Editor
+            {t("teacher_lesson_manage.editor.label")}
           </span>
           <span className="ml-auto text-xs text-m3-on-surface-variant/50">
-            Plain text or Markdown
+            {t("teacher_lesson_manage.editor.hint")}
           </span>
         </div>
+        {/* Default to a compact height so the editor doesn't dominate the
+            page; teacher drags the bottom-right corner (native resize-y) to
+            grow it as needed. */}
         <textarea
           ref={notesRef}
-          className="min-h-[600px] w-full p-8 bg-m3-surface-container-lowest text-m3-on-surface leading-relaxed text-base outline-none resize-none font-body placeholder:text-m3-on-surface-variant/40"
+          className="min-h-[240px] w-full p-8 bg-m3-surface-container-lowest text-m3-on-surface leading-relaxed text-base outline-none resize-y font-body placeholder:text-m3-on-surface-variant/40"
           placeholder={
             "# Introduction\n\nWrite your reading material here.\n\n## Key Concepts\n\n- Concept 1\n- Concept 2\n\n**Bold text**, *italic text*, `inline code`"
           }
@@ -472,6 +685,121 @@ function ReadingContent({
           onChange={(e) => setNotes(e.target.value)}
         />
       </div>
+    </section>
+  );
+}
+
+/* ════════════════════════════════════════
+   Material history — folded in from the former AI Material Hub page.
+   Upload → live processing status → processed-material list (with the
+   two-click delete-confirm pattern) → recently-deleted restore. Shared with
+   both reading and video lessons (same component). Uses the extracted
+   components from _components/material-hub.tsx verbatim.
+   ════════════════════════════════════════ */
+function MaterialHistorySection({ lessonId }: { lessonId: string }) {
+  const { t } = useTranslation();
+  const { data: materials = [], isLoading: materialsLoading } =
+    useTeacherLessonMaterials(lessonId);
+  const { data: summary } = useTeacherProcessingSummary(lessonId);
+
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const readyCount = summary?.completed_versions ?? 0;
+  const processingCount = summary?.processing_versions ?? 0;
+  const processingMaterial =
+    processingCount > 0
+      ? materials.find((m) => m.current_version_id !== null)
+      : undefined;
+
+  return (
+    <section className="space-y-5">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h2 className="font-headline font-bold text-2xl text-m3-primary">
+          {t("teacher_lesson_manage.sections.material_history")}
+        </h2>
+        <div className="flex gap-2 flex-wrap shrink-0">
+          {processingCount > 0 && (
+            <Badge className="bg-blue-100 text-blue-700 border-0 gap-1.5 text-xs">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              {t("teacher_lesson_materials.header.processing_count", {
+                count: processingCount,
+              })}
+            </Badge>
+          )}
+          {readyCount > 0 && (
+            <Badge className="bg-emerald-100 text-emerald-700 border-0 gap-1.5 text-xs">
+              <CheckCircle className="h-3 w-3" />
+              {t("teacher_lesson_materials.header.ready_count", {
+                count: readyCount,
+              })}
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Upload removed here — files are attached once via "Downloadable
+          Resources" below (its "Use for AI" toggle routes a file into AI
+          processing, after which it appears in this history with the live
+          progress card). This section is now history/management only, so the
+          teacher never sees two competing upload fields. */}
+
+      {/* Live processing status (the "AI progress" pattern the user liked). */}
+      {processingCount > 0 && processingMaterial && (
+        <ProcessingStatusCard material={processingMaterial} />
+      )}
+
+      {/* Processed-material list with the two-click delete confirm. */}
+      {materialsLoading ? (
+        <div className="space-y-3">
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-16 bg-m3-surface-container animate-pulse rounded-xl"
+            />
+          ))}
+        </div>
+      ) : materials.length === 0 ? (
+        <div className="text-center py-10 text-m3-on-surface-variant bg-m3-surface-container-low/50 rounded-xl">
+          <FileText className="h-9 w-9 mx-auto mb-3 opacity-20" />
+          <p className="text-sm font-medium">
+            {t("teacher_lesson_materials.history.empty_title")}
+          </p>
+          <p className="text-xs mt-1 text-m3-on-surface-variant/70">
+            {t("teacher_lesson_materials.history.empty_body")}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {materials.map((material) => (
+            <div key={material.id}>
+              <MaterialCard
+                material={material}
+                onDelete={(id) => setPendingDeleteId(id)}
+              />
+              {pendingDeleteId === material.id && (
+                <div className="mt-2 flex items-center justify-end gap-2 px-4 py-3 rounded-xl bg-m3-error-container/20 border border-m3-error/20 text-xs text-m3-on-surface">
+                  <span className="text-m3-error font-medium">
+                    {t("teacher_lesson_materials.confirm_delete.inline")}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPendingDeleteId(null)}
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                  <MaterialDeleteButton
+                    id={material.id}
+                    onDeleted={() => setPendingDeleteId(null)}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <RecentlyDeletedSection lessonId={lessonId} />
     </section>
   );
 }
@@ -499,6 +827,8 @@ export default function LessonManagePage() {
   const moduleId = lesson?.module_id ?? "";
   const courseModule = (content?.modules ?? []).find((m) => m.id === moduleId);
   const createMaterial = useCreateMaterial(courseId, moduleId, lessonId);
+  const { data: aiMaterials = [] } = useTeacherLessonMaterials(lessonId);
+  const bulkSetVisibility = useBulkSetMaterialVisibility(lessonId);
   const initVideoUpload = useInitMaterialUpload(lessonId);
   const completeVideoUpload = useCompleteMaterialUpload();
   const { data: videoStreamData } = useTeacherMaterialStreamUrl(
@@ -506,6 +836,7 @@ export default function LessonManagePage() {
   );
   const deleteLesson = useDeleteLesson(courseId);
   const updateModuleItem = useUpdateModuleItem(courseId);
+  const navigate = useNavigate();
 
   /* ── Find this lesson's module item (for unlock_rule_json / prerequisites) ── */
   const moduleItem = (content?.modules ?? [])
@@ -527,8 +858,6 @@ export default function LessonManagePage() {
 
   /* ── Local-only state ── */
   const [prerequisites, setPrerequisites] = useState<string[]>([]);
-  const [prereqOpen, setPrereqOpen] = useState(false);
-  const [prereqSearch, setPrereqSearch] = useState("");
   const [archiveConfirm, setArchiveConfirm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -536,21 +865,31 @@ export default function LessonManagePage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [attachingResource, setAttachingResource] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
-  const resourceInputRef = useRef<HTMLInputElement>(null);
+  // Whether a newly-uploaded resource is also sent to the AI Hub (quizzes,
+  // search, KG). Smart-defaulted per file type on drop (see aiDefaultForFile);
+  // teacher can override before the next upload.
+  const [aiEnabled, setAiEnabled] = useState(true);
 
-  /* ── All lessons in the course (for prerequisite picker) ── */
-  const allLessons: CourseContentLesson[] = (content?.modules ?? []).flatMap(
-    (m) =>
-      m.items
-        .filter(
-          (i) =>
-            i.item_type === "lesson" && i.lesson && i.lesson.id !== lessonId,
-        )
-        .map((i) => i.lesson!),
-  );
-
-  const filteredLessons = allLessons.filter((l) =>
-    l.title.toLowerCase().includes(prereqSearch.toLowerCase()),
+  /* ── All lessons in the course (for prerequisite picker) ──
+     The teacher content payload carries each item's data under `item.target`
+     (NOT `item.lesson`, which is only populated on the public/learner payload).
+     Reading `item.lesson` here left the picker permanently empty — the actual
+     bug behind "prerequisites not working". Build from `target` instead. */
+  const allLessons: { id: string; title: string; lesson_type: string }[] = (
+    content?.modules ?? []
+  ).flatMap((m) =>
+    m.items
+      .filter(
+        (i) =>
+          i.item_type === "lesson" &&
+          i.target != null &&
+          i.target.id !== lessonId,
+      )
+      .map((i) => ({
+        id: i.target!.id,
+        title: i.target!.title,
+        lesson_type: i.target!.lesson_type ?? "video",
+      })),
   );
 
   /* ── Sync server data once ── */
@@ -627,7 +966,10 @@ export default function LessonManagePage() {
       setTimeout(() => setSaved(false), 2000);
       toast.success(t("teacher_common.lesson_saved"));
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Save failed");
+      toast.error(
+        (err as Error).message ||
+          t("teacher_lesson_manage.toasts.save_failed"),
+      );
     } finally {
       setSaving(false);
     }
@@ -640,9 +982,12 @@ export default function LessonManagePage() {
     }
     try {
       await updateLesson.mutateAsync({ status: "archived" });
-      toast.success("Lesson archived");
+      toast.success(t("teacher_lesson_manage.toasts.lesson_archived"));
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Archive failed");
+      toast.error(
+        (err as Error).message ||
+          t("teacher_lesson_manage.toasts.archive_failed"),
+      );
     }
   }
 
@@ -653,9 +998,25 @@ export default function LessonManagePage() {
     }
     try {
       await deleteLesson.mutateAsync(lessonId);
-      toast.success("Lesson deleted");
+      toast.success(t("teacher_lesson_manage.toasts.lesson_deleted"));
+      // Redirect back to the parent module (or course) — the lesson page no
+      // longer exists, so staying here would show a broken/empty view.
+      if (moduleId) {
+        void navigate({
+          to: "/teacher/courses/$courseId/modules/$moduleId",
+          params: { courseId, moduleId },
+        });
+      } else {
+        void navigate({
+          to: "/teacher/courses/$courseId",
+          params: { courseId },
+        });
+      }
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Delete failed");
+      toast.error(
+        (err as Error).message ||
+          t("teacher_lesson_manage.toasts.delete_failed"),
+      );
     }
   }
 
@@ -712,10 +1073,13 @@ export default function LessonManagePage() {
     }
   }
 
-  async function handleResourceFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  async function handleResourceFile(file: File) {
     if (!file) return;
-    e.target.value = "";
+    // Effective AI decision for THIS upload: the checkbox is the master switch
+    // (teacher's preference); when it's on we still apply the per-file-type
+    // smart default, so a ZIP/video/image won't be force-fed to the AI even
+    // with the box checked (no teachable text → wasted spend + KG noise).
+    const useAi = aiEnabled && aiDefaultForFile(file);
     setAttachingResource(true);
     try {
       const { storage_object, upload_url } = await requestUpload.mutateAsync({
@@ -757,9 +1121,11 @@ export default function LessonManagePage() {
       });
       showFeedback(`"${file.name}" attached successfully.`);
 
-      // Best-effort: also add to AI Material Hub (no processing until teacher enables it)
+      // Opt-in: only sync to the AI Material Hub (and kick off ingestion) when
+      // the teacher left the "Use for AI" toggle on. Skipping it avoids wasted
+      // LLM spend + KG pollution for files with no teachable text (zip/video/…).
       const currentModuleId = lesson?.module_id;
-      if (currentModuleId) {
+      if (useAi && currentModuleId) {
         const materialType = file.type.startsWith("video/")
           ? "video"
           : ext === "pdf"
@@ -772,7 +1138,7 @@ export default function LessonManagePage() {
                 ? "code"
                 : "other";
         try {
-          await createMaterial.mutateAsync({
+          const material = await createMaterial.mutateAsync({
             title: file.name.replace(/\.[^.]+$/, ""),
             material_type: materialType,
             storage_object_id: storage_object.id,
@@ -781,24 +1147,122 @@ export default function LessonManagePage() {
             ai_processing_enabled: true,
             visible_to_students: false,
           });
+          // Wire this material as the lesson's primary if the slot is empty.
+          // The student reading pane renders ONLY `lesson.primary_material_id`;
+          // without this the doc is uploaded + visible but the student page
+          // shows nothing (the exact "live preview not working" bug). Only
+          // claim an empty slot — never stomp a primary the teacher chose.
+          if (material?.id) claimPrimaryIfEmpty(material.id);
         } catch {
-          toast.error(
-            "Resource attached, but couldn't sync to AI Material Hub",
-          );
+          toast.error(t("teacher_lesson_manage.toasts.attach_sync_failed"));
         }
       }
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Attach failed");
+      toast.error(
+        (err as Error).message ||
+          t("teacher_lesson_manage.toasts.attach_failed"),
+      );
     } finally {
       setAttachingResource(false);
     }
   }
 
   function handleDeleteResource(resourceId: string) {
+    // Delete ONLY the downloadable resource. Do NOT cascade into the AI Hub
+    // material that may share this file's storage_object_id: that material is a
+    // separate, teacher-managed entity (already processed into quizzes/search/
+    // KG). Auto-deleting it here silently destroyed live, working documents —
+    // the teacher removed a student download and lost their processed doc. If
+    // they want the AI copy gone too, they remove it explicitly in the AI Hub.
     deleteResource.mutate(resourceId, {
       onSuccess: () => showFeedback("Resource removed."),
       onError: (err) => toast.error((err as Error).message),
     });
+  }
+
+  // Correlate a resource to its AI Hub twin (same storage_object_id), or
+  // undefined when the resource was never synced to AI. Drives the per-card
+  // status badge AND the inline hide/show + retry actions.
+  function twinForResource(
+    resource: LessonResource,
+  ): LearningMaterial | undefined {
+    if (resource.storage_object_id == null) return undefined;
+    return aiMaterials.find(
+      (m: LearningMaterial) =>
+        m.latest_version?.storage_object_id === resource.storage_object_id,
+    );
+  }
+
+  // Claim the lesson's primary-material slot if it's currently empty. The
+  // student reading pane renders ONLY `lesson.primary_material_id`, so a doc
+  // with no primary set never previews for students even when visible+ready.
+  // Never stomp an existing primary the teacher already chose. Best-effort —
+  // a failure here shouldn't surface as a hard error on the calling action.
+  function claimPrimaryIfEmpty(materialId: string) {
+    if (lesson?.primary_material_id) return;
+    updateLesson.mutate({ primary_material_id: materialId });
+  }
+
+  // Ready AI twins that back a downloadable resource, de-duped by id. The
+  // student live preview requires BOTH: the doc is visible_to_students AND the
+  // lesson's primary_material_id points at a ready doc. So the "needs fixing"
+  // set is any ready twin that is either hidden OR (the lesson has no primary
+  // at all — the exact ch1/ch2 case: visible but never wired as the preview).
+  const readyTwins = Array.from(
+    new Map(
+      resources
+        .map((r) => twinForResource(r))
+        .filter(
+          (m): m is LearningMaterial =>
+            m != null && m.latest_version?.processing_status === "ready",
+        )
+        .map((m) => [m.id, m] as const),
+    ).values(),
+  );
+  const hiddenReadyTwinIds = readyTwins
+    .filter((m) => !m.visible_to_students)
+    .map((m) => m.id);
+  // The lesson's preview is unwired when there's a ready doc but no primary
+  // pointer — showing/hiding visibility alone will NEVER fix this.
+  const lessonPrimaryUnwired =
+    !lesson?.primary_material_id && readyTwins.length > 0;
+  // Show the bulk button when anything blocks the student preview.
+  const needsPreviewFix = hiddenReadyTwinIds.length > 0 || lessonPrimaryUnwired;
+
+  function handleShowAll() {
+    if (!needsPreviewFix) return;
+    // Always ensure the lesson has a primary pointer (pick the first ready
+    // twin) — this is what fixes an already-visible-but-unwired doc.
+    claimPrimaryIfEmpty(readyTwins[0]?.id);
+    if (hiddenReadyTwinIds.length === 0) {
+      // Nothing hidden — the only issue was the missing primary, now claimed.
+      toast.success(
+        t("teacher_lesson_manage.resource_ai.show_all_done", { count: 1 }),
+      );
+      return;
+    }
+    bulkSetVisibility.mutate(
+      { materialIds: hiddenReadyTwinIds, visible: true },
+      {
+        onSuccess: ({ succeeded, failed }) => {
+          if (failed > 0) {
+            toast.warning(
+              t("teacher_lesson_manage.resource_ai.show_all_partial", {
+                succeeded,
+                failed,
+              }),
+            );
+          } else {
+            toast.success(
+              t("teacher_lesson_manage.resource_ai.show_all_done", {
+                count: succeeded,
+              }),
+            );
+          }
+        },
+        onError: (err) => toast.error((err as Error).message),
+      },
+    );
   }
 
   function togglePrerequisite(id: string) {
@@ -820,7 +1284,7 @@ export default function LessonManagePage() {
     t("teacher_common.lesson_fallback");
 
   return (
-    <div className="max-w-[1440px] mx-auto pb-20">
+    <div className="max-w-[1800px] mx-auto pb-20">
       <div className="pt-4 pb-2">
         <Breadcrumbs
           items={[
@@ -850,7 +1314,15 @@ export default function LessonManagePage() {
         />
       </div>
 
-      <div className="py-3 mb-8 flex items-center justify-between gap-3">
+      {/* ── Sticky action bar ──
+          Sticky at top-0 z-10 (inside <main>, stays ≤ z-20 per frontend
+          AGENTS.md). Holds ALL lesson-level actions so they follow the teacher
+          while scrolling the (now long) page: Back · Archive · Delete ·
+          Publish/Unpublish · Save. The old sidebar published/draft toggle and
+          the main-column danger-zone are removed so no action is duplicated.
+          Archive/Delete reuse the existing two-click confirm: the first click
+          arms (button turns red + label changes), the second executes. */}
+      <div className="sticky top-16 z-10 -mx-1 mb-8 flex items-center justify-between gap-3 border-b border-m3-outline-variant/15 bg-m3-surface/85 px-1 py-3 backdrop-blur-md">
         <Link
           to={
             moduleId
@@ -871,19 +1343,85 @@ export default function LessonManagePage() {
           </Button>
         </Link>
         <div className="flex items-center gap-2">
-          <Link
-            to="/teacher/courses/$courseId/lessons/$lessonId/materials"
-            params={{ courseId, lessonId }}
+          {/* Archive (two-click confirm) */}
+          <Button
+            variant={archiveConfirm ? "default" : "ghost"}
+            size="sm"
+            onClick={handleArchive}
+            onBlur={() => setArchiveConfirm(false)}
+            className={cn(
+              "gap-2 cursor-pointer",
+              archiveConfirm
+                ? "bg-amber-500 hover:bg-amber-600 text-white border-0"
+                : "text-m3-on-surface-variant hover:text-amber-600",
+            )}
+            title={t("teacher_lesson_manage.actions.archive_title")}
           >
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 hidden sm:flex border-m3-outline-variant/30"
-            >
-              <Brain className="h-4 w-4 text-m3-secondary" />
-              AI Material Hub
-            </Button>
-          </Link>
+            <Archive className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {archiveConfirm
+                ? t("teacher_lesson_manage.actions.archive_confirm")
+                : t("teacher_lesson_manage.actions.archive")}
+            </span>
+          </Button>
+
+          {/* Delete (two-click confirm) */}
+          <Button
+            variant={deleteConfirm ? "default" : "ghost"}
+            size="sm"
+            onClick={handleDelete}
+            onBlur={() => setDeleteConfirm(false)}
+            className={cn(
+              "gap-2 cursor-pointer",
+              deleteConfirm
+                ? "bg-m3-error hover:opacity-90 text-white border-0"
+                : "text-m3-on-surface-variant hover:text-m3-error",
+            )}
+            title={t("teacher_lesson_manage.actions.delete_title")}
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {deleteConfirm
+                ? t("teacher_lesson_manage.actions.delete_confirm")
+                : t("teacher_lesson_manage.actions.delete")}
+            </span>
+          </Button>
+
+          <span className="mx-0.5 h-5 w-px bg-m3-outline-variant/30" />
+
+          {/* Publish / Unpublish — single toggle replacing the old sidebar
+              published/draft control. Flips local `status`; persisted on Save. */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setStatus((s) => (s === "published" ? "draft" : "published"))
+            }
+            className={cn(
+              "gap-2 cursor-pointer border-m3-outline-variant/30",
+              status === "published"
+                ? "text-emerald-600 hover:text-emerald-700"
+                : "text-m3-on-surface-variant",
+            )}
+            title={
+              status === "published"
+                ? t("teacher_lesson_manage.actions.unpublish_title")
+                : t("teacher_lesson_manage.actions.publish_title")
+            }
+          >
+            {status === "published" ? (
+              <Eye className="h-4 w-4" />
+            ) : (
+              <EyeOff className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">
+              {status === "published"
+                ? t("teacher_lesson_manage.actions.published")
+                : t("teacher_lesson_manage.actions.draft")}
+            </span>
+          </Button>
+
+          {/* Save */}
           <Button
             size="sm"
             onClick={handleSave}
@@ -992,9 +1530,29 @@ export default function LessonManagePage() {
 
           {/* ── Downloadable Resources (all types) ── */}
           <section className="space-y-5">
-            <h2 className="font-headline font-bold text-2xl text-m3-primary">
-              Downloadable Resources
-            </h2>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h2 className="font-headline font-bold text-2xl text-m3-primary">
+                {t("teacher_lesson_manage.sections.downloadable_resources")}
+              </h2>
+              {needsPreviewFix && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 shrink-0"
+                  disabled={bulkSetVisibility.isPending}
+                  onClick={handleShowAll}
+                >
+                  {bulkSetVisibility.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Eye className="h-3.5 w-3.5" />
+                  )}
+                  {t("teacher_lesson_manage.resource_ai.show_all", {
+                    count: Math.max(hiddenReadyTwinIds.length, 1),
+                  })}
+                </Button>
+              )}
+            </div>
 
             {resources.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1003,6 +1561,8 @@ export default function LessonManagePage() {
                     key={resource.id}
                     resource={resource}
                     onDelete={handleDeleteResource}
+                    twin={twinForResource(resource)}
+                    onShown={claimPrimaryIfEmpty}
                   />
                 ))}
               </div>
@@ -1015,28 +1575,48 @@ export default function LessonManagePage() {
               </div>
             )}
 
-            <input
-              ref={resourceInputRef}
-              type="file"
-              className="sr-only"
-              onChange={handleResourceFile}
+            <FileDropzone
+              onFile={handleResourceFile}
+              busy={attachingResource}
+              busyLabel="Uploading…"
+              idleTitle="Attach New Resource"
+              hint="PDF, ZIP, MP4, XLSX, PPTX, DOCX, and more"
             />
-            <button
-              type="button"
-              onClick={() => resourceInputRef.current?.click()}
-              disabled={attachingResource}
-              className="w-full py-4 border-2 border-dashed border-m3-outline-variant/40 rounded-xl text-m3-on-surface-variant font-bold hover:bg-m3-surface-container-lowest hover:border-m3-secondary/40 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 cursor-pointer"
-            >
-              {attachingResource ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" /> Uploading…
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4" /> Attach New Resource
-                </>
-              )}
-            </button>
+
+            {/* Opt-in AI sync. Controls whether the NEXT upload is also added
+                to the AI Hub (quizzes, search, knowledge graph). Smart-defaulted
+                per file type on drop, but the teacher can flip it here first. */}
+            <label className="flex items-start gap-2.5 px-1 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={aiEnabled}
+                onChange={(e) => setAiEnabled(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-m3-outline-variant accent-m3-secondary cursor-pointer"
+              />
+              <span className="text-sm text-m3-on-surface-variant">
+                <span className="font-semibold text-m3-on-surface">
+                  {t("teacher_lesson_manage.ai_optin.label")}
+                </span>{" "}
+                {t("teacher_lesson_manage.ai_optin.hint")}
+              </span>
+            </label>
+          </section>
+
+          {/* ── Material history (folded in from the former AI Material Hub) ──
+              Live processing progress + processed-material list +
+              recently-deleted. Upload happens once via Downloadable Resources
+              above. Same component for reading and video lessons. */}
+          <MaterialHistorySection lessonId={lessonId} />
+
+          {/* ── Knowledge Graph (brought over from the AI hub) ── */}
+          <section className="space-y-5">
+            <h2 className="font-headline font-bold text-2xl text-m3-primary">
+              {t("teacher_lesson_manage.sections.knowledge_graph")}
+            </h2>
+            <KnowledgeGraphPreview
+              lessonId={lessonId}
+              readyCount={aiMaterials.filter((m) => m.current_version_id).length}
+            />
           </section>
         </div>
 
@@ -1046,63 +1626,23 @@ export default function LessonManagePage() {
         <aside className="col-span-12 lg:col-span-4 space-y-6 lg:sticky lg:top-32 self-start">
           {/* ── Lesson Settings ── */}
           <div className="bg-m3-surface-container-low rounded-xl p-6 space-y-6 shadow-sm">
-            <h3 className="font-headline font-bold text-xl text-m3-primary">
-              Lesson Settings
-            </h3>
-
-            {/* Visibility */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                Visibility
-              </label>
-              <div className="flex gap-2 p-1 bg-m3-surface-container rounded-xl">
-                {(["published", "draft"] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setStatus(s)}
-                    className={cn(
-                      "flex-1 py-2 rounded-lg text-sm font-bold capitalize transition-all cursor-pointer",
-                      status === s
-                        ? "bg-surface-elev text-m3-primary shadow-sm"
-                        : "text-m3-on-surface-variant hover:text-m3-on-surface",
-                    )}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
+            <div>
+              <h3 className="font-headline font-bold text-xl text-m3-primary">
+                {t("teacher_lesson_manage.settings.title")}
+              </h3>
+              <p className="text-xs text-m3-on-surface-variant mt-0.5">
+                {t("teacher_lesson_manage.settings.subtitle")}
+              </p>
             </div>
 
-            {/* Lesson type */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                Lesson Type
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {LESSON_TYPE_OPTIONS.map(({ value, label, icon: Icon }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setLessonType(value)}
-                    className={cn(
-                      "flex items-center gap-2 p-3 rounded-xl border text-sm font-bold transition-all cursor-pointer",
-                      lessonType === value
-                        ? "border-m3-primary/30 bg-m3-primary-fixed text-m3-primary"
-                        : "border-m3-outline-variant/20 bg-surface-elev text-m3-on-surface-variant hover:bg-m3-surface-container-high",
-                    )}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Visibility (published/draft) moved to the sticky action bar as
+                the Publish/Unpublish toggle. Lesson Type selector removed —
+                type is fixed at lesson creation (reading/video). */}
 
             {/* Estimated duration */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                Estimated Duration (minutes)
+                {t("teacher_lesson_manage.settings.duration_label")}
               </label>
               <input
                 type="number"
@@ -1110,42 +1650,50 @@ export default function LessonManagePage() {
                 value={estimatedMinutes}
                 onChange={(e) => setEstimatedMinutes(e.target.value)}
                 className="w-full bg-surface-elev border border-m3-outline-variant/20 rounded-xl px-4 py-3 text-sm font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all"
-                placeholder="e.g. 24"
+                placeholder={t(
+                  "teacher_lesson_manage.settings.duration_placeholder",
+                )}
               />
             </div>
 
             {/* Difficulty */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                Difficulty Level
+                {t("teacher_lesson_manage.settings.difficulty_label")}
               </label>
               <select
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value)}
                 className="w-full bg-surface-elev border border-m3-outline-variant/20 rounded-xl px-4 py-3 text-sm font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer"
               >
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
+                <option value="beginner">
+                  {t("teacher_lesson_manage.settings.difficulty_beginner")}
+                </option>
+                <option value="intermediate">
+                  {t("teacher_lesson_manage.settings.difficulty_intermediate")}
+                </option>
+                <option value="advanced">
+                  {t("teacher_lesson_manage.settings.difficulty_advanced")}
+                </option>
               </select>
             </div>
           </div>
 
           {/* ── Prerequisites ── */}
-          <div className="bg-m3-surface-container-low rounded-xl p-6 space-y-4 shadow-sm">
+          <div className="bg-m3-surface-container-low rounded-xl p-6 space-y-6 shadow-sm">
             <div>
-              <h3 className="font-headline font-bold text-base text-m3-primary">
-                Prerequisites
+              <h3 className="font-headline font-bold text-xl text-m3-primary">
+                {t("teacher_lesson_manage.prerequisites.title")}
               </h3>
               <p className="text-xs text-m3-on-surface-variant mt-0.5">
-                Lessons students should complete first.
+                {t("teacher_lesson_manage.prerequisites.subtitle")}
               </p>
             </div>
 
             {/* Selected */}
-            {prerequisites.length === 0 && !prereqOpen && (
+            {prerequisites.length === 0 && (
               <p className="text-sm text-m3-on-surface-variant/60 text-center py-2">
-                No prerequisites added.
+                {t("teacher_lesson_manage.prerequisites.empty")}
               </p>
             )}
             {prerequisites.map((id) => {
@@ -1174,180 +1722,43 @@ export default function LessonManagePage() {
               );
             })}
 
-            {/* Lesson picker */}
-            {prereqOpen ? (
-              <div className="space-y-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-m3-on-surface-variant/60" />
-                  <input
-                    autoFocus
-                    value={prereqSearch}
-                    onChange={(e) => setPrereqSearch(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Escape") {
-                        setPrereqOpen(false);
-                        setPrereqSearch("");
-                      }
-                    }}
-                    placeholder={t("teacher_common.search_lessons")}
-                    className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-m3-outline-variant/20 bg-surface-elev focus:outline-none focus:ring-2 focus:ring-m3-secondary/20"
-                  />
-                </div>
-                <div className="max-h-48 overflow-y-auto space-y-0.5 rounded-xl border border-m3-outline-variant/10 bg-surface-elev p-1">
-                  {filteredLessons.length === 0 && (
-                    <p className="text-xs text-m3-on-surface-variant/60 text-center py-3">
-                      {allLessons.length === 0
-                        ? "No other lessons in this course."
-                        : "No lessons match."}
-                    </p>
-                  )}
-                  {filteredLessons.map((l) => {
-                    const selected = prerequisites.includes(l.id);
-                    const TypeIcon =
-                      LESSON_TYPE_OPTIONS.find((t) => t.value === l.lesson_type)
-                        ?.icon ?? BookOpen;
-                    return (
-                      <button
-                        key={l.id}
-                        type="button"
-                        onClick={() => togglePrerequisite(l.id)}
-                        className={cn(
-                          "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer text-left",
-                          selected
-                            ? "bg-m3-primary-fixed text-m3-primary"
-                            : "hover:bg-m3-surface-container-low text-m3-on-surface",
-                        )}
-                      >
-                        <TypeIcon className="h-3.5 w-3.5 shrink-0 text-m3-on-surface-variant" />
-                        <span className="flex-1 truncate">{l.title}</span>
-                        {selected && <Check className="h-3.5 w-3.5 shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPrereqOpen(false);
-                    setPrereqSearch("");
+            {/* Lesson selector — pick a lesson to add as a prerequisite.
+                Already-selected lessons are filtered out of the options so the
+                dropdown only offers additions. Resets to the placeholder after
+                each pick (it's an "add" action, not a bound value). */}
+            {(() => {
+              const available = allLessons.filter(
+                (l) => !prerequisites.includes(l.id),
+              );
+              return (
+                <select
+                  value=""
+                  disabled={available.length === 0}
+                  onChange={(e) => {
+                    if (e.target.value) togglePrerequisite(e.target.value);
                   }}
-                  className="w-full text-xs text-m3-on-surface-variant py-1.5 hover:text-m3-on-surface transition-colors cursor-pointer font-bold"
+                  className="w-full bg-surface-elev border border-m3-outline-variant/20 rounded-xl px-4 py-3 text-sm font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Done
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setPrereqOpen(true)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-surface-elev border border-m3-outline-variant/20 text-sm font-bold text-m3-primary hover:bg-m3-primary-fixed transition-colors cursor-pointer"
-              >
-                <Plus className="h-4 w-4" />
-                Add Prerequisite
-              </button>
-            )}
+                  <option value="" disabled>
+                    {allLessons.length === 0
+                      ? "No other lessons in this course"
+                      : available.length === 0
+                        ? "All lessons added"
+                        : "Add a prerequisite lesson…"}
+                  </option>
+                  {available.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.title}
+                    </option>
+                  ))}
+                </select>
+              );
+            })()}
           </div>
 
-          {/* ── AI Material Hub teaser ── */}
-          <div className="ghost-border rounded-xl p-5 flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-m3-secondary-fixed flex items-center justify-center shrink-0">
-              <Sparkles className="h-4 w-4 text-m3-secondary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-m3-on-surface">
-                AI Material Hub
-              </p>
-              <p className="text-xs text-m3-on-surface-variant mt-0.5 leading-relaxed">
-                Upload videos or PDFs to generate quizzes, extract knowledge
-                graphs, and track student readiness.
-              </p>
-              <Link
-                to="/teacher/courses/$courseId/lessons/$lessonId/materials"
-                params={{ courseId, lessonId }}
-              >
-                <button
-                  type="button"
-                  className="mt-2.5 text-xs font-bold text-m3-secondary hover:text-m3-primary transition-colors cursor-pointer"
-                >
-                  Go to AI Hub →
-                </button>
-              </Link>
-            </div>
-          </div>
-
-          {/* ── Danger zone ── */}
-          {archiveConfirm ? (
-            <div className="w-full rounded-xl border border-m3-error/30 bg-m3-error/5 p-4 space-y-3">
-              <p className="text-sm font-bold text-m3-error text-center">
-                Archive this lesson?
-              </p>
-              <p className="text-xs text-m3-on-surface-variant text-center">
-                Students will no longer see it. You can restore it later.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setArchiveConfirm(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-m3-outline-variant/30 text-sm font-bold text-m3-on-surface-variant hover:bg-m3-surface-container transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleArchive}
-                  className="flex-1 py-2.5 rounded-xl bg-m3-error text-white text-sm font-bold hover:opacity-90 cursor-pointer"
-                >
-                  Yes, Archive
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handleArchive}
-              className="w-full py-3 flex items-center justify-center gap-2 rounded-xl text-m3-error font-bold text-sm hover:bg-m3-error/5 transition-colors cursor-pointer"
-            >
-              <Archive className="h-4 w-4" />
-              Archive Lesson
-            </button>
-          )}
-
-          {deleteConfirm ? (
-            <div className="w-full rounded-xl border border-m3-error/50 bg-m3-error/5 p-4 space-y-3">
-              <p className="text-sm font-bold text-m3-error text-center">
-                Permanently delete this lesson?
-              </p>
-              <p className="text-xs text-m3-on-surface-variant text-center">
-                This cannot be undone. All resources and materials will be
-                removed.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setDeleteConfirm(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-m3-outline-variant/30 text-sm font-bold text-m3-on-surface-variant hover:bg-m3-surface-container transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="flex-1 py-2.5 rounded-xl bg-m3-error text-white text-sm font-bold hover:opacity-90 cursor-pointer"
-                >
-                  Yes, Delete
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="w-full py-3 flex items-center justify-center gap-2 rounded-xl text-m3-error font-bold text-sm hover:bg-m3-error/5 transition-colors cursor-pointer"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete Lesson
-            </button>
-          )}
+          {/* AI Material Hub teaser + danger zone removed: material management
+              now lives inline as "Material history" in the main column, and
+              Archive/Delete moved to the sticky action bar at the top. */}
         </aside>
       </div>
 

@@ -4,6 +4,7 @@ import {
   AlertCircle,
   BookOpen,
   CheckCircle2,
+  ChevronRight,
   Loader2,
   Mic,
   MinusCircle,
@@ -70,13 +71,17 @@ function SessionRow({ item }: { item: InterviewSessionPublic }) {
   const title = item.interview_title ?? t("me_interviews.untitled");
 
   return (
-    <div className="flex items-center gap-4 p-4 rounded-xl bg-card ghost-border transition-all duration-200">
+    <Link
+      to="/me/interviews/$sessionId"
+      params={{ sessionId: item.session_id }}
+      className="group flex items-center gap-4 p-4 rounded-xl bg-card ghost-border transition-all duration-200 outline-none hover:bg-m3-surface-container hover:ghost-border hover:shadow-sm focus-visible:ring-2 focus-visible:ring-m3-primary/40 cursor-pointer"
+    >
       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-m3-primary to-m3-secondary flex items-center justify-center shrink-0">
         <Mic className="h-6 w-6 text-white" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start gap-2">
-          <h3 className="font-headline font-semibold text-sm text-m3-on-surface line-clamp-1 leading-snug flex-1">
+          <h3 className="font-headline font-semibold text-sm text-m3-on-surface line-clamp-1 leading-snug flex-1 transition-colors group-hover:text-m3-primary">
             {title}
           </h3>
           <span
@@ -96,7 +101,11 @@ function SessionRow({ item }: { item: InterviewSessionPublic }) {
           <span>{formatDate(item.started_at)}</span>
         </div>
       </div>
-    </div>
+      <ChevronRight
+        aria-hidden="true"
+        className="h-4 w-4 shrink-0 text-m3-outline transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-m3-primary"
+      />
+    </Link>
   );
 }
 

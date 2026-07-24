@@ -5,10 +5,15 @@ import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration"
 import { cn } from "@/lib/utils";
 
 const MIN_PREPARATION_MS = 600;
-// Never hide a newly-arrived question behind audio startup for several seconds.
-// A short lead-in still feels natural, while narration may continue warming up
-// independently when the TTS endpoint or browser audio is slow.
-const MAX_NARRATION_READY_WAIT_MS = 1_200;
+// Hold the "preparing" loading indicator until the voice ACTUALLY starts
+// playing (presentation.started), so text and audio begin together instead of
+// the text racing ahead while server TTS (Deepgram) is still fetching/decoding.
+// This is a safety cap only: presentation.started resolves the moment audio (or
+// the browser-voice fallback) begins, so in the normal case there is no extra
+// wait. The cap must exceed the narration client timeout (20s, matching the
+// worst-case Deepgram synth of long onboarding turns) so a slow/failed TTS
+// still releases the typing; keep a small margin over that.
+const MAX_NARRATION_READY_WAIT_MS = 22_000;
 const MAX_DURATION_READY_WAIT_MS = 250;
 const MAX_PLAYOUT_WAIT_MS = 30_000;
 const TYPING_INTERVAL_MS = 44;
@@ -235,7 +240,10 @@ export function AiTypingMessage({
 
   return (
     <p
-      className={cn("whitespace-pre-wrap text-base leading-relaxed", className)}
+      className={cn(
+        "whitespace-pre-wrap text-base leading-relaxed text-justify hyphens-auto",
+        className,
+      )}
     >
       {phase === "preparing" ? (
         <span

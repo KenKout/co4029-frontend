@@ -3,14 +3,25 @@ import { Link, useBlocker, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  AudioLines,
+  BookOpen,
   Bot,
+  CheckCircle2,
+  Clock,
   History,
+  Infinity as InfinityIcon,
+  ListChecks,
   Loader2,
   Mic,
   MicOff,
+  RotateCcw,
   Sparkles,
+  Timer,
+  User,
+  XCircle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -72,6 +83,12 @@ import {
   isClosingTurn,
 } from "@/lib/interview/end-confirmation";
 import { useAnswerState } from "@/lib/interview/use-answer-state";
+import { useDraftAutosave } from "@/lib/interview/use-draft-autosave";
+import {
+  useQuestionPacing,
+  clearQuestionPacing,
+} from "@/lib/interview/use-question-pacing";
+import { useIntegrityReporter } from "@/components/interview/use-integrity-reporter";
 import { normalizeQuestionText } from "@/lib/interview/question-content";
 import { planTransition } from "@/lib/interview/transition-sequencing";
 
@@ -200,6 +217,21 @@ function newTurnKey(): string {
   return `tk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+/**
+ * Human-readable elapsed label for the results facts row (#16), e.g. "12m 04s"
+ * or "1h 03m". Seconds are dropped once we're past an hour to keep it compact.
+ */
+function formatElapsedLabel(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const seconds = safe % 60;
+  if (hours > 0) {
+    return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+  }
+  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+}
+
 export default function CourseInterviewPage() {
   const { t, i18n } = useTranslation();
   // Route: /courses/$slug/interview/$moduleId
@@ -243,6 +275,26 @@ export default function CourseInterviewPage() {
       }) ?? null,
     [configId, previousSessions],
   );
+
+  // Completed (graded/terminal) past attempts for THIS config, newest first —
+  // powers the lobby's attempt-history block. The learner session contract
+  // exposes pass_verdict + ended_at (no score %), so we show verdict + date.
+  const pastAttempts = useMemo(
+    () =>
+      (previousSessions ?? [])
+        .filter(
+          (s) =>
+            s.interview_config_id === configId &&
+            (s.status === "completed" || s.status === "timed_out"),
+        )
+        .sort((a, b) => {
+          const at = new Date(a.ended_at ?? a.started_at).getTime();
+          const bt = new Date(b.ended_at ?? b.started_at).getTime();
+          return bt - at;
+        }),
+    [configId, previousSessions],
+  );
+  const lastAttempt = pastAttempts[0] ?? null;
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] =
@@ -295,6 +347,12 @@ export default function CourseInterviewPage() {
   const [endDialogOpen, setEndDialogOpen] = useState(false);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [aiSpeaking, setAiSpeaking] = useState(false);
+  // Whether the AI is actively presenting its turn (typing the text out and/or
+  // speaking). UNLIKE aiSpeaking this is NOT gated by voiceOn, so the status bar
+  // reflects "speaking" even when audio is muted or the session is Vietnamese
+  // (no server voice) — otherwise the bar sat frozen on "Waiting for your
+  // answer" the whole time the interviewer was clearly typing a reply.
+  const [aiPresenting, setAiPresenting] = useState(false);
   const [connected, setConnected] = useState(
     typeof navigator === "undefined" ? true : navigator.onLine,
   );
@@ -328,6 +386,15 @@ export default function CourseInterviewPage() {
       : phase === "questioning"
         ? "interview"
         : "setup";
+  // Once the interview is closing (student confirmed end / final transition /
+  // AI is reading the goodbye) or already showing results, the end button must
+  // be disabled so a second confirm can't re-submit the finish. Guard both the
+  // button (disabled) and the open handler (below) so neither path can fire.
+  const endInterviewDisabled = phase === "closing" || phase === "results";
+  const openEndDialog = useCallback(() => {
+    if (phase === "closing" || phase === "results") return;
+    setEndDialogOpen(true);
+  }, [phase]);
   const [pendingFinishResult, setPendingFinishResult] =
     useState<InterviewSessionFinishResponse | null>(null);
   const sessionStartedAtRef = useRef<number | null>(null);
@@ -346,6 +413,38 @@ export default function CourseInterviewPage() {
   useEffect(() => {
     if (currentQuestion?.id) resetAnswerForQuestion(currentQuestion.id);
   }, [currentQuestion?.id, resetAnswerForQuestion]);
+
+  // Answer-draft autosave (resilience A-Tier-1 #2): mirror the composer text
+  // into localStorage keyed by session+question so a reload / crash / accidental
+  // navigation mid-question never loses a half-typed answer.
+  const draftAutosave = useDraftAutosave(
+    sessionId,
+    currentQuestion?.id ?? null,
+    answerText,
+  );
+  const { restore: restoreDraftAutosave, clear: clearDraftAutosave } =
+    draftAutosave;
+
+  // On (re)entering a question during active questioning, rehydrate any draft
+  // persisted for THIS session+question. Runs only while the composer is live
+  // and empty, so it restores after a reload without clobbering fresh typing or
+  // a just-submitted state. Keyed by question id so each question restores once.
+  const restoredQuestionRef = useRef<string | null>(null);
+  useEffect(() => {
+    const qid = currentQuestion?.id;
+    if (!qid || phase !== "questioning") return;
+    if (restoredQuestionRef.current === qid) return;
+    restoredQuestionRef.current = qid;
+    if (answer.state.status !== "draft" || answerText.trim()) return;
+    const saved = restoreDraftAutosave();
+    if (saved) {
+      setAnswerText(saved);
+      restoreDraft(saved);
+    }
+    // answerText/answer.state are read as a one-shot guard at question entry;
+    // re-running on their every change would fight live typing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestion?.id, phase, restoreDraftAutosave]);
 
   useEffect(() => {
     const handleOnline = () => setConnected(true);
@@ -381,6 +480,17 @@ export default function CourseInterviewPage() {
           Math.floor((Date.now() - sessionStartedAtRef.current) / 1000),
         );
 
+  // Server-authoritative timer reconciliation (resilience A-Tier-1 #4): the
+  // backend returns the true whole-second countdown on each turn. Re-anchor the
+  // locally computed deadline to the server clock so client clock skew or a
+  // throttled background tab can't drift the timeout. Ignored when the session
+  // has no time limit (server returns null) or the value is non-finite.
+  const reconcileDeadline = useCallback((remainingSeconds?: number | null) => {
+    if (remainingSeconds == null || !Number.isFinite(remainingSeconds)) return;
+    sessionDeadlineAtRef.current = Date.now() + remainingSeconds * 1000;
+    timeoutTriggeredRef.current = false;
+  }, []);
+
   const respond = useInterviewRespond(sessionId);
   const onboarding = useInterviewOnboarding(sessionId);
   const finish = useFinishInterview(sessionId);
@@ -400,6 +510,46 @@ export default function CourseInterviewPage() {
       setInputMode(resumableSession.input_mode);
     }
   }, [resumableSession, sessionId]);
+
+  // Auto-resume on reload (resilience A-Tier-1 #1). A mid-interview refresh
+  // otherwise dumps the student back to the lobby with a manual "Resume" button.
+  // We stamp a sessionStorage marker while the interview is live; on mount, if a
+  // resumable in-progress session exists AND its marker is present (i.e. this is
+  // a genuine reload of an active attempt, not a fresh lobby visit), we resume
+  // automatically. sessionStorage survives reload but not tab-close, so a fresh
+  // navigation still shows the lobby + Resume button (never surprises the user).
+  const ACTIVE_MARKER_KEY = `abridge:iv-active:${configId}`;
+  const autoResumeTriedRef = useRef(false);
+  useEffect(() => {
+    // Stamp / clear the "live attempt" marker as the session goes active/ends.
+    try {
+      if (sessionId && phase !== "prestart" && phase !== "results") {
+        window.sessionStorage.setItem(ACTIVE_MARKER_KEY, sessionId);
+      } else if (phase === "results") {
+        window.sessionStorage.removeItem(ACTIVE_MARKER_KEY);
+      }
+    } catch {
+      /* storage unavailable — auto-resume is best-effort */
+    }
+  }, [sessionId, phase, ACTIVE_MARKER_KEY]);
+
+  useEffect(() => {
+    if (autoResumeTriedRef.current) return;
+    if (sessionId || !resumableSession || previousSessionsLoading) return;
+    let marker: string | null = null;
+    try {
+      marker = window.sessionStorage.getItem(ACTIVE_MARKER_KEY);
+    } catch {
+      marker = null;
+    }
+    // Only auto-resume a genuine reload of THIS live attempt.
+    if (marker !== resumableSession.session_id) return;
+    autoResumeTriedRef.current = true;
+    void handleStart();
+    // handleStart is a stable declaration read at call time; resumableSession /
+    // loading are the real triggers. Guarded by the ref so it fires once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumableSession, sessionId, previousSessionsLoading, ACTIVE_MARKER_KEY]);
 
   // The pass/fail verdict is produced by an async worker (~1-2 min) AFTER
   // /finish returns. At finish time pass_verdict is still null, so we must NOT
@@ -530,6 +680,12 @@ export default function CourseInterviewPage() {
     sessionId,
     persona: speakPersona,
     lang: speakLang,
+    // Server TTS only works for English on this deployment (Deepgram Aura is
+    // English-only; the gateway serves no TTS model). Gate by the SESSION
+    // language — not the UI locale — so a VI session skips the always-503
+    // server call and narrates with the browser voice directly, while an EN
+    // session viewed under a VI UI still gets server (Deepgram) narration.
+    serverNarrationEnabled: interviewLanguage !== "vi",
   });
   const speakIfOn = useCallback(
     (text: string) => {
@@ -563,6 +719,32 @@ export default function CourseInterviewPage() {
   // currently does not expose a total. The header/card render an honest
   // indeterminate fallback until that existing nullable field is populated.
   const totalQuestions: number | null = null;
+  // Per-question pacing (#2): a gentle per-question elapsed cue in the header
+  // (the session timer alone gives no signal of lingering on one question).
+  const questionPacing = useQuestionPacing(
+    sessionId,
+    phase === "questioning" ? (currentQuestion?.id ?? null) : null,
+    phase === "questioning",
+  );
+  // FR-5.8: record integrity signals (focus_lost / tab_switch / fullscreen_exit)
+  // for the whole in-progress session in EVERY mode (text / hybrid / voice),
+  // not just the voice room. The hook no-ops until sessionId exists, so it stays
+  // inert on the prestart screen. This is the single mount point — VoiceRoom no
+  // longer mounts its own (avoids duplicate POSTs when the voice branch renders).
+  // FR-5.8 level-1 deterrent: nudge the candidate in real time when a
+  // warning-level signal fires (tab switch / fullscreen exit). Throttled so a
+  // burst of switches shows at most one toast per window — the recording is
+  // unaffected, this is purely a visible reminder that the action is logged.
+  const lastIntegrityWarnRef = useRef(0);
+  const handleIntegrityWarning = useCallback(() => {
+    const now = Date.now();
+    if (now - lastIntegrityWarnRef.current < 10_000) return;
+    lastIntegrityWarnRef.current = now;
+    toast.warning(t("course_interview.integrity_warning.title"), {
+      description: t("course_interview.integrity_warning.body"),
+    });
+  }, [t]);
+  useIntegrityReporter(sessionId, { onWarning: handleIntegrityWarning });
   const dictationHasError = Boolean(
     dictation.error && dictation.error !== "unsupported",
   );
@@ -570,7 +752,7 @@ export default function CourseInterviewPage() {
     connected,
     hasError: respond.isError || onboarding.isError || dictationHasError,
     thinking: respond.isPending || onboarding.isPending,
-    speaking: aiSpeaking,
+    speaking: aiSpeaking || aiPresenting,
     listening: dictation.listening,
     paused: dictation.paused,
   });
@@ -703,6 +885,40 @@ export default function CourseInterviewPage() {
     }
   }
 
+  /**
+   * Retry from the results screen (#7). Clears the finished-session state back
+   * to a clean slate, then starts a fresh attempt via the normal start path.
+   * A backend cooldown / attempt-ceiling still guards it (429/409) — the UI
+   * only exposes this button when compute_retake_status said a retry is allowed,
+   * so the reactive error is a rare race-safety net rather than the norm.
+   */
+  async function handleRetry() {
+    if (startSession.isPending) return;
+    setFinishResult(null);
+    setPendingFinishResult(null);
+    setTranscript([]);
+    setCurrentQuestion(null);
+    setPendingFirstQuestion(null);
+    setPendingNextQuestion(null);
+    setSessionId(null);
+    setAnswerText("");
+    setPhase("prestart");
+    sessionStartedAtRef.current = null;
+    setAssessmentStartedAtMs(null);
+    sessionDeadlineAtRef.current = null;
+    timeoutTriggeredRef.current = false;
+    try {
+      const payload = await startSession.mutateAsync({ input_mode: "text" });
+      handleStartSuccess(payload);
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError && err.status === 429
+          ? t("course_interview.errors.rate_limited")
+          : t("course_interview.errors.start_failed"),
+      );
+    }
+  }
+
   async function handleOnboarding(
     action?: InterviewOnboardingAction,
     languageOverride?: InterviewLanguage,
@@ -808,10 +1024,13 @@ export default function CourseInterviewPage() {
       setAnswerText("");
       setEndDialogOpen(false);
       setAiSpeaking(false);
+      setAiPresenting(false);
       setPhase("closing");
 
       try {
         const result = await finish.mutateAsync({ reason });
+        // Session is terminal — drop the per-question pacing anchors.
+        clearQuestionPacing(sessionId);
         setCurrentQuestion(null);
         setPendingFirstQuestion(null);
         setPendingFinishResult(result);
@@ -855,6 +1074,32 @@ export default function CourseInterviewPage() {
       finish.mutate({ reason: "natural" }, { onError: () => undefined });
     }
     setPollingCompletion(true);
+  }
+
+  /**
+   * Voice room dropped for a transient reason (network / server), NOT a natural
+   * end (resilience A-Tier-1 #3). Do NOT finalize+grade the session. Tear down
+   * the room, switch the live session to text, restore the transcript captured
+   * so far, and resume questioning in place so the student keeps going instead
+   * of losing a graded attempt to a blip.
+   */
+  async function handleVoiceDropped() {
+    setVoiceActive(false);
+    setInputMode("text");
+    toast.warning(t("course_interview.voice.dropped_fallback_text"));
+    // Re-enter via the idempotent start path in TEXT mode: it returns the SAME
+    // in-progress session with full history + the current question, so the
+    // student resumes exactly where the voice room dropped — no finalize, no
+    // lost turns. (start_session is idempotent for a live session.) We call the
+    // mutation directly with input_mode:"text" rather than handleStart() because
+    // the setInputMode above hasn't flushed yet — handleStart's closure would
+    // still read the stale "voice" mode and re-enter the room.
+    try {
+      const payload = await startSession.mutateAsync({ input_mode: "text" });
+      handleStartSuccess(payload);
+    } catch {
+      toast.error(t("course_interview.errors.start_failed"));
+    }
   }
 
   const handleTurnPresented = useCallback(
@@ -992,6 +1237,8 @@ export default function CourseInterviewPage() {
         turn_key: newTurnKey(),
       });
 
+      reconcileDeadline(result.time_remaining_seconds);
+
       const finished = Boolean(result.should_finish ?? result.is_finished);
       const standaloneText =
         result.ai_turn_text || result.ai_followup_text || null;
@@ -1103,6 +1350,9 @@ export default function CourseInterviewPage() {
         turn_key: submissionId,
       });
 
+      // Re-anchor the timeout to the server's authoritative countdown (#4).
+      reconcileDeadline(result.time_remaining_seconds);
+
       // End-confirmation gate (Slice 4): the backend recognised this as a
       // natural-language end request and is asking the candidate to confirm
       // rather than closing. It is NOT an answer — roll the editor back to a
@@ -1139,6 +1389,8 @@ export default function CourseInterviewPage() {
             ],
       );
       submitSucceeded(trimmed);
+      // The answer is committed server-side — drop its autosaved draft (#2).
+      clearDraftAutosave();
       // Editor content is cleared ONLY after the server acknowledged (spec §2);
       // the compact confirmation now stands in for the answer on the main screen.
       setAnswerText("");
@@ -1369,112 +1621,327 @@ export default function CourseInterviewPage() {
 
   // ── Results screen (text mode finish OR voice mode completion) ─────────────
   if (finishResult) {
+    // ── Results-screen derived state (#16/#7) ────────────────────────────────
+    // Verdict phase — drives the hero treatment. "retry" (failed verdict) is
+    // deliberately encouraging (primary, not red); red is reserved for an
+    // evaluation-system failure so a normal fail never feels punitive.
+    const resultPhase: "pass" | "retry" | "evaluating" | "eval_failed" | "abandoned" =
+      evaluationFailed
+        ? "eval_failed"
+        : evaluationUnavailable
+          ? "abandoned"
+          : verdictPending
+            ? "evaluating"
+            : liveVerdict
+              ? "pass"
+              : "retry";
+
+    // Session facts: elapsed (ended_at − assessment start), attempt #, date.
+    const finishedAtMs = finishResult.ended_at
+      ? new Date(finishResult.ended_at).getTime()
+      : null;
+    const elapsedResultSeconds =
+      finishedAtMs !== null && assessmentStartedAtMs !== null
+        ? Math.max(0, Math.floor((finishedAtMs - assessmentStartedAtMs) / 1000))
+        : null;
+    const resultLocale = i18n.language?.startsWith("vi") ? "vi-VN" : "en-US";
+    const resultDate = finishResult.ended_at
+      ? new Date(finishResult.ended_at).toLocaleDateString(resultLocale, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : null;
+
+    // Retake context (#7) — prefer the freshest source (verdict poll survives
+    // reload) then the finish response.
+    const retakeSource = verdictPoll ?? finishResult;
+    const remainingAttempts = retakeSource.remaining_attempts ?? null;
+    const retakeAvailableAt = retakeSource.retake_available_at ?? null;
+    const cooldownActive =
+      retakeAvailableAt !== null &&
+      new Date(retakeAvailableAt).getTime() > Date.now();
+    const outOfAttempts = remainingAttempts !== null && remainingAttempts <= 0;
+    const canRetry = resultPhase === "retry" && !cooldownActive && !outOfAttempts;
+    const cooldownLabel = retakeAvailableAt
+      ? new Date(retakeAvailableAt).toLocaleString(resultLocale, {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : null;
+
+    const heroToneClass =
+      resultPhase === "pass"
+        ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
+        : resultPhase === "eval_failed"
+          ? "bg-gradient-to-br from-danger to-red-600 text-white"
+          : resultPhase === "abandoned"
+            ? "bg-m3-surface-container text-m3-on-surface-variant"
+            : resultPhase === "evaluating"
+              ? "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary"
+              : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white";
+
+    const HeroIcon =
+      resultPhase === "pass"
+        ? CheckCircle2
+        : resultPhase === "eval_failed"
+          ? AlertTriangle
+          : resultPhase === "evaluating"
+            ? Loader2
+            : resultPhase === "retry"
+              ? RotateCcw
+              : History;
+
+    const heroTitleKey =
+      resultPhase === "eval_failed"
+        ? "course_interview.results.evaluation_failed"
+        : resultPhase === "abandoned"
+          ? "course_interview.results.abandoned"
+          : resultPhase === "evaluating"
+            ? "course_interview.results.evaluating"
+            : resultPhase === "pass"
+              ? "course_interview.results.passed"
+              : "course_interview.results.completed";
+
+    const heroSummaryKey =
+      resultPhase === "eval_failed"
+        ? "course_interview.results.evaluation_failed_summary"
+        : resultPhase === "abandoned"
+          ? "course_interview.results.abandoned_summary"
+          : resultPhase === "evaluating"
+            ? "course_interview.results.evaluating_summary"
+            : resultPhase === "pass"
+              ? "course_interview.results.pass_summary"
+              : "course_interview.results.fail_summary";
+
+    const studyPlan = gapReport?.study_plan ?? [];
+    // attempt_number lives on the session projection (verdictPoll), not the
+    // finish response; fall back to the resumable/last known attempt.
+    const resultAttemptNumber =
+      verdictPoll?.attempt_number ?? lastAttempt?.attempt_number ?? null;
+
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 sm:p-8">
         <div className="max-w-3xl w-full space-y-6">
-          <GlassCard className="p-8 sm:p-10 text-center">
-            <div
-              className={cn(
-                "w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl font-black font-headline shadow-lg",
-                evaluationFailed
-                  ? "bg-gradient-to-br from-danger to-red-600 text-white"
-                  : evaluationUnavailable
-                    ? "bg-m3-surface-container text-m3-on-surface-variant"
-                    : verdictPending
-                      ? "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary"
-                      : liveVerdict
-                        ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
-                        : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white",
-              )}
-            >
-              {evaluationFailed ? (
-                "!"
-              ) : evaluationUnavailable ? (
-                "—"
-              ) : verdictPending ? (
-                <Loader2 className="h-10 w-10 animate-spin" />
-              ) : liveVerdict ? (
-                "✓"
-              ) : (
-                "—"
+          {/* ── Verdict hero (#16) ── */}
+          <GlassCard className="p-8 sm:p-10 text-center motion-safe:animate-fade-in-up">
+            {/* Module-context eyebrow — consistency with lobby / quiz screens. */}
+            <div className="mb-4 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-m3-secondary">
+              <Bot className="h-3.5 w-3.5" />
+              <span>{t("course_interview.labels.ai_interview")}</span>
+              {config?.title && (
+                <>
+                  <span className="text-m3-outline">·</span>
+                  <span className="normal-case font-semibold text-m3-on-surface-variant truncate max-w-[220px]">
+                    {config.title}
+                  </span>
+                </>
               )}
             </div>
-            <h2 className="font-headline font-extrabold text-2xl text-m3-primary mb-1">
-              {evaluationFailed
-                ? t("course_interview.results.evaluation_failed")
-                : evaluationUnavailable
-                  ? t("course_interview.results.abandoned")
-                  : verdictPending
-                    ? t("course_interview.results.evaluating")
-                    : liveVerdict
-                      ? t("course_interview.results.passed")
-                      : t("course_interview.results.completed")}
+
+            <div
+              className={cn(
+                "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg",
+                heroToneClass,
+              )}
+            >
+              <HeroIcon
+                className={cn(
+                  "h-9 w-9",
+                  resultPhase === "evaluating" && "animate-spin",
+                )}
+                aria-hidden="true"
+              />
+            </div>
+            <h2 className="font-headline font-extrabold text-2xl text-m3-primary mb-1.5">
+              {t(heroTitleKey)}
             </h2>
-            <p className="text-m3-on-surface-variant text-sm mb-6">
-              {evaluationFailed
-                ? t("course_interview.results.evaluation_failed_summary")
-                : evaluationUnavailable
-                  ? t("course_interview.results.abandoned_summary")
-                  : verdictPending
-                    ? t("course_interview.results.evaluating_summary")
-                    : liveVerdict
-                      ? t("course_interview.results.pass_summary")
-                      : t("course_interview.results.fail_summary")}
+            <p className="text-m3-on-surface-variant text-sm mb-6 mx-auto max-w-md leading-relaxed">
+              {t(heroSummaryKey)}
             </p>
 
-            <Link to="/courses/$slug/learn" params={{ slug }}>
-              <Button
-                variant="outline"
-                className="rounded-xl ghost-border font-bold text-sm gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {t("course_interview.actions.back_to_course")}
-              </Button>
-            </Link>
+            {/* ── Session facts row (#16) ── */}
+            {(elapsedResultSeconds !== null || resultDate) && (
+              <div className="mb-6 flex flex-wrap items-center justify-center gap-2 text-xs">
+                {elapsedResultSeconds !== null && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-m3-surface-container px-3 py-1.5 font-semibold text-m3-on-surface-variant">
+                    <Timer className="h-3.5 w-3.5" />
+                    {formatElapsedLabel(elapsedResultSeconds)}
+                  </span>
+                )}
+                {resultAttemptNumber !== null && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-m3-surface-container px-3 py-1.5 font-semibold text-m3-on-surface-variant">
+                    <History className="h-3.5 w-3.5" />
+                    {t("course_interview.attempts.attempt_n", {
+                      n: resultAttemptNumber,
+                    })}
+                  </span>
+                )}
+                {resultDate && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-m3-surface-container px-3 py-1.5 font-semibold text-m3-on-surface-variant">
+                    {resultDate}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* ── What happens next (#7) ── */}
+            <div className="flex flex-col items-center gap-3">
+              {resultPhase === "pass" ? (
+                <Link to="/courses/$slug/learn" params={{ slug }}>
+                  <Button className="gradient-primary text-white rounded-xl font-bold text-sm gap-2 px-6">
+                    {t("course_interview.results.next.back_to_lesson")}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              ) : canRetry ? (
+                <>
+                  <Button
+                    onClick={() => void handleRetry()}
+                    disabled={startSession.isPending}
+                    className="gradient-primary text-white rounded-xl font-bold text-sm gap-2 px-6"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    {startSession.isPending
+                      ? t("course_interview.actions.starting")
+                      : t("course_interview.results.next.retry")}
+                  </Button>
+                  {remainingAttempts !== null && (
+                    <p className="text-xs font-medium text-m3-on-surface-variant">
+                      {t("course_interview.results.next.attempts_left", {
+                        count: remainingAttempts,
+                      })}
+                    </p>
+                  )}
+                </>
+              ) : resultPhase === "retry" && cooldownActive ? (
+                <>
+                  <div className="inline-flex items-center gap-2 rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low px-4 py-2.5 text-sm font-semibold text-m3-on-surface-variant">
+                    <Clock className="h-4 w-4" />
+                    {t("course_interview.results.next.cooldown", {
+                      when: cooldownLabel,
+                    })}
+                  </div>
+                  {remainingAttempts !== null && (
+                    <p className="text-xs font-medium text-m3-on-surface-variant">
+                      {t("course_interview.results.next.attempts_left", {
+                        count: remainingAttempts,
+                      })}
+                    </p>
+                  )}
+                </>
+              ) : resultPhase === "retry" && outOfAttempts ? (
+                <p className="text-sm font-medium text-m3-on-surface-variant">
+                  {t("course_interview.results.next.no_attempts")}
+                </p>
+              ) : null}
+
+              <Link to="/courses/$slug/learn" params={{ slug }}>
+                <Button
+                  variant="ghost"
+                  className="rounded-xl font-semibold text-sm gap-2 text-m3-on-surface-variant"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {t("course_interview.actions.back_to_course")}
+                </Button>
+              </Link>
+            </div>
           </GlassCard>
 
-          {finishResult &&
-            !gapReport &&
+          {/* ── Study plan pending skeleton (#6) ── */}
+          {!gapReport &&
             gapReportPending &&
-            !evaluationFailed && (
-              <GlassCard className="p-6 text-center">
-                <p className="text-sm text-m3-on-surface-variant">
+            resultPhase !== "eval_failed" &&
+            resultPhase !== "abandoned" && (
+              <GlassCard className="p-6">
+                <div className="flex items-center gap-2 text-sm font-semibold text-m3-primary">
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   {t("course_interview.sections.gap_report_pending")}
-                </p>
+                </div>
+                <div className="mt-4 space-y-2">
+                  {[0, 1].map((i) => (
+                    <div
+                      key={i}
+                      className="h-14 rounded-xl bg-m3-surface-container-low motion-safe:animate-pulse"
+                    />
+                  ))}
+                </div>
               </GlassCard>
             )}
 
+          {/* ── Study plan / gap report as the path forward (#6) ── */}
           {gapReport && (
-            <GlassCard className="p-6">
-              <h3 className="font-headline font-bold text-m3-primary mb-3">
-                {t("course_interview.sections.gap_report")}
-              </h3>
+            <GlassCard className="p-6 motion-safe:animate-fade-in-up">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="flex size-8 items-center justify-center rounded-full bg-m3-primary-fixed text-m3-primary">
+                  <BookOpen className="h-4 w-4" />
+                </span>
+                <h3 className="font-headline font-bold text-m3-primary">
+                  {resultPhase === "pass"
+                    ? t("course_interview.sections.keep_growing")
+                    : t("course_interview.sections.your_path_forward")}
+                </h3>
+              </div>
               {gapReport.discrepancy_summary && (
                 <p className="text-sm text-m3-on-surface-variant mb-4 leading-relaxed">
                   {gapReport.discrepancy_summary}
                 </p>
               )}
-              {gapReport.study_plan.length > 0 && (
+              {studyPlan.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold text-m3-outline uppercase tracking-widest">
                     {t("course_interview.sections.study_plan")}
                   </h4>
                   <ul className="space-y-2">
-                    {gapReport.study_plan.map((item, idx) => (
-                      <li
-                        key={idx}
-                        className="rounded-xl bg-m3-surface-container-low p-3 text-sm text-m3-on-surface"
-                      >
-                        <span className="block font-semibold mb-0.5">
-                          {item.topic}
-                        </span>
-                        {item.suggested_resources.length > 0 && (
-                          <span className="block text-xs text-m3-on-surface-variant">
-                            {item.suggested_resources.join(" • ")}
+                    {studyPlan.map((item, idx) => {
+                      const lessonId = item.lesson_id ?? null;
+                      const body = (
+                        <>
+                          <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-white text-m3-primary shadow-sm">
+                            <BookOpen className="h-3.5 w-3.5" />
                           </span>
-                        )}
-                      </li>
-                    ))}
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-center gap-1.5 font-semibold text-m3-on-surface">
+                              {item.topic}
+                              {lessonId && (
+                                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-m3-primary" />
+                              )}
+                            </span>
+                            {item.suggested_resources.length > 0 && (
+                              <span className="mt-1.5 flex flex-wrap gap-1.5">
+                                {item.suggested_resources.map((res, ri) => (
+                                  <span
+                                    key={ri}
+                                    className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-m3-on-surface-variant"
+                                  >
+                                    {res}
+                                  </span>
+                                ))}
+                              </span>
+                            )}
+                          </span>
+                        </>
+                      );
+                      return (
+                        <li key={idx}>
+                          {lessonId ? (
+                            <Link
+                              to="/courses/$slug/learn"
+                              params={{ slug }}
+                              className="flex items-start gap-2.5 rounded-xl bg-m3-surface-container-low p-3 text-sm outline-none transition-colors hover:bg-m3-surface-container focus-visible:ring-2 focus-visible:ring-m3-primary/40"
+                            >
+                              {body}
+                            </Link>
+                          ) : (
+                            <div className="flex items-start gap-2.5 rounded-xl bg-m3-surface-container-low p-3 text-sm">
+                              {body}
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               )}
@@ -1522,6 +1989,7 @@ export default function CourseInterviewPage() {
           elapsed={elapsed}
           initialTranscript={voiceInitialTranscriptRef.current}
           onCompleted={handleVoiceCompleted}
+          onVoiceDropped={handleVoiceDropped}
           onTranscriptChange={setTranscript}
         />
         {leaveInterviewDialog}
@@ -1532,25 +2000,40 @@ export default function CourseInterviewPage() {
   // ── Pre-start screen (mode selection) ─────────────────────────────────────
   if (!sessionId) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center px-4 py-16 sm:px-6">
-        <Link
-          to="/courses/$slug/learn"
-          params={{ slug }}
-          className="absolute left-4 top-4 inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-text-muted outline-none transition-colors hover:bg-surface-muted hover:text-text-strong focus-visible:ring-2 focus-visible:ring-primary/60 sm:left-6 sm:top-6"
-          aria-label={t("course_interview.actions.back_to_course")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t("course_interview.actions.back_to_course")}
-        </Link>
-
-        <div className="max-w-2xl w-full mx-auto space-y-6">
+      <div className="relative flex min-h-screen items-center justify-center px-4 py-12 sm:px-6">
+        <div className="max-w-xl w-full mx-auto space-y-4">
           <GlassCard className="p-8 sm:p-10 text-center">
+            {/* Module-context eyebrow — gives the bare title a frame of
+                reference (which course / that this is an AI module interview). */}
+            <div className="mb-3 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-m3-secondary">
+              <Bot className="h-3.5 w-3.5" />
+              <span>{t("course_interview.labels.ai_interview")}</span>
+              {course?.title && (
+                <>
+                  <span className="text-m3-outline">·</span>
+                  <span className="normal-case font-semibold text-m3-on-surface-variant truncate max-w-[220px]">
+                    {course.title}
+                  </span>
+                </>
+              )}
+            </div>
             <h1 className="font-headline font-extrabold text-3xl text-m3-primary mb-3">
               {config.title}
             </h1>
             <p className="text-m3-on-surface-variant mb-6">
               {t("course_interview.intro.description")}
             </p>
+
+            {/* Criteria count — a safe expectation-setting signal (count only,
+                no rubric text / weights / threshold, per the learner contract). */}
+            {(takingPayload?.outcome_count ?? 0) > 0 && (
+              <div className="mb-6 inline-flex items-center gap-1.5 rounded-full bg-m3-primary-fixed px-3 py-1 text-xs font-semibold text-m3-primary">
+                <ListChecks className="h-3.5 w-3.5" />
+                {t("course_interview.criteria.assessed_on", {
+                  count: takingPayload?.outcome_count ?? 0,
+                })}
+              </div>
+            )}
 
             {resumableSession && (
               <div
@@ -1579,44 +2062,159 @@ export default function CourseInterviewPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 text-left">
-              <div className="rounded-xl bg-m3-surface-container-low p-4">
-                <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-                  {t("course_interview.labels.persona")}
-                </span>
-                <span className="text-base font-bold text-m3-primary">
-                  {config.persona === "strict"
-                    ? t("course_interview.values.persona.strict")
-                    : config.persona === "supportive"
-                      ? t("course_interview.values.persona.supportive")
-                      : t("course_interview.values.persona.neutral")}
-                </span>
+            {/* Stat tiles — icon chip + label + value. Values share one
+                consistent color/weight (the earlier design had one stat
+                arbitrarily blue); a hairline border lifts them off the card. */}
+            <div className="grid grid-cols-2 gap-3 mb-8">
+              <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+                  <User className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-[10px] text-m3-on-surface-variant uppercase font-bold tracking-wider">
+                    {t("course_interview.labels.persona")}
+                  </span>
+                  <span className="text-sm font-bold text-m3-on-surface">
+                    {config.persona === "strict"
+                      ? t("course_interview.values.persona.strict")
+                      : config.persona === "supportive"
+                        ? t("course_interview.values.persona.supportive")
+                        : t("course_interview.values.persona.neutral")}
+                  </span>
+                </div>
               </div>
-              <div className="rounded-xl bg-m3-surface-container-low p-4">
-                <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-                  {t("course_interview.labels.time")}
-                </span>
-                <span className="text-base font-bold text-m3-on-surface">
-                  {config.time_limit_minutes
-                    ? t("course_interview.values.time_limit_minutes", {
-                        minutes: config.time_limit_minutes,
-                      })
-                    : t("course_interview.values.no_limit")}
-                </span>
+              <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+                  <Clock className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-[10px] text-m3-on-surface-variant uppercase font-bold tracking-wider">
+                    {t("course_interview.labels.time")}
+                  </span>
+                  <span className="text-sm font-bold text-m3-on-surface">
+                    {config.time_limit_minutes
+                      ? t("course_interview.values.time_limit_minutes", {
+                          minutes: config.time_limit_minutes,
+                        })
+                      : t("course_interview.values.no_limit")}
+                  </span>
+                </div>
               </div>
-              <div className="rounded-xl bg-m3-surface-container-low p-4">
-                <span className="block text-[10px] text-m3-outline uppercase font-bold mb-1 tracking-wider">
-                  {t("course_interview.labels.max_attempts")}
-                </span>
-                <span className="text-base font-bold text-m3-secondary">
-                  {config.max_attempts ?? t("course_interview.values.no_limit")}
-                </span>
+              <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+                  {config.max_attempts ? (
+                    <History className="h-4 w-4" />
+                  ) : (
+                    <InfinityIcon className="h-4 w-4" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-[10px] text-m3-on-surface-variant uppercase font-bold tracking-wider">
+                    {t("course_interview.labels.max_attempts")}
+                  </span>
+                  <span className="text-sm font-bold text-m3-on-surface">
+                    {config.max_attempts ??
+                      t("course_interview.values.no_limit")}
+                  </span>
+                </div>
+              </div>
+              {/* AI voice tile. tts_voice is a Deepgram Aura model id
+                  (e.g. 'aura-2-ophelia-en'); we surface just the human name
+                  ('Ophelia'). NULL = the deployment default voice. Only
+                  meaningful for English sessions (Vietnamese uses the browser
+                  voice), noted via the value label. */}
+              <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+                  <AudioLines className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-[10px] text-m3-on-surface-variant uppercase font-bold tracking-wider">
+                    {t("course_interview.labels.ai_voice")}
+                  </span>
+                  <span className="block text-sm font-bold text-m3-on-surface truncate">
+                    {config.tts_voice
+                      ? config.tts_voice
+                          .replace(/^aura-2-/, "")
+                          .replace(/-en$/, "")
+                          .replace(/^\w/, (c) => c.toUpperCase())
+                      : t("course_interview.values.ai_voice_default")}
+                  </span>
+                </div>
               </div>
             </div>
 
+            {/* Attempt history — the learner session contract exposes verdict
+                + date (no score %), so we surface a compact pass/fail list so
+                the lobby is a hub, not just a start button. Hidden while a
+                resumable session banner is showing to avoid double context. */}
+            {!resumableSession && pastAttempts.length > 0 && (
+              <div className="mb-6 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 text-left">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-m3-on-surface-variant">
+                  {t("course_interview.attempts.history_title")}
+                </p>
+                <ul className="space-y-1.5">
+                  {pastAttempts.slice(0, 3).map((s) => {
+                    const passed = s.pass_verdict === true;
+                    const failed = s.pass_verdict === false;
+                    return (
+                      <li key={s.session_id}>
+                        <Link
+                          to="/me/interviews/$sessionId"
+                          params={{ sessionId: s.session_id }}
+                          className="group flex items-center justify-between gap-2 rounded-lg px-1.5 py-1 text-xs outline-none transition-colors hover:bg-m3-surface-container focus-visible:ring-2 focus-visible:ring-m3-primary/40"
+                        >
+                        <span className="flex items-center gap-1.5 text-m3-on-surface-variant transition-colors group-hover:text-m3-primary">
+                          {passed ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                          ) : failed ? (
+                            <XCircle className="h-3.5 w-3.5 text-danger" />
+                          ) : (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-m3-outline" />
+                          )}
+                          {t("course_interview.attempts.attempt_n", {
+                            n: s.attempt_number,
+                          })}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <span
+                            className={cn(
+                              "font-semibold",
+                              passed
+                                ? "text-success"
+                                : failed
+                                  ? "text-danger"
+                                  : "text-m3-on-surface-variant",
+                            )}
+                          >
+                            {passed
+                              ? t("course_interview.attempts.passed")
+                              : failed
+                                ? t("course_interview.attempts.not_passed")
+                                : t("course_interview.attempts.in_review")}
+                          </span>
+                          {(s.ended_at || s.started_at) && (
+                            <span className="text-m3-outline tabular-nums">
+                              {new Date(
+                                s.ended_at ?? s.started_at,
+                              ).toLocaleDateString(
+                                i18n.language?.startsWith("vi")
+                                  ? "vi-VN"
+                                  : "en-US",
+                                { month: "short", day: "numeric" },
+                              )}
+                            </span>
+                          )}
+                        </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
             {!resumableSession && isHybrid && (
               <div className="flex items-center justify-center gap-2 mb-6 text-xs text-m3-on-surface-variant">
-                <Mic className="h-3.5 w-3.5 text-m3-primary" />
                 {t("course_interview.hybrid.prestart_hint")}
               </div>
             )}
@@ -1646,24 +2244,33 @@ export default function CourseInterviewPage() {
               </div>
             )}
 
-            <Button
-              onClick={() => setStartDialogOpen(true)}
-              disabled={startSession.isPending || previousSessionsLoading}
-              className="gradient-primary text-white rounded-xl font-bold gap-2 px-8 py-3 h-auto"
-            >
-              {startSession.isPending || previousSessionsLoading
-                ? t("course_interview.actions.starting")
-                : resumableSession
-                  ? t("course_interview.resume_dialog.continue")
-                  : inputMode === "voice"
-                    ? "Start voice interview"
-                    : t("course_interview.actions.start")}
-              {resumableSession ? (
-                <History className="h-4 w-4" />
-              ) : (
-                <ArrowRight className="h-4 w-4" />
-              )}
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link
+                to="/courses/$slug/learn"
+                params={{ slug }}
+                className="inline-flex h-auto items-center rounded-xl border border-m3-outline-variant/40 px-6 py-3 text-sm font-bold text-m3-on-surface-variant outline-none transition-colors hover:bg-m3-surface-container hover:text-m3-on-surface focus-visible:ring-2 focus-visible:ring-m3-primary/40"
+              >
+                {t("course_interview.actions.back_to_course")}
+              </Link>
+              <Button
+                onClick={() => setStartDialogOpen(true)}
+                disabled={startSession.isPending || previousSessionsLoading}
+                className="gradient-primary text-white rounded-xl font-bold gap-2 px-8 py-3 h-auto"
+              >
+                {startSession.isPending || previousSessionsLoading
+                  ? t("course_interview.actions.starting")
+                  : resumableSession
+                    ? t("course_interview.resume_dialog.continue")
+                    : inputMode === "voice"
+                      ? t("course_interview.actions.start_voice")
+                      : t("course_interview.actions.start")}
+                {resumableSession ? (
+                  <History className="h-4 w-4" />
+                ) : (
+                  <ArrowRight className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </GlassCard>
         </div>
 
@@ -1702,6 +2309,12 @@ export default function CourseInterviewPage() {
         onEndAndSubmit={() => void handleEndConfirm()}
         isPending={respond.isPending}
       />
+    ) : answerStatus.status === "submitting" ? (
+      // B-Tier-1 #13: unmistakable in-flight state while the answer is sent.
+      <SubmittedAnswerConfirmation
+        status="submitting"
+        answer={answerStatus.draft}
+      />
     ) : answerStatus.status === "failed" ? (
       <SubmittedAnswerConfirmation
         status="failed"
@@ -1733,6 +2346,10 @@ export default function CourseInterviewPage() {
         expectedDurationMinutes={config.time_limit_minutes}
         currentQuestion={phase === "questioning" ? currentQuestionNumber : null}
         totalQuestions={totalQuestions}
+        questionElapsed={
+          phase === "questioning" ? questionPacing.elapsedSeconds : null
+        }
+        questionLingering={questionPacing.lingering}
         connected={connected}
         voiceOn={voiceOn}
         onToggleVoice={() =>
@@ -1741,7 +2358,8 @@ export default function CourseInterviewPage() {
             return !current;
           })
         }
-        onEndInterview={() => setEndDialogOpen(true)}
+        onEndInterview={openEndDialog}
+        endInterviewDisabled={endInterviewDisabled}
       />
 
       {/* Coarse step indicator: Setup → Interview → Completed (spec §4). */}
@@ -1780,7 +2398,10 @@ export default function CourseInterviewPage() {
             }
             questionTypeLabel={(type) => questionTypeLabel(type, t)}
             speak={speakIfOn}
-            onSpeakingChange={(speaking) => setAiSpeaking(voiceOn && speaking)}
+            onSpeakingChange={(speaking) => {
+              setAiSpeaking(voiceOn && speaking);
+              setAiPresenting(speaking);
+            }}
             onTurnPresented={handleTurnPresented}
             onClarifyQuestion={
               phase === "questioning"
@@ -1884,9 +2505,13 @@ export default function CourseInterviewPage() {
             </div>
           )}
 
-          {(currentQuestion && phase === "questioning") ||
-          phase === "opening" ||
-          phase === "readiness" ? (
+          {/* The bottom composer (Voice/Type bar) is only the answer surface
+              during the assessed questioning phase. Throughout onboarding
+              (opening/readiness) the SetupChecklist above is the sole input —
+              name field, language, readiness — so the composer is hidden to
+              avoid a redundant/confusing second input, then reappears once
+              setup completes and the first question is asked. */}
+          {currentQuestion && phase === "questioning" ? (
             <FocusedAnswerComposer
               value={
                 dictation.listening && dictation.interim
@@ -1895,21 +2520,10 @@ export default function CourseInterviewPage() {
               }
               draftLength={answerText.length}
               onChange={setAnswerText}
-              onSubmit={() =>
-                void (phase === "opening" || phase === "readiness"
-                  ? handleOnboarding()
-                  : handleRespond())
-              }
-              onFinishRecording={() =>
-                void (phase === "opening" || phase === "readiness"
-                  ? handleOnboarding()
-                  : handleRespond())
-              }
+              onSubmit={() => void handleRespond()}
+              onFinishRecording={() => void handleRespond()}
               sending={respond.isPending || onboarding.isPending}
-              micAvailable={Boolean(
-                (phase === "opening" || phase === "readiness" || isHybrid) &&
-                  dictation.supported,
-              )}
+              micAvailable={Boolean(isHybrid && dictation.supported)}
               micActive={dictation.listening}
               micPaused={dictation.paused}
               micError={
@@ -1924,15 +2538,32 @@ export default function CourseInterviewPage() {
               onTranscriptToggle={() => setTranscriptOpen((open) => !open)}
               elapsed={elapsed}
               status={agentStatus}
-              onEndInterview={() => setEndDialogOpen(true)}
-              placeholder={
-                phase === "opening" || phase === "readiness"
-                  ? t("course_interview.onboarding.reply_placeholder")
-                  : undefined
-              }
+              onEndInterview={openEndDialog}
             />
+          ) : phase === "opening" || phase === "readiness" ? (
+            // Onboarding: the SetupChecklist above is the sole input surface,
+            // so render no bottom bar at all (no composer, no wind-down).
+            null
           ) : (
-            <div className="shrink-0 border-t border-border bg-white px-4 py-6 text-center">
+            <div className="shrink-0 border-t border-border bg-white px-4 py-6 text-center motion-safe:animate-fade-in-up">
+              {/* Calm pacing on the closing wind-down (#15): a gentle pulsing
+                  dot trio so the goodbye/results transition reads as a graceful
+                  wind-down rather than an abrupt cut. */}
+              <span
+                className="mb-3 inline-flex items-center justify-center gap-1.5"
+                aria-hidden="true"
+              >
+                {[0, 1, 2].map((dot) => (
+                  <span
+                    key={dot}
+                    className="size-1.5 rounded-full bg-m3-primary/70 motion-safe:animate-pulse"
+                    style={{
+                      animationDelay: `${dot * 200}ms`,
+                      animationDuration: "1s",
+                    }}
+                  />
+                ))}
+              </span>
               <p
                 className="text-sm text-text-muted"
                 role="status"
@@ -1956,7 +2587,10 @@ export default function CourseInterviewPage() {
           transcript={transcript}
           questionTypeLabel={(type) => questionTypeLabel(type, t)}
           speak={speakIfOn}
-          onSpeakingChange={(speaking) => setAiSpeaking(voiceOn && speaking)}
+          onSpeakingChange={(speaking) => {
+            setAiSpeaking(voiceOn && speaking);
+            setAiPresenting(speaking);
+          }}
           onReplay={(turn) => void speakIfOn(turn.text)}
           replayDisabled={!voiceOn}
           replayingTurnId={null}

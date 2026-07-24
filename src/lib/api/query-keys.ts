@@ -52,6 +52,13 @@ export const queryKeys = {
     preferences: () => ["notifications", "preferences"] as const,
   },
 
+  discussions: {
+    topics: (lessonId: string) =>
+      ["discussions", "topics", lessonId] as const,
+    comments: (topicId: string) =>
+      ["discussions", "comments", topicId] as const,
+  },
+
   sr: {
     cardsDue: (lessonId?: string, limit?: number) =>
       ["sr", "cards-due", lessonId, limit] as const,
@@ -105,12 +112,23 @@ export const queryKeys = {
     auditDataChanges: (table: string, entityId: string) =>
       ["admin", "audit", "data-changes", table, entityId] as const,
     aiCosts: {
-      summary: (period: string) =>
-        ["admin", "ai-costs", "summary", period] as const,
+      summary: (period: string, filters?: string) =>
+        ["admin", "ai-costs", "summary", period, filters ?? ""] as const,
       byUser: (topN: number, period: string) =>
         ["admin", "ai-costs", "by-user", topN, period] as const,
       byPipeline: (period: string) =>
         ["admin", "ai-costs", "by-pipeline", period] as const,
+      byCategory: (dimension: string, period: string, filters?: string) =>
+        [
+          "admin",
+          "ai-costs",
+          "by-category",
+          dimension,
+          period,
+          filters ?? "",
+        ] as const,
+      byModel: (period: string, filters?: string) =>
+        ["admin", "ai-costs", "by-model", period, filters ?? ""] as const,
       recent: (limit: number) =>
         ["admin", "ai-costs", "recent", limit] as const,
     },
@@ -226,6 +244,8 @@ export const queryKeys = {
       ["interviews", "config-sessions", configId] as const,
     transcript: (sessionId: string) =>
       ["interviews", "transcript", sessionId] as const,
+    integrityEvents: (sessionId: string) =>
+      ["interviews", "integrity-events", sessionId] as const,
     courseSessions: (courseId: string) =>
       ["interviews", "course-sessions", courseId] as const,
     studentSessions: (courseId: string, studentId: string) =>

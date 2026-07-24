@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { BookOpen, ChevronRight, Users } from "lucide-react";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { PageHeader } from "@/components/ui/page-header";
 import type { CourseAuthoring } from "@/lib/api/types";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -95,14 +96,10 @@ export default function DeptCoursesPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div>
-        <h1 className="text-2xl font-headline font-bold text-text-strong">
-          {t("dept_courses.title")}
-        </h1>
-        <p className="text-sm text-text-muted mt-1">
-          {t("dept_courses.subtitle")}
-        </p>
-      </div>
+      <PageHeader
+        title={t("dept_courses.title")}
+        subtitle={t("dept_courses.subtitle")}
+      />
 
       {!enabled || list.isLoading ? (
         <div className="space-y-3">

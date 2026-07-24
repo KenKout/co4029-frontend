@@ -25,6 +25,14 @@ export interface ConfirmDialogProps {
   isPending?: boolean;
   /** Optional content rendered above the action row (e.g. a spinner row). */
   extraContent?: React.ReactNode;
+  /**
+   * When true, clicking the backdrop (outside the popup) dismisses the dialog.
+   * Off by default: AlertDialog intentionally blocks outside-click dismissal so
+   * destructive confirmations can't be closed accidentally. Opt in only for
+   * non-destructive dialogs (e.g. the interview start prompt) where a quick
+   * outside-click cancel is the expected, harmless behaviour.
+   */
+  dismissOnBackdrop?: boolean;
 }
 
 /**
@@ -43,12 +51,18 @@ export function ConfirmDialog({
   confirmVariant = "destructive",
   isPending = false,
   extraContent,
+  dismissOnBackdrop = false,
 }: ConfirmDialogProps) {
   return (
     <AlertDialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialogPrimitive.Portal>
         {/* Backdrop sits above sidebar (z-40) and below the popup. */}
         <AlertDialogPrimitive.Backdrop
+          onClick={
+            dismissOnBackdrop && !isPending
+              ? () => onOpenChange(false)
+              : undefined
+          }
           className={cn(
             "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm",
             "transition-opacity duration-200",

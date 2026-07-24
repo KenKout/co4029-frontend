@@ -141,11 +141,11 @@ export function SetupChecklist({
   ) => void;
 }) {
   const { t } = useTranslation();
-  // When the candidate says the profile name isn't theirs, the identity row
-  // switches to a name-entry field ("What should I call you?") before the
-  // set_name action is dispatched.
-  const [enteringName, setEnteringName] = useState(false);
-  const [nameDraft, setNameDraft] = useState("");
+  // The identity step is a single name field: it prefills the profile name so
+  // the common case is a one-tap confirm, but the candidate can edit it to any
+  // preferred name before sending. Submitting dispatches set_name directly
+  // (the backend treats set_name as an advance — no reject step needed).
+  const [nameDraft, setNameDraft] = useState(candidateName ?? "");
 
   const identityState = itemState("identity_check", stage);
   const audioState = itemState("audio_check", stage);
@@ -158,6 +158,12 @@ export function SetupChecklist({
       className="mx-auto mt-6 w-full max-w-[520px] rounded-2xl border border-border bg-white px-5 py-6 shadow-editorial motion-safe:animate-fade-in-up sm:mt-8 sm:px-7 sm:py-7"
     >
       <div className="mb-5 text-center">
+        {/* Module-context eyebrow — consistency with the lobby / results / quiz
+            screens so the setup step reads as the same calm family (#15). */}
+        <div className="mb-3 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-m3-secondary">
+          <Sparkles className="h-3.5 w-3.5" />
+          <span>{t("course_interview.setup.eyebrow")}</span>
+        </div>
         <span className="mb-3 inline-flex size-12 items-center justify-center rounded-full border border-primary/15 bg-primary-soft text-primary">
           <ShieldCheck className="h-6 w-6" aria-hidden="true" />
         </span>
@@ -179,34 +185,7 @@ export function SetupChecklist({
           label={t("course_interview.setup.identity")}
           value={candidateName}
         >
-          {identityState === "active" && !enteringName && (
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                size="lg"
-                disabled={disabled}
-                onClick={() => onAction("confirm_identity")}
-                className="min-h-11 rounded-lg"
-              >
-                <Check className="h-4 w-4" />
-                {t("course_interview.onboarding.confirm_identity")}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                disabled={disabled}
-                onClick={() => {
-                  setEnteringName(true);
-                  onAction("reject_identity");
-                }}
-                className="min-h-11 rounded-lg"
-              >
-                {t("course_interview.onboarding.wrong_name")}
-              </Button>
-            </div>
-          )}
-          {identityState === "active" && enteringName && (
+          {identityState === "active" && (
             <form
               className="flex flex-col gap-2"
               onSubmit={(event) => {
@@ -214,8 +193,6 @@ export function SetupChecklist({
                 const name = nameDraft.trim();
                 if (!name) return;
                 onAction("set_name", { name });
-                setEnteringName(false);
-                setNameDraft("");
               }}
             >
               <label
@@ -230,7 +207,6 @@ export function SetupChecklist({
                   value={nameDraft}
                   onChange={(event) => setNameDraft(event.target.value)}
                   maxLength={60}
-                  autoFocus
                   autoComplete="off"
                   placeholder={t(
                     "course_interview.onboarding.name_placeholder",

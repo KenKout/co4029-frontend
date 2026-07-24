@@ -1,4 +1,9 @@
 {
+  "file_dropzone": {
+    "idle_title": "Kéo thả hoặc nhấp để chọn tệp",
+    "drop_active": "Thả để tải lên",
+    "uploading": "Đang tải lên…"
+  },
   "common": {
     "loading": "Đang tải…",
     "error": "Đã xảy ra lỗi",
@@ -115,7 +120,7 @@
     "ai_mock_title": "Bao gồm phỏng vấn AI",
     "ai_mock_body": "Hoàn thành từng module để mở khóa buổi phỏng vấn AI. Nhận phản hồi thời gian thực, câu hỏi tiếp theo thích ứng và đánh giá chi tiết về cách bạn giải thích kỹ thuật.",
     "start_learning": "Bắt đầu học",
-    "modules": "Modules"
+    "modules": "Chương"
   },
   "settings_security": {
     "title": "Bảo mật tài khoản",
@@ -195,10 +200,24 @@
       "beginner": "Cơ bản",
       "intermediate": "Trung cấp",
       "advanced": "Nâng cao"
+    },
+    "actions": {
+      "ungraded_quizzes": "bài kiểm tra cần chấm",
+      "pending_interviews": "phỏng vấn chờ đánh giá",
+      "draft_courses": "bản nháp cần xuất bản"
     }
   },
   "teacher_course_settings": {
     "title": "Cài đặt khóa học",
+    "thumbnail": {
+      "label": "Ảnh khóa học",
+      "change": "Đổi ảnh",
+      "hint": "JPEG, PNG, WebP hoặc GIF · tối đa 5 MB. Hiển thị trên thẻ khóa học. Áp dụng khi bạn nhấn Lưu.",
+      "updated": "Đã cập nhật ảnh khóa học",
+      "upload_failed": "Không thể tải ảnh lên. Vui lòng thử lại.",
+      "invalid_type": "Vui lòng chọn ảnh JPEG, PNG, WebP hoặc GIF.",
+      "too_large": "Ảnh phải nhỏ hơn hoặc bằng 5 MB."
+    },
     "status_summary_published": "Đã xuất bản",
     "status_summary_draft": "Bản nháp",
     "no_level": "Chưa đặt cấp độ",
@@ -224,9 +243,22 @@
     "enrollment_cap_placeholder": "Để trống nếu không giới hạn",
     "expected_completion": "Thời gian hoàn thành dự kiến (ngày)",
     "expected_completion_placeholder": "vd. 30",
-    "save": "Lưu cài đặt khóa học",
+    "save": "Lưu",
     "saved": "Đã lưu cài đặt khóa học",
-    "save_failed": "Lưu thất bại"
+    "save_failed": "Lưu thất bại",
+    "save_status": {
+      "saving": "Đang lưu…",
+      "saved": "Đã lưu",
+      "unsaved": "Có thay đổi chưa lưu",
+      "last_saved": "Lưu lần cuối {{when}}"
+    },
+    "delete": {
+      "button": "Xóa",
+      "title": "Xóa khóa học này?",
+      "body": "\"{{title}}\" và các mô-đun, bài học, nội dung của khóa học sẽ bị xóa. Quản trị viên có thể khôi phục.",
+      "deleted": "Đã xóa khóa học",
+      "failed": "Không thể xóa khóa học. Vui lòng thử lại."
+    }
   },
   "teacher_quiz_attempt": {
     "load_failed": "Không tải được lượt làm này.",
@@ -294,7 +326,24 @@
     "filter_draft": "Bản nháp",
     "filter_archived": "Đã lưu trữ",
     "no_match": "Không có khóa học nào khớp tìm kiếm",
-    "no_courses_yet": "Chưa có khóa học nào"
+    "no_courses_yet": "Chưa có khóa học nào",
+    "clear_search": "Xóa tìm kiếm",
+    "sort_label": "Sắp xếp",
+    "sort_recent": "Mới nhất",
+    "sort_oldest": "Cũ nhất",
+    "sort_title": "Tiêu đề (A–Z)",
+    "showing_count": "Hiển thị {{count}} trên {{total}}",
+    "stat_total": "Tổng",
+    "stat_published": "Đã xuất bản",
+    "stat_draft": "Bản nháp",
+    "stat_archived": "Đã lưu trữ",
+    "empty_first_title": "Tạo khóa học đầu tiên của bạn",
+    "empty_first_body": "Khóa học là nơi bạn tổ chức bài học, bài kiểm tra và phỏng vấn AI cho học viên. Hãy bắt đầu với một tiêu đề — bạn có thể xây dựng phần còn lại bất cứ lúc nào.",
+    "no_match_title": "Không có khóa học nào khớp",
+    "no_match_body": "Hãy thử từ khóa khác hoặc xóa bộ lọc.",
+    "clear_filters": "Xóa bộ lọc",
+    "students_label": "Học viên",
+    "modules_label": "Mô-đun"
   },
   "course_learn": {
     "lesson_unavailable_title": "Bài học không khả dụng",
@@ -302,7 +351,7 @@
     "lesson_locked_title": "Bài học đang khóa",
     "lesson_locked_body": "Hoàn thành các bài học tiên quyết và ôn tập các thẻ đến hạn để mở khóa bài học này.",
     "resource_unavailable": "Tài nguyên không khả dụng",
-    "download": "Download",
+    "download": "Tải xuống",
     "reading_lesson": "Bài đọc",
     "reading_open_fullscreen": "Mở toàn màn hình",
     "reading_material_unavailable": "Tài liệu đọc hiện chưa khả dụng.",
@@ -394,6 +443,17 @@
     "delete_body": "Thao tác này xóa câu hỏi khỏi ngân hàng của khóa học. Các câu hỏi đã nhập vào buổi phỏng vấn không bị ảnh hưởng."
   },
   "teacher_common": {
+    "drag_to_reorder": "Kéo để sắp xếp",
+    "publish_item": "Xuất bản",
+    "publish_failed": "Không thể xuất bản",
+    "item_published": "Đã xuất bản \"{{title}}\".",
+    "publish_progress": "{{published}}/{{total}} mục đã xuất bản",
+    "publish_all": "Xuất bản tất cả ({{count}})",
+    "publish_all_done": "Đã xuất bản {{count}} mục.",
+    "publish_all_partial": "Đã xuất bản {{ok}}, {{failed}} thất bại — thử lại.",
+    "expand_all": "Mở tất cả",
+    "collapse_all": "Thu gọn tất cả",
+    "jump_to": "Nhảy đến",
     "back_to_course": "Quay lại khóa học",
     "breadcrumb_teaching": "Khoá của tôi",
     "breadcrumb_course": "Khóa học",
@@ -497,16 +557,16 @@
   },
   "google_callback": {
     "in_progress": "Đang hoàn tất đăng nhập Google...",
-    "success_redirecting": "Signed in successfully. Redirecting...",
+    "success_redirecting": "Đăng nhập thành công. Đang chuyển hướng...",
     "mfa_redirect": "Đăng nhập thành công. Đang chuyển sang xác thực hai bước...",
-    "exchange_default": "Securely exchanging your Google authorization code with aBridgeAI.",
-    "cancelled_title": "Google sign-in was cancelled.",
-    "missing_code_title": "Google did not return an authorization code.",
-    "missing_code_detail": "Start the sign-in flow again from the login page.",
-    "state_mismatch_title": "Unable to verify the Google sign-in response.",
-    "state_mismatch_detail": "The sign-in state did not match. Please try again.",
-    "exchange_failed_title": "Unable to finish Google sign-in.",
-    "exchange_failed_detail": "Please try again.",
+    "exchange_default": "Đang trao đổi mã ủy quyền Google của bạn với aBridgeAI một cách an toàn.",
+    "cancelled_title": "Đăng nhập Google đã bị hủy.",
+    "missing_code_title": "Google không trả về mã ủy quyền.",
+    "missing_code_detail": "Hãy bắt đầu lại quá trình đăng nhập từ trang đăng nhập.",
+    "state_mismatch_title": "Không thể xác minh phản hồi đăng nhập Google.",
+    "state_mismatch_detail": "Trạng thái đăng nhập không khớp. Vui lòng thử lại.",
+    "exchange_failed_title": "Không thể hoàn tất đăng nhập Google.",
+    "exchange_failed_detail": "Vui lòng thử lại.",
     "toast_failed": "Đăng nhập thất bại. Vui lòng thử lại."
   },
   "login_mfa": {
@@ -569,6 +629,11 @@
       "not_graded": "Không chấm điểm"
     }
   },
+  "me_interview_result": {
+    "back_to_list": "Quay lại danh sách phỏng vấn",
+    "load_failed_title": "Không thể tải kết quả này",
+    "load_failed_body": "Kết quả phỏng vấn này hiện chưa khả dụng. Vui lòng thử lại."
+  },
   "career_path_detail": {
     "back": "Quay lại",
     "load_failed": "Không thể tải lộ trình",
@@ -615,7 +680,9 @@
       "lesson_unlock": "Mở khóa bài học",
       "interview_result": "Kết quả phỏng vấn",
       "course_announcement": "Thông báo khóa học",
-      "system": "Hệ thống"
+      "system": "Hệ thống",
+      "material_processing": "Xử lý tài liệu",
+      "quiz_generation": "Tạo câu hỏi"
     },
     "channel": {
       "email": "Email",
@@ -647,6 +714,14 @@
     "toasts": {
       "saved": "Đã lưu hồ sơ",
       "save_failed": "Không thể lưu hồ sơ. Vui lòng thử lại."
+    },
+    "avatar": {
+      "change": "Đổi ảnh",
+      "hint": "JPEG, PNG, WebP hoặc GIF · tối đa 2 MB",
+      "updated": "Đã cập nhật ảnh đại diện",
+      "upload_failed": "Không thể tải ảnh đại diện lên. Vui lòng thử lại.",
+      "invalid_type": "Vui lòng chọn ảnh JPEG, PNG, WebP hoặc GIF.",
+      "too_large": "Ảnh phải có dung lượng 2 MB trở xuống."
     }
   },
   "notifications": {
@@ -666,7 +741,9 @@
       "lesson_unlock": "Mở khóa bài học",
       "interview_result": "Kết quả phỏng vấn",
       "course_announcement": "Thông báo khóa học",
-      "system": "Hệ thống"
+      "system": "Hệ thống",
+      "material_processing": "Xử lý tài liệu",
+      "quiz_generation": "Tạo câu hỏi"
     },
     "errors": {
       "mark_read_failed": "Không thể đánh dấu đã đọc",
@@ -1094,6 +1171,9 @@
       "back_to_list": "Quay lại danh sách",
       "restore": "Khôi phục khoá học",
       "restoring": "Đang khôi phục…",
+      "delete": "Xoá",
+      "deleting": "Đang xoá…",
+      "delete_confirm": "Xoá \"{{title}}\" cùng các chương và bài học? Có thể hoàn tác bằng Khôi phục.",
       "audit_load_failed": "Không thể tải dữ liệu audit.",
       "jobs_load_failed": "Không thể tải danh sách job.",
       "no_jobs": "Chưa có job xử lý nào cho khoá học này.",
@@ -1118,7 +1198,9 @@
       },
       "toasts": {
         "restored": "Đã khôi phục khoá học",
-        "restore_failed": "Không thể khôi phục"
+        "restore_failed": "Không thể khôi phục",
+        "deleted": "Đã xoá khoá học",
+        "delete_failed": "Không thể xoá"
       }
     },
     "processing_job": {
@@ -1204,7 +1286,35 @@
       "users_load_failed": "Không thể tải bảng người dùng.",
       "pipelines_load_failed": "Không thể tải bảng pipeline.",
       "recent_load_failed": "Không thể tải danh sách lượt gọi.",
+      "category_load_failed": "Không thể tải phân tích theo nhóm.",
+      "model_load_failed": "Không thể tải bảng hiệu quả mô hình.",
+      "export_csv": "Xuất CSV",
       "period_aria": "Khoảng thời gian",
+      "dimension_aria": "Nhóm chi phí theo",
+      "dimension_options": {
+        "operation": "Loại thao tác",
+        "role": "Vai trò",
+        "tier": "Bậc",
+        "stage_name": "Bước",
+        "model_name": "Mô hình",
+        "status": "Trạng thái"
+      },
+      "filters": {
+        "model": "Mô hình",
+        "role": "Vai trò",
+        "operation": "Loại thao tác",
+        "status": "Trạng thái",
+        "model_placeholder": "vd: gpt-4o",
+        "role_placeholder": "vd: generator_main",
+        "any": "Tất cả",
+        "clear": "Xoá bộ lọc"
+      },
+      "drilldown": {
+        "title": "Chi tiết pipeline",
+        "stages": "Phân tích theo bước",
+        "no_stages": "Không có dữ liệu bước cho pipeline này.",
+        "close": "Đóng"
+      },
       "period_options": {
         "24h": "24 giờ qua",
         "7d": "7 ngày qua",
@@ -1219,12 +1329,16 @@
         "total_cost": "Tổng chi phí",
         "total_tokens": "Tổng tokens",
         "call_count": "Số lượt gọi",
-        "period": "Khoảng thời gian"
+        "period": "Khoảng thời gian",
+        "failed_spend": "Chi phí lượt gọi lỗi",
+        "failed_spend_hint": "{{count}} lượt gọi lỗi"
       },
       "sections": {
         "trend": "Xu hướng chi phí",
         "by_role": "Chi phí theo vai trò",
         "by_stage": "Chi phí theo bước xử lý",
+        "by_category": "Chi phí theo nhóm",
+        "by_model": "Hiệu quả mô hình",
         "top_users": "Người dùng tốn chi phí cao nhất",
         "top_pipelines": "Pipeline tốn chi phí cao nhất",
         "recent_calls": "Lượt gọi AI",
@@ -1234,6 +1348,8 @@
         "trend": "Chưa có dữ liệu chi phí trong khoảng thời gian này.",
         "by_role": "Chưa có dữ liệu chi phí theo vai trò.",
         "by_stage": "Chưa có dữ liệu chi phí theo bước.",
+        "by_category": "Chưa có dữ liệu chi phí cho cách nhóm này.",
+        "by_model": "Chưa có mô hình nào được dùng trong khoảng thời gian này.",
         "users": "Chưa có người dùng nào phát sinh chi phí.",
         "pipelines": "Chưa có pipeline nào trong khoảng thời gian này.",
         "recent": "Chưa có lượt gọi AI nào gần đây.",
@@ -1261,14 +1377,14 @@
         "delete_success": "Đã xoá giá.",
         "fields": {
           "model_name": "Tên mô hình",
-          "input_rate": "Giá input $ / 1K tokens",
-          "output_rate": "Giá output $ / 1K tokens",
+          "input_rate": "Giá input $ / 1M tokens",
+          "output_rate": "Giá output $ / 1M tokens",
           "notes": "Ghi chú (tùy chọn)"
         },
         "cols": {
           "model": "Mô hình",
-          "input_rate": "Input / 1K",
-          "output_rate": "Output / 1K",
+          "input_rate": "Input / 1M",
+          "output_rate": "Output / 1M",
           "updated": "Cập nhật",
           "actions": "Hành động"
         }
@@ -1286,7 +1402,16 @@
         "stage": "Bước",
         "latency": "Độ trễ",
         "tokens_short": "Tokens",
-        "cost_short": "Chi phí"
+        "cost_short": "Chi phí",
+        "status": "Trạng thái",
+        "category": "Nhóm",
+        "input_tokens": "Input",
+        "output_tokens": "Output",
+        "cached_tokens": "Cache",
+        "usd_per_1m": "$ / 1M tok",
+        "latency_p50": "p50",
+        "latency_p95": "p95",
+        "actions": "Hành động"
       }
     },
     "users": {
@@ -1483,6 +1608,10 @@
     "teacher": "Giảng viên",
     "admin": "Quản trị"
   },
+  "sidebar": {
+    "collapse": "Thu gọn",
+    "expand": "Mở rộng"
+  },
   "teacher_interview_gap_report": {
     "transcript": {
       "title": "Bản ghi phỏng vấn",
@@ -1501,7 +1630,8 @@
       "no_report": "Chưa có báo cáo lỗ hổng",
       "no_overview": "AI chưa sinh phần tổng quan.",
       "no_detail": "Không có dữ liệu chi tiết theo tiêu chí.",
-      "no_study_plan": "AI chưa đề xuất bước học cụ thể."
+      "no_study_plan": "AI chưa đề xuất bước học cụ thể.",
+      "no_source_quiz": "Buổi phỏng vấn này không đi kèm với một lượt làm quiz, nên không có quiz nguồn để đối chiếu."
     },
     "errors": {
       "no_view_permission_or_ungraded": "Phiên phỏng vấn này chưa được chấm hoặc bạn không có quyền xem báo cáo."
@@ -1513,6 +1643,32 @@
       "by_criterion": "Phân tích theo tiêu chí",
       "study_plan": "Kế hoạch học tập",
       "sources": "Liên kết nguồn"
+    },
+    "tabs": {
+      "overview": "Tổng quan",
+      "analysis": "Phân tích",
+      "transcript": "Bản ghi",
+      "integrity": "Liêm chính",
+      "sources": "Nguồn"
+    },
+    "integrity": {
+      "clean_title": "Không có cảnh báo liêm chính",
+      "clean_body": "Không ghi nhận việc mất tiêu điểm, chuyển tab hay thoát toàn màn hình trong buổi phỏng vấn này.",
+      "flagged_title": "Đã ghi nhận tín hiệu liêm chính",
+      "summary": "{{tab}} lần chuyển tab, {{focus}} lần mất tiêu điểm, {{fullscreen}} lần thoát toàn màn hình trong phiên này.",
+      "event": {
+        "tab_switch": "Đã chuyển khỏi tab phỏng vấn",
+        "focus_lost": "Cửa sổ phỏng vấn mất tiêu điểm",
+        "fullscreen_exit": "Đã thoát toàn màn hình",
+        "reconnect": "Đã kết nối lại",
+        "disconnect": "Đã ngắt kết nối",
+        "warning_issued": "Đã phát cảnh báo"
+      },
+      "severity": {
+        "info": "Thông tin",
+        "warning": "Cảnh báo",
+        "critical": "Nghiêm trọng"
+      }
     },
     "labels": {
       "session_id": "Phiên #{{id}}",
@@ -1706,11 +1862,22 @@
     },
     "instructions": {
       "choose_best": "Chọn đáp án phù hợp nhất; có thể đánh dấu để xem lại sau."
+    },
+    "overview": {
+      "eyebrow": "Bài kiểm tra",
+      "questions": "Câu hỏi",
+      "passed_banner_title": "Bạn đã vượt qua bài kiểm tra này",
+      "passed_banner_best": "Điểm cao nhất {{score}}%",
+      "best_label": "Cao nhất {{score}}%"
     }
   },
   "course_interview": {
+    "integrity_warning": {
+      "title": "Bạn đã rời khỏi cửa sổ phỏng vấn",
+      "body": "Hành vi này được ghi lại để giáo viên xem lại. Vui lòng ở lại tab này cho đến khi kết thúc phỏng vấn."
+    },
     "hybrid": {
-      "prestart_hint": "Phỏng vấn kết hợp — bạn có thể gõ hoặc nói câu trả lời, và kết hợp cả hai ở bất kỳ câu hỏi nào.",
+      "prestart_hint": "Phỏng vấn kết hợp — bạn có thể gõ hoặc nói câu trả lời",
       "speak_answer": "Nói câu trả lời",
       "listening": "Đang nghe… chạm để dừng",
       "dictation_hint": "Giọng nói của bạn được chuyển thành văn bản trong ô trả lời — hãy chỉnh sửa trước khi gửi.",
@@ -1725,6 +1892,7 @@
     "workspace": {
       "in_progress": "Đang phỏng vấn",
       "elapsed_time": "Thời gian phỏng vấn đã trôi qua",
+      "time_on_question": "Thời gian cho câu hỏi này",
       "ai_interviewer": "Người phỏng vấn AI",
       "you": "Bạn",
       "replay_message": "Phát lại tin nhắn AI này",
@@ -1812,9 +1980,11 @@
         "error": "Đã xảy ra lỗi. Câu trả lời của bạn vẫn được giữ lại.",
         "disconnected": "Kết nối bị gián đoạn",
         "ready": "Sẵn sàng gửi"
-      }
+      },
+      "listening_silent_hint": "Chưa nghe thấy bạn — hãy kiểm tra micro đã bật tiếng và nói to hơn một chút."
     },
     "submission": {
+      "submitting_title": "Đang gửi câu trả lời…",
       "submitted_title": "Đã gửi câu trả lời",
       "previous_submitted": "Đã gửi câu trả lời trước đó",
       "analyzing": "Đang phân tích câu trả lời…",
@@ -1874,7 +2044,8 @@
       "microphone": "Micro",
       "mic_connected": "Đã kết nối",
       "mic_unavailable": "Không phát hiện",
-      "language": "Ngôn ngữ phỏng vấn"
+      "language": "Ngôn ngữ phỏng vấn",
+      "eyebrow": "Chuẩn bị phỏng vấn AI"
     },
     "recovery": {
       "connection_lost_title": "Mất kết nối",
@@ -1928,12 +2099,15 @@
       "gap_report_pending": "Đang chuẩn bị báo cáo lỗ hổng cá nhân hóa… có thể mất một phút.",
       "study_plan": "Kế hoạch học tập",
       "follow_up": "Tiếp theo",
-      "wrap_up": "Kết thúc"
+      "wrap_up": "Kết thúc",
+      "your_path_forward": "Lộ trình phía trước",
+      "keep_growing": "Tiếp tục phát triển"
     },
     "labels": {
       "persona": "Phong cách",
       "time": "Thời gian",
       "max_attempts": "Lượt tối đa",
+      "ai_voice": "Giọng AI",
       "ai_interview": "Phỏng vấn AI",
       "answer": "Câu trả lời của bạn",
       "character_count": "{{count}} ký tự"
@@ -1953,14 +2127,24 @@
       },
       "time_limit_minutes": "{{minutes}} phút",
       "no_limit": "Không giới hạn",
+      "ai_voice_default": "Mặc định",
       "mode": {
         "voice": "Giọng nói",
         "text": "Văn bản"
       }
     },
+    "attempts": {
+      "history_title": "Lượt làm của bạn",
+      "attempt_n": "Lượt {{n}}",
+      "passed": "Đạt",
+      "not_passed": "Chưa đạt",
+      "in_review": "Đang chấm",
+      "none": "Chưa có lượt nào — đây sẽ là lượt đầu tiên của bạn."
+    },
     "actions": {
       "starting": "Đang khởi tạo...",
       "start": "Bắt đầu phỏng vấn",
+      "start_voice": "Bắt đầu phỏng vấn bằng giọng nói",
       "course": "Khoá học",
       "next": "Tiếp theo",
       "finish_early": "Kết thúc sớm",
@@ -1991,7 +2175,15 @@
       "evaluation_failed": "Chấm điểm gặp lỗi",
       "evaluation_failed_summary": "Hệ thống AI gặp lỗi khi chấm bài phỏng vấn của bạn và không thể trả kết quả sau nhiều lần thử. Điều này không phản ánh chất lượng câu trả lời của bạn — vui lòng liên hệ giáo viên hoặc thử lại phỏng vấn sau.",
       "abandoned": "Buổi phỏng vấn đã kết thúc",
-      "abandoned_summary": "Buổi phỏng vấn kết thúc trước khi bạn gửi câu trả lời, vì vậy lần thử này không có kết quả đánh giá."
+      "abandoned_summary": "Buổi phỏng vấn kết thúc trước khi bạn gửi câu trả lời, vì vậy lần thử này không có kết quả đánh giá.",
+      "next": {
+        "back_to_lesson": "Tiếp tục vào bài học",
+        "retry": "Thử lại",
+        "attempts_left": "Còn {{count}} lần thử",
+        "attempts_left_plural": "Còn {{count}} lần thử",
+        "cooldown": "Bạn có thể thử lại sau {{when}}",
+        "no_attempts": "Bạn đã dùng hết số lần thử cho bài phỏng vấn này. Hãy xem lại kế hoạch học tập bên dưới và liên hệ giảng viên nếu cần thêm lượt thử."
+      }
     },
     "intro": {
       "description": "Phỏng vấn AI chấm điểm theo các tiêu chí của module. Trả lời từng câu một và xem phản hồi cuối phiên."
@@ -2001,6 +2193,13 @@
     },
     "status": {
       "compiling_results": "Đang tổng hợp kết quả phỏng vấn..."
+    },
+    "criteria": {
+      "assessed_on": "Đánh giá trên {{count}} tiêu chí",
+      "assessed_on_plural": "Đánh giá trên {{count}} tiêu chí"
+    },
+    "voice": {
+      "dropped_fallback_text": "Mất kết nối thoại — đang tiếp tục bằng văn bản. Tiến trình của bạn đã được lưu."
     }
   },
   "management_career_path_detail": {
@@ -2551,6 +2750,55 @@
       "neutral": "Trung lập",
       "supportive": "Hỗ trợ"
     },
+    "voice": {
+      "aura-2-thalia-en": "Thalia (Nữ, rõ ràng)",
+      "aura-2-andromeda-en": "Andromeda (Nữ, ấm áp)",
+      "aura-2-helena-en": "Helena (Nữ, nhẹ nhàng)",
+      "aura-2-apollo-en": "Apollo (Nam, tự tin)",
+      "aura-2-arcas-en": "Arcas (Nam, tự nhiên)",
+      "aura-2-aries-en": "Aries (Nam, sôi nổi)",
+      "aura-2-asteria-en": "Asteria (Nữ, thân thiện)",
+      "aura-2-athena-en": "Athena (Nữ, điềm tĩnh)",
+      "aura-2-hera-en": "Hera (Nữ, chững chạc)",
+      "aura-2-hyperion-en": "Hyperion (Nam, trầm)",
+      "aura-2-luna-en": "Luna (Nữ, trẻ trung)",
+      "aura-2-orion-en": "Orion (Nam, dễ gần)",
+      "aura-2-orpheus-en": "Orpheus (Nam, biểu cảm)",
+      "aura-2-ophelia-en": "Ophelia (Nữ, chuyên nghiệp)",
+      "aura-2-zeus-en": "Zeus (Nam, uy quyền)",
+      "aura-2-vesta-en": "Vesta (Nữ, ổn định)"
+    },
+    "voice_guide": {
+      "open": "Xem hướng dẫn giọng & phong cách",
+      "title": "Hướng dẫn giọng đọc & phong cách AI",
+      "subtitle": "Mô tả cách hành xử của từng phong cách và âm sắc của từng giọng tiếng Anh. Phong cách quyết định thái độ; giọng quyết định âm thanh khi đọc (chỉ áp dụng phiên tiếng Anh).",
+      "persona_heading": "Phong cách (thái độ & hành vi)",
+      "persona_desc": {
+        "strict": "Nghiêm khắc, trang trọng. Truy vấn câu trả lời chính xác, ít động viên — hợp cho đánh giá khắt khe, quan trọng.",
+        "neutral": "Cân bằng, chuyên nghiệp. Đặt câu hỏi đều tay, không nóng không lạnh — lựa chọn mặc định an toàn.",
+        "supportive": "Ấm áp, khích lệ. Gợi mở nhẹ nhàng và trấn an — hợp cho người học giai đoạn đầu hoặc ít áp lực."
+      },
+      "voice_heading": "Giọng đọc (chỉ tiếng Anh)",
+      "voice_note": "Phiên tiếng Việt dùng giọng trình duyệt, nên lựa chọn này chỉ ảnh hưởng phỏng vấn tiếng Anh.",
+      "voice_desc": {
+        "aura-2-thalia-en": "Nữ, rõ và sắc. Giọng Mỹ trung tính, dễ nghe.",
+        "aura-2-andromeda-en": "Nữ, ấm và tròn. Thân thiện, thong thả.",
+        "aura-2-helena-en": "Nữ, nhẹ và dịu. Âm sắc êm, ít áp lực.",
+        "aura-2-apollo-en": "Nam, tự tin và rõ ràng. Quả quyết nhưng không gắt.",
+        "aura-2-arcas-en": "Nam, tự nhiên như trò chuyện. Giọng đời thường thoải mái.",
+        "aura-2-aries-en": "Nam, sôi nổi và tươi. Nhịp đọc nhanh, hoạt bát.",
+        "aura-2-asteria-en": "Nữ, thân thiện và sáng. Dễ gần, niềm nở.",
+        "aura-2-athena-en": "Nữ, điềm tĩnh và chừng mực. Nhịp đọc ổn định, bình thản.",
+        "aura-2-hera-en": "Nữ, chững chạc và tự tin. Uy tín mà vẫn ấm.",
+        "aura-2-hyperion-en": "Nam, trầm và vang. Âm sắc nghiêm, nặng.",
+        "aura-2-luna-en": "Nữ, trẻ trung và nhẹ. Cảm giác tươi mới, thoải mái.",
+        "aura-2-orion-en": "Nam, dễ gần và đều. Giọng nam trung tính, mặc định dễ chịu.",
+        "aura-2-orpheus-en": "Nam, biểu cảm và linh hoạt. Nhiều ngữ điệu và nhấn nhá.",
+        "aura-2-ophelia-en": "Nữ, chuyên nghiệp và chỉn chu. Rõ ràng, chuẩn công việc (mặc định hiện tại).",
+        "aura-2-zeus-en": "Nam, uy quyền và mạnh mẽ. Hiện diện trang trọng, chắc chắn.",
+        "aura-2-vesta-en": "Nữ, ổn định và đáng tin. Đọc đều, không màu mè."
+      }
+    },
     "status": {
       "draft": "Bản nháp",
       "published": "Đã xuất bản",
@@ -2710,6 +2958,12 @@
       "duration_placeholder": "vd. 30",
       "attempts_label": "Số lần thử",
       "attempts_placeholder": "vd. 3",
+      "cooldown_label": "Thời gian chờ (giờ)",
+      "cooldown_hint": "Thời gian chờ tối thiểu giữa các lần thi; để trống = không chờ",
+      "cooldown_placeholder": "vd. 24",
+      "voice_label": "Giọng AI (tiếng Anh)",
+      "voice_hint": "Giọng Deepgram cho phiên tiếng Anh; tiếng Việt dùng giọng trình duyệt",
+      "voice_default": "Giọng mặc định",
       "criteria_label": "Số tiêu chí cần đạt",
       "criteria_hint": "Số rubric outcome tối thiểu để vượt qua",
       "criteria_placeholder": "vd. 2",
@@ -3002,7 +3256,89 @@
       "phase_done": "Đã sinh xong tất cả câu hỏi",
       "success_body": "Câu hỏi mới đã được thêm vào bộ nháp. Đóng cửa sổ để xem.",
       "processing": "Đang xử lý…",
-      "start_button": "Bắt đầu sinh"
+      "start_button": "Bắt đầu sinh",
+      "outcomes_label": "Chuẩn đầu ra mục tiêu (tùy chọn)",
+      "outcomes_hint": "Chọn những chuẩn đầu ra rubric mà lượt tạo này nên tập trung. Bỏ trống tất cả để bao quát mọi chuẩn đầu ra.",
+      "outcomes_empty": "Chưa có chuẩn đầu ra nào cho bài phỏng vấn này. Thêm ở tab Chuẩn đầu ra — việc tạo sẽ bao quát tất cả.",
+      "outcomes_select_all": "Chọn tất cả",
+      "outcomes_clear": "Bỏ chọn",
+      "outcomes_badge": "CĐR {{n}}"
+    }
+  },
+  "teacher_lesson_manage": {
+    "ai_optin": {
+      "label": "Dùng cho AI",
+      "hint": "Đồng thời thêm tài liệu vào AI Hub cho trắc nghiệm, tìm kiếm và đồ thị tri thức. Tắt với video, tệp nén và hình ảnh."
+    },
+    "ai_badge": {
+      "off": "Không dùng AI",
+      "processing": "AI: đang xử lý",
+      "ready": "AI: sẵn sàng",
+      "failed": "AI: thất bại"
+    },
+    "video": {
+      "empty": "Kéo thả video vào đây, hoặc nhấp để chọn"
+    },
+    "resource_ai": {
+      "show": "Hiện cho học viên (bật xem trước trực tiếp trên trang của họ)",
+      "hide": "Ẩn khỏi học viên",
+      "not_ready": "Đang xử lý — chưa thể hiện cho học viên đến khi sẵn sàng",
+      "now_visible": "Đã hiện cho học viên.",
+      "now_hidden": "Đã ẩn khỏi học viên.",
+      "retry": "Thử xử lý lại",
+      "retry_started": "Đã bắt đầu xử lý lại.",
+      "show_all": "Hiện tất cả cho học viên ({{count}})",
+      "show_all_done": "{{count}} tài liệu đã hiện cho học viên.",
+      "show_all_partial": "Đã hiện {{succeeded}}, {{failed}} thất bại — thử lại."
+    },
+    "sections": {
+      "reading_content": "Nội dung bài đọc",
+      "reading_content_hint": "Viết bằng Markdown hoặc văn bản thuần túy",
+      "read_stats": "~{{words}} từ · {{minutes}} phút đọc",
+      "downloadable_resources": "Tài nguyên tải xuống",
+      "material_history": "Lịch sử tài liệu",
+      "knowledge_graph": "Đồ thị tri thức"
+    },
+    "editor": {
+      "label": "Trình soạn thảo Markdown",
+      "hint": "Văn bản thuần hoặc Markdown"
+    },
+    "actions": {
+      "archive": "Lưu trữ",
+      "archive_confirm": "Xác nhận lưu trữ?",
+      "archive_title": "Lưu trữ bài học",
+      "delete": "Xóa",
+      "delete_confirm": "Xác nhận xóa?",
+      "delete_title": "Xóa bài học",
+      "published": "Đã xuất bản",
+      "draft": "Bản nháp",
+      "publish_title": "Xuất bản bài học",
+      "unpublish_title": "Hủy xuất bản (chuyển về nháp)"
+    },
+    "settings": {
+      "title": "Cài đặt bài học",
+      "subtitle": "Thời lượng và độ khó hiển thị cho học viên.",
+      "duration_label": "Thời lượng ước tính (phút)",
+      "duration_placeholder": "vd: 24",
+      "difficulty_label": "Mức độ khó",
+      "difficulty_beginner": "Cơ bản",
+      "difficulty_intermediate": "Trung cấp",
+      "difficulty_advanced": "Nâng cao"
+    },
+    "prerequisites": {
+      "title": "Điều kiện tiên quyết",
+      "subtitle": "Các bài học học viên nên hoàn thành trước.",
+      "empty": "Chưa thêm điều kiện tiên quyết nào."
+    },
+    "toasts": {
+      "download_failed": "Tải xuống thất bại",
+      "save_failed": "Lưu thất bại",
+      "lesson_archived": "Đã lưu trữ bài học",
+      "archive_failed": "Lưu trữ thất bại",
+      "lesson_deleted": "Đã xóa bài học",
+      "delete_failed": "Xóa thất bại",
+      "attach_failed": "Đính kèm thất bại",
+      "attach_sync_failed": "Đã đính kèm tài nguyên, nhưng không thể đồng bộ với AI"
     }
   },
   "teacher_lesson_materials": {
@@ -3128,6 +3464,13 @@
     },
     "confirm_delete": {
       "inline": "Xoá tài liệu này?"
+    },
+    "recently_deleted": {
+      "title": "Đã xoá gần đây",
+      "hint": "Tài liệu đã xoá được giữ trong 30 ngày. Khôi phục để lấy lại chỉ mục AI đã xử lý (trắc nghiệm, tìm kiếm, đồ thị tri thức) — không cần xử lý lại.",
+      "restore": "Khôi phục",
+      "restored": "Đã khôi phục tài liệu.",
+      "restore_failed": "Không thể khôi phục tài liệu"
     }
   },
   "cooldown": {
@@ -3198,5 +3541,83 @@
     "analytics": "Phân tích",
     "management": "Quản lý",
     "system": "Hệ thống"
+  },
+  "teacher_course_new": {
+    "title": "Khóa học mới",
+    "section_basics": "Thông tin cơ bản",
+    "section_details": "Chi tiết",
+    "field_title": "Tiêu đề",
+    "title_placeholder": "vd. Nhập môn Thuật toán",
+    "field_slug": "Slug",
+    "slug_hint": "URL khóa học: …/courses/{{slug}}",
+    "slug_available": "Slug này khả dụng",
+    "slug_taken": "Slug này đã được sử dụng",
+    "slug_reset": "Đặt lại tự động",
+    "field_description": "Mô tả",
+    "description_placeholder": "Mô tả ngắn giúp học viên lựa chọn. Họ sẽ học được gì?",
+    "field_level": "Cấp độ",
+    "field_duration": "Thời lượng ước tính",
+    "minutes_suffix": "phút",
+    "create": "Tạo khóa học",
+    "creating": "Đang tạo…",
+    "created": "Đã tạo khóa học",
+    "create_failed": "Không thể tạo khóa học",
+    "preview_label": "Xem trước",
+    "preview_title_placeholder": "Tiêu đề khóa học của bạn",
+    "preview_desc_placeholder": "Mô tả khóa học sẽ hiển thị ở đây."
+  },
+  "discussion": {
+    "title": "Thảo luận",
+    "unknown_author": "Không rõ",
+    "comment_count_one": "{{count}} bình luận",
+    "comment_count_other": "{{count}} bình luận",
+    "comment_placeholder": "Viết bình luận…",
+    "topic_title_placeholder": "Tiêu đề chủ đề (ví dụ: một câu hỏi mở)",
+    "topic_body_placeholder": "Thêm bối cảnh hoặc (các) câu hỏi để thảo luận (không bắt buộc, hỗ trợ Markdown)",
+    "new_topic_title": "Chủ đề thảo luận mới",
+    "topic_posted": "Đã đăng chủ đề",
+    "no_comments": "Chưa có bình luận nào — hãy là người trả lời đầu tiên.",
+    "closed_no_comments": "Chủ đề này đã đóng, không nhận bình luận mới.",
+    "load_failed": "Không tải được phần thảo luận. Vui lòng thử lại.",
+    "empty_title": "Chưa có chủ đề thảo luận nào",
+    "empty_teacher": "Đăng một chủ đề để bắt đầu thảo luận với học viên của bạn.",
+    "empty_student": "Giảng viên chưa đăng chủ đề nào. Hãy quay lại sau.",
+    "status": {
+      "closed": "Đã đóng"
+    },
+    "actions": {
+      "new_topic": "Chủ đề mới",
+      "post_topic": "Đăng chủ đề",
+      "post_comment": "Đăng bình luận",
+      "delete_comment": "Xóa bình luận",
+      "delete_topic": "Xóa",
+      "close": "Đóng",
+      "reopen": "Mở lại",
+      "cancel": "Hủy"
+    },
+    "errors": {
+      "post_topic": "Không đăng được chủ đề. Vui lòng thử lại.",
+      "update_topic": "Không cập nhật được chủ đề. Vui lòng thử lại.",
+      "delete_topic": "Không xóa được chủ đề. Vui lòng thử lại.",
+      "post_comment": "Không đăng được bình luận. Vui lòng thử lại.",
+      "delete_comment": "Không xóa được bình luận. Vui lòng thử lại."
+    }
+  },
+  "teacher_quiz_new": {
+    "modal_title": "Bài kiểm tra mới",
+    "modal_description": "Đặt tên ngay bây giờ — bạn sẽ thiết lập câu hỏi, điểm đạt, giới hạn thời gian và tạo câu hỏi ở màn hình tiếp theo.",
+    "fields": {
+      "title": "Tên bài kiểm tra",
+      "title_placeholder": "ví dụ: Kiểm tra kiến thức Chương 3"
+    },
+    "submit": "Tạo bài kiểm tra",
+    "submitting": "Đang tạo…",
+    "errors": {
+      "title_required": "Vui lòng nhập tên bài kiểm tra",
+      "create_failed": "Không thể tạo bài kiểm tra"
+    },
+    "success": {
+      "created": "Đã tạo bài kiểm tra"
+    }
   }
 }

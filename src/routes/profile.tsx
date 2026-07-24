@@ -11,7 +11,7 @@ import {
   Pencil,
   ShieldCheck,
 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMe } from "@/lib/api/hooks/auth";
@@ -155,6 +155,9 @@ export default function ProfilePage() {
         ) : (
           <div className="flex flex-wrap items-start gap-4">
             <Avatar size="lg" className="h-16 w-16">
+              {me.profile?.avatar_url && (
+                <AvatarImage src={me.profile.avatar_url} alt="" />
+              )}
               <AvatarFallback className="bg-primary text-base font-bold text-white">
                 {initials}
               </AvatarFallback>

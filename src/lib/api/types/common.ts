@@ -15,9 +15,16 @@ export interface Course {
   status: "draft" | "published" | "archived";
   level: string | null;
   thumbnail_object_id: string | null;
+  // Short-TTL presigned GET URL for the course thumbnail, minted server-side.
+  // Null when no thumbnail is set — the UI falls back to the gradient banner.
+  thumbnail_url?: string | null;
   estimated_minutes: number | null;
   expected_completion_days: number | null;
   enrollment_cap: number | null;
+  // Course-health projections from the teacher authoring list (default 0).
+  // Active enrollments and non-deleted module count — shown on the card.
+  student_count?: number;
+  module_count?: number;
   created_at: string;
   updated_at: string;
 }

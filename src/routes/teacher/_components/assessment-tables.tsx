@@ -65,6 +65,8 @@ export interface QuizAttemptsTableProps {
   showQuizColumn?: boolean;
   /** Omit the student column (e.g. when already scoped to one student). */
   showStudentColumn?: boolean;
+  /** Empty-state copy — lets the caller distinguish first-run vs no-match. */
+  emptyState?: string;
   onRowClick?: (attempt: QuizAttemptTeacherRead) => void;
 }
 
@@ -73,6 +75,7 @@ export function QuizAttemptsTable({
   loading = false,
   showQuizColumn = true,
   showStudentColumn = false,
+  emptyState = "No quiz attempts yet.",
   onRowClick,
 }: QuizAttemptsTableProps) {
   const columns: DataTableColumn<QuizAttemptTeacherRead>[] = [
@@ -146,7 +149,7 @@ export function QuizAttemptsTable({
       onRowClick={onRowClick}
       pagination={attempts.length > 10}
       pageSize={10}
-      emptyState="No quiz attempts yet."
+      emptyState={emptyState}
     />
   );
 }
@@ -208,6 +211,8 @@ export interface InterviewSessionsTableProps {
   loading?: boolean;
   showConfigColumn?: boolean;
   showStudentColumn?: boolean;
+  /** Empty-state copy — lets the caller distinguish first-run vs no-match. */
+  emptyState?: string;
   onRowClick?: (session: InterviewSessionTeacherRead) => void;
 }
 
@@ -216,6 +221,7 @@ export function InterviewSessionsTable({
   loading = false,
   showConfigColumn = true,
   showStudentColumn = false,
+  emptyState = "No interview attempts yet.",
   onRowClick,
 }: InterviewSessionsTableProps) {
   const columns: DataTableColumn<InterviewSessionTeacherRead>[] = [
@@ -286,7 +292,7 @@ export function InterviewSessionsTable({
       onRowClick={onRowClick}
       pagination={sessions.length > 10}
       pageSize={10}
-      emptyState="No interview attempts yet."
+      emptyState={emptyState}
     />
   );
 }

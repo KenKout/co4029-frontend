@@ -16,7 +16,13 @@ export interface UseInterviewNarration {
   cancel: () => void;
 }
 
-const SERVER_NARRATION_TIMEOUT_MS = 6_000;
+// Deepgram Aura synthesis of long utterances (e.g. the multi-sentence
+// onboarding greeting) can take 12-13s server-side — measured 200-OK responses
+// at latency_ms ~13000. A 6s client timeout gave up before that audio arrived
+// and fell back to the browser voice, so long turns spoke in a DIFFERENT voice
+// than short ones. Raise the cap above the observed worst case so every turn
+// uses the same server (Deepgram) voice; short turns still return in ~2-4s.
+const SERVER_NARRATION_TIMEOUT_MS = 20_000;
 const AUDIO_READY_TIMEOUT_MS = 1_500;
 const AUDIO_OUTPUT_WARMUP_MS = 400;
 // Keep the warm-up loop running well into the real audio so the physical
@@ -139,8 +145,18 @@ export function useInterviewNarration(params: {
   sessionId: string | null;
   persona: SpeechPersona;
   lang: string;
+  /**
+   * When false, skip the server ``/narration`` call entirely and go straight
+   * to the browser's local speech synthesizer. Used for Vietnamese sessions:
+   * Deepgram Aura TTS is English-only and the OpenAI-compatible gateway serves
+   * no TTS model on this deployment, so the server would always 503 for VI —
+   * calling it just spams the console with failed requests before the same
+   * browser-voice fallback kicks in. Gated by the SESSION language (not the UI
+   * locale) so an English session viewed with a VI UI still uses server TTS.
+   */
+  serverNarrationEnabled?: boolean;
 }): UseInterviewNarration {
-  const { sessionId, persona, lang } = params;
+  const { sessionId, persona, lang, serverNarrationEnabled = true } = params;
   const browser = useSpeechSynthesis();
   const browserSpeak = browser.speak;
   const browserCancel = browser.cancel;
@@ -320,7 +336,10 @@ export function useInterviewNarration(params: {
       };
 
       void (async () => {
-        if (!sessionId) {
+        if (!sessionId || !serverNarrationEnabled) {
+          // No session yet, or server TTS is known-unavailable for this
+          // session's language (e.g. Vietnamese) — skip the server call that
+          // would only 503, and narrate with the browser voice directly.
           browserFallback();
           return;
         }
@@ -478,6 +497,7 @@ export function useInterviewNarration(params: {
       sessionId,
       persona,
       lang,
+      serverNarrationEnabled,
       browserSpeak,
       cancel,
       releaseUrl,

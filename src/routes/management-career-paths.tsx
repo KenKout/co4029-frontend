@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/ui/page-header";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import {
   useCreateCareerPath,
@@ -264,29 +265,21 @@ export default function ManagementCareerPathsPage() {
 
   return (
     <div className="max-w-4xl mx-auto pb-16 space-y-6">
-      <div className="flex items-center gap-3 pt-2">
-        <Link to="/dashboard">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <ArrowLeft className="h-4 w-4" />
+      <PageHeader
+        title={t("management_career_paths.title")}
+        subtitle={t("management_career_paths.subtitle")}
+        backTo="/dashboard"
+        action={
+          <Button
+            size="sm"
+            onClick={() => setCreating(true)}
+            className="gap-2 shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            {t("management_career_paths.create_button")}
           </Button>
-        </Link>
-        <div className="flex-1 min-w-0">
-          <h1 className="font-headline font-black text-2xl sm:text-3xl text-m3-on-surface tracking-tight">
-            {t("management_career_paths.title")}
-          </h1>
-          <p className="text-xs text-m3-on-surface-variant mt-0.5">
-            {t("management_career_paths.subtitle")}
-          </p>
-        </div>
-        <Button
-          size="sm"
-          onClick={() => setCreating(true)}
-          className="gap-2 shrink-0"
-        >
-          <Plus className="h-4 w-4" />
-          {t("management_career_paths.create_button")}
-        </Button>
-      </div>
+        }
+      />
 
       <label className="inline-flex items-center gap-2 text-sm cursor-pointer select-none">
         <input

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiDelete, apiFetch, apiPatch, apiPost, apiPut } from "../client";
+import { authenticatedFetch } from "../../auth";
 import { queryKeys } from "../query-keys";
 import type {
   CourseAuthoring,
@@ -33,6 +34,23 @@ export function useTeacherCourses() {
     queryKey: ["teacher", "courses"],
     queryFn: () => apiFetch<Course[]>("/teacher/courses"),
     staleTime: 1000 * 60 * 2,
+  });
+}
+
+export interface TeacherDashboardStats {
+  draft_courses: number;
+  ungraded_quizzes: number;
+  pending_interviews: number;
+}
+
+// Actionable counts for the teacher dashboard's clickable widgets. Scoped
+// server-side to the caller's authorable courses.
+export function useTeacherDashboardStats() {
+  return useQuery({
+    queryKey: ["teacher", "dashboard", "stats"],
+    queryFn: () =>
+      apiFetch<TeacherDashboardStats>("/teacher/dashboard/stats"),
+    staleTime: 1000 * 60,
   });
 }
 
@@ -127,6 +145,21 @@ export async function fetchTeacherResourceDownloadUrl(
   return data.stream_url;
 }
 
+// Pre-flight slug availability check for the new-course form. Enabled only
+// when a non-empty slug is supplied; the caller debounces the slug value.
+export function useSlugAvailability(slug: string) {
+  return useQuery({
+    queryKey: ["teacher", "courses", "check-slug", slug],
+    queryFn: () =>
+      apiFetch<{ available: boolean }>(
+        `/teacher/courses/check-slug?slug=${encodeURIComponent(slug)}`,
+      ),
+    enabled: slug.trim().length > 0,
+    staleTime: 1000 * 30,
+    retry: false,
+  });
+}
+
 export function useCreateCourse() {
   const qc = useQueryClient();
   return useMutation({
@@ -156,6 +189,49 @@ export function useUpdateCourse(courseId: string) {
   });
 }
 
+// Uploads the raw image bytes as the PUT body with the file's MIME type in the
+// Content-Type header (the backend reads request.body(), no multipart wrapper).
+export function useUploadCourseThumbnail(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File): Promise<CourseAuthoring> => {
+      const response = await authenticatedFetch(
+        `/teacher/courses/${courseId}/thumbnail`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": file.type || "application/octet-stream" },
+          body: file,
+        },
+      );
+      if (!response.ok) {
+        let detail = response.statusText;
+        try {
+          const payload: unknown = await response.json();
+          if (
+            payload &&
+            typeof payload === "object" &&
+            "detail" in payload &&
+            typeof (payload as { detail: unknown }).detail === "string"
+          ) {
+            detail = (payload as { detail: string }).detail;
+          }
+        } catch {
+          // keep statusText
+        }
+        throw new Error(detail);
+      }
+      return (await response.json()) as CourseAuthoring;
+    },
+    onSuccess: (course) => {
+      qc.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
+      qc.invalidateQueries({ queryKey: queryKeys.courses.bySlug(course.slug) });
+      qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
+      qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
+      qc.invalidateQueries({ queryKey: ["teacher", "courses", courseId] });
+    },
+  });
+}
+
 export function usePublishCourse(courseId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -164,6 +240,21 @@ export function usePublishCourse(courseId: string) {
     onSuccess: (course) => {
       qc.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.bySlug(course.slug) });
+      qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
+      qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
+      qc.invalidateQueries({ queryKey: ["teacher", "courses", courseId] });
+    },
+  });
+}
+
+// Soft-deletes the course (reversible tombstone on the backend). Returns 204,
+// so there's no response body to parse.
+export function useDeleteTeacherCourse(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiDelete(`/teacher/courses/${courseId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
       qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
       qc.invalidateQueries({ queryKey: ["teacher", "courses", courseId] });
@@ -250,6 +341,28 @@ export function useReorderModuleItems(moduleId: string, courseId: string) {
       qc.invalidateQueries({
         queryKey: queryKeys.courses.moduleItems(moduleId),
       });
+      qc.invalidateQueries({ queryKey: queryKeys.courses.content(courseId) });
+      qc.invalidateQueries({
+        queryKey: ["teacher", "courses", courseId, "content"],
+      });
+    },
+  });
+}
+
+/**
+ * Reorder modules within a course. Sends the FULL ordered list of module ids;
+ * the backend applies the OFFSET two-phase swap to avoid the
+ * uq_modules_course_position unique-constraint collision mid-update.
+ */
+export function useReorderModules(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (newOrder: string[]) =>
+      apiPut<ModuleAuthoring[]>(`/teacher/courses/${courseId}/modules/reorder`, {
+        course_id: courseId,
+        new_order: newOrder,
+      }),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.courses.content(courseId) });
       qc.invalidateQueries({
         queryKey: ["teacher", "courses", courseId, "content"],
@@ -435,10 +548,19 @@ export function useDeleteModuleItem(courseId: string) {
   return useMutation({
     mutationFn: (itemId: string) =>
       apiDelete(`/teacher/module-items/${itemId}`),
-    onSuccess: () =>
+    onSuccess: () => {
       qc.invalidateQueries({
         queryKey: ["teacher", "courses", courseId, "content"],
-      }),
+      });
+      // Also refresh the authoring module-lessons lists (source pickers in the
+      // quiz-generation panel read from these). Invalidate by family prefix
+      // since this hook doesn't carry the moduleId — cheap, and covers whichever
+      // module the deleted item belonged to.
+      qc.invalidateQueries({
+        queryKey: ["courses", "module-lessons-authoring"],
+      });
+      qc.invalidateQueries({ queryKey: ["courses", "module-lessons"] });
+    },
   });
 }
 

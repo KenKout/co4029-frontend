@@ -19,7 +19,6 @@ import type { RealtimeTokenResponse } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { VoiceControls } from "./voice-controls";
 import { VoiceTranscript } from "./voice-transcript";
-import { useIntegrityReporter } from "./use-integrity-reporter";
 import type { ConversationTurn } from "./interview-workspace";
 
 interface VoiceRoomProps {
@@ -28,6 +27,13 @@ interface VoiceRoomProps {
   initialTranscript?: ConversationTurn[];
   onCompleted: (reason: "natural" | "ended_early") => void;
   onTranscriptChange?: (turns: ConversationTurn[]) => void;
+  /**
+   * Called when the LiveKit room drops for a reason OTHER than a natural
+   * agent departure or an explicit end (resilience A-Tier-1 #3): a transient
+   * network / server disconnect that should NOT finalize+grade the session.
+   * The route offers to continue the interview in text instead.
+   */
+  onVoiceDropped?: () => void;
 }
 
 function RoomContent({
@@ -119,6 +125,7 @@ export function VoiceRoom({
   initialTranscript,
   onCompleted,
   onTranscriptChange,
+  onVoiceDropped,
 }: VoiceRoomProps) {
   const [tokenData, setTokenData] = useState<RealtimeTokenResponse | null>(
     null,
@@ -126,8 +133,6 @@ export function VoiceRoom({
   const [isEnding, setIsEnding] = useState(false);
   const [isFetchingToken, setIsFetchingToken] = useState(false);
   const fetchToken = useInterviewRealtimeToken(sessionId);
-
-  useIntegrityReporter(sessionId);
 
   const acquireToken = useCallback(async () => {
     setIsFetchingToken(true);
@@ -150,9 +155,22 @@ export function VoiceRoom({
 
   const handleDisconnected = useCallback(
     (reason?: DisconnectReason) => {
-      if (reason !== DisconnectReason.CLIENT_INITIATED) onCompleted("natural");
+      // A client-initiated disconnect is the user's own End action — handled by
+      // handleEndInterview, nothing to do here.
+      if (reason === DisconnectReason.CLIENT_INITIATED) return;
+      // Natural agent departure (the interview genuinely finished) is signalled
+      // separately by the agentWasPresent effect in RoomContent → onCompleted.
+      // A SERVER_SHUTDOWN / DUPLICATE_IDENTITY / other transient drop is a
+      // FAILURE, not completion — don't finalize+grade the session. Offer the
+      // text fallback when a handler is wired; otherwise fall back to the prior
+      // behaviour so no path silently stalls (resilience A-Tier-1 #3).
+      if (onVoiceDropped) {
+        onVoiceDropped();
+        return;
+      }
+      onCompleted("natural");
     },
-    [onCompleted],
+    [onCompleted, onVoiceDropped],
   );
 
   const handleEndInterview = useCallback(() => {

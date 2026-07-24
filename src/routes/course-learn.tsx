@@ -50,6 +50,7 @@ import {
 import { useMyInterviewSessions } from "@/lib/api/hooks/interviews";
 // import { useCourseSrOverview } from "@/lib/api/hooks/spaced-repetition";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
+import { LessonDiscussionPanel } from "@/routes/_components/LessonDiscussionPanel";
 import ReactMarkdown from "react-markdown";
 import { queryKeys } from "@/lib/api/query-keys";
 import type {
@@ -537,7 +538,7 @@ function CourseLearnLoaded({
 
   return (
     <div className="min-h-screen pb-24">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         <nav className="flex items-center gap-2 text-xs text-m3-on-surface-variant mb-5">
           <Link
             to="/courses"
@@ -822,24 +823,10 @@ function CourseLearnLoaded({
                     </GlassCard>
                   )}
 
-                  {activeTab === "Discussion" && (
-                    <GlassCard className="p-6 sm:p-8">
-                      <div className="flex items-center gap-2 mb-5">
-                        <HelpCircle className="h-4 w-4 text-m3-secondary" />
-                        <h4 className="font-headline font-bold text-m3-on-surface text-sm">
-                          Discussion
-                        </h4>
-                      </div>
-                      <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
-                        <p className="text-sm font-semibold text-m3-on-surface">
-                          Discussion coming soon
-                        </p>
-                        <p className="text-xs text-m3-on-surface-variant">
-                          Lesson-level discussion threads are under development.
-                        </p>
-                      </div>
-                    </GlassCard>
-                  )}
+                  {activeTab === "Discussion" &&
+                    (activeLessonId ? (
+                      <LessonDiscussionPanel lessonId={activeLessonId} />
+                    ) : null)}
 
                   {activeTab === "Resources" && (
                     <ResourcesPanel resources={resources} />

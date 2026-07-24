@@ -9,6 +9,7 @@ import {
 
 import { getStoredAuthSession } from "@/lib/auth";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { MfaGate } from "@/components/auth/MfaGate";
 import { Toaster } from "sonner";
 
@@ -42,7 +43,16 @@ function Root() {
       <MfaGate>
         <Outlet />
       </MfaGate>
-      <Toaster position="top-right" richColors />
+      {/* closeButton: every toast gets a dismiss (X) so it can be collapsed
+          on demand — without it a top-right toast sits over the notification
+          bell in ContentTopBar and blocks tapping it. offset pushes the stack
+          below the 64px (h-16) top bar so it never overlaps the bell/avatar. */}
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        offset={72}
+      />
     </AuthProvider>
   );
 }
@@ -209,13 +219,9 @@ const teacherLessonManageRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/teacher/lesson-manage")),
 });
 
-const teacherLessonMaterialsRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
-  path: "/teacher/courses/$courseId/lessons/$lessonId/materials",
-  component: lazyRouteComponent(
-    () => import("@/routes/teacher/lesson-materials"),
-  ),
-});
+/* lesson-materials route removed: the AI Material Hub is now folded into the
+   lesson-manage page as the inline "Material history" + "Knowledge Graph"
+   sections. */
 
 const teacherModuleManageRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
@@ -409,6 +415,12 @@ const myInterviewsRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/me-interviews")),
 });
 
+const myInterviewResultRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/me/interviews/$sessionId",
+  component: lazyRouteComponent(() => import("@/routes/me-interview-result")),
+});
+
 const managementCareerPathsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/career-paths",
@@ -525,7 +537,6 @@ const routeTree = rootRoute.addChildren([
     teacherCourseNewRoute,
     teacherCourseManageRoute,
     teacherLessonManageRoute,
-    teacherLessonMaterialsRoute,
     teacherModuleManageRoute,
     teacherQuizManageRoute,
     teacherQuizResultsRoute,
@@ -556,6 +567,7 @@ const routeTree = rootRoute.addChildren([
     careerPathDetailRoute,
     myCareerPathsRoute,
     myInterviewsRoute,
+    myInterviewResultRoute,
     managementCareerPathsRoute,
     managementCareerPathDetailRoute,
     srDashboardRoute,
@@ -571,7 +583,13 @@ const routeTree = rootRoute.addChildren([
   callbackRoute,
 ]);
 
-export const router = createRouter({ routeTree });
+export const router = createRouter({
+  routeTree,
+  // Without a default error component, any uncaught render error in a route
+  // blanks the whole app to a white screen. This catches it per-route and
+  // shows a readable fallback + the actual error message.
+  defaultErrorComponent: RouteErrorBoundary,
+});
 
 declare module "@tanstack/react-router" {
   interface Register {

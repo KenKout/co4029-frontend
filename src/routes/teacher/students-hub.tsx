@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Users, ChevronRight, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTeacherCourses } from "@/lib/api/hooks/teacher-courses";
+import { PageHeader } from "@/components/ui/page-header";
 import type { Course } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
 
@@ -25,17 +26,10 @@ export default function TeacherStudentsHubPage() {
 
   return (
     <div className="max-w-5xl mx-auto pb-16 space-y-6">
-      <div className="pt-4">
-        <span className="text-m3-secondary font-headline font-bold text-xs tracking-widest uppercase">
-          {t("teacher_students_hub.eyebrow")}
-        </span>
-        <h1 className="font-headline font-extrabold text-3xl sm:text-4xl text-m3-primary tracking-tight leading-tight mt-1">
-          {t("teacher_students_hub.title")}
-        </h1>
-        <p className="text-m3-on-surface-variant text-sm mt-1">
-          {t("teacher_students_hub.subtitle")}
-        </p>
-      </div>
+      <PageHeader
+        title={t("teacher_students_hub.title")}
+        subtitle={t("teacher_students_hub.subtitle")}
+      />
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

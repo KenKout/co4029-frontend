@@ -362,6 +362,15 @@ export function DataTable<T>({
                     key={col.id}
                     title={col.headerTitle}
                     style={col.width ? { width: col.width } : undefined}
+                    aria-sort={
+                      col.sortable
+                        ? isSorted
+                          ? dir === "asc"
+                            ? "ascending"
+                            : "descending"
+                          : "none"
+                        : undefined
+                    }
                     className={cn(
                       col.align && ALIGN_CLASS[col.align],
                       col.headerClassName,

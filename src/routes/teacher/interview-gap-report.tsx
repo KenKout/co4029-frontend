@@ -5,16 +5,21 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import {
+  AlertTriangle,
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Eye,
   FileText,
   Loader2,
+  MonitorX,
   Pencil,
   Save,
+  ShieldCheck,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bar,
@@ -35,7 +40,9 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
+import { cn } from "@/lib/utils";
 import {
+  useInterviewIntegrityEvents,
   useInterviewTranscript,
   useSaveGapReportNotes,
   useTeacherGapReport,
@@ -85,6 +92,119 @@ function humanResources(resources: string[]): string[] {
   return resources.filter((r) => !UUID_RE.test(r.trim()));
 }
 
+type GapTabId = "overview" | "analysis" | "transcript" | "integrity";
+
+// Tabbed navigation for the gap-report page, mirroring the interview-config
+// workspace: an absolutely-positioned pill measures the active tab and glides
+// to it via CSS transform, so the colored indicator slides between tabs.
+function GapTabBar({
+  activeTab,
+  onSelect,
+  ariaLabel,
+}: {
+  activeTab: GapTabId;
+  onSelect: (id: GapTabId) => void;
+  ariaLabel: string;
+}) {
+  const { t } = useTranslation();
+  const items: { id: GapTabId; label: string }[] = [
+    { id: "overview", label: t("teacher_interview_gap_report.tabs.overview") },
+    { id: "analysis", label: t("teacher_interview_gap_report.tabs.analysis") },
+    {
+      id: "transcript",
+      label: t("teacher_interview_gap_report.tabs.transcript"),
+    },
+    {
+      id: "integrity",
+      label: t("teacher_interview_gap_report.tabs.integrity"),
+    },
+  ];
+
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [indicator, setIndicator] = useState<{
+    left: number;
+    width: number;
+    ready: boolean;
+  }>({ left: 0, width: 0, ready: false });
+
+  useLayoutEffect(() => {
+    function measure() {
+      const el = tabRefs.current.get(activeTab);
+      const list = listRef.current;
+      if (!el || !list) return;
+      setIndicator({ left: el.offsetLeft, width: el.offsetWidth, ready: true });
+    }
+    measure();
+    const list = listRef.current;
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(measure)
+        : null;
+    if (ro && list) {
+      ro.observe(list);
+      for (const el of tabRefs.current.values()) ro.observe(el);
+    }
+    window.addEventListener("resize", measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [activeTab]);
+
+  return (
+    <nav aria-label={ariaLabel} className="sticky z-10 -mx-1 px-1" style={{ top: 64 }}>
+      <div
+        ref={listRef}
+        role="tablist"
+        aria-label={ariaLabel}
+        className="relative flex items-stretch gap-1 overflow-x-auto no-scrollbar rounded-lg border border-border bg-white/95 p-1 shadow-sm backdrop-blur-sm lg:overflow-visible"
+      >
+        <span
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute top-1 bottom-1 rounded-md bg-m3-primary shadow-sm ring-1 ring-m3-primary",
+            "motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out",
+            indicator.ready ? "opacity-100" : "opacity-0",
+          )}
+          style={{
+            transform: `translateX(${indicator.left}px)`,
+            width: indicator.width,
+          }}
+        />
+        {items.map((item) => {
+          const isActive = item.id === activeTab;
+          return (
+            <button
+              key={item.id}
+              id={`tab-${item.id}`}
+              ref={(el) => {
+                if (el) tabRefs.current.set(item.id, el);
+                else tabRefs.current.delete(item.id);
+              }}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={item.id}
+              onClick={() => onSelect(item.id)}
+              className={cn(
+                "group relative z-10 min-w-fit flex-1 rounded-md px-3 py-2 text-center transition-colors duration-300",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+                "whitespace-nowrap cursor-pointer text-[13px] font-bold",
+                isActive
+                  ? "text-white"
+                  : "text-m3-on-surface hover:bg-surface-muted",
+              )}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 export default function InterviewGapReportPage() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -97,6 +217,11 @@ export default function InterviewGapReportPage() {
     error,
   } = useTeacherGapReport(sessionId);
   const { data: session } = useTeacherInterviewSession(sessionId);
+
+  // Tabbed workspace (Overview → Analysis → Transcript → Sources), mirroring
+  // the interview-config page. Panels stay mounted (hidden via `hidden`) so
+  // in-progress note edits survive tab switches.
+  const [activeTab, setActiveTab] = useState<GapTabId>("overview");
 
   const configId = session?.interview_config_id;
   const courseId = report?.course_id;
@@ -160,31 +285,189 @@ export default function InterviewGapReportPage() {
     <div className="space-y-6 pb-12 max-w-[1100px] mx-auto">
       <Header report={report} session={session ?? null} onBack={goBack} />
 
-      <ContextCard report={report} session={session ?? null} />
+      <GapTabBar
+        activeTab={activeTab}
+        onSelect={setActiveTab}
+        ariaLabel={t("teacher_interview_gap_report.sections.title")}
+      />
 
-      <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 lg:col-span-7 space-y-4">
-          <NotesCard
-            sessionId={sessionId}
-            teacherSummary={report.teacher_summary}
-            studyPlan={report.study_plan}
-            courseId={report.course_id}
-          />
-
-          <CriterionBreakdown report={report} />
-        </div>
-
-        <div className="col-span-12 lg:col-span-5 space-y-4">
-          <SourceLinksCard report={report} />
-        </div>
+      {/* Overview — session context + notes/study plan. */}
+      <div
+        id="overview"
+        role="tabpanel"
+        aria-labelledby="tab-overview"
+        hidden={activeTab !== "overview"}
+        className="space-y-6"
+      >
+        <ContextCard report={report} session={session ?? null} />
+        <NotesCard
+          sessionId={sessionId}
+          teacherSummary={report.teacher_summary}
+          studyPlan={report.study_plan}
+          courseId={report.course_id}
+        />
       </div>
 
-      <TranscriptCard sessionId={sessionId} />
+      {/* Analysis — criterion charts + per-criterion breakdown. */}
+      <div
+        id="analysis"
+        role="tabpanel"
+        aria-labelledby="tab-analysis"
+        hidden={activeTab !== "analysis"}
+      >
+        <CriterionBreakdown report={report} />
+      </div>
+
+      {/* Transcript — full interview turn-by-turn. */}
+      <div
+        id="transcript"
+        role="tabpanel"
+        aria-labelledby="tab-transcript"
+        hidden={activeTab !== "transcript"}
+      >
+        <TranscriptCard
+          sessionId={sessionId}
+          studentName={report.student_name ?? null}
+        />
+      </div>
+
+      {/* Integrity — FR-5.8 proctoring signal timeline. */}
+      <div
+        id="integrity"
+        role="tabpanel"
+        aria-labelledby="tab-integrity"
+        hidden={activeTab !== "integrity"}
+      >
+        <IntegrityCard sessionId={sessionId} />
+      </div>
     </div>
   );
 }
 
-function TranscriptCard({ sessionId }: { sessionId: string }) {
+/* ── Integrity severity → colour (mirrors the quiz attempt-detail panel) ── */
+const INTEGRITY_SEVERITY_META: Record<
+  string,
+  { badge: string; dot: string }
+> = {
+  critical: { badge: "bg-red-100 text-red-700", dot: "bg-red-500" },
+  warning: { badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
+  info: { badge: "bg-blue-100 text-blue-700", dot: "bg-blue-400" },
+};
+
+// FR-5.8 teacher review surface: the proctoring-signal timeline for a session.
+// Signals are recorded across every mode (text / hybrid / voice) — see Gap 1.
+// A clean session shows a reassuring green state rather than an empty box.
+function IntegrityCard({ sessionId }: { sessionId: string }) {
+  const { t } = useTranslation();
+  const { data, isLoading } = useInterviewIntegrityEvents(sessionId);
+  const events = data?.events ?? [];
+
+  const counts = {
+    total: events.length,
+    tabSwitch: events.filter((e) => e.event_type === "tab_switch").length,
+    focusLost: events.filter((e) => e.event_type === "focus_lost").length,
+    fullscreenExit: events.filter((e) => e.event_type === "fullscreen_exit")
+      .length,
+  };
+
+  if (isLoading) {
+    return (
+      <GlassCard className="p-6">
+        <p className="text-sm text-m3-on-surface-variant">
+          {t("common.loading")}
+        </p>
+      </GlassCard>
+    );
+  }
+
+  if (counts.total === 0) {
+    return (
+      <GlassCard className="p-6">
+        <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+          <div className="shrink-0 rounded-lg bg-emerald-100 p-2 text-emerald-700">
+            <ShieldCheck className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="font-headline text-sm font-bold text-emerald-800">
+              {t("teacher_interview_gap_report.integrity.clean_title")}
+            </h3>
+            <p className="mt-0.5 text-xs text-emerald-700/80">
+              {t("teacher_interview_gap_report.integrity.clean_body")}
+            </p>
+          </div>
+        </div>
+      </GlassCard>
+    );
+  }
+
+  return (
+    <GlassCard className="overflow-hidden p-0">
+      <div className="flex items-center gap-2.5 border-b border-amber-200/60 bg-amber-50/50 px-5 py-3">
+        <div className="rounded-lg bg-amber-100 p-1.5 text-amber-700">
+          <AlertTriangle className="h-4 w-4" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-headline text-sm font-bold text-amber-800">
+            {t("teacher_interview_gap_report.integrity.flagged_title")}
+          </h3>
+          <p className="text-xs text-amber-700/80">
+            {t("teacher_interview_gap_report.integrity.summary", {
+              tab: counts.tabSwitch,
+              focus: counts.focusLost,
+              fullscreen: counts.fullscreenExit,
+            })}
+          </p>
+        </div>
+      </div>
+      <div className="max-h-96 divide-y divide-amber-200/40 overflow-y-auto">
+        {events.map((ev) => {
+          const meta =
+            INTEGRITY_SEVERITY_META[ev.severity] ??
+            INTEGRITY_SEVERITY_META.info;
+          const Icon =
+            ev.event_type === "tab_switch"
+              ? MonitorX
+              : ev.event_type === "focus_lost"
+                ? Eye
+                : Clock;
+          return (
+            <div key={ev.id} className="flex items-center gap-3 px-5 py-2.5">
+              <Icon className="h-4 w-4 shrink-0 text-amber-700" />
+              <span className="flex-1 text-sm text-m3-on-surface">
+                {t(
+                  `teacher_interview_gap_report.integrity.event.${ev.event_type}`,
+                  { defaultValue: ev.event_type },
+                )}
+              </span>
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  meta.badge,
+                )}
+              >
+                {t(
+                  `teacher_interview_gap_report.integrity.severity.${ev.severity}`,
+                  { defaultValue: ev.severity },
+                )}
+              </span>
+              <span className="whitespace-nowrap text-xs tabular-nums text-m3-on-surface-variant">
+                {formatDate(ev.created_at)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </GlassCard>
+  );
+}
+
+function TranscriptCard({
+  sessionId,
+  studentName,
+}: {
+  sessionId: string;
+  studentName: string | null;
+}) {
   const { t } = useTranslation();
   const { data, isLoading } = useInterviewTranscript(sessionId);
   const turns = data?.turns ?? [];
@@ -230,40 +513,58 @@ function TranscriptCard({ sessionId }: { sessionId: string }) {
       {turns.length > 0 && (
         <>
           <ul className="space-y-3">
-            {pageTurns.map((turn, idx) => (
-              <li
-                key={start + idx}
-                className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-1"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  {turn.question_prompt ? (
+            {pageTurns.map((turn, idx) => {
+              // Only show the question prompt when a NEW question starts —
+              // i.e. when this turn's prompt differs from the previous turn's.
+              // The same prompt is attached to every turn of a question
+              // (the answer, clarify requests, AI rephrases), so rendering it
+              // each time repeats the full question and makes the log messy.
+              const absoluteIdx = start + idx;
+              const prevPrompt =
+                absoluteIdx > 0
+                  ? (turns[absoluteIdx - 1].question_prompt ?? null)
+                  : null;
+              const showPrompt =
+                Boolean(turn.question_prompt) &&
+                turn.question_prompt !== prevPrompt;
+              return (
+                <li
+                  key={absoluteIdx}
+                  className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-1"
+                >
+                  {/* Header line: speaker on the left, timestamp on the far
+                      right. The speaker label is on its own line so the timer
+                      can never collide with a long question prompt or answer. */}
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-m3-primary">
+                      {turn.role === "user" && studentName
+                        ? studentName
+                        : t(
+                            `teacher_interview_gap_report.transcript.role.${turn.role}`,
+                          )}
+                    </span>
+                    {/* Relative timestamp (0:00 = first turn), pushed to the far right. */}
+                    <time className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-m3-primary">
+                      {formatRelativeTime(
+                        (new Date(turn.created_at).getTime() - baseline) / 1000,
+                      )}
+                    </time>
+                  </div>
+                  {showPrompt && (
                     <p className="text-[11px] font-semibold text-m3-outline uppercase tracking-widest">
                       {turn.question_prompt}
                     </p>
-                  ) : (
-                    <span />
                   )}
-                  {/* Relative timestamp (0:00 = first turn), pushed to the far right. */}
-                  <time className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-m3-primary">
-                    {formatRelativeTime(
-                      (new Date(turn.created_at).getTime() - baseline) / 1000,
-                    )}
-                  </time>
-                </div>
-                <p className="text-sm text-m3-on-surface leading-relaxed">
-                  <span className="font-bold mr-1.5">
-                    {t(
-                      `teacher_interview_gap_report.transcript.role.${turn.role}`,
-                    )}
-                    :
-                  </span>
-                  {turn.content_text ??
-                    (turn.has_audio
-                      ? t("teacher_interview_gap_report.transcript.audio_only")
-                      : "—")}
-                </p>
-              </li>
-            ))}
+                  {/* Content always begins below the header line. */}
+                  <p className="text-sm text-m3-on-surface leading-relaxed">
+                    {turn.content_text ??
+                      (turn.has_audio
+                        ? t("teacher_interview_gap_report.transcript.audio_only")
+                        : "—")}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
           {pageCount > 1 && (
             <div className="flex items-center justify-end gap-2 pt-1">
@@ -666,7 +967,7 @@ function NotesCard({
                 >
                   {canLink ? (
                     <Link
-                      to="/teacher/courses/$courseId/lessons/$lessonId/materials"
+                      to="/teacher/courses/$courseId/lessons/$lessonId"
                       params={{
                         courseId: courseId as string,
                         lessonId: item.lesson_id as string,
@@ -1055,32 +1356,3 @@ function CriterionBreakdown({
   );
 }
 
-function SourceLinksCard({ report }: { report: GapReportAuthoringRead }) {
-  const { t } = useTranslation();
-  // Only the source quiz attempt is a meaningful cross-link: the interview
-  // session this report was built from IS the page we're already on (the
-  // gap report is opened via that session), so linking to it is circular.
-  const quizAttemptId = report.source_quiz_attempt_id;
-  if (!quizAttemptId || !report.course_id) return null;
-
-  return (
-    <GlassCard className="p-6 space-y-3">
-      <h2 className="font-headline font-bold text-base text-m3-primary mb-2">
-        {t("teacher_interview_gap_report.sections.sources")}
-      </h2>
-      <Link
-        to="/teacher/courses/$courseId/quiz-attempts/$attemptId"
-        params={{ courseId: report.course_id, attemptId: quizAttemptId }}
-        className="flex items-center justify-between gap-3 rounded-xl bg-m3-surface-container-low px-3 py-2 text-xs transition-colors hover:bg-m3-surface-container"
-      >
-        <span className="text-m3-on-surface-variant shrink-0">
-          {t("teacher_interview_gap_report.labels.source_quiz_attempt")}
-        </span>
-        <span className="inline-flex items-center gap-1 font-semibold text-m3-primary underline decoration-m3-primary/30 underline-offset-2">
-          {t("teacher_interview_gap_report.labels.view")}
-          <ChevronRight className="h-3.5 w-3.5" />
-        </span>
-      </Link>
-    </GlassCard>
-  );
-}

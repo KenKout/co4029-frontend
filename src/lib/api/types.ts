@@ -133,7 +133,14 @@ export type InterviewConfigAuthoring = Schemas["InterviewConfigAuthoring"] & {
 export type InterviewConfigCreate = Schemas["InterviewConfigCreate"];
 export type InterviewConfigUpdate = Schemas["InterviewConfigUpdate"];
 export type InterviewForTakingPublic = Schemas["InterviewForTakingPublic"];
-export type InterviewSessionPublic = Schemas["InterviewSessionPublic"];
+export type InterviewSessionPublic = Schemas["InterviewSessionPublic"] & {
+  // Proactive retake context (#7) — manually typed until the OpenAPI snapshot
+  // is regenerated. remaining_attempts is null when unlimited; retake_available_at
+  // is null when no cooldown is active.
+  remaining_attempts?: number | null;
+  retake_available_at?: string | null;
+  can_retake?: boolean;
+};
 export type InterviewSessionStartRequest =
   Schemas["InterviewSessionStartRequest"];
 export type InterviewLanguage = NonNullable<
@@ -168,7 +175,13 @@ export type InterviewOnboardingRespondRequest = Omit<
 export type InterviewOnboardingRespondResponse =
   Schemas["InterviewOnboardingRespondResponse"];
 export type InterviewSessionFinishResponse =
-  Schemas["InterviewSessionFinishResponse"];
+  Schemas["InterviewSessionFinishResponse"] & {
+    // Proactive retake context (#7) — manually typed until the OpenAPI snapshot
+    // is regenerated.
+    remaining_attempts?: number | null;
+    retake_available_at?: string | null;
+    can_retake?: boolean;
+  };
 export interface InterviewSessionFinishRequest {
   reason?: "natural" | "ended_early" | "timed_out";
 }
@@ -207,6 +220,9 @@ export type InterviewOutcomeCreate = Schemas["InterviewOutcomeCreate"];
 export type InterviewGenerationRequest =
   Schemas["InterviewGenerationRequest"] & {
     source_module_ids?: string[];
+    // Interview rubric-outcome ids to target (empty = all). Manually typed
+    // until the OpenAPI snapshot is regenerated.
+    target_outcome_ids?: string[];
   };
 export type InterviewGenerationRunPublic =
   Schemas["InterviewGenerationRunPublic"];
@@ -400,6 +416,9 @@ export type AiCostsStageBreakdown = Schemas["StageBreakdown"];
 export type AiCostsTimeBucket = Schemas["TimeBucket"];
 export type AiCostsByUser = Schemas["UserSpendOut"];
 export type AiCostsByPipeline = Schemas["PipelineSpendOut"];
+export type AiCostsByCategory = Schemas["CategorySpendOut"];
+export type AiCostsByModel = Schemas["ModelEfficiencyOut"];
+export type AiCostsFailedSpend = Schemas["FailedSpend"];
 export type AiModelPricing = Schemas["ModelPricingOut"];
 export type AiCostsPipelineStage = Schemas["PipelineStage"];
 export type AiCostsRecentCall = Schemas["RecentCallOut"];
@@ -505,3 +524,46 @@ export const DATA_CHANGE_TABLES = [
   "role_assignments",
 ] as const;
 export type DataChangeTable = (typeof DATA_CHANGE_TABLES)[number];
+
+/**
+ * Lesson discussion feature (backend `features/discussions`). Hand-written
+ * because the committed OpenAPI snapshot predates the feature; mirrors the
+ * Pydantic DTOs in `abridgeai/features/discussions/schemas.py` exactly.
+ */
+export interface DiscussionTopic {
+  id: string;
+  lesson_id: string;
+  title: string;
+  body_markdown: string | null;
+  status: "open" | "closed";
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  comment_count: number;
+  can_manage: boolean;
+}
+
+/** Envelope returned by `GET /lessons/{id}/discussion/topics`. */
+export interface DiscussionTopicList {
+  can_manage: boolean;
+  topics: DiscussionTopic[];
+}
+
+export interface DiscussionCommentAuthor {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
+export interface DiscussionComment {
+  id: string;
+  topic_id: string;
+  author_id: string;
+  body: string;
+  parent_comment_id: string | null;
+  created_at: string;
+  updated_at: string;
+  author: DiscussionCommentAuthor | null;
+  is_own: boolean;
+  can_delete: boolean;
+}

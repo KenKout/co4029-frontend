@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { Archive, BookOpen, RotateCcw, Search } from "lucide-react";
+import { Archive, BookOpen, RotateCcw, Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
-import { useRestoreCourse } from "@/lib/api/hooks/admin";
+import { useDeleteCourse, useRestoreCourse } from "@/lib/api/hooks/admin";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import type { CourseAuthoring } from "@/lib/api/types";
 
@@ -70,6 +70,45 @@ function RestoreButton({ course }: { course: CourseAuthoring }) {
       {restore.isPending
         ? t("admin.course_detail.restoring")
         : t("admin.course_detail.restore")}
+    </button>
+  );
+}
+
+function DeleteButton({ course }: { course: CourseAuthoring }) {
+  const { t } = useTranslation();
+  const del = useDeleteCourse();
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Cascade tombstone — confirm before deleting. It's reversible
+        // (Restore appears on the row afterwards), but it also removes the
+        // course's modules/lessons from every listing, so make it deliberate.
+        if (
+          !window.confirm(
+            t("admin.course_detail.delete_confirm", { title: course.title }),
+          )
+        ) {
+          return;
+        }
+        del.mutate(course.id, {
+          onSuccess: () => toast.success(t("admin.course_detail.toasts.deleted")),
+          onError: (err) =>
+            toast.error(
+              (err as Error).message ||
+                t("admin.course_detail.toasts.delete_failed"),
+            ),
+        });
+      }}
+      disabled={del.isPending}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-danger text-white hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+      {del.isPending
+        ? t("admin.course_detail.deleting")
+        : t("admin.course_detail.delete")}
     </button>
   );
 }
@@ -212,7 +251,11 @@ export default function AdminCoursesPage() {
             })
           }
           actions={(course) =>
-            course.deleted_at != null ? <RestoreButton course={course} /> : null
+            course.deleted_at != null ? (
+              <RestoreButton course={course} />
+            ) : (
+              <DeleteButton course={course} />
+            )
           }
           pagination
           manualPagination

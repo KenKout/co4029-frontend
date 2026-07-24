@@ -37,6 +37,7 @@ import {
   Wifi,
   WifiOff,
   X,
+  type LucideIcon,
 } from "lucide-react";
 
 import { AiTypingMessage } from "@/components/interview/ai-typing-message";
@@ -126,6 +127,60 @@ export function formatRelativeInterviewTime(totalSeconds: number | undefined) {
     : `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
+/**
+ * Per-turn-kind visual treatment (B-Tier-1 #12): an icon + accent color so the
+ * transcript stream is scannable — a question reads differently from a hint,
+ * clarification, follow-up, or wrap-up ceremony. Icon is shown in the AI turn's
+ * avatar; `accent`/`badgeClass` tint the kind badge. Returns null for a plain
+ * question/opening (the default Bot avatar + neutral badge already suit those).
+ */
+export interface TurnKindVisual {
+  icon: LucideIcon;
+  /** Tailwind classes for the avatar bubble (bg + text). */
+  avatarClass: string;
+  /** Tailwind classes for the kind badge (bg + text). */
+  badgeClass: string;
+  /** i18n key for the badge label. */
+  labelKey: string;
+}
+
+const TURN_KIND_VISUALS: Partial<Record<
+  NonNullable<ConversationTurn["kind"]>,
+  TurnKindVisual
+>> = {
+  hint: {
+    icon: Sparkles,
+    avatarClass: "border-amber-200 bg-amber-50 text-amber-600",
+    badgeClass: "bg-amber-100 text-amber-700",
+    labelKey: "course_interview.workspace.small_hint",
+  },
+  clarification: {
+    icon: CircleHelp,
+    avatarClass: "border-sky-200 bg-sky-50 text-sky-600",
+    badgeClass: "bg-sky-100 text-sky-700",
+    labelKey: "course_interview.workspace.interviewer_clarification",
+  },
+  followup: {
+    icon: MessageSquareText,
+    avatarClass: "border-violet-200 bg-violet-50 text-violet-600",
+    badgeClass: "bg-violet-100 text-violet-700",
+    labelKey: "course_interview.sections.follow_up",
+  },
+  closing: {
+    icon: Check,
+    avatarClass: "border-primary/15 bg-primary-soft text-primary",
+    badgeClass: "bg-primary-soft text-primary",
+    labelKey: "course_interview.sections.wrap_up",
+  },
+};
+
+export function turnKindVisual(
+  kind: ConversationTurn["kind"] | undefined,
+): TurnKindVisual | null {
+  if (!kind) return null;
+  return TURN_KIND_VISUALS[kind] ?? null;
+}
+
 const STATUS_LABELS: Record<InterviewAgentStatus, string> = {
   idle: "course_interview.workspace.status.idle",
   listening: "course_interview.workspace.status.listening",
@@ -205,24 +260,28 @@ export function VoiceStatusIndicator({
         aria-hidden="true"
       >
         {status === "thinking" ? (
+          // B-Tier-1 #14: calm staggered pulse so a silent "thinking" beat reads
+          // as the interviewer composing, never as a frozen UI.
           <span className="flex items-center gap-1">
             {[0, 1, 2].map((dot) => (
               <span
                 key={dot}
-                className="size-1.5 rounded-full bg-primary motion-safe:animate-bounce"
-                style={{ animationDelay: `${dot * 130}ms` }}
+                className="size-1.5 rounded-full bg-primary/80 motion-safe:animate-pulse"
+                style={{ animationDelay: `${dot * 200}ms`, animationDuration: "1s" }}
               />
             ))}
           </span>
         ) : animated ? (
-          [0, 1, 2, 3].map((bar) => (
+          // B-Tier-1 #14: a varied waveform reads as live audio (speaking /
+          // listening) rather than a flat, uniform bar set.
+          [0, 1, 2, 3, 4].map((bar) => (
             <span
               key={bar}
               className={cn(
                 "w-0.5 rounded-full bg-primary motion-safe:animate-pulse",
-                bar % 2 === 0 ? "h-2" : "h-4",
+                ["h-2", "h-4", "h-3", "h-5", "h-2.5"][bar],
               )}
-              style={{ animationDelay: `${bar * 120}ms` }}
+              style={{ animationDelay: `${bar * 110}ms`, animationDuration: "0.9s" }}
             />
           ))
         ) : status === "error" ? (
@@ -272,7 +331,10 @@ export function InterviewHeader({
   voiceOn,
   onToggleVoice,
   onEndInterview,
+  endInterviewDisabled = false,
   showVoiceControl = true,
+  questionElapsed,
+  questionLingering = false,
 }: {
   slug: string;
   courseName: string;
@@ -286,7 +348,13 @@ export function InterviewHeader({
   voiceOn: boolean;
   onToggleVoice: () => void;
   onEndInterview?: () => void;
+  /** Disable the end button (e.g. while the closing is already underway). */
+  endInterviewDisabled?: boolean;
   showVoiceControl?: boolean;
+  /** Whole seconds spent on the current question; null hides the per-question cue. */
+  questionElapsed?: number | null;
+  /** True once past the lingering threshold — switches the cue to a gentle nudge. */
+  questionLingering?: boolean;
 }) {
   const { t } = useTranslation();
   const safeCurrent = Math.max(1, currentQuestion ?? 1);
@@ -345,9 +413,23 @@ export function InterviewHeader({
                     })
                 : t("course_interview.workspace.interview_setup")}
             </span>
-            <span className="hidden shrink-0 text-text-muted sm:inline">
-              {t("course_interview.workspace.in_progress")}
-            </span>
+            {typeof questionElapsed === "number" && currentQuestion ? (
+              <span
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1 tabular-nums",
+                  questionLingering ? "text-amber-600" : "text-text-muted",
+                )}
+                title={t("course_interview.workspace.time_on_question")}
+                aria-label={t("course_interview.workspace.time_on_question")}
+              >
+                <Clock3 className="h-3 w-3" aria-hidden="true" />
+                {formatRelativeInterviewTime(questionElapsed)}
+              </span>
+            ) : (
+              <span className="hidden shrink-0 text-text-muted sm:inline">
+                {t("course_interview.workspace.in_progress")}
+              </span>
+            )}
           </div>
           {progress !== null ? (
             <Progress
@@ -433,7 +515,8 @@ export function InterviewHeader({
               variant="destructive"
               size="icon-lg"
               onClick={onEndInterview}
-              className="size-11 rounded-lg text-danger sm:size-9"
+              disabled={endInterviewDisabled}
+              className="size-11 rounded-lg text-danger disabled:cursor-not-allowed disabled:opacity-50 sm:size-9"
               aria-label={t("course_interview.actions.end_interview")}
               title={t("course_interview.actions.end_interview")}
             >
@@ -481,12 +564,22 @@ export function ConversationMessage({
   const relativeTime = formatRelativeInterviewTime(turn.elapsedSeconds);
   const showTimestamp =
     turn.elapsedSeconds !== undefined && (!isAi || textComplete);
+  // B-Tier-1 #11: nest sub-turns (hint / clarification / follow-up) under their
+  // parent question with a left indent + accent rail so the conversation reads
+  // as a hierarchy rather than a flat stream.
+  const isNestedKind =
+    isAi &&
+    (turn.kind === "hint" ||
+      turn.kind === "clarification" ||
+      turn.kind === "followup" ||
+      turn.isFollowUp === true);
 
   return (
     <article
       className={cn(
         "flex w-full gap-3 motion-safe:animate-fade-in-up",
         isAi ? "justify-start" : "justify-end",
+        isNestedKind && "border-l-2 border-border pl-3 sm:pl-5",
       )}
       aria-label={
         isAi
@@ -494,11 +587,22 @@ export function ConversationMessage({
           : t("course_interview.workspace.you")
       }
     >
-      {isAi && (
-        <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border border-primary/15 bg-primary-soft text-primary">
-          <Bot className="h-4 w-4" aria-hidden="true" />
-        </div>
-      )}
+      {isAi &&
+        (() => {
+          const kindVisual = turnKindVisual(turn.kind);
+          const AvatarIcon = kindVisual?.icon ?? Bot;
+          return (
+            <div
+              className={cn(
+                "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border",
+                kindVisual?.avatarClass ??
+                  "border-primary/15 bg-primary-soft text-primary",
+              )}
+            >
+              <AvatarIcon className="h-4 w-4" aria-hidden="true" />
+            </div>
+          );
+        })()}
 
       <div
         className={cn(
@@ -513,19 +617,39 @@ export function ConversationMessage({
             <span className="text-xs font-semibold text-text-strong">
               {t("course_interview.workspace.ai_interviewer")}
             </span>
-            {turn.kind === "closing" ? (
-              <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                {t("course_interview.sections.wrap_up")}
-              </span>
-            ) : turn.isFollowUp ? (
-              <span className="text-[11px] font-medium text-text-subtle">
-                {t("course_interview.sections.follow_up")}
-              </span>
-            ) : label ? (
-              <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-                {label}
-              </span>
-            ) : null}
+            {(() => {
+              // B-Tier-1 #12: colored kind badge (hint/clarification/followup/
+              // wrap-up) so the transcript is scannable. Falls back to the
+              // question-type label pill for plain question/opening turns.
+              const kindVisual = turnKindVisual(turn.kind);
+              if (kindVisual) {
+                return (
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                      kindVisual.badgeClass,
+                    )}
+                  >
+                    {t(kindVisual.labelKey)}
+                  </span>
+                );
+              }
+              if (turn.isFollowUp) {
+                return (
+                  <span className="text-[11px] font-medium text-text-subtle">
+                    {t("course_interview.sections.follow_up")}
+                  </span>
+                );
+              }
+              if (label) {
+                return (
+                  <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    {label}
+                  </span>
+                );
+              }
+              return null;
+            })()}
             {showTimestamp && (
               <time className="ml-auto text-[11px] font-medium tabular-nums text-text-subtle">
                 {relativeTime}
@@ -1530,11 +1654,44 @@ export function FocusedInterviewStage({
     [onTurnPresented],
   );
 
+  // A11y (#9): announce the newest AI turn to screen readers. The visible
+  // transcript re-renders silently on submit, so without a live region a SR
+  // user never learns a new question / follow-up / hint arrived. We mirror the
+  // latest AI turn's text (prefixed with its kind + question number when known)
+  // into a polite, visually-hidden region. Only announce once a turn has been
+  // presented so the typing animation and the announcement don't fight.
+  const announceTurn = assistanceTurn ?? activeTurn;
+  const announcement = useMemo(() => {
+    if (!announceTurn || announceTurn.role !== "ai") return "";
+    if (!presentedAiTurnIds.has(announceTurn.id)) return "";
+    const kindPrefix =
+      announceTurn.kind === "hint"
+        ? `${t("course_interview.workspace.small_hint")}: `
+        : announceTurn.kind === "clarification"
+          ? `${t("course_interview.workspace.interviewer_clarification")}: `
+          : announceTurn.kind === "followup"
+            ? `${t("course_interview.sections.follow_up")}: `
+            : assessmentActive && currentQuestionNumber
+              ? `${t("course_interview.workspace.question_number", { current: currentQuestionNumber })}: `
+              : "";
+    return `${kindPrefix}${announceTurn.text}`;
+  }, [
+    announceTurn,
+    presentedAiTurnIds,
+    assessmentActive,
+    currentQuestionNumber,
+    t,
+  ]);
+
   return (
     <main
       className="min-h-0 flex-1 overflow-y-auto bg-surface"
       aria-label={t("course_interview.workspace.interview_room")}
     >
+      {/* Polite SR announcement of the newest interviewer turn (#9). */}
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </p>
       <div className="mx-auto flex min-h-full w-full max-w-[1000px] flex-col justify-center gap-5 px-4 py-6 sm:px-8 sm:py-8">
         {assessmentActive &&
           transcript.some(
@@ -2186,6 +2343,7 @@ export function AnswerControls({
   onFinish,
   onCancel,
   onRetry,
+  speechDetected,
 }: {
   mode: "voice" | "type";
   onModeChange: (mode: "voice" | "type") => void;
@@ -2201,12 +2359,20 @@ export function AnswerControls({
   onFinish: () => void;
   onCancel: () => void;
   onRetry?: () => void;
+  /** True once any speech/interim has been captured this session (drives the
+   *  "listening but silent" nudge — #10). */
+  speechDetected?: boolean;
 }) {
   const { t } = useTranslation();
   const recordingSeconds = useRecordingTimer(micActive, micPaused);
   const errorKey = micError
     ? `course_interview.workspace.microphone_errors.${micError}`
     : null;
+  // A11y (#10): after a few seconds of active listening with nothing captured,
+  // surface a "we can't hear you" nudge so a voice user isn't left wondering
+  // whether the mic is working.
+  const listeningSilent =
+    micActive && !speechDetected && recordingSeconds >= 4;
 
   return (
     <div className="space-y-4">
@@ -2230,7 +2396,7 @@ export function AnswerControls({
             disabled={!micAvailable || disabled}
             aria-pressed={mode === "voice"}
             className={cn(
-              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50",
+              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100",
               mode === "voice"
                 ? "text-primary"
                 : "text-text-muted hover:bg-white/50 hover:text-text-strong",
@@ -2245,7 +2411,7 @@ export function AnswerControls({
             disabled={disabled}
             aria-pressed={mode === "type"}
             className={cn(
-              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50",
+              "relative z-10 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100",
               mode === "type"
                 ? "text-primary"
                 : "text-text-muted hover:bg-white/50 hover:text-text-strong",
@@ -2334,8 +2500,17 @@ export function AnswerControls({
                       ? t("course_interview.workspace.listening_short")
                       : t("course_interview.workspace.recording_paused")}
                   </p>
-                  <p className="text-xs text-text-muted">
-                    {t("course_interview.workspace.live_transcript_hint")}
+                  <p
+                    className={cn(
+                      "text-xs",
+                      listeningSilent
+                        ? "font-medium text-warning"
+                        : "text-text-muted",
+                    )}
+                  >
+                    {listeningSilent
+                      ? t("course_interview.workspace.listening_silent_hint")
+                      : t("course_interview.workspace.live_transcript_hint")}
                   </p>
                 </div>
                 <time className="font-mono text-sm font-semibold tabular-nums text-primary">
@@ -2538,6 +2713,7 @@ export function FocusedAnswerComposer({
         <AnswerControls
           mode={mode}
           onModeChange={changeMode}
+          speechDetected={value.trim().length > 0}
           micAvailable={micAvailable}
           micActive={micActive}
           micPaused={micPaused}
@@ -2610,8 +2786,16 @@ export function FocusedAnswerComposer({
         </div>
 
         <div className="mt-2 flex items-center gap-2 text-[11px] text-text-subtle">
-          <span className="hidden sm:inline">
-            {t("course_interview.workspace.send_hint")}
+          {/* A11y (#8): keyboard-shortcut hint is discoverable at every
+              breakpoint (was hidden on mobile). Kbd styling makes the keys read
+              as keys, not prose. */}
+          <span className="inline-flex items-center gap-1">
+            <kbd className="rounded border border-border bg-surface-muted px-1 py-0.5 font-mono text-[10px] font-semibold text-text-muted">
+              Enter
+            </kbd>
+            <span className="hidden sm:inline">
+              {t("course_interview.workspace.send_hint")}
+            </span>
           </span>
           <span className="ml-auto font-mono font-semibold tabular-nums sm:hidden">
             {elapsed}
@@ -2859,6 +3043,7 @@ export function StartInterviewDialog({
       onConfirm={onConfirm}
       isPending={isPending}
       confirmVariant="default"
+      dismissOnBackdrop
     />
   );
 }

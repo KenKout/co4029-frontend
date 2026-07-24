@@ -913,47 +913,6 @@ export function QuestionBank({
     }
   }
 
-  // The (config_id, position) unique constraint + per-PATCH commit means we
-  // can't set A→B and B→A directly (first write collides). Swap through a
-  // temp position above the current max: current→temp, neighbour→current,
-  // current→neighbour.
-  async function handleReorder(index: number, direction: -1 | 1) {
-    if (reordering) return;
-    const target = index + direction;
-    if (target < 0 || target >= sorted.length) return;
-    const current = sorted[index];
-    const neighbour = sorted[target];
-    const currentPos = current.position ?? index + 1;
-    const neighbourPos = neighbour.position ?? target + 1;
-    if (currentPos === neighbourPos) return;
-    const tempPos = Math.max(...sorted.map((q, i) => q.position ?? i + 1)) + 1;
-    setReordering(true);
-    try {
-      await updateQuestion.mutateAsync({
-        questionId: current.id,
-        patch: { position: tempPos },
-      });
-      await updateQuestion.mutateAsync({
-        questionId: neighbour.id,
-        patch: { position: currentPos },
-      });
-      await updateQuestion.mutateAsync({
-        questionId: current.id,
-        patch: { position: neighbourPos },
-      });
-      announce(
-        t("teacher_interview_config.qbank.sr.moved", { position: target + 1 }),
-      );
-    } catch (err: unknown) {
-      toast.error(
-        (err as Error).message ||
-          t("teacher_interview_config.toasts.question_reorder_failed"),
-      );
-    } finally {
-      setReordering(false);
-    }
-  }
-
   // Move a question from one index to an arbitrary target index (drag-drop or
   // move-to-top/bottom). Renumbers only the affected span, using a two-phase
   // temp-then-final assignment so the (config_id, position) unique constraint
@@ -1558,8 +1517,6 @@ export function QuestionBank({
                       setEditDirty(true);
                     }}
                     onDelete={() => void handleDelete(q)}
-                    onMoveUp={() => void handleReorder(displayIndex, -1)}
-                    onMoveDown={() => void handleReorder(displayIndex, 1)}
                     onMoveToTop={() => void handleMoveTo(displayIndex, 0)}
                     onMoveToBottom={() =>
                       void handleMoveTo(displayIndex, sorted.length - 1)
@@ -1978,8 +1935,6 @@ interface QuestionCardProps {
   onChangeEditingText: (v: string) => void;
   onChangeEditingAnswer: (v: string) => void;
   onDelete: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
   onMoveToTop: () => void;
   onMoveToBottom: () => void;
   onAddToBank: () => void;
@@ -2027,8 +1982,6 @@ function QuestionCard({
   onChangeEditingText,
   onChangeEditingAnswer,
   onDelete,
-  onMoveUp,
-  onMoveDown,
   onMoveToTop,
   onMoveToBottom,
   onAddToBank,
@@ -2133,58 +2086,41 @@ function QuestionCard({
           >
             {String(index + 1).padStart(2, "0")}
           </span>
-          <div className="flex flex-col">
-            <button
-              type="button"
-              title={t("teacher_interview_config.questions.move_up")}
-              aria-label={t("teacher_interview_config.questions.move_up")}
-              disabled={reordering || index === 0}
-              onClick={onMoveUp}
-              className="text-m3-on-surface-variant hover:text-m3-primary disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-not-allowed"
-            >
-              <ArrowUp className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              title={t("teacher_interview_config.questions.move_down")}
-              aria-label={t("teacher_interview_config.questions.move_down")}
-              disabled={reordering || index === total - 1}
-              onClick={onMoveDown}
-              className="text-m3-on-surface-variant hover:text-m3-primary disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-not-allowed"
-            >
-              <ArrowDown className="h-3.5 w-3.5" />
-            </button>
-          </div>
         </div>
 
         {/* Prompt + metadata */}
         <div className="min-w-0 flex-1 space-y-1.5">
-          <button
+          <p
+            className={cn(
+              "text-m3-on-surface font-semibold leading-relaxed",
+              // The prompt is the content — give it more weight than its
+              // surrounding chrome. Slightly smaller in compact mode.
+              compact ? "text-sm" : "text-[15px]",
+            )}
+          >
+            {q.prompt_text}
+          </p>
+          {/* Explicit answer toggle — a labelled button reads far clearer than
+              a bare chevron, so it's obvious this reveals the model answer. */}
+          <Button
             type="button"
+            variant={expanded ? "secondary" : "outline"}
+            size="sm"
             onClick={onToggleExpand}
             aria-expanded={expanded}
-            className="block w-full text-left cursor-pointer group"
+            className="mt-1 h-7 gap-1.5 text-xs"
           >
-            <span className="flex items-start gap-1.5">
-              <ChevronDown
-                className={cn(
-                  "h-4 w-4 mt-0.5 shrink-0 text-m3-on-surface-variant transition-transform motion-reduce:transition-none",
-                  expanded ? "rotate-0" : "-rotate-90",
-                )}
-                aria-hidden="true"
-              />
-              <span
-                className={cn(
-                  "text-m3-on-surface font-semibold leading-relaxed group-hover:text-m3-primary transition-colors",
-                  // The prompt is the content — give it more weight than its
-                  // surrounding chrome. Slightly smaller in compact mode.
-                  compact ? "text-sm" : "text-[15px]",
-                )}
-              >
-                {q.prompt_text}
-              </span>
-            </span>
-          </button>
+            <ChevronDown
+              className={cn(
+                "h-3.5 w-3.5 transition-transform motion-reduce:transition-none",
+                expanded ? "rotate-0" : "-rotate-90",
+              )}
+              aria-hidden="true"
+            />
+            {expanded
+              ? t("teacher_interview_config.qbank.hide_answer")
+              : t("teacher_interview_config.qbank.view_answer")}
+          </Button>
 
           {/* Metadata row (real fields only). Hidden in compact mode unless
               the card is expanded, so triage lists stay dense. */}
@@ -2341,10 +2277,20 @@ function QuestionCard({
         </div>
       </div>
 
-      {/* Expanded / editing body */}
-      {(expanded || editing) && (
-        <div className="px-3 pb-3 pl-11 space-y-2 border-t border-m3-outline-variant/10 pt-3">
-          {editing ? (
+      {/* Expanded / editing body — slides open/closed via a grid-rows
+          transition (0fr → 1fr) so "View answer"/"Hide answer" animates up and
+          down instead of snapping. */}
+      <div
+        className={cn(
+          "grid transition-all duration-300 ease-out motion-reduce:transition-none",
+          expanded || editing
+            ? "grid-rows-[1fr] opacity-100"
+            : "grid-rows-[0fr] opacity-0",
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="px-3 pb-3 pl-11 space-y-2 border-t border-m3-outline-variant/10 pt-3">
+            {editing ? (
             <>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
@@ -2405,13 +2351,14 @@ function QuestionCard({
                 {q.model_answer}
               </p>
             </div>
-          ) : (
-            <p className="text-[11px] text-m3-on-surface-variant/60 italic">
-              {t("teacher_interview_config.questions.model_answer_missing")}
-            </p>
-          )}
+            ) : (
+              <p className="text-[11px] text-m3-on-surface-variant/60 italic">
+                {t("teacher_interview_config.questions.model_answer_missing")}
+              </p>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </li>
   );
 }

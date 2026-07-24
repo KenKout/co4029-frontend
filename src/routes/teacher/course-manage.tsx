@@ -1,5 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, useParams, useNavigate } from "@tanstack/react-router";
+import { apiPatch, apiPost } from "@/lib/api/client";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -26,12 +28,18 @@ import {
   Trash2,
   X,
   Library,
+  ImageIcon,
+  Camera,
+  Clock,
+  CheckCheck,
+  CircleDot,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useTeacherCourseById,
   useTeacherCourseContent,
@@ -39,8 +47,14 @@ import {
   useCreateLesson,
   useUpdateModule,
   useUpdateCourse,
+  useUploadCourseThumbnail,
+  useDeleteTeacherCourse,
   useReorderModuleItems,
+  useReorderModules,
+  useUpdateLesson,
 } from "@/lib/api/hooks/teacher-courses";
+import { usePublishQuiz } from "@/lib/api/hooks/quizzes";
+import { usePublishInterviewConfig } from "@/lib/api/hooks/interviews";
 import {
   useTeacherCourseOutcomes,
   useCreateCourseOutcome,
@@ -53,6 +67,7 @@ import type {
   CourseContentItem,
   CourseContentModule,
 } from "@/lib/api/types/common";
+import { useFileDrop } from "@/lib/use-file-drop";
 import { cn } from "@/lib/utils";
 
 const LESSON_TYPE_CONFIG: Record<
@@ -92,7 +107,7 @@ const ADD_PILL_CLS =
   "hover:bg-m3-primary-fixed hover:text-m3-primary hover:border-m3-primary/20 transition-colors cursor-pointer";
 
 function CourseSettingsPanel({ courseId }: { courseId: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: course } = useTeacherCourseById(courseId);
   const updateCourse = useUpdateCourse(courseId);
   const [open, setOpen] = useState(false);
@@ -105,6 +120,63 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
   const [enrollmentCap, setEnrollmentCap] = useState("");
   const [completionDays, setCompletionDays] = useState("");
   const initialized = useRef(false);
+  const uploadThumbnail = useUploadCourseThumbnail(courseId);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  // Thumbnail is STAGED locally (with an object-URL preview) and only sent to
+  // the server when the user presses Save — so the image change is applied to
+  // the database on Save, in step with the other settings fields.
+  const [stagedThumbnail, setStagedThumbnail] = useState<File | null>(null);
+  const [stagedPreview, setStagedPreview] = useState<string | null>(null);
+
+  // Client-side guardrails mirroring the backend (JPEG/PNG/WebP/GIF, ≤ 5 MiB).
+  const THUMB_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
+  const THUMB_MAX_BYTES = 5 * 1024 * 1024;
+
+  function stageThumbnailFile(file: File) {
+    if (!file) return;
+    if (!THUMB_ACCEPT.split(",").includes(file.type)) {
+      toast.error(t("teacher_course_settings.thumbnail.invalid_type"));
+      return;
+    }
+    if (file.size > THUMB_MAX_BYTES) {
+      toast.error(t("teacher_course_settings.thumbnail.too_large"));
+      return;
+    }
+    // Revoke any previous preview URL before replacing it (avoid a leak).
+    setStagedPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+    setStagedThumbnail(file);
+  }
+
+  function handleThumbnailFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (file) stageThumbnailFile(file);
+  }
+
+  // Drag-and-drop onto the thumbnail tile — same flicker-proof lifecycle as
+  // every other upload surface; keeps the live image preview.
+  const { dragging: thumbDragging, dropProps: thumbDropProps } = useFileDrop({
+    onFile: stageThumbnailFile,
+    disabled: uploadThumbnail.isPending,
+  });
+
+  // Clean up the object URL when the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (stagedPreview) URL.revokeObjectURL(stagedPreview);
+    };
+  }, [stagedPreview]);
+
+  // Briefly true right after a successful save so the header can show a
+  // transient "Saved" confirmation (cleared once edits resume or the timer
+  // elapses) — mirrors the interview-config save UX.
+  const [justSaved, setJustSaved] = useState(false);
+  // Timestamp of the last successful save, seeded from the course's updated_at
+  // so the "Last saved" indicator is populated on first load.
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
 
   if (course && !initialized.current) {
     initialized.current = true;
@@ -116,7 +188,37 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
     setEstimatedMinutes(course.estimated_minutes?.toString() ?? "");
     setEnrollmentCap(course.enrollment_cap?.toString() ?? "");
     setCompletionDays(course.expected_completion_days?.toString() ?? "");
+    setLastSaved(course.updated_at ?? null);
   }
+
+  // Compare the current form against the saved course so the button can show
+  // Saving… / Unsaved changes / Saved and disable itself when there's nothing
+  // to save (matches the interview-config settings behaviour).
+  const settingsDirty = useMemo(() => {
+    if (!course) return false;
+    return (
+      stagedThumbnail !== null ||
+      title.trim() !== (course.title ?? "") ||
+      slug.trim() !== (course.slug ?? "") ||
+      description.trim() !== (course.description ?? "") ||
+      level !== (course.level ?? "") ||
+      status !== (course.status ?? "draft") ||
+      estimatedMinutes !== (course.estimated_minutes?.toString() ?? "") ||
+      enrollmentCap !== (course.enrollment_cap?.toString() ?? "") ||
+      completionDays !== (course.expected_completion_days?.toString() ?? "")
+    );
+  }, [
+    course,
+    stagedThumbnail,
+    title,
+    slug,
+    description,
+    level,
+    status,
+    estimatedMinutes,
+    enrollmentCap,
+    completionDays,
+  ]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -143,6 +245,19 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
           ? Number(completionDays)
           : undefined,
       });
+      // Upload the staged thumbnail (if any) as part of the same Save action,
+      // so the image change is persisted to the DB only on Save.
+      if (stagedThumbnail) {
+        await uploadThumbnail.mutateAsync(stagedThumbnail);
+        setStagedThumbnail(null);
+        setStagedPreview((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return null;
+        });
+      }
+      setJustSaved(true);
+      setLastSaved(new Date().toISOString());
+      window.setTimeout(() => setJustSaved(false), 2500);
       toast.success(t("teacher_course_settings.saved"));
     } catch (err: unknown) {
       toast.error(
@@ -201,6 +316,69 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
             className="p-5 border-t border-m3-outline-variant/10 bg-m3-surface space-y-5"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Thumbnail — the image representing this course on cards.
+                  Click the banner (or the button) to upload a new one. */}
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("teacher_course_settings.thumbnail.label")}
+                </label>
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => thumbnailInputRef.current?.click()}
+                    disabled={uploadThumbnail.isPending}
+                    aria-label={t("teacher_course_settings.thumbnail.change")}
+                    className="group relative aspect-video w-40 shrink-0 cursor-pointer overflow-hidden rounded-lg ghost-border transition-transform hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed"
+                  >
+                    {stagedPreview ?? course?.thumbnail_url ? (
+                      <img
+                        src={stagedPreview ?? course?.thumbnail_url ?? ""}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-500 via-blue-700 to-blue-800">
+                        <ImageIcon className="h-6 w-6 text-white/70" />
+                      </div>
+                    )}
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                      {uploadThumbnail.isPending ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-white" />
+                      ) : (
+                        <Camera className="h-5 w-5 text-white" />
+                      )}
+                    </span>
+                  </button>
+                  <div className="min-w-0">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={uploadThumbnail.isPending}
+                      onClick={() => thumbnailInputRef.current?.click()}
+                      className="gap-1.5"
+                    >
+                      {uploadThumbnail.isPending ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Camera className="h-3.5 w-3.5" />
+                      )}
+                      {t("teacher_course_settings.thumbnail.change")}
+                    </Button>
+                    <p className="mt-1 text-xs text-m3-on-surface-variant">
+                      {t("teacher_course_settings.thumbnail.hint")}
+                    </p>
+                  </div>
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept={THUMB_ACCEPT}
+                    onChange={handleThumbnailFile}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
               {/* Title */}
               <div className="sm:col-span-2 space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
@@ -349,11 +527,55 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
               </div>
             </div>
 
-            <div className="flex justify-end pt-1">
+            <div className="flex items-center justify-end gap-3 pt-1">
+              {/* Save-state indicator beside the button — Saving… / Unsaved
+                  changes / Saved — so the teacher always knows whether their
+                  edits are persisted (mirrors the interview-config save UX). */}
+              {updateCourse.isPending ? (
+                <span
+                  role="status"
+                  aria-live="polite"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-m3-on-surface-variant"
+                >
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                  {t("teacher_course_settings.save_status.saving")}
+                </span>
+              ) : settingsDirty ? (
+                <span
+                  role="status"
+                  aria-live="polite"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700"
+                >
+                  <span
+                    className="h-2 w-2 rounded-full bg-amber-500"
+                    aria-hidden
+                  />
+                  {t("teacher_course_settings.save_status.unsaved")}
+                </span>
+              ) : justSaved ? (
+                <span
+                  role="status"
+                  aria-live="polite"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600"
+                >
+                  <Check className="h-3.5 w-3.5" aria-hidden />
+                  {t("teacher_course_settings.save_status.saved")}
+                </span>
+              ) : lastSaved ? (
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-m3-on-surface-variant">
+                  <Clock className="h-3.5 w-3.5" aria-hidden />
+                  {t("teacher_course_settings.save_status.last_saved", {
+                    when: new Date(lastSaved).toLocaleString(
+                      i18n.language?.startsWith("vi") ? "vi-VN" : "en-US",
+                      { dateStyle: "medium", timeStyle: "short" },
+                    ),
+                  })}
+                </span>
+              ) : null}
               <Button
                 type="submit"
                 size="sm"
-                disabled={updateCourse.isPending}
+                disabled={updateCourse.isPending || !settingsDirty}
                 className="gap-2 gradient-primary text-white border-0 shadow-sm"
               >
                 {updateCourse.isPending ? (
@@ -842,6 +1064,18 @@ function ModuleItemRow({
   const lesson = item.lesson;
   const quiz = item.quiz;
   const interview = item.interview;
+  // Dragging is armed only while the grip handle is held (see the handle
+  // button below) so the row's title link + buttons remain clickable.
+  const [dragEnabled, setDragEnabled] = useState(false);
+  // Inline publish (T#2): publish a draft item without opening it. Publishing
+  // is the stated pain point and every item type supports it; unpublish is not
+  // uniformly exposed (quizzes have no unpublish route), so the inline control
+  // is publish-only — a published item shows a static status badge.
+  const publishLesson = useUpdateLesson(item.lesson_id ?? "", courseId);
+  const publishQuiz = usePublishQuiz(item.quiz_id ?? undefined);
+  const publishInterview = usePublishInterviewConfig(
+    item.interview_config_id ?? undefined,
+  );
   const lessonType = item.target?.lesson_type ?? lesson?.lesson_type ?? "video";
   const cfg =
     item.item_type === "lesson"
@@ -862,24 +1096,69 @@ function ModuleItemRow({
     quiz?.title ??
     interview?.title ??
     label;
-  const status = lesson?.status ?? quiz?.status ?? interview?.status;
+  // Status lives on `item.target` in the teacher content payload (the
+  // `item.lesson/quiz/interview` fields are only populated on the public/learner
+  // payload). Reading the wrong field left `status` undefined, so the inline
+  // publish control never rendered — the \"no quick publish\" bug.
+  const status =
+    item.target?.status ??
+    lesson?.status ??
+    quiz?.status ??
+    interview?.status;
+  const publishing =
+    publishLesson.isPending ||
+    publishQuiz.isPending ||
+    publishInterview.isPending;
+
+  function handlePublish(e: React.MouseEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    const onError = (err: unknown) =>
+      toast.error(
+        (err as Error).message || t("teacher_common.publish_failed"),
+      );
+    const onSuccess = () =>
+      toast.success(t("teacher_common.item_published", { title }));
+    if (item.item_type === "lesson" && item.lesson_id) {
+      publishLesson.mutate({ status: "published" }, { onSuccess, onError });
+    } else if (item.item_type === "quiz" && item.quiz_id) {
+      publishQuiz.mutate(undefined, { onSuccess, onError });
+    } else if (item.item_type === "interview" && item.interview_config_id) {
+      publishInterview.mutate(undefined, { onSuccess, onError });
+    }
+  }
 
   return (
     <div
-      draggable
+      draggable={dragEnabled}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      onDragEnd={onDragEnd}
+      onDragEnd={() => {
+        setDragEnabled(false);
+        onDragEnd();
+      }}
       className={cn(
-        "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all group select-none cursor-grab active:cursor-grabbing",
+        "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all group select-none",
         isDragging ? "opacity-40" : "",
         isDragOver
           ? "ring-2 ring-m3-primary/40 bg-m3-primary-fixed shadow-sm"
           : "bg-m3-surface hover:bg-m3-surface-container",
       )}
     >
-      <GripVertical className="h-3.5 w-3.5 text-m3-outline-variant shrink-0" />
+      {/* Drag handle: dragging is enabled ONLY while grabbing this grip, so the
+          title link + action buttons stay clickable. Previously the whole row
+          was draggable but the title <Link draggable={false}> covered most of
+          it and swallowed drag-starts — the \"item drag doesn't work\" bug. */}
+      <button
+        type="button"
+        aria-label={t("teacher_common.drag_to_reorder")}
+        onMouseDown={() => setDragEnabled(true)}
+        onMouseUp={() => setDragEnabled(false)}
+        className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 text-m3-outline-variant hover:text-m3-on-surface-variant"
+      >
+        <GripVertical className="h-3.5 w-3.5" />
+      </button>
       <div
         className={cn(
           "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
@@ -931,18 +1210,30 @@ function ModuleItemRow({
       >
         {label}
       </Badge>
-      {status && (
-        <Badge
-          className={cn(
-            "text-[10px] border-0 shrink-0",
-            status === "published"
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-amber-50 text-amber-700",
-          )}
-        >
-          {status}
-        </Badge>
-      )}
+      {status &&
+        (status === "published" ? (
+          <Badge className="text-[10px] border-0 shrink-0 bg-emerald-100 text-emerald-700">
+            {status}
+          </Badge>
+        ) : (
+          // Inline publish (T#2): a draft/archived item can be published right
+          // here without opening it. Stops propagation so it doesn't trigger
+          // the row's drag / link behaviour.
+          <button
+            type="button"
+            onClick={handlePublish}
+            disabled={publishing}
+            title={t("teacher_common.publish_item")}
+            className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 hover:bg-emerald-100 hover:text-emerald-700 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {publishing ? (
+              <Loader2 className="h-2.5 w-2.5 animate-spin" />
+            ) : (
+              <CircleDot className="h-2.5 w-2.5" />
+            )}
+            {t("teacher_common.publish_item")}
+          </button>
+        ))}
       <div className="flex items-center gap-1 text-m3-on-surface-variant">
         {item.item_type === "lesson" && item.lesson_id && (
           <Link
@@ -997,22 +1288,42 @@ function ModuleItemRow({
 function ModuleAccordion({
   module,
   courseId,
-  defaultOpen = false,
+  open,
+  onToggle,
+  registerRef,
+  isDragOver,
+  isDragging,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
 }: {
   module: CourseContentModule;
   courseId: string;
-  defaultOpen?: boolean;
+  open: boolean;
+  onToggle: () => void;
+  /** Registers this module's DOM node so the quick-nav rail can scroll to it. */
+  registerRef: (id: string, el: HTMLDivElement | null) => void;
+  isDragOver: boolean;
+  isDragging: boolean;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: () => void;
+  onDragEnd: () => void;
 }) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(defaultOpen);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(module.title);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const updateModule = useUpdateModule(module.id, courseId);
   const reorderItems = useReorderModuleItems(module.id, courseId);
+  const qc = useQueryClient();
 
   const [dragSourceIdx, setDragSourceIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  // Module dragging is armed only while the header grip is held so the title
+  // edit / edit-link / publish controls in the header stay clickable.
+  const [moduleDragEnabled, setModuleDragEnabled] = useState(false);
 
   const allItemsSorted = [...(module.items ?? [])].sort(
     (a, b) => a.position - b.position,
@@ -1026,6 +1337,31 @@ function ModuleAccordion({
   const interviewCount = (module.items ?? []).filter(
     (i) => i.item_type === "interview",
   ).length;
+
+  // Publish progress (T#2 + #1): how many items are live. Drives the header
+  // "N/M published" chip and the "Publish all" action. An item's status lives
+  // on its target (lesson/quiz/interview); items with no status are ignored.
+  function itemStatus(i: CourseContentItem): string | undefined {
+    // Teacher payload carries status on `target`; the typed lesson/quiz/
+    // interview fields are learner-payload-only. Check target first.
+    return (
+      i.target?.status ??
+      i.lesson?.status ??
+      i.quiz?.status ??
+      i.interview?.status
+    );
+  }
+  const statusedItems = (module.items ?? []).filter(
+    (i) => itemStatus(i) !== undefined,
+  );
+  const publishedCount = statusedItems.filter(
+    (i) => itemStatus(i) === "published",
+  ).length;
+  const draftItems = statusedItems.filter(
+    (i) => itemStatus(i) !== "published",
+  );
+  const allPublished =
+    statusedItems.length > 0 && publishedCount === statusedItems.length;
 
   function handleDrop(dropIdx: number) {
     if (dragSourceIdx === null || dragSourceIdx === dropIdx) {
@@ -1084,10 +1420,67 @@ function ModuleAccordion({
     );
   }
 
+  // Publish-all (T#2): fire a publish for every draft item in this module in
+  // parallel. Each item type has its own route, so we branch per item. The
+  // per-row hooks can't be reused here (hooks can't live in a loop), so we PATCH
+  // /POST directly via the same endpoints those hooks call. Best-effort with a
+  // summary toast; the content query is invalidated once at the end.
+  const [publishingAll, setPublishingAll] = useState(false);
+  async function handlePublishAll(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (draftItems.length === 0 || publishingAll) return;
+    setPublishingAll(true);
+    const results = await Promise.allSettled(
+      draftItems.map((i) => {
+        if (i.item_type === "lesson" && i.lesson_id) {
+          return apiPatch(`/teacher/lessons/${i.lesson_id}`, {
+            status: "published",
+          });
+        }
+        if (i.item_type === "quiz" && i.quiz_id) {
+          return apiPost(`/teacher/quizzes/${i.quiz_id}/publish`);
+        }
+        if (i.item_type === "interview" && i.interview_config_id) {
+          return apiPost(
+            `/teacher/interview-configs/${i.interview_config_id}/publish`,
+          );
+        }
+        return Promise.reject(new Error("unpublishable item"));
+      }),
+    );
+    setPublishingAll(false);
+    const ok = results.filter((r) => r.status === "fulfilled").length;
+    const failed = results.length - ok;
+    void qc.invalidateQueries({
+      queryKey: ["teacher", "courses", courseId, "content"],
+    });
+    if (failed > 0) {
+      toast.warning(
+        t("teacher_common.publish_all_partial", { ok, failed }),
+      );
+    } else {
+      toast.success(t("teacher_common.publish_all_done", { count: ok }));
+    }
+  }
+
   return (
     <div
+      ref={(el) => registerRef(module.id, el)}
+      id={`module-${module.id}`}
+      draggable={moduleDragEnabled}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={() => {
+        setModuleDragEnabled(false);
+        onDragEnd();
+      }}
       className={cn(
-        "flex flex-col rounded-xl border-l-4 overflow-hidden",
+        "flex flex-col rounded-xl border-l-4 overflow-hidden scroll-mt-24 transition-all",
+        isDragging ? "opacity-40" : "",
+        isDragOver
+          ? "ring-2 ring-m3-primary/40 shadow-sm"
+          : "",
         open ? "border-m3-primary" : "border-m3-outline-variant",
       )}
     >
@@ -1097,9 +1490,20 @@ function ModuleAccordion({
           "group w-full flex items-center gap-3 p-4 text-left cursor-pointer transition-colors",
           "bg-m3-surface-container-low hover:bg-m3-surface-container",
         )}
-        onClick={() => !editingTitle && setOpen((o) => !o)}
+        onClick={() => !editingTitle && onToggle()}
       >
-        <GripVertical className="h-4 w-4 text-m3-outline-variant shrink-0 cursor-grab" />
+        {/* Drag handle — dragging armed only while grabbing this grip so the
+            title / edit / publish controls in the header stay clickable. */}
+        <button
+          type="button"
+          aria-label={t("teacher_common.drag_to_reorder")}
+          onMouseDown={() => setModuleDragEnabled(true)}
+          onMouseUp={() => setModuleDragEnabled(false)}
+          onClick={(e) => e.stopPropagation()}
+          className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 text-m3-outline-variant hover:text-m3-on-surface-variant"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
 
         {/* Title — editable inline */}
         {editingTitle ? (
@@ -1173,8 +1577,53 @@ function ModuleAccordion({
               : module.status}
         </button>
 
+        {/* Publish progress chip (T#1 + #2): fills the wasted middle space with
+            useful signal — how many items are live. Green when all published. */}
+        {statusedItems.length > 0 && (
+          <span
+            className={cn(
+              "hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0",
+              allPublished
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-m3-surface-container-high text-m3-on-surface-variant",
+            )}
+            title={t("teacher_common.publish_progress", {
+              published: publishedCount,
+              total: statusedItems.length,
+            })}
+          >
+            {allPublished ? (
+              <CheckCheck className="h-2.5 w-2.5" />
+            ) : (
+              <CircleDot className="h-2.5 w-2.5" />
+            )}
+            {publishedCount}/{statusedItems.length}
+          </span>
+        )}
+
+        {/* Publish-all (T#2): one click publishes every draft item in the
+            module. Only shown when there's at least one draft to publish. */}
+        {draftItems.length > 0 && (
+          <button
+            type="button"
+            onClick={handlePublishAll}
+            disabled={publishingAll}
+            title={t("teacher_common.publish_all", {
+              count: draftItems.length,
+            })}
+            className="shrink-0 hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 hover:bg-emerald-100 hover:text-emerald-700 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {publishingAll ? (
+              <Loader2 className="h-2.5 w-2.5 animate-spin" />
+            ) : (
+              <CheckCheck className="h-2.5 w-2.5" />
+            )}
+            {t("teacher_common.publish_all", { count: draftItems.length })}
+          </button>
+        )}
+
         {/* Meta counts */}
-        <span className="text-[11px] text-m3-on-surface-variant hidden sm:block shrink-0">
+        <span className="text-[11px] text-m3-on-surface-variant hidden md:block shrink-0">
           {lessonCount}L{quizCount > 0 && ` · ${quizCount}Q`}
           {interviewCount > 0 && ` · ${interviewCount}I`}
         </span>
@@ -1196,7 +1645,7 @@ function ModuleAccordion({
         {/* Chevron expand */}
         <button
           type="button"
-          onClick={() => setOpen((o) => !o)}
+          onClick={onToggle}
           className="shrink-0"
         >
           <ChevronDown
@@ -1320,12 +1769,97 @@ function AddModuleForm({
 
 export default function CourseManagePage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
   const { data: course } = useTeacherCourseById(courseId);
   const { data: content, isLoading } = useTeacherCourseContent(courseId);
   const [addingModule, setAddingModule] = useState(false);
+  const deleteCourse = useDeleteTeacherCourse(courseId);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const modules = content?.modules ?? [];
+
+  // Per-course open/closed state, persisted to localStorage (T#: "remember what
+  // I last had open"). Keyed by module id. A module absent from the map falls
+  // back to closed. Seeded once from storage; every toggle writes back.
+  const storageKey = `co4029:course-manage:open:${courseId}`;
+  const [openMap, setOpenMap] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      return raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+    } catch {
+      return {};
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(openMap));
+    } catch {
+      /* storage full / unavailable — non-fatal, state still works in-memory */
+    }
+  }, [openMap, storageKey]);
+  function toggleModule(id: string) {
+    setOpenMap((m) => ({ ...m, [id]: !m[id] }));
+  }
+  function setAllModules(open: boolean) {
+    setOpenMap(Object.fromEntries(modules.map((m) => [m.id, open])));
+  }
+
+  // Ref registry so the quick-nav rail can scroll a module into view (T#3/#4).
+  const moduleRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  function registerModuleRef(id: string, el: HTMLDivElement | null) {
+    moduleRefs.current[id] = el;
+  }
+
+  // Module drag-reorder. dragEnabled is armed only while the module grip is
+  // held (same pattern as item rows) so the header's title/buttons stay usable.
+  const reorderModules = useReorderModules(courseId);
+  const [modDragIdx, setModDragIdx] = useState<number | null>(null);
+  const [modDragOverIdx, setModDragOverIdx] = useState<number | null>(null);
+  function handleModuleDrop(dropIdx: number) {
+    if (modDragIdx === null || modDragIdx === dropIdx) {
+      setModDragIdx(null);
+      setModDragOverIdx(null);
+      return;
+    }
+    const newOrder = [...modules];
+    const [moved] = newOrder.splice(modDragIdx, 1);
+    newOrder.splice(dropIdx, 0, moved);
+    reorderModules.mutate(
+      newOrder.map((m) => m.id),
+      {
+        onError: (err) =>
+          toast.error(
+            (err as Error).message || t("teacher_common.reorder_failed"),
+          ),
+      },
+    );
+    setModDragIdx(null);
+    setModDragOverIdx(null);
+  }
+  function scrollToModule(id: string) {
+    // Ensure it's open before scrolling so the target has its full height.
+    setOpenMap((m) => (m[id] ? m : { ...m, [id]: true }));
+    requestAnimationFrame(() => {
+      moduleRefs.current[id]?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
+  async function handleDeleteCourse() {
+    try {
+      await deleteCourse.mutateAsync();
+      toast.success(t("teacher_course_settings.delete.deleted"));
+      setConfirmDelete(false);
+      void navigate({ to: "/teacher/courses" });
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message || t("teacher_course_settings.delete.failed"),
+      );
+    }
+  }
 
   return (
     <div className="space-y-6 pb-12">
@@ -1347,9 +1881,24 @@ export default function CourseManagePage() {
             <ArrowRight className="h-3 w-3" />
             <span className="truncate">{course?.title ?? "…"}</span>
           </div>
-          <h1 className="text-xl font-headline font-bold text-m3-on-surface truncate">
-            {course?.title ?? t("teacher_common.curriculum_fallback_title")}
-          </h1>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="min-w-0 flex-1 text-xl font-headline font-bold text-m3-on-surface truncate">
+              {course?.title ?? t("teacher_common.curriculum_fallback_title")}
+            </h1>
+            {/* Delete — destructive, pushed to the right of the course name.
+                Red hover fill + subtle lift; press-down on click. */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmDelete(true)}
+              disabled={deleteCourse.isPending}
+              className="shrink-0 gap-2 border-destructive/40 text-destructive transition-all hover:-translate-y-0.5 hover:bg-destructive hover:text-white hover:shadow-md active:translate-y-0 active:scale-95"
+            >
+              <Trash2 className="h-4 w-4" />
+              {t("teacher_course_settings.delete.button")}
+            </Button>
+          </div>
           <p className="text-xs text-m3-on-surface-variant mt-0.5">
             {t("teacher_common.module_count", { count: modules.length })}
             {modules.length > 0 &&
@@ -1485,11 +2034,34 @@ export default function CourseManagePage() {
 
       {/* Curriculum */}
       <section className="space-y-2">
-        <div className="flex items-center gap-2">
-          <GripVertical className="h-4 w-4 text-m3-primary" />
-          <h2 className="text-base font-headline font-bold text-m3-primary">
-            {t("teacher_common.section_curriculum")}
-          </h2>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <GripVertical className="h-4 w-4 text-m3-primary" />
+            <h2 className="text-base font-headline font-bold text-m3-primary">
+              {t("teacher_common.section_curriculum")}
+            </h2>
+          </div>
+          {/* Expand/collapse all (T#1/#3): fast way to open or compact every
+              module at once. */}
+          {modules.length > 1 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setAllModules(true)}
+                className="text-xs font-medium text-m3-on-surface-variant hover:text-m3-primary transition-colors cursor-pointer px-2 py-1"
+              >
+                {t("teacher_common.expand_all")}
+              </button>
+              <span className="text-m3-outline-variant">·</span>
+              <button
+                type="button"
+                onClick={() => setAllModules(false)}
+                className="text-xs font-medium text-m3-on-surface-variant hover:text-m3-primary transition-colors cursor-pointer px-2 py-1"
+              >
+                {t("teacher_common.collapse_all")}
+              </button>
+            </div>
+          )}
         </div>
 
         {isLoading ? (
@@ -1503,34 +2075,121 @@ export default function CourseManagePage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {modules.map((module, idx) => (
-              <ModuleAccordion
-                key={module.id}
-                module={module}
-                courseId={courseId}
-                defaultOpen={idx === 0}
-              />
-            ))}
-
-            {addingModule ? (
-              <AddModuleForm
-                courseId={courseId}
-                nextPosition={modules.length + 1}
-                onDone={() => setAddingModule(false)}
-              />
-            ) : (
-              <Button
-                variant="outline"
-                className="w-full gap-2 text-sm"
-                onClick={() => setAddingModule(true)}
-              >
-                <Plus className="h-4 w-4" />
-                {t("teacher_common.add_module")}
-              </Button>
+            {/* Horizontal quick-nav bar (T#3/#4): jump to any module + see its
+                publish progress at a glance. Was a 220px left rail that squeezed
+                the module cards; now a full-width horizontal chip row that
+                scrolls on overflow, so modules get the full width. */}
+            {modules.length > 1 && (
+              <nav className="flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-m3-outline-variant/40 pb-2">
+                <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant/70">
+                  {t("teacher_common.jump_to")}
+                </span>
+                {modules.map((module) => {
+                  const st = (i: CourseContentItem) =>
+                    i.target?.status ??
+                    i.lesson?.status ??
+                    i.quiz?.status ??
+                    i.interview?.status;
+                  const items = (module.items ?? []).filter(
+                    (i) => st(i) !== undefined,
+                  );
+                  const pub = items.filter(
+                    (i) => st(i) === "published",
+                  ).length;
+                  const done = items.length > 0 && pub === items.length;
+                  return (
+                    <button
+                      key={module.id}
+                      type="button"
+                      onClick={() => scrollToModule(module.id)}
+                      className="flex shrink-0 items-center gap-1.5 rounded-full border border-m3-outline-variant/60 px-3 py-1 text-left text-xs text-m3-on-surface hover:border-m3-primary hover:bg-m3-surface-container transition-colors cursor-pointer group"
+                    >
+                      {done ? (
+                        <CheckCheck className="h-3 w-3 shrink-0 text-emerald-600" />
+                      ) : (
+                        <CircleDot className="h-3 w-3 shrink-0 text-m3-outline-variant group-hover:text-m3-primary" />
+                      )}
+                      <span className="max-w-[12rem] truncate group-hover:text-m3-primary transition-colors">
+                        {module.title}
+                      </span>
+                      {items.length > 0 && (
+                        <span className="text-[10px] text-m3-on-surface-variant shrink-0">
+                          {pub}/{items.length}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
             )}
+
+            <div className="space-y-3 min-w-0">
+              {modules.map((module, idx) => (
+                <ModuleAccordion
+                  key={module.id}
+                  module={module}
+                  courseId={courseId}
+                  open={!!openMap[module.id]}
+                  onToggle={() => toggleModule(module.id)}
+                  registerRef={registerModuleRef}
+                  isDragOver={modDragOverIdx === idx}
+                  isDragging={modDragIdx === idx}
+                  onDragStart={(e) => {
+                    setModDragIdx(idx);
+                    const el = e.currentTarget as HTMLElement;
+                    const rect = el.getBoundingClientRect();
+                    e.dataTransfer.setDragImage(
+                      el,
+                      e.clientX - rect.left,
+                      e.clientY - rect.top,
+                    );
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setModDragOverIdx(idx);
+                  }}
+                  onDrop={() => handleModuleDrop(idx)}
+                  onDragEnd={() => {
+                    setModDragIdx(null);
+                    setModDragOverIdx(null);
+                  }}
+                />
+              ))}
+
+              {addingModule ? (
+                <AddModuleForm
+                  courseId={courseId}
+                  nextPosition={modules.length + 1}
+                  onDone={() => setAddingModule(false)}
+                />
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 text-sm"
+                  onClick={() => setAddingModule(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  {t("teacher_common.add_module")}
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </section>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title={t("teacher_course_settings.delete.title")}
+        description={t("teacher_course_settings.delete.body", {
+          title: course?.title ?? "",
+        })}
+        confirmLabel={t("teacher_course_settings.delete.button")}
+        cancelLabel={t("common.cancel", "Cancel")}
+        confirmVariant="destructive"
+        onConfirm={handleDeleteCourse}
+        isPending={deleteCourse.isPending}
+      />
     </div>
   );
 }

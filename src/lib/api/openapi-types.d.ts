@@ -5181,10 +5181,57 @@ export interface components {
         CostTotals: {
             /** Tokens */
             tokens: number;
+            /** Input Tokens */
+            input_tokens?: number;
+            /** Output Tokens */
+            output_tokens?: number;
+            /** Cached Tokens */
+            cached_tokens?: number;
             /** Usd */
             usd: number;
             /** Call Count */
             call_count: number;
+        };
+        /** FailedSpend */
+        FailedSpend: {
+            /** Call Count */
+            call_count?: number;
+            /** Usd */
+            usd?: number;
+        };
+        /** CategorySpendOut */
+        CategorySpendOut: {
+            /** Dimension Value */
+            dimension_value: string;
+            /** Call Count */
+            call_count: number;
+            /** Total Tokens */
+            total_tokens: number;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Output Tokens */
+            output_tokens: number;
+            /** Cached Tokens */
+            cached_tokens: number;
+            /** Total Usd */
+            total_usd: number;
+        };
+        /** ModelEfficiencyOut */
+        ModelEfficiencyOut: {
+            /** Model Name */
+            model_name: string;
+            /** Call Count */
+            call_count: number;
+            /** Total Tokens */
+            total_tokens: number;
+            /** Total Usd */
+            total_usd: number;
+            /** Latency P50 Ms */
+            latency_p50_ms: number;
+            /** Latency P95 Ms */
+            latency_p95_ms: number;
+            /** Usd Per 1K Tokens */
+            usd_per_1m_tokens: number;
         };
         /**
          * CourseAuthoring
@@ -5240,6 +5287,8 @@ export interface components {
             level?: string | null;
             /** Thumbnail Object Id */
             thumbnail_object_id?: string | null;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
             /** Estimated Minutes */
             estimated_minutes?: number | null;
             /** Expected Completion Days */
@@ -5481,6 +5530,8 @@ export interface components {
              * @constant
              */
             status: "published";
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
             /**
              * Tags
              * @default []
@@ -6152,6 +6203,8 @@ export interface components {
              * @enum {string}
              */
             supported_modes: "voice" | "text" | "hybrid";
+            /** Tts Voice */
+            tts_voice?: ("aura-2-thalia-en" | "aura-2-andromeda-en" | "aura-2-helena-en" | "aura-2-apollo-en" | "aura-2-arcas-en" | "aura-2-aries-en" | "aura-2-asteria-en" | "aura-2-athena-en" | "aura-2-hera-en" | "aura-2-hyperion-en" | "aura-2-luna-en" | "aura-2-orion-en" | "aura-2-orpheus-en" | "aura-2-ophelia-en" | "aura-2-zeus-en" | "aura-2-vesta-en") | null;
             /** Time Limit Minutes */
             time_limit_minutes?: number | null;
             /** Max Attempts */
@@ -6236,6 +6289,8 @@ export interface components {
              * @enum {string}
              */
             supported_modes: "voice" | "text" | "hybrid";
+            /** Tts Voice */
+            tts_voice?: ("aura-2-thalia-en" | "aura-2-andromeda-en" | "aura-2-helena-en" | "aura-2-apollo-en" | "aura-2-arcas-en" | "aura-2-aries-en" | "aura-2-asteria-en" | "aura-2-athena-en" | "aura-2-hera-en" | "aura-2-hyperion-en" | "aura-2-luna-en" | "aura-2-orion-en" | "aura-2-orpheus-en" | "aura-2-ophelia-en" | "aura-2-zeus-en" | "aura-2-vesta-en") | null;
             /** Time Limit Minutes */
             time_limit_minutes?: number | null;
             /** Max Attempts */
@@ -6317,6 +6372,8 @@ export interface components {
              * @enum {string}
              */
             supported_modes: "voice" | "text" | "hybrid";
+            /** Tts Voice */
+            tts_voice?: string | null;
             /** Time Limit Minutes */
             time_limit_minutes?: number | null;
             /** Max Attempts */
@@ -6344,6 +6401,8 @@ export interface components {
             persona?: ("strict" | "neutral" | "supportive") | null;
             /** Supported Modes */
             supported_modes?: ("voice" | "text" | "hybrid") | null;
+            /** Tts Voice */
+            tts_voice?: ("aura-2-thalia-en" | "aura-2-andromeda-en" | "aura-2-helena-en" | "aura-2-apollo-en" | "aura-2-arcas-en" | "aura-2-aries-en" | "aura-2-asteria-en" | "aura-2-athena-en" | "aura-2-hera-en" | "aura-2-hyperion-en" | "aura-2-luna-en" | "aura-2-orion-en" | "aura-2-orpheus-en" | "aura-2-ophelia-en" | "aura-2-zeus-en" | "aura-2-vesta-en") | null;
             /** Time Limit Minutes */
             time_limit_minutes?: number | null;
             /** Max Attempts */
@@ -6406,6 +6465,8 @@ export interface components {
         InterviewForTakingPublic: {
             config: components["schemas"]["InterviewConfigPublic"];
             first_question?: components["schemas"]["InterviewQuestionPublic"] | null;
+            /** Outcome Count */
+            outcome_count?: number;
         };
         /**
          * InterviewGenerationRequest
@@ -8206,10 +8267,10 @@ export interface components {
         ModelPricingCreate: {
             /** Model Name */
             model_name: string;
-            /** Input Usd Per 1K */
-            input_usd_per_1k: number;
-            /** Output Usd Per 1K */
-            output_usd_per_1k: number;
+            /** Input Usd Per 1M */
+            input_usd_per_1m: number;
+            /** Output Usd Per 1M */
+            output_usd_per_1m: number;
             /** Notes */
             notes?: string | null;
         };
@@ -8222,10 +8283,10 @@ export interface components {
             id: string;
             /** Model Name */
             model_name: string;
-            /** Input Usd Per 1K */
-            input_usd_per_1k: number;
-            /** Output Usd Per 1K */
-            output_usd_per_1k: number;
+            /** Input Usd Per 1M */
+            input_usd_per_1m: number;
+            /** Output Usd Per 1M */
+            output_usd_per_1m: number;
             /** Notes */
             notes?: string | null;
             /** Updated By */
@@ -8243,10 +8304,10 @@ export interface components {
         };
         /** ModelPricingUpdate */
         ModelPricingUpdate: {
-            /** Input Usd Per 1K */
-            input_usd_per_1k?: number | null;
-            /** Output Usd Per 1K */
-            output_usd_per_1k?: number | null;
+            /** Input Usd Per 1M */
+            input_usd_per_1m?: number | null;
+            /** Output Usd Per 1M */
+            output_usd_per_1m?: number | null;
             /** Notes */
             notes?: string | null;
         };
@@ -9994,6 +10055,8 @@ export interface components {
             available_until?: string | null;
             /** Due At */
             due_at?: string | null;
+            /** Question Count */
+            question_count?: number;
         };
         /**
          * QuizQuestionAuthoring
@@ -10366,10 +10429,18 @@ export interface components {
             model?: string | null;
             /** Tokens */
             tokens: number;
+            /** Input Tokens */
+            input_tokens?: number;
+            /** Output Tokens */
+            output_tokens?: number;
+            /** Cached Tokens */
+            cached_tokens?: number;
             /** Usd */
             usd: number;
             /** Latency Ms */
             latency_ms?: number | null;
+            /** Status */
+            status?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -10895,6 +10966,7 @@ export interface components {
         /** SummaryOut */
         SummaryOut: {
             totals: components["schemas"]["CostTotals"];
+            failed?: components["schemas"]["FailedSpend"];
             /** By Role */
             by_role: components["schemas"]["RoleBreakdown"][];
             /** By Stage */
@@ -11122,6 +11194,8 @@ export interface components {
             display_name: string;
             /** Avatar Object Id */
             avatar_object_id?: string | null;
+            /** Avatar Url */
+            avatar_url?: string | null;
             /** Bio */
             bio?: string | null;
             /** Locale */

@@ -9,23 +9,25 @@ import {
   ArrowRight,
   CheckCircle,
   Clock,
+  FileEdit,
+  ClipboardCheck,
+  MessageSquare,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
+import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
-import { useTeacherCourses } from "@/lib/api/hooks/teacher-courses";
-import { cn } from "@/lib/utils";
-
-const STATUS_COLORS: Record<string, string> = {
-  published: "bg-emerald-100 text-emerald-700",
-  draft: "bg-amber-50 text-amber-700",
-  archived: "bg-slate-100 text-slate-500",
-};
+import {
+  useTeacherCourses,
+  useTeacherDashboardStats,
+} from "@/lib/api/hooks/teacher-courses";
+import { TeacherCourseCard } from "@/routes/teacher/_components/TeacherCourseCard";
 
 export default function TeacherDashboard() {
   const { t } = useTranslation();
   const { data: courses = [], isLoading } = useTeacherCourses();
+  const { data: stats } = useTeacherDashboardStats();
 
   const published = courses.filter((c) => c.status === "published").length;
   const draft = courses.filter((c) => c.status === "draft").length;
@@ -33,22 +35,18 @@ export default function TeacherDashboard() {
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-headline font-bold text-m3-on-surface">
-            {t("teacher_dashboard.title")}
-          </h1>
-          <p className="text-sm text-m3-on-surface-variant mt-1">
-            {t("teacher_dashboard.subtitle")}
-          </p>
-        </div>
-        <Link to="/teacher/courses/new">
-          <Button size="sm" className="gap-2">
-            <Plus className="h-4 w-4" />
-            {t("teacher_dashboard.new_course")}
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title={t("teacher_dashboard.title")}
+        subtitle={t("teacher_dashboard.subtitle")}
+        action={
+          <Link to="/teacher/courses/new">
+            <Button size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
+              {t("teacher_dashboard.new_course")}
+            </Button>
+          </Link>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -74,6 +72,50 @@ export default function TeacherDashboard() {
         />
       </div>
 
+      {/* Actionable widgets — only render when there's something to act on,
+          so the dashboard stays a launchpad rather than showing empty zeros.
+          Each deep-links into the relevant workflow. */}
+      {stats &&
+        (stats.draft_courses > 0 ||
+          stats.ungraded_quizzes > 0 ||
+          stats.pending_interviews > 0) && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {stats.ungraded_quizzes > 0 && (
+              <ActionWidget
+                icon={ClipboardCheck}
+                count={stats.ungraded_quizzes}
+                label={t(
+                  "teacher_dashboard.actions.ungraded_quizzes",
+                  "quiz attempts to grade",
+                )}
+                tone="amber"
+              />
+            )}
+            {stats.pending_interviews > 0 && (
+              <ActionWidget
+                icon={MessageSquare}
+                count={stats.pending_interviews}
+                label={t(
+                  "teacher_dashboard.actions.pending_interviews",
+                  "interviews awaiting evaluation",
+                )}
+                tone="violet"
+              />
+            )}
+            {stats.draft_courses > 0 && (
+              <ActionWidget
+                icon={FileEdit}
+                count={stats.draft_courses}
+                label={t(
+                  "teacher_dashboard.actions.draft_courses",
+                  "drafts to publish",
+                )}
+                tone="sky"
+              />
+            )}
+          </div>
+        )}
+
       {/* Course list */}
       <div>
         <SectionHeader
@@ -90,12 +132,15 @@ export default function TeacherDashboard() {
         />
 
         {isLoading ? (
-          <div className="grid md:grid-cols-2 gap-4 mt-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="h-28 bg-m3-surface-container animate-pulse rounded-xl"
-              />
+          <div className="grid gap-5 mt-4 sm:grid-cols-2 xl:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="rounded-xl ghost-border overflow-hidden">
+                <div className="aspect-video bg-m3-surface-container animate-pulse" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 w-3/4 bg-m3-surface-container animate-pulse rounded" />
+                  <div className="h-3 w-1/2 bg-m3-surface-container animate-pulse rounded" />
+                </div>
+              </div>
             ))}
           </div>
         ) : courses.length === 0 ? (
@@ -115,61 +160,53 @@ export default function TeacherDashboard() {
             </Link>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-4 mt-4">
-            {courses.slice(0, 6).map((course) => (
-              <Link
-                key={course.id}
-                to="/teacher/courses/$courseId"
-                params={{ courseId: course.id }}
-                className="group block"
-              >
-                <div className="bg-card rounded-xl p-5 shadow-editorial ghost-border hover:-translate-y-0.5 transition-all duration-200">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-headline font-semibold text-sm text-m3-on-surface truncate">
-                        {course.title}
-                      </h3>
-                      {course.description && (
-                        <p className="text-xs text-m3-on-surface-variant mt-1 line-clamp-2">
-                          {course.description}
-                        </p>
-                      )}
-                    </div>
-                    <Badge
-                      className={cn(
-                        "shrink-0 text-[10px] font-semibold border-0",
-                        STATUS_COLORS[course.status] ??
-                          "bg-slate-100 text-slate-500",
-                      )}
-                    >
-                      {t(`teacher_dashboard.status.${course.status}`, {
-                        defaultValue: course.status,
-                      })}
-                    </Badge>
-                  </div>
-                  <div className="mt-3 flex items-center gap-2 text-[11px] text-m3-on-surface-variant">
-                    {course.level && (
-                      <span className="px-1.5 py-0.5 bg-m3-surface-container rounded-md font-medium">
-                        {t(`teacher_dashboard.level.${course.level}`, {
-                          defaultValue: course.level,
-                        })}
-                      </span>
-                    )}
-                    {course.estimated_minutes && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {Math.round(course.estimated_minutes / 60)}h
-                      </span>
-                    )}
-                    <span className="ml-auto text-m3-primary font-medium group-hover:underline">
-                      {t("teacher_dashboard.your_courses.manage")} &rarr;
-                    </span>
-                  </div>
-                </div>
-              </Link>
+          <div className="grid gap-5 mt-4 sm:grid-cols-2 xl:grid-cols-3">
+            {courses.slice(0, 6).map((course, i) => (
+              <TeacherCourseCard key={course.id} course={course} index={i} />
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A "needs attention" widget for the teacher dashboard. Shows a count + label
+ * with a tone-coded icon. When `to` is provided the whole widget is a link
+ * (drafts → courses list); otherwise it's an informational tile (grading
+ * queues have no cross-course page yet).
+ */
+function ActionWidget({
+  icon: Icon,
+  count,
+  label,
+  tone,
+}: {
+  icon: LucideIcon;
+  count: number;
+  label: string;
+  tone: "amber" | "violet" | "sky";
+}) {
+  const toneClasses: Record<typeof tone, string> = {
+    amber: "bg-amber-50 text-amber-700",
+    violet: "bg-violet-50 text-violet-700",
+    sky: "bg-sky-50 text-sky-700",
+  };
+  return (
+    <div className="flex items-center gap-3 rounded-xl bg-card ghost-border shadow-editorial p-4 transition-all hover:-translate-y-0.5 hover:shadow-md">
+      <div
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${toneClasses[tone]}`}
+      >
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-lg font-headline font-bold text-m3-on-surface leading-none tabular-nums">
+          {count}
+        </p>
+        <p className="text-xs text-m3-on-surface-variant mt-1 leading-snug">
+          {label}
+        </p>
       </div>
     </div>
   );
