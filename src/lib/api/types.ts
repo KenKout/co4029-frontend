@@ -365,15 +365,19 @@ export type NotificationPreferenceUpdate =
  * Notification category literals.
  *
  * The OpenAPI schema surfaces `category` as a free-form string, but the
- * backend ships exactly five categories. We pin them as a literal union for
- * exhaustive matrix rendering and Vietnamese-label maps.
+ * backend ships a fixed set of categories. We pin them as a literal union for
+ * exhaustive matrix rendering and Vietnamese-label maps. Keep this in sync
+ * with the backend CHECK constraint (notifications.models) and the
+ * `notifications.category.*` / `settings_notifications.category.*` i18n keys.
  */
 export type NotificationCategory =
   | "spaced_repetition"
   | "lesson_unlock"
   | "interview_result"
   | "course_announcement"
-  | "system";
+  | "system"
+  | "material_processing"
+  | "quiz_generation";
 
 export type NotificationChannel = "email" | "in_app";
 
