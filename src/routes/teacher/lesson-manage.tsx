@@ -227,7 +227,15 @@ function AiStatusBadge({ status }: { status: string | undefined }) {
      - Retry: reprocess a failed/cancelled ingestion so the preview can build.
    Only rendered when a twin exists, so the hooks (which need the twin id) are
    always called unconditionally. */
-function ResourceAiActions({ twin }: { twin: LearningMaterial }) {
+function ResourceAiActions({
+  twin,
+  onShown,
+}: {
+  twin: LearningMaterial;
+  /** Called after a material is made visible, so the caller can claim the
+      lesson's primary-material slot (required for the student preview). */
+  onShown: (materialId: string) => void;
+}) {
   const { t } = useTranslation();
   const status = twin.latest_version?.processing_status;
   const reprocess = useReprocessMaterial(twin.id);
@@ -237,15 +245,20 @@ function ResourceAiActions({ twin }: { twin: LearningMaterial }) {
   const ready = status === "ready";
 
   function toggleVisible() {
+    const showing = !visible;
     updateMaterial.mutate(
-      { visible_to_students: !visible },
+      { visible_to_students: showing },
       {
-        onSuccess: () =>
+        onSuccess: () => {
+          // Showing a doc is only half the job — the student pane renders the
+          // lesson's primary_material_id, so claim that slot too when showing.
+          if (showing) onShown(twin.id);
           toast.success(
-            !visible
+            showing
               ? t("teacher_lesson_manage.resource_ai.now_visible")
               : t("teacher_lesson_manage.resource_ai.now_hidden"),
-          ),
+          );
+        },
         onError: (err) => toast.error((err as Error).message),
       },
     );
@@ -308,11 +321,14 @@ function ResourceCard({
   resource,
   onDelete,
   twin,
+  onShown,
 }: {
   resource: LessonResource;
   onDelete: (id: string) => void;
   /** Correlated AI Hub material (same storage_object_id), or undefined. */
   twin: LearningMaterial | undefined;
+  /** Claim the lesson's primary-material slot after a doc is made visible. */
+  onShown: (materialId: string) => void;
 }) {
   const style = resourceStyle(resource.title);
   const [downloading, setDownloading] = useState(false);
@@ -356,7 +372,7 @@ function ResourceCard({
         </div>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
-        {twin && <ResourceAiActions twin={twin} />}
+        {twin && <ResourceAiActions twin={twin} onShown={onShown} />}
         <button
           type="button"
           onClick={handleDownload}
@@ -967,7 +983,7 @@ export default function LessonManagePage() {
                 ? "code"
                 : "other";
         try {
-          await createMaterial.mutateAsync({
+          const material = await createMaterial.mutateAsync({
             title: file.name.replace(/\.[^.]+$/, ""),
             material_type: materialType,
             storage_object_id: storage_object.id,
@@ -976,6 +992,12 @@ export default function LessonManagePage() {
             ai_processing_enabled: true,
             visible_to_students: false,
           });
+          // Wire this material as the lesson's primary if the slot is empty.
+          // The student reading pane renders ONLY `lesson.primary_material_id`;
+          // without this the doc is uploaded + visible but the student page
+          // shows nothing (the exact "live preview not working" bug). Only
+          // claim an empty slot — never stomp a primary the teacher chose.
+          if (material?.id) claimPrimaryIfEmpty(material.id);
         } catch {
           toast.error(
             "Resource attached, but couldn't sync to AI Material Hub",
@@ -1015,25 +1037,54 @@ export default function LessonManagePage() {
     );
   }
 
-  // Ready-but-hidden AI twins that back a downloadable resource. These are the
-  // docs whose student-side live preview is off — the "Show all" bulk target.
-  // Scoped to twins of actual resources (not stray AI Hub materials) and only
-  // ready ones (a not-ready doc can't preview even when visible).
-  const hiddenReadyTwins = resources
-    .map((r) => twinForResource(r))
-    .filter(
-      (m): m is LearningMaterial =>
-        m != null &&
-        !m.visible_to_students &&
-        m.latest_version?.processing_status === "ready",
-    );
-  // De-dupe by material id (two resources could share a twin).
-  const hiddenReadyTwinIds = Array.from(
-    new Set(hiddenReadyTwins.map((m) => m.id)),
+  // Claim the lesson's primary-material slot if it's currently empty. The
+  // student reading pane renders ONLY `lesson.primary_material_id`, so a doc
+  // with no primary set never previews for students even when visible+ready.
+  // Never stomp an existing primary the teacher already chose. Best-effort —
+  // a failure here shouldn't surface as a hard error on the calling action.
+  function claimPrimaryIfEmpty(materialId: string) {
+    if (lesson?.primary_material_id) return;
+    updateLesson.mutate({ primary_material_id: materialId });
+  }
+
+  // Ready AI twins that back a downloadable resource, de-duped by id. The
+  // student live preview requires BOTH: the doc is visible_to_students AND the
+  // lesson's primary_material_id points at a ready doc. So the "needs fixing"
+  // set is any ready twin that is either hidden OR (the lesson has no primary
+  // at all — the exact ch1/ch2 case: visible but never wired as the preview).
+  const readyTwins = Array.from(
+    new Map(
+      resources
+        .map((r) => twinForResource(r))
+        .filter(
+          (m): m is LearningMaterial =>
+            m != null && m.latest_version?.processing_status === "ready",
+        )
+        .map((m) => [m.id, m] as const),
+    ).values(),
   );
+  const hiddenReadyTwinIds = readyTwins
+    .filter((m) => !m.visible_to_students)
+    .map((m) => m.id);
+  // The lesson's preview is unwired when there's a ready doc but no primary
+  // pointer — showing/hiding visibility alone will NEVER fix this.
+  const lessonPrimaryUnwired =
+    !lesson?.primary_material_id && readyTwins.length > 0;
+  // Show the bulk button when anything blocks the student preview.
+  const needsPreviewFix = hiddenReadyTwinIds.length > 0 || lessonPrimaryUnwired;
 
   function handleShowAll() {
-    if (hiddenReadyTwinIds.length === 0) return;
+    if (!needsPreviewFix) return;
+    // Always ensure the lesson has a primary pointer (pick the first ready
+    // twin) — this is what fixes an already-visible-but-unwired doc.
+    claimPrimaryIfEmpty(readyTwins[0]?.id);
+    if (hiddenReadyTwinIds.length === 0) {
+      // Nothing hidden — the only issue was the missing primary, now claimed.
+      toast.success(
+        t("teacher_lesson_manage.resource_ai.show_all_done", { count: 1 }),
+      );
+      return;
+    }
     bulkSetVisibility.mutate(
       { materialIds: hiddenReadyTwinIds, visible: true },
       {
@@ -1253,7 +1304,7 @@ export default function LessonManagePage() {
               <h2 className="font-headline font-bold text-2xl text-m3-primary">
                 Downloadable Resources
               </h2>
-              {hiddenReadyTwinIds.length > 0 && (
+              {needsPreviewFix && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -1267,7 +1318,7 @@ export default function LessonManagePage() {
                     <Eye className="h-3.5 w-3.5" />
                   )}
                   {t("teacher_lesson_manage.resource_ai.show_all", {
-                    count: hiddenReadyTwinIds.length,
+                    count: Math.max(hiddenReadyTwinIds.length, 1),
                   })}
                 </Button>
               )}
@@ -1281,6 +1332,7 @@ export default function LessonManagePage() {
                     resource={resource}
                     onDelete={handleDeleteResource}
                     twin={twinForResource(resource)}
+                    onShown={claimPrimaryIfEmpty}
                   />
                 ))}
               </div>
