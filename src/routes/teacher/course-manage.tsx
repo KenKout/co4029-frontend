@@ -1,5 +1,7 @@
 import { useState, useRef, useMemo, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, useParams, useNavigate } from "@tanstack/react-router";
+import { apiPatch, apiPost } from "@/lib/api/client";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -29,6 +31,8 @@ import {
   ImageIcon,
   Camera,
   Clock,
+  CheckCheck,
+  CircleDot,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -46,7 +50,10 @@ import {
   useUploadCourseThumbnail,
   useDeleteTeacherCourse,
   useReorderModuleItems,
+  useUpdateLesson,
 } from "@/lib/api/hooks/teacher-courses";
+import { usePublishQuiz } from "@/lib/api/hooks/quizzes";
+import { usePublishInterviewConfig } from "@/lib/api/hooks/interviews";
 import {
   useTeacherCourseOutcomes,
   useCreateCourseOutcome,
@@ -1056,6 +1063,15 @@ function ModuleItemRow({
   const lesson = item.lesson;
   const quiz = item.quiz;
   const interview = item.interview;
+  // Inline publish (T#2): publish a draft item without opening it. Publishing
+  // is the stated pain point and every item type supports it; unpublish is not
+  // uniformly exposed (quizzes have no unpublish route), so the inline control
+  // is publish-only — a published item shows a static status badge.
+  const publishLesson = useUpdateLesson(item.lesson_id ?? "", courseId);
+  const publishQuiz = usePublishQuiz(item.quiz_id ?? undefined);
+  const publishInterview = usePublishInterviewConfig(
+    item.interview_config_id ?? undefined,
+  );
   const lessonType = item.target?.lesson_type ?? lesson?.lesson_type ?? "video";
   const cfg =
     item.item_type === "lesson"
@@ -1077,6 +1093,28 @@ function ModuleItemRow({
     interview?.title ??
     label;
   const status = lesson?.status ?? quiz?.status ?? interview?.status;
+  const publishing =
+    publishLesson.isPending ||
+    publishQuiz.isPending ||
+    publishInterview.isPending;
+
+  function handlePublish(e: React.MouseEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    const onError = (err: unknown) =>
+      toast.error(
+        (err as Error).message || t("teacher_common.publish_failed"),
+      );
+    const onSuccess = () =>
+      toast.success(t("teacher_common.item_published", { title }));
+    if (item.item_type === "lesson" && item.lesson_id) {
+      publishLesson.mutate({ status: "published" }, { onSuccess, onError });
+    } else if (item.item_type === "quiz" && item.quiz_id) {
+      publishQuiz.mutate(undefined, { onSuccess, onError });
+    } else if (item.item_type === "interview" && item.interview_config_id) {
+      publishInterview.mutate(undefined, { onSuccess, onError });
+    }
+  }
 
   return (
     <div
@@ -1145,18 +1183,30 @@ function ModuleItemRow({
       >
         {label}
       </Badge>
-      {status && (
-        <Badge
-          className={cn(
-            "text-[10px] border-0 shrink-0",
-            status === "published"
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-amber-50 text-amber-700",
-          )}
-        >
-          {status}
-        </Badge>
-      )}
+      {status &&
+        (status === "published" ? (
+          <Badge className="text-[10px] border-0 shrink-0 bg-emerald-100 text-emerald-700">
+            {status}
+          </Badge>
+        ) : (
+          // Inline publish (T#2): a draft/archived item can be published right
+          // here without opening it. Stops propagation so it doesn't trigger
+          // the row's drag / link behaviour.
+          <button
+            type="button"
+            onClick={handlePublish}
+            disabled={publishing}
+            title={t("teacher_common.publish_item")}
+            className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 hover:bg-emerald-100 hover:text-emerald-700 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {publishing ? (
+              <Loader2 className="h-2.5 w-2.5 animate-spin" />
+            ) : (
+              <CircleDot className="h-2.5 w-2.5" />
+            )}
+            {t("teacher_common.publish_item")}
+          </button>
+        ))}
       <div className="flex items-center gap-1 text-m3-on-surface-variant">
         {item.item_type === "lesson" && item.lesson_id && (
           <Link
@@ -1211,19 +1261,24 @@ function ModuleItemRow({
 function ModuleAccordion({
   module,
   courseId,
-  defaultOpen = false,
+  open,
+  onToggle,
+  registerRef,
 }: {
   module: CourseContentModule;
   courseId: string;
-  defaultOpen?: boolean;
+  open: boolean;
+  onToggle: () => void;
+  /** Registers this module's DOM node so the quick-nav rail can scroll to it. */
+  registerRef: (id: string, el: HTMLDivElement | null) => void;
 }) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(defaultOpen);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(module.title);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const updateModule = useUpdateModule(module.id, courseId);
   const reorderItems = useReorderModuleItems(module.id, courseId);
+  const qc = useQueryClient();
 
   const [dragSourceIdx, setDragSourceIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
@@ -1240,6 +1295,24 @@ function ModuleAccordion({
   const interviewCount = (module.items ?? []).filter(
     (i) => i.item_type === "interview",
   ).length;
+
+  // Publish progress (T#2 + #1): how many items are live. Drives the header
+  // "N/M published" chip and the "Publish all" action. An item's status lives
+  // on its target (lesson/quiz/interview); items with no status are ignored.
+  function itemStatus(i: CourseContentItem): string | undefined {
+    return i.lesson?.status ?? i.quiz?.status ?? i.interview?.status;
+  }
+  const statusedItems = (module.items ?? []).filter(
+    (i) => itemStatus(i) !== undefined,
+  );
+  const publishedCount = statusedItems.filter(
+    (i) => itemStatus(i) === "published",
+  ).length;
+  const draftItems = statusedItems.filter(
+    (i) => itemStatus(i) !== "published",
+  );
+  const allPublished =
+    statusedItems.length > 0 && publishedCount === statusedItems.length;
 
   function handleDrop(dropIdx: number) {
     if (dragSourceIdx === null || dragSourceIdx === dropIdx) {
@@ -1298,10 +1371,55 @@ function ModuleAccordion({
     );
   }
 
+  // Publish-all (T#2): fire a publish for every draft item in this module in
+  // parallel. Each item type has its own route, so we branch per item. The
+  // per-row hooks can't be reused here (hooks can't live in a loop), so we PATCH
+  // /POST directly via the same endpoints those hooks call. Best-effort with a
+  // summary toast; the content query is invalidated once at the end.
+  const [publishingAll, setPublishingAll] = useState(false);
+  async function handlePublishAll(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (draftItems.length === 0 || publishingAll) return;
+    setPublishingAll(true);
+    const results = await Promise.allSettled(
+      draftItems.map((i) => {
+        if (i.item_type === "lesson" && i.lesson_id) {
+          return apiPatch(`/teacher/lessons/${i.lesson_id}`, {
+            status: "published",
+          });
+        }
+        if (i.item_type === "quiz" && i.quiz_id) {
+          return apiPost(`/teacher/quizzes/${i.quiz_id}/publish`);
+        }
+        if (i.item_type === "interview" && i.interview_config_id) {
+          return apiPost(
+            `/teacher/interview-configs/${i.interview_config_id}/publish`,
+          );
+        }
+        return Promise.reject(new Error("unpublishable item"));
+      }),
+    );
+    setPublishingAll(false);
+    const ok = results.filter((r) => r.status === "fulfilled").length;
+    const failed = results.length - ok;
+    void qc.invalidateQueries({
+      queryKey: ["teacher", "courses", courseId, "content"],
+    });
+    if (failed > 0) {
+      toast.warning(
+        t("teacher_common.publish_all_partial", { ok, failed }),
+      );
+    } else {
+      toast.success(t("teacher_common.publish_all_done", { count: ok }));
+    }
+  }
+
   return (
     <div
+      ref={(el) => registerRef(module.id, el)}
+      id={`module-${module.id}`}
       className={cn(
-        "flex flex-col rounded-xl border-l-4 overflow-hidden",
+        "flex flex-col rounded-xl border-l-4 overflow-hidden scroll-mt-24",
         open ? "border-m3-primary" : "border-m3-outline-variant",
       )}
     >
@@ -1311,7 +1429,7 @@ function ModuleAccordion({
           "group w-full flex items-center gap-3 p-4 text-left cursor-pointer transition-colors",
           "bg-m3-surface-container-low hover:bg-m3-surface-container",
         )}
-        onClick={() => !editingTitle && setOpen((o) => !o)}
+        onClick={() => !editingTitle && onToggle()}
       >
         <GripVertical className="h-4 w-4 text-m3-outline-variant shrink-0 cursor-grab" />
 
@@ -1387,8 +1505,53 @@ function ModuleAccordion({
               : module.status}
         </button>
 
+        {/* Publish progress chip (T#1 + #2): fills the wasted middle space with
+            useful signal — how many items are live. Green when all published. */}
+        {statusedItems.length > 0 && (
+          <span
+            className={cn(
+              "hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0",
+              allPublished
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-m3-surface-container-high text-m3-on-surface-variant",
+            )}
+            title={t("teacher_common.publish_progress", {
+              published: publishedCount,
+              total: statusedItems.length,
+            })}
+          >
+            {allPublished ? (
+              <CheckCheck className="h-2.5 w-2.5" />
+            ) : (
+              <CircleDot className="h-2.5 w-2.5" />
+            )}
+            {publishedCount}/{statusedItems.length}
+          </span>
+        )}
+
+        {/* Publish-all (T#2): one click publishes every draft item in the
+            module. Only shown when there's at least one draft to publish. */}
+        {draftItems.length > 0 && (
+          <button
+            type="button"
+            onClick={handlePublishAll}
+            disabled={publishingAll}
+            title={t("teacher_common.publish_all", {
+              count: draftItems.length,
+            })}
+            className="shrink-0 hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 hover:bg-emerald-100 hover:text-emerald-700 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {publishingAll ? (
+              <Loader2 className="h-2.5 w-2.5 animate-spin" />
+            ) : (
+              <CheckCheck className="h-2.5 w-2.5" />
+            )}
+            {t("teacher_common.publish_all", { count: draftItems.length })}
+          </button>
+        )}
+
         {/* Meta counts */}
-        <span className="text-[11px] text-m3-on-surface-variant hidden sm:block shrink-0">
+        <span className="text-[11px] text-m3-on-surface-variant hidden md:block shrink-0">
           {lessonCount}L{quizCount > 0 && ` · ${quizCount}Q`}
           {interviewCount > 0 && ` · ${interviewCount}I`}
         </span>
@@ -1410,7 +1573,7 @@ function ModuleAccordion({
         {/* Chevron expand */}
         <button
           type="button"
-          onClick={() => setOpen((o) => !o)}
+          onClick={onToggle}
           className="shrink-0"
         >
           <ChevronDown
@@ -1543,6 +1706,48 @@ export default function CourseManagePage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const modules = content?.modules ?? [];
+
+  // Per-course open/closed state, persisted to localStorage (T#: "remember what
+  // I last had open"). Keyed by module id. A module absent from the map falls
+  // back to closed. Seeded once from storage; every toggle writes back.
+  const storageKey = `co4029:course-manage:open:${courseId}`;
+  const [openMap, setOpenMap] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      return raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+    } catch {
+      return {};
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(openMap));
+    } catch {
+      /* storage full / unavailable — non-fatal, state still works in-memory */
+    }
+  }, [openMap, storageKey]);
+  function toggleModule(id: string) {
+    setOpenMap((m) => ({ ...m, [id]: !m[id] }));
+  }
+  function setAllModules(open: boolean) {
+    setOpenMap(Object.fromEntries(modules.map((m) => [m.id, open])));
+  }
+
+  // Ref registry so the quick-nav rail can scroll a module into view (T#3/#4).
+  const moduleRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  function registerModuleRef(id: string, el: HTMLDivElement | null) {
+    moduleRefs.current[id] = el;
+  }
+  function scrollToModule(id: string) {
+    // Ensure it's open before scrolling so the target has its full height.
+    setOpenMap((m) => (m[id] ? m : { ...m, [id]: true }));
+    requestAnimationFrame(() => {
+      moduleRefs.current[id]?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
 
   async function handleDeleteCourse() {
     try {
@@ -1730,11 +1935,34 @@ export default function CourseManagePage() {
 
       {/* Curriculum */}
       <section className="space-y-2">
-        <div className="flex items-center gap-2">
-          <GripVertical className="h-4 w-4 text-m3-primary" />
-          <h2 className="text-base font-headline font-bold text-m3-primary">
-            {t("teacher_common.section_curriculum")}
-          </h2>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <GripVertical className="h-4 w-4 text-m3-primary" />
+            <h2 className="text-base font-headline font-bold text-m3-primary">
+              {t("teacher_common.section_curriculum")}
+            </h2>
+          </div>
+          {/* Expand/collapse all (T#1/#3): fast way to open or compact every
+              module at once. */}
+          {modules.length > 1 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setAllModules(true)}
+                className="text-xs font-medium text-m3-on-surface-variant hover:text-m3-primary transition-colors cursor-pointer px-2 py-1"
+              >
+                {t("teacher_common.expand_all")}
+              </button>
+              <span className="text-m3-outline-variant">·</span>
+              <button
+                type="button"
+                onClick={() => setAllModules(false)}
+                className="text-xs font-medium text-m3-on-surface-variant hover:text-m3-primary transition-colors cursor-pointer px-2 py-1"
+              >
+                {t("teacher_common.collapse_all")}
+              </button>
+            </div>
+          )}
         </div>
 
         {isLoading ? (
@@ -1747,32 +1975,84 @@ export default function CourseManagePage() {
             ))}
           </div>
         ) : (
-          <div className="space-y-3">
-            {modules.map((module, idx) => (
-              <ModuleAccordion
-                key={module.id}
-                module={module}
-                courseId={courseId}
-                defaultOpen={idx === 0}
-              />
-            ))}
-
-            {addingModule ? (
-              <AddModuleForm
-                courseId={courseId}
-                nextPosition={modules.length + 1}
-                onDone={() => setAddingModule(false)}
-              />
-            ) : (
-              <Button
-                variant="outline"
-                className="w-full gap-2 text-sm"
-                onClick={() => setAddingModule(true)}
-              >
-                <Plus className="h-4 w-4" />
-                {t("teacher_common.add_module")}
-              </Button>
+          <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-5 items-start">
+            {/* Sticky quick-nav rail (T#3/#4): jump to any module, see its
+                publish progress at a glance, stays pinned while scrolling deep.
+                Hidden on narrow screens where a single column reads better. */}
+            {modules.length > 0 && (
+              <nav className="hidden lg:block sticky top-20 space-y-1 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant/70 px-2 pb-1">
+                  {t("teacher_common.jump_to")}
+                </p>
+                {modules.map((module) => {
+                  const items = (module.items ?? []).filter(
+                    (i) =>
+                      (i.lesson?.status ??
+                        i.quiz?.status ??
+                        i.interview?.status) !== undefined,
+                  );
+                  const pub = items.filter(
+                    (i) =>
+                      (i.lesson?.status ??
+                        i.quiz?.status ??
+                        i.interview?.status) === "published",
+                  ).length;
+                  const done = items.length > 0 && pub === items.length;
+                  return (
+                    <button
+                      key={module.id}
+                      type="button"
+                      onClick={() => scrollToModule(module.id)}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-xs text-m3-on-surface hover:bg-m3-surface-container transition-colors cursor-pointer group"
+                    >
+                      {done ? (
+                        <CheckCheck className="h-3 w-3 shrink-0 text-emerald-600" />
+                      ) : (
+                        <CircleDot className="h-3 w-3 shrink-0 text-m3-outline-variant group-hover:text-m3-primary" />
+                      )}
+                      <span className="flex-1 truncate group-hover:text-m3-primary transition-colors">
+                        {module.title}
+                      </span>
+                      {items.length > 0 && (
+                        <span className="text-[10px] text-m3-on-surface-variant shrink-0">
+                          {pub}/{items.length}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
             )}
+
+            <div className="space-y-3 min-w-0">
+              {modules.map((module) => (
+                <ModuleAccordion
+                  key={module.id}
+                  module={module}
+                  courseId={courseId}
+                  open={!!openMap[module.id]}
+                  onToggle={() => toggleModule(module.id)}
+                  registerRef={registerModuleRef}
+                />
+              ))}
+
+              {addingModule ? (
+                <AddModuleForm
+                  courseId={courseId}
+                  nextPosition={modules.length + 1}
+                  onDone={() => setAddingModule(false)}
+                />
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 text-sm"
+                  onClick={() => setAddingModule(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  {t("teacher_common.add_module")}
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </section>
