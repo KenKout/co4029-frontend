@@ -1402,13 +1402,6 @@ function SettingsForm({
             />
           </Field>
         </div>
-
-        <ToggleRow
-          label={t("teacher_interview_config.fields.lock_ef_label")}
-          description={t("teacher_interview_config.fields.lock_ef_desc")}
-          value={draft.lock_quiz_ef_until_pass}
-          onChange={(v) => update("lock_quiz_ef_until_pass", v)}
-        />
       </Section>
 
       <Section
