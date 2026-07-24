@@ -62,6 +62,20 @@ function nowMs(): number {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
 }
 
+// TEMP DIAG (narration skip B): gated on localStorage so it can be toggled in
+// the deployed production build. Remove with the console.debug calls once the
+// skip root cause is confirmed.
+function narrationDebugEnabled(): boolean {
+  try {
+    return (
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("narrationDebug") === "1"
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** Build a tiny near-silent WAV that opens and keeps the audio output route warm. */
 function createAudioWarmupBlob(): Blob {
   const sampleCount = Math.ceil(
@@ -209,6 +223,21 @@ export function useInterviewNarration(params: {
   }, [stopAudioWarmup]);
 
   const cancel = useCallback(() => {
+    // TEMP DIAG (narration skip B): log every cancel so we can see when a new
+    // turn's narrate() aborts a prior turn whose audio hadn't started yet.
+    // Enable in the deployed build with: localStorage.narrationDebug = "1"
+    // (the workflow ships a production build, so import.meta.env.DEV is false).
+    // Remove this block once the skip root cause is confirmed.
+    if (narrationDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.debug(
+        `[narration] cancel — token ${tokenRef.current} -> ${tokenRef.current + 1}`,
+        {
+          hadAudioGraph: Boolean(audioGraphRef.current),
+          hadAudioEl: Boolean(audioRef.current),
+        },
+      );
+    }
     tokenRef.current += 1;
     stopAudioWarmup();
     if (audioGraphRef.current) {
@@ -248,6 +277,12 @@ export function useInterviewNarration(params: {
 
       cancel();
       const myToken = tokenRef.current;
+      if (narrationDebugEnabled()) {
+        // eslint-disable-next-line no-console
+        console.debug(
+          `[narration] narrate — token ${myToken}: "${clean.slice(0, 48)}${clean.length > 48 ? "…" : ""}"`,
+        );
+      }
       const warmupStartedAt = startAudioWarmup();
       const ensureAudioWarmup = async () => {
         if (warmupStartedAt !== null) {
