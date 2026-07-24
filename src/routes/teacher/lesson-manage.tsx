@@ -8,7 +8,6 @@ import {
   FileText,
   Download,
   Trash2,
-  Plus,
   Paperclip,
   Bold,
   Italic,
@@ -26,10 +25,8 @@ import {
   Save,
   Brain,
   Pencil,
-  Check,
   Hash,
   AlignLeft,
-  Search,
 } from "lucide-react";
 import { MediaPlayer, MediaProvider } from "@vidstack/react";
 import {
@@ -63,10 +60,7 @@ import {
   useCompleteMaterialUpload,
   useTeacherLessonMaterials,
 } from "@/lib/api/hooks/materials";
-import type {
-  CourseContentLesson,
-  LessonResource,
-} from "@/lib/api/types/common";
+import type { LessonResource } from "@/lib/api/types/common";
 import type { LearningMaterial } from "@/lib/api/types/teacher";
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { useFileDrop } from "@/lib/use-file-drop";
@@ -618,8 +612,6 @@ export default function LessonManagePage() {
 
   /* ── Local-only state ── */
   const [prerequisites, setPrerequisites] = useState<string[]>([]);
-  const [prereqOpen, setPrereqOpen] = useState(false);
-  const [prereqSearch, setPrereqSearch] = useState("");
   const [archiveConfirm, setArchiveConfirm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -632,19 +624,26 @@ export default function LessonManagePage() {
   // teacher can override before the next upload.
   const [aiEnabled, setAiEnabled] = useState(true);
 
-  /* ── All lessons in the course (for prerequisite picker) ── */
-  const allLessons: CourseContentLesson[] = (content?.modules ?? []).flatMap(
-    (m) =>
-      m.items
-        .filter(
-          (i) =>
-            i.item_type === "lesson" && i.lesson && i.lesson.id !== lessonId,
-        )
-        .map((i) => i.lesson!),
-  );
-
-  const filteredLessons = allLessons.filter((l) =>
-    l.title.toLowerCase().includes(prereqSearch.toLowerCase()),
+  /* ── All lessons in the course (for prerequisite picker) ──
+     The teacher content payload carries each item's data under `item.target`
+     (NOT `item.lesson`, which is only populated on the public/learner payload).
+     Reading `item.lesson` here left the picker permanently empty — the actual
+     bug behind "prerequisites not working". Build from `target` instead. */
+  const allLessons: { id: string; title: string; lesson_type: string }[] = (
+    content?.modules ?? []
+  ).flatMap((m) =>
+    m.items
+      .filter(
+        (i) =>
+          i.item_type === "lesson" &&
+          i.target != null &&
+          i.target.id !== lessonId,
+      )
+      .map((i) => ({
+        id: i.target!.id,
+        title: i.target!.title,
+        lesson_type: i.target!.lesson_type ?? "video",
+      })),
   );
 
   /* ── Sync server data once ── */
@@ -1264,7 +1263,7 @@ export default function LessonManagePage() {
             </div>
 
             {/* Selected */}
-            {prerequisites.length === 0 && !prereqOpen && (
+            {prerequisites.length === 0 && (
               <p className="text-sm text-m3-on-surface-variant/60 text-center py-2">
                 No prerequisites added.
               </p>
@@ -1295,78 +1294,38 @@ export default function LessonManagePage() {
               );
             })}
 
-            {/* Lesson picker */}
-            {prereqOpen ? (
-              <div className="space-y-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-m3-on-surface-variant/60" />
-                  <input
-                    autoFocus
-                    value={prereqSearch}
-                    onChange={(e) => setPrereqSearch(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Escape") {
-                        setPrereqOpen(false);
-                        setPrereqSearch("");
-                      }
-                    }}
-                    placeholder={t("teacher_common.search_lessons")}
-                    className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-m3-outline-variant/20 bg-surface-elev focus:outline-none focus:ring-2 focus:ring-m3-secondary/20"
-                  />
-                </div>
-                <div className="max-h-48 overflow-y-auto space-y-0.5 rounded-xl border border-m3-outline-variant/10 bg-surface-elev p-1">
-                  {filteredLessons.length === 0 && (
-                    <p className="text-xs text-m3-on-surface-variant/60 text-center py-3">
-                      {allLessons.length === 0
-                        ? "No other lessons in this course."
-                        : "No lessons match."}
-                    </p>
-                  )}
-                  {filteredLessons.map((l) => {
-                    const selected = prerequisites.includes(l.id);
-                    const TypeIcon =
-                      LESSON_TYPE_OPTIONS.find((t) => t.value === l.lesson_type)
-                        ?.icon ?? BookOpen;
-                    return (
-                      <button
-                        key={l.id}
-                        type="button"
-                        onClick={() => togglePrerequisite(l.id)}
-                        className={cn(
-                          "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer text-left",
-                          selected
-                            ? "bg-m3-primary-fixed text-m3-primary"
-                            : "hover:bg-m3-surface-container-low text-m3-on-surface",
-                        )}
-                      >
-                        <TypeIcon className="h-3.5 w-3.5 shrink-0 text-m3-on-surface-variant" />
-                        <span className="flex-1 truncate">{l.title}</span>
-                        {selected && <Check className="h-3.5 w-3.5 shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPrereqOpen(false);
-                    setPrereqSearch("");
+            {/* Lesson selector — pick a lesson to add as a prerequisite.
+                Already-selected lessons are filtered out of the options so the
+                dropdown only offers additions. Resets to the placeholder after
+                each pick (it's an "add" action, not a bound value). */}
+            {(() => {
+              const available = allLessons.filter(
+                (l) => !prerequisites.includes(l.id),
+              );
+              return (
+                <select
+                  value=""
+                  disabled={available.length === 0}
+                  onChange={(e) => {
+                    if (e.target.value) togglePrerequisite(e.target.value);
                   }}
-                  className="w-full text-xs text-m3-on-surface-variant py-1.5 hover:text-m3-on-surface transition-colors cursor-pointer font-bold"
+                  className="w-full bg-surface-elev border border-m3-outline-variant/20 rounded-xl px-4 py-3 text-sm font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Done
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setPrereqOpen(true)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-surface-elev border border-m3-outline-variant/20 text-sm font-bold text-m3-primary hover:bg-m3-primary-fixed transition-colors cursor-pointer"
-              >
-                <Plus className="h-4 w-4" />
-                Add Prerequisite
-              </button>
-            )}
+                  <option value="" disabled>
+                    {allLessons.length === 0
+                      ? "No other lessons in this course"
+                      : available.length === 0
+                        ? "All lessons added"
+                        : "Add a prerequisite lesson…"}
+                  </option>
+                  {available.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.title}
+                    </option>
+                  ))}
+                </select>
+              );
+            })()}
           </div>
 
           {/* ── AI Material Hub teaser ── */}
