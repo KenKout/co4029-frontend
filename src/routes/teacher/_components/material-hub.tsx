@@ -673,27 +673,6 @@ export function MaterialCard({
     );
   }
 
-  function handleToggleVisibility() {
-    updateMaterial.mutate(
-      { visible_to_students: !material.visible_to_students },
-      {
-        onSuccess: () =>
-          toast.success(
-            material.visible_to_students
-              ? t("teacher_lesson_materials.toasts.hidden_from_students")
-              : t("teacher_lesson_materials.toasts.shown_to_students"),
-          ),
-        onError: (err) => {
-          if (err instanceof ApiError && err.status === 403) {
-            toast.error(t("teacher_lesson_materials.toasts.edit_forbidden"));
-            return;
-          }
-          toast.error((err as Error).message);
-        },
-      },
-    );
-  }
-
   const enablingAI = updateMaterial.isPending || reprocess.isPending;
 
   return (
@@ -742,24 +721,9 @@ export function MaterialCard({
         </div>
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            title={
-              material.visible_to_students
-                ? t("teacher_lesson_materials.actions.toggle_visibility_hide")
-                : t("teacher_lesson_materials.actions.toggle_visibility_show")
-            }
-            disabled={updateMaterial.isPending}
-            onClick={handleToggleVisibility}
-          >
-            {material.visible_to_students ? (
-              <Eye className="h-3.5 w-3.5" />
-            ) : (
-              <EyeOff className="h-3.5 w-3.5" />
-            )}
-          </Button>
+          {/* Visibility toggle removed from Material history — student
+              visibility is controlled via Downloadable Resources / lesson
+              Publish, so it doesn't belong on the AI-material history card. */}
           {notQueued && (
             <Button
               variant="ghost"

@@ -120,7 +120,7 @@
     "ai_mock_title": "Bao gồm phỏng vấn AI",
     "ai_mock_body": "Hoàn thành từng module để mở khóa buổi phỏng vấn AI. Nhận phản hồi thời gian thực, câu hỏi tiếp theo thích ứng và đánh giá chi tiết về cách bạn giải thích kỹ thuật.",
     "start_learning": "Bắt đầu học",
-    "modules": "Modules"
+    "modules": "Chương"
   },
   "settings_security": {
     "title": "Bảo mật tài khoản",
@@ -351,7 +351,7 @@
     "lesson_locked_title": "Bài học đang khóa",
     "lesson_locked_body": "Hoàn thành các bài học tiên quyết và ôn tập các thẻ đến hạn để mở khóa bài học này.",
     "resource_unavailable": "Tài nguyên không khả dụng",
-    "download": "Download",
+    "download": "Tải xuống",
     "reading_lesson": "Bài đọc",
     "reading_open_fullscreen": "Mở toàn màn hình",
     "reading_material_unavailable": "Tài liệu đọc hiện chưa khả dụng.",
@@ -557,16 +557,16 @@
   },
   "google_callback": {
     "in_progress": "Đang hoàn tất đăng nhập Google...",
-    "success_redirecting": "Signed in successfully. Redirecting...",
+    "success_redirecting": "Đăng nhập thành công. Đang chuyển hướng...",
     "mfa_redirect": "Đăng nhập thành công. Đang chuyển sang xác thực hai bước...",
-    "exchange_default": "Securely exchanging your Google authorization code with aBridgeAI.",
-    "cancelled_title": "Google sign-in was cancelled.",
-    "missing_code_title": "Google did not return an authorization code.",
-    "missing_code_detail": "Start the sign-in flow again from the login page.",
-    "state_mismatch_title": "Unable to verify the Google sign-in response.",
-    "state_mismatch_detail": "The sign-in state did not match. Please try again.",
-    "exchange_failed_title": "Unable to finish Google sign-in.",
-    "exchange_failed_detail": "Please try again.",
+    "exchange_default": "Đang trao đổi mã ủy quyền Google của bạn với aBridgeAI một cách an toàn.",
+    "cancelled_title": "Đăng nhập Google đã bị hủy.",
+    "missing_code_title": "Google không trả về mã ủy quyền.",
+    "missing_code_detail": "Hãy bắt đầu lại quá trình đăng nhập từ trang đăng nhập.",
+    "state_mismatch_title": "Không thể xác minh phản hồi đăng nhập Google.",
+    "state_mismatch_detail": "Trạng thái đăng nhập không khớp. Vui lòng thử lại.",
+    "exchange_failed_title": "Không thể hoàn tất đăng nhập Google.",
+    "exchange_failed_detail": "Vui lòng thử lại.",
     "toast_failed": "Đăng nhập thất bại. Vui lòng thử lại."
   },
   "login_mfa": {

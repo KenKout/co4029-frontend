@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -831,6 +831,7 @@ export default function LessonManagePage() {
   );
   const deleteLesson = useDeleteLesson(courseId);
   const updateModuleItem = useUpdateModuleItem(courseId);
+  const navigate = useNavigate();
 
   /* ── Find this lesson's module item (for unlock_rule_json / prerequisites) ── */
   const moduleItem = (content?.modules ?? [])
@@ -987,6 +988,19 @@ export default function LessonManagePage() {
     try {
       await deleteLesson.mutateAsync(lessonId);
       toast.success("Lesson deleted");
+      // Redirect back to the parent module (or course) — the lesson page no
+      // longer exists, so staying here would show a broken/empty view.
+      if (moduleId) {
+        void navigate({
+          to: "/teacher/courses/$courseId/modules/$moduleId",
+          params: { courseId, moduleId },
+        });
+      } else {
+        void navigate({
+          to: "/teacher/courses/$courseId",
+          params: { courseId },
+        });
+      }
     } catch (err: unknown) {
       toast.error((err as Error).message || "Delete failed");
     }
@@ -1255,7 +1269,7 @@ export default function LessonManagePage() {
     t("teacher_common.lesson_fallback");
 
   return (
-    <div className="max-w-[1440px] mx-auto pb-20">
+    <div className="max-w-[1800px] mx-auto pb-20">
       <div className="pt-4 pb-2">
         <Breadcrumbs
           items={[
