@@ -2431,7 +2431,8 @@
       "by_question": "Theo câu hỏi",
       "responses": "Câu trả lời",
       "statistics": "Thống kê",
-      "grading": "Chấm tay"
+      "grading": "Chấm tay",
+      "gradebook": "Bảng điểm"
     },
     "per_student": {
       "col_student": "Học viên",
@@ -2538,6 +2539,16 @@
       "feedback_label": "Nhận xét",
       "feedback_placeholder": "Nhận xét cho học viên (tuỳ chọn)…",
       "grade_action": "Lưu điểm"
+    },
+    "gradebook": {
+      "empty": "Chưa có điểm nào được ghi nhận.",
+      "col_student": "Học viên",
+      "col_grade": "Điểm",
+      "col_passed": "Trạng thái",
+      "col_method": "Phương thức",
+      "col_attempts": "Số lần làm",
+      "passed": "Đạt",
+      "failed": "Chưa đạt"
     }
   },
   "teacher_outcomes": {

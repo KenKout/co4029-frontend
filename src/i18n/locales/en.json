@@ -2519,7 +2519,8 @@
       "by_question": "By question",
       "responses": "Responses",
       "statistics": "Statistics",
-      "grading": "Manual grading"
+      "grading": "Manual grading",
+      "gradebook": "Gradebook"
     },
     "per_student": {
       "col_student": "Student",
@@ -2626,6 +2627,16 @@
       "feedback_label": "Feedback",
       "feedback_placeholder": "Optional feedback for the student…",
       "grade_action": "Save grade"
+    },
+    "gradebook": {
+      "empty": "No grades recorded yet.",
+      "col_student": "Student",
+      "col_grade": "Grade",
+      "col_passed": "Status",
+      "col_method": "Method",
+      "col_attempts": "Attempts",
+      "passed": "Passed",
+      "failed": "Failed"
     }
   },
   "teacher_outcomes": {
