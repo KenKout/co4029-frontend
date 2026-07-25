@@ -1,0 +1,7 @@
+<!-- aBridgeAI · 16px favicon. "aB" merges into a blob at this size, so a
+     single letter is used and the amber span is dropped. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" role="img" aria-label="aBridgeAI">
+  <rect width="16" height="16" rx="4" fill="#1e40af"/>
+  <text x="8" y="13" text-anchor="middle" font-size="13" font-weight="800" fill="#fff"
+        font-family="Inter, ui-sans-serif, system-ui, sans-serif">a</text>
+</svg>
