@@ -86,27 +86,26 @@ function layoutCircular(
 /**
  * Hierarchical (tree) layout in world space.
  *
- * The heaviest concept (nodes[0]) is the root, placed at the top-centre. The
- * hierarchy is derived ONLY from PREREQUISITE_OF edges (source is the
- * prerequisite → target depends on it), so the tree reads top-to-bottom as
- * "learn this, then you can learn that". RELATED_TO edges are still drawn but
- * don't shape the tree.
+ * The heaviest concept (nodes[0]) is the root, placed at the top-centre. Rank 2
+ * is every node directly connected to the root; rank 3 is their neighbours; and
+ * so on — a breadth-first spanning tree over the graph, expanding vertically
+ * downward. Adjacency is UNDIRECTED and spans BOTH edge kinds (PREREQUISITE_OF
+ * and RELATED_TO), so a node lands one rank below whatever first connects it to
+ * the root regardless of edge direction. (Edges are still colour-coded when
+ * drawn; the direction just doesn't gate the ranking.)
  *
  * Edge cases (see the chat thread — these are the ones that actually occur in
  * the KG data):
- *  - CYCLES (A → B → A via prereqs): a `placed` set means each node is laid out
- *    exactly once, at its shortest prereq-distance from the root, so a cycle
- *    can't loop forever or double-place a node.
- *  - FOREST / disconnected-but-linked components (nodes with prereq edges among
- *    themselves but unreachable from the root): after the root's BFS, any
- *    still-unplaced node that participates in a prereq edge is seeded as a
- *    local root and laid out in the same level bands, so whole sub-hierarchies
- *    hang below the main tree instead of vanishing.
+ *  - CYCLES / MULTIPLE PARENTS: BFS first-visit-wins means each node is placed
+ *    exactly once at its shortest hop-distance from the root, so a cycle can't
+ *    loop forever and a node with several connections sits under whichever
+ *    neighbour reached it first (its shortest path to the root).
+ *  - FOREST / disconnected components (nodes with edges among themselves but
+ *    unreachable from the root): after the root's BFS, any still-unplaced
+ *    edge-bearing node is seeded as a local root and laid out in the same rank
+ *    bands, so whole sub-graphs hang below the main tree instead of vanishing.
  *  - ORPHANS (no edges of any kind): parked in a row along the very bottom as
  *    leaves, per the requested behaviour — present but clearly peripheral.
- *  - MULTIPLE PARENTS (a concept required by several others): placed at the
- *    deepest level any parent implies (max depth), so it never sits above one
- *    of its own prerequisites.
  */
 function layoutTree(
   nodes: LessonKnowledgeGraph["nodes"],
@@ -118,38 +117,46 @@ function layoutTree(
   const ids = nodes.map((n) => n.id);
   const idSet = new Set(ids);
 
-  // children[a] = nodes that list `a` as a prerequisite (a → child).
-  const children = new Map<string, string[]>();
+  // UNDIRECTED adjacency over ALL edges. The tree is a breadth-first spanning
+  // tree rooted at the heaviest node: whatever touches the root (in either
+  // direction, prerequisite OR related) lands on the next rank, and so on
+  // outward. Using prereq-direction only was the bug — if the root wasn't a
+  // prerequisite *source* (e.g. a hub other concepts point to, or one whose
+  // links are mostly RELATED_TO), its rank-2 was empty and the tree collapsed.
+  const adj = new Map<string, string[]>();
   const hasAnyEdge = new Set<string>();
+  const addAdj = (a: string, b: string) => {
+    const list = adj.get(a) ?? [];
+    list.push(b);
+    adj.set(a, list);
+  };
   for (const e of edges) {
-    if (idSet.has(e.source)) hasAnyEdge.add(e.source);
-    if (idSet.has(e.target)) hasAnyEdge.add(e.target);
-    if (e.relation !== "PREREQUISITE_OF") continue;
     if (!idSet.has(e.source) || !idSet.has(e.target)) continue;
-    const list = children.get(e.source) ?? [];
-    list.push(e.target);
-    children.set(e.source, list);
+    hasAnyEdge.add(e.source);
+    hasAnyEdge.add(e.target);
+    addAdj(e.source, e.target);
+    addAdj(e.target, e.source);
   }
 
-  // Assign each node a depth = shortest prereq-hops from a root. BFS from the
-  // heaviest node first, then seed any unplaced edge-bearing node as its own
-  // local root so disconnected sub-hierarchies still get placed.
+  // Assign each node a depth = shortest hop-distance from a root via BFS. First
+  // visit wins (standard BFS = shortest path), so each node sits one rank below
+  // whichever neighbour reached it first. BFS from the heaviest node, then seed
+  // any still-unplaced edge-bearing node as a local root so disconnected
+  // sub-graphs still get laid out instead of vanishing.
   const depth = new Map<string, number>();
   const placed = new Set<string>();
   const bfs = (start: string) => {
+    if (placed.has(start)) return;
+    placed.add(start);
+    depth.set(start, 0);
     const queue: Array<{ id: string; d: number }> = [{ id: start, d: 0 }];
     while (queue.length) {
       const { id, d } = queue.shift()!;
-      if (placed.has(id)) {
-        // Already placed by a shorter/equal path — keep the deeper of the two
-        // so a multi-parent node never sits above a prerequisite.
-        if (d > (depth.get(id) ?? 0)) depth.set(id, d);
-        continue;
-      }
-      placed.add(id);
-      depth.set(id, d);
-      for (const c of children.get(id) ?? []) {
-        if (!placed.has(c)) queue.push({ id: c, d: d + 1 });
+      for (const nb of adj.get(id) ?? []) {
+        if (placed.has(nb)) continue;
+        placed.add(nb);
+        depth.set(nb, d + 1);
+        queue.push({ id: nb, d: d + 1 });
       }
     }
   };
