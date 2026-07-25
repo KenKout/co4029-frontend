@@ -3357,7 +3357,7 @@
       "voice_label": "AI voice",
       "voice_hint": "",
       "voice_default": "Default voice",
-      "criteria_label": "Learning outcomes required to pass",
+      "criteria_label": "Min LO",
       "criteria_hint": "Minimum number of learning outcomes a student must meet to pass",
       "criteria_placeholder": "e.g. 2",
       "lock_ef_label": "Lock quiz EF growth until pass",

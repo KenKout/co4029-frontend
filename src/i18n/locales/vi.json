@@ -3269,7 +3269,7 @@
       "voice_label": "Giọng AI",
       "voice_hint": "",
       "voice_default": "Giọng mặc định",
-      "criteria_label": "Số learning outcome cần đạt để pass",
+      "criteria_label": "Min LO",
       "criteria_hint": "Số learning outcome tối thiểu học viên phải đạt để vượt qua",
       "criteria_placeholder": "vd. 2",
       "lock_ef_label": "Khoá nâng EF của quiz đến khi đạt",
