@@ -726,7 +726,8 @@
       "course_announcement": "Course announcement",
       "system": "System",
       "material_processing": "Material processing",
-      "quiz_generation": "Quiz generation"
+      "quiz_generation": "Quiz generation",
+      "interview_generation": "Interview generation"
     },
     "channel": {
       "email": "Email",
@@ -787,7 +788,8 @@
       "course_announcement": "Course announcement",
       "system": "System",
       "material_processing": "Material processing",
-      "quiz_generation": "Quiz generation"
+      "quiz_generation": "Quiz generation",
+      "interview_generation": "Interview generation"
     },
     "errors": {
       "mark_read_failed": "Couldn't mark as read",

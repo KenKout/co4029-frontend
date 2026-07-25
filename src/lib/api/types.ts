@@ -420,7 +420,8 @@ export type NotificationCategory =
   | "course_announcement"
   | "system"
   | "material_processing"
-  | "quiz_generation";
+  | "quiz_generation"
+  | "interview_generation";
 
 export type NotificationChannel = "email" | "in_app";
 
