@@ -1791,7 +1791,8 @@
       "your_correct": "Your answer · Correct",
       "your_incorrect": "Your answer",
       "correct": "Correct answer"
-    }
+    },
+    "overall_feedback": "Overall feedback"
   },
   "discussion": {
     "title": "Discussion",

@@ -190,6 +190,24 @@ export default function CourseQuizReviewPage() {
           </div>
         </GlassCard>
 
+        {/* Phase 8: overall grade-band feedback (only present when the teacher
+            configured a matching band AND the review window shows the score). */}
+        {(() => {
+          const fb = review as {
+            overall_feedback_text?: string | null;
+          };
+          return fb.overall_feedback_text ? (
+            <GlassCard className="p-5 border-l-4 border-m3-primary">
+              <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant mb-1">
+                {t("course_quiz_review.overall_feedback")}
+              </p>
+              <p className="text-sm text-m3-on-surface whitespace-pre-wrap">
+                {fb.overall_feedback_text}
+              </p>
+            </GlassCard>
+          ) : null;
+        })()}
+
         {/* Per-question breakdown */}
         <div className="space-y-4">
           <h2 className="font-headline font-bold text-lg text-m3-on-surface">

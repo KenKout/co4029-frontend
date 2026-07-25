@@ -1740,7 +1740,8 @@
       "your_correct": "Bạn chọn · Đúng",
       "your_incorrect": "Bạn chọn",
       "correct": "Đáp án đúng"
-    }
+    },
+    "overall_feedback": "Nhận xét tổng thể"
   },
   "course_quiz": {
     "empty": {
