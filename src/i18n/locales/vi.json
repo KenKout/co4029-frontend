@@ -2833,8 +2833,7 @@
       "reset_button": "Huỷ thay đổi",
       "review": {
         "title": "Tùy chọn xem lại",
-        "description": "Kiểm soát những gì học viên thấy sau khi nộp bài, theo từng mốc thời gian. Bật hết = học viên thấy mọi thứ (hành vi hiện tại).",
-        "flag_col": "Học viên được thấy gì",
+        "description": "Kiểm soát những gì học viên thấy sau khi nộp bài. Chọn một thiết lập sẵn, hoặc tùy chỉnh theo từng mốc thời gian.",
         "windows": {
           "immediately_after": "Ngay sau khi nộp",
           "later_while_open": "Sau đó, khi còn mở",
@@ -2846,7 +2845,24 @@
           "show_correct_answers": "Đáp án đúng",
           "show_explanation": "Giải thích",
           "show_points": "Điểm mỗi câu"
-        }
+        },
+        "presets_label": "Thiết lập sẵn",
+        "presets": {
+          "everything": "Hiện mọi thứ",
+          "score_now_rest_after_close": "Điểm ngay, đáp án sau khi đóng",
+          "nothing_until_close": "Không hiện gì đến khi đóng",
+          "nothing": "Không bao giờ hiện kết quả",
+          "custom": "Tùy chỉnh"
+        },
+        "customize": "Tùy chỉnh theo mốc thời gian",
+        "window_hints": {
+          "immediately_after": "Ngay khi học viên nộp bài làm.",
+          "later_while_open": "Khi họ quay lại trước lúc quiz đóng.",
+          "after_close": "Sau khi quiz đã đóng với tất cả mọi người."
+        },
+        "shown_count": "Hiện {{shown}}/{{total}}",
+        "show_all": "Hiện tất cả",
+        "hide_all": "Ẩn tất cả"
       },
       "access": {
         "title": "Quy tắc truy cập",

@@ -2921,8 +2921,7 @@
       "reset_button": "Discard",
       "review": {
         "title": "Review options",
-        "description": "Control what students see after they submit, per time window. All on = students see everything (current behaviour).",
-        "flag_col": "What the student sees",
+        "description": "Control what students see after they submit. Pick a preset, or customize per time window.",
         "windows": {
           "immediately_after": "Right after submit",
           "later_while_open": "Later, while open",
@@ -2934,7 +2933,24 @@
           "show_correct_answers": "The correct answers",
           "show_explanation": "Explanations",
           "show_points": "Points per question"
-        }
+        },
+        "presets_label": "Preset",
+        "presets": {
+          "everything": "Show everything",
+          "score_now_rest_after_close": "Score now, answers after close",
+          "nothing_until_close": "Nothing until close",
+          "nothing": "Never show results",
+          "custom": "Custom"
+        },
+        "customize": "Customize per time window",
+        "window_hints": {
+          "immediately_after": "The moment a student submits their attempt.",
+          "later_while_open": "When they come back before the quiz closes.",
+          "after_close": "Once the quiz is closed to everyone."
+        },
+        "shown_count": "{{shown}} of {{total}} shown",
+        "show_all": "Show all",
+        "hide_all": "Hide all"
       },
       "access": {
         "title": "Access rules",
