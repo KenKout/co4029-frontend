@@ -132,6 +132,13 @@ export interface QuizQuestionRichFields {
   numeric_tolerance?: number | string | null;
   match_pairs?: Array<{ left: string; right: string }> | null;
   ordering_sequence?: string[] | null;
+  // No-leak derived projections served to students (backend Phase 7). The raw
+  // answer keys above are teacher-only; these shuffled lists are what a learner
+  // renders/answers against. match_prompts = left column (in order),
+  // match_choices = right values (shuffled), ordering_items = items (shuffled).
+  match_prompts?: string[] | null;
+  match_choices?: string[] | null;
+  ordering_items?: string[] | null;
 }
 export interface QuizQuestionOptionRichFields {
   option_format?: RichFormat | null;
