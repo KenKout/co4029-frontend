@@ -3304,7 +3304,18 @@
       "lock_ef_label": "Lock quiz EF growth until pass",
       "lock_ef_desc": "Students must pass the interview before spaced repetition expands review intervals.",
       "supplementary_label": "Supplementary instructions",
-      "supplementary_placeholder": "e.g. Focus on real scenarios, avoid rote-memorization questions…"
+      "supplementary_placeholder": "e.g. Focus on real scenarios, avoid rote-memorization questions…",
+      "notes_label": "Guidance notes (shapes generated questions)",
+      "notes_hint": "Free-text guidance fed to the question generator. Not used for scoring.",
+      "rubric_label": "Scoring rubric",
+      "rubric_hint": "Criteria the AI grades each answer against. Leave empty to use the default rubric (technical accuracy, communication, problem-solving, professionalism). A description is optional but greatly improves grading consistency.",
+      "rubric_empty": "No custom criteria — answers are graded on the default rubric.",
+      "rubric_name_placeholder": "Criterion name, e.g. depth",
+      "rubric_weight": "Weight",
+      "rubric_description_placeholder": "What this criterion means, e.g. Cites concrete trade-offs rather than definitions",
+      "rubric_add": "Add criterion",
+      "rubric_remove": "Remove criterion",
+      "rubric_at_cap": "Maximum {{max}} criteria"
     },
     "security": {
       "title": "Security & Integrity",

@@ -3216,7 +3216,18 @@
       "lock_ef_label": "Khoá nâng EF của quiz đến khi đạt",
       "lock_ef_desc": "Học viên phải vượt phỏng vấn trước khi spaced repetition tăng khoảng cách ôn tập.",
       "supplementary_label": "Hướng dẫn bổ sung",
-      "supplementary_placeholder": "VD: Tập trung vào tình huống thực tế, tránh câu hỏi học thuộc lòng…"
+      "supplementary_placeholder": "VD: Tập trung vào tình huống thực tế, tránh câu hỏi học thuộc lòng…",
+      "notes_label": "Ghi chú hướng dẫn (định hình câu hỏi được sinh)",
+      "notes_hint": "Hướng dẫn dạng văn bản đưa vào bộ sinh câu hỏi. Không dùng để chấm điểm.",
+      "rubric_label": "Tiêu chí chấm điểm",
+      "rubric_hint": "Các tiêu chí AI dùng để chấm mỗi câu trả lời. Để trống để dùng tiêu chí mặc định (độ chính xác kỹ thuật, giao tiếp, giải quyết vấn đề, tính chuyên nghiệp). Mô tả là tùy chọn nhưng cải thiện đáng kể tính nhất quán khi chấm.",
+      "rubric_empty": "Chưa có tiêu chí riêng — câu trả lời được chấm theo tiêu chí mặc định.",
+      "rubric_name_placeholder": "Tên tiêu chí, VD: chiều sâu",
+      "rubric_weight": "Trọng số",
+      "rubric_description_placeholder": "Ý nghĩa của tiêu chí, VD: Nêu được các đánh đổi cụ thể thay vì chỉ định nghĩa",
+      "rubric_add": "Thêm tiêu chí",
+      "rubric_remove": "Xóa tiêu chí",
+      "rubric_at_cap": "Tối đa {{max}} tiêu chí"
     },
     "security": {
       "title": "Bảo mật & Tính toàn vẹn",

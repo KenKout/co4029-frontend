@@ -80,6 +80,13 @@ import type {
   InterviewQuestionAuthoring,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import {
+  type RubricCriterion,
+  MAX_CRITERIA,
+  MAX_CRITERION_NAME_CHARS,
+  parseSupplementaryInstructions,
+  serializeSupplementaryInstructions,
+} from "@/lib/interview/supplementary-instructions";
 
 type SupportedMode = NonNullable<InterviewConfigUpdate["supported_modes"]>;
 type Persona = NonNullable<InterviewConfigUpdate["persona"]>;
@@ -120,7 +127,12 @@ interface SettingsDraft {
   cooldown_hours: string;
   min_outcomes_to_pass: string;
   lock_quiz_ef_until_pass: boolean;
-  supplementary_instructions: string;
+  // The single `supplementary_instructions` column is split for editing into
+  // free prose (`notes`, fed to the generation prompt) and the structured
+  // scoring rubric (`rubric_criteria`). They are re-joined on save by
+  // `serializeSupplementaryInstructions`.
+  notes: string;
+  rubric_criteria: RubricCriterion[];
   security_response_policy: SecurityResponsePolicy;
   security_max_consecutive_attempts: string;
   security_custom_refusal_en: string;
@@ -150,7 +162,12 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
         ? ""
         : String(config.min_outcomes_to_pass),
     lock_quiz_ef_until_pass: config.lock_quiz_ef_until_pass,
-    supplementary_instructions: config.supplementary_instructions ?? "",
+    ...(() => {
+      const parsed = parseSupplementaryInstructions(
+        config.supplementary_instructions,
+      );
+      return { notes: parsed.notes, rubric_criteria: parsed.criteria };
+    })(),
     security_response_policy:
       config.security_response_policy ?? "warn_and_continue",
     security_max_consecutive_attempts: String(
@@ -451,8 +468,10 @@ export default function InterviewConfigPage() {
         cooldown_hours: integerOrNull(draft.cooldown_hours),
         min_outcomes_to_pass: integerOrNull(draft.min_outcomes_to_pass),
         lock_quiz_ef_until_pass: draft.lock_quiz_ef_until_pass,
-        supplementary_instructions:
-          draft.supplementary_instructions.trim() || null,
+        supplementary_instructions: serializeSupplementaryInstructions({
+          notes: draft.notes,
+          criteria: draft.rubric_criteria,
+        }),
         security_response_policy: draft.security_response_policy,
         security_max_consecutive_attempts:
           integerOrNull(draft.security_max_consecutive_attempts) ?? 3,
@@ -566,8 +585,14 @@ export default function InterviewConfigPage() {
         source_lesson_ids: [],
         target_outcome_ids: generationForm.target_outcome_ids,
         persona: draft?.persona,
-        supplementary_instructions:
-          draft?.supplementary_instructions.trim() || null,
+        // Send the same serialized blob the config stores; the backend strips
+        // the structured keys and feeds only the prose to the generation prompt.
+        supplementary_instructions: draft
+          ? serializeSupplementaryInstructions({
+              notes: draft.notes,
+              criteria: draft.rubric_criteria,
+            })
+          : null,
       });
       setActiveRunId(result.run_id);
       toast.success(t("teacher_interview_config.toasts.generation_started"));
@@ -1392,23 +1417,32 @@ function SettingsForm({
         </div>
       </SettingsCard>
 
-      {/* Card 3 — Guidance for AI: single free-text box under its heading. */}
+      {/* Card 3 — Guidance for AI: free-text prose (fed to the question
+          generator) plus the structured scoring rubric (graded against). */}
       <SettingsCard
         title={t("teacher_interview_config.sections.guidance.title")}
         description={t(
           "teacher_interview_config.sections.guidance.description",
         )}
       >
-        <textarea
-          value={draft.supplementary_instructions}
-          onChange={(e) =>
-            update("supplementary_instructions", e.target.value)
-          }
-          rows={4}
-          placeholder={t(
-            "teacher_interview_config.fields.supplementary_placeholder",
-          )}
-          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+        <Field
+          label={t("teacher_interview_config.fields.notes_label")}
+          hint={t("teacher_interview_config.fields.notes_hint")}
+        >
+          <textarea
+            value={draft.notes}
+            onChange={(e) => update("notes", e.target.value)}
+            rows={4}
+            placeholder={t(
+              "teacher_interview_config.fields.supplementary_placeholder",
+            )}
+            className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+          />
+        </Field>
+
+        <RubricEditor
+          criteria={draft.rubric_criteria}
+          onChange={(next) => update("rubric_criteria", next)}
         />
       </SettingsCard>
 
@@ -2107,6 +2141,131 @@ function Field({
  * choosing. ``focus`` scrolls/hints which table is most relevant to the field
  * the link sits under, but both tables are always present.
  */
+function RubricEditor({
+  criteria,
+  onChange,
+}: {
+  criteria: RubricCriterion[];
+  onChange: (next: RubricCriterion[]) => void;
+}) {
+  const { t } = useTranslation();
+
+  function updateAt(index: number, patch: Partial<RubricCriterion>) {
+    onChange(criteria.map((c, i) => (i === index ? { ...c, ...patch } : c)));
+  }
+
+  function removeAt(index: number) {
+    onChange(criteria.filter((_, i) => i !== index));
+  }
+
+  function addCriterion() {
+    if (criteria.length >= MAX_CRITERIA) return;
+    onChange([...criteria, { name: "", weight: 1, description: "" }]);
+  }
+
+  const atCap = criteria.length >= MAX_CRITERIA;
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <label className="block text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+          {t("teacher_interview_config.fields.rubric_label")}
+        </label>
+        <p className="text-[11px] text-m3-on-surface-variant">
+          {t("teacher_interview_config.fields.rubric_hint")}
+        </p>
+      </div>
+
+      {criteria.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-m3-outline-variant/40 bg-m3-surface px-3 py-4 text-center text-xs text-m3-on-surface-variant">
+          {t("teacher_interview_config.fields.rubric_empty")}
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {criteria.map((criterion, index) => (
+            <div
+              key={index}
+              className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface p-3 space-y-2"
+            >
+              <div className="flex items-start gap-2">
+                <div className="flex-1 space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                    <Input
+                      value={criterion.name}
+                      maxLength={MAX_CRITERION_NAME_CHARS}
+                      onChange={(e) =>
+                        updateAt(index, { name: e.target.value })
+                      }
+                      placeholder={t(
+                        "teacher_interview_config.fields.rubric_name_placeholder",
+                      )}
+                      className="bg-m3-surface text-sm"
+                    />
+                    <label className="flex items-center gap-2 text-xs text-m3-on-surface-variant">
+                      <span className="whitespace-nowrap">
+                        {t("teacher_interview_config.fields.rubric_weight")}
+                      </span>
+                      <Input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={String(criterion.weight)}
+                        onChange={(e) =>
+                          updateAt(index, {
+                            weight: Math.max(1, Number(e.target.value) || 1),
+                          })
+                        }
+                        className="w-20 bg-m3-surface text-sm"
+                      />
+                    </label>
+                  </div>
+                  <textarea
+                    value={criterion.description}
+                    onChange={(e) =>
+                      updateAt(index, { description: e.target.value })
+                    }
+                    rows={2}
+                    placeholder={t(
+                      "teacher_interview_config.fields.rubric_description_placeholder",
+                    )}
+                    className="w-full rounded-lg border border-m3-outline-variant/20 bg-m3-surface px-3 py-2 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeAt(index)}
+                  aria-label={t(
+                    "teacher_interview_config.fields.rubric_remove",
+                  )}
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-m3-on-surface-variant hover:bg-m3-error/10 hover:text-m3-error cursor-pointer"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={addCriterion}
+        disabled={atCap}
+        className="gap-1.5"
+      >
+        <Plus className="h-4 w-4" />
+        {atCap
+          ? t("teacher_interview_config.fields.rubric_at_cap", {
+              max: MAX_CRITERIA,
+            })
+          : t("teacher_interview_config.fields.rubric_add")}
+      </Button>
+    </div>
+  );
+}
+
 function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
   const { t } = useTranslation();
   return (
