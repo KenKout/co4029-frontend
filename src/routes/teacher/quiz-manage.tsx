@@ -1481,6 +1481,11 @@ function QuestionCard({
     (question.question_type === "multiple_choice" ||
       question.question_type === "true_false") &&
     draft.options.length > 0;
+  // Phase 7: multi-select is MCQ-only (true_false is always single-answer).
+  // Read the DRAFT flag, not the saved row, so flipping the toggle switches the
+  // option inputs to checkboxes immediately — before the teacher hits Save.
+  const allowMultiCorrect =
+    question.question_type === "multiple_choice" && !draft.single_answer;
   const correctAnswer = readCorrectAnswer(question);
   const blankCount =
     question.question_type === "fill_blank"
@@ -1501,7 +1506,16 @@ function QuestionCard({
         toast.error(t("teacher_quiz_manage.errors.option_text_required"));
         return;
       }
-      if (draft.options.filter((o) => o.is_correct).length !== 1) {
+      // Phase 7: the correct-count rule depends on the multi-select toggle.
+      // Multi-select needs >= 1 correct (matching the backend validator);
+      // single-answer still requires exactly 1.
+      const correctCount = draft.options.filter((o) => o.is_correct).length;
+      if (allowMultiCorrect) {
+        if (correctCount < 1) {
+          toast.error(t("teacher_quiz_manage.errors.at_least_one_correct"));
+          return;
+        }
+      } else if (correctCount !== 1) {
         toast.error(t("teacher_quiz_manage.errors.exactly_one_correct"));
         return;
       }
@@ -1749,17 +1763,29 @@ function QuestionCard({
                   : "border border-m3-outline-variant/20 bg-m3-surface-container-lowest",
               )}
             >
+              {/* Phase 7: honour the multi-select toggle. When multiple correct
+                  answers are allowed the teacher needs checkboxes that toggle
+                  independently; a radio group would silently clear the others
+                  (and true_false is always single-answer). */}
               <input
-                type="radio"
-                name={`correct-${question.id}`}
+                type={allowMultiCorrect ? "checkbox" : "radio"}
+                name={
+                  allowMultiCorrect ? undefined : `correct-${question.id}`
+                }
                 checked={option.is_correct}
+                aria-label={t("teacher_quiz_manage.editor.mark_correct", {
+                  key: option.option_key,
+                })}
                 onChange={() =>
                   setDraft((current) => ({
                     ...current,
-                    options: current.options.map((o, j) => ({
-                      ...o,
-                      is_correct: j === idx,
-                    })),
+                    options: current.options.map((o, j) =>
+                      allowMultiCorrect
+                        ? j === idx
+                          ? { ...o, is_correct: !o.is_correct }
+                          : o
+                        : { ...o, is_correct: j === idx },
+                    ),
                   }))
                 }
                 className="h-4 w-4"
@@ -2398,46 +2424,42 @@ function SettingsTab({
       </SettingsSection>
 
       <SettingsSection title={t("teacher_quiz_manage.settings.behavior.title")}>
-        {/* Shuffle + hints change how the quiz presents to a student, so they
-            are frozen once published; reminders (below) is a notification
-            setting and stays editable — hence the separate LockableSection.
-            Both groups use the same space-y so the four cards read as one
-            evenly spaced list despite the wrapper boundary between them. */}
-        <div className="space-y-2.5">
-          <LockableSection locked={locked}>
-            <div className="space-y-2.5">
-              <ToggleRow
-                label={t(
-                  "teacher_quiz_manage.settings.behavior.shuffle_q_label",
-                )}
-                description={t(
-                  "teacher_quiz_manage.settings.behavior.shuffle_q_desc",
-                )}
-                value={draft.shuffle_questions}
-                onChange={(v) => update("shuffle_questions", v)}
-              />
-              <ToggleRow
-                label={t(
-                  "teacher_quiz_manage.settings.behavior.shuffle_o_label",
-                )}
-                description={t(
-                  "teacher_quiz_manage.settings.behavior.shuffle_o_desc",
-                )}
-                value={draft.shuffle_options}
-                onChange={(v) => update("shuffle_options", v)}
-              />
-              <ToggleRow
-                label={t(
-                  "teacher_quiz_manage.settings.behavior.show_hints_label",
-                )}
-                description={t(
-                  "teacher_quiz_manage.settings.behavior.show_hints_desc",
-                )}
-                value={draft.show_hints}
-                onChange={(v) => update("show_hints", v)}
-              />
-            </div>
-          </LockableSection>
+        {/* One row of four on wide screens — these are short, independent
+            switches, so a single column wasted most of the width.
+
+            The first three change how the quiz presents to a student and are
+            frozen once published; reminders is a notification setting and
+            stays editable. They can't be split across a `<fieldset disabled>`
+            here without breaking the grid (the fieldset would be one grid
+            item), so the lock is applied per card via `disabled`. */}
+        <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+          <ToggleRow
+            label={t("teacher_quiz_manage.settings.behavior.shuffle_q_label")}
+            description={t(
+              "teacher_quiz_manage.settings.behavior.shuffle_q_desc",
+            )}
+            value={draft.shuffle_questions}
+            onChange={(v) => update("shuffle_questions", v)}
+            disabled={locked}
+          />
+          <ToggleRow
+            label={t("teacher_quiz_manage.settings.behavior.shuffle_o_label")}
+            description={t(
+              "teacher_quiz_manage.settings.behavior.shuffle_o_desc",
+            )}
+            value={draft.shuffle_options}
+            onChange={(v) => update("shuffle_options", v)}
+            disabled={locked}
+          />
+          <ToggleRow
+            label={t("teacher_quiz_manage.settings.behavior.show_hints_label")}
+            description={t(
+              "teacher_quiz_manage.settings.behavior.show_hints_desc",
+            )}
+            value={draft.show_hints}
+            onChange={(v) => update("show_hints", v)}
+            disabled={locked}
+          />
           <ToggleRow
             label={t("teacher_quiz_manage.settings.behavior.reminders_label")}
             description={t(
@@ -2797,28 +2819,38 @@ function Field({
  * empty outline. `role="switch"` + `aria-checked` keeps it announced as a
  * toggle rather than a plain button.
  *
- * Being a real <button>, it inherits `disabled` from an ancestor
- * `<fieldset disabled>` (LockableSection) natively — no prop threading needed.
+ * Locking works two ways: being a real <button> it inherits `disabled` from an
+ * ancestor `<fieldset disabled>` (LockableSection) for free, and the explicit
+ * `disabled` prop covers layouts where that wrapper isn't available — e.g. the
+ * Behavior grid, where a fieldset around a subset of cards would collapse into
+ * a single grid item and break the 4-up row.
  */
 function ToggleRow({
   label,
   description,
   value,
   onChange,
+  disabled = false,
 }: {
   label: string;
   description: string;
   value: boolean;
   onChange: (next: boolean) => void;
+  /** Set directly when the card can't sit inside a `<fieldset disabled>` —
+   *  e.g. in a grid where locked and unlocked cards are siblings. */
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={value}
+      disabled={disabled}
       onClick={() => onChange(!value)}
       className={cn(
-        "group flex w-full items-start gap-3 rounded-xl border p-3.5 text-left transition-colors",
+        // h-full so cards in the same grid row match height even when one
+        // description wraps to more lines than the others.
+        "group flex h-full w-full items-start gap-3 rounded-xl border p-3.5 text-left transition-colors",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/40",
         "disabled:cursor-not-allowed disabled:opacity-60",
         value

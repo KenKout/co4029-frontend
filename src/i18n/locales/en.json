@@ -2701,7 +2701,8 @@
       "count_out_of_range": "Question count must be between 1 and 50",
       "publish_missing_t_exp": "Set the expected time for every question before publishing. Use the 'Quick set time' button.",
       "bulk_select_required": "Please choose at least one question.",
-      "bulk_seconds_positive": "Expected time must be greater than 0 seconds."
+      "bulk_seconds_positive": "Expected time must be greater than 0 seconds.",
+      "at_least_one_correct": "At least one option must be marked correct"
     },
     "toasts": {
       "deleted": "Quiz deleted",
@@ -2813,7 +2814,8 @@
       "explanation_label": "Explanation",
       "approve": "Approve",
       "regenerate": "Regenerate",
-      "explanation_inline": "Explanation:"
+      "explanation_inline": "Explanation:",
+      "mark_correct": "Mark option {{key}} as correct"
     },
     "generate_modal": {
       "title": "Generate questions with AI",

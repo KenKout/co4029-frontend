@@ -2613,7 +2613,8 @@
       "count_out_of_range": "Số lượng câu hỏi phải nằm trong khoảng 1-50",
       "publish_missing_t_exp": "Cần đặt thời gian dự kiến cho mọi câu hỏi trước khi xuất bản. Dùng nút 'Đặt nhanh thời gian'.",
       "bulk_select_required": "Hãy chọn ít nhất một câu hỏi.",
-      "bulk_seconds_positive": "Thời gian dự kiến phải lớn hơn 0 giây."
+      "bulk_seconds_positive": "Thời gian dự kiến phải lớn hơn 0 giây.",
+      "at_least_one_correct": "Phải có ít nhất một đáp án đúng"
     },
     "toasts": {
       "deleted": "Đã xoá bài kiểm tra",
@@ -2725,7 +2726,8 @@
       "explanation_label": "Giải thích",
       "approve": "Duyệt",
       "regenerate": "Tái tạo",
-      "explanation_inline": "Giải thích:"
+      "explanation_inline": "Giải thích:",
+      "mark_correct": "Đánh dấu đáp án {{key}} là đúng"
     },
     "generate_modal": {
       "title": "Tạo câu hỏi bằng AI",
