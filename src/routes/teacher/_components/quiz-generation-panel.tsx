@@ -88,6 +88,12 @@ const QUESTION_TYPES = [
   "true_false",
   "short_answer",
   "fill_blank",
+  // Phase 7 types the generation pipeline can now produce. Keep this list in
+  // lockstep with the backend's ``QuizGenerationRequest.question_types``
+  // literal — a value the API rejects fails the whole request with a 422.
+  "numerical",
+  "matching",
+  "ordering",
 ] as const;
 type QuestionType = (typeof QUESTION_TYPES)[number];
 
@@ -96,6 +102,9 @@ const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   true_false: "True / false",
   short_answer: "Short answer",
   fill_blank: "Fill in the blank",
+  numerical: "Numerical",
+  matching: "Matching",
+  ordering: "Ordering",
 };
 
 type GenerationMode = "topic" | "coverage";
