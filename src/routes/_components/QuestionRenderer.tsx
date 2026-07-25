@@ -30,7 +30,7 @@ export interface QuestionRendererProps {
 export function QuestionRenderer(props: QuestionRendererProps) {
   // Cast to string: the generated schema literal predates the Phase 7 types
   // (numerical/matching/ordering), which the backend now serves.
-  switch (props.question.question_type as string) {
+  switch (props.question.question_type) {
     case "multiple_choice":
       // Phase 7: multi-select MCQ (single_answer=false) uses checkboxes and
       // submits a JSON array of chosen option ids via answerText; single-answer

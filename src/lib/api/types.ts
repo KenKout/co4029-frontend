@@ -211,11 +211,41 @@ export interface QuizQuestionOptionRichFields {
   option_format?: RichFormat | null;
 }
 
-export type QuizQuestion = Schemas["QuizQuestionPublic"] &
+/**
+ * The question types the platform actually supports.
+ *
+ * The committed OpenAPI snapshot predates Phase 7, so its generated
+ * `question_type` literal stops at `code` and omits `numerical` / `matching` /
+ * `ordering`. An `&` intersection cannot WIDEN an existing literal (it would
+ * intersect to `never`), so the field is `Omit`ted and redeclared below —
+ * otherwise every `question.question_type === "matching"` comparison is a
+ * compile error and needs an `as string` cast at each site.
+ *
+ * Delete this once the snapshot is regenerated against the live backend.
+ */
+export type QuizQuestionType =
+  | "multiple_choice"
+  | "true_false"
+  | "short_answer"
+  | "fill_blank"
+  | "code"
+  | "numerical"
+  | "matching"
+  | "ordering";
+
+type WithQuestionType<T> = Omit<T, "question_type"> & {
+  question_type: QuizQuestionType;
+};
+
+export type QuizQuestion = WithQuestionType<Schemas["QuizQuestionPublic"]> &
   QuizQuestionRichFields;
-export type QuizQuestionPublic = Schemas["QuizQuestionPublic"] &
+export type QuizQuestionPublic = WithQuestionType<
+  Schemas["QuizQuestionPublic"]
+> &
   QuizQuestionRichFields;
-export type QuizQuestionAuthoring = Schemas["QuizQuestionAuthoring"] &
+export type QuizQuestionAuthoring = WithQuestionType<
+  Schemas["QuizQuestionAuthoring"]
+> &
   QuizQuestionRichFields;
 export type QuizQuestionOptionPublic = Schemas["QuizQuestionOptionPublic"] &
   QuizQuestionOptionRichFields;

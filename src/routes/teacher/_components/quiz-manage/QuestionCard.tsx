@@ -197,7 +197,7 @@ export function QuestionCard({
         ...(question.question_type === "multiple_choice"
           ? { single_answer: draft.single_answer }
           : {}),
-        ...((question.question_type as string) === "numerical"
+        ...(question.question_type === "numerical"
           ? {
               numeric_answer:
                 draft.numeric_answer.trim() === ""
@@ -209,14 +209,14 @@ export function QuestionCard({
                   : Number(draft.numeric_tolerance),
             }
           : {}),
-        ...((question.question_type as string) === "matching"
+        ...(question.question_type === "matching"
           ? {
               match_pairs: draft.match_pairs
                 .filter((p) => p.left.trim() && p.right.trim())
                 .map((p) => ({ left: p.left.trim(), right: p.right.trim() })),
             }
           : {}),
-        ...((question.question_type as string) === "ordering"
+        ...(question.question_type === "ordering"
           ? {
               ordering_sequence: draft.ordering_sequence
                 .map((s) => s.trim())

@@ -2970,7 +2970,13 @@
       "empty_approved_body": "Chưa có câu hỏi nào được duyệt. Hãy duyệt câu hỏi trong tab Câu hỏi — học viên chỉ thấy câu hỏi đã duyệt.",
       "no_content": "(Chưa có nội dung)",
       "correct": "Đúng",
-      "edit_question": "Chỉnh sửa"
+      "edit_question": "Chỉnh sửa",
+      "correct_pairs": "Các cặp đúng",
+      "correct_order": "Thứ tự đúng",
+      "tolerance": "± {{value}}",
+      "matching_note": "Học viên thấy các giá trị bên phải đã được trộn và chọn một cho mỗi mục.",
+      "ordering_note": "Học viên thấy các mục này đã được trộn và sắp xếp lại.",
+      "multi_select_note": "Nhiều đáp án đúng — học viên thấy ô chọn (checkbox)."
     },
     "import_export": {
       "title": "Nhập / Xuất câu hỏi",

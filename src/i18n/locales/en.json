@@ -3058,7 +3058,13 @@
       "empty_approved_body": "No approved questions yet. Approve questions in the Questions tab — students only see approved ones.",
       "no_content": "(No content)",
       "correct": "Correct",
-      "edit_question": "Edit"
+      "edit_question": "Edit",
+      "correct_pairs": "Correct pairs",
+      "correct_order": "Correct order",
+      "tolerance": "± {{value}}",
+      "matching_note": "Students see the right-hand values shuffled and pick one per prompt.",
+      "ordering_note": "Students see these items shuffled and reorder them.",
+      "multi_select_note": "Multiple correct answers — students see checkboxes."
     },
     "import_export": {
       "title": "Import / Export questions",
