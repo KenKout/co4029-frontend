@@ -343,7 +343,7 @@ export function LearningOutcomes({
   const hasOutcomes = sorted.length > 0;
 
   return (
-    <div className="bg-m3-surface-container-lowest border border-m3-outline-variant/60 rounded-xl p-6 lg:p-8 space-y-4 shadow-glass">
+    <section className="rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low/40 p-5 lg:p-6 space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0 space-y-1">
@@ -699,7 +699,7 @@ export function LearningOutcomes({
       )}
 
       <div ref={liveRegionRef} aria-live="polite" className="sr-only" />
-    </div>
+    </section>
   );
 }
 

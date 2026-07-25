@@ -939,17 +939,16 @@ export default function InterviewConfigPage() {
                   dirty={settingsDirty}
                   justSaved={justSaved}
                   updatedAt={config?.updated_at ?? null}
-                />
-                {/* Learning outcomes now live inside Settings (merged from the
-                    old standalone tab) so all pre-generation config sits in one
-                    place. */}
-                <LearningOutcomes
-                  configId={configId}
-                  courseId={courseId}
-                  outcomes={outcomes ?? []}
-                  questions={questions ?? []}
-                  minOutcomesToPass={config.min_outcomes_to_pass ?? null}
-                  onViewQuestions={handleViewOutcomeQuestions}
+                  outcomesSlot={
+                    <LearningOutcomes
+                      configId={configId}
+                      courseId={courseId}
+                      outcomes={outcomes ?? []}
+                      questions={questions ?? []}
+                      minOutcomesToPass={config.min_outcomes_to_pass ?? null}
+                      onViewQuestions={handleViewOutcomeQuestions}
+                    />
+                  }
                 />
               </section>
               <section
@@ -1223,16 +1222,18 @@ function TabBar({
                   : "text-m3-on-surface hover:bg-surface-muted",
               )}
             >
-              {/* Everything on ONE centered row so the tab name stays on the
-                  same baseline across all tabs — a status affix (e.g.
-                  "Completed") sits inline after the label instead of pushing
-                  the name up onto a second line. */}
-              <span className="flex items-center justify-center gap-2">
-                {statusDot(status)}
-                <span className="text-[13px] font-bold">
-                  <span className="lg:hidden xl:inline">{item.label}</span>
-                  <span className="hidden lg:inline xl:hidden">
-                    {item.shortLabel ?? item.label}
+              {/* Two stacked rows: the tab name (with its status dot) on top,
+                  and the sub-status affix (e.g. "Completed" / "None yet")
+                  centered on a SECOND line beneath it so the name stays the
+                  visual anchor and the status reads as a caption. */}
+              <span className="flex flex-col items-center justify-center gap-0.5">
+                <span className="flex items-center justify-center gap-2">
+                  {statusDot(status)}
+                  <span className="text-[13px] font-bold">
+                    <span className="lg:hidden xl:inline">{item.label}</span>
+                    <span className="hidden lg:inline xl:hidden">
+                      {item.shortLabel ?? item.label}
+                    </span>
                   </span>
                 </span>
                 {status.kind !== "none" && (
@@ -1391,6 +1392,7 @@ function SettingsForm({
   dirty,
   justSaved,
   updatedAt,
+  outcomesSlot,
 }: {
   draft: SettingsDraft;
   setDraft: React.Dispatch<React.SetStateAction<SettingsDraft | null>>;
@@ -1399,9 +1401,13 @@ function SettingsForm({
   dirty: boolean;
   justSaved: boolean;
   updatedAt: string | null;
+  /** Learning-outcomes panel, injected between Guidance and Security so the
+      outcomes sit above the (now bottom-most) Security & Integrity block. */
+  outcomesSlot?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const [securityOpen, setSecurityOpen] = useState(false);
+  const [personaAdvancedOpen, setPersonaAdvancedOpen] = useState(false);
   function update<K extends keyof SettingsDraft>(
     key: K,
     value: SettingsDraft[K],
@@ -1430,7 +1436,7 @@ function SettingsForm({
             <select
               value={draft.persona}
               onChange={(e) => update("persona", e.target.value as Persona)}
-              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+              className="w-full cursor-pointer rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm transition-colors hover:border-m3-primary/50 hover:bg-m3-primary/5 focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
             >
               {PERSONA_KEYS.map((p) => (
                 <option key={p} value={p}>
@@ -1447,7 +1453,7 @@ function SettingsForm({
             <select
               value={draft.tts_voice}
               onChange={(e) => update("tts_voice", e.target.value)}
-              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+              className="w-full cursor-pointer rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm transition-colors hover:border-m3-primary/50 hover:bg-m3-primary/5 focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
             >
               <option value="">
                 {t("teacher_interview_config.fields.voice_default")}
@@ -1466,63 +1472,94 @@ function SettingsForm({
             by default — the persona preset is enough for most teachers; the
             sliders let a power user fine-tune tone without a new persona. Every
             dial is TONE ONLY and never affects scoring (backend enforces this).
-            An override exists only for a trait moved away from its preset. */}
-        <details className="mt-4 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest">
-          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-m3-on-surface select-none">
-            {t("teacher_interview_config.persona_traits.advanced_label")}
-          </summary>
-          <div className="px-4 pb-4 space-y-4">
-            <p className="text-xs text-m3-on-surface-variant">
-              {t("teacher_interview_config.persona_traits.help")}
-            </p>
-            {(() => {
-              const effective = effectivePersonaTraits(
-                draft.persona,
-                draft.persona_profile,
-              );
-              return PERSONA_TRAIT_KEYS.map((traitKey) => (
-                <div key={traitKey} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label
-                      htmlFor={`persona-trait-${traitKey}`}
-                      className="text-xs font-medium text-m3-on-surface"
-                    >
-                      {t(`teacher_interview_config.persona_traits.trait.${traitKey}`)}
-                    </label>
-                    <span className="text-xs tabular-nums text-m3-on-surface-variant">
-                      {effective[traitKey]} / 4
-                    </span>
-                  </div>
-                  <input
-                    id={`persona-trait-${traitKey}`}
-                    type="range"
-                    min={0}
-                    max={4}
-                    step={1}
-                    value={effective[traitKey]}
-                    onChange={(e) =>
-                      update("persona_profile", {
-                        ...draft.persona_profile,
-                        [traitKey]: Number(e.target.value),
-                      })
-                    }
-                    className="w-full accent-m3-primary"
-                  />
-                  <p className="text-[11px] text-m3-on-surface-variant">
-                    {t(`teacher_interview_config.persona_traits.trait_hint.${traitKey}`)}
-                  </p>
-                </div>
-              ));
-            })()}
-            <button
-              type="button"
-              onClick={() => update("persona_profile", {})}
-              className="text-xs font-medium text-m3-primary hover:underline"
-            >
-              {t("teacher_interview_config.persona_traits.reset")}
-            </button>
+            An override exists only for a trait moved away from its preset.
+            Uses the same button + grid-rows scroll animation as the Security
+            panel (a rotating ChevronDown, not a raw native triangle). */}
+        <div className="mt-4 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-4">
+          <button
+            type="button"
+            aria-expanded={personaAdvancedOpen}
+            onClick={() => setPersonaAdvancedOpen((open) => !open)}
+            className="flex w-full cursor-pointer list-none items-center gap-3 text-left"
+          >
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-m3-primary/10 text-m3-primary">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-extrabold text-m3-on-surface">
+                {t("teacher_interview_config.persona_traits.advanced_label")}
+              </span>
+              <span className="block text-xs text-m3-on-surface-variant">
+                {t("teacher_interview_config.persona_traits.help")}
+              </span>
+            </span>
+            <ChevronDown
+              className={`h-5 w-5 shrink-0 text-m3-on-surface-variant transition-transform duration-300 ${
+                personaAdvancedOpen ? "rotate-180" : ""
+              }`}
+              aria-hidden="true"
+            />
+          </button>
+
+          <div
+            className={`grid transition-all duration-300 ease-in-out ${
+              personaAdvancedOpen
+                ? "grid-rows-[1fr] opacity-100"
+                : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="mt-5 space-y-4 border-t border-m3-outline-variant/20 pt-5">
+                {(() => {
+                  const effective = effectivePersonaTraits(
+                    draft.persona,
+                    draft.persona_profile,
+                  );
+                  return PERSONA_TRAIT_KEYS.map((traitKey) => (
+                    <div key={traitKey} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label
+                          htmlFor={`persona-trait-${traitKey}`}
+                          className="text-xs font-medium text-m3-on-surface"
+                        >
+                          {t(`teacher_interview_config.persona_traits.trait.${traitKey}`)}
+                        </label>
+                        <span className="text-xs tabular-nums text-m3-on-surface-variant">
+                          {effective[traitKey]} / 4
+                        </span>
+                      </div>
+                      <input
+                        id={`persona-trait-${traitKey}`}
+                        type="range"
+                        min={0}
+                        max={4}
+                        step={1}
+                        value={effective[traitKey]}
+                        onChange={(e) =>
+                          update("persona_profile", {
+                            ...draft.persona_profile,
+                            [traitKey]: Number(e.target.value),
+                          })
+                        }
+                        className="w-full cursor-pointer accent-m3-primary"
+                      />
+                      <p className="text-[11px] text-m3-on-surface-variant">
+                        {t(`teacher_interview_config.persona_traits.trait_hint.${traitKey}`)}
+                      </p>
+                    </div>
+                  ));
+                })()}
+                <button
+                  type="button"
+                  onClick={() => update("persona_profile", {})}
+                  className="text-xs font-medium text-m3-primary hover:underline"
+                >
+                  {t("teacher_interview_config.persona_traits.reset")}
+                </button>
+              </div>
+            </div>
           </div>
-        </details>
+        </div>
       </SettingsCard>
 
       {/* Card 2 — Scoring & timing: the three numeric knobs on one 3-up row. */}
@@ -1605,6 +1642,11 @@ function SettingsForm({
           onChange={(next) => update("rubric_criteria", next)}
         />
       </SettingsCard>
+
+      {/* Learning outcomes sit above Security & Integrity (which is now the
+          bottom-most block). Injected here as a slot so it lives inside the
+          settings flow without SettingsForm needing to know the outcomes API. */}
+      {outcomesSlot}
 
       <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-4">
         <button
@@ -2439,7 +2481,11 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
         }
       >
         <HelpCircle className="h-3 w-3" aria-hidden="true" />
-        {t("teacher_interview_config.voice_guide.open")}
+        {t(
+          focus === "persona"
+            ? "teacher_interview_config.voice_guide.open_persona"
+            : "teacher_interview_config.voice_guide.open_voice",
+        )}
       </SheetTrigger>
       <SheetContent className="w-full overflow-y-auto p-6 sm:max-w-md">
         <div className="space-y-6">
