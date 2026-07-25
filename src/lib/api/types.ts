@@ -310,7 +310,25 @@ export interface InterviewQuestionBankItemUpdate {
 export type GapReportAuthoringRead = Schemas["GapReportAuthoringRead"] & {
   student_name?: string | null;
   interview_title?: string | null;
+  // Tone-only persona-adherence audit (teacher diagnostic). Present only when a
+  // session was audited; absent/empty otherwise. Manually typed until the
+  // OpenAPI snapshot is regenerated.
+  persona_adherence?: PersonaAdherenceRead;
 };
+
+// Persona-adherence audit result surfaced from internal_summary_json. Every
+// field is optional so a partial/legacy payload never breaks the render.
+export interface PersonaAdherenceRead {
+  tone_consistency?: number;
+  reasoning?: string;
+  warmth_observed?: number;
+  directness_observed?: number;
+  verbosity_observed?: number;
+  formality_observed?: number;
+  drift_turns?: number[];
+  violations?: string[];
+  available?: boolean;
+}
 
 // Adaptive readiness (Slice 5) — advisory authoring analysis. Manually typed
 // until the OpenAPI snapshot is regenerated; the backend returns these from

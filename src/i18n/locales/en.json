@@ -20,6 +20,7 @@
     "search": "Search",
     "submit": "Submit",
     "close": "Close",
+    "back_to_top": "Back to top",
     "yes": "Yes",
     "no": "No",
     "breadcrumb_aria": "Breadcrumb",
@@ -1689,6 +1690,27 @@
       "transcript": "Transcript",
       "integrity": "Integrity",
       "sources": "Sources"
+    },
+    "persona_adherence": {
+      "title": "Interviewer persona",
+      "tone_only": "Tone only — does not affect the score",
+      "band_consistent": "Held the persona",
+      "band_mixed": "Drifted at times",
+      "band_off": "Off-persona",
+      "answer_leak_warning": "The interviewer may have revealed answer content during the session. This does not change the student's score, but review the flagged turns — it can affect fairness.",
+      "drift_turns": "Tone drifted at turn(s): {{turns}}",
+      "traits": {
+        "warmth": "Warmth",
+        "directness": "Directness",
+        "verbosity": "Verbosity",
+        "formality": "Formality"
+      },
+      "violations": {
+        "over_polite_for_strict": "Too warm for a strict persona",
+        "cold_for_supportive": "Too cold for a supportive persona",
+        "repeated_candidate_answer": "Parroted the candidate's answer",
+        "identity_confusion": "Lost track of interviewer role"
+      }
     },
     "integrity": {
       "clean_title": "No integrity flags",

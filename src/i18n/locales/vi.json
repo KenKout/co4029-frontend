@@ -20,6 +20,7 @@
     "search": "Tìm kiếm",
     "submit": "Gửi",
     "close": "Đóng",
+    "back_to_top": "Lên đầu trang",
     "yes": "Có",
     "no": "Không",
     "breadcrumb_aria": "Đường dẫn",
@@ -1638,6 +1639,27 @@
       "transcript": "Bản ghi",
       "integrity": "Liêm chính",
       "sources": "Nguồn"
+    },
+    "persona_adherence": {
+      "title": "Phong cách người phỏng vấn",
+      "tone_only": "Chỉ về giọng điệu — không ảnh hưởng điểm",
+      "band_consistent": "Giữ đúng phong cách",
+      "band_mixed": "Có lúc lệch",
+      "band_off": "Lệch phong cách",
+      "answer_leak_warning": "Người phỏng vấn có thể đã tiết lộ nội dung đáp án trong phiên. Điều này không làm thay đổi điểm của học viên, nhưng hãy xem lại các lượt được đánh dấu — nó có thể ảnh hưởng tính công bằng.",
+      "drift_turns": "Giọng điệu lệch ở lượt: {{turns}}",
+      "traits": {
+        "warmth": "Độ ấm áp",
+        "directness": "Độ thẳng thắn",
+        "verbosity": "Độ dài dòng",
+        "formality": "Độ trang trọng"
+      },
+      "violations": {
+        "over_polite_for_strict": "Quá ấm áp so với phong cách nghiêm khắc",
+        "cold_for_supportive": "Quá lạnh lùng so với phong cách hỗ trợ",
+        "repeated_candidate_answer": "Nhại lại câu trả lời của học viên",
+        "identity_confusion": "Lẫn lộn vai trò người phỏng vấn"
+      }
     },
     "integrity": {
       "clean_title": "Không có cảnh báo liêm chính",
