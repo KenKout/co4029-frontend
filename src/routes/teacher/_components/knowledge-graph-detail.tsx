@@ -120,14 +120,24 @@ export function KnowledgeGraphDetail({
   useEffect(() => {
     setPositions(layoutWorld(nodes));
   }, [nodes]);
+  // Mirror of the latest positions so focusNode (called from event handlers
+  // and relation-chip jumps) can read current coords without going stale.
+  const positionsRef = useRef(positions);
+  positionsRef.current = positions;
 
   const [transform, setTransform] = useState<Transform>({
     tx: 0,
     ty: 0,
     scale: 1,
   });
+  // When true, the world <g> animates its transform (used for camera focus so
+  // the jump to a clicked node glides). Turned off during pan/drag/zoom so
+  // those stay instant and lag-free.
+  const [smooth, setSmooth] = useState(false);
+  const smoothTimer = useRef<number | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
-  // The node whose relationship panel is pinned (double-click).
+  // The node whose relationship panel is pinned. Now a SINGLE click selects a
+  // node: it pins the panel and focuses the camera on that node.
   const [pinned, setPinned] = useState<string | null>(null);
 
   // Fit the whole world into the viewport on first mount / when the node set
@@ -249,25 +259,42 @@ export function KnowledgeGraphDetail({
 
   // Wheel zoom toward the pointer: keep the world point under the cursor fixed
   // while scaling, which is what makes zoom feel anchored rather than drifting.
-  const onWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
+  //
+  // Attached as a NATIVE, non-passive listener (see effect below) rather than
+  // via React's onWheel. React registers wheel handlers as passive, so
+  // e.preventDefault() there is silently ignored — which is why ctrl+scroll
+  // used to zoom the whole browser page instead of the canvas. A non-passive
+  // listener lets us cancel that default. We zoom the canvas on every wheel,
+  // and on ctrl/⌘+wheel (trackpad pinch / browser-zoom gesture) we ALSO
+  // preventDefault so the page never zooms out from under the graph.
+  useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
-    const rect = svg.getBoundingClientRect();
-    const sx = e.clientX - rect.left;
-    const sy = e.clientY - rect.top;
-    setTransform((prev) => {
-      const factor = Math.exp(-e.deltaY * 0.0015);
-      const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, prev.scale * factor));
-      const k = scale / prev.scale;
-      // Solve so (sx,sy) maps to the same world point before/after.
-      return {
-        scale,
-        tx: sx - k * (sx - prev.tx),
-        ty: sy - k * (sy - prev.ty),
-      };
-    });
-  };
+    const handler = (e: WheelEvent) => {
+      // Always cancel: prevents page scroll on plain wheel and, crucially,
+      // browser page-zoom on ctrl/⌘+wheel.
+      e.preventDefault();
+      const rect = svg.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+      setTransform((prev) => {
+        const factor = Math.exp(-e.deltaY * 0.0015);
+        const scale = Math.min(
+          MAX_SCALE,
+          Math.max(MIN_SCALE, prev.scale * factor),
+        );
+        const k = scale / prev.scale;
+        // Solve so (sx,sy) maps to the same world point before/after.
+        return {
+          scale,
+          tx: sx - k * (sx - prev.tx),
+          ty: sy - k * (sy - prev.ty),
+        };
+      });
+    };
+    svg.addEventListener("wheel", handler, { passive: false });
+    return () => svg.removeEventListener("wheel", handler);
+  }, []);
 
   const zoomBy = (factor: number) => {
     const svg = svgRef.current;
@@ -288,6 +315,51 @@ export function KnowledgeGraphDetail({
       };
     });
   };
+
+  // Glide the camera so a node lands in the centre of the canvas. Called on
+  // single-click and on relation-chip jumps. Keeps the current zoom unless
+  // we're very zoomed out, in which case it eases in a little so the focused
+  // node is comfortably readable. Enables the transform transition for the
+  // move, then disables it after the animation so pan/zoom stay instant.
+  const focusNode = useCallback((nodeId: string) => {
+    const svg = svgRef.current;
+    const p = positionsRef.current.get(nodeId);
+    if (!svg || !p) return;
+    const rect = svg.getBoundingClientRect();
+    setSmooth(true);
+    if (smoothTimer.current) window.clearTimeout(smoothTimer.current);
+    smoothTimer.current = window.setTimeout(() => setSmooth(false), 420);
+    setTransform((prev) => {
+      const scale = Math.min(
+        MAX_SCALE,
+        Math.max(prev.scale, 0.9),
+      );
+      return {
+        scale,
+        tx: rect.width / 2 - p.x * scale,
+        ty: rect.height / 2 - p.y * scale,
+      };
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (smoothTimer.current) window.clearTimeout(smoothTimer.current);
+    };
+  }, []);
+
+  // Select a node: pin its relationship panel AND glide the camera to centre
+  // it. Shared by single-click on a node and by relation-chip jump clicks, so
+  // both routes behave identically. Always focuses (even when re-selecting via
+  // a chip) so jumping to an off-screen neighbour brings it into view.
+  const selectNode = useCallback(
+    (nodeId: string) => {
+      setPinned(nodeId);
+      setHovered(null);
+      focusNode(nodeId);
+    },
+    [focusNode],
+  );
 
   // --- Relationship data for the pinned node -------------------------------
   const pinnedRelations = useMemo(() => {
@@ -319,6 +391,31 @@ export function KnowledgeGraphDetail({
     }
     return set;
   }, [activeId, edges]);
+
+  // Screen-space position of the pinned node, so the relationship popup can be
+  // anchored directly over that node (not parked in a fixed corner). Derived
+  // from transform + world position, so it tracks live as the user pans/zooms.
+  // Reads the svg box during render — safe because the panel only mounts once
+  // a node is pinned (post-mount). Also decides above/below placement so the
+  // popup never spills off the top edge when the node sits high in the canvas.
+  const pinnedScreen = useMemo(() => {
+    if (!pinned) return null;
+    const p = positions.get(pinned);
+    const svg = svgRef.current;
+    if (!p || !svg) return null;
+    const rect = svg.getBoundingClientRect();
+    const x = p.x * transform.scale + transform.tx;
+    const y = p.y * transform.scale + transform.ty;
+    const r = radiusFor(nodeById.get(pinned)?.weight ?? minW, maxW, minW) *
+      transform.scale;
+    // Clamp the horizontal anchor so a centred (translateX(-50%)) 288px panel
+    // stays fully on-canvas even when the node is near an edge.
+    const half = 150;
+    const clampedX = Math.min(Math.max(x, half), rect.width - half);
+    // Prefer above; flip below when the node is in the top third.
+    const below = y < rect.height * 0.34;
+    return { x: clampedX, y, r, below };
+  }, [pinned, positions, transform, nodeById, maxW, minW]);
 
   const overlay = (
     <div className="fixed inset-0 z-50 flex flex-col bg-m3-surface">
@@ -357,7 +454,6 @@ export function KnowledgeGraphDetail({
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerLeave={onPointerUp}
-          onWheel={onWheel}
           role="application"
           aria-label={title}
         >
@@ -388,6 +484,11 @@ export function KnowledgeGraphDetail({
 
           <g
             transform={`translate(${transform.tx} ${transform.ty}) scale(${transform.scale})`}
+            style={{
+              transition: smooth
+                ? "transform 380ms cubic-bezier(0.22, 1, 0.36, 1)"
+                : undefined,
+            }}
           >
             {/* Edges */}
             {edges.map((e, i) => {
@@ -459,13 +560,15 @@ export function KnowledgeGraphDetail({
                   className="cursor-pointer transition-opacity"
                   onPointerDown={(e) => onPointerDownNode(e, n.id)}
                   onPointerUp={() => {
-                    // A click that didn't drag counts as hover-focus; the
-                    // double-click handler pins the relationship panel.
-                    if (!drag.current.moved) setHovered(n.id);
-                  }}
-                  onDoubleClick={(e) => {
-                    e.stopPropagation();
-                    setPinned((cur) => (cur === n.id ? null : n.id));
+                    // A single click that didn't turn into a drag SELECTS the
+                    // node: pin its relationship panel and glide the camera so
+                    // the node centres. Clicking the already-selected node
+                    // clears the selection. (Was double-click before.)
+                    if (drag.current.moved) return;
+                    // Toggle off if it's already the selected node; otherwise
+                    // select (pin panel + centre camera) via the shared path.
+                    if (pinned === n.id) setPinned(null);
+                    else selectNode(n.id);
                   }}
                   onMouseEnter={() => !pinned && setHovered(n.id)}
                   onMouseLeave={() => !pinned && setHovered(null)}
@@ -555,9 +658,25 @@ export function KnowledgeGraphDetail({
           </span>
         </div>
 
-        {/* Pinned relationship panel (double-click a node) */}
-        {pinned && pinnedRelations && nodeById.get(pinned) && (
-          <div className="absolute top-4 right-4 w-72 max-w-[calc(100%-2rem)] rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest/98 p-4 shadow-glass backdrop-blur">
+        {/* Relationship popup — anchored over the selected node (single-click).
+            Because the camera centres the node, this normally floats mid-canvas
+            just above the concept it describes. It's translated -50% on X to
+            centre on the node, and placed either above (default) or below (when
+            the node is high up) so it never clips the top edge. */}
+        {pinned && pinnedRelations && pinnedScreen && nodeById.get(pinned) && (
+          <div
+            className="absolute z-10 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest/98 p-4 shadow-glass backdrop-blur"
+            style={{
+              left: pinnedScreen.x,
+              top: pinnedScreen.below
+                ? pinnedScreen.y + pinnedScreen.r + 12
+                : undefined,
+              bottom: pinnedScreen.below
+                ? undefined
+                : `calc(100% - ${pinnedScreen.y - pinnedScreen.r - 12}px)`,
+              transform: "translateX(-50%)",
+            }}
+          >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="font-headline font-bold text-m3-on-surface">
@@ -589,7 +708,7 @@ export function KnowledgeGraphDetail({
                 ids={pinnedRelations.prerequisites}
                 nodeById={nodeById}
                 tone="amber"
-                onJump={setPinned}
+                onJump={selectNode}
                 emptyLabel={t("teacher_lesson_materials.kg.rel_none")}
               />
               <RelationGroup
@@ -597,7 +716,7 @@ export function KnowledgeGraphDetail({
                 ids={pinnedRelations.unlocks}
                 nodeById={nodeById}
                 tone="amber"
-                onJump={setPinned}
+                onJump={selectNode}
                 emptyLabel={t("teacher_lesson_materials.kg.rel_none")}
               />
               <RelationGroup
@@ -605,7 +724,7 @@ export function KnowledgeGraphDetail({
                 ids={pinnedRelations.related}
                 nodeById={nodeById}
                 tone="slate"
-                onJump={setPinned}
+                onJump={selectNode}
                 emptyLabel={t("teacher_lesson_materials.kg.rel_none")}
               />
             </div>
