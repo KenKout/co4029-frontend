@@ -1115,7 +1115,7 @@ function TabBar({
                 {status.kind !== "none" && (
                   <span
                     className={cn(
-                      "hidden text-[11px] leading-tight transition-colors duration-300 xl:inline",
+                      "text-[11px] leading-tight transition-colors duration-300",
                       isActive ? "text-white/80" : "text-m3-on-surface-variant",
                     )}
                   >
