@@ -2773,7 +2773,8 @@
       "select_all": "Chọn tất cả",
       "deselect": "Bỏ chọn",
       "apply": "Áp dụng cho đã chọn",
-      "approve_selected": "Duyệt đã chọn"
+      "approve_selected": "Duyệt đã chọn",
+      "delete_selected": "Xoá {{count}} đã chọn"
     },
     "questions": {
       "sr_select": "Chọn câu hỏi {{position}}",

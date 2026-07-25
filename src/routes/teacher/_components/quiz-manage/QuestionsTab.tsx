@@ -165,6 +165,26 @@ export function QuestionsTab({
     }
   }
 
+  /** Stage every selected question for deletion in one go.
+   *
+   * Reuses the per-question combo-undo path (``onQueueDelete``) rather than
+   * adding a bulk endpoint: each id is staged, the shared 5s countdown covers
+   * the whole batch, and the undo snackbar can cancel all of them at once
+   * because nothing has been sent to the server yet. Selection is cleared so
+   * the bar doesn't keep acting on rows that are already hidden.
+   */
+  function handleDeleteSelected() {
+    const targets = questions.filter((q) => selectedIds.has(q.id));
+    if (targets.length === 0) return;
+    for (const question of targets) {
+      onQueueDelete({
+        id: question.id,
+        label: question.prompt_text?.slice(0, 60) || question.id,
+      });
+    }
+    onClearSelection();
+  }
+
   return (
     <div className="grid grid-cols-12 gap-6">
       <div className="col-span-12 lg:col-span-8 space-y-4 min-w-0">
@@ -242,6 +262,7 @@ export function QuestionsTab({
             onApprove={handleApproveBulk}
             approveValid={selectedIds.size > 0}
             approving={bulkApprove.isPending}
+            onDeleteSelected={handleDeleteSelected}
           />
         )}
 

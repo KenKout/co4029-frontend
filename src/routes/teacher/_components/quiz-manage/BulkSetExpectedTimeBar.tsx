@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, Clock, Loader2, Save } from "lucide-react";
+import { CheckCircle2, Clock, Loader2, Save, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ export function BulkSetExpectedTimeBar({
   onApprove,
   approveValid,
   approving,
+  onDeleteSelected,
 }: {
   totalQuestions: number;
   selectedCount: number;
@@ -37,6 +38,8 @@ export function BulkSetExpectedTimeBar({
   onApprove: () => void | Promise<void>;
   approveValid: boolean;
   approving: boolean;
+  /** Stage every selected question for deletion (combo-undo window). */
+  onDeleteSelected: () => void;
 }) {
   const { t } = useTranslation();
   if (totalQuestions === 0) return null;
@@ -129,6 +132,23 @@ export function BulkSetExpectedTimeBar({
             <CheckCircle2 className="h-3.5 w-3.5" />
           )}
           {t("teacher_quiz_manage.bulk_time.approve_selected")}
+        </Button>
+        {/* Destructive, so it sits last and is visually separated. No confirm
+            dialog on purpose: the delete is STAGED into the existing combo-undo
+            window (nothing hits the server yet), so the undo snackbar is the
+            safety net rather than a modal. */}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={!hasSelection}
+          onClick={onDeleteSelected}
+          className="gap-2 border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          {t("teacher_quiz_manage.bulk_time.delete_selected", {
+            count: selectedCount,
+          })}
         </Button>
       </div>
     </div>

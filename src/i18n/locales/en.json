@@ -2861,7 +2861,8 @@
       "select_all": "Select all",
       "deselect": "Deselect",
       "apply": "Apply to selected",
-      "approve_selected": "Approve selected"
+      "approve_selected": "Approve selected",
+      "delete_selected": "Delete {{count}} selected"
     },
     "questions": {
       "sr_select": "Select question {{position}}",
