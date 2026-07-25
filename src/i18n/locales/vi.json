@@ -2762,7 +2762,8 @@
       "status_selected": "Đã chọn",
       "status_focused": "Đang xem",
       "error_count": "{{count}} lỗi",
-      "unsaved_count": "{{count}} chưa lưu"
+      "unsaved_count": "{{count}} chưa lưu",
+      "legend_title": "Ý nghĩa các màu"
     },
     "bulk_time": {
       "title": "Đặt nhanh thời gian",

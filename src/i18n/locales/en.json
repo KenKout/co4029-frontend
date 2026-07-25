@@ -2850,7 +2850,8 @@
       "status_selected": "Selected",
       "status_focused": "Viewing",
       "error_count": "{{count}} error",
-      "unsaved_count": "{{count}} unsaved"
+      "unsaved_count": "{{count}} unsaved",
+      "legend_title": "What the colours mean"
     },
     "bulk_time": {
       "title": "Quick set time",
