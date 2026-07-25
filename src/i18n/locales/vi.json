@@ -386,7 +386,11 @@
       "title": "Phiên phỏng vấn đang diễn ra",
       "body": "Bạn có một buổi phỏng vấn vẫn đang diễn ra. Hãy hoàn thành trước khi bắt đầu buổi mới.",
       "continue": "Tiếp tục phiên gần nhất"
-    }
+    },
+    "knowledge_map": "Sơ đồ kiến thức",
+    "km_zoom_in": "Phóng to",
+    "km_zoom_out": "Thu nhỏ",
+    "km_fit": "Vừa khung nhìn"
   },
   "placeholder": {
     "body": "Trang này sắp có. Quay lại sau khi quá trình chuyển API hoàn tất.",
@@ -3776,7 +3780,9 @@
       "rel_none": "Không có",
       "layout_label": "Bố cục",
       "layout_circular": "Vòng tròn",
-      "layout_tree": "Cây"
+      "layout_tree": "Cây",
+      "edit": "Chỉnh sửa",
+      "editor_title": "Chỉnh sửa sơ đồ kiến thức"
     },
     "history": {
       "title": "Lịch sử tài liệu",
@@ -3941,5 +3947,36 @@
     "success": {
       "created": "Đã tạo bài kiểm tra"
     }
+  },
+  "teacher_kg_editor": {
+    "title": "Trình chỉnh sửa sơ đồ kiến thức",
+    "add_node": "Thêm nút",
+    "delete_node": "Xóa nút",
+    "make_primary": "Đặt làm nút chính",
+    "is_primary": "Nút chính",
+    "node_detail": "Chi tiết nút",
+    "field_label": "Nhãn",
+    "field_type": "Loại",
+    "field_definition": "Định nghĩa",
+    "field_weight": "Mức độ quan trọng",
+    "new_node_label": "Khái niệm mới",
+    "link_from": "Liên kết từ đây",
+    "link_mode_hint": "Nhấp vào nút đích để tạo quan hệ (Esc để hủy)",
+    "edge_exists": "Quan hệ này đã tồn tại",
+    "canvas_label": "Khung sơ đồ kiến thức",
+    "seeded_hint": "Được tạo sẵn từ sơ đồ khái niệm AI — chỉnh sửa tùy ý, rồi Lưu.",
+    "undo": "Hoàn tác",
+    "redo": "Làm lại",
+    "save": "Lưu",
+    "saved": "Đã lưu",
+    "save_failed": "Lưu thất bại",
+    "unsaved": "Thay đổi chưa lưu",
+    "publish": "Xuất bản",
+    "published": "Đã xuất bản",
+    "published_state": "Đã xuất bản cho học viên",
+    "publish_failed": "Xuất bản thất bại",
+    "err_no_nodes": "Thêm ít nhất một nút trước khi lưu.",
+    "err_no_primary": "Đánh dấu đúng một nút làm nút chính (trung tâm).",
+    "err_many_primary": "Chỉ một nút được làm nút chính — bạn đang có {{count}}."
   }
 }

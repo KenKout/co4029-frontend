@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiDelete, apiFetch, apiPatch, apiPost, ApiError } from "../client";
+import { apiDelete, apiFetch, apiPatch, apiPost, apiPut, ApiError } from "../client";
 import { authenticatedFetch } from "../../auth";
 import { queryKeys } from "../query-keys";
 import type {
   ChunkPreview,
+  CuratedKGDraft,
+  CuratedKGDraftSave,
+  CuratedKGPublished,
   MaterialPublic,
   MaterialStreamUrl,
   MaterialUpdate,
@@ -204,6 +207,76 @@ export function useTeacherLessonKnowledgeGraph(
     // Keep the prior graph visible while refetching so it doesn't flicker
     // to empty when readyCount ticks.
     placeholderData: (prev) => prev,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Teacher-curated, publishable knowledge graph (separate from the AI KG above).
+// ---------------------------------------------------------------------------
+
+function curatedKgKey(lessonId: string | undefined) {
+  return ["teacher", "lessons", lessonId, "curated-knowledge-graph"] as const;
+}
+
+/** Teacher's editable KG draft (seeded from the AI KG on first open). */
+export function useCuratedKnowledgeGraph(lessonId: string | undefined) {
+  return useQuery({
+    queryKey: curatedKgKey(lessonId),
+    queryFn: () =>
+      apiFetch<CuratedKGDraft>(
+        `/teacher/lessons/${lessonId}/curated-knowledge-graph`,
+      ),
+    enabled: !!lessonId,
+    // The draft is the editing source of truth — don't silently refetch and
+    // clobber in-progress local edits. The editor manages its own state and
+    // invalidates on save/publish.
+    staleTime: Infinity,
+    retry: retryUnless404,
+  });
+}
+
+/** Save the teacher's draft (PUT upsert). Server validates exactly-one-primary. */
+export function useSaveCuratedKnowledgeGraph(lessonId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CuratedKGDraftSave) =>
+      apiPut<CuratedKGDraft>(
+        `/teacher/lessons/${lessonId}/curated-knowledge-graph`,
+        payload,
+      ),
+    onSuccess: (data) => {
+      qc.setQueryData(curatedKgKey(lessonId), data);
+    },
+  });
+}
+
+/** Publish the current draft to the student reading-lesson view. */
+export function usePublishCuratedKnowledgeGraph(lessonId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiPost<CuratedKGDraft>(
+        `/teacher/lessons/${lessonId}/curated-knowledge-graph/publish`,
+      ),
+    onSuccess: (data) => {
+      qc.setQueryData(curatedKgKey(lessonId), data);
+    },
+  });
+}
+
+/** Student-facing read of the PUBLISHED curated KG for a lesson. */
+export function usePublishedLessonKnowledgeGraph(
+  lessonId: string | null | undefined,
+) {
+  return useQuery({
+    queryKey: ["materials", "lessons", lessonId, "published-knowledge-graph"],
+    queryFn: () =>
+      apiFetch<CuratedKGPublished>(
+        `/materials/lessons/${lessonId}/knowledge-graph`,
+      ),
+    enabled: !!lessonId,
+    staleTime: 1000 * 60 * 5,
+    retry: retryUnless404,
   });
 }
 

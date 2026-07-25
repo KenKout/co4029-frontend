@@ -409,7 +409,11 @@
       "title": "Interview session in progress",
       "body": "You have an interview that is still ongoing. Finish it before starting a new one.",
       "continue": "Continue latest session"
-    }
+    },
+    "knowledge_map": "Knowledge map",
+    "km_zoom_in": "Zoom in",
+    "km_zoom_out": "Zoom out",
+    "km_fit": "Fit to view"
   },
   "placeholder": {
     "body": "This page is coming soon. Check back after the API migration is complete.",
@@ -3864,7 +3868,9 @@
       "rel_none": "None",
       "layout_label": "Layout",
       "layout_circular": "Circular",
-      "layout_tree": "Tree"
+      "layout_tree": "Tree",
+      "edit": "Edit",
+      "editor_title": "Edit knowledge graph"
     },
     "history": {
       "title": "Material history",
@@ -3951,5 +3957,36 @@
     "analytics": "Analytics",
     "management": "Management",
     "system": "System"
+  },
+  "teacher_kg_editor": {
+    "title": "Knowledge graph editor",
+    "add_node": "Add node",
+    "delete_node": "Delete node",
+    "make_primary": "Set as primary",
+    "is_primary": "Primary node",
+    "node_detail": "Node details",
+    "field_label": "Label",
+    "field_type": "Type",
+    "field_definition": "Definition",
+    "field_weight": "Importance",
+    "new_node_label": "New concept",
+    "link_from": "Link from here",
+    "link_mode_hint": "Click a target node to create a relationship (Esc to cancel)",
+    "edge_exists": "That relationship already exists",
+    "canvas_label": "Knowledge graph canvas",
+    "seeded_hint": "Seeded from the AI concept graph — edit freely, then Save.",
+    "undo": "Undo",
+    "redo": "Redo",
+    "save": "Save",
+    "saved": "Saved",
+    "save_failed": "Save failed",
+    "unsaved": "Unsaved changes",
+    "publish": "Publish",
+    "published": "Published",
+    "published_state": "Published to students",
+    "publish_failed": "Publish failed",
+    "err_no_nodes": "Add at least one node before saving.",
+    "err_no_primary": "Mark exactly one node as the primary (center) node.",
+    "err_many_primary": "Only one node can be primary — you have {{count}}."
   }
 }

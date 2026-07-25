@@ -33,6 +33,60 @@ export type CourseLearningOutcomePublic =
 export type CourseLearningOutcomeAuthoring =
   Schemas["CourseLearningOutcomeAuthoring"];
 
+// Teacher-curated, publishable knowledge graph (backend migration 0062).
+// Hand-defined here rather than via generated openapi types for the same
+// reason as the contact fields above: the committed openapi-snapshot.json
+// can't be regenerated in isolation right now without pulling in unrelated
+// in-flight backend drift. The backend already serves/accepts these shapes on
+// the teacher (GET/PUT/publish) and learner (GET) curated-KG endpoints. Keep
+// in sync with abridgeai/features/materials/schemas/curated_kg.py until a
+// coordinated snapshot refresh lands.
+export type CuratedKGRelation = "PREREQUISITE_OF" | "RELATED_TO";
+
+export interface CuratedKGNode {
+  id: string;
+  label: string;
+  type: string;
+  definition?: string | null;
+  weight: number;
+  is_primary: boolean;
+}
+
+export interface CuratedKGEdge {
+  source: string;
+  target: string;
+  relation: CuratedKGRelation;
+}
+
+// Request body for saving the draft (PUT).
+export interface CuratedKGDraftSave {
+  nodes: CuratedKGNode[];
+  edges: CuratedKGEdge[];
+}
+
+// Teacher-facing read of the draft + publish state.
+export interface CuratedKGDraft {
+  lesson_id: string;
+  exists: boolean;
+  seeded: boolean;
+  nodes: CuratedKGNode[];
+  edges: CuratedKGEdge[];
+  primary_node_id: string | null;
+  is_published: boolean;
+  published_at: string | null;
+  has_unpublished_changes: boolean;
+}
+
+// Student-facing read of the PUBLISHED graph only.
+export interface CuratedKGPublished {
+  lesson_id: string;
+  published: boolean;
+  nodes: CuratedKGNode[];
+  edges: CuratedKGEdge[];
+  primary_node_id: string | null;
+  published_at: string | null;
+}
+
 export type Module = Schemas["ModulePublic"];
 export type ModulePublic = Schemas["ModulePublic"];
 export type ModuleAuthoring = Schemas["ModuleAuthoring"];

@@ -51,6 +51,7 @@ import { useMyInterviewSessions } from "@/lib/api/hooks/interviews";
 // import { useCourseSrOverview } from "@/lib/api/hooks/spaced-repetition";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
 import { LessonDiscussionPanel } from "@/routes/_components/LessonDiscussionPanel";
+import { LessonKnowledgeMap } from "@/routes/_components/LessonKnowledgeMap";
 import ReactMarkdown from "react-markdown";
 import { queryKeys } from "@/lib/api/query-keys";
 import type {
@@ -1192,6 +1193,10 @@ function ReadingLessonPane({
           {t("course_learn.reading_empty")}
         </p>
       )}
+
+      {/* Teacher-published knowledge map — renders itself only when a graph
+          has been published for this lesson (otherwise it's null). */}
+      <LessonKnowledgeMap lessonId={lesson.id} />
     </GlassCard>
   );
 }

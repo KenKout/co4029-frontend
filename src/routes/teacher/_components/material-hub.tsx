@@ -12,6 +12,7 @@ import {
   Trash2,
   Brain,
   Maximize2,
+  Pencil,
   X,
   History,
   Undo2,
@@ -49,6 +50,7 @@ import { uploadMultipart } from "@/lib/upload/multipart";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { KnowledgeGraphDetail } from "./knowledge-graph-detail";
+import { KnowledgeGraphEditor } from "./knowledge-graph-editor";
 
 export const PROC_STATUS: Record<string, { color: string; spin?: boolean }> = {
   not_queued: { color: "bg-amber-50 text-amber-600" },
@@ -974,6 +976,10 @@ export function KnowledgeGraphPreview({
   // Full-screen explorer. Only opened on demand, and it fetches the fuller
   // graph (higher node limit) so "expand" actually shows more than the preview.
   const [expanded, setExpanded] = useState(false);
+  // Teacher-curated KG editor. Independent of the AI KG above — it seeds itself
+  // from the AI graph on first open, so it's available even when the AI preview
+  // is empty/disabled.
+  const [editing, setEditing] = useState(false);
   const { data: detailData } = useTeacherLessonKnowledgeGraph(
     lessonId,
     readyCount,
@@ -1013,21 +1019,31 @@ export function KnowledgeGraphPreview({
             {t("teacher_lesson_materials.kg.title")}
           </h3>
         </div>
-        {/* Expand → full-screen interactive explorer. Hidden until there's a
-            graph to explore, so it never dangles on an empty/disabled state. */}
-        {nodes.length > 0 ? (
+        {/* Right-side controls: Edit (curated KG — always available, seeds
+            itself) + Expand (AI preview explorer — only when there's an AI
+            graph to explore). */}
+        <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
-            onClick={() => setExpanded(true)}
-            aria-label={t("teacher_lesson_materials.kg.expand")}
-            title={t("teacher_lesson_materials.kg.expand")}
-            className="shrink-0 rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer"
+            onClick={() => setEditing(true)}
+            aria-label={t("teacher_lesson_materials.kg.edit")}
+            title={t("teacher_lesson_materials.kg.edit")}
+            className="rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer"
           >
-            <Maximize2 className="h-4 w-4" />
+            <Pencil className="h-4 w-4" />
           </button>
-        ) : (
-          <span className="w-8 shrink-0" aria-hidden="true" />
-        )}
+          {nodes.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              aria-label={t("teacher_lesson_materials.kg.expand")}
+              title={t("teacher_lesson_materials.kg.expand")}
+              className="rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer"
+            >
+              <Maximize2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -1278,6 +1294,17 @@ export function KnowledgeGraphPreview({
           data={detailData ?? (data as LessonKnowledgeGraph)}
           title={t("teacher_lesson_materials.kg.title")}
           onClose={() => setExpanded(false)}
+        />
+      )}
+
+      {/* Teacher-curated KG editor (CRUD + primary rule + undo/redo +
+          save/publish). Mounts its own full-screen portal; seeds from the AI
+          KG on first open. */}
+      {editing && (
+        <KnowledgeGraphEditor
+          lessonId={lessonId}
+          title={t("teacher_lesson_materials.kg.editor_title")}
+          onClose={() => setEditing(false)}
         />
       )}
     </div>
