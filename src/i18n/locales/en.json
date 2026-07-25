@@ -3880,7 +3880,13 @@
       "source_label": "Graph source",
       "source_ai": "AI",
       "source_curated": "Curated",
-      "edit_ai_disabled": "The AI graph is regenerated on every upload and can't be edited. Switch to Curated to author your own."
+      "edit_ai_disabled": "The AI graph is regenerated on every upload and can't be edited. Switch to Curated to author your own.",
+      "publish": "Publish",
+      "publish_changes": "Publish changes",
+      "publish_title": "Publish the curated knowledge graph to students",
+      "publish_confirm_title": "Publish knowledge graph?",
+      "publish_confirm_first": "This makes your knowledge graph ({{count}} nodes) visible to students in the lesson reading view.",
+      "publish_confirm_replace": "This replaces the knowledge graph students currently see with your latest saved version ({{count}} nodes)."
     },
     "history": {
       "title": "Material history",

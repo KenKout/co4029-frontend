@@ -12,7 +12,7 @@ import {
   Trash2,
   Brain,
   Maximize2,
-  Pencil,
+  Send,
   X,
   History,
   Undo2,
@@ -21,9 +21,11 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useTeacherLessonKnowledgeGraph,
   useCuratedKnowledgeGraph,
+  usePublishCuratedKnowledgeGraph,
   useTeacherMaterialStatus,
   useInitMaterialUpload,
   useCompleteMaterialUpload,
@@ -988,12 +990,33 @@ export function KnowledgeGraphPreview({
     readyCount,
     expanded ? 60 : undefined,
   );
-  // Curated draft, fetched only once the detail screen is open. Reused as the
-  // detail screen's data when the Curated source is selected, so both modes
-  // render the SAME graph the editor writes to.
-  const { data: curatedData } = useCuratedKnowledgeGraph(
-    expanded ? lessonId : undefined,
-  );
+  // Curated draft. Fetched whenever the card is mounted (not just when the
+  // detail screen opens) because the card's Publish button needs to know
+  // whether a graph exists and whether it has unpublished changes. Doubles as
+  // the detail screen's data when the Curated source is selected, so both
+  // modes render the SAME graph the editor writes to.
+  const { data: curatedData } = useCuratedKnowledgeGraph(lessonId);
+  const publishCurated = usePublishCuratedKnowledgeGraph(lessonId);
+  // Publish is a student-visible action, so it goes through a confirmation.
+  const [confirmPublish, setConfirmPublish] = useState(false);
+
+  const curatedNodeCount = curatedData?.nodes.length ?? 0;
+  // Nothing saved yet → nothing to publish (the backend 409s on an empty draft).
+  const canPublish = !!curatedData?.exists && curatedNodeCount > 0;
+
+  async function handlePublishCurated() {
+    try {
+      await publishCurated.mutateAsync();
+      toast.success(t("teacher_kg_editor.published"));
+      setConfirmPublish(false);
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : t("teacher_kg_editor.publish_failed"),
+      );
+    }
+  }
 
   const W = 340;
   const H = 240;
@@ -1032,15 +1055,44 @@ export function KnowledgeGraphPreview({
             source toggle and Edit live (so viewing and editing are two modes of
             one screen). Always available: even with no AI graph, the teacher can
             open it and switch to Curated to author one from scratch. */}
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          aria-label={t("teacher_lesson_materials.kg.expand")}
-          title={t("teacher_lesson_materials.kg.expand")}
-          className="shrink-0 rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer"
-        >
-          <Maximize2 className="h-4 w-4" />
-        </button>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {/* Publish the curated graph straight from the lesson page, without
+              opening the editor. Hidden until a draft exists, since there'd be
+              nothing to publish. */}
+          {canPublish && (
+            <button
+              type="button"
+              onClick={() => setConfirmPublish(true)}
+              disabled={publishCurated.isPending}
+              title={t("teacher_lesson_materials.kg.publish_title")}
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
+                curatedData?.has_unpublished_changes
+                  ? "bg-m3-primary text-white hover:bg-m3-primary/90"
+                  : "bg-m3-surface-container text-m3-on-surface-variant hover:text-m3-primary",
+                publishCurated.isPending && "opacity-60",
+              )}
+            >
+              {publishCurated.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Send className="h-3.5 w-3.5" />
+              )}
+              {curatedData?.has_unpublished_changes
+                ? t("teacher_lesson_materials.kg.publish_changes")
+                : t("teacher_lesson_materials.kg.publish")}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            aria-label={t("teacher_lesson_materials.kg.expand")}
+            title={t("teacher_lesson_materials.kg.expand")}
+            className="rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -1346,6 +1398,28 @@ export function KnowledgeGraphPreview({
           onClose={() => setEditing(false)}
         />
       )}
+
+      {/* Publish confirmation. Publishing overwrites what students currently
+          see, so the copy states that plainly and names the node count. */}
+      <ConfirmDialog
+        open={confirmPublish}
+        onOpenChange={setConfirmPublish}
+        title={t("teacher_lesson_materials.kg.publish_confirm_title")}
+        description={
+          curatedData?.is_published
+            ? t("teacher_lesson_materials.kg.publish_confirm_replace", {
+                count: curatedNodeCount,
+              })
+            : t("teacher_lesson_materials.kg.publish_confirm_first", {
+                count: curatedNodeCount,
+              })
+        }
+        confirmLabel={t("teacher_lesson_materials.kg.publish")}
+        cancelLabel={t("common.cancel")}
+        confirmVariant="default"
+        isPending={publishCurated.isPending}
+        onConfirm={handlePublishCurated}
+      />
     </div>
   );
 }

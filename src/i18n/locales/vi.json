@@ -3792,7 +3792,13 @@
       "source_label": "Nguồn sơ đồ",
       "source_ai": "AI",
       "source_curated": "Tự soạn",
-      "edit_ai_disabled": "Sơ đồ AI được tạo lại sau mỗi lần tải lên nên không thể chỉnh sửa. Chuyển sang Tự soạn để tự biên tập."
+      "edit_ai_disabled": "Sơ đồ AI được tạo lại sau mỗi lần tải lên nên không thể chỉnh sửa. Chuyển sang Tự soạn để tự biên tập.",
+      "publish": "Xuất bản",
+      "publish_changes": "Xuất bản thay đổi",
+      "publish_title": "Xuất bản sơ đồ kiến thức tự soạn cho học viên",
+      "publish_confirm_title": "Xuất bản sơ đồ kiến thức?",
+      "publish_confirm_first": "Học viên sẽ thấy sơ đồ kiến thức của bạn ({{count}} nút) trong màn hình đọc bài học.",
+      "publish_confirm_replace": "Thao tác này thay thế sơ đồ học viên đang thấy bằng bản đã lưu mới nhất của bạn ({{count}} nút)."
     },
     "history": {
       "title": "Lịch sử tài liệu",
