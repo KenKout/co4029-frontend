@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
+import { RichContent } from "@/components/ui/rich-content";
 import { GradientProgress } from "@/components/ui/gradient-progress";
 import { useQuizAttemptReview, useStudentQuiz } from "@/lib/api/hooks/quizzes";
 import { useCourseBySlug } from "@/lib/api/hooks/courses";
@@ -296,9 +297,16 @@ function ReviewQuestionCard({
           <span className="text-xs font-headline font-black text-m3-secondary tabular-nums shrink-0">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <p className="text-sm font-semibold text-m3-on-surface flex-1 min-w-0">
-            {question.prompt_text}
-          </p>
+          <div className="text-sm font-semibold text-m3-on-surface flex-1 min-w-0">
+            <RichContent
+              value={question.prompt_text}
+              format={
+                (question as { prompt_format?: string | null }).prompt_format ??
+                "plain"
+              }
+              inline
+            />
+          </div>
         </div>
         <span
           className={cn(
@@ -341,9 +349,15 @@ function ReviewQuestionCard({
             <p className="text-[10px] uppercase tracking-widest font-bold text-m3-primary mb-1">
               {t("course_quiz_review.explanation")}
             </p>
-            <p className="text-sm text-m3-on-surface whitespace-pre-wrap">
-              {question.explanation}
-            </p>
+            <div className="text-sm text-m3-on-surface">
+              <RichContent
+                value={question.explanation}
+                format={
+                  (question as { explanation_format?: string | null })
+                    .explanation_format ?? "plain"
+                }
+              />
+            </div>
           </div>
         </div>
       )}

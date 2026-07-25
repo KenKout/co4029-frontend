@@ -115,12 +115,38 @@ export type QuizAttemptReviewOption = Schemas["QuizAttemptReviewOption"];
 export type QuizAttemptStart = Schemas["QuizAttemptStart"];
 export type QuizAttemptSubmitAnswer = Schemas["QuizAttemptAnswerInput"];
 export type QuizAttemptAnswerRead = Schemas["QuizAttemptAnswerRead"];
-export type QuizQuestion = Schemas["QuizQuestionPublic"];
-export type QuizQuestionPublic = Schemas["QuizQuestionPublic"];
-export type QuizQuestionAuthoring = Schemas["QuizQuestionAuthoring"];
-export type QuizQuestionOptionPublic = Schemas["QuizQuestionOptionPublic"];
+/**
+ * Rich-content format discriminators (backend Phase 3, migration 0044) +
+ * expanded question-type fields (Phase 7, migration 0051). These post-date the
+ * committed OpenAPI snapshot, so augment locally until it is regenerated.
+ * All-optional so the shape stays compatible with the eventual generated type.
+ */
+export type RichFormat = "plain" | "markdown" | "html";
+export interface QuizQuestionRichFields {
+  prompt_format?: RichFormat | null;
+  hint_format?: RichFormat | null;
+  explanation_format?: RichFormat | null;
+  // Phase 7 expanded types.
+  single_answer?: boolean | null;
+  numeric_answer?: number | string | null;
+  numeric_tolerance?: number | string | null;
+  match_pairs?: Array<{ left: string; right: string }> | null;
+  ordering_sequence?: string[] | null;
+}
+export interface QuizQuestionOptionRichFields {
+  option_format?: RichFormat | null;
+}
+
+export type QuizQuestion = Schemas["QuizQuestionPublic"] &
+  QuizQuestionRichFields;
+export type QuizQuestionPublic = Schemas["QuizQuestionPublic"] &
+  QuizQuestionRichFields;
+export type QuizQuestionAuthoring = Schemas["QuizQuestionAuthoring"] &
+  QuizQuestionRichFields;
+export type QuizQuestionOptionPublic = Schemas["QuizQuestionOptionPublic"] &
+  QuizQuestionOptionRichFields;
 export type QuizQuestionOptionAuthoring =
-  Schemas["QuizQuestionOptionAuthoring"];
+  Schemas["QuizQuestionOptionAuthoring"] & QuizQuestionOptionRichFields;
 export type QuestionBankEntry = Schemas["QuestionBankEntry"];
 export type QuestionBankImportRequest = Schemas["QuestionBankImportRequest"];
 

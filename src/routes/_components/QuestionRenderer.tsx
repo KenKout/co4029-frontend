@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RichContent } from "@/components/ui/rich-content";
 import type { QuizQuestionPublic } from "@/lib/api/types";
 
 /**
@@ -89,7 +90,14 @@ function OptionInput({
                   : "text-m3-on-surface font-medium",
               )}
             >
-              {option.option_text}
+              <RichContent
+                value={option.option_text}
+                format={
+                  (option as { option_format?: string | null })
+                    .option_format ?? "plain"
+                }
+                inline
+              />
             </span>
             {isSelected && (
               <CheckCircle2 className="h-5 w-5 text-m3-primary shrink-0 fill-m3-primary/10" />

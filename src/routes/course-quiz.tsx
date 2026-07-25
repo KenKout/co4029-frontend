@@ -38,6 +38,7 @@ import {
 import { useCardCooldown } from "@/lib/api/cooldown";
 import { isApiErrorCode } from "@/lib/api/error-codes";
 import { QuestionRenderer } from "@/routes/_components/QuestionRenderer";
+import { RichContent } from "@/components/ui/rich-content";
 import {
   QuizSummaryCard,
   type QuizSummaryItem,
@@ -1363,7 +1364,10 @@ export default function CourseQuizPage() {
                   })}
                 </span>
                 <h2 className="text-xl sm:text-2xl font-headline font-bold text-m3-on-surface leading-snug">
-                  {activeQuestion.prompt_text}
+                  <RichContent
+                    value={activeQuestion.prompt_text}
+                    format={activeQuestion.prompt_format ?? "plain"}
+                  />
                 </h2>
               </div>
 
