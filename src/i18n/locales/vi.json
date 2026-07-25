@@ -2952,7 +2952,8 @@
       "type_numerical": "Dạng số",
       "type_matching": "Ghép cặp",
       "type_ordering": "Sắp xếp"
-    }
+    },
+    "published_readonly_banner": "Bài kiểm tra này đã được xuất bản và bị khóa chỉnh sửa. Học viên có thể xem và làm bài, nên câu hỏi và cài đặt đã bị đóng băng. Hãy lưu trữ (archive) bài kiểm tra trước nếu bạn cần thay đổi."
   },
   "teacher_interview_config": {
     "persona": {

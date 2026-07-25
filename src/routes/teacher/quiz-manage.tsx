@@ -14,6 +14,7 @@ import {
   HelpCircle,
   ListChecks,
   Loader2,
+  LockIcon,
   Pencil,
   Plus,
   RefreshCw,
@@ -638,6 +639,22 @@ export default function QuizManagePage() {
         </div>
       </div>
 
+      {/* Published = frozen. Students can see/attempt the quiz, so the backend
+          rejects all authoring edits (409 quiz_published_readonly). Surface a
+          clear banner and disable the editing controls so teachers understand
+          the lock instead of hitting errors. */}
+      {isPublished && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <LockIcon className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>
+            {t(
+              "teacher_quiz_manage.published_readonly_banner",
+              "This quiz is published and locked for editing. Students can see and attempt it, so questions and settings are frozen. Archive the quiz first if you need to make changes.",
+            )}
+          </span>
+        </div>
+      )}
+
       {/* Zero-height sentinel: when it scrolls up under the global top bar,
           the sticky strip below is pinned and we condense actions to icons. */}
       <div ref={stickySentinelRef} aria-hidden className="h-px w-full" />
@@ -799,41 +816,58 @@ export default function QuizManagePage() {
         </div>
       </div>
 
+      {/* When published the quiz is frozen (backend hard-blocks with 409). A
+          native <fieldset disabled> on the editable tabs disables every input,
+          select, textarea and button inside in one shot — no need to thread a
+          readOnly flag through every nested control. border-0 p-0 m-0 min-w-0
+          neutralize the default fieldset chrome so layout is unchanged. */}
       {tab === "questions" && (
-        <QuestionsTab
-          quizId={quizId}
-          questions={questions}
-          outcomes={outcomes ?? []}
-          selectedIds={selectedQuestionIds}
-          onToggleSelect={toggleQuestionSelection}
-          onSelectAll={selectAllQuestions}
-          onClearSelection={clearSelection}
-          bulkSeconds={bulkSeconds}
-          onBulkSecondsChange={setBulkSeconds}
-          onAddQuestion={handleAddQuestion}
-          addPending={addQuestion.isPending}
-          onOpenGenerator={() =>
-            navigate({
-              to: "/teacher/courses/$courseId/quizzes/$quizId/generate",
-              params: { courseId, quizId },
-            })
-          }
-          onOpenBank={() => setShowBankModal(true)}
-          onOpenImportExport={() => setShowImportExport(true)}
-          onQueueDelete={pendingDeletes.queueDelete}
-        />
+        <fieldset
+          disabled={isPublished}
+          className="border-0 p-0 m-0 min-w-0 disabled:opacity-70"
+        >
+          <QuestionsTab
+            quizId={quizId}
+            questions={questions}
+            outcomes={outcomes ?? []}
+            selectedIds={selectedQuestionIds}
+            onToggleSelect={toggleQuestionSelection}
+            onSelectAll={selectAllQuestions}
+            onClearSelection={clearSelection}
+            bulkSeconds={bulkSeconds}
+            onBulkSecondsChange={setBulkSeconds}
+            onAddQuestion={handleAddQuestion}
+            addPending={addQuestion.isPending}
+            onOpenGenerator={() =>
+              navigate({
+                to: "/teacher/courses/$courseId/quizzes/$quizId/generate",
+                params: { courseId, quizId },
+              })
+            }
+            onOpenBank={() => setShowBankModal(true)}
+            onOpenImportExport={() => setShowImportExport(true)}
+            onQueueDelete={pendingDeletes.queueDelete}
+          />
+        </fieldset>
       )}
 
       {tab === "settings" && draft && quiz && (
-        <SettingsTab
-          quizId={quizId}
-          draft={draft}
-          setDraft={setDraft}
-          onSubmit={handleSaveSettings}
-          saving={patchQuiz.isPending}
-          dirty={JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))}
-          onReset={() => setDraft(draftFromQuiz(quiz))}
-        />
+        <fieldset
+          disabled={isPublished}
+          className="border-0 p-0 m-0 min-w-0 disabled:opacity-70"
+        >
+          <SettingsTab
+            quizId={quizId}
+            draft={draft}
+            setDraft={setDraft}
+            onSubmit={handleSaveSettings}
+            saving={patchQuiz.isPending}
+            dirty={
+              JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))
+            }
+            onReset={() => setDraft(draftFromQuiz(quiz))}
+          />
+        </fieldset>
       )}
 
       {tab === "preview" && (

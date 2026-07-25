@@ -3040,7 +3040,8 @@
       "type_numerical": "Numerical",
       "type_matching": "Matching",
       "type_ordering": "Ordering"
-    }
+    },
+    "published_readonly_banner": "This quiz is published and locked for editing. Students can see and attempt it, so questions and settings are frozen. Archive the quiz first if you need to make changes."
   },
   "teacher_interview_config": {
     "persona": {
