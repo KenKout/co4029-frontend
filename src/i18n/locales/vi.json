@@ -2737,8 +2737,10 @@
       "undo": "Hoàn tác ({{count}})"
     },
     "banners": {
-      "missing_expected_time": "{{count}} câu chưa có thời gian dự kiến. Cần đặt thời gian trước khi xuất bản.",
-      "pending_review": "{{count}} câu hỏi chưa được duyệt và sẽ không hiển thị cho học viên. Hãy duyệt để thêm vào; dù sao chúng vẫn được giữ làm bản nháp."
+      "missing_expected_time": "{{count}} câu hỏi chưa có thời gian dự kiến. Hãy đặt trước khi xuất bản.",
+      "pending_review": "{{count}} câu hỏi chưa được duyệt và sẽ không hiển thị cho học viên. Hãy duyệt để thêm vào; dù sao chúng vẫn được giữ làm bản nháp.",
+      "unsaved_default_time": "{{count}} câu hỏi đã có thời gian dự kiến gợi ý {{seconds}}s trong ô nhập nhưng chưa lưu. Hãy lưu để giá trị được ghi lại.",
+      "save_default_time": "Lưu các thời gian này"
     },
     "empty": {
       "no_questions_title": "Chưa có câu hỏi",

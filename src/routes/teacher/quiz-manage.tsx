@@ -1139,10 +1139,37 @@ function QuestionsTab({
     (q) => q.review_status !== "approved",
   ).length;
 
-  // Uses the shared predicate so the banner, the card field, and the
-  // navigator's error layer can never disagree about what counts as invalid.
-  const missingExpectedTimeCount =
-    questions.filter(hasInvalidExpectedTime).length;
+  // Split the "no expected time on the row" population into the two cases that
+  // need different messaging (see the banners below). A question is only
+  // genuinely blank if the editor also has no value for it — otherwise the
+  // editor is showing a pre-filled default that merely needs saving.
+  const noSavedTimeQuestions = questions.filter(hasInvalidExpectedTime);
+  const unsavedDefaultTimeIds = noSavedTimeQuestions
+    .filter((q) => dirtyIds.has(q.id))
+    .map((q) => q.id);
+  const unsavedDefaultTimeCount = unsavedDefaultTimeIds.length;
+  const blankExpectedTimeCount =
+    noSavedTimeQuestions.length - unsavedDefaultTimeCount;
+
+  /** Persist the pre-filled default time for every affected question at once. */
+  async function handleSaveDefaultTimes() {
+    try {
+      const result = await bulkSet.mutateAsync({
+        question_ids: unsavedDefaultTimeIds,
+        expected_seconds: DEFAULT_EXPECTED_SECONDS,
+      });
+      toast.success(
+        t("teacher_quiz_manage.toasts.expected_time_set", {
+          count: result.updated,
+        }),
+      );
+    } catch (err) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_quiz_manage.toasts.expected_time_failed"),
+      );
+    }
+  }
 
   const secondsValue = Number(bulkSeconds);
   const bulkValid =
@@ -1193,14 +1220,45 @@ function QuestionsTab({
         {/* The combo-undo snackbar now lives at page level (see
             QuizManagePage) so it stays visible when a delete is queued from
             the Preview tab too. */}
-        {/* Expected response time is required, so a missing/zero value is an
-            ERROR (red), not an advisory — these questions block publishing. */}
-        {questions.length > 0 && missingExpectedTimeCount > 0 && (
+        {/* Expected response time is required. Two DISTINCT situations, and
+            conflating them is what made the old copy misleading:
+
+            (a) unsaved default — the editor pre-filled DEFAULT_EXPECTED_SECONDS
+                so the field LOOKS populated, but the row is still null. Nothing
+                is "missing"; the teacher just needs to Save. Actionable, not an
+                error, and offers a one-click bulk Save.
+            (b) genuinely blank — no value on the row AND none in the editor
+                (e.g. the teacher cleared it). This blocks publishing. */}
+        {questions.length > 0 && unsavedDefaultTimeCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-900">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            <span className="flex-1 min-w-[12rem]">
+              {t("teacher_quiz_manage.banners.unsaved_default_time", {
+                count: unsavedDefaultTimeCount,
+                seconds: DEFAULT_EXPECTED_SECONDS,
+              })}
+            </span>
+            <button
+              type="button"
+              onClick={handleSaveDefaultTimes}
+              disabled={bulkSet.isPending}
+              className="shrink-0 rounded-lg bg-amber-600 px-2.5 py-1 font-bold text-white hover:bg-amber-700 disabled:opacity-60"
+            >
+              {bulkSet.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                t("teacher_quiz_manage.banners.save_default_time")
+              )}
+            </button>
+          </div>
+        )}
+
+        {questions.length > 0 && blankExpectedTimeCount > 0 && (
           <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-800">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             <span>
               {t("teacher_quiz_manage.banners.missing_expected_time", {
-                count: missingExpectedTimeCount,
+                count: blankExpectedTimeCount,
               })}
             </span>
           </div>
@@ -1542,13 +1600,26 @@ function QuestionCard({
     setDraft(buildQuestionDraft(question));
   }, [question]);
 
-  // Local edits not yet PATCHed. Compared against a freshly-built draft of the
-  // saved row so it clears automatically when the mutation's response lands.
-  const isUnsaved = useMemo(
-    () =>
-      JSON.stringify(draft) !== JSON.stringify(buildQuestionDraft(question)),
-    [draft, question],
-  );
+  // Local edits not yet PATCHed.
+  //
+  // The baseline deliberately uses the RAW saved expected time, not
+  // buildQuestionDraft's defaulted one. buildQuestionDraft pre-fills
+  // DEFAULT_EXPECTED_SECONDS when the saved value is null, so comparing against
+  // it would cancel the default out on both sides — the field would look
+  // populated while the row stayed null, and the question wouldn't register as
+  // unsaved. Baselining on the raw value makes that pre-filled default show up
+  // as exactly what it is: an unsaved local edit.
+  const isUnsaved = useMemo(() => {
+    const savedSeconds =
+      question.expected_response_time_ms == null
+        ? null
+        : Math.round(question.expected_response_time_ms / 1000);
+    const savedBaseline = {
+      ...buildQuestionDraft(question),
+      expected_response_seconds: savedSeconds,
+    };
+    return JSON.stringify(draft) !== JSON.stringify(savedBaseline);
+  }, [draft, question]);
 
   // Report dirtiness up so the navigator can show a Saved/Unsaved badge. The
   // draft itself stays local to the card (lifting it would re-render every
@@ -2912,7 +2983,10 @@ function QuestionNavigator({
 
   if (questions.length === 0) return null;
 
-  const errorCount = questions.filter(hasInvalidExpectedTime).length;
+  // Mirrors the per-cell rule: an unsaved pre-filled default isn't an error.
+  const errorCount = questions.filter(
+    (q) => hasInvalidExpectedTime(q) && !(dirtyIds?.has(q.id) ?? false),
+  ).length;
   const unsavedCount = dirtyIds
     ? questions.filter((q) => dirtyIds.has(q.id)).length
     : 0;
@@ -2951,8 +3025,12 @@ function QuestionNavigator({
             // they can coexist on one cell (see QuestionNavStatus).
             const focused = question.id === activeId;
             const approved = question.review_status === "approved";
-            const error = hasInvalidExpectedTime(question);
             const unsaved = dirtyIds?.has(question.id) ?? false;
+            // A pre-filled-but-unsaved default is NOT an error — the value is
+            // right there in the editor, it just hasn't been persisted. The
+            // unsaved ring already communicates that, so flag an error only when
+            // the row has no time AND there are no pending edits to save.
+            const error = hasInvalidExpectedTime(question) && !unsaved;
             const selected = selectedIds?.has(question.id) ?? false;
             const pending = !approved && !error;
 

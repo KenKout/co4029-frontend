@@ -2825,8 +2825,10 @@
       "undo": "Undo ({{count}})"
     },
     "banners": {
-      "missing_expected_time": "{{count}} questions are missing an expected time. Set them before publishing.",
-      "pending_review": "{{count}} question(s) are not approved and won't be shown to students. Approve them to include them; they're kept as drafts either way."
+      "missing_expected_time": "{{count}} questions have no expected time. Set one before publishing.",
+      "pending_review": "{{count}} question(s) are not approved and won't be shown to students. Approve them to include them; they're kept as drafts either way.",
+      "unsaved_default_time": "{{count}} questions have a suggested expected time of {{seconds}}s filled in but not yet saved. Save them so the value is stored.",
+      "save_default_time": "Save these times"
     },
     "empty": {
       "no_questions_title": "No questions yet",
