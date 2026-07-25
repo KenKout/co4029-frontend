@@ -2751,7 +2751,8 @@
       "publish_missing_t_exp": "Set the expected time for every question before publishing. Use the 'Quick set time' button.",
       "bulk_select_required": "Please choose at least one question.",
       "bulk_seconds_positive": "Expected time must be greater than 0 seconds.",
-      "at_least_one_correct": "At least one option must be marked correct"
+      "at_least_one_correct": "At least one option must be marked correct",
+      "expected_time_required": "Expected response time is required and must be greater than 0."
     },
     "toasts": {
       "deleted": "Quiz deleted",
@@ -2838,7 +2839,16 @@
       "import_export_file": "Import / Export file"
     },
     "question_nav": {
-      "title": "Jump to question"
+      "title": "Jump to question",
+      "status_approved": "Approved",
+      "status_pending": "Pending review",
+      "status_error": "Error",
+      "status_saved": "Saved",
+      "status_unsaved": "Unsaved",
+      "status_selected": "Selected",
+      "status_focused": "Viewing",
+      "error_count": "{{count}} error",
+      "unsaved_count": "{{count}} unsaved"
     },
     "bulk_time": {
       "title": "Quick set time",

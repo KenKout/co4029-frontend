@@ -2663,7 +2663,8 @@
       "publish_missing_t_exp": "Cần đặt thời gian dự kiến cho mọi câu hỏi trước khi xuất bản. Dùng nút 'Đặt nhanh thời gian'.",
       "bulk_select_required": "Hãy chọn ít nhất một câu hỏi.",
       "bulk_seconds_positive": "Thời gian dự kiến phải lớn hơn 0 giây.",
-      "at_least_one_correct": "Phải có ít nhất một đáp án đúng"
+      "at_least_one_correct": "Phải có ít nhất một đáp án đúng",
+      "expected_time_required": "Thời gian trả lời dự kiến là bắt buộc và phải lớn hơn 0."
     },
     "toasts": {
       "deleted": "Đã xoá bài kiểm tra",
@@ -2750,7 +2751,16 @@
       "import_export_file": "Nhập / Xuất file"
     },
     "question_nav": {
-      "title": "Nhảy tới câu hỏi"
+      "title": "Nhảy tới câu hỏi",
+      "status_approved": "Đã duyệt",
+      "status_pending": "Chờ duyệt",
+      "status_error": "Lỗi",
+      "status_saved": "Đã lưu",
+      "status_unsaved": "Chưa lưu",
+      "status_selected": "Đã chọn",
+      "status_focused": "Đang xem",
+      "error_count": "{{count}} lỗi",
+      "unsaved_count": "{{count}} chưa lưu"
     },
     "bulk_time": {
       "title": "Đặt nhanh thời gian",

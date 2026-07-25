@@ -9,6 +9,7 @@ import {
   BookOpen,
   Check,
   CheckCircle2,
+  AlertTriangle,
   Clock,
   Eye,
   FileUp,
@@ -1120,14 +1121,28 @@ function QuestionsTab({
   const { t } = useTranslation();
   const bulkSet = useBulkSetExpectedTime(quizId);
   const bulkApprove = useBulkApprove(quizId);
+  // Which questions have unsaved local edits. Owned here (not in each card) so
+  // the navigator can render a Saved/Unsaved layer; each card reports its own
+  // dirty state up via onDirtyChange.
+  const [dirtyIds, setDirtyIds] = useState<Set<string>>(() => new Set());
+  const handleDirtyChange = useCallback((id: string, dirty: boolean) => {
+    setDirtyIds((prev) => {
+      if (dirty === prev.has(id)) return prev; // no-op keeps referential identity
+      const next = new Set(prev);
+      if (dirty) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+
   const pendingCount = questions.filter(
     (q) => q.review_status !== "approved",
   ).length;
 
-  const missingExpectedTimeCount = questions.filter(
-    (q) =>
-      q.expected_response_time_ms == null || q.expected_response_time_ms <= 0,
-  ).length;
+  // Uses the shared predicate so the banner, the card field, and the
+  // navigator's error layer can never disagree about what counts as invalid.
+  const missingExpectedTimeCount =
+    questions.filter(hasInvalidExpectedTime).length;
 
   const secondsValue = Number(bulkSeconds);
   const bulkValid =
@@ -1178,8 +1193,10 @@ function QuestionsTab({
         {/* The combo-undo snackbar now lives at page level (see
             QuizManagePage) so it stays visible when a delete is queued from
             the Preview tab too. */}
+        {/* Expected response time is required, so a missing/zero value is an
+            ERROR (red), not an advisory — these questions block publishing. */}
         {questions.length > 0 && missingExpectedTimeCount > 0 && (
-          <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2 text-xs text-amber-800">
+          <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-800">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             <span>
               {t("teacher_quiz_manage.banners.missing_expected_time", {
@@ -1242,6 +1259,7 @@ function QuestionsTab({
               onToggleSelect={() => onToggleSelect(question.id)}
               onQueueDelete={onQueueDelete}
               published={published}
+              onDirtyChange={handleDirtyChange}
             />
           ))
         )}
@@ -1355,7 +1373,11 @@ function QuestionsTab({
 
           {/* Quick question navigation — jumps (auto-scrolls) to a question
               card. Reuses the numbered-box design from the student quiz. */}
-          <QuestionNavigator questions={questions} />
+          <QuestionNavigator
+            questions={questions}
+            selectedIds={selectedIds}
+            dirtyIds={dirtyIds}
+          />
         </div>
       </div>
     </div>
@@ -1494,6 +1516,7 @@ function QuestionCard({
   onToggleSelect,
   onQueueDelete,
   published = false,
+  onDirtyChange,
 }: {
   quizId: string;
   question: QuizQuestionAuthoring;
@@ -1505,6 +1528,8 @@ function QuestionCard({
    *  Regenerate / Delete) are hidden entirely rather than shown disabled,
    *  since the backend hard-rejects every edit with 409. */
   published?: boolean;
+  /** Reports unsaved-edit state up to the navigator. */
+  onDirtyChange?: (questionId: string, dirty: boolean) => void;
 }) {
   const { t } = useTranslation();
   const updateQuestion = useUpdateQuizQuestion(quizId, question.id);
@@ -1516,6 +1541,30 @@ function QuestionCard({
   useEffect(() => {
     setDraft(buildQuestionDraft(question));
   }, [question]);
+
+  // Local edits not yet PATCHed. Compared against a freshly-built draft of the
+  // saved row so it clears automatically when the mutation's response lands.
+  const isUnsaved = useMemo(
+    () =>
+      JSON.stringify(draft) !== JSON.stringify(buildQuestionDraft(question)),
+    [draft, question],
+  );
+
+  // Report dirtiness up so the navigator can show a Saved/Unsaved badge. The
+  // draft itself stays local to the card (lifting it would re-render every
+  // sibling card on each keystroke).
+  useEffect(() => {
+    onDirtyChange?.(question.id, isUnsaved);
+  }, [question.id, isUnsaved, onDirtyChange]);
+
+  // Unmount cleanup: a card that scrolls out of the list (or is deleted) must
+  // not leave a stale "unsaved" flag behind in the parent.
+  useEffect(
+    () => () => {
+      onDirtyChange?.(question.id, false);
+    },
+    [question.id, onDirtyChange],
+  );
 
   const hasOptions =
     (question.question_type === "multiple_choice" ||
@@ -1535,10 +1584,29 @@ function QuestionCard({
     question.expected_response_time_ms == null
       ? null
       : Math.round(question.expected_response_time_ms / 1000);
+  // Live validity of the DRAFT value, for inline field feedback while typing.
+  // Distinct from hasInvalidExpectedTime(question), which reflects the SAVED
+  // row and drives the navigator's error state.
+  const draftTimeInvalid =
+    draft.expected_response_seconds == null ||
+    !Number.isFinite(draft.expected_response_seconds) ||
+    draft.expected_response_seconds <= 0;
 
   async function handleSave(reviewStatus = draft.review_status) {
     if (!draft.prompt_text.trim()) {
       toast.error(t("teacher_quiz_manage.errors.prompt_required"));
+      return;
+    }
+    // Expected response time is REQUIRED — the SR scheduler and pacing
+    // analytics divide by it, so saving null/0 would produce a broken question
+    // that the backend rejects at publish time anyway. Fail fast here with a
+    // pointed message instead of letting it through to a publish-time 422.
+    if (
+      draft.expected_response_seconds == null ||
+      !Number.isFinite(draft.expected_response_seconds) ||
+      draft.expected_response_seconds <= 0
+    ) {
+      toast.error(t("teacher_quiz_manage.errors.expected_time_required"));
       return;
     }
     if (hasOptions) {
@@ -1569,10 +1637,9 @@ function QuestionCard({
         // bloom_level and expected_ef_ceiling are no longer teacher-editable
         // (removed from the question editor). This is a partial PATCH, so
         // omitting them leaves any existing backend values untouched.
+        // Validated as required above, so this is always a positive integer.
         expected_response_time_ms:
-          draft.expected_response_seconds == null
-            ? null
-            : Math.max(1, Math.round(draft.expected_response_seconds)) * 1000,
+          Math.max(1, Math.round(draft.expected_response_seconds)) * 1000,
         review_status: reviewStatus,
         learning_outcome_id: draft.learning_outcome_id || null,
         ...(hasOptions
@@ -1983,13 +2050,26 @@ function QuestionCard({
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+            <label
+              htmlFor={`qexp-${question.id}`}
+              className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant"
+            >
               {t("teacher_quiz_manage.editor.t_exp_label", "Expected time (s)")}
+              {/* Required marker — the SR scheduler divides by this value. */}
+              <span className="ml-0.5 text-red-600" aria-hidden="true">
+                *
+              </span>
             </label>
             <Input
+              id={`qexp-${question.id}`}
               type="number"
               min={1}
               max={600}
+              required
+              aria-invalid={draftTimeInvalid || undefined}
+              aria-describedby={
+                draftTimeInvalid ? `qexp-err-${question.id}` : undefined
+              }
               value={draft.expected_response_seconds ?? ""}
               placeholder={t(
                 "teacher_quiz_manage.editor.t_exp_placeholder",
@@ -2002,8 +2082,20 @@ function QuestionCard({
                     e.target.value === "" ? null : Number(e.target.value),
                 }))
               }
-              className="h-8 bg-m3-surface text-xs"
+              className={cn(
+                "h-8 bg-m3-surface text-xs",
+                draftTimeInvalid &&
+                  "border-red-500 focus-visible:ring-red-500/30",
+              )}
             />
+            {draftTimeInvalid && (
+              <p
+                id={`qexp-err-${question.id}`}
+                className="text-[10px] font-semibold text-red-600"
+              >
+                {t("teacher_quiz_manage.errors.expected_time_required")}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -2167,6 +2259,46 @@ function readCorrectAnswer(
 function countBlanks(promptText: string): number {
   const matches = promptText.match(/_{3,}/g);
   return matches ? matches.length : 0;
+}
+
+/**
+ * Is this question's expected response time missing/invalid?
+ *
+ * The expected response time is REQUIRED: the spaced-repetition scheduler and
+ * the pacing analytics both divide by it, so a null or non-positive value is a
+ * broken question, not merely an incomplete one. A question can be pruned to
+ * null by the AI generator or cleared by hand, so this is checked on the saved
+ * row (what the backend will reject at publish) rather than on the draft.
+ */
+function hasInvalidExpectedTime(question: QuizQuestionAuthoring): boolean {
+  const ms = question.expected_response_time_ms;
+  return ms == null || ms <= 0;
+}
+
+/**
+ * Per-question status shown in the navigator.
+ *
+ * These are ORTHOGONAL layers, not one enum — a question can be approved AND
+ * unsaved AND focused at once. The navigator renders them on separate visual
+ * channels so they never collide:
+ *
+ *   error      → red fill            (invalid/missing expected time; blocks publish)
+ *   approved   → primary fill        (review_status === "approved")
+ *   pending    → neutral fill + amber dot (awaiting review)
+ *   unsaved    → amber ring + pencil corner (local edits not yet PATCHed)
+ *   selected   → checkbox tick badge (bulk-action selection)
+ *   focused    → primary ring + scale (scroll-spy / just-clicked)
+ *
+ * Precedence applies only to the FILL (a cell has one background): error wins
+ * over approved wins over pending, because error is the state that blocks
+ * publishing and must never be masked by an approved fill.
+ */
+export interface QuestionNavStatus {
+  error: boolean;
+  approved: boolean;
+  unsaved: boolean;
+  selected: boolean;
+  focused: boolean;
 }
 
 function buildQuestionDraft(question: QuizQuestionAuthoring): QuestionDraft {
@@ -2709,8 +2841,17 @@ function SettingsTab({
 
 function QuestionNavigator({
   questions,
+  selectedIds,
+  dirtyIds,
+  onJump,
 }: {
   questions: QuizQuestionAuthoring[];
+  /** Bulk-action selection, rendered as a corner tick badge. */
+  selectedIds?: Set<string>;
+  /** Questions with unsaved local edits, rendered as an amber ring + pencil. */
+  dirtyIds?: Set<string>;
+  /** Notified when a cell is clicked (so the parent can also select/focus). */
+  onJump?: (questionId: string) => void;
 }) {
   const { t } = useTranslation();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -2718,20 +2859,24 @@ function QuestionNavigator({
   // flicker through intermediate cards during the smooth scroll.
   const suppressSpyUntil = useRef<number>(0);
 
-  const scrollToQuestion = useCallback((id: string) => {
-    const el = document.getElementById(`qcard-${id}`);
-    if (!el) return;
-    suppressSpyUntil.current = Date.now() + 700;
-    setActiveId(id);
-    const reduceMotion =
-      typeof window !== "undefined" &&
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({
-      behavior: reduceMotion ? "auto" : "smooth",
-      block: "start",
-    });
-  }, []);
+  const scrollToQuestion = useCallback(
+    (id: string) => {
+      const el = document.getElementById(`qcard-${id}`);
+      if (!el) return;
+      suppressSpyUntil.current = Date.now() + 700;
+      setActiveId(id);
+      onJump?.(id);
+      const reduceMotion =
+        typeof window !== "undefined" &&
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    },
+    [onJump],
+  );
 
   // Scroll-spy: highlight the last card whose top has scrolled above a line
   // just below the sticky header (matches the card's scroll-mt offset).
@@ -2767,50 +2912,181 @@ function QuestionNavigator({
 
   if (questions.length === 0) return null;
 
+  const errorCount = questions.filter(hasInvalidExpectedTime).length;
+  const unsavedCount = dirtyIds
+    ? questions.filter((q) => dirtyIds.has(q.id)).length
+    : 0;
+
   return (
     <div className="rounded-xl border border-m3-secondary/10 bg-m3-surface-container-low p-5 shadow-glass space-y-3">
-      <h2 className="font-headline font-bold text-sm text-m3-on-surface">
-        {t("teacher_quiz_manage.question_nav.title")}
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-headline font-bold text-sm text-m3-on-surface">
+          {t("teacher_quiz_manage.question_nav.title")}
+        </h2>
+        {/* Roll-up counts for the two states that need action. */}
+        <div className="flex items-center gap-1.5">
+          {errorCount > 0 && (
+            <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700">
+              {t("teacher_quiz_manage.question_nav.error_count", {
+                count: errorCount,
+              })}
+            </span>
+          )}
+          {unsavedCount > 0 && (
+            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+              {t("teacher_quiz_manage.question_nav.unsaved_count", {
+                count: unsavedCount,
+              })}
+            </span>
+          )}
+        </div>
+      </div>
       {/* Numbered grid — reuses the student QuizSummaryCard box design.
           Inner-scrollable so a quiz with many questions doesn't blow out
           the sticky sidebar height. */}
       <div className="max-h-[22rem] overflow-y-auto overflow-x-hidden">
         <div className="grid grid-cols-6 gap-1.5 p-1.5">
           {questions.map((question, index) => {
-            const isActive = question.id === activeId;
+            // Six orthogonal status layers, each on its own visual channel so
+            // they can coexist on one cell (see QuestionNavStatus).
+            const focused = question.id === activeId;
             const approved = question.review_status === "approved";
+            const error = hasInvalidExpectedTime(question);
+            const unsaved = dirtyIds?.has(question.id) ?? false;
+            const selected = selectedIds?.has(question.id) ?? false;
+            const pending = !approved && !error;
+
+            // FILL is exclusive (one background per cell): error > approved >
+            // pending. Error must never be masked by an approved fill, since
+            // it's the state that blocks publishing.
+            const fill = error
+              ? "bg-red-600 text-white hover:bg-red-500"
+              : approved
+                ? "bg-m3-primary text-white hover:bg-m3-primary/90"
+                : "bg-m3-surface-container-high text-m3-outline hover:bg-m3-surface-container-highest";
+
+            // RING is exclusive too (focus outranks unsaved, since focus is
+            // transient and needs to be unmistakable).
+            const ring = focused
+              ? "ring-2 ring-offset-1 ring-m3-primary scale-105 z-10"
+              : unsaved
+                ? "ring-2 ring-amber-500"
+                : "";
+
+            const statusWords = [
+              error
+                ? t("teacher_quiz_manage.question_nav.status_error")
+                : approved
+                  ? t("teacher_quiz_manage.question_nav.status_approved")
+                  : t("teacher_quiz_manage.question_nav.status_pending"),
+              unsaved
+                ? t("teacher_quiz_manage.question_nav.status_unsaved")
+                : t("teacher_quiz_manage.question_nav.status_saved"),
+              selected
+                ? t("teacher_quiz_manage.question_nav.status_selected")
+                : null,
+            ].filter(Boolean);
+
             return (
               <button
                 key={question.id}
                 type="button"
                 onClick={() => scrollToQuestion(question.id)}
-                aria-current={isActive ? "location" : undefined}
-                title={question.prompt_text ?? undefined}
+                aria-current={focused ? "location" : undefined}
+                aria-label={`${index + 1}. ${statusWords.join(", ")}`}
+                title={`${index + 1}. ${statusWords.join(" · ")}${
+                  question.prompt_text ? `\n${question.prompt_text}` : ""
+                }`}
                 className={cn(
-                  "aspect-square w-full flex items-center justify-center rounded-lg font-bold text-xs transition-colors duration-150 relative cursor-pointer",
-                  isActive
-                    ? "bg-surface-elev text-m3-primary ring-2 ring-m3-primary shadow-sm"
-                    : approved
-                      ? "bg-m3-primary text-white hover:bg-m3-primary/90"
-                      : "bg-m3-surface-container-high text-m3-outline hover:bg-m3-surface-container-highest",
+                  "aspect-square w-full flex items-center justify-center rounded-lg font-bold text-xs relative cursor-pointer",
+                  "transition-all duration-150",
+                  fill,
+                  ring,
                 )}
               >
                 {index + 1}
-                {!approved && (
+
+                {/* PENDING — amber dot, top-right. Only when there's no error
+                    (an error cell is already fully red; a dot would be noise). */}
+                {pending && (
                   <span
-                    className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-amber-500 rounded-full"
+                    className="absolute top-0.5 right-0.5 h-1.5 w-1.5 rounded-full bg-amber-500"
                     aria-hidden="true"
                   />
+                )}
+
+                {/* ERROR — warning glyph, top-right, on top of the red fill. */}
+                {error && (
+                  <AlertTriangle
+                    className="absolute top-0 right-0 h-2.5 w-2.5"
+                    aria-hidden="true"
+                  />
+                )}
+
+                {/* UNSAVED — pencil, bottom-right. Pairs with the amber ring so
+                    the state reads even for colour-blind users. */}
+                {unsaved && (
+                  <Pencil
+                    className={cn(
+                      "absolute bottom-0 right-0 h-2 w-2",
+                      error || approved ? "text-white" : "text-amber-600",
+                    )}
+                    aria-hidden="true"
+                  />
+                )}
+
+                {/* SELECTED — tick badge, top-left. Distinct corner from every
+                    other marker so bulk-selection never collides with status. */}
+                {selected && (
+                  <span
+                    className="absolute -top-1 -left-1 flex h-3 w-3 items-center justify-center rounded-full bg-m3-secondary text-white shadow-sm"
+                    aria-hidden="true"
+                  >
+                    <Check className="h-2 w-2" strokeWidth={4} />
+                  </span>
                 )}
               </button>
             );
           })}
         </div>
       </div>
+
+      {/* Legend — six states is past the point where colour alone is
+          self-explanatory. */}
+      <ul className="grid grid-cols-2 gap-x-2 gap-y-1 pt-1 text-[10px] text-m3-on-surface-variant">
+        <li className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 shrink-0 rounded bg-m3-primary" />
+          {t("teacher_quiz_manage.question_nav.status_approved")}
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span className="relative h-2.5 w-2.5 shrink-0 rounded bg-m3-surface-container-high">
+            <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
+          </span>
+          {t("teacher_quiz_manage.question_nav.status_pending")}
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 shrink-0 rounded bg-red-600" />
+          {t("teacher_quiz_manage.question_nav.status_error")}
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 shrink-0 rounded bg-m3-surface-container-high ring-2 ring-amber-500" />
+          {t("teacher_quiz_manage.question_nav.status_unsaved")}
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 shrink-0 rounded bg-m3-surface-container-high ring-2 ring-offset-1 ring-m3-primary" />
+          {t("teacher_quiz_manage.question_nav.status_focused")}
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span className="relative h-2.5 w-2.5 shrink-0 rounded bg-m3-surface-container-high">
+            <span className="absolute -top-1 -left-1 h-2 w-2 rounded-full bg-m3-secondary" />
+          </span>
+          {t("teacher_quiz_manage.question_nav.status_selected")}
+        </li>
+      </ul>
     </div>
   );
 }
+
 
 function SettingsSection({
   title,
