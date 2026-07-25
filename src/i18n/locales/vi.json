@@ -3734,8 +3734,16 @@
       "legend_prereq": "Tiên quyết",
       "legend_related": "Liên quan",
       "showing_top": "Top {{shown}} trong {{total}} khái niệm",
-      "open_full": "Mở đồ thị đầy đủ",
-      "viewer_coming_soon": "Trình xem đồ thị tri thức sẽ sớm có"
+      "expand": "Mở rộng",
+      "node_count": "{{count}} khái niệm",
+      "zoom_in": "Phóng to",
+      "zoom_out": "Thu nhỏ",
+      "fit_view": "Vừa khung nhìn",
+      "detail_hint": "Kéo để di chuyển · cuộn để phóng to · nhấp đúp vào khái niệm để xem liên kết",
+      "rel_prerequisites": "Điều kiện tiên quyết",
+      "rel_unlocks": "Mở khóa",
+      "rel_related": "Liên quan",
+      "rel_none": "Không có"
     },
     "history": {
       "title": "Lịch sử tài liệu",

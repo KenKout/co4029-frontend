@@ -176,14 +176,28 @@ export function useTeacherProcessingSummary(lessonId: string | undefined) {
 export function useTeacherLessonKnowledgeGraph(
   lessonId: string | undefined,
   readyCount: number,
+  // Backend caps at 60. The compact preview uses the server default (24);
+  // the full-screen detail view requests the fuller graph so students/teachers
+  // see more of the concept map. Part of the query key so the two views cache
+  // independently instead of clobbering each other.
+  limit?: number,
 ) {
   return useQuery({
     // readyCount is part of the key so the graph refetches when a new
     // material finishes processing (the KG only exists post-ingest).
-    queryKey: ["teacher", "lessons", lessonId, "knowledge-graph", readyCount],
+    queryKey: [
+      "teacher",
+      "lessons",
+      lessonId,
+      "knowledge-graph",
+      readyCount,
+      limit ?? "default",
+    ],
     queryFn: () =>
       apiFetch<LessonKnowledgeGraph>(
-        `/teacher/lessons/${lessonId}/knowledge-graph`,
+        `/teacher/lessons/${lessonId}/knowledge-graph${
+          limit ? `?limit=${limit}` : ""
+        }`,
       ),
     enabled: !!lessonId,
     staleTime: 1000 * 60 * 2,

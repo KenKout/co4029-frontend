@@ -3822,8 +3822,16 @@
       "legend_prereq": "Prerequisite",
       "legend_related": "Related",
       "showing_top": "Top {{shown}} of {{total}} concepts",
-      "open_full": "Open full graph",
-      "viewer_coming_soon": "Knowledge graph viewer coming soon"
+      "expand": "Expand",
+      "node_count": "{{count}} concepts",
+      "zoom_in": "Zoom in",
+      "zoom_out": "Zoom out",
+      "fit_view": "Fit to view",
+      "detail_hint": "Drag to pan · scroll to zoom · double-click a concept for its links",
+      "rel_prerequisites": "Prerequisites",
+      "rel_unlocks": "Unlocks",
+      "rel_related": "Related",
+      "rel_none": "None"
     },
     "history": {
       "title": "Material history",

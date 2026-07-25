@@ -11,6 +11,7 @@ import {
   EyeOff,
   Trash2,
   Brain,
+  Maximize2,
   X,
   History,
   Undo2,
@@ -47,6 +48,7 @@ import type {
 import { uploadMultipart } from "@/lib/upload/multipart";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { KnowledgeGraphDetail } from "./knowledge-graph-detail";
 
 export const PROC_STATUS: Record<string, { color: string; spin?: boolean }> = {
   not_queued: { color: "bg-amber-50 text-amber-600" },
@@ -969,6 +971,14 @@ export function KnowledgeGraphPreview({
     readyCount,
   );
   const [hovered, setHovered] = useState<string | null>(null);
+  // Full-screen explorer. Only opened on demand, and it fetches the fuller
+  // graph (higher node limit) so "expand" actually shows more than the preview.
+  const [expanded, setExpanded] = useState(false);
+  const { data: detailData } = useTeacherLessonKnowledgeGraph(
+    lessonId,
+    readyCount,
+    expanded ? 60 : undefined,
+  );
 
   const W = 340;
   const H = 240;
@@ -994,11 +1004,30 @@ export function KnowledgeGraphPreview({
 
   return (
     <div className="glass ghost-border shadow-glass rounded-xl p-6 space-y-4">
-      <div className="flex items-center justify-center gap-2">
-        <Brain className="h-5 w-5 text-m3-secondary" />
-        <h3 className="font-headline font-bold text-lg text-m3-on-surface">
-          {t("teacher_lesson_materials.kg.title")}
-        </h3>
+      <div className="flex items-center justify-between gap-2">
+        {/* Spacer keeps the title centred while the expand button hugs right. */}
+        <span className="w-8 shrink-0" aria-hidden="true" />
+        <div className="flex items-center gap-2">
+          <Brain className="h-5 w-5 text-m3-secondary" />
+          <h3 className="font-headline font-bold text-lg text-m3-on-surface">
+            {t("teacher_lesson_materials.kg.title")}
+          </h3>
+        </div>
+        {/* Expand → full-screen interactive explorer. Hidden until there's a
+            graph to explore, so it never dangles on an empty/disabled state. */}
+        {nodes.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            aria-label={t("teacher_lesson_materials.kg.expand")}
+            title={t("teacher_lesson_materials.kg.expand")}
+            className="shrink-0 rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
+        ) : (
+          <span className="w-8 shrink-0" aria-hidden="true" />
+        )}
       </div>
 
       {isLoading ? (
@@ -1239,6 +1268,17 @@ export function KnowledgeGraphPreview({
             )}
           </div>
         </>
+      )}
+
+      {/* Full-screen explorer. Prefer the fuller detail fetch (limit=60) once
+          it lands; fall back to the preview data so opening feels instant
+          rather than waiting on the larger request. */}
+      {expanded && (detailData ?? data) && (
+        <KnowledgeGraphDetail
+          data={detailData ?? (data as LessonKnowledgeGraph)}
+          title={t("teacher_lesson_materials.kg.title")}
+          onClose={() => setExpanded(false)}
+        />
       )}
     </div>
   );
