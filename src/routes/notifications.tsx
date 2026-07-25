@@ -6,6 +6,7 @@ import {
   useDeleteNotification,
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
+  useNotificationInboxSync,
   useNotifications,
   useUnreadCount,
 } from "@/lib/api/hooks/notifications";
@@ -227,6 +228,9 @@ export default function NotificationsPage() {
 
   const { data: unread } = useUnreadCount();
   const unreadCount = unread?.unread ?? 0;
+  // Pull newly-arrived notifications into the open list without a reload; the
+  // badge poll drives this, so no extra timer.
+  useNotificationInboxSync();
 
   const markRead = useMarkNotificationRead();
   const deleteNotification = useDeleteNotification();

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import {
   useMutation,
   useQuery,
@@ -52,12 +53,44 @@ export function useNotifications(limit = 20) {
   });
 }
 
-export function useUnreadCount(options?: { enabled?: boolean }) {
+/**
+ * Poll interval (ms) for the unread badge. The badge is the only always-mounted
+ * notification surface, so this is what makes new notifications appear without
+ * a page reload.
+ *
+ * 20s is a deliberate compromise: the endpoint is a single indexed COUNT scoped
+ * to one user (cheap), but it fires for every signed-in tab, so a much tighter
+ * interval multiplies load across the cohort for no perceptible gain. The
+ * backend has no SSE/WebSocket channel (every live surface in this codebase
+ * polls — see materials status), so introducing push would mean new infra.
+ */
+const UNREAD_POLL_MS = 20_000;
+
+/**
+ * Unread badge count.
+ *
+ * Refetches on an interval AND on window focus / network reconnect, so the
+ * number climbs on its own while the app sits open and snaps up-to-date the
+ * moment a backgrounded tab is returned to. `refetchIntervalInBackground` is
+ * left off on purpose: a hidden tab doesn't need to poll, and browsers throttle
+ * its timers anyway — the focus refetch covers that case.
+ */
+export function useUnreadCount(options?: {
+  enabled?: boolean;
+  /** Override the poll interval. Exists so tests don't wait 20s per assertion. */
+  pollMs?: number;
+}) {
+  const pollMs = options?.pollMs ?? UNREAD_POLL_MS;
   return useQuery({
     queryKey: queryKeys.notifications.unreadCount(),
     queryFn: () =>
       apiFetch<{ unread: number }>("/me/notifications/unread-count"),
-    staleTime: 1000 * 30,
+    // Must be under the poll interval, else the scheduled refetch would be
+    // served from cache and the badge would never move.
+    staleTime: Math.max(0, Math.floor(pollMs / 2)),
+    refetchInterval: pollMs,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     enabled: options?.enabled ?? true,
   });
 }
@@ -67,6 +100,34 @@ type InboxCache = InfiniteData<Page<Notification>, string | undefined>;
 const INBOX_KEY = queryKeys.notifications.inbox();
 const UNREAD_KEY = queryKeys.notifications.unreadCount();
 const PREFS_KEY = queryKeys.notifications.preferences();
+
+/**
+ * Keeps the open inbox list in step with the polled unread badge.
+ *
+ * The badge poll is the only thing on a timer. Polling the inbox directly would
+ * be far more expensive: it's an infinite query, so a refetch re-requests EVERY
+ * page the user has scrolled through. Instead we watch the count the badge
+ * already fetched and invalidate the list only when it actually changes, so a
+ * new notification costs one extra request at the moment it arrives rather than
+ * N requests every interval.
+ *
+ * Call this from a component that renders the inbox list.
+ */
+export function useNotificationInboxSync(options?: { pollMs?: number }) {
+  const qc = useQueryClient();
+  const { data } = useUnreadCount(options);
+  const unread = data?.unread;
+  const previous = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (unread === undefined) return;
+    // Skip the first observation: the list has just mounted and fetched.
+    if (previous.current !== undefined && previous.current !== unread) {
+      void qc.invalidateQueries({ queryKey: INBOX_KEY });
+    }
+    previous.current = unread;
+  }, [unread, qc]);
+}
 
 function mapInboxItems(
   cache: InboxCache | undefined,

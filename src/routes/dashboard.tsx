@@ -3,7 +3,10 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useMyCourses } from "@/lib/api/hooks/courses";
-import { useNotifications } from "@/lib/api/hooks/notifications";
+import {
+  useNotificationInboxSync,
+  useNotifications,
+} from "@/lib/api/hooks/notifications";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -152,6 +155,8 @@ export default function DashboardPage() {
   const { items: myCourses, isLoading: coursesLoading } = useMyCourses(8);
   const { items: notifications, isLoading: notificationsLoading } =
     useNotifications();
+  // Keep the dashboard's notification list current without a reload.
+  useNotificationInboxSync();
 
   const firstName = getAuthDisplayName(user).split(" ")[0];
   const initials = getAuthUserInitials(user);
