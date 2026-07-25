@@ -251,7 +251,11 @@ export default function SideNavBar({
             <button
               type="button"
               onClick={onToggle}
-              title={collapsed ? t("sidebar.expand", { defaultValue: "Expand" }) : undefined}
+              title={
+                collapsed
+                  ? t("sidebar.expand", { defaultValue: "Expand" })
+                  : undefined
+              }
               aria-label={
                 collapsed
                   ? t("sidebar.expand", { defaultValue: "Expand" })

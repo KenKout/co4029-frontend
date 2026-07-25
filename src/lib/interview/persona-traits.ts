@@ -75,7 +75,11 @@ export const PERSONA_TRAIT_PRESETS: Record<PersonaKey, PersonaTraits> = {
 const NEUTRAL = PERSONA_TRAIT_PRESETS.neutral;
 
 function presetFor(persona: string | null | undefined): PersonaTraits {
-  if (persona === "strict" || persona === "supportive" || persona === "neutral") {
+  if (
+    persona === "strict" ||
+    persona === "supportive" ||
+    persona === "neutral"
+  ) {
     return PERSONA_TRAIT_PRESETS[persona];
   }
   return NEUTRAL;
@@ -95,7 +99,10 @@ export function resolvePersonaTraits(
   const base = presetFor(persona);
   if (!resolved) return base;
   return {
-    key: typeof resolved.key === "string" && resolved.key ? resolved.key : base.key,
+    key:
+      typeof resolved.key === "string" && resolved.key
+        ? resolved.key
+        : base.key,
     warmth: clampTrait(resolved.warmth ?? base.warmth),
     directness: clampTrait(resolved.directness ?? base.directness),
     verbosity: clampTrait(resolved.verbosity ?? base.verbosity),

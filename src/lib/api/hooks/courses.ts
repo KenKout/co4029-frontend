@@ -26,7 +26,10 @@ import type {
  * code (learner endpoint before it stamps one) fall back to `position` and
  * sort after coded rows rather than scrambling them.
  */
-function outcomeSortKey(o: { code?: string | null; position: number }): number[] {
+function outcomeSortKey(o: {
+  code?: string | null;
+  position: number;
+}): number[] {
   const code = o.code?.trim();
   if (!code) return [o.position];
   const parts = code.split(".").map((p) => Number.parseInt(p, 10));
@@ -277,11 +280,16 @@ export function useCreateCourseOutcome(courseId: string | undefined) {
   return useMutation({
     // parent_id (optional) nests the new outcome under an existing one for
     // the L.O.x.y hierarchy; omit / null for a top-level outcome.
-    mutationFn: (args: string | { outcome_text: string; parent_id?: string | null }) => {
+    mutationFn: (
+      args: string | { outcome_text: string; parent_id?: string | null },
+    ) => {
       const body =
         typeof args === "string"
           ? { outcome_text: args }
-          : { outcome_text: args.outcome_text, parent_id: args.parent_id ?? null };
+          : {
+              outcome_text: args.outcome_text,
+              parent_id: args.parent_id ?? null,
+            };
       return apiPost<CourseLearningOutcomeAuthoring>(
         `/teacher/courses/${courseId}/outcomes`,
         body,

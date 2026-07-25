@@ -52,12 +52,12 @@ export default function CourseNewPage() {
   const slugQuery = useSlugAvailability(debouncedSlug);
   // Only trust the result when the debounced value matches the current input
   // (avoids a stale ✓/✗ flashing while the user is still typing).
-  const slugSettled = debouncedSlug === form.slug.trim() && debouncedSlug.length > 0;
+  const slugSettled =
+    debouncedSlug === form.slug.trim() && debouncedSlug.length > 0;
   const slugAvailable = slugSettled && slugQuery.data?.available === true;
   const slugTaken = slugSettled && slugQuery.data?.available === false;
   const slugChecking =
-    form.slug.trim().length > 0 &&
-    (!slugSettled || slugQuery.isFetching);
+    form.slug.trim().length > 0 && (!slugSettled || slugQuery.isFetching);
 
   function slugify(title: string) {
     return title
@@ -115,7 +115,9 @@ export default function CourseNewPage() {
         params: { courseId: course.id },
       });
     } catch (err: unknown) {
-      toast.error((err as Error).message || t("teacher_course_new.create_failed"));
+      toast.error(
+        (err as Error).message || t("teacher_course_new.create_failed"),
+      );
     }
   }
 
@@ -266,10 +268,12 @@ export default function CourseNewPage() {
               <div>
                 <SegmentedFilter
                   ariaLabel={t("teacher_course_new.field_level")}
-                  value={(form.level || "beginner") as
-                    | "beginner"
-                    | "intermediate"
-                    | "advanced"}
+                  value={
+                    (form.level || "beginner") as
+                      | "beginner"
+                      | "intermediate"
+                      | "advanced"
+                  }
                   onChange={(lvl) => setForm((f) => ({ ...f, level: lvl }))}
                   options={levelOptions}
                 />

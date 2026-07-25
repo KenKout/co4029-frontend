@@ -53,8 +53,7 @@ export const queryKeys = {
   },
 
   discussions: {
-    topics: (lessonId: string) =>
-      ["discussions", "topics", lessonId] as const,
+    topics: (lessonId: string) => ["discussions", "topics", lessonId] as const,
     comments: (topicId: string) =>
       ["discussions", "comments", topicId] as const,
   },

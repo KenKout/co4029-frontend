@@ -139,7 +139,13 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
 }
 
-export function ProgressBar({ value, label }: { value: number; label: string }) {
+export function ProgressBar({
+  value,
+  label,
+}: {
+  value: number;
+  label: string;
+}) {
   const pct = Math.max(0, Math.min(100, Math.round(value)));
   return (
     <div className="space-y-1.5">
@@ -513,7 +519,11 @@ export function SelectedFileForm({
   );
 }
 
-export function ProcessingStatusCard({ material }: { material: LearningMaterial }) {
+export function ProcessingStatusCard({
+  material,
+}: {
+  material: LearningMaterial;
+}) {
   const { t } = useTranslation();
   const { data: status } = useTeacherMaterialStatus(material.id);
   const proc =
@@ -1342,7 +1352,7 @@ export function KnowledgeGraphPreview({
         <KnowledgeGraphDetail
           data={
             kgSource === "curated"
-              ? {
+              ? ({
                   // Project the curated graph into the viewer's shape. The
                   // viewer treats nodes[0] as the centre, so the primary node is
                   // hoisted to the front; `mention_count` is unused here so the
@@ -1369,7 +1379,7 @@ export function KnowledgeGraphPreview({
                     relation: e.relation,
                     weight: 1,
                   })),
-                } as LessonKnowledgeGraph
+                } as LessonKnowledgeGraph)
               : ((detailData ??
                   data ?? {
                     enabled: true,

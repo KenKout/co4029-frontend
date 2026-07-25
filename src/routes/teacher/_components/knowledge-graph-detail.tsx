@@ -266,10 +266,7 @@ export function KnowledgeGraphDetail({
   const nodes = useMemo(() => data.nodes ?? [], [data.nodes]);
   const edges = useMemo(() => data.edges ?? [], [data.edges]);
 
-  const nodeById = useMemo(
-    () => new Map(nodes.map((n) => [n.id, n])),
-    [nodes],
-  );
+  const nodeById = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
   const maxW = useMemo(
     () => Math.max(...nodes.map((n) => n.weight), 1),
     [nodes],
@@ -516,10 +513,7 @@ export function KnowledgeGraphDetail({
     if (smoothTimer.current) window.clearTimeout(smoothTimer.current);
     smoothTimer.current = window.setTimeout(() => setSmooth(false), 420);
     setTransform((prev) => {
-      const scale = Math.min(
-        MAX_SCALE,
-        Math.max(prev.scale, 0.9),
-      );
+      const scale = Math.min(MAX_SCALE, Math.max(prev.scale, 0.9));
       return {
         scale,
         tx: rect.width / 2 - p.x * scale,
@@ -592,7 +586,8 @@ export function KnowledgeGraphDetail({
     const rect = svg.getBoundingClientRect();
     const x = p.x * transform.scale + transform.tx;
     const y = p.y * transform.scale + transform.ty;
-    const r = radiusFor(nodeById.get(pinned)?.weight ?? minW, maxW, minW) *
+    const r =
+      radiusFor(nodeById.get(pinned)?.weight ?? minW, maxW, minW) *
       transform.scale;
     // Clamp the horizontal anchor so a centred (translateX(-50%)) 384px panel
     // stays fully on-canvas even when the node is near an edge.
@@ -832,7 +827,9 @@ export function KnowledgeGraphDetail({
                       ? "url(#kgd-arrow-prereq)"
                       : "url(#kgd-arrow-related)"
                   }
-                  opacity={dim ? 0.08 : connected ? 0.95 : isPrereq ? 0.55 : 0.32}
+                  opacity={
+                    dim ? 0.08 : connected ? 0.95 : isPrereq ? 0.55 : 0.32
+                  }
                   className="transition-opacity"
                 />
               );

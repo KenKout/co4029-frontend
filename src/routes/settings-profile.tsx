@@ -4,11 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Camera, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
-import {
-  useMe,
-  useUpdateProfile,
-  useUploadAvatar,
-} from "@/lib/api/hooks/auth";
+import { useMe, useUpdateProfile, useUploadAvatar } from "@/lib/api/hooks/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

@@ -109,14 +109,18 @@ function layoutRadial(
       // If somehow multiple depth-0, nudge extras onto ring 1.
       ids.slice(1).forEach((id, i) => {
         const a = (i / Math.max(1, ids.length - 1)) * Math.PI * 2;
-        pos.set(id, { x: cx + ringGap * Math.cos(a), y: cy + ringGap * Math.sin(a) });
+        pos.set(id, {
+          x: cx + ringGap * Math.cos(a),
+          y: cy + ringGap * Math.sin(a),
+        });
       });
       continue;
     }
     const radius = d * ringGap;
     ids.forEach((id, i) => {
       // Offset every other ring so nodes don't line up radially.
-      const angle = (i / ids.length) * Math.PI * 2 + (d % 2) * (Math.PI / ids.length);
+      const angle =
+        (i / ids.length) * Math.PI * 2 + (d % 2) * (Math.PI / ids.length);
       pos.set(id, {
         x: cx + radius * Math.cos(angle),
         y: cy + radius * Math.sin(angle),
@@ -142,18 +146,29 @@ export function LessonKnowledgeMap({ lessonId }: { lessonId: string }) {
     [nodes, edges, primaryId],
   );
 
-  const [transform, setTransform] = useState<Transform>({ tx: 0, ty: 0, scale: 1 });
+  const [transform, setTransform] = useState<Transform>({
+    tx: 0,
+    ty: 0,
+    scale: 1,
+  });
   const [selected, setSelected] = useState<string | null>(null);
-  const drag = useRef<{ active: boolean; lastX: number; lastY: number; moved: boolean }>(
-    { active: false, lastX: 0, lastY: 0, moved: false },
-  );
+  const drag = useRef<{
+    active: boolean;
+    lastX: number;
+    lastY: number;
+    moved: boolean;
+  }>({ active: false, lastX: 0, lastY: 0, moved: false });
 
   const fit = useMemo(
     () => () => {
       const svg = svgRef.current;
       if (!svg) return;
       const rect = svg.getBoundingClientRect();
-      const scale = Math.min(rect.width / WORLD_W, rect.height / WORLD_H, MAX_SCALE);
+      const scale = Math.min(
+        rect.width / WORLD_W,
+        rect.height / WORLD_H,
+        MAX_SCALE,
+      );
       setTransform({
         scale,
         tx: (rect.width - WORLD_W * scale) / 2,
@@ -184,9 +199,16 @@ export function LessonKnowledgeMap({ lessonId }: { lessonId: string }) {
       const sy = e.clientY - rect.top;
       setTransform((prev) => {
         const factor = Math.exp(-e.deltaY * 0.0015);
-        const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, prev.scale * factor));
+        const scale = Math.min(
+          MAX_SCALE,
+          Math.max(MIN_SCALE, prev.scale * factor),
+        );
         const k = scale / prev.scale;
-        return { scale, tx: sx - k * (sx - prev.tx), ty: sy - k * (sy - prev.ty) };
+        return {
+          scale,
+          tx: sx - k * (sx - prev.tx),
+          ty: sy - k * (sy - prev.ty),
+        };
       });
     };
     svg.addEventListener("wheel", handler, { passive: false });
@@ -200,15 +222,27 @@ export function LessonKnowledgeMap({ lessonId }: { lessonId: string }) {
     const sx = rect.width / 2;
     const sy = rect.height / 2;
     setTransform((prev) => {
-      const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, prev.scale * factor));
+      const scale = Math.min(
+        MAX_SCALE,
+        Math.max(MIN_SCALE, prev.scale * factor),
+      );
       const k = scale / prev.scale;
-      return { scale, tx: sx - k * (sx - prev.tx), ty: sy - k * (sy - prev.ty) };
+      return {
+        scale,
+        tx: sx - k * (sx - prev.tx),
+        ty: sy - k * (sy - prev.ty),
+      };
     });
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
     (e.target as Element).setPointerCapture?.(e.pointerId);
-    drag.current = { active: true, lastX: e.clientX, lastY: e.clientY, moved: false };
+    drag.current = {
+      active: true,
+      lastX: e.clientX,
+      lastY: e.clientY,
+      moved: false,
+    };
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (!drag.current.active) return;
@@ -283,7 +317,8 @@ export function LessonKnowledgeMap({ lessonId }: { lessonId: string }) {
                 const b = positions.get(e.target);
                 if (!a || !b) return null;
                 const connected =
-                  !!selected && (e.source === selected || e.target === selected);
+                  !!selected &&
+                  (e.source === selected || e.target === selected);
                 const dim = !!selected && !connected;
                 const isPrereq = e.relation === "PREREQUISITE_OF";
                 return (
@@ -308,7 +343,8 @@ export function LessonKnowledgeMap({ lessonId }: { lessonId: string }) {
                 const r = radiusFor(n.weight);
                 const isPrimary = n.id === primaryId || n.is_primary;
                 const isSelected = selected === n.id;
-                const isNeighbor = !!selected && !isSelected && neighborIds.has(n.id);
+                const isNeighbor =
+                  !!selected && !isSelected && neighborIds.has(n.id);
                 const dim = !!selected && !isSelected && !isNeighbor;
                 return (
                   <g
@@ -353,7 +389,9 @@ export function LessonKnowledgeMap({ lessonId }: { lessonId: string }) {
                       fill="currentColor"
                       className="pointer-events-none text-m3-on-surface"
                     >
-                      {n.label.length > 26 ? `${n.label.slice(0, 25)}…` : n.label}
+                      {n.label.length > 26
+                        ? `${n.label.slice(0, 25)}…`
+                        : n.label}
                     </text>
                   </g>
                 );

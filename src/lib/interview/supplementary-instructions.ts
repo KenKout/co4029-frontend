@@ -143,7 +143,9 @@ export function serializeSupplementaryInstructions(
       weight: c.weight,
       description: c.description.trim(),
     }))
-    .filter((c) => c.name.length > 0 && Number.isFinite(c.weight) && c.weight > 0)
+    .filter(
+      (c) => c.name.length > 0 && Number.isFinite(c.weight) && c.weight > 0,
+    )
     .slice(0, MAX_CRITERIA);
 
   if (criteria.length === 0) {

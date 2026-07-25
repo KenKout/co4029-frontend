@@ -47,12 +47,7 @@ function Root() {
           on demand — without it a top-right toast sits over the notification
           bell in ContentTopBar and blocks tapping it. offset pushes the stack
           below the 64px (h-16) top bar so it never overlaps the bell/avatar. */}
-      <Toaster
-        position="top-right"
-        richColors
-        closeButton
-        offset={72}
-      />
+      <Toaster position="top-right" richColors closeButton offset={72} />
     </AuthProvider>
   );
 }
@@ -198,19 +193,25 @@ const teacherRoute = createRoute({
 const teacherCoursesRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses",
-  component: lazyRouteComponent(() => import("@/routes/teacher/courses/courses")),
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/courses/courses"),
+  ),
 });
 
 const teacherCourseNewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/new",
-  component: lazyRouteComponent(() => import("@/routes/teacher/courses/course-new")),
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/courses/course-new"),
+  ),
 });
 
 const teacherCourseManageRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId",
-  component: lazyRouteComponent(() => import("@/routes/teacher/courses/course-manage")),
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/courses/course-manage"),
+  ),
 });
 
 const teacherLessonManageRoute = createRoute({
@@ -232,19 +233,25 @@ const teacherModuleManageRoute = createRoute({
 const teacherQuizManageRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/quizzes/$quizId",
-  component: lazyRouteComponent(() => import("@/routes/teacher/quiz/quiz-manage")),
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/quiz/quiz-manage"),
+  ),
 });
 
 const teacherQuizGenerateRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/quizzes/$quizId/generate",
-  component: lazyRouteComponent(() => import("@/routes/teacher/quiz/quiz-generate")),
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/quiz/quiz-generate"),
+  ),
 });
 
 const teacherQuizResultsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/quizzes/$quizId/results",
-  component: lazyRouteComponent(() => import("@/routes/teacher/quiz/quiz-results")),
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/quiz/quiz-results"),
+  ),
 });
 
 const teacherInterviewConfigRoute = createRoute({

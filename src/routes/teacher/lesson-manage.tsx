@@ -316,11 +316,7 @@ function ResourceAiActions({
             : "text-m3-on-surface-variant hover:bg-m3-surface-container-highest",
         )}
       >
-        {visible ? (
-          <Eye className="h-4 w-4" />
-        ) : (
-          <EyeOff className="h-4 w-4" />
-        )}
+        {visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
       </button>
     </>
   );
@@ -967,8 +963,7 @@ export default function LessonManagePage() {
       toast.success(t("teacher_common.lesson_saved"));
     } catch (err: unknown) {
       toast.error(
-        (err as Error).message ||
-          t("teacher_lesson_manage.toasts.save_failed"),
+        (err as Error).message || t("teacher_lesson_manage.toasts.save_failed"),
       );
     } finally {
       setSaving(false);
@@ -1615,7 +1610,9 @@ export default function LessonManagePage() {
             </h2>
             <KnowledgeGraphPreview
               lessonId={lessonId}
-              readyCount={aiMaterials.filter((m) => m.current_version_id).length}
+              readyCount={
+                aiMaterials.filter((m) => m.current_version_id).length
+              }
             />
           </section>
         </div>

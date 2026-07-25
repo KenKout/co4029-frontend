@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiDelete, apiFetch, apiPatch, apiPost, apiPut, ApiError } from "../client";
+import {
+  apiDelete,
+  apiFetch,
+  apiPatch,
+  apiPost,
+  apiPut,
+  ApiError,
+} from "../client";
 import { authenticatedFetch } from "../../auth";
 import { queryKeys } from "../query-keys";
 import type {
@@ -581,4 +588,3 @@ export function useBulkSetMaterialVisibility(lessonId: string) {
     },
   });
 }
-

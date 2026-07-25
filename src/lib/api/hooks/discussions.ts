@@ -14,9 +14,7 @@ export function useLessonDiscussionTopics(lessonId: string | null | undefined) {
   return useQuery({
     queryKey: queryKeys.discussions.topics(lessonId ?? ""),
     queryFn: () =>
-      apiFetch<DiscussionTopicList>(
-        `/lessons/${lessonId}/discussion/topics`,
-      ),
+      apiFetch<DiscussionTopicList>(`/lessons/${lessonId}/discussion/topics`),
     enabled: !!lessonId,
   });
 }
@@ -25,10 +23,7 @@ export function useCreateDiscussionTopic(lessonId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: { title: string; body_markdown?: string | null }) =>
-      apiPost<DiscussionTopic>(
-        `/lessons/${lessonId}/discussion/topics`,
-        body,
-      ),
+      apiPost<DiscussionTopic>(`/lessons/${lessonId}/discussion/topics`, body),
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: queryKeys.discussions.topics(lessonId),
@@ -60,8 +55,7 @@ export function useUpdateDiscussionTopic(lessonId: string) {
 export function useDeleteDiscussionTopic(lessonId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (topicId: string) =>
-      apiDelete(`/discussion/topics/${topicId}`),
+    mutationFn: (topicId: string) => apiDelete(`/discussion/topics/${topicId}`),
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: queryKeys.discussions.topics(lessonId),
@@ -76,9 +70,7 @@ export function useTopicComments(topicId: string | null | undefined) {
   return useQuery({
     queryKey: queryKeys.discussions.comments(topicId ?? ""),
     queryFn: () =>
-      apiFetch<DiscussionComment[]>(
-        `/discussion/topics/${topicId}/comments`,
-      ),
+      apiFetch<DiscussionComment[]>(`/discussion/topics/${topicId}/comments`),
     enabled: !!topicId,
   });
 }

@@ -33,7 +33,6 @@ export function SettingsSection({
   );
 }
 
-
 export function Field({
   label,
   hint,
@@ -131,7 +130,6 @@ export function ToggleRow({
   );
 }
 
-
 export function LockableSection({
   locked,
   children,
@@ -148,4 +146,3 @@ export function LockableSection({
     </fieldset>
   );
 }
-

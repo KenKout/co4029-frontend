@@ -134,7 +134,10 @@ export function OverridesPanel({ quizId }: { quizId: string }) {
               className="flex items-center gap-3 rounded-lg border border-m3-outline-variant/30 px-3 py-2 text-sm"
             >
               <UserCog className="h-4 w-4 text-m3-primary shrink-0" />
-              <span className="font-mono text-xs truncate flex-1" title={o.user_id ?? ""}>
+              <span
+                className="font-mono text-xs truncate flex-1"
+                title={o.user_id ?? ""}
+              >
                 {o.user_id}
               </span>
               {o.max_attempts != null && (

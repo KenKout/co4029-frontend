@@ -110,8 +110,8 @@ function OptionInput({
               <RichContent
                 value={option.option_text}
                 format={
-                  (option as { option_format?: string | null })
-                    .option_format ?? "plain"
+                  (option as { option_format?: string | null }).option_format ??
+                  "plain"
                 }
                 inline
               />
@@ -523,7 +523,9 @@ function MatchingInput({
     if (!answerText) return {};
     try {
       const data = JSON.parse(answerText);
-      return data && typeof data === "object" ? (data as Record<string, string>) : {};
+      return data && typeof data === "object"
+        ? (data as Record<string, string>)
+        : {};
     } catch {
       return {};
     }
@@ -534,11 +536,24 @@ function MatchingInput({
     const next = { ...selected };
     if (choice) next[prompt] = choice;
     else delete next[prompt];
-    onAnswerTextChange(Object.keys(next).length > 0 ? JSON.stringify(next) : null);
+    onAnswerTextChange(
+      Object.keys(next).length > 0 ? JSON.stringify(next) : null,
+    );
   }
 
   if (prompts.length === 0) {
-    return <ShortAnswerInput {...({ question, answerText, disabled, onAnswerTextChange, selectedOptionId: null, onSelectOption: () => {} } as QuestionRendererProps)} />;
+    return (
+      <ShortAnswerInput
+        {...({
+          question,
+          answerText,
+          disabled,
+          onAnswerTextChange,
+          selectedOptionId: null,
+          onSelectOption: () => {},
+        } as QuestionRendererProps)}
+      />
+    );
   }
 
   return (
@@ -612,7 +627,18 @@ function OrderingInput({
   }
 
   if (initial.length === 0) {
-    return <ShortAnswerInput {...({ question, answerText, disabled, onAnswerTextChange, selectedOptionId: null, onSelectOption: () => {} } as QuestionRendererProps)} />;
+    return (
+      <ShortAnswerInput
+        {...({
+          question,
+          answerText,
+          disabled,
+          onAnswerTextChange,
+          selectedOptionId: null,
+          onSelectOption: () => {},
+        } as QuestionRendererProps)}
+      />
+    );
   }
 
   return (

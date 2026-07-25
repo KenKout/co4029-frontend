@@ -48,8 +48,7 @@ export interface TeacherDashboardStats {
 export function useTeacherDashboardStats() {
   return useQuery({
     queryKey: ["teacher", "dashboard", "stats"],
-    queryFn: () =>
-      apiFetch<TeacherDashboardStats>("/teacher/dashboard/stats"),
+    queryFn: () => apiFetch<TeacherDashboardStats>("/teacher/dashboard/stats"),
     staleTime: 1000 * 60,
   });
 }
@@ -358,10 +357,13 @@ export function useReorderModules(courseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (newOrder: string[]) =>
-      apiPut<ModuleAuthoring[]>(`/teacher/courses/${courseId}/modules/reorder`, {
-        course_id: courseId,
-        new_order: newOrder,
-      }),
+      apiPut<ModuleAuthoring[]>(
+        `/teacher/courses/${courseId}/modules/reorder`,
+        {
+          course_id: courseId,
+          new_order: newOrder,
+        },
+      ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.courses.content(courseId) });
       qc.invalidateQueries({

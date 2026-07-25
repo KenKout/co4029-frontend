@@ -377,7 +377,7 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                     aria-label={t("teacher_course_settings.thumbnail.change")}
                     className="group relative aspect-video w-40 shrink-0 cursor-pointer overflow-hidden rounded-lg ghost-border transition-transform hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed"
                   >
-                    {stagedPreview ?? course?.thumbnail_url ? (
+                    {(stagedPreview ?? course?.thumbnail_url) ? (
                       <img
                         src={stagedPreview ?? course?.thumbnail_url ?? ""}
                         alt=""
@@ -765,7 +765,10 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
     const text = childText.trim();
     if (!text) return;
     try {
-      await createOutcome.mutateAsync({ outcome_text: text, parent_id: parentId });
+      await createOutcome.mutateAsync({
+        outcome_text: text,
+        parent_id: parentId,
+      });
       cancelAddChild();
       toast.success(t("teacher_outcomes.child_added", "Sub-outcome added"));
     } catch (err: unknown) {
@@ -881,106 +884,106 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                       className="flex flex-col gap-2 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5"
                       style={{ marginLeft: `${depth * 1.5}rem` }}
                     >
-                    <div className="flex items-start gap-3">
-                      <Badge className="mt-0.5 shrink-0 bg-violet-100 text-violet-700 border-transparent">
-                        {code}
-                      </Badge>
-                      {isEditing ? (
-                        <>
-                          <Input
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                void handleSaveEdit(outcome.id);
-                              } else if (e.key === "Escape") {
-                                cancelEdit();
-                              }
-                            }}
-                            autoFocus
-                            className="flex-1 text-sm"
-                          />
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button
-                              type="button"
-                              size="icon-sm"
-                              variant="ghost"
-                              disabled={
-                                updateOutcome.isPending || !editText.trim()
-                              }
-                              onClick={() => void handleSaveEdit(outcome.id)}
-                              aria-label={t("teacher_outcomes.save", "Save")}
-                            >
-                              {updateOutcome.isPending ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Check className="h-4 w-4 text-m3-primary" />
-                              )}
-                            </Button>
-                            <Button
-                              type="button"
-                              size="icon-sm"
-                              variant="ghost"
-                              onClick={cancelEdit}
-                              aria-label={t(
-                                "teacher_outcomes.cancel",
-                                "Cancel",
-                              )}
-                            >
-                              <X className="h-4 w-4 text-m3-on-surface-variant" />
-                            </Button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <span className="flex-1 text-sm text-m3-on-surface leading-relaxed">
-                            {outcome.outcome_text}
-                          </span>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button
-                              type="button"
-                              size="icon-sm"
-                              variant="ghost"
-                              onClick={() =>
-                                startEdit(outcome.id, outcome.outcome_text)
-                              }
-                              aria-label={t("teacher_outcomes.edit", "Edit")}
-                            >
-                              <Pencil className="h-4 w-4 text-m3-on-surface-variant" />
-                            </Button>
-                            <Button
-                              type="button"
-                              size="icon-sm"
-                              variant="ghost"
-                              onClick={() => startAddChild(outcome.id)}
-                              aria-label={t(
-                                "teacher_outcomes.add_child",
-                                "Add sub-outcome",
-                              )}
-                              title={t(
-                                "teacher_outcomes.add_child",
-                                "Add sub-outcome",
-                              )}
-                            >
-                              <CornerDownRight className="h-4 w-4 text-m3-on-surface-variant" />
-                            </Button>
-                            <Button
-                              type="button"
-                              size="icon-sm"
-                              variant="ghost"
-                              onClick={() => setPendingDeleteId(outcome.id)}
-                              aria-label={t(
-                                "teacher_outcomes.delete",
-                                "Delete",
-                              )}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                      <div className="flex items-start gap-3">
+                        <Badge className="mt-0.5 shrink-0 bg-violet-100 text-violet-700 border-transparent">
+                          {code}
+                        </Badge>
+                        {isEditing ? (
+                          <>
+                            <Input
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  void handleSaveEdit(outcome.id);
+                                } else if (e.key === "Escape") {
+                                  cancelEdit();
+                                }
+                              }}
+                              autoFocus
+                              className="flex-1 text-sm"
+                            />
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Button
+                                type="button"
+                                size="icon-sm"
+                                variant="ghost"
+                                disabled={
+                                  updateOutcome.isPending || !editText.trim()
+                                }
+                                onClick={() => void handleSaveEdit(outcome.id)}
+                                aria-label={t("teacher_outcomes.save", "Save")}
+                              >
+                                {updateOutcome.isPending ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Check className="h-4 w-4 text-m3-primary" />
+                                )}
+                              </Button>
+                              <Button
+                                type="button"
+                                size="icon-sm"
+                                variant="ghost"
+                                onClick={cancelEdit}
+                                aria-label={t(
+                                  "teacher_outcomes.cancel",
+                                  "Cancel",
+                                )}
+                              >
+                                <X className="h-4 w-4 text-m3-on-surface-variant" />
+                              </Button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <span className="flex-1 text-sm text-m3-on-surface leading-relaxed">
+                              {outcome.outcome_text}
+                            </span>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Button
+                                type="button"
+                                size="icon-sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  startEdit(outcome.id, outcome.outcome_text)
+                                }
+                                aria-label={t("teacher_outcomes.edit", "Edit")}
+                              >
+                                <Pencil className="h-4 w-4 text-m3-on-surface-variant" />
+                              </Button>
+                              <Button
+                                type="button"
+                                size="icon-sm"
+                                variant="ghost"
+                                onClick={() => startAddChild(outcome.id)}
+                                aria-label={t(
+                                  "teacher_outcomes.add_child",
+                                  "Add sub-outcome",
+                                )}
+                                title={t(
+                                  "teacher_outcomes.add_child",
+                                  "Add sub-outcome",
+                                )}
+                              >
+                                <CornerDownRight className="h-4 w-4 text-m3-on-surface-variant" />
+                              </Button>
+                              <Button
+                                type="button"
+                                size="icon-sm"
+                                variant="ghost"
+                                onClick={() => setPendingDeleteId(outcome.id)}
+                                aria-label={t(
+                                  "teacher_outcomes.delete",
+                                  "Delete",
+                                )}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </div>
 
                       {/* Inline sub-outcome input — nests a child under this
                           outcome (parent_id). Enter submits, Escape cancels. */}
@@ -1330,10 +1333,7 @@ function ModuleItemRow({
   // payload). Reading the wrong field left `status` undefined, so the inline
   // publish control never rendered — the \"no quick publish\" bug.
   const status =
-    item.target?.status ??
-    lesson?.status ??
-    quiz?.status ??
-    interview?.status;
+    item.target?.status ?? lesson?.status ?? quiz?.status ?? interview?.status;
   const publishing =
     publishLesson.isPending ||
     publishQuiz.isPending ||
@@ -1343,9 +1343,7 @@ function ModuleItemRow({
     e.stopPropagation();
     e.preventDefault();
     const onError = (err: unknown) =>
-      toast.error(
-        (err as Error).message || t("teacher_common.publish_failed"),
-      );
+      toast.error((err as Error).message || t("teacher_common.publish_failed"));
     const onSuccess = () =>
       toast.success(t("teacher_common.item_published", { title }));
     if (item.item_type === "lesson" && item.lesson_id) {
@@ -1586,9 +1584,7 @@ function ModuleAccordion({
   const publishedCount = statusedItems.filter(
     (i) => itemStatus(i) === "published",
   ).length;
-  const draftItems = statusedItems.filter(
-    (i) => itemStatus(i) !== "published",
-  );
+  const draftItems = statusedItems.filter((i) => itemStatus(i) !== "published");
   const allPublished =
     statusedItems.length > 0 && publishedCount === statusedItems.length;
 
@@ -1684,9 +1680,7 @@ function ModuleAccordion({
       queryKey: ["teacher", "courses", courseId, "content"],
     });
     if (failed > 0) {
-      toast.warning(
-        t("teacher_common.publish_all_partial", { ok, failed }),
-      );
+      toast.warning(t("teacher_common.publish_all_partial", { ok, failed }));
     } else {
       toast.success(t("teacher_common.publish_all_done", { count: ok }));
     }
@@ -1707,9 +1701,7 @@ function ModuleAccordion({
       className={cn(
         "flex flex-col rounded-xl border-l-4 overflow-hidden scroll-mt-24 transition-all",
         isDragging ? "opacity-40" : "",
-        isDragOver
-          ? "ring-2 ring-m3-primary/40 shadow-sm"
-          : "",
+        isDragOver ? "ring-2 ring-m3-primary/40 shadow-sm" : "",
         open ? "border-m3-primary" : "border-m3-outline-variant",
       )}
     >
@@ -1872,11 +1864,7 @@ function ModuleAccordion({
         </button>
 
         {/* Chevron expand */}
-        <button
-          type="button"
-          onClick={onToggle}
-          className="shrink-0"
-        >
+        <button type="button" onClick={onToggle} className="shrink-0">
           <ChevronDown
             className={cn(
               "h-4 w-4 text-m3-on-surface-variant transition-transform duration-300",
@@ -2309,9 +2297,7 @@ export default function CourseManagePage() {
                   const items = (module.items ?? []).filter(
                     (i) => st(i) !== undefined,
                   );
-                  const pub = items.filter(
-                    (i) => st(i) === "published",
-                  ).length;
+                  const pub = items.filter((i) => st(i) === "published").length;
                   const done = items.length > 0 && pub === items.length;
                   return (
                     <button

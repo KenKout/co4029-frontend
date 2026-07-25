@@ -878,11 +878,18 @@ export function useRegradeCommit(quizId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (scope: RegradeScopeIn) =>
-      apiPost<RegradeRunRead>(`/teacher/quizzes/${quizId}/regrade/commit`, scope),
+      apiPost<RegradeRunRead>(
+        `/teacher/quizzes/${quizId}/regrade/commit`,
+        scope,
+      ),
     onSuccess: () => {
       if (quizId) {
-        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.results(quizId) });
-        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.gradebook(quizId) });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.results(quizId),
+        });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.gradebook(quizId),
+        });
       }
     },
   });
@@ -932,14 +939,22 @@ export function useNeedsGrading(quizId: string | null | undefined) {
 export function useGradeAnswer(quizId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ answerId, body }: { answerId: string; body: ManualGradeIn }) =>
+    mutationFn: ({
+      answerId,
+      body,
+    }: {
+      answerId: string;
+      body: ManualGradeIn;
+    }) =>
       apiPatch(`/teacher/quizzes/${quizId}/answers/${answerId}/grade`, body),
     onSuccess: () => {
       if (quizId) {
         void qc.invalidateQueries({
           queryKey: queryKeys.quizzes.needsGrading(quizId),
         });
-        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.gradebook(quizId) });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.gradebook(quizId),
+        });
       }
     },
   });
@@ -979,7 +994,9 @@ export function useCreateOverride(quizId: string | null | undefined) {
       apiPost<QuizOverrideRead>(`/teacher/quizzes/${quizId}/overrides`, body),
     onSuccess: () => {
       if (quizId)
-        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.overrides(quizId) });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.overrides(quizId),
+        });
     },
   });
 }
@@ -991,7 +1008,9 @@ export function useDeleteOverride(quizId: string | null | undefined) {
       apiDelete(`/teacher/quizzes/${quizId}/overrides/${overrideId}`),
     onSuccess: () => {
       if (quizId)
-        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.overrides(quizId) });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.overrides(quizId),
+        });
     },
   });
 }
@@ -1105,7 +1124,10 @@ export function useStatisticsReport(quizId: string | null | undefined) {
 }
 
 /** Filename from a Content-Disposition header, or a fallback. */
-function filenameFromDisposition(header: string | null, fallback: string): string {
+function filenameFromDisposition(
+  header: string | null,
+  fallback: string,
+): string {
   if (!header) return fallback;
   const match = /filename="?([^"]+)"?/.exec(header);
   return match ? match[1] : fallback;
@@ -1172,15 +1194,28 @@ export interface ImportResult {
 export function useImportQuestionsFromFile(quizId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ content, format }: { content: string; format: "gift" | "xml" }) =>
-      apiPost<ImportResult>(`/teacher/quizzes/${quizId}/questions/import-file`, {
-        content,
-        format,
-      }),
+    mutationFn: ({
+      content,
+      format,
+    }: {
+      content: string;
+      format: "gift" | "xml";
+    }) =>
+      apiPost<ImportResult>(
+        `/teacher/quizzes/${quizId}/questions/import-file`,
+        {
+          content,
+          format,
+        },
+      ),
     onSuccess: () => {
       if (quizId) {
-        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.authoring(quizId) });
-        void qc.invalidateQueries({ queryKey: queryKeys.quizzes.questions(quizId) });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.authoring(quizId),
+        });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.questions(quizId),
+        });
       }
     },
   });

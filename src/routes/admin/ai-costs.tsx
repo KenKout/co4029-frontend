@@ -1675,7 +1675,10 @@ export default function AdminAiCostsPage() {
               downloadCsv("ai-costs-by-model", byModel.data ?? [], [
                 { header: "model_name", value: (r) => r.model_name },
                 { header: "total_usd", value: (r) => r.total_usd },
-                { header: "usd_per_1m_tokens", value: (r) => r.usd_per_1m_tokens },
+                {
+                  header: "usd_per_1m_tokens",
+                  value: (r) => r.usd_per_1m_tokens,
+                },
                 { header: "latency_p50_ms", value: (r) => r.latency_p50_ms },
                 { header: "latency_p95_ms", value: (r) => r.latency_p95_ms },
                 { header: "total_tokens", value: (r) => r.total_tokens },

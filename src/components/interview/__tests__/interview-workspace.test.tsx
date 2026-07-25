@@ -963,12 +963,8 @@ describe("P0 focused interview room", () => {
     // The turn text appears twice: once in the sr-only aria-live announcement
     // region (accessibility) and once as the visible question. Assert the
     // visible one specifically rather than failing on the intentional duplicate.
-    const matches = screen.getAllByText(
-      "Thank you. Can you hear me clearly?",
-    );
-    expect(
-      matches.some((el) => !el.classList.contains("sr-only")),
-    ).toBe(true);
+    const matches = screen.getAllByText("Thank you. Can you hear me clearly?");
+    expect(matches.some((el) => !el.classList.contains("sr-only"))).toBe(true);
     expect(
       screen.getByRole("button", { name: "Audio is clear" }),
     ).toBeVisible();

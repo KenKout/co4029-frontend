@@ -433,9 +433,7 @@ function CourseLearnLoaded({
   // fallback. No-op when the param is absent so the home landing is preserved.
   useEffect(() => {
     if (!search.item || lessonItems.length === 0) return;
-    let idx = lessonItems.findIndex(
-      (li) => li.item.target?.id === search.item,
-    );
+    let idx = lessonItems.findIndex((li) => li.item.target?.id === search.item);
     if (idx < 0) {
       const asNum = Number(search.item);
       if (Number.isInteger(asNum) && asNum >= 0 && asNum < lessonItems.length) {

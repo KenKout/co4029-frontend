@@ -118,7 +118,9 @@ describe("serializeSupplementaryInstructions", () => {
     const parsed = JSON.parse(out as string);
     expect(parsed).toEqual({
       evaluation_rubric: {
-        criteria: [{ name: "depth", weight: 3, description: "Cites evidence." }],
+        criteria: [
+          { name: "depth", weight: 3, description: "Cites evidence." },
+        ],
       },
       notes: "Applied only.",
     });

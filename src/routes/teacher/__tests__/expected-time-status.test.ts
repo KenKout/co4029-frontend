@@ -74,7 +74,9 @@ describe("expected response time — dirty detection", () => {
 
   it("treats zero/negative as invalid, not just null", () => {
     expect(hasInvalidExpectedTime({ expected_response_time_ms: 0 })).toBe(true);
-    expect(hasInvalidExpectedTime({ expected_response_time_ms: -1 })).toBe(true);
+    expect(hasInvalidExpectedTime({ expected_response_time_ms: -1 })).toBe(
+      true,
+    );
     expect(hasInvalidExpectedTime({ expected_response_time_ms: null })).toBe(
       true,
     );

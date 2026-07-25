@@ -155,7 +155,11 @@ function GapTabBar({
   }, [activeTab]);
 
   return (
-    <nav aria-label={ariaLabel} className="sticky z-10 -mx-1 px-1" style={{ top: 64 }}>
+    <nav
+      aria-label={ariaLabel}
+      className="sticky z-10 -mx-1 px-1"
+      style={{ top: 64 }}
+    >
       <div
         ref={listRef}
         role="tablist"
@@ -348,14 +352,12 @@ export default function InterviewGapReportPage() {
 }
 
 /* ── Integrity severity → colour (mirrors the quiz attempt-detail panel) ── */
-const INTEGRITY_SEVERITY_META: Record<
-  string,
-  { badge: string; dot: string }
-> = {
-  critical: { badge: "bg-red-100 text-red-700", dot: "bg-red-500" },
-  warning: { badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
-  info: { badge: "bg-blue-100 text-blue-700", dot: "bg-blue-400" },
-};
+const INTEGRITY_SEVERITY_META: Record<string, { badge: string; dot: string }> =
+  {
+    critical: { badge: "bg-red-100 text-red-700", dot: "bg-red-500" },
+    warning: { badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
+    info: { badge: "bg-blue-100 text-blue-700", dot: "bg-blue-400" },
+  };
 
 /* ── Integrity event type → icon + accent colour ──────────────────────────
  * Each proctoring signal gets its own icon and colour so the timeline reads at
@@ -733,7 +735,9 @@ function TranscriptCard({
                   <p className="text-sm text-m3-on-surface leading-relaxed">
                     {turn.content_text ??
                       (turn.has_audio
-                        ? t("teacher_interview_gap_report.transcript.audio_only")
+                        ? t(
+                            "teacher_interview_gap_report.transcript.audio_only",
+                          )
                         : "—")}
                   </p>
                 </li>
@@ -1167,9 +1171,10 @@ function NotesCard({
 // map of criterion → note phrases. Bullets without a recognizable "tag:" prefix
 // (or tagged with a non-rubric key like "theory_performance") are collected
 // under a null key so they still surface as general notes.
-function groupNotesByCriterion(
-  bullets: string[],
-): { byCriterion: Map<string, string[]>; untagged: string[] } {
+function groupNotesByCriterion(bullets: string[]): {
+  byCriterion: Map<string, string[]>;
+  untagged: string[];
+} {
   const byCriterion = new Map<string, string[]>();
   const untagged: string[] = [];
   for (const bullet of bullets) {
@@ -1197,9 +1202,17 @@ function scoreBand(score: number): {
   text: string;
 } {
   if (score >= 4)
-    return { labelKey: "band_strong", bar: "bg-emerald-500", text: "text-emerald-700" };
+    return {
+      labelKey: "band_strong",
+      bar: "bg-emerald-500",
+      text: "text-emerald-700",
+    };
   if (score >= 2.5)
-    return { labelKey: "band_developing", bar: "bg-amber-500", text: "text-amber-700" };
+    return {
+      labelKey: "band_developing",
+      bar: "bg-amber-500",
+      text: "text-amber-700",
+    };
   return { labelKey: "band_weak", bar: "bg-red-500", text: "text-red-600" };
 }
 
@@ -1219,11 +1232,7 @@ function criterionLabel(
     .join(" ");
 }
 
-function CriterionBreakdown({
-  report,
-}: {
-  report: GapReportAuthoringRead;
-}) {
+function CriterionBreakdown({ report }: { report: GapReportAuthoringRead }) {
   const { t } = useTranslation();
   const breakdown = report.per_criterion_breakdown ?? {};
   const weights = (report.rubric_weights ?? {}) as Record<string, number>;
@@ -1237,7 +1246,11 @@ function CriterionBreakdown({
   }));
 
   const asNum = (v: unknown): number | null =>
-    typeof v === "number" ? v : typeof v === "string" && v.trim() ? Number(v) : null;
+    typeof v === "number"
+      ? v
+      : typeof v === "string" && v.trim()
+        ? Number(v)
+        : null;
   const totalScore = asNum(summary.total_score);
   const outcomesMet = asNum(summary.outcomes_met);
   const outcomesTotal = asNum(summary.outcomes_total);
@@ -1250,13 +1263,17 @@ function CriterionBreakdown({
   const extraStrengths = [
     ...[...strengths.byCriterion.entries()]
       .filter(([k]) => !rubricKeys.has(k))
-      .flatMap(([k, notes]) => notes.map((n) => `${criterionLabel(k, t)}: ${n}`)),
+      .flatMap(([k, notes]) =>
+        notes.map((n) => `${criterionLabel(k, t)}: ${n}`),
+      ),
     ...strengths.untagged,
   ];
   const extraWeaknesses = [
     ...[...weaknesses.byCriterion.entries()]
       .filter(([k]) => !rubricKeys.has(k))
-      .flatMap(([k, notes]) => notes.map((n) => `${criterionLabel(k, t)}: ${n}`)),
+      .flatMap(([k, notes]) =>
+        notes.map((n) => `${criterionLabel(k, t)}: ${n}`),
+      ),
     ...weaknesses.untagged,
   ];
 
@@ -1335,11 +1352,7 @@ function CriterionBreakdown({
       {/* Visual per-criterion score charts: radar for the overall shape and a
           horizontal bar for exact comparison. Both read the same 0–5 means. */}
       {chartData.length > 0 && (
-        <div
-          className={
-            showRadar ? "grid gap-4 sm:grid-cols-2" : "grid gap-4"
-          }
-        >
+        <div className={showRadar ? "grid gap-4 sm:grid-cols-2" : "grid gap-4"}>
           {showRadar && (
             <div className="rounded-xl bg-m3-surface-container-lowest p-2">
               <ResponsiveContainer width="100%" height={220}>
@@ -1414,7 +1427,11 @@ function CriterionBreakdown({
                   }}
                   formatter={(value) => [`${value} / 5`, ""]}
                 />
-                <Bar dataKey="score" radius={[0, 6, 6, 0]} isAnimationActive={false}>
+                <Bar
+                  dataKey="score"
+                  radius={[0, 6, 6, 0]}
+                  isAnimationActive={false}
+                >
                   {chartData.map((row) => {
                     const band = scoreBand(row.score);
                     return (
@@ -1513,7 +1530,10 @@ function CriterionBreakdown({
             {t("teacher_interview_gap_report.labels.other_notes")}
           </p>
           {extraStrengths.map((note, i) => (
-            <p key={`eg-${i}`} className="text-xs text-emerald-700 leading-relaxed">
+            <p
+              key={`eg-${i}`}
+              className="text-xs text-emerald-700 leading-relaxed"
+            >
               <span className="font-bold mr-1">+</span>
               {note}
             </p>
@@ -1536,9 +1556,12 @@ function violationLabel(
   tag: string,
   t: (k: string, opts?: Record<string, unknown>) => string,
 ): string {
-  const label = t(`teacher_interview_gap_report.persona_adherence.violations.${tag}`, {
-    defaultValue: "",
-  });
+  const label = t(
+    `teacher_interview_gap_report.persona_adherence.violations.${tag}`,
+    {
+      defaultValue: "",
+    },
+  );
   if (label) return label;
   return tag
     .split("_")
@@ -1548,11 +1571,23 @@ function violationLabel(
 
 // Tone-consistency score band (0–10) → color + label. Mirrors scoreBand's
 // three-tier scheme so the persona card reads consistently with the rubric.
-function toneBand(score: number): { bar: string; text: string; labelKey: string } {
+function toneBand(score: number): {
+  bar: string;
+  text: string;
+  labelKey: string;
+} {
   if (score >= 8)
-    return { bar: "bg-emerald-500", text: "text-emerald-700", labelKey: "band_consistent" };
+    return {
+      bar: "bg-emerald-500",
+      text: "text-emerald-700",
+      labelKey: "band_consistent",
+    };
   if (score >= 5)
-    return { bar: "bg-amber-500", text: "text-amber-700", labelKey: "band_mixed" };
+    return {
+      bar: "bg-amber-500",
+      text: "text-amber-700",
+      labelKey: "band_mixed",
+    };
   return { bar: "bg-red-500", text: "text-red-600", labelKey: "band_off" };
 }
 
@@ -1562,11 +1597,7 @@ function toneBand(score: number): { bar: string; text: string; labelKey: string 
  * no interviewer turns, or the judge was unavailable) so the tab stays clean.
  * This never affects the student's pass/fail — it is guidance for the teacher.
  */
-function PersonaAdherenceCard({
-  report,
-}: {
-  report: GapReportAuthoringRead;
-}) {
+function PersonaAdherenceCard({ report }: { report: GapReportAuthoringRead }) {
   const { t } = useTranslation();
   const audit = report.persona_adherence;
   // Absent or explicitly unavailable → don't render the card at all.
@@ -1588,9 +1619,15 @@ function PersonaAdherenceCard({
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           {score >= 8 ? (
-            <ShieldCheck className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+            <ShieldCheck
+              className="h-5 w-5 text-emerald-600"
+              aria-hidden="true"
+            />
           ) : (
-            <ShieldAlert className="h-5 w-5 text-amber-600" aria-hidden="true" />
+            <ShieldAlert
+              className="h-5 w-5 text-amber-600"
+              aria-hidden="true"
+            />
           )}
           <h2 className="font-headline font-bold text-base text-m3-primary">
             {t("teacher_interview_gap_report.persona_adherence.title")}
@@ -1605,7 +1642,9 @@ function PersonaAdherenceCard({
       <div className="space-y-1.5">
         <div className="flex items-baseline justify-between">
           <span className={cn("text-sm font-bold", band.text)}>
-            {t(`teacher_interview_gap_report.persona_adherence.${band.labelKey}`)}
+            {t(
+              `teacher_interview_gap_report.persona_adherence.${band.labelKey}`,
+            )}
           </span>
           <span className="text-lg font-extrabold tabular-nums text-m3-on-surface">
             {score}
@@ -1630,7 +1669,9 @@ function PersonaAdherenceCard({
             aria-hidden="true"
           />
           <p className="text-xs text-red-700 leading-relaxed">
-            {t("teacher_interview_gap_report.persona_adherence.answer_leak_warning")}
+            {t(
+              "teacher_interview_gap_report.persona_adherence.answer_leak_warning",
+            )}
           </p>
         </div>
       )}
@@ -1659,7 +1700,9 @@ function PersonaAdherenceCard({
                 </span>
               </p>
               <p className="text-[10px] uppercase tracking-wider text-m3-on-surface-variant mt-0.5">
-                {t(`teacher_interview_gap_report.persona_adherence.traits.${labelKey}`)}
+                {t(
+                  `teacher_interview_gap_report.persona_adherence.traits.${labelKey}`,
+                )}
               </p>
             </div>
           );
@@ -1700,4 +1743,3 @@ function PersonaAdherenceCard({
     </GlassCard>
   );
 }
-

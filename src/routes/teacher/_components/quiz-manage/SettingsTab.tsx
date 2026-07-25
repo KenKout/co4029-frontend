@@ -5,7 +5,12 @@ import { MasterySelector } from "../MasterySelector";
 import { FeedbackBandsPanel } from "./FeedbackBandsPanel";
 import { OverridesPanel } from "./OverridesPanel";
 import { ReviewOptionsMatrix } from "./ReviewOptionsMatrix";
-import { Field, LockableSection, SettingsSection, ToggleRow } from "./form-primitives";
+import {
+  Field,
+  LockableSection,
+  SettingsSection,
+  ToggleRow,
+} from "./form-primitives";
 import type { SettingsDraft } from "./types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,121 +84,133 @@ export function SettingsTab({
       </SettingsSection>
 
       <LockableSection locked={locked}>
-      <SettingsSection title={t("teacher_quiz_manage.settings.scoring.title")}>
-        <Field
-          label={
-            <span className="flex items-center justify-between">
-              <span>
-                {t("teacher_quiz_manage.settings.scoring.pass_score")}
+        <SettingsSection
+          title={t("teacher_quiz_manage.settings.scoring.title")}
+        >
+          <Field
+            label={
+              <span className="flex items-center justify-between">
+                <span>
+                  {t("teacher_quiz_manage.settings.scoring.pass_score")}
+                </span>
+                <span className="text-m3-primary font-extrabold text-sm">
+                  {draft.passing_score_percent}%
+                </span>
               </span>
-              <span className="text-m3-primary font-extrabold text-sm">
-                {draft.passing_score_percent}%
-              </span>
-            </span>
-          }
-        >
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={5}
-            value={draft.passing_score_percent}
-            onChange={(e) =>
-              update("passing_score_percent", Number(e.target.value))
             }
-            className="w-full h-2 rounded-full cursor-pointer accent-[var(--m3-primary)]"
-          />
-        </Field>
-        <Field
-          label={t("teacher_quiz_manage.settings.scoring.time_label")}
-          hint={t("teacher_quiz_manage.settings.scoring.time_hint")}
-        >
-          <Input
-            type="number"
-            min={1}
-            max={180}
-            value={draft.time_limit_minutes}
-            onChange={(e) => update("time_limit_minutes", e.target.value)}
-            placeholder={t(
-              "teacher_quiz_manage.settings.scoring.time_placeholder",
-            )}
-            className="bg-m3-surface text-sm w-40"
-          />
-        </Field>
-        <Field
-          label={t("teacher_quiz_manage.settings.scoring.grading_method_label")}
-          hint={t("teacher_quiz_manage.settings.scoring.grading_method_hint")}
-        >
-          <select
-            value={draft.grading_method}
-            onChange={(e) =>
-              update(
-                "grading_method",
-                e.target.value as SettingsDraft["grading_method"],
-              )
-            }
-            className="w-full sm:w-72 rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
           >
-            <option value="highest">
-              {t("teacher_quiz_manage.settings.scoring.grading_method_highest")}
-            </option>
-            <option value="average">
-              {t("teacher_quiz_manage.settings.scoring.grading_method_average")}
-            </option>
-            <option value="first">
-              {t("teacher_quiz_manage.settings.scoring.grading_method_first")}
-            </option>
-            <option value="last">
-              {t("teacher_quiz_manage.settings.scoring.grading_method_last")}
-            </option>
-          </select>
-        </Field>
-      </SettingsSection>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={draft.passing_score_percent}
+              onChange={(e) =>
+                update("passing_score_percent", Number(e.target.value))
+              }
+              className="w-full h-2 rounded-full cursor-pointer accent-[var(--m3-primary)]"
+            />
+          </Field>
+          <Field
+            label={t("teacher_quiz_manage.settings.scoring.time_label")}
+            hint={t("teacher_quiz_manage.settings.scoring.time_hint")}
+          >
+            <Input
+              type="number"
+              min={1}
+              max={180}
+              value={draft.time_limit_minutes}
+              onChange={(e) => update("time_limit_minutes", e.target.value)}
+              placeholder={t(
+                "teacher_quiz_manage.settings.scoring.time_placeholder",
+              )}
+              className="bg-m3-surface text-sm w-40"
+            />
+          </Field>
+          <Field
+            label={t(
+              "teacher_quiz_manage.settings.scoring.grading_method_label",
+            )}
+            hint={t("teacher_quiz_manage.settings.scoring.grading_method_hint")}
+          >
+            <select
+              value={draft.grading_method}
+              onChange={(e) =>
+                update(
+                  "grading_method",
+                  e.target.value as SettingsDraft["grading_method"],
+                )
+              }
+              className="w-full sm:w-72 rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+            >
+              <option value="highest">
+                {t(
+                  "teacher_quiz_manage.settings.scoring.grading_method_highest",
+                )}
+              </option>
+              <option value="average">
+                {t(
+                  "teacher_quiz_manage.settings.scoring.grading_method_average",
+                )}
+              </option>
+              <option value="first">
+                {t("teacher_quiz_manage.settings.scoring.grading_method_first")}
+              </option>
+              <option value="last">
+                {t("teacher_quiz_manage.settings.scoring.grading_method_last")}
+              </option>
+            </select>
+          </Field>
+        </SettingsSection>
       </LockableSection>
 
       <LockableSection locked={locked}>
-      <SettingsSection title={t("teacher_quiz_manage.settings.attempts.title")}>
-        <ToggleRow
-          label={t("teacher_quiz_manage.settings.attempts.allow_label")}
-          description={t("teacher_quiz_manage.settings.attempts.allow_desc")}
-          value={draft.allow_retakes}
-          onChange={(v) => update("allow_retakes", v)}
-        />
-        {draft.allow_retakes && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-            <Field
-              label={t("teacher_quiz_manage.settings.attempts.max_label")}
-              hint={t("teacher_quiz_manage.settings.attempts.max_hint")}
-            >
-              <Input
-                type="number"
-                min={1}
-                value={draft.max_attempts}
-                onChange={(e) => update("max_attempts", e.target.value)}
-                placeholder={t(
-                  "teacher_quiz_manage.settings.attempts.max_placeholder",
+        <SettingsSection
+          title={t("teacher_quiz_manage.settings.attempts.title")}
+        >
+          <ToggleRow
+            label={t("teacher_quiz_manage.settings.attempts.allow_label")}
+            description={t("teacher_quiz_manage.settings.attempts.allow_desc")}
+            value={draft.allow_retakes}
+            onChange={(v) => update("allow_retakes", v)}
+          />
+          {draft.allow_retakes && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <Field
+                label={t("teacher_quiz_manage.settings.attempts.max_label")}
+                hint={t("teacher_quiz_manage.settings.attempts.max_hint")}
+              >
+                <Input
+                  type="number"
+                  min={1}
+                  value={draft.max_attempts}
+                  onChange={(e) => update("max_attempts", e.target.value)}
+                  placeholder={t(
+                    "teacher_quiz_manage.settings.attempts.max_placeholder",
+                  )}
+                  className="bg-m3-surface text-sm"
+                />
+              </Field>
+              <Field
+                label={t(
+                  "teacher_quiz_manage.settings.attempts.cooldown_label",
                 )}
-                className="bg-m3-surface text-sm"
-              />
-            </Field>
-            <Field
-              label={t("teacher_quiz_manage.settings.attempts.cooldown_label")}
-              hint={t("teacher_quiz_manage.settings.attempts.cooldown_hint")}
-            >
-              <Input
-                type="number"
-                min={0}
-                value={draft.cooldown_hours}
-                onChange={(e) => update("cooldown_hours", e.target.value)}
-                placeholder={t(
-                  "teacher_quiz_manage.settings.attempts.cooldown_placeholder",
-                )}
-                className="bg-m3-surface text-sm"
-              />
-            </Field>
-          </div>
-        )}
-      </SettingsSection>
+                hint={t("teacher_quiz_manage.settings.attempts.cooldown_hint")}
+              >
+                <Input
+                  type="number"
+                  min={0}
+                  value={draft.cooldown_hours}
+                  onChange={(e) => update("cooldown_hours", e.target.value)}
+                  placeholder={t(
+                    "teacher_quiz_manage.settings.attempts.cooldown_placeholder",
+                  )}
+                  className="bg-m3-surface text-sm"
+                />
+              </Field>
+            </div>
+          )}
+        </SettingsSection>
       </LockableSection>
 
       {/* Schedule stays editable on a published quiz — extending a deadline
@@ -295,140 +312,150 @@ export function SettingsTab({
           feedback bands, and SM-2 spacing all change how the quiz is graded
           or presented under a live/finished attempt — frozen once published. */}
       <LockableSection locked={locked}>
-      <div className="space-y-8">
-      <SettingsSection
-        title={t("teacher_quiz_manage.settings.review.title")}
-        description={t("teacher_quiz_manage.settings.review.description")}
-      >
-        <ReviewOptionsMatrix
-          value={draft.review_options}
-          onChange={(next) => update("review_options", next)}
-        />
-      </SettingsSection>
-
-      <SettingsSection
-        title={t("teacher_quiz_manage.settings.access.title")}
-        description={t("teacher_quiz_manage.settings.access.description")}
-      >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            label={t("teacher_quiz_manage.settings.access.password_label")}
-            hint={t("teacher_quiz_manage.settings.access.password_hint")}
+        <div className="space-y-8">
+          <SettingsSection
+            title={t("teacher_quiz_manage.settings.review.title")}
+            description={t("teacher_quiz_manage.settings.review.description")}
           >
-            <Input
-              type="text"
-              value={draft.require_password}
-              onChange={(e) => update("require_password", e.target.value)}
-              className="bg-m3-surface text-sm w-full"
-              placeholder={t(
-                "teacher_quiz_manage.settings.access.password_placeholder",
+            <ReviewOptionsMatrix
+              value={draft.review_options}
+              onChange={(next) => update("review_options", next)}
+            />
+          </SettingsSection>
+
+          <SettingsSection
+            title={t("teacher_quiz_manage.settings.access.title")}
+            description={t("teacher_quiz_manage.settings.access.description")}
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label={t("teacher_quiz_manage.settings.access.password_label")}
+                hint={t("teacher_quiz_manage.settings.access.password_hint")}
+              >
+                <Input
+                  type="text"
+                  value={draft.require_password}
+                  onChange={(e) => update("require_password", e.target.value)}
+                  className="bg-m3-surface text-sm w-full"
+                  placeholder={t(
+                    "teacher_quiz_manage.settings.access.password_placeholder",
+                  )}
+                />
+              </Field>
+              <Field
+                label={t("teacher_quiz_manage.settings.access.subnet_label")}
+                hint={t("teacher_quiz_manage.settings.access.subnet_hint")}
+              >
+                <Input
+                  type="text"
+                  value={draft.require_subnet}
+                  onChange={(e) => update("require_subnet", e.target.value)}
+                  className="bg-m3-surface text-sm w-full"
+                  placeholder="10.0.0.0/8, 192.168.1.5"
+                />
+              </Field>
+            </div>
+            <ToggleRow
+              label={t(
+                "teacher_quiz_manage.settings.access.browser_security_label",
               )}
+              description={t(
+                "teacher_quiz_manage.settings.access.browser_security_desc",
+              )}
+              value={draft.browser_security}
+              onChange={(v) => update("browser_security", v)}
             />
-          </Field>
-          <Field
-            label={t("teacher_quiz_manage.settings.access.subnet_label")}
-            hint={t("teacher_quiz_manage.settings.access.subnet_hint")}
-          >
-            <Input
-              type="text"
-              value={draft.require_subnet}
-              onChange={(e) => update("require_subnet", e.target.value)}
-              className="bg-m3-surface text-sm w-full"
-              placeholder="10.0.0.0/8, 192.168.1.5"
-            />
-          </Field>
-        </div>
-        <ToggleRow
-          label={t("teacher_quiz_manage.settings.access.browser_security_label")}
-          description={t(
-            "teacher_quiz_manage.settings.access.browser_security_desc",
-          )}
-          value={draft.browser_security}
-          onChange={(v) => update("browser_security", v)}
-        />
-      </SettingsSection>
+          </SettingsSection>
 
-      <SettingsSection
-        title={t("teacher_quiz_manage.settings.timing.title")}
-        description={t("teacher_quiz_manage.settings.timing.description")}
-      >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            label={t("teacher_quiz_manage.settings.timing.overdue_label")}
-            hint={t("teacher_quiz_manage.settings.timing.overdue_hint")}
+          <SettingsSection
+            title={t("teacher_quiz_manage.settings.timing.title")}
+            description={t("teacher_quiz_manage.settings.timing.description")}
           >
-            <select
-              value={draft.overdue_handling}
-              onChange={(e) =>
-                update(
-                  "overdue_handling",
-                  e.target.value as SettingsDraft["overdue_handling"],
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label={t("teacher_quiz_manage.settings.timing.overdue_label")}
+                hint={t("teacher_quiz_manage.settings.timing.overdue_hint")}
+              >
+                <select
+                  value={draft.overdue_handling}
+                  onChange={(e) =>
+                    update(
+                      "overdue_handling",
+                      e.target.value as SettingsDraft["overdue_handling"],
+                    )
+                  }
+                  className="bg-m3-surface text-sm w-full rounded-lg border border-m3-outline-variant px-3 py-2"
+                >
+                  <option value="autosubmit">
+                    {t(
+                      "teacher_quiz_manage.settings.timing.overdue_autosubmit",
+                    )}
+                  </option>
+                  <option value="graceperiod">
+                    {t(
+                      "teacher_quiz_manage.settings.timing.overdue_graceperiod",
+                    )}
+                  </option>
+                  <option value="autoabandon">
+                    {t(
+                      "teacher_quiz_manage.settings.timing.overdue_autoabandon",
+                    )}
+                  </option>
+                </select>
+              </Field>
+              {draft.overdue_handling === "graceperiod" && (
+                <Field
+                  label={t("teacher_quiz_manage.settings.timing.grace_label")}
+                  hint={t("teacher_quiz_manage.settings.timing.grace_hint")}
+                >
+                  <Input
+                    type="number"
+                    min={1}
+                    value={draft.grace_period_seconds}
+                    onChange={(e) =>
+                      update("grace_period_seconds", e.target.value)
+                    }
+                    className="bg-m3-surface text-sm w-full"
+                  />
+                </Field>
+              )}
+            </div>
+          </SettingsSection>
+
+          <SettingsSection
+            title={t("teacher_quiz_manage.settings.overrides.title")}
+            description={t(
+              "teacher_quiz_manage.settings.overrides.description",
+            )}
+          >
+            <OverridesPanel quizId={quizId} />
+          </SettingsSection>
+
+          <SettingsSection
+            title={t("teacher_quiz_manage.settings.feedback.title")}
+            description={t("teacher_quiz_manage.settings.feedback.description")}
+          >
+            <FeedbackBandsPanel quizId={quizId} />
+          </SettingsSection>
+
+          <SettingsSection
+            title={t("teacher_quiz_manage.settings.spacing.title")}
+            description={t("teacher_quiz_manage.settings.spacing.description")}
+          >
+            <MasterySelector
+              values={{
+                initial_ef: draft.initial_ef,
+                min_ef_for_unlock: draft.min_ef_for_unlock,
+                coverage_threshold: draft.coverage_threshold,
+              }}
+              onPatch={(patch) =>
+                setDraft((current) =>
+                  current ? { ...current, ...patch } : current,
                 )
               }
-              className="bg-m3-surface text-sm w-full rounded-lg border border-m3-outline-variant px-3 py-2"
-            >
-              <option value="autosubmit">
-                {t("teacher_quiz_manage.settings.timing.overdue_autosubmit")}
-              </option>
-              <option value="graceperiod">
-                {t("teacher_quiz_manage.settings.timing.overdue_graceperiod")}
-              </option>
-              <option value="autoabandon">
-                {t("teacher_quiz_manage.settings.timing.overdue_autoabandon")}
-              </option>
-            </select>
-          </Field>
-          {draft.overdue_handling === "graceperiod" && (
-            <Field
-              label={t("teacher_quiz_manage.settings.timing.grace_label")}
-              hint={t("teacher_quiz_manage.settings.timing.grace_hint")}
-            >
-              <Input
-                type="number"
-                min={1}
-                value={draft.grace_period_seconds}
-                onChange={(e) =>
-                  update("grace_period_seconds", e.target.value)
-                }
-                className="bg-m3-surface text-sm w-full"
-              />
-            </Field>
-          )}
+            />
+          </SettingsSection>
         </div>
-      </SettingsSection>
-
-      <SettingsSection
-        title={t("teacher_quiz_manage.settings.overrides.title")}
-        description={t("teacher_quiz_manage.settings.overrides.description")}
-      >
-        <OverridesPanel quizId={quizId} />
-      </SettingsSection>
-
-      <SettingsSection
-        title={t("teacher_quiz_manage.settings.feedback.title")}
-        description={t("teacher_quiz_manage.settings.feedback.description")}
-      >
-        <FeedbackBandsPanel quizId={quizId} />
-      </SettingsSection>
-
-      <SettingsSection
-        title={t("teacher_quiz_manage.settings.spacing.title")}
-        description={t("teacher_quiz_manage.settings.spacing.description")}
-      >
-        <MasterySelector
-          values={{
-            initial_ef: draft.initial_ef,
-            min_ef_for_unlock: draft.min_ef_for_unlock,
-            coverage_threshold: draft.coverage_threshold,
-          }}
-          onPatch={(patch) =>
-            setDraft((current) =>
-              current ? { ...current, ...patch } : current,
-            )
-          }
-        />
-      </SettingsSection>
-      </div>
       </LockableSection>
 
       {/* Sticky action bar: pins to the bottom of the viewport so the teacher

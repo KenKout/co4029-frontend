@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, Clock, Loader2, RefreshCw, Save, Sparkles, Trash2 } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  Loader2,
+  RefreshCw,
+  Save,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { TypeSpecificAnswerEditor } from "./TypeSpecificAnswerEditor";
 import { buildQuestionDraft, countBlanks, readCorrectAnswer } from "./helpers";
@@ -8,9 +16,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ApiError } from "@/lib/api/client";
-import { useRegenerateQuestion, useUpdateQuizQuestion } from "@/lib/api/hooks/quizzes";
+import {
+  useRegenerateQuestion,
+  useUpdateQuizQuestion,
+} from "@/lib/api/hooks/quizzes";
 import type { PendingQuestionDelete } from "@/lib/api/hooks/quizzes";
-import type { CourseLearningOutcomeAuthoring, QuizQuestionAuthoring } from "@/lib/api/types";
+import type {
+  CourseLearningOutcomeAuthoring,
+  QuizQuestionAuthoring,
+} from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
 /**
@@ -400,9 +414,7 @@ export function QuestionCard({
                   (and true_false is always single-answer). */}
               <input
                 type={allowMultiCorrect ? "checkbox" : "radio"}
-                name={
-                  allowMultiCorrect ? undefined : `correct-${question.id}`
-                }
+                name={allowMultiCorrect ? undefined : `correct-${question.id}`}
                 checked={option.is_correct}
                 aria-label={t("teacher_quiz_manage.editor.mark_correct", {
                   key: option.option_key,

@@ -126,7 +126,10 @@ export function TeacherCourseCard({
                 {course.student_count ?? 0}
               </span>
             </Link>
-            <span className="flex items-center gap-1" title={t("teacher_courses_list.modules_label", "Modules")}>
+            <span
+              className="flex items-center gap-1"
+              title={t("teacher_courses_list.modules_label", "Modules")}
+            >
               <Layers className="h-3.5 w-3.5 text-m3-secondary" />
               <span className="font-semibold text-m3-on-surface tabular-nums">
                 {course.module_count ?? 0}

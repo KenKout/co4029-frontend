@@ -49,7 +49,8 @@ function allFalse(): ReviewOptions {
  */
 async function expand(user: ReturnType<typeof userEvent.setup>) {
   const toggle = screen.getByRole("button", { name: `${K}.customize` });
-  if (toggle.getAttribute("aria-expanded") === "false") await user.click(toggle);
+  if (toggle.getAttribute("aria-expanded") === "false")
+    await user.click(toggle);
 }
 
 function windowGroup(win: string): HTMLElement {

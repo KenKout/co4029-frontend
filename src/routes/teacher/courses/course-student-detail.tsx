@@ -179,12 +179,7 @@ export default function CourseStudentDetailPage() {
       }
       return true;
     });
-  }, [
-    interviewSessions,
-    ivInterviewFilter,
-    ivResultFilter,
-    ivTimeCutoff,
-  ]);
+  }, [interviewSessions, ivInterviewFilter, ivResultFilter, ivTimeCutoff]);
 
   const ivFiltersActive =
     ivInterviewFilter !== "all" ||

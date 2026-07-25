@@ -1,7 +1,15 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Plus, BookOpen, Search, X, CheckCircle, FileEdit, Archive } from "lucide-react";
+import {
+  Plus,
+  BookOpen,
+  Search,
+  X,
+  CheckCircle,
+  FileEdit,
+  Archive,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
@@ -113,7 +121,10 @@ export default function TeacherCoursesPage() {
             <button
               type="button"
               onClick={() => setSearch("")}
-              aria-label={t("teacher_courses_list.clear_search", "Clear search")}
+              aria-label={t(
+                "teacher_courses_list.clear_search",
+                "Clear search",
+              )}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-m3-on-surface-variant transition-colors hover:bg-m3-surface-container hover:text-m3-on-surface"
             >
               <X className="h-3.5 w-3.5" />

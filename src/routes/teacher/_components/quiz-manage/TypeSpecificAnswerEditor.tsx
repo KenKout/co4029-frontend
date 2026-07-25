@@ -248,9 +248,7 @@ export function TypeSpecificAnswerEditor({
           <span
             className={cn(
               "absolute top-1 w-4 h-4 rounded-full transition-all",
-              !value.single_answer
-                ? "left-6 bg-white"
-                : "left-1 bg-slate-400",
+              !value.single_answer ? "left-6 bg-white" : "left-1 bg-slate-400",
             )}
           />
         </button>

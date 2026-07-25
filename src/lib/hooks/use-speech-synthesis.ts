@@ -93,7 +93,9 @@ export function useSpeechSynthesis(): UseSpeechSynthesis {
       const { lang = "en-US", persona = "neutral", traits, onStart } = options;
       // Prefer explicit resolved traits (teacher override); else derive from the
       // persona label's preset. Prosody is DERIVED, never a per-name table.
-      const prosody = prosodyFromTraits(traits ?? resolvePersonaTraits(persona));
+      const prosody = prosodyFromTraits(
+        traits ?? resolvePersonaTraits(persona),
+      );
       return new Promise<void>((resolve) => {
         try {
           const utterance = new SpeechSynthesisUtterance(clean);

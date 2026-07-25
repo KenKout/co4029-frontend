@@ -318,9 +318,7 @@ export function KnowledgeGraphEditor({
     (source: string, target: string, relation: CuratedKGRelation) => {
       if (source === target) return;
       // De-dupe: same source+target already linked.
-      if (
-        graph.edges.some((e) => e.source === source && e.target === target)
-      ) {
+      if (graph.edges.some((e) => e.source === source && e.target === target)) {
         toast.info(t("teacher_kg_editor.edge_exists"));
         return;
       }
@@ -388,8 +386,7 @@ export function KnowledgeGraphEditor({
   );
 
   const validationError = useMemo(() => {
-    if (graph.nodes.length === 0)
-      return t("teacher_kg_editor.err_no_nodes");
+    if (graph.nodes.length === 0) return t("teacher_kg_editor.err_no_nodes");
     if (primaryCount === 0) return t("teacher_kg_editor.err_no_primary");
     if (primaryCount > 1) return t("teacher_kg_editor.err_many_primary");
     return null;
@@ -408,9 +405,7 @@ export function KnowledgeGraphEditor({
       setSavedSnapshot(JSON.stringify(graph));
       toast.success(t("teacher_kg_editor.saved"));
     } catch (err) {
-      toast.error(
-        (err as Error).message || t("teacher_kg_editor.save_failed"),
-      );
+      toast.error((err as Error).message || t("teacher_kg_editor.save_failed"));
     }
   }, [validationError, saveMutation, graph, t]);
 

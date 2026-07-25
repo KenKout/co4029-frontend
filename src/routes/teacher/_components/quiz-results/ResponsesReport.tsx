@@ -48,13 +48,22 @@ export function ResponsesReport({ report }: { report: ResponsesReportRead }) {
               key={`${row.attempt_id}-${row.question_id}-${i}`}
               className="border-t border-m3-outline-variant/20"
             >
-              <td className="px-3 py-2 max-w-xs truncate" title={row.prompt_text}>
+              <td
+                className="px-3 py-2 max-w-xs truncate"
+                title={row.prompt_text}
+              >
                 {row.prompt_text}
               </td>
-              <td className="px-3 py-2 max-w-xs truncate" title={row.student_answer}>
+              <td
+                className="px-3 py-2 max-w-xs truncate"
+                title={row.student_answer}
+              >
                 {row.student_answer || "—"}
               </td>
-              <td className="px-3 py-2 max-w-xs truncate" title={row.correct_answer}>
+              <td
+                className="px-3 py-2 max-w-xs truncate"
+                title={row.correct_answer}
+              >
                 {row.correct_answer || "—"}
               </td>
               <td className="px-3 py-2 text-center">

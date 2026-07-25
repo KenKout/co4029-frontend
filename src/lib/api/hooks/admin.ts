@@ -216,8 +216,7 @@ export function useRestoreCourse() {
 export function useDeleteCourse() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (courseId: string) =>
-      apiDelete(`/admin/courses/${courseId}`),
+    mutationFn: (courseId: string) => apiDelete(`/admin/courses/${courseId}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["admin", "courses"] });
       void qc.invalidateQueries({ queryKey: queryKeys.admin.courseStats() });

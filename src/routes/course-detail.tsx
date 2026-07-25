@@ -367,9 +367,7 @@ function ModuleAccordion({ modules }: { modules: ModulePublic[] }) {
             className={cn(
               "group rounded-xl overflow-hidden border bg-m3-surface-container-lowest shadow-sm transition-all duration-200",
               "hover:border-m3-primary/40 hover:shadow-md",
-              isOpen
-                ? "border-m3-primary/30"
-                : "border-m3-outline-variant/30",
+              isOpen ? "border-m3-primary/30" : "border-m3-outline-variant/30",
             )}
           >
             <button
@@ -503,7 +501,8 @@ function ContactCard({ course }: { course: CoursePublic }) {
   if (!email && !phone && !website && !social) return null;
 
   // Strip the scheme for a cleaner visible label on URL rows.
-  const pretty = (url: string) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const pretty = (url: string) =>
+    url.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
   return (
     <GlassCard className="p-6 sm:p-8">

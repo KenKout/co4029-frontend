@@ -35,7 +35,6 @@ import type {
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
-
 // Coverage thresholds (derived from question→outcome assignment counts).
 //   0 questions → none, 1 → limited, 2+ → covered.
 function coverageOf(count: number): "none" | "limited" | "covered" {
@@ -575,7 +574,6 @@ function ImportFromCoursePanel({
     </div>
   );
 }
-
 
 // ── Weight stepper ────────────────────────────────────────────────────────────
 

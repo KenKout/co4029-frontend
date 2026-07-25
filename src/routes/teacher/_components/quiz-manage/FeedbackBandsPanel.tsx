@@ -45,7 +45,12 @@ export function FeedbackBandsPanel({ quizId }: { quizId: string }) {
   function addBand() {
     setDraft((cur) => [
       ...cur,
-      { min_grade: 0, max_grade: 100, feedback_text: "", feedback_format: "markdown" },
+      {
+        min_grade: 0,
+        max_grade: 100,
+        feedback_text: "",
+        feedback_format: "markdown",
+      },
     ]);
   }
 
@@ -132,7 +137,9 @@ export function FeedbackBandsPanel({ quizId }: { quizId: string }) {
             value={band.feedback_text}
             onChange={(e) => updateBand(i, { feedback_text: e.target.value })}
             rows={2}
-            placeholder={t("teacher_quiz_manage.feedback_bands.text_placeholder")}
+            placeholder={t(
+              "teacher_quiz_manage.feedback_bands.text_placeholder",
+            )}
             className="w-full rounded-lg border border-m3-outline-variant/20 bg-m3-surface px-3 py-2 text-sm resize-none"
           />
           <button
@@ -146,7 +153,13 @@ export function FeedbackBandsPanel({ quizId }: { quizId: string }) {
         </div>
       ))}
       <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={addBand} className="gap-1.5">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={addBand}
+          className="gap-1.5"
+        >
           <Plus className="h-4 w-4" />
           {t("teacher_quiz_manage.feedback_bands.add")}
         </Button>

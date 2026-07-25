@@ -36,14 +36,18 @@ import {
 } from "@/lib/api/hooks/teacher-courses";
 import { useTeacherCourseOutcomes } from "@/lib/api/hooks/courses";
 import { cn } from "@/lib/utils";
-import { draftFromQuiz, localInputToIso, integerOrNull, decimalOrNull } from "../_components/quiz-manage/helpers";
+import {
+  draftFromQuiz,
+  localInputToIso,
+  integerOrNull,
+  decimalOrNull,
+} from "../_components/quiz-manage/helpers";
 import type { SettingsDraft, TabKey } from "../_components/quiz-manage/types";
 import { QuestionBankModal } from "../_components/question-bank-modal";
 import { ImportExportPanel } from "../_components/quiz-manage/ImportExportPanel";
 import { QuestionsTab } from "../_components/quiz-manage/QuestionsTab";
 import { SettingsTab } from "../_components/quiz-manage/SettingsTab";
 import { PreviewTab } from "../_components/quiz-manage/PreviewTab";
-
 
 // Tab order: Settings first (configure the quiz), then Questions (author the
 // content), then Preview (see it as a student). Matches the natural authoring
@@ -52,10 +56,7 @@ const TAB_KEYS: ReadonlyArray<TabKey> = ["settings", "questions", "preview"];
 
 // Icon per tab — used for the condensed icon-only vertical rail that the tab
 // strip morphs into once it sticks under the global top bar.
-const TAB_ICONS: Record<
-  TabKey,
-  React.ComponentType<{ className?: string }>
-> = {
+const TAB_ICONS: Record<TabKey, React.ComponentType<{ className?: string }>> = {
   questions: ListChecks,
   settings: Settings,
   preview: Eye,
@@ -548,9 +549,9 @@ export default function QuizManagePage() {
             className={cn(
               "transition-all duration-300 ease-out inline-flex gap-1 rounded-xl p-1",
               actionsStuck
-                // Stays in-flow inside the solid toolbar band — icon-only to
-                // stay compact, but horizontal and never floating over content.
-                ? "border border-transparent"
+                ? // Stays in-flow inside the solid toolbar band — icon-only to
+                  // stay compact, but horizontal and never floating over content.
+                  "border border-transparent"
                 : "border border-m3-outline-variant/20 bg-m3-surface-container-low shadow-lg shadow-m3-primary/5",
             )}
           >
@@ -568,9 +569,7 @@ export default function QuizManagePage() {
                   title={actionsStuck ? label : undefined}
                   className={cn(
                     "rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center border",
-                    actionsStuck
-                      ? "h-10 w-10"
-                      : "px-4 py-2 text-sm gap-2",
+                    actionsStuck ? "h-10 w-10" : "px-4 py-2 text-sm gap-2",
                     // Active tab: in the stuck rail it needs a solid blue fill
                     // with a WHITE icon + gray border so it doesn't blend into
                     // the content showing through behind the rail. In the
@@ -726,9 +725,7 @@ export default function QuizManagePage() {
           onSubmit={handleSaveSettings}
           saving={patchQuiz.isPending}
           locked={isPublished}
-          dirty={
-            JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))
-          }
+          dirty={JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))}
           onReset={() => setDraft(draftFromQuiz(quiz))}
         />
       )}

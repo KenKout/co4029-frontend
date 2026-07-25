@@ -107,7 +107,6 @@ export function readCorrectAnswer(
   return null;
 }
 
-
 export function countBlanks(promptText: string): number {
   const matches = promptText.match(/_{3,}/g);
   return matches ? matches.length : 0;
@@ -123,9 +122,9 @@ export function countBlanks(promptText: string): number {
  * row (what the backend will reject at publish) rather than on the draft.
  */
 
-
-
-export function hasInvalidExpectedTime(question: QuizQuestionAuthoring): boolean {
+export function hasInvalidExpectedTime(
+  question: QuizQuestionAuthoring,
+): boolean {
   const ms = question.expected_response_time_ms;
   return ms == null || ms <= 0;
 }
@@ -149,7 +148,9 @@ export function hasInvalidExpectedTime(question: QuizQuestionAuthoring): boolean
  * publishing and must never be masked by an approved fill.
  */
 
-export function buildQuestionDraft(question: QuizQuestionAuthoring): QuestionDraft {
+export function buildQuestionDraft(
+  question: QuizQuestionAuthoring,
+): QuestionDraft {
   return {
     prompt_text: question.prompt_text ?? "",
     hint_text: question.hint_text ?? "",

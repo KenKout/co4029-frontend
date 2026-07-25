@@ -22,7 +22,10 @@ import { useCallback, useEffect, useRef } from "react";
 const PREFIX = "abridge:iv-draft:";
 const DEBOUNCE_MS = 400;
 
-function keyFor(sessionId: string | null, questionId: string | null): string | null {
+function keyFor(
+  sessionId: string | null,
+  questionId: string | null,
+): string | null {
   if (!sessionId || !questionId) return null;
   return `${PREFIX}${sessionId}:${questionId}`;
 }

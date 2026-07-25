@@ -1710,16 +1710,20 @@ export default function CourseInterviewPage() {
     // Verdict phase — drives the hero treatment. "retry" (failed verdict) is
     // deliberately encouraging (primary, not red); red is reserved for an
     // evaluation-system failure so a normal fail never feels punitive.
-    const resultPhase: "pass" | "retry" | "evaluating" | "eval_failed" | "abandoned" =
-      evaluationFailed
-        ? "eval_failed"
-        : evaluationUnavailable
-          ? "abandoned"
-          : verdictPending
-            ? "evaluating"
-            : liveVerdict
-              ? "pass"
-              : "retry";
+    const resultPhase:
+      | "pass"
+      | "retry"
+      | "evaluating"
+      | "eval_failed"
+      | "abandoned" = evaluationFailed
+      ? "eval_failed"
+      : evaluationUnavailable
+        ? "abandoned"
+        : verdictPending
+          ? "evaluating"
+          : liveVerdict
+            ? "pass"
+            : "retry";
 
     // Session facts: elapsed (ended_at − assessment start), attempt #, date.
     const finishedAtMs = finishResult.ended_at
@@ -1747,7 +1751,8 @@ export default function CourseInterviewPage() {
       retakeAvailableAt !== null &&
       new Date(retakeAvailableAt).getTime() > Date.now();
     const outOfAttempts = remainingAttempts !== null && remainingAttempts <= 0;
-    const canRetry = resultPhase === "retry" && !cooldownActive && !outOfAttempts;
+    const canRetry =
+      resultPhase === "retry" && !cooldownActive && !outOfAttempts;
     const cooldownLabel = retakeAvailableAt
       ? new Date(retakeAvailableAt).toLocaleString(resultLocale, {
           month: "short",
@@ -2250,48 +2255,48 @@ export default function CourseInterviewPage() {
                           params={{ sessionId: s.session_id }}
                           className="group flex items-center justify-between gap-2 rounded-lg px-1.5 py-1 text-xs outline-none transition-colors hover:bg-m3-surface-container focus-visible:ring-2 focus-visible:ring-m3-primary/40"
                         >
-                        <span className="flex items-center gap-1.5 text-m3-on-surface-variant transition-colors group-hover:text-m3-primary">
-                          {passed ? (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                          ) : failed ? (
-                            <XCircle className="h-3.5 w-3.5 text-danger" />
-                          ) : (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin text-m3-outline" />
-                          )}
-                          {t("course_interview.attempts.attempt_n", {
-                            n: s.attempt_number,
-                          })}
-                        </span>
-                        <span className="flex items-center gap-2">
-                          <span
-                            className={cn(
-                              "font-semibold",
-                              passed
-                                ? "text-success"
-                                : failed
-                                  ? "text-danger"
-                                  : "text-m3-on-surface-variant",
+                          <span className="flex items-center gap-1.5 text-m3-on-surface-variant transition-colors group-hover:text-m3-primary">
+                            {passed ? (
+                              <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                            ) : failed ? (
+                              <XCircle className="h-3.5 w-3.5 text-danger" />
+                            ) : (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-m3-outline" />
                             )}
-                          >
-                            {passed
-                              ? t("course_interview.attempts.passed")
-                              : failed
-                                ? t("course_interview.attempts.not_passed")
-                                : t("course_interview.attempts.in_review")}
+                            {t("course_interview.attempts.attempt_n", {
+                              n: s.attempt_number,
+                            })}
                           </span>
-                          {(s.ended_at || s.started_at) && (
-                            <span className="text-m3-outline tabular-nums">
-                              {new Date(
-                                s.ended_at ?? s.started_at,
-                              ).toLocaleDateString(
-                                i18n.language?.startsWith("vi")
-                                  ? "vi-VN"
-                                  : "en-US",
-                                { month: "short", day: "numeric" },
+                          <span className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                "font-semibold",
+                                passed
+                                  ? "text-success"
+                                  : failed
+                                    ? "text-danger"
+                                    : "text-m3-on-surface-variant",
                               )}
+                            >
+                              {passed
+                                ? t("course_interview.attempts.passed")
+                                : failed
+                                  ? t("course_interview.attempts.not_passed")
+                                  : t("course_interview.attempts.in_review")}
                             </span>
-                          )}
-                        </span>
+                            {(s.ended_at || s.started_at) && (
+                              <span className="text-m3-outline tabular-nums">
+                                {new Date(
+                                  s.ended_at ?? s.started_at,
+                                ).toLocaleDateString(
+                                  i18n.language?.startsWith("vi")
+                                    ? "vi-VN"
+                                    : "en-US",
+                                  { month: "short", day: "numeric" },
+                                )}
+                              </span>
+                            )}
+                          </span>
                         </Link>
                       </li>
                     );
@@ -2628,11 +2633,11 @@ export default function CourseInterviewPage() {
               status={agentStatus}
               onEndInterview={openEndDialog}
             />
-          ) : phase === "opening" || phase === "readiness" ? (
-            // Onboarding: the SetupChecklist above is the sole input surface,
-            // so render no bottom bar at all (no composer, no wind-down).
-            null
-          ) : (
+          ) : phase === "opening" ||
+            phase ===
+              "readiness" ? // Onboarding: the SetupChecklist above is the sole input surface,
+          // so render no bottom bar at all (no composer, no wind-down).
+          null : (
             <div className="shrink-0 border-t border-border bg-white px-4 py-6 text-center motion-safe:animate-fade-in-up">
               {/* Calm pacing on the closing wind-down (#15): a gentle pulsing
                   dot trio so the goodbye/results transition reads as a graceful

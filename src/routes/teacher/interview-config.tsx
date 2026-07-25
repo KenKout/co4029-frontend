@@ -32,11 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -102,11 +98,7 @@ type SecurityResponsePolicy =
   | "warn_and_continue"
   | "end_and_flag";
 
-type TabId =
-  | "settings"
-  | "generate"
-  | "questions"
-  | "adaptive-readiness";
+type TabId = "settings" | "generate" | "questions" | "adaptive-readiness";
 
 interface GenerationFormState {
   mode: GenerationMode;
@@ -207,7 +199,9 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
     // config has no stored overrides this equals the preset, so the sliders
     // simply show the preset values; a teacher only creates a real override by
     // moving one away from its preset (see the diff computed on save).
-    persona_profile: personaOverrideFromResolved(config.persona_profile_resolved),
+    persona_profile: personaOverrideFromResolved(
+      config.persona_profile_resolved,
+    ),
   };
 }
 
@@ -243,7 +237,9 @@ function effectivePersonaTraits(
   persona: Persona,
   override: PersonaProfileOverride,
 ): Record<(typeof PERSONA_TRAIT_KEYS)[number], number> {
-  const preset = PERSONA_TRAIT_PRESETS[persona as PersonaKey] ?? PERSONA_TRAIT_PRESETS.neutral;
+  const preset =
+    PERSONA_TRAIT_PRESETS[persona as PersonaKey] ??
+    PERSONA_TRAIT_PRESETS.neutral;
   const presetByKey: Record<(typeof PERSONA_TRAIT_KEYS)[number], number> = {
     warmth: preset.warmth,
     directness: preset.directness,
@@ -266,7 +262,9 @@ function personaOverridePayload(
   persona: Persona,
   override: PersonaProfileOverride,
 ): PersonaProfileOverride | null {
-  const preset = PERSONA_TRAIT_PRESETS[persona as PersonaKey] ?? PERSONA_TRAIT_PRESETS.neutral;
+  const preset =
+    PERSONA_TRAIT_PRESETS[persona as PersonaKey] ??
+    PERSONA_TRAIT_PRESETS.neutral;
   const presetByKey: Record<(typeof PERSONA_TRAIT_KEYS)[number], number> = {
     warmth: preset.warmth,
     directness: preset.directness,
@@ -557,7 +555,10 @@ export default function InterviewConfigPage() {
       await updateConfig.mutateAsync({
         title: draft.title.trim(),
         persona: draft.persona,
-        persona_profile: personaOverridePayload(draft.persona, draft.persona_profile),
+        persona_profile: personaOverridePayload(
+          draft.persona,
+          draft.persona_profile,
+        ),
         // Empty selection → null (deployment default voice).
         tts_voice: (draft.tts_voice || null) as TtsVoice | null,
         supported_modes: draft.supported_modes,
@@ -1522,7 +1523,9 @@ function SettingsForm({
                           htmlFor={`persona-trait-${traitKey}`}
                           className="text-xs font-medium text-m3-on-surface"
                         >
-                          {t(`teacher_interview_config.persona_traits.trait.${traitKey}`)}
+                          {t(
+                            `teacher_interview_config.persona_traits.trait.${traitKey}`,
+                          )}
                         </label>
                         <span className="text-xs tabular-nums text-m3-on-surface-variant">
                           {effective[traitKey]} / 4
@@ -1544,7 +1547,9 @@ function SettingsForm({
                         className="w-full cursor-pointer accent-m3-primary"
                       />
                       <p className="text-[11px] text-m3-on-surface-variant">
-                        {t(`teacher_interview_config.persona_traits.trait_hint.${traitKey}`)}
+                        {t(
+                          `teacher_interview_config.persona_traits.trait_hint.${traitKey}`,
+                        )}
                       </p>
                     </div>
                   ));
@@ -2093,7 +2098,9 @@ function GenerationSection({
                 >
                   {generationForm.target_outcome_ids.length === outcomes.length
                     ? t("teacher_interview_config.generate.outcomes_clear")
-                    : t("teacher_interview_config.generate.outcomes_select_all")}
+                    : t(
+                        "teacher_interview_config.generate.outcomes_select_all",
+                      )}
                 </button>
               </div>
               {outcomes.map((outcome, index) => {
@@ -2502,7 +2509,8 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
           <section
             className={cn(
               "space-y-2",
-              focus === "persona" && "rounded-lg ring-1 ring-m3-primary/30 p-2 -m-2",
+              focus === "persona" &&
+                "rounded-lg ring-1 ring-m3-primary/30 p-2 -m-2",
             )}
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
@@ -2511,7 +2519,10 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
             <table className="w-full text-left text-xs">
               <tbody>
                 {PERSONA_KEYS.map((p) => (
-                  <tr key={p} className="border-b border-m3-outline-variant/20 align-top">
+                  <tr
+                    key={p}
+                    className="border-b border-m3-outline-variant/20 align-top"
+                  >
                     <th
                       scope="row"
                       className="whitespace-nowrap py-2 pr-3 font-semibold text-m3-on-surface"
@@ -2519,7 +2530,9 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
                       {t(`teacher_interview_config.persona.${p}`)}
                     </th>
                     <td className="py-2 text-m3-on-surface-variant">
-                      {t(`teacher_interview_config.voice_guide.persona_desc.${p}`)}
+                      {t(
+                        `teacher_interview_config.voice_guide.persona_desc.${p}`,
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -2531,7 +2544,8 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
           <section
             className={cn(
               "space-y-2",
-              focus === "voice" && "rounded-lg ring-1 ring-m3-primary/30 p-2 -m-2",
+              focus === "voice" &&
+                "rounded-lg ring-1 ring-m3-primary/30 p-2 -m-2",
             )}
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
@@ -2543,7 +2557,10 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
             <table className="w-full text-left text-xs">
               <tbody>
                 {VOICE_KEYS.map((v) => (
-                  <tr key={v} className="border-b border-m3-outline-variant/20 align-top">
+                  <tr
+                    key={v}
+                    className="border-b border-m3-outline-variant/20 align-top"
+                  >
                     <th
                       scope="row"
                       className="whitespace-nowrap py-2 pr-3 font-semibold text-m3-on-surface"
@@ -2551,7 +2568,9 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
                       {t(`teacher_interview_config.voice.${v}`)}
                     </th>
                     <td className="py-2 text-m3-on-surface-variant">
-                      {t(`teacher_interview_config.voice_guide.voice_desc.${v}`)}
+                      {t(
+                        `teacher_interview_config.voice_guide.voice_desc.${v}`,
+                      )}
                     </td>
                   </tr>
                 ))}

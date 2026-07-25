@@ -1,15 +1,29 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, BookOpen, FileUp, HelpCircle, Loader2, Plus, Sparkles } from "lucide-react";
+import {
+  AlertCircle,
+  BookOpen,
+  FileUp,
+  HelpCircle,
+  Loader2,
+  Plus,
+  Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 import { BulkSetExpectedTimeBar } from "./BulkSetExpectedTimeBar";
 import { QuestionCard } from "./QuestionCard";
 import { QuestionNavigator } from "./QuestionNavigator";
 import { DEFAULT_EXPECTED_SECONDS, hasInvalidExpectedTime } from "./helpers";
 import { Button } from "@/components/ui/button";
-import { useBulkApprove, useBulkSetExpectedTime } from "@/lib/api/hooks/quizzes";
+import {
+  useBulkApprove,
+  useBulkSetExpectedTime,
+} from "@/lib/api/hooks/quizzes";
 import type { PendingQuestionDelete } from "@/lib/api/hooks/quizzes";
-import type { CourseLearningOutcomeAuthoring, QuizQuestionAuthoring } from "@/lib/api/types";
+import type {
+  CourseLearningOutcomeAuthoring,
+  QuizQuestionAuthoring,
+} from "@/lib/api/types";
 
 /**
  * Questions tab: bulk-action bar, the question list, add-question controls,
@@ -262,54 +276,54 @@ export function QuestionsTab({
         {/* Add-question controls are authoring only — hidden on a published
             (frozen) quiz so no new questions can be seeded. */}
         {!published && (
-        <div className="flex flex-wrap items-stretch gap-2">
-          <button
-            type="button"
-            onClick={() => onAddQuestion("multiple_choice")}
-            disabled={addPending}
-            className="flex-1 min-w-[12rem] flex items-center justify-center gap-2 border-2 border-dashed border-m3-outline-variant/40 rounded-xl px-6 py-4 text-sm font-bold text-m3-on-surface-variant hover:border-m3-primary hover:text-m3-primary hover:bg-m3-primary/5 transition-all disabled:opacity-60 cursor-pointer"
-          >
-            {addPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-            {t("teacher_quiz_manage.actions.add_question")}
-          </button>
-          {/* Phase 7: type picker — add a question of any supported type.
+          <div className="flex flex-wrap items-stretch gap-2">
+            <button
+              type="button"
+              onClick={() => onAddQuestion("multiple_choice")}
+              disabled={addPending}
+              className="flex-1 min-w-[12rem] flex items-center justify-center gap-2 border-2 border-dashed border-m3-outline-variant/40 rounded-xl px-6 py-4 text-sm font-bold text-m3-on-surface-variant hover:border-m3-primary hover:text-m3-primary hover:bg-m3-primary/5 transition-all disabled:opacity-60 cursor-pointer"
+            >
+              {addPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+              {t("teacher_quiz_manage.actions.add_question")}
+            </button>
+            {/* Phase 7: type picker — add a question of any supported type.
               Selecting a value seeds the right shape; the reset to "" keeps
               this a pure action control (not stateful). */}
-          <select
-            aria-label={t("teacher_quiz_manage.actions.add_question_of_type")}
-            disabled={addPending}
-            value=""
-            onChange={(e) => {
-              const type = e.target.value;
-              if (type) void onAddQuestion(type);
-              e.currentTarget.value = "";
-            }}
-            className="shrink-0 rounded-xl border-2 border-dashed border-m3-outline-variant/40 bg-m3-surface px-3 py-4 text-sm font-bold text-m3-on-surface-variant hover:border-m3-primary hover:text-m3-primary transition-all disabled:opacity-60 cursor-pointer"
-          >
-            <option value="">
-              {t("teacher_quiz_manage.actions.add_other_type")}
-            </option>
-            <option value="true_false">
-              {t("teacher_quiz_manage.type_editor.type_true_false")}
-            </option>
-            <option value="short_answer">
-              {t("teacher_quiz_manage.type_editor.type_short_answer")}
-            </option>
-            <option value="numerical">
-              {t("teacher_quiz_manage.type_editor.type_numerical")}
-            </option>
-            <option value="matching">
-              {t("teacher_quiz_manage.type_editor.type_matching")}
-            </option>
-            <option value="ordering">
-              {t("teacher_quiz_manage.type_editor.type_ordering")}
-            </option>
-          </select>
-        </div>
+            <select
+              aria-label={t("teacher_quiz_manage.actions.add_question_of_type")}
+              disabled={addPending}
+              value=""
+              onChange={(e) => {
+                const type = e.target.value;
+                if (type) void onAddQuestion(type);
+                e.currentTarget.value = "";
+              }}
+              className="shrink-0 rounded-xl border-2 border-dashed border-m3-outline-variant/40 bg-m3-surface px-3 py-4 text-sm font-bold text-m3-on-surface-variant hover:border-m3-primary hover:text-m3-primary transition-all disabled:opacity-60 cursor-pointer"
+            >
+              <option value="">
+                {t("teacher_quiz_manage.actions.add_other_type")}
+              </option>
+              <option value="true_false">
+                {t("teacher_quiz_manage.type_editor.type_true_false")}
+              </option>
+              <option value="short_answer">
+                {t("teacher_quiz_manage.type_editor.type_short_answer")}
+              </option>
+              <option value="numerical">
+                {t("teacher_quiz_manage.type_editor.type_numerical")}
+              </option>
+              <option value="matching">
+                {t("teacher_quiz_manage.type_editor.type_matching")}
+              </option>
+              <option value="ordering">
+                {t("teacher_quiz_manage.type_editor.type_ordering")}
+              </option>
+            </select>
+          </div>
         )}
       </div>
 
@@ -320,50 +334,50 @@ export function QuestionsTab({
               panel when frozen. The read-only QuestionNavigator stays so the
               teacher can still jump between questions. */}
           {!published && (
-          <div className="rounded-xl border border-m3-secondary/10 bg-m3-surface-container-low p-5 shadow-glass space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-xl gradient-primary flex items-center justify-center shadow-ai-glow">
-                <Sparkles className="h-5 w-5 text-white" />
+            <div className="rounded-xl border border-m3-secondary/10 bg-m3-surface-container-low p-5 shadow-glass space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="h-9 w-9 rounded-xl gradient-primary flex items-center justify-center shadow-ai-glow">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-headline font-bold text-sm text-m3-on-surface">
+                    {t("teacher_quiz_manage.ai_panel.title")}
+                  </h2>
+                  <p className="text-xs text-m3-on-surface-variant">
+                    {t("teacher_quiz_manage.ai_panel.description")}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-headline font-bold text-sm text-m3-on-surface">
-                  {t("teacher_quiz_manage.ai_panel.title")}
-                </h2>
-                <p className="text-xs text-m3-on-surface-variant">
-                  {t("teacher_quiz_manage.ai_panel.description")}
-                </p>
-              </div>
+              <Button
+                type="button"
+                onClick={onOpenGenerator}
+                className="w-full gap-2 gradient-primary text-white border-0 shadow-ai-glow"
+              >
+                <Sparkles className="h-4 w-4" />
+                {t("teacher_quiz_manage.ai_panel.open_generator")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onOpenBank}
+                className="w-full gap-2"
+              >
+                <BookOpen className="h-4 w-4" />
+                {t(
+                  "teacher_quiz_manage.ai_panel.import_from_bank",
+                  "Import from bank",
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onOpenImportExport}
+                className="w-full gap-2"
+              >
+                <FileUp className="h-4 w-4" />
+                {t("teacher_quiz_manage.ai_panel.import_export_file")}
+              </Button>
             </div>
-            <Button
-              type="button"
-              onClick={onOpenGenerator}
-              className="w-full gap-2 gradient-primary text-white border-0 shadow-ai-glow"
-            >
-              <Sparkles className="h-4 w-4" />
-              {t("teacher_quiz_manage.ai_panel.open_generator")}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onOpenBank}
-              className="w-full gap-2"
-            >
-              <BookOpen className="h-4 w-4" />
-              {t(
-                "teacher_quiz_manage.ai_panel.import_from_bank",
-                "Import from bank",
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onOpenImportExport}
-              className="w-full gap-2"
-            >
-              <FileUp className="h-4 w-4" />
-              {t("teacher_quiz_manage.ai_panel.import_export_file")}
-            </Button>
-          </div>
           )}
 
           {/* Quick question navigation — jumps (auto-scrolls) to a question

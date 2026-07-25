@@ -75,7 +75,9 @@ function GradeRow({ quizId, row }: { quizId: string; row: NeedsGradingRow }) {
           {row.question_type}
         </span>
       </div>
-      <p className="text-sm font-medium text-m3-on-surface">{row.prompt_text}</p>
+      <p className="text-sm font-medium text-m3-on-surface">
+        {row.prompt_text}
+      </p>
       <div className="rounded-lg bg-m3-surface-container-lowest p-3 text-sm text-m3-on-surface-variant whitespace-pre-wrap">
         {row.answer_text || t("teacher_quiz_results.grading.no_answer")}
       </div>

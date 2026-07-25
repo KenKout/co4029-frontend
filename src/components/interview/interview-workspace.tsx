@@ -145,10 +145,9 @@ export interface TurnKindVisual {
   labelKey: string;
 }
 
-const TURN_KIND_VISUALS: Partial<Record<
-  NonNullable<ConversationTurn["kind"]>,
-  TurnKindVisual
->> = {
+const TURN_KIND_VISUALS: Partial<
+  Record<NonNullable<ConversationTurn["kind"]>, TurnKindVisual>
+> = {
   hint: {
     icon: Sparkles,
     avatarClass: "border-amber-200 bg-amber-50 text-amber-600",
@@ -268,7 +267,10 @@ export function VoiceStatusIndicator({
               <span
                 key={dot}
                 className="size-1.5 rounded-full bg-primary/80 motion-safe:animate-pulse"
-                style={{ animationDelay: `${dot * 200}ms`, animationDuration: "1s" }}
+                style={{
+                  animationDelay: `${dot * 200}ms`,
+                  animationDuration: "1s",
+                }}
               />
             ))}
           </span>
@@ -282,7 +284,10 @@ export function VoiceStatusIndicator({
                 "w-0.5 rounded-full bg-primary motion-safe:animate-pulse",
                 ["h-2", "h-4", "h-3", "h-5", "h-2.5"][bar],
               )}
-              style={{ animationDelay: `${bar * 110}ms`, animationDuration: "0.9s" }}
+              style={{
+                animationDelay: `${bar * 110}ms`,
+                animationDuration: "0.9s",
+              }}
             />
           ))
         ) : status === "error" ? (
@@ -1717,7 +1722,12 @@ export function FocusedInterviewStage({
       aria-label={t("course_interview.workspace.interview_room")}
     >
       {/* Polite SR announcement of the newest interviewer turn (#9). */}
-      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      <p
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {announcement}
       </p>
       <div className="mx-auto flex min-h-full w-full max-w-[1000px] flex-col justify-center gap-5 px-4 py-6 sm:px-8 sm:py-8">
@@ -2399,8 +2409,7 @@ export function AnswerControls({
   // A11y (#10): after a few seconds of active listening with nothing captured,
   // surface a "we can't hear you" nudge so a voice user isn't left wondering
   // whether the mic is working.
-  const listeningSilent =
-    micActive && !speechDetected && recordingSeconds >= 4;
+  const listeningSilent = micActive && !speechDetected && recordingSeconds >= 4;
 
   return (
     <div className="space-y-4">

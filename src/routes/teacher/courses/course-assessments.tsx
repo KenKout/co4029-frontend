@@ -371,7 +371,9 @@ export default function CourseAssessmentsPage() {
                 onClick={chip.onRemove}
                 className="inline-flex items-center gap-1.5 rounded-full bg-m3-primary-fixed px-2.5 py-1 text-xs font-medium text-m3-primary transition-colors hover:bg-m3-primary/15"
               >
-                <span className="text-m3-on-surface-variant">{chip.prefix}</span>
+                <span className="text-m3-on-surface-variant">
+                  {chip.prefix}
+                </span>
                 {chip.label}
                 <X className="h-3 w-3" />
               </button>
