@@ -9,6 +9,7 @@ import {
   GraduationCap,
   FileText,
   HelpCircle,
+  History,
   Loader2,
   RotateCcw,
   Sigma,
@@ -39,6 +40,7 @@ import { StatisticsReport } from "./_components/quiz-results/StatisticsReport";
 import { RegradePanel } from "./_components/quiz-results/RegradePanel";
 import { NeedsGradingTab } from "./_components/quiz-results/NeedsGradingTab";
 import { GradebookTab } from "./_components/quiz-results/GradebookTab";
+import { AuditEventsTab } from "./_components/quiz-results/AuditEventsTab";
 
 type ResultsTab =
   | "students"
@@ -46,7 +48,8 @@ type ResultsTab =
   | "responses"
   | "statistics"
   | "grading"
-  | "gradebook";
+  | "gradebook"
+  | "audit";
 type HeadlineMetric = "best" | "latest";
 
 export default function QuizResultsPage() {
@@ -330,6 +333,20 @@ export default function QuizResultsPage() {
                 <GraduationCap className="h-4 w-4" />
                 {t("teacher_quiz_results.tabs.gradebook")}
               </button>
+              <button
+                type="button"
+                onClick={() => setTab("audit")}
+                aria-pressed={tab === "audit"}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer",
+                  tab === "audit"
+                    ? "bg-surface-elev text-m3-primary shadow-sm"
+                    : "text-m3-on-surface-variant hover:text-m3-primary/80",
+                )}
+              >
+                <History className="h-4 w-4" />
+                {t("teacher_quiz_results.tabs.audit")}
+              </button>
 
               {(tab === "responses" || tab === "statistics") && (
                 <div className="ml-auto flex items-center gap-1">
@@ -387,6 +404,7 @@ export default function QuizResultsPage() {
               ))}
             {tab === "grading" && <NeedsGradingTab quizId={quizId} />}
             {tab === "gradebook" && <GradebookTab quizId={quizId} />}
+            {tab === "audit" && <AuditEventsTab quizId={quizId} />}
           </div>
         </>
       )}

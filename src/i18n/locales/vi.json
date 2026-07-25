@@ -2432,7 +2432,8 @@
       "responses": "Câu trả lời",
       "statistics": "Thống kê",
       "grading": "Chấm tay",
-      "gradebook": "Bảng điểm"
+      "gradebook": "Bảng điểm",
+      "audit": "Nhật ký"
     },
     "per_student": {
       "col_student": "Học viên",
@@ -2549,6 +2550,12 @@
       "col_attempts": "Số lần làm",
       "passed": "Đạt",
       "failed": "Chưa đạt"
+    },
+    "audit": {
+      "empty": "Chưa có sự kiện nào.",
+      "col_event": "Sự kiện",
+      "col_when": "Thời điểm",
+      "col_details": "Chi tiết"
     }
   },
   "teacher_outcomes": {

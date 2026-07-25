@@ -2520,7 +2520,8 @@
       "responses": "Responses",
       "statistics": "Statistics",
       "grading": "Manual grading",
-      "gradebook": "Gradebook"
+      "gradebook": "Gradebook",
+      "audit": "Audit log"
     },
     "per_student": {
       "col_student": "Student",
@@ -2637,6 +2638,12 @@
       "col_attempts": "Attempts",
       "passed": "Passed",
       "failed": "Failed"
+    },
+    "audit": {
+      "empty": "No audit events yet.",
+      "col_event": "Event",
+      "col_when": "When",
+      "col_details": "Details"
     }
   },
   "teacher_outcomes": {
