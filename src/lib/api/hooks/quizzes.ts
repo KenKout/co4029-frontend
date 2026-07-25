@@ -717,6 +717,14 @@ export function usePendingQuestionDeletes(
     new Map(),
   );
   const [secondsLeft, setSecondsLeft] = useState(0);
+  // Ids whose DELETE is in flight (or whose refetch hasn't landed yet).
+  //
+  // Without this the list flickers: the commit path cleared `pending` BEFORE
+  // the DELETE requests resolved, so the rows unhid while the server still
+  // returned them (they reappeared), then vanished again once the invalidated
+  // query refetched. Keeping the ids in a second set until the refetch settles
+  // means a staged row is hidden continuously from click to final state.
+  const [inFlight, setInFlight] = useState<Set<string>>(() => new Set());
 
   // Refs so the unmount flush sees the latest staged set / quizId without
   // re-subscribing the cleanup effect on every change.
@@ -740,11 +748,14 @@ export function usePendingQuestionDeletes(
     }
   }, []);
 
-  const invalidate = useCallback(() => {
+  const invalidate = useCallback(async () => {
     const qid = quizIdRef.current;
     if (!qid) return;
-    void qc.invalidateQueries({ queryKey: queryKeys.quizzes.authoring(qid) });
-    void qc.invalidateQueries({ queryKey: queryKeys.quizzes.questions(qid) });
+    // Awaited so callers can keep rows hidden until fresh data has landed.
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: queryKeys.quizzes.authoring(qid) }),
+      qc.invalidateQueries({ queryKey: queryKeys.quizzes.questions(qid) }),
+    ]);
   }, [qc]);
 
   // Fire the real DELETE calls for a set of ids. Concurrent, partial-failure
@@ -753,16 +764,34 @@ export function usePendingQuestionDeletes(
     async (ids: string[]) => {
       const qid = quizIdRef.current;
       if (!qid || ids.length === 0) return;
-      const results = await Promise.allSettled(
-        ids.map((id) => apiDelete(`/teacher/quizzes/${qid}/questions/${id}`)),
-      );
-      const failed = results.filter((r) => r.status === "rejected").length;
-      if (failed > 0) {
-        toast.error(
-          i18n.t("teacher_quiz_manage.toasts.delete_question_failed"),
+      // Hold the rows hidden across the request + refetch so they can't
+      // reappear in the gap between the countdown ending and the server
+      // actually reflecting the deletion.
+      setInFlight((prev) => {
+        const next = new Set(prev);
+        for (const id of ids) next.add(id);
+        return next;
+      });
+      try {
+        const results = await Promise.allSettled(
+          ids.map((id) => apiDelete(`/teacher/quizzes/${qid}/questions/${id}`)),
         );
+        const failed = results.filter((r) => r.status === "rejected").length;
+        if (failed > 0) {
+          toast.error(
+            i18n.t("teacher_quiz_manage.toasts.delete_question_failed"),
+          );
+        }
+        await invalidate();
+      } finally {
+        // Release only after fresh data is in the cache. A failed DELETE also
+        // releases, so the row correctly comes back (it still exists).
+        setInFlight((prev) => {
+          const next = new Set(prev);
+          for (const id of ids) next.delete(id);
+          return next;
+        });
       }
-      invalidate();
     },
     [invalidate],
   );
@@ -822,7 +851,12 @@ export function usePendingQuestionDeletes(
   }, []);
 
   return {
-    pendingIds: new Set(pending.keys()),
+    // Union of staged (countdown running) and in-flight (DELETE + refetch)
+    // ids. Both must stay hidden, otherwise a row reappears in the gap
+    // between the countdown ending and the server reflecting the delete.
+    pendingIds: new Set([...pending.keys(), ...inFlight]),
+    // Only the staged batch drives the undo snackbar — once the commit fires
+    // it can no longer be undone, so the banner must disappear.
     comboCount: pending.size,
     secondsLeft,
     queueDelete,
