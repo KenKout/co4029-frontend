@@ -364,26 +364,33 @@ function ModuleAccordion({ modules }: { modules: ModulePublic[] }) {
         return (
           <div
             key={mod.id}
-            className="rounded-xl overflow-hidden border border-m3-outline-variant/30 bg-m3-surface-container-lowest shadow-sm"
+            className={cn(
+              "group rounded-xl overflow-hidden border bg-m3-surface-container-lowest shadow-sm transition-all duration-200",
+              "hover:border-m3-primary/40 hover:shadow-md",
+              isOpen
+                ? "border-m3-primary/30"
+                : "border-m3-outline-variant/30",
+            )}
           >
             <button
+              type="button"
               onClick={() => toggle(mod.id)}
-              className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-m3-surface-container-low transition-colors text-left"
+              className="w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer transition-colors hover:bg-m3-primary/5"
             >
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110">
                   <BookOpen className="h-4 w-4 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-headline font-semibold text-sm text-m3-on-surface leading-snug">
+                  <p className="font-headline font-semibold text-sm text-m3-on-surface leading-snug transition-colors group-hover:text-m3-primary">
                     {mod.title}
                   </p>
                 </div>
               </div>
               {isOpen ? (
-                <ChevronUp className="h-4 w-4 text-m3-outline shrink-0 ml-3" />
+                <ChevronUp className="h-4 w-4 text-m3-outline shrink-0 ml-3 transition-colors group-hover:text-m3-primary" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-m3-outline shrink-0 ml-3" />
+                <ChevronDown className="h-4 w-4 text-m3-outline shrink-0 ml-3 transition-all duration-200 group-hover:text-m3-primary group-hover:translate-y-0.5" />
               )}
             </button>
 
@@ -429,10 +436,10 @@ function ModuleItemsPanel({ moduleId }: { moduleId: string }) {
         return (
           <div
             key={item.id}
-            className="flex items-center gap-3 px-5 py-3 hover:bg-m3-surface-container-low transition-colors"
+            className="group/item flex items-center gap-3 px-5 py-3 transition-colors hover:bg-m3-primary/5"
           >
             <ItemTypeIcon type={item.item_type} />
-            <span className="text-sm text-m3-on-surface-variant flex-1 leading-snug">
+            <span className="text-sm text-m3-on-surface-variant flex-1 leading-snug transition-colors group-hover/item:text-m3-on-surface">
               {label}
             </span>
           </div>

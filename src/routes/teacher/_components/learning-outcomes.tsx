@@ -1,17 +1,14 @@
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowDown,
-  ArrowUp,
   BookOpen,
   Check,
   CheckCircle2,
   CircleHelp,
   Loader2,
+  Minus,
   MoreVertical,
-  Pencil,
   Plus,
-  Save,
   Trash2,
   TriangleAlert,
   X,
@@ -23,7 +20,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -39,24 +35,6 @@ import type {
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
-type OutcomeType = InterviewOutcomeAuthoring["outcome_type"];
-
-const OUTCOME_TYPES: OutcomeType[] = ["knowledge", "skill", "attitude"];
-
-// Editable quick templates. The label + prefilled statement are translated
-// (outcomes.templates.*); type/weight are sensible starting points the teacher
-// can still change before saving. Clicking a template opens the inline editor
-// prefilled — it never adds an outcome immediately.
-const OUTCOME_TEMPLATES: {
-  key: string;
-  type: OutcomeType;
-  weight: number;
-}[] = [
-  { key: "explain_concept", type: "knowledge", weight: 3 },
-  { key: "apply_knowledge", type: "skill", weight: 4 },
-  { key: "analyze_tradeoffs", type: "skill", weight: 4 },
-  { key: "communicate_clearly", type: "attitude", weight: 2 },
-];
 
 // Coverage thresholds (derived from question→outcome assignment counts).
 //   0 questions → none, 1 → limited, 2+ → covered.
@@ -77,14 +55,6 @@ interface LearningOutcomesProps {
   /** Scroll to the Question Bank and filter it to this outcome's questions. */
   onViewQuestions: (outcomeId: string) => void;
 }
-
-interface EditorState {
-  text: string;
-  type: OutcomeType;
-  weight: number;
-}
-
-const EMPTY_EDITOR: EditorState = { text: "", type: "knowledge", weight: 3 };
 
 export function LearningOutcomes({
   configId,
@@ -128,12 +98,6 @@ export function LearningOutcomes({
   );
 
   // ── Local UI state ──────────────────────────────────────────────────────
-  const [adding, setAdding] = useState(false);
-  const [addDraft, setAddDraft] = useState<EditorState>(EMPTY_EDITOR);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<EditorState>(EMPTY_EDITOR);
-  const [editDirty, setEditDirty] = useState(false);
-  const [reordering, setReordering] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] =
     useState<InterviewOutcomeAuthoring | null>(null);
@@ -142,47 +106,10 @@ export function LearningOutcomes({
   const [selectedImport, setSelectedImport] = useState<Set<string>>(new Set());
   const [importBusy, setImportBusy] = useState(false);
 
-  const addTextRef = useRef<HTMLTextAreaElement | null>(null);
   const liveRegionRef = useRef<HTMLDivElement | null>(null);
   const announce = (msg: string) => {
     if (liveRegionRef.current) liveRegionRef.current.textContent = msg;
   };
-
-  // ── Add ──────────────────────────────────────────────────────────────────
-  function openAdd(prefill?: EditorState) {
-    setAddDraft(prefill ?? EMPTY_EDITOR);
-    setAdding(true);
-    // Focus the statement input on next paint.
-    window.setTimeout(() => addTextRef.current?.focus(), 0);
-  }
-  function cancelAdd() {
-    setAdding(false);
-    setAddDraft(EMPTY_EDITOR);
-  }
-  async function submitAdd() {
-    if (!addDraft.text.trim()) return;
-    try {
-      await createOutcome.mutateAsync({
-        position: sorted.length + 1,
-        outcome_text: addDraft.text.trim(),
-        outcome_type: addDraft.type,
-        importance_weight: addDraft.weight,
-      });
-      announce(t("teacher_interview_config.outcomes.added"));
-      toast.success(t("teacher_interview_config.outcomes.added"));
-      cancelAdd();
-    } catch (err: unknown) {
-      toast.error((err as Error).message);
-    }
-  }
-
-  function pickTemplate(tpl: (typeof OUTCOME_TEMPLATES)[number]) {
-    openAdd({
-      text: t(`teacher_interview_config.outcomes.templates.${tpl.key}`),
-      type: tpl.type,
-      weight: tpl.weight,
-    });
-  }
 
   // ── Import from course-level outcomes ──────────────────────────────────────
   // Course outcomes carry only text; interview outcomes also need a type +
@@ -247,40 +174,25 @@ export function LearningOutcomes({
     }
   }
 
-  // ── Edit ──────────────────────────────────────────────────────────────────
-  function beginEdit(o: InterviewOutcomeAuthoring) {
-    setEditingId(o.id);
-    setEditDraft({
-      text: o.outcome_text,
-      type: o.outcome_type,
-      weight: o.importance_weight,
-    });
-    setEditDirty(false);
-  }
-  function cancelEdit() {
-    if (
-      editDirty &&
-      !window.confirm(t("teacher_interview_config.qbank.unsaved_confirm"))
-    )
-      return;
-    setEditingId(null);
-    setEditDirty(false);
-  }
-  async function saveEdit() {
-    if (!editingId || !editDraft.text.trim()) return;
-    setSavingId(editingId);
+  // ── Weight (the only inline-editable field) ────────────────────────────────
+  // Outcome text/type are owned by the course-level outcome and imported
+  // verbatim, so they are read-only here. The importance weight is
+  // interview-specific, so it gets a stepper that PATCHes immediately —
+  // no edit mode, no separate save button.
+  async function setWeight(o: InterviewOutcomeAuthoring, next: number) {
+    const clamped = Math.min(5, Math.max(1, Math.round(next)));
+    if (clamped === o.importance_weight) return;
+    setSavingId(o.id);
     try {
       await updateOutcome.mutateAsync({
-        outcomeId: editingId,
-        patch: {
-          outcome_text: editDraft.text.trim(),
-          outcome_type: editDraft.type,
-          importance_weight: editDraft.weight,
-        },
+        outcomeId: o.id,
+        patch: { importance_weight: clamped },
       });
-      toast.success(t("teacher_interview_config.outcomes.saved"));
-      setEditingId(null);
-      setEditDirty(false);
+      announce(
+        t("teacher_interview_config.outcomes.weight_badge", {
+          weight: clamped,
+        }),
+      );
     } catch (err: unknown) {
       toast.error((err as Error).message);
     } finally {
@@ -301,45 +213,6 @@ export function LearningOutcomes({
     }
   }
 
-  // ── Reorder (position swap through a temp parking slot; same pattern as
-  // questions — the (config_id, position) unique constraint + per-PATCH
-  // commit means a direct A↔B swap collides). ────────────────────────────────
-  async function handleReorder(index: number, direction: -1 | 1) {
-    if (reordering) return;
-    const target = index + direction;
-    if (target < 0 || target >= sorted.length) return;
-    const current = sorted[index];
-    const neighbour = sorted[target];
-    const currentPos = current.position ?? index + 1;
-    const neighbourPos = neighbour.position ?? target + 1;
-    if (currentPos === neighbourPos) return;
-    const tempPos = Math.max(...sorted.map((o, i) => o.position ?? i + 1)) + 1;
-    setReordering(true);
-    try {
-      await updateOutcome.mutateAsync({
-        outcomeId: current.id,
-        patch: { position: tempPos },
-      });
-      await updateOutcome.mutateAsync({
-        outcomeId: neighbour.id,
-        patch: { position: currentPos },
-      });
-      await updateOutcome.mutateAsync({
-        outcomeId: current.id,
-        patch: { position: neighbourPos },
-      });
-      announce(
-        t("teacher_interview_config.outcomes.sr_moved", {
-          position: target + 1,
-        }),
-      );
-    } catch (err: unknown) {
-      toast.error((err as Error).message);
-    } finally {
-      setReordering(false);
-    }
-  }
-
   const hasOutcomes = sorted.length > 0;
 
   return (
@@ -354,7 +227,7 @@ export function LearningOutcomes({
             {t("teacher_interview_config.outcomes.section_help")}
           </p>
         </div>
-        {hasOutcomes && !adding && !importing && (
+        {hasOutcomes && !importing && (
           <div className="flex items-center gap-2 shrink-0">
             {(courseOutcomes?.length ?? 0) > 0 && (
               <Button
@@ -367,15 +240,6 @@ export function LearningOutcomes({
                 {t("teacher_interview_config.outcomes.import_from_course")}
               </Button>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => openAdd()}
-              className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
-            >
-              <Plus className="h-4 w-4" />
-              {t("teacher_interview_config.outcomes.add")}
-            </Button>
           </div>
         )}
       </div>
@@ -452,27 +316,9 @@ export function LearningOutcomes({
         </div>
       )}
 
-      {/* Inline add editor — templates stay available here so a teacher who
-          already has outcomes can still start from a suggested statement. */}
-      {adding && (
-        <div className="space-y-2">
-          <TemplateRow onPick={pickTemplate} />
-          <OutcomeEditor
-            heading={t("teacher_interview_config.outcomes.add")}
-            draft={addDraft}
-            setDraft={setAddDraft}
-            textRef={addTextRef}
-            saving={createOutcome.isPending}
-            onCancel={cancelAdd}
-            onSubmit={() => void submitAdd()}
-            submitLabel={t("teacher_interview_config.outcomes.add_save")}
-          />
-        </div>
-      )}
-
-      {/* Empty state with editable templates */}
+      {/* Empty state — outcomes are sourced from the course, never authored
+          here, so the only affordance is the course importer. */}
       {!hasOutcomes ? (
-        !adding &&
         !importing && (
           <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
             <div className="flex items-start gap-2">
@@ -490,16 +336,7 @@ export function LearningOutcomes({
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                onClick={() => openAdd()}
-                className="gap-2"
-                size="sm"
-              >
-                <Plus className="h-4 w-4" />
-                {t("teacher_interview_config.outcomes.add")}
-              </Button>
-              {importableOutcomes.length > 0 && (
+              {importableOutcomes.length > 0 ? (
                 <Button
                   type="button"
                   variant="outline"
@@ -510,9 +347,12 @@ export function LearningOutcomes({
                   <BookOpen className="h-4 w-4" />
                   {t("teacher_interview_config.outcomes.import_from_course")}
                 </Button>
+              ) : (
+                <p className="text-xs text-m3-on-surface-variant">
+                  {t("teacher_interview_config.outcomes.no_course_outcomes")}
+                </p>
               )}
             </div>
-            <TemplateRow onPick={pickTemplate} />
           </div>
         )
       ) : (
@@ -520,167 +360,86 @@ export function LearningOutcomes({
           {sorted.map((o, idx) => {
             const count = questionCountByOutcome.get(o.id) ?? 0;
             const cov = coverageOf(count);
-            const isEditing = editingId === o.id;
             return (
               <li
                 key={o.id}
-                aria-expanded={isEditing}
-                className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low overflow-hidden"
+                className="group rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low overflow-hidden transition-colors hover:border-m3-primary/30"
               >
-                {isEditing ? (
-                  <div className="p-3">
-                    <OutcomeEditor
-                      heading={`LO${idx + 1}`}
-                      draft={editDraft}
-                      setDraft={(next) => {
-                        setEditDraft(next);
-                        setEditDirty(true);
-                      }}
-                      saving={savingId === o.id}
-                      onCancel={cancelEdit}
-                      onSubmit={() => void saveEdit()}
-                      submitLabel={t("common.save")}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-2.5 p-3">
-                    {/* Number + reorder */}
-                    <div className="flex flex-col items-center gap-1 shrink-0 pt-0.5">
-                      <span
-                        className="inline-flex items-center rounded-full bg-m3-primary-fixed px-2 py-0.5 text-[11px] font-extrabold text-m3-primary"
-                        aria-hidden="true"
-                      >
-                        LO{idx + 1}
+                <div className="flex items-start gap-2.5 p-3">
+                  {/* Index badge only — outcomes mirror the course order, so
+                      there is no per-row reordering here. */}
+                  <span
+                    className="mt-0.5 inline-flex shrink-0 items-center rounded-full bg-m3-primary-fixed px-2 py-0.5 text-[11px] font-extrabold text-m3-primary"
+                    aria-hidden="true"
+                  >
+                    LO{idx + 1}
+                  </span>
+
+                  {/* Statement + metadata (read-only: the text is owned by the
+                      course-level outcome and imported, never edited here). */}
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <p className="text-sm text-m3-on-surface leading-relaxed">
+                      {o.outcome_text}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-m3-on-surface-variant">
+                      <CoverageChip coverage={cov} count={count} />
+                      <Dot />
+                      <span>
+                        {t(
+                          `teacher_interview_config.outcomes.type_${o.outcome_type}`,
+                        )}
                       </span>
-                      <div className="flex flex-col">
-                        <button
-                          type="button"
-                          aria-label={t(
-                            "teacher_interview_config.questions.move_up",
-                          )}
-                          title={t(
-                            "teacher_interview_config.questions.move_up",
-                          )}
-                          disabled={reordering || idx === 0}
-                          onClick={() => void handleReorder(idx, -1)}
-                          className="text-m3-on-surface-variant hover:text-m3-primary disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-not-allowed"
-                        >
-                          <ArrowUp className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={t(
-                            "teacher_interview_config.questions.move_down",
-                          )}
-                          title={t(
-                            "teacher_interview_config.questions.move_down",
-                          )}
-                          disabled={reordering || idx === sorted.length - 1}
-                          onClick={() => void handleReorder(idx, 1)}
-                          className="text-m3-on-surface-variant hover:text-m3-primary disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-not-allowed"
-                        >
-                          <ArrowDown className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Statement + metadata */}
-                    <div className="min-w-0 flex-1 space-y-1.5">
-                      <p className="text-sm text-m3-on-surface leading-relaxed">
-                        {o.outcome_text}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-m3-on-surface-variant">
-                        <CoverageChip coverage={cov} count={count} />
-                        <Dot />
-                        <span>
-                          {t(
-                            `teacher_interview_config.outcomes.type_${o.outcome_type}`,
-                          )}
-                        </span>
-                        <Dot />
-                        <span>
-                          {t("teacher_interview_config.outcomes.weight_badge", {
-                            weight: o.importance_weight,
-                          })}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onViewQuestions(o.id)}
-                        className="gap-1.5 hidden sm:inline-flex text-xs"
-                      >
-                        {t("teacher_interview_config.outcomes.view_questions")}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => beginEdit(o)}
-                        className="gap-1.5 hidden sm:inline-flex"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        {t("common.edit")}
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          aria-label={t(
-                            "teacher_interview_config.qbank.more_actions",
-                          )}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-m3-on-surface-variant hover:bg-surface-muted hover:text-m3-on-surface cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem
-                            onClick={() => onViewQuestions(o.id)}
-                            className="gap-2 sm:hidden"
-                          >
-                            {t(
-                              "teacher_interview_config.outcomes.view_questions",
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => beginEdit(o)}
-                            className="gap-2 sm:hidden"
-                          >
-                            <Pencil className="h-4 w-4" />
-                            {t("common.edit")}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => void handleReorder(idx, -1)}
-                            disabled={reordering || idx === 0}
-                            className="gap-2"
-                          >
-                            <ArrowUp className="h-4 w-4" />
-                            {t("teacher_interview_config.questions.move_up")}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => void handleReorder(idx, 1)}
-                            disabled={reordering || idx === sorted.length - 1}
-                            className="gap-2"
-                          >
-                            <ArrowDown className="h-4 w-4" />
-                            {t("teacher_interview_config.questions.move_down")}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => setConfirmDelete(o)}
-                            className="gap-2 text-red-700 focus:text-red-700 focus:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            {t("common.delete")}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </div>
                   </div>
-                )}
+
+                  {/* Weight stepper — the one inline-editable knob, saved
+                      immediately (no edit mode / no save button). */}
+                  <WeightStepper
+                    weight={o.importance_weight}
+                    busy={savingId === o.id}
+                    onChange={(next) => void setWeight(o, next)}
+                  />
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onViewQuestions(o.id)}
+                      className="gap-1.5 hidden sm:inline-flex text-xs"
+                    >
+                      {t("teacher_interview_config.outcomes.view_questions")}
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        aria-label={t(
+                          "teacher_interview_config.qbank.more_actions",
+                        )}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-m3-on-surface-variant hover:bg-surface-muted hover:text-m3-on-surface cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem
+                          onClick={() => onViewQuestions(o.id)}
+                          className="gap-2 sm:hidden"
+                        >
+                          {t(
+                            "teacher_interview_config.outcomes.view_questions",
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setConfirmDelete(o)}
+                          className="gap-2 text-red-700 focus:text-red-700 focus:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          {t("teacher_interview_config.outcomes.remove")}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
               </li>
             );
           })}
@@ -817,141 +576,65 @@ function ImportFromCoursePanel({
   );
 }
 
-// ── Editable quick templates ──────────────────────────────────────────────────
 
-function TemplateRow({
-  onPick,
+// ── Weight stepper ────────────────────────────────────────────────────────────
+
+/**
+ * Compact −/+ stepper for an outcome's importance weight (1–5).
+ *
+ * Replaces the old "enter edit mode → change a number input → press Save"
+ * round-trip: each click PATCHes immediately, so adjusting how much an outcome
+ * counts is a single tap. Clamped to 1–5 with the ends disabled so the teacher
+ * gets an affordance rather than a silent no-op.
+ */
+function WeightStepper({
+  weight,
+  busy,
+  onChange,
 }: {
-  onPick: (tpl: (typeof OUTCOME_TEMPLATES)[number]) => void;
+  weight: number;
+  busy: boolean;
+  onChange: (next: number) => void;
 }) {
   const { t } = useTranslation();
+  const MIN = 1;
+  const MAX = 5;
   return (
-    <div className="space-y-1.5">
-      <p className="text-[11px] font-semibold text-m3-on-surface-variant">
-        {t("teacher_interview_config.outcomes.templates_hint")}
-      </p>
-      <div className="flex flex-wrap gap-1.5">
-        {OUTCOME_TEMPLATES.map((tpl) => (
-          <button
-            key={tpl.key}
-            type="button"
-            onClick={() => onPick(tpl)}
-            className="rounded-full border border-dashed border-m3-outline-variant/40 bg-m3-surface px-2.5 py-1 text-[11px] text-m3-on-surface-variant hover:bg-primary/10 hover:border-primary/40 hover:text-primary hover:-translate-y-0.5 hover:shadow-sm active:scale-95 transition-all duration-200 cursor-pointer"
-          >
-            +{" "}
-            {t(`teacher_interview_config.outcomes.template_labels.${tpl.key}`)}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Inline outcome editor (add + edit share this) ─────────────────────────────
-
-function OutcomeEditor({
-  heading,
-  draft,
-  setDraft,
-  textRef,
-  saving,
-  onCancel,
-  onSubmit,
-  submitLabel,
-}: {
-  heading: string;
-  draft: EditorState;
-  setDraft: (next: EditorState) => void;
-  textRef?: React.RefObject<HTMLTextAreaElement | null>;
-  saving: boolean;
-  onCancel: () => void;
-  onSubmit: () => void;
-  submitLabel: string;
-}) {
-  const { t } = useTranslation();
-  const canSubmit = draft.text.trim().length > 0 && !saving;
-  return (
-    <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-2.5">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-        {heading}
-      </p>
-      <div className="space-y-1">
-        <label className="block text-[11px] font-semibold text-m3-on-surface-variant">
-          {t("teacher_interview_config.outcomes.statement_label")}
-        </label>
-        <textarea
-          ref={textRef}
-          value={draft.text}
-          onChange={(e) => setDraft({ ...draft, text: e.target.value })}
-          onKeyDown={(e) => {
-            // Ctrl/Cmd+Enter submits.
-            if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && canSubmit) {
-              e.preventDefault();
-              onSubmit();
-            }
-          }}
-          rows={2}
-          placeholder={t("teacher_interview_config.outcomes.add_placeholder")}
-          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-        />
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-1.5 text-xs text-m3-on-surface-variant">
-          <span className="sr-only sm:not-sr-only">
-            {t("teacher_interview_config.outcomes.type_label")}
-          </span>
-          <select
-            value={draft.type}
-            onChange={(e) =>
-              setDraft({ ...draft, type: e.target.value as OutcomeType })
-            }
-            aria-label={t("teacher_interview_config.outcomes.type_label")}
-            className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30 cursor-pointer"
-          >
-            {OUTCOME_TYPES.map((tp) => (
-              <option key={tp} value={tp}>
-                {t(`teacher_interview_config.outcomes.type_${tp}`)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-1.5 text-xs text-m3-on-surface-variant">
-          {t("teacher_interview_config.outcomes.weight_label")}
-          <input
-            type="number"
-            min={1}
-            max={5}
-            value={draft.weight}
-            onChange={(e) =>
-              setDraft({
-                ...draft,
-                weight: Math.min(
-                  5,
-                  Math.max(1, Math.floor(Number(e.target.value)) || 1),
-                ),
-              })
-            }
-            className="w-16 rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-          />
-        </label>
-        <div className="flex justify-end gap-2 ml-auto">
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            {t("common.cancel")}
-          </Button>
-          <Button
-            type="button"
-            disabled={!canSubmit}
-            onClick={onSubmit}
-            className="gap-2"
-          >
-            {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
-            {submitLabel}
-          </Button>
-        </div>
+    <div className="flex shrink-0 flex-col items-center gap-0.5">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-m3-on-surface-variant">
+        {t("teacher_interview_config.outcomes.weight_label")}
+      </span>
+      <div className="inline-flex items-center rounded-lg border border-m3-outline-variant/30 bg-m3-surface">
+        <button
+          type="button"
+          aria-label={t("teacher_interview_config.outcomes.weight_decrease")}
+          title={t("teacher_interview_config.outcomes.weight_decrease")}
+          disabled={busy || weight <= MIN}
+          onClick={() => onChange(weight - 1)}
+          className="grid h-7 w-7 place-items-center rounded-l-lg text-m3-on-surface-variant transition-colors hover:bg-m3-primary/10 hover:text-m3-primary disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
+        >
+          <Minus className="h-3.5 w-3.5" />
+        </button>
+        <span
+          className="min-w-9 px-1 text-center text-xs font-extrabold tabular-nums text-m3-on-surface"
+          aria-live="polite"
+        >
+          {busy ? (
+            <Loader2 className="mx-auto h-3.5 w-3.5 animate-spin" />
+          ) : (
+            `${weight}/${MAX}`
+          )}
+        </span>
+        <button
+          type="button"
+          aria-label={t("teacher_interview_config.outcomes.weight_increase")}
+          title={t("teacher_interview_config.outcomes.weight_increase")}
+          disabled={busy || weight >= MAX}
+          onClick={() => onChange(weight + 1)}
+          className="grid h-7 w-7 place-items-center rounded-r-lg text-m3-on-surface-variant transition-colors hover:bg-m3-primary/10 hover:text-m3-primary disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
       </div>
     </div>
   );
