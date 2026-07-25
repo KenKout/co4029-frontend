@@ -7,6 +7,7 @@ import {
   ArrowRight,
   BarChart3,
   BookOpen,
+  Check,
   CheckCircle2,
   Clock,
   Eye,
@@ -2142,6 +2143,34 @@ function buildQuestionDraft(question: QuizQuestionAuthoring): QuestionDraft {
    (src/routes/teacher/quiz-generate.tsx) reached via onOpenGenerator, since
    the form outgrew the dialog. QuizGenerationPanel is imported by that page. */
 
+/**
+ * A `<fieldset disabled>` wrapper for the sections frozen once published.
+ * Grouping each locked SettingsSection in one of these disables every control
+ * inside without threading `disabled` onto each input. When not locked it
+ * renders a transparent passthrough so draft editing is unaffected.
+ *
+ * Declared at module scope on purpose. Nested inside SettingsTab, every
+ * re-render created a NEW component function, so React saw a different element
+ * type and remounted the whole subtree — discarding local state in children
+ * (e.g. the review-options expand/collapse) on every keystroke or toggle.
+ */
+function LockableSection({
+  locked,
+  children,
+}: {
+  locked: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <fieldset
+      disabled={locked}
+      className="border-0 p-0 m-0 min-w-0 disabled:opacity-60"
+    >
+      {children}
+    </fieldset>
+  );
+}
+
 function SettingsTab({
   quizId,
   draft,
@@ -2169,22 +2198,6 @@ function SettingsTab({
     value: SettingsDraft[K],
   ) {
     setDraft((current) => (current ? { ...current, [key]: value } : current));
-  }
-
-  // A <fieldset disabled> wrapper for the sections frozen once published.
-  // Grouping each locked SettingsSection in one of these disables every
-  // control inside without threading `disabled` onto each input. When not
-  // locked it renders a transparent passthrough so draft editing is
-  // unaffected.
-  function LockableSection({ children }: { children: React.ReactNode }) {
-    return (
-      <fieldset
-        disabled={locked}
-        className="border-0 p-0 m-0 min-w-0 disabled:opacity-60"
-      >
-        {children}
-      </fieldset>
-    );
   }
 
   return (
@@ -2219,7 +2232,7 @@ function SettingsTab({
         </Field>
       </SettingsSection>
 
-      <LockableSection>
+      <LockableSection locked={locked}>
       <SettingsSection title={t("teacher_quiz_manage.settings.scoring.title")}>
         <Field
           label={
@@ -2292,7 +2305,7 @@ function SettingsTab({
       </SettingsSection>
       </LockableSection>
 
-      <LockableSection>
+      <LockableSection locked={locked}>
       <SettingsSection title={t("teacher_quiz_manage.settings.attempts.title")}>
         <ToggleRow
           label={t("teacher_quiz_manage.settings.attempts.allow_label")}
@@ -2387,49 +2400,59 @@ function SettingsTab({
       <SettingsSection title={t("teacher_quiz_manage.settings.behavior.title")}>
         {/* Shuffle + hints change how the quiz presents to a student, so they
             are frozen once published; reminders (below) is a notification
-            setting and stays editable. */}
-        <LockableSection>
-          <div className="space-y-6">
-            <ToggleRow
-              label={t("teacher_quiz_manage.settings.behavior.shuffle_q_label")}
-              description={t(
-                "teacher_quiz_manage.settings.behavior.shuffle_q_desc",
-              )}
-              value={draft.shuffle_questions}
-              onChange={(v) => update("shuffle_questions", v)}
-            />
-            <ToggleRow
-              label={t("teacher_quiz_manage.settings.behavior.shuffle_o_label")}
-              description={t(
-                "teacher_quiz_manage.settings.behavior.shuffle_o_desc",
-              )}
-              value={draft.shuffle_options}
-              onChange={(v) => update("shuffle_options", v)}
-            />
-            <ToggleRow
-              label={t("teacher_quiz_manage.settings.behavior.show_hints_label")}
-              description={t(
-                "teacher_quiz_manage.settings.behavior.show_hints_desc",
-              )}
-              value={draft.show_hints}
-              onChange={(v) => update("show_hints", v)}
-            />
-          </div>
-        </LockableSection>
-        <ToggleRow
-          label={t("teacher_quiz_manage.settings.behavior.reminders_label")}
-          description={t(
-            "teacher_quiz_manage.settings.behavior.reminders_desc",
-          )}
-          value={draft.reminders_enabled}
-          onChange={(v) => update("reminders_enabled", v)}
-        />
+            setting and stays editable — hence the separate LockableSection.
+            Both groups use the same space-y so the four cards read as one
+            evenly spaced list despite the wrapper boundary between them. */}
+        <div className="space-y-2.5">
+          <LockableSection locked={locked}>
+            <div className="space-y-2.5">
+              <ToggleRow
+                label={t(
+                  "teacher_quiz_manage.settings.behavior.shuffle_q_label",
+                )}
+                description={t(
+                  "teacher_quiz_manage.settings.behavior.shuffle_q_desc",
+                )}
+                value={draft.shuffle_questions}
+                onChange={(v) => update("shuffle_questions", v)}
+              />
+              <ToggleRow
+                label={t(
+                  "teacher_quiz_manage.settings.behavior.shuffle_o_label",
+                )}
+                description={t(
+                  "teacher_quiz_manage.settings.behavior.shuffle_o_desc",
+                )}
+                value={draft.shuffle_options}
+                onChange={(v) => update("shuffle_options", v)}
+              />
+              <ToggleRow
+                label={t(
+                  "teacher_quiz_manage.settings.behavior.show_hints_label",
+                )}
+                description={t(
+                  "teacher_quiz_manage.settings.behavior.show_hints_desc",
+                )}
+                value={draft.show_hints}
+                onChange={(v) => update("show_hints", v)}
+              />
+            </div>
+          </LockableSection>
+          <ToggleRow
+            label={t("teacher_quiz_manage.settings.behavior.reminders_label")}
+            description={t(
+              "teacher_quiz_manage.settings.behavior.reminders_desc",
+            )}
+            value={draft.reminders_enabled}
+            onChange={(v) => update("reminders_enabled", v)}
+          />
+        </div>
       </SettingsSection>
 
       {/* Review visibility, access/proctoring, overdue timing, overrides,
           feedback bands, and SM-2 spacing all change how the quiz is graded
           or presented under a live/finished attempt — frozen once published. */}
-      <LockableSection>
+      <LockableSection locked={locked}>
       <div className="space-y-8">
       <SettingsSection
         title={t("teacher_quiz_manage.settings.review.title")}
@@ -2765,6 +2788,18 @@ function Field({
   );
 }
 
+/**
+ * A single on/off setting rendered as a whole-card toggle.
+ *
+ * The entire card is the control (not a small switch at the far right), so the
+ * click target matches the text you just read and state is legible at a glance:
+ * ON tints the card blue and shows a filled check, OFF stays neutral with an
+ * empty outline. `role="switch"` + `aria-checked` keeps it announced as a
+ * toggle rather than a plain button.
+ *
+ * Being a real <button>, it inherits `disabled` from an ancestor
+ * `<fieldset disabled>` (LockableSection) natively — no prop threading needed.
+ */
 function ToggleRow({
   label,
   description,
@@ -2777,30 +2812,45 @@ function ToggleRow({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4">
-      <div className="min-w-0">
-        <p className="text-sm font-bold text-m3-on-surface">{label}</p>
-        <p className="text-xs text-m3-on-surface-variant mt-0.5">
-          {description}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={() => onChange(!value)}
-        aria-pressed={value}
+    <button
+      type="button"
+      role="switch"
+      aria-checked={value}
+      onClick={() => onChange(!value)}
+      className={cn(
+        "group flex w-full items-start gap-3 rounded-xl border p-3.5 text-left transition-colors",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/40",
+        "disabled:cursor-not-allowed disabled:opacity-60",
+        value
+          ? "border-m3-primary/40 bg-m3-primary/[0.07]"
+          : "border-m3-outline-variant/25 bg-m3-surface-container-lowest hover:bg-m3-surface-container-high",
+      )}
+    >
+      <span
+        aria-hidden="true"
         className={cn(
-          "relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/50 shrink-0 cursor-pointer",
-          value ? "bg-m3-primary" : "bg-m3-surface-container-high",
+          "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors",
+          value
+            ? "border-m3-primary bg-m3-primary text-white"
+            : "border-m3-outline-variant/60 bg-m3-surface",
         )}
       >
+        {value && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+      </span>
+      <span className="min-w-0">
         <span
           className={cn(
-            "absolute top-1 w-4 h-4 rounded-full shadow-sm transition-all duration-200",
-            value ? "left-6 bg-surface-elev" : "left-1 bg-slate-400",
+            "block text-sm font-bold",
+            value ? "text-m3-primary" : "text-m3-on-surface",
           )}
-        />
-      </button>
-    </div>
+        >
+          {label}
+        </span>
+        <span className="mt-0.5 block text-xs text-m3-on-surface-variant">
+          {description}
+        </span>
+      </span>
+    </button>
   );
 }
 
