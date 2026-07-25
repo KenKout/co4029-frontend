@@ -3129,7 +3129,12 @@
       "type_matching": "Matching",
       "type_ordering": "Ordering"
     },
-    "published_readonly_banner": "This quiz is published. Questions and any settings that affect scoring, timing, or presentation are frozen so students mid-attempt aren't disrupted. You can still edit the title, description, schedule, and reminders. Archive the quiz first to change anything else."
+    "published_readonly_banner": "This quiz is published. Questions and any settings that affect scoring, timing, or presentation are frozen so students mid-attempt aren't disrupted. You can still edit the title, description, schedule, and reminders. Archive the quiz first to change anything else.",
+    "confirm_bulk_delete": {
+      "title": "Delete {{count}} questions?",
+      "body": "The selected questions will be removed from this quiz. You'll have a few seconds to undo before it's saved.",
+      "confirm": "Delete {{count}} questions"
+    }
   },
   "teacher_interview_config": {
     "persona": {

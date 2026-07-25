@@ -3041,7 +3041,12 @@
       "type_matching": "Ghép cặp",
       "type_ordering": "Sắp xếp"
     },
-    "published_readonly_banner": "Bài kiểm tra này đã được xuất bản. Câu hỏi và các cài đặt ảnh hưởng đến chấm điểm, thời gian hoặc cách hiển thị bị đóng băng để không làm gián đoạn học viên đang làm bài. Bạn vẫn có thể sửa tiêu đề, mô tả, lịch trình và nhắc nhở. Hãy lưu trữ (archive) bài kiểm tra trước nếu muốn thay đổi những mục khác."
+    "published_readonly_banner": "Bài kiểm tra này đã được xuất bản. Câu hỏi và các cài đặt ảnh hưởng đến chấm điểm, thời gian hoặc cách hiển thị bị đóng băng để không làm gián đoạn học viên đang làm bài. Bạn vẫn có thể sửa tiêu đề, mô tả, lịch trình và nhắc nhở. Hãy lưu trữ (archive) bài kiểm tra trước nếu muốn thay đổi những mục khác.",
+    "confirm_bulk_delete": {
+      "title": "Xoá {{count}} câu hỏi?",
+      "body": "Các câu hỏi đã chọn sẽ bị xoá khỏi bài kiểm tra này. Bạn có vài giây để hoàn tác trước khi lưu.",
+      "confirm": "Xoá {{count}} câu hỏi"
+    }
   },
   "teacher_interview_config": {
     "persona": {

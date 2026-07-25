@@ -15,6 +15,7 @@ import { QuestionCard } from "./QuestionCard";
 import { QuestionNavigator } from "./QuestionNavigator";
 import { DEFAULT_EXPECTED_SECONDS, hasInvalidExpectedTime } from "./helpers";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useBulkApprove,
   useBulkSetExpectedTime,
@@ -76,6 +77,13 @@ export function QuestionsTab({
   // the navigator can render a Saved/Unsaved layer; each card reports its own
   // dirty state up via onDirtyChange.
   const [dirtyIds, setDirtyIds] = useState<Set<string>>(() => new Set());
+  // Bulk delete is gated behind a confirm dialog (see handler below). The
+  // count is frozen when the dialog opens: the confirm handler clears the
+  // selection, and reading live `selectedIds.size` would make the dialog copy
+  // flicker to "Delete 0 questions?" during the close animation.
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState<number | null>(
+    null,
+  );
   const handleDirtyChange = useCallback((id: string, dirty: boolean) => {
     setDirtyIds((prev) => {
       if (dirty === prev.has(id)) return prev; // no-op keeps referential identity
@@ -172,9 +180,14 @@ export function QuestionsTab({
    * the whole batch, and the undo snackbar can cancel all of them at once
    * because nothing has been sent to the server yet. Selection is cleared so
    * the bar doesn't keep acting on rows that are already hidden.
+   *
+   * Gated behind a confirm dialog: unlike a single-card delete, this can wipe
+   * the whole quiz in one click, so the 5s undo window alone is too thin a
+   * safety net — the teacher should see the count before it happens.
    */
-  function handleDeleteSelected() {
+  function handleDeleteSelectedConfirmed() {
     const targets = questions.filter((q) => selectedIds.has(q.id));
+    setConfirmBulkDelete(null);
     if (targets.length === 0) return;
     for (const question of targets) {
       onQueueDelete({
@@ -187,6 +200,25 @@ export function QuestionsTab({
 
   return (
     <div className="grid grid-cols-12 gap-6">
+      {/* Bulk-delete confirmation. Destructive, so no backdrop dismissal —
+          the dialog primitive blocks it by default. */}
+      <ConfirmDialog
+        open={confirmBulkDelete !== null}
+        onOpenChange={(next) =>
+          setConfirmBulkDelete(next ? selectedIds.size : null)
+        }
+        title={t("teacher_quiz_manage.confirm_bulk_delete.title", {
+          count: confirmBulkDelete ?? 0,
+        })}
+        description={t("teacher_quiz_manage.confirm_bulk_delete.body", {
+          count: confirmBulkDelete ?? 0,
+        })}
+        confirmLabel={t("teacher_quiz_manage.confirm_bulk_delete.confirm", {
+          count: confirmBulkDelete ?? 0,
+        })}
+        cancelLabel={t("common.cancel", "Cancel")}
+        onConfirm={handleDeleteSelectedConfirmed}
+      />
       <div className="col-span-12 lg:col-span-8 space-y-4 min-w-0">
         {/* The combo-undo snackbar now lives at page level (see
             QuizManagePage) so it stays visible when a delete is queued from
@@ -262,7 +294,7 @@ export function QuestionsTab({
             onApprove={handleApproveBulk}
             approveValid={selectedIds.size > 0}
             approving={bulkApprove.isPending}
-            onDeleteSelected={handleDeleteSelected}
+            onDeleteSelected={() => setConfirmBulkDelete(selectedIds.size)}
           />
         )}
 
