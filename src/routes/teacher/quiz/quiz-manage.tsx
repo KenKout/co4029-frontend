@@ -60,16 +60,16 @@ import type {
   QuizQuestionAuthoring,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
-import { QuestionBankModal } from "./_components/question-bank-modal";
-import { MasterySelector } from "./_components/MasterySelector";
+import { QuestionBankModal } from "../_components/question-bank-modal";
+import { MasterySelector } from "../_components/MasterySelector";
 import {
   ReviewOptionsMatrix,
   defaultReviewOptions,
-} from "./_components/quiz-manage/ReviewOptionsMatrix";
-import { ImportExportPanel } from "./_components/quiz-manage/ImportExportPanel";
-import { OverridesPanel } from "./_components/quiz-manage/OverridesPanel";
-import { FeedbackBandsPanel } from "./_components/quiz-manage/FeedbackBandsPanel";
-import { TypeSpecificAnswerEditor } from "./_components/quiz-manage/TypeSpecificAnswerEditor";
+} from "../_components/quiz-manage/ReviewOptionsMatrix";
+import { ImportExportPanel } from "../_components/quiz-manage/ImportExportPanel";
+import { OverridesPanel } from "../_components/quiz-manage/OverridesPanel";
+import { FeedbackBandsPanel } from "../_components/quiz-manage/FeedbackBandsPanel";
+import { TypeSpecificAnswerEditor } from "../_components/quiz-manage/TypeSpecificAnswerEditor";
 
 type TabKey = "questions" | "settings" | "preview";
 

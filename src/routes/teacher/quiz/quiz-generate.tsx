@@ -24,7 +24,7 @@ import {
   useTeacherCourseById,
   useTeacherCourseContent,
 } from "@/lib/api/hooks/teacher-courses";
-import { QuizGenerationPanel } from "./_components/quiz-generation-panel";
+import { QuizGenerationPanel } from "../_components/quiz-generation-panel";
 
 export default function QuizGeneratePage() {
   const { t } = useTranslation();

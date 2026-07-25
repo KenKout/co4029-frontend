@@ -198,19 +198,19 @@ const teacherRoute = createRoute({
 const teacherCoursesRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses",
-  component: lazyRouteComponent(() => import("@/routes/teacher/courses")),
+  component: lazyRouteComponent(() => import("@/routes/teacher/courses/courses")),
 });
 
 const teacherCourseNewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/new",
-  component: lazyRouteComponent(() => import("@/routes/teacher/course-new")),
+  component: lazyRouteComponent(() => import("@/routes/teacher/courses/course-new")),
 });
 
 const teacherCourseManageRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId",
-  component: lazyRouteComponent(() => import("@/routes/teacher/course-manage")),
+  component: lazyRouteComponent(() => import("@/routes/teacher/courses/course-manage")),
 });
 
 const teacherLessonManageRoute = createRoute({
@@ -232,19 +232,19 @@ const teacherModuleManageRoute = createRoute({
 const teacherQuizManageRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/quizzes/$quizId",
-  component: lazyRouteComponent(() => import("@/routes/teacher/quiz-manage")),
+  component: lazyRouteComponent(() => import("@/routes/teacher/quiz/quiz-manage")),
 });
 
 const teacherQuizGenerateRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/quizzes/$quizId/generate",
-  component: lazyRouteComponent(() => import("@/routes/teacher/quiz-generate")),
+  component: lazyRouteComponent(() => import("@/routes/teacher/quiz/quiz-generate")),
 });
 
 const teacherQuizResultsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/quizzes/$quizId/results",
-  component: lazyRouteComponent(() => import("@/routes/teacher/quiz-results")),
+  component: lazyRouteComponent(() => import("@/routes/teacher/quiz/quiz-results")),
 });
 
 const teacherInterviewConfigRoute = createRoute({
@@ -273,7 +273,7 @@ const teacherCourseStudentsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/students",
   component: lazyRouteComponent(
-    () => import("@/routes/teacher/course-students"),
+    () => import("@/routes/teacher/courses/course-students"),
   ),
 });
 
@@ -281,7 +281,7 @@ const teacherCourseStudentDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/students/$studentId",
   component: lazyRouteComponent(
-    () => import("@/routes/teacher/course-student-detail"),
+    () => import("@/routes/teacher/courses/course-student-detail"),
   ),
 });
 
@@ -471,7 +471,7 @@ const teacherCourseProgressRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/progress",
   component: lazyRouteComponent(
-    () => import("@/routes/teacher/course-progress"),
+    () => import("@/routes/teacher/courses/course-progress"),
   ),
 });
 
@@ -479,7 +479,7 @@ const teacherCourseAssessmentsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/assessments",
   component: lazyRouteComponent(
-    () => import("@/routes/teacher/course-assessments"),
+    () => import("@/routes/teacher/courses/course-assessments"),
   ),
 });
 
@@ -487,7 +487,7 @@ const teacherCourseQuizAttemptDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/quiz-attempts/$attemptId",
   component: lazyRouteComponent(
-    () => import("@/routes/teacher/course-quiz-attempt-detail"),
+    () => import("@/routes/teacher/courses/course-quiz-attempt-detail"),
   ),
 });
 
@@ -503,7 +503,7 @@ const teacherCourseQuestionBankRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/question-bank",
   component: lazyRouteComponent(
-    () => import("@/routes/teacher/course-question-bank"),
+    () => import("@/routes/teacher/courses/course-question-bank"),
   ),
 });
 

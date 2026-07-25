@@ -31,16 +31,16 @@ import {
   useTeacherCourseById,
   useTeacherCourseContent,
 } from "@/lib/api/hooks/teacher-courses";
-import { ResultsSummaryCards } from "./_components/quiz-results/ResultsSummaryCards";
-import { ScoreHistogram } from "./_components/quiz-results/ScoreHistogram";
-import { PerStudentTable } from "./_components/quiz-results/PerStudentTable";
-import { PerQuestionTable } from "./_components/quiz-results/PerQuestionTable";
-import { ResponsesReport } from "./_components/quiz-results/ResponsesReport";
-import { StatisticsReport } from "./_components/quiz-results/StatisticsReport";
-import { RegradePanel } from "./_components/quiz-results/RegradePanel";
-import { NeedsGradingTab } from "./_components/quiz-results/NeedsGradingTab";
-import { GradebookTab } from "./_components/quiz-results/GradebookTab";
-import { AuditEventsTab } from "./_components/quiz-results/AuditEventsTab";
+import { ResultsSummaryCards } from "../_components/quiz-results/ResultsSummaryCards";
+import { ScoreHistogram } from "../_components/quiz-results/ScoreHistogram";
+import { PerStudentTable } from "../_components/quiz-results/PerStudentTable";
+import { PerQuestionTable } from "../_components/quiz-results/PerQuestionTable";
+import { ResponsesReport } from "../_components/quiz-results/ResponsesReport";
+import { StatisticsReport } from "../_components/quiz-results/StatisticsReport";
+import { RegradePanel } from "../_components/quiz-results/RegradePanel";
+import { NeedsGradingTab } from "../_components/quiz-results/NeedsGradingTab";
+import { GradebookTab } from "../_components/quiz-results/GradebookTab";
+import { AuditEventsTab } from "../_components/quiz-results/AuditEventsTab";
 
 type ResultsTab =
   | "students"
