@@ -121,7 +121,8 @@
     "ai_mock_title": "Bao gồm phỏng vấn AI",
     "ai_mock_body": "Hoàn thành từng module để mở khóa buổi phỏng vấn AI. Nhận phản hồi thời gian thực, câu hỏi tiếp theo thích ứng và đánh giá chi tiết về cách bạn giải thích kỹ thuật.",
     "start_learning": "Bắt đầu học",
-    "modules": "Chương"
+    "modules": "Chương",
+    "contact_title": "Liên hệ giảng viên"
   },
   "settings_security": {
     "title": "Bảo mật tài khoản",
@@ -259,6 +260,16 @@
       "body": "\"{{title}}\" và các mô-đun, bài học, nội dung của khóa học sẽ bị xóa. Quản trị viên có thể khôi phục.",
       "deleted": "Đã xóa khóa học",
       "failed": "Không thể xóa khóa học. Vui lòng thử lại."
+    },
+    "contact": {
+      "section_title": "Thông tin liên hệ",
+      "section_hint": "Hiển thị trên trang khóa học để học viên có thể liên hệ với bạn. Tất cả các trường đều không bắt buộc.",
+      "email": "Email",
+      "email_placeholder": "ban@example.com",
+      "phone": "Số điện thoại",
+      "phone_placeholder": "+84 555 000 000",
+      "website": "Trang web",
+      "social": "Mạng xã hội"
     }
   },
   "teacher_quiz_attempt": {

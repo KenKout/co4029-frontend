@@ -13,6 +13,10 @@ import {
   Sparkles,
   Mic,
   Bot,
+  Mail,
+  Phone,
+  Globe,
+  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -266,6 +270,8 @@ export default function CourseDetailPage() {
               <InstructorCard instructor={course.instructor} />
             )}
 
+            <ContactCard course={course} />
+
             <GlassCard className="p-6 sm:p-8 bg-gradient-to-br from-m3-secondary/5 to-m3-primary/5">
               <div className="flex items-start gap-4">
                 <div className="w-11 h-11 rounded-xl gradient-secondary flex items-center justify-center shrink-0">
@@ -472,6 +478,80 @@ function InstructorCard({ instructor }: { instructor: InstructorRead }) {
             </p>
           )}
         </div>
+      </div>
+    </GlassCard>
+  );
+}
+
+// Teacher-published contact block. Renders nothing unless at least one contact
+// field is set, so courses without contact info show no empty card. Email and
+// phone become mailto:/tel: links; website and social open in a new tab.
+function ContactCard({ course }: { course: CoursePublic }) {
+  const { t } = useTranslation();
+  const email = course.contact_email?.trim();
+  const phone = course.contact_phone?.trim();
+  const website = course.contact_website_url?.trim();
+  const social = course.contact_social_url?.trim();
+
+  if (!email && !phone && !website && !social) return null;
+
+  // Strip the scheme for a cleaner visible label on URL rows.
+  const pretty = (url: string) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+  return (
+    <GlassCard className="p-6 sm:p-8">
+      <h2 className="font-headline font-bold text-xl text-m3-on-surface mb-5">
+        {t("course_detail.contact_title")}
+      </h2>
+      <div className="space-y-3">
+        {email && (
+          <a
+            href={`mailto:${email}`}
+            className="flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors group"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary/8 text-m3-primary group-hover:bg-m3-primary/15 transition-colors">
+              <Mail className="h-4 w-4" />
+            </span>
+            <span className="truncate">{email}</span>
+          </a>
+        )}
+        {phone && (
+          <a
+            href={`tel:${phone.replace(/\s+/g, "")}`}
+            className="flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors group"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary/8 text-m3-primary group-hover:bg-m3-primary/15 transition-colors">
+              <Phone className="h-4 w-4" />
+            </span>
+            <span className="truncate">{phone}</span>
+          </a>
+        )}
+        {website && (
+          <a
+            href={website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors group"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary/8 text-m3-primary group-hover:bg-m3-primary/15 transition-colors">
+              <Globe className="h-4 w-4" />
+            </span>
+            <span className="truncate">{pretty(website)}</span>
+          </a>
+        )}
+        {social && (
+          <a
+            href={social}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors group"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary/8 text-m3-primary group-hover:bg-m3-primary/15 transition-colors">
+              <Share2 className="h-4 w-4" />
+            </span>
+            <span className="truncate">{pretty(social)}</span>
+          </a>
+        )}
       </div>
     </GlassCard>
   );

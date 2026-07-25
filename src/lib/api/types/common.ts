@@ -25,6 +25,12 @@ export interface Course {
   // Active enrollments and non-deleted module count — shown on the card.
   student_count?: number;
   module_count?: number;
+  // Teacher contact info shown on the student landing page. All optional —
+  // null when the teacher hasn't filled that field in.
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  contact_website_url?: string | null;
+  contact_social_url?: string | null;
   created_at: string;
   updated_at: string;
 }

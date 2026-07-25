@@ -120,7 +120,8 @@
     "ai_mock_title": "AI mock interviews included",
     "ai_mock_body": "Complete each module to unlock an AI-powered mock interview. Get real-time feedback, adaptive follow-up questions, and a detailed assessment of your technical explanations.",
     "start_learning": "Start learning",
-    "modules": "Modules"
+    "modules": "Modules",
+    "contact_title": "Contact the instructor"
   },
   "settings_security": {
     "title": "Account security",
@@ -282,6 +283,16 @@
       "body": "\"{{title}}\" and its modules, lessons, and content will be removed. This can be restored by an administrator.",
       "deleted": "Course deleted",
       "failed": "Couldn't delete the course. Please try again."
+    },
+    "contact": {
+      "section_title": "Contact info",
+      "section_hint": "Shown on the course landing page so students can reach you. All fields are optional.",
+      "email": "Email",
+      "email_placeholder": "you@example.com",
+      "phone": "Phone",
+      "phone_placeholder": "+1 555 000 0000",
+      "website": "Website",
+      "social": "Social media"
     }
   },
   "teacher_quiz_attempt": {

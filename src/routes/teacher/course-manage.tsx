@@ -34,6 +34,10 @@ import {
   Clock,
   CheckCheck,
   CircleDot,
+  Mail,
+  Phone,
+  Globe,
+  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -57,6 +61,7 @@ import {
 } from "@/lib/api/hooks/teacher-courses";
 import { usePublishQuiz } from "@/lib/api/hooks/quizzes";
 import { usePublishInterviewConfig } from "@/lib/api/hooks/interviews";
+import { useMe } from "@/lib/api/hooks/auth";
 import {
   useTeacherCourseOutcomes,
   useCreateCourseOutcome,
@@ -121,6 +126,15 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
   const [estimatedMinutes, setEstimatedMinutes] = useState("");
   const [enrollmentCap, setEnrollmentCap] = useState("");
   const [completionDays, setCompletionDays] = useState("");
+  // Teacher contact info shown on the student landing page. contactEmail is
+  // pre-filled from the teacher's account email (useMe) on first load when the
+  // course has none saved yet — but stays fully editable (a teacher may want a
+  // different public address than their login).
+  const { data: me } = useMe();
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactWebsiteUrl, setContactWebsiteUrl] = useState("");
+  const [contactSocialUrl, setContactSocialUrl] = useState("");
   const initialized = useRef(false);
   const uploadThumbnail = useUploadCourseThumbnail(courseId);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
@@ -190,8 +204,24 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
     setEstimatedMinutes(course.estimated_minutes?.toString() ?? "");
     setEnrollmentCap(course.enrollment_cap?.toString() ?? "");
     setCompletionDays(course.expected_completion_days?.toString() ?? "");
+    // Contact email autofills from the teacher's account email when the course
+    // has none saved yet; the other contact fields start from whatever's saved.
+    setContactEmail(course.contact_email ?? me?.primary_email ?? "");
+    setContactPhone(course.contact_phone ?? "");
+    setContactWebsiteUrl(course.contact_website_url ?? "");
+    setContactSocialUrl(course.contact_social_url ?? "");
     setLastSaved(course.updated_at ?? null);
   }
+
+  // Backfill the contact email from the teacher's account once useMe resolves,
+  // in case the course initialized before that query landed. Only fills when
+  // the field is still empty AND the course has no saved contact_email, so it
+  // never clobbers a teacher's typed value or a saved custom address.
+  useEffect(() => {
+    if (!me?.primary_email) return;
+    if (!course || course.contact_email) return;
+    setContactEmail((cur) => cur || me.primary_email);
+  }, [me?.primary_email, course]);
 
   // Compare the current form against the saved course so the button can show
   // Saving… / Unsaved changes / Saved and disable itself when there's nothing
@@ -207,7 +237,11 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
       status !== (course.status ?? "draft") ||
       estimatedMinutes !== (course.estimated_minutes?.toString() ?? "") ||
       enrollmentCap !== (course.enrollment_cap?.toString() ?? "") ||
-      completionDays !== (course.expected_completion_days?.toString() ?? "")
+      completionDays !== (course.expected_completion_days?.toString() ?? "") ||
+      contactEmail.trim() !== (course.contact_email ?? "") ||
+      contactPhone.trim() !== (course.contact_phone ?? "") ||
+      contactWebsiteUrl.trim() !== (course.contact_website_url ?? "") ||
+      contactSocialUrl.trim() !== (course.contact_social_url ?? "")
     );
   }, [
     course,
@@ -220,6 +254,10 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
     estimatedMinutes,
     enrollmentCap,
     completionDays,
+    contactEmail,
+    contactPhone,
+    contactWebsiteUrl,
+    contactSocialUrl,
   ]);
 
   async function handleSave(e: React.FormEvent) {
@@ -246,6 +284,13 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
         expected_completion_days: completionDays
           ? Number(completionDays)
           : undefined,
+        // Contact fields: send trimmed value or null so clearing a field in
+        // the form actually blanks the column (backend also normalises "" →
+        // null as a belt-and-braces guard).
+        contact_email: contactEmail.trim() || null,
+        contact_phone: contactPhone.trim() || null,
+        contact_website_url: contactWebsiteUrl.trim() || null,
+        contact_social_url: contactSocialUrl.trim() || null,
       });
       // Upload the staged thumbnail (if any) as part of the same Save action,
       // so the image change is persisted to the DB only on Save.
@@ -526,6 +571,87 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                   )}
                   className="text-sm"
                 />
+              </div>
+
+              {/* Contact info — surfaced on the student landing page. Spans the
+                  full grid width as its own titled sub-section so it reads as a
+                  distinct group from the course meta above. */}
+              <div className="sm:col-span-2 space-y-3 pt-2">
+                <div className="flex items-center gap-2 border-t border-m3-outline-variant/15 pt-4">
+                  <Users className="h-4 w-4 text-m3-secondary" />
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                    {t("teacher_course_settings.contact.section_title")}
+                  </h4>
+                </div>
+                <p className="text-xs text-m3-on-surface-variant -mt-1">
+                  {t("teacher_course_settings.contact.section_hint")}
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Contact email — pre-filled from the teacher's account. */}
+                  <div className="space-y-1.5">
+                    <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                      <Mail className="h-3.5 w-3.5" />
+                      {t("teacher_course_settings.contact.email")}
+                    </label>
+                    <Input
+                      type="email"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      placeholder={t(
+                        "teacher_course_settings.contact.email_placeholder",
+                      )}
+                      className="text-sm"
+                    />
+                  </div>
+
+                  {/* Phone */}
+                  <div className="space-y-1.5">
+                    <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                      <Phone className="h-3.5 w-3.5" />
+                      {t("teacher_course_settings.contact.phone")}
+                    </label>
+                    <Input
+                      type="tel"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      placeholder={t(
+                        "teacher_course_settings.contact.phone_placeholder",
+                      )}
+                      className="text-sm"
+                    />
+                  </div>
+
+                  {/* Website */}
+                  <div className="space-y-1.5">
+                    <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                      <Globe className="h-3.5 w-3.5" />
+                      {t("teacher_course_settings.contact.website")}
+                    </label>
+                    <Input
+                      type="url"
+                      value={contactWebsiteUrl}
+                      onChange={(e) => setContactWebsiteUrl(e.target.value)}
+                      placeholder="https://example.com"
+                      className="text-sm"
+                    />
+                  </div>
+
+                  {/* Social media */}
+                  <div className="space-y-1.5">
+                    <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                      <Share2 className="h-3.5 w-3.5" />
+                      {t("teacher_course_settings.contact.social")}
+                    </label>
+                    <Input
+                      type="url"
+                      value={contactSocialUrl}
+                      onChange={(e) => setContactSocialUrl(e.target.value)}
+                      placeholder="https://linkedin.com/in/…"
+                      className="text-sm"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

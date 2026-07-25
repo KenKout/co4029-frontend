@@ -6,11 +6,24 @@ import type { components, paths } from "./openapi-types";
 
 type Schemas = components["schemas"];
 
-export type Course = Schemas["CoursePublic"];
-export type CoursePublic = Schemas["CoursePublic"];
-export type CourseAuthoring = Schemas["CourseAuthoring"];
-export type CourseCreate = Schemas["CourseCreate"];
-export type CourseUpdate = Schemas["CourseUpdate"];
+// Teacher contact info shown on the student landing page (backend migration
+// 0061). Augmented here rather than via the generated openapi types: the
+// committed openapi-snapshot.json can't be regenerated in isolation right now
+// without pulling in unrelated in-flight backend drift, so these four optional
+// fields are layered on by hand until a coordinated snapshot refresh lands.
+// The backend already serves + accepts them on all four course schemas.
+export interface CourseContactFields {
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  contact_website_url?: string | null;
+  contact_social_url?: string | null;
+}
+
+export type Course = Schemas["CoursePublic"] & CourseContactFields;
+export type CoursePublic = Schemas["CoursePublic"] & CourseContactFields;
+export type CourseAuthoring = Schemas["CourseAuthoring"] & CourseContactFields;
+export type CourseCreate = Schemas["CourseCreate"] & CourseContactFields;
+export type CourseUpdate = Schemas["CourseUpdate"] & CourseContactFields;
 export type CourseContent = Schemas["CourseContentPublic"];
 export type CourseContentPublic = Schemas["CourseContentPublic"];
 export type CourseProgressSummary = Schemas["CourseProgressSummary"];
