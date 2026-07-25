@@ -25,6 +25,11 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
   const { status, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 768);
   const [stalled, setStalled] = useState(false);
+  // Immersive mode: an interview session is actually running, so the app nav
+  // sidebar is removed entirely (not merely collapsed) and the workspace takes
+  // the full viewport width. Driven by events from the interview page rather
+  // than the route alone — the pre-start lobby keeps normal navigation.
+  const [immersive, setImmersive] = useState(false);
   const navigate = useNavigate();
   const routerLocation = useRouterState({ select: (s) => s.location });
   const isInterviewWorkspace = /^\/courses\/[^/]+\/interview\/[^/]+/.test(
@@ -32,14 +37,24 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
   );
 
   useEffect(() => {
-    const collapseForInterview = () => setCollapsed(true);
-    window.addEventListener("abridge:interview-started", collapseForInterview);
-    return () =>
-      window.removeEventListener(
-        "abridge:interview-started",
-        collapseForInterview,
-      );
+    const enterImmersive = () => {
+      setCollapsed(true);
+      setImmersive(true);
+    };
+    const exitImmersive = () => setImmersive(false);
+    window.addEventListener("abridge:interview-started", enterImmersive);
+    window.addEventListener("abridge:interview-ended", exitImmersive);
+    return () => {
+      window.removeEventListener("abridge:interview-started", enterImmersive);
+      window.removeEventListener("abridge:interview-ended", exitImmersive);
+    };
   }, []);
+
+  // Leaving the interview route always restores the normal shell, even if the
+  // page unmounted without dispatching its end event (hard navigation, crash).
+  useEffect(() => {
+    if (!isInterviewWorkspace) setImmersive(false);
+  }, [isInterviewWorkspace]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -107,15 +122,19 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-m3-surface">
-      <SideNavBar
-        navGroups={navGroups}
-        role={role}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((c) => !c)}
-      />
+      {/* During a live interview the nav sidebar is unmounted entirely so the
+          candidate has no chrome to click away into (and no left gutter). */}
+      {!immersive && (
+        <SideNavBar
+          navGroups={navGroups}
+          role={role}
+          collapsed={collapsed}
+          onToggle={() => setCollapsed((c) => !c)}
+        />
+      )}
 
       {/* Backdrop — mobile only, when sidebar expanded */}
-      {!collapsed && (
+      {!immersive && !collapsed && (
         <div
           className="fixed inset-0 z-30 bg-black/20 md:hidden"
           onClick={() => setCollapsed(true)}
@@ -125,8 +144,8 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
       <main
         className={cn(
           "relative min-h-screen transition-all duration-300 bg-white",
-          "ml-16",
-          !collapsed && "md:ml-64",
+          immersive ? "ml-0" : "ml-16",
+          !immersive && !collapsed && "md:ml-64",
         )}
       >
         {!isInterviewWorkspace && (

@@ -1965,6 +1965,18 @@
       "title": "You left the interview window",
       "body": "This is recorded for your teacher to review. Please stay on this tab until the interview ends."
     },
+    "fullscreen": {
+      "prompt_title": "Switch to fullscreen mode",
+      "prompt_description": "Your interview runs in fullscreen so nothing distracts you. The app menu is hidden until the interview ends.",
+      "enter": "Enter fullscreen",
+      "continue_windowed": "Continue in a window",
+      "exit_warning_title": "You left fullscreen mode",
+      "exit_warning_description": "Please return to fullscreen and stay there until the interview ends.",
+      "exit_warning_recorded_one": "This exit was recorded for your teacher to review ({{count}} time so far).",
+      "exit_warning_recorded_other": "This exit was recorded for your teacher to review ({{count}} times so far).",
+      "reenter": "Back to fullscreen",
+      "stay_windowed": "Stay in a window"
+    },
     "hybrid": {
       "prestart_hint": "Hybrid interview — type your answers or speak them",
       "speak_answer": "Speak answer",

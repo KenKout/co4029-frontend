@@ -57,6 +57,8 @@ import {
   EndInterviewDialog,
   FocusedAnswerComposer,
   FocusedInterviewStage,
+  FullscreenExitWarningDialog,
+  FullscreenPromptDialog,
   InterviewHeader,
   LeaveInterviewDialog,
   StartInterviewDialog,
@@ -89,6 +91,7 @@ import {
   clearQuestionPacing,
 } from "@/lib/interview/use-question-pacing";
 import { useIntegrityReporter } from "@/components/interview/use-integrity-reporter";
+import { useInterviewFullscreen } from "@/components/interview/use-interview-fullscreen";
 import { normalizeQuestionText } from "@/lib/interview/question-content";
 import { planTransition } from "@/lib/interview/transition-sequencing";
 
@@ -745,6 +748,61 @@ export default function CourseInterviewPage() {
     });
   }, [t]);
   useIntegrityReporter(sessionId, { onWarning: handleIntegrityWarning });
+
+  // ── Immersive fullscreen (proctoring) ──────────────────────────────────────
+  // A live session runs fullscreen with the app sidebar unmounted. Entering
+  // fullscreen requires a user gesture, so it is gated behind a confirmation
+  // dialog; leaving it mid-session raises a warning dialog (the exit itself is
+  // already logged as an integrity event by useIntegrityReporter above).
+  const interviewActive = Boolean(
+    sessionId &&
+      !finishResult &&
+      (phase === "opening" ||
+        phase === "readiness" ||
+        phase === "transition" ||
+        phase === "questioning" ||
+        phase === "closing"),
+  );
+  const [fullscreenPromptOpen, setFullscreenPromptOpen] = useState(false);
+  const [fullscreenWarningOpen, setFullscreenWarningOpen] = useState(false);
+  const [fullscreenExitCount, setFullscreenExitCount] = useState(0);
+  // Once the candidate explicitly chooses to stay windowed we stop re-asking,
+  // otherwise the prompt would reappear on every render pass of an active phase.
+  const fullscreenPromptedRef = useRef(false);
+
+  const handleFullscreenLost = useCallback(() => {
+    setFullscreenExitCount((count) => count + 1);
+    setFullscreenWarningOpen(true);
+  }, []);
+
+  const fullscreen = useInterviewFullscreen(interviewActive, {
+    onUnexpectedExit: handleFullscreenLost,
+  });
+
+  // Ask once, as soon as a session goes live.
+  useEffect(() => {
+    if (!interviewActive) {
+      fullscreenPromptedRef.current = false;
+      setFullscreenPromptOpen(false);
+      setFullscreenWarningOpen(false);
+      setFullscreenExitCount(0);
+      return;
+    }
+    if (fullscreenPromptedRef.current) return;
+    if (!fullscreen.supported || fullscreen.isFullscreen) {
+      fullscreenPromptedRef.current = true;
+      return;
+    }
+    fullscreenPromptedRef.current = true;
+    setFullscreenPromptOpen(true);
+  }, [interviewActive, fullscreen.supported, fullscreen.isFullscreen]);
+
+  // Once the session is over, restore the normal app shell (sidebar back).
+  useEffect(() => {
+    if (interviewActive) return;
+    window.dispatchEvent(new CustomEvent("abridge:interview-ended"));
+  }, [interviewActive]);
+
   const dictationHasError = Boolean(
     dictation.error && dictation.error !== "unsupported",
   );
@@ -1584,6 +1642,31 @@ export default function CourseInterviewPage() {
     />
   );
 
+  // Fullscreen consent + exit-warning dialogs. Rendered in every live-session
+  // branch (text/hybrid workspace and the LiveKit voice room) so the proctoring
+  // behaviour is identical across modes.
+  const fullscreenDialogs = (
+    <>
+      <FullscreenPromptDialog
+        open={fullscreenPromptOpen}
+        onConfirm={() => {
+          setFullscreenPromptOpen(false);
+          void fullscreen.enter();
+        }}
+        onDecline={() => setFullscreenPromptOpen(false)}
+      />
+      <FullscreenExitWarningDialog
+        open={fullscreenWarningOpen}
+        exitCount={fullscreenExitCount}
+        onReenter={() => {
+          setFullscreenWarningOpen(false);
+          void fullscreen.enter();
+        }}
+        onDismiss={() => setFullscreenWarningOpen(false)}
+      />
+    </>
+  );
+
   // ── Loading state ──────────────────────────────────────────────────────────
   if (courseLoading || configLoading) {
     return (
@@ -1994,6 +2077,7 @@ export default function CourseInterviewPage() {
           onTranscriptChange={setTranscript}
         />
         {leaveInterviewDialog}
+        {fullscreenDialogs}
       </div>
     );
   }
@@ -2609,6 +2693,7 @@ export default function CourseInterviewPage() {
         isPending={finish.isPending}
       />
       {leaveInterviewDialog}
+      {fullscreenDialogs}
     </div>
   );
 }

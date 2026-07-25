@@ -1877,6 +1877,18 @@
       "title": "Bạn đã rời khỏi cửa sổ phỏng vấn",
       "body": "Hành vi này được ghi lại để giáo viên xem lại. Vui lòng ở lại tab này cho đến khi kết thúc phỏng vấn."
     },
+    "fullscreen": {
+      "prompt_title": "Chuyển sang chế độ toàn màn hình",
+      "prompt_description": "Buổi phỏng vấn sẽ chạy toàn màn hình để bạn không bị phân tán. Menu của ứng dụng được ẩn cho đến khi phỏng vấn kết thúc.",
+      "enter": "Vào toàn màn hình",
+      "continue_windowed": "Tiếp tục trong cửa sổ",
+      "exit_warning_title": "Bạn đã thoát chế độ toàn màn hình",
+      "exit_warning_description": "Vui lòng quay lại toàn màn hình và ở đó cho đến khi phỏng vấn kết thúc.",
+      "exit_warning_recorded_one": "Lần thoát này đã được ghi lại để giáo viên xem lại ({{count}} lần).",
+      "exit_warning_recorded_other": "Lần thoát này đã được ghi lại để giáo viên xem lại ({{count}} lần).",
+      "reenter": "Quay lại toàn màn hình",
+      "stay_windowed": "Ở lại trong cửa sổ"
+    },
     "hybrid": {
       "prestart_hint": "Phỏng vấn kết hợp — bạn có thể gõ hoặc nói câu trả lời",
       "speak_answer": "Nói câu trả lời",
