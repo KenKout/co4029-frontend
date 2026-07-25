@@ -1694,7 +1694,9 @@ function QuestionCard({
           </option>
           {outcomes.map((outcome) => (
             <option key={outcome.id} value={outcome.id}>
-              {`L.O.${outcome.position} — ${
+              {`${"\u00A0".repeat((outcome.depth ?? 0) * 2)}L.O.${
+                outcome.code ?? outcome.position
+              } — ${
                 outcome.outcome_text.length > 60
                   ? `${outcome.outcome_text.slice(0, 60)}…`
                   : outcome.outcome_text
@@ -2901,9 +2903,9 @@ function PreviewQuestion({
           {index + 1}
         </span>
         <p className="flex-1 text-sm font-semibold text-m3-on-surface leading-relaxed">
-          {question.outcome_position != null && (
+          {(question.outcome_code ?? question.outcome_position) != null && (
             <span className="mr-1.5 inline-flex items-center rounded-md bg-violet-50 px-1.5 py-0.5 text-[11px] font-bold text-violet-600 align-middle">
-              (L.O.{question.outcome_position})
+              (L.O.{question.outcome_code ?? question.outcome_position})
             </span>
           )}
           {question.prompt_text || (

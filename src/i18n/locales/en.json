@@ -2667,7 +2667,10 @@
     "update_failed": "Failed to update outcome",
     "delete_failed": "Failed to delete outcome",
     "delete_title": "Delete learning outcome?",
-    "delete_description": "Questions tagged with it revert to no outcome. Remaining outcomes renumber automatically."
+    "delete_description": "Questions tagged with it revert to no outcome. Remaining outcomes renumber automatically.",
+    "child_added": "Sub-outcome added",
+    "add_child": "Add sub-outcome",
+    "add_child_placeholder": "Sub-outcome statement…"
   },
   "quiz_generation": {
     "outcomes": {

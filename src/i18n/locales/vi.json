@@ -2579,7 +2579,10 @@
     "update_failed": "Không thể cập nhật chuẩn đầu ra",
     "delete_failed": "Không thể xóa chuẩn đầu ra",
     "delete_title": "Xóa chuẩn đầu ra này?",
-    "delete_description": "Các câu hỏi được gắn với nó sẽ trở về không có chuẩn đầu ra. Các chuẩn còn lại được đánh số lại tự động."
+    "delete_description": "Các câu hỏi được gắn với nó sẽ trở về không có chuẩn đầu ra. Các chuẩn còn lại được đánh số lại tự động.",
+    "child_added": "Đã thêm mục tiêu con",
+    "add_child": "Thêm mục tiêu con",
+    "add_child_placeholder": "Nội dung mục tiêu con…"
   },
   "quiz_generation": {
     "outcomes": {

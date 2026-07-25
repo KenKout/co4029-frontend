@@ -241,11 +241,18 @@ function useOutcomeInvalidation(courseId: string | undefined) {
 export function useCreateCourseOutcome(courseId: string | undefined) {
   const invalidate = useOutcomeInvalidation(courseId);
   return useMutation({
-    mutationFn: (outcome_text: string) =>
-      apiPost<CourseLearningOutcomeAuthoring>(
+    // parent_id (optional) nests the new outcome under an existing one for
+    // the L.O.x.y hierarchy; omit / null for a top-level outcome.
+    mutationFn: (args: string | { outcome_text: string; parent_id?: string | null }) => {
+      const body =
+        typeof args === "string"
+          ? { outcome_text: args }
+          : { outcome_text: args.outcome_text, parent_id: args.parent_id ?? null };
+      return apiPost<CourseLearningOutcomeAuthoring>(
         `/teacher/courses/${courseId}/outcomes`,
-        { outcome_text },
-      ),
+        body,
+      );
+    },
     onSuccess: invalidate,
   });
 }
@@ -253,17 +260,26 @@ export function useCreateCourseOutcome(courseId: string | undefined) {
 export function useUpdateCourseOutcome(courseId: string | undefined) {
   const invalidate = useOutcomeInvalidation(courseId);
   return useMutation({
+    // parent_id is only sent when re-parenting (move within the tree); pass
+    // null to promote to top-level. Omit the key entirely to leave the
+    // parent unchanged — the backend distinguishes the two via fields_set.
     mutationFn: ({
       outcomeId,
       outcome_text,
+      parent_id,
     }: {
       outcomeId: string;
-      outcome_text: string;
-    }) =>
-      apiPatch<CourseLearningOutcomeAuthoring>(
+      outcome_text?: string;
+      parent_id?: string | null;
+    }) => {
+      const body: Record<string, unknown> = {};
+      if (outcome_text !== undefined) body.outcome_text = outcome_text;
+      if (parent_id !== undefined) body.parent_id = parent_id;
+      return apiPatch<CourseLearningOutcomeAuthoring>(
         `/teacher/courses/${courseId}/outcomes/${outcomeId}`,
-        { outcome_text },
-      ),
+        body,
+      );
+    },
     onSuccess: invalidate,
   });
 }

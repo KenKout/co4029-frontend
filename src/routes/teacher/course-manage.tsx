@@ -24,6 +24,7 @@ import {
   ExternalLink,
   Brain,
   ClipboardList,
+  CornerDownRight,
   ListChecks,
   Trash2,
   X,
@@ -605,15 +606,41 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  // Inline "add child" state: the parent whose child-input is open + its text.
+  const [addChildParentId, setAddChildParentId] = useState<string | null>(null);
+  const [childText, setChildText] = useState("");
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     const text = newText.trim();
     if (!text) return;
     try {
-      await createOutcome.mutateAsync(text);
+      await createOutcome.mutateAsync({ outcome_text: text });
       setNewText("");
       toast.success(t("teacher_outcomes.added", "Learning outcome added"));
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_outcomes.add_failed", "Failed to add outcome"),
+      );
+    }
+  }
+
+  function startAddChild(parentId: string) {
+    setAddChildParentId(parentId);
+    setChildText("");
+  }
+  function cancelAddChild() {
+    setAddChildParentId(null);
+    setChildText("");
+  }
+  async function handleAddChild(parentId: string) {
+    const text = childText.trim();
+    if (!text) return;
+    try {
+      await createOutcome.mutateAsync({ outcome_text: text, parent_id: parentId });
+      cancelAddChild();
+      toast.success(t("teacher_outcomes.child_added", "Sub-outcome added"));
     } catch (err: unknown) {
       toast.error(
         (err as Error).message ||
@@ -711,16 +738,23 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
               </p>
             ) : (
               <ul className="space-y-2">
-                {outcomes.map((outcome, idx) => {
+                {outcomes.map((outcome) => {
+                  // Dotted hierarchy code is derived server-side (e.g. "1.2.1"
+                  // → "L.O.1.2.1"); depth drives left indentation so the tree
+                  // reads as nested. Fallback to position if code is absent.
+                  const depth = outcome.depth ?? 0;
                   const code = t("teacher_outcomes.code", "L.O.{{n}}", {
-                    n: idx + 1,
+                    n: outcome.code ?? outcome.position,
                   });
                   const isEditing = editingId === outcome.id;
+                  const isAddingChild = addChildParentId === outcome.id;
                   return (
                     <li
                       key={outcome.id}
-                      className="flex items-start gap-3 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5"
+                      className="flex flex-col gap-2 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5"
+                      style={{ marginLeft: `${depth * 1.5}rem` }}
                     >
+                    <div className="flex items-start gap-3">
                       <Badge className="mt-0.5 shrink-0 bg-violet-100 text-violet-700 border-transparent">
                         {code}
                       </Badge>
@@ -792,6 +826,22 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                               type="button"
                               size="icon-sm"
                               variant="ghost"
+                              onClick={() => startAddChild(outcome.id)}
+                              aria-label={t(
+                                "teacher_outcomes.add_child",
+                                "Add sub-outcome",
+                              )}
+                              title={t(
+                                "teacher_outcomes.add_child",
+                                "Add sub-outcome",
+                              )}
+                            >
+                              <CornerDownRight className="h-4 w-4 text-m3-on-surface-variant" />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="icon-sm"
+                              variant="ghost"
                               onClick={() => setPendingDeleteId(outcome.id)}
                               aria-label={t(
                                 "teacher_outcomes.delete",
@@ -802,6 +852,58 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                             </Button>
                           </div>
                         </>
+                      )}
+                    </div>
+
+                      {/* Inline sub-outcome input — nests a child under this
+                          outcome (parent_id). Enter submits, Escape cancels. */}
+                      {isAddingChild && (
+                        <div className="flex items-center gap-2 pl-6">
+                          <CornerDownRight className="h-4 w-4 text-m3-on-surface-variant shrink-0" />
+                          <Input
+                            value={childText}
+                            onChange={(e) => setChildText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                void handleAddChild(outcome.id);
+                              } else if (e.key === "Escape") {
+                                cancelAddChild();
+                              }
+                            }}
+                            autoFocus
+                            placeholder={t(
+                              "teacher_outcomes.add_child_placeholder",
+                              "Sub-outcome statement…",
+                            )}
+                            className="flex-1 text-sm"
+                          />
+                          <Button
+                            type="button"
+                            size="icon-sm"
+                            variant="ghost"
+                            disabled={
+                              createOutcome.isPending || !childText.trim()
+                            }
+                            onClick={() => void handleAddChild(outcome.id)}
+                            aria-label={t("teacher_outcomes.save", "Save")}
+                          >
+                            {createOutcome.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4 text-m3-primary" />
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="icon-sm"
+                            variant="ghost"
+                            onClick={cancelAddChild}
+                            aria-label={t("teacher_outcomes.cancel", "Cancel")}
+                          >
+                            <X className="h-4 w-4 text-m3-on-surface-variant" />
+                          </Button>
+                        </div>
                       )}
                     </li>
                   );
