@@ -3041,7 +3041,7 @@
       "type_matching": "Matching",
       "type_ordering": "Ordering"
     },
-    "published_readonly_banner": "This quiz is published and locked for editing. Students can see and attempt it, so questions and settings are frozen. Archive the quiz first if you need to make changes."
+    "published_readonly_banner": "This quiz is published. Questions and any settings that affect scoring, timing, or presentation are frozen so students mid-attempt aren't disrupted. You can still edit the title, description, schedule, and reminders. Archive the quiz first to change anything else."
   },
   "teacher_interview_config": {
     "persona": {

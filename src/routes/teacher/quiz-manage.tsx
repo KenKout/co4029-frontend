@@ -649,7 +649,7 @@ export default function QuizManagePage() {
           <span>
             {t(
               "teacher_quiz_manage.published_readonly_banner",
-              "This quiz is published and locked for editing. Students can see and attempt it, so questions and settings are frozen. Archive the quiz first if you need to make changes.",
+              "This quiz is published. Questions and any settings that affect scoring, timing, or presentation are frozen so students mid-attempt aren't disrupted. You can still edit the title, description, schedule, and reminders. Archive the quiz first to change anything else.",
             )}
           </span>
         </div>
@@ -852,22 +852,22 @@ export default function QuizManagePage() {
       )}
 
       {tab === "settings" && draft && quiz && (
-        <fieldset
-          disabled={isPublished}
-          className="border-0 p-0 m-0 min-w-0 disabled:opacity-70"
-        >
-          <SettingsTab
-            quizId={quizId}
-            draft={draft}
-            setDraft={setDraft}
-            onSubmit={handleSaveSettings}
-            saving={patchQuiz.isPending}
-            dirty={
-              JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))
-            }
-            onReset={() => setDraft(draftFromQuiz(quiz))}
-          />
-        </fieldset>
+        // Settings is field-aware when published: student-safe fields
+        // (title/description/schedule/reminders) stay editable; the rest is
+        // locked per-section inside SettingsTab. Mirrors the backend
+        // whitelist in authoring.py (_PUBLISHED_EDITABLE_FIELDS).
+        <SettingsTab
+          quizId={quizId}
+          draft={draft}
+          setDraft={setDraft}
+          onSubmit={handleSaveSettings}
+          saving={patchQuiz.isPending}
+          locked={isPublished}
+          dirty={
+            JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))
+          }
+          onReset={() => setDraft(draftFromQuiz(quiz))}
+        />
       )}
 
       {tab === "preview" && (
@@ -2148,6 +2148,7 @@ function SettingsTab({
   saving,
   dirty,
   onReset,
+  locked = false,
 }: {
   quizId: string;
   draft: SettingsDraft;
@@ -2156,6 +2157,9 @@ function SettingsTab({
   saving: boolean;
   dirty: boolean;
   onReset: () => void;
+  /** Published quiz: freeze the non-student-safe sections. Title,
+   *  description, schedule, and reminders stay editable. */
+  locked?: boolean;
 }) {
   const { t } = useTranslation();
   function update<K extends keyof SettingsDraft>(
@@ -2163,6 +2167,22 @@ function SettingsTab({
     value: SettingsDraft[K],
   ) {
     setDraft((current) => (current ? { ...current, [key]: value } : current));
+  }
+
+  // A <fieldset disabled> wrapper for the sections frozen once published.
+  // Grouping each locked SettingsSection in one of these disables every
+  // control inside without threading `disabled` onto each input. When not
+  // locked it renders a transparent passthrough so draft editing is
+  // unaffected.
+  function LockableSection({ children }: { children: React.ReactNode }) {
+    return (
+      <fieldset
+        disabled={locked}
+        className="border-0 p-0 m-0 min-w-0 disabled:opacity-60"
+      >
+        {children}
+      </fieldset>
+    );
   }
 
   return (
@@ -2197,6 +2217,7 @@ function SettingsTab({
         </Field>
       </SettingsSection>
 
+      <LockableSection>
       <SettingsSection title={t("teacher_quiz_manage.settings.scoring.title")}>
         <Field
           label={
@@ -2267,7 +2288,9 @@ function SettingsTab({
           </select>
         </Field>
       </SettingsSection>
+      </LockableSection>
 
+      <LockableSection>
       <SettingsSection title={t("teacher_quiz_manage.settings.attempts.title")}>
         <ToggleRow
           label={t("teacher_quiz_manage.settings.attempts.allow_label")}
@@ -2310,7 +2333,10 @@ function SettingsTab({
           </div>
         )}
       </SettingsSection>
+      </LockableSection>
 
+      {/* Schedule stays editable on a published quiz — extending a deadline
+          or shifting the open/close window doesn't disrupt a live attempt. */}
       <SettingsSection
         title={t("teacher_quiz_manage.settings.schedule.title")}
         description={t("teacher_quiz_manage.settings.schedule.description")}
@@ -2357,30 +2383,37 @@ function SettingsTab({
       </SettingsSection>
 
       <SettingsSection title={t("teacher_quiz_manage.settings.behavior.title")}>
-        <ToggleRow
-          label={t("teacher_quiz_manage.settings.behavior.shuffle_q_label")}
-          description={t(
-            "teacher_quiz_manage.settings.behavior.shuffle_q_desc",
-          )}
-          value={draft.shuffle_questions}
-          onChange={(v) => update("shuffle_questions", v)}
-        />
-        <ToggleRow
-          label={t("teacher_quiz_manage.settings.behavior.shuffle_o_label")}
-          description={t(
-            "teacher_quiz_manage.settings.behavior.shuffle_o_desc",
-          )}
-          value={draft.shuffle_options}
-          onChange={(v) => update("shuffle_options", v)}
-        />
-        <ToggleRow
-          label={t("teacher_quiz_manage.settings.behavior.show_hints_label")}
-          description={t(
-            "teacher_quiz_manage.settings.behavior.show_hints_desc",
-          )}
-          value={draft.show_hints}
-          onChange={(v) => update("show_hints", v)}
-        />
+        {/* Shuffle + hints change how the quiz presents to a student, so they
+            are frozen once published; reminders (below) is a notification
+            setting and stays editable. */}
+        <LockableSection>
+          <div className="space-y-6">
+            <ToggleRow
+              label={t("teacher_quiz_manage.settings.behavior.shuffle_q_label")}
+              description={t(
+                "teacher_quiz_manage.settings.behavior.shuffle_q_desc",
+              )}
+              value={draft.shuffle_questions}
+              onChange={(v) => update("shuffle_questions", v)}
+            />
+            <ToggleRow
+              label={t("teacher_quiz_manage.settings.behavior.shuffle_o_label")}
+              description={t(
+                "teacher_quiz_manage.settings.behavior.shuffle_o_desc",
+              )}
+              value={draft.shuffle_options}
+              onChange={(v) => update("shuffle_options", v)}
+            />
+            <ToggleRow
+              label={t("teacher_quiz_manage.settings.behavior.show_hints_label")}
+              description={t(
+                "teacher_quiz_manage.settings.behavior.show_hints_desc",
+              )}
+              value={draft.show_hints}
+              onChange={(v) => update("show_hints", v)}
+            />
+          </div>
+        </LockableSection>
         <ToggleRow
           label={t("teacher_quiz_manage.settings.behavior.reminders_label")}
           description={t(
@@ -2391,6 +2424,11 @@ function SettingsTab({
         />
       </SettingsSection>
 
+      {/* Review visibility, access/proctoring, overdue timing, overrides,
+          feedback bands, and SM-2 spacing all change how the quiz is graded
+          or presented under a live/finished attempt — frozen once published. */}
+      <LockableSection>
+      <div className="space-y-8">
       <SettingsSection
         title={t("teacher_quiz_manage.settings.review.title")}
         description={t("teacher_quiz_manage.settings.review.description")}
@@ -2523,6 +2561,8 @@ function SettingsTab({
           }
         />
       </SettingsSection>
+      </div>
+      </LockableSection>
 
       {/* Sticky action bar: pins to the bottom of the viewport so the teacher
           can save from anywhere in a long form without scrolling back down.
