@@ -2652,7 +2652,9 @@
       "delete_quiz_tooltip": "Xoá bài kiểm tra, câu hỏi, lượt làm bài và mục module",
       "add_question": "Thêm câu hỏi",
       "view_as_student": "Xem như học viên",
-      "view_results": "Kết quả"
+      "view_results": "Kết quả",
+      "add_question_of_type": "Thêm câu hỏi loại khác",
+      "add_other_type": "+ Loại khác…"
     },
     "status": {
       "published": "Đã xuất bản",
@@ -2925,6 +2927,31 @@
       "save_failed": "Không thể lưu dải phản hồi",
       "overlap": "Các dải không được chồng nhau",
       "invalid": "Mỗi dải cần tối thiểu < tối đa"
+    },
+    "type_editor": {
+      "numerical_label": "Đáp án dạng số",
+      "numeric_answer": "Đáp án đúng",
+      "numeric_tolerance": "Sai số cho phép (±)",
+      "numeric_hint": "Câu trả lời của học viên đúng nếu nằm trong khoảng ± sai số so với giá trị đúng.",
+      "matching_label": "Các cặp ghép",
+      "match_left": "Vế trái",
+      "match_right": "Vế phải (ghép)",
+      "remove_pair": "Xóa cặp",
+      "add_pair": "Thêm cặp",
+      "matching_hint": "Học viên thấy các giá trị vế phải bị xáo trộn và ghép với từng vế trái. Phải ghép đúng tất cả mới được điểm.",
+      "ordering_label": "Thứ tự đúng",
+      "move_up": "Di chuyển lên",
+      "move_down": "Di chuyển xuống",
+      "remove_item": "Xóa mục",
+      "add_item": "Thêm mục",
+      "ordering_hint": "Thứ tự ở đây LÀ đáp án đúng. Học viên thấy các mục bị xáo trộn và phải sắp xếp lại.",
+      "multi_select_label": "Cho phép nhiều đáp án đúng",
+      "multi_select_desc": "Khi bật, học viên thấy ô chọn (checkbox) và có thể chọn nhiều hơn một đáp án.",
+      "type_true_false": "Đúng / Sai",
+      "type_short_answer": "Trả lời ngắn",
+      "type_numerical": "Dạng số",
+      "type_matching": "Ghép cặp",
+      "type_ordering": "Sắp xếp"
     }
   },
   "teacher_interview_config": {

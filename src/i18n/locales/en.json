@@ -2740,7 +2740,9 @@
       "delete_quiz_tooltip": "Delete quiz, questions, attempts, and module item",
       "add_question": "Add question",
       "view_as_student": "View as student",
-      "view_results": "Results"
+      "view_results": "Results",
+      "add_question_of_type": "Add a question of another type",
+      "add_other_type": "+ Other type…"
     },
     "status": {
       "published": "Published",
@@ -3013,6 +3015,31 @@
       "save_failed": "Could not save feedback bands",
       "overlap": "Bands must not overlap",
       "invalid": "Each band needs min < max"
+    },
+    "type_editor": {
+      "numerical_label": "Numerical answer",
+      "numeric_answer": "Correct answer",
+      "numeric_tolerance": "Tolerance (±)",
+      "numeric_hint": "The learner's answer is correct if it falls within ± tolerance of the correct value.",
+      "matching_label": "Matching pairs",
+      "match_left": "Prompt (left)",
+      "match_right": "Match (right)",
+      "remove_pair": "Remove pair",
+      "add_pair": "Add pair",
+      "matching_hint": "Students see the right-hand values shuffled and match each prompt. All pairs must be correct to score.",
+      "ordering_label": "Ordering sequence",
+      "move_up": "Move up",
+      "move_down": "Move down",
+      "remove_item": "Remove item",
+      "add_item": "Add item",
+      "ordering_hint": "The order here IS the correct sequence. Students see the items shuffled and must reorder them.",
+      "multi_select_label": "Allow multiple correct answers",
+      "multi_select_desc": "When on, learners see checkboxes and may select more than one option.",
+      "type_true_false": "True / False",
+      "type_short_answer": "Short answer",
+      "type_numerical": "Numerical",
+      "type_matching": "Matching",
+      "type_ordering": "Ordering"
     }
   },
   "teacher_interview_config": {

@@ -65,6 +65,7 @@ import {
 import { ImportExportPanel } from "./_components/quiz-manage/ImportExportPanel";
 import { OverridesPanel } from "./_components/quiz-manage/OverridesPanel";
 import { FeedbackBandsPanel } from "./_components/quiz-manage/FeedbackBandsPanel";
+import { TypeSpecificAnswerEditor } from "./_components/quiz-manage/TypeSpecificAnswerEditor";
 
 type TabKey = "questions" | "settings" | "preview";
 
@@ -424,37 +425,77 @@ export default function QuizManagePage() {
     }
   }
 
-  async function handleAddQuestion() {
+  async function handleAddQuestion(questionType = "multiple_choice") {
+    // Phase 7: seed the right shape per type. MCQ/T-F seed option rows; the
+    // expanded types seed their own answer fields (edited in the card after).
+    const base: Record<string, unknown> = {
+      question_type: questionType,
+      prompt_text: t("teacher_quiz_manage.new_question.prompt"),
+      explanation: t("teacher_quiz_manage.new_question.explanation"),
+      difficulty: "medium",
+      bloom_level: "understand",
+    };
+    let payload: Record<string, unknown>;
+    switch (questionType) {
+      case "true_false":
+        payload = {
+          ...base,
+          options: [
+            { option_key: "T", option_text: "True", is_correct: true },
+            { option_key: "F", option_text: "False", is_correct: false },
+          ],
+        };
+        break;
+      case "short_answer":
+        payload = { ...base };
+        break;
+      case "numerical":
+        payload = { ...base, numeric_answer: 0, numeric_tolerance: 0 };
+        break;
+      case "matching":
+        payload = {
+          ...base,
+          match_pairs: [
+            { left: "Term 1", right: "Match 1" },
+            { left: "Term 2", right: "Match 2" },
+          ],
+        };
+        break;
+      case "ordering":
+        payload = {
+          ...base,
+          ordering_sequence: ["First", "Second", "Third"],
+        };
+        break;
+      default:
+        payload = {
+          ...base,
+          options: [
+            {
+              option_key: "A",
+              option_text: t("teacher_quiz_manage.new_question.option_a"),
+              is_correct: true,
+            },
+            {
+              option_key: "B",
+              option_text: t("teacher_quiz_manage.new_question.option_b"),
+              is_correct: false,
+            },
+            {
+              option_key: "C",
+              option_text: t("teacher_quiz_manage.new_question.option_c"),
+              is_correct: false,
+            },
+            {
+              option_key: "D",
+              option_text: t("teacher_quiz_manage.new_question.option_d"),
+              is_correct: false,
+            },
+          ],
+        };
+    }
     try {
-      await addQuestion.mutateAsync({
-        question_type: "multiple_choice",
-        prompt_text: t("teacher_quiz_manage.new_question.prompt"),
-        explanation: t("teacher_quiz_manage.new_question.explanation"),
-        difficulty: "medium",
-        bloom_level: "understand",
-        options: [
-          {
-            option_key: "A",
-            option_text: t("teacher_quiz_manage.new_question.option_a"),
-            is_correct: true,
-          },
-          {
-            option_key: "B",
-            option_text: t("teacher_quiz_manage.new_question.option_b"),
-            is_correct: false,
-          },
-          {
-            option_key: "C",
-            option_text: t("teacher_quiz_manage.new_question.option_c"),
-            is_correct: false,
-          },
-          {
-            option_key: "D",
-            option_text: t("teacher_quiz_manage.new_question.option_d"),
-            is_correct: false,
-          },
-        ],
-      });
+      await addQuestion.mutateAsync(payload);
       toast.success(t("teacher_quiz_manage.toasts.question_added"));
     } catch (err: unknown) {
       toast.error(
@@ -686,20 +727,26 @@ export default function QuizManagePage() {
               actionsStuck && "ml-auto",
             )}
           >
-            <Link
-              to="/teacher/courses/$courseId/quizzes/$quizId/results"
-              params={{ courseId, quizId }}
-            >
-              <Button
-                variant="outline"
-                className="gap-2"
-                type="button"
-                title={t("teacher_quiz_manage.actions.view_results")}
+            {/* Results only make sense once the quiz is published — a draft
+                being configured has no attempts yet, so the button is hidden
+                during configuration and appears after publish. */}
+            {isPublished && (
+              <Link
+                to="/teacher/courses/$courseId/quizzes/$quizId/results"
+                params={{ courseId, quizId }}
               >
-                <BarChart3 className="h-4 w-4" />
-                {!actionsStuck && t("teacher_quiz_manage.actions.view_results")}
-              </Button>
-            </Link>
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  type="button"
+                  title={t("teacher_quiz_manage.actions.view_results")}
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  {!actionsStuck &&
+                    t("teacher_quiz_manage.actions.view_results")}
+                </Button>
+              </Link>
+            )}
             {/* "View as student" used to be a button here, but it was
                 redundant with the Preview tab (both open the same in-app
                 WYSIWYG PreviewTab). Removed the button; the Preview tab is
@@ -1008,7 +1055,7 @@ function QuestionsTab({
   onClearSelection: () => void;
   bulkSeconds: string;
   onBulkSecondsChange: (value: string) => void;
-  onAddQuestion: () => void | Promise<void>;
+  onAddQuestion: (questionType?: string) => void | Promise<void>;
   addPending: boolean;
   onOpenGenerator: () => void;
   onOpenBank: () => void;
@@ -1139,19 +1186,54 @@ function QuestionsTab({
           ))
         )}
 
-        <button
-          type="button"
-          onClick={onAddQuestion}
-          disabled={addPending}
-          className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-m3-outline-variant/40 rounded-xl px-6 py-4 text-sm font-bold text-m3-on-surface-variant hover:border-m3-primary hover:text-m3-primary hover:bg-m3-primary/5 transition-all disabled:opacity-60 cursor-pointer"
-        >
-          {addPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="h-4 w-4" />
-          )}
-          {t("teacher_quiz_manage.actions.add_question")}
-        </button>
+        <div className="flex flex-wrap items-stretch gap-2">
+          <button
+            type="button"
+            onClick={() => onAddQuestion("multiple_choice")}
+            disabled={addPending}
+            className="flex-1 min-w-[12rem] flex items-center justify-center gap-2 border-2 border-dashed border-m3-outline-variant/40 rounded-xl px-6 py-4 text-sm font-bold text-m3-on-surface-variant hover:border-m3-primary hover:text-m3-primary hover:bg-m3-primary/5 transition-all disabled:opacity-60 cursor-pointer"
+          >
+            {addPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+            {t("teacher_quiz_manage.actions.add_question")}
+          </button>
+          {/* Phase 7: type picker — add a question of any supported type.
+              Selecting a value seeds the right shape; the reset to "" keeps
+              this a pure action control (not stateful). */}
+          <select
+            aria-label={t("teacher_quiz_manage.actions.add_question_of_type")}
+            disabled={addPending}
+            value=""
+            onChange={(e) => {
+              const type = e.target.value;
+              if (type) void onAddQuestion(type);
+              e.currentTarget.value = "";
+            }}
+            className="shrink-0 rounded-xl border-2 border-dashed border-m3-outline-variant/40 bg-m3-surface px-3 py-4 text-sm font-bold text-m3-on-surface-variant hover:border-m3-primary hover:text-m3-primary transition-all disabled:opacity-60 cursor-pointer"
+          >
+            <option value="">
+              {t("teacher_quiz_manage.actions.add_other_type")}
+            </option>
+            <option value="true_false">
+              {t("teacher_quiz_manage.type_editor.type_true_false")}
+            </option>
+            <option value="short_answer">
+              {t("teacher_quiz_manage.type_editor.type_short_answer")}
+            </option>
+            <option value="numerical">
+              {t("teacher_quiz_manage.type_editor.type_numerical")}
+            </option>
+            <option value="matching">
+              {t("teacher_quiz_manage.type_editor.type_matching")}
+            </option>
+            <option value="ordering">
+              {t("teacher_quiz_manage.type_editor.type_ordering")}
+            </option>
+          </select>
+        </div>
       </div>
 
       <div className="col-span-12 lg:col-span-4 min-w-0">
@@ -1412,6 +1494,39 @@ function QuestionCard({
                 option_text: o.option_text.trim(),
                 is_correct: o.is_correct,
               })),
+            }
+          : {}),
+        // Phase 7: type-specific answer fields. Sent per question type so the
+        // backend persists the answer key (numerical/matching/ordering) or the
+        // multi-select discriminator (multiple_choice). Omitted for types that
+        // don't use them, leaving existing values untouched (partial PATCH).
+        ...(question.question_type === "multiple_choice"
+          ? { single_answer: draft.single_answer }
+          : {}),
+        ...((question.question_type as string) === "numerical"
+          ? {
+              numeric_answer:
+                draft.numeric_answer.trim() === ""
+                  ? null
+                  : Number(draft.numeric_answer),
+              numeric_tolerance:
+                draft.numeric_tolerance.trim() === ""
+                  ? 0
+                  : Number(draft.numeric_tolerance),
+            }
+          : {}),
+        ...((question.question_type as string) === "matching"
+          ? {
+              match_pairs: draft.match_pairs
+                .filter((p) => p.left.trim() && p.right.trim())
+                .map((p) => ({ left: p.left.trim(), right: p.right.trim() })),
+            }
+          : {}),
+        ...((question.question_type as string) === "ordering"
+          ? {
+              ordering_sequence: draft.ordering_sequence
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0),
             }
           : {}),
       });
@@ -1705,6 +1820,36 @@ function QuestionCard({
         </div>
       )}
 
+      <TypeSpecificAnswerEditor
+        questionType={question.question_type}
+        value={{
+          single_answer: draft.single_answer,
+          numeric_answer: draft.numeric_answer,
+          numeric_tolerance: draft.numeric_tolerance,
+          match_pairs: draft.match_pairs,
+          ordering_sequence: draft.ordering_sequence,
+        }}
+        onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+      />
+
+      {/* Explanation comes before Configuration: it's the content-authoring
+          field (what students see), so it sits with the question body; the
+          Configuration block (difficulty / expected time) is metadata and
+          follows it. */}
+      <div className="space-y-1.5">
+        <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+          {t("teacher_quiz_manage.editor.explanation_label")}
+        </label>
+        <textarea
+          value={draft.explanation}
+          onChange={(e) =>
+            setDraft((current) => ({ ...current, explanation: e.target.value }))
+          }
+          rows={2}
+          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+        />
+      </div>
+
       <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-3 space-y-2.5">
         <div className="flex items-center gap-1.5">
           <Sparkles className="h-3 w-3 text-m3-secondary" />
@@ -1758,20 +1903,6 @@ function QuestionCard({
             />
           </div>
         </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          {t("teacher_quiz_manage.editor.explanation_label")}
-        </label>
-        <textarea
-          value={draft.explanation}
-          onChange={(e) =>
-            setDraft((current) => ({ ...current, explanation: e.target.value }))
-          }
-          rows={2}
-          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-        />
       </div>
 
       <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -1896,6 +2027,12 @@ interface QuestionDraft {
     option_text: string;
     is_correct: boolean;
   }>;
+  // Phase 7: type-specific answer fields (editable for the expanded types).
+  single_answer: boolean;
+  numeric_answer: string;
+  numeric_tolerance: string;
+  match_pairs: Array<{ left: string; right: string }>;
+  ordering_sequence: string[];
 }
 
 /** Pull the canonical correct answer out of an AI-generated question.
@@ -1944,6 +2081,24 @@ function buildQuestionDraft(question: QuizQuestionAuthoring): QuestionDraft {
       option_text: o.option_text,
       is_correct: o.is_correct,
     })),
+    // Phase 7: type-specific answer fields (teacher-only; served on the
+    // authoring schema). Held as strings in the draft for easy input binding.
+    single_answer: question.single_answer ?? true,
+    numeric_answer:
+      question.numeric_answer == null ? "" : String(question.numeric_answer),
+    numeric_tolerance:
+      question.numeric_tolerance == null
+        ? ""
+        : String(question.numeric_tolerance),
+    match_pairs: Array.isArray(question.match_pairs)
+      ? question.match_pairs.map((p) => ({
+          left: String(p.left ?? ""),
+          right: String(p.right ?? ""),
+        }))
+      : [],
+    ordering_sequence: Array.isArray(question.ordering_sequence)
+      ? question.ordering_sequence.map((s) => String(s))
+      : [],
   };
 }
 
