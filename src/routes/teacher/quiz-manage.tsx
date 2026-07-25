@@ -2087,7 +2087,7 @@ function SettingsTab({
           onChange={(v) => update("allow_retakes", v)}
         />
         {draft.allow_retakes && (
-          <div className="ml-1 pl-4 border-l-2 border-m3-primary/30 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
             <Field
               label={t("teacher_quiz_manage.settings.attempts.max_label")}
               hint={t("teacher_quiz_manage.settings.attempts.max_hint")}
