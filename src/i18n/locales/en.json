@@ -2779,10 +2779,10 @@
       "publish": "Publish",
       "delete_quiz_tooltip": "Delete quiz, questions, attempts, and module item",
       "add_question": "Add question",
-      "view_as_student": "View as student",
       "view_results": "Results",
       "add_question_of_type": "Add a question of another type",
-      "add_other_type": "+ Other type…"
+      "add_other_type": "+ Other type…",
+      "preview": "Preview"
     },
     "status": {
       "published": "Published",
@@ -2797,7 +2797,8 @@
     },
     "confirm_publish": {
       "title": "Publish this quiz?",
-      "body": "This will publish {{count}} question(s) and make the quiz visible to students. You can preview it as a student first, or publish now."
+      "body_preview": "This will publish {{count}} question(s) and make the quiz visible to students. Preview it as a student first to check how it looks, then publish.",
+      "body_confirm": "This will publish {{count}} question(s) and make the quiz visible to students. Ready to publish?"
     },
     "confirm_delete_question": {
       "title": "Delete this question?",

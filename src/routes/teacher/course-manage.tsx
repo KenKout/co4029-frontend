@@ -41,6 +41,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import {
   useTeacherCourseById,
   useTeacherCourseContent,
@@ -2112,27 +2113,14 @@ export default function CourseManagePage() {
         </div>
       </div>
 
-      {/* Course Settings */}
-      <section className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Settings className="h-4 w-4 text-m3-primary" />
-          <h2 className="text-base font-headline font-bold text-m3-primary">
-            {t("teacher_common.section_course_settings")}
-          </h2>
-        </div>
-        <CourseSettingsPanel courseId={courseId} />
-      </section>
+      {/* Course Settings — the panel carries its own titled, collapsible
+          header (icon + "Course Settings" + status summary), so an outer
+          <h2> here just duplicated that title. Panel stands alone. */}
+      <CourseSettingsPanel courseId={courseId} />
 
-      {/* Learning Outcomes */}
-      <section className="space-y-2">
-        <div className="flex items-center gap-2">
-          <ListChecks className="h-4 w-4 text-m3-primary" />
-          <h2 className="text-base font-headline font-bold text-m3-primary">
-            {t("teacher_common.section_learning_outcomes")}
-          </h2>
-        </div>
-        <LearningOutcomesPanel courseId={courseId} />
-      </section>
+      {/* Learning Outcomes — same story: LearningOutcomesPanel self-titles,
+          so no redundant section header. */}
+      <LearningOutcomesPanel courseId={courseId} />
 
       {/* Curriculum */}
       <section className="space-y-2">
@@ -2292,6 +2280,9 @@ export default function CourseManagePage() {
         onConfirm={handleDeleteCourse}
         isPending={deleteCourse.isPending}
       />
+      {/* Long page (settings + outcomes + every module) — floating jump back
+          to the top once scrolled down. */}
+      <ScrollToTop />
     </div>
   );
 }

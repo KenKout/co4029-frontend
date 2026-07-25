@@ -2691,10 +2691,10 @@
       "publish": "Xuất bản",
       "delete_quiz_tooltip": "Xoá bài kiểm tra, câu hỏi, lượt làm bài và mục module",
       "add_question": "Thêm câu hỏi",
-      "view_as_student": "Xem như học viên",
       "view_results": "Kết quả",
       "add_question_of_type": "Thêm câu hỏi loại khác",
-      "add_other_type": "+ Loại khác…"
+      "add_other_type": "+ Loại khác…",
+      "preview": "Xem thử"
     },
     "status": {
       "published": "Đã xuất bản",
@@ -2709,7 +2709,8 @@
     },
     "confirm_publish": {
       "title": "Xuất bản bài kiểm tra này?",
-      "body": "Thao tác này sẽ xuất bản {{count}} câu hỏi và hiển thị bài kiểm tra cho học viên. Bạn có thể xem thử như học viên trước, hoặc xuất bản ngay."
+      "body_preview": "Thao tác này sẽ xuất bản {{count}} câu hỏi và hiển thị bài kiểm tra cho học viên. Hãy xem thử như học viên trước để kiểm tra, rồi xuất bản.",
+      "body_confirm": "Thao tác này sẽ xuất bản {{count}} câu hỏi và hiển thị bài kiểm tra cho học viên. Bạn có chắc chắn muốn xuất bản?"
     },
     "confirm_delete_question": {
       "title": "Xóa câu hỏi này?",

@@ -802,17 +802,22 @@ export default function QuizManagePage() {
                   ? t("teacher_quiz_manage.status.published")
                   : t("teacher_quiz_manage.actions.publish"))}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700"
-              onClick={() => setConfirmDelete(true)}
-              disabled={deleteQuiz.isPending}
-              title={t("teacher_quiz_manage.actions.delete_quiz_tooltip")}
-            >
-              <Trash2 className="h-4 w-4" />
-              {!actionsStuck && t("common.delete")}
-            </Button>
+            {/* Delete is hidden once published: students may be mid-attempt,
+                and the backend blocks destructive changes on a live quiz.
+                Archive first (frees the freeze) to delete. */}
+            {!isPublished && (
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700"
+                onClick={() => setConfirmDelete(true)}
+                disabled={deleteQuiz.isPending}
+                title={t("teacher_quiz_manage.actions.delete_quiz_tooltip")}
+              >
+                <Trash2 className="h-4 w-4" />
+                {!actionsStuck && t("common.delete")}
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -848,6 +853,7 @@ export default function QuizManagePage() {
             onOpenBank={() => setShowBankModal(true)}
             onOpenImportExport={() => setShowImportExport(true)}
             onQueueDelete={pendingDeletes.queueDelete}
+            published={isPublished}
           />
         </fieldset>
       )}
@@ -1011,10 +1017,18 @@ export default function QuizManagePage() {
                 <h2 className="font-headline font-bold text-base text-m3-on-surface">
                   {t("teacher_quiz_manage.confirm_publish.title")}
                 </h2>
+                {/* Context-aware copy: from Settings/Questions the teacher
+                    hasn't necessarily seen the student view, so nudge them to
+                    preview first. From the Preview tab they're already looking
+                    at it, so just ask for final confirmation. */}
                 <p className="text-sm text-m3-on-surface-variant">
-                  {t("teacher_quiz_manage.confirm_publish.body", {
-                    count: approvedCount,
-                  })}
+                  {tab === "preview"
+                    ? t("teacher_quiz_manage.confirm_publish.body_confirm", {
+                        count: approvedCount,
+                      })
+                    : t("teacher_quiz_manage.confirm_publish.body_preview", {
+                        count: approvedCount,
+                      })}
                 </p>
               </div>
             </div>
@@ -1027,22 +1041,24 @@ export default function QuizManagePage() {
               >
                 {t("common.cancel")}
               </Button>
-              {/* Preview before publishing: open the in-app WYSIWYG tab
-                  rather than the live student route (which 404s on a
-                  not-yet-published quiz). Close the dialog first. */}
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-2"
-                disabled={publishQuiz.isPending}
-                onClick={() => {
-                  setConfirmPublish(false);
-                  setTab("preview");
-                }}
-              >
-                <Eye className="h-4 w-4" />
-                {t("teacher_quiz_manage.actions.view_as_student")}
-              </Button>
+              {/* Preview button only when NOT already on the Preview tab.
+                  Opens the in-app WYSIWYG tab rather than the live student
+                  route (which 404s on a not-yet-published quiz). */}
+              {tab !== "preview" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2"
+                  disabled={publishQuiz.isPending}
+                  onClick={() => {
+                    setConfirmPublish(false);
+                    setTab("preview");
+                  }}
+                >
+                  <Eye className="h-4 w-4" />
+                  {t("teacher_quiz_manage.actions.preview")}
+                </Button>
+              )}
               <Button
                 type="button"
                 onClick={handlePublish}
@@ -1080,6 +1096,7 @@ function QuestionsTab({
   onOpenBank,
   onOpenImportExport,
   onQueueDelete,
+  published = false,
 }: {
   quizId: string;
   questions: QuizQuestionAuthoring[];
@@ -1096,6 +1113,9 @@ function QuestionsTab({
   onOpenBank: () => void;
   onOpenImportExport: () => void;
   onQueueDelete: (item: PendingQuestionDelete) => void;
+  /** Published quiz: hide all authoring controls (bulk bar, add-question,
+   *  per-card actions) instead of disabling them. */
+  published?: boolean;
 }) {
   const { t } = useTranslation();
   const bulkSet = useBulkSetExpectedTime(quizId);
@@ -1180,20 +1200,24 @@ function QuestionsTab({
           </div>
         )}
 
-        <BulkSetExpectedTimeBar
-          totalQuestions={questions.length}
-          selectedCount={selectedIds.size}
-          bulkSeconds={bulkSeconds}
-          onBulkSecondsChange={onBulkSecondsChange}
-          onSelectAll={onSelectAll}
-          onClear={onClearSelection}
-          onApply={handleApplyBulk}
-          applyValid={bulkValid}
-          applying={bulkSet.isPending}
-          onApprove={handleApproveBulk}
-          approveValid={selectedIds.size > 0}
-          approving={bulkApprove.isPending}
-        />
+        {/* Bulk set-time / approve is authoring only — a published quiz is
+            frozen, so hide the whole bar rather than leave dead controls. */}
+        {!published && (
+          <BulkSetExpectedTimeBar
+            totalQuestions={questions.length}
+            selectedCount={selectedIds.size}
+            bulkSeconds={bulkSeconds}
+            onBulkSecondsChange={onBulkSecondsChange}
+            onSelectAll={onSelectAll}
+            onClear={onClearSelection}
+            onApply={handleApplyBulk}
+            applyValid={bulkValid}
+            applying={bulkSet.isPending}
+            onApprove={handleApproveBulk}
+            approveValid={selectedIds.size > 0}
+            approving={bulkApprove.isPending}
+          />
+        )}
 
         {questions.length === 0 ? (
           <div className="rounded-xl border border-dashed border-m3-outline-variant/30 bg-m3-surface-container-lowest p-10 text-center space-y-3">
@@ -1217,10 +1241,14 @@ function QuestionsTab({
               selected={selectedIds.has(question.id)}
               onToggleSelect={() => onToggleSelect(question.id)}
               onQueueDelete={onQueueDelete}
+              published={published}
             />
           ))
         )}
 
+        {/* Add-question controls are authoring only — hidden on a published
+            (frozen) quiz so no new questions can be seeded. */}
+        {!published && (
         <div className="flex flex-wrap items-stretch gap-2">
           <button
             type="button"
@@ -1269,10 +1297,16 @@ function QuestionsTab({
             </option>
           </select>
         </div>
+        )}
       </div>
 
       <div className="col-span-12 lg:col-span-4 min-w-0">
         <div className="lg:sticky lg:top-[8.5rem] space-y-4">
+          {/* AI generation / bank import / file import all SEED new questions,
+              which a published quiz can't accept — hide the whole authoring
+              panel when frozen. The read-only QuestionNavigator stays so the
+              teacher can still jump between questions. */}
+          {!published && (
           <div className="rounded-xl border border-m3-secondary/10 bg-m3-surface-container-low p-5 shadow-glass space-y-3">
             <div className="flex items-center gap-2">
               <div className="h-9 w-9 rounded-xl gradient-primary flex items-center justify-center shadow-ai-glow">
@@ -1317,6 +1351,7 @@ function QuestionsTab({
               {t("teacher_quiz_manage.ai_panel.import_export_file")}
             </Button>
           </div>
+          )}
 
           {/* Quick question navigation — jumps (auto-scrolls) to a question
               card. Reuses the numbered-box design from the student quiz. */}
@@ -1458,6 +1493,7 @@ function QuestionCard({
   selected,
   onToggleSelect,
   onQueueDelete,
+  published = false,
 }: {
   quizId: string;
   question: QuizQuestionAuthoring;
@@ -1465,6 +1501,10 @@ function QuestionCard({
   selected: boolean;
   onToggleSelect: () => void;
   onQueueDelete: (item: PendingQuestionDelete) => void;
+  /** Published quizzes are frozen — the mutating actions (Save / Approve /
+   *  Regenerate / Delete) are hidden entirely rather than shown disabled,
+   *  since the backend hard-rejects every edit with 409. */
+  published?: boolean;
 }) {
   const { t } = useTranslation();
   const updateQuestion = useUpdateQuizQuestion(quizId, question.id);
@@ -1968,60 +2008,66 @@ function QuestionCard({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 pt-1">
-        <Button
-          type="button"
-          size="sm"
-          onClick={() => handleSave()}
-          disabled={updateQuestion.isPending}
-          className="gap-2"
-        >
-          {updateQuestion.isPending ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Save className="h-3.5 w-3.5" />
+      {/* Published quiz = frozen. Hide the mutating actions entirely (Save /
+          Approve / Regenerate / Delete) rather than showing them disabled —
+          the backend rejects every edit with 409, so a greyed-out row would
+          only invite dead clicks. The card stays visible read-only. */}
+      {!published && (
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => handleSave()}
+            disabled={updateQuestion.isPending}
+            className="gap-2"
+          >
+            {updateQuestion.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Save className="h-3.5 w-3.5" />
+            )}
+            {t("common.save")}
+          </Button>
+          {question.review_status !== "approved" && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => handleSave("approved")}
+              disabled={updateQuestion.isPending}
+              className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {t("teacher_quiz_manage.editor.approve")}
+            </Button>
           )}
-          {t("common.save")}
-        </Button>
-        {question.review_status !== "approved" && (
           <Button
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => handleSave("approved")}
-            disabled={updateQuestion.isPending}
-            className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700"
+            onClick={handleRegenerate}
+            disabled={regenerate.isPending}
+            className="gap-2"
           >
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            {t("teacher_quiz_manage.editor.approve")}
+            {regenerate.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3.5 w-3.5" />
+            )}
+            {t("teacher_quiz_manage.editor.regenerate")}
           </Button>
-        )}
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={handleRegenerate}
-          disabled={regenerate.isPending}
-          className="gap-2"
-        >
-          {regenerate.isPending ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <RefreshCw className="h-3.5 w-3.5" />
-          )}
-          {t("teacher_quiz_manage.editor.regenerate")}
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => setConfirmDelete(true)}
-          className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700 ml-auto"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          {t("common.delete")}
-        </Button>
-      </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setConfirmDelete(true)}
+            className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700 ml-auto"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {t("common.delete")}
+          </Button>
+        </div>
+      )}
 
       {/* Delete confirmation. On confirm we still route through the deferred
           queue + undo banner (the real DELETE fires when the 5s combo commits),
