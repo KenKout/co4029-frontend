@@ -172,9 +172,16 @@ export type InterviewConfigPublic = Schemas["InterviewConfigPublic"];
 // snapshot is regenerated.
 export type InterviewConfigAuthoring = Schemas["InterviewConfigAuthoring"] & {
   published_at?: string | null;
+  // Resolved persona traits (preset merged with overrides) — teacher-only.
+  // Manually typed until the OpenAPI snapshot is regenerated (Phase 3).
+  persona_profile_resolved?: PersonaProfileRead | null;
 };
-export type InterviewConfigCreate = Schemas["InterviewConfigCreate"];
-export type InterviewConfigUpdate = Schemas["InterviewConfigUpdate"];
+export type InterviewConfigCreate = Schemas["InterviewConfigCreate"] & {
+  persona_profile?: PersonaProfileWrite | null;
+};
+export type InterviewConfigUpdate = Schemas["InterviewConfigUpdate"] & {
+  persona_profile?: PersonaProfileWrite | null;
+};
 export type InterviewForTakingPublic = Schemas["InterviewForTakingPublic"];
 export type InterviewSessionPublic = Schemas["InterviewSessionPublic"] & {
   // Proactive retake context (#7) — manually typed until the OpenAPI snapshot
@@ -318,6 +325,31 @@ export type GapReportAuthoringRead = Schemas["GapReportAuthoringRead"] & {
 
 // Persona-adherence audit result surfaced from internal_summary_json. Every
 // field is optional so a partial/legacy payload never breaks the render.
+// Resolved persona profile (preset merged with teacher per-trait overrides),
+// returned on the teacher authoring projection (Phase 3). Traits are 0-4 dials.
+// Manually typed until the OpenAPI snapshot is regenerated.
+export interface PersonaProfileRead {
+  key: string;
+  warmth: number;
+  directness: number;
+  verbosity: number;
+  formality: number;
+  ack_frequency: number;
+  opening_style: "brief" | "standard" | "comfort";
+}
+
+// Optional per-trait persona overrides written on a config (Phase 3). Every
+// field optional so a teacher can nudge one dial and leave the rest to the
+// preset. Sent on POST/PATCH /teacher/interview-configs.
+export interface PersonaProfileWrite {
+  warmth?: number | null;
+  directness?: number | null;
+  verbosity?: number | null;
+  formality?: number | null;
+  ack_frequency?: number | null;
+  opening_style?: "brief" | "standard" | "comfort" | null;
+}
+
 export interface PersonaAdherenceRead {
   tone_consistency?: number;
   reasoning?: string;

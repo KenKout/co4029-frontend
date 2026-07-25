@@ -78,8 +78,13 @@ import type {
   InterviewGenerationRunPublic,
   InterviewOutcomeAuthoring,
   InterviewQuestionAuthoring,
+  PersonaProfileRead,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import {
+  PERSONA_TRAIT_PRESETS,
+  type PersonaKey,
+} from "@/lib/interview/persona-traits";
 import {
   type RubricCriterion,
   MAX_CRITERIA,
@@ -138,7 +143,28 @@ interface SettingsDraft {
   security_custom_refusal_en: string;
   security_custom_refusal_vi: string;
   security_incident_summary_enabled: boolean;
+  // Optional per-trait persona overrides (Phase 3). Empty object = no override
+  // (use the persona preset as-is). Each trait 0-4; opening_style optional.
+  persona_profile: PersonaProfileOverride;
 }
+
+// Local editable shape for the per-trait override panel. All optional so a
+// teacher can nudge one dial; absent keys fall back to the persona preset.
+interface PersonaProfileOverride {
+  warmth?: number;
+  directness?: number;
+  verbosity?: number;
+  formality?: number;
+  ack_frequency?: number;
+}
+
+const PERSONA_TRAIT_KEYS = [
+  "warmth",
+  "directness",
+  "verbosity",
+  "formality",
+  "ack_frequency",
+] as const;
 
 function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
   return {
@@ -177,6 +203,27 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
     security_custom_refusal_vi: config.security_custom_refusal_vi ?? "",
     security_incident_summary_enabled:
       config.security_incident_summary_enabled ?? true,
+    // Seed the override panel from whatever the backend resolved. When the
+    // config has no stored overrides this equals the preset, so the sliders
+    // simply show the preset values; a teacher only creates a real override by
+    // moving one away from its preset (see the diff computed on save).
+    persona_profile: personaOverrideFromResolved(config.persona_profile_resolved),
+  };
+}
+
+// Extract just the editable trait dials from the resolved profile. Returns an
+// empty object when nothing is resolvable, so the panel falls back to preset
+// values via `effectivePersonaTraits`.
+function personaOverrideFromResolved(
+  resolved: PersonaProfileRead | null | undefined,
+): PersonaProfileOverride {
+  if (!resolved) return {};
+  return {
+    warmth: resolved.warmth,
+    directness: resolved.directness,
+    verbosity: resolved.verbosity,
+    formality: resolved.formality,
+    ack_frequency: resolved.ack_frequency,
   };
 }
 
@@ -188,6 +235,56 @@ function integerOrNull(value: string): number | null {
 }
 
 const PERSONA_KEYS: Persona[] = ["strict", "neutral", "supportive"];
+
+// The effective trait values shown on the sliders: the teacher's override if
+// present, else the persona preset. Keeps the panel in sync when the persona
+// dropdown changes and no explicit override exists for a trait yet.
+function effectivePersonaTraits(
+  persona: Persona,
+  override: PersonaProfileOverride,
+): Record<(typeof PERSONA_TRAIT_KEYS)[number], number> {
+  const preset = PERSONA_TRAIT_PRESETS[persona as PersonaKey] ?? PERSONA_TRAIT_PRESETS.neutral;
+  const presetByKey: Record<(typeof PERSONA_TRAIT_KEYS)[number], number> = {
+    warmth: preset.warmth,
+    directness: preset.directness,
+    verbosity: preset.verbosity,
+    formality: preset.formality,
+    ack_frequency: preset.ackFrequency,
+  };
+  const out = { ...presetByKey };
+  for (const key of PERSONA_TRAIT_KEYS) {
+    const v = override[key];
+    if (typeof v === "number") out[key] = v;
+  }
+  return out;
+}
+
+// Build the persona_profile payload sent on save: only the traits the teacher
+// actually moved AWAY from the preset become an override. When nothing differs,
+// return null so the config falls back to the bare preset (no stored override).
+function personaOverridePayload(
+  persona: Persona,
+  override: PersonaProfileOverride,
+): PersonaProfileOverride | null {
+  const preset = PERSONA_TRAIT_PRESETS[persona as PersonaKey] ?? PERSONA_TRAIT_PRESETS.neutral;
+  const presetByKey: Record<(typeof PERSONA_TRAIT_KEYS)[number], number> = {
+    warmth: preset.warmth,
+    directness: preset.directness,
+    verbosity: preset.verbosity,
+    formality: preset.formality,
+    ack_frequency: preset.ackFrequency,
+  };
+  const diff: PersonaProfileOverride = {};
+  let hasOverride = false;
+  for (const key of PERSONA_TRAIT_KEYS) {
+    const v = override[key];
+    if (typeof v === "number" && v !== presetByKey[key]) {
+      diff[key] = v;
+      hasOverride = true;
+    }
+  }
+  return hasOverride ? diff : null;
+}
 // Deepgram Aura-2 English voices. MUST stay in sync with the backend allow-list
 // (services.narration.ALLOWED_TTS_VOICES / schemas.authoring.TtsVoiceLiteral).
 // Empty value ("") = deployment default (settings.deepgram_tts_model_en).
@@ -460,6 +557,7 @@ export default function InterviewConfigPage() {
       await updateConfig.mutateAsync({
         title: draft.title.trim(),
         persona: draft.persona,
+        persona_profile: personaOverridePayload(draft.persona, draft.persona_profile),
         // Empty selection → null (deployment default voice).
         tts_voice: (draft.tts_voice || null) as TtsVoice | null,
         supported_modes: draft.supported_modes,
@@ -1363,6 +1461,68 @@ function SettingsForm({
             <VoicePersonaGuideSheet focus="voice" />
           </Field>
         </div>
+
+        {/* Advanced: optional per-trait persona overrides (Phase 3). Collapsed
+            by default — the persona preset is enough for most teachers; the
+            sliders let a power user fine-tune tone without a new persona. Every
+            dial is TONE ONLY and never affects scoring (backend enforces this).
+            An override exists only for a trait moved away from its preset. */}
+        <details className="mt-4 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-m3-on-surface select-none">
+            {t("teacher_interview_config.persona_traits.advanced_label")}
+          </summary>
+          <div className="px-4 pb-4 space-y-4">
+            <p className="text-xs text-m3-on-surface-variant">
+              {t("teacher_interview_config.persona_traits.help")}
+            </p>
+            {(() => {
+              const effective = effectivePersonaTraits(
+                draft.persona,
+                draft.persona_profile,
+              );
+              return PERSONA_TRAIT_KEYS.map((traitKey) => (
+                <div key={traitKey} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label
+                      htmlFor={`persona-trait-${traitKey}`}
+                      className="text-xs font-medium text-m3-on-surface"
+                    >
+                      {t(`teacher_interview_config.persona_traits.trait.${traitKey}`)}
+                    </label>
+                    <span className="text-xs tabular-nums text-m3-on-surface-variant">
+                      {effective[traitKey]} / 4
+                    </span>
+                  </div>
+                  <input
+                    id={`persona-trait-${traitKey}`}
+                    type="range"
+                    min={0}
+                    max={4}
+                    step={1}
+                    value={effective[traitKey]}
+                    onChange={(e) =>
+                      update("persona_profile", {
+                        ...draft.persona_profile,
+                        [traitKey]: Number(e.target.value),
+                      })
+                    }
+                    className="w-full accent-m3-primary"
+                  />
+                  <p className="text-[11px] text-m3-on-surface-variant">
+                    {t(`teacher_interview_config.persona_traits.trait_hint.${traitKey}`)}
+                  </p>
+                </div>
+              ));
+            })()}
+            <button
+              type="button"
+              onClick={() => update("persona_profile", {})}
+              className="text-xs font-medium text-m3-primary hover:underline"
+            >
+              {t("teacher_interview_config.persona_traits.reset")}
+            </button>
+          </div>
+        </details>
       </SettingsCard>
 
       {/* Card 2 — Scoring & timing: the three numeric knobs on one 3-up row. */}

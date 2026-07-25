@@ -3107,6 +3107,25 @@
       "neutral": "Neutral",
       "supportive": "Supportive"
     },
+    "persona_traits": {
+      "advanced_label": "Advanced: fine-tune persona tone",
+      "help": "Optional. Nudge individual tone dials (0–4) on top of the persona preset. This shapes wording only — it never affects scoring, difficulty, or which questions are asked. Leave everything at the preset to use the persona as-is.",
+      "reset": "Reset to persona preset",
+      "trait": {
+        "warmth": "Warmth",
+        "directness": "Directness",
+        "verbosity": "Verbosity",
+        "formality": "Formality",
+        "ack_frequency": "Acknowledgement frequency"
+      },
+      "trait_hint": {
+        "warmth": "How warm and reassuring the interviewer sounds (0 = detached, 4 = encouraging).",
+        "directness": "How blunt vs. softened the phrasing is (0 = heavily hedged, 4 = direct).",
+        "verbosity": "How much the interviewer says (0 = terse, 4 = expansive).",
+        "formality": "Register and word choice (0 = casual, 4 = formal).",
+        "ack_frequency": "How often the interviewer acknowledges an answer (0 = rarely, 4 = almost always)."
+      }
+    },
     "voice": {
       "aura-2-thalia-en": "Thalia (F, clear)",
       "aura-2-andromeda-en": "Andromeda (F, warm)",

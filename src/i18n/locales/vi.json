@@ -3019,6 +3019,25 @@
       "neutral": "Trung lập",
       "supportive": "Hỗ trợ"
     },
+    "persona_traits": {
+      "advanced_label": "Nâng cao: tinh chỉnh giọng điệu persona",
+      "help": "Tùy chọn. Điều chỉnh từng thang giọng điệu (0–4) trên nền preset của persona. Điều này chỉ nắn cách diễn đạt — không ảnh hưởng điểm số, độ khó, hay câu hỏi nào được hỏi. Giữ nguyên preset nếu muốn dùng persona như mặc định.",
+      "reset": "Đặt lại về preset persona",
+      "trait": {
+        "warmth": "Độ ấm áp",
+        "directness": "Độ thẳng thắn",
+        "verbosity": "Độ dài dòng",
+        "formality": "Độ trang trọng",
+        "ack_frequency": "Tần suất ghi nhận"
+      },
+      "trait_hint": {
+        "warmth": "Người phỏng vấn nghe ấm áp và trấn an đến mức nào (0 = lạnh lùng, 4 = khích lệ).",
+        "directness": "Cách diễn đạt thẳng hay mềm (0 = rào đón nhiều, 4 = thẳng thắn).",
+        "verbosity": "Người phỏng vấn nói nhiều đến đâu (0 = ngắn gọn, 4 = mở rộng).",
+        "formality": "Văn phong và cách chọn từ (0 = thân mật, 4 = trang trọng).",
+        "ack_frequency": "Tần suất người phỏng vấn ghi nhận câu trả lời (0 = hiếm khi, 4 = hầu như luôn)."
+      }
+    },
     "voice": {
       "aura-2-thalia-en": "Thalia (Nữ, rõ ràng)",
       "aura-2-andromeda-en": "Andromeda (Nữ, ấm áp)",

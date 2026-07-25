@@ -52,6 +52,7 @@ import { VoiceRoom } from "@/components/interview/voice-room";
 import { useSpeechDictation } from "@/lib/hooks/use-speech-dictation";
 import { type SpeechPersona } from "@/lib/hooks/use-speech-synthesis";
 import { useInterviewNarration } from "@/lib/hooks/use-interview-narration";
+import { resolvePersonaTraits } from "@/lib/interview/persona-traits";
 import {
   EndConfirmationPanel,
   EndInterviewDialog,
@@ -672,16 +673,17 @@ export default function CourseInterviewPage() {
   // browser-TTS fallback. Student-toggleable so it can be silenced.
   const [voiceOn, setVoiceOn] = useState(true);
   const speakLang = i18n.language?.startsWith("vi") ? "vi-VN" : "en-US";
-  // Persona drives the voice selection (server-side) so a "strict" interview
-  // sounds firmer and a "supportive" one warmer. Falls back to neutral when
-  // the config has no persona set.
-  const speakPersona: SpeechPersona =
-    config?.persona === "strict" || config?.persona === "supportive"
-      ? config.persona
-      : "neutral";
+  // Persona drives the voice: a "strict" interview sounds firmer, a
+  // "supportive" one warmer. Resolve the persona label to its trait dials (no
+  // hardcoded per-name narrowing) and pass them through — prosody/WPM are then
+  // DERIVED from traits (see lib/interview/persona-traits). The learner config
+  // carries only the persona label, so this uses preset traits; teacher-tuned
+  // overrides shape the server voice + LLM phrasing, which is where they matter.
+  const speakTraits = resolvePersonaTraits(config?.persona);
   const narration = useInterviewNarration({
     sessionId,
-    persona: speakPersona,
+    persona: speakTraits.key as SpeechPersona,
+    traits: speakTraits,
     lang: speakLang,
     // Server TTS only works for English on this deployment (Deepgram Aura is
     // English-only; the gateway serves no TTS model). Gate by the SESSION

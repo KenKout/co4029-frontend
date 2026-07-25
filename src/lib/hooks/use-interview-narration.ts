@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { apiPostBlob, ApiError } from "@/lib/api/client";
+import {
+  resolvePersonaTraits,
+  wordsPerMinuteFromTraits,
+  type PersonaTraits,
+} from "@/lib/interview/persona-traits";
 import { useSpeechSynthesis, type SpeechPersona } from "./use-speech-synthesis";
 
 /** Separate readiness and playout signals used to coordinate voice and text. */
@@ -45,11 +50,9 @@ const AUDIO_SOURCE_SCHEDULE_AHEAD_MS = 30;
 const AUDIO_KEEPALIVE_INT16 = 48;
 const AUDIO_LEAD_IN_AMPLITUDE = AUDIO_KEEPALIVE_INT16 / 32_768;
 const HAVE_FUTURE_DATA = 3;
-const PERSONA_WORDS_PER_MINUTE: Record<SpeechPersona, number> = {
-  strict: 135,
-  neutral: 155,
-  supportive: 160,
-};
+// Words-per-minute is DERIVED from the verbosity trait (see
+// lib/interview/persona-traits.wordsPerMinuteFromTraits), not a per-name table,
+// so a fourth persona or a teacher's per-trait override needs no edit here.
 
 class NarrationTimeoutError extends Error {}
 
@@ -119,13 +122,13 @@ function createAudioWarmupBlob(): Blob {
 
 function estimateSpeechDurationMs(
   text: string,
-  persona: SpeechPersona,
+  traits: PersonaTraits,
   lang: string,
 ): number {
   const words = text.trim().split(/\s+/u).filter(Boolean).length;
   const punctuationPauses = (text.match(/[.!?;:]/gu) ?? []).length * 180;
   const languageRate = lang.toLowerCase().startsWith("vi") ? 0.92 : 1;
-  const wordsPerMinute = PERSONA_WORDS_PER_MINUTE[persona] * languageRate;
+  const wordsPerMinute = wordsPerMinuteFromTraits(traits) * languageRate;
   return Math.max(800, (words * 60_000) / wordsPerMinute + punctuationPauses);
 }
 
@@ -169,8 +172,26 @@ export function useInterviewNarration(params: {
    * locale) so an English session viewed with a VI UI still uses server TTS.
    */
   serverNarrationEnabled?: boolean;
+  /**
+   * Resolved persona traits (preset merged with any teacher per-trait
+   * override). When present, these drive the browser-voice WPM estimate; else
+   * the ``persona`` label's preset traits are used. TONE ONLY.
+   */
+  traits?: PersonaTraits;
 }): UseInterviewNarration {
-  const { sessionId, persona, lang, serverNarrationEnabled = true } = params;
+  const {
+    sessionId,
+    persona,
+    lang,
+    serverNarrationEnabled = true,
+    traits,
+  } = params;
+  // Resolve once: explicit override traits win, else the persona preset.
+  // Memoised so the narrate callback's identity is stable across renders.
+  const resolvedTraits = useMemo(
+    () => traits ?? resolvePersonaTraits(persona),
+    [traits, persona],
+  );
   const browser = useSpeechSynthesis();
   const browserSpeak = browser.speak;
   const browserCancel = browser.cancel;
@@ -341,7 +362,7 @@ export function useInterviewNarration(params: {
       const browserFallback = () => {
         if (fallbackStarted) return;
         fallbackStarted = true;
-        resolveDuration(estimateSpeechDurationMs(clean, persona, lang));
+        resolveDuration(estimateSpeechDurationMs(clean, resolvedTraits, lang));
         void (async () => {
           await ensureAudioWarmup();
           if (myToken !== tokenRef.current) return;
@@ -356,6 +377,7 @@ export function useInterviewNarration(params: {
             const speech = browserSpeak(clean, {
               lang,
               persona,
+              traits: resolvedTraits,
               onStart: handleBrowserSpeechStart,
             });
             await Promise.resolve(speech);
@@ -531,6 +553,7 @@ export function useInterviewNarration(params: {
     [
       sessionId,
       persona,
+      resolvedTraits,
       lang,
       serverNarrationEnabled,
       browserSpeak,

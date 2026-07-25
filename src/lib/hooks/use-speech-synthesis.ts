@@ -12,39 +12,28 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
  * `supported === false` (the feature simply becomes silent).
  */
 
+import {
+  prosodyFromTraits,
+  resolvePersonaTraits,
+  type PersonaTraits,
+} from "@/lib/interview/persona-traits";
+
 /** Interview AI persona — drives the spoken tone (rate + pitch). */
 export type SpeechPersona = "strict" | "neutral" | "supportive";
 
 /**
- * Persona → prosody mapping. Browser TTS only exposes rate + pitch (0–2, with
- * ~0.1 steps audibly distinct), so persona is expressed through pacing and
- * pitch rather than a distinct trained voice:
- *   - strict: slower + lower — firm, deliberate.
- *   - neutral: default cadence.
- *   - supportive: slightly faster + higher — warm, encouraging.
- * `voiceHints` are lowercase substrings we prefer when matching an installed
- * voice for the language (best-effort; falls back to any lang match).
+ * Persona prosody (rate + pitch + voice hints) is DERIVED from the 0-4 trait
+ * dials (see lib/interview/persona-traits), not a per-name table. Browser TTS
+ * only exposes rate + pitch (0–2, with ~0.1 steps audibly distinct), so persona
+ * is expressed through pacing and pitch rather than a distinct trained voice.
+ * A caller may pass explicit ``traits`` (e.g. a teacher's per-trait override);
+ * otherwise the ``persona`` label resolves to its preset traits.
  */
-const PERSONA_PROSODY: Record<
-  SpeechPersona,
-  { rate: number; pitch: number; voiceHints: string[] }
-> = {
-  strict: {
-    rate: 0.9,
-    pitch: 0.85,
-    voiceHints: ["daniel", "male", "google uk english male"],
-  },
-  neutral: { rate: 1.0, pitch: 1.0, voiceHints: [] },
-  supportive: {
-    rate: 1.04,
-    pitch: 1.12,
-    voiceHints: ["samantha", "female", "google uk english female"],
-  },
-};
-
 export interface SpeakOptions {
   lang?: string;
   persona?: SpeechPersona;
+  /** Resolved persona traits; when present these win over ``persona``. */
+  traits?: PersonaTraits;
   /** Called when the browser reports that audible playout has actually begun. */
   onStart?: () => void;
 }
@@ -101,8 +90,10 @@ export function useSpeechSynthesis(): UseSpeechSynthesis {
       if (!supported) return Promise.resolve();
       const clean = text.trim();
       if (!clean) return Promise.resolve();
-      const { lang = "en-US", persona = "neutral", onStart } = options;
-      const prosody = PERSONA_PROSODY[persona] ?? PERSONA_PROSODY.neutral;
+      const { lang = "en-US", persona = "neutral", traits, onStart } = options;
+      // Prefer explicit resolved traits (teacher override); else derive from the
+      // persona label's preset. Prosody is DERIVED, never a per-name table.
+      const prosody = prosodyFromTraits(traits ?? resolvePersonaTraits(persona));
       return new Promise<void>((resolve) => {
         try {
           const utterance = new SpeechSynthesisUtterance(clean);
@@ -122,7 +113,7 @@ export function useSpeechSynthesis(): UseSpeechSynthesis {
           if (candidates.length > 0) {
             const hinted = prosody.voiceHints.length
               ? candidates.find((v) =>
-                  prosody.voiceHints.some((h) =>
+                  prosody.voiceHints.some((h: string) =>
                     v.name.toLowerCase().includes(h),
                   ),
                 )
