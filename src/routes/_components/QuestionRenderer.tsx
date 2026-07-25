@@ -28,14 +28,27 @@ export interface QuestionRendererProps {
 }
 
 export function QuestionRenderer(props: QuestionRendererProps) {
-  switch (props.question.question_type) {
+  // Cast to string: the generated schema literal predates the Phase 7 types
+  // (numerical/matching/ordering), which the backend now serves.
+  switch (props.question.question_type as string) {
     case "multiple_choice":
+      // Phase 7: multi-select MCQ (single_answer=false) uses checkboxes and
+      // submits a JSON array of chosen option ids via answerText; single-answer
+      // keeps the radio-style OptionInput.
+      return (props.question as { single_answer?: boolean }).single_answer ===
+        false ? (
+        <MultiSelectInput {...props} />
+      ) : (
+        <OptionInput {...props} />
+      );
     case "true_false":
       return <OptionInput {...props} />;
     case "short_answer":
       return <ShortAnswerInput {...props} />;
     case "fill_blank":
       return <FillBlankInput {...props} />;
+    case "numerical":
+      return <NumericalInput {...props} />;
     default:
       // ``code`` (and any future type) falls back to a text answer so
       // students can at least submit something.
@@ -378,6 +391,110 @@ function DropSlot({
         </span>
       )}
     </span>
+  );
+}
+
+/** Phase 7: multi-select MCQ. Checkboxes; submits a JSON array of the chosen
+ * option ids via answerText (the grader's multi-select contract). */
+function MultiSelectInput({
+  question,
+  answerText,
+  disabled,
+  onAnswerTextChange,
+}: QuestionRendererProps) {
+  const sortedOptions = useMemo(
+    () => question.options.slice().sort((a, b) => a.position - b.position),
+    [question.options],
+  );
+  const chosen = useMemo<string[]>(() => {
+    if (!answerText) return [];
+    try {
+      const data = JSON.parse(answerText);
+      return Array.isArray(data) ? data.map((v) => String(v)) : [];
+    } catch {
+      return [];
+    }
+  }, [answerText]);
+
+  function toggle(optionId: string) {
+    if (disabled) return;
+    const next = chosen.includes(optionId)
+      ? chosen.filter((id) => id !== optionId)
+      : [...chosen, optionId];
+    onAnswerTextChange(next.length > 0 ? JSON.stringify(next) : null);
+  }
+
+  return (
+    <div className="space-y-3">
+      {sortedOptions.map((option) => {
+        const isSelected = chosen.includes(option.id);
+        return (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => toggle(option.id)}
+            aria-pressed={isSelected}
+            className={cn(
+              "w-full text-left p-5 sm:p-6 rounded-xl flex items-center gap-5 transition-all duration-200 border-2 group/opt cursor-pointer",
+              isSelected
+                ? "bg-m3-primary-fixed/20 border-m3-primary shadow-lg shadow-m3-primary/10 ring-2 ring-m3-primary"
+                : "bg-m3-surface-container-low border-transparent hover:bg-m3-surface-container-high hover:border-m3-outline-variant/30",
+            )}
+          >
+            <span
+              className={cn(
+                "w-6 h-6 shrink-0 flex items-center justify-center rounded-md border-2 transition-colors",
+                isSelected
+                  ? "bg-m3-primary border-m3-primary text-white"
+                  : "bg-m3-surface-container-lowest border-m3-outline-variant",
+              )}
+            >
+              {isSelected && <CheckCircle2 className="h-4 w-4" />}
+            </span>
+            <span
+              className={cn(
+                "flex-1 text-sm sm:text-base leading-snug",
+                isSelected
+                  ? "text-m3-primary font-semibold"
+                  : "text-m3-on-surface font-medium",
+              )}
+            >
+              <RichContent
+                value={option.option_text}
+                format={
+                  (option as { option_format?: string | null }).option_format ??
+                  "plain"
+                }
+                inline
+              />
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Phase 7: numerical answer. Single number input; submits the raw string
+ * (the grader parses + compares within tolerance). */
+function NumericalInput({
+  answerText,
+  disabled,
+  onAnswerTextChange,
+}: QuestionRendererProps) {
+  return (
+    <div className="space-y-2 max-w-xs">
+      <input
+        type="number"
+        inputMode="decimal"
+        value={answerText ?? ""}
+        onChange={(e) => onAnswerTextChange(e.target.value || null)}
+        disabled={disabled}
+        placeholder="0"
+        className="w-full rounded-xl border-2 border-m3-outline-variant/30 bg-m3-surface-container-lowest px-4 py-3 text-base text-m3-on-surface focus:outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 disabled:opacity-50 disabled:cursor-not-allowed tabular-nums"
+        aria-label="Numerical answer input"
+      />
+    </div>
   );
 }
 
