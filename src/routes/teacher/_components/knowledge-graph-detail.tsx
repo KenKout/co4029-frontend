@@ -3,10 +3,11 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import {
   Brain,
-  Maximize2,
+  Circle,
   Minus,
   Plus,
   RotateCcw,
+  Workflow,
   X,
 } from "lucide-react";
 
@@ -51,13 +52,17 @@ const WORLD_H = 1000;
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 3;
 
+export type KgLayoutMode = "circular" | "tree";
+
 /**
  * Deterministic radial layout in world space: heaviest concept at the centre,
  * the rest fanned out on rings by rank with golden-angle spacing so neighbours
  * never stack. Pure function of the node list, so positions are stable across
  * renders (the drag layer mutates a copy in state).
  */
-function layoutWorld(nodes: LessonKnowledgeGraph["nodes"]): Map<string, KgVec> {
+function layoutCircular(
+  nodes: LessonKnowledgeGraph["nodes"],
+): Map<string, KgVec> {
   const positions = new Map<string, KgVec>();
   const cx = WORLD_W / 2;
   const cy = WORLD_H / 2;
@@ -76,6 +81,148 @@ function layoutWorld(nodes: LessonKnowledgeGraph["nodes"]): Map<string, KgVec> {
     });
   });
   return positions;
+}
+
+/**
+ * Hierarchical (tree) layout in world space.
+ *
+ * The heaviest concept (nodes[0]) is the root, placed at the top-centre. The
+ * hierarchy is derived ONLY from PREREQUISITE_OF edges (source is the
+ * prerequisite → target depends on it), so the tree reads top-to-bottom as
+ * "learn this, then you can learn that". RELATED_TO edges are still drawn but
+ * don't shape the tree.
+ *
+ * Edge cases (see the chat thread — these are the ones that actually occur in
+ * the KG data):
+ *  - CYCLES (A → B → A via prereqs): a `placed` set means each node is laid out
+ *    exactly once, at its shortest prereq-distance from the root, so a cycle
+ *    can't loop forever or double-place a node.
+ *  - FOREST / disconnected-but-linked components (nodes with prereq edges among
+ *    themselves but unreachable from the root): after the root's BFS, any
+ *    still-unplaced node that participates in a prereq edge is seeded as a
+ *    local root and laid out in the same level bands, so whole sub-hierarchies
+ *    hang below the main tree instead of vanishing.
+ *  - ORPHANS (no edges of any kind): parked in a row along the very bottom as
+ *    leaves, per the requested behaviour — present but clearly peripheral.
+ *  - MULTIPLE PARENTS (a concept required by several others): placed at the
+ *    deepest level any parent implies (max depth), so it never sits above one
+ *    of its own prerequisites.
+ */
+function layoutTree(
+  nodes: LessonKnowledgeGraph["nodes"],
+  edges: LessonKnowledgeGraph["edges"],
+): Map<string, KgVec> {
+  const positions = new Map<string, KgVec>();
+  if (nodes.length === 0) return positions;
+
+  const ids = nodes.map((n) => n.id);
+  const idSet = new Set(ids);
+
+  // children[a] = nodes that list `a` as a prerequisite (a → child).
+  const children = new Map<string, string[]>();
+  const hasAnyEdge = new Set<string>();
+  for (const e of edges) {
+    if (idSet.has(e.source)) hasAnyEdge.add(e.source);
+    if (idSet.has(e.target)) hasAnyEdge.add(e.target);
+    if (e.relation !== "PREREQUISITE_OF") continue;
+    if (!idSet.has(e.source) || !idSet.has(e.target)) continue;
+    const list = children.get(e.source) ?? [];
+    list.push(e.target);
+    children.set(e.source, list);
+  }
+
+  // Assign each node a depth = shortest prereq-hops from a root. BFS from the
+  // heaviest node first, then seed any unplaced edge-bearing node as its own
+  // local root so disconnected sub-hierarchies still get placed.
+  const depth = new Map<string, number>();
+  const placed = new Set<string>();
+  const bfs = (start: string) => {
+    const queue: Array<{ id: string; d: number }> = [{ id: start, d: 0 }];
+    while (queue.length) {
+      const { id, d } = queue.shift()!;
+      if (placed.has(id)) {
+        // Already placed by a shorter/equal path — keep the deeper of the two
+        // so a multi-parent node never sits above a prerequisite.
+        if (d > (depth.get(id) ?? 0)) depth.set(id, d);
+        continue;
+      }
+      placed.add(id);
+      depth.set(id, d);
+      for (const c of children.get(id) ?? []) {
+        if (!placed.has(c)) queue.push({ id: c, d: d + 1 });
+      }
+    }
+  };
+
+  bfs(ids[0]);
+  // Forest: remaining nodes that still have edges become local roots, in the
+  // node list's (weight-sorted) order for determinism.
+  for (const id of ids) {
+    if (!placed.has(id) && hasAnyEdge.has(id)) bfs(id);
+  }
+
+  // Orphans: no edges at all → a row along the bottom.
+  const orphans = ids.filter((id) => !hasAnyEdge.has(id));
+
+  // Group placed nodes by depth to lay out level bands.
+  const byDepth = new Map<number, string[]>();
+  let maxDepth = 0;
+  for (const id of ids) {
+    if (!placed.has(id)) continue;
+    const d = depth.get(id) ?? 0;
+    maxDepth = Math.max(maxDepth, d);
+    const row = byDepth.get(d) ?? [];
+    row.push(id);
+    byDepth.set(d, row);
+  }
+
+  const LEVEL_GAP = 190;
+  const NODE_GAP = 240;
+  const topMargin = 120;
+  const cx = WORLD_W / 2;
+
+  // Width of the widest band drives horizontal centring of every band.
+  let widest = 1;
+  for (const [, row] of byDepth) widest = Math.max(widest, row.length);
+  for (let d = 0; d <= maxDepth; d++) {
+    const row = byDepth.get(d) ?? [];
+    const rowWidth = (row.length - 1) * NODE_GAP;
+    const startX = cx - rowWidth / 2;
+    row.forEach((id, i) => {
+      positions.set(id, {
+        x: row.length === 1 ? cx : startX + i * NODE_GAP,
+        y: topMargin + d * LEVEL_GAP,
+      });
+    });
+  }
+
+  // Orphan row: one level below the deepest tree band, wrapped so a big pile of
+  // orphans doesn't run off the sides.
+  if (orphans.length > 0) {
+    const perRow = Math.max(1, Math.min(orphans.length, widest, 10));
+    const baseY = topMargin + (maxDepth + 1.4) * LEVEL_GAP;
+    orphans.forEach((id, i) => {
+      const col = i % perRow;
+      const rowN = Math.floor(i / perRow);
+      const rowCount = Math.min(perRow, orphans.length - rowN * perRow);
+      const rowWidth = (rowCount - 1) * NODE_GAP;
+      const startX = cx - rowWidth / 2;
+      positions.set(id, {
+        x: rowCount === 1 ? cx : startX + col * NODE_GAP,
+        y: baseY + rowN * LEVEL_GAP,
+      });
+    });
+  }
+
+  return positions;
+}
+
+function computeLayout(
+  mode: KgLayoutMode,
+  nodes: LessonKnowledgeGraph["nodes"],
+  edges: LessonKnowledgeGraph["edges"],
+): Map<string, KgVec> {
+  return mode === "tree" ? layoutTree(nodes, edges) : layoutCircular(nodes);
 }
 
 function radiusFor(weight: number, maxW: number, minW: number): number {
@@ -112,14 +259,18 @@ export function KnowledgeGraphDetail({
     [nodes],
   );
 
-  // World-space node positions. Seeded from the deterministic layout, then
-  // mutated in place when a teacher drags a node.
+  // Layout mode: circular (radial rings) or tree (prereq hierarchy). Toggling
+  // re-seeds positions from the chosen layout.
+  const [layoutMode, setLayoutMode] = useState<KgLayoutMode>("circular");
+
+  // World-space node positions. Seeded from the chosen layout, then mutated in
+  // place when a teacher drags a node.
   const [positions, setPositions] = useState<Map<string, KgVec>>(() =>
-    layoutWorld(nodes),
+    computeLayout("circular", nodes, edges),
   );
   useEffect(() => {
-    setPositions(layoutWorld(nodes));
-  }, [nodes]);
+    setPositions(computeLayout(layoutMode, nodes, edges));
+  }, [nodes, edges, layoutMode]);
   // Mirror of the latest positions so focusNode (called from event handlers
   // and relation-chip jumps) can read current coords without going stale.
   const positionsRef = useRef(positions);
@@ -140,27 +291,42 @@ export function KnowledgeGraphDetail({
   // node: it pins the panel and focuses the camera on that node.
   const [pinned, setPinned] = useState<string | null>(null);
 
-  // Fit the whole world into the viewport on first mount / when the node set
-  // changes, so the graph opens framed rather than zoomed into a corner.
+  // Fit the current layout into the viewport. Frames the ACTUAL node bounds
+  // (not the fixed WORLD box) with padding, so both the compact circular layout
+  // and a tall tree — which can extend well past WORLD_H via deep levels + the
+  // orphan rows — open fully visible rather than clipped or zoomed into a
+  // corner. Reads positionsRef so it always sees the latest layout.
   const fitToView = useCallback(() => {
     const svg = svgRef.current;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
-    const scale = Math.min(
-      rect.width / WORLD_W,
-      rect.height / WORLD_H,
-      MAX_SCALE,
-    );
+    const pts = Array.from(positionsRef.current.values());
+    let minX = 0;
+    let minY = 0;
+    let boxW = WORLD_W;
+    let boxH = WORLD_H;
+    if (pts.length > 0) {
+      const pad = 120; // world units of breathing room around the extremes
+      minX = Math.min(...pts.map((p) => p.x)) - pad;
+      minY = Math.min(...pts.map((p) => p.y)) - pad;
+      boxW = Math.max(...pts.map((p) => p.x)) + pad - minX;
+      boxH = Math.max(...pts.map((p) => p.y)) + pad - minY;
+    }
+    const scale = Math.min(rect.width / boxW, rect.height / boxH, MAX_SCALE);
     setTransform({
       scale,
-      tx: (rect.width - WORLD_W * scale) / 2,
-      ty: (rect.height - WORLD_H * scale) / 2,
+      tx: (rect.width - boxW * scale) / 2 - minX * scale,
+      ty: (rect.height - boxH * scale) / 2 - minY * scale,
     });
   }, []);
 
+  // Refit whenever the node set OR the layout mode changes. Deferred a frame so
+  // the positions state (set in the layout effect above) has committed before
+  // we measure it.
   useEffect(() => {
-    fitToView();
-  }, [fitToView, nodes.length]);
+    const id = requestAnimationFrame(() => fitToView());
+    return () => cancelAnimationFrame(id);
+  }, [fitToView, nodes.length, layoutMode]);
 
   // Close on Escape.
   useEffect(() => {
@@ -418,7 +584,20 @@ export function KnowledgeGraphDetail({
   }, [pinned, positions, transform, nodeById, maxW, minW]);
 
   const overlay = (
-    <div className="fixed inset-0 z-50 flex flex-col bg-m3-surface">
+    // Dimmed backdrop. Clicking it (but not the dialog inside) closes — the
+    // dialog stops propagation so interior clicks never bubble here.
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 backdrop-blur-sm"
+      onPointerDown={onClose}
+      role="presentation"
+    >
+      <div
+        className="flex h-full max-h-[92vh] w-full max-w-[1500px] flex-col overflow-hidden rounded-2xl bg-m3-surface shadow-2xl"
+        onPointerDown={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+      >
       {/* Header */}
       <div className="flex items-center justify-between gap-3 border-b border-m3-outline-variant/20 bg-m3-surface-container-lowest px-4 py-3">
         <div className="flex items-center gap-2 min-w-0">
@@ -432,14 +611,51 @@ export function KnowledgeGraphDetail({
             })}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={t("common.close")}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Layout mode toggle: Circular (radial) vs Tree (prereq hierarchy). */}
+          <div
+            role="group"
+            aria-label={t("teacher_lesson_materials.kg.layout_label")}
+            className="flex items-center rounded-lg border border-m3-outline-variant/30 bg-m3-surface-container p-0.5"
+          >
+            <button
+              type="button"
+              onClick={() => setLayoutMode("circular")}
+              aria-pressed={layoutMode === "circular"}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
+                layoutMode === "circular"
+                  ? "bg-m3-primary text-white"
+                  : "text-m3-on-surface-variant hover:text-m3-primary",
+              )}
+            >
+              <Circle className="h-3.5 w-3.5" />
+              {t("teacher_lesson_materials.kg.layout_circular")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setLayoutMode("tree")}
+              aria-pressed={layoutMode === "tree"}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
+                layoutMode === "tree"
+                  ? "bg-m3-primary text-white"
+                  : "text-m3-on-surface-variant hover:text-m3-primary",
+              )}
+            >
+              <Workflow className="h-3.5 w-3.5" />
+              {t("teacher_lesson_materials.kg.layout_tree")}
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("common.close")}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Canvas */}
@@ -730,6 +946,7 @@ export function KnowledgeGraphDetail({
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

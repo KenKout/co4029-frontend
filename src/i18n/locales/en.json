@@ -3831,7 +3831,10 @@
       "rel_prerequisites": "Prerequisites",
       "rel_unlocks": "Unlocks",
       "rel_related": "Related",
-      "rel_none": "None"
+      "rel_none": "None",
+      "layout_label": "Layout",
+      "layout_circular": "Circular",
+      "layout_tree": "Tree"
     },
     "history": {
       "title": "Material history",
