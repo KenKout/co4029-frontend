@@ -2766,15 +2766,16 @@
       "legend_title": "Ý nghĩa các màu"
     },
     "bulk_time": {
-      "title": "Đặt nhanh thời gian",
       "selected_count": "{{selected}}/{{total}} đã chọn",
       "duration_seconds": "Thời gian (giây)",
       "seconds_suffix": "giây",
       "select_all": "Chọn tất cả",
       "deselect": "Bỏ chọn",
-      "apply": "Áp dụng cho đã chọn",
-      "approve_selected": "Duyệt đã chọn",
-      "delete_selected": "Xoá {{count}} đã chọn"
+      "idle_hint": "Chọn câu hỏi để thao tác hàng loạt",
+      "apply_short": "Đặt thời gian",
+      "approve_short": "Duyệt",
+      "delete_short": "Xoá",
+      "question_count": "{{count}} câu hỏi"
     },
     "questions": {
       "sr_select": "Chọn câu hỏi {{position}}",

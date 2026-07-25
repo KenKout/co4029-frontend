@@ -2854,15 +2854,16 @@
       "legend_title": "What the colours mean"
     },
     "bulk_time": {
-      "title": "Quick set time",
       "selected_count": "{{selected}}/{{total}} selected",
       "duration_seconds": "Time (seconds)",
       "seconds_suffix": "sec",
       "select_all": "Select all",
       "deselect": "Deselect",
-      "apply": "Apply to selected",
-      "approve_selected": "Approve selected",
-      "delete_selected": "Delete {{count}} selected"
+      "idle_hint": "Select questions for bulk actions",
+      "apply_short": "Set time",
+      "approve_short": "Approve",
+      "delete_short": "Delete",
+      "question_count": "{{count}} questions"
     },
     "questions": {
       "sr_select": "Select question {{position}}",
