@@ -3788,7 +3788,11 @@
       "layout_circular": "Vòng tròn",
       "layout_tree": "Cây",
       "edit": "Chỉnh sửa",
-      "editor_title": "Chỉnh sửa sơ đồ kiến thức"
+      "editor_title": "Chỉnh sửa sơ đồ kiến thức",
+      "source_label": "Nguồn sơ đồ",
+      "source_ai": "AI",
+      "source_curated": "Tự soạn",
+      "edit_ai_disabled": "Sơ đồ AI được tạo lại sau mỗi lần tải lên nên không thể chỉnh sửa. Chuyển sang Tự soạn để tự biên tập."
     },
     "history": {
       "title": "Lịch sử tài liệu",
@@ -3966,8 +3970,6 @@
     "field_definition": "Định nghĩa",
     "field_weight": "Mức độ quan trọng",
     "new_node_label": "Khái niệm mới",
-    "link_from": "Liên kết từ đây",
-    "link_mode_hint": "Nhấp vào nút đích để tạo quan hệ (Esc để hủy)",
     "edge_exists": "Quan hệ này đã tồn tại",
     "canvas_label": "Khung sơ đồ kiến thức",
     "seeded_hint": "Được tạo sẵn từ sơ đồ khái niệm AI — chỉnh sửa tùy ý, rồi Lưu.",
@@ -3983,6 +3985,15 @@
     "publish_failed": "Xuất bản thất bại",
     "err_no_nodes": "Thêm ít nhất một nút trước khi lưu.",
     "err_no_primary": "Đánh dấu đúng một nút làm nút chính (trung tâm).",
-    "err_many_primary": "Chỉ một nút được làm nút chính — bạn đang có {{count}}."
+    "err_many_primary": "Chỉ một nút được làm nút chính — bạn đang có {{count}}.",
+    "arrow_mode": "Mũi tên",
+    "arrow_kind": "Loại mũi tên",
+    "arrow_pick_source": "Đã bật chế độ mũi tên — nhấp vào nút BẮT ĐẦU (Esc để thoát)",
+    "arrow_pick_target": "Giờ nhấp vào nút ĐÍCH ({{relation}})",
+    "rel_prerequisite": "Là tiên quyết của",
+    "rel_related": "Liên quan đến",
+    "edge_detail": "Quan hệ",
+    "reverse_arrow": "Đảo chiều",
+    "delete_arrow": "Xóa mũi tên"
   }
 }

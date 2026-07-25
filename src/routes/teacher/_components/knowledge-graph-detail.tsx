@@ -5,8 +5,10 @@ import {
   Brain,
   Circle,
   Minus,
+  Pencil,
   Plus,
   RotateCcw,
+  Sparkles,
   Workflow,
   X,
 } from "lucide-react";
@@ -238,14 +240,25 @@ function radiusFor(weight: number, maxW: number, minW: number): number {
   return 12 + t * 22; // 12–34px in world units
 }
 
+export type KgSource = "ai" | "curated";
+
 export function KnowledgeGraphDetail({
   data,
   title,
   onClose,
+  source = "ai",
+  onSourceChange,
+  onEdit,
 }: {
   data: LessonKnowledgeGraph;
   title: string;
   onClose: () => void;
+  /** Which graph is being displayed. The parent owns the fetch for each. */
+  source?: KgSource;
+  /** Omit to hide the AI/Curated toggle entirely (single-source callers). */
+  onSourceChange?: (next: KgSource) => void;
+  /** Omit to hide the Edit button. Only enabled while viewing `curated`. */
+  onEdit?: () => void;
 }) {
   const { t } = useTranslation();
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -614,6 +627,46 @@ export function KnowledgeGraphDetail({
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          {/* Graph source: the AI-derived concept graph (read-only, regenerated
+              on every ingest) vs the teacher's curated graph (editable, what
+              students see once published). Only rendered when the parent wires
+              up a curated source. */}
+          {onSourceChange && (
+            <div
+              role="group"
+              aria-label={t("teacher_lesson_materials.kg.source_label")}
+              className="flex items-center rounded-lg border border-m3-outline-variant/30 bg-m3-surface-container p-0.5"
+            >
+              <button
+                type="button"
+                onClick={() => onSourceChange("ai")}
+                aria-pressed={source === "ai"}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
+                  source === "ai"
+                    ? "bg-m3-primary text-white"
+                    : "text-m3-on-surface-variant hover:text-m3-primary",
+                )}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                {t("teacher_lesson_materials.kg.source_ai")}
+              </button>
+              <button
+                type="button"
+                onClick={() => onSourceChange("curated")}
+                aria-pressed={source === "curated"}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
+                  source === "curated"
+                    ? "bg-m3-primary text-white"
+                    : "text-m3-on-surface-variant hover:text-m3-primary",
+                )}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                {t("teacher_lesson_materials.kg.source_curated")}
+              </button>
+            </div>
+          )}
           {/* Layout mode toggle: Circular (radial) vs Tree (prereq hierarchy). */}
           <div
             role="group"
@@ -649,6 +702,31 @@ export function KnowledgeGraphDetail({
               {t("teacher_lesson_materials.kg.layout_tree")}
             </button>
           </div>
+          {/* Edit lives HERE (in the detail screen), not on the lesson-settings
+              card, so view and edit are two modes of the same screen. Only the
+              curated graph is editable — the AI graph is regenerated on every
+              ingest, so edits to it would be silently overwritten. */}
+          {onEdit && (
+            <button
+              type="button"
+              onClick={onEdit}
+              disabled={source !== "curated"}
+              title={
+                source === "curated"
+                  ? t("teacher_lesson_materials.kg.edit")
+                  : t("teacher_lesson_materials.kg.edit_ai_disabled")
+              }
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
+                source === "curated"
+                  ? "bg-m3-surface-container text-m3-on-surface-variant hover:text-m3-primary"
+                  : "bg-m3-surface-container/50 text-m3-on-surface-variant/40 cursor-not-allowed",
+              )}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              {t("teacher_lesson_materials.kg.edit")}
+            </button>
+          )}
           <button
             type="button"
             onClick={onClose}

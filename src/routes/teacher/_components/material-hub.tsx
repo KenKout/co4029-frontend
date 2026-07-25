@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   useTeacherLessonKnowledgeGraph,
+  useCuratedKnowledgeGraph,
   useTeacherMaterialStatus,
   useInitMaterialUpload,
   useCompleteMaterialUpload,
@@ -50,6 +51,7 @@ import { uploadMultipart } from "@/lib/upload/multipart";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { KnowledgeGraphDetail } from "./knowledge-graph-detail";
+import type { KgSource } from "./knowledge-graph-detail";
 import { KnowledgeGraphEditor } from "./knowledge-graph-editor";
 
 export const PROC_STATUS: Record<string, { color: string; spin?: boolean }> = {
@@ -976,14 +978,21 @@ export function KnowledgeGraphPreview({
   // Full-screen explorer. Only opened on demand, and it fetches the fuller
   // graph (higher node limit) so "expand" actually shows more than the preview.
   const [expanded, setExpanded] = useState(false);
-  // Teacher-curated KG editor. Independent of the AI KG above — it seeds itself
-  // from the AI graph on first open, so it's available even when the AI preview
-  // is empty/disabled.
+  // Which graph the detail screen is showing: the AI-derived concept graph
+  // (read-only) or the teacher's curated graph (editable / publishable).
+  const [kgSource, setKgSource] = useState<KgSource>("ai");
+  // Teacher-curated KG editor, launched from inside the detail screen.
   const [editing, setEditing] = useState(false);
   const { data: detailData } = useTeacherLessonKnowledgeGraph(
     lessonId,
     readyCount,
     expanded ? 60 : undefined,
+  );
+  // Curated draft, fetched only once the detail screen is open. Reused as the
+  // detail screen's data when the Curated source is selected, so both modes
+  // render the SAME graph the editor writes to.
+  const { data: curatedData } = useCuratedKnowledgeGraph(
+    expanded ? lessonId : undefined,
   );
 
   const W = 340;
@@ -1019,31 +1028,19 @@ export function KnowledgeGraphPreview({
             {t("teacher_lesson_materials.kg.title")}
           </h3>
         </div>
-        {/* Right-side controls: Edit (curated KG — always available, seeds
-            itself) + Expand (AI preview explorer — only when there's an AI
-            graph to explore). */}
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            aria-label={t("teacher_lesson_materials.kg.edit")}
-            title={t("teacher_lesson_materials.kg.edit")}
-            className="rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer"
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-          {nodes.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setExpanded(true)}
-              aria-label={t("teacher_lesson_materials.kg.expand")}
-              title={t("teacher_lesson_materials.kg.expand")}
-              className="rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer"
-            >
-              <Maximize2 className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+        {/* Expand → full-screen detail screen, which is where the AI/Curated
+            source toggle and Edit live (so viewing and editing are two modes of
+            one screen). Always available: even with no AI graph, the teacher can
+            open it and switch to Curated to author one from scratch. */}
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          aria-label={t("teacher_lesson_materials.kg.expand")}
+          title={t("teacher_lesson_materials.kg.expand")}
+          className="shrink-0 rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </button>
       </div>
 
       {isLoading ? (
@@ -1289,17 +1286,59 @@ export function KnowledgeGraphPreview({
       {/* Full-screen explorer. Prefer the fuller detail fetch (limit=60) once
           it lands; fall back to the preview data so opening feels instant
           rather than waiting on the larger request. */}
-      {expanded && (detailData ?? data) && (
+      {expanded && (
         <KnowledgeGraphDetail
-          data={detailData ?? (data as LessonKnowledgeGraph)}
+          data={
+            kgSource === "curated"
+              ? {
+                  // Project the curated graph into the viewer's shape. The
+                  // viewer treats nodes[0] as the centre, so the primary node is
+                  // hoisted to the front; `mention_count` is unused here so the
+                  // curated `weight` drives node size directly.
+                  enabled: true,
+                  lesson_id: lessonId,
+                  total_concepts: curatedData?.nodes.length ?? 0,
+                  nodes: [...(curatedData?.nodes ?? [])]
+                    .sort(
+                      (a, b) =>
+                        Number(b.is_primary) - Number(a.is_primary) ||
+                        b.weight - a.weight,
+                    )
+                    .map((n) => ({
+                      id: n.id,
+                      label: n.label,
+                      type: n.type,
+                      definition: n.definition ?? null,
+                      weight: n.weight,
+                    })),
+                  edges: (curatedData?.edges ?? []).map((e) => ({
+                    source: e.source,
+                    target: e.target,
+                    relation: e.relation,
+                    weight: 1,
+                  })),
+                } as LessonKnowledgeGraph
+              : ((detailData ??
+                  data ?? {
+                    enabled: true,
+                    lesson_id: lessonId,
+                    total_concepts: 0,
+                    nodes: [],
+                    edges: [],
+                  }) as LessonKnowledgeGraph)
+          }
           title={t("teacher_lesson_materials.kg.title")}
           onClose={() => setExpanded(false)}
+          source={kgSource}
+          onSourceChange={setKgSource}
+          onEdit={() => setEditing(true)}
         />
       )}
 
       {/* Teacher-curated KG editor (CRUD + primary rule + undo/redo +
-          save/publish). Mounts its own full-screen portal; seeds from the AI
-          KG on first open. */}
+          save/publish). Launched from the detail screen's Edit button; mounts
+          its own full-screen portal above it and seeds from the AI KG on first
+          open. */}
       {editing && (
         <KnowledgeGraphEditor
           lessonId={lessonId}

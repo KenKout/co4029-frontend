@@ -12,7 +12,8 @@ import {
   Send,
   Trash2,
   Star,
-  Link2,
+  ArrowRight,
+  ArrowLeftRight,
   Loader2,
   Check,
   Pencil,
@@ -41,6 +42,17 @@ import type {
  * client-side undo/redo over an in-memory history stack (reset on load/save).
  * Save persists the draft; Publish snapshots it to the student reading view.
  *
+ * Interaction parity with the read-only detail explorer is deliberate: same
+ * wheel-zoom maths (zoom toward the pointer, non-passive listener so ctrl+wheel
+ * can't page-zoom), same +/- / fit controls, and the same camera glide when a
+ * node is selected — so switching between viewing and editing doesn't feel like
+ * two different tools.
+ *
+ * Relationships are drawn via ARROW MODE: toggle it on, click a source node
+ * then a target node. Two arrow kinds are supported (PREREQUISITE_OF and
+ * RELATED_TO), chosen in the toolbar. Clicking an existing arrow selects it,
+ * exposing edit (kind / direction) and delete.
+ *
  * Rendering is plain SVG with a single <g> transform (translate+scale), same
  * dependency-free approach as the read-only explorer. Coordinates live in an
  * abstract "world" space that the transform maps to screen.
@@ -64,9 +76,33 @@ interface Transform {
 
 const WORLD_W = 1600;
 const WORLD_H = 1000;
+// Zoom bounds mirror knowledge-graph-detail.tsx so both screens feel identical.
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 3;
 const HISTORY_CAP = 100;
+
+// Node-type vocabulary offered by the type selector. A closed list keeps the
+// graph consistent — free text produced "concept"/"Concept"/"Concepts" as three
+// distinct kinds. The backend column is a plain string, so extending this list
+// needs no migration, and an unrecognised legacy value falls back to the first
+// entry in the picker rather than being silently dropped.
+const NODE_TYPES = [
+  "Concept",
+  "Definition",
+  "Theorem",
+  "Formula",
+  "Procedure",
+  "Example",
+  "Application",
+  "Tool",
+  "Person",
+  "Event",
+] as const;
+
+const RELATION_KINDS: readonly CuratedKGRelation[] = [
+  "PREREQUISITE_OF",
+  "RELATED_TO",
+];
 
 // Deterministic radial seed layout so a freshly loaded graph has sane
 // positions. The teacher can drag from here; positions are view-only (not
@@ -146,8 +182,24 @@ export function KnowledgeGraphEditor({
     scale: 1,
   });
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  // Edge-draw mode: when set, the next node click completes an edge from it.
+  // Arrow (edge-draw) mode. A toggle rather than a per-node action: turn it on,
+  // then click a source node and a target node. Stays armed after each arrow so
+  // several can be drawn in a row.
+  const [arrowMode, setArrowMode] = useState(false);
+  // Which arrow kind new relationships are created with while arrow mode is on.
+  const [arrowRelation, setArrowRelation] =
+    useState<CuratedKGRelation>("PREREQUISITE_OF");
+  // Pending source node while arrow mode waits for its target.
   const [linkSource, setLinkSource] = useState<string | null>(null);
+  // Currently selected relationship, enabling edit (kind/direction) + delete.
+  const [selectedEdge, setSelectedEdge] = useState<{
+    source: string;
+    target: string;
+  } | null>(null);
+  // When true the world <g> animates its transform (camera glide on select),
+  // then goes instant again so pan/zoom/drag stay lag-free. Same as detail view.
+  const [smooth, setSmooth] = useState(false);
+  const smoothTimer = useRef<number | null>(null);
 
   // Seed local state once the draft loads.
   useEffect(() => {
@@ -221,6 +273,7 @@ export function KnowledgeGraphEditor({
       is_primary: isFirst,
     };
     commit({ nodes: [...graph.nodes, node], edges: graph.edges });
+    setSelectedEdge(null);
     setSelectedId(id);
   }, [graph, commit, t]);
 
@@ -242,6 +295,10 @@ export function KnowledgeGraphEditor({
       });
       setSelectedId((cur) => (cur === id ? null : cur));
       setLinkSource((cur) => (cur === id ? null : cur));
+      // Any relationship touching the removed node is gone too.
+      setSelectedEdge((cur) =>
+        cur && (cur.source === id || cur.target === id) ? null : cur,
+      );
     },
     [graph, commit],
   );
@@ -283,8 +340,45 @@ export function KnowledgeGraphEditor({
           (e) => !(e.source === source && e.target === target),
         ),
       });
+      setSelectedEdge((cur) =>
+        cur && cur.source === source && cur.target === target ? null : cur,
+      );
     },
     [graph, commit],
+  );
+
+  /** Change an existing relationship's kind (arrow type) in place. */
+  const updateEdgeRelation = useCallback(
+    (source: string, target: string, relation: CuratedKGRelation) => {
+      commit({
+        nodes: graph.nodes,
+        edges: graph.edges.map((e) =>
+          e.source === source && e.target === target ? { ...e, relation } : e,
+        ),
+      });
+    },
+    [graph, commit],
+  );
+
+  /** Flip a relationship's direction (source ⇄ target). */
+  const reverseEdge = useCallback(
+    (source: string, target: string) => {
+      // Refuse if the reversed pair already exists — that would be a duplicate.
+      if (graph.edges.some((e) => e.source === target && e.target === source)) {
+        toast.info(t("teacher_kg_editor.edge_exists"));
+        return;
+      }
+      commit({
+        nodes: graph.nodes,
+        edges: graph.edges.map((e) =>
+          e.source === source && e.target === target
+            ? { ...e, source: target, target: source }
+            : e,
+        ),
+      });
+      setSelectedEdge({ source: target, target: source });
+    },
+    [graph, commit, t],
   );
 
   // --- Dirty tracking ------------------------------------------------------
@@ -377,6 +471,37 @@ export function KnowledgeGraphEditor({
     }
   }, [fitToView, initialized.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Glide the camera so a node lands in the centre of the canvas — identical to
+  // the read-only detail screen's focusNode, so selecting a concept behaves the
+  // same in both. Enables the transform transition for the move, then disables
+  // it so subsequent pan/zoom stay instant.
+  const focusNode = useCallback((nodeId: string) => {
+    const svg = svgRef.current;
+    const p = positionsRef.current.get(nodeId);
+    if (!svg || !p) return;
+    const rect = svg.getBoundingClientRect();
+    setSmooth(true);
+    if (smoothTimer.current) window.clearTimeout(smoothTimer.current);
+    smoothTimer.current = window.setTimeout(() => setSmooth(false), 420);
+    setTransform((prev) => {
+      // Ease in a little if we're very zoomed out, so the focused node is
+      // comfortably readable — matches the detail screen's behaviour.
+      const scale = Math.min(MAX_SCALE, Math.max(prev.scale, 0.9));
+      return {
+        scale,
+        tx: rect.width / 2 - p.x * scale,
+        ty: rect.height / 2 - p.y * scale,
+      };
+    });
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (smoothTimer.current) window.clearTimeout(smoothTimer.current);
+    },
+    [],
+  );
+
   // --- Keyboard: undo/redo/escape ------------------------------------------
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -392,14 +517,18 @@ export function KnowledgeGraphEditor({
         e.preventDefault();
         redo();
       } else if (e.key === "Escape") {
+        // Unwind one layer at a time: pending arrow source → arrow mode →
+        // selected edge → selected node → close the editor.
         if (linkSource) setLinkSource(null);
+        else if (arrowMode) setArrowMode(false);
+        else if (selectedEdge) setSelectedEdge(null);
         else if (selectedId) setSelectedId(null);
         else onClose();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [undo, redo, onClose, linkSource, selectedId]);
+  }, [undo, redo, onClose, linkSource, arrowMode, selectedEdge, selectedId]);
 
   // --- Pointer interaction (pan + node drag) -------------------------------
   const drag = useRef<{
@@ -463,19 +592,29 @@ export function KnowledgeGraphEditor({
 
   const onNodeClick = (nodeId: string) => {
     if (drag.current.moved) return;
-    if (linkSource) {
-      // Complete an edge from linkSource → this node.
+    // Arrow mode: first click arms the source, second completes the arrow with
+    // the currently selected relation kind. Mode stays on for the next one.
+    if (arrowMode) {
+      if (!linkSource) {
+        setLinkSource(nodeId);
+        return;
+      }
       if (linkSource !== nodeId) {
-        addEdge(linkSource, nodeId, "PREREQUISITE_OF");
+        addEdge(linkSource, nodeId, arrowRelation);
       }
       setLinkSource(null);
       return;
     }
+    setSelectedEdge(null);
     setSelectedId((cur) => (cur === nodeId ? null : nodeId));
+    // Parity with the detail screen: selecting a node glides the camera to it.
+    focusNode(nodeId);
   };
 
   // Native non-passive wheel zoom (React onWheel is passive → can't
   // preventDefault, which would let ctrl+scroll zoom the browser page).
+  // Identical maths to knowledge-graph-detail.tsx: zoom toward the pointer so
+  // the concept under the cursor stays put.
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
@@ -527,6 +666,22 @@ export function KnowledgeGraphEditor({
     [graph.nodes],
   );
   const selectedNode = selectedId ? nodeById.get(selectedId) : undefined;
+  const activeEdge = useMemo(
+    () =>
+      selectedEdge
+        ? graph.edges.find(
+            (e) =>
+              e.source === selectedEdge.source &&
+              e.target === selectedEdge.target,
+          )
+        : undefined,
+    [selectedEdge, graph.edges],
+  );
+
+  const relationLabel = (r: CuratedKGRelation) =>
+    r === "PREREQUISITE_OF"
+      ? t("teacher_kg_editor.rel_prerequisite")
+      : t("teacher_kg_editor.rel_related");
 
   const busy = saveMutation.isPending || publishMutation.isPending;
 
@@ -549,6 +704,42 @@ export function KnowledgeGraphEditor({
             <Plus className="h-3.5 w-3.5" />
             {t("teacher_kg_editor.add_node")}
           </button>
+          {/* Arrow mode: toggle on, then click two nodes to link them. The
+              adjacent picker chooses which arrow kind gets created. */}
+          <button
+            type="button"
+            onClick={() => {
+              setArrowMode((on) => !on);
+              setLinkSource(null);
+            }}
+            aria-pressed={arrowMode}
+            title={t("teacher_kg_editor.arrow_mode")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
+              arrowMode
+                ? "bg-m3-primary text-white"
+                : "bg-m3-surface-container text-m3-on-surface-variant hover:text-m3-primary",
+            )}
+          >
+            <ArrowRight className="h-3.5 w-3.5" />
+            {t("teacher_kg_editor.arrow_mode")}
+          </button>
+          {arrowMode && (
+            <select
+              value={arrowRelation}
+              onChange={(e) =>
+                setArrowRelation(e.target.value as CuratedKGRelation)
+              }
+              aria-label={t("teacher_kg_editor.arrow_kind")}
+              className="rounded-lg border border-m3-outline-variant/30 bg-m3-surface-container-lowest px-2 py-1.5 text-xs font-semibold text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20"
+            >
+              {RELATION_KINDS.map((r) => (
+                <option key={r} value={r}>
+                  {relationLabel(r)}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             type="button"
             onClick={undo}
@@ -619,17 +810,21 @@ export function KnowledgeGraphEditor({
       </div>
 
       {/* Validation / mode banner */}
-      {(validationError || linkSource) && (
+      {(validationError || arrowMode) && (
         <div
           className={cn(
             "px-4 py-2 text-xs font-semibold",
-            linkSource
+            arrowMode
               ? "bg-m3-primary/10 text-m3-primary"
               : "bg-amber-50 text-amber-800",
           )}
         >
-          {linkSource
-            ? t("teacher_kg_editor.link_mode_hint")
+          {arrowMode
+            ? linkSource
+              ? t("teacher_kg_editor.arrow_pick_target", {
+                  relation: relationLabel(arrowRelation),
+                })
+              : t("teacher_kg_editor.arrow_pick_source")
             : validationError}
         </div>
       )}
@@ -645,13 +840,19 @@ export function KnowledgeGraphEditor({
             ref={svgRef}
             className={cn(
               "h-full w-full touch-none select-none",
-              drag.current.kind === "pan" ? "cursor-grabbing" : "cursor-grab",
+              arrowMode
+                ? "cursor-crosshair"
+                : drag.current.kind === "pan"
+                  ? "cursor-grabbing"
+                  : "cursor-grab",
             )}
             onPointerDown={(e) => {
               onPointerDownBg(e);
-              // Click on empty canvas clears selection / link mode.
+              // Empty-canvas click clears selection and any pending arrow
+              // source (without leaving arrow mode — Esc does that).
               if (linkSource) setLinkSource(null);
               setSelectedId(null);
+              setSelectedEdge(null);
             }}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -660,8 +861,11 @@ export function KnowledgeGraphEditor({
             aria-label={t("teacher_kg_editor.canvas_label")}
           >
             <defs>
+              {/* Two arrow kinds. Solid amber head + dashed line =
+                  PREREQUISITE_OF (a hard dependency); open slate head + solid
+                  line = RELATED_TO (a soft association). */}
               <marker
-                id="kge-arrow"
+                id="kge-arrow-prereq"
                 viewBox="0 0 10 10"
                 refX="9"
                 refY="5"
@@ -671,8 +875,38 @@ export function KnowledgeGraphEditor({
               >
                 <path d="M0,1 L9,5 L0,9 z" fill="#d97706" />
               </marker>
+              <marker
+                id="kge-arrow-related"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path
+                  d="M0,1 L9,5 L0,9"
+                  fill="none"
+                  stroke="#64748b"
+                  strokeWidth="1.6"
+                />
+              </marker>
+              <marker
+                id="kge-arrow-selected"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="5"
+                markerHeight="5"
+                orient="auto-start-reverse"
+              >
+                <path d="M0,1 L9,5 L0,9 z" fill="#7c3aed" />
+              </marker>
             </defs>
             <g
+              className={
+                smooth ? "transition-transform duration-[400ms]" : undefined
+              }
               transform={`translate(${transform.tx} ${transform.ty}) scale(${transform.scale})`}
             >
               {/* Edges */}
@@ -694,33 +928,70 @@ export function KnowledgeGraphEditor({
                 const y2 = b.y - uy * (rb + 7);
                 const mx = (x1 + x2) / 2;
                 const my = (y1 + y2) / 2;
+                const isEdgeSelected =
+                  !!selectedEdge &&
+                  selectedEdge.source === e.source &&
+                  selectedEdge.target === e.target;
                 return (
                   <g key={`${e.source}->${e.target}-${i}`}>
+                    {/* Invisible fat hit-line: the drawn arrow is only ~1.5px,
+                        far too thin to click reliably when zoomed out. */}
                     <line
                       x1={x1}
                       y1={y1}
                       x2={x2}
                       y2={y2}
-                      stroke={isPrereq ? "#d97706" : "#94a3b8"}
-                      strokeWidth={1.5}
-                      strokeDasharray={isPrereq ? "6 4" : undefined}
-                      markerEnd={isPrereq ? "url(#kge-arrow)" : undefined}
-                    />
-                    {/* Delete-edge hotspot at the midpoint. */}
-                    <circle
-                      cx={mx}
-                      cy={my}
-                      r={7}
-                      fill="#fff"
-                      stroke="#ef4444"
-                      strokeWidth={1}
-                      className="cursor-pointer opacity-0 hover:opacity-100"
+                      stroke="transparent"
+                      strokeWidth={14}
+                      className="cursor-pointer"
                       onPointerDown={(ev) => ev.stopPropagation()}
-                      onClick={(ev) => {
+                      onPointerUp={(ev) => {
                         ev.stopPropagation();
-                        deleteEdge(e.source, e.target);
+                        // In arrow mode clicks belong to node linking, not
+                        // selection.
+                        if (arrowMode) return;
+                        setSelectedId(null);
+                        setSelectedEdge((cur) =>
+                          cur &&
+                          cur.source === e.source &&
+                          cur.target === e.target
+                            ? null
+                            : { source: e.source, target: e.target },
+                        );
                       }}
                     />
+                    <line
+                      x1={x1}
+                      y1={y1}
+                      x2={x2}
+                      y2={y2}
+                      stroke={
+                        isEdgeSelected
+                          ? "#7c3aed"
+                          : isPrereq
+                            ? "#d97706"
+                            : "#94a3b8"
+                      }
+                      strokeWidth={isEdgeSelected ? 3 : 1.5}
+                      strokeDasharray={isPrereq ? "6 4" : undefined}
+                      markerEnd={
+                        isEdgeSelected
+                          ? "url(#kge-arrow-selected)"
+                          : isPrereq
+                            ? "url(#kge-arrow-prereq)"
+                            : "url(#kge-arrow-related)"
+                      }
+                      className="pointer-events-none"
+                    />
+                    {isEdgeSelected && (
+                      <circle
+                        cx={mx}
+                        cy={my}
+                        r={4}
+                        fill="#7c3aed"
+                        className="pointer-events-none"
+                      />
+                    )}
                   </g>
                 );
               })}
@@ -816,8 +1087,90 @@ export function KnowledgeGraphEditor({
           </button>
         </div>
 
+        {/* Selected-relationship editor (arrow kind / direction / delete) */}
+        {activeEdge && selectedEdge && (
+          <div className="absolute top-4 right-4 w-80 max-w-[calc(100%-2rem)] rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest/98 p-4 shadow-glass backdrop-blur">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="font-headline font-bold text-m3-on-surface">
+                {t("teacher_kg_editor.edge_detail")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setSelectedEdge(null)}
+                aria-label={t("common.close")}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-m3-on-surface-variant hover:bg-m3-surface-container-high"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {/* Which two concepts this arrow connects, in direction order. */}
+              <div className="flex items-center gap-2 rounded-lg bg-m3-surface-container-low px-2.5 py-2 text-xs">
+                <span className="truncate font-semibold text-m3-on-surface">
+                  {nodeById.get(activeEdge.source)?.label ?? activeEdge.source}
+                </span>
+                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-m3-on-surface-variant" />
+                <span className="truncate font-semibold text-m3-on-surface">
+                  {nodeById.get(activeEdge.target)?.label ?? activeEdge.target}
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="kge-edge-kind"
+                  className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant"
+                >
+                  {t("teacher_kg_editor.arrow_kind")}
+                </label>
+                <select
+                  id="kge-edge-kind"
+                  value={activeEdge.relation}
+                  onChange={(ev) =>
+                    updateEdgeRelation(
+                      activeEdge.source,
+                      activeEdge.target,
+                      ev.target.value as CuratedKGRelation,
+                    )
+                  }
+                  className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20"
+                >
+                  {RELATION_KINDS.map((r) => (
+                    <option key={r} value={r}>
+                      {relationLabel(r)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() =>
+                    reverseEdge(activeEdge.source, activeEdge.target)
+                  }
+                  className="flex items-center gap-1.5 rounded-lg bg-m3-surface-container px-2.5 py-1.5 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-primary"
+                >
+                  <ArrowLeftRight className="h-3.5 w-3.5" />
+                  {t("teacher_kg_editor.reverse_arrow")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    deleteEdge(activeEdge.source, activeEdge.target)
+                  }
+                  className="flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {t("teacher_kg_editor.delete_arrow")}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Selected-node detail editor */}
-        {selectedNode && (
+        {selectedNode && !activeEdge && (
           <div className="absolute top-4 right-4 w-80 max-w-[calc(100%-2rem)] rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest/98 p-4 shadow-glass backdrop-blur">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-headline font-bold text-m3-on-surface">
@@ -847,16 +1200,32 @@ export function KnowledgeGraphEditor({
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                <label
+                  htmlFor="kge-node-type"
+                  className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant"
+                >
                   {t("teacher_kg_editor.field_type")}
                 </label>
-                <Input
-                  value={selectedNode.type}
+                <select
+                  id="kge-node-type"
+                  value={
+                    (NODE_TYPES as readonly string[]).includes(
+                      selectedNode.type,
+                    )
+                      ? selectedNode.type
+                      : NODE_TYPES[0]
+                  }
                   onChange={(e) =>
                     updateNode(selectedNode.id, { type: e.target.value })
                   }
-                  className="text-sm"
-                />
+                  className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20"
+                >
+                  {NODE_TYPES.map((nt) => (
+                    <option key={nt} value={nt}>
+                      {nt}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
@@ -907,14 +1276,6 @@ export function KnowledgeGraphEditor({
                   {selectedNode.is_primary
                     ? t("teacher_kg_editor.is_primary")
                     : t("teacher_kg_editor.make_primary")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLinkSource(selectedNode.id)}
-                  className="flex items-center gap-1.5 rounded-lg bg-m3-surface-container px-2.5 py-1.5 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-primary"
-                >
-                  <Link2 className="h-3.5 w-3.5" />
-                  {t("teacher_kg_editor.link_from")}
                 </button>
                 <button
                   type="button"

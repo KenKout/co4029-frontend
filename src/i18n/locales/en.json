@@ -3876,7 +3876,11 @@
       "layout_circular": "Circular",
       "layout_tree": "Tree",
       "edit": "Edit",
-      "editor_title": "Edit knowledge graph"
+      "editor_title": "Edit knowledge graph",
+      "source_label": "Graph source",
+      "source_ai": "AI",
+      "source_curated": "Curated",
+      "edit_ai_disabled": "The AI graph is regenerated on every upload and can't be edited. Switch to Curated to author your own."
     },
     "history": {
       "title": "Material history",
@@ -3976,8 +3980,6 @@
     "field_definition": "Definition",
     "field_weight": "Importance",
     "new_node_label": "New concept",
-    "link_from": "Link from here",
-    "link_mode_hint": "Click a target node to create a relationship (Esc to cancel)",
     "edge_exists": "That relationship already exists",
     "canvas_label": "Knowledge graph canvas",
     "seeded_hint": "Seeded from the AI concept graph — edit freely, then Save.",
@@ -3993,6 +3995,15 @@
     "publish_failed": "Publish failed",
     "err_no_nodes": "Add at least one node before saving.",
     "err_no_primary": "Mark exactly one node as the primary (center) node.",
-    "err_many_primary": "Only one node can be primary — you have {{count}}."
+    "err_many_primary": "Only one node can be primary — you have {{count}}.",
+    "arrow_mode": "Arrow",
+    "arrow_kind": "Arrow type",
+    "arrow_pick_source": "Arrow mode on — click the node the arrow starts FROM (Esc to exit)",
+    "arrow_pick_target": "Now click the node the arrow points TO ({{relation}})",
+    "rel_prerequisite": "Prerequisite of",
+    "rel_related": "Related to",
+    "edge_detail": "Relationship",
+    "reverse_arrow": "Reverse direction",
+    "delete_arrow": "Delete arrow"
   }
 }
