@@ -581,9 +581,9 @@ export function KnowledgeGraphDetail({
     const y = p.y * transform.scale + transform.ty;
     const r = radiusFor(nodeById.get(pinned)?.weight ?? minW, maxW, minW) *
       transform.scale;
-    // Clamp the horizontal anchor so a centred (translateX(-50%)) 288px panel
+    // Clamp the horizontal anchor so a centred (translateX(-50%)) 384px panel
     // stays fully on-canvas even when the node is near an edge.
-    const half = 150;
+    const half = 200;
     const clampedX = Math.min(Math.max(x, half), rect.width - half);
     // Prefer above; flip below when the node is in the top third.
     const below = y < rect.height * 0.34;
@@ -591,20 +591,15 @@ export function KnowledgeGraphDetail({
   }, [pinned, positions, transform, nodeById, maxW, minW]);
 
   const overlay = (
-    // Dimmed backdrop. Clicking it (but not the dialog inside) closes — the
-    // dialog stops propagation so interior clicks never bubble here.
+    // Full-screen, edge-to-edge explorer (not a windowed dialog) — the graph
+    // wants all the room it can get. Escape closes it (see the key handler);
+    // node-detail closing is handled by the popup's own controls.
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 backdrop-blur-sm"
-      onPointerDown={onClose}
-      role="presentation"
+      className="fixed inset-0 z-50 flex flex-col bg-m3-surface"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
     >
-      <div
-        className="flex h-full max-h-[92vh] w-full max-w-[1500px] flex-col overflow-hidden rounded-2xl bg-m3-surface shadow-2xl"
-        onPointerDown={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-      >
       {/* Header */}
       <div className="flex items-center justify-between gap-3 border-b border-m3-outline-variant/20 bg-m3-surface-container-lowest px-4 py-3">
         <div className="flex items-center gap-2 min-w-0">
@@ -888,7 +883,7 @@ export function KnowledgeGraphDetail({
             the node is high up) so it never clips the top edge. */}
         {pinned && pinnedRelations && pinnedScreen && nodeById.get(pinned) && (
           <div
-            className="absolute z-10 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest/98 p-4 shadow-glass backdrop-blur"
+            className="absolute z-10 w-96 max-w-[calc(100vw-2rem)] rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest/98 p-4 shadow-glass backdrop-blur"
             style={{
               left: pinnedScreen.x,
               top: pinnedScreen.below
@@ -953,7 +948,6 @@ export function KnowledgeGraphDetail({
             </div>
           </div>
         )}
-      </div>
       </div>
     </div>
   );
