@@ -1090,7 +1090,7 @@ function TabBar({
               aria-controls={item.id}
               onClick={() => onSelect(item.id as TabId)}
               className={cn(
-                "group relative z-10 min-w-fit flex-1 rounded-md px-3 py-2 text-left transition-colors duration-300",
+                "group relative z-10 min-w-fit flex-1 rounded-md px-3 py-2 text-center transition-colors duration-300",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
                 "whitespace-nowrap cursor-pointer",
                 // Text color switches with the sliding pill; the pill itself
@@ -1100,7 +1100,11 @@ function TabBar({
                   : "text-m3-on-surface hover:bg-surface-muted",
               )}
             >
-              <span className="flex items-center gap-2">
+              {/* Everything on ONE centered row so the tab name stays on the
+                  same baseline across all tabs — a status affix (e.g.
+                  "Completed") sits inline after the label instead of pushing
+                  the name up onto a second line. */}
+              <span className="flex items-center justify-center gap-2">
                 {statusDot(status)}
                 <span className="text-[13px] font-bold">
                   <span className="lg:hidden xl:inline">{item.label}</span>
@@ -1108,17 +1112,17 @@ function TabBar({
                     {item.shortLabel ?? item.label}
                   </span>
                 </span>
+                {status.kind !== "none" && (
+                  <span
+                    className={cn(
+                      "hidden text-[11px] leading-tight transition-colors duration-300 xl:inline",
+                      isActive ? "text-white/80" : "text-m3-on-surface-variant",
+                    )}
+                  >
+                    {status.label}
+                  </span>
+                )}
               </span>
-              {status.kind !== "none" && (
-                <span
-                  className={cn(
-                    "mt-0.5 block text-[11px] leading-tight transition-colors duration-300",
-                    isActive ? "text-white/80" : "text-m3-on-surface-variant",
-                  )}
-                >
-                  {status.label}
-                </span>
-              )}
             </button>
           );
         })}
