@@ -3363,6 +3363,12 @@
       "title": "Delete this interview?",
       "body": "This permanently deletes {{title}} along with related questions and recordings."
     },
+    "confirm_unsaved": {
+      "title": "Save your changes?",
+      "body": "You have unsaved changes in Settings. Save them before switching tab, or keep editing and save later.",
+      "confirm": "Save now",
+      "cancel": "Later"
+    },
     "sections": {
       "general": {
         "title": "General info",

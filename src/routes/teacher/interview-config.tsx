@@ -367,8 +367,10 @@ export default function InterviewConfigPage() {
       id: outcomeId,
       nonce: (prev?.nonce ?? 0) + 1,
     }));
-    // Switch to the Review tab so the filtered questions are visible.
-    setActiveTab("questions");
+    // Switch to the Review tab so the filtered questions are visible. Routed
+    // through the guard: this link also leaves Settings, so unsaved edits must
+    // prompt here exactly as they do for a direct tab click.
+    requestTabChange("questions");
   }
   const [generationForm, setGenerationForm] = useState<GenerationFormState>({
     mode: "outcome-based" as GenerationMode,
@@ -407,6 +409,39 @@ export default function InterviewConfigPage() {
     const saved = draftFromConfig(config);
     return JSON.stringify(draft) !== JSON.stringify(saved);
   }, [draft, config]);
+
+  // ── Unsaved-changes guard on tab switch ────────────────────────────────────
+  // Leaving Settings with unsaved edits is not destructive (panels stay mounted,
+  // so the draft survives), but it is easy to forget and then lose the work on a
+  // later reload. Intercepting the tab switch asks once: save now, or carry on
+  // and save later. The pending tab is remembered so either answer lands the
+  // teacher where they were going.
+  const [pendingTab, setPendingTab] = useState<TabId | null>(null);
+
+  function requestTabChange(next: TabId) {
+    if (next === activeTab) return;
+    if (activeTab === "settings" && settingsDirty) {
+      setPendingTab(next);
+      return;
+    }
+    setActiveTab(next);
+  }
+
+  /** "Later" — keep the unsaved draft and switch anyway. */
+  function discardSaveAndSwitch() {
+    const next = pendingTab;
+    setPendingTab(null);
+    if (next) setActiveTab(next);
+  }
+
+  /** "Save now" — persist first, and only switch if the save succeeded. */
+  async function saveAndSwitch() {
+    const next = pendingTab;
+    const ok = await saveSettings();
+    if (!ok) return; // stay put with the dialog open so the error is actionable
+    setPendingTab(null);
+    if (next) setActiveTab(next);
+  }
 
   // ── Section-nav status derivation ──────────────────────────────────────────
   // Pure read of existing state — no business logic added. Settings is
@@ -547,10 +582,21 @@ export default function InterviewConfigPage() {
 
   async function handleSaveSettings(event: React.FormEvent) {
     event.preventDefault();
-    if (!draft) return;
+    await saveSettings();
+  }
+
+  /**
+   * Persist the settings draft. Returns true only when the save actually
+   * succeeded, so callers that need to act on the result — e.g. the
+   * unsaved-changes dialog, which must not navigate away after a failed save —
+   * can branch on it. Validation failure and request failure both return false
+   * (each already surfaces its own toast).
+   */
+  async function saveSettings(): Promise<boolean> {
+    if (!draft) return false;
     if (!draft.title.trim()) {
       toast.error(t("teacher_interview_config.errors.title_required"));
-      return;
+      return false;
     }
     try {
       await updateConfig.mutateAsync({
@@ -585,11 +631,13 @@ export default function InterviewConfigPage() {
       setJustSaved(true);
       window.setTimeout(() => setJustSaved(false), 2500);
       toast.success(t("teacher_interview_config.toasts.config_saved"));
+      return true;
     } catch (err: unknown) {
       toast.error(
         (err as Error).message ||
           t("teacher_interview_config.toasts.save_failed"),
       );
+      return false;
     }
   }
 
@@ -908,7 +956,7 @@ export default function InterviewConfigPage() {
       <TabBar
         items={navItems}
         activeTab={activeTab}
-        onSelect={setActiveTab}
+        onSelect={requestTabChange}
         ariaLabel={t("teacher_interview_config.section_nav.aria_label")}
       />
 
@@ -918,7 +966,7 @@ export default function InterviewConfigPage() {
           outcomeCount={outcomeCount}
           approvedCount={approvedCount}
           draftCount={draftCount}
-          onGoTo={setActiveTab}
+          onGoTo={requestTabChange}
         />
       )}
 
@@ -1002,7 +1050,7 @@ export default function InterviewConfigPage() {
                   questions={questions ?? []}
                   outcomes={outcomes ?? []}
                   timeLimitMinutes={config.time_limit_minutes ?? null}
-                  onGoTo={setActiveTab}
+                  onGoTo={requestTabChange}
                 />
               </section>
             </>
@@ -1021,6 +1069,27 @@ export default function InterviewConfigPage() {
         cancelLabel={t("common.cancel")}
         onConfirm={handleDelete}
         isPending={deleteConfig.isPending}
+      />
+
+      {/* Unsaved Settings changes, raised when leaving the Settings tab.
+          Non-destructive: "Later" keeps the draft (panels stay mounted) and just
+          switches, so the confirm button is `default`, not `destructive`.
+          Dismissing (Escape / backdrop) cancels the switch and stays on
+          Settings — the safe default when the intent is unclear. */}
+      <ConfirmDialog
+        open={pendingTab !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingTab(null);
+        }}
+        title={t("teacher_interview_config.confirm_unsaved.title")}
+        description={t("teacher_interview_config.confirm_unsaved.body")}
+        confirmLabel={t("teacher_interview_config.confirm_unsaved.confirm")}
+        cancelLabel={t("teacher_interview_config.confirm_unsaved.cancel")}
+        confirmVariant="default"
+        onConfirm={saveAndSwitch}
+        onCancel={discardSaveAndSwitch}
+        isPending={updateConfig.isPending}
+        dismissOnBackdrop
       />
     </div>
   );

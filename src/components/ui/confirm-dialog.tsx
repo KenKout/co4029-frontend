@@ -19,6 +19,16 @@ export interface ConfirmDialogProps {
   cancelLabel?: React.ReactNode;
   /** Called when the user clicks confirm. The dialog stays open until `open` flips. */
   onConfirm: () => void;
+  /**
+   * Optional explicit handler for the secondary (cancel) button.
+   *
+   * By default the cancel button only closes the dialog, which is right when
+   * cancelling means "do nothing". Provide this when the secondary button is a
+   * real second choice with its own effect (e.g. "switch tab anyway, save
+   * later") — then a click here runs the handler, while Escape / backdrop still
+   * mean plain dismissal via `onOpenChange`.
+   */
+  onCancel?: () => void;
   /** Visual treatment for the confirm button. Defaults to "destructive". */
   confirmVariant?: "default" | "destructive";
   /** Disables the confirm button (e.g. while a mutation runs). */
@@ -48,6 +58,7 @@ export function ConfirmDialog({
   confirmLabel,
   cancelLabel,
   onConfirm,
+  onCancel,
   confirmVariant = "destructive",
   isPending = false,
   extraContent,
@@ -93,7 +104,12 @@ export function ConfirmDialog({
           <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
             <AlertDialogPrimitive.Close
               render={
-                <Button type="button" variant="ghost" disabled={isPending}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={isPending}
+                  onClick={onCancel}
+                >
                   {cancelLabel ?? "Cancel"}
                 </Button>
               }

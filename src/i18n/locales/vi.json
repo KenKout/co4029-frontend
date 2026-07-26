@@ -3275,6 +3275,12 @@
       "title": "Xoá phỏng vấn này?",
       "body": "Hành động này sẽ xoá vĩnh viễn {{title}} cùng các câu hỏi và bản ghi liên quan."
     },
+    "confirm_unsaved": {
+      "title": "Lưu thay đổi?",
+      "body": "Bạn có thay đổi chưa lưu trong tab Cài đặt. Lưu ngay trước khi chuyển tab, hoặc để từ từ lưu sau.",
+      "confirm": "Lưu liền",
+      "cancel": "Từ từ"
+    },
     "sections": {
       "general": {
         "title": "Thông tin chung",
