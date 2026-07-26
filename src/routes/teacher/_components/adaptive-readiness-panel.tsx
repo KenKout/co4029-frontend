@@ -195,11 +195,13 @@ function CoverageStats({
         icon={<ClipboardList className="h-4 w-4" aria-hidden="true" />}
         label={t("teacher_interview_config.readiness.stat_approved_questions")}
         value={String(stats.approvedCount)}
+        stagger={0}
       />
       <Stat
         icon={<Target className="h-4 w-4" aria-hidden="true" />}
         label={t("teacher_interview_config.readiness.stat_outcomes_covered")}
         value={`${stats.coveredOutcomes}/${stats.outcomeCount}`}
+        stagger={1}
         tone={
           stats.outcomeCount > 0 && stats.coveredOutcomes === stats.outcomeCount
             ? "good"
@@ -230,8 +232,12 @@ function CoverageStats({
             ? "warn"
             : "neutral"
         }
+        stagger={2}
       />
-      <div className="rounded-xl border border-border bg-m3-surface-container-lowest p-3">
+      <div
+        className="animate-[fade-in-up_0.35s_cubic-bezier(0.16,1,0.3,1)_both] rounded-xl border border-border bg-m3-surface-container-lowest p-3 transition-colors duration-200 hover:border-m3-primary/30"
+        style={{ animationDelay: "180ms" }}
+      >
         <div className="flex items-center gap-1.5 text-[11px] font-medium text-m3-on-surface-variant">
           <Gauge className="h-4 w-4" aria-hidden="true" />
           {t("teacher_interview_config.readiness.stat_difficulty_mix")}
@@ -272,15 +278,21 @@ function Stat({
   value,
   hint,
   tone = "neutral",
+  stagger = 0,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   hint?: string;
   tone?: "good" | "warn" | "neutral";
+  /** Position in the stat row, used to stagger the enter animation. */
+  stagger?: number;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-m3-surface-container-lowest p-3">
+    <div
+      className="animate-[fade-in-up_0.35s_cubic-bezier(0.16,1,0.3,1)_both] rounded-xl border border-border bg-m3-surface-container-lowest p-3 transition-colors duration-200 hover:border-m3-primary/30"
+      style={{ animationDelay: `${Math.min(stagger, 5) * 60}ms` }}
+    >
       <div className="flex items-center gap-1.5 text-[11px] font-medium text-m3-on-surface-variant">
         {icon}
         {label}
@@ -293,7 +305,17 @@ function Stat({
           tone === "neutral" && "text-m3-on-surface",
         )}
       >
-        {value}
+        {/* Keyed on the value so a change fades the new figure in instead of
+            swapping the glyphs in place. Deliberately NOT AnimatedCounter:
+            these values are pre-formatted strings ("3/5", "~12 min",
+            "Untimed"), and that component only counts a leading number — it
+            would mangle every one of them. */}
+        <span
+          key={value}
+          className="inline-block animate-[fade-in-up_0.25s_ease-out_both]"
+        >
+          {value}
+        </span>
       </div>
       {hint && (
         <div className="mt-0.5 text-[11px] text-m3-on-surface-variant">
@@ -324,14 +346,19 @@ function ReadinessWarnings({
 
   return (
     <ul className="mt-4 space-y-2">
-      {warnings.map((w) => {
+      {warnings.map((w, idx) => {
         const isWarning = w.level === "warning";
         const tab = WARNING_TAB[w.code];
         return (
           <li
             key={w.code}
+            // Staggered so the list reads top-to-bottom instead of appearing as
+            // one block. Capped at 5 steps (~300ms) so a long warning list never
+            // makes the teacher wait to read the last item.
+            style={{ animationDelay: `${Math.min(idx, 5) * 60}ms` }}
             className={cn(
               "flex items-start gap-2 rounded-xl border p-3 text-sm",
+              "animate-[fade-in-up_0.35s_cubic-bezier(0.16,1,0.3,1)_both]",
               isWarning
                 ? "border-amber-300 bg-amber-50/70 text-amber-900"
                 : "border-sky-200 bg-sky-50/70 text-sky-900",

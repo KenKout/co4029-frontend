@@ -362,7 +362,11 @@ export function LearningOutcomes({
             return (
               <li
                 key={o.id}
-                className="group rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low overflow-hidden transition-colors hover:border-m3-primary/30"
+                // Staggered enter so a freshly added outcome arrives with a beat
+                // rather than snapping into the list. Capped at 8 steps so a long
+                // outcome list is fully readable in ~320ms.
+                style={{ animationDelay: `${Math.min(idx, 8) * 40}ms` }}
+                className="group animate-[fade-in-up_0.3s_cubic-bezier(0.16,1,0.3,1)_both] rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low overflow-hidden transition-colors hover:border-m3-primary/30"
               >
                 <div className="flex items-start gap-2.5 p-3">
                   {/* Index badge only — outcomes mirror the course order, so
