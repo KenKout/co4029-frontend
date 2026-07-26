@@ -1896,7 +1896,8 @@
       "failed_summary": "Bạn đạt {{score}}% và cần {{passing}}% để qua."
     },
     "status": {
-      "currently_doing": "ĐANG LÀM"
+      "currently_doing": "ĐANG LÀM",
+      "saved": "Đã lưu"
     },
     "instructions": {
       "choose_best": "Chọn đáp án phù hợp nhất; có thể đánh dấu để xem lại sau."
@@ -1907,6 +1908,16 @@
       "passed_banner_title": "Bạn đã vượt qua bài kiểm tra này",
       "passed_banner_best": "Điểm cao nhất {{score}}%",
       "best_label": "Cao nhất {{score}}%"
+    },
+    "pagination": {
+      "per_page_label": "Số câu mỗi trang",
+      "per_page_all": "Tất cả",
+      "page_of": "Trang {{page}}/{{pages}}",
+      "prev_page": "Trang trước",
+      "next_page": "Trang sau",
+      "showing": "Hiển thị {{from}}–{{to}} trong {{total}}",
+      "save_page": "Lưu câu trả lời ở trang này",
+      "unanswered_warning": "{{count}} câu ở trang này chưa có câu trả lời."
     }
   },
   "course_interview": {

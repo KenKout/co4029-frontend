@@ -1991,10 +1991,21 @@
       "failed_summary": "You scored {{score}}% and need {{passing}}% to pass."
     },
     "status": {
-      "currently_doing": "In progress"
+      "currently_doing": "In progress",
+      "saved": "Saved"
     },
     "instructions": {
       "choose_best": "Choose the best answer; you can flag it for review later."
+    },
+    "pagination": {
+      "per_page_label": "Questions per page",
+      "per_page_all": "All",
+      "page_of": "Page {{page}} of {{pages}}",
+      "prev_page": "Previous page",
+      "next_page": "Next page",
+      "showing": "Showing {{from}}–{{to}} of {{total}}",
+      "save_page": "Save answers on this page",
+      "unanswered_warning": "{{count}} questions on this page have no answer yet."
     }
   },
   "course_interview": {

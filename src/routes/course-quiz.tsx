@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -14,13 +14,11 @@ import {
   Lightbulb,
   ListChecks,
   RotateCcw,
-  Sparkles,
   Target,
   Timer,
   X,
   XCircle,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardCooldownBadge } from "@/components/ui/card-cooldown-badge";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -37,8 +35,6 @@ import {
 } from "@/lib/api/hooks/quizzes";
 import { useCardCooldown } from "@/lib/api/cooldown";
 import { isApiErrorCode } from "@/lib/api/error-codes";
-import { QuestionRenderer } from "@/routes/_components/QuestionRenderer";
-import { RichContent } from "@/components/ui/rich-content";
 import {
   QuizSummaryCard,
   type QuizSummaryItem,
@@ -52,7 +48,19 @@ import type {
   QuizQuestionPublic,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
-import { clearSeenAt, loadSeenAt, saveSeenAt } from "@/lib/quiz-timing";
+import {
+  clearSeenAt,
+  loadSeenAt,
+  loadFocusMs,
+  loadPageSize,
+  savePageSize,
+  saveFocusMs,
+  QUIZ_PAGE_SIZES,
+  type QuizPageSize,
+} from "@/lib/quiz-timing";
+import { useQuestionFocusTime } from "@/lib/quiz/use-question-focus-time";
+import { QuizQuestionCard } from "@/routes/_components/QuizQuestionCard";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { useQuizIntegrityReporter } from "@/lib/hooks/useQuizIntegrityReporter";
 
 type QuestionState = "completed" | "active" | "flagged" | "pending";
@@ -742,13 +750,25 @@ export default function CourseQuizPage() {
     Record<string, string>
   >({});
   const [hintDialogOpen, setHintDialogOpen] = useState(false);
-  const [activeQuestionElapsed, setActiveQuestionElapsed] = useState(0);
   // Wall-clock start of the whole attempt (epoch ms). Drives the "Started at"
   // label and the total-elapsed indicator, which stays visible whether or not
   // the quiz has a time limit. Set on fresh start and on resume/hydrate so the
   // elapsed count reflects the ORIGINAL start, not this session.
   const [quizStartedAt, setQuizStartedAt] = useState<number | null>(null);
   const [quizElapsed, setQuizElapsed] = useState(0);
+
+  // --- Pagination -----------------------------------------------------------
+  // How many questions render at once: 1 (classic one-per-screen), 5, 10, or
+  // every question on a single page. Persisted per device.
+  const [pageSize, setPageSize] = useState<QuizPageSize>(() => loadPageSize());
+  const [pageIndex, setPageIndex] = useState(0);
+
+  // --- Per-question attention timing ---------------------------------------
+  // Replaces the old "elapsed since first seen" measure, which only held when
+  // exactly one question was on screen. See use-question-focus-time.ts.
+  const focusTime = useQuestionFocusTime({
+    paused: submittedSummary != null,
+  });
 
   useEffect(() => {
     setHintDialogOpen(false);
@@ -815,6 +835,9 @@ export default function CourseQuizPage() {
     // the t_actual_ms we report) keep counting from the ORIGINAL first view,
     // not from this refresh/resume. Falls back to {} when nothing persisted.
     questionSeenAtRef.current = loadSeenAt(progress.attempt_id);
+    // Restore banked attention time so a refresh doesn't reset every badge
+    // (and every reported t_actual_ms) to zero.
+    focusTime.reset(loadFocusMs(progress.attempt_id));
     setPerQuestionCooldown({});
   }, [attemptProgress.data, taking]);
 
@@ -831,34 +854,62 @@ export default function CourseQuizPage() {
     statuses.length === displayQuestions.length &&
     displayQuestions.length > 0;
 
+  // --- Page slicing ---------------------------------------------------------
+  const perPage =
+    pageSize === "all" ? Math.max(1, displayQuestions.length) : pageSize;
+  const pageCount = Math.max(1, Math.ceil(displayQuestions.length / perPage));
+  // Clamp so shrinking the quiz (or switching 1 -> All) can't strand us on a
+  // page that no longer exists.
+  const safePageIndex = Math.min(pageIndex, pageCount - 1);
+  const pageStart = safePageIndex * perPage;
+  const pageEnd = Math.min(pageStart + perPage, displayQuestions.length);
+  const pageQuestions = displayQuestions.slice(pageStart, pageEnd);
+
+  // Keep the page in step with the active question. Jumping via the summary
+  // card sets activeIdx; if that question lives on another page we follow it.
   useEffect(() => {
-    const activeQuestionId = displayQuestions[activeIdx]?.id;
-    if (!activeQuestionId) {
-      setActiveQuestionElapsed(0);
-      return;
-    }
-    if (!questionSeenAtRef.current[activeQuestionId]) {
-      questionSeenAtRef.current[activeQuestionId] = Date.now();
-      // Persist the first-seen anchor so a refresh/resume keeps counting
-      // from here instead of restarting the elapsed badge at zero.
-      if (activeAttemptId) {
-        saveSeenAt(activeAttemptId, questionSeenAtRef.current);
-      }
-    }
-    const interval = window.setInterval(() => {
-      setActiveQuestionElapsed(
-        Math.floor(
-          (Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000,
-        ),
-      );
-    }, 1000);
-    setActiveQuestionElapsed(
-      Math.floor(
-        (Date.now() - questionSeenAtRef.current[activeQuestionId]) / 1000,
-      ),
-    );
-    return () => window.clearInterval(interval);
-  }, [activeIdx, displayQuestions, activeAttemptId]);
+    if (!sessionReady) return;
+    const target = Math.floor(activeIdx / perPage);
+    setPageIndex((current) => (current === target ? current : target));
+  }, [activeIdx, perPage, sessionReady]);
+
+  const changePageSize = useCallback(
+    (next: QuizPageSize) => {
+      setPageSize(next);
+      savePageSize(next);
+      // Keep the student anchored on the question they were looking at rather
+      // than snapping to page 1.
+      const nextPer =
+        next === "all" ? Math.max(1, displayQuestions.length) : next;
+      setPageIndex(Math.floor(activeIdx / nextPer));
+    },
+    [activeIdx, displayQuestions.length],
+  );
+
+  const goToPage = useCallback(
+    (next: number) => {
+      const clamped = Math.max(0, Math.min(next, pageCount - 1));
+      setPageIndex(clamped);
+      // Move the active question to the first on the new page so per-question
+      // actions and the "current" highlight stay meaningful.
+      setActiveIdx(clamped * perPage);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [pageCount, perPage],
+  );
+
+  // Mirror accumulated focus totals to localStorage so a refresh mid-attempt
+  // resumes with the time already banked rather than restarting at zero.
+  useEffect(() => {
+    if (!activeAttemptId || !sessionReady || submittedSummary) return;
+    const id = window.setInterval(() => {
+      saveFocusMs(activeAttemptId, focusTime.snapshot());
+    }, 5000);
+    return () => {
+      window.clearInterval(id);
+      saveFocusMs(activeAttemptId, focusTime.snapshot());
+    };
+  }, [activeAttemptId, sessionReady, submittedSummary, focusTime]);
 
   useEffect(() => {
     if (!quiz?.time_limit_seconds || !sessionReady || submittedSummary) return;
@@ -905,6 +956,8 @@ export default function CourseQuizPage() {
       // Fresh attempt: drop any stale persisted timing for this id.
       clearSeenAt(result.attempt_id);
       questionSeenAtRef.current = {};
+      focusTime.reset();
+      setPageIndex(0);
       setPerQuestionCooldown({});
     } catch (err) {
       // Server-side retake policy (FR-4.3): 409 = attempts exhausted,
@@ -932,8 +985,15 @@ export default function CourseQuizPage() {
     if (!question || !status || !activeAttemptId) return false;
     if (!hasAnswer(status)) return false;
     if (status.savedToServer) return true;
-    const startedAt = questionSeenAtRef.current[question.id];
-    const tActualMs = startedAt ? Math.max(Date.now() - startedAt, 0) : null;
+    // Accumulated ATTENTION time (see use-question-focus-time.ts). `null` when
+    // the question was never observed, which the backend treats as a neutral
+    // rho=1.0 rather than recording an implausible instant answer.
+    //
+    // NOT capped here: the cap needs `expected_response_time_ms`, which the
+    // student payload deliberately omits (telling students how long a question
+    // "should" take would leak teacher intent). The backend clamps instead —
+    // see `_clamp_t_actual` in spaced_repetition/services/review.py.
+    const tActualMs = focusTime.getFocusMs(question.id);
 
     try {
       await submitAnswer.mutateAsync({
@@ -1342,68 +1402,150 @@ export default function CourseQuizPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-9 xl:col-span-10">
-            <div className="bg-m3-surface-container-lowest rounded-xl p-6 sm:p-10 relative overflow-hidden shadow-editorial">
-              <div className="absolute top-0 right-0 m-5 flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className="text-m3-outline border-m3-outline-variant font-mono text-[10px] bg-white"
+            {/* Per-page selector. 1 keeps the classic one-question-per-screen
+                flow; 5/10/All render several cards at once. */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t("course_quiz.pagination.per_page_label")}
+                </span>
+                <div
+                  role="group"
+                  aria-label={t("course_quiz.pagination.per_page_label")}
+                  className="flex items-center rounded-lg border border-m3-outline-variant/40 bg-m3-surface-container p-0.5"
                 >
-                  <Timer className="h-3 w-3 mr-1" />
-                  {formatTime(activeQuestionElapsed)}
-                </Badge>
-                <Badge className="bg-m3-secondary-fixed text-m3-on-surface border-0 font-bold text-[10px] px-3 py-1.5 gap-1.5 rounded-full">
-                  <Sparkles className="h-3 w-3" />
-                  {t("course_quiz.status.currently_doing")}
-                </Badge>
+                  {QUIZ_PAGE_SIZES.map((size) => (
+                    <button
+                      key={String(size)}
+                      type="button"
+                      onClick={() => changePageSize(size)}
+                      aria-pressed={pageSize === size}
+                      className={cn(
+                        "rounded-md px-2.5 py-1 text-xs font-bold transition-colors",
+                        pageSize === size
+                          ? "bg-m3-primary text-white"
+                          : "text-m3-on-surface-variant hover:text-m3-primary",
+                      )}
+                    >
+                      {size === "all"
+                        ? t("course_quiz.pagination.per_page_all")
+                        : size}
+                    </button>
+                  ))}
+                </div>
               </div>
-
-              <div className="mb-8 pt-2">
-                <span className="text-m3-secondary font-headline font-bold text-xs tracking-widest uppercase mb-3 block">
-                  {t("course_quiz.labels.question_label_short", {
-                    index: String(activeIdx + 1).padStart(2, "0"),
+              {pageCount > 1 && (
+                <span className="text-xs font-semibold text-m3-on-surface-variant tabular-nums">
+                  {t("course_quiz.pagination.showing", {
+                    from: pageStart + 1,
+                    to: pageEnd,
+                    total: displayQuestions.length,
                   })}
                 </span>
-                <h2 className="text-xl sm:text-2xl font-headline font-bold text-m3-on-surface leading-snug">
-                  <RichContent
-                    value={activeQuestion.prompt_text}
-                    format={activeQuestion.prompt_format ?? "plain"}
-                  />
-                </h2>
-              </div>
-
-              <QuestionRenderer
-                question={activeQuestion}
-                selectedOptionId={activeStatus.selectedOptionId}
-                answerText={activeStatus.answerText}
-                disabled={submitAnswer.isPending || submitAttempt.isPending}
-                onSelectOption={(optionId) => {
-                  setStatuses((current) =>
-                    current.map((status, index) =>
-                      index === activeIdx
-                        ? {
-                            ...status,
-                            selectedOptionId: optionId,
-                            savedToServer: false,
-                          }
-                        : status,
-                    ),
-                  );
-                }}
-                onAnswerTextChange={(value) => {
-                  setStatuses((current) =>
-                    current.map((status, index) =>
-                      index === activeIdx
-                        ? {
-                            ...status,
-                            answerText: value,
-                            savedToServer: false,
-                          }
-                        : status,
-                    ),
-                  );
-                }}
-              />
+              )}
             </div>
+
+            {/* Question cards for the current page. */}
+            <div className="space-y-6">
+              {pageQuestions.map((question, offset) => {
+                const index = pageStart + offset;
+                const status = statuses[index];
+                if (!status) return null;
+                return (
+                  <QuizQuestionCard
+                    key={question.id}
+                    question={question}
+                    index={index}
+                    total={displayQuestions.length}
+                    status={status}
+                    isActive={index === activeIdx}
+                    disabled={submitAnswer.isPending || submitAttempt.isPending}
+                    showHints={quiz.show_hints}
+                    hintText={question.hint_text ?? null}
+                    cooldownRetryAt={perQuestionCooldown[question.id] ?? null}
+                    registerRef={focusTime.register(question.id)}
+                    peekFocusMs={() => focusTime.peekFocusMs(question.id)}
+                    onFocusQuestion={() => setActiveIdx(index)}
+                    onSelectOption={(optionId) => {
+                      setStatuses((current) =>
+                        current.map((s, i) =>
+                          i === index
+                            ? {
+                                ...s,
+                                selectedOptionId: optionId,
+                                savedToServer: false,
+                              }
+                            : s,
+                        ),
+                      );
+                    }}
+                    onAnswerTextChange={(value) => {
+                      setStatuses((current) =>
+                        current.map((s, i) =>
+                          i === index
+                            ? { ...s, answerText: value, savedToServer: false }
+                            : s,
+                        ),
+                      );
+                    }}
+                    onToggleFlag={() => {
+                      setStatuses((current) =>
+                        current.map((s, i) =>
+                          i === index ? { ...s, flagged: !s.flagged } : s,
+                        ),
+                      );
+                    }}
+                    onShowHint={() => {
+                      setActiveIdx(index);
+                      setStatuses((current) =>
+                        current.map((s, i) =>
+                          i === index ? { ...s, hintViewed: true } : s,
+                        ),
+                      );
+                      setHintDialogOpen(true);
+                    }}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Page navigation (multi-question layouts only). */}
+            {pageCount > 1 && (
+              <div className="mt-6 flex items-center justify-between gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => goToPage(safePageIndex - 1)}
+                  disabled={
+                    safePageIndex === 0 ||
+                    submitAnswer.isPending ||
+                    submitAttempt.isPending
+                  }
+                  className="font-bold text-m3-primary hover:bg-m3-primary-fixed/30 rounded-xl gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {t("course_quiz.pagination.prev_page")}
+                </Button>
+                <span className="text-xs font-bold text-m3-on-surface-variant tabular-nums">
+                  {t("course_quiz.pagination.page_of", {
+                    page: safePageIndex + 1,
+                    pages: pageCount,
+                  })}
+                </span>
+                <Button
+                  variant="ghost"
+                  onClick={() => goToPage(safePageIndex + 1)}
+                  disabled={
+                    safePageIndex >= pageCount - 1 ||
+                    submitAnswer.isPending ||
+                    submitAttempt.isPending
+                  }
+                  className="font-bold text-m3-primary hover:bg-m3-primary-fixed/30 rounded-xl gap-2"
+                >
+                  {t("course_quiz.pagination.next_page")}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
 
             <div className="flex items-center justify-between mt-6 flex-wrap gap-3">
               <Button
@@ -1423,54 +1565,6 @@ export default function CourseQuizPage() {
               </Button>
 
               <div className="flex items-center gap-3 flex-wrap justify-end">
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setStatuses((current) =>
-                      current.map((status, index) =>
-                        index === activeIdx
-                          ? { ...status, flagged: !status.flagged }
-                          : status,
-                      ),
-                    );
-                  }}
-                  disabled={submitAnswer.isPending || submitAttempt.isPending}
-                  className={cn(
-                    "font-bold rounded-xl gap-2 text-sm",
-                    activeStatus.flagged
-                      ? "text-amber-600 bg-amber-50 hover:bg-amber-100"
-                      : "text-m3-outline hover:text-m3-on-surface",
-                  )}
-                >
-                  <Flag className="h-4 w-4" />
-                  {activeStatus.flagged
-                    ? t("course_quiz.actions.unflag")
-                    : t("course_quiz.actions.flag")}
-                </Button>
-
-                {quiz.show_hints && activeQuestion.hint_text && (
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setStatuses((current) =>
-                        current.map((status, index) =>
-                          index === activeIdx
-                            ? { ...status, hintViewed: true }
-                            : status,
-                        ),
-                      );
-                      setHintDialogOpen(true);
-                    }}
-                    disabled={submitAnswer.isPending || submitAttempt.isPending}
-                    className="font-bold rounded-xl gap-2 text-sm text-m3-primary hover:bg-m3-primary-fixed/30"
-                  >
-                    <Lightbulb className="h-4 w-4" />
-                    {activeStatus.hintViewed
-                      ? t("course_quiz.actions.view_hint_again")
-                      : t("course_quiz.actions.show_hint")}
-                  </Button>
-                )}
-
                 <QuestionSubmitButton
                   isLastQuestion={isLastQuestion}
                   hasSelection={hasAnswer(activeStatus)}
@@ -1504,6 +1598,9 @@ export default function CourseQuizPage() {
           </div>
         </div>
       </div>
+      {/* Long page in the 5/10/All layouts — the student can be many screens
+          below the timer and the submit controls. */}
+      <ScrollToTop />
     </div>
   );
 }
