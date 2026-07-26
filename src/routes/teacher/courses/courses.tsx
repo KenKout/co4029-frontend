@@ -116,7 +116,7 @@ export default function TeacherCoursesPage() {
             onKeyDown={(e) => {
               if (e.key === "Escape") setSearch("");
             }}
-            className="pl-9 pr-9 h-10 text-sm"
+            className="pl-9 pr-9 h-10"
           />
           {search && (
             <button

@@ -174,7 +174,7 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
             placeholder={t(
               "management_career_paths.create_dialog.slug_placeholder",
             )}
-            className="font-mono text-sm"
+            className="font-mono"
             required
           />
           <p className="text-[11px] text-m3-on-surface-variant">

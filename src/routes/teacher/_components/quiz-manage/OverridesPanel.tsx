@@ -73,7 +73,7 @@ export function OverridesPanel({ quizId }: { quizId: string }) {
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
             placeholder={t("teacher_quiz_manage.overrides.user_id_placeholder")}
-            className="bg-m3-surface text-sm w-full"
+            className="w-full"
           />
         </div>
         <div className="space-y-1.5">
@@ -85,7 +85,7 @@ export function OverridesPanel({ quizId }: { quizId: string }) {
             min={1}
             value={maxAttempts}
             onChange={(e) => setMaxAttempts(e.target.value)}
-            className="bg-m3-surface text-sm w-full"
+            className="w-full"
           />
         </div>
         <div className="space-y-1.5">
@@ -97,7 +97,7 @@ export function OverridesPanel({ quizId }: { quizId: string }) {
             min={1}
             value={timeLimitMinutes}
             onChange={(e) => setTimeLimitMinutes(e.target.value)}
-            className="bg-m3-surface text-sm w-full"
+            className="w-full"
           />
         </div>
       </div>

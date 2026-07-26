@@ -142,7 +142,7 @@ export function BulkSetExpectedTimeBar({
                 onChange={(e) => onBulkSecondsChange(e.target.value)}
                 aria-label={t("teacher_quiz_manage.bulk_time.duration_seconds")}
                 title={t("teacher_quiz_manage.bulk_time.duration_seconds")}
-                className="h-9 w-16 rounded-r-none border-r-0 bg-m3-surface text-sm tabular-nums"
+                className="h-9 w-16 rounded-r-none border-r-0 tabular-nums"
               />
               <span
                 className="flex items-center border border-l-0 border-m3-outline-variant/40 bg-m3-surface-container-high px-2 text-xs font-semibold text-m3-on-surface-variant"

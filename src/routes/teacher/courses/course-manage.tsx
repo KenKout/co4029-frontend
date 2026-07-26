@@ -438,7 +438,6 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                   placeholder={t(
                     "teacher_course_settings.course_title_placeholder",
                   )}
-                  className="text-sm"
                 />
               </div>
 
@@ -453,7 +452,6 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                   placeholder={t(
                     "teacher_course_settings.course_slug_placeholder",
                   )}
-                  className="text-sm"
                 />
                 <p className="text-[11px] text-m3-on-surface-variant">
                   {t("teacher_course_settings.course_slug_help")}
@@ -543,7 +541,6 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                   placeholder={t(
                     "teacher_course_settings.estimated_duration_placeholder",
                   )}
-                  className="text-sm"
                 />
               </div>
 
@@ -560,7 +557,6 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                   placeholder={t(
                     "teacher_course_settings.enrollment_cap_placeholder",
                   )}
-                  className="text-sm"
                 />
               </div>
 
@@ -577,7 +573,6 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                   placeholder={t(
                     "teacher_course_settings.expected_completion_placeholder",
                   )}
-                  className="text-sm"
                 />
               </div>
 
@@ -609,7 +604,6 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                       placeholder={t(
                         "teacher_course_settings.contact.email_placeholder",
                       )}
-                      className="text-sm"
                     />
                   </div>
 
@@ -626,7 +620,6 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                       placeholder={t(
                         "teacher_course_settings.contact.phone_placeholder",
                       )}
-                      className="text-sm"
                     />
                   </div>
 
@@ -641,7 +634,6 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                       value={contactWebsiteUrl}
                       onChange={(e) => setContactWebsiteUrl(e.target.value)}
                       placeholder="https://example.com"
-                      className="text-sm"
                     />
                   </div>
 
@@ -656,7 +648,6 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                       value={contactSocialUrl}
                       onChange={(e) => setContactSocialUrl(e.target.value)}
                       placeholder="https://linkedin.com/in/…"
-                      className="text-sm"
                     />
                   </div>
                 </div>
@@ -910,7 +901,7 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                                 }
                               }}
                               autoFocus
-                              className="flex-1 text-sm"
+                              className="h-9 flex-1"
                             />
                             <div className="flex items-center gap-1 shrink-0">
                               <Button
@@ -1014,7 +1005,7 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                               "teacher_outcomes.add_child_placeholder",
                               "Sub-outcome statement…",
                             )}
-                            className="flex-1 text-sm"
+                            className="h-9 flex-1"
                           />
                           <Button
                             type="button"
@@ -1057,7 +1048,7 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                   "teacher_outcomes.add_placeholder",
                   "e.g. Explain the core principles of…",
                 )}
-                className="flex-1 text-sm"
+                className="h-9 flex-1"
               />
               <Button
                 type="submit"
@@ -1976,7 +1967,7 @@ function AddModuleForm({
         placeholder={t("teacher_common.module_title_placeholder")}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="flex-1 text-sm"
+        className="h-9 flex-1"
       />
       <Button type="submit" size="sm" disabled={createModule.isPending}>
         {createModule.isPending ? (

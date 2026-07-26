@@ -1231,7 +1231,7 @@ export function QuestionBank({
                 aria-label={t(
                   "teacher_interview_config.qbank.search_placeholder",
                 )}
-                className="bg-m3-surface text-sm pl-9"
+                className="pl-9"
               />
             </div>
             {/* Filter selects below the search bar */}

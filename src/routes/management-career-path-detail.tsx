@@ -401,7 +401,7 @@ function EditForm({
             placeholder={t(
               "management_career_path_detail.placeholders.org_unit_uuid_optional",
             )}
-            className="font-mono text-sm"
+            className="font-mono"
           />
         </div>
       </div>

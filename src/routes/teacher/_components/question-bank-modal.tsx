@@ -247,7 +247,7 @@ export function QuestionBankModal({
             placeholder="Search prompt or quiz title…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="h-10 bg-m3-surface pl-9 pr-9"
+            className="h-10 pl-9 pr-9"
             autoFocus
           />
           {searchInput ? (

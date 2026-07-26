@@ -169,7 +169,7 @@ export default function CoursesListPage() {
                 placeholder={t("courses_list.search_placeholder")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="pl-9 bg-m3-surface-container-lowest ghost-border rounded-xl h-10 text-sm placeholder:text-m3-outline focus-visible:ring-m3-secondary/40"
+                className="pl-9 bg-m3-surface-container-lowest ghost-border rounded-xl h-10 placeholder:text-m3-outline focus-visible:ring-m3-secondary/40"
               />
             </div>
 

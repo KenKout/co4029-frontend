@@ -119,7 +119,6 @@ export function FeedbackBandsPanel({ quizId }: { quizId: string }) {
             onChange={(e) =>
               updateBand(i, { min_grade: Number(e.target.value) })
             }
-            className="bg-m3-surface text-sm"
             aria-label={t("teacher_quiz_manage.feedback_bands.min")}
           />
           <Input
@@ -130,7 +129,6 @@ export function FeedbackBandsPanel({ quizId }: { quizId: string }) {
             onChange={(e) =>
               updateBand(i, { max_grade: Number(e.target.value) })
             }
-            className="bg-m3-surface text-sm"
             aria-label={t("teacher_quiz_manage.feedback_bands.max")}
           />
           <textarea

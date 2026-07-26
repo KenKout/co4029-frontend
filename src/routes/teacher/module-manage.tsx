@@ -595,7 +595,6 @@ function ModuleSettings({
             value={estimatedMinutes}
             onChange={(e) => setEstimatedMinutes(e.target.value)}
             placeholder="e.g. 60"
-            className="text-sm bg-m3-surface"
           />
         </div>
 

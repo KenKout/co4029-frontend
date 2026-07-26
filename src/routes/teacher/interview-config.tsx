@@ -31,6 +31,7 @@ import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -1449,7 +1450,9 @@ function PublishReadiness({
  * re-renders on, so storing it in state would add a second render pass for no
  * benefit. Items are compared by key, so reordering the checklist is safe.
  */
-function useJustCompleted(items: { key: string; done: boolean }[]): Set<string> {
+function useJustCompleted(
+  items: { key: string; done: boolean }[],
+): Set<string> {
   const prev = useRef<Map<string, boolean>>(new Map());
   const justCompleted = new Set<string>();
   for (const item of items) {
@@ -1488,9 +1491,7 @@ function SettingsCard({
       // permanently invisible. A plain keyframe cannot get stuck.
       // opacity+transform only → compositor-only, no reflow.
       className="animate-[fade-in-up_0.4s_cubic-bezier(0.16,1,0.3,1)_both] rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low/40 p-5 lg:p-6 space-y-4 transition-colors duration-200 hover:border-m3-outline-variant/70"
-      style={
-        { animationDelay: `${revealDelayMs(stagger)}ms` } as CSSProperties
-      }
+      style={{ animationDelay: `${revealDelayMs(stagger)}ms` } as CSSProperties}
     >
       <div className="space-y-1">
         <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
@@ -1557,7 +1558,6 @@ function SettingsForm({
             value={draft.title}
             onChange={(e) => update("title", e.target.value)}
             placeholder={t("teacher_interview_config.fields.title_placeholder")}
-            className="bg-m3-surface text-sm"
           />
         </Field>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1698,6 +1698,10 @@ function SettingsForm({
         title={t("teacher_interview_config.sections.rules.title")}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* All three are unbounded-by-default numeric knobs whose empty state
+              means something ("unlimited"), so each carries its unit inside the
+              field — an anonymous empty box gave no clue whether it wanted
+              minutes, seconds or a count. */}
           <Field
             label={t("teacher_interview_config.fields.duration_label")}
             hint={t("teacher_interview_config.fields.duration_hint")}
@@ -1711,7 +1715,7 @@ function SettingsForm({
               placeholder={t(
                 "teacher_interview_config.fields.duration_placeholder",
               )}
-              className="bg-m3-surface text-sm"
+              endAdornment={t("teacher_interview_config.units.minutes")}
             />
           </Field>
           <Field
@@ -1726,7 +1730,7 @@ function SettingsForm({
               placeholder={t(
                 "teacher_interview_config.fields.attempts_placeholder",
               )}
-              className="bg-m3-surface text-sm"
+              endAdornment={t("teacher_interview_config.units.attempts")}
             />
           </Field>
           <Field
@@ -1741,7 +1745,7 @@ function SettingsForm({
               placeholder={t(
                 "teacher_interview_config.fields.criteria_placeholder",
               )}
-              className="bg-m3-surface text-sm"
+              endAdornment={t("teacher_interview_config.units.outcomes")}
             />
           </Field>
         </div>
@@ -1760,14 +1764,13 @@ function SettingsForm({
           label={t("teacher_interview_config.fields.notes_label")}
           hint={t("teacher_interview_config.fields.notes_hint")}
         >
-          <textarea
+          <Textarea
             value={draft.notes}
             onChange={(e) => update("notes", e.target.value)}
             rows={4}
             placeholder={t(
               "teacher_interview_config.fields.supplementary_placeholder",
             )}
-            className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
           />
         </Field>
 
@@ -1875,21 +1878,19 @@ function SettingsForm({
                         e.target.value,
                       )
                     }
-                    className="bg-m3-surface text-sm"
                   />
                 </Field>
               </div>
 
               <div className="grid gap-4">
                 <Field label={t("teacher_interview_config.security.custom_en")}>
-                  <textarea
+                  <Textarea
                     rows={3}
                     maxLength={500}
                     value={draft.security_custom_refusal_en}
                     onChange={(e) =>
                       update("security_custom_refusal_en", e.target.value)
                     }
-                    className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
                   />
                   <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
                     {draft.security_custom_refusal_en.trim() ||
@@ -2164,7 +2165,6 @@ function GenerationSection({
                   Math.floor(Number(e.target.value)) || 0,
                 )
               }
-              className="bg-m3-surface text-sm"
             />
           </Field>
         </div>
@@ -2310,7 +2310,6 @@ function GenerationSection({
             placeholder={t(
               "teacher_interview_config.generate.focus_placeholder",
             )}
-            className="bg-m3-surface text-sm"
           />
         </Field>
 
@@ -2324,7 +2323,6 @@ function GenerationSection({
             placeholder={t(
               "teacher_interview_config.generate.avoid_placeholder",
             )}
-            className="bg-m3-surface text-sm"
           />
         </Field>
 
@@ -2558,7 +2556,6 @@ function RubricEditor({
                       placeholder={t(
                         "teacher_interview_config.fields.rubric_name_placeholder",
                       )}
-                      className="bg-m3-surface text-sm"
                     />
                     <label className="flex items-center gap-2 text-xs text-m3-on-surface-variant">
                       <span className="whitespace-nowrap">
@@ -2574,11 +2571,11 @@ function RubricEditor({
                             weight: Math.max(1, Number(e.target.value) || 1),
                           })
                         }
-                        className="w-20 bg-m3-surface text-sm"
+                        className="w-20"
                       />
                     </label>
                   </div>
-                  <textarea
+                  <Textarea
                     value={criterion.description}
                     onChange={(e) =>
                       updateAt(index, { description: e.target.value })
@@ -2587,7 +2584,7 @@ function RubricEditor({
                     placeholder={t(
                       "teacher_interview_config.fields.rubric_description_placeholder",
                     )}
-                    className="w-full rounded-lg border border-m3-outline-variant/20 bg-m3-surface px-3 py-2 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+                    className="rounded-lg py-2"
                   />
                 </div>
                 <button

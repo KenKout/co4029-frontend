@@ -167,7 +167,7 @@ export default function Footer() {
             <div className="bg-white/5 border border-white/10 rounded-2xl p-1">
               <div className="flex bg-[#0f172a] rounded-xl overflow-hidden p-1">
                 <Input
-                  className="flex-1 bg-transparent border-none text-sm text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-4 placeholder:text-slate-600"
+                  className="flex-1 bg-transparent border-none text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-4 placeholder:text-slate-600"
                   placeholder="Enter email address"
                   type="email"
                 />

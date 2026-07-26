@@ -32,7 +32,12 @@ export interface SelectProps<T extends string> {
 }
 
 const TRIGGER_SIZE: Record<"default" | "sm", string> = {
-  default: "rounded-xl px-3 py-2.5 text-sm",
+  // Kept byte-compatible with `ui/input.tsx`'s tokens (explicit `h-*`, same
+  // radius/padding/text size) so a dropdown and a text field on the same form
+  // row are the same box. `h-10` rather than `py-2.5` also means a call site
+  // that must height-match a sibling can override with `h-9` and have
+  // tailwind-merge actually drop the token.
+  default: "h-10 rounded-xl px-3 text-sm",
   sm: "h-7 rounded-md px-2.5 text-xs font-medium",
 };
 
@@ -78,9 +83,13 @@ export function Select<T extends string>({
         disabled={disabled}
         aria-label={ariaLabel}
         className={cn(
-          "flex w-full cursor-pointer items-center justify-between gap-2 border border-m3-outline-variant/20 bg-m3-surface text-left",
+          // Border strength is shared with `ui/input.tsx` on purpose: a text
+          // field and a dropdown on the same form row must read as the same
+          // control family. /20 of slate-200 on white is effectively invisible,
+          // which is what made these rows look unfinished.
+          "flex w-full cursor-pointer items-center justify-between gap-2 border border-m3-outline-variant/60 bg-m3-surface text-left",
           TRIGGER_SIZE[size],
-          "transition-colors hover:border-m3-primary/50 hover:bg-m3-primary/5",
+          "transition-colors hover:border-m3-primary/70 hover:bg-m3-primary/[0.04] hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)]",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-secondary/30",
           "disabled:cursor-not-allowed disabled:opacity-60",
           "data-popup-open:border-m3-primary/60 data-popup-open:bg-m3-primary/5",

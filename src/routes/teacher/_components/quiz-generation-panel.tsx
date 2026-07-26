@@ -707,7 +707,6 @@ export function QuizGenerationPanel({
                     ),
                   }))
                 }
-                className="bg-m3-surface text-sm"
               />
             </div>
             <div className="space-y-1.5">

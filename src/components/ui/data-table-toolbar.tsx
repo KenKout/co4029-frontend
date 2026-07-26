@@ -117,6 +117,7 @@ export function DataTableToolbar({
         <div className="relative min-w-[180px] max-w-xs flex-1">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-m3-on-surface-variant/50 pointer-events-none" />
           <Input
+            size="sm"
             value={search ?? ""}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={searchPlaceholder}

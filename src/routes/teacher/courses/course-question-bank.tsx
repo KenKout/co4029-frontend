@@ -219,7 +219,7 @@ export default function CourseQuestionBankPage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("teacher_question_bank.search_placeholder")}
               aria-label={t("teacher_question_bank.search_placeholder")}
-              className="bg-m3-surface text-sm pl-9"
+              className="pl-9"
             />
           </div>
           <FilterSelect
@@ -568,7 +568,7 @@ function ItemEditor({
                 }
               }}
               placeholder={t("teacher_question_bank.add_tag_placeholder")}
-              className="h-7 w-32 bg-m3-surface text-xs"
+              className="h-7 w-32 text-xs"
             />
             <Button
               type="button"

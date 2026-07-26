@@ -68,7 +68,6 @@ export function SettingsTab({
             placeholder={t(
               "teacher_quiz_manage.settings.general.title_placeholder",
             )}
-            className="bg-m3-surface text-sm"
           />
         </Field>
         <Field label={t("teacher_quiz_manage.settings.general.desc_label")}>
@@ -125,7 +124,7 @@ export function SettingsTab({
               placeholder={t(
                 "teacher_quiz_manage.settings.scoring.time_placeholder",
               )}
-              className="bg-m3-surface text-sm w-40"
+              className="w-40"
             />
           </Field>
           <Field
@@ -193,7 +192,6 @@ export function SettingsTab({
                   placeholder={t(
                     "teacher_quiz_manage.settings.attempts.max_placeholder",
                   )}
-                  className="bg-m3-surface text-sm"
                 />
               </Field>
               <Field
@@ -210,7 +208,6 @@ export function SettingsTab({
                   placeholder={t(
                     "teacher_quiz_manage.settings.attempts.cooldown_placeholder",
                   )}
-                  className="bg-m3-surface text-sm"
                 />
               </Field>
             </div>
@@ -237,7 +234,7 @@ export function SettingsTab({
               type="datetime-local"
               value={draft.available_from}
               onChange={(e) => update("available_from", e.target.value)}
-              className="bg-m3-surface text-sm w-full"
+              className="w-full"
             />
           </Field>
           <Field
@@ -248,7 +245,7 @@ export function SettingsTab({
               type="datetime-local"
               value={draft.available_until}
               onChange={(e) => update("available_until", e.target.value)}
-              className="bg-m3-surface text-sm w-full"
+              className="w-full"
             />
           </Field>
           <Field
@@ -259,7 +256,7 @@ export function SettingsTab({
               type="datetime-local"
               value={draft.due_at}
               onChange={(e) => update("due_at", e.target.value)}
-              className="bg-m3-surface text-sm w-full"
+              className="w-full"
             />
           </Field>
         </div>
@@ -341,7 +338,7 @@ export function SettingsTab({
                   type="text"
                   value={draft.require_password}
                   onChange={(e) => update("require_password", e.target.value)}
-                  className="bg-m3-surface text-sm w-full"
+                  className="w-full"
                   placeholder={t(
                     "teacher_quiz_manage.settings.access.password_placeholder",
                   )}
@@ -355,7 +352,7 @@ export function SettingsTab({
                   type="text"
                   value={draft.require_subnet}
                   onChange={(e) => update("require_subnet", e.target.value)}
-                  className="bg-m3-surface text-sm w-full"
+                  className="w-full"
                   placeholder="10.0.0.0/8, 192.168.1.5"
                 />
               </Field>
@@ -418,7 +415,7 @@ export function SettingsTab({
                     onChange={(e) =>
                       update("grace_period_seconds", e.target.value)
                     }
-                    className="bg-m3-surface text-sm w-full"
+                    className="w-full"
                   />
                 </Field>
               )}

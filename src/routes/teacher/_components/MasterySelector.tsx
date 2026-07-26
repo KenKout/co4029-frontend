@@ -251,7 +251,6 @@ function AdvancedField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="bg-m3-surface text-sm"
       />
     </div>
   );

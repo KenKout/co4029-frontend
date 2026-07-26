@@ -92,7 +92,7 @@ function GradeRow({ quizId, row }: { quizId: string; row: NeedsGradingRow }) {
             step="0.25"
             value={score}
             onChange={(e) => setScore(e.target.value)}
-            className="w-24 bg-m3-surface"
+            className="h-9 w-24"
           />
         </label>
         <label className="text-sm flex-1 min-w-[200px]">
@@ -104,7 +104,7 @@ function GradeRow({ quizId, row }: { quizId: string; row: NeedsGradingRow }) {
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
             placeholder={t("teacher_quiz_results.grading.feedback_placeholder")}
-            className="bg-m3-surface w-full"
+            className="h-9 w-full"
           />
         </label>
         <Button

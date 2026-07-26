@@ -3394,7 +3394,7 @@
       "title": "Title",
       "title_placeholder": "Enter interview title…",
       "persona": "AI persona",
-      "duration_label": "Duration (minutes)",
+      "duration_label": "Duration",
       "duration_hint": "Blank = unlimited",
       "duration_placeholder": "e.g. 30",
       "attempts_label": "Attempts",
@@ -3405,7 +3405,7 @@
       "voice_label": "AI voice",
       "voice_hint": "",
       "voice_default": "Default voice",
-      "criteria_label": "Min LO",
+      "criteria_label": "Minimum to pass",
       "criteria_hint": "Minimum number of learning outcomes a student must meet to pass",
       "criteria_placeholder": "e.g. 2",
       "lock_ef_label": "Lock quiz EF growth until pass",
@@ -3423,6 +3423,11 @@
       "rubric_add": "Add criterion",
       "rubric_remove": "Remove criterion",
       "rubric_at_cap": "Maximum {{max}} criteria"
+    },
+    "units": {
+      "minutes": "min",
+      "attempts": "times",
+      "outcomes": "LO"
     },
     "security": {
       "title": "Security & Integrity",

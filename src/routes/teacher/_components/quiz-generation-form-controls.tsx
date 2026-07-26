@@ -215,7 +215,6 @@ export function CoverageOptionsForm({
                 ),
               })
             }
-            className="bg-m3-surface text-sm"
           />
         </div>
         <div className="space-y-1.5">
@@ -235,7 +234,6 @@ export function CoverageOptionsForm({
                 ),
               })
             }
-            className="bg-m3-surface text-sm"
           />
         </div>
       </div>
@@ -282,7 +280,6 @@ export function CoverageOptionsForm({
               ),
             })
           }
-          className="bg-m3-surface text-sm"
         />
         <p className="text-[10px] text-m3-on-surface-variant">
           When grouping is <strong>fixed</strong>, every <em>N</em> consecutive
@@ -592,7 +589,6 @@ export function BloomDistributionInput({
                     );
                     onChange({ ...distribution, [level]: next });
                   }}
-                  className="bg-m3-surface text-sm"
                 />
               </div>
             ))}
