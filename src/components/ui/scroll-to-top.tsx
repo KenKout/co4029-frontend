@@ -15,8 +15,19 @@ import { cn } from "@/lib/utils";
  * Sits at z-30 — above page content (which AGENTS.md caps at z-20) but below
  * the sidebar (z-40), so it never floats over navigation. Anchored bottom-right
  * clear of the sidebar's left gutter.
+ *
+ * `className` is appended last so a page can move the anchor when something
+ * else already occupies the bottom-right — e.g. quiz-manage lifts it above the
+ * pending-delete undo snackbar, which is bottom-centre but wide enough to reach
+ * under this button.
  */
-export function ScrollToTop({ showAfter = 400 }: { showAfter?: number }) {
+export function ScrollToTop({
+  showAfter = 400,
+  className,
+}: {
+  showAfter?: number;
+  className?: string;
+}) {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
 
@@ -62,6 +73,7 @@ export function ScrollToTop({ showAfter = 400 }: { showAfter?: number }) {
         visible
           ? "opacity-100 translate-y-0"
           : "pointer-events-none translate-y-2 opacity-0",
+        className,
       )}
     >
       <ArrowUp className="h-5 w-5" />

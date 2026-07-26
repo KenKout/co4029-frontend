@@ -21,6 +21,7 @@ import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { ApiError } from "@/lib/api/client";
 import {
   useAddQuizQuestion,
@@ -929,6 +930,14 @@ export default function QuizManagePage() {
           </div>
         </div>
       )}
+      {/* Long page — the Questions tab stacks every question card, so a
+          20-question quiz scrolls a long way from the tab strip and actions.
+          Lifted above the pending-delete undo snackbar while that's showing:
+          the snackbar is bottom-centre but wide enough to reach under a
+          bottom-right button, and both sit at z-30. */}
+      <ScrollToTop
+        className={pendingDeletes.comboCount > 0 ? "bottom-24" : undefined}
+      />
     </div>
   );
 }
