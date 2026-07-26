@@ -501,7 +501,15 @@
     "saved": "Question updated",
     "deleted": "Question removed from bank",
     "delete_title": "Remove from question bank?",
-    "delete_body": "This removes the question from the course bank. Questions already imported into interviews are not affected."
+    "delete_body": "This removes the question from the course bank. Questions already imported into interviews are not affected.",
+    "how_it_works": "How it works",
+    "clear_filters": "Clear filters",
+    "filter_by_tag": "Filter by tag {{tag}}",
+    "add_tag": "Add tag",
+    "stat_total": "Questions",
+    "stat_tags": "Tags",
+    "stat_with_answer": "With answer",
+    "stat_of_total": "of {{total}}"
   },
   "teacher_common": {
     "drag_to_reorder": "Drag to reorder",

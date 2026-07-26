@@ -461,7 +461,15 @@
     "saved": "Đã cập nhật câu hỏi",
     "deleted": "Đã xóa câu hỏi khỏi ngân hàng",
     "delete_title": "Xóa khỏi ngân hàng câu hỏi?",
-    "delete_body": "Thao tác này xóa câu hỏi khỏi ngân hàng của khóa học. Các câu hỏi đã nhập vào buổi phỏng vấn không bị ảnh hưởng."
+    "delete_body": "Thao tác này xóa câu hỏi khỏi ngân hàng của khóa học. Các câu hỏi đã nhập vào buổi phỏng vấn không bị ảnh hưởng.",
+    "how_it_works": "Cách hoạt động",
+    "clear_filters": "Xóa bộ lọc",
+    "filter_by_tag": "Lọc theo thẻ {{tag}}",
+    "add_tag": "Thêm thẻ",
+    "stat_total": "Câu hỏi",
+    "stat_tags": "Thẻ",
+    "stat_with_answer": "Có đáp án",
+    "stat_of_total": "/ {{total}}"
   },
   "teacher_common": {
     "drag_to_reorder": "Kéo để sắp xếp",
