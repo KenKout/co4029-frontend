@@ -298,6 +298,12 @@ const adminHealthRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/admin/health")),
 });
 
+const adminSettingsRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/admin/settings",
+  component: lazyRouteComponent(() => import("@/routes/admin/settings")),
+});
+
 const adminStatsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/stats",
@@ -560,6 +566,7 @@ const routeTree = rootRoute.addChildren([
     teacherCourseStudentsRoute,
     teacherCourseStudentDetailRoute,
     adminHealthRoute,
+    adminSettingsRoute,
     adminStatsRoute,
     adminStatsActiveRoute,
     adminStatsContentRoute,
