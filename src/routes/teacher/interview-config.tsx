@@ -1,5 +1,15 @@
-import type { CSSProperties } from "react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, ReactElement } from "react";
+import {
+  cloneElement,
+  isValidElement,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Collapsible } from "@base-ui/react/collapsible";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
@@ -1457,7 +1467,7 @@ function PublishReadiness({
                     className={cn(
                       "h-3.5 w-3.5",
                       justCompleted.has(item.key) &&
-                        "animate-[scale-in_0.3s_cubic-bezier(0.16,1,0.3,1)_both]",
+                        "motion-safe:animate-[scale-in_0.3s_cubic-bezier(0.16,1,0.3,1)_both]",
                     )}
                     aria-hidden="true"
                   />
@@ -1522,7 +1532,7 @@ function SettingsCard({
       // tab panel is `hidden` would never receive `.visible` and would stay
       // permanently invisible. A plain keyframe cannot get stuck.
       // opacity+transform only → compositor-only, no reflow.
-      className="animate-[fade-in-up_0.4s_cubic-bezier(0.16,1,0.3,1)_both] rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low/40 p-5 lg:p-6 space-y-4 transition-colors duration-200 hover:border-m3-outline-variant/70"
+      className="motion-safe:animate-[fade-in-up_0.4s_cubic-bezier(0.16,1,0.3,1)_both] rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low/40 p-5 lg:p-6 space-y-4 transition-colors duration-200 hover:border-m3-outline-variant/70"
       style={{ animationDelay: `${revealDelayMs(stagger)}ms` } as CSSProperties}
     >
       <div className="space-y-1">
@@ -1654,15 +1664,21 @@ function SettingsForm({
             sliders let a power user fine-tune tone without a new persona. Every
             dial is TONE ONLY and never affects scoring (backend enforces this).
             An override exists only for a trait moved away from its preset.
-            Uses the same button + grid-rows scroll animation as the Security
-            panel (a rotating ChevronDown, not a raw native triangle). */}
-        <div className="mt-4 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-4">
-          <button
-            type="button"
-            aria-expanded={personaAdvancedOpen}
-            onClick={() => setPersonaAdvancedOpen((open) => !open)}
-            className="flex w-full cursor-pointer list-none items-center gap-3 text-left"
-          >
+
+            Base UI Collapsible rather than the hand-rolled grid-rows trick this
+            used to share with the Security panel. Two reasons, both correctness
+            rather than polish: the old version left the collapsed content in the
+            DOM at opacity-0, so every slider inside stayed in the tab order and
+            keyboard users landed on invisible controls; and it animated a grid
+            track, which is a layout property recomputed every frame, against
+            this file's own compositor-only convention. Collapsible unmounts the
+            panel when closed and animates its height via a CSS variable. */}
+        <Collapsible.Root
+          open={personaAdvancedOpen}
+          onOpenChange={setPersonaAdvancedOpen}
+          className="mt-4 block rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-4"
+        >
+          <Collapsible.Trigger className="flex w-full cursor-pointer list-none items-center gap-3 text-left">
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-m3-primary/10 text-m3-primary">
               <Sparkles className="h-5 w-5" />
             </span>
@@ -1680,16 +1696,10 @@ function SettingsForm({
               }`}
               aria-hidden="true"
             />
-          </button>
+          </Collapsible.Trigger>
 
-          <div
-            className={`grid transition-all duration-300 ease-in-out ${
-              personaAdvancedOpen
-                ? "grid-rows-[1fr] opacity-100"
-                : "grid-rows-[0fr] opacity-0"
-            }`}
-          >
-            <div className="overflow-hidden">
+          <Collapsible.Panel className="h-[var(--collapsible-panel-height)] overflow-hidden transition-[height] duration-300 ease-out data-[ending-style]:h-0 data-[starting-style]:h-0">
+            <div>
               <div className="mt-5 space-y-4 border-t border-m3-outline-variant/20 pt-5">
                 {(() => {
                   const effective = effectivePersonaTraits(
@@ -1743,8 +1753,8 @@ function SettingsForm({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+          </Collapsible.Panel>
+        </Collapsible.Root>
       </SettingsCard>
 
       {/* Card 2 — Scoring & timing: the three numeric knobs on one 3-up row. */}
@@ -1840,13 +1850,16 @@ function SettingsForm({
           settings flow without SettingsForm needing to know the outcomes API. */}
       {outcomesSlot}
 
-      <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-4">
-        <button
-          type="button"
-          aria-expanded={securityOpen}
-          onClick={() => setSecurityOpen((open) => !open)}
-          className="flex w-full cursor-pointer list-none items-center gap-3 text-left"
-        >
+      {/* Collapsible for the same reasons as the persona panel above: this one
+          holds a response-policy select, a max-attempts number and two custom
+          refusal textareas, all of which stayed tabbable while the section was
+          closed. */}
+      <Collapsible.Root
+        open={securityOpen}
+        onOpenChange={setSecurityOpen}
+        className="block rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-4"
+      >
+        <Collapsible.Trigger className="flex w-full cursor-pointer list-none items-center gap-3 text-left">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-500/10 text-emerald-700">
             <ShieldCheck className="h-5 w-5" />
           </span>
@@ -1867,16 +1880,10 @@ function SettingsForm({
             }`}
             aria-hidden="true"
           />
-        </button>
+        </Collapsible.Trigger>
 
-        <div
-          className={`grid transition-all duration-300 ease-in-out ${
-            securityOpen
-              ? "grid-rows-[1fr] opacity-100"
-              : "grid-rows-[0fr] opacity-0"
-          }`}
-        >
-          <div className="overflow-hidden">
+        <Collapsible.Panel className="h-[var(--collapsible-panel-height)] overflow-hidden transition-[height] duration-300 ease-out data-[ending-style]:h-0 data-[starting-style]:h-0">
+          <div>
             <div className="mt-5 space-y-5 border-t border-m3-outline-variant/20 pt-5">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
@@ -1969,8 +1976,8 @@ function SettingsForm({
               </p>
             </div>
           </div>
-        </div>
-      </div>
+        </Collapsible.Panel>
+      </Collapsible.Root>
 
       <div className="flex items-center justify-between gap-3 pt-4 border-t border-m3-outline-variant/20">
         <p className="text-[11px] text-m3-on-surface-variant">
@@ -2036,7 +2043,7 @@ function SaveStatus({
         role="status"
         aria-live="polite"
         className={cn(
-          "inline-flex items-center gap-1.5 text-[11px] animate-[fade-in-up_0.25s_ease-out_both]",
+          "inline-flex items-center gap-1.5 text-[11px] motion-safe:animate-[fade-in-up_0.25s_ease-out_both]",
           className,
         )}
       >
@@ -2072,7 +2079,7 @@ function SaveStatus({
         {/* Tick pops in rather than appearing flat — the one moment on this
             page worth a beat of acknowledgement. */}
         <CheckCircle2
-          className="h-3.5 w-3.5 animate-[scale-in_0.3s_cubic-bezier(0.16,1,0.3,1)_both]"
+          className="h-3.5 w-3.5 motion-safe:animate-[scale-in_0.3s_cubic-bezier(0.16,1,0.3,1)_both]"
           aria-hidden="true"
         />
         {t("teacher_interview_config.save_status.saved")}
@@ -2340,7 +2347,12 @@ function GenerationSection({
                       }
                       className="h-4 w-4"
                     />
-                    <span className="shrink-0 rounded-md bg-violet-100 px-1.5 py-0.5 text-[11px] font-bold text-violet-700">
+                    {/* Was bg-violet-100/text-violet-700. Purple is banned by
+                        the design system; it survived because the guard script
+                        greps a directory that no longer exists and so passes
+                        unconditionally. Uses the primary token like every other
+                        index badge in this file. */}
+                    <span className="shrink-0 rounded-md bg-m3-primary/10 px-1.5 py-0.5 text-[11px] font-bold text-m3-primary">
                       {t("teacher_interview_config.generate.outcomes_badge", {
                         n: index + 1,
                       })}
@@ -2535,12 +2547,40 @@ function Field({
   hint?: string;
   children: React.ReactNode;
 }) {
+  const generatedId = useId();
+  // Associate the label with its control. The label was previously a bare
+  // <label> with no htmlFor, so a screen reader announced most of this form's
+  // inputs as unlabelled — and clicking a label did not focus its field.
+  //
+  // Done by cloning rather than by wrapping the control in the <label>:
+  // implicit association would swallow any other interactive child, and the
+  // persona field puts a "View guide" button next to its Select, which would
+  // then toggle the Select when clicked.
+  //
+  // Only a single element child that does not already carry an id is wired.
+  // Anything else (multiple children, a fragment, plain text) keeps today's
+  // behaviour rather than pointing htmlFor at an id that does not exist, which
+  // would be worse than no association at all. Input, Textarea and Select all
+  // accept and forward `id`, so the common cases are covered.
+  const onlyChild = isValidElement(children) ? children : null;
+  const childProps = (onlyChild?.props ?? {}) as { id?: string };
+  const controlId = childProps.id ?? (onlyChild ? generatedId : undefined);
+  const wired =
+    onlyChild && !childProps.id
+      ? cloneElement(onlyChild as ReactElement<{ id?: string }>, {
+          id: generatedId,
+        })
+      : children;
+
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+      <label
+        htmlFor={controlId}
+        className="block text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant"
+      >
         {label}
       </label>
-      {children}
+      {wired}
       {hint && <p className="text-[11px] text-m3-on-surface-variant">{hint}</p>}
     </div>
   );
@@ -2813,10 +2853,16 @@ function ToggleRow({
           value ? "bg-m3-primary" : "bg-m3-surface-container-high",
         )}
       >
+        {/* Knob moves by transform, not by `left`. Animating `left` under
+            `transition-all` recomputed layout on every frame of every toggle;
+            a translate runs on the compositor and matches the opacity/transform
+            rule the rest of this file follows. */}
         <span
           className={cn(
-            "absolute top-1 w-4 h-4 rounded-full shadow-sm transition-all duration-200",
-            value ? "left-6 bg-surface-elev" : "left-1 bg-slate-400",
+            "absolute top-1 left-1 w-4 h-4 rounded-full shadow-sm transition-[transform,background-color] duration-200 ease-out",
+            value
+              ? "translate-x-5 bg-surface-elev"
+              : "translate-x-0 bg-slate-400",
           )}
         />
       </button>
