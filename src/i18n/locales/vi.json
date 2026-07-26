@@ -3342,7 +3342,9 @@
       "rubric_description_placeholder": "Ý nghĩa của tiêu chí, VD: Nêu được các đánh đổi cụ thể thay vì chỉ định nghĩa",
       "rubric_add": "Thêm tiêu chí",
       "rubric_remove": "Xóa tiêu chí",
-      "rubric_at_cap": "Tối đa {{max}} tiêu chí"
+      "rubric_at_cap": "Tối đa {{max}} tiêu chí",
+      "interviewer_role": "Người phỏng vấn",
+      "interviewer_role_hint": "Người phỏng vấn xuất hiện với vai nào. Chỉ đổi cách diễn đạt — không đổi độ khó, câu hỏi hay điểm."
     },
     "units": {
       "minutes": "phút",
@@ -3650,6 +3652,13 @@
       "outcomes_select_all": "Chọn tất cả",
       "outcomes_clear": "Bỏ chọn",
       "outcomes_badge": "CĐR {{n}}"
+    },
+    "interviewer_role": {
+      "generic_assistant": "Trợ lý ảo (mặc định)",
+      "backend_tech_lead": "Tech lead backend",
+      "staff_engineer": "Staff engineer",
+      "eng_manager": "Engineering manager",
+      "hr_screener": "Chuyên viên tuyển dụng"
     }
   },
   "teacher_lesson_manage": {

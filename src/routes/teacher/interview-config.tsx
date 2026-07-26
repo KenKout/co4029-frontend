@@ -151,7 +151,29 @@ interface PersonaProfileOverride {
   verbosity?: number;
   formality?: number;
   ack_frequency?: number;
+  // Who the interviewer presents as. Not a 0-4 dial and not diffed against the
+  // persona preset — identity is its own axis, so it is sent whenever the
+  // teacher picks anything other than the generic assistant.
+  interviewer_role?: InterviewerRole;
 }
+
+/** Professional identity presets. MUST stay in sync with the backend
+ *  `InterviewerRoleLiteral` (schemas/authoring.py) and the preset table in
+ *  orchestrator/interviewer_identity.py. */
+type InterviewerRole =
+  | "generic_assistant"
+  | "backend_tech_lead"
+  | "staff_engineer"
+  | "eng_manager"
+  | "hr_screener";
+
+const INTERVIEWER_ROLE_KEYS: InterviewerRole[] = [
+  "generic_assistant",
+  "backend_tech_lead",
+  "staff_engineer",
+  "eng_manager",
+  "hr_screener",
+];
 
 const PERSONA_TRAIT_KEYS = [
   "warmth",
@@ -221,6 +243,9 @@ function personaOverrideFromResolved(
     verbosity: resolved.verbosity,
     formality: resolved.formality,
     ack_frequency: resolved.ack_frequency,
+    interviewer_role:
+      (resolved as { interviewer_role?: InterviewerRole }).interviewer_role ??
+      "generic_assistant",
   };
 }
 
@@ -283,6 +308,13 @@ function personaOverridePayload(
       diff[key] = v;
       hasOverride = true;
     }
+  }
+  // Identity has no preset to differ from, so it is carried whenever it is set
+  // to something other than the default. Without this the role would be dropped
+  // on any config whose tone dials all match the preset.
+  if (override.interviewer_role && override.interviewer_role !== "generic_assistant") {
+    diff.interviewer_role = override.interviewer_role;
+    hasOverride = true;
   }
   return hasOverride ? diff : null;
 }
@@ -1571,6 +1603,29 @@ function SettingsForm({
               }))}
             />
             <VoicePersonaGuideSheet focus="persona" />
+          </Field>
+          {/* Who the interviewer presents as. Orthogonal to persona: persona is
+              HOW they sound, this is WHO they are. Like persona it shapes
+              language only — never difficulty, question choice, or scoring. */}
+          <Field
+            label={t("teacher_interview_config.fields.interviewer_role")}
+            hint={t("teacher_interview_config.fields.interviewer_role_hint")}
+          >
+            <Select<InterviewerRole>
+              value={
+                draft.persona_profile.interviewer_role ?? "generic_assistant"
+              }
+              onValueChange={(next) =>
+                update("persona_profile", {
+                  ...draft.persona_profile,
+                  interviewer_role: next,
+                })
+              }
+              options={INTERVIEWER_ROLE_KEYS.map((r) => ({
+                value: r,
+                label: t(`teacher_interview_config.interviewer_role.${r}`),
+              }))}
+            />
           </Field>
           <Field
             label={t("teacher_interview_config.fields.voice_label")}

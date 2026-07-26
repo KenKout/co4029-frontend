@@ -3430,7 +3430,9 @@
       "rubric_description_placeholder": "What this criterion means, e.g. Cites concrete trade-offs rather than definitions",
       "rubric_add": "Add criterion",
       "rubric_remove": "Remove criterion",
-      "rubric_at_cap": "Maximum {{max}} criteria"
+      "rubric_at_cap": "Maximum {{max}} criteria",
+      "interviewer_role": "Interviewer",
+      "interviewer_role_hint": "Who the interviewer presents as. Affects wording only — never difficulty, question choice, or scoring."
     },
     "units": {
       "minutes": "min",
@@ -3738,6 +3740,13 @@
       "processing": "Processing…",
       "start_button": "Start generation",
       "elapsed": "Elapsed time"
+    },
+    "interviewer_role": {
+      "generic_assistant": "Virtual assistant (default)",
+      "backend_tech_lead": "Backend tech lead",
+      "staff_engineer": "Staff engineer",
+      "eng_manager": "Engineering manager",
+      "hr_screener": "Talent partner"
     }
   },
   "teacher_lesson_manage": {
