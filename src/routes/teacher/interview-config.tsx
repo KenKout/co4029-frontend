@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
@@ -928,6 +929,7 @@ export default function InterviewConfigPage() {
               <section
                 id="settings"
                 hidden={activeTab !== "settings"}
+                data-active={activeTab === "settings"}
                 role="tabpanel"
                 aria-labelledby="tab-settings"
                 className="space-y-6"
@@ -955,6 +957,7 @@ export default function InterviewConfigPage() {
               <section
                 id="generate"
                 hidden={activeTab !== "generate"}
+                data-active={activeTab === "generate"}
                 role="tabpanel"
                 aria-labelledby="tab-generate"
               >
@@ -973,6 +976,7 @@ export default function InterviewConfigPage() {
               <section
                 id="questions"
                 hidden={activeTab !== "questions"}
+                data-active={activeTab === "questions"}
                 role="tabpanel"
                 aria-labelledby="tab-questions"
               >
@@ -989,6 +993,7 @@ export default function InterviewConfigPage() {
               <section
                 id="adaptive-readiness"
                 hidden={activeTab !== "adaptive-readiness"}
+                data-active={activeTab === "adaptive-readiness"}
                 role="tabpanel"
                 aria-labelledby="tab-adaptive-readiness"
               >
@@ -1306,6 +1311,10 @@ function PublishReadiness({
     },
   ];
   const allDone = items.every((i) => i.done);
+  // Which items flipped false→true since the last render. Used to pop ONLY the
+  // tick that just became done: animating on `item.done` alone would replay the
+  // bounce on every re-render (i.e. on every keystroke in the settings form).
+  const justCompleted = useJustCompleted(items);
 
   return (
     <div
@@ -1341,7 +1350,14 @@ function PublishReadiness({
                 )}
               >
                 {item.done ? (
-                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                  <Check
+                    className={cn(
+                      "h-3.5 w-3.5",
+                      justCompleted.has(item.key) &&
+                        "animate-[scale-in_0.3s_cubic-bezier(0.16,1,0.3,1)_both]",
+                    )}
+                    aria-hidden="true"
+                  />
                 ) : (
                   <TriangleAlert className="h-3.5 w-3.5" aria-hidden="true" />
                 )}
@@ -1356,6 +1372,26 @@ function PublishReadiness({
 }
 
 /**
+ * Keys of checklist items that flipped from not-done to done since the previous
+ * render, so a completion can be acknowledged exactly once.
+ *
+ * A ref (not state) on purpose: this derives from props the parent already
+ * re-renders on, so storing it in state would add a second render pass for no
+ * benefit. Items are compared by key, so reordering the checklist is safe.
+ */
+function useJustCompleted(items: { key: string; done: boolean }[]): Set<string> {
+  const prev = useRef<Map<string, boolean>>(new Map());
+  const justCompleted = new Set<string>();
+  for (const item of items) {
+    if (item.done && prev.current.get(item.key) === false) {
+      justCompleted.add(item.key);
+    }
+  }
+  prev.current = new Map(items.map((i) => [i.key, i.done]));
+  return justCompleted;
+}
+
+/**
  * A titled settings group rendered as its own bordered card. Groups related
  * fields under one heading so the Settings tab reads as a set of tidy cards
  * (FormBold-style grouping) instead of one long scrolling column — keeps the
@@ -1365,13 +1401,27 @@ function SettingsCard({
   title,
   description,
   children,
+  stagger = 0,
 }: {
   title: string;
   description?: string;
   children: React.ReactNode;
+  /** Position in the card column, used to stagger the reveal (0 = first). */
+  stagger?: number;
 }) {
   return (
-    <section className="rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low/40 p-5 lg:p-6 space-y-4">
+    <section
+      // Enter animation runs unconditionally rather than via the `.reveal`
+      // IntersectionObserver: `.reveal` sets a hard `opacity: 0` and useReveal()
+      // unobserves after the first intersection, so a card that mounts while its
+      // tab panel is `hidden` would never receive `.visible` and would stay
+      // permanently invisible. A plain keyframe cannot get stuck.
+      // opacity+transform only → compositor-only, no reflow.
+      className="animate-[fade-in-up_0.4s_cubic-bezier(0.16,1,0.3,1)_both] rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low/40 p-5 lg:p-6 space-y-4 transition-colors duration-200 hover:border-m3-outline-variant/70"
+      style={
+        { animationDelay: `${revealDelayMs(stagger)}ms` } as CSSProperties
+      }
+    >
       <div className="space-y-1">
         <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
           {title}
@@ -1383,6 +1433,13 @@ function SettingsCard({
       {children}
     </section>
   );
+}
+
+/** Stagger step, capped so the whole column is revealed within ~360ms. */
+function revealDelayMs(index: number): number {
+  const STEP_MS = 60;
+  const MAX_STEPS = 6;
+  return Math.min(Math.max(index, 0), MAX_STEPS) * STEP_MS;
 }
 
 function SettingsForm({
@@ -1421,6 +1478,7 @@ function SettingsForm({
       {/* Card 1 — Basics: identity + interviewer style grouped together, with
           persona/voice on one row (FormBold-style two-up layout). */}
       <SettingsCard
+        stagger={0}
         title={t("teacher_interview_config.sections.general.title")}
         description={t("teacher_interview_config.sections.general.description")}
       >
@@ -1568,7 +1626,10 @@ function SettingsForm({
       </SettingsCard>
 
       {/* Card 2 — Scoring & timing: the three numeric knobs on one 3-up row. */}
-      <SettingsCard title={t("teacher_interview_config.sections.rules.title")}>
+      <SettingsCard
+        stagger={1}
+        title={t("teacher_interview_config.sections.rules.title")}
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Field
             label={t("teacher_interview_config.fields.duration_label")}
@@ -1622,6 +1683,7 @@ function SettingsForm({
       {/* Card 3 — Guidance for AI: free-text prose (fed to the question
           generator) plus the structured scoring rubric (graded against). */}
       <SettingsCard
+        stagger={2}
         title={t("teacher_interview_config.sections.guidance.title")}
         description={t(
           "teacher_interview_config.sections.guidance.description",
@@ -1796,7 +1858,14 @@ function SettingsForm({
           {t("teacher_interview_config.actions.save_config_scope_hint")}
         </p>
         <div className="flex items-center gap-3 shrink-0">
+          {/* Keyed on the status it will render: a key on the element returned
+              *inside* SaveStatus would do nothing (React only diffs keys among
+              siblings), so the remount that triggers the enter animation has to
+              be forced from the call site. */}
           <SaveStatus
+            key={
+              saving ? "saving" : dirty ? "dirty" : justSaved ? "saved" : "idle"
+            }
             saving={saving}
             dirty={dirty}
             justSaved={justSaved}
@@ -1836,43 +1905,60 @@ function SaveStatus({
   updatedAt: string | null;
 }) {
   const { t, i18n } = useTranslation();
-  if (saving) {
+
+  // Every branch shares one animated shell. The remount that replays the enter
+  // animation is forced by a `key` at the CALL SITE (a key here would be inert —
+  // React only diffs keys among siblings). This is the feedback for the page's
+  // primary action (saving settings), so the 250ms is worth it.
+  // opacity+transform only → compositor-only, no reflow.
+  function shell(children: React.ReactNode, className: string) {
     return (
       <span
         role="status"
         aria-live="polite"
-        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-m3-on-surface-variant"
+        className={cn(
+          "inline-flex items-center gap-1.5 text-[11px] animate-[fade-in-up_0.25s_ease-out_both]",
+          className,
+        )}
       >
-        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-        {t("teacher_interview_config.save_status.saving")}
+        {children}
       </span>
     );
   }
+
+  if (saving) {
+    return shell(
+      <>
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        {t("teacher_interview_config.save_status.saving")}
+      </>,
+      "font-semibold text-m3-on-surface-variant",
+    );
+  }
   if (dirty) {
-    return (
-      <span
-        role="status"
-        aria-live="polite"
-        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700"
-      >
+    return shell(
+      <>
         <span
           className="h-2 w-2 rounded-full bg-amber-500"
           aria-hidden="true"
         />
         {t("teacher_interview_config.save_status.unsaved")}
-      </span>
+      </>,
+      "font-semibold text-amber-700",
     );
   }
   if (justSaved) {
-    return (
-      <span
-        role="status"
-        aria-live="polite"
-        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600"
-      >
-        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+    return shell(
+      <>
+        {/* Tick pops in rather than appearing flat — the one moment on this
+            page worth a beat of acknowledgement. */}
+        <CheckCircle2
+          className="h-3.5 w-3.5 animate-[scale-in_0.3s_cubic-bezier(0.16,1,0.3,1)_both]"
+          aria-hidden="true"
+        />
         {t("teacher_interview_config.save_status.saved")}
-      </span>
+      </>,
+      "font-semibold text-emerald-600",
     );
   }
   if (updatedAt) {
