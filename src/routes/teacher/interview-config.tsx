@@ -90,6 +90,7 @@ import type {
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   PERSONA_TRAIT_PRESETS,
   type PersonaKey,
@@ -575,9 +576,29 @@ export default function InterviewConfigPage() {
   }, [t, settingsComplete, outcomeCount, draftCount, approvedCount]);
 
   if (configLoading) {
+    // Shaped like the screen it precedes — header, tab strip, then the first
+    // settings card — rather than a bare spinner on an empty page. This guard
+    // is also why QuestionBank has no loading state of its own: it never
+    // renders while the config query is in flight.
     return (
-      <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-m3-secondary" />
+      <div className="mx-auto w-full max-w-6xl space-y-5 px-4 py-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-48" />
+            <Skeleton className="h-7 w-72" />
+          </div>
+          <Skeleton className="h-9 w-28 rounded-lg" />
+        </div>
+        <Skeleton className="h-14 w-full rounded-xl" />
+        <div className="space-y-4">
+          {[0, 1, 2].map((card) => (
+            <Skeleton
+              key={card}
+              className="h-40 w-full rounded-xl"
+              style={{ animationDelay: `${card * 120}ms` } as CSSProperties}
+            />
+          ))}
+        </div>
       </div>
     );
   }

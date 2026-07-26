@@ -58,6 +58,7 @@ import type {
   InterviewQuestionDuplicateCheck,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { Select } from "@/components/ui/select";
 
 type ReviewStatus = InterviewQuestionAuthoring["review_status"];
@@ -436,13 +437,6 @@ export function QuestionBank({
     }
     return counts;
   }, [sorted]);
-  const pendingCount = statusCounts.pending ?? 0;
-  // Whether the view is currently narrowed to just the pending status (the
-  // quick-filter's active state).
-  const pendingOnlyActive = statusFilter === "pending";
-  function togglePendingOnly() {
-    setStatusFilter((prev) => (prev === "pending" ? "all" : "pending"));
-  }
 
   // ── Bulk selection ──────────────────────────────────────────────────────
   // Selection operates over the currently FILTERED, non-deleting questions, so
@@ -1215,9 +1209,11 @@ export function QuestionBank({
           />
         )}
 
-        {/* Search + filters — only when there are questions to filter. */}
+        {/* Search + filters — only when there are questions to filter.
+            Grouped into one bordered card, matching the redesigned course
+            Question Bank page so the two screens read as the same product. */}
         {hasQuestions && (
-          <div className="space-y-2">
+          <div className="space-y-2.5 rounded-xl border border-m3-outline-variant/30 bg-m3-surface-container-lowest p-3">
             {/* Search bar on its own row */}
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-m3-on-surface-variant/60" />
@@ -1236,46 +1232,6 @@ export function QuestionBank({
             </div>
             {/* Filter selects below the search bar */}
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Quick filter: jump straight to the pending-review pile — the
-                  primary curation workflow. Shows the pending count. */}
-              {pendingCount > 0 && (
-                <button
-                  type="button"
-                  onClick={togglePendingOnly}
-                  aria-pressed={pendingOnlyActive}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer",
-                    pendingOnlyActive
-                      ? "bg-amber-500 text-white"
-                      : "bg-amber-50 text-amber-700 hover:bg-amber-100",
-                  )}
-                >
-                  <CircleDot className="h-3.5 w-3.5" aria-hidden="true" />
-                  {t("teacher_interview_config.qbank.pending_only", {
-                    count: pendingCount,
-                  })}
-                </button>
-              )}
-              <FilterSelect
-                label={t("teacher_interview_config.qbank.filter.status")}
-                value={statusFilter}
-                onChange={(v) => setStatusFilter(v as ReviewStatus | "all")}
-                options={[
-                  {
-                    value: "all",
-                    label: t(
-                      "teacher_interview_config.qbank.filter.all_count",
-                      {
-                        count: sorted.length,
-                      },
-                    ),
-                  },
-                  ...STATUS_ORDER.map((s) => ({
-                    value: s,
-                    label: `${t(`teacher_interview_config.qbank.status.${statusMeta(s).key}`)} (${statusCounts[s] ?? 0})`,
-                  })),
-                ]}
-              />
               {outcomes.length > 0 && (
                 <FilterSelect
                   label={t("teacher_interview_config.qbank.filter.outcome")}
@@ -1357,6 +1313,44 @@ export function QuestionBank({
               />
             </div>
 
+            {/* Review status gets a segmented control rather than a sixth
+                dropdown. It is the dimension a teacher curating a bank acts on
+                most (pending vs approved), it has a small fixed value set, and
+                its counts were already being computed — they were just buried
+                inside `<option>` labels, where a dropdown hides them behind a
+                click. Statuses with no questions are omitted so the control
+                does not grow empty segments. Counts come from `statusCounts`,
+                which is deliberately computed over the UNFILTERED pool so the
+                numbers do not shrink as you narrow the list.
+
+                This also replaces the amber "pending only" pill that used to
+                sit above: it was never separate state, just a shortcut setting
+                statusFilter to "pending", so a "Pending (n)" segment does the
+                same job without a second control competing for the same idea. */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <SegmentedFilter
+                ariaLabel={t("teacher_interview_config.qbank.filter.status")}
+                value={statusFilter}
+                onChange={(v) => setStatusFilter(v as ReviewStatus | "all")}
+                options={[
+                  {
+                    key: "all" as const,
+                    label: t("teacher_interview_config.qbank.filter.all"),
+                    count: sorted.length,
+                  },
+                  ...STATUS_ORDER.filter((s) => (statusCounts[s] ?? 0) > 0).map(
+                    (s) => ({
+                      key: s,
+                      label: t(
+                        `teacher_interview_config.qbank.status.${statusMeta(s).key}`,
+                      ),
+                      count: statusCounts[s] ?? 0,
+                    }),
+                  ),
+                ]}
+              />
+            </div>
+
             {/* Active filter chips */}
             {anyFilterActive && (
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -1422,6 +1416,27 @@ export function QuestionBank({
             )}
           </div>
         )}
+
+        {/* The bulk-action bar lives INSIDE the sticky toolbar rather than
+            sticking on its own. It used to pin at the same `top-32` as the
+            toolbar with a higher z-index, so the moment you scrolled with a
+            selection active it landed on top of the search field and filter
+            row and hid them. Its correct offset would have been "toolbar
+            height + top-32", but the toolbar's height varies with the filter
+            and chip rows, so sharing one stacking box is the fix rather than
+            another hand-tuned magic number. */}
+        {selectedQuestions.length > 0 && (
+          <BulkActionBar
+            count={selectedQuestions.length}
+            busy={bulkBusy}
+            outcomeOptions={outcomeOptions}
+            onSetStatus={(s) => void bulkSetStatus(s)}
+            onSetOutcome={(o) => void bulkSetOutcome(o)}
+            onAddToBank={() => void bulkAddToBank()}
+            onDelete={() => void bulkDelete()}
+            onClear={clearSelection}
+          />
+        )}
       </div>
 
       <div className="p-4 lg:p-6 space-y-3">
@@ -1477,12 +1492,15 @@ export function QuestionBank({
           </div>
         )}
 
-        {/* Empty states */}
+        {/* Empty states — two distinct weights. This one is "the bank is
+            genuinely empty", which is a starting point rather than a problem,
+            so it gets the dashed frame and the larger medallion. The
+            filtered-out case below is deliberately lighter. */}
         {!hasQuestions ? (
-          <div className="text-center py-12 px-4 space-y-3">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft">
+          <div className="motion-safe:animate-[fade-in-up_0.4s_cubic-bezier(0.16,1,0.3,1)_both] space-y-3 rounded-2xl border border-dashed border-m3-outline-variant/50 bg-m3-surface-container-lowest px-4 py-10 text-center">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary-soft">
               <ClipboardList
-                className="h-6 w-6 text-m3-primary"
+                className="h-7 w-7 text-m3-primary"
                 aria-hidden="true"
               />
             </div>
@@ -1508,8 +1526,18 @@ export function QuestionBank({
             )}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-10 space-y-3">
-            <p className="text-sm text-m3-on-surface-variant">
+          // Deliberately lighter than the "no questions at all" state above:
+          // nothing is wrong here, the filters are just too narrow, and the
+          // only thing the teacher needs is the way out. Solid border and a
+          // plain icon rather than the dashed medallion treatment reserved for
+          // a genuinely empty bank — same two-weight split as the redesigned
+          // sibling page.
+          <div className="motion-safe:animate-[fade-in-up_0.3s_cubic-bezier(0.16,1,0.3,1)_both] rounded-xl border border-m3-outline-variant/30 bg-m3-surface-container-lowest p-8 text-center">
+            <Search
+              className="mx-auto h-6 w-6 text-m3-on-surface-variant/50"
+              aria-hidden="true"
+            />
+            <p className="mt-3 text-sm font-semibold text-m3-on-surface">
               {t("teacher_interview_config.qbank.empty_filtered")}
             </p>
             <Button
@@ -1517,7 +1545,7 @@ export function QuestionBank({
               variant="outline"
               size="sm"
               onClick={clearFilters}
-              className="gap-1.5"
+              className="mt-3 gap-1.5"
             >
               <X className="h-3.5 w-3.5" />
               {t("teacher_interview_config.qbank.clear_filters")}
@@ -1548,23 +1576,19 @@ export function QuestionBank({
               </label>
             </div>
 
-            {selectedQuestions.length > 0 && (
-              <BulkActionBar
-                count={selectedQuestions.length}
-                busy={bulkBusy}
-                outcomeOptions={outcomeOptions}
-                onSetStatus={(s) => void bulkSetStatus(s)}
-                onSetOutcome={(o) => void bulkSetOutcome(o)}
-                onAddToBank={() => void bulkAddToBank()}
-                onDelete={() => void bulkDelete()}
-                onClear={clearSelection}
-              />
-            )}
-
             {(() => {
               // Drag-to-reorder only makes sense on the flat, unfiltered list:
               // once filtered or grouped by module, the visible order no longer
               // maps 1:1 to persisted positions, so dropping would be ambiguous.
+              //
+              // This is NOT a rare edge case: `showModuleGroups` is true for any
+              // bank spanning more than one source module, so for most real
+              // courses drag is off by default and nothing ever told the
+              // teacher why — the grip simply was not rendered. Reordering
+              // itself still works through each card's move-to-top /
+              // move-to-bottom menu, which operates in true position space, so
+              // the note below points there rather than pretending the
+              // capability is gone.
               const dndEnabled = !showModuleGroups && !anyFilterActive;
               const renderCard = (q: InterviewQuestionAuthoring) => {
                 const displayIndex = sorted.findIndex((s) => s.id === q.id);
@@ -1637,17 +1661,34 @@ export function QuestionBank({
                   />
                 );
               };
+              // Explains the missing drag handle. Only shown when reordering is
+              // actually unavailable, and worded for the reason it is
+              // unavailable, since the two causes have different escape routes:
+              // a filter can be cleared, module grouping cannot.
+              const reorderNote = dndEnabled ? null : (
+                <p className="px-1 pb-1 text-[11px] leading-relaxed text-m3-on-surface-variant">
+                  {t(
+                    anyFilterActive
+                      ? "teacher_interview_config.qbank.reorder_off_filtered"
+                      : "teacher_interview_config.qbank.reorder_off_grouped",
+                  )}
+                </p>
+              );
               // Flat list when there's only one module group (or no module
               // data); grouped sections with headers otherwise.
               if (!showModuleGroups) {
                 return (
-                  <ul className="space-y-2" role="list">
-                    {filtered.map(renderCard)}
-                  </ul>
+                  <>
+                    {reorderNote}
+                    <ul className="space-y-2" role="list">
+                      {filtered.map(renderCard)}
+                    </ul>
+                  </>
                 );
               }
               return (
                 <div className="space-y-5">
+                  {reorderNote}
                   {groupedByModule.map((g) => (
                     <div key={g.key} className="space-y-2">
                       <div className="flex items-center gap-1.5">
@@ -1874,7 +1915,12 @@ function BulkActionBar({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="sticky top-32 z-[6] flex items-center gap-2 flex-wrap rounded-xl border border-m3-primary/40 bg-primary-soft px-3 py-2 shadow-sm">
+    // No `sticky` of its own: it is rendered inside the sticky toolbar, so it
+    // inherits that stacking context and offset. Pinning it separately at the
+    // same `top-32` with a higher z-index is what made it cover the search
+    // field. The z-[5]/z-[6] pair it used to belong to is deliberately BELOW
+    // the config screen's TabBar (z-10) — do not "normalise" those upward.
+    <div className="flex items-center gap-2 flex-wrap rounded-xl border border-m3-primary/40 bg-primary-soft px-3 py-2 shadow-sm">
       <span className="inline-flex items-center gap-1.5 text-xs font-bold text-m3-primary">
         {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         {t("teacher_interview_config.qbank.bulk.count", { count })}
@@ -1991,14 +2037,18 @@ function FilterSelect({
 }) {
   return (
     <label className="inline-flex items-center gap-1.5 text-xs text-m3-on-surface-variant">
-      <span className="sr-only sm:not-sr-only">{label}</span>
+      <span className="hidden font-semibold sm:inline">{label}</span>
+      {/* Fixed identical width for every filter select. Under `w-auto` each one
+          sized to its longest option, so a row of them stepped up and down at
+          random — the redesigned sibling page names this exactly: unequal
+          widths in one control row read as a bug. */}
       <Select
         size="sm"
         aria-label={label}
         value={value}
         onValueChange={onChange}
         options={options}
-        className="w-auto"
+        className="w-[8.5rem]"
       />
     </label>
   );
@@ -2011,13 +2061,18 @@ function FilterChip({
   label: string;
   onClear: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary">
       {label}
       <button
         type="button"
         onClick={onClear}
-        aria-label={`Remove filter ${label}`}
+        // Was a hardcoded English string, so this button announced in English
+        // to a Vietnamese screen-reader user regardless of the UI language.
+        aria-label={t("teacher_interview_config.qbank.remove_filter", {
+          label,
+        })}
         className="cursor-pointer rounded-full hover:bg-primary/20 p-0.5"
       >
         <X className="h-3 w-3" />
@@ -2126,8 +2181,13 @@ function QuestionCard({
   const canDrag = dndEnabled && !editing && !deleting;
 
   return (
+    // No `aria-selected` here. It used to carry `expanded`, which was wrong
+    // twice over: the attribute is not valid on an implicit `listitem` role
+    // (axe flags aria-allowed-attr), and its value described the accordion
+    // rather than selection — while this card genuinely does have a selected
+    // state, exposed through its checkbox. Expansion is already announced
+    // correctly by `aria-expanded` on the toggle button below.
     <li
-      aria-selected={expanded}
       onDragOver={(e) => {
         if (!canDrag) return;
         e.preventDefault();
@@ -2144,11 +2204,21 @@ function QuestionCard({
       }}
       className={cn(
         // relative so the absolutely-positioned insertion lines anchor here.
-        "relative rounded-xl border bg-m3-surface origin-top overflow-hidden transition-all duration-300 ease-in motion-reduce:transition-none",
+        // `group` drives the hover treatments on the prompt text and the action
+        // column below. NOTE: this element owns the transforms (delete
+        // slide-out, hover lift), so it must never carry a keyframe animation —
+        // `fade-in-up ... both` pins transform forever and would silently
+        // cancel both. Entrance belongs on an inner wrapper.
+        "group relative rounded-xl border bg-m3-surface origin-top overflow-hidden transition-all duration-300 ease-in motion-reduce:transition-none",
         selected
           ? "border-m3-primary/50 ring-1 ring-m3-primary/30"
           : "border-m3-outline-variant/20",
         dragging && "opacity-40",
+        // Hover lift only when the card is at rest: a card that drifts under
+        // the cursor while you are editing it is worse than no affordance.
+        !editing &&
+          !deleting &&
+          "hover:-translate-y-0.5 hover:border-m3-primary/40 hover:shadow-editorial",
         deleting
           ? "opacity-0 scale-95 -translate-x-4 max-h-0 !p-0 !my-0 border-transparent"
           : "max-h-[1200px]",
@@ -2207,6 +2277,9 @@ function QuestionCard({
           <p
             className={cn(
               "text-m3-on-surface font-semibold leading-relaxed",
+              // Recolours with the row so the whole card reads as one hover
+              // target rather than a set of separately-hoverable pieces.
+              "transition-colors group-hover:text-m3-primary",
               // The prompt is the content — give it more weight than its
               // surrounding chrome. Slightly smaller in compact mode.
               compact ? "text-sm" : "text-[15px]",
@@ -2222,6 +2295,7 @@ function QuestionCard({
             size="sm"
             onClick={onToggleExpand}
             aria-expanded={expanded}
+            aria-controls={`qbank-body-${q.id}`}
             className="mt-1 h-7 gap-1.5 text-xs"
           >
             <ChevronDown
@@ -2395,6 +2469,7 @@ function QuestionCard({
           transition (0fr → 1fr) so "View answer"/"Hide answer" animates up and
           down instead of snapping. */}
       <div
+        id={`qbank-body-${q.id}`}
         className={cn(
           "grid transition-all duration-300 ease-out motion-reduce:transition-none",
           expanded || editing

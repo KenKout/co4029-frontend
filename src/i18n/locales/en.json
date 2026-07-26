@@ -3695,7 +3695,10 @@
         "status_changed": "Status changed to {{status}}",
         "outcome_changed": "Outcome set to {{outcome}}",
         "moved": "Question moved to position {{position}}"
-      }
+      },
+      "remove_filter": "Remove filter {{label}}",
+      "reorder_off_filtered": "Drag-to-reorder is off while filters are active. Use each question's menu to move it to the top or bottom, or clear the filters.",
+      "reorder_off_grouped": "Drag-to-reorder is off while questions are grouped by module. Use each question's menu to move it to the top or bottom."
     },
     "review_status": {
       "pending": "Pending review",

@@ -3607,7 +3607,10 @@
         "status_changed": "Đã đổi trạng thái sang {{status}}",
         "outcome_changed": "Đã gán chuẩn đầu ra: {{outcome}}",
         "moved": "Đã chuyển câu hỏi tới vị trí {{position}}"
-      }
+      },
+      "remove_filter": "Bỏ bộ lọc {{label}}",
+      "reorder_off_filtered": "Kéo để sắp xếp đang tắt vì có bộ lọc. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối, hoặc xoá bộ lọc.",
+      "reorder_off_grouped": "Kéo để sắp xếp đang tắt vì câu hỏi đang nhóm theo module. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối."
     },
     "review_status": {
       "pending": "Chờ duyệt",
