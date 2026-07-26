@@ -11,6 +11,7 @@ import {
   CircleDashed,
   CircleDot,
   ClipboardList,
+  Dumbbell,
   FileText,
   GripVertical,
   Layers,
@@ -633,6 +634,38 @@ export function QuestionBank({
   }
 
   // ── Status change (with toast + undo) ──────────────────────────────────────
+  /**
+   * Move a question between the graded and practice partitions.
+   *
+   * The two sets are disjoint: a practice question is never asked in a graded
+   * run and vice versa. That is what stops a rehearsal pre-revealing the exam,
+   * so moving a question here removes it from the assessment.
+   */
+  async function setPracticeOnly(
+    q: InterviewQuestionAuthoring,
+    next: boolean,
+  ) {
+    if ((q.practice_only ?? false) === next) return;
+    setSavingId(q.id);
+    try {
+      await updateQuestion.mutateAsync({
+        questionId: q.id,
+        patch: { practice_only: next },
+      });
+      const msg = t(
+        next
+          ? "teacher_interview_config.qbank.practice.moved_to_practice"
+          : "teacher_interview_config.qbank.practice.moved_to_graded",
+      );
+      announce(msg);
+      toast.success(msg);
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   async function setStatus(q: InterviewQuestionAuthoring, next: ReviewStatus) {
     if (q.review_status === next) return;
     const prev = q.review_status;
@@ -1626,6 +1659,9 @@ export function QuestionBank({
                       void handleMoveTo(displayIndex, sorted.length - 1)
                     }
                     onAddToBank={() => void handleAddToBank(q)}
+                    onTogglePracticeOnly={() =>
+                      void setPracticeOnly(q, !(q.practice_only ?? false))
+                    }
                     banking={bankingId === q.id}
                     alreadyInBank={bankedPrompts.has(
                       q.prompt_text.trim().toLowerCase(),
@@ -2107,6 +2143,7 @@ interface QuestionCardProps {
   onMoveToTop: () => void;
   onMoveToBottom: () => void;
   onAddToBank: () => void;
+  onTogglePracticeOnly: () => void;
   banking: boolean;
   alreadyInBank: boolean;
   selected: boolean;
@@ -2154,6 +2191,7 @@ function QuestionCard({
   onMoveToTop,
   onMoveToBottom,
   onAddToBank,
+  onTogglePracticeOnly,
   banking,
   alreadyInBank,
   selected,
@@ -2317,6 +2355,18 @@ function QuestionCard({
               <span>
                 {t(`teacher_interview_config.question_type.${q.question_type}`)}
               </span>
+              {/* Partition chip. Only rendered for practice questions: graded is
+                  the default and the overwhelming majority, so labelling both
+                  would add noise to every row to mark the exception. */}
+              {q.practice_only && (
+                <>
+                  <Sep />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-1.5 py-0.5 font-semibold text-sky-700">
+                    <Dumbbell className="h-3 w-3" aria-hidden="true" />
+                    {t("teacher_interview_config.qbank.practice.badge")}
+                  </span>
+                </>
+              )}
               {/* Module attribution: one chip per source module. A question
                   sourced from 2+ modules therefore shows a separate chip for
                   each, making cross-module questions visible at a glance. */}
@@ -2449,6 +2499,17 @@ function QuestionCard({
                     {alreadyInBank
                       ? t("teacher_interview_config.qbank.already_in_bank")
                       : t("teacher_interview_config.qbank.add_to_bank")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={onTogglePracticeOnly}
+                    className="gap-2"
+                  >
+                    <Dumbbell className="h-4 w-4" />
+                    {t(
+                      q.practice_only
+                        ? "teacher_interview_config.qbank.practice.move_to_graded"
+                        : "teacher_interview_config.qbank.practice.move_to_practice",
+                    )}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

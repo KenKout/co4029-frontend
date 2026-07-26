@@ -19,6 +19,8 @@ import type {
   InterviewOnboardingRespondResponse,
   InterviewOutcomeAuthoring,
   InterviewOutcomeCreate,
+  InterviewPracticeFeedback,
+  InterviewPracticeInfo,
   InterviewQuestionAuthoring,
   InterviewQuestionBankItemCreate,
   InterviewQuestionBankItemRead,
@@ -38,6 +40,65 @@ import type {
   InterviewTranscriptRead,
   RealtimeTokenResponse,
 } from "../types";
+
+/**
+ * Whether this student may rehearse, plus the criteria they are judged on.
+ *
+ * A separate request from `useInterviewForTaking` because it is a separate
+ * route on the server: the taking payload's shape is pinned by an exact
+ * key-set contract test, so practice data deliberately does not ride on it.
+ *
+ * Only fetched when the config advertises practice, so interviews that do not
+ * offer it cost no extra round trip.
+ */
+export function useInterviewPracticeInfo(
+  configId: string | null | undefined,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: queryKeys.interviews.practice(configId ?? ""),
+    queryFn: () =>
+      apiFetch<InterviewPracticeInfo>(
+        `/interview-configs/${configId}/practice`,
+      ),
+    enabled: !!configId && (options?.enabled ?? true),
+  });
+}
+
+/**
+ * Criterion-level result of a practice run. Never a grade.
+ *
+ * Polls while `ready` is false — the judge is a background task, so the first
+ * few seconds after a rehearsal ends return an empty result. It also stops on
+ * `failed`, which the server sets rather than leaving the client to guess with
+ * a timeout: the feedback task does not retry, so a permanent absence is a real
+ * outcome and not something to wait on.
+ */
+export function useInterviewPracticeFeedback(
+  sessionId: string | null | undefined,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: queryKeys.interviews.practiceFeedback(sessionId ?? ""),
+    queryFn: () =>
+      apiFetch<InterviewPracticeFeedback>(
+        `/interview-sessions/${sessionId}/practice-feedback`,
+      ),
+    enabled: !!sessionId && (options?.enabled ?? true),
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      // The server distinguishes "not yet" from "never coming" — the feedback
+      // task stamps a failure marker rather than retrying — so the client never
+      // has to guess with a timeout.
+      if (data?.ready || data?.failed) return false;
+      return PRACTICE_FEEDBACK_POLL_MS;
+    },
+    retry: false,
+    staleTime: 0,
+  });
+}
+
+const PRACTICE_FEEDBACK_POLL_MS = 3000;
 
 export function useInterviewForTaking(configId: string | null | undefined) {
   return useQuery({
@@ -458,6 +519,7 @@ export function useUpdateInterviewQuestion(
         linked_outcome_id: string | null;
         position: number;
         model_answer: string | null;
+        practice_only: boolean;
       }>;
     }) =>
       apiPatch<InterviewQuestionAuthoring>(

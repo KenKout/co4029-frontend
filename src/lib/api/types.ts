@@ -264,11 +264,50 @@ export type BulkSetExpectedTimeResponse =
   Schemas["BulkSetExpectedTimeResponse"];
 export type BulkSetItem = Schemas["BulkSetItem"];
 
-export type InterviewConfigPublic = Schemas["InterviewConfigPublic"];
+// Practice mode (session_mode split). Hand-written for the same reason as the
+// duplicate-check and curated-KG types above: openapi-snapshot.json trails the
+// live spec, so regenerating would revert unrelated endpoints.
+export type InterviewSessionMode = "assessment" | "practice";
+export type InterviewPracticeUnavailableReason =
+  | "not_enabled"
+  | "no_practice_questions"
+  | "limit_reached";
+/** Criterion text only — never importance_weight or min_outcomes_to_pass. */
+export type InterviewOutcomePublic = {
+  id: string;
+  position: number;
+  outcome_text: string;
+  outcome_type: "knowledge" | "skill" | "attitude";
+};
+export type InterviewPracticeCriterionResult = {
+  outcome_id: string;
+  outcome_text: string;
+  met: boolean;
+};
+/** Criterion-level result of a rehearsal. Carries no verdict and no score. */
+export type InterviewPracticeFeedback = {
+  /** False while the background judge is still running. */
+  ready: boolean;
+  /** True when the judge failed and no feedback is coming. */
+  failed?: boolean;
+  criteria: InterviewPracticeCriterionResult[];
+};
+export type InterviewPracticeInfo = {
+  available: boolean;
+  unavailable_reason: InterviewPracticeUnavailableReason | null;
+  runs_remaining: number;
+  // Criterion text only — never importance_weight or min_outcomes_to_pass.
+  criteria: InterviewOutcomePublic[];
+};
+
+export type InterviewConfigPublic = Schemas["InterviewConfigPublic"] & {
+  practice_mode_enabled?: boolean;
+};
 // Widen with published_at (last-published timestamp) until the OpenAPI
 // snapshot is regenerated.
 export type InterviewConfigAuthoring = Schemas["InterviewConfigAuthoring"] & {
   published_at?: string | null;
+  practice_mode_enabled?: boolean;
   // Resolved persona traits (preset merged with overrides) — teacher-only.
   // Manually typed until the OpenAPI snapshot is regenerated (Phase 3).
   persona_profile_resolved?: PersonaProfileRead | null;
@@ -278,8 +317,15 @@ export type InterviewConfigCreate = Schemas["InterviewConfigCreate"] & {
 };
 export type InterviewConfigUpdate = Schemas["InterviewConfigUpdate"] & {
   persona_profile?: PersonaProfileWrite | null;
+  practice_mode_enabled?: boolean | null;
 };
-export type InterviewForTakingPublic = Schemas["InterviewForTakingPublic"];
+// `config` is re-declared so the widened InterviewConfigPublic (with
+// practice_mode_enabled) reaches the lobby; the snapshot's nested type is the
+// pre-split shape.
+export type InterviewForTakingPublic =
+  Schemas["InterviewForTakingPublic"] & {
+    config: InterviewConfigPublic;
+  };
 export type InterviewSessionPublic = Schemas["InterviewSessionPublic"] & {
   // Proactive retake context (#7) — manually typed until the OpenAPI snapshot
   // is regenerated. remaining_attempts is null when unlimited; retake_available_at
@@ -287,9 +333,12 @@ export type InterviewSessionPublic = Schemas["InterviewSessionPublic"] & {
   remaining_attempts?: number | null;
   retake_available_at?: string | null;
   can_retake?: boolean;
+  session_mode?: InterviewSessionMode;
 };
 export type InterviewSessionStartRequest =
-  Schemas["InterviewSessionStartRequest"];
+  Schemas["InterviewSessionStartRequest"] & {
+    session_mode?: InterviewSessionMode;
+  };
 export type InterviewLanguage = NonNullable<
   Schemas["InterviewOnboardingRespondRequest"]["language"]
 >;
@@ -302,6 +351,9 @@ export type InterviewSessionStartResponse =
     onboarding_stage?: InterviewOnboardingStage;
     interview_language?: InterviewLanguage;
     assessment_started_at?: string | null;
+    // Authoritative for the run in progress: start is idempotent, so resuming a
+    // live session echoes the mode it was created with, not the one requested.
+    session_mode?: InterviewSessionMode;
   };
 // The generated schema is regenerated from the backend OpenAPI doc; until that
 // regen runs, widen the union to include the in-session identity-correction
@@ -357,8 +409,12 @@ export type InterviewQuestionPublic = Schemas["InterviewQuestionPublic"];
 export type InterviewQuestionAuthoring =
   Schemas["InterviewQuestionAuthoring"] & {
     source_module_ids?: string[];
+    /** Bank partition: true = only ever asked in a practice run. */
+    practice_only?: boolean;
   };
-export type InterviewQuestionCreate = Schemas["InterviewQuestionCreate"];
+export type InterviewQuestionCreate = Schemas["InterviewQuestionCreate"] & {
+  practice_only?: boolean;
+};
 
 // Advisory duplicate check run before saving an authored question. Manually
 // typed until the OpenAPI snapshot is regenerated; mirrors

@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link, useBlocker, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -10,6 +17,7 @@ import {
   BookOpen,
   Bot,
   CheckCircle2,
+  CircleDashed,
   Clock,
   History,
   Infinity as InfinityIcon,
@@ -33,6 +41,8 @@ import {
   useGapReport,
   useInterviewForTaking,
   useInterviewOnboarding,
+  useInterviewPracticeFeedback,
+  useInterviewPracticeInfo,
   useInterviewRespond,
   useInterviewSession,
   useMyInterviewSessions,
@@ -46,6 +56,8 @@ import type {
   InterviewOnboardingStage,
   InterviewSessionFinishResponse,
   InterviewSessionHistoryTurn,
+  InterviewSessionMode,
+  InterviewSessionStartRequest,
   InterviewSessionStartResponse,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -252,6 +264,12 @@ export default function CourseInterviewPage() {
   const { data: takingPayload, isLoading: configLoading } =
     useInterviewForTaking(configId);
   const config = takingPayload?.config;
+  // Only fetched when the interview advertises practice, so the majority that
+  // do not offer it pay no extra round trip.
+  const { data: practiceInfo } = useInterviewPracticeInfo(configId, {
+    enabled: config?.practice_mode_enabled === true,
+  });
+  const canPractise = practiceInfo?.available === true;
 
   const startSession = useStartInterviewSession(configId);
   const { data: previousSessions, isLoading: previousSessionsLoading } =
@@ -346,6 +364,10 @@ export default function CourseInterviewPage() {
   const [inputMode, setInputMode] = useState<"voice" | "text" | "hybrid">(
     "text",
   );
+  // Practice vs graded. Defaults to graded: an unset picker must never produce
+  // an ungraded run, and the server defaults the same way.
+  const [sessionMode, setSessionMode] =
+    useState<InterviewSessionMode>("assessment");
   // true = voice session started and LiveKitRoom is active
   const [voiceActive, setVoiceActive] = useState(false);
   // polling active when voice session is completing
@@ -364,6 +386,14 @@ export default function CourseInterviewPage() {
   );
   const [startDialogOpen, setStartDialogOpen] = useState(false);
   const [phase, setPhase] = useState<InterviewPhase>("prestart");
+
+  // Only for a finished rehearsal. A graded session 404s on this route by
+  // design — per-criterion verdicts are the raw material of a pass/fail
+  // decision, and students get the binary verdict plus prose, never the
+  // breakdown (thesis §4.3).
+  const { data: practiceFeedback } = useInterviewPracticeFeedback(sessionId, {
+    enabled: sessionMode === "practice" && phase === "results",
+  });
   const [onboardingStage, setOnboardingStage] =
     useState<InterviewOnboardingStage>("identity_check");
   const [interviewLanguage, setInterviewLanguage] = useState<InterviewLanguage>(
@@ -847,6 +877,10 @@ export default function CourseInterviewPage() {
     setConnected(true);
     setSessionId(payload.session_id);
     setPendingFirstQuestion(null);
+    // The server is authoritative here, not the picker. Start is idempotent, so
+    // resuming a live session returns the mode it was created with — trusting
+    // local state would mislabel a resumed practice run as graded, or worse.
+    if (payload.session_mode) setSessionMode(payload.session_mode);
 
     if (stage === "completed" && payload.first_question) {
       const assessmentStart = payload.assessment_started_at
@@ -903,6 +937,52 @@ export default function CourseInterviewPage() {
     }
   }
 
+  /**
+   * The only place a start body is constructed.
+   *
+   * There are four call sites that begin or re-enter a session, and dropping
+   * `session_mode` from any one of them fails in the worst direction: the
+   * student picks "practice" and is silently graded. Routing every one of them
+   * through here makes that omission impossible rather than merely unlikely.
+   *
+   * `mode` is passed explicitly by the two callers that mean something other
+   * than "whatever the picker says" — see handleRetry.
+   */
+  function buildStartBody(
+    overrides: Partial<InterviewSessionStartRequest> = {},
+  ): InterviewSessionStartRequest {
+    return {
+      input_mode: inputMode,
+      session_mode: sessionMode,
+      ...overrides,
+    };
+  }
+
+  /**
+   * Start errors, with the practice conflicts named.
+   *
+   * A 409 from a practice request is not "you are out of attempts" — no graded
+   * attempt was consumed. Collapsing them into the generic failure toast would
+   * tell the student something false about their remaining tries.
+   */
+  function reportStartError(err: unknown) {
+    if (err instanceof ApiError && err.status === 409) {
+      if (err.code === "practice_limit_reached") {
+        toast.error(t("course_interview.mode.errors.practice_limit"));
+        return;
+      }
+      if (err.code === "practice_unavailable") {
+        toast.error(t("course_interview.mode.errors.practice_unavailable"));
+        return;
+      }
+    }
+    toast.error(
+      err instanceof ApiError && err.status === 429
+        ? t("course_interview.errors.rate_limited")
+        : t("course_interview.errors.start_failed"),
+    );
+  }
+
   async function handleStart() {
     const isVoice = inputMode === "voice";
 
@@ -915,23 +995,19 @@ export default function CourseInterviewPage() {
         setInputMode("text");
         // Fall through to start a text session
         try {
-          const payload = await startSession.mutateAsync({
-            input_mode: "text",
-          });
+          const payload = await startSession.mutateAsync(
+            buildStartBody({ input_mode: "text" }),
+          );
           handleStartSuccess(payload);
         } catch (err) {
-          toast.error(
-            err instanceof ApiError && err.status === 429
-              ? t("course_interview.errors.rate_limited")
-              : t("course_interview.errors.start_failed"),
-          );
+          reportStartError(err);
         }
         return;
       }
     }
 
     try {
-      const payload = await startSession.mutateAsync({ input_mode: inputMode });
+      const payload = await startSession.mutateAsync(buildStartBody());
       handleStartSuccess(payload, isVoice);
       // Only enter voice mode when handleStartSuccess actually committed to a
       // session — i.e. the backend returned a first question. When it didn't
@@ -939,11 +1015,7 @@ export default function CourseInterviewPage() {
       // handleStartSuccess already informed the user; staying on the
       // mode-selection screen lets them retry without joining an empty room.
     } catch (err) {
-      toast.error(
-        err instanceof ApiError && err.status === 429
-          ? t("course_interview.errors.rate_limited")
-          : t("course_interview.errors.start_failed"),
-      );
+      reportStartError(err);
     }
   }
 
@@ -970,14 +1042,14 @@ export default function CourseInterviewPage() {
     sessionDeadlineAtRef.current = null;
     timeoutTriggeredRef.current = false;
     try {
-      const payload = await startSession.mutateAsync({ input_mode: "text" });
+      // Explicitly graded. "Retry" on the results screen means another real
+      // attempt; a rehearsal is chosen from the lobby, not reached by retrying.
+      const payload = await startSession.mutateAsync(
+        buildStartBody({ input_mode: "text", session_mode: "assessment" }),
+      );
       handleStartSuccess(payload);
     } catch (err) {
-      toast.error(
-        err instanceof ApiError && err.status === 429
-          ? t("course_interview.errors.rate_limited")
-          : t("course_interview.errors.start_failed"),
-      );
+      reportStartError(err);
     }
   }
 
@@ -1157,7 +1229,9 @@ export default function CourseInterviewPage() {
     // the setInputMode above hasn't flushed yet — handleStart's closure would
     // still read the stale "voice" mode and re-enter the room.
     try {
-      const payload = await startSession.mutateAsync({ input_mode: "text" });
+      const payload = await startSession.mutateAsync(
+        buildStartBody({ input_mode: "text" }),
+      );
       handleStartSuccess(payload);
     } catch {
       toast.error(t("course_interview.errors.start_failed"));
@@ -1729,15 +1803,23 @@ export default function CourseInterviewPage() {
       | "retry"
       | "evaluating"
       | "eval_failed"
-      | "abandoned" = evaluationFailed
-      ? "eval_failed"
-      : evaluationUnavailable
-        ? "abandoned"
-        : verdictPending
-          ? "evaluating"
-          : liveVerdict
-            ? "pass"
-            : "retry";
+      | "abandoned"
+      | "practice" =
+      // Ahead of every verdict branch, for the same reason as the chip in
+      // me-interviews: a practice run has no verdict by design, so without this
+      // `verdictPending` stays true and the screen shows "evaluating" forever,
+      // waiting for a grade that is never coming.
+      sessionMode === "practice"
+        ? "practice"
+        : evaluationFailed
+          ? "eval_failed"
+          : evaluationUnavailable
+            ? "abandoned"
+            : verdictPending
+              ? "evaluating"
+              : liveVerdict
+                ? "pass"
+                : "retry";
 
     // Session facts: elapsed (ended_at − assessment start), attempt #, date.
     const finishedAtMs = finishResult.ended_at
@@ -1777,7 +1859,9 @@ export default function CourseInterviewPage() {
       : null;
 
     const heroToneClass =
-      resultPhase === "pass"
+      resultPhase === "practice"
+        ? "bg-gradient-to-br from-sky-400 to-blue-500 text-white"
+        : resultPhase === "pass"
         ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
         : resultPhase === "eval_failed"
           ? "bg-gradient-to-br from-danger to-red-600 text-white"
@@ -1788,7 +1872,9 @@ export default function CourseInterviewPage() {
               : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white";
 
     const HeroIcon =
-      resultPhase === "pass"
+      resultPhase === "practice"
+        ? ListChecks
+        : resultPhase === "pass"
         ? CheckCircle2
         : resultPhase === "eval_failed"
           ? AlertTriangle
@@ -1799,7 +1885,9 @@ export default function CourseInterviewPage() {
               : History;
 
     const heroTitleKey =
-      resultPhase === "eval_failed"
+      resultPhase === "practice"
+        ? "course_interview.mode.results_title"
+        : resultPhase === "eval_failed"
         ? "course_interview.results.evaluation_failed"
         : resultPhase === "abandoned"
           ? "course_interview.results.abandoned"
@@ -1810,9 +1898,11 @@ export default function CourseInterviewPage() {
               : "course_interview.results.completed";
 
     const heroSummaryKey =
-      resultPhase === "eval_failed"
-        ? "course_interview.results.evaluation_failed_summary"
-        : resultPhase === "abandoned"
+      resultPhase === "practice"
+        ? "course_interview.mode.results_summary"
+        : resultPhase === "eval_failed"
+          ? "course_interview.results.evaluation_failed_summary"
+          : resultPhase === "abandoned"
           ? "course_interview.results.abandoned_summary"
           : resultPhase === "evaluating"
             ? "course_interview.results.evaluating_summary"
@@ -1954,9 +2044,75 @@ export default function CourseInterviewPage() {
             </div>
           </GlassCard>
 
+          {/* ── Criteria you demonstrated (practice only) ──
+              Closes the loop with the panel shown before the run: same
+              criteria, now with what the rehearsal actually covered. No
+              verdict, no score, and no judge prose — see InterviewPracticeFeedback. */}
+          {resultPhase === "practice" && (
+            <GlassCard className="p-6 motion-safe:animate-fade-in-up">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="flex size-8 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+                  <ListChecks className="h-4 w-4" />
+                </span>
+                <h3 className="font-headline font-bold text-m3-primary">
+                  {t("course_interview.mode.results_criteria_title")}
+                </h3>
+              </div>
+              {practiceFeedback?.ready ? (
+                <ul className="space-y-2">
+                  {practiceFeedback.criteria.map((c, i) => (
+                    <li
+                      key={c.outcome_id}
+                      className="flex items-start gap-2.5 rounded-xl border border-m3-outline-variant/30 p-3 text-sm motion-safe:animate-fade-in-up"
+                      style={
+                        {
+                          animationDelay: `${Math.min(i, 5) * 60}ms`,
+                        } as CSSProperties
+                      }
+                    >
+                      {c.met ? (
+                        <CheckCircle2
+                          className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <CircleDashed
+                          className="mt-0.5 h-4 w-4 shrink-0 text-m3-on-surface-variant"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <span className="min-w-0">
+                        <span className="block text-m3-on-surface">
+                          {c.outcome_text}
+                        </span>
+                        <span className="mt-0.5 block text-xs font-semibold text-m3-on-surface-variant">
+                          {t(
+                            c.met
+                              ? "course_interview.mode.criterion_met"
+                              : "course_interview.mode.criterion_not_met",
+                          )}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : practiceFeedback?.failed ? (
+                <p className="text-sm text-m3-on-surface-variant">
+                  {t("course_interview.mode.results_unavailable")}
+                </p>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-m3-on-surface-variant">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("course_interview.mode.results_pending")}
+                </div>
+              )}
+            </GlassCard>
+          )}
+
           {/* ── Study plan pending skeleton (#6) ── */}
           {!gapReport &&
             gapReportPending &&
+            resultPhase !== "practice" &&
             resultPhase !== "eval_failed" &&
             resultPhase !== "abandoned" && (
               <GlassCard className="p-6">
@@ -2152,6 +2308,76 @@ export default function CourseInterviewPage() {
                   count: takingPayload?.outcome_count ?? 0,
                 })}
               </div>
+            )}
+
+            {/* Mode picker. Rendered only when a rehearsal is actually startable
+                — offering a choice that then 409s is worse than not offering it.
+                Hidden while resuming, because start_session returns the live
+                session untouched and the picker would be a lie. */}
+            {canPractise && !resumableSession && (
+              <fieldset className="mb-6 rounded-2xl border border-m3-outline-variant/40 bg-m3-surface-container-lowest p-4 text-left">
+                <legend className="px-1 text-xs font-bold text-text-strong">
+                  {t("course_interview.mode.legend")}
+                </legend>
+                <div className="mt-1 grid gap-2 sm:grid-cols-2">
+                  {(["assessment", "practice"] as const).map((mode) => {
+                    const selected = sessionMode === mode;
+                    return (
+                      <button
+                        key={mode}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => setSessionMode(mode)}
+                        className={cn(
+                          "rounded-xl border p-3 text-left transition-colors motion-safe:duration-150",
+                          selected
+                            ? "border-m3-primary bg-m3-primary-fixed"
+                            : "border-m3-outline-variant/50 hover:border-m3-outline-variant",
+                        )}
+                      >
+                        <span className="block text-sm font-bold text-text-strong">
+                          {t(`course_interview.mode.${mode}_title`)}
+                        </span>
+                        <span className="mt-1 block text-xs leading-5 text-text-muted">
+                          {mode === "practice"
+                            ? t("course_interview.mode.practice_help", {
+                                count: practiceInfo?.runs_remaining ?? 0,
+                              })
+                            : t("course_interview.mode.assessment_help")}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* The criteria, shown before the run rather than on request.
+                    Asking the interviewer for the rubric mid-session is still
+                    classified as an exfiltration attempt and refused, so the
+                    answer has to be on screen already for the student never to
+                    need to ask. */}
+                {sessionMode === "practice" &&
+                  (practiceInfo?.criteria.length ?? 0) > 0 && (
+                    <div className="mt-3 rounded-xl border border-m3-outline-variant/30 bg-m3-surface p-3">
+                      <p className="text-xs font-bold text-text-strong">
+                        {t("course_interview.mode.criteria_title")}
+                      </p>
+                      <ul className="mt-2 space-y-1.5">
+                        {practiceInfo?.criteria.map((c) => (
+                          <li
+                            key={c.id}
+                            className="flex gap-2 text-xs leading-5 text-text-muted"
+                          >
+                            <ListChecks
+                              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-m3-primary"
+                              aria-hidden="true"
+                            />
+                            <span>{c.outcome_text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+              </fieldset>
             )}
 
             {resumableSession && (
@@ -2493,6 +2719,21 @@ export default function CourseInterviewPage() {
         onEndInterview={openEndDialog}
         endInterviewDisabled={endInterviewDisabled}
       />
+
+      {/* Persistent, not dismissible. The stakes of the run are the one thing a
+          student must never be uncertain about mid-interview, and a toast at
+          start would be long gone by the time it mattered. */}
+      {sessionMode === "practice" && (
+        <div
+          className="shrink-0 border-b border-m3-outline-variant/40 bg-m3-primary-fixed"
+          role="status"
+        >
+          <div className="mx-auto flex max-w-[1120px] items-center justify-center gap-2 px-3 py-1.5 text-xs font-semibold text-m3-primary sm:px-6">
+            <ListChecks className="h-3.5 w-3.5" aria-hidden="true" />
+            {t("course_interview.mode.banner")}
+          </div>
+        </div>
+      )}
 
       {/* Coarse step indicator: Setup → Interview → Completed (spec §4). */}
       <div className="shrink-0 border-b border-border bg-white/95">
