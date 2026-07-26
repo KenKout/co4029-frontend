@@ -1282,7 +1282,6 @@ function FilterBar({
         <Select
           value={filters.operation ?? ""}
           onValueChange={(next) => set("operation", next)}
-          size="sm"
           options={[
             { value: "", label: t("admin.ai_costs.filters.any") },
             { value: "chat_completion", label: "chat_completion" },
@@ -1298,7 +1297,6 @@ function FilterBar({
         <Select
           value={filters.status ?? ""}
           onValueChange={(next) => set("status", next)}
-          size="sm"
           options={[
             { value: "", label: t("admin.ai_costs.filters.any") },
             { value: "success", label: "success" },
