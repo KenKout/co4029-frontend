@@ -78,6 +78,7 @@ import type {
   PersonaProfileRead,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
 import {
   PERSONA_TRAIT_PRESETS,
   type PersonaKey,
@@ -1561,37 +1562,34 @@ function SettingsForm({
         </Field>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label={t("teacher_interview_config.fields.persona")}>
-            <select
+            <Select<Persona>
               value={draft.persona}
-              onChange={(e) => update("persona", e.target.value as Persona)}
-              className="w-full cursor-pointer rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm transition-colors hover:border-m3-primary/50 hover:bg-m3-primary/5 focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-            >
-              {PERSONA_KEYS.map((p) => (
-                <option key={p} value={p}>
-                  {t(`teacher_interview_config.persona.${p}`)}
-                </option>
-              ))}
-            </select>
+              onValueChange={(next) => update("persona", next)}
+              options={PERSONA_KEYS.map((p) => ({
+                value: p,
+                label: t(`teacher_interview_config.persona.${p}`),
+              }))}
+            />
             <VoicePersonaGuideSheet focus="persona" />
           </Field>
           <Field
             label={t("teacher_interview_config.fields.voice_label")}
             hint={t("teacher_interview_config.fields.voice_hint")}
           >
-            <select
+            <Select
               value={draft.tts_voice}
-              onChange={(e) => update("tts_voice", e.target.value)}
-              className="w-full cursor-pointer rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm transition-colors hover:border-m3-primary/50 hover:bg-m3-primary/5 focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-            >
-              <option value="">
-                {t("teacher_interview_config.fields.voice_default")}
-              </option>
-              {VOICE_KEYS.map((v) => (
-                <option key={v} value={v}>
-                  {t(`teacher_interview_config.voice.${v}`)}
-                </option>
-              ))}
-            </select>
+              onValueChange={(next) => update("tts_voice", next)}
+              options={[
+                {
+                  value: "",
+                  label: t("teacher_interview_config.fields.voice_default"),
+                },
+                ...VOICE_KEYS.map((v) => ({
+                  value: v as string,
+                  label: t(`teacher_interview_config.voice.${v}`),
+                })),
+              ]}
+            />
             <VoicePersonaGuideSheet focus="voice" />
           </Field>
         </div>
@@ -1844,28 +1842,24 @@ function SettingsForm({
                 <Field
                   label={t("teacher_interview_config.security.response_policy")}
                 >
-                  <select
+                  <Select<SecurityResponsePolicy>
                     value={draft.security_response_policy}
-                    onChange={(e) =>
-                      update(
-                        "security_response_policy",
-                        e.target.value as SecurityResponsePolicy,
-                      )
+                    onValueChange={(next) =>
+                      update("security_response_policy", next)
                     }
-                    className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-                  >
-                    {[
-                      "continue_and_log",
-                      "warn_and_continue",
-                      "end_and_flag",
-                    ].map((policy) => (
-                      <option key={policy} value={policy}>
-                        {t(
-                          `teacher_interview_config.security.policy.${policy}`,
-                        )}
-                      </option>
-                    ))}
-                  </select>
+                    options={(
+                      [
+                        "continue_and_log",
+                        "warn_and_continue",
+                        "end_and_flag",
+                      ] as SecurityResponsePolicy[]
+                    ).map((policy) => ({
+                      value: policy,
+                      label: t(
+                        `teacher_interview_config.security.policy.${policy}`,
+                      ),
+                    }))}
+                  />
                 </Field>
                 <Field
                   label={t("teacher_interview_config.security.max_attempts")}
@@ -2139,23 +2133,24 @@ function GenerationSection({
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label={t("teacher_interview_config.generate.mode_label")}>
-            <select
+            <Select<GenerationMode>
               value={generationForm.mode}
-              onChange={(e) =>
-                updateGeneration("mode", e.target.value as GenerationMode)
-              }
-              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-            >
-              <option value="outcome-based">
-                {t("teacher_interview_config.generate.mode_outcome")}
-              </option>
-              <option value="topic">
-                {t("teacher_interview_config.generate.mode_topic")}
-              </option>
-              <option value="coverage">
-                {t("teacher_interview_config.generate.mode_coverage")}
-              </option>
-            </select>
+              onValueChange={(next) => updateGeneration("mode", next)}
+              options={[
+                {
+                  value: "outcome-based",
+                  label: t("teacher_interview_config.generate.mode_outcome"),
+                },
+                {
+                  value: "topic",
+                  label: t("teacher_interview_config.generate.mode_topic"),
+                },
+                {
+                  value: "coverage",
+                  label: t("teacher_interview_config.generate.mode_coverage"),
+                },
+              ]}
+            />
           </Field>
           <Field label={t("teacher_interview_config.generate.count_label")}>
             <Input
