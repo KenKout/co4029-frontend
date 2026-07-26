@@ -10,7 +10,6 @@ import {
   Eye,
   EyeOff,
   Trash2,
-  Brain,
   Maximize2,
   Send,
   X,
@@ -25,6 +24,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useTeacherLessonKnowledgeGraph,
   useCuratedKnowledgeGraph,
+  useSaveCuratedKnowledgeGraph,
   usePublishCuratedKnowledgeGraph,
   useTeacherMaterialStatus,
   useInitMaterialUpload,
@@ -1004,16 +1004,40 @@ export function KnowledgeGraphPreview({
   // the detail screen's data when the Curated source is selected, so both
   // modes render the SAME graph the editor writes to.
   const { data: curatedData } = useCuratedKnowledgeGraph(lessonId);
+  const saveCurated = useSaveCuratedKnowledgeGraph(lessonId);
   const publishCurated = usePublishCuratedKnowledgeGraph(lessonId);
   // Publish is a student-visible action, so it goes through a confirmation.
   const [confirmPublish, setConfirmPublish] = useState(false);
 
   const curatedNodeCount = curatedData?.nodes.length ?? 0;
-  // Nothing saved yet → nothing to publish (the backend 409s on an empty draft).
-  const canPublish = !!curatedData?.exists && curatedNodeCount > 0;
+  // Publish needs a graph with at least one node — that's the backend's only
+  // real requirement (it rejects an empty draft with 409).
+  //
+  // It deliberately does NOT require `exists`. A never-saved draft is seeded
+  // from the AI graph and has nodes; gating on `exists` hid the button in
+  // exactly that case, which is why publishing a fresh lesson was impossible.
+  // Instead we SAVE the seeded draft first — see handlePublishCurated.
+  const canPublish = curatedNodeCount > 0;
+
+  // The server has nothing (or something stale) for this lesson, so publishing
+  // alone would 409 / publish the wrong graph. Drives "Save and publish".
+  const needsSaveBeforePublish =
+    !curatedData?.exists || !!curatedData?.has_unpublished_changes;
+
+  const publishBusy = saveCurated.isPending || publishCurated.isPending;
 
   async function handlePublishCurated() {
+    if (!curatedData) return;
     try {
+      // Publish snapshots the PERSISTED draft_json. A seeded-but-unsaved draft
+      // has no row at all, so publish must be preceded by a save or the backend
+      // raises 409 ("save a draft with at least one primary node first").
+      if (needsSaveBeforePublish) {
+        await saveCurated.mutateAsync({
+          nodes: curatedData.nodes,
+          edges: curatedData.edges,
+        });
+      }
       await publishCurated.mutateAsync();
       toast.success(t("teacher_kg_editor.published"));
       setConfirmPublish(false);
@@ -1050,44 +1074,40 @@ export function KnowledgeGraphPreview({
 
   return (
     <div className="glass ghost-border shadow-glass rounded-xl p-6 space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        {/* Spacer keeps the title centred while the expand button hugs right. */}
-        <span className="w-8 shrink-0" aria-hidden="true" />
-        <div className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-m3-secondary" />
-          <h3 className="font-headline font-bold text-lg text-m3-on-surface">
-            {t("teacher_lesson_materials.kg.title")}
-          </h3>
-        </div>
+      <div className="flex items-center justify-end gap-2">
+        {/* No title here: the lesson page already renders a "Knowledge Graph"
+            section heading directly above this card, so repeating it (with the
+            brain icon) read as a duplicate. */}
         {/* Expand → full-screen detail screen, which is where the AI/Curated
             source toggle and Edit live (so viewing and editing are two modes of
             one screen). Always available: even with no AI graph, the teacher can
             open it and switch to Curated to author one from scratch. */}
         <div className="flex shrink-0 items-center gap-1.5">
           {/* Publish the curated graph straight from the lesson page, without
-              opening the editor. Hidden until a draft exists, since there'd be
-              nothing to publish. */}
+              opening the editor. Shown whenever there's a graph with nodes —
+              including a never-saved AI-seeded one, which we save on the way
+              through (label becomes "Save and publish"). */}
           {canPublish && (
             <button
               type="button"
               onClick={() => setConfirmPublish(true)}
-              disabled={publishCurated.isPending}
+              disabled={publishBusy}
               title={t("teacher_lesson_materials.kg.publish_title")}
               className={cn(
                 "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
-                curatedData?.has_unpublished_changes
+                needsSaveBeforePublish
                   ? "bg-m3-primary text-white hover:bg-m3-primary/90"
                   : "bg-m3-surface-container text-m3-on-surface-variant hover:text-m3-primary",
-                publishCurated.isPending && "opacity-60",
+                publishBusy && "opacity-60",
               )}
             >
-              {publishCurated.isPending ? (
+              {publishBusy ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <Send className="h-3.5 w-3.5" />
               )}
-              {curatedData?.has_unpublished_changes
-                ? t("teacher_lesson_materials.kg.publish_changes")
+              {needsSaveBeforePublish
+                ? t("teacher_lesson_materials.kg.save_and_publish")
                 : t("teacher_lesson_materials.kg.publish")}
             </button>
           )}
@@ -1408,11 +1428,17 @@ export function KnowledgeGraphPreview({
       )}
 
       {/* Publish confirmation. Publishing overwrites what students currently
-          see, so the copy states that plainly and names the node count. */}
+          see, so the copy states that plainly and names the node count. When
+          the draft isn't persisted yet the copy says so, since confirming will
+          save as well as publish. */}
       <ConfirmDialog
         open={confirmPublish}
         onOpenChange={setConfirmPublish}
-        title={t("teacher_lesson_materials.kg.publish_confirm_title")}
+        title={
+          needsSaveBeforePublish
+            ? t("teacher_lesson_materials.kg.save_publish_confirm_title")
+            : t("teacher_lesson_materials.kg.publish_confirm_title")
+        }
         description={
           curatedData?.is_published
             ? t("teacher_lesson_materials.kg.publish_confirm_replace", {
@@ -1422,10 +1448,14 @@ export function KnowledgeGraphPreview({
                 count: curatedNodeCount,
               })
         }
-        confirmLabel={t("teacher_lesson_materials.kg.publish")}
+        confirmLabel={
+          needsSaveBeforePublish
+            ? t("teacher_lesson_materials.kg.save_and_publish")
+            : t("teacher_lesson_materials.kg.publish")
+        }
         cancelLabel={t("common.cancel")}
         confirmVariant="default"
-        isPending={publishCurated.isPending}
+        isPending={publishBusy}
         onConfirm={handlePublishCurated}
       />
     </div>
