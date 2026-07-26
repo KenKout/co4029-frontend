@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
@@ -51,6 +51,7 @@ export function QuestionsTab({
   onOpenImportExport,
   onQueueDelete,
   published = false,
+  onDirtyCountChange,
 }: {
   quizId: string;
   questions: QuizQuestionAuthoring[];
@@ -70,6 +71,9 @@ export function QuestionsTab({
   /** Published quiz: hide all authoring controls (bulk bar, add-question,
    *  per-card actions) instead of disabling them. */
   published?: boolean;
+  /** How many question cards currently hold unsaved edits. The parent uses
+   *  this to guard tab switches, which unmount this whole subtree. */
+  onDirtyCountChange?: (count: number) => void;
 }) {
   const { t } = useTranslation();
   const bulkSet = useBulkSetExpectedTime(quizId);
@@ -85,6 +89,17 @@ export function QuestionsTab({
   const [confirmBulkDelete, setConfirmBulkDelete] = useState<number | null>(
     null,
   );
+  // Mirror the dirty-card count up to the page, which owns the tab strip and
+  // needs it to decide whether switching away would discard work. Reset on
+  // unmount so a confirmed "Quit" doesn't leave the parent armed with a stale
+  // count after this subtree is gone.
+  useEffect(() => {
+    onDirtyCountChange?.(dirtyIds.size);
+  }, [dirtyIds.size, onDirtyCountChange]);
+  useEffect(() => {
+    return () => onDirtyCountChange?.(0);
+  }, [onDirtyCountChange]);
+
   const handleDirtyChange = useCallback((id: string, dirty: boolean) => {
     setDirtyIds((prev) => {
       if (dirty === prev.has(id)) return prev; // no-op keeps referential identity

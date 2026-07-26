@@ -36,6 +36,7 @@ import {
   useTeacherCourseContent,
 } from "@/lib/api/hooks/teacher-courses";
 import { useTeacherCourseOutcomes } from "@/lib/api/hooks/courses";
+import { useUnsavedChangesGuard } from "@/lib/hooks/useUnsavedChangesGuard";
 import { cn } from "@/lib/utils";
 import {
   draftFromQuiz,
@@ -110,6 +111,21 @@ export default function QuizManagePage() {
     new Set(),
   );
   const [bulkSeconds, setBulkSeconds] = useState<string>("60");
+
+  // Unsaved-work guard for tab switches. Two sources of pending edits:
+  //   - the Settings draft (local until Save settings)
+  //   - any question card with unsaved edits, reported up by QuestionsTab
+  // Switching tabs unmounts the editor, so without this a half-finished edit
+  // vanished silently — including the Questions -> Preview jump.
+  const [dirtyQuestionCount, setDirtyQuestionCount] = useState(0);
+  const settingsDirty =
+    draft != null &&
+    quiz != null &&
+    JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz));
+  const hasUnsavedWork =
+    (tab === "settings" && settingsDirty) ||
+    (tab === "questions" && dirtyQuestionCount > 0);
+  const leaveGuard = useUnsavedChangesGuard(hasUnsavedWork);
 
   // Jump from the Preview tab to a specific question in the Questions editor:
   // switch tabs, then scroll the target card into view after it renders. The
@@ -564,7 +580,7 @@ export default function QuizManagePage() {
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setTab(key)}
+                  onClick={() => leaveGuard.run(() => setTab(key))}
                   aria-pressed={active}
                   aria-label={label}
                   title={actionsStuck ? label : undefined}
@@ -710,6 +726,7 @@ export default function QuizManagePage() {
             onOpenImportExport={() => setShowImportExport(true)}
             onQueueDelete={pendingDeletes.queueDelete}
             published={isPublished}
+            onDirtyCountChange={setDirtyQuestionCount}
           />
         </fieldset>
       )}
@@ -726,7 +743,7 @@ export default function QuizManagePage() {
           onSubmit={handleSaveSettings}
           saving={patchQuiz.isPending}
           locked={isPublished}
-          dirty={JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz))}
+          dirty={settingsDirty}
           onReset={() => setDraft(draftFromQuiz(quiz))}
         />
       )}
@@ -938,6 +955,7 @@ export default function QuizManagePage() {
       <ScrollToTop
         className={pendingDeletes.comboCount > 0 ? "bottom-24" : undefined}
       />
+      {leaveGuard.dialog}
     </div>
   );
 }

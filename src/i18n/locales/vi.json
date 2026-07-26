@@ -24,7 +24,12 @@
     "yes": "Có",
     "no": "Không",
     "breadcrumb_aria": "Đường dẫn",
-    "unsaved_changes_warning": "Bạn có thay đổi chưa được lưu. Rời khỏi trang sẽ làm mất các thay đổi này."
+    "unsaved_changes_warning": "Bạn có thay đổi chưa được lưu. Rời khỏi trang sẽ làm mất các thay đổi này.",
+    "unsaved": {
+      "title": "Bạn có chắc muốn thoát?",
+      "description": "Bạn có thay đổi chưa lưu. Nếu thoát bây giờ, các thay đổi sẽ bị mất.",
+      "quit": "Thoát"
+    }
   },
   "entity_select": {
     "selected_count": "Đã chọn {{count}}",
@@ -3842,7 +3847,9 @@
       "publish_confirm_first": "Học viên sẽ thấy sơ đồ kiến thức của bạn ({{count}} nút) trong màn hình đọc bài học.",
       "publish_confirm_replace": "Thao tác này thay thế sơ đồ học viên đang thấy bằng bản đã lưu mới nhất của bạn ({{count}} nút).",
       "save_and_publish": "Lưu và xuất bản",
-      "save_publish_confirm_title": "Lưu và xuất bản sơ đồ kiến thức?"
+      "save_publish_confirm_title": "Lưu và xuất bản sơ đồ kiến thức?",
+      "published_badge": "Đã xuất bản",
+      "published_at": "Đã xuất bản {{date}}"
     },
     "history": {
       "title": "Lịch sử tài liệu",

@@ -4,6 +4,7 @@ import {
   FileText,
   Video,
   FileCode,
+  CheckCircle2,
   RefreshCw,
   Loader2,
   Sparkles,
@@ -1026,6 +1027,11 @@ export function KnowledgeGraphPreview({
 
   const publishBusy = saveCurated.isPending || publishCurated.isPending;
 
+  // Live snapshot already matches the draft — nothing left to publish, so the
+  // card shows a "Published" marker instead of the button.
+  const isFullyPublished =
+    !!curatedData?.is_published && !curatedData?.has_unpublished_changes;
+
   async function handlePublishCurated() {
     if (!curatedData) return;
     try {
@@ -1086,8 +1092,12 @@ export function KnowledgeGraphPreview({
           {/* Publish the curated graph straight from the lesson page, without
               opening the editor. Shown whenever there's a graph with nodes —
               including a never-saved AI-seeded one, which we save on the way
-              through (label becomes "Save and publish"). */}
-          {canPublish && (
+              through (label becomes "Save and publish").
+
+              Once the live snapshot matches the draft there is nothing to do, so
+              the button gives way to a static "Published" marker rather than
+              inviting a pointless re-publish. */}
+          {canPublish && !isFullyPublished && (
             <button
               type="button"
               onClick={() => setConfirmPublish(true)}
@@ -1110,6 +1120,21 @@ export function KnowledgeGraphPreview({
                 ? t("teacher_lesson_materials.kg.save_and_publish")
                 : t("teacher_lesson_materials.kg.publish")}
             </button>
+          )}
+          {isFullyPublished && (
+            <span
+              title={
+                curatedData?.published_at
+                  ? t("teacher_lesson_materials.kg.published_at", {
+                      date: new Date(curatedData.published_at).toLocaleString(),
+                    })
+                  : undefined
+              }
+              className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {t("teacher_lesson_materials.kg.published_badge")}
+            </span>
           )}
           <button
             type="button"

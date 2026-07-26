@@ -24,7 +24,12 @@
     "yes": "Yes",
     "no": "No",
     "breadcrumb_aria": "Breadcrumb",
-    "unsaved_changes_warning": "You have unsaved changes. Leaving the page will discard them."
+    "unsaved_changes_warning": "You have unsaved changes. Leaving the page will discard them.",
+    "unsaved": {
+      "title": "Are you sure you want to quit?",
+      "description": "You have unsaved changes. If you quit now, they will be lost.",
+      "quit": "Quit"
+    }
   },
   "entity_select": {
     "selected_count": "{{count}} selected",
@@ -3930,7 +3935,9 @@
       "publish_confirm_first": "This makes your knowledge graph ({{count}} nodes) visible to students in the lesson reading view.",
       "publish_confirm_replace": "This replaces the knowledge graph students currently see with your latest saved version ({{count}} nodes).",
       "save_and_publish": "Save and publish",
-      "save_publish_confirm_title": "Save and publish knowledge graph?"
+      "save_publish_confirm_title": "Save and publish knowledge graph?",
+      "published_badge": "Published",
+      "published_at": "Published {{date}}"
     },
     "history": {
       "title": "Material history",
