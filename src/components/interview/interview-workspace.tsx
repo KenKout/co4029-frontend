@@ -478,7 +478,16 @@ export function InterviewHeader({
               )}
               className="h-1.5 overflow-hidden rounded-full bg-surface-muted"
             >
-              <span className="block h-full w-1/3 rounded-full bg-primary motion-safe:animate-pulse" />
+              {/* Indeterminate: a band that actually travels. The previous
+                  version was a stationary one-third bar that merely pulsed in
+                  place, which reads as a stalled or broken progress bar rather
+                  than as "total unknown". Reuses the existing `shimmer`
+                  keyframe (background-position, no layout) at a progress-bar
+                  tempo instead of its 8s decorative default. */}
+              <span
+                className="block h-full rounded-full bg-[linear-gradient(90deg,transparent_0%,var(--color-primary)_50%,transparent_100%)] bg-[length:200%_100%] motion-safe:animate-shimmer"
+                style={{ animationDuration: "1.6s" }}
+              />
             </div>
           )}
         </div>
@@ -610,7 +619,8 @@ export function ConversationMessage({
   return (
     <article
       className={cn(
-        "flex w-full gap-3 motion-safe:animate-fade-in-up",
+        // In-conversation beat: 200ms / 8px, not the 0.7s / 32px page-card entrance.
+        "flex w-full gap-3 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 motion-safe:ease-out",
         isAi ? "justify-start" : "justify-end",
         isNestedKind && "border-l-2 border-border pl-3 sm:pl-5",
       )}
@@ -1066,7 +1076,11 @@ export function QuestionCard({
 
   return (
     <article
-      className="rounded-2xl border border-border bg-white px-5 py-5 shadow-editorial motion-safe:animate-fade-in-up sm:px-7 sm:py-7"
+      // 200ms / 8px, matching MessageTurnActions and UserTypingIndicator — the
+      // idiom this screen already uses for in-conversation beats. The shared
+      // `fade-in-up` utility is 0.7s and lifts 32px, which is right for a page
+      // card but reads as sluggish for a chat turn arriving mid-exchange.
+      className="rounded-2xl border border-border bg-white px-5 py-5 shadow-editorial motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 motion-safe:ease-out sm:px-7 sm:py-7"
       aria-labelledby={`question-${turn.id}`}
     >
       <div className="mb-5 flex flex-wrap items-center gap-2.5">
@@ -1415,7 +1429,7 @@ function InterviewerAssistance({
 
   return (
     <section
-      className="rounded-2xl border border-primary/15 bg-primary-soft/35 px-5 py-4 motion-safe:animate-fade-in-up sm:ml-14 sm:px-6"
+      className="rounded-2xl border border-primary/15 bg-primary-soft/35 px-5 py-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 motion-safe:ease-out sm:ml-14 sm:px-6"
       aria-label={t("course_interview.workspace.interviewer_assistance")}
     >
       <div className="flex items-start gap-3">
@@ -1730,7 +1744,14 @@ export function FocusedInterviewStage({
       >
         {announcement}
       </p>
-      <div className="mx-auto flex min-h-full w-full max-w-[1000px] flex-col justify-center gap-5 px-4 py-6 sm:px-8 sm:py-8">
+      {/* Top-aligned, NOT vertically centred. This column's height changes on
+          almost every beat — the question card grows as the typewriter wraps to
+          a new line, the submission rail mounts, the assistance card appears —
+          and under `justify-center` every one of those re-centred the whole
+          column, so the text drifted upward character by character while the
+          candidate was reading it. Anchoring to the top costs a little empty
+          space below on short turns and buys a stage that never moves. */}
+      <div className="mx-auto flex min-h-full w-full max-w-[1000px] flex-col gap-5 px-4 py-6 sm:px-8 sm:py-8">
         {assessmentActive &&
           transcript.some(
             (turn) => turn.kind === "opening" || turn.kind === "briefing",
@@ -1816,11 +1837,15 @@ export function FocusedInterviewStage({
             </section>
           )
         ) : (
+          // Placeholder for the QuestionCard that is about to replace it. The
+          // min-height approximates a loaded card (eyebrow + two lines + action
+          // row) so the swap does not jump; without it this card was roughly
+          // half the height of its replacement and the whole stage lurched.
           <section
-            className="rounded-2xl border border-border bg-white px-6 py-12 text-center shadow-editorial"
+            className="flex min-h-[188px] flex-col items-center justify-center rounded-2xl border border-border bg-white px-6 py-12 text-center shadow-editorial sm:min-h-[212px]"
             role="status"
           >
-            <Loader2 className="mx-auto mb-4 h-6 w-6 animate-spin text-primary" />
+            <Loader2 className="mb-4 h-6 w-6 animate-spin text-primary" />
             <p className="text-sm text-text-muted">
               {t("course_interview.workspace.preparing_question")}
             </p>

@@ -26,6 +26,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCourseBySlug } from "@/lib/api/hooks/courses";
 import {
   useFinishInterview,
@@ -85,6 +86,7 @@ import {
   isAwaitingEndConfirmation,
   isClosingTurn,
 } from "@/lib/interview/end-confirmation";
+import { cardStaggerStyle, rowStaggerStyle } from "@/lib/interview/stagger";
 import { useAnswerState } from "@/lib/interview/use-answer-state";
 import { useDraftAutosave } from "@/lib/interview/use-draft-autosave";
 import {
@@ -1672,11 +1674,23 @@ export default function CourseInterviewPage() {
   // ── Loading state ──────────────────────────────────────────────────────────
   if (courseLoading || configLoading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center px-6">
-        <div className="space-y-3 w-full max-w-sm">
-          <div className="h-4 rounded-full bg-m3-surface-container animate-pulse" />
-          <div className="h-4 rounded-full bg-m3-surface-container animate-pulse w-4/5" />
-          <div className="h-32 rounded-xl bg-m3-surface-container animate-pulse mt-6" />
+      // Shaped like the lobby it precedes — eyebrow, title, description, the
+      // 2x2 stat grid, then the action — so the swap reads as content arriving
+      // rather than as one layout being replaced by a different one. Uses the
+      // shared Skeleton primitive instead of hand-rolled pulsing divs.
+      <div className="relative flex min-h-screen items-center justify-center px-4 py-12 sm:px-6">
+        <div className="mx-auto w-full max-w-xl">
+          <GlassCard className="p-8 text-center sm:p-10">
+            <Skeleton className="mx-auto mb-3 h-3 w-40" />
+            <Skeleton className="mx-auto mb-3 h-8 w-3/4" />
+            <Skeleton className="mx-auto mb-6 h-4 w-2/3" />
+            <div className="mb-8 grid grid-cols-2 gap-3">
+              {[0, 1, 2, 3].map((tile) => (
+                <Skeleton key={tile} className="h-[60px] rounded-xl" />
+              ))}
+            </div>
+            <Skeleton className="mx-auto h-11 w-full rounded-xl" />
+          </GlassCard>
         </div>
       </div>
     );
@@ -2015,7 +2029,15 @@ export default function CourseInterviewPage() {
                         </>
                       );
                       return (
-                        <li key={idx}>
+                        // Staggered like the teacher-side outcome rows, which
+                        // got this treatment in 16f31ae while the student's
+                        // study plan — the list they actually act on — kept
+                        // snapping in whole.
+                        <li
+                          key={idx}
+                          className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:ease-out motion-safe:fill-mode-both"
+                          style={rowStaggerStyle(idx)}
+                        >
                           {lessonId ? (
                             <Link
                               to="/courses/$slug/learn"
@@ -2094,7 +2116,12 @@ export default function CourseInterviewPage() {
     return (
       <div className="relative flex min-h-screen items-center justify-center px-4 py-12 sm:px-6">
         <div className="max-w-xl w-full mx-auto space-y-4">
-          <GlassCard className="p-8 sm:p-10 text-center">
+          {/* The lobby had no entrance at all, so the whole card — title, stats,
+              attempt history, mode toggle — appeared in one frame. The results
+              card and the setup checklist both animate in; this is the screen a
+              candidate sees FIRST and it was the one that just popped. Full
+              0.7s/32px here is right: this is a page-level card, not a chat beat. */}
+          <GlassCard className="p-8 sm:p-10 text-center motion-safe:animate-fade-in-up">
             {/* Module-context eyebrow — gives the bare title a frame of
                 reference (which course / that this is an AI module interview). */}
             <div className="mb-3 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-m3-secondary">
@@ -2158,7 +2185,10 @@ export default function CourseInterviewPage() {
                 consistent color/weight (the earlier design had one stat
                 arbitrarily blue); a hairline border lifts them off the card. */}
             <div className="grid grid-cols-2 gap-3 mb-8">
-              <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
+              <div
+                className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:ease-out motion-safe:fill-mode-both"
+                style={{ ...cardStaggerStyle(0) }}
+              >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
                   <User className="h-4 w-4" />
                 </div>
@@ -2175,7 +2205,10 @@ export default function CourseInterviewPage() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
+              <div
+                className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:ease-out motion-safe:fill-mode-both"
+                style={{ ...cardStaggerStyle(1) }}
+              >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
                   <Clock className="h-4 w-4" />
                 </div>
@@ -2192,7 +2225,10 @@ export default function CourseInterviewPage() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
+              <div
+                className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:ease-out motion-safe:fill-mode-both"
+                style={{ ...cardStaggerStyle(2) }}
+              >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
                   {config.max_attempts ? (
                     <History className="h-4 w-4" />
@@ -2215,7 +2251,10 @@ export default function CourseInterviewPage() {
                   ('Ophelia'). NULL = the deployment default voice. Only
                   meaningful for English sessions (Vietnamese uses the browser
                   voice), noted via the value label. */}
-              <div className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left">
+              <div
+                className="flex items-center gap-3 rounded-xl bg-m3-surface-container ghost-border p-3 text-left motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:ease-out motion-safe:fill-mode-both"
+                style={{ ...cardStaggerStyle(3) }}
+              >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
                   <AudioLines className="h-4 w-4" />
                 </div>
@@ -2638,7 +2677,10 @@ export default function CourseInterviewPage() {
               "readiness" ? // Onboarding: the SetupChecklist above is the sole input surface,
           // so render no bottom bar at all (no composer, no wind-down).
           null : (
-            <div className="shrink-0 border-t border-border bg-white px-4 py-6 text-center motion-safe:animate-fade-in-up">
+            // Same min-height as the composer this replaces, so the stage above
+            // does not lurch upward when the input surface swaps out for the
+            // wind-down message and back again.
+            <div className="flex min-h-[180px] shrink-0 flex-col items-center justify-center border-t border-border bg-white px-4 py-6 text-center motion-safe:animate-fade-in-up">
               {/* Calm pacing on the closing wind-down (#15): a gentle pulsing
                   dot trio so the goodbye/results transition reads as a graceful
                   wind-down rather than an abrupt cut. */}
