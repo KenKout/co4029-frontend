@@ -24,6 +24,8 @@ import type {
   InterviewQuestionBankItemRead,
   InterviewQuestionBankItemUpdate,
   InterviewQuestionCreate,
+  InterviewQuestionDuplicateCheck,
+  InterviewQuestionDuplicateCheckRequest,
   InterviewSessionFinishResponse,
   InterviewSessionFinishRequest,
   InterviewSessionPublic,
@@ -469,6 +471,46 @@ export function useUpdateInterviewQuestion(
         });
       }
     },
+  });
+}
+
+/**
+ * POST /teacher/interview-configs/{config_id}/questions/check-duplicate —
+ * advisory "is this already in the bank?" check, run just before saving.
+ *
+ * Deliberately a mutation rather than a query: it is a one-shot POST tied to a
+ * save click, not cacheable state, and the caller awaits the verdict inline.
+ *
+ * Non-blocking by contract — the backend never refuses a save on the strength
+ * of this, and neither should callers. A rejected promise (network, 5xx) means
+ * the check could not run, which is not evidence of uniqueness; callers should
+ * treat that the same as `error` being set and save anyway.
+ */
+/**
+ * Should this verdict actually be shown to the teacher?
+ *
+ * The response packs three distinct outcomes into one shape, and only one of
+ * them is a real duplicate. `enabled: false` (dedup switched off) and a
+ * non-empty `error` (check could not run) both come back with
+ * `is_duplicate: false` — reading that flag alone would silently turn "we
+ * don't know" into "it's unique". Nothing here is blocking either way; a false
+ * result just means save without interrupting.
+ */
+export function isActionableDuplicate(
+  verdict: InterviewQuestionDuplicateCheck,
+): boolean {
+  return verdict.enabled && !verdict.error && verdict.is_duplicate;
+}
+
+export function useCheckInterviewQuestionDuplicate(
+  configId: string | null | undefined,
+) {
+  return useMutation({
+    mutationFn: (payload: InterviewQuestionDuplicateCheckRequest) =>
+      apiPost<InterviewQuestionDuplicateCheck>(
+        `/teacher/interview-configs/${configId}/questions/check-duplicate`,
+        payload,
+      ),
   });
 }
 

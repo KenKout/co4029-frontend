@@ -359,6 +359,30 @@ export type InterviewQuestionAuthoring =
     source_module_ids?: string[];
   };
 export type InterviewQuestionCreate = Schemas["InterviewQuestionCreate"];
+
+// Advisory duplicate check run before saving an authored question. Manually
+// typed until the OpenAPI snapshot is regenerated; mirrors
+// abridgeai/features/interviews/schemas/authoring.py.
+export interface InterviewQuestionDuplicateCheckRequest {
+  prompt_text: string;
+  /** Set when editing, so the question is not matched against itself. */
+  exclude_question_id?: string | null;
+}
+/**
+ * Three distinct outcomes share one shape, so read the flags in order:
+ * `enabled === false` (feature off) and `error !== ""` (check failed) both
+ * report `is_duplicate: false` without having actually cleared the question.
+ * Only `enabled && !error && !is_duplicate` means "genuinely not a duplicate".
+ */
+export interface InterviewQuestionDuplicateCheck {
+  enabled: boolean;
+  is_duplicate: boolean;
+  duplicate_of_id: string | null;
+  duplicate_of_text: string;
+  rationale: string;
+  error: string;
+}
+
 export type InterviewOutcomeAuthoring = Schemas["InterviewOutcomeAuthoring"];
 export type InterviewOutcomeCreate = Schemas["InterviewOutcomeCreate"];
 // Widen with source_module_ids (module-scoped generation) until the OpenAPI

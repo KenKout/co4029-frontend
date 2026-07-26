@@ -41,17 +41,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useAddToInterviewQuestionBank,
+  useCheckInterviewQuestionDuplicate,
   useCreateInterviewQuestion,
   useDeleteInterviewQuestion,
   useInterviewQuestionBank,
   useUpdateInterviewQuestion,
+  isActionableDuplicate,
 } from "@/lib/api/hooks/interviews";
 import type {
   InterviewOutcomeAuthoring,
   InterviewQuestionAuthoring,
   InterviewQuestionBankItemRead,
+  InterviewQuestionDuplicateCheck,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
@@ -157,6 +161,7 @@ export function QuestionBank({
   const updateQuestion = useUpdateInterviewQuestion(configId);
   const deleteQuestion = useDeleteInterviewQuestion(configId);
   const createQuestion = useCreateInterviewQuestion(configId);
+  const checkDuplicate = useCheckInterviewQuestionDuplicate(configId);
   const addToBank = useAddToInterviewQuestionBank(courseId);
   const { data: bankItems } = useInterviewQuestionBank(courseId);
 
@@ -204,6 +209,13 @@ export function QuestionBank({
   const [reordering, setReordering] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [savingId, setSavingId] = useState<string | null>(null);
+  // A duplicate verdict awaiting the teacher's call. Holds the save it
+  // interrupted so confirming resumes exactly that write — the check is
+  // advisory, so "Save anyway" is always available.
+  const [duplicateWarning, setDuplicateWarning] = useState<{
+    check: InterviewQuestionDuplicateCheck;
+    proceed: () => void;
+  } | null>(null);
   // Bulk selection: ids of questions ticked for a batch action. `bulkBusy`
   // guards the contextual action bar while a batch mutation runs.
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -769,16 +781,42 @@ export function QuestionBank({
     setEditingAnswer("");
     setEditDirty(false);
   }
-  async function saveEdit() {
-    if (!editingId || !editingText.trim()) return;
-    setSavingId(editingId);
+  /**
+   * Ask the bank whether this prompt already exists.
+   *
+   * Returns a verdict only when there is something worth interrupting the save
+   * for; `null` means "go ahead". The three non-duplicate outcomes — feature
+   * disabled, check errored, genuinely unique — all collapse to `null` here
+   * because none of them should stop or nag the teacher. A thrown request is
+   * swallowed for the same reason: a check that could not run is not evidence
+   * of a duplicate, and losing the save over it would be far worse than
+   * missing one warning.
+   */
+  async function runDuplicateCheck(
+    promptText: string,
+    excludeQuestionId: string | null,
+  ): Promise<InterviewQuestionDuplicateCheck | null> {
+    try {
+      const verdict = await checkDuplicate.mutateAsync({
+        prompt_text: promptText,
+        exclude_question_id: excludeQuestionId,
+      });
+      return isActionableDuplicate(verdict) ? verdict : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function commitEdit(
+    questionId: string,
+    promptText: string,
+    modelAnswer: string | null,
+  ) {
+    setSavingId(questionId);
     try {
       await updateQuestion.mutateAsync({
-        questionId: editingId,
-        patch: {
-          prompt_text: editingText.trim(),
-          model_answer: editingAnswer.trim() || null,
-        },
+        questionId,
+        patch: { prompt_text: promptText, model_answer: modelAnswer },
       });
       setEditingId(null);
       setEditingText("");
@@ -790,6 +828,28 @@ export function QuestionBank({
     } finally {
       setSavingId(null);
     }
+  }
+
+  async function saveEdit() {
+    if (!editingId || !editingText.trim()) return;
+    // Snapshot the draft: the confirm dialog can resume this save later, by
+    // which point the editor state may have been cleared or moved on.
+    const questionId = editingId;
+    const promptText = editingText.trim();
+    const modelAnswer = editingAnswer.trim() || null;
+    setSavingId(questionId);
+    // Exclude self, or editing a question without touching its wording would
+    // always report the question as a duplicate of itself.
+    const verdict = await runDuplicateCheck(promptText, questionId);
+    setSavingId(null);
+    if (verdict) {
+      setDuplicateWarning({
+        check: verdict,
+        proceed: () => void commitEdit(questionId, promptText, modelAnswer),
+      });
+      return;
+    }
+    await commitEdit(questionId, promptText, modelAnswer);
   }
 
   // ── Delete (fade + collapse exit, then PATCH) ───────────────────────────────
@@ -811,13 +871,12 @@ export function QuestionBank({
   }
 
   // ── Add manual ──────────────────────────────────────────────────────────────
-  async function handleAdd() {
-    if (!newText.trim()) return;
+  async function commitAdd(promptText: string, modelAnswer: string | null) {
     try {
       await createQuestion.mutateAsync({
-        prompt_text: newText.trim(),
+        prompt_text: promptText,
         question_type: "conceptual",
-        model_answer: newAnswer.trim() || null,
+        model_answer: modelAnswer,
       });
       setAdding(false);
       setNewText("");
@@ -825,6 +884,22 @@ export function QuestionBank({
     } catch (err: unknown) {
       toast.error((err as Error).message);
     }
+  }
+
+  async function handleAdd() {
+    const promptText = newText.trim();
+    if (!promptText) return;
+    const modelAnswer = newAnswer.trim() || null;
+    // No question id to exclude: nothing exists to match against yet.
+    const verdict = await runDuplicateCheck(promptText, null);
+    if (verdict) {
+      setDuplicateWarning({
+        check: verdict,
+        proceed: () => void commitAdd(promptText, modelAnswer),
+      });
+      return;
+    }
+    await commitAdd(promptText, modelAnswer);
   }
 
   // ── Question bank: add-to-bank + import-from-bank (copy semantics) ─────────
@@ -1385,11 +1460,15 @@ export function QuestionBank({
               </Button>
               <Button
                 type="button"
-                disabled={createQuestion.isPending || !newText.trim()}
+                disabled={
+                  createQuestion.isPending ||
+                  checkDuplicate.isPending ||
+                  !newText.trim()
+                }
                 onClick={() => void handleAdd()}
                 className="gap-2"
               >
-                {createQuestion.isPending && (
+                {(createQuestion.isPending || checkDuplicate.isPending) && (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 )}
                 {t("teacher_interview_config.questions.add_save")}
@@ -1598,6 +1677,44 @@ export function QuestionBank({
 
       {/* Screen-reader live region for status/reorder announcements */}
       <div ref={liveRegionRef} aria-live="polite" className="sr-only" />
+
+      {/* Advisory duplicate warning. Confirm is the non-destructive path here —
+          the teacher is proceeding with their own question — so the save stays
+          the default-styled action and Cancel merely returns to the editor with
+          the draft intact. */}
+      <ConfirmDialog
+        open={duplicateWarning !== null}
+        onOpenChange={(next) => {
+          if (!next) setDuplicateWarning(null);
+        }}
+        title={t("teacher_interview_config.qbank.duplicate_title")}
+        description={t("teacher_interview_config.qbank.duplicate_description")}
+        confirmLabel={t("teacher_interview_config.qbank.duplicate_save_anyway")}
+        cancelLabel={t("teacher_interview_config.qbank.duplicate_go_back")}
+        confirmVariant="default"
+        onConfirm={() => {
+          const pending = duplicateWarning;
+          setDuplicateWarning(null);
+          pending?.proceed();
+        }}
+        extraContent={
+          duplicateWarning ? (
+            <div className="space-y-2 rounded-xl border border-amber-300/60 bg-amber-50 p-3 text-left">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                {t("teacher_interview_config.qbank.duplicate_existing")}
+              </p>
+              <p className="text-sm text-m3-on-surface">
+                {duplicateWarning.check.duplicate_of_text}
+              </p>
+              {duplicateWarning.check.rationale && (
+                <p className="text-xs text-m3-on-surface-variant">
+                  {duplicateWarning.check.rationale}
+                </p>
+              )}
+            </div>
+          ) : null
+        }
+      />
     </div>
   );
 }
