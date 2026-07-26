@@ -2,6 +2,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
 
 /**
  * Guards an action that would discard unsaved edits.
@@ -56,9 +57,9 @@ export function useUnsavedChangesGuard(
   },
 ): UnsavedChangesGuard {
   const { t } = useTranslation();
-  const [pendingAction, setPendingAction] = React.useState<
-    (() => void) | null
-  >(null);
+  const [pendingAction, setPendingAction] = React.useState<(() => void) | null>(
+    null,
+  );
 
   // Keep the latest dirty flag in a ref so `run` stays referentially stable —
   // callers often pass it straight into a memoised child.
@@ -88,18 +89,9 @@ export function useUnsavedChangesGuard(
   }, [pendingAction]);
 
   // Native guard for reload / tab close, which no in-app dialog can intercept.
-  React.useEffect(() => {
-    if (options?.disableBeforeUnload || !isDirty) return;
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      // Modern browsers show their own generic string; returnValue is still
-      // required for the prompt to appear at all in some engines.
-      e.returnValue = "";
-      return "";
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [isDirty, options?.disableBeforeUnload]);
+  // Delegated to the pre-existing hook so there's exactly one beforeunload
+  // implementation in the codebase rather than two competing handlers.
+  useUnsavedChangesWarning(options?.disableBeforeUnload ? false : isDirty);
 
   const dialog = (
     <ConfirmDialog
@@ -107,7 +99,10 @@ export function useUnsavedChangesGuard(
       onOpenChange={(next) => {
         if (!next) setPendingAction(null);
       }}
-      title={options?.title ?? t("common.unsaved.title", "Are you sure you want to quit?")}
+      title={
+        options?.title ??
+        t("common.unsaved.title", "Are you sure you want to quit?")
+      }
       description={
         options?.description ??
         t(

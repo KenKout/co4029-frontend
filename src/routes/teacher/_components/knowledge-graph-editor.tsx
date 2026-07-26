@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
+import { useUnsavedChangesGuard } from "@/lib/hooks/useUnsavedChangesGuard";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -386,6 +387,15 @@ export function KnowledgeGraphEditor({
     [graph, savedSnapshot],
   );
 
+  // Guard both close paths (the X button and the Escape unwind). The editor
+  // holds its whole graph in an in-memory history stack, so closing while dirty
+  // discards every edit since the last save.
+  const closeGuard = useUnsavedChangesGuard(isDirty);
+  const requestClose = useCallback(
+    () => closeGuard.run(onClose),
+    [closeGuard, onClose],
+  );
+
   const validationError = useMemo(() => {
     if (graph.nodes.length === 0) return t("teacher_kg_editor.err_no_nodes");
     if (primaryCount === 0) return t("teacher_kg_editor.err_no_primary");
@@ -519,12 +529,20 @@ export function KnowledgeGraphEditor({
         else if (arrowMode) setArrowMode(false);
         else if (selectedEdge) setSelectedEdge(null);
         else if (selectedId) setSelectedId(null);
-        else onClose();
+        else requestClose();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [undo, redo, onClose, linkSource, arrowMode, selectedEdge, selectedId]);
+  }, [
+    undo,
+    redo,
+    requestClose,
+    linkSource,
+    arrowMode,
+    selectedEdge,
+    selectedId,
+  ]);
 
   // --- Pointer interaction (pan + node drag) -------------------------------
   const drag = useRef<{
@@ -793,7 +811,7 @@ export function KnowledgeGraphEditor({
           </Button>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label={t("common.close")}
             className="flex h-9 w-9 items-center justify-center rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface"
           >
@@ -1285,6 +1303,10 @@ export function KnowledgeGraphEditor({
             {t("teacher_kg_editor.seeded_hint")}
           </div>
         )}
+
+        {/* Unsaved-changes confirmation for the X / Escape close paths. Lives
+            inside the portal so it stacks above this full-screen overlay. */}
+        {closeGuard.dialog}
       </div>
     </div>
   );

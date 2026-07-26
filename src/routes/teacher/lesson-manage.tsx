@@ -43,7 +43,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
+import { useUnsavedChangesGuard } from "@/lib/hooks/useUnsavedChangesGuard";
 import {
   useTeacherLesson,
   useUpdateLesson,
@@ -927,7 +927,10 @@ export default function LessonManagePage() {
       estimatedMinutes !== (lesson.estimated_minutes?.toString() ?? "") ||
       notes !== (lesson.notes_markdown ?? ""));
 
-  useUnsavedChangesWarning(isDirty);
+  // In-app exit guard (back link) + the native reload/close warning, which the
+  // guard installs internally — so this replaces the standalone
+  // useUnsavedChangesWarning call rather than sitting alongside it.
+  const leaveGuard = useUnsavedChangesGuard(isDirty);
 
   function showFeedback(msg: string) {
     setFeedback(msg);
@@ -1319,6 +1322,9 @@ export default function LessonManagePage() {
           Archive/Delete reuse the existing two-click confirm: the first click
           arms (button turns red + label changes), the second executes. */}
       <div className="sticky top-16 z-10 -mx-1 mb-8 flex items-center justify-between gap-3 border-b border-m3-outline-variant/15 bg-m3-surface/85 px-1 py-3 backdrop-blur-md">
+        {/* Back to the parent module/course. Intercepted so unsaved lesson
+            edits prompt first — a plain <Link> would navigate straight away and
+            silently drop the draft. */}
         <Link
           to={
             moduleId
@@ -1326,6 +1332,23 @@ export default function LessonManagePage() {
               : "/teacher/courses/$courseId"
           }
           params={moduleId ? { courseId, moduleId } : { courseId }}
+          onClick={(e) => {
+            if (!isDirty) return; // let the Link do its normal thing
+            e.preventDefault();
+            leaveGuard.run(() => {
+              void navigate(
+                moduleId
+                  ? {
+                      to: "/teacher/courses/$courseId/modules/$moduleId",
+                      params: { courseId, moduleId },
+                    }
+                  : {
+                      to: "/teacher/courses/$courseId",
+                      params: { courseId },
+                    },
+              );
+            });
+          }}
         >
           <Button
             variant="ghost"
@@ -1660,13 +1683,17 @@ export default function LessonManagePage() {
                 {t("teacher_lesson_manage.settings.difficulty_label")}
               </label>
               <Select
-                aria-label={t("teacher_lesson_manage.settings.difficulty_label")}
+                aria-label={t(
+                  "teacher_lesson_manage.settings.difficulty_label",
+                )}
                 value={difficulty}
                 onValueChange={setDifficulty}
                 options={[
                   {
                     value: "beginner",
-                    label: t("teacher_lesson_manage.settings.difficulty_beginner"),
+                    label: t(
+                      "teacher_lesson_manage.settings.difficulty_beginner",
+                    ),
                   },
                   {
                     value: "intermediate",
@@ -1676,7 +1703,9 @@ export default function LessonManagePage() {
                   },
                   {
                     value: "advanced",
-                    label: t("teacher_lesson_manage.settings.difficulty_advanced"),
+                    label: t(
+                      "teacher_lesson_manage.settings.difficulty_advanced",
+                    ),
                   },
                 ]}
                 className="bg-surface-elev font-medium"
@@ -1782,6 +1811,9 @@ export default function LessonManagePage() {
       >
         {feedback}
       </div>
+
+      {/* "Are you sure you want to quit?" for the back link while dirty. */}
+      {leaveGuard.dialog}
     </div>
   );
 }
