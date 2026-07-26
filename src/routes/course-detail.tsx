@@ -266,11 +266,9 @@ export default function CourseDetailPage() {
               )}
             </div>
 
-            {course.instructor && (
-              <InstructorCard instructor={course.instructor} />
-            )}
-
-            <ContactCard course={course} />
+            {/* Bio + contact details in one section (self-hides when the
+                course has neither). */}
+            <InstructorCard course={course} />
 
             <GlassCard className="p-6 sm:p-8 bg-gradient-to-br from-m3-secondary/5 to-m3-primary/5">
               <div className="flex items-start gap-4">
@@ -447,118 +445,133 @@ function ModuleItemsPanel({ moduleId }: { moduleId: string }) {
   );
 }
 
-function InstructorCard({ instructor }: { instructor: InstructorRead }) {
+/**
+ * Instructor bio AND their contact details in one card.
+ *
+ * These were two adjacent GlassCards ("About the instructor" + "Contact the
+ * instructor") describing the same person, which read as duplicated headers with
+ * an arbitrary split. Merged so the avatar/name/headline sit above the contact
+ * rows in a single section.
+ *
+ * Renders nothing when there is neither an instructor nor any contact field, so
+ * a course with neither shows no empty card (preserving ContactCard's old
+ * behaviour).
+ */
+function InstructorCard({ course }: { course: CoursePublic }) {
   const { t } = useTranslation();
-  const inits = initials(instructor.display_name);
+  const instructor = course.instructor ?? null;
+
+  const email = course.contact_email?.trim();
+  const phone = course.contact_phone?.trim();
+  const website = course.contact_website_url?.trim();
+  const social = course.contact_social_url?.trim();
+  const hasContact = Boolean(email || phone || website || social);
+
+  if (!instructor && !hasContact) return null;
+
+  // Strip the scheme for a cleaner visible label on URL rows.
+  const pretty = (url: string) =>
+    url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+  const rowClass =
+    "flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors group";
+  const iconClass =
+    "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary/8 text-m3-primary group-hover:bg-m3-primary/15 transition-colors";
 
   return (
     <GlassCard className="p-6 sm:p-8">
       <h2 className="font-headline font-bold text-xl text-m3-on-surface mb-5">
         {t("course_detail.about_instructor")}
       </h2>
-      <div className="flex flex-col sm:flex-row gap-5">
-        <Avatar className="h-20 w-20 shrink-0 ring-4 ring-white shadow-xl self-start">
-          {instructor.avatar_url ? (
-            <AvatarImage
-              src={instructor.avatar_url}
-              alt={instructor.display_name}
-            />
-          ) : null}
-          <AvatarFallback className="gradient-primary text-white text-xl font-bold">
-            {inits}
-          </AvatarFallback>
-        </Avatar>
-        <div className="space-y-3 flex-1">
-          <div>
-            <h3 className="font-headline font-bold text-m3-primary text-lg">
-              {instructor.display_name}
-            </h3>
-            <p className="text-m3-secondary text-sm font-semibold mt-0.5">
-              {t("course_detail.instructor_role")}
-            </p>
+
+      {instructor && (
+        <div className="flex flex-col sm:flex-row gap-5">
+          <Avatar className="h-20 w-20 shrink-0 ring-4 ring-white shadow-xl self-start">
+            {instructor.avatar_url ? (
+              <AvatarImage
+                src={instructor.avatar_url}
+                alt={instructor.display_name}
+              />
+            ) : null}
+            <AvatarFallback className="gradient-primary text-white text-xl font-bold">
+              {initials(instructor.display_name)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="space-y-3 flex-1">
+            <div>
+              <h3 className="font-headline font-bold text-m3-primary text-lg">
+                {instructor.display_name}
+              </h3>
+              <p className="text-m3-secondary text-sm font-semibold mt-0.5">
+                {t("course_detail.instructor_role")}
+              </p>
+            </div>
+            {instructor.headline && (
+              <p className="text-sm text-m3-on-surface-variant leading-relaxed">
+                {instructor.headline}
+              </p>
+            )}
           </div>
-          {instructor.headline && (
-            <p className="text-sm text-m3-on-surface-variant leading-relaxed">
-              {instructor.headline}
-            </p>
-          )}
         </div>
-      </div>
-    </GlassCard>
-  );
-}
+      )}
 
-// Teacher-published contact block. Renders nothing unless at least one contact
-// field is set, so courses without contact info show no empty card. Email and
-// phone become mailto:/tel: links; website and social open in a new tab.
-function ContactCard({ course }: { course: CoursePublic }) {
-  const { t } = useTranslation();
-  const email = course.contact_email?.trim();
-  const phone = course.contact_phone?.trim();
-  const website = course.contact_website_url?.trim();
-  const social = course.contact_social_url?.trim();
-
-  if (!email && !phone && !website && !social) return null;
-
-  // Strip the scheme for a cleaner visible label on URL rows.
-  const pretty = (url: string) =>
-    url.replace(/^https?:\/\//, "").replace(/\/$/, "");
-
-  return (
-    <GlassCard className="p-6 sm:p-8">
-      <h2 className="font-headline font-bold text-xl text-m3-on-surface mb-5">
-        {t("course_detail.contact_title")}
-      </h2>
-      <div className="space-y-3">
-        {email && (
-          <a
-            href={`mailto:${email}`}
-            className="flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors group"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary/8 text-m3-primary group-hover:bg-m3-primary/15 transition-colors">
-              <Mail className="h-4 w-4" />
-            </span>
-            <span className="truncate">{email}</span>
-          </a>
-        )}
-        {phone && (
-          <a
-            href={`tel:${phone.replace(/\s+/g, "")}`}
-            className="flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors group"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary/8 text-m3-primary group-hover:bg-m3-primary/15 transition-colors">
-              <Phone className="h-4 w-4" />
-            </span>
-            <span className="truncate">{phone}</span>
-          </a>
-        )}
-        {website && (
-          <a
-            href={website}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors group"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary/8 text-m3-primary group-hover:bg-m3-primary/15 transition-colors">
-              <Globe className="h-4 w-4" />
-            </span>
-            <span className="truncate">{pretty(website)}</span>
-          </a>
-        )}
-        {social && (
-          <a
-            href={social}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors group"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary/8 text-m3-primary group-hover:bg-m3-primary/15 transition-colors">
-              <Share2 className="h-4 w-4" />
-            </span>
-            <span className="truncate">{pretty(social)}</span>
-          </a>
-        )}
-      </div>
+      {/* Contact rows. Sub-headed rather than given their own card, and only
+          divided from the bio when both halves are present. */}
+      {hasContact && (
+        <div
+          className={cn(
+            instructor && "mt-6 pt-6 border-t border-m3-outline-variant/20",
+          )}
+        >
+          <h3 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant mb-3">
+            {t("course_detail.contact_title")}
+          </h3>
+          <div className="space-y-3">
+            {email && (
+              <a href={`mailto:${email}`} className={rowClass}>
+                <span className={iconClass}>
+                  <Mail className="h-4 w-4" />
+                </span>
+                <span className="truncate">{email}</span>
+              </a>
+            )}
+            {phone && (
+              <a href={`tel:${phone.replace(/\s+/g, "")}`} className={rowClass}>
+                <span className={iconClass}>
+                  <Phone className="h-4 w-4" />
+                </span>
+                <span className="truncate">{phone}</span>
+              </a>
+            )}
+            {website && (
+              <a
+                href={website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={rowClass}
+              >
+                <span className={iconClass}>
+                  <Globe className="h-4 w-4" />
+                </span>
+                <span className="truncate">{pretty(website)}</span>
+              </a>
+            )}
+            {social && (
+              <a
+                href={social}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={rowClass}
+              >
+                <span className={iconClass}>
+                  <Share2 className="h-4 w-4" />
+                </span>
+                <span className="truncate">{pretty(social)}</span>
+              </a>
+            )}
+          </div>
+        </div>
+      )}
     </GlassCard>
   );
 }
