@@ -56,6 +56,7 @@ import {
   useQuizGenerationRun,
 } from "@/lib/api/hooks/quizzes";
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
 import {
   BLOOM_LEVELS,
   type BloomDistribution,
@@ -713,22 +714,17 @@ export function QuizGenerationPanel({
               <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
                 Difficulty
               </label>
-              <select
+              <Select<Difficulty>
+                aria-label="Difficulty"
                 value={form.difficulty}
-                onChange={(e) =>
-                  setForm((current) => ({
-                    ...current,
-                    difficulty: e.target.value as Difficulty,
-                  }))
+                onValueChange={(next) =>
+                  setForm((current) => ({ ...current, difficulty: next }))
                 }
-                className="h-8 w-full rounded-lg border border-m3-outline-variant/20 bg-m3-surface px-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-              >
-                {DIFFICULTIES.map((level) => (
-                  <option key={level} value={level}>
-                    {level}
-                  </option>
-                ))}
-              </select>
+                options={DIFFICULTIES.map((level) => ({
+                  value: level,
+                  label: level,
+                }))}
+              />
             </div>
           </div>
 

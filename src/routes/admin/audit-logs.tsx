@@ -4,6 +4,7 @@ import { ScrollText, ShieldCheck, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useAuditHttp,
@@ -335,20 +336,19 @@ function DataChangesPanel() {
       <div className="flex flex-wrap items-end gap-3">
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant flex flex-col gap-1">
           {t("admin.audit.data_changes.table_label")}
-          <select
+          <Select<DataChangeTable>
             value={table}
-            onChange={(e) => {
-              setTable(e.target.value as DataChangeTable);
+            onValueChange={(next) => {
+              setTable(next);
               setSubmittedId("");
             }}
-            className="h-9 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 text-sm font-normal normal-case"
-          >
-            {DATA_CHANGE_TABLES.map((tbl) => (
-              <option key={tbl} value={tbl}>
-                {t(`admin.audit.data_changes.tables.${tbl}`)}
-              </option>
-            ))}
-          </select>
+            size="sm"
+            options={DATA_CHANGE_TABLES.map((tbl) => ({
+              value: tbl,
+              label: t(`admin.audit.data_changes.tables.${tbl}`),
+            }))}
+            className="w-48 font-normal normal-case"
+          />
         </label>
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant flex flex-col gap-1 flex-1 min-w-[280px]">
           {t("admin.audit.data_changes.entity_id_label")}

@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InfiniteList } from "@/components/ui/InfiniteList";
+import { Select } from "@/components/ui/select";
 import { useCourseModules, useModuleLessons } from "@/lib/api/hooks/courses";
 import {
   useImportQuestionsFromBank,
@@ -286,85 +287,82 @@ export function QuestionBankModal({
             ) : null}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            <select
+            <Select<string>
               value={moduleId}
-              onChange={(e) => setModuleId(e.target.value)}
-              className="h-8 rounded-md border border-m3-outline-variant/30 bg-m3-surface px-2 text-xs text-m3-on-surface focus:border-m3-secondary focus:outline-none"
+              onValueChange={(next) => setModuleId(next)}
+              size="sm"
               disabled={modulesQuery.isLoading}
-            >
-              <option value="">
-                {modulesQuery.isLoading ? "Loading modules…" : "All modules"}
-              </option>
-              {modules.map((m) => (
-                <option key={m.id} value={m.id}>
-                  Module {m.position + 1} · {m.title}
-                </option>
-              ))}
-            </select>
-            <select
-              value={lessonId}
-              onChange={(e) => setLessonId(e.target.value)}
-              className="h-8 rounded-md border border-m3-outline-variant/30 bg-m3-surface px-2 text-xs text-m3-on-surface focus:border-m3-secondary focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!moduleId || lessonsQuery.isLoading}
-              title={moduleId ? undefined : "Pick a module first"}
-            >
-              <option value="">
-                {!moduleId
-                  ? "All lessons (pick module)"
-                  : lessonsQuery.isLoading
-                    ? "Loading lessons…"
-                    : "All lessons in module"}
-              </option>
-              {lessons.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.title}
-                </option>
-              ))}
-            </select>
-            <select
+              options={[
+                {
+                  value: "",
+                  label: modulesQuery.isLoading
+                    ? "Loading modules…"
+                    : "All modules",
+                },
+                ...modules.map((m) => ({
+                  value: m.id,
+                  label: `Module ${m.position + 1} · ${m.title}`,
+                })),
+              ]}
+            />
+            <div title={moduleId ? undefined : "Pick a module first"}>
+              <Select<string>
+                value={lessonId}
+                onValueChange={(next) => setLessonId(next)}
+                size="sm"
+                disabled={!moduleId || lessonsQuery.isLoading}
+                options={[
+                  {
+                    value: "",
+                    label: !moduleId
+                      ? "All lessons (pick module)"
+                      : lessonsQuery.isLoading
+                        ? "Loading lessons…"
+                        : "All lessons in module",
+                  },
+                  ...lessons.map((l) => ({
+                    value: l.id,
+                    label: l.title,
+                  })),
+                ]}
+              />
+            </div>
+            <Select<string>
               value={questionType}
-              onChange={(e) => setQuestionType(e.target.value)}
-              className="h-8 rounded-md border border-m3-outline-variant/30 bg-m3-surface px-2 text-xs text-m3-on-surface focus:border-m3-secondary focus:outline-none"
-            >
-              {QUESTION_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <select
+              onValueChange={(next) => setQuestionType(next)}
+              size="sm"
+              options={QUESTION_TYPE_OPTIONS.map((opt) => ({
+                value: opt.value as string,
+                label: opt.label,
+              }))}
+            />
+            <Select<string>
               value={bloomLevel}
-              onChange={(e) => setBloomLevel(e.target.value)}
-              className="h-8 rounded-md border border-m3-outline-variant/30 bg-m3-surface px-2 text-xs text-m3-on-surface focus:border-m3-secondary focus:outline-none"
-            >
-              {BLOOM_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <select
+              onValueChange={(next) => setBloomLevel(next)}
+              size="sm"
+              options={BLOOM_OPTIONS.map((opt) => ({
+                value: opt.value as string,
+                label: opt.label,
+              }))}
+            />
+            <Select<string>
               value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
-              className="h-8 rounded-md border border-m3-outline-variant/30 bg-m3-surface px-2 text-xs text-m3-on-surface focus:border-m3-secondary focus:outline-none"
-            >
-              {DIFFICULTY_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <select
+              onValueChange={(next) => setDifficulty(next)}
+              size="sm"
+              options={DIFFICULTY_OPTIONS.map((opt) => ({
+                value: opt.value as string,
+                label: opt.label,
+              }))}
+            />
+            <Select<string>
               value={reviewStatus}
-              onChange={(e) => setReviewStatus(e.target.value)}
-              className="h-8 rounded-md border border-m3-outline-variant/30 bg-m3-surface px-2 text-xs text-m3-on-surface focus:border-m3-secondary focus:outline-none"
-            >
-              {REVIEW_STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              onValueChange={(next) => setReviewStatus(next)}
+              size="sm"
+              options={REVIEW_STATUS_OPTIONS.map((opt) => ({
+                value: opt.value as string,
+                label: opt.label,
+              }))}
+            />
           </div>
         </div>
 

@@ -14,6 +14,7 @@ import {
 import type { SettingsDraft } from "./types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 /**
@@ -133,33 +134,37 @@ export function SettingsTab({
             )}
             hint={t("teacher_quiz_manage.settings.scoring.grading_method_hint")}
           >
-            <select
+            <Select<SettingsDraft["grading_method"]>
               value={draft.grading_method}
-              onChange={(e) =>
-                update(
-                  "grading_method",
-                  e.target.value as SettingsDraft["grading_method"],
-                )
-              }
-              className="w-full sm:w-72 rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-            >
-              <option value="highest">
-                {t(
-                  "teacher_quiz_manage.settings.scoring.grading_method_highest",
-                )}
-              </option>
-              <option value="average">
-                {t(
-                  "teacher_quiz_manage.settings.scoring.grading_method_average",
-                )}
-              </option>
-              <option value="first">
-                {t("teacher_quiz_manage.settings.scoring.grading_method_first")}
-              </option>
-              <option value="last">
-                {t("teacher_quiz_manage.settings.scoring.grading_method_last")}
-              </option>
-            </select>
+              onValueChange={(next) => update("grading_method", next)}
+              options={[
+                {
+                  value: "highest",
+                  label: t(
+                    "teacher_quiz_manage.settings.scoring.grading_method_highest",
+                  ),
+                },
+                {
+                  value: "average",
+                  label: t(
+                    "teacher_quiz_manage.settings.scoring.grading_method_average",
+                  ),
+                },
+                {
+                  value: "first",
+                  label: t(
+                    "teacher_quiz_manage.settings.scoring.grading_method_first",
+                  ),
+                },
+                {
+                  value: "last",
+                  label: t(
+                    "teacher_quiz_manage.settings.scoring.grading_method_last",
+                  ),
+                },
+              ]}
+              className="w-full sm:w-72"
+            />
           </Field>
         </SettingsSection>
       </LockableSection>
@@ -376,32 +381,30 @@ export function SettingsTab({
                 label={t("teacher_quiz_manage.settings.timing.overdue_label")}
                 hint={t("teacher_quiz_manage.settings.timing.overdue_hint")}
               >
-                <select
+                <Select<SettingsDraft["overdue_handling"]>
                   value={draft.overdue_handling}
-                  onChange={(e) =>
-                    update(
-                      "overdue_handling",
-                      e.target.value as SettingsDraft["overdue_handling"],
-                    )
-                  }
-                  className="bg-m3-surface text-sm w-full rounded-lg border border-m3-outline-variant px-3 py-2"
-                >
-                  <option value="autosubmit">
-                    {t(
-                      "teacher_quiz_manage.settings.timing.overdue_autosubmit",
-                    )}
-                  </option>
-                  <option value="graceperiod">
-                    {t(
-                      "teacher_quiz_manage.settings.timing.overdue_graceperiod",
-                    )}
-                  </option>
-                  <option value="autoabandon">
-                    {t(
-                      "teacher_quiz_manage.settings.timing.overdue_autoabandon",
-                    )}
-                  </option>
-                </select>
+                  onValueChange={(next) => update("overdue_handling", next)}
+                  options={[
+                    {
+                      value: "autosubmit",
+                      label: t(
+                        "teacher_quiz_manage.settings.timing.overdue_autosubmit",
+                      ),
+                    },
+                    {
+                      value: "graceperiod",
+                      label: t(
+                        "teacher_quiz_manage.settings.timing.overdue_graceperiod",
+                      ),
+                    },
+                    {
+                      value: "autoabandon",
+                      label: t(
+                        "teacher_quiz_manage.settings.timing.overdue_autoabandon",
+                      ),
+                    },
+                  ]}
+                />
               </Field>
               {draft.overdue_handling === "graceperiod" && (
                 <Field

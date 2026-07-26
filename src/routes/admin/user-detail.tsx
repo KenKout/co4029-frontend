@@ -23,6 +23,7 @@ import {
 } from "@/lib/api/hooks/admin";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { RoleAssignmentRead } from "@/lib/api/types";
 
@@ -263,40 +264,44 @@ function RoleAssignmentsSection({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="text-xs text-text-muted">
             {t("admin.users.roles.role")}
-            <select
+            <Select
               value={roleCode}
-              onChange={(e) => setRoleCode(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-border bg-surface-elev px-2 py-1.5 text-sm"
-              required
-            >
-              <option value="">{t("admin.users.roles.select_role")}</option>
-              {roleOptions.map((r) => (
-                <option key={r.id} value={r.code}>
-                  {r.name} ({r.code})
-                </option>
-              ))}
-            </select>
+              onValueChange={(next) => setRoleCode(next)}
+              options={[
+                { value: "", label: t("admin.users.roles.select_role") },
+                ...roleOptions.map((r) => ({
+                  value: r.code,
+                  label: `${r.name} (${r.code})`,
+                })),
+              ]}
+              className="mt-1"
+            />
           </label>
           <label className="text-xs text-text-muted">
             {t("admin.users.roles.scope")}
-            <select
+            <Select
               value={scopeKind}
-              onChange={(e) => setScopeKind(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-border bg-surface-elev px-2 py-1.5 text-sm"
-            >
-              <option value="organization">
-                {t("admin.users.roles.scope_organization")}
-              </option>
-              <option value="org_unit">
-                {t("admin.users.roles.scope_org_unit")}
-              </option>
-              <option value="course">
-                {t("admin.users.roles.scope_course")}
-              </option>
-              <option value="global">
-                {t("admin.users.roles.scope_global")}
-              </option>
-            </select>
+              onValueChange={(next) => setScopeKind(next)}
+              options={[
+                {
+                  value: "organization",
+                  label: t("admin.users.roles.scope_organization"),
+                },
+                {
+                  value: "org_unit",
+                  label: t("admin.users.roles.scope_org_unit"),
+                },
+                {
+                  value: "course",
+                  label: t("admin.users.roles.scope_course"),
+                },
+                {
+                  value: "global",
+                  label: t("admin.users.roles.scope_global"),
+                },
+              ]}
+              className="mt-1"
+            />
           </label>
           {scopeKind === "organization" || scopeKind === "org_unit" ? (
             <label className="text-xs text-text-muted">

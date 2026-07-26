@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { GradientProgress } from "@/components/ui/gradient-progress";
+import { Select } from "@/components/ui/select";
 import {
   useTeacherCourseById,
   useTeacherCourseRoster,
@@ -436,45 +437,50 @@ export default function CourseStudentDetailPage() {
               {/* Filters: Interview / Result / Time — mirror the course
                   Assessments page so teachers get the same controls here. */}
               <div className="flex items-center gap-2 flex-wrap">
-                <select
+                <Select
                   value={ivInterviewFilter}
-                  onChange={(e) => setIvInterviewFilter(e.target.value)}
-                  className="h-8 rounded-lg border border-m3-outline-variant/40 bg-m3-surface-container-lowest px-2 text-xs text-m3-on-surface"
+                  onValueChange={(next) => setIvInterviewFilter(next)}
+                  size="sm"
+                  className="w-44"
                   aria-label="Filter by interview"
-                >
-                  <option value="all">All interviews</option>
-                  {ivInterviewTitles.map((title) => (
-                    <option key={title} value={title}>
-                      {title}
-                    </option>
-                  ))}
-                </select>
-                <select
+                  options={[
+                    { value: "all", label: "All interviews" },
+                    ...ivInterviewTitles.map((title) => ({
+                      value: title,
+                      label: title,
+                    })),
+                  ]}
+                />
+                <Select
                   value={ivResultFilter}
-                  onChange={(e) => setIvResultFilter(e.target.value)}
-                  className="h-8 rounded-lg border border-m3-outline-variant/40 bg-m3-surface-container-lowest px-2 text-xs text-m3-on-surface"
+                  onValueChange={(next) => setIvResultFilter(next)}
+                  size="sm"
+                  className="w-40"
                   aria-label="Filter by result"
-                >
-                  <option value="all">All results</option>
-                  <option value="passed">Passed</option>
-                  <option value="not_passed">Not passed</option>
-                  <option value="evaluating">Evaluating</option>
-                  <option value="in_progress">In progress</option>
-                  <option value="failed">Evaluation failed</option>
-                  <option value="not_graded">Not graded</option>
-                </select>
-                <select
+                  options={[
+                    { value: "all", label: "All results" },
+                    { value: "passed", label: "Passed" },
+                    { value: "not_passed", label: "Not passed" },
+                    { value: "evaluating", label: "Evaluating" },
+                    { value: "in_progress", label: "In progress" },
+                    { value: "failed", label: "Evaluation failed" },
+                    { value: "not_graded", label: "Not graded" },
+                  ]}
+                />
+                <Select
                   value={ivTimeFilter}
-                  onChange={(e) => setIvTimeFilter(e.target.value)}
-                  className="h-8 rounded-lg border border-m3-outline-variant/40 bg-m3-surface-container-lowest px-2 text-xs text-m3-on-surface"
+                  onValueChange={(next) => setIvTimeFilter(next)}
+                  size="sm"
+                  className="w-36"
                   aria-label="Filter by time"
-                >
-                  <option value="all">All time</option>
-                  <option value="today">Last 24 hours</option>
-                  <option value="7">Last 7 days</option>
-                  <option value="30">Last 30 days</option>
-                  <option value="90">Last 90 days</option>
-                </select>
+                  options={[
+                    { value: "all", label: "All time" },
+                    { value: "today", label: "Last 24 hours" },
+                    { value: "7", label: "Last 7 days" },
+                    { value: "30", label: "Last 30 days" },
+                    { value: "90", label: "Last 90 days" },
+                  ]}
+                />
                 {ivFiltersActive && (
                   <Button
                     variant="ghost"

@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
 import {
   useDeleteInterviewQuestionBankItem,
@@ -479,46 +480,45 @@ function ItemEditor({
           <label className="text-[11px] font-semibold text-m3-on-surface-variant">
             {t("teacher_question_bank.filter_type")}
           </label>
-          <select
+          <Select<InterviewQuestionType>
             value={draft.question_type}
-            onChange={(e) =>
+            onValueChange={(next) =>
               setDraft({
                 ...draft,
-                question_type: e.target.value as InterviewQuestionType,
+                question_type: next,
               })
             }
-            className="block rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-2.5 py-1.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            {QUESTION_TYPES.map((qt) => (
-              <option key={qt} value={qt}>
-                {t(`teacher_interview_config.qbank.type.${qt}`)}
-              </option>
-            ))}
-          </select>
+            className="w-48"
+            options={QUESTION_TYPES.map((qt) => ({
+              value: qt,
+              label: t(`teacher_interview_config.qbank.type.${qt}`),
+            }))}
+          />
         </div>
         <div className="space-y-1">
           <label className="text-[11px] font-semibold text-m3-on-surface-variant">
             {t("teacher_question_bank.filter_difficulty")}
           </label>
-          <select
+          <Select<InterviewDifficulty | "none">
             value={draft.difficulty}
-            onChange={(e) =>
+            onValueChange={(next) =>
               setDraft({
                 ...draft,
-                difficulty: e.target.value as InterviewDifficulty | "none",
+                difficulty: next,
               })
             }
-            className="block rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-2.5 py-1.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="none">
-              {t("teacher_question_bank.no_difficulty")}
-            </option>
-            {DIFFICULTIES.map((d) => (
-              <option key={d} value={d}>
-                {t(`teacher_interview_config.qbank.difficulty.${d}`)}
-              </option>
-            ))}
-          </select>
+            className="w-48"
+            options={[
+              {
+                value: "none",
+                label: t("teacher_question_bank.no_difficulty"),
+              },
+              ...DIFFICULTIES.map((d) => ({
+                value: d,
+                label: t(`teacher_interview_config.qbank.difficulty.${d}`),
+              })),
+            ]}
+          />
         </div>
       </div>
 
@@ -629,18 +629,14 @@ function FilterSelect({
   return (
     <label className="inline-flex items-center gap-1.5 text-xs text-m3-on-surface-variant">
       <span className="hidden sm:inline">{label}:</span>
-      <select
+      <Select
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onValueChange={(next) => onChange(next)}
         aria-label={label}
-        className="rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-2 py-1.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+        size="sm"
+        className="w-40"
+        options={options}
+      />
     </label>
   );
 }

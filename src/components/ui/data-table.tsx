@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -587,17 +588,19 @@ function DataTablePagination({
         {pageSizeOptions && pageSizeOptions.length > 0 && (
           <label className="flex items-center gap-2">
             <span className="hidden sm:inline">Rows</span>
-            <select
-              value={size}
-              onChange={(e) => onSizeChange(Number(e.target.value))}
-              className="rounded-md border border-m3-outline-variant/30 bg-m3-surface-container-low px-2 py-1 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
-            >
-              {pageSizeOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
+            {/* Page size is stored as a number; the Select API is string-based,
+                so convert at the boundary and leave the state type alone. */}
+            <Select
+              size="sm"
+              aria-label="Rows per page"
+              value={String(size)}
+              onValueChange={(next) => onSizeChange(Number(next))}
+              options={pageSizeOptions.map((opt) => ({
+                value: String(opt),
+                label: String(opt),
+              }))}
+              className="w-auto"
+            />
           </label>
         )}
       </div>

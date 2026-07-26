@@ -20,10 +20,21 @@ export interface SelectProps<T extends string> {
   id?: string;
   name?: string;
   disabled?: boolean;
+  /**
+   * Trigger density. `default` is the form-field size; `sm` matches the compact
+   * inline filter controls (table toolbars, chip rows) that would look bloated
+   * at field height.
+   */
+  size?: "default" | "sm";
   /** Extra classes for the trigger button. */
   className?: string;
   "aria-label"?: string;
 }
+
+const TRIGGER_SIZE: Record<"default" | "sm", string> = {
+  default: "rounded-xl px-3 py-2.5 text-sm",
+  sm: "h-7 rounded-md px-2.5 text-xs font-medium",
+};
 
 /**
  * Styled single-choice select.
@@ -47,6 +58,7 @@ export function Select<T extends string>({
   id,
   name,
   disabled = false,
+  size = "default",
   className,
   "aria-label": ariaLabel,
 }: SelectProps<T>) {
@@ -66,7 +78,8 @@ export function Select<T extends string>({
         disabled={disabled}
         aria-label={ariaLabel}
         className={cn(
-          "flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-left text-sm",
+          "flex w-full cursor-pointer items-center justify-between gap-2 border border-m3-outline-variant/20 bg-m3-surface text-left",
+          TRIGGER_SIZE[size],
           "transition-colors hover:border-m3-primary/50 hover:bg-m3-primary/5",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-secondary/30",
           "disabled:cursor-not-allowed disabled:opacity-60",
@@ -81,20 +94,31 @@ export function Select<T extends string>({
         </SelectPrimitive.Value>
         <SelectPrimitive.Icon
           className="shrink-0 text-m3-on-surface-variant transition-transform duration-200 data-popup-open:rotate-180"
-          render={<ChevronDown className="h-4 w-4" aria-hidden="true" />}
+          render={
+            <ChevronDown
+              className={size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"}
+              aria-hidden="true"
+            />
+          }
         />
       </SelectPrimitive.Trigger>
 
       <SelectPrimitive.Portal>
         <SelectPrimitive.Positioner
           sideOffset={6}
+          align="start"
           alignItemWithTrigger={false}
           className="isolate z-50 outline-none"
         >
           <SelectPrimitive.Popup
             className={cn(
-              // Width tracks the trigger so the list never looks detached.
-              "z-50 max-h-[min(20rem,var(--available-height))] w-(--anchor-width) min-w-40 overflow-y-auto",
+              // Width: at LEAST the trigger, and free to grow for long labels.
+              // `w-(--anchor-width)` alone is not enough — a narrow trigger (the
+              // `sm` filter chips are ~82px) lost to `min-w-40`, which made the
+              // popup 78px wider than its trigger and, with the default centred
+              // alignment, hang 27px off its left edge. Measured in a browser;
+              // `align="start"` above pins the left edges together.
+              "z-50 max-h-[min(20rem,var(--available-height))] min-w-(--anchor-width) overflow-y-auto",
               "rounded-xl border border-m3-outline-variant/40 bg-white p-1.5 shadow-xl shadow-black/5",
               "origin-(--transform-origin) outline-none",
               // Enter/exit: opacity+transform only → compositor-only, no reflow.

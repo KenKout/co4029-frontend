@@ -48,6 +48,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet, SheetClose, SheetContent } from "@/components/ui/sheet";
 import { ApiError } from "@/lib/api/client";
@@ -1278,29 +1279,33 @@ function FilterBar({
         <label className="text-xs font-semibold text-text-muted">
           {t("admin.ai_costs.filters.operation")}
         </label>
-        <select
+        <Select
           value={filters.operation ?? ""}
-          onChange={(e) => set("operation", e.target.value)}
-          className="w-40 h-9 rounded-md border border-border bg-surface px-2 text-sm text-text-strong"
-        >
-          <option value="">{t("admin.ai_costs.filters.any")}</option>
-          <option value="chat_completion">chat_completion</option>
-          <option value="embedding">embedding</option>
-        </select>
+          onValueChange={(next) => set("operation", next)}
+          size="sm"
+          options={[
+            { value: "", label: t("admin.ai_costs.filters.any") },
+            { value: "chat_completion", label: "chat_completion" },
+            { value: "embedding", label: "embedding" },
+          ]}
+          className="w-40 h-9"
+        />
       </div>
       <div className="space-y-1">
         <label className="text-xs font-semibold text-text-muted">
           {t("admin.ai_costs.filters.status")}
         </label>
-        <select
+        <Select
           value={filters.status ?? ""}
-          onChange={(e) => set("status", e.target.value)}
-          className="w-40 h-9 rounded-md border border-border bg-surface px-2 text-sm text-text-strong"
-        >
-          <option value="">{t("admin.ai_costs.filters.any")}</option>
-          <option value="success">success</option>
-          <option value="failed">failed</option>
-        </select>
+          onValueChange={(next) => set("status", next)}
+          size="sm"
+          options={[
+            { value: "", label: t("admin.ai_costs.filters.any") },
+            { value: "success", label: "success" },
+            { value: "failed", label: "failed" },
+          ]}
+          className="w-40 h-9"
+        />
       </div>
       {active ? (
         <Button

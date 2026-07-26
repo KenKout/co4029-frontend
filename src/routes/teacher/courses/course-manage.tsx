@@ -46,6 +46,7 @@ import { Badge } from "@/components/ui/badge";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { Select } from "@/components/ui/select";
 import {
   useTeacherCourseById,
   useTeacherCourseContent,
@@ -480,24 +481,28 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                 <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
                   {t("teacher_course_settings.level")}
                 </label>
-                <select
+                <Select
                   value={level}
-                  onChange={(e) => setLevel(e.target.value)}
-                  className="w-full px-4 py-3 text-sm bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer"
-                >
-                  <option value="">
-                    {t("teacher_course_settings.level_not_set")}
-                  </option>
-                  <option value="beginner">
-                    {t("teacher_course_settings.level_beginner")}
-                  </option>
-                  <option value="intermediate">
-                    {t("teacher_course_settings.level_intermediate")}
-                  </option>
-                  <option value="advanced">
-                    {t("teacher_course_settings.level_advanced")}
-                  </option>
-                </select>
+                  onValueChange={(next) => setLevel(next)}
+                  options={[
+                    {
+                      value: "",
+                      label: t("teacher_course_settings.level_not_set"),
+                    },
+                    {
+                      value: "beginner",
+                      label: t("teacher_course_settings.level_beginner"),
+                    },
+                    {
+                      value: "intermediate",
+                      label: t("teacher_course_settings.level_intermediate"),
+                    },
+                    {
+                      value: "advanced",
+                      label: t("teacher_course_settings.level_advanced"),
+                    },
+                  ]}
+                />
               </div>
 
               {/* Status */}
@@ -505,21 +510,24 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                 <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
                   {t("teacher_course_settings.status")}
                 </label>
-                <select
+                <Select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full px-4 py-3 text-sm bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer"
-                >
-                  <option value="draft">
-                    {t("teacher_course_settings.status_draft")}
-                  </option>
-                  <option value="published">
-                    {t("teacher_course_settings.status_published")}
-                  </option>
-                  <option value="archived">
-                    {t("teacher_course_settings.status_archived")}
-                  </option>
-                </select>
+                  onValueChange={(next) => setStatus(next)}
+                  options={[
+                    {
+                      value: "draft",
+                      label: t("teacher_course_settings.status_draft"),
+                    },
+                    {
+                      value: "published",
+                      label: t("teacher_course_settings.status_published"),
+                    },
+                    {
+                      value: "archived",
+                      label: t("teacher_course_settings.status_archived"),
+                    },
+                  ]}
+                />
               </div>
 
               {/* Estimated minutes */}

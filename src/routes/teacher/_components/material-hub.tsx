@@ -52,6 +52,7 @@ import type {
 import { uploadMultipart } from "@/lib/upload/multipart";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
 import { KnowledgeGraphDetail } from "./knowledge-graph-detail";
 import type { KgSource } from "./knowledge-graph-detail";
 import { KnowledgeGraphEditor } from "./knowledge-graph-editor";
@@ -415,26 +416,23 @@ export function SelectedFileForm({
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
           {t("teacher_lesson_materials.form.doc_type_label")}
         </label>
-        <select
+        <Select<NonNullable<MaterialUploadInit["material_type"]>>
+          aria-label={t("teacher_lesson_materials.form.doc_type_label")}
           disabled={uploading}
-          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30 disabled:opacity-60"
           value={form.material_type ?? "pdf"}
-          onChange={(e) =>
-            setForm((f) => ({
-              ...f,
-              material_type: e.target
-                .value as MaterialUploadInit["material_type"],
-            }))
+          onValueChange={(next) =>
+            setForm((f) => ({ ...f, material_type: next }))
           }
-        >
-          {MATERIAL_TYPE_OPTIONS.map((opt) => (
-            <option key={opt.value ?? "pdf"} value={opt.value ?? "pdf"}>
-              {opt.labelKey
-                ? t(`teacher_lesson_materials.doc_type.${opt.labelKey}`)
-                : opt.labelText}
-            </option>
-          ))}
-        </select>
+          options={MATERIAL_TYPE_OPTIONS.map((opt) => ({
+            value: (opt.value ?? "pdf") as NonNullable<
+              MaterialUploadInit["material_type"]
+            >,
+            label: opt.labelKey
+              ? t(`teacher_lesson_materials.doc_type.${opt.labelKey}`)
+              : opt.labelText,
+          }))}
+          className="bg-m3-surface-container-lowest"
+        />
       </div>
 
       <div className="flex items-center gap-6">

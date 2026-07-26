@@ -54,6 +54,7 @@ import type {
   InterviewQuestionBankItemRead,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
 
 type ReviewStatus = InterviewQuestionAuthoring["review_status"];
 
@@ -1874,18 +1875,14 @@ function FilterSelect({
   return (
     <label className="inline-flex items-center gap-1.5 text-xs text-m3-on-surface-variant">
       <span className="sr-only sm:not-sr-only">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+      <Select
+        size="sm"
         aria-label={label}
-        className="rounded-lg border border-border bg-m3-surface px-2 py-1.5 text-xs font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30 cursor-pointer"
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+        value={value}
+        onValueChange={onChange}
+        options={options}
+        className="w-auto"
+      />
     </label>
   );
 }

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { PageHeader } from "@/components/ui/page-header";
+import { Select } from "@/components/ui/select";
 import { useTeacherCourses } from "@/lib/api/hooks/teacher-courses";
 import { TeacherCourseCard } from "@/routes/teacher/_components/TeacherCourseCard";
 
@@ -150,21 +151,26 @@ export default function TeacherCoursesPage() {
           {/* Sort */}
           <label className="flex items-center gap-2 text-xs text-m3-on-surface-variant">
             {t("teacher_courses_list.sort_label", "Sort")}
-            <select
+            <Select<SortKey>
               value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
-              className="cursor-pointer rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs font-medium text-m3-on-surface transition-colors hover:border-m3-primary/50 focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="recent">
-                {t("teacher_courses_list.sort_recent", "Newest first")}
-              </option>
-              <option value="oldest">
-                {t("teacher_courses_list.sort_oldest", "Oldest first")}
-              </option>
-              <option value="title">
-                {t("teacher_courses_list.sort_title", "Title (A–Z)")}
-              </option>
-            </select>
+              onValueChange={(next) => setSort(next)}
+              size="sm"
+              className="w-40"
+              options={[
+                {
+                  value: "recent",
+                  label: t("teacher_courses_list.sort_recent", "Newest first"),
+                },
+                {
+                  value: "oldest",
+                  label: t("teacher_courses_list.sort_oldest", "Oldest first"),
+                },
+                {
+                  value: "title",
+                  label: t("teacher_courses_list.sort_title", "Title (A–Z)"),
+                },
+              ]}
+            />
           </label>
         </div>
       </div>

@@ -11,6 +11,7 @@ import {
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
 import { useCourseQuizAttempts } from "@/lib/api/hooks/quizzes";
 import { useCourseInterviewSessions } from "@/lib/api/hooks/interviews";
@@ -291,57 +292,59 @@ export default function CourseAssessmentsPage() {
 
         {/* Dropdown filters — title (which quiz / interview), result, and time
             window. Mirrored across both tabs; the title options swap with the
-            active tab. Native <select> is the app standard. */}
+            active tab. Uses the shared styled Select (ui/select.tsx), which is
+            the app standard — native option lists are painted by the OS and
+            ignore the app's tokens entirely. */}
         <div className="flex flex-wrap items-center gap-2">
-          <select
+          <Select
             value={titleFilter}
-            onChange={(e) => setTitleFilter(e.target.value)}
-            className="h-9 rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-3 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-primary/30"
-          >
-            <option value="all">
-              {tab === "quizzes" ? "All quizzes" : "All interviews"}
-            </option>
-            {(tab === "quizzes" ? quizTitles : interviewTitles).map((title) => (
-              <option key={title} value={title}>
-                {title}
-              </option>
-            ))}
-          </select>
+            onValueChange={(next) => setTitleFilter(next)}
+            className="w-52"
+            options={[
+              {
+                value: "all",
+                label: tab === "quizzes" ? "All quizzes" : "All interviews",
+              },
+              ...(tab === "quizzes" ? quizTitles : interviewTitles).map(
+                (title) => ({ value: title, label: title }),
+              ),
+            ]}
+          />
 
-          <select
+          <Select
             value={resultFilter}
-            onChange={(e) => setResultFilter(e.target.value)}
-            className="h-9 rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-3 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-primary/30"
-          >
-            <option value="all">All results</option>
-            <option value="passed">Passed</option>
-            <option value="not_passed">Not passed</option>
-            {tab === "quizzes" ? (
-              <>
-                <option value="grading">Grading</option>
-                <option value="in_progress">In progress</option>
-              </>
-            ) : (
-              <>
-                <option value="evaluating">Evaluating</option>
-                <option value="in_progress">In progress</option>
-                <option value="failed">Evaluation failed</option>
-                <option value="not_graded">Not graded</option>
-              </>
-            )}
-          </select>
+            onValueChange={(next) => setResultFilter(next)}
+            className="w-44"
+            options={[
+              { value: "all", label: "All results" },
+              { value: "passed", label: "Passed" },
+              { value: "not_passed", label: "Not passed" },
+              ...(tab === "quizzes"
+                ? [
+                    { value: "grading", label: "Grading" },
+                    { value: "in_progress", label: "In progress" },
+                  ]
+                : [
+                    { value: "evaluating", label: "Evaluating" },
+                    { value: "in_progress", label: "In progress" },
+                    { value: "failed", label: "Evaluation failed" },
+                    { value: "not_graded", label: "Not graded" },
+                  ]),
+            ]}
+          />
 
-          <select
+          <Select
             value={timeFilter}
-            onChange={(e) => setTimeFilter(e.target.value)}
-            className="h-9 rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-3 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-primary/30"
-          >
-            <option value="all">All time</option>
-            <option value="today">Last 24 hours</option>
-            <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="90">Last 90 days</option>
-          </select>
+            onValueChange={(next) => setTimeFilter(next)}
+            className="w-40"
+            options={[
+              { value: "all", label: "All time" },
+              { value: "today", label: "Last 24 hours" },
+              { value: "7", label: "Last 7 days" },
+              { value: "30", label: "Last 30 days" },
+              { value: "90", label: "Last 90 days" },
+            ]}
+          />
 
           {(titleFilter !== "all" ||
             resultFilter !== "all" ||

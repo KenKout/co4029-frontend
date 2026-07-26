@@ -80,6 +80,7 @@ import {
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { useFileDrop } from "@/lib/use-file-drop";
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
 
 /* ── Lesson type options ── */
 const LESSON_TYPE_OPTIONS = [
@@ -1658,21 +1659,28 @@ export default function LessonManagePage() {
               <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
                 {t("teacher_lesson_manage.settings.difficulty_label")}
               </label>
-              <select
+              <Select
+                aria-label={t("teacher_lesson_manage.settings.difficulty_label")}
                 value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-                className="w-full bg-surface-elev border border-m3-outline-variant/20 rounded-xl px-4 py-3 text-sm font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer"
-              >
-                <option value="beginner">
-                  {t("teacher_lesson_manage.settings.difficulty_beginner")}
-                </option>
-                <option value="intermediate">
-                  {t("teacher_lesson_manage.settings.difficulty_intermediate")}
-                </option>
-                <option value="advanced">
-                  {t("teacher_lesson_manage.settings.difficulty_advanced")}
-                </option>
-              </select>
+                onValueChange={setDifficulty}
+                options={[
+                  {
+                    value: "beginner",
+                    label: t("teacher_lesson_manage.settings.difficulty_beginner"),
+                  },
+                  {
+                    value: "intermediate",
+                    label: t(
+                      "teacher_lesson_manage.settings.difficulty_intermediate",
+                    ),
+                  },
+                  {
+                    value: "advanced",
+                    label: t("teacher_lesson_manage.settings.difficulty_advanced"),
+                  },
+                ]}
+                className="bg-surface-elev font-medium"
+              />
             </div>
           </div>
 
@@ -1728,27 +1736,30 @@ export default function LessonManagePage() {
                 (l) => !prerequisites.includes(l.id),
               );
               return (
-                <select
+                <Select
+                  aria-label="Add a prerequisite lesson"
+                  // Action picker, not a value holder: it always shows the
+                  // prompt, and choosing an entry performs the add then resets.
+                  // Keeping value="" preserves that behaviour.
                   value=""
                   disabled={available.length === 0}
-                  onChange={(e) => {
-                    if (e.target.value) togglePrerequisite(e.target.value);
+                  onValueChange={(next) => {
+                    if (next) togglePrerequisite(next);
                   }}
-                  className="w-full bg-surface-elev border border-m3-outline-variant/20 rounded-xl px-4 py-3 text-sm font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="" disabled>
-                    {allLessons.length === 0
-                      ? "No other lessons in this course"
-                      : available.length === 0
-                        ? "All lessons added"
-                        : "Add a prerequisite lesson…"}
-                  </option>
-                  {available.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.title}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    {
+                      value: "",
+                      label:
+                        allLessons.length === 0
+                          ? "No other lessons in this course"
+                          : available.length === 0
+                            ? "All lessons added"
+                            : "Add a prerequisite lesson…",
+                    },
+                    ...available.map((l) => ({ value: l.id, label: l.title })),
+                  ]}
+                  className="bg-surface-elev font-medium"
+                />
               );
             })()}
           </div>

@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -720,20 +721,17 @@ export function KnowledgeGraphEditor({
             {t("teacher_kg_editor.arrow_mode")}
           </button>
           {arrowMode && (
-            <select
-              value={arrowRelation}
-              onChange={(e) =>
-                setArrowRelation(e.target.value as CuratedKGRelation)
-              }
+            <Select<CuratedKGRelation>
+              size="sm"
               aria-label={t("teacher_kg_editor.arrow_kind")}
-              className="rounded-lg border border-m3-outline-variant/30 bg-m3-surface-container-lowest px-2 py-1.5 text-xs font-semibold text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20"
-            >
-              {RELATION_KINDS.map((r) => (
-                <option key={r} value={r}>
-                  {relationLabel(r)}
-                </option>
-              ))}
-            </select>
+              value={arrowRelation}
+              onValueChange={setArrowRelation}
+              options={RELATION_KINDS.map((r) => ({
+                value: r,
+                label: relationLabel(r),
+              }))}
+              className="w-auto bg-m3-surface-container-lowest font-semibold"
+            />
           )}
           <button
             type="button"
@@ -1118,24 +1116,22 @@ export function KnowledgeGraphEditor({
                 >
                   {t("teacher_kg_editor.arrow_kind")}
                 </label>
-                <select
+                <Select<CuratedKGRelation>
                   id="kge-edge-kind"
                   value={activeEdge.relation}
-                  onChange={(ev) =>
+                  onValueChange={(next) =>
                     updateEdgeRelation(
                       activeEdge.source,
                       activeEdge.target,
-                      ev.target.value as CuratedKGRelation,
+                      next,
                     )
                   }
-                  className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20"
-                >
-                  {RELATION_KINDS.map((r) => (
-                    <option key={r} value={r}>
-                      {relationLabel(r)}
-                    </option>
-                  ))}
-                </select>
+                  options={RELATION_KINDS.map((r) => ({
+                    value: r,
+                    label: relationLabel(r),
+                  }))}
+                  className="bg-m3-surface-container-lowest"
+                />
               </div>
 
               <div className="flex flex-wrap gap-2 pt-1">
@@ -1201,7 +1197,7 @@ export function KnowledgeGraphEditor({
                 >
                   {t("teacher_kg_editor.field_type")}
                 </label>
-                <select
+                <Select
                   id="kge-node-type"
                   value={
                     (NODE_TYPES as readonly string[]).includes(
@@ -1210,17 +1206,15 @@ export function KnowledgeGraphEditor({
                       ? selectedNode.type
                       : NODE_TYPES[0]
                   }
-                  onChange={(e) =>
-                    updateNode(selectedNode.id, { type: e.target.value })
+                  onValueChange={(next) =>
+                    updateNode(selectedNode.id, { type: next })
                   }
-                  className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20"
-                >
-                  {NODE_TYPES.map((nt) => (
-                    <option key={nt} value={nt}>
-                      {nt}
-                    </option>
-                  ))}
-                </select>
+                  options={NODE_TYPES.map((nt) => ({
+                    value: nt,
+                    label: nt,
+                  }))}
+                  className="bg-m3-surface-container-lowest"
+                />
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">

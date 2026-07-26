@@ -15,6 +15,7 @@ import { buildQuestionDraft, countBlanks, readCorrectAnswer } from "./helpers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { ApiError } from "@/lib/api/client";
 import {
   useRegenerateQuestion,
@@ -339,31 +340,31 @@ export function QuestionCard({
         <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
           {t("teacher_quiz_manage.outcome.label", "Learning outcome")}
         </label>
-        <select
+        <Select<string>
           value={draft.learning_outcome_id ?? ""}
-          onChange={(e) =>
+          onValueChange={(next) =>
             setDraft((current) => ({
               ...current,
-              learning_outcome_id: e.target.value || null,
+              learning_outcome_id: next || null,
             }))
           }
-          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-        >
-          <option value="">
-            {t("teacher_quiz_manage.outcome.none", "No outcome")}
-          </option>
-          {outcomes.map((outcome) => (
-            <option key={outcome.id} value={outcome.id}>
-              {`${"\u00A0".repeat((outcome.depth ?? 0) * 2)}L.O.${
+          options={[
+            {
+              value: "",
+              label: t("teacher_quiz_manage.outcome.none", "No outcome"),
+            },
+            ...outcomes.map((outcome) => ({
+              value: outcome.id,
+              label: `${"\u00A0".repeat((outcome.depth ?? 0) * 2)}L.O.${
                 outcome.code ?? outcome.position
               } — ${
                 outcome.outcome_text.length > 60
                   ? `${outcome.outcome_text.slice(0, 60)}…`
                   : outcome.outcome_text
-              }`}
-            </option>
-          ))}
-        </select>
+              }`,
+            })),
+          ]}
+        />
       </div>
 
       <div className="space-y-1.5">
@@ -568,22 +569,21 @@ export function QuestionCard({
             <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
               {t("teacher_quiz_manage.editor.difficulty_label", "Difficulty")}
             </label>
-            <select
+            <Select<string>
               value={draft.difficulty}
-              onChange={(e) =>
+              onValueChange={(next) =>
                 setDraft((current) => ({
                   ...current,
-                  difficulty: e.target.value,
+                  difficulty: next,
                 }))
               }
-              className="h-8 w-full rounded-md border border-m3-outline-variant/30 bg-m3-surface px-2 text-xs text-m3-on-surface focus:border-m3-secondary focus:outline-none capitalize"
-            >
-              {["easy", "medium", "hard"].map((level) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
+              options={["easy", "medium", "hard"].map((level) => ({
+                value: level,
+                label: level,
+              }))}
+              size="sm"
+              className="capitalize"
+            />
           </div>
           <div className="space-y-1">
             <label

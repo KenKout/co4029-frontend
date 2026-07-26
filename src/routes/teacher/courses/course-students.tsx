@@ -27,6 +27,7 @@ import {
 import type { RosterStudent } from "@/lib/api/types/teacher";
 import { GradientProgress } from "@/components/ui/gradient-progress";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 /* ── Risk / status helpers ── */
@@ -360,16 +361,18 @@ export default function CourseStudentsPage() {
               <div className="flex items-center gap-2 text-xs text-m3-on-surface-variant">
                 <Filter className="h-3.5 w-3.5" />
                 <span>Sort:</span>
-                <select
+                <Select<SortKey>
                   value={sortKey}
-                  onChange={(e) => setSortKey(e.target.value as SortKey)}
-                  className="bg-m3-surface-container-high border-0 rounded-lg px-2 py-1 text-xs font-bold text-m3-on-surface focus:outline-none cursor-pointer"
-                >
-                  <option value="progress">Progress</option>
-                  <option value="name">Name</option>
-                  <option value="enrolled_at">Enrollment Date</option>
-                  <option value="risk">Risk Level</option>
-                </select>
+                  onValueChange={(next) => setSortKey(next)}
+                  size="sm"
+                  className="w-44"
+                  options={[
+                    { value: "progress", label: "Progress" },
+                    { value: "name", label: "Name" },
+                    { value: "enrolled_at", label: "Enrollment Date" },
+                    { value: "risk", label: "Risk Level" },
+                  ]}
+                />
               </div>
             </div>
           </div>

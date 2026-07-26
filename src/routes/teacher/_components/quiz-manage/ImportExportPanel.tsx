@@ -4,6 +4,7 @@ import { Download, FileUp, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import {
   downloadQuizExport,
   useImportQuestionsFromFile,
@@ -124,14 +125,16 @@ export function ImportExportPanel({
             <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
               {t("teacher_quiz_manage.import_export.format_label")}
             </label>
-            <select
+            <Select<"gift" | "xml">
               value={format}
-              onChange={(e) => setFormat(e.target.value as "gift" | "xml")}
-              className="bg-m3-surface text-sm rounded-lg border border-m3-outline-variant px-2 py-1"
-            >
-              <option value="gift">GIFT</option>
-              <option value="xml">Moodle XML</option>
-            </select>
+              onValueChange={(next) => setFormat(next)}
+              options={[
+                { value: "gift", label: "GIFT" },
+                { value: "xml", label: "Moodle XML" },
+              ]}
+              size="sm"
+              className="w-40"
+            />
             <label className="inline-flex items-center gap-1.5 text-sm text-m3-primary cursor-pointer">
               <FileUp className="h-4 w-4" />
               {t("teacher_quiz_manage.import_export.upload")}

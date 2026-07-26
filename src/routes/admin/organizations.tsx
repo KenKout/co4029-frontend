@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
@@ -117,19 +118,17 @@ function CreateOrgDialog({ onClose }: { onClose: () => void }) {
             <span className="text-sm font-semibold text-text-strong">
               {t("admin.organizations.fields.status")}
             </span>
-            <select
+            <Select<OrganizationStatus>
               value={orgStatus}
-              onChange={(e) =>
-                setOrgStatus(e.target.value as OrganizationStatus)
-              }
-              className="mt-1 w-full h-10 rounded-md border border-m3-outline-variant px-3 text-sm bg-white"
-            >
-              {(["active", "inactive", "archived"] as const).map((k) => (
-                <option key={k} value={k}>
-                  {t(`admin.organizations.status_label.${k}`)}
-                </option>
-              ))}
-            </select>
+              onValueChange={(next) => setOrgStatus(next)}
+              options={(["active", "inactive", "archived"] as const).map(
+                (k) => ({
+                  value: k,
+                  label: t(`admin.organizations.status_label.${k}`),
+                }),
+              )}
+              className="mt-1"
+            />
           </label>
         </div>
         <div className="flex justify-end gap-2 mt-6">

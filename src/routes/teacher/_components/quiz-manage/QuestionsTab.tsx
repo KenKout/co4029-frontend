@@ -16,6 +16,7 @@ import { QuestionNavigator } from "./QuestionNavigator";
 import { DEFAULT_EXPECTED_SECONDS, hasInvalidExpectedTime } from "./helpers";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Select } from "@/components/ui/select";
 import {
   useBulkApprove,
   useBulkSetExpectedTime,
@@ -346,36 +347,41 @@ export function QuestionsTab({
             {/* Phase 7: type picker — add a question of any supported type.
               Selecting a value seeds the right shape; the reset to "" keeps
               this a pure action control (not stateful). */}
-            <select
+            <Select<string>
               aria-label={t("teacher_quiz_manage.actions.add_question_of_type")}
               disabled={addPending}
               value=""
-              onChange={(e) => {
-                const type = e.target.value;
-                if (type) void onAddQuestion(type);
-                e.currentTarget.value = "";
+              onValueChange={(next) => {
+                if (next) void onAddQuestion(next);
               }}
-              className="shrink-0 rounded-xl border-2 border-dashed border-m3-outline-variant/40 bg-m3-surface px-3 py-4 text-sm font-bold text-m3-on-surface-variant hover:border-m3-primary hover:text-m3-primary transition-all disabled:opacity-60 cursor-pointer"
-            >
-              <option value="">
-                {t("teacher_quiz_manage.actions.add_other_type")}
-              </option>
-              <option value="true_false">
-                {t("teacher_quiz_manage.type_editor.type_true_false")}
-              </option>
-              <option value="short_answer">
-                {t("teacher_quiz_manage.type_editor.type_short_answer")}
-              </option>
-              <option value="numerical">
-                {t("teacher_quiz_manage.type_editor.type_numerical")}
-              </option>
-              <option value="matching">
-                {t("teacher_quiz_manage.type_editor.type_matching")}
-              </option>
-              <option value="ordering">
-                {t("teacher_quiz_manage.type_editor.type_ordering")}
-              </option>
-            </select>
+              options={[
+                {
+                  value: "",
+                  label: t("teacher_quiz_manage.actions.add_other_type"),
+                },
+                {
+                  value: "true_false",
+                  label: t("teacher_quiz_manage.type_editor.type_true_false"),
+                },
+                {
+                  value: "short_answer",
+                  label: t("teacher_quiz_manage.type_editor.type_short_answer"),
+                },
+                {
+                  value: "numerical",
+                  label: t("teacher_quiz_manage.type_editor.type_numerical"),
+                },
+                {
+                  value: "matching",
+                  label: t("teacher_quiz_manage.type_editor.type_matching"),
+                },
+                {
+                  value: "ordering",
+                  label: t("teacher_quiz_manage.type_editor.type_ordering"),
+                },
+              ]}
+              className="w-auto shrink-0 border-dashed py-4 font-bold"
+            />
           </div>
         )}
       </div>

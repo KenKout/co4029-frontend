@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   Brain,
   CheckCircle2,
-  ChevronDown,
   ChevronRight,
   Info,
   Loader2,
@@ -37,6 +36,7 @@ import { apiFetch } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Select } from "@/components/ui/select";
 import type { LessonPublic, ModulePublic } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
@@ -444,28 +444,21 @@ export default function TeacherSrCohortPage() {
           >
             {t("teacher_sr_cohort.lesson_picker_label")}
           </label>
-          <div className="relative">
-            <select
-              id="lesson-select"
-              value={selectedLessonId ?? ""}
-              onChange={(e) => setSelectedLessonId(e.target.value || undefined)}
-              disabled={lessonsLoading || lessons.length === 0}
-              className="w-full appearance-none px-4 py-2.5 pr-10 rounded-xl bg-m3-surface-container-low border border-m3-outline-variant/20 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-primary/20 disabled:opacity-50 cursor-pointer"
-            >
-              {lessonsLoading && (
-                <option>{t("teacher_sr_cohort.lesson_loading")}</option>
-              )}
-              {!lessonsLoading && lessons.length === 0 && (
-                <option>{t("teacher_sr_cohort.lesson_empty")}</option>
-              )}
-              {lessons.map((l) => (
-                <option key={l.lesson_id} value={l.lesson_id}>
-                  {l.module_title} — {l.lesson_title}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-m3-on-surface-variant pointer-events-none" />
-          </div>
+          <Select
+            id="lesson-select"
+            value={selectedLessonId ?? ""}
+            onValueChange={(next) => setSelectedLessonId(next || undefined)}
+            disabled={lessonsLoading || lessons.length === 0}
+            placeholder={
+              lessonsLoading
+                ? t("teacher_sr_cohort.lesson_loading")
+                : t("teacher_sr_cohort.lesson_empty")
+            }
+            options={lessons.map((l) => ({
+              value: l.lesson_id,
+              label: `${l.module_title} — ${l.lesson_title}`,
+            }))}
+          />
         </div>
 
         <section className="bg-m3-surface-container-lowest rounded-xl ghost-border shadow-editorial p-6 space-y-5">

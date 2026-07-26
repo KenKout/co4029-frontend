@@ -3,6 +3,7 @@ import { AlertTriangle, Bot, Loader, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useStatsHealth } from "@/lib/api/hooks/admin";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { Select } from "@/components/ui/select";
 
 type MetricRow = {
   key: string;
@@ -120,18 +121,16 @@ export default function AdminStatsHealthPage() {
           >
             {t("admin.stats.health.window_label")}
           </label>
-          <select
+          <Select<Window>
             id="health-window"
             value={windowKey}
-            onChange={(e) => setWindowKey(e.target.value as Window)}
-            className="bg-surface-elev border border-border rounded-md px-3 py-2 text-sm text-text-strong focus:outline-none focus:ring-2 focus:ring-m3-primary"
-          >
-            {(Object.keys(WINDOW_HOURS) as Window[]).map((w) => (
-              <option key={w} value={w}>
-                {t(`admin.stats.health.windows.${w}`)}
-              </option>
-            ))}
-          </select>
+            onValueChange={(next) => setWindowKey(next)}
+            options={(Object.keys(WINDOW_HOURS) as Window[]).map((w) => ({
+              value: w,
+              label: t(`admin.stats.health.windows.${w}`),
+            }))}
+            className="w-40"
+          />
         </div>
       </div>
 
