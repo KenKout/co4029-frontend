@@ -1271,7 +1271,8 @@
         "value": "Giá trị",
         "count": "Số lượng",
         "status": "Trạng thái",
-        "type": "Loại"
+        "type": "Loại",
+        "share": "Tỉ lệ"
       },
       "active": {
         "dau_label": "Người dùng hoạt động hằng ngày (DAU)",

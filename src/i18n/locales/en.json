@@ -1322,7 +1322,8 @@
         "value": "Value",
         "count": "Count",
         "status": "Status",
-        "type": "Type"
+        "type": "Type",
+        "share": "Share"
       },
       "active": {
         "dau_label": "Daily active users (DAU)",
