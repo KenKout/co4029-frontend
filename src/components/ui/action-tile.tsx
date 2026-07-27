@@ -1,5 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import {
+  ChevronRight,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -50,6 +56,7 @@ export function ActionTile({
   to,
   search,
   statusText,
+  trend,
 }: {
   label: string;
   value: string;
@@ -61,8 +68,30 @@ export function ActionTile({
   search?: Record<string, string>;
   /** Short state word rendered as a chip, e.g. "degraded". */
   statusText?: string;
+  /**
+   * Trend vs the previous comparable window. `null` means no baseline (e.g. the
+   * prior period had no data) — rendered as an explicit "no baseline" note
+   * rather than a misleading flat or improving arrow.
+   */
+  trend?: {
+    deltaPct: number | null;
+    /** True when a rising number is bad (failure rates, spend). */
+    higherIsWorse?: boolean;
+    noBaselineLabel?: string;
+  };
 }) {
   const tone = TONE[severity];
+  const trendDelta = trend?.deltaPct ?? null;
+  const trendWorse =
+    trendDelta !== null &&
+    trendDelta !== 0 &&
+    (trend?.higherIsWorse ? trendDelta > 0 : trendDelta < 0);
+  const TrendIcon =
+    trendDelta === null || trendDelta === 0
+      ? Minus
+      : trendDelta > 0
+        ? TrendingUp
+        : TrendingDown;
   return (
     <Link
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -98,6 +127,25 @@ export function ActionTile({
           </p>
           {detail && (
             <p className="mt-0.5 text-xs text-text-muted truncate">{detail}</p>
+          )}
+          {trend && (
+            <p
+              className={cn(
+                "mt-1 flex items-center gap-1 text-xs font-semibold tabular-nums",
+                trendDelta === null
+                  ? "text-text-subtle"
+                  : trendWorse
+                    ? "text-red-700"
+                    : trendDelta === 0
+                      ? "text-text-muted"
+                      : "text-emerald-700",
+              )}
+            >
+              <TrendIcon aria-hidden="true" className="h-3 w-3 shrink-0" />
+              {trendDelta === null
+                ? (trend.noBaselineLabel ?? "—")
+                : `${trendDelta > 0 ? "+" : ""}${trendDelta.toFixed(0)}%`}
+            </p>
           )}
         </div>
         <span className="flex items-center gap-1.5 shrink-0">

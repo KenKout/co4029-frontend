@@ -50,6 +50,40 @@ function spendDeltaPct(now: number, prev: number): number | null {
   return prev > 0 ? ((now - prev) / prev) * 100 : null;
 }
 
+/** Mirrors the spend severity thresholds in routes/admin/stats.tsx. */
+function spendSeverity(deltaPct: number | null): ActionSeverity {
+  if (deltaPct === null) return "ok";
+  return deltaPct > 300 ? "critical" : deltaPct > 100 ? "warn" : "ok";
+}
+
+/**
+ * Mirrors the interview pass-rate severity in routes/admin/stats.tsx.
+ *
+ * A low rate only means something once enough DISTINCT students have been
+ * evaluated — otherwise it's a dev-testing artifact and shouting about it trains
+ * operators to ignore the tile.
+ */
+function passRateSeverity(
+  passRate: number,
+  evaluated: number,
+  students: number,
+): ActionSeverity {
+  const meaningful = evaluated >= 20 && students >= 5;
+  if (!meaningful) return "ok";
+  return passRate < 25 ? "critical" : passRate < 50 ? "warn" : "ok";
+}
+
+/** Mirrors the failure-rate trend calculation. */
+function failureTrendPct(
+  rateNow: number,
+  failedPrev: number,
+  totalPrev: number,
+): number | null {
+  const prevRate = totalPrev > 0 ? (100 * failedPrev) / totalPrev : null;
+  if (prevRate === null || prevRate === 0) return null;
+  return ((rateNow - prevRate) / prevRate) * 100;
+}
+
 function projectMonthEnd(
   spentSoFar: number,
   dayOfMonth: number,
@@ -182,5 +216,102 @@ describe("ActionTile", () => {
   it("shows the supporting ratio when given", async () => {
     renderTile({ detail: "17 of 52 jobs, 7d" });
     expect(await screen.findByText("17 of 52 jobs, 7d")).toBeInTheDocument();
+  });
+});
+
+describe("interview pass-rate severity (sample-size guarded)", () => {
+  it("stays neutral on the dev-state sample despite a low rate", () => {
+    // Real dev DB: 13.79% over 29 evaluated sessions from just 2 students.
+    // Genuinely low, but 2 students is a testing artifact — going red here
+    // would be a false alarm and would train operators to ignore the tile.
+    expect(passRateSeverity(13.79, 29, 2)).toBe("ok");
+  });
+
+  it("goes critical at the same rate once enough students are involved", () => {
+    // Same 13.79%, but now a real cohort — that IS a broken pipeline.
+    expect(passRateSeverity(13.79, 40, 12)).toBe("critical");
+  });
+
+  it("requires BOTH enough sessions and enough students", () => {
+    // Many sessions, too few students (one person retrying).
+    expect(passRateSeverity(10, 100, 3)).toBe("ok");
+    // Many students, too few sessions.
+    expect(passRateSeverity(10, 8, 8)).toBe("ok");
+    // Both thresholds met.
+    expect(passRateSeverity(10, 20, 5)).toBe("critical");
+  });
+
+  it("bands a mediocre-but-not-broken rate as a warning", () => {
+    expect(passRateSeverity(40, 50, 10)).toBe("warn");
+    expect(passRateSeverity(75, 50, 10)).toBe("ok");
+  });
+});
+
+describe("spend severity", () => {
+  it("treats the observed ~19x spike as critical, not routine growth", () => {
+    // Dev DB: $2.8127 vs $0.1462 = +1824%.
+    const delta = spendDeltaPct(2.8127, 0.1462);
+    expect(spendSeverity(delta)).toBe("critical");
+  });
+
+  it("leaves ordinary week-over-week movement neutral", () => {
+    expect(spendSeverity(spendDeltaPct(105, 100))).toBe("ok");
+    expect(spendSeverity(spendDeltaPct(80, 100))).toBe("ok");
+  });
+
+  it("warns in the doubling band", () => {
+    expect(spendSeverity(spendDeltaPct(250, 100))).toBe("warn");
+  });
+
+  it("is neutral (not critical) when there is no prior baseline", () => {
+    // First week of spend must not read as an infinite spike.
+    expect(spendSeverity(spendDeltaPct(500, 0))).toBe("ok");
+  });
+});
+
+describe("job failure rate trend", () => {
+  it("returns null when the prior window had no jobs", () => {
+    // Dev DB state: 0 jobs in the previous 7d, so there is no baseline. Must not
+    // render as a flat or improving trend.
+    expect(failureTrendPct(32.7, 0, 0)).toBeNull();
+  });
+
+  it("reports worsening when the rate climbed", () => {
+    // 28% all-time -> 33% this week is a degradation.
+    const t = failureTrendPct(33, 28, 100);
+    expect(t).not.toBeNull();
+    expect(t as number).toBeGreaterThan(0);
+  });
+
+  it("reports improvement when the rate fell", () => {
+    const t = failureTrendPct(10, 40, 100);
+    expect(t as number).toBeLessThan(0);
+  });
+});
+
+describe("needs-attention list construction", () => {
+  /** Mirrors the filter in routes/admin/stats.tsx. */
+  function partition(counts: number[]) {
+    const items = counts.filter((c) => c > 0);
+    return { shown: items.length, clear: counts.length - items.length };
+  }
+
+  it("drops zero-count checks instead of listing them as resolved", () => {
+    // Dev DB: stuck=0, missing_texp=0, configs=9, orgs=2.
+    const { shown, clear } = partition([0, 0, 9, 2]);
+    expect(shown).toBe(2);
+    expect(clear).toBe(2);
+  });
+
+  it("shows nothing but an all-clear when everything is clean", () => {
+    const { shown, clear } = partition([0, 0, 0, 0]);
+    expect(shown).toBe(0);
+    expect(clear).toBe(4);
+  });
+
+  it("lists every check when all have occurrences", () => {
+    const { shown, clear } = partition([1, 2, 3, 4]);
+    expect(shown).toBe(4);
+    expect(clear).toBe(0);
   });
 });

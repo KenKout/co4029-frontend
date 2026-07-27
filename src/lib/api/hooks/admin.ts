@@ -133,6 +133,8 @@ export interface AdminDashboardOut {
   job_failure_rate_pct: number;
   jobs_failed_7d: number;
   jobs_total_7d: number;
+  jobs_failed_prev_7d: number;
+  jobs_total_prev_7d: number;
   queue_depth: number;
   failed_ai_calls_30d: number;
   // cost snapshot
@@ -150,6 +152,9 @@ export interface AdminDashboardOut {
   quiz_sessions_completed_7d: number;
   interview_sessions_7d: number;
   interview_pass_rate_pct: number;
+  /** Sample size behind the pass rate — distinguishes signal from dev noise. */
+  interview_evaluated_7d: number;
+  interview_students_7d: number;
   materials_ingested_7d: number;
   // needs attention
   materials_stuck_processing: number;

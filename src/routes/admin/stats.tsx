@@ -2,6 +2,7 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle2,
+  ChevronRight,
   ClipboardCheck,
   Clock,
   DollarSign,
@@ -10,8 +11,6 @@ import {
   HeartPulse,
   Layers,
   MessagesSquare,
-  TrendingDown,
-  TrendingUp,
   Users,
   XCircle,
 } from "lucide-react";
@@ -125,26 +124,30 @@ function MiniStat({
 }
 
 /**
- * One row of the "needs attention" checklist.
+ * One row of the "needs attention" list.
  *
- * Renders as resolved (muted, tick) at zero rather than being hidden, so the
- * operator can see the check ran and came back clean instead of wondering
- * whether it was skipped.
+ * Only rendered when the count is non-zero — a section called "Needs attention"
+ * listing resolved items forces the operator to read each label to work out
+ * whether it needs a click. Clear checks are summarised as a single line at the
+ * bottom instead, so it's still visible that they ran.
+ *
+ * Every rendered row therefore carries a count badge; severity only changes how
+ * loud it is, never whether the number is shown.
  */
 function AttentionRow({
   label,
   count,
   to,
   search,
+  severity = "warn",
 }: {
   label: string;
-  count: number | undefined;
+  count: number;
   to: string;
   search?: Record<string, string>;
+  severity?: "warn" | "critical";
 }) {
-  const { t } = useTranslation();
-  const n = count ?? 0;
-  const clear = n === 0;
+  const critical = severity === "critical";
   return (
     <Link
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -153,35 +156,29 @@ function AttentionRow({
       className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-surface-muted/60"
     >
       <span className="flex min-w-0 items-center gap-2.5">
-        {clear ? (
-          <CheckCircle2
-            aria-hidden="true"
-            className="h-4 w-4 shrink-0 text-emerald-600"
-          />
-        ) : (
-          <AlertTriangle
-            aria-hidden="true"
-            className="h-4 w-4 shrink-0 text-amber-600"
-          />
-        )}
-        <span
+        <AlertTriangle
+          aria-hidden="true"
           className={cn(
-            "truncate text-sm",
-            clear ? "text-text-muted" : "font-medium text-text-strong",
+            "h-4 w-4 shrink-0",
+            critical ? "text-red-600" : "text-amber-600",
           )}
-        >
+        />
+        <span className="truncate text-sm font-medium text-text-strong">
           {label}
         </span>
       </span>
-      <span
-        className={cn(
-          "shrink-0 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums",
-          clear
-            ? "bg-surface-muted text-text-subtle"
-            : "bg-amber-100 text-amber-800",
-        )}
-      >
-        {clear ? t("admin.dashboard.attention.clear") : n}
+      <span className="flex shrink-0 items-center gap-2">
+        <span
+          className={cn(
+            "rounded-full px-2 py-0.5 text-xs font-bold tabular-nums",
+            critical
+              ? "bg-red-100 text-red-800"
+              : "bg-amber-100 text-amber-800",
+          )}
+        >
+          {count}
+        </span>
+        <ChevronRight aria-hidden="true" className="h-4 w-4 text-text-subtle" />
       </span>
     </Link>
   );
@@ -235,7 +232,86 @@ export default function AdminStatsPage() {
   const prevSpend = data?.spend_prev_7d_usd ?? 0;
   const spendDeltaPct =
     prevSpend > 0 ? ((spend - prevSpend) / prevSpend) * 100 : null;
-  const spendUp = spendDeltaPct !== null && spendDeltaPct > 0;
+  // A multi-fold week-over-week jump is a budget event, not routine growth, so
+  // it earns the same visual weight as a failure. >300% loud, >100% worth a look.
+  const spendSeverity: ActionSeverity =
+    spendDeltaPct === null
+      ? "ok"
+      : spendDeltaPct > 300
+        ? "critical"
+        : spendDeltaPct > 100
+          ? "warn"
+          : "ok";
+
+  // Job failure rate trend vs the prior 7d, so the tile shows whether things are
+  // improving or degrading rather than just the current level. null when the
+  // prior window had no jobs at all — no baseline to compare against.
+  const prevFailureRate =
+    (data?.jobs_total_prev_7d ?? 0) > 0
+      ? (100 * (data?.jobs_failed_prev_7d ?? 0)) /
+        (data?.jobs_total_prev_7d ?? 1)
+      : null;
+  const failureTrendPct =
+    prevFailureRate !== null && prevFailureRate > 0
+      ? ((failureRate - prevFailureRate) / prevFailureRate) * 100
+      : null;
+
+  // Interview pass rate. A low rate is only a platform signal once enough
+  // DISTINCT students have been evaluated — 29 sessions from 2 students (the dev
+  // state) is a testing artifact, and shouting about it trains operators to
+  // ignore the tile. Below the threshold we show it captioned instead of red.
+  const passRate = data?.interview_pass_rate_pct ?? 0;
+  const evaluated = data?.interview_evaluated_7d ?? 0;
+  const students = data?.interview_students_7d ?? 0;
+  const passRateIsMeaningful = evaluated >= 20 && students >= 5;
+  const passRateSeverity: ActionSeverity = !passRateIsMeaningful
+    ? "ok"
+    : passRate < 25
+      ? "critical"
+      : passRate < 50
+        ? "warn"
+        : "ok";
+
+  // Needs-attention checklist. Built as data so zero-count checks can be
+  // filtered out (and counted for the "also clear" footnote) rather than
+  // rendered as resolved rows inside a section called "Needs attention".
+  const attentionCandidates: {
+    key: string;
+    label: string;
+    count: number;
+    to: string;
+    search?: Record<string, string>;
+    severity?: "warn" | "critical";
+  }[] = [
+    {
+      key: "materials_stuck",
+      label: t("admin.dashboard.attention.materials_stuck"),
+      count: data?.materials_stuck_processing ?? 0,
+      to: "/admin/processing",
+      search: { status: "running" },
+      severity: "critical",
+    },
+    {
+      key: "quizzes_missing_texp",
+      label: t("admin.dashboard.attention.quizzes_missing_texp"),
+      count: data?.published_quizzes_missing_texp ?? 0,
+      to: "/admin/courses",
+    },
+    {
+      key: "configs_unreviewed",
+      label: t("admin.dashboard.attention.configs_unreviewed"),
+      count: data?.interview_configs_no_reviewed_questions ?? 0,
+      to: "/admin/courses",
+    },
+    {
+      key: "orgs_inactive",
+      label: t("admin.dashboard.attention.orgs_inactive"),
+      count: data?.orgs_inactive_30d ?? 0,
+      to: "/admin/organizations",
+    },
+  ];
+  const attentionItems = attentionCandidates.filter((i) => i.count > 0);
+  const clearCount = attentionCandidates.length - attentionItems.length;
 
   if (isError) {
     return (
@@ -272,7 +348,7 @@ export default function AdminStatsPage() {
       {/* ---- Row 1: needs action ------------------------------------------ */}
       <section className="space-y-3">
         <RowHeading>{t("admin.dashboard.rows.needs_action")}</RowHeading>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <ActionTile
             label={t("admin.dashboard.tiles.job_failure_rate")}
             value={f.pct(failureRate)}
@@ -284,6 +360,11 @@ export default function AdminStatsPage() {
             icon={XCircle}
             to="/admin/processing"
             search={{ status: "failed" }}
+            trend={{
+              deltaPct: failureTrendPct,
+              higherIsWorse: true,
+              noBaselineLabel: t("admin.dashboard.tiles.no_baseline"),
+            }}
           />
           <ActionTile
             label={t("admin.dashboard.tiles.queue_depth")}
@@ -321,6 +402,33 @@ export default function AdminStatsPage() {
                 : undefined
             }
           />
+          {/* Interview pass rate lives HERE, not in "activity": a genuinely low
+              pass rate means the assessment pipeline or outcome verification is
+              broken, which is an operator problem. But it is only trustworthy
+              once enough distinct students have been evaluated, so below that
+              threshold it stays neutral and says why. */}
+          <ActionTile
+            label={t("admin.dashboard.tiles.interview_pass_rate")}
+            value={f.pct(passRate, 1)}
+            detail={
+              passRateIsMeaningful
+                ? t("admin.dashboard.tiles.pass_rate_detail", {
+                    evaluated: f.count(evaluated),
+                  })
+                : t("admin.dashboard.tiles.pass_rate_low_sample", {
+                    evaluated: f.count(evaluated),
+                    students: f.count(students),
+                  })
+            }
+            severity={passRateSeverity}
+            icon={MessagesSquare}
+            to="/admin/courses"
+            statusText={
+              passRateIsMeaningful
+                ? undefined
+                : t("admin.dashboard.tiles.low_sample_chip")
+            }
+          />
         </div>
       </section>
 
@@ -328,18 +436,23 @@ export default function AdminStatsPage() {
       <section className="space-y-3">
         <RowHeading>{t("admin.dashboard.rows.cost")}</RowHeading>
         <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-          <MiniStat
+          {/* Spend gets the ActionTile treatment rather than a quiet MiniStat: a
+              multi-fold week-over-week jump is a budget event and should carry
+              the same weight as a failure, not look like routine growth. */}
+          <ActionTile
             label={t("admin.dashboard.cost.spend_7d")}
             value={f.usd(spend)}
-            detail={
-              spendDeltaPct === null
-                ? t("admin.dashboard.cost.no_prior")
-                : t("admin.dashboard.cost.vs_prev", {
-                    delta: `${spendUp ? "+" : ""}${spendDeltaPct.toFixed(0)}%`,
-                  })
-            }
-            icon={spendUp ? TrendingUp : TrendingDown}
+            detail={t("admin.dashboard.cost.prev_window", {
+              usd: f.usd(prevSpend),
+            })}
+            severity={spendSeverity}
+            icon={DollarSign}
             to="/admin/ai-costs"
+            trend={{
+              deltaPct: spendDeltaPct,
+              higherIsWorse: true,
+              noBaselineLabel: t("admin.dashboard.cost.no_prior"),
+            }}
           />
           <MiniStat
             label={t("admin.dashboard.cost.projected_month")}
@@ -398,8 +511,8 @@ export default function AdminStatsPage() {
           <MiniStat
             label={t("admin.dashboard.activity.interview_sessions")}
             value={f.count(data?.interview_sessions_7d)}
-            detail={t("admin.dashboard.activity.pass_rate", {
-              pct: f.pct(data?.interview_pass_rate_pct, 1),
+            detail={t("admin.dashboard.activity.sessions_by_students", {
+              students: f.count(students),
             })}
             icon={MessagesSquare}
           />
@@ -416,37 +529,45 @@ export default function AdminStatsPage() {
       {/* ---- Row 4: needs attention --------------------------------------- */}
       <section className="space-y-3">
         <RowHeading>{t("admin.dashboard.rows.attention")}</RowHeading>
-        <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border">
-          <AttentionRow
-            label={t("admin.dashboard.attention.materials_stuck")}
-            count={data?.materials_stuck_processing}
-            to="/admin/processing"
-            search={{ status: "running" }}
-          />
-          <AttentionRow
-            label={t("admin.dashboard.attention.quizzes_missing_texp")}
-            count={data?.published_quizzes_missing_texp}
-            to="/admin/courses"
-          />
-          <AttentionRow
-            label={t("admin.dashboard.attention.configs_unreviewed")}
-            count={data?.interview_configs_no_reviewed_questions}
-            to="/admin/courses"
-          />
-          <AttentionRow
-            label={t("admin.dashboard.attention.orgs_inactive")}
-            count={data?.orgs_inactive_30d}
-            to="/admin/organizations"
-          />
-          <AttentionRow
-            label={t("admin.dashboard.attention.audit_review")}
-            count={0}
-            to="/admin/audit-logs"
-          />
-        </div>
-        <p className="text-xs text-text-muted">
-          {t("admin.dashboard.attention.footnote")}
-        </p>
+        {attentionItems.length > 0 ? (
+          <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+            {attentionItems.map((item) => (
+              <AttentionRow
+                key={item.key}
+                label={item.label}
+                count={item.count}
+                to={item.to}
+                search={item.search}
+                severity={item.severity}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-5 py-4">
+            <CheckCircle2
+              aria-hidden="true"
+              className="h-4 w-4 shrink-0 text-emerald-600"
+            />
+            <p className="text-sm text-text-muted">
+              {t("admin.dashboard.attention.all_clear")}
+            </p>
+          </div>
+        )}
+        {clearCount > 0 && attentionItems.length > 0 && (
+          <p className="text-xs text-text-muted">
+            {t("admin.dashboard.attention.also_clear", { count: clearCount })}
+          </p>
+        )}
+        {/* Security review is a standing task, not a count: there's no
+            "zero permission changes to review" state that means done, so it's a
+            plain link rather than a checklist row with a fabricated 0. */}
+        <Link
+          to="/admin/audit-logs"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-m3-primary hover:underline"
+        >
+          {t("admin.dashboard.attention.audit_review")}
+          <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />
+        </Link>
       </section>
     </div>
   );
