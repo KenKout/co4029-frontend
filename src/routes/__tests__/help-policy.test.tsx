@@ -145,7 +145,7 @@ describe("pages actually render their content", () => {
   it("renders every FAQ question and the policy body", async () => {
     // Guards against the pages compiling but rendering nothing (e.g. a bad
     // slug lookup or an empty content import).
-    const { render, screen } = await import("@testing-library/react");
+    const { screen } = await import("@testing-library/react");
     const {
       RouterProvider,
       createRouter,
@@ -154,6 +154,13 @@ describe("pages actually render their content", () => {
       createMemoryHistory,
     } = await import("@tanstack/react-router");
     const HelpPage = (await import("../help")).default;
+    // The page renders TopNavBar, which needs BOTH an AuthProvider (useAuth) and
+    // a QueryClient (useUnreadCount). The real app supplies both above the router
+    // — see Root() in router.tsx and main.tsx — so the harness must too.
+    const { AuthProvider } = await import("@/components/auth/AuthProvider");
+    const { renderWithQueryClient } = await import(
+      "@/test/react-query-wrapper"
+    );
 
     const root = createRootRoute({ component: HelpPage });
     const idx = createRoute({ getParentRoute: () => root, path: "/" });
@@ -165,14 +172,23 @@ describe("pages actually render their content", () => {
       routeTree: root.addChildren([idx, pol]),
       history: createMemoryHistory({ initialEntries: ["/"] }),
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    render(<RouterProvider router={router as any} />);
+    renderWithQueryClient(
+      <AuthProvider>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <RouterProvider router={router as any} />
+      </AuthProvider>,
+    );
 
     // A question from each category must be on the page.
     expect(await screen.findByText(/How do I enrol in a course/)).toBeTruthy();
     expect(screen.getByText(/How does spaced repetition decide/)).toBeTruthy();
     expect(screen.getByText(/What happens in an AI interview/)).toBeTruthy();
-    // Policy links rendered at the foot of the help page.
-    expect(screen.getByText("Privacy Policy")).toBeTruthy();
+    // Policy links render on the page. Note there are now TWO matches — the
+    // Policies section and the Footer (which the page also renders) — so assert
+    // on the count rather than expecting a unique node.
+    expect(screen.getAllByText("Privacy Policy").length).toBeGreaterThan(0);
+    // The chrome is present: TopNavBar + Footer, so these pages don't render
+    // bare. Footer carries the copyright line.
+    expect(screen.getByText(/All\s+rights\s+reserved/)).toBeTruthy();
   });
 });

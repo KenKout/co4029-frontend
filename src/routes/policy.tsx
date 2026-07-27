@@ -2,6 +2,8 @@ import { Link, useParams } from "@tanstack/react-router";
 import { AlertTriangle, ArrowLeft, FileText } from "lucide-react";
 
 import { RichContent } from "@/components/ui/rich-content";
+import TopNavBar from "@/components/layout/TopNavBar";
+import Footer from "@/components/layout/Footer";
 import {
   POLICY_DOCUMENTS,
   POLICY_ORDER,
@@ -29,8 +31,9 @@ export default function PolicyPage() {
 
   if (!doc) {
     return (
-      <div className="min-h-screen bg-m3-surface">
-        <div className="mx-auto max-w-3xl px-5 py-12 sm:px-8">
+      <div className="min-h-screen bg-m3-surface flex flex-col">
+        <TopNavBar />
+        <div className="mx-auto w-full max-w-3xl flex-1 px-5 pb-12 pt-28 sm:px-8">
           <h1 className="font-headline text-2xl font-bold text-m3-on-surface">
             Policy not found
           </h1>
@@ -50,13 +53,17 @@ export default function PolicyPage() {
             ))}
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-m3-surface">
-      <div className="mx-auto max-w-3xl px-5 py-12 sm:px-8">
+    // TopNavBar rather than ContentTopBar — see the note in help.tsx: these
+    // routes are public and ContentTopBar assumes an authenticated user.
+    <div className="min-h-screen bg-m3-surface flex flex-col">
+      <TopNavBar />
+      <div className="mx-auto w-full max-w-3xl flex-1 px-5 pb-12 pt-28 sm:px-8">
         <Link
           to="/help"
           className="mb-6 inline-flex items-center gap-1.5 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-primary"
@@ -117,6 +124,7 @@ export default function PolicyPage() {
           </div>
         </nav>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { ChevronDown, HelpCircle, Search, X } from "lucide-react";
 
 import { RichContent } from "@/components/ui/rich-content";
+import TopNavBar from "@/components/layout/TopNavBar";
+import Footer from "@/components/layout/Footer";
 import {
   FAQ_CATEGORY_LABELS,
   FAQ_CATEGORY_ORDER,
@@ -64,8 +66,13 @@ export default function HelpPage() {
   const isSearching = trimmed.length > 0;
 
   return (
-    <div className="min-h-screen bg-m3-surface">
-      <div className="mx-auto max-w-3xl px-5 py-12 sm:px-8">
+    // TopNavBar (not ContentTopBar): these routes are public, and ContentTopBar
+    // assumes an authenticated user. TopNavBar already branches on
+    // isAuthenticated, so a signed-in visitor keeps their avatar/notifications
+    // and a signed-out one gets sign-in actions.
+    <div className="min-h-screen bg-m3-surface flex flex-col">
+      <TopNavBar />
+      <div className="mx-auto w-full max-w-3xl flex-1 px-5 pb-12 pt-28 sm:px-8">
         <header className="mb-8">
           <span className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-m3-primary-fixed">
             <HelpCircle className="h-5 w-5 text-m3-primary" />
@@ -186,6 +193,7 @@ export default function HelpPage() {
           administrator for account and access problems.
         </p>
       </div>
+      <Footer />
     </div>
   );
 }
