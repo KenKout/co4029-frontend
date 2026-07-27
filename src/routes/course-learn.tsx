@@ -1131,71 +1131,78 @@ function ReadingLessonPane({
   };
 
   return (
-    <GlassCard
-      className="p-6 sm:p-8 space-y-6"
-      data-testid="course-learn-reading"
-    >
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-m3-secondary" />
-          <span className="text-xs font-headline font-semibold uppercase tracking-wider text-m3-on-surface-variant">
-            {t("course_learn.reading_lesson")}
-          </span>
+    // space-y-6 here rather than relying on the parent: the pane now emits two
+    // sibling sections (Reading + Knowledge map) and owns the gap between them.
+    <div className="space-y-6">
+      <GlassCard
+        className="p-6 sm:p-8 space-y-6"
+        data-testid="course-learn-reading"
+      >
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-m3-secondary" />
+            <span className="text-xs font-headline font-semibold uppercase tracking-wider text-m3-on-surface-variant">
+              {t("course_learn.reading_lesson")}
+            </span>
+          </div>
+          {streamUrl && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={openFullscreen}
+              className="rounded-xl text-xs font-bold gap-1.5 text-m3-on-surface-variant hover:text-m3-primary"
+              data-testid="course-learn-reading-fullscreen"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+              {t("course_learn.reading_open_fullscreen")}
+            </Button>
+          )}
         </div>
-        {streamUrl && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={openFullscreen}
-            className="rounded-xl text-xs font-bold gap-1.5 text-m3-on-surface-variant hover:text-m3-primary"
-            data-testid="course-learn-reading-fullscreen"
-          >
-            <Maximize2 className="h-3.5 w-3.5" />
-            {t("course_learn.reading_open_fullscreen")}
-          </Button>
+
+        {lesson.summary && (
+          <p className="text-sm text-m3-on-surface-variant leading-relaxed">
+            {lesson.summary}
+          </p>
         )}
-      </div>
 
-      {lesson.summary && (
-        <p className="text-sm text-m3-on-surface-variant leading-relaxed">
-          {lesson.summary}
-        </p>
-      )}
+        {hasMaterial &&
+          (streamQuery.isLoading ? (
+            <div className="h-[600px] rounded-xl bg-m3-surface-container-low animate-pulse" />
+          ) : streamUrl ? (
+            <div className="mt-2 rounded-xl overflow-hidden border border-m3-outline-variant/30">
+              <iframe
+                src={streamUrl}
+                title={lesson.title}
+                className="w-full h-[600px] bg-white"
+                data-testid="course-learn-reading-iframe"
+              />
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-m3-outline-variant/40 p-6 text-sm text-m3-on-surface-variant">
+              {t("course_learn.reading_material_unavailable")}
+            </div>
+          ))}
 
-      {hasMaterial &&
-        (streamQuery.isLoading ? (
-          <div className="h-[600px] rounded-xl bg-m3-surface-container-low animate-pulse" />
-        ) : streamUrl ? (
-          <div className="mt-2 rounded-xl overflow-hidden border border-m3-outline-variant/30">
-            <iframe
-              src={streamUrl}
-              title={lesson.title}
-              className="w-full h-[600px] bg-white"
-              data-testid="course-learn-reading-iframe"
-            />
-          </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-m3-outline-variant/40 p-6 text-sm text-m3-on-surface-variant">
-            {t("course_learn.reading_material_unavailable")}
-          </div>
-        ))}
+        {hasNotes && (
+          <article className="prose prose-sm max-w-none prose-headings:font-headline prose-headings:text-m3-on-surface prose-p:text-m3-on-surface-variant prose-a:text-m3-primary">
+            <ReactMarkdown>{lesson.notes_markdown ?? ""}</ReactMarkdown>
+          </article>
+        )}
 
-      {hasNotes && (
-        <article className="prose prose-sm max-w-none prose-headings:font-headline prose-headings:text-m3-on-surface prose-p:text-m3-on-surface-variant prose-a:text-m3-primary">
-          <ReactMarkdown>{lesson.notes_markdown ?? ""}</ReactMarkdown>
-        </article>
-      )}
+        {!hasMaterial && !hasNotes && (
+          <p className="text-sm text-m3-on-surface-variant">
+            {t("course_learn.reading_empty")}
+          </p>
+        )}
+      </GlassCard>
 
-      {!hasMaterial && !hasNotes && (
-        <p className="text-sm text-m3-on-surface-variant">
-          {t("course_learn.reading_empty")}
-        </p>
-      )}
-
-      {/* Teacher-published knowledge map — renders itself only when a graph
-          has been published for this lesson (otherwise it's null). */}
+      {/* Teacher-published knowledge map — its own section, sibling to the
+          Reading card rather than nested inside it: it describes the lesson's
+          concepts, not the reading material, and burying it under the document
+          made it read as part of that content. Renders nothing when no graph
+          has been published for this lesson. */}
       <LessonKnowledgeMap lessonId={lesson.id} />
-    </GlassCard>
+    </div>
   );
 }
 

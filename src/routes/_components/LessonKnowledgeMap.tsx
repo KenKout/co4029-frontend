@@ -273,11 +273,17 @@ export function LessonKnowledgeMap({ lessonId }: { lessonId: string }) {
   const selectedNode = selected ? nodeById.get(selected) : null;
 
   return (
-    <div className="rounded-xl border border-m3-outline-variant/30 overflow-hidden">
+    // Standalone section now (sibling to the Reading card, not nested in it), so
+    // it carries the same glass/shadow treatment as the other lesson sections
+    // instead of the plain inset border it had while embedded.
+    <div
+      className="glass ghost-border shadow-glass rounded-xl overflow-hidden"
+      data-testid="course-learn-knowledge-map"
+    >
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-2 px-4 py-3 bg-m3-surface-container-low hover:bg-m3-surface-container transition-colors"
+        className="flex w-full items-center justify-between gap-2 px-6 py-4 sm:px-8 hover:bg-m3-surface-container/50 transition-colors"
       >
         <span className="flex items-center gap-2">
           <Brain className="h-4 w-4 text-m3-secondary" />
