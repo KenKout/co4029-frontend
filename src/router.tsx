@@ -531,11 +531,28 @@ const callbackRoute = createRoute({
   component: GoogleCallbackPage,
 });
 
+/* Public help + policy. Deliberately children of rootRoute rather than
+   authenticatedRoute: a user who cannot sign in is exactly who needs /help, and
+   the terms must be readable before creating an account. */
+const helpRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/help",
+  component: lazyRouteComponent(() => import("@/routes/help")),
+});
+
+const policyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/policy/$slug",
+  component: lazyRouteComponent(() => import("@/routes/policy")),
+});
+
 /* ── Route tree ── */
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
   loginMfaRoute,
+  helpRoute,
+  policyRoute,
   authenticatedRoute.addChildren([
     dashboardRoute,
     coursesRoute,

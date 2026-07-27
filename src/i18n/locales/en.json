@@ -57,7 +57,8 @@
     "logout": "Log Out",
     "admin": "Admin",
     "system_config": "System Config",
-    "job_health": "Job Health"
+    "job_health": "Job Health",
+    "help": "Help"
   },
   "auth": {
     "sign_in": "Sign in",

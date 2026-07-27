@@ -58,7 +58,8 @@
     "logout": "Đăng xuất",
     "admin": "Quản trị",
     "system_config": "Cấu hình hệ thống",
-    "job_health": "Sức khoẻ tác vụ"
+    "job_health": "Sức khoẻ tác vụ",
+    "help": "Trợ giúp"
   },
   "auth": {
     "sign_in": "Đăng nhập",

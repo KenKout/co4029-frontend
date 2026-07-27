@@ -191,15 +191,32 @@ export default function Footer() {
             rights reserved.
           </div>
           <div className="flex gap-6 text-xs font-medium text-slate-400">
-            <a className="hover:text-white transition-colors" href="#">
+            {/* These three were dead `href="#"` anchors. They now resolve to the
+                public policy pages. */}
+            <Link
+              className="hover:text-white transition-colors"
+              to="/policy/$slug"
+              params={{ slug: "privacy" }}
+            >
               Privacy Policy
-            </a>
-            <a className="hover:text-white transition-colors" href="#">
+            </Link>
+            <Link
+              className="hover:text-white transition-colors"
+              to="/policy/$slug"
+              params={{ slug: "terms" }}
+            >
               Terms of Service
-            </a>
-            <a className="hover:text-white transition-colors" href="#">
+            </Link>
+            <Link
+              className="hover:text-white transition-colors"
+              to="/policy/$slug"
+              params={{ slug: "cookies" }}
+            >
               Cookie Policy
-            </a>
+            </Link>
+            <Link className="hover:text-white transition-colors" to="/help">
+              Help
+            </Link>
           </div>
         </div>
       </div>

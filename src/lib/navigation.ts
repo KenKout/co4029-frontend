@@ -392,7 +392,8 @@ export const settingsNavItems: NavItem[] = [
 // ─── Secondary / Bottom ───────────────────────────────────────────────────────
 
 export const secondaryNavItems: NavItem[] = [
-  { label: "Help", href: "#", icon: HelpCircle },
+  // Was href:"#" — now points at the public help page.
+  { label: "Help", i18nKey: "nav.help", href: "/help", icon: HelpCircle },
   { label: "Log Out", i18nKey: "nav.logout", href: "#", icon: LogOut },
 ];
 
