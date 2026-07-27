@@ -56,7 +56,9 @@
     "settings": "Cài đặt",
     "profile": "Hồ sơ",
     "logout": "Đăng xuất",
-    "admin": "Quản trị"
+    "admin": "Quản trị",
+    "system_config": "Cấu hình hệ thống",
+    "job_health": "Sức khoẻ tác vụ"
   },
   "auth": {
     "sign_in": "Đăng nhập",

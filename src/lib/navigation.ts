@@ -1,22 +1,24 @@
 import {
-  LayoutDashboard,
-  BookOpen,
-  BarChart3,
-  Building2,
-  Users,
-  Settings,
-  HelpCircle,
-  LogOut,
-  Shield,
-  MessageSquare,
-  FileText,
   Activity,
+  AlertTriangle,
+  BarChart3,
+  BookOpen,
+  Briefcase,
+  Building2,
   Cpu,
   DollarSign,
-  ScrollText,
-  Briefcase,
-  User,
+  FileText,
   GraduationCap,
+  HelpCircle,
+  LayoutDashboard,
+  LogOut,
+  MessageSquare,
+  ScrollText,
+  Settings,
+  Shield,
+  SlidersHorizontal,
+  User,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -249,6 +251,24 @@ export const adminNavItems: NavItem[] = [
     href: "/admin/health",
     icon: Shield,
   },
+  {
+    // Windowed pipeline failure metrics (failed jobs / failed AI calls over
+    // 24h/7d/30d). Distinct from `nav.health`, which is the infra readiness
+    // probe (postgres/redis/migrations).
+    label: "Job Health",
+    i18nKey: "nav.job_health",
+    href: "/admin/stats/health",
+    icon: AlertTriangle,
+  },
+  {
+    // Deployment/tenant runtime configuration (chunking, preprocessing, KG,
+    // retrieval). Distinct from `nav.settings`, which is the signed-in user's
+    // own account settings — hence its own i18n key and icon.
+    label: "System Config",
+    i18nKey: "nav.system_config",
+    href: "/admin/settings",
+    icon: SlidersHorizontal,
+  },
 ];
 
 export const adminNavGroups: NavGroup[] = [
@@ -328,6 +348,18 @@ export const adminNavGroups: NavGroup[] = [
         i18nKey: "nav.health",
         href: "/admin/health",
         icon: Shield,
+      },
+      {
+        label: "Job Health",
+        i18nKey: "nav.job_health",
+        href: "/admin/stats/health",
+        icon: AlertTriangle,
+      },
+      {
+        label: "System Config",
+        i18nKey: "nav.system_config",
+        href: "/admin/settings",
+        icon: SlidersHorizontal,
       },
     ],
   },

@@ -55,7 +55,9 @@
     "settings": "Settings",
     "profile": "Profile",
     "logout": "Log Out",
-    "admin": "Admin"
+    "admin": "Admin",
+    "system_config": "System Config",
+    "job_health": "Job Health"
   },
   "auth": {
     "sign_in": "Sign in",
