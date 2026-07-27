@@ -1615,6 +1615,60 @@
         "user_search_loading": "Đang tải danh sách...",
         "user_search_empty": "Không tìm thấy người dùng nào khớp."
       }
+    },
+    "dashboard": {
+      "subtitle": "Vận hành nền tảng — chi phí, thông lượng, lỗi và bảo mật.",
+      "rows": {
+        "needs_action": "Cần xử lý",
+        "cost": "Ảnh chụp chi phí (7 ngày)",
+        "activity": "Hoạt động nền tảng",
+        "attention": "Cần chú ý"
+      },
+      "tiles": {
+        "job_failure_rate": "Tỉ lệ job lỗi",
+        "job_failure_detail": "{{failed}}/{{total}} job, 7 ngày",
+        "queue_depth": "Độ sâu hàng đợi",
+        "queue_depth_detail": "Đang chờ + đang chạy",
+        "failed_ai_calls": "Lệnh gọi AI lỗi",
+        "window_30d": "30 ngày qua",
+        "window_7d": "7 ngày qua",
+        "system_health": "Sức khoẻ hệ thống",
+        "system_health_detail": "API · Postgres · Redis · migration"
+      },
+      "health": {
+        "ok": "Bình thường",
+        "degraded": "Suy giảm",
+        "unknown": "Không rõ"
+      },
+      "cost": {
+        "spend_7d": "Chi phí 7 ngày",
+        "vs_prev": "{{delta}} so với 7 ngày trước",
+        "no_prior": "Chưa có chi phí kỳ trước",
+        "projected_month": "Dự báo cuối tháng",
+        "projected_detail": "Ngoại suy từ chi phí hiện tại",
+        "top_driver": "Nguồn chi phí lớn nhất",
+        "top_driver_detail": "{{usd}} trong 7 ngày qua",
+        "slowest_model": "Model chậm nhất",
+        "slowest_detail": "p95 {{p95}}, 7 ngày"
+      },
+      "activity": {
+        "active_users": "Người dùng hoạt động 7 ngày",
+        "active_users_value": "{{wau}}/{{total}}",
+        "active_users_detail": "{{today}} hoạt động hôm nay",
+        "quiz_sessions": "Lượt kiểm tra hoàn thành",
+        "interview_sessions": "Lượt phỏng vấn",
+        "pass_rate": "Tỉ lệ đạt {{pct}}, 7 ngày",
+        "materials_ingested": "Tài liệu đã nạp"
+      },
+      "attention": {
+        "clear": "Ổn",
+        "materials_stuck": "Tài liệu bị treo xử lý quá 1 giờ",
+        "quizzes_missing_texp": "Bài kiểm tra đã xuất bản thiếu thời gian dự kiến",
+        "configs_unreviewed": "Cấu hình phỏng vấn chưa có câu hỏi được duyệt",
+        "orgs_inactive": "Tổ chức không hoạt động trong 30 ngày",
+        "audit_review": "Xem lại thay đổi quyền và đăng nhập thất bại",
+        "footnote": "Mỗi mục liên kết tới trang có thể xử lý."
+      }
     }
   },
   "languages": {

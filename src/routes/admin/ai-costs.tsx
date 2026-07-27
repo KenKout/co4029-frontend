@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import {
@@ -1423,11 +1423,15 @@ export default function AdminAiCostsPage() {
 
   const [period, setPeriod] = useState<AiCostsPeriod>("30d");
   const [dimension, setDimension] = useState<AiCostsDimension>("operation");
+  // Seed the status filter from ?status= so the admin dashboard's "Failed AI
+  // calls" tile deep-links straight to the failures instead of dropping the
+  // operator on the unfiltered view.
+  const search = useSearch({ strict: false }) as { status?: string };
   const [filters, setFilters] = useState<AiCostsFilters>({
     model: null,
     role: null,
     operation: null,
-    status: null,
+    status: search.status ?? null,
   });
   const [drilldown, setDrilldown] = useState<AiCostsByPipelineRow | null>(null);
 

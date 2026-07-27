@@ -1666,6 +1666,60 @@
         "user_search_loading": "Loading users...",
         "user_search_empty": "No matching users found."
       }
+    },
+    "dashboard": {
+      "subtitle": "Platform operations — cost, throughput, failures and security.",
+      "rows": {
+        "needs_action": "Needs action",
+        "cost": "Cost snapshot (7 days)",
+        "activity": "Platform activity",
+        "attention": "Needs attention"
+      },
+      "tiles": {
+        "job_failure_rate": "Job failure rate",
+        "job_failure_detail": "{{failed}} of {{total}} jobs, 7d",
+        "queue_depth": "Queue depth",
+        "queue_depth_detail": "Pending + running now",
+        "failed_ai_calls": "Failed AI calls",
+        "window_30d": "Last 30 days",
+        "window_7d": "Last 7 days",
+        "system_health": "System health",
+        "system_health_detail": "API · Postgres · Redis · migrations"
+      },
+      "health": {
+        "ok": "Healthy",
+        "degraded": "Degraded",
+        "unknown": "Unknown"
+      },
+      "cost": {
+        "spend_7d": "Spend 7d",
+        "vs_prev": "{{delta}} vs previous 7d",
+        "no_prior": "No prior 7d spend",
+        "projected_month": "Projected month-end",
+        "projected_detail": "Extrapolated from spend so far",
+        "top_driver": "Top cost driver",
+        "top_driver_detail": "{{usd}} in the last 7d",
+        "slowest_model": "Slowest model",
+        "slowest_detail": "p95 {{p95}}, 7d"
+      },
+      "activity": {
+        "active_users": "Active users 7d",
+        "active_users_value": "{{wau}} of {{total}}",
+        "active_users_detail": "{{today}} active today",
+        "quiz_sessions": "Quiz sessions completed",
+        "interview_sessions": "Interview sessions",
+        "pass_rate": "{{pct}} pass rate, 7d",
+        "materials_ingested": "Materials ingested"
+      },
+      "attention": {
+        "clear": "Clear",
+        "materials_stuck": "Materials stuck in processing over 1 hour",
+        "quizzes_missing_texp": "Published quizzes with cards missing expected time",
+        "configs_unreviewed": "Interview configs with no reviewed questions",
+        "orgs_inactive": "Organizations with no activity in 30 days",
+        "audit_review": "Review recent permission changes and failed logins",
+        "footnote": "Each check links to the page where it can be resolved."
+      }
     }
   },
   "languages": {
