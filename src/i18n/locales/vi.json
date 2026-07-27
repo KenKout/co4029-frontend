@@ -183,12 +183,6 @@
     "title": "Bảng điều khiển Giảng viên",
     "subtitle": "Quản lý khóa học, tài liệu và tạo AI.",
     "new_course": "Khóa học mới",
-    "stats": {
-      "total_courses": "Tổng số khóa học",
-      "published": "Đã xuất bản",
-      "drafts": "Bản nháp",
-      "ai_enabled": "Hỗ trợ AI"
-    },
     "your_courses": {
       "title": "Khóa học của bạn",
       "subtitle": "Nhấn để quản lý học phần, bài học và tài liệu",
@@ -208,10 +202,31 @@
       "intermediate": "Trung cấp",
       "advanced": "Nâng cao"
     },
-    "actions": {
-      "ungraded_quizzes": "bài kiểm tra cần chấm",
-      "pending_interviews": "phỏng vấn chờ đánh giá",
-      "draft_courses": "bản nháp cần xuất bản"
+    "signals": {
+      "cards_awaiting_review": "Chờ bạn xem xét",
+      "cards_awaiting_review_sub": "Câu hỏi kiểm tra + phỏng vấn",
+      "students_below_ef": "Học viên đang tụt lại",
+      "students_below_ef_sub": "Độ dễ trung bình dưới 2.0",
+      "avg_retention": "Ghi nhớ trung bình (EF)",
+      "avg_retention_sub": "2.5 là mức chuẩn lý tưởng",
+      "cards_overdue": "Thẻ quá hạn",
+      "cards_overdue_sub": "Đã qua ngày ôn tập"
+    },
+    "review": {
+      "title": "Cần bạn xem xét",
+      "subtitle": "Nội dung do AI tạo đang chờ quyết định của người dùng.",
+      "all_clear": "Không có gì chờ bạn — hàng đợi xem xét đã trống.",
+      "quiz_cards": "Câu hỏi kiểm tra chờ xem xét",
+      "quiz_cards_hint": "Câu hỏi chưa duyệt sẽ không đến được học viên",
+      "interview_questions": "Câu hỏi phỏng vấn chờ duyệt",
+      "interview_questions_hint": "Đang chờ bạn duyệt / sửa / từ chối",
+      "missing_texp": "Bài kiểm tra đã xuất bản thiếu thời gian dự kiến",
+      "missing_texp_hint": "Thiếu nó, điểm ghi nhớ sẽ về mức trung tính",
+      "materials_ready": "Tài liệu đã sẵn sàng tạo bài kiểm tra",
+      "materials_ready_hint": "Đã nạp xong, chưa tạo bài kiểm tra",
+      "ungraded_quizzes": "Lượt kiểm tra cần chấm",
+      "pending_interviews": "Phỏng vấn chờ đánh giá",
+      "course_pending": "{{count}} mục chờ xem xét trong khoá này"
     }
   },
   "teacher_course_settings": {

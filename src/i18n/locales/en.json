@@ -182,17 +182,6 @@
     "title": "Teacher Dashboard",
     "subtitle": "Manage your courses, materials, and AI generation.",
     "new_course": "New Course",
-    "stats": {
-      "total_courses": "Total Courses",
-      "published": "Published",
-      "drafts": "Drafts",
-      "ai_enabled": "AI Enabled"
-    },
-    "actions": {
-      "ungraded_quizzes": "quiz attempts to grade",
-      "pending_interviews": "interviews awaiting evaluation",
-      "draft_courses": "drafts to publish"
-    },
     "your_courses": {
       "title": "Your Courses",
       "subtitle": "Click to manage modules, lessons, and materials",
@@ -211,6 +200,33 @@
       "beginner": "Beginner",
       "intermediate": "Intermediate",
       "advanced": "Advanced"
+    },
+    "signals": {
+      "cards_awaiting_review": "Awaiting your review",
+      "cards_awaiting_review_sub": "Quiz + interview questions",
+      "students_below_ef": "Students falling behind",
+      "students_below_ef_sub": "Avg easiness below 2.0",
+      "avg_retention": "Avg retention (EF)",
+      "avg_retention_sub": "2.5 is the ideal baseline",
+      "cards_overdue": "Cards overdue",
+      "cards_overdue_sub": "Past their review date"
+    },
+    "review": {
+      "title": "Needs your review",
+      "subtitle": "AI-generated content waiting on a human decision.",
+      "all_clear": "Nothing waiting on you — the review queue is clear.",
+      "quiz_cards": "Quiz cards pending review",
+      "quiz_cards_hint": "Generated cards can't reach students until approved",
+      "interview_questions": "Interview questions pending approval",
+      "interview_questions_hint": "Awaiting your approve / edit / reject",
+      "missing_texp": "Published quizzes missing expected time",
+      "missing_texp_hint": "Without it, retention scoring falls back to neutral",
+      "materials_ready": "Materials ready for quiz generation",
+      "materials_ready_hint": "Ingestion finished, no quiz generated yet",
+      "ungraded_quizzes": "Quiz attempts to grade",
+      "pending_interviews": "Interviews awaiting evaluation",
+      "course_pending": "{{count}} item awaiting review in this course",
+      "course_pending_plural": "{{count}} items awaiting review in this course"
     }
   },
   "teacher_course_new": {

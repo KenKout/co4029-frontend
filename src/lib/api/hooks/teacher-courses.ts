@@ -41,6 +41,22 @@ export interface TeacherDashboardStats {
   draft_courses: number;
   ungraded_quizzes: number;
   pending_interviews: number;
+  /**
+   * `{course_id: pending_count}` for AI-generated quiz + interview questions
+   * awaiting review. Courses with nothing pending are OMITTED, so treat a
+   * missing key as zero — drives the pending-review dot on the course cards.
+   */
+  pending_review_by_course: Record<string, number>;
+  // Human-in-the-Loop review queue.
+  quiz_cards_pending_review: number;
+  interview_questions_pending_review: number;
+  published_quizzes_missing_texp: number;
+  materials_ready_for_quiz_gen: number;
+  // Student performance (spaced repetition).
+  students_below_ef_threshold: number;
+  /** Mean SM-2 easiness factor across in-scope cards. 2.5 is the default/ideal. */
+  avg_retention_ef: number;
+  cards_overdue: number;
 }
 
 // Actionable counts for the teacher dashboard's clickable widgets. Scoped

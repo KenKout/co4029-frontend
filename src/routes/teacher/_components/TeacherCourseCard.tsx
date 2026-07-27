@@ -32,9 +32,15 @@ const STATUS_COLORS: Record<string, string> = {
 export function TeacherCourseCard({
   course,
   index,
+  pendingReviewCount,
 }: {
   course: Course;
   index: number;
+  /**
+   * Items awaiting this teacher's review in this course. Optional so other
+   * callers (the courses list) can keep using the card unchanged.
+   */
+  pendingReviewCount?: number;
 }) {
   const { t } = useTranslation();
   const gradientClass = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
@@ -78,6 +84,24 @@ export function TeacherCourseCard({
           {/* AI Boost + status badges pinned bottom-right so an uploaded image
               doesn't obscure them at the top. */}
           <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5">
+            {/* Pending-review dot: lets the grid itself hint where attention is
+                needed, so a teacher doesn't have to open the review list (or
+                each course) to find out. Count is passed in by the dashboard —
+                the card stays presentational. */}
+            {pendingReviewCount !== undefined && pendingReviewCount > 0 && (
+              <Badge
+                title={t("teacher_dashboard.review.course_pending", {
+                  count: pendingReviewCount,
+                })}
+                className="border-0 bg-amber-500 text-[10px] font-bold text-white gap-1"
+              >
+                <span
+                  aria-hidden="true"
+                  className="inline-block h-1.5 w-1.5 rounded-full bg-white"
+                />
+                {pendingReviewCount}
+              </Badge>
+            )}
             <Badge className="bg-black/40 text-white border border-white/20 backdrop-blur-sm text-[10px] font-semibold tracking-wide">
               <Sparkles className="h-2.5 w-2.5 mr-1" />
               {t("courses_list.ai_boost")}
