@@ -375,13 +375,24 @@ function CourseLearnLoaded({
   // the focused player view. This gives students an orientation/"what's next"
   // surface the cramped sidebar can't, and makes the full curriculum visible
   // on arrival (the reason the tiny sidebar felt like the only navigation).
-  const [showHome, setShowHome] = useState(
-    () =>
-      seekSeconds === null &&
-      targetPage === null &&
-      !targetAnchor &&
-      !search.item,
-  );
+  // DERIVED from the URL rather than held in state.
+  //
+  // This used to be `useState`, kept in sync by hand from openLesson/goHome and
+  // from the ?item restore effect. That produced two bugs:
+  //   1. Clicking the "Learn" crumb appeared to do nothing — router navigation
+  //      is async, and because `lessonItems` isn't referentially stable (it
+  //      derives from `t`), the restore effect re-ran with the still-present
+  //      stale ?item and immediately flipped showHome back to false.
+  //   2. Browser Back only changes the search param (the component stays
+  //      mounted), and nothing flipped showHome back to true — so Back from a
+  //      lesson left the lesson on screen.
+  // Deriving it makes the URL the single source of truth: ?item present = a
+  // lesson is open, absent = course-home. Back/Forward then work for free.
+  const showHome =
+    !search.item &&
+    seekSeconds === null &&
+    targetPage === null &&
+    !targetAnchor;
   // Resume target = first non-completed lesson (falls back to the first).
   const resumeIdx = useMemo(() => {
     const i = lessonItems.findIndex((li) => {
@@ -399,31 +410,33 @@ function CourseLearnLoaded({
   );
   function openLesson(idx: number) {
     setActiveIdx(idx);
-    setShowHome(false);
     // Persist the opened lesson id in the URL (?item=<lessonId>) so that
     // returning from a quiz/interview sub-route — or refreshing — restores
     // this content view at the right lesson instead of bouncing back to the
     // course-home summary (Moodle-authentic resume behavior). Falls back to
     // the lesson index when the target id is missing.
+    //
+    // PUSHES a history entry (no `replace`). With replace:true the plain
+    // /learn entry was overwritten, so Back from a lesson skipped the Learn
+    // page entirely and landed on the course page.
     const openedId = lessonItems[idx]?.item.target?.id;
     void navigate({
       to: "/courses/$slug/learn",
       params: { slug },
       search: (prev) => ({ ...prev, item: openedId ?? String(idx) }),
-      replace: true,
     });
   }
 
-  // Return to the course-home summary: clear ?item= (so the restore effect
-  // below doesn't immediately re-open a lesson) and flip back to the home view.
-  // Backs the clickable "Learn" breadcrumb crumb.
+  // Return to the course-home summary: clear ?item= and flip back to the home
+  // view. Backs the clickable "Learn" breadcrumb crumb.
+  //
+  // Clearing ?item is all that's needed now that showHome is derived from the
+  // URL — no local flag to keep in sync, so the async navigation can't race it.
   function goHome() {
-    setShowHome(true);
     void navigate({
       to: "/courses/$slug/learn",
       params: { slug },
       search: (prev) => ({ ...prev, item: undefined }),
-      replace: true,
     });
   }
 
@@ -440,10 +453,7 @@ function CourseLearnLoaded({
         idx = asNum;
       }
     }
-    if (idx >= 0) {
-      setActiveIdx(idx);
-      setShowHome(false);
-    }
+    if (idx >= 0) setActiveIdx(idx);
   }, [search.item, lessonItems]);
 
   useEffect(() => {
