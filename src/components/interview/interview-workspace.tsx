@@ -54,6 +54,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import {
+  visibleTranscriptTurns,
+  visibleTranscriptCount,
+} from "@/lib/interview/transcript-visibility";
 import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration";
 import type {
   InterviewLanguage,
@@ -1177,6 +1181,7 @@ export function QuestionCard({
  */
 function TranscriptConversation({
   transcript,
+  presentedAiTurnIds,
   questionTypeLabel,
   speak,
   onSpeakingChange,
@@ -1186,6 +1191,8 @@ function TranscriptConversation({
   className,
 }: {
   transcript: ConversationTurn[];
+  /** Ids of AI turns whose presentation finished. Absent → show everything. */
+  presentedAiTurnIds?: ReadonlySet<string>;
   questionTypeLabel: (type: string | null | undefined) => string | null;
   speak: (text: string) => void | Promise<void> | NarrationPresentation;
   onSpeakingChange: (speaking: boolean) => void;
@@ -1199,6 +1206,19 @@ function TranscriptConversation({
   const endRef = useRef<HTMLDivElement | null>(null);
   // Only auto-scroll to newest when the user is already pinned to the bottom.
   const pinnedToBottomRef = useRef(true);
+
+  // Every turn here renders with `isLatest={false}`, which makes AiTypingMessage
+  // skip animation and paint the full text at once. A question the interviewer
+  // has not finished reading is already in `transcript` (the route appends it
+  // before narration), so without this filter it appeared here in full while
+  // the main stage was still on its "preparing" indicator.
+  const visibleTurns = useMemo(
+    () =>
+      presentedAiTurnIds
+        ? visibleTranscriptTurns(transcript, presentedAiTurnIds)
+        : transcript,
+    [transcript, presentedAiTurnIds],
+  );
 
   const handleScroll = useCallback(() => {
     const element = scrollRef.current;
@@ -1214,7 +1234,7 @@ function TranscriptConversation({
       // auto-scroll effect stays a no-op there instead of throwing.
       endRef.current?.scrollIntoView?.({ block: "nearest" });
     }
-  }, [transcript]);
+  }, [visibleTurns]);
 
   return (
     <div
@@ -1225,12 +1245,12 @@ function TranscriptConversation({
         className,
       )}
     >
-      {transcript.length === 0 ? (
+      {visibleTurns.length === 0 ? (
         <p className="py-12 text-center text-sm text-text-muted">
           {t("course_interview.workspace.transcript_empty")}
         </p>
       ) : (
-        transcript.map((turn) => (
+        visibleTurns.map((turn) => (
           <ConversationMessage
             key={turn.id}
             turn={turn}
@@ -1255,6 +1275,7 @@ export function TranscriptDrawer({
   open,
   onOpenChange,
   transcript,
+  presentedAiTurnIds,
   questionTypeLabel,
   speak,
   onSpeakingChange,
@@ -1265,6 +1286,8 @@ export function TranscriptDrawer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transcript: ConversationTurn[];
+  /** Ids of AI turns whose presentation finished. Absent → show everything. */
+  presentedAiTurnIds?: ReadonlySet<string>;
   questionTypeLabel: (type: string | null | undefined) => string | null;
   speak: (text: string) => void | Promise<void> | NarrationPresentation;
   onSpeakingChange: (speaking: boolean) => void;
@@ -1273,6 +1296,11 @@ export function TranscriptDrawer({
   replayingTurnId: string | null;
 }) {
   const { t } = useTranslation();
+  // Derived from the same rule as the list, so the badge/count can never lead
+  // the turn it is counting (which would re-introduce the "showed early" tell).
+  const visibleCount = presentedAiTurnIds
+    ? visibleTranscriptCount(transcript, presentedAiTurnIds)
+    : transcript.length;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -1289,7 +1317,7 @@ export function TranscriptDrawer({
         <MessageSquareText className="h-4 w-4" />
         {t("course_interview.workspace.view_transcript")}
         <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] text-text-muted">
-          {transcript.length}
+          {visibleCount}
         </span>
       </SheetTrigger>
       <SheetContent
@@ -1303,12 +1331,13 @@ export function TranscriptDrawer({
           </h2>
           <p className="mt-1 text-xs text-text-muted">
             {t("course_interview.workspace.transcript_count", {
-              count: transcript.length,
+              count: visibleCount,
             })}
           </p>
         </header>
         <TranscriptConversation
           transcript={transcript}
+          presentedAiTurnIds={presentedAiTurnIds}
           questionTypeLabel={questionTypeLabel}
           speak={speak}
           onSpeakingChange={onSpeakingChange}
@@ -1331,6 +1360,7 @@ export function TranscriptPanel({
   open,
   onClose,
   transcript,
+  presentedAiTurnIds,
   questionTypeLabel,
   speak,
   onSpeakingChange,
@@ -1341,6 +1371,8 @@ export function TranscriptPanel({
   open: boolean;
   onClose: () => void;
   transcript: ConversationTurn[];
+  /** Ids of AI turns whose presentation finished. Absent → show everything. */
+  presentedAiTurnIds?: ReadonlySet<string>;
   questionTypeLabel: (type: string | null | undefined) => string | null;
   speak: (text: string) => void | Promise<void> | NarrationPresentation;
   onSpeakingChange: (speaking: boolean) => void;
@@ -1349,6 +1381,9 @@ export function TranscriptPanel({
   replayingTurnId: string | null;
 }) {
   const { t } = useTranslation();
+  const visibleCount = presentedAiTurnIds
+    ? visibleTranscriptCount(transcript, presentedAiTurnIds)
+    : transcript.length;
   if (!open) return null;
 
   return (
@@ -1363,7 +1398,7 @@ export function TranscriptPanel({
           </h2>
           <p className="mt-0.5 text-xs text-text-muted">
             {t("course_interview.workspace.transcript_count", {
-              count: transcript.length,
+              count: visibleCount,
             })}
           </p>
         </div>
@@ -1381,6 +1416,7 @@ export function TranscriptPanel({
       </header>
       <TranscriptConversation
         transcript={transcript}
+        presentedAiTurnIds={presentedAiTurnIds}
         questionTypeLabel={questionTypeLabel}
         speak={speak}
         onSpeakingChange={onSpeakingChange}
@@ -1870,6 +1906,7 @@ export function FocusedInterviewStage({
             open={transcriptOpen && !transcriptDocked}
             onOpenChange={onTranscriptOpenChange}
             transcript={transcript}
+            presentedAiTurnIds={presentedAiTurnIds}
             questionTypeLabel={questionTypeLabel}
             speak={speak}
             onSpeakingChange={onSpeakingChange}

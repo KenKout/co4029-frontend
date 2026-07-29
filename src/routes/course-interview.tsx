@@ -381,6 +381,14 @@ export default function CourseInterviewPage() {
   // (no server voice) — otherwise the bar sat frozen on "Waiting for your
   // answer" the whole time the interviewer was clearly typing a reply.
   const [aiPresenting, setAiPresenting] = useState(false);
+  // AI turns whose presentation (typing + narration) has finished. The docked
+  // TranscriptPanel is rendered here rather than inside FocusedInterviewStage,
+  // so it needs its own view of this — otherwise a question the interviewer had
+  // not finished reading appeared in the panel in full (the panel renders turns
+  // with isLatest={false}, which paints text immediately).
+  const [presentedAiTurnIds, setPresentedAiTurnIds] = useState<
+    ReadonlySet<string>
+  >(() => new Set<string>());
   const [connected, setConnected] = useState(
     typeof navigator === "undefined" ? true : navigator.onLine,
   );
@@ -1240,6 +1248,14 @@ export default function CourseInterviewPage() {
 
   const handleTurnPresented = useCallback(
     (turn: ConversationTurn) => {
+      // Record it first: the docked transcript withholds the newest AI turn
+      // until it lands here, so this must happen on EVERY presented turn, not
+      // only the ones the sequencing branches below care about.
+      if (turn.role === "ai") {
+        setPresentedAiTurnIds((current) =>
+          current.has(turn.id) ? current : new Set([...current, turn.id]),
+        );
+      }
       if (
         turn.kind === "transition" &&
         phase === "transition" &&
@@ -1862,40 +1878,40 @@ export default function CourseInterviewPage() {
       resultPhase === "practice"
         ? "bg-gradient-to-br from-sky-400 to-blue-500 text-white"
         : resultPhase === "pass"
-        ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
-        : resultPhase === "eval_failed"
-          ? "bg-gradient-to-br from-danger to-red-600 text-white"
-          : resultPhase === "abandoned"
-            ? "bg-m3-surface-container text-m3-on-surface-variant"
-            : resultPhase === "evaluating"
-              ? "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary"
-              : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white";
+          ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
+          : resultPhase === "eval_failed"
+            ? "bg-gradient-to-br from-danger to-red-600 text-white"
+            : resultPhase === "abandoned"
+              ? "bg-m3-surface-container text-m3-on-surface-variant"
+              : resultPhase === "evaluating"
+                ? "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary"
+                : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white";
 
     const HeroIcon =
       resultPhase === "practice"
         ? ListChecks
         : resultPhase === "pass"
-        ? CheckCircle2
-        : resultPhase === "eval_failed"
-          ? AlertTriangle
-          : resultPhase === "evaluating"
-            ? Loader2
-            : resultPhase === "retry"
-              ? RotateCcw
-              : History;
+          ? CheckCircle2
+          : resultPhase === "eval_failed"
+            ? AlertTriangle
+            : resultPhase === "evaluating"
+              ? Loader2
+              : resultPhase === "retry"
+                ? RotateCcw
+                : History;
 
     const heroTitleKey =
       resultPhase === "practice"
         ? "course_interview.mode.results_title"
         : resultPhase === "eval_failed"
-        ? "course_interview.results.evaluation_failed"
-        : resultPhase === "abandoned"
-          ? "course_interview.results.abandoned"
-          : resultPhase === "evaluating"
-            ? "course_interview.results.evaluating"
-            : resultPhase === "pass"
-              ? "course_interview.results.passed"
-              : "course_interview.results.completed";
+          ? "course_interview.results.evaluation_failed"
+          : resultPhase === "abandoned"
+            ? "course_interview.results.abandoned"
+            : resultPhase === "evaluating"
+              ? "course_interview.results.evaluating"
+              : resultPhase === "pass"
+                ? "course_interview.results.passed"
+                : "course_interview.results.completed";
 
     const heroSummaryKey =
       resultPhase === "practice"
@@ -1903,12 +1919,12 @@ export default function CourseInterviewPage() {
         : resultPhase === "eval_failed"
           ? "course_interview.results.evaluation_failed_summary"
           : resultPhase === "abandoned"
-          ? "course_interview.results.abandoned_summary"
-          : resultPhase === "evaluating"
-            ? "course_interview.results.evaluating_summary"
-            : resultPhase === "pass"
-              ? "course_interview.results.pass_summary"
-              : "course_interview.results.fail_summary";
+            ? "course_interview.results.abandoned_summary"
+            : resultPhase === "evaluating"
+              ? "course_interview.results.evaluating_summary"
+              : resultPhase === "pass"
+                ? "course_interview.results.pass_summary"
+                : "course_interview.results.fail_summary";
 
     const studyPlan = gapReport?.study_plan ?? [];
     // attempt_number lives on the session projection (verdictPoll), not the
@@ -2915,8 +2931,7 @@ export default function CourseInterviewPage() {
             />
           ) : phase === "opening" ||
             phase ===
-              "readiness" ? // Onboarding: the SetupChecklist above is the sole input surface,
-          // so render no bottom bar at all (no composer, no wind-down).
+              "readiness" ? // so render no bottom bar at all (no composer, no wind-down). // Onboarding: the SetupChecklist above is the sole input surface,
           null : (
             // Same min-height as the composer this replaces, so the stage above
             // does not lurch upward when the input surface swaps out for the
@@ -2961,6 +2976,7 @@ export default function CourseInterviewPage() {
           open={transcriptOpen}
           onClose={() => setTranscriptOpen(false)}
           transcript={transcript}
+          presentedAiTurnIds={presentedAiTurnIds}
           questionTypeLabel={(type) => questionTypeLabel(type, t)}
           speak={speakIfOn}
           onSpeakingChange={(speaking) => {

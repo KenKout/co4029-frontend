@@ -1090,4 +1090,72 @@ describe("TranscriptPanel (desktop reflow)", () => {
       screen.queryByText(/chronological order|thứ tự thời gian/i),
     ).not.toBeInTheDocument();
   });
+
+  it("withholds an AI turn that has not finished being read aloud", () => {
+    // The route appends a question to `transcript` BEFORE narration starts, and
+    // this panel renders turns with isLatest={false} (no typing animation), so
+    // without the presented-ids filter the full question text was readable here
+    // while the main stage still showed its "preparing" indicator.
+    render(
+      <TranscriptPanel
+        open
+        onClose={() => undefined}
+        {...baseProps}
+        transcript={[
+          { id: "q1", role: "ai", text: "Already read out", kind: "question" },
+          { id: "a1", role: "user", text: "My answer", kind: "answer" },
+          { id: "q2", role: "ai", text: "Still being read", kind: "question" },
+        ]}
+        presentedAiTurnIds={new Set(["q1"])}
+      />,
+    );
+
+    expect(screen.getByText("Already read out")).toBeInTheDocument();
+    expect(screen.getByText("My answer")).toBeInTheDocument();
+    expect(screen.queryByText("Still being read")).not.toBeInTheDocument();
+    // The count must match what is rendered, or the badge leaks the arrival.
+    expect(
+      screen.getByText(
+        i18n.t("course_interview.workspace.transcript_count", { count: 2 }),
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("reveals the AI turn once its presentation completes", () => {
+    render(
+      <TranscriptPanel
+        open
+        onClose={() => undefined}
+        {...baseProps}
+        transcript={[
+          { id: "q1", role: "ai", text: "Already read out", kind: "question" },
+          { id: "q2", role: "ai", text: "Now finished", kind: "question" },
+        ]}
+        presentedAiTurnIds={new Set(["q1", "q2"])}
+      />,
+    );
+    expect(screen.getByText("Now finished")).toBeInTheDocument();
+  });
+
+  it("keeps restored history visible when nothing has been presented yet", () => {
+    // A resumed session replays server history that never went through the
+    // presentation lifecycle. Only the LAST AI turn may be withheld, or the
+    // whole transcript would blank out on resume.
+    render(
+      <TranscriptPanel
+        open
+        onClose={() => undefined}
+        {...baseProps}
+        transcript={[
+          { id: "q1", role: "ai", text: "Restored question", kind: "question" },
+          { id: "a1", role: "user", text: "Restored answer", kind: "answer" },
+          { id: "q2", role: "ai", text: "Newest question", kind: "question" },
+        ]}
+        presentedAiTurnIds={new Set<string>()}
+      />,
+    );
+    expect(screen.getByText("Restored question")).toBeInTheDocument();
+    expect(screen.getByText("Restored answer")).toBeInTheDocument();
+    expect(screen.queryByText("Newest question")).not.toBeInTheDocument();
+  });
 });
