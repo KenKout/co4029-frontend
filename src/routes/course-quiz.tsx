@@ -1401,7 +1401,7 @@ export default function CourseQuizPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-9 xl:col-span-10">
+          <div className="lg:col-span-8 xl:col-span-9">
             {/* Per-page selector. 1 keeps the classic one-question-per-screen
                 flow; 5/10/All render several cards at once. */}
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -1580,7 +1580,7 @@ export default function CourseQuizPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-3 xl:col-span-2 space-y-5 lg:sticky lg:top-32 lg:self-start">
+          <div className="lg:col-span-4 xl:col-span-3 space-y-5 lg:sticky lg:top-32 lg:self-start">
             <HintDialog
               open={hintDialogOpen}
               onOpenChange={setHintDialogOpen}
