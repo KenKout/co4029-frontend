@@ -515,10 +515,17 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
                   value={status}
                   onValueChange={(next) => setStatus(next)}
                   options={[
-                    {
-                      value: "draft",
-                      label: t("teacher_course_settings.status_draft"),
-                    },
+                    // Publishing is a one-way door: once a course is published
+                    // it can never revert to draft (its LOs are the graded
+                    // assessment scale). Hide the draft option after publish.
+                    ...(course?.status === "published"
+                      ? []
+                      : [
+                          {
+                            value: "draft",
+                            label: t("teacher_course_settings.status_draft"),
+                          },
+                        ]),
                     {
                       value: "published",
                       label: t("teacher_course_settings.status_published"),
@@ -725,10 +732,17 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
 
 function LearningOutcomesPanel({ courseId }: { courseId: string }) {
   const { t } = useTranslation();
+  const { data: course } = useTeacherCourseById(courseId);
   const { data: outcomes = [] } = useTeacherCourseOutcomes(courseId);
   const createOutcome = useCreateCourseOutcome(courseId);
   const updateOutcome = useUpdateCourseOutcome(courseId);
   const deleteOutcome = useDeleteCourseOutcome(courseId);
+
+  // Learning outcomes are editable only while the course is an unpublished
+  // draft — once published they're frozen (they double as the graded
+  // assessment scale). The backend enforces this with 409; here we hide the
+  // add/edit/delete affordances so the read-only state is obvious.
+  const editable = (course?.status ?? "draft") === "draft";
 
   const [open, setOpen] = useState(false);
   const [newText, setNewText] = useState("");
@@ -942,6 +956,7 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                             <span className="flex-1 text-sm text-m3-on-surface leading-relaxed">
                               {outcome.outcome_text}
                             </span>
+                            {editable && (
                             <div className="flex items-center gap-1 shrink-0">
                               <Button
                                 type="button"
@@ -983,6 +998,7 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </div>
+                            )}
                           </>
                         )}
                       </div>
@@ -1043,30 +1059,42 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
               </ul>
             )}
 
-            <form onSubmit={handleAdd} className="flex items-center gap-2 pt-1">
-              <Input
-                value={newText}
-                onChange={(e) => setNewText(e.target.value)}
-                placeholder={t(
-                  "teacher_outcomes.add_placeholder",
-                  "e.g. Explain the core principles of…",
-                )}
-                className="h-9 flex-1"
-              />
-              <Button
-                type="submit"
-                size="sm"
-                disabled={createOutcome.isPending || !newText.trim()}
-                className="gap-2 shrink-0"
+            {editable ? (
+              <form
+                onSubmit={handleAdd}
+                className="flex items-center gap-2 pt-1"
               >
-                {createOutcome.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="h-4 w-4" />
+                <Input
+                  value={newText}
+                  onChange={(e) => setNewText(e.target.value)}
+                  placeholder={t(
+                    "teacher_outcomes.add_placeholder",
+                    "e.g. Explain the core principles of…",
+                  )}
+                  className="h-9 flex-1"
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={createOutcome.isPending || !newText.trim()}
+                  className="gap-2 shrink-0"
+                >
+                  {createOutcome.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                  {t("teacher_outcomes.add", "Add outcome")}
+                </Button>
+              </form>
+            ) : (
+              <p className="pt-1 text-xs text-m3-on-surface-variant">
+                {t(
+                  "teacher_outcomes.locked_published",
+                  "Learning outcomes are locked once the course is published — they act as the assessment scale. Outcomes can only be edited while the course is an unpublished draft.",
                 )}
-                {t("teacher_outcomes.add", "Add outcome")}
-              </Button>
-            </form>
+              </p>
+            )}
           </div>
         </div>
       </div>
