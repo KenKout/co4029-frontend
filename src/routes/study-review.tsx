@@ -108,10 +108,11 @@ export default function StudyReviewPage() {
   }
 
   const card = cards[index];
+  const pct = Math.round((index / total) * 100);
 
   return (
     <div className="min-h-screen pb-12">
-      <div className="max-w-2xl mx-auto space-y-5">
+      <div className="max-w-6xl mx-auto space-y-5">
         <div className="flex items-center gap-3">
           <Link
             to="/study/cards-due"
@@ -130,24 +131,59 @@ export default function StudyReviewPage() {
           />
         </div>
 
-        {/* Progress bar */}
-        <div className="h-1.5 rounded-full bg-m3-surface-container-high overflow-hidden">
-          <div
-            className="h-full bg-m3-primary transition-all duration-300"
-            style={{ width: `${(index / total) * 100}%` }}
+        {/* Wide two-column layout: the card fills the main column, the session
+            rail uses the right-hand space for progress + running stats. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_18rem] gap-6 items-start">
+          <ReviewCardView
+            key={card.question_id}
+            card={card}
+            onResolved={(result) => {
+              setAnsweredCount((c) => c + 1);
+              if (result.correct) setCorrectCount((c) => c + 1);
+            }}
+            onNext={() => setIndex((i) => i + 1)}
+            isLast={index === total - 1}
           />
-        </div>
 
-        <ReviewCardView
-          key={card.question_id}
-          card={card}
-          onResolved={(result) => {
-            setAnsweredCount((c) => c + 1);
-            if (result.correct) setCorrectCount((c) => c + 1);
-          }}
-          onNext={() => setIndex((i) => i + 1)}
-          isLast={index === total - 1}
-        />
+          <aside className="lg:sticky lg:top-6 space-y-4">
+            <div className="bg-m3-surface-container-lowest rounded-2xl ghost-border shadow-editorial p-5 space-y-4">
+              <div>
+                <div className="flex items-baseline justify-between mb-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wide text-m3-on-surface-variant">
+                    {t("study_review.session_progress", "Progress")}
+                  </span>
+                  <span className="text-xs font-semibold text-m3-on-surface tabular-nums">
+                    {index}/{total}
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-m3-surface-container-high overflow-hidden">
+                  <div
+                    className="h-full bg-m3-primary transition-all duration-300"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-emerald-50 p-3 text-center">
+                  <div className="text-xl font-headline font-black text-emerald-700 tabular-nums">
+                    {correctCount}
+                  </div>
+                  <div className="text-[10px] font-bold uppercase tracking-wide text-emerald-700/70">
+                    {t("study_review.stat_correct", "Correct")}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-m3-surface-container-high p-3 text-center">
+                  <div className="text-xl font-headline font-black text-m3-on-surface tabular-nums">
+                    {total - index}
+                  </div>
+                  <div className="text-[10px] font-bold uppercase tracking-wide text-m3-on-surface-variant">
+                    {t("study_review.stat_remaining", "Left")}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   );

@@ -47,7 +47,7 @@ export default function StudyCardsDuePage() {
 
   return (
     <div className="min-h-screen pb-12">
-      <div className="max-w-3xl mx-auto pb-6 space-y-6">
+      <div className="max-w-6xl mx-auto pb-6 space-y-6">
         <div className="flex items-center gap-3">
           <Link
             to="/dashboard/sr"
@@ -93,10 +93,10 @@ export default function StudyCardsDuePage() {
           <>
             {/* Primary action: resolve the whole queue in a review session. */}
             {items.length > 0 && (
-              <Link to="/study/review" className="block">
+              <Link to="/study/review" className="inline-block">
                 <Button
                   size="lg"
-                  className="w-full gap-2 cursor-pointer bg-m3-primary text-white"
+                  className="gap-2 cursor-pointer bg-m3-primary text-white"
                 >
                   <Play className="h-4 w-4" />
                   {t("study_cards_due.start_review", {
@@ -129,7 +129,7 @@ export default function StudyCardsDuePage() {
                       {t("study_cards_due.review_course", "Review")}
                     </Link>
                   </div>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                     {group.cards.map((card) => (
                       <CardDueRow key={card.question_id} card={card} />
                     ))}
