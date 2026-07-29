@@ -23,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import { CardCooldownBadge } from "@/components/ui/card-cooldown-badge";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GradientProgress } from "@/components/ui/gradient-progress";
+import { Input } from "@/components/ui/input";
+import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { ApiError } from "@/lib/api/client";
 import { useCourseBySlug } from "@/lib/api/hooks/courses";
 import {
@@ -723,6 +725,14 @@ export default function CourseQuizPage() {
 
   const startAttempt = useStartQuizAttempt(quizId);
 
+  // Access-password gate (Phase 12). When the quiz has a password configured,
+  // the start-attempt POST returns 403 {reason: quiz_password_required}; we
+  // open this dialog, collect the password, and retry the start with it.
+  // quiz_password_incorrect re-opens it with an inline error.
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
   // A prior in-progress attempt (from before a refresh / back-navigation) —
   // when present, its saved answers are rehydrated instead of starting fresh.
   const inProgressAttempt = useMemo(
@@ -933,9 +943,15 @@ export default function CourseQuizPage() {
     return () => window.clearInterval(timerId);
   }, [quizStartedAt, sessionReady, submittedSummary]);
 
-  async function handleStartAttempt() {
+  async function handleStartAttempt(password?: string) {
     try {
-      const result = await startAttempt.mutateAsync(undefined);
+      const result = await startAttempt.mutateAsync(
+        password ? { password } : undefined,
+      );
+      // Success — clear any password prompt state.
+      setPasswordDialogOpen(false);
+      setPasswordInput("");
+      setPasswordError(null);
       hydratedAttemptIdRef.current = result.attempt_id;
       setTaking(result.take);
       setActiveAttemptId(result.attempt_id);
@@ -962,7 +978,18 @@ export default function CourseQuizPage() {
     } catch (err) {
       // Server-side retake policy (FR-4.3): 409 = attempts exhausted,
       // 429 = quiz/card cooldown still active (retry time in the body).
-      if (extractDetailString(err, "reason") === "max_attempts_reached") {
+      const reason = extractDetailString(err, "reason");
+      if (reason === "quiz_password_required") {
+        // Quiz is password-protected — prompt for it (first attempt to start).
+        setPasswordError(null);
+        setPasswordDialogOpen(true);
+      } else if (reason === "quiz_password_incorrect") {
+        // Wrong password — keep the dialog open with an inline error.
+        setPasswordError(t("course_quiz.password.incorrect"));
+        setPasswordDialogOpen(true);
+      } else if (reason === "quiz_subnet_blocked") {
+        toast.error(t("course_quiz.errors.quiz_subnet_blocked"));
+      } else if (reason === "max_attempts_reached") {
         toast.error(t("course_quiz.errors.max_attempts_reached"));
       } else if (err instanceof ApiError && err.status === 429) {
         const retryAt = extractRetryAt(err);
@@ -977,6 +1004,15 @@ export default function CourseQuizPage() {
         toast.error(t("course_quiz.errors.start_failed"));
       }
     }
+  }
+
+  function submitPassword() {
+    const pw = passwordInput.trim();
+    if (!pw) {
+      setPasswordError(t("course_quiz.password.required_error"));
+      return;
+    }
+    void handleStartAttempt(pw);
   }
 
   async function persistAnswer(questionIdx: number): Promise<boolean> {
@@ -1228,6 +1264,55 @@ export default function CourseQuizPage() {
           slug={slug}
           courseTitle={course?.title}
         />
+
+        {/* Access-password prompt — shown when the quiz requires a password
+            (server returns 403 quiz_password_required on start). */}
+        <PromptDialog
+          open={passwordDialogOpen}
+          onOpenChange={(open) => {
+            setPasswordDialogOpen(open);
+            if (!open) {
+              setPasswordInput("");
+              setPasswordError(null);
+            }
+          }}
+          title={t("course_quiz.password.title")}
+          description={t("course_quiz.password.description")}
+          confirmLabel={
+            startAttempt.isPending
+              ? t("course_quiz.password.submitting")
+              : t("course_quiz.password.submit")
+          }
+          cancelLabel={t("common.cancel", "Cancel")}
+          onConfirm={submitPassword}
+          isPending={startAttempt.isPending}
+        >
+          <div className="space-y-1.5">
+            <Input
+              type="password"
+              autoFocus
+              value={passwordInput}
+              onChange={(e) => {
+                setPasswordInput(e.target.value);
+                if (passwordError) setPasswordError(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  submitPassword();
+                }
+              }}
+              placeholder={t("course_quiz.password.placeholder")}
+              aria-label={t("course_quiz.password.title")}
+              aria-invalid={passwordError ? true : undefined}
+            />
+            {passwordError && (
+              <p className="text-xs font-medium text-m3-error">
+                {passwordError}
+              </p>
+            )}
+          </div>
+        </PromptDialog>
       </div>
     );
   }

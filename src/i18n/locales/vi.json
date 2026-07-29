@@ -1986,9 +1986,19 @@
       "max_attempts_reached": "Bạn đã dùng hết số lượt làm bài quiz này.",
       "quiz_cooldown_active": "Bài quiz đang trong thời gian chờ. Vui lòng thử lại sau.",
       "quiz_cooldown_active_at": "Bài quiz đang trong thời gian chờ đến {{time}}.",
+      "quiz_subnet_blocked": "Bạn không ở trong mạng được phép làm bài quiz này.",
       "save_answer_failed": "Không thể lưu câu trả lời",
       "auto_submitted_timeout": "Đã hết giờ. Bài quiz đã được nộp tự động.",
       "submit_failed": "Không thể nộp bài quiz"
+    },
+    "password": {
+      "title": "Yêu cầu mật khẩu",
+      "description": "Bài quiz này được bảo vệ bằng mật khẩu. Nhập mật khẩu do giáo viên cung cấp để bắt đầu.",
+      "placeholder": "Mật khẩu bài quiz",
+      "submit": "Bắt đầu làm bài",
+      "submitting": "Đang bắt đầu…",
+      "incorrect": "Mật khẩu không đúng. Vui lòng thử lại.",
+      "required_error": "Vui lòng nhập mật khẩu bài quiz."
     },
     "empty_states": {
       "no_quiz_found": "Không tìm thấy bài quiz",

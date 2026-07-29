@@ -179,7 +179,12 @@ export type QuizAttemptRead = Schemas["QuizAttemptRead"];
 export type QuizAttemptReviewRead = Schemas["QuizAttemptReviewRead"];
 export type QuizAttemptReviewQuestion = Schemas["QuizAttemptReviewQuestion"];
 export type QuizAttemptReviewOption = Schemas["QuizAttemptReviewOption"];
-export type QuizAttemptStart = Schemas["QuizAttemptStart"];
+// The committed OpenAPI snapshot predates the Phase-12 access-password gate,
+// so widen QuizAttemptStart with the optional `password` the backend accepts
+// on POST /quizzes/{id}/attempts until the snapshot is regenerated.
+export type QuizAttemptStart = Schemas["QuizAttemptStart"] & {
+  password?: string | null;
+};
 export type QuizAttemptSubmitAnswer = Schemas["QuizAttemptAnswerInput"];
 export type QuizAttemptAnswerRead = Schemas["QuizAttemptAnswerRead"];
 /**

@@ -2082,9 +2082,19 @@
       "max_attempts_reached": "You've used all your attempts for this quiz.",
       "quiz_cooldown_active": "This quiz is in cooldown. Try again later.",
       "quiz_cooldown_active_at": "This quiz is in cooldown until {{time}}.",
+      "quiz_subnet_blocked": "You're not on a network allowed to take this quiz.",
       "save_answer_failed": "Failed to save answer",
       "auto_submitted_timeout": "Time's up. Quiz was auto-submitted.",
       "submit_failed": "Failed to submit quiz"
+    },
+    "password": {
+      "title": "Password required",
+      "description": "This quiz is password-protected. Enter the password from your teacher to begin.",
+      "placeholder": "Quiz password",
+      "submit": "Start quiz",
+      "submitting": "Starting…",
+      "incorrect": "Incorrect password. Please try again.",
+      "required_error": "Please enter the quiz password."
     },
     "empty_states": {
       "no_quiz_found": "Quiz not found",
