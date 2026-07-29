@@ -193,8 +193,8 @@ export default function CourseQuizAttemptDetailPage() {
             </h3>
           </div>
           <div className="divide-y divide-m3-outline-variant/10">
-            {questions.map((q) => (
-              <QuestionRow key={q.question_id} question={q} />
+            {questions.map((q, idx) => (
+              <QuestionRow key={q.question_id} question={q} index={idx} />
             ))}
           </div>
         </section>
@@ -341,7 +341,13 @@ function IntegrityPanel({
   );
 }
 
-function QuestionRow({ question }: { question: QuizAttemptReviewQuestion }) {
+function QuestionRow({
+  question,
+  index,
+}: {
+  question: QuizAttemptReviewQuestion;
+  index: number;
+}) {
   const { t } = useTranslation();
   const answered =
     question.selected_option_id != null || !!question.answer_text;
@@ -371,7 +377,7 @@ function QuestionRow({ question }: { question: QuizAttemptReviewQuestion }) {
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wide text-m3-on-surface-variant">
               {t("teacher_quiz_attempt.questions.q_label", {
-                index: question.position + 1,
+                index: index + 1,
               })}
             </span>
             {!answered && (
