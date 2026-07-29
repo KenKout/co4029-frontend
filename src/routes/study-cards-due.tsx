@@ -51,7 +51,12 @@ function CardDueRow({ card }: { card: CardDue }) {
   const relativeDue = useRelativeDue();
   const { label: dueLabel, overdue } = relativeDue(card.due_at);
   return (
-    <div className="bg-m3-surface-container-lowest rounded-xl ghost-border shadow-editorial p-4 flex items-center gap-4 hover:bg-m3-surface-container-low transition-colors">
+    <Link
+      to="/courses/$slug/learn"
+      params={{ slug: card.course_slug }}
+      search={{ item: card.lesson_id }}
+      className="block bg-m3-surface-container-lowest rounded-xl ghost-border shadow-editorial p-4 flex items-center gap-4 hover:bg-m3-surface-container-low transition-colors cursor-pointer"
+    >
       <div
         className={cn(
           "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
@@ -91,7 +96,7 @@ function CardDueRow({ card }: { card: CardDue }) {
         </p>
       </div>
       <Clock className="h-4 w-4 text-m3-on-surface-variant shrink-0" />
-    </div>
+    </Link>
   );
 }
 

@@ -727,7 +727,10 @@ export type CareerReadinessSnapshotRead =
   Schemas["CareerReadinessSnapshotRead"];
 
 export type CardDueItem = Schemas["CardsDueItem"];
-export type CardDue = CardDueItem;
+// The generated OpenAPI snapshot is stale — the backend enriches each due
+// card with the owning course slug so the cards-due screen can deep-link
+// straight to the lesson item. Layer it on until the snapshot is regenerated.
+export type CardDue = CardDueItem & { course_slug: string };
 export type CardsDuePage = Schemas["CardsDuePage"];
 export type StudentLessonSummaryRead = Schemas["StudentLessonSummaryRead"];
 export type CohortKrResponse = Schemas["ClassKRDistributionRead"];
