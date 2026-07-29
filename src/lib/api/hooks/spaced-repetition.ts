@@ -175,3 +175,38 @@ export function useStudentSrDetail(
     staleTime: STALE_5M,
   });
 }
+
+/**
+ * Cross-course SR rollup — `GET /me/sr-dashboard-summary`.
+ *
+ * Mirror of `StudentDashboardSummaryRead`. Declared locally rather than pulled
+ * from the generated schema because `openapi-snapshot.json` is stale and
+ * regenerating it sweeps in unrelated churn from other in-flight work.
+ */
+export interface SrDashboardSummary {
+  avg_kr_estimate: number;
+  /**
+   * False when the student has no tracked cards at all. Distinguishes "no data
+   * yet" from a genuine 0% — a new student must not be shown 0% retention.
+   */
+  has_retention_data: boolean;
+  lessons_mature: number;
+  lessons_learning: number;
+  lessons_locked: number;
+  lessons_total: number;
+  /** Same predicate as /me/cards-due, so these can't disagree. */
+  cards_due_now: number;
+  cards_total: number;
+  next_unlock_lesson_id: string | null;
+  next_unlock_lesson_title: string | null;
+  /** Progress toward tau_unlock on the nearest locked lesson, 0-100. */
+  next_unlock_progress_pct: number;
+}
+
+export function useSrDashboardSummary() {
+  return useQuery({
+    queryKey: queryKeys.sr.dashboardSummary(),
+    queryFn: () => apiFetch<SrDashboardSummary>("/me/sr-dashboard-summary"),
+    staleTime: 1000 * 60,
+  });
+}

@@ -1048,10 +1048,13 @@
       "enrolled_sub": "Khóa học đang theo",
       "notifications": "Thông báo",
       "notifications_sub": "Chưa đọc",
-      "quizzes": "Bài kiểm tra",
-      "quizzes_sub": "Đang chờ chấm",
-      "interviews": "Phỏng vấn",
-      "interviews_sub": "Đã lên lịch"
+      "retention": "Ghi nhớ",
+      "retention_sub": "{{mature}}/{{total}} bài đã thành thục",
+      "retention_no_data": "Chưa có thẻ nào được theo dõi",
+      "next_unlock": "Mở khóa tiếp theo",
+      "next_unlock_sub": "Tiến tới \"{{lesson}}\"",
+      "next_unlock_none": "Không có bài bị khóa",
+      "all_unlocked": "Đã mở hết"
     },
     "your_courses": "Khóa học của bạn",
     "your_courses_sub": "Tiếp tục từ nơi bạn đã dừng",

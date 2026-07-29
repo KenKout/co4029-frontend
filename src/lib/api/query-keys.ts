@@ -59,6 +59,7 @@ export const queryKeys = {
   },
 
   sr: {
+    dashboardSummary: () => ["sr", "dashboard-summary"] as const,
     cardsDue: (lessonId?: string, limit?: number) =>
       ["sr", "cards-due", lessonId, limit] as const,
     lessonSummary: (lessonId: string) =>
