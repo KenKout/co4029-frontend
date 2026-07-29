@@ -532,6 +532,11 @@
   },
   "teacher_common": {
     "drag_to_reorder": "Drag to reorder",
+    "delete_item": "Remove item",
+    "delete_item_title": "Remove this item?",
+    "delete_item_body": "\"{{title}}\" will be removed from this module. This can't be undone.",
+    "delete_item_confirm": "Remove",
+    "item_removed": "Item removed",
     "publish_item": "Publish",
     "duplicate_item": "Duplicate",
     "duplicate_module": "Duplicate module",

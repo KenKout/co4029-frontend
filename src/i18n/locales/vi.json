@@ -491,6 +491,11 @@
   },
   "teacher_common": {
     "drag_to_reorder": "Kéo để sắp xếp",
+    "delete_item": "Xóa mục",
+    "delete_item_title": "Xóa mục này?",
+    "delete_item_body": "\"{{title}}\" sẽ bị xóa khỏi chương này. Không thể hoàn tác.",
+    "delete_item_confirm": "Xóa",
+    "item_removed": "Đã xóa mục",
     "publish_item": "Xuất bản",
     "duplicate_item": "Nhân bản",
     "duplicate_module": "Nhân bản chương",
