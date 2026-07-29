@@ -327,6 +327,13 @@ export function usePublishQuiz(quizId: string | null | undefined) {
       void qc.invalidateQueries({
         queryKey: queryKeys.courses.content(quiz.course_id),
       });
+      // The teacher course-manage tree reads from a SEPARATE query key
+      // (["teacher","courses",id,"content"]), not queryKeys.courses.content.
+      // Without this invalidation an inline publish from the course view
+      // succeeds server-side but leaves the item's status badge stale.
+      void qc.invalidateQueries({
+        queryKey: ["teacher", "courses", quiz.course_id, "content"],
+      });
     },
     onError: (err: unknown) => {
       if (
