@@ -533,6 +533,11 @@
   "teacher_common": {
     "drag_to_reorder": "Drag to reorder",
     "publish_item": "Publish",
+    "duplicate_item": "Duplicate",
+    "duplicate_module": "Duplicate module",
+    "item_duplicated": "Duplicated as a draft copy.",
+    "module_duplicated": "Module duplicated as a draft.",
+    "duplicate_failed": "Couldn't duplicate.",
     "publish_failed": "Couldn't publish",
     "item_published": "\"{{title}}\" published.",
     "publish_progress": "{{published}} of {{total}} items published",
@@ -3008,6 +3013,9 @@
       "explanation_label": "Explanation",
       "approve": "Approve",
       "regenerate": "Regenerate",
+      "duplicate": "Duplicate",
+      "duplicate_success": "Question duplicated (added as a pending copy).",
+      "duplicate_error": "Could not duplicate the question.",
       "explanation_inline": "Explanation:",
       "mark_correct": "Mark option {{key}} as correct"
     },

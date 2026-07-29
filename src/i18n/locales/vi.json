@@ -492,6 +492,11 @@
   "teacher_common": {
     "drag_to_reorder": "Kéo để sắp xếp",
     "publish_item": "Xuất bản",
+    "duplicate_item": "Nhân bản",
+    "duplicate_module": "Nhân bản chương",
+    "item_duplicated": "Đã nhân bản thành bản nháp.",
+    "module_duplicated": "Đã nhân bản chương thành bản nháp.",
+    "duplicate_failed": "Không thể nhân bản.",
     "publish_failed": "Không thể xuất bản",
     "item_published": "Đã xuất bản \"{{title}}\".",
     "publish_progress": "{{published}}/{{total}} mục đã xuất bản",
@@ -2918,6 +2923,9 @@
       "explanation_label": "Giải thích",
       "approve": "Duyệt",
       "regenerate": "Tái tạo",
+      "duplicate": "Nhân bản",
+      "duplicate_success": "Đã nhân bản câu hỏi (thêm bản sao ở trạng thái chờ duyệt).",
+      "duplicate_error": "Không thể nhân bản câu hỏi.",
       "explanation_inline": "Giải thích:",
       "mark_correct": "Đánh dấu đáp án {{key}} là đúng"
     },

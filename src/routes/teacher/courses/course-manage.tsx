@@ -26,6 +26,7 @@ import {
   ClipboardList,
   CornerDownRight,
   ListChecks,
+  Copy,
   Trash2,
   X,
   Library,
@@ -59,6 +60,8 @@ import {
   useReorderModuleItems,
   useReorderModules,
   useUpdateLesson,
+  useDuplicateModuleItem,
+  useDuplicateModule,
 } from "@/lib/api/hooks/teacher-courses";
 import { usePublishQuiz } from "@/lib/api/hooks/quizzes";
 import { usePublishInterviewConfig } from "@/lib/api/hooks/interviews";
@@ -1307,6 +1310,18 @@ function ModuleItemRow({
   const publishInterview = usePublishInterviewConfig(
     item.interview_config_id ?? undefined,
   );
+  const duplicateItem = useDuplicateModuleItem(courseId);
+
+  function handleDuplicateItem(e: React.MouseEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    duplicateItem.mutate(item.id, {
+      onSuccess: () =>
+        toast.success(t("teacher_common.item_duplicated", "Duplicated as a draft copy")),
+      onError: (err: unknown) =>
+        toast.error((err as Error).message || t("teacher_common.duplicate_failed", "Could not duplicate")),
+    });
+  }
   const lessonType = item.target?.lesson_type ?? lesson?.lesson_type ?? "video";
   const cfg =
     item.item_type === "lesson"
@@ -1506,6 +1521,23 @@ function ModuleItemRow({
             </Button>
           </Link>
         )}
+        {/* Duplicate this item: deep-clones the lesson/quiz/interview as an
+            independent draft and appends a new pin to the module. */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 hover:text-m3-on-surface"
+          onClick={handleDuplicateItem}
+          disabled={duplicateItem.isPending}
+          title={t("teacher_common.duplicate_item", "Duplicate")}
+          aria-label={t("teacher_common.duplicate_item", "Duplicate")}
+        >
+          {duplicateItem.isPending ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <Copy className="h-3 w-3" />
+          )}
+        </Button>
       </div>
     </div>
   );
@@ -1543,6 +1575,22 @@ function ModuleAccordion({
   const titleInputRef = useRef<HTMLInputElement>(null);
   const updateModule = useUpdateModule(module.id, courseId);
   const reorderItems = useReorderModuleItems(module.id, courseId);
+  const duplicateModule = useDuplicateModule(courseId);
+
+  function handleDuplicateModule(e: React.MouseEvent) {
+    e.stopPropagation();
+    duplicateModule.mutate(module.id, {
+      onSuccess: () =>
+        toast.success(
+          t("teacher_common.module_duplicated", "Module duplicated as a draft"),
+        ),
+      onError: (err: unknown) =>
+        toast.error(
+          (err as Error).message ||
+            t("teacher_common.duplicate_failed", "Could not duplicate"),
+        ),
+    });
+  }
   const qc = useQueryClient();
 
   const [dragSourceIdx, setDragSourceIdx] = useState<number | null>(null);
@@ -1859,6 +1907,21 @@ function ModuleAccordion({
             <Check className="h-3.5 w-3.5" />
           ) : (
             <Pencil className="h-3.5 w-3.5" />
+          )}
+        </button>
+
+        {/* Duplicate module — deep-clones the module + all items as a new draft */}
+        <button
+          type="button"
+          title={t("teacher_common.duplicate_module", "Duplicate module")}
+          onClick={handleDuplicateModule}
+          disabled={duplicateModule.isPending}
+          className="shrink-0 p-1 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors disabled:opacity-50"
+        >
+          {duplicateModule.isPending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
           )}
         </button>
 

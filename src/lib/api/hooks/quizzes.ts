@@ -376,6 +376,26 @@ export function useAddQuizQuestion(quizId: string | null | undefined) {
   });
 }
 
+export function useDuplicateQuizQuestion(quizId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (questionId: string) =>
+      apiPost<QuizQuestionAuthoring>(
+        `/teacher/quizzes/${quizId}/questions/${questionId}/duplicate`,
+      ),
+    onSuccess: () => {
+      if (quizId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.authoring(quizId),
+        });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.quizzes.questions(quizId),
+        });
+      }
+    },
+  });
+}
+
 export function useUpdateQuizQuestion(
   quizId: string | null | undefined,
   questionId: string | null | undefined,

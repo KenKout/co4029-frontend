@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   CheckCircle2,
   Clock,
+  Copy,
   Loader2,
   RefreshCw,
   Save,
@@ -18,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { ApiError } from "@/lib/api/client";
 import {
+  useDuplicateQuizQuestion,
   useRegenerateQuestion,
   useUpdateQuizQuestion,
 } from "@/lib/api/hooks/quizzes";
@@ -60,6 +62,25 @@ export function QuestionCard({
   const { t } = useTranslation();
   const updateQuestion = useUpdateQuizQuestion(quizId, question.id);
   const regenerate = useRegenerateQuestion(quizId, question.id);
+  const duplicate = useDuplicateQuizQuestion(quizId);
+
+  async function handleDuplicate() {
+    try {
+      await duplicate.mutateAsync(question.id);
+      toast.success(
+        t(
+          "teacher_quiz_manage.editor.duplicate_success",
+          "Question duplicated (added as a pending copy)",
+        ),
+      );
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError && err.message
+          ? err.message
+          : t("teacher_quiz_manage.editor.duplicate_error", "Could not duplicate the question"),
+      );
+    }
+  }
 
   const [draft, setDraft] = useState(() => buildQuestionDraft(question));
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -683,6 +704,22 @@ export function QuestionCard({
               <RefreshCw className="h-3.5 w-3.5" />
             )}
             {t("teacher_quiz_manage.editor.regenerate")}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={handleDuplicate}
+            disabled={duplicate.isPending}
+            className="gap-2"
+            title={t("teacher_quiz_manage.editor.duplicate", "Duplicate")}
+          >
+            {duplicate.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
+            {t("teacher_quiz_manage.editor.duplicate", "Duplicate")}
           </Button>
           <Button
             type="button"

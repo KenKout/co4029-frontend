@@ -598,3 +598,49 @@ export function useUpdateModuleItem(courseId: string) {
       }),
   });
 }
+
+/**
+ * Deep-clone a single module item (lesson / quiz / interview) in place.
+ * The backend copies the target as an independent draft (all content
+ * unpublished / review_status='pending') and appends a new pin at the end
+ * of the same module.
+ */
+export function useDuplicateModuleItem(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: string) =>
+      apiPost<ModuleItemAuthoring>(
+        `/teacher/module-items/${itemId}/duplicate`,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["teacher", "courses", courseId, "content"],
+      });
+      qc.invalidateQueries({ queryKey: queryKeys.courses.content(courseId) });
+      qc.invalidateQueries({
+        queryKey: ["courses", "module-lessons-authoring"],
+      });
+      qc.invalidateQueries({ queryKey: ["courses", "module-lessons"] });
+    },
+  });
+}
+
+/**
+ * Deep-clone a whole module: the module row + every item + every target,
+ * created as a new draft module at the end of the course. All duplicated
+ * content is unpublished.
+ */
+export function useDuplicateModule(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (moduleId: string) =>
+      apiPost<ModuleAuthoring>(`/teacher/modules/${moduleId}/duplicate`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.courses.modules(courseId) });
+      qc.invalidateQueries({ queryKey: queryKeys.courses.content(courseId) });
+      qc.invalidateQueries({
+        queryKey: ["teacher", "courses", courseId, "content"],
+      });
+    },
+  });
+}
