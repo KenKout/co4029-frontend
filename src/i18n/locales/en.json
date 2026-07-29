@@ -2865,7 +2865,8 @@
       "label": "Target learning outcomes",
       "select_all": "Select all",
       "empty": "No learning outcomes defined for this course yet. Questions will be generated without outcome tagging.",
-      "badge": "L.O.{{n}}"
+      "badge": "L.O.{{n}}",
+      "parent_hint": "incl. sub-outcomes"
     }
   },
   "teacher_quiz_manage": {

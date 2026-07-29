@@ -382,6 +382,30 @@ export function QuizGenerationPanel({
   const generateQuiz = useGenerateQuiz(quizId);
   const { data: lessons = [] } = useAuthoringModuleLessons(moduleId);
   const { data: outcomes = [] } = useTeacherCourseOutcomes(courseId);
+  // Map each outcome id -> its direct child ids, so a parent toggle can
+  // cascade to the whole subtree. Built once per outcomes change.
+  const childrenByParent = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const o of outcomes) {
+      if (!o.parent_id) continue;
+      const siblings = map.get(o.parent_id) ?? [];
+      siblings.push(o.id);
+      map.set(o.parent_id, siblings);
+    }
+    return map;
+  }, [outcomes]);
+
+  // The outcome id plus every descendant id (depth-first). Used by
+  // toggleOutcome / select-all so parent selection implies its children.
+  function outcomeWithDescendants(outcomeId: string): string[] {
+    const acc: string[] = [];
+    const walk = (id: string) => {
+      acc.push(id);
+      for (const childId of childrenByParent.get(id) ?? []) walk(childId);
+    };
+    walk(outcomeId);
+    return acc;
+  }
   // Reattach to the latest server-side run on mount instead of
   // persisting the run id in the browser. Survives cross-device
   // sessions, tab closes, and lets two teachers viewing the same
@@ -478,12 +502,21 @@ export function QuizGenerationPanel({
   }
 
   function toggleOutcome(outcomeId: string) {
-    setForm((current) => ({
-      ...current,
-      target_outcome_ids: current.target_outcome_ids.includes(outcomeId)
-        ? current.target_outcome_ids.filter((id) => id !== outcomeId)
-        : [...current.target_outcome_ids, outcomeId],
-    }));
+    // Cascade selection down the outcome tree: toggling a node flips that node
+    // AND all of its descendants to the same state. Selecting a parent selects
+    // every child by default; unselecting the parent clears them all. This
+    // keeps the target set consistent with the L.O. hierarchy shown below.
+    const affected = outcomeWithDescendants(outcomeId);
+    setForm((current) => {
+      const willSelect = !current.target_outcome_ids.includes(outcomeId);
+      const next = new Set(current.target_outcome_ids);
+      if (willSelect) {
+        for (const id of affected) next.add(id);
+      } else {
+        for (const id of affected) next.delete(id);
+      }
+      return { ...current, target_outcome_ids: [...next] };
+    });
   }
 
   function setSelectedSectionIds(lessonId: string, sectionIds: string[]) {
@@ -649,13 +682,17 @@ export function QuizGenerationPanel({
                     )}
                   </div>
                 ) : (
-                  outcomes.map((outcome, index) => {
+                  outcomes.map((outcome) => {
                     const checked = form.target_outcome_ids.includes(
                       outcome.id,
                     );
+                    const depth = outcome.depth ?? 0;
+                    const hasChildren =
+                      (childrenByParent.get(outcome.id)?.length ?? 0) > 0;
                     return (
                       <label
                         key={outcome.id}
+                        style={{ marginLeft: `${depth * 1.25}rem` }}
                         className={cn(
                           "flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer transition-all",
                           checked
@@ -671,12 +708,20 @@ export function QuizGenerationPanel({
                         />
                         <span className="shrink-0 rounded-md bg-violet-100 px-1.5 py-0.5 text-[11px] font-bold text-violet-700">
                           {t("quiz_generation.outcomes.badge", "L.O.{{n}}", {
-                            n: index + 1,
+                            n: outcome.code ?? outcome.position,
                           })}
                         </span>
                         <span className="flex-1 text-sm text-m3-on-surface">
                           {outcome.outcome_text}
                         </span>
+                        {hasChildren && (
+                          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-m3-on-surface-variant">
+                            {t(
+                              "quiz_generation.outcomes.parent_hint",
+                              "incl. sub-outcomes",
+                            )}
+                          </span>
+                        )}
                       </label>
                     );
                   })

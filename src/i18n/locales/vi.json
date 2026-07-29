@@ -2775,7 +2775,8 @@
       "label": "Chuẩn đầu ra mục tiêu",
       "select_all": "Chọn tất cả",
       "empty": "Khóa học này chưa có chuẩn đầu ra nào. Câu hỏi sẽ được tạo mà không gắn nhãn chuẩn đầu ra.",
-      "badge": "L.O.{{n}}"
+      "badge": "L.O.{{n}}",
+      "parent_hint": "gồm mục tiêu con"
     }
   },
   "teacher_quiz_manage": {
