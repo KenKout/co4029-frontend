@@ -62,6 +62,8 @@ export const queryKeys = {
     dashboardSummary: () => ["sr", "dashboard-summary"] as const,
     cardsDue: (lessonId?: string, limit?: number) =>
       ["sr", "cards-due", lessonId, limit] as const,
+    reviewQueue: (lessonId?: string, limit?: number) =>
+      ["sr", "review-queue", lessonId, limit] as const,
     lessonSummary: (lessonId: string) =>
       ["sr", "lesson-summary", lessonId] as const,
     courseOverview: (courseId: string) =>

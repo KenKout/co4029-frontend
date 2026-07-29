@@ -733,10 +733,50 @@ export type CareerReadinessSnapshotRead =
 
 export type CardDueItem = Schemas["CardsDueItem"];
 // The generated OpenAPI snapshot is stale — the backend enriches each due
-// card with the owning course slug so the cards-due screen can deep-link
-// straight to the lesson item. Layer it on until the snapshot is regenerated.
-export type CardDue = CardDueItem & { course_slug: string };
+// card with the owning course slug + title so the cards-due screen can group
+// by course and deep-link into review. Layer it on until the snapshot is
+// regenerated.
+export type CardDue = CardDueItem & {
+  course_slug: string;
+  course_title: string;
+};
 export type CardsDuePage = Schemas["CardsDuePage"];
+
+// -- SR review loop (post-snapshot; declared locally) --
+export interface ReviewCard {
+  question_id: string;
+  quiz_id: string;
+  lesson_id: string;
+  lesson_title: string;
+  course_slug: string;
+  course_title: string;
+  due_at: string;
+  ef: number;
+  last_q: number | null;
+  question: QuizQuestionPublic;
+}
+export interface ReviewQueue {
+  items: ReviewCard[];
+  total_due: number;
+}
+export interface ReviewSubmitRequest {
+  selected_option_id?: string | null;
+  answer_text?: string | null;
+  hint_used?: boolean;
+  t_actual_ms?: number | null;
+}
+export interface ReviewSubmitResult {
+  question_id: string;
+  correct: boolean;
+  q: number;
+  passing: boolean;
+  due_at: string;
+  interval_days: number;
+  remaining_due: number;
+  correct_option_ids: string[];
+  correct_answer_text: string | null;
+  explanation: string | null;
+}
 export type StudentLessonSummaryRead = Schemas["StudentLessonSummaryRead"];
 export type CohortKrResponse = Schemas["ClassKRDistributionRead"];
 export type HistogramBucket = Schemas["HistogramBucket"];

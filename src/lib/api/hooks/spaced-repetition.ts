@@ -1,5 +1,5 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { apiFetch } from "../client";
+import { apiFetch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import { useInfinitePage } from "../use-infinite-page";
 import type {
@@ -9,6 +9,9 @@ import type {
   CohortKrResponse,
   DifficultCard,
   LessonOverviewItem,
+  ReviewQueue,
+  ReviewSubmitRequest,
+  ReviewSubmitResult,
   StudentLessonSummaryRead,
   StudentSrDetail,
 } from "../types";
@@ -64,6 +67,43 @@ export function useCardsDue(opts: UseCardsDueOptions = {}) {
     limit,
     enabled,
   });
+}
+
+/**
+ * Review queue — `GET /me/review/queue`. Due cards + their no-leak question
+ * payloads, so a student can resolve cards without re-taking the whole quiz.
+ * Not infinite: the review session pulls one batch, and the count shrinks as
+ * cards are answered (refetched on invalidation).
+ */
+export function useReviewQueue(opts: UseCardsDueOptions = {}) {
+  const { lessonId, limit = 20, enabled } = opts;
+  return useQuery({
+    queryKey: queryKeys.sr.reviewQueue(lessonId, limit),
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (lessonId) params.set("lesson_id", lessonId);
+      if (limit) params.set("limit", String(limit));
+      const qs = params.toString();
+      return apiFetch<ReviewQueue>(
+        qs ? `/me/review/queue?${qs}` : "/me/review/queue",
+      );
+    },
+    enabled,
+    staleTime: 0,
+  });
+}
+
+/**
+ * Submit one review answer — `POST /me/review/{questionId}`. Grades the answer,
+ * fires the SM-2 reschedule, and returns feedback + the remaining due count.
+ * Returns a plain async submit fn (not a react-query mutation) so the review
+ * page can drive its own local card-by-card state machine.
+ */
+export function submitReview(
+  questionId: string,
+  body: ReviewSubmitRequest,
+): Promise<ReviewSubmitResult> {
+  return apiPost<ReviewSubmitResult>(`/me/review/${questionId}`, body);
 }
 
 export function useLessonSrSummary(lessonId: string | undefined) {

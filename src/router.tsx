@@ -468,6 +468,12 @@ const studyCardsDueRoute = createRoute({
   component: StudyCardsDuePage,
 });
 
+const studyReviewRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/study/review",
+  component: lazyRouteComponent(() => import("@/routes/study-review")),
+});
+
 const teacherSrCohortRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/sr-cohort",
@@ -610,6 +616,7 @@ const routeTree = rootRoute.addChildren([
     managementCareerPathDetailRoute,
     srDashboardRoute,
     studyCardsDueRoute,
+    studyReviewRoute,
     teacherSrCohortRoute,
     teacherSrAtRiskRoute,
     teacherCourseProgressRoute,
