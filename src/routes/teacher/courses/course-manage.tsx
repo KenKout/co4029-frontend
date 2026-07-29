@@ -1059,7 +1059,7 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
               </ul>
             )}
 
-            {editable ? (
+            {editable && (
               <form
                 onSubmit={handleAdd}
                 className="flex items-center gap-2 pt-1"
@@ -1087,13 +1087,6 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                   {t("teacher_outcomes.add", "Add outcome")}
                 </Button>
               </form>
-            ) : (
-              <p className="pt-1 text-xs text-m3-on-surface-variant">
-                {t(
-                  "teacher_outcomes.locked_published",
-                  "Learning outcomes are locked once the course is published — they act as the assessment scale. Outcomes can only be edited while the course is an unpublished draft.",
-                )}
-              </p>
             )}
           </div>
         </div>

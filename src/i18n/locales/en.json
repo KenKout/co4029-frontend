@@ -2868,8 +2868,7 @@
     "delete_description": "Questions tagged with it revert to no outcome. Remaining outcomes renumber automatically.",
     "child_added": "Sub-outcome added",
     "add_child": "Add sub-outcome",
-    "add_child_placeholder": "Sub-outcome statement…",
-    "locked_published": "Learning outcomes are locked once the course is published — they act as the assessment scale. Outcomes can only be edited while the course is an unpublished draft."
+    "add_child_placeholder": "Sub-outcome statement…"
   },
   "quiz_generation": {
     "outcomes": {

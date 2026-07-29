@@ -2778,8 +2778,7 @@
     "delete_description": "Các câu hỏi được gắn với nó sẽ trở về không có chuẩn đầu ra. Các chuẩn còn lại được đánh số lại tự động.",
     "child_added": "Đã thêm mục tiêu con",
     "add_child": "Thêm mục tiêu con",
-    "add_child_placeholder": "Nội dung mục tiêu con…",
-    "locked_published": "Chuẩn đầu ra bị khóa sau khi khóa học được xuất bản — chúng đóng vai trò thang đánh giá. Chỉ có thể chỉnh sửa chuẩn đầu ra khi khóa học còn ở trạng thái bản nháp chưa xuất bản."
+    "add_child_placeholder": "Nội dung mục tiêu con…"
   },
   "quiz_generation": {
     "outcomes": {
