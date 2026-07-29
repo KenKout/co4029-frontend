@@ -17,6 +17,7 @@ const GROUP_ORDER = [
   "preprocessing",
   "knowledge_graph",
   "retrieval",
+  "notifications",
 ] as const;
 
 const GROUP_LABELS: Record<string, string> = {
@@ -24,6 +25,7 @@ const GROUP_LABELS: Record<string, string> = {
   preprocessing: "Document preprocessing",
   knowledge_graph: "Knowledge graph",
   retrieval: "Retrieval",
+  notifications: "Notifications",
 };
 
 /**
