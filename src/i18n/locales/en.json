@@ -1815,13 +1815,6 @@
     "manager": "Manager",
     "admin": "Admin"
   },
-  "tenant_switcher": {
-    "aria": "Switch tenant",
-    "all_tenants": "All tenants",
-    "search_placeholder": "Search organisations…",
-    "loading": "Loading…",
-    "empty": "No organisations found"
-  },
   "sidebar": {
     "collapse": "Collapse",
     "expand": "Expand"
