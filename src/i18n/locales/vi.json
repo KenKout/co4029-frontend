@@ -45,6 +45,8 @@
     "my_courses": "Khoá của tôi",
     "students": "Sinh viên",
     "department_courses": "Khoá của khoa",
+    "manager_courses": "Khoá học",
+    "enrolment": "Ghi danh",
     "active_users": "Người dùng đang hoạt động",
     "content": "Nội dung",
     "users": "Người dùng",
@@ -611,6 +613,13 @@
       "published": "Đã xuất bản",
       "archived": "Đã lưu trữ"
     }
+  },
+  "management_enrolment": {
+    "title": "Ghi danh",
+    "subtitle": "Quản lý ai được ghi danh vào từng khóa học — thêm học viên, nhập hàng loạt và mã mời.",
+    "no_permission": "Không có quyền truy cập",
+    "empty_title": "Chưa có khóa học nào để quản lý ghi danh.",
+    "empty_body": "Khi khóa học được gán cho tổ chức của bạn, chúng sẽ xuất hiện tại đây."
   },
   "google_callback": {
     "in_progress": "Đang hoàn tất đăng nhập Google...",
@@ -1751,6 +1760,7 @@
   "sections": {
     "student": "Học viên",
     "teacher": "Giảng viên",
+    "manager": "Quản lý",
     "admin": "Quản trị"
   },
   "sidebar": {
@@ -4136,7 +4146,9 @@
     "my_journey": "Hành trình của tôi",
     "overview": "Tổng quan",
     "content": "Nội dung",
-    "pathways": "Lộ trình",
+    "pathways": "Lộ trình nghề nghiệp",
+    "manager_courses": "Khoá học",
+    "enrolment": "Ghi danh",
     "analytics": "Phân tích",
     "management": "Quản lý",
     "system": "Hệ thống"

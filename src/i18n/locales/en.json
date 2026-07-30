@@ -45,6 +45,8 @@
     "my_courses": "My Courses",
     "students": "Students",
     "department_courses": "Department Courses",
+    "manager_courses": "Courses",
+    "enrolment": "Enrolment",
     "active_users": "Active Users",
     "content": "Content",
     "users": "Users",
@@ -653,6 +655,13 @@
       "published": "Published",
       "archived": "Archived"
     }
+  },
+  "management_enrolment": {
+    "title": "Enrolment",
+    "subtitle": "Manage who is enrolled in each course — add learners, bulk import, and invitation codes.",
+    "no_permission": "You do not have permission to access this page",
+    "empty_title": "No courses to manage enrolment for yet.",
+    "empty_body": "When courses are assigned to your organisation, they will appear here."
   },
   "google_callback": {
     "in_progress": "Finishing Google sign-in…",
@@ -1803,6 +1812,7 @@
   "sections": {
     "student": "Student",
     "teacher": "Teacher",
+    "manager": "Manager",
     "admin": "Admin"
   },
   "sidebar": {
@@ -4226,7 +4236,9 @@
     "my_journey": "My Journey",
     "overview": "Overview",
     "content": "Content",
-    "pathways": "Pathways",
+    "pathways": "Career Pathways",
+    "manager_courses": "Courses",
+    "enrolment": "Enrolment",
     "analytics": "Analytics",
     "management": "Management",
     "system": "System"

@@ -8,7 +8,7 @@ import SideNavBar from "./SideNavBar";
 import ContentTopBar from "./ContentTopBar";
 import { type NavGroup } from "@/lib/navigation";
 
-type SidebarRole = "student" | "teacher" | "admin";
+type SidebarRole = "student" | "teacher" | "manager" | "admin";
 
 interface AppShellProps {
   children: React.ReactNode;

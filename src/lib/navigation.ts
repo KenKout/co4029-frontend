@@ -126,18 +126,6 @@ export const teacherNavItems: NavItem[] = [
     href: "/teacher/students",
     icon: GraduationCap,
   },
-  {
-    label: "Department Courses",
-    i18nKey: "nav.department_courses",
-    href: "/dept",
-    icon: Users,
-  },
-  {
-    label: "Career Paths",
-    i18nKey: "nav.career_paths",
-    href: "/management/career-paths",
-    icon: Briefcase,
-  },
 ];
 
 export const teacherNavGroups: NavGroup[] = [
@@ -170,20 +158,70 @@ export const teacherNavGroups: NavGroup[] = [
         href: "/teacher/students",
         icon: GraduationCap,
       },
+    ],
+  },
+];
+
+// ─── Manager ──────────────────────────────────────────────────────────────────
+//
+// Managers own student + course management for their organization: course
+// lifecycle (create/publish/delete + assign teachers), enrolment, learning
+// outcomes, and career pathways. Teachers, by contrast, own course *content*
+// only — so the two sidebars are deliberately different. These three groups
+// keep the manager's distinct responsibilities visually separated.
+
+export const managerNavItems: NavItem[] = [
+  {
+    label: "Courses",
+    i18nKey: "nav.manager_courses",
+    href: "/dept",
+    icon: BookOpen,
+  },
+  {
+    label: "Enrolment",
+    i18nKey: "nav.enrolment",
+    href: "/management/enrolment",
+    icon: GraduationCap,
+  },
+  {
+    label: "Career Pathways",
+    i18nKey: "nav.career_paths",
+    href: "/management/career-paths",
+    icon: Briefcase,
+  },
+];
+
+export const managerNavGroups: NavGroup[] = [
+  {
+    label: "Courses",
+    i18nKey: "nav_groups.manager_courses",
+    items: [
       {
-        label: "Department Courses",
-        i18nKey: "nav.department_courses",
+        label: "Courses",
+        i18nKey: "nav.manager_courses",
         href: "/dept",
-        icon: Users,
+        icon: BookOpen,
       },
     ],
   },
   {
-    label: "Pathways",
+    label: "Enrolment",
+    i18nKey: "nav_groups.enrolment",
+    items: [
+      {
+        label: "Enrolment",
+        i18nKey: "nav.enrolment",
+        href: "/management/enrolment",
+        icon: GraduationCap,
+      },
+    ],
+  },
+  {
+    label: "Career Pathways",
     i18nKey: "nav_groups.pathways",
     items: [
       {
-        label: "Career Paths",
+        label: "Career Pathways",
         i18nKey: "nav.career_paths",
         href: "/management/career-paths",
         icon: Briefcase,

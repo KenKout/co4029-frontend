@@ -67,8 +67,13 @@ export default function ManagementCareerPathDetailPage() {
   const { id } = useParams({ strict: false }) as { id: string };
   const permissions = useMyPermissions();
   const perms = permissions.data?.permissions ?? [];
+  // Backend gates career-path authoring on course lifecycle codes (manager
+  // holds them); there is no `career_path.manage` code. See the sibling
+  // management-career-paths.tsx for the rationale.
   const canManage =
-    perms.includes("career_path.manage") || perms.includes("system.administer");
+    perms.includes("course.create") ||
+    perms.includes("course.update") ||
+    perms.includes("system.administer");
 
   useEffect(() => {
     if (permissions.isLoading) return;
