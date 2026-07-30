@@ -23,6 +23,7 @@ import {
 import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 import { Switch } from "@/components/ui/switch";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { cn } from "@/lib/utils";
 
 const GROUP_ORDER = [
@@ -721,28 +722,11 @@ export default function AdminSettingsPage() {
     0,
   );
 
-  // Scroll-spy for the section rail.
+  // Scroll-spy for the section rail. The section rail is what navigates; the
+  // toolbar and section headers are NOT sticky, so a fixed activation line
+  // near the top of the viewport is all we need.
   const contentRef = useRef<HTMLDivElement>(null);
-
-  // The toolbar is sticky at 64px (below the global top bar) and wraps to more
-  // rows on narrow widths, so its height is not fixed. Measure it and offset
-  // the sticky section headers + scroll-spy line from its real bottom edge —
-  // otherwise a wrapped toolbar overlaps the section header underneath it.
-  const GLOBAL_TOP = 64; // h-16 top bar the toolbar sticks under
-  const GAP = 8;
-  const toolbarRef = useRef<HTMLDivElement>(null);
-  const [toolbarH, setToolbarH] = useState(72);
-  useEffect(() => {
-    const el = toolbarRef.current;
-    if (!el) return;
-    const measure = () => setToolbarH(el.offsetHeight);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  // Where a sticky section header parks, and the scroll-spy activation line.
-  const sectionTop = GLOBAL_TOP + toolbarH + GAP;
+  const SPY_LINE = 120;
 
   useEffect(() => {
     if (dense) return;
@@ -750,7 +734,7 @@ export default function AdminSettingsPage() {
       let current = "";
       for (const g of visibleGroups) {
         const el = document.getElementById(`section-${g}`);
-        if (el && el.getBoundingClientRect().top <= sectionTop + 4) current = g;
+        if (el && el.getBoundingClientRect().top <= SPY_LINE + 4) current = g;
       }
       // A short final section can never scroll its top past the activation
       // line — the page bottom stops first — so it would never highlight.
@@ -771,14 +755,12 @@ export default function AdminSettingsPage() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [dense, visibleGroups, sectionTop]);
+  }, [dense, visibleGroups]);
 
   const scrollToSection = (g: string) => {
     const el = document.getElementById(`section-${g}`);
     if (!el) return;
-    // Land the section just below the sticky header stack, not under it.
-    const top =
-      el.getBoundingClientRect().top + window.scrollY - (sectionTop + 12);
+    const top = el.getBoundingClientRect().top + window.scrollY - (SPY_LINE + 8);
     window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
   };
 
@@ -844,11 +826,8 @@ export default function AdminSettingsPage() {
             Resolves organization → global → environment → built-in.
           </p>
 
-          {/* ── Sticky toolbar ── */}
-          <div
-            ref={toolbarRef}
-            className="sticky top-16 z-10 -mx-1 mt-4 rounded-lg border border-slate-200 bg-white/95 px-3 py-2.5 shadow-sm backdrop-blur"
-          >
+          {/* ── Toolbar ── (not sticky: kept overlapping the section headers) */}
+          <div className="-mx-1 mt-4 rounded-lg border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative min-w-[180px] flex-1">
                 <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -973,17 +952,12 @@ export default function AdminSettingsPage() {
                     key={group}
                     id={`section-${group}`}
                     className="rounded-lg border border-slate-200 bg-white"
-                    style={{ scrollMarginTop: sectionTop + 12 }}
+                    style={{ scrollMarginTop: SPY_LINE + 8 }}
                   >
-                    {/* Sticky section header inside a long card — parks just
-                        below the global top bar + the (variable-height) sticky
-                        toolbar, measured at runtime so a wrapped toolbar can't
-                        overlap it. NB: the section must NOT be overflow-hidden
-                        or this sticky child stops sticking. */}
-                    <div
-                      className="sticky z-[5] rounded-t-lg border-b border-slate-200 bg-white/95 px-5 py-3 backdrop-blur"
-                      style={{ top: sectionTop }}
-                    >
+                    {/* Section header — plain (not sticky), so it never
+                        overlaps or gets overlapped. The section rail handles
+                        jumping between sections. */}
+                    <div className="rounded-t-lg border-b border-slate-200 bg-white px-5 py-3">
                       <div className="flex items-center justify-between gap-2">
                         <h2 className="text-lg font-semibold text-slate-900">
                           {GROUP_LABELS[group] ?? group}
@@ -1016,6 +990,9 @@ export default function AdminSettingsPage() {
           )}
         </div>
       </div>
+
+      {/* Long scrolling page — floating jump back to top. */}
+      <ScrollToTop />
     </div>
   );
 }
