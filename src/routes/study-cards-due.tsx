@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, BookOpen, Inbox, Layers, Play } from "lucide-react";
 import { useCardsDue } from "@/lib/api/hooks/spaced-repetition";
@@ -40,10 +40,26 @@ function groupByCourse(cards: CardDue[]) {
 
 export default function StudyCardsDuePage() {
   const { t } = useTranslation();
+  // Deep-link scoping: the SR reminder builds `?lesson={id}` for a single-lesson
+  // backlog; a per-course "Review" builds `?course={slug}`. Honour both so the
+  // list a student lands on matches what they clicked, instead of the whole
+  // backlog every time.
+  const { lesson, course } = useSearch({ strict: false }) as {
+    lesson?: string;
+    course?: string;
+  };
   const { items, hasNextPage, fetchNextPage, isFetchingNextPage, isLoading } =
-    useCardsDue({ limit: 100 });
+    useCardsDue({ limit: 100, lessonId: lesson, courseSlug: course });
 
   const groups = useMemo(() => groupByCourse(items), [items]);
+
+  // Carry the active scope onto the review links so "Start review" resolves the
+  // same cards the student is looking at. Both keys are always present (as
+  // undefined when unset) to satisfy the route's search-param shape.
+  const reviewSearch = useMemo<{ lesson: string | undefined; course: string | undefined }>(
+    () => ({ lesson, course }),
+    [lesson, course],
+  );
 
   return (
     <div className="min-h-screen pb-12">
@@ -93,7 +109,11 @@ export default function StudyCardsDuePage() {
           <>
             {/* Primary action: resolve the whole queue in a review session. */}
             {items.length > 0 && (
-              <Link to="/study/review" className="inline-block">
+              <Link
+                to="/study/review"
+                search={reviewSearch}
+                className="inline-block"
+              >
                 <Button
                   size="lg"
                   className="gap-2 cursor-pointer bg-m3-primary text-white"
@@ -124,6 +144,7 @@ export default function StudyCardsDuePage() {
                     </span>
                     <Link
                       to="/study/review"
+                      search={{ lesson: undefined, course: group.slug }}
                       className="ml-auto text-xs font-semibold text-m3-primary hover:underline"
                     >
                       {t("study_cards_due.review_course", "Review")}

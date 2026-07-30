@@ -1,11 +1,12 @@
 import { useMemo, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Inbox,
+  Lightbulb,
   Loader2,
   PartyPopper,
   XCircle,
@@ -32,9 +33,22 @@ import { cn } from "@/lib/utils";
  */
 export default function StudyReviewPage() {
   const { t } = useTranslation();
-  const { data, isLoading, isError } = useReviewQueue({ limit: 20 });
+  // Scope the session to a lesson or course when the entry link carried it
+  // (per-course "Review" or the SR reminder deep-link). Omitted = full backlog.
+  const { lesson, course } = useSearch({ strict: false }) as {
+    lesson?: string;
+    course?: string;
+  };
+  const { data, isLoading, isError } = useReviewQueue({
+    limit: 20,
+    lessonId: lesson,
+    courseSlug: course,
+  });
 
   const cards = useMemo(() => data?.items ?? [], [data]);
+  // Full due backlog across everything (unscoped by the server), so the done
+  // screen can say how many cards remain beyond the ones in this batch.
+  const totalDue = data?.total_due ?? 0;
   const [index, setIndex] = useState(0);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -83,6 +97,12 @@ export default function StudyReviewPage() {
   }
 
   if (done) {
+    // total_due was the full backlog when the queue loaded, before this
+    // session's answers. Passing cards leave the backlog; failing ones stay
+    // due — but either way the student cleared `answeredCount` from the top of
+    // the queue, so the honest "still waiting" figure is total_due minus what
+    // they just worked through, floored at zero.
+    const remaining = Math.max(0, totalDue - answeredCount);
     return (
       <div className="max-w-2xl mx-auto pt-10 text-center space-y-4">
         <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center">
@@ -98,11 +118,32 @@ export default function StudyReviewPage() {
             defaultValue: "You got {{correct}} of {{total}} right.",
           })}
         </p>
-        <Link to="/dashboard/sr">
-          <Button variant="default" className="cursor-pointer">
-            {t("study_review.back_to_dashboard", "Back to dashboard")}
-          </Button>
-        </Link>
+        {remaining > 0 ? (
+          <div className="mx-auto max-w-sm rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 space-y-3">
+            <p className="text-sm font-semibold text-amber-800">
+              {t("study_review.remaining_backlog", {
+                count: remaining,
+                defaultValue: "{{count}} more cards still due.",
+              })}
+            </p>
+            <Link to="/study/review" search={{ lesson, course }}>
+              <Button variant="default" size="sm" className="cursor-pointer">
+                {t("study_review.keep_reviewing", "Keep reviewing")}
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <p className="text-sm font-semibold text-emerald-700">
+            {t("study_review.all_caught_up", "You're all caught up!")}
+          </p>
+        )}
+        <div>
+          <Link to="/dashboard/sr">
+            <Button variant="outline" className="cursor-pointer">
+              {t("study_review.back_to_dashboard", "Back to dashboard")}
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -116,6 +157,7 @@ export default function StudyReviewPage() {
         <div className="flex items-center gap-3">
           <Link
             to="/study/cards-due"
+            search={{ lesson, course }}
             className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
             aria-label={t("study_review.back", "Back")}
           >
@@ -206,7 +248,16 @@ function ReviewCardView({
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<ReviewSubmitResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Track real hint usage — the quiz-taking path does the same, and the SM-2
+  // Q grade depends on it (correct WITH hint → Q∈{1,2}, WITHOUT → Q∈{3,4,5}).
+  // Hardcoding false here would grade a review card on a different scale than
+  // the exact same card answered inside a quiz.
+  const [hintShown, setHintShown] = useState(false);
   const startedAt = useRef<number>(Date.now());
+
+  const hintText = (card.question as { hint_text?: string | null }).hint_text;
+  const hintFormat =
+    (card.question as { hint_format?: string }).hint_format ?? "plain";
 
   const hasAnswer =
     selectedOptionId !== null || (answerText ?? "").trim().length > 0;
@@ -220,7 +271,7 @@ function ReviewCardView({
       const res = await submitReview(card.question_id, {
         selected_option_id: selectedOptionId,
         answer_text: answerText,
-        hint_used: false,
+        hint_used: hintShown,
         t_actual_ms: Date.now() - startedAt.current,
       });
       setResult(res);
@@ -260,6 +311,42 @@ function ReviewCardView({
         onSelectOption={(id) => !graded && setSelectedOptionId(id)}
         onAnswerTextChange={(v) => !graded && setAnswerText(v)}
       />
+
+      {/* Hint — parity with the quiz-taking flow. Viewing it flags the answer
+          as assisted recall, which caps the SM-2 grade at Q≤2 so a hinted
+          review can't inflate the card's interval the way an unaided one does.
+          Only offered before grading and only when the question carries one. */}
+      {hintText && !graded && (
+        <div>
+          {hintShown ? (
+            <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 flex items-start gap-2">
+              <Lightbulb className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
+              <div className="min-w-0 space-y-0.5">
+                <RichContent
+                  value={hintText}
+                  format={hintFormat}
+                  className="text-sm text-amber-900"
+                />
+                <p className="text-[11px] text-amber-700/80">
+                  {t(
+                    "study_review.hint_counts",
+                    "Using a hint counts as assisted recall.",
+                  )}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setHintShown(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline cursor-pointer"
+            >
+              <Lightbulb className="h-4 w-4" />
+              {t("study_review.show_hint", "Show hint")}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Feedback after grading */}
       {graded && (

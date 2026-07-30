@@ -116,7 +116,6 @@
     "breadcrumb_courses": "Khóa học",
     "ai_enhanced": "Tăng cường AI",
     "modules_count": "{{count}} module",
-    "modules_count_plural": "{{count}} modules",
     "instructor_unknown": "Giảng viên không xác định",
     "created_by": "Bởi",
     "what_youll_learn": "Bạn sẽ học được",
@@ -132,7 +131,9 @@
     "ai_mock_body": "Hoàn thành từng module để mở khóa buổi phỏng vấn AI. Nhận phản hồi thời gian thực, câu hỏi tiếp theo thích ứng và đánh giá chi tiết về cách bạn giải thích kỹ thuật.",
     "start_learning": "Bắt đầu học",
     "modules": "Chương",
-    "contact_title": "Liên hệ giảng viên"
+    "contact_title": "Liên hệ giảng viên",
+    "modules_count_other": "{{count}} modules",
+    "modules_count_one": "{{count}} module"
   },
   "settings_security": {
     "title": "Bảo mật tài khoản",
@@ -351,7 +352,6 @@
   "teacher_courses_list": {
     "title": "Khóa học của tôi",
     "n_courses": "{{count}} khóa học",
-    "n_courses_plural": "{{count}} khóa học",
     "published_suffix": " · {{count}} đã xuất bản",
     "draft_suffix": " · {{count}} bản nháp",
     "filter_all": "Tất cả",
@@ -376,7 +376,9 @@
     "no_match_body": "Hãy thử từ khóa khác hoặc xóa bộ lọc.",
     "clear_filters": "Xóa bộ lọc",
     "students_label": "Học viên",
-    "modules_label": "Mô-đun"
+    "modules_label": "Mô-đun",
+    "n_courses_other": "{{count}} khóa học",
+    "n_courses_one": "{{count}} khóa học"
   },
   "course_learn": {
     "lesson_unavailable_title": "Bài học không khả dụng",
@@ -654,7 +656,6 @@
     "subtitle": "Theo dõi tiến độ học tập trên các lộ trình bạn đã đăng ký.",
     "section_title": "Đã đăng ký",
     "n_paths": "{{count}} lộ trình",
-    "n_paths_plural": "{{count}} lộ trình",
     "load_failed_title": "Không thể tải danh sách lộ trình",
     "load_failed_body": "Vui lòng thử lại sau ít phút.",
     "retry": "Thử lại",
@@ -666,14 +667,15 @@
       "active": "Đang học",
       "completed": "Hoàn thành",
       "dropped": "Đã bỏ"
-    }
+    },
+    "n_paths_other": "{{count}} lộ trình",
+    "n_paths_one": "{{count}} lộ trình"
   },
   "me_interviews": {
     "title": "Phỏng vấn của tôi",
     "subtitle": "Các lần phỏng vấn thử trước đây và kết quả của bạn.",
     "section_title": "Các lần thử",
     "n_sessions": "{{count}} lần",
-    "n_sessions_plural": "{{count}} lần",
     "load_failed_title": "Không thể tải danh sách phỏng vấn",
     "load_failed_body": "Vui lòng thử lại sau ít phút.",
     "retry": "Thử lại",
@@ -690,7 +692,9 @@
       "evaluation_failed": "Chấm điểm thất bại",
       "not_graded": "Không chấm điểm",
       "practice": "Thi thử"
-    }
+    },
+    "n_sessions_other": "{{count}} lần",
+    "n_sessions_one": "{{count}} lần"
   },
   "me_interview_result": {
     "back_to_list": "Quay lại danh sách phỏng vấn",
@@ -701,7 +705,6 @@
     "back": "Quay lại",
     "load_failed": "Không thể tải lộ trình",
     "n_courses": "{{count}} khóa học",
-    "n_courses_plural": "{{count}} khóa học",
     "completed_courses": "Đã hoàn thành {{completed}}/{{total}} khóa học",
     "overall_progress": "Tổng tiến độ",
     "continue_learning": "Tiếp tục học",
@@ -712,7 +715,9 @@
     "empty": "Lộ trình này chưa có khóa học nào.",
     "course_required": "Khóa học bắt buộc",
     "course_optional": "Tự chọn",
-    "course_progress_label": "Tiến độ"
+    "course_progress_label": "Tiến độ",
+    "n_courses_other": "{{count}} khóa học",
+    "n_courses_one": "{{count}} khóa học"
   },
   "study_cards_due": {
     "back": "Quay lại bảng điều khiển",
@@ -720,7 +725,6 @@
     "loading": "Đang tải...",
     "empty_subtitle": "Bạn đã ôn hết rồi",
     "summary": "{{count}} thẻ cần ôn trong {{courses}} khóa học",
-    "summary_plural": "{{count}} thẻ cần ôn trong {{courses}} khóa học",
     "start_review": "Bắt đầu ôn ({{count}})",
     "group_count": "{{count}} cần ôn",
     "review_course": "Ôn tập",
@@ -732,7 +736,6 @@
       "shaky": "Cần cải thiện"
     },
     "n_cards": "{{count}} thẻ",
-    "n_cards_plural": "{{count}} thẻ",
     "n_overdue_suffix": " • {{count}} cần ôn ngay",
     "due_now": "Cần ôn ngay",
     "minutes_left": "Còn {{count}} phút",
@@ -742,7 +745,11 @@
     "last_q": "Q gần nhất: {{q}}",
     "empty_title": "Hiện chưa có thẻ nào cần ôn",
     "empty_body": "Bạn đã ôn hết. Thẻ mới sẽ xuất hiện ở đây khi đến hạn.",
-    "back_to_dashboard": "Quay lại bảng điều khiển"
+    "back_to_dashboard": "Quay lại bảng điều khiển",
+    "summary_other": "{{count}} thẻ cần ôn trong {{courses}} khóa học",
+    "summary_one": "{{count}} thẻ cần ôn trong {{courses}} khóa học",
+    "n_cards_other": "{{count}} thẻ",
+    "n_cards_one": "{{count}} thẻ"
   },
   "study_review": {
     "title": "Phiên ôn tập",
@@ -760,13 +767,20 @@
     "incorrect": "Chưa đúng.",
     "correct_answer": "Đáp án",
     "next_in": "Ôn lại sau {{days}} ngày.",
-    "next_in_plural": "Ôn lại sau {{days}} ngày.",
     "will_repeat": "Bạn sẽ gặp lại thẻ này sớm thôi.",
     "done_title": "Hoàn thành phiên ôn!",
     "done_body": "Bạn trả lời đúng {{correct}} / {{total}}.",
     "empty_title": "Không có thẻ để ôn",
     "empty_body": "Bạn đã ôn hết. Hãy quay lại khi có thẻ đến hạn.",
-    "back_to_dashboard": "Quay lại bảng điều khiển"
+    "back_to_dashboard": "Quay lại bảng điều khiển",
+    "next_in_other": "Ôn lại sau {{days}} ngày.",
+    "next_in_one": "Ôn lại sau {{days}} ngày.",
+    "remaining_backlog_one": "Còn {{count}} thẻ nữa đến hạn.",
+    "remaining_backlog_other": "Còn {{count}} thẻ nữa đến hạn.",
+    "keep_reviewing": "Tiếp tục ôn tập",
+    "all_caught_up": "Bạn đã ôn tập xong tất cả!",
+    "show_hint": "Xem gợi ý",
+    "hint_counts": "Dùng gợi ý được tính là nhớ lại có hỗ trợ."
   },
   "settings_notifications": {
     "title": "Tùy chọn thông báo",
@@ -973,7 +987,6 @@
     "histogram_subtitle": "Số sinh viên trong mỗi khoảng độ ghi nhớ",
     "kr_hint": "Độ ghi nhớ (thuật ngữ: \"KR\", knowledge retention): ước tính của mô hình về khả năng sinh viên nhớ được nội dung ngay lúc này, từ 0% đến 100%. Càng cao càng tốt.",
     "student_count": "{{count}} sinh viên",
-    "student_count_plural": "{{count}} sinh viên",
     "kr_axis": "Độ ghi nhớ",
     "students_axis": "Số sinh viên",
     "kr_tooltip_label": "Độ ghi nhớ",
@@ -1011,7 +1024,9 @@
       "correct": "Đúng",
       "incorrect": "Sai",
       "accuracy_value": "{{correct}}/{{total}} đúng"
-    }
+    },
+    "student_count_other": "{{count}} sinh viên",
+    "student_count_one": "{{count}} sinh viên"
   },
   "management_career_paths": {
     "title": "Quản lý lộ trình",
@@ -1059,12 +1074,13 @@
     "card_chip": "Lộ trình nghề nghiệp",
     "enrolled_badge": "Đã đăng ký",
     "n_courses": "{{count}} khóa học",
-    "n_courses_plural": "{{count}} khóa học",
     "load_failed_title": "Không thể tải danh sách lộ trình",
     "load_failed_body": "Vui lòng thử lại sau ít phút.",
     "retry": "Thử lại",
     "empty_title": "Chưa có lộ trình nào",
-    "empty_body": "Khi quản lý xuất bản lộ trình mới, danh sách sẽ xuất hiện tại đây."
+    "empty_body": "Khi quản lý xuất bản lộ trình mới, danh sách sẽ xuất hiện tại đây.",
+    "n_courses_other": "{{count}} khóa học",
+    "n_courses_one": "{{count}} khóa học"
   },
   "courses_list": {
     "ai_chip": "HỖ TRỢ BỞI AI",
@@ -1092,7 +1108,6 @@
     "active_session": "Phiên đang hoạt động",
     "welcome": "Chào mừng trở lại, {{name}}.",
     "enrolled_count": "Bạn đang theo học {{count}} khóa học.",
-    "enrolled_count_plural": "Bạn đang theo học {{count}} khóa học.",
     "explore_intro": "Khám phá thư viện khóa học để bắt đầu hành trình học tập.",
     "stats": {
       "enrolled": "Đã đăng ký",
@@ -1127,7 +1142,9 @@
     "ready_body": "Hoàn thành các khóa học đã đăng ký, làm bài kiểm tra do AI tạo và luyện tập các kịch bản phỏng vấn thực tế — tất cả đều được theo dõi và cá nhân hóa theo lộ trình học của bạn.",
     "view_progress": "Xem tiến độ",
     "ask_ai": "Hỏi trợ lý AI",
-    "ai_chip": "Hỗ trợ bởi AI"
+    "ai_chip": "Hỗ trợ bởi AI",
+    "enrolled_count_other": "Bạn đang theo học {{count}} khóa học.",
+    "enrolled_count_one": "Bạn đang theo học {{count}} khóa học."
   },
   "admin": {
     "audit": {
@@ -1558,7 +1575,6 @@
       "roles": {
         "title": "Vai trò & phân quyền",
         "count": "{{count}} vai trò",
-        "count_plural": "{{count}} vai trò",
         "none": "Chưa có vai trò",
         "empty": "Người dùng chưa được gán vai trò nào.",
         "assign_new": "Gán vai trò mới",
@@ -1601,7 +1617,9 @@
           "revoked": "Đã thu hồi vai trò",
           "disabled": "Đã vô hiệu hoá. Đã thu hồi {{count}} phiên.",
           "enabled": "Đã kích hoạt lại người dùng"
-        }
+        },
+        "count_other": "{{count}} vai trò",
+        "count_one": "{{count}} vai trò"
       },
       "confirm_disable": {
         "title": "Vô hiệu hoá người dùng?",
@@ -2434,9 +2452,10 @@
         "back_to_lesson": "Tiếp tục vào bài học",
         "retry": "Thử lại",
         "attempts_left": "Còn {{count}} lần thử",
-        "attempts_left_plural": "Còn {{count}} lần thử",
         "cooldown": "Bạn có thể thử lại sau {{when}}",
-        "no_attempts": "Bạn đã dùng hết số lần thử cho bài phỏng vấn này. Hãy xem lại kế hoạch học tập bên dưới và liên hệ giảng viên nếu cần thêm lượt thử."
+        "no_attempts": "Bạn đã dùng hết số lần thử cho bài phỏng vấn này. Hãy xem lại kế hoạch học tập bên dưới và liên hệ giảng viên nếu cần thêm lượt thử.",
+        "attempts_left_other": "Còn {{count}} lần thử",
+        "attempts_left_one": "Còn {{count}} lần thử"
       }
     },
     "intro": {
@@ -2450,7 +2469,8 @@
     },
     "criteria": {
       "assessed_on": "Đánh giá trên {{count}} tiêu chí",
-      "assessed_on_plural": "Đánh giá trên {{count}} tiêu chí"
+      "assessed_on_other": "Đánh giá trên {{count}} tiêu chí",
+      "assessed_on_one": "Đánh giá trên {{count}} tiêu chí"
     },
     "voice": {
       "dropped_fallback_text": "Mất kết nối thoại — đang tiếp tục bằng văn bản. Tiến trình của bạn đã được lưu."
@@ -3758,7 +3778,6 @@
       "ai_generated": "Do AI tạo",
       "manually_added": "Thêm thủ công",
       "source_count": "{{count}} nguồn",
-      "source_count_plural": "{{count}} nguồn",
       "no_answer": "Chưa có câu trả lời mẫu",
       "move_to_top": "Chuyển lên đầu",
       "move_to_bottom": "Chuyển xuống cuối",
@@ -3830,7 +3849,9 @@
         "moved_to_practice": "Đã chuyển sang bộ câu hỏi thi thử.",
         "moved_to_graded": "Đã chuyển lại bộ câu hỏi chấm điểm.",
         "badge": "Thi thử"
-      }
+      },
+      "source_count_other": "{{count}} nguồn",
+      "source_count_one": "{{count}} nguồn"
     },
     "review_status": {
       "pending": "Chờ duyệt",

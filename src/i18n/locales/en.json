@@ -115,7 +115,6 @@
     "breadcrumb_courses": "Courses",
     "ai_enhanced": "AI-enhanced",
     "modules_count": "{{count}} module",
-    "modules_count_plural": "{{count}} modules",
     "instructor_unknown": "Unknown instructor",
     "created_by": "Created by",
     "what_youll_learn": "What you'll learn",
@@ -131,7 +130,9 @@
     "ai_mock_body": "Complete each module to unlock an AI-powered mock interview. Get real-time feedback, adaptive follow-up questions, and a detailed assessment of your technical explanations.",
     "start_learning": "Start learning",
     "modules": "Modules",
-    "contact_title": "Contact the instructor"
+    "contact_title": "Contact the instructor",
+    "modules_count_other": "{{count}} modules",
+    "modules_count_one": "{{count}} module"
   },
   "settings_security": {
     "title": "Account security",
@@ -229,7 +230,8 @@
       "ungraded_quizzes": "Quiz attempts to grade",
       "pending_interviews": "Interviews awaiting evaluation",
       "course_pending": "{{count}} item awaiting review in this course",
-      "course_pending_plural": "{{count}} items awaiting review in this course"
+      "course_pending_other": "{{count}} items awaiting review in this course",
+      "course_pending_one": "{{count}} item awaiting review in this course"
     }
   },
   "teacher_course_new": {
@@ -375,7 +377,6 @@
   "teacher_courses_list": {
     "title": "My courses",
     "n_courses": "{{count}} course",
-    "n_courses_plural": "{{count}} courses",
     "published_suffix": " · {{count}} published",
     "draft_suffix": " · {{count}} draft",
     "filter_all": "All",
@@ -400,7 +401,9 @@
     "no_match_body": "Try a different search term or clear your filters.",
     "clear_filters": "Clear filters",
     "students_label": "Students",
-    "modules_label": "Modules"
+    "modules_label": "Modules",
+    "n_courses_other": "{{count}} courses",
+    "n_courses_one": "{{count}} course"
   },
   "course_learn": {
     "lesson_unavailable_title": "Lesson unavailable",
@@ -578,7 +581,6 @@
     "mark_module_as": "Click to mark as {{status}}",
     "curriculum_fallback_title": "Curriculum Structure",
     "module_count": "{{count}} module",
-    "module_count_plural": "{{count}} modules",
     "lesson_count_suffix": " · {{count}} lessons",
     "nav_students": "Students",
     "nav_progress": "Progress",
@@ -600,7 +602,9 @@
     "video_uploaded": "Video uploaded",
     "storage_unavailable": "Storage isn't configured yet. Please contact your admin.",
     "upload_failed": "Upload failed",
-    "resource_unavailable": "Resource unavailable"
+    "resource_unavailable": "Resource unavailable",
+    "module_count_other": "{{count}} modules",
+    "module_count_one": "{{count}} module"
   },
   "dept_course_detail": {
     "back": "Team management",
@@ -696,7 +700,6 @@
     "subtitle": "Track your progress on the paths you're enrolled in.",
     "section_title": "Enrolled",
     "n_paths": "{{count}} path",
-    "n_paths_plural": "{{count}} paths",
     "load_failed_title": "Couldn't load your paths",
     "load_failed_body": "Please try again in a few minutes.",
     "retry": "Retry",
@@ -708,14 +711,15 @@
       "active": "Active",
       "completed": "Completed",
       "dropped": "Dropped"
-    }
+    },
+    "n_paths_other": "{{count}} paths",
+    "n_paths_one": "{{count}} path"
   },
   "me_interviews": {
     "title": "My interviews",
     "subtitle": "Your past mock-interview attempts and their results.",
     "section_title": "Attempts",
     "n_sessions": "{{count}} attempt",
-    "n_sessions_plural": "{{count}} attempts",
     "load_failed_title": "Couldn't load your interviews",
     "load_failed_body": "Please try again in a few minutes.",
     "retry": "Retry",
@@ -732,7 +736,9 @@
       "evaluation_failed": "Evaluation failed",
       "not_graded": "Not graded",
       "practice": "Practice"
-    }
+    },
+    "n_sessions_other": "{{count}} attempts",
+    "n_sessions_one": "{{count}} attempt"
   },
   "me_interview_result": {
     "back_to_list": "Back to my interviews",
@@ -743,7 +749,6 @@
     "back": "Back",
     "load_failed": "Couldn't load the path",
     "n_courses": "{{count}} course",
-    "n_courses_plural": "{{count}} courses",
     "completed_courses": "Completed {{completed}}/{{total}} courses",
     "overall_progress": "Overall progress",
     "continue_learning": "Continue learning",
@@ -754,7 +759,9 @@
     "empty": "This path has no courses yet.",
     "course_required": "Required",
     "course_optional": "Optional",
-    "course_progress_label": "Progress"
+    "course_progress_label": "Progress",
+    "n_courses_other": "{{count}} courses",
+    "n_courses_one": "{{count}} course"
   },
   "study_cards_due": {
     "back": "Back to dashboard",
@@ -762,7 +769,6 @@
     "loading": "Loading…",
     "empty_subtitle": "You're all caught up",
     "summary": "{{count}} card to review across {{courses}} course",
-    "summary_plural": "{{count}} cards to review across {{courses}} courses",
     "start_review": "Start review ({{count}})",
     "group_count": "{{count}} due",
     "review_course": "Review",
@@ -774,20 +780,26 @@
       "shaky": "Needs work"
     },
     "n_cards": "{{count}} card",
-    "n_cards_plural": "{{count}} cards",
     "n_overdue_suffix": " • {{count}} due now",
     "due_now": "Due now",
     "minutes_left": "{{count}} min left",
-    "minutes_left_plural": "{{count}} mins left",
     "hours_left": "{{count}} hour left",
-    "hours_left_plural": "{{count}} hours left",
     "days_left": "{{count}} day left",
-    "days_left_plural": "{{count}} days left",
     "ef_label": "EF",
     "last_q": "Last Q: {{q}}",
     "empty_title": "Nothing due right now",
     "empty_body": "Your reviews are all caught up. New cards appear here when they're due.",
-    "back_to_dashboard": "Back to dashboard"
+    "back_to_dashboard": "Back to dashboard",
+    "summary_other": "{{count}} cards to review across {{courses}} courses",
+    "summary_one": "{{count}} card to review across {{courses}} course",
+    "n_cards_other": "{{count}} cards",
+    "n_cards_one": "{{count}} card",
+    "minutes_left_other": "{{count}} mins left",
+    "minutes_left_one": "{{count}} min left",
+    "hours_left_other": "{{count}} hours left",
+    "hours_left_one": "{{count}} hour left",
+    "days_left_other": "{{count}} days left",
+    "days_left_one": "{{count}} day left"
   },
   "study_review": {
     "title": "Review session",
@@ -805,13 +817,20 @@
     "incorrect": "Not quite.",
     "correct_answer": "Answer",
     "next_in": "Next review in {{days}} day.",
-    "next_in_plural": "Next review in {{days}} days.",
     "will_repeat": "You'll see this one again soon.",
     "done_title": "Session complete!",
     "done_body": "You got {{correct}} of {{total}} right.",
     "empty_title": "Nothing to review",
     "empty_body": "You're all caught up. Come back when cards are due.",
-    "back_to_dashboard": "Back to dashboard"
+    "back_to_dashboard": "Back to dashboard",
+    "next_in_other": "Next review in {{days}} days.",
+    "next_in_one": "Next review in {{days}} day.",
+    "remaining_backlog_one": "{{count}} more card still due.",
+    "remaining_backlog_other": "{{count}} more cards still due.",
+    "keep_reviewing": "Keep reviewing",
+    "all_caught_up": "You're all caught up!",
+    "show_hint": "Show hint",
+    "hint_counts": "Using a hint counts as assisted recall."
   },
   "settings_notifications": {
     "title": "Notification preferences",
@@ -905,11 +924,8 @@
     "subtitle": "Per-lesson review progress and recent history",
     "just_now": "Just now",
     "minutes_ago": "{{count}} min ago",
-    "minutes_ago_plural": "{{count}} mins ago",
     "hours_ago": "{{count}} hour ago",
-    "hours_ago_plural": "{{count}} hours ago",
     "days_ago": "{{count}} day ago",
-    "days_ago_plural": "{{count}} days ago",
     "lessons_title": "Lesson progress",
     "lessons_subtitle": "Estimated KR, card counts, and status per lesson",
     "empty_lessons": "Student hasn't started any lesson yet",
@@ -928,7 +944,13 @@
     "review": {
       "answered_correct": "Answered correctly",
       "answered_incorrect": "Answered incorrectly"
-    }
+    },
+    "minutes_ago_other": "{{count}} mins ago",
+    "minutes_ago_one": "{{count}} min ago",
+    "hours_ago_other": "{{count}} hours ago",
+    "hours_ago_one": "{{count}} hour ago",
+    "days_ago_other": "{{count}} days ago",
+    "days_ago_one": "{{count}} day ago"
   },
   "teacher_progress": {
     "breadcrumb": "Lesson progress",
@@ -973,13 +995,9 @@
     "today": "Today",
     "yesterday": "Yesterday",
     "days_ago": "{{count}} day ago",
-    "days_ago_plural": "{{count}} days ago",
     "weeks_ago": "{{count}} week ago",
-    "weeks_ago_plural": "{{count}} weeks ago",
     "months_ago": "{{count}} month ago",
-    "months_ago_plural": "{{count}} months ago",
     "flag_count": "{{count}} issue",
-    "flag_count_plural": "{{count}} issues",
     "cols": {
       "student": "Student",
       "why_flagged": "Why flagged",
@@ -1008,7 +1026,15 @@
       "tp_gap_short": "Weak when tested live",
       "tp_gap_desc": "Scores well on written quizzes but much lower in live interviews (30+ point gap).",
       "tp_gap_action": "Give them more speaking or explain-out-loud practice."
-    }
+    },
+    "days_ago_other": "{{count}} days ago",
+    "days_ago_one": "{{count}} day ago",
+    "weeks_ago_other": "{{count}} weeks ago",
+    "weeks_ago_one": "{{count}} week ago",
+    "months_ago_other": "{{count}} months ago",
+    "months_ago_one": "{{count}} month ago",
+    "flag_count_other": "{{count}} issues",
+    "flag_count_one": "{{count}} issue"
   },
   "teacher_sr_cohort": {
     "breadcrumb_teaching": "My Courses",
@@ -1025,7 +1051,6 @@
     "histogram_subtitle": "How many students fall into each memory-strength range",
     "kr_hint": "Memory strength (technically \"KR\", knowledge retention): the model's estimate of how likely a student is to recall the material right now, from 0% to 100%. Higher is better.",
     "student_count": "{{count}} student",
-    "student_count_plural": "{{count}} students",
     "kr_axis": "Memory strength",
     "students_axis": "Students",
     "kr_tooltip_label": "Memory strength",
@@ -1063,7 +1088,9 @@
       "correct": "Correct",
       "incorrect": "Incorrect",
       "accuracy_value": "{{correct}}/{{total}} correct"
-    }
+    },
+    "student_count_other": "{{count}} students",
+    "student_count_one": "{{count}} student"
   },
   "management_career_paths": {
     "title": "Manage career paths",
@@ -1111,12 +1138,13 @@
     "card_chip": "Career path",
     "enrolled_badge": "Enrolled",
     "n_courses": "{{count}} course",
-    "n_courses_plural": "{{count}} courses",
     "load_failed_title": "Couldn't load career paths",
     "load_failed_body": "Please try again in a few minutes.",
     "retry": "Retry",
     "empty_title": "No career paths yet",
-    "empty_body": "When managers publish new paths, they will appear here."
+    "empty_body": "When managers publish new paths, they will appear here.",
+    "n_courses_other": "{{count}} courses",
+    "n_courses_one": "{{count}} course"
   },
   "courses_list": {
     "ai_chip": "AI-POWERED",
@@ -1144,7 +1172,6 @@
     "active_session": "Active session",
     "welcome": "Welcome back, {{name}}.",
     "enrolled_count": "You are enrolled in {{count}} course.",
-    "enrolled_count_plural": "You are enrolled in {{count}} courses.",
     "explore_intro": "Explore the catalog to start your learning journey.",
     "stats": {
       "enrolled": "Enrolled",
@@ -1179,7 +1206,9 @@
     "ready_body": "Finish your enrolled courses, take AI-generated quizzes, and practice realistic interview scenarios — everything is tracked and personalized to your learning path.",
     "view_progress": "View progress",
     "ask_ai": "Ask the AI assistant",
-    "ai_chip": "AI-powered"
+    "ai_chip": "AI-powered",
+    "enrolled_count_other": "You are enrolled in {{count}} courses.",
+    "enrolled_count_one": "You are enrolled in {{count}} course."
   },
   "admin": {
     "audit": {
@@ -1610,7 +1639,6 @@
       "roles": {
         "title": "Roles & permissions",
         "count": "{{count}} role",
-        "count_plural": "{{count}} roles",
         "none": "No role",
         "empty": "No roles assigned to this user.",
         "assign_new": "Assign new role",
@@ -1653,7 +1681,9 @@
           "revoked": "Role revoked",
           "disabled": "Disabled. Revoked {{count}} session(s).",
           "enabled": "User reactivated"
-        }
+        },
+        "count_other": "{{count}} roles",
+        "count_one": "{{count}} role"
       },
       "confirm_disable": {
         "title": "Disable user?",
@@ -2489,7 +2519,8 @@
     },
     "criteria": {
       "assessed_on": "Assessed on {{count}} criterion",
-      "assessed_on_plural": "Assessed on {{count}} criteria"
+      "assessed_on_other": "Assessed on {{count}} criteria",
+      "assessed_on_one": "Assessed on {{count}} criterion"
     },
     "actions": {
       "starting": "Starting...",
@@ -2530,9 +2561,10 @@
         "back_to_lesson": "Continue to lesson",
         "retry": "Try again",
         "attempts_left": "{{count}} attempt left",
-        "attempts_left_plural": "{{count}} attempts left",
         "cooldown": "You can try again after {{when}}",
-        "no_attempts": "You've used all your attempts for this interview. Review the study plan below and reach out to your teacher if you need another try."
+        "no_attempts": "You've used all your attempts for this interview. Review the study plan below and reach out to your teacher if you need another try.",
+        "attempts_left_other": "{{count}} attempts left",
+        "attempts_left_one": "{{count}} attempt left"
       }
     },
     "intro": {
@@ -3501,7 +3533,10 @@
         "questions_missing_difficulty": "{{count}} approved question is missing a difficulty label, so difficulty adaptation can't place it.",
         "questions_missing_difficulty_other": "{{count}} approved questions are missing a difficulty label, so difficulty adaptation can't place them.",
         "low_difficulty_diversity": "All approved questions share one difficulty level, so there is no easy-to-hard ramp to adapt along.",
-        "insufficient_question_coverage": "The approved question pool looks thin for the configured duration; add more so the interview doesn't run out early."
+        "insufficient_question_coverage": "The approved question pool looks thin for the configured duration; add more so the interview doesn't run out early.",
+        "questions_without_outcome_one": "{{count}} approved question is not linked to an outcome, so its evidence can't be scored.",
+        "outcomes_without_question_one": "{{count}} outcome has no approved question, so it can never be covered.",
+        "questions_missing_difficulty_one": "{{count}} approved question is missing a difficulty label, so difficulty adaptation can't place it."
       }
     },
     "errors": {
@@ -3848,7 +3883,6 @@
       "ai_generated": "AI-generated",
       "manually_added": "Added manually",
       "source_count": "{{count}} source",
-      "source_count_plural": "{{count}} sources",
       "no_answer": "No model answer yet",
       "move_to_top": "Move to top",
       "move_to_bottom": "Move to bottom",
@@ -3920,7 +3954,9 @@
         "moved_to_practice": "Moved to the practice question set.",
         "moved_to_graded": "Moved back to the graded question set.",
         "badge": "Practice"
-      }
+      },
+      "source_count_other": "{{count}} sources",
+      "source_count_one": "{{count}} source"
     },
     "review_status": {
       "pending": "Pending review",

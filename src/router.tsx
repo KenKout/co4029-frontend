@@ -511,12 +511,24 @@ const srDashboardRoute = createRoute({
 const studyCardsDueRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/study/cards-due",
+  // `lesson` (UUID) scopes the list to one lesson — used by the SR reminder
+  // deep-link (`/study/cards-due?lesson={id}`). `course` (slug) scopes to one
+  // course. Both optional; omit for the full backlog.
+  validateSearch: (search: Record<string, unknown>) => ({
+    lesson: typeof search.lesson === "string" ? search.lesson : undefined,
+    course: typeof search.course === "string" ? search.course : undefined,
+  }),
   component: StudyCardsDuePage,
 });
 
 const studyReviewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/study/review",
+  // Scope the review session to one lesson or course; omit for everything.
+  validateSearch: (search: Record<string, unknown>) => ({
+    lesson: typeof search.lesson === "string" ? search.lesson : undefined,
+    course: typeof search.course === "string" ? search.course : undefined,
+  }),
   component: lazyRouteComponent(() => import("@/routes/study-review")),
 });
 

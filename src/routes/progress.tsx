@@ -44,7 +44,7 @@ export default function ProgressPage() {
           </div>
         </div>
         <div className="ml-auto flex gap-2">
-          <Link to="/study/cards-due">
+          <Link to="/study/cards-due" search={{ lesson: undefined, course: undefined }}>
             <Button
               size="sm"
               className="gradient-primary text-white border-0 gap-2"

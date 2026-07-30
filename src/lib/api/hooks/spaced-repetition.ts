@@ -40,17 +40,19 @@ export type CardStudentResult = {
 
 export type UseCardsDueOptions = {
   lessonId?: string;
+  courseSlug?: string;
   limit?: number;
   enabled?: boolean;
 };
 
 export function useCardsDue(opts: UseCardsDueOptions = {}) {
-  const { lessonId, limit = 20, enabled } = opts;
+  const { lessonId, courseSlug, limit = 20, enabled } = opts;
   return useInfinitePage<CardDue>({
-    queryKey: queryKeys.sr.cardsDue(lessonId, limit),
+    queryKey: queryKeys.sr.cardsDue(lessonId, limit, courseSlug),
     fetch: async (cursor, lim = limit) => {
       const params = new URLSearchParams();
       if (lessonId) params.set("lesson_id", lessonId);
+      if (courseSlug) params.set("course_slug", courseSlug);
       if (cursor) params.set("cursor", cursor);
       if (lim) params.set("limit", String(lim));
       const qs = params.toString();
@@ -76,12 +78,13 @@ export function useCardsDue(opts: UseCardsDueOptions = {}) {
  * cards are answered (refetched on invalidation).
  */
 export function useReviewQueue(opts: UseCardsDueOptions = {}) {
-  const { lessonId, limit = 20, enabled } = opts;
+  const { lessonId, courseSlug, limit = 20, enabled } = opts;
   return useQuery({
-    queryKey: queryKeys.sr.reviewQueue(lessonId, limit),
+    queryKey: queryKeys.sr.reviewQueue(lessonId, limit, courseSlug),
     queryFn: () => {
       const params = new URLSearchParams();
       if (lessonId) params.set("lesson_id", lessonId);
+      if (courseSlug) params.set("course_slug", courseSlug);
       if (limit) params.set("limit", String(limit));
       const qs = params.toString();
       return apiFetch<ReviewQueue>(
