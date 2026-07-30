@@ -22,6 +22,7 @@ import {
 } from "@/lib/api/hooks/admin-settings";
 import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 import { Switch } from "@/components/ui/switch";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 
 const GROUP_ORDER = [
@@ -457,13 +458,34 @@ function SettingRow({
   );
 }
 
-/** Dense alternate layout: Setting | Value | Default | Source | Scope. */
+/**
+ * Dense alternate layout as ONE hierarchical table: each group is a
+ * collapsible parent row, each setting a child row. Using the shared DataTable
+ * (rather than one <table> per group) means every column shares a single
+ * layout, so Value / Default / Source / Scope line up across all groups
+ * instead of each group's table sizing its own columns.
+ */
+type TableNode =
+  | {
+      kind: "group";
+      id: string;
+      group: string;
+      overrideCount: number;
+      count: number;
+      children: TableNode[];
+    }
+  | { kind: "setting"; id: string; setting: RuntimeSetting };
+
 function SettingsTable({
-  settings,
+  groups,
+  grouped,
+  overrideCounts,
   orgId,
   showKeys,
 }: {
-  settings: RuntimeSetting[];
+  groups: readonly string[];
+  grouped: Map<string, RuntimeSetting[]>;
+  overrideCounts: Record<string, number>;
   orgId?: string;
   showKeys: boolean;
 }) {
@@ -472,110 +494,175 @@ function SettingsTable({
 
   const scopeLabel = orgId ? "This org" : "Global";
 
-  return (
-    <table className="w-full border-collapse text-sm">
-      <thead>
-        <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
-          <th className="py-2 pr-3 font-semibold">Setting</th>
-          <th className="py-2 pr-3 font-semibold">Value</th>
-          <th className="py-2 pr-3 font-semibold">Default</th>
-          <th className="py-2 pr-3 font-semibold">Source</th>
-          <th className="py-2 pr-3 font-semibold">{scopeLabel}</th>
-          <th className="py-2" />
-        </tr>
-      </thead>
-      <tbody>
-        {settings.map((s) => {
-          const unit = unitFor(s);
-          const overrideAtThisScope =
-            orgId !== undefined ? s.org_value !== null : s.global_value !== null;
+  const nodes: TableNode[] = groups.map((group) => {
+    const rows = grouped.get(group) ?? [];
+    return {
+      kind: "group" as const,
+      id: `group:${group}`,
+      group,
+      overrideCount: overrideCounts[group] ?? 0,
+      count: rows.length,
+      children: rows.map((s) => ({
+        kind: "setting" as const,
+        id: s.key,
+        setting: s,
+      })),
+    };
+  });
+
+  const overrideAtScope = (s: RuntimeSetting) =>
+    orgId !== undefined ? s.org_value !== null : s.global_value !== null;
+
+  const columns: DataTableColumn<TableNode>[] = [
+    {
+      id: "setting",
+      header: "Setting",
+      cell: (node) => {
+        if (node.kind === "group") {
           return (
-            <tr
-              key={s.key}
-              className="border-b border-slate-100 align-top last:border-b-0"
-            >
-              <td className="py-2 pr-3">
-                <div className="flex items-center gap-1.5">
-                  {s.requires_reprocess && (
-                    <span
-                      title="Applies on next ingest"
-                      className="h-1.5 w-1.5 rounded-full bg-amber-400"
-                    />
-                  )}
-                  <span className="font-medium text-slate-800">{s.label}</span>
-                </div>
-                {showKeys && (
-                  <span className="font-mono text-[11px] text-slate-400">
-                    {s.key}
-                  </span>
-                )}
-              </td>
-              <td className="py-2 pr-3">
-                {s.type === "bool" ? (
-                  <Switch
-                    checked={Boolean(s.effective_value)}
-                    disabled={setMutation.isPending}
-                    onCheckedChange={(c) =>
-                      setMutation.mutate({ key: s.key, value: c })
-                    }
-                    aria-label={s.label}
-                  />
-                ) : (
-                  <input
-                    type="number"
-                    defaultValue={String(s.effective_value)}
-                    step={s.type === "float" ? "0.01" : "1"}
-                    min={s.minimum ?? undefined}
-                    max={s.maximum ?? undefined}
-                    className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm tabular-nums focus:border-m3-primary focus:outline-none focus:ring-1 focus:ring-m3-primary/40"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        const v = Number((e.target as HTMLInputElement).value);
-                        if (!Number.isNaN(v))
-                          setMutation.mutate({ key: s.key, value: v });
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const v = Number(e.target.value);
-                      if (
-                        !Number.isNaN(v) &&
-                        v !== Number(s.effective_value)
-                      )
-                        setMutation.mutate({ key: s.key, value: v });
-                    }}
-                  />
-                )}
-              </td>
-              <td className="py-2 pr-3 font-mono text-xs text-slate-500">
-                {String(s.default_value)}
-                {unit ? ` ${unit}` : ""}
-              </td>
-              <td className="py-2 pr-3">
-                <ResolutionPopover setting={s} />
-              </td>
-              <td className="py-2 pr-3 text-xs text-slate-500">
-                {overrideAtThisScope ? "overridden" : "inherited"}
-              </td>
-              <td className="py-2">
-                <button
-                  type="button"
-                  title={
-                    overrideAtThisScope
-                      ? "Remove this override"
-                      : "Nothing overridden at this scope"
-                  }
-                  className="rounded-md p-1 text-slate-400 enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30"
-                  disabled={!overrideAtThisScope || clearMutation.isPending}
-                  onClick={() => clearMutation.mutate(s.key)}
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                </button>
-              </td>
-            </tr>
+            <span className="flex items-center gap-2">
+              <span className="font-semibold text-slate-800">
+                {GROUP_LABELS[node.group] ?? node.group}
+              </span>
+              <span className="text-xs font-normal text-slate-400">
+                {node.count}
+              </span>
+              {node.overrideCount > 0 && (
+                <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700">
+                  {node.overrideCount} overridden
+                </span>
+              )}
+            </span>
           );
-        })}
-      </tbody>
-    </table>
+        }
+        const s = node.setting;
+        return (
+          <span className="flex flex-col">
+            <span className="flex items-center gap-1.5">
+              {s.requires_reprocess && (
+                <span
+                  title="Applies on next ingest"
+                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"
+                />
+              )}
+              <span className="font-medium text-slate-800">{s.label}</span>
+            </span>
+            {showKeys && (
+              <span className="font-mono text-[11px] text-slate-400">
+                {s.key}
+              </span>
+            )}
+          </span>
+        );
+      },
+    },
+    {
+      id: "value",
+      header: "Value",
+      width: 140,
+      cell: (node) => {
+        if (node.kind === "group") return null;
+        const s = node.setting;
+        return s.type === "bool" ? (
+          <Switch
+            checked={Boolean(s.effective_value)}
+            disabled={setMutation.isPending}
+            onCheckedChange={(c) => setMutation.mutate({ key: s.key, value: c })}
+            aria-label={s.label}
+          />
+        ) : (
+          <input
+            type="number"
+            defaultValue={String(s.effective_value)}
+            step={s.type === "float" ? "0.01" : "1"}
+            min={s.minimum ?? undefined}
+            max={s.maximum ?? undefined}
+            className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm tabular-nums focus:border-m3-primary focus:outline-none focus:ring-1 focus:ring-m3-primary/40"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                const v = Number((e.target as HTMLInputElement).value);
+                if (!Number.isNaN(v)) setMutation.mutate({ key: s.key, value: v });
+              }
+            }}
+            onBlur={(e) => {
+              const v = Number(e.target.value);
+              if (!Number.isNaN(v) && v !== Number(s.effective_value))
+                setMutation.mutate({ key: s.key, value: v });
+            }}
+          />
+        );
+      },
+    },
+    {
+      id: "default",
+      header: "Default",
+      width: 100,
+      cell: (node) => {
+        if (node.kind === "group") return null;
+        const s = node.setting;
+        const unit = unitFor(s);
+        return (
+          <span className="font-mono text-xs text-slate-500">
+            {String(s.default_value)}
+            {unit ? ` ${unit}` : ""}
+          </span>
+        );
+      },
+    },
+    {
+      id: "source",
+      header: "Source",
+      width: 120,
+      cell: (node) =>
+        node.kind === "group" ? null : (
+          <ResolutionPopover setting={node.setting} />
+        ),
+    },
+    {
+      id: "scope",
+      header: scopeLabel,
+      width: 110,
+      cell: (node) =>
+        node.kind === "group" ? null : (
+          <span className="text-xs text-slate-500">
+            {overrideAtScope(node.setting) ? "overridden" : "inherited"}
+          </span>
+        ),
+    },
+  ];
+
+  return (
+    <DataTable<TableNode>
+      columns={columns}
+      data={nodes}
+      getRowId={(n) => n.id}
+      getSubRows={(n) => (n.kind === "group" ? n.children : undefined)}
+      defaultExpanded
+      rowClassName={(n) =>
+        n.kind === "group" ? "bg-slate-50/60" : undefined
+      }
+      actionsHeader={<span className="sr-only">Reset</span>}
+      actions={(node) => {
+        if (node.kind === "group") return null;
+        const s = node.setting;
+        const canReset = overrideAtScope(s);
+        return (
+          <button
+            type="button"
+            title={
+              canReset
+                ? "Remove this override"
+                : "Nothing overridden at this scope"
+            }
+            className="rounded-md p-1 text-slate-400 enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30"
+            disabled={!canReset || clearMutation.isPending}
+            onClick={() => clearMutation.mutate(s.key)}
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+          </button>
+        );
+      }}
+    />
   );
 }
 
@@ -839,19 +926,14 @@ export default function AdminSettingsPage() {
           )}
 
           {settings.data && dense && visibleGroups.length > 0 && (
-            <div className="mt-4 space-y-8">
-              {visibleGroups.map((group) => (
-                <section key={group} id={`section-${group}`}>
-                  <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-                    {GROUP_LABELS[group] ?? group}
-                  </h2>
-                  <SettingsTable
-                    settings={grouped.get(group) ?? []}
-                    orgId={orgId || undefined}
-                    showKeys={showKeys}
-                  />
-                </section>
-              ))}
+            <div className="mt-4">
+              <SettingsTable
+                groups={visibleGroups}
+                grouped={grouped}
+                overrideCounts={overrideCounts}
+                orgId={orgId || undefined}
+                showKeys={showKeys}
+              />
             </div>
           )}
 
