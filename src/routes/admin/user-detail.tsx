@@ -165,24 +165,22 @@ function RoleAssignmentsSection({
     return m;
   }, [roleOptions]);
 
+  // Grant is valid only when a role is chosen and the scope's required target
+  // is filled. Used to disable the submit button instead of surfacing a toast
+  // after the click — the user sees up front what's still needed.
+  const isGrantValid = useMemo(() => {
+    if (!roleCode) return false;
+    if (scopeKind === "organization") return Boolean(organizationId.trim());
+    if (scopeKind === "org_unit") return Boolean(orgUnitId.trim());
+    if (scopeKind === "course") return Boolean(courseId.trim());
+    return true; // global scope needs no target
+  }, [roleCode, scopeKind, organizationId, orgUnitId, courseId]);
+
   const handleGrant = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!roleCode) {
-      toast.error(t("admin.users.roles.errors.select_role"));
-      return;
-    }
-    if (scopeKind === "organization" && !organizationId.trim()) {
-      toast.error(t("admin.users.roles.errors.need_org_id"));
-      return;
-    }
-    if (scopeKind === "org_unit" && !orgUnitId.trim()) {
-      toast.error(t("admin.users.roles.errors.need_unit_id"));
-      return;
-    }
-    if (scopeKind === "course" && !courseId.trim()) {
-      toast.error(t("admin.users.roles.errors.need_course_id"));
-      return;
-    }
+    // The submit button is disabled until the form is valid, so this is a
+    // belt-and-suspenders guard (e.g. Enter-key submit) — no toast needed.
+    if (!isGrantValid) return;
     grant.mutate(
       {
         role_code: roleCode,
@@ -412,8 +410,8 @@ function RoleAssignmentsSection({
         </div>
         <button
           type="submit"
-          disabled={grant.isPending}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:bg-m3-primary/90 disabled:opacity-50"
+          disabled={grant.isPending || !isGrantValid}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:bg-m3-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="h-3.5 w-3.5" />
           {grant.isPending
