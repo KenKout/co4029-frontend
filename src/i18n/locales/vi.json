@@ -1858,7 +1858,10 @@
       "showing_count": "Hiển thị {{count}}",
       "filter_empty": "Buổi phỏng vấn này không ghi nhận sự kiện nào thuộc loại này.",
       "filter": {
-        "total": "Tất cả tín hiệu"
+        "total": "Tất cả tín hiệu",
+        "tab_switch": "Chuyển tab",
+        "fullscreen_exit": "Toàn màn hình",
+        "focus_lost": "Mất tiêu điểm"
       },
       "risk": {
         "low_title": "Liêm chính ổn định",

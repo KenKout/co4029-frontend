@@ -1910,7 +1910,10 @@
       "showing_count": "{{count}} shown",
       "filter_empty": "No events of this type were recorded in this session.",
       "filter": {
-        "total": "All signals"
+        "total": "All signals",
+        "tab_switch": "Switching",
+        "fullscreen_exit": "Fullscreen",
+        "focus_lost": "Focus loss"
       },
       "risk": {
         "low_title": "Integrity looks clean",

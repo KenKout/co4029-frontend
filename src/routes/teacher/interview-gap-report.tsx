@@ -426,6 +426,7 @@ function IntegrityFilterTab({
   icon: Icon,
   count,
   label,
+  title,
   selected,
   warning,
   onSelect,
@@ -433,6 +434,11 @@ function IntegrityFilterTab({
   icon: typeof MonitorX;
   count: number;
   label: string;
+  /** Full event wording, kept as the tooltip + accessible name when `label` is
+      an abbreviation ("Switching" for "Switched away from the interview tab").
+      The short form keeps four tabs readable on one row; the long form stays
+      reachable so the abbreviation never has to be guessed at. */
+  title?: string;
   selected: boolean;
   /** Warning-level type with at least one hit — tinted amber even when unselected. */
   warning: boolean;
@@ -444,6 +450,8 @@ function IntegrityFilterTab({
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
+      title={title ?? label}
+      aria-label={title ? `${title} (${count})` : undefined}
       className={cn(
         "group flex w-full items-center gap-3 rounded-xl border p-3 text-left",
         // Hover/press feedback: lift + shadow on the way in, settle on click.
@@ -652,7 +660,10 @@ export function IntegrityCard({ sessionId }: { sessionId: string }) {
             selected={filter === "tab_switch"}
             warning={counts.tabSwitch > 0}
             onSelect={() => setFilter("tab_switch")}
-            label={t("teacher_interview_gap_report.integrity.event.tab_switch")}
+            label={t(
+              "teacher_interview_gap_report.integrity.filter.tab_switch",
+            )}
+            title={t("teacher_interview_gap_report.integrity.event.tab_switch")}
           />
           <IntegrityFilterTab
             icon={Maximize}
@@ -661,6 +672,9 @@ export function IntegrityCard({ sessionId }: { sessionId: string }) {
             warning={counts.fullscreenExit > 0}
             onSelect={() => setFilter("fullscreen_exit")}
             label={t(
+              "teacher_interview_gap_report.integrity.filter.fullscreen_exit",
+            )}
+            title={t(
               "teacher_interview_gap_report.integrity.event.fullscreen_exit",
             )}
           />
@@ -670,7 +684,10 @@ export function IntegrityCard({ sessionId }: { sessionId: string }) {
             selected={filter === "focus_lost"}
             warning={false}
             onSelect={() => setFilter("focus_lost")}
-            label={t("teacher_interview_gap_report.integrity.event.focus_lost")}
+            label={t(
+              "teacher_interview_gap_report.integrity.filter.focus_lost",
+            )}
+            title={t("teacher_interview_gap_report.integrity.event.focus_lost")}
           />
         </div>
       </div>
