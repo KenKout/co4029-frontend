@@ -174,7 +174,7 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
             placeholder={t(
               "management_career_paths.create_dialog.slug_placeholder",
             )}
-            className="font-mono text-sm"
+            className="font-mono"
             required
           />
           <p className="text-[11px] text-m3-on-surface-variant">
@@ -228,8 +228,15 @@ export default function ManagementCareerPathsPage() {
   const permissions = useMyPermissions();
 
   const perms = permissions.data?.permissions ?? [];
+  // Career-path authoring is gated on course lifecycle codes on the backend
+  // (see career_paths/routers/authoring.py _PATH_MANAGE_CODES), which the
+  // manager role holds. There is no `career_path.manage` code in the catalog —
+  // checking it here locked everyone but admins out of a surface the backend
+  // already allows managers to use.
   const canManage =
-    perms.includes("career_path.manage") || perms.includes("system.administer");
+    perms.includes("course.create") ||
+    perms.includes("course.update") ||
+    perms.includes("system.administer");
 
   useEffect(() => {
     if (permissions.isLoading) return;

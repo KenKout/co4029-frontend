@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, ShieldCheck, Briefcase } from "lucide-react";
+import { LayoutDashboard, ShieldCheck, Briefcase, Building2 } from "lucide-react";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +32,20 @@ const SECTIONS: SectionLink[] = [
       perms.includes("course.create") || perms.includes("lesson.manage"),
   },
   {
+    // Manager: student + course management (course lifecycle, enrolment,
+    // teacher assignment, career pathways). Gated on permissions the teacher
+    // role does NOT hold, so a plain teacher never sees this section.
+    i18nKey: "sections.manager",
+    fallback: "Manager",
+    href: "/dept",
+    icon: Building2,
+    prefix: "/management",
+    show: (perms) =>
+      perms.includes("course.assign_teacher") ||
+      perms.includes("org_unit.manage") ||
+      perms.includes("course.enrollment.create"),
+  },
+  {
     i18nKey: "sections.admin",
     fallback: "Admin",
     href: "/admin/stats",
@@ -41,8 +55,9 @@ const SECTIONS: SectionLink[] = [
   },
 ];
 
-// Routes that belong to the teacher/management section but use different URL prefixes.
-const TEACHER_EXTRA_PREFIXES = ["/management", "/dept"];
+// Routes that belong to a section but use a different URL prefix. ``/dept`` is
+// the manager's course-management landing; ``/management`` is its own prefix.
+const MANAGER_EXTRA_PREFIXES = ["/dept"];
 
 export default function SectionSwitcher() {
   const { t } = useTranslation();
@@ -53,10 +68,10 @@ export default function SectionSwitcher() {
   const visible = SECTIONS.filter((s) => s.show(perms));
   if (visible.length <= 1) return null;
 
-  const activePrefix = TEACHER_EXTRA_PREFIXES.some((p) =>
+  const activePrefix = MANAGER_EXTRA_PREFIXES.some((p) =>
     location.pathname.startsWith(p),
   )
-    ? "/teacher"
+    ? "/management"
     : ([...visible]
         .sort((a, b) => b.prefix.length - a.prefix.length)
         .find((s) => location.pathname.startsWith(s.prefix))?.prefix ??

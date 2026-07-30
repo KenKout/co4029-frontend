@@ -116,6 +116,61 @@ export function useUpdateEnrollment(enrollmentId: string, courseId: string) {
   });
 }
 
+/**
+ * Operator dashboard rollup — `GET /admin/stats/dashboard`.
+ *
+ * Declared locally rather than pulled from `Schemas[...]`: the checked-in
+ * `openapi-snapshot.json` is ~29 endpoints stale, and regenerating it sweeps in
+ * unrelated schema churn from other in-flight work (it surfaced 9 type errors in
+ * interviews / question-bank / quiz-manage). Mirror of `DashboardOut` in
+ * `abridgeai/features/admin/routers/stats.py`.
+ *
+ * NOTE: `processing_jobs` and `ai_model_calls` carry no organization edge, so the
+ * job / cost / latency fields are global even for an org-scoped admin.
+ */
+export interface AdminDashboardOut {
+  // needs action
+  job_failure_rate_pct: number;
+  jobs_failed_7d: number;
+  jobs_total_7d: number;
+  jobs_failed_prev_7d: number;
+  jobs_total_prev_7d: number;
+  queue_depth: number;
+  failed_ai_calls_30d: number;
+  // cost snapshot
+  spend_7d_usd: number;
+  spend_prev_7d_usd: number;
+  projected_month_end_usd: number;
+  top_cost_driver: string | null;
+  top_cost_driver_usd: number;
+  slowest_model: string | null;
+  slowest_model_p95_ms: number;
+  // activity
+  active_users_today: number;
+  active_users_7d: number;
+  total_users: number;
+  quiz_sessions_completed_7d: number;
+  interview_sessions_7d: number;
+  interview_pass_rate_pct: number;
+  /** Sample size behind the pass rate — distinguishes signal from dev noise. */
+  interview_evaluated_7d: number;
+  interview_students_7d: number;
+  materials_ingested_7d: number;
+  // needs attention
+  materials_stuck_processing: number;
+  published_quizzes_missing_texp: number;
+  interview_configs_no_reviewed_questions: number;
+  orgs_inactive_30d: number;
+}
+
+export function useAdminDashboard() {
+  return useQuery({
+    queryKey: queryKeys.admin.dashboard(),
+    queryFn: () => apiFetch<AdminDashboardOut>("/admin/stats/dashboard"),
+    staleTime: 1000 * 30,
+  });
+}
+
 export function useAdminStatsOverview() {
   return useQuery({
     queryKey: queryKeys.admin.statsOverview(),
@@ -216,8 +271,7 @@ export function useRestoreCourse() {
 export function useDeleteCourse() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (courseId: string) =>
-      apiDelete(`/admin/courses/${courseId}`),
+    mutationFn: (courseId: string) => apiDelete(`/admin/courses/${courseId}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["admin", "courses"] });
       void qc.invalidateQueries({ queryKey: queryKeys.admin.courseStats() });

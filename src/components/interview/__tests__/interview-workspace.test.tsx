@@ -237,6 +237,39 @@ describe("AnswerComposer", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it("renders the send hint as keycaps, not a sentence", () => {
+    // Redesign: each key is its own <kbd> so the shortcut is scannable. Enter
+    // appears twice (send, and again in the Shift combo), Shift once.
+    renderComposer("");
+    const keys = Array.from(document.querySelectorAll("kbd")).map((k) =>
+      (k.textContent ?? "").trim(),
+    );
+    expect(keys).toEqual(["Enter", "Shift", "Enter"]);
+  });
+
+  it("keeps the shortcut announceable as a sentence", () => {
+    // The keycaps are aria-hidden, so without this label a screen reader would
+    // get "Enter send Shift + Enter new line" as loose fragments — worse than
+    // the prose it replaced.
+    renderComposer("");
+    expect(
+      screen.getByLabelText(/Enter để gửi.*Shift \+ Enter để xuống dòng/i),
+    ).toBeInTheDocument();
+  });
+
+  it("labels the keys with verbs only", () => {
+    // "Enter to send" collapses to a keycap + "gửi"; the word "Enter" must not
+    // also appear as prose next to its own keycap.
+    renderComposer("");
+    const hint = screen.getByLabelText(/Enter để gửi/i);
+    const visibleText = (hint.textContent ?? "").replace(
+      /Enter|Shift|\+|·/g,
+      "",
+    );
+    expect(visibleText.trim()).toMatch(/gửi/);
+    expect(visibleText.trim()).toMatch(/xuống dòng/);
+  });
+
   it("does not send an empty answer", () => {
     const onSubmit = renderComposer("   ");
     fireEvent.keyDown(screen.getByRole("textbox"), {
@@ -963,12 +996,8 @@ describe("P0 focused interview room", () => {
     // The turn text appears twice: once in the sr-only aria-live announcement
     // region (accessibility) and once as the visible question. Assert the
     // visible one specifically rather than failing on the intentional duplicate.
-    const matches = screen.getAllByText(
-      "Thank you. Can you hear me clearly?",
-    );
-    expect(
-      matches.some((el) => !el.classList.contains("sr-only")),
-    ).toBe(true);
+    const matches = screen.getAllByText("Thank you. Can you hear me clearly?");
+    expect(matches.some((el) => !el.classList.contains("sr-only"))).toBe(true);
     expect(
       screen.getByRole("button", { name: "Audio is clear" }),
     ).toBeVisible();
@@ -1093,5 +1122,73 @@ describe("TranscriptPanel (desktop reflow)", () => {
     expect(
       screen.queryByText(/chronological order|thứ tự thời gian/i),
     ).not.toBeInTheDocument();
+  });
+
+  it("withholds an AI turn that has not finished being read aloud", () => {
+    // The route appends a question to `transcript` BEFORE narration starts, and
+    // this panel renders turns with isLatest={false} (no typing animation), so
+    // without the presented-ids filter the full question text was readable here
+    // while the main stage still showed its "preparing" indicator.
+    render(
+      <TranscriptPanel
+        open
+        onClose={() => undefined}
+        {...baseProps}
+        transcript={[
+          { id: "q1", role: "ai", text: "Already read out", kind: "question" },
+          { id: "a1", role: "user", text: "My answer", kind: "answer" },
+          { id: "q2", role: "ai", text: "Still being read", kind: "question" },
+        ]}
+        presentedAiTurnIds={new Set(["q1"])}
+      />,
+    );
+
+    expect(screen.getByText("Already read out")).toBeInTheDocument();
+    expect(screen.getByText("My answer")).toBeInTheDocument();
+    expect(screen.queryByText("Still being read")).not.toBeInTheDocument();
+    // The count must match what is rendered, or the badge leaks the arrival.
+    expect(
+      screen.getByText(
+        i18n.t("course_interview.workspace.transcript_count", { count: 2 }),
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("reveals the AI turn once its presentation completes", () => {
+    render(
+      <TranscriptPanel
+        open
+        onClose={() => undefined}
+        {...baseProps}
+        transcript={[
+          { id: "q1", role: "ai", text: "Already read out", kind: "question" },
+          { id: "q2", role: "ai", text: "Now finished", kind: "question" },
+        ]}
+        presentedAiTurnIds={new Set(["q1", "q2"])}
+      />,
+    );
+    expect(screen.getByText("Now finished")).toBeInTheDocument();
+  });
+
+  it("keeps restored history visible when nothing has been presented yet", () => {
+    // A resumed session replays server history that never went through the
+    // presentation lifecycle. Only the LAST AI turn may be withheld, or the
+    // whole transcript would blank out on resume.
+    render(
+      <TranscriptPanel
+        open
+        onClose={() => undefined}
+        {...baseProps}
+        transcript={[
+          { id: "q1", role: "ai", text: "Restored question", kind: "question" },
+          { id: "a1", role: "user", text: "Restored answer", kind: "answer" },
+          { id: "q2", role: "ai", text: "Newest question", kind: "question" },
+        ]}
+        presentedAiTurnIds={new Set<string>()}
+      />,
+    );
+    expect(screen.getByText("Restored question")).toBeInTheDocument();
+    expect(screen.getByText("Restored answer")).toBeInTheDocument();
+    expect(screen.queryByText("Newest question")).not.toBeInTheDocument();
   });
 });

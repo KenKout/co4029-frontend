@@ -43,7 +43,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
+import { useUnsavedChangesGuard } from "@/lib/hooks/useUnsavedChangesGuard";
 import {
   useTeacherLesson,
   useUpdateLesson,
@@ -80,6 +80,7 @@ import {
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { useFileDrop } from "@/lib/use-file-drop";
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
 
 /* ── Lesson type options ── */
 const LESSON_TYPE_OPTIONS = [
@@ -316,11 +317,7 @@ function ResourceAiActions({
             : "text-m3-on-surface-variant hover:bg-m3-surface-container-highest",
         )}
       >
-        {visible ? (
-          <Eye className="h-4 w-4" />
-        ) : (
-          <EyeOff className="h-4 w-4" />
-        )}
+        {visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
       </button>
     </>
   );
@@ -930,7 +927,10 @@ export default function LessonManagePage() {
       estimatedMinutes !== (lesson.estimated_minutes?.toString() ?? "") ||
       notes !== (lesson.notes_markdown ?? ""));
 
-  useUnsavedChangesWarning(isDirty);
+  // In-app exit guard (back link) + the native reload/close warning, which the
+  // guard installs internally — so this replaces the standalone
+  // useUnsavedChangesWarning call rather than sitting alongside it.
+  const leaveGuard = useUnsavedChangesGuard(isDirty);
 
   function showFeedback(msg: string) {
     setFeedback(msg);
@@ -967,8 +967,7 @@ export default function LessonManagePage() {
       toast.success(t("teacher_common.lesson_saved"));
     } catch (err: unknown) {
       toast.error(
-        (err as Error).message ||
-          t("teacher_lesson_manage.toasts.save_failed"),
+        (err as Error).message || t("teacher_lesson_manage.toasts.save_failed"),
       );
     } finally {
       setSaving(false);
@@ -1323,6 +1322,9 @@ export default function LessonManagePage() {
           Archive/Delete reuse the existing two-click confirm: the first click
           arms (button turns red + label changes), the second executes. */}
       <div className="sticky top-16 z-10 -mx-1 mb-8 flex items-center justify-between gap-3 border-b border-m3-outline-variant/15 bg-m3-surface/85 px-1 py-3 backdrop-blur-md">
+        {/* Back to the parent module/course. Intercepted so unsaved lesson
+            edits prompt first — a plain <Link> would navigate straight away and
+            silently drop the draft. */}
         <Link
           to={
             moduleId
@@ -1330,6 +1332,23 @@ export default function LessonManagePage() {
               : "/teacher/courses/$courseId"
           }
           params={moduleId ? { courseId, moduleId } : { courseId }}
+          onClick={(e) => {
+            if (!isDirty) return; // let the Link do its normal thing
+            e.preventDefault();
+            leaveGuard.run(() => {
+              void navigate(
+                moduleId
+                  ? {
+                      to: "/teacher/courses/$courseId/modules/$moduleId",
+                      params: { courseId, moduleId },
+                    }
+                  : {
+                      to: "/teacher/courses/$courseId",
+                      params: { courseId },
+                    },
+              );
+            });
+          }}
         >
           <Button
             variant="ghost"
@@ -1615,7 +1634,9 @@ export default function LessonManagePage() {
             </h2>
             <KnowledgeGraphPreview
               lessonId={lessonId}
-              readyCount={aiMaterials.filter((m) => m.current_version_id).length}
+              readyCount={
+                aiMaterials.filter((m) => m.current_version_id).length
+              }
             />
           </section>
         </div>
@@ -1661,21 +1682,34 @@ export default function LessonManagePage() {
               <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
                 {t("teacher_lesson_manage.settings.difficulty_label")}
               </label>
-              <select
+              <Select
+                aria-label={t(
+                  "teacher_lesson_manage.settings.difficulty_label",
+                )}
                 value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-                className="w-full bg-surface-elev border border-m3-outline-variant/20 rounded-xl px-4 py-3 text-sm font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer"
-              >
-                <option value="beginner">
-                  {t("teacher_lesson_manage.settings.difficulty_beginner")}
-                </option>
-                <option value="intermediate">
-                  {t("teacher_lesson_manage.settings.difficulty_intermediate")}
-                </option>
-                <option value="advanced">
-                  {t("teacher_lesson_manage.settings.difficulty_advanced")}
-                </option>
-              </select>
+                onValueChange={setDifficulty}
+                options={[
+                  {
+                    value: "beginner",
+                    label: t(
+                      "teacher_lesson_manage.settings.difficulty_beginner",
+                    ),
+                  },
+                  {
+                    value: "intermediate",
+                    label: t(
+                      "teacher_lesson_manage.settings.difficulty_intermediate",
+                    ),
+                  },
+                  {
+                    value: "advanced",
+                    label: t(
+                      "teacher_lesson_manage.settings.difficulty_advanced",
+                    ),
+                  },
+                ]}
+                className="bg-surface-elev font-medium"
+              />
             </div>
           </div>
 
@@ -1731,27 +1765,30 @@ export default function LessonManagePage() {
                 (l) => !prerequisites.includes(l.id),
               );
               return (
-                <select
+                <Select
+                  aria-label="Add a prerequisite lesson"
+                  // Action picker, not a value holder: it always shows the
+                  // prompt, and choosing an entry performs the add then resets.
+                  // Keeping value="" preserves that behaviour.
                   value=""
                   disabled={available.length === 0}
-                  onChange={(e) => {
-                    if (e.target.value) togglePrerequisite(e.target.value);
+                  onValueChange={(next) => {
+                    if (next) togglePrerequisite(next);
                   }}
-                  className="w-full bg-surface-elev border border-m3-outline-variant/20 rounded-xl px-4 py-3 text-sm font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="" disabled>
-                    {allLessons.length === 0
-                      ? "No other lessons in this course"
-                      : available.length === 0
-                        ? "All lessons added"
-                        : "Add a prerequisite lesson…"}
-                  </option>
-                  {available.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.title}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    {
+                      value: "",
+                      label:
+                        allLessons.length === 0
+                          ? "No other lessons in this course"
+                          : available.length === 0
+                            ? "All lessons added"
+                            : "Add a prerequisite lesson…",
+                    },
+                    ...available.map((l) => ({ value: l.id, label: l.title })),
+                  ]}
+                  className="bg-surface-elev font-medium"
+                />
               );
             })()}
           </div>
@@ -1774,6 +1811,9 @@ export default function LessonManagePage() {
       >
         {feedback}
       </div>
+
+      {/* "Are you sure you want to quit?" for the back link while dirty. */}
+      {leaveGuard.dialog}
     </div>
   );
 }

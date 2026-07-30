@@ -1,4 +1,4 @@
-import { test, expect, type Page, type Route } from "@playwright/test";
+import { test, expect, type Route } from "@playwright/test";
 import { Client } from "pg";
 import { execSync } from "node:child_process";
 import { loginAs } from "./_helpers/login";
@@ -69,87 +69,16 @@ async function countInterviewConfigsForCourse(
   return safeRowCount("interview_configs", "course_id = $1", [courseId]);
 }
 
-/**
- * Probe whether a client-side route is registered in the router.
- * TanStack Router renders an empty/Not-Found body for unwired paths,
- * so scenarios skip cleanly when the surface is missing.
- */
-async function isRouteWired(
-  page: Page,
-  path: string,
-  sentinel: string,
-): Promise<boolean> {
-  await page.goto(path, { waitUntil: "domcontentloaded" });
-  return page
-    .locator(sentinel)
-    .first()
-    .isVisible({ timeout: 5_000 })
-    .catch(() => false);
-}
-
 test.describe("wave-4-smoke", () => {
   test.beforeAll(async () => {
     await resetSeed();
   });
 
-  test("01 course CRUD: teacher creates → publish → archive → admin lists", async ({
-    page,
-  }) => {
-    await loginAs(page, "teacher");
-    const wired = await isRouteWired(page, "/teacher/courses/new", "h1");
-    test.skip(!wired, "/teacher/courses/new not wired or teacher blocked");
-
-    await expect(
-      page.getByRole("heading", { name: /New Course/i }).first(),
-    ).toBeVisible({ timeout: 10_000 });
-
-    const titleInput = page.locator("input").nth(0);
-    const slugInput = page.locator("input").nth(1);
-    const slugSuffix = Date.now().toString(36);
-    const slug = `e2e-w4-${slugSuffix}`;
-
-    await titleInput.fill(`E2E Wave-4 Course ${slugSuffix}`);
-    await slugInput.fill(slug);
-
-    const responsePromise = page
-      .waitForResponse(
-        (resp) =>
-          resp.url().includes("/api/v1/teacher/courses") &&
-          resp.request().method() === "POST",
-        { timeout: 10_000 },
-      )
-      .catch(() => null);
-    await page.getByRole("button", { name: /Create Course/i }).click();
-    const createResp = await responsePromise;
-
+  test("01 course CRUD: teacher creates → publish → archive → admin lists", async () => {
     test.skip(
-      !createResp || createResp.status() === 403,
-      `Teacher cannot create course (status=${createResp?.status() ?? "no-response"})`,
+      true,
+      "Course creation is manager-side; the teacher /teacher/courses/new route and its buttons were removed. Publish/archive lifecycle is covered against seeded courses elsewhere.",
     );
-
-    await page.waitForURL(/\/teacher\/courses\/[a-f0-9-]{36}/, {
-      timeout: 10_000,
-    });
-
-    await page
-      .getByRole("button", { name: /Course Settings/i })
-      .first()
-      .click();
-
-    const statusSelect = page.locator("select").nth(1);
-    await statusSelect.selectOption("published");
-    await page.getByRole("button", { name: /Save Course Settings/i }).click();
-    await page.waitForTimeout(800);
-
-    await statusSelect.selectOption("archived");
-    await page.getByRole("button", { name: /Save Course Settings/i }).click();
-    await page.waitForTimeout(800);
-
-    await loginAs(page, "admin");
-    await page.goto("/admin/courses");
-    await expect(
-      page.getByRole("heading", { name: /Quản lý khoá học/i }).first(),
-    ).toBeVisible({ timeout: 10_000 });
   });
 
   test("02 module reorder sends full ordered id list", async ({ page }) => {

@@ -5405,18 +5405,22 @@ export interface components {
             deleted_at?: string | null;
             /** Deleted By */
             deleted_by?: string | null;
+            /** Parent Id */
+            parent_id?: string | null;
+            /** Code */
+            code?: string | null;
+            /** Depth */
+            depth?: number;
         };
         /**
          * CourseLearningOutcomeCreate
          * @description Body for ``POST /teacher/courses/{course_id}/outcomes`` (§LO-1).
-         *
-         *     Only ``outcome_text`` is client-supplied. ``position`` is assigned
-         *     server-side (append at the end); the ``(L.O.x)`` code is derived from
-         *     that position at display time and is never stored.
          */
         CourseLearningOutcomeCreate: {
             /** Outcome Text */
             outcome_text: string;
+            /** Parent Id */
+            parent_id?: string | null;
         };
         /**
          * CourseLearningOutcomePublic
@@ -5432,18 +5436,22 @@ export interface components {
             position: number;
             /** Outcome Text */
             outcome_text: string;
+            /** Parent Id */
+            parent_id?: string | null;
+            /** Code */
+            code?: string | null;
+            /** Depth */
+            depth?: number;
         };
         /**
          * CourseLearningOutcomeUpdate
          * @description Body for ``PATCH /teacher/courses/{course_id}/outcomes/{outcome_id}``.
-         *
-         *     Only the text is editable — position is managed by the server
-         *     (append on create, contiguous re-index on delete), and the code is
-         *     display-only, so neither is accepted from the client.
          */
         CourseLearningOutcomeUpdate: {
             /** Outcome Text */
             outcome_text?: string | null;
+            /** Parent Id */
+            parent_id?: string | null;
         };
         /** CoursePage */
         CoursePage: {
@@ -10097,6 +10105,8 @@ export interface components {
             learning_outcome_id?: string | null;
             /** Outcome Position */
             outcome_position?: number | null;
+            /** Outcome Code */
+            outcome_code?: string | null;
             /** Explanation */
             explanation?: string | null;
             /** Difficulty */
@@ -10282,6 +10292,8 @@ export interface components {
             learning_outcome_id?: string | null;
             /** Outcome Position */
             outcome_position?: number | null;
+            /** Outcome Code */
+            outcome_code?: string | null;
         };
         /**
          * QuizResultsRead

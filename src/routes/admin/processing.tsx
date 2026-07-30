@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import {
@@ -176,7 +176,11 @@ export default function AdminProcessingPage() {
   const canAdmin =
     permissions.data?.permissions.includes("system.administer") ?? false;
 
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  // Seed the filter from ?status= so the admin dashboard can deep-link straight
+  // to the failed jobs ("Job failure rate" tile) instead of landing on the
+  // unfiltered queue and making the operator re-select.
+  const search = useSearch({ strict: false }) as { status?: string };
+  const [statusFilter, setStatusFilter] = useState<string>(search.status ?? "");
   const [retryingId, setRetryingId] = useState<string | null>(null);
 
   useEffect(() => {

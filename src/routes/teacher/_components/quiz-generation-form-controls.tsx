@@ -34,6 +34,7 @@ import { Input } from "@/components/ui/input";
 import { useLessonOutline } from "@/lib/api/hooks/teacher-courses";
 import type { LessonPublic } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
 
 /**
  * Bloom's taxonomy levels accepted by the backend
@@ -214,7 +215,6 @@ export function CoverageOptionsForm({
                 ),
               })
             }
-            className="bg-m3-surface text-sm"
           />
         </div>
         <div className="space-y-1.5">
@@ -234,7 +234,6 @@ export function CoverageOptionsForm({
                 ),
               })
             }
-            className="bg-m3-surface text-sm"
           />
         </div>
       </div>
@@ -242,18 +241,21 @@ export function CoverageOptionsForm({
         <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
           Section grouping
         </label>
-        <select
+        <Select<"auto" | "fixed">
+          aria-label="Section grouping"
           value={sectionGrouping}
-          onChange={(e) =>
-            onChange({
-              section_grouping: e.target.value as "auto" | "fixed",
-            })
-          }
-          className="w-full rounded-md border border-m3-outline-variant/40 bg-m3-surface px-3 py-1.5 text-sm text-m3-on-surface focus:border-m3-primary focus:outline-none"
-        >
-          <option value="fixed">Fixed bundle (use slides per section)</option>
-          <option value="auto">Auto (semantic — one section per topic)</option>
-        </select>
+          onValueChange={(next) => onChange({ section_grouping: next })}
+          options={[
+            {
+              value: "fixed",
+              label: "Fixed bundle (use slides per section)",
+            },
+            {
+              value: "auto",
+              label: "Auto (semantic — one section per topic)",
+            },
+          ]}
+        />
         <p className="text-[10px] text-m3-on-surface-variant">
           <strong>Fixed</strong>: bundle every <em>N</em> consecutive slides
           into one section. <strong>Auto</strong>: let the chunker's semantic
@@ -278,7 +280,6 @@ export function CoverageOptionsForm({
               ),
             })
           }
-          className="bg-m3-surface text-sm"
         />
         <p className="text-[10px] text-m3-on-surface-variant">
           When grouping is <strong>fixed</strong>, every <em>N</em> consecutive
@@ -588,7 +589,6 @@ export function BloomDistributionInput({
                     );
                     onChange({ ...distribution, [level]: next });
                   }}
-                  className="bg-m3-surface text-sm"
                 />
               </div>
             ))}

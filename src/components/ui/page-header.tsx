@@ -11,6 +11,11 @@ interface PageHeaderProps {
   /** Optional back-navigation target. When set, a ghost back arrow is shown
       to the left of the title. Ignored when `onBack` is provided. */
   backTo?: string;
+  /** Path params for `backTo` when it is a param route (e.g.
+      "/teacher/courses/$courseId" needs `{ courseId }`). Ignored without
+      `backTo`. Untyped on purpose: route-tree types are not generated in this
+      repo, so a typed params object cannot be expressed here. */
+  backParams?: Record<string, string>;
   /** Optional history-aware back handler. Use this (instead of `backTo`) when
       the page needs custom back logic (e.g. router.history.back() with a
       dashboard/settings fallback for deep-links). Renders the same ghost
@@ -34,6 +39,7 @@ export function PageHeader({
   title,
   subtitle,
   backTo,
+  backParams,
   onBack,
   backLabel,
   action,
@@ -51,7 +57,12 @@ export function PageHeader({
       <ArrowLeft className="h-4 w-4" />
     </Button>
   ) : backTo ? (
-    <Link to={backTo} className="shrink-0" aria-label={backLabel ?? "Back"}>
+    <Link
+      to={backTo}
+      params={backParams}
+      className="shrink-0"
+      aria-label={backLabel ?? "Back"}
+    >
       <Button variant="ghost" size="icon" className="h-8 w-8">
         <ArrowLeft className="h-4 w-4" />
       </Button>

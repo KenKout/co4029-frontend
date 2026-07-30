@@ -13,6 +13,10 @@ import {
   Sparkles,
   Mic,
   Bot,
+  Mail,
+  Phone,
+  Globe,
+  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -262,9 +266,9 @@ export default function CourseDetailPage() {
               )}
             </div>
 
-            {course.instructor && (
-              <InstructorCard instructor={course.instructor} />
-            )}
+            {/* Bio + contact details in one section (self-hides when the
+                course has neither). */}
+            <InstructorCard course={course} />
 
             <GlassCard className="p-6 sm:p-8 bg-gradient-to-br from-m3-secondary/5 to-m3-primary/5">
               <div className="flex items-start gap-4">
@@ -358,26 +362,31 @@ function ModuleAccordion({ modules }: { modules: ModulePublic[] }) {
         return (
           <div
             key={mod.id}
-            className="rounded-xl overflow-hidden border border-m3-outline-variant/30 bg-m3-surface-container-lowest shadow-sm"
+            className={cn(
+              "group rounded-xl overflow-hidden border bg-m3-surface-container-lowest shadow-sm transition-all duration-200",
+              "hover:border-m3-primary/40 hover:shadow-md",
+              isOpen ? "border-m3-primary/30" : "border-m3-outline-variant/30",
+            )}
           >
             <button
+              type="button"
               onClick={() => toggle(mod.id)}
-              className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-m3-surface-container-low transition-colors text-left"
+              className="w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer transition-colors hover:bg-m3-primary/5"
             >
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110">
                   <BookOpen className="h-4 w-4 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-headline font-semibold text-sm text-m3-on-surface leading-snug">
+                  <p className="font-headline font-semibold text-sm text-m3-on-surface leading-snug transition-colors group-hover:text-m3-primary">
                     {mod.title}
                   </p>
                 </div>
               </div>
               {isOpen ? (
-                <ChevronUp className="h-4 w-4 text-m3-outline shrink-0 ml-3" />
+                <ChevronUp className="h-4 w-4 text-m3-outline shrink-0 ml-3 transition-colors group-hover:text-m3-primary" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-m3-outline shrink-0 ml-3" />
+                <ChevronDown className="h-4 w-4 text-m3-outline shrink-0 ml-3 transition-all duration-200 group-hover:text-m3-primary group-hover:translate-y-0.5" />
               )}
             </button>
 
@@ -423,10 +432,10 @@ function ModuleItemsPanel({ moduleId }: { moduleId: string }) {
         return (
           <div
             key={item.id}
-            className="flex items-center gap-3 px-5 py-3 hover:bg-m3-surface-container-low transition-colors"
+            className="group/item flex items-center gap-3 px-5 py-3 transition-colors hover:bg-m3-primary/5"
           >
             <ItemTypeIcon type={item.item_type} />
-            <span className="text-sm text-m3-on-surface-variant flex-1 leading-snug">
+            <span className="text-sm text-m3-on-surface-variant flex-1 leading-snug transition-colors group-hover/item:text-m3-on-surface">
               {label}
             </span>
           </div>
@@ -436,43 +445,133 @@ function ModuleItemsPanel({ moduleId }: { moduleId: string }) {
   );
 }
 
-function InstructorCard({ instructor }: { instructor: InstructorRead }) {
+/**
+ * Instructor bio AND their contact details in one card.
+ *
+ * These were two adjacent GlassCards ("About the instructor" + "Contact the
+ * instructor") describing the same person, which read as duplicated headers with
+ * an arbitrary split. Merged so the avatar/name/headline sit above the contact
+ * rows in a single section.
+ *
+ * Renders nothing when there is neither an instructor nor any contact field, so
+ * a course with neither shows no empty card (preserving ContactCard's old
+ * behaviour).
+ */
+function InstructorCard({ course }: { course: CoursePublic }) {
   const { t } = useTranslation();
-  const inits = initials(instructor.display_name);
+  const instructor = course.instructor ?? null;
+
+  const email = course.contact_email?.trim();
+  const phone = course.contact_phone?.trim();
+  const website = course.contact_website_url?.trim();
+  const social = course.contact_social_url?.trim();
+  const hasContact = Boolean(email || phone || website || social);
+
+  if (!instructor && !hasContact) return null;
+
+  // Strip the scheme for a cleaner visible label on URL rows.
+  const pretty = (url: string) =>
+    url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+  const rowClass =
+    "flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors group";
+  const iconClass =
+    "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary/8 text-m3-primary group-hover:bg-m3-primary/15 transition-colors";
 
   return (
     <GlassCard className="p-6 sm:p-8">
       <h2 className="font-headline font-bold text-xl text-m3-on-surface mb-5">
         {t("course_detail.about_instructor")}
       </h2>
-      <div className="flex flex-col sm:flex-row gap-5">
-        <Avatar className="h-20 w-20 shrink-0 ring-4 ring-white shadow-xl self-start">
-          {instructor.avatar_url ? (
-            <AvatarImage
-              src={instructor.avatar_url}
-              alt={instructor.display_name}
-            />
-          ) : null}
-          <AvatarFallback className="gradient-primary text-white text-xl font-bold">
-            {inits}
-          </AvatarFallback>
-        </Avatar>
-        <div className="space-y-3 flex-1">
-          <div>
-            <h3 className="font-headline font-bold text-m3-primary text-lg">
-              {instructor.display_name}
-            </h3>
-            <p className="text-m3-secondary text-sm font-semibold mt-0.5">
-              {t("course_detail.instructor_role")}
-            </p>
+
+      {instructor && (
+        <div className="flex flex-col sm:flex-row gap-5">
+          <Avatar className="h-20 w-20 shrink-0 ring-4 ring-white shadow-xl self-start">
+            {instructor.avatar_url ? (
+              <AvatarImage
+                src={instructor.avatar_url}
+                alt={instructor.display_name}
+              />
+            ) : null}
+            <AvatarFallback className="gradient-primary text-white text-xl font-bold">
+              {initials(instructor.display_name)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="space-y-3 flex-1">
+            <div>
+              <h3 className="font-headline font-bold text-m3-primary text-lg">
+                {instructor.display_name}
+              </h3>
+              <p className="text-m3-secondary text-sm font-semibold mt-0.5">
+                {t("course_detail.instructor_role")}
+              </p>
+            </div>
+            {instructor.headline && (
+              <p className="text-sm text-m3-on-surface-variant leading-relaxed">
+                {instructor.headline}
+              </p>
+            )}
           </div>
-          {instructor.headline && (
-            <p className="text-sm text-m3-on-surface-variant leading-relaxed">
-              {instructor.headline}
-            </p>
-          )}
         </div>
-      </div>
+      )}
+
+      {/* Contact rows. Sub-headed rather than given their own card, and only
+          divided from the bio when both halves are present. */}
+      {hasContact && (
+        <div
+          className={cn(
+            instructor && "mt-6 pt-6 border-t border-m3-outline-variant/20",
+          )}
+        >
+          <h3 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant mb-3">
+            {t("course_detail.contact_title")}
+          </h3>
+          <div className="space-y-3">
+            {email && (
+              <a href={`mailto:${email}`} className={rowClass}>
+                <span className={iconClass}>
+                  <Mail className="h-4 w-4" />
+                </span>
+                <span className="truncate">{email}</span>
+              </a>
+            )}
+            {phone && (
+              <a href={`tel:${phone.replace(/\s+/g, "")}`} className={rowClass}>
+                <span className={iconClass}>
+                  <Phone className="h-4 w-4" />
+                </span>
+                <span className="truncate">{phone}</span>
+              </a>
+            )}
+            {website && (
+              <a
+                href={website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={rowClass}
+              >
+                <span className={iconClass}>
+                  <Globe className="h-4 w-4" />
+                </span>
+                <span className="truncate">{pretty(website)}</span>
+              </a>
+            )}
+            {social && (
+              <a
+                href={social}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={rowClass}
+              >
+                <span className={iconClass}>
+                  <Share2 className="h-4 w-4" />
+                </span>
+                <span className="truncate">{pretty(social)}</span>
+              </a>
+            )}
+          </div>
+        </div>
+      )}
     </GlassCard>
   );
 }
@@ -492,12 +591,23 @@ function CtaCard({
   return (
     <div className="rounded-xl overflow-hidden shadow-editorial ghost-border bg-m3-surface-container-lowest">
       <div className={cn("relative h-44 bg-gradient-to-br", gradientClass)}>
+        {course.thumbnail_url && (
+          <img
+            src={course.thumbnail_url}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <GraduationCap className="h-8 w-8 text-white" />
+        {/* GraduationCap motif only on the gradient placeholder — a real
+            thumbnail shouldn't have an icon overlaid on it. */}
+        {!course.thumbnail_url && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <GraduationCap className="h-8 w-8 text-white" />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="p-5 space-y-5">

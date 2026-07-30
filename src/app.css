@@ -545,6 +545,18 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Tab-panel enter animation.
+     Panels stay MOUNTED (they are toggled with the `hidden` attribute, not
+     unmounted) so their local state survives a tab switch — question-bank
+     alone holds ~29 useState. `hidden` on its own is a binary flip with no
+     intermediate frame, which made the content snap while the tab indicator
+     glided. Animating the panel's children on `data-active="true"` gives the
+     switch a frame without touching mount state or accessibility semantics.
+     opacity+transform only → compositor-only, no reflow. */
+  [role="tabpanel"][data-active="true"] > * {
+    animation: fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
 }
 
 /* ────────────────────────────────────────────────────────────────────

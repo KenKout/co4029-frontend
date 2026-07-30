@@ -56,6 +56,7 @@ import {
   useQuizGenerationRun,
 } from "@/lib/api/hooks/quizzes";
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
 import {
   BLOOM_LEVELS,
   type BloomDistribution,
@@ -88,6 +89,12 @@ const QUESTION_TYPES = [
   "true_false",
   "short_answer",
   "fill_blank",
+  // Phase 7 types the generation pipeline can now produce. Keep this list in
+  // lockstep with the backend's ``QuizGenerationRequest.question_types``
+  // literal — a value the API rejects fails the whole request with a 422.
+  "numerical",
+  "matching",
+  "ordering",
 ] as const;
 type QuestionType = (typeof QUESTION_TYPES)[number];
 
@@ -96,6 +103,9 @@ const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   true_false: "True / false",
   short_answer: "Short answer",
   fill_blank: "Fill in the blank",
+  numerical: "Numerical",
+  matching: "Matching",
+  ordering: "Ordering",
 };
 
 type GenerationMode = "topic" | "coverage";
@@ -372,6 +382,30 @@ export function QuizGenerationPanel({
   const generateQuiz = useGenerateQuiz(quizId);
   const { data: lessons = [] } = useAuthoringModuleLessons(moduleId);
   const { data: outcomes = [] } = useTeacherCourseOutcomes(courseId);
+  // Map each outcome id -> its direct child ids, so a parent toggle can
+  // cascade to the whole subtree. Built once per outcomes change.
+  const childrenByParent = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const o of outcomes) {
+      if (!o.parent_id) continue;
+      const siblings = map.get(o.parent_id) ?? [];
+      siblings.push(o.id);
+      map.set(o.parent_id, siblings);
+    }
+    return map;
+  }, [outcomes]);
+
+  // The outcome id plus every descendant id (depth-first). Used by
+  // toggleOutcome / select-all so parent selection implies its children.
+  function outcomeWithDescendants(outcomeId: string): string[] {
+    const acc: string[] = [];
+    const walk = (id: string) => {
+      acc.push(id);
+      for (const childId of childrenByParent.get(id) ?? []) walk(childId);
+    };
+    walk(outcomeId);
+    return acc;
+  }
   // Reattach to the latest server-side run on mount instead of
   // persisting the run id in the browser. Survives cross-device
   // sessions, tab closes, and lets two teachers viewing the same
@@ -468,12 +502,21 @@ export function QuizGenerationPanel({
   }
 
   function toggleOutcome(outcomeId: string) {
-    setForm((current) => ({
-      ...current,
-      target_outcome_ids: current.target_outcome_ids.includes(outcomeId)
-        ? current.target_outcome_ids.filter((id) => id !== outcomeId)
-        : [...current.target_outcome_ids, outcomeId],
-    }));
+    // Cascade selection down the outcome tree: toggling a node flips that node
+    // AND all of its descendants to the same state. Selecting a parent selects
+    // every child by default; unselecting the parent clears them all. This
+    // keeps the target set consistent with the L.O. hierarchy shown below.
+    const affected = outcomeWithDescendants(outcomeId);
+    setForm((current) => {
+      const willSelect = !current.target_outcome_ids.includes(outcomeId);
+      const next = new Set(current.target_outcome_ids);
+      if (willSelect) {
+        for (const id of affected) next.add(id);
+      } else {
+        for (const id of affected) next.delete(id);
+      }
+      return { ...current, target_outcome_ids: [...next] };
+    });
   }
 
   function setSelectedSectionIds(lessonId: string, sectionIds: string[]) {
@@ -555,94 +598,193 @@ export function QuizGenerationPanel({
       <div className="grid gap-4 lg:grid-cols-2 lg:gap-6 items-start">
         {/* ── Left column ── */}
         <div className="space-y-4">
-      {/* ── Source lessons picker ── */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            Source lessons
-          </label>
-          <button
-            type="button"
-            disabled={lessons.length === 0}
-            onClick={() => setSelectedLessonIds(lessons.map((l) => l.id))}
-            className="text-xs font-semibold text-m3-secondary hover:text-m3-primary disabled:text-m3-on-surface-variant/50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            Select all
-          </button>
-        </div>
-        <div className="space-y-2">
-          {lessons.length === 0 ? (
-            <div className="rounded-xl bg-m3-surface p-4 text-sm text-m3-on-surface-variant text-center">
-              This module has no lessons yet. Add a lesson with AI-ready
-              material before generating.
-            </div>
-          ) : (
-            lessons.map((lesson) => {
-              const checked = selectedLessonIds.includes(lesson.id);
-              return (
-                <label
-                  key={lesson.id}
-                  className={cn(
-                    "flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer transition-all",
-                    checked
-                      ? "border-m3-secondary bg-m3-secondary-fixed/30"
-                      : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
-                  )}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleLesson(lesson.id)}
-                    className="h-4 w-4"
-                  />
-                  <span className="flex-1 text-sm font-semibold text-m3-on-surface truncate">
-                    {lesson.title}
-                  </span>
-                </label>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* ── Target learning outcomes ── */}
-      {courseId && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t("quiz_generation.outcomes.label", "Target learning outcomes")}
-            </label>
-            {outcomes.length > 0 && (
+          {/* ── Source lessons picker ── */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                Source lessons
+              </label>
               <button
                 type="button"
-                onClick={() =>
-                  setForm((current) => ({
-                    ...current,
-                    target_outcome_ids: outcomes.map((o) => o.id),
-                  }))
-                }
-                className="text-xs font-semibold text-m3-secondary hover:text-m3-primary cursor-pointer"
+                disabled={lessons.length === 0}
+                onClick={() => setSelectedLessonIds(lessons.map((l) => l.id))}
+                className="text-xs font-semibold text-m3-secondary hover:text-m3-primary disabled:text-m3-on-surface-variant/50 disabled:cursor-not-allowed cursor-pointer"
               >
-                {t("quiz_generation.outcomes.select_all", "Select all")}
+                Select all
               </button>
-            )}
+            </div>
+            <div className="space-y-2">
+              {lessons.length === 0 ? (
+                <div className="rounded-xl bg-m3-surface p-4 text-sm text-m3-on-surface-variant text-center">
+                  This module has no lessons yet. Add a lesson with AI-ready
+                  material before generating.
+                </div>
+              ) : (
+                lessons.map((lesson) => {
+                  const checked = selectedLessonIds.includes(lesson.id);
+                  return (
+                    <label
+                      key={lesson.id}
+                      className={cn(
+                        "flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer transition-all",
+                        checked
+                          ? "border-m3-secondary bg-m3-secondary-fixed/30"
+                          : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleLesson(lesson.id)}
+                        className="h-4 w-4"
+                      />
+                      <span className="flex-1 text-sm font-semibold text-m3-on-surface truncate">
+                        {lesson.title}
+                      </span>
+                    </label>
+                  );
+                })
+              )}
+            </div>
           </div>
-          <div className="space-y-2">
-            {outcomes.length === 0 ? (
-              <div className="rounded-xl bg-m3-surface p-4 text-sm text-m3-on-surface-variant text-center">
-                {t(
-                  "quiz_generation.outcomes.empty",
-                  "No learning outcomes defined for this course yet. Questions will be generated without outcome tagging.",
+
+          {/* ── Target learning outcomes ── */}
+          {courseId && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                  {t(
+                    "quiz_generation.outcomes.label",
+                    "Target learning outcomes",
+                  )}
+                </label>
+                {outcomes.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((current) => ({
+                        ...current,
+                        target_outcome_ids: outcomes.map((o) => o.id),
+                      }))
+                    }
+                    className="text-xs font-semibold text-m3-secondary hover:text-m3-primary cursor-pointer"
+                  >
+                    {t("quiz_generation.outcomes.select_all", "Select all")}
+                  </button>
                 )}
               </div>
-            ) : (
-              outcomes.map((outcome, index) => {
-                const checked = form.target_outcome_ids.includes(outcome.id);
+              <div className="space-y-2">
+                {outcomes.length === 0 ? (
+                  <div className="rounded-xl bg-m3-surface p-4 text-sm text-m3-on-surface-variant text-center">
+                    {t(
+                      "quiz_generation.outcomes.empty",
+                      "No learning outcomes defined for this course yet. Questions will be generated without outcome tagging.",
+                    )}
+                  </div>
+                ) : (
+                  outcomes.map((outcome) => {
+                    const checked = form.target_outcome_ids.includes(
+                      outcome.id,
+                    );
+                    const depth = outcome.depth ?? 0;
+                    const hasChildren =
+                      (childrenByParent.get(outcome.id)?.length ?? 0) > 0;
+                    return (
+                      <label
+                        key={outcome.id}
+                        style={{ marginLeft: `${depth * 1.25}rem` }}
+                        className={cn(
+                          "flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer transition-all",
+                          checked
+                            ? "border-m3-secondary bg-m3-secondary-fixed/30"
+                            : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleOutcome(outcome.id)}
+                          className="h-4 w-4"
+                        />
+                        <span className="shrink-0 rounded-md bg-violet-100 px-1.5 py-0.5 text-[11px] font-bold text-violet-700">
+                          {t("quiz_generation.outcomes.badge", "L.O.{{n}}", {
+                            n: outcome.code ?? outcome.position,
+                          })}
+                        </span>
+                        <span className="flex-1 text-sm text-m3-on-surface">
+                          {outcome.outcome_text}
+                        </span>
+                        {hasChildren && (
+                          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-m3-on-surface-variant">
+                            {t(
+                              "quiz_generation.outcomes.parent_hint",
+                              "incl. sub-outcomes",
+                            )}
+                          </span>
+                        )}
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        {/* ── Right column ── */}
+        <div className="space-y-4">
+          {/* ── Question count + difficulty ── */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                Questions
+              </label>
+              <Input
+                type="number"
+                min={1}
+                max={50}
+                value={form.question_count}
+                onChange={(e) =>
+                  setForm((current) => ({
+                    ...current,
+                    question_count: Math.min(
+                      50,
+                      Math.max(1, Number(e.target.value) || 1),
+                    ),
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                Difficulty
+              </label>
+              <Select<Difficulty>
+                aria-label="Difficulty"
+                value={form.difficulty}
+                onValueChange={(next) =>
+                  setForm((current) => ({ ...current, difficulty: next }))
+                }
+                options={DIFFICULTIES.map((level) => ({
+                  value: level,
+                  label: level,
+                }))}
+              />
+            </div>
+          </div>
+
+          {/* ── Question types ── */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              Question types
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {QUESTION_TYPES.map((type) => {
+                const checked = form.question_types.includes(type);
                 return (
                   <label
-                    key={outcome.id}
+                    key={type}
                     className={cn(
-                      "flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer transition-all",
+                      "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition-all",
                       checked
                         ? "border-m3-secondary bg-m3-secondary-fixed/30"
                         : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
@@ -651,135 +793,47 @@ export function QuizGenerationPanel({
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={() => toggleOutcome(outcome.id)}
-                      className="h-4 w-4"
+                      onChange={(e) =>
+                        setForm((current) => {
+                          const next = e.target.checked
+                            ? [...current.question_types, type]
+                            : current.question_types.filter(
+                                (entry) => entry !== type,
+                              );
+                          return { ...current, question_types: next };
+                        })
+                      }
+                      className="h-3.5 w-3.5"
                     />
-                    <span className="shrink-0 rounded-md bg-violet-100 px-1.5 py-0.5 text-[11px] font-bold text-violet-700">
-                      {t("quiz_generation.outcomes.badge", "L.O.{{n}}", {
-                        n: index + 1,
-                      })}
-                    </span>
-                    <span className="flex-1 text-sm text-m3-on-surface">
-                      {outcome.outcome_text}
+                    <span className="text-m3-on-surface">
+                      {QUESTION_TYPE_LABELS[type]}
                     </span>
                   </label>
                 );
-              })
-            )}
+              })}
+            </div>
+            <p className="text-[10px] text-m3-on-surface-variant">
+              Generator cycles through the selected types when budgeting per
+              section. Pick at least one.
+            </p>
           </div>
-        </div>
-      )}
-        </div>
-        {/* ── Right column ── */}
-        <div className="space-y-4">
-      {/* ── Question count + difficulty ── */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            Questions
-          </label>
-          <Input
-            type="number"
-            min={1}
-            max={50}
-            value={form.question_count}
-            onChange={(e) =>
-              setForm((current) => ({
-                ...current,
-                question_count: Math.min(
-                  50,
-                  Math.max(1, Number(e.target.value) || 1),
-                ),
-              }))
+
+          <ModeToggle
+            mode={form.generation_mode}
+            onChange={(mode) =>
+              setForm((current) => ({ ...current, generation_mode: mode }))
             }
-            className="bg-m3-surface text-sm"
           />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            Difficulty
-          </label>
-          <select
-            value={form.difficulty}
-            onChange={(e) =>
-              setForm((current) => ({
-                ...current,
-                difficulty: e.target.value as Difficulty,
-              }))
-            }
-            className="h-8 w-full rounded-lg border border-m3-outline-variant/20 bg-m3-surface px-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-          >
-            {DIFFICULTIES.map((level) => (
-              <option key={level} value={level}>
-                {level}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
 
-      {/* ── Question types ── */}
-      <div className="space-y-1.5">
-        <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          Question types
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          {QUESTION_TYPES.map((type) => {
-            const checked = form.question_types.includes(type);
-            return (
-              <label
-                key={type}
-                className={cn(
-                  "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition-all",
-                  checked
-                    ? "border-m3-secondary bg-m3-secondary-fixed/30"
-                    : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
-                )}
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={(e) =>
-                    setForm((current) => {
-                      const next = e.target.checked
-                        ? [...current.question_types, type]
-                        : current.question_types.filter(
-                            (entry) => entry !== type,
-                          );
-                      return { ...current, question_types: next };
-                    })
-                  }
-                  className="h-3.5 w-3.5"
-                />
-                <span className="text-m3-on-surface">
-                  {QUESTION_TYPE_LABELS[type]}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-        <p className="text-[10px] text-m3-on-surface-variant">
-          Generator cycles through the selected types when budgeting per
-          section. Pick at least one.
-        </p>
-      </div>
-
-      <ModeToggle
-        mode={form.generation_mode}
-        onChange={(mode) =>
-          setForm((current) => ({ ...current, generation_mode: mode }))
-        }
-      />
-
-      {hasExistingQuestions && (
-        <AppendToggle
-          append={form.append}
-          hasExistingQuestions={hasExistingQuestions}
-          onChange={(value) =>
-            setForm((current) => ({ ...current, append: value }))
-          }
-        />
-      )}
+          {hasExistingQuestions && (
+            <AppendToggle
+              append={form.append}
+              hasExistingQuestions={hasExistingQuestions}
+              onChange={(value) =>
+                setForm((current) => ({ ...current, append: value }))
+              }
+            />
+          )}
         </div>
       </div>
       {/* ── Full-width sections below the two-column grid ── */}

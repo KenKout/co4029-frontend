@@ -21,6 +21,7 @@ import {
   Clock3,
   Headphones,
   Loader2,
+  Maximize,
   MessageSquareText,
   Mic,
   MicOff,
@@ -53,6 +54,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import {
+  visibleTranscriptTurns,
+  visibleTranscriptCount,
+} from "@/lib/interview/transcript-visibility";
 import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration";
 import type {
   InterviewLanguage,
@@ -144,10 +149,9 @@ export interface TurnKindVisual {
   labelKey: string;
 }
 
-const TURN_KIND_VISUALS: Partial<Record<
-  NonNullable<ConversationTurn["kind"]>,
-  TurnKindVisual
->> = {
+const TURN_KIND_VISUALS: Partial<
+  Record<NonNullable<ConversationTurn["kind"]>, TurnKindVisual>
+> = {
   hint: {
     icon: Sparkles,
     avatarClass: "border-amber-200 bg-amber-50 text-amber-600",
@@ -267,7 +271,10 @@ export function VoiceStatusIndicator({
               <span
                 key={dot}
                 className="size-1.5 rounded-full bg-primary/80 motion-safe:animate-pulse"
-                style={{ animationDelay: `${dot * 200}ms`, animationDuration: "1s" }}
+                style={{
+                  animationDelay: `${dot * 200}ms`,
+                  animationDuration: "1s",
+                }}
               />
             ))}
           </span>
@@ -281,7 +288,10 @@ export function VoiceStatusIndicator({
                 "w-0.5 rounded-full bg-primary motion-safe:animate-pulse",
                 ["h-2", "h-4", "h-3", "h-5", "h-2.5"][bar],
               )}
-              style={{ animationDelay: `${bar * 110}ms`, animationDuration: "0.9s" }}
+              style={{
+                animationDelay: `${bar * 110}ms`,
+                animationDuration: "0.9s",
+              }}
             />
           ))
         ) : status === "error" ? (
@@ -324,6 +334,7 @@ export function InterviewHeader({
   interviewTitle,
   elapsed,
   timerActive = true,
+  assessmentStartedAtMs,
   expectedDurationMinutes,
   currentQuestion,
   totalQuestions,
@@ -341,6 +352,10 @@ export function InterviewHeader({
   interviewTitle: string;
   elapsed: string;
   timerActive?: boolean;
+  /** Epoch ms when the assessed timer started; drives the time-based progress
+   * fallback used when the question total is unknown (always, on the learner
+   * API). Null before the assessment begins. */
+  assessmentStartedAtMs?: number | null;
   expectedDurationMinutes?: number | null;
   currentQuestion?: number | null;
   totalQuestions?: number | null;
@@ -361,9 +376,31 @@ export function InterviewHeader({
   const safeTotal = totalQuestions
     ? Math.max(safeCurrent, totalQuestions)
     : null;
+  // The learner API intentionally reveals questions one at a time and never
+  // exposes a question total, so `safeTotal` is effectively always null and the
+  // question-count progress below never applies. Without a fallback the bar sat
+  // frozen on the indeterminate 1/3 pulse for the WHOLE session. When the
+  // interview has a time limit and the assessed timer is running, drive the bar
+  // off elapsed/limit instead so it actually advances. Derived at render time;
+  // the header already re-renders every second via the `elapsed` string.
+  const timeProgress =
+    timerActive &&
+    assessmentStartedAtMs != null &&
+    expectedDurationMinutes != null &&
+    expectedDurationMinutes > 0
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            ((Date.now() - assessmentStartedAtMs) /
+              (expectedDurationMinutes * 60_000)) *
+              100,
+          ),
+        )
+      : null;
   const progress = safeTotal
     ? Math.min(100, (safeCurrent / safeTotal) * 100)
-    : null;
+    : timeProgress;
   const expected = expectedDurationMinutes
     ? formatRelativeInterviewTime(expectedDurationMinutes * 60)
     : null;
@@ -445,7 +482,16 @@ export function InterviewHeader({
               )}
               className="h-1.5 overflow-hidden rounded-full bg-surface-muted"
             >
-              <span className="block h-full w-1/3 rounded-full bg-primary motion-safe:animate-pulse" />
+              {/* Indeterminate: a band that actually travels. The previous
+                  version was a stationary one-third bar that merely pulsed in
+                  place, which reads as a stalled or broken progress bar rather
+                  than as "total unknown". Reuses the existing `shimmer`
+                  keyframe (background-position, no layout) at a progress-bar
+                  tempo instead of its 8s decorative default. */}
+              <span
+                className="block h-full rounded-full bg-[linear-gradient(90deg,transparent_0%,var(--color-primary)_50%,transparent_100%)] bg-[length:200%_100%] motion-safe:animate-shimmer"
+                style={{ animationDuration: "1.6s" }}
+              />
             </div>
           )}
         </div>
@@ -577,7 +623,8 @@ export function ConversationMessage({
   return (
     <article
       className={cn(
-        "flex w-full gap-3 motion-safe:animate-fade-in-up",
+        // In-conversation beat: 200ms / 8px, not the 0.7s / 32px page-card entrance.
+        "flex w-full gap-3 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 motion-safe:ease-out",
         isAi ? "justify-start" : "justify-end",
         isNestedKind && "border-l-2 border-border pl-3 sm:pl-5",
       )}
@@ -1033,7 +1080,11 @@ export function QuestionCard({
 
   return (
     <article
-      className="rounded-2xl border border-border bg-white px-5 py-5 shadow-editorial motion-safe:animate-fade-in-up sm:px-7 sm:py-7"
+      // 200ms / 8px, matching MessageTurnActions and UserTypingIndicator — the
+      // idiom this screen already uses for in-conversation beats. The shared
+      // `fade-in-up` utility is 0.7s and lifts 32px, which is right for a page
+      // card but reads as sluggish for a chat turn arriving mid-exchange.
+      className="rounded-2xl border border-border bg-white px-5 py-5 shadow-editorial motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 motion-safe:ease-out sm:px-7 sm:py-7"
       aria-labelledby={`question-${turn.id}`}
     >
       <div className="mb-5 flex flex-wrap items-center gap-2.5">
@@ -1130,6 +1181,7 @@ export function QuestionCard({
  */
 function TranscriptConversation({
   transcript,
+  presentedAiTurnIds,
   questionTypeLabel,
   speak,
   onSpeakingChange,
@@ -1139,6 +1191,8 @@ function TranscriptConversation({
   className,
 }: {
   transcript: ConversationTurn[];
+  /** Ids of AI turns whose presentation finished. Absent → show everything. */
+  presentedAiTurnIds?: ReadonlySet<string>;
   questionTypeLabel: (type: string | null | undefined) => string | null;
   speak: (text: string) => void | Promise<void> | NarrationPresentation;
   onSpeakingChange: (speaking: boolean) => void;
@@ -1152,6 +1206,19 @@ function TranscriptConversation({
   const endRef = useRef<HTMLDivElement | null>(null);
   // Only auto-scroll to newest when the user is already pinned to the bottom.
   const pinnedToBottomRef = useRef(true);
+
+  // Every turn here renders with `isLatest={false}`, which makes AiTypingMessage
+  // skip animation and paint the full text at once. A question the interviewer
+  // has not finished reading is already in `transcript` (the route appends it
+  // before narration), so without this filter it appeared here in full while
+  // the main stage was still on its "preparing" indicator.
+  const visibleTurns = useMemo(
+    () =>
+      presentedAiTurnIds
+        ? visibleTranscriptTurns(transcript, presentedAiTurnIds)
+        : transcript,
+    [transcript, presentedAiTurnIds],
+  );
 
   const handleScroll = useCallback(() => {
     const element = scrollRef.current;
@@ -1167,7 +1234,7 @@ function TranscriptConversation({
       // auto-scroll effect stays a no-op there instead of throwing.
       endRef.current?.scrollIntoView?.({ block: "nearest" });
     }
-  }, [transcript]);
+  }, [visibleTurns]);
 
   return (
     <div
@@ -1178,12 +1245,12 @@ function TranscriptConversation({
         className,
       )}
     >
-      {transcript.length === 0 ? (
+      {visibleTurns.length === 0 ? (
         <p className="py-12 text-center text-sm text-text-muted">
           {t("course_interview.workspace.transcript_empty")}
         </p>
       ) : (
-        transcript.map((turn) => (
+        visibleTurns.map((turn) => (
           <ConversationMessage
             key={turn.id}
             turn={turn}
@@ -1208,6 +1275,7 @@ export function TranscriptDrawer({
   open,
   onOpenChange,
   transcript,
+  presentedAiTurnIds,
   questionTypeLabel,
   speak,
   onSpeakingChange,
@@ -1218,6 +1286,8 @@ export function TranscriptDrawer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transcript: ConversationTurn[];
+  /** Ids of AI turns whose presentation finished. Absent → show everything. */
+  presentedAiTurnIds?: ReadonlySet<string>;
   questionTypeLabel: (type: string | null | undefined) => string | null;
   speak: (text: string) => void | Promise<void> | NarrationPresentation;
   onSpeakingChange: (speaking: boolean) => void;
@@ -1226,6 +1296,11 @@ export function TranscriptDrawer({
   replayingTurnId: string | null;
 }) {
   const { t } = useTranslation();
+  // Derived from the same rule as the list, so the badge/count can never lead
+  // the turn it is counting (which would re-introduce the "showed early" tell).
+  const visibleCount = presentedAiTurnIds
+    ? visibleTranscriptCount(transcript, presentedAiTurnIds)
+    : transcript.length;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -1242,7 +1317,7 @@ export function TranscriptDrawer({
         <MessageSquareText className="h-4 w-4" />
         {t("course_interview.workspace.view_transcript")}
         <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] text-text-muted">
-          {transcript.length}
+          {visibleCount}
         </span>
       </SheetTrigger>
       <SheetContent
@@ -1256,12 +1331,13 @@ export function TranscriptDrawer({
           </h2>
           <p className="mt-1 text-xs text-text-muted">
             {t("course_interview.workspace.transcript_count", {
-              count: transcript.length,
+              count: visibleCount,
             })}
           </p>
         </header>
         <TranscriptConversation
           transcript={transcript}
+          presentedAiTurnIds={presentedAiTurnIds}
           questionTypeLabel={questionTypeLabel}
           speak={speak}
           onSpeakingChange={onSpeakingChange}
@@ -1284,6 +1360,7 @@ export function TranscriptPanel({
   open,
   onClose,
   transcript,
+  presentedAiTurnIds,
   questionTypeLabel,
   speak,
   onSpeakingChange,
@@ -1294,6 +1371,8 @@ export function TranscriptPanel({
   open: boolean;
   onClose: () => void;
   transcript: ConversationTurn[];
+  /** Ids of AI turns whose presentation finished. Absent → show everything. */
+  presentedAiTurnIds?: ReadonlySet<string>;
   questionTypeLabel: (type: string | null | undefined) => string | null;
   speak: (text: string) => void | Promise<void> | NarrationPresentation;
   onSpeakingChange: (speaking: boolean) => void;
@@ -1302,6 +1381,9 @@ export function TranscriptPanel({
   replayingTurnId: string | null;
 }) {
   const { t } = useTranslation();
+  const visibleCount = presentedAiTurnIds
+    ? visibleTranscriptCount(transcript, presentedAiTurnIds)
+    : transcript.length;
   if (!open) return null;
 
   return (
@@ -1316,7 +1398,7 @@ export function TranscriptPanel({
           </h2>
           <p className="mt-0.5 text-xs text-text-muted">
             {t("course_interview.workspace.transcript_count", {
-              count: transcript.length,
+              count: visibleCount,
             })}
           </p>
         </div>
@@ -1334,6 +1416,7 @@ export function TranscriptPanel({
       </header>
       <TranscriptConversation
         transcript={transcript}
+        presentedAiTurnIds={presentedAiTurnIds}
         questionTypeLabel={questionTypeLabel}
         speak={speak}
         onSpeakingChange={onSpeakingChange}
@@ -1382,7 +1465,7 @@ function InterviewerAssistance({
 
   return (
     <section
-      className="rounded-2xl border border-primary/15 bg-primary-soft/35 px-5 py-4 motion-safe:animate-fade-in-up sm:ml-14 sm:px-6"
+      className="rounded-2xl border border-primary/15 bg-primary-soft/35 px-5 py-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 motion-safe:ease-out sm:ml-14 sm:px-6"
       aria-label={t("course_interview.workspace.interviewer_assistance")}
     >
       <div className="flex items-start gap-3">
@@ -1689,10 +1772,22 @@ export function FocusedInterviewStage({
       aria-label={t("course_interview.workspace.interview_room")}
     >
       {/* Polite SR announcement of the newest interviewer turn (#9). */}
-      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      <p
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {announcement}
       </p>
-      <div className="mx-auto flex min-h-full w-full max-w-[1000px] flex-col justify-center gap-5 px-4 py-6 sm:px-8 sm:py-8">
+      {/* Top-aligned, NOT vertically centred. This column's height changes on
+          almost every beat — the question card grows as the typewriter wraps to
+          a new line, the submission rail mounts, the assistance card appears —
+          and under `justify-center` every one of those re-centred the whole
+          column, so the text drifted upward character by character while the
+          candidate was reading it. Anchoring to the top costs a little empty
+          space below on short turns and buys a stage that never moves. */}
+      <div className="mx-auto flex min-h-full w-full max-w-[1000px] flex-col gap-5 px-4 py-6 sm:px-8 sm:py-8">
         {assessmentActive &&
           transcript.some(
             (turn) => turn.kind === "opening" || turn.kind === "briefing",
@@ -1778,11 +1873,15 @@ export function FocusedInterviewStage({
             </section>
           )
         ) : (
+          // Placeholder for the QuestionCard that is about to replace it. The
+          // min-height approximates a loaded card (eyebrow + two lines + action
+          // row) so the swap does not jump; without it this card was roughly
+          // half the height of its replacement and the whole stage lurched.
           <section
-            className="rounded-2xl border border-border bg-white px-6 py-12 text-center shadow-editorial"
+            className="flex min-h-[188px] flex-col items-center justify-center rounded-2xl border border-border bg-white px-6 py-12 text-center shadow-editorial sm:min-h-[212px]"
             role="status"
           >
-            <Loader2 className="mx-auto mb-4 h-6 w-6 animate-spin text-primary" />
+            <Loader2 className="mb-4 h-6 w-6 animate-spin text-primary" />
             <p className="text-sm text-text-muted">
               {t("course_interview.workspace.preparing_question")}
             </p>
@@ -1807,6 +1906,7 @@ export function FocusedInterviewStage({
             open={transcriptOpen && !transcriptDocked}
             onOpenChange={onTranscriptOpenChange}
             transcript={transcript}
+            presentedAiTurnIds={presentedAiTurnIds}
             questionTypeLabel={questionTypeLabel}
             speak={speak}
             onSpeakingChange={onSpeakingChange}
@@ -2153,6 +2253,56 @@ export function OnboardingActions({
   );
 }
 
+/**
+ * Keyboard hint under the answer box, rendered as keycaps rather than prose.
+ *
+ * Was a single sentence ("Enter to send · Shift + Enter for a new line") with one
+ * decorative `<kbd>Enter</kbd>` beside it in the focused composer, which put the
+ * same key in two visual languages at once. Now every key is a keycap and only
+ * the verbs are words, so the shortcut is scannable without reading a sentence.
+ *
+ * `aria-label` carries the original prose: a screen reader announcing
+ * "Enter send Shift plus Enter new line" as loose fragments is worse than the
+ * sentence it replaced, so the visual keycaps are hidden from the a11y tree and
+ * the sentence is what gets announced.
+ */
+function SendHint({ className }: { className?: string }) {
+  const { t } = useTranslation();
+  return (
+    <span
+      className={cn("inline-flex items-center gap-1.5", className)}
+      aria-label={t("course_interview.workspace.send_hint")}
+    >
+      <span className="inline-flex items-center gap-1" aria-hidden="true">
+        <Kbd>Enter</Kbd>
+        <span>{t("course_interview.workspace.send_hint_send")}</span>
+      </span>
+      {/* The Shift half drops on narrow screens: two keycap groups plus a timer
+          do not fit, and "Enter send" is the half a student needs first. Hiding
+          the whole hint instead would regress what mobile used to show. */}
+      <span
+        className="hidden items-center gap-1 sm:inline-flex"
+        aria-hidden="true"
+      >
+        <span className="text-border">·</span>
+        <Kbd>Shift</Kbd>
+        <span className="text-text-subtle">+</span>
+        <Kbd>Enter</Kbd>
+        <span>{t("course_interview.workspace.send_hint_newline")}</span>
+      </span>
+    </span>
+  );
+}
+
+/** One keycap. Shared so both composers render identical keys. */
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="rounded border border-border bg-surface-muted px-1 py-0.5 font-mono text-[10px] font-semibold leading-none text-text-muted">
+      {children}
+    </kbd>
+  );
+}
+
 export function AnswerComposer({
   value,
   draftLength,
@@ -2235,9 +2385,7 @@ export function AnswerComposer({
             className="block min-h-[72px] w-full resize-none overflow-y-auto bg-transparent pb-8 pr-12 text-[15px] leading-6 text-text-strong outline-none placeholder:text-text-subtle disabled:cursor-wait"
           />
 
-          <span className="absolute bottom-3 left-4 text-[10px] text-text-subtle">
-            {t("course_interview.workspace.send_hint")}
-          </span>
+          <SendHint className="absolute bottom-3 left-4 text-[10px] text-text-subtle" />
           <span className="sr-only" aria-live="polite">
             {t("course_interview.labels.character_count", {
               count: draftLength,
@@ -2371,8 +2519,7 @@ export function AnswerControls({
   // A11y (#10): after a few seconds of active listening with nothing captured,
   // surface a "we can't hear you" nudge so a voice user isn't left wondering
   // whether the mic is working.
-  const listeningSilent =
-    micActive && !speechDetected && recordingSeconds >= 4;
+  const listeningSilent = micActive && !speechDetected && recordingSeconds >= 4;
 
   return (
     <div className="space-y-4">
@@ -2787,16 +2934,10 @@ export function FocusedAnswerComposer({
 
         <div className="mt-2 flex items-center gap-2 text-[11px] text-text-subtle">
           {/* A11y (#8): keyboard-shortcut hint is discoverable at every
-              breakpoint (was hidden on mobile). Kbd styling makes the keys read
-              as keys, not prose. */}
-          <span className="inline-flex items-center gap-1">
-            <kbd className="rounded border border-border bg-surface-muted px-1 py-0.5 font-mono text-[10px] font-semibold text-text-muted">
-              Enter
-            </kbd>
-            <span className="hidden sm:inline">
-              {t("course_interview.workspace.send_hint")}
-            </span>
-          </span>
+              breakpoint (was hidden on mobile). Keys read as keys, not prose —
+              and the standalone <kbd>Enter</kbd> that used to sit beside the
+              sentence is gone, since SendHint now renders every key itself. */}
+          <SendHint />
           <span className="ml-auto font-mono font-semibold tabular-nums sm:hidden">
             {elapsed}
           </span>
@@ -2965,6 +3106,97 @@ export function LeaveInterviewDialog({
       confirmLabel={t("course_interview.leave_dialog.leave")}
       cancelLabel={t("course_interview.leave_dialog.stay")}
       onConfirm={onLeave}
+      confirmVariant="default"
+    />
+  );
+}
+
+/**
+ * Fullscreen consent gate. Shown the moment a session becomes active, before
+ * the candidate can answer. Browsers only grant `requestFullscreen()` from a
+ * user gesture, so entering fullscreen MUST originate from this button — it
+ * cannot be done automatically on mount.
+ *
+ * Not blocking by design: "Continue windowed" is offered because a denied or
+ * unsupported fullscreen must never lock a candidate out of their assessment.
+ */
+export function FullscreenPromptDialog({
+  open,
+  onConfirm,
+  onDecline,
+}: {
+  open: boolean;
+  onConfirm: () => void;
+  onDecline: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onDecline();
+      }}
+      title={t("course_interview.fullscreen.prompt_title")}
+      description={t("course_interview.fullscreen.prompt_description")}
+      confirmLabel={
+        <span className="flex items-center gap-2">
+          <Maximize className="h-4 w-4" aria-hidden="true" />
+          {t("course_interview.fullscreen.enter")}
+        </span>
+      }
+      cancelLabel={t("course_interview.fullscreen.continue_windowed")}
+      onConfirm={onConfirm}
+      confirmVariant="default"
+    />
+  );
+}
+
+/**
+ * Warning shown when the candidate leaves fullscreen mid-interview (Escape /
+ * F11 / OS gesture). The exit is already recorded as an integrity event by
+ * `useIntegrityReporter`; this dialog is the visible level-1 deterrent and the
+ * one-click path back in (again, a gesture is required to re-enter).
+ */
+export function FullscreenExitWarningDialog({
+  open,
+  onReenter,
+  onDismiss,
+  exitCount,
+}: {
+  open: boolean;
+  onReenter: () => void;
+  onDismiss: () => void;
+  exitCount: number;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onDismiss();
+      }}
+      title={t("course_interview.fullscreen.exit_warning_title")}
+      description={t("course_interview.fullscreen.exit_warning_description")}
+      extraContent={
+        <p className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50/70 p-3 text-sm text-amber-900">
+          <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span aria-live="polite">
+            {t("course_interview.fullscreen.exit_warning_recorded", {
+              count: exitCount,
+            })}
+          </span>
+        </p>
+      }
+      confirmLabel={
+        <span className="flex items-center gap-2">
+          <Maximize className="h-4 w-4" aria-hidden="true" />
+          {t("course_interview.fullscreen.reenter")}
+        </span>
+      }
+      cancelLabel={t("course_interview.fullscreen.stay_windowed")}
+      onConfirm={onReenter}
       confirmVariant="default"
     />
   );

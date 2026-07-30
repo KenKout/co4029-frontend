@@ -13,9 +13,12 @@ import {
   Eye,
   FileText,
   Loader2,
+  Maximize,
   MonitorX,
+  ListFilter,
   Pencil,
   Save,
+  ShieldAlert,
   ShieldCheck,
   X,
 } from "lucide-react";
@@ -41,6 +44,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { cn } from "@/lib/utils";
+import {
+  classifyMissingGapReport,
+  gapReportReasonI18nKey,
+} from "@/lib/interview/gap-report-availability";
 import {
   useInterviewIntegrityEvents,
   useInterviewTranscript,
@@ -153,7 +160,11 @@ function GapTabBar({
   }, [activeTab]);
 
   return (
-    <nav aria-label={ariaLabel} className="sticky z-10 -mx-1 px-1" style={{ top: 64 }}>
+    <nav
+      aria-label={ariaLabel}
+      className="sticky z-10 -mx-1 px-1"
+      style={{ top: 64 }}
+    >
       <div
         ref={listRef}
         role="tablist"
@@ -255,6 +266,25 @@ export default function InterviewGapReportPage() {
   }
 
   if (isError || !report) {
+    // Never render `ApiError.message` here: it is `API ${status}: ${body}`, so a
+    // routine "not graded yet" 404 leaked the raw
+    // {"detail":{"error":"not_found","resource":"gap_report","id":...}} payload.
+    //
+    // The teacher-facing distinction is not the HTTP code but whether the report
+    // is still coming: grading is async, so a `completed` session 404s for a
+    // while and then works — but an `abandoned` session is never enqueued for
+    // evaluation at all, so telling that teacher to "check back shortly" sends
+    // them to wait for something that will never arrive.
+    const apiStatus =
+      error && typeof error === "object" && "status" in error
+        ? (error as { status?: number }).status
+        : undefined;
+    const reason = classifyMissingGapReport(apiStatus, session?.status);
+    const headingKey =
+      reason === "never_graded"
+        ? "teacher_interview_gap_report.empty_states.not_graded"
+        : "teacher_interview_gap_report.empty_states.no_report";
+
     return (
       <div className="text-center py-24 text-m3-on-surface-variant space-y-4">
         <div className="flex justify-center">
@@ -264,13 +294,10 @@ export default function InterviewGapReportPage() {
         </div>
         <div>
           <p className="font-headline font-bold text-m3-on-surface">
-            {t("teacher_interview_gap_report.empty_states.no_report")}
+            {t(headingKey)}
           </p>
           <p className="text-sm mt-1 max-w-md mx-auto">
-            {(error as Error | undefined)?.message ||
-              t(
-                "teacher_interview_gap_report.errors.no_view_permission_or_ungraded",
-              )}
+            {t(gapReportReasonI18nKey(reason))}
           </p>
         </div>
         <Button variant="outline" className="gap-2" onClick={goBack}>
@@ -316,6 +343,7 @@ export default function InterviewGapReportPage() {
         hidden={activeTab !== "analysis"}
       >
         <CriterionBreakdown report={report} />
+        <PersonaAdherenceCard report={report} />
       </div>
 
       {/* Transcript — full interview turn-by-turn. */}
@@ -345,22 +373,149 @@ export default function InterviewGapReportPage() {
 }
 
 /* ── Integrity severity → colour (mirrors the quiz attempt-detail panel) ── */
-const INTEGRITY_SEVERITY_META: Record<
+const INTEGRITY_SEVERITY_META: Record<string, { badge: string; dot: string }> =
+  {
+    critical: { badge: "bg-red-100 text-red-700", dot: "bg-red-500" },
+    warning: { badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
+    info: { badge: "bg-blue-100 text-blue-700", dot: "bg-blue-400" },
+  };
+
+/* ── Integrity event type → icon + accent colour ──────────────────────────
+ * Each proctoring signal gets its own icon and colour so the timeline reads at
+ * a glance instead of a wall of identical amber rows. Colour follows the
+ * event's inherent severity (tab switch / fullscreen exit = warning amber,
+ * focus loss = informational blue). */
+const INTEGRITY_EVENT_META: Record<
   string,
-  { badge: string; dot: string }
+  { icon: typeof MonitorX; tint: string; iconBg: string }
 > = {
-  critical: { badge: "bg-red-100 text-red-700", dot: "bg-red-500" },
-  warning: { badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
-  info: { badge: "bg-blue-100 text-blue-700", dot: "bg-blue-400" },
+  tab_switch: {
+    icon: MonitorX,
+    tint: "text-amber-600",
+    iconBg: "bg-amber-50 text-amber-600",
+  },
+  focus_lost: {
+    icon: Eye,
+    tint: "text-blue-600",
+    iconBg: "bg-blue-50 text-blue-600",
+  },
+  fullscreen_exit: {
+    icon: Maximize,
+    tint: "text-amber-600",
+    iconBg: "bg-amber-50 text-amber-600",
+  },
 };
+
+/** The sub-tabs inside Integrity: "all events" plus one per event type. */
+type IntegrityFilter =
+  | "total"
+  | "tab_switch"
+  | "fullscreen_exit"
+  | "focus_lost";
+
+/**
+ * One filter tab in the integrity breakdown row.
+ *
+ * Doubles as the stat tile it replaced — the count is the headline, so the tabs
+ * carry the same information the old passive tiles did while also being the
+ * control that filters the timeline. `aria-pressed` (not `aria-selected`) because
+ * these are toggle buttons in a group, not an ARIA tablist: the panel below is a
+ * filtered list, not four separate panels.
+ */
+function IntegrityFilterTab({
+  icon: Icon,
+  count,
+  label,
+  title,
+  selected,
+  warning,
+  onSelect,
+}: {
+  icon: typeof MonitorX;
+  count: number;
+  label: string;
+  /** Full event wording, kept as the tooltip + accessible name when `label` is
+      an abbreviation ("Switching" for "Switched away from the interview tab").
+      The short form keeps four tabs readable on one row; the long form stays
+      reachable so the abbreviation never has to be guessed at. */
+  title?: string;
+  selected: boolean;
+  /** Warning-level type with at least one hit — tinted amber even when unselected. */
+  warning: boolean;
+  onSelect: () => void;
+}) {
+  const empty = count === 0;
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      title={title ?? label}
+      aria-label={title ? `${title} (${count})` : undefined}
+      className={cn(
+        "group flex w-full items-center gap-3 rounded-xl border p-3 text-left",
+        // Hover/press feedback: lift + shadow on the way in, settle on click.
+        // transform+shadow+colour only, so this stays off the layout path.
+        "cursor-pointer transition-all duration-200",
+        "hover:-translate-y-0.5 hover:shadow-editorial active:translate-y-0 active:scale-[0.98]",
+        selected
+          ? warning
+            ? "border-amber-400 bg-amber-50 ring-2 ring-amber-200"
+            : "border-m3-primary/50 bg-m3-primary-fixed ring-2 ring-m3-primary/20"
+          : warning
+            ? "border-amber-200 bg-amber-50/50 hover:border-amber-300"
+            : "border-border bg-surface-muted/40 hover:border-m3-primary/30",
+        // An empty bucket is still clickable (it explains the zero), but it
+        // should not compete for attention with one that has hits.
+        empty && !selected && "opacity-70 hover:opacity-100",
+      )}
+    >
+      <div
+        className={cn(
+          "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-200",
+          selected
+            ? warning
+              ? "bg-amber-200 text-amber-900"
+              : "bg-m3-primary text-white"
+            : warning
+              ? "bg-amber-100 text-amber-700"
+              : "bg-white text-text-subtle group-hover:text-m3-primary",
+        )}
+      >
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p
+          className={cn(
+            "text-lg font-bold leading-none tabular-nums transition-colors duration-200",
+            selected
+              ? warning
+                ? "text-amber-900"
+                : "text-m3-primary"
+              : warning
+                ? "text-amber-800"
+                : "text-text-subtle",
+          )}
+        >
+          {count}
+        </p>
+        <p className="mt-1 truncate text-[11px] font-medium text-m3-on-surface-variant">
+          {label}
+        </p>
+      </div>
+    </button>
+  );
+}
 
 // FR-5.8 teacher review surface: the proctoring-signal timeline for a session.
 // Signals are recorded across every mode (text / hybrid / voice) — see Gap 1.
 // A clean session shows a reassuring green state rather than an empty box.
-function IntegrityCard({ sessionId }: { sessionId: string }) {
+/** Exported for tests: asserts the sub-tab filtering of the event timeline. */
+export function IntegrityCard({ sessionId }: { sessionId: string }) {
   const { t } = useTranslation();
   const { data, isLoading } = useInterviewIntegrityEvents(sessionId);
   const events = data?.events ?? [];
+  const [filter, setFilter] = useState<IntegrityFilter>("total");
 
   const counts = {
     total: events.length,
@@ -369,13 +524,27 @@ function IntegrityCard({ sessionId }: { sessionId: string }) {
     fullscreenExit: events.filter((e) => e.event_type === "fullscreen_exit")
       .length,
   };
+  // Warning-level signals (tab switches + fullscreen exits) are what actually
+  // matter for integrity; focus losses alone are noisy/low-signal. Grade the
+  // overall risk off the warning count so the teacher gets an at-a-glance read
+  // rather than having to eyeball a long list.
+  const warningCount = counts.tabSwitch + counts.fullscreenExit;
+  const risk: "low" | "moderate" | "high" =
+    warningCount === 0 ? "low" : warningCount <= 3 ? "moderate" : "high";
+
+  // The timeline shows one bucket at a time. "total" keeps the full chronology;
+  // the other three narrow to a single event_type so a teacher can read the tab
+  // switches without scrolling past interleaved focus-loss noise.
+  const visibleEvents =
+    filter === "total" ? events : events.filter((e) => e.event_type === filter);
 
   if (isLoading) {
     return (
       <GlassCard className="p-6">
-        <p className="text-sm text-m3-on-surface-variant">
+        <div className="flex items-center gap-2 text-sm text-m3-on-surface-variant">
+          <Loader2 className="h-4 w-4 animate-spin" />
           {t("common.loading")}
-        </p>
+        </div>
       </GlassCard>
     );
   }
@@ -385,7 +554,7 @@ function IntegrityCard({ sessionId }: { sessionId: string }) {
       <GlassCard className="p-6">
         <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
           <div className="shrink-0 rounded-lg bg-emerald-100 p-2 text-emerald-700">
-            <ShieldCheck className="h-4 w-4" />
+            <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
             <h3 className="font-headline text-sm font-bold text-emerald-800">
@@ -400,63 +569,212 @@ function IntegrityCard({ sessionId }: { sessionId: string }) {
     );
   }
 
+  const RISK_META = {
+    low: {
+      icon: ShieldCheck,
+      wrap: "border-emerald-200 bg-emerald-50/60",
+      iconBg: "bg-emerald-100 text-emerald-700",
+      title: "text-emerald-800",
+      body: "text-emerald-700/80",
+    },
+    moderate: {
+      icon: AlertTriangle,
+      wrap: "border-amber-200 bg-amber-50/60",
+      iconBg: "bg-amber-100 text-amber-700",
+      title: "text-amber-800",
+      body: "text-amber-700/80",
+    },
+    high: {
+      icon: ShieldAlert,
+      wrap: "border-red-200 bg-red-50/60",
+      iconBg: "bg-red-100 text-red-700",
+      title: "text-red-800",
+      body: "text-red-700/80",
+    },
+  } as const;
+  const riskMeta = RISK_META[risk];
+  const RiskIcon = riskMeta.icon;
+
   return (
     <GlassCard className="overflow-hidden p-0">
-      <div className="flex items-center gap-2.5 border-b border-amber-200/60 bg-amber-50/50 px-5 py-3">
-        <div className="rounded-lg bg-amber-100 p-1.5 text-amber-700">
-          <AlertTriangle className="h-4 w-4" />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-headline text-sm font-bold text-amber-800">
-            {t("teacher_interview_gap_report.integrity.flagged_title")}
-          </h3>
-          <p className="text-xs text-amber-700/80">
-            {t("teacher_interview_gap_report.integrity.summary", {
-              tab: counts.tabSwitch,
-              focus: counts.focusLost,
-              fullscreen: counts.fullscreenExit,
-            })}
-          </p>
-        </div>
-      </div>
-      <div className="max-h-96 divide-y divide-amber-200/40 overflow-y-auto">
-        {events.map((ev) => {
-          const meta =
-            INTEGRITY_SEVERITY_META[ev.severity] ??
-            INTEGRITY_SEVERITY_META.info;
-          const Icon =
-            ev.event_type === "tab_switch"
-              ? MonitorX
-              : ev.event_type === "focus_lost"
-                ? Eye
-                : Clock;
-          return (
-            <div key={ev.id} className="flex items-center gap-3 px-5 py-2.5">
-              <Icon className="h-4 w-4 shrink-0 text-amber-700" />
-              <span className="flex-1 text-sm text-m3-on-surface">
-                {t(
-                  `teacher_interview_gap_report.integrity.event.${ev.event_type}`,
-                  { defaultValue: ev.event_type },
-                )}
-              </span>
-              <span
+      {/* Risk banner: overall read graded off warning-level signals. */}
+      <div className="border-b border-border p-5">
+        <div
+          className={cn(
+            "flex items-start gap-3 rounded-xl border p-4",
+            riskMeta.wrap,
+          )}
+        >
+          <div className={cn("shrink-0 rounded-lg p-2", riskMeta.iconBg)}>
+            <RiskIcon className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3
                 className={cn(
-                  "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                  meta.badge,
+                  "font-headline text-sm font-bold",
+                  riskMeta.title,
                 )}
               >
-                {t(
-                  `teacher_interview_gap_report.integrity.severity.${ev.severity}`,
-                  { defaultValue: ev.severity },
+                {t(`teacher_interview_gap_report.integrity.risk.${risk}_title`)}
+              </h3>
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                  riskMeta.iconBg,
                 )}
-              </span>
-              <span className="whitespace-nowrap text-xs tabular-nums text-m3-on-surface-variant">
-                {formatDate(ev.created_at)}
+              >
+                {t(`teacher_interview_gap_report.integrity.risk.${risk}_badge`)}
               </span>
             </div>
-          );
-        })}
+            <p className={cn("mt-1 text-xs", riskMeta.body)}>
+              {t(`teacher_interview_gap_report.integrity.risk.${risk}_body`, {
+                count: warningCount,
+              })}
+            </p>
+          </div>
+        </div>
+
+        {/* Per-type breakdown, doubling as the filter for the timeline below.
+            Four buckets: everything, then one per event type. Clicking one shows
+            only that type, so a teacher can read the 7 tab switches without
+            scrolling past 14 interleaved focus-loss rows. */}
+        <div
+          className="mt-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4"
+          role="group"
+          aria-label={t(
+            "teacher_interview_gap_report.integrity.filter_group_label",
+          )}
+        >
+          <IntegrityFilterTab
+            icon={ListFilter}
+            count={counts.total}
+            selected={filter === "total"}
+            warning={false}
+            onSelect={() => setFilter("total")}
+            label={t("teacher_interview_gap_report.integrity.filter.total")}
+          />
+          <IntegrityFilterTab
+            icon={MonitorX}
+            count={counts.tabSwitch}
+            selected={filter === "tab_switch"}
+            warning={counts.tabSwitch > 0}
+            onSelect={() => setFilter("tab_switch")}
+            label={t(
+              "teacher_interview_gap_report.integrity.filter.tab_switch",
+            )}
+            title={t("teacher_interview_gap_report.integrity.event.tab_switch")}
+          />
+          <IntegrityFilterTab
+            icon={Maximize}
+            count={counts.fullscreenExit}
+            selected={filter === "fullscreen_exit"}
+            warning={counts.fullscreenExit > 0}
+            onSelect={() => setFilter("fullscreen_exit")}
+            label={t(
+              "teacher_interview_gap_report.integrity.filter.fullscreen_exit",
+            )}
+            title={t(
+              "teacher_interview_gap_report.integrity.event.fullscreen_exit",
+            )}
+          />
+          <IntegrityFilterTab
+            icon={Eye}
+            count={counts.focusLost}
+            selected={filter === "focus_lost"}
+            warning={false}
+            onSelect={() => setFilter("focus_lost")}
+            label={t(
+              "teacher_interview_gap_report.integrity.filter.focus_lost",
+            )}
+            title={t("teacher_interview_gap_report.integrity.event.focus_lost")}
+          />
+        </div>
       </div>
+
+      {/* Chronological timeline, narrowed to the selected bucket. */}
+      <div className="flex items-center justify-between gap-3 px-5 pt-4">
+        <h4 className="text-[11px] font-bold uppercase tracking-wide text-text-subtle">
+          {t("teacher_interview_gap_report.integrity.timeline_title")}
+        </h4>
+        <span className="shrink-0 text-[11px] tabular-nums text-m3-on-surface-variant">
+          {t("teacher_interview_gap_report.integrity.showing_count", {
+            count: visibleEvents.length,
+          })}
+        </span>
+      </div>
+      {visibleEvents.length === 0 ? (
+        // A zero bucket is reachable on purpose (the tab shows its 0), so it needs
+        // to say why it is empty instead of rendering a blank strip.
+        <div className="px-5 py-6">
+          <p className="rounded-xl border border-dashed border-border bg-surface-muted/40 px-4 py-6 text-center text-xs text-m3-on-surface-variant">
+            {t("teacher_interview_gap_report.integrity.filter_empty")}
+          </p>
+        </div>
+      ) : (
+        <ol
+          // Keyed on the filter so switching buckets replays the entrance
+          // animation and makes the list visibly change even when two buckets
+          // happen to have a similar-looking first row.
+          key={filter}
+          className="max-h-80 animate-[fade-in-up_0.25s_ease-out_backwards] overflow-y-auto px-5 py-3"
+        >
+          {visibleEvents.map((ev, index) => {
+            const eventMeta =
+              INTEGRITY_EVENT_META[ev.event_type] ??
+              INTEGRITY_EVENT_META.focus_lost;
+            const severityMeta =
+              INTEGRITY_SEVERITY_META[ev.severity] ??
+              INTEGRITY_SEVERITY_META.info;
+            const Icon = eventMeta.icon;
+            const isLast = index === visibleEvents.length - 1;
+            return (
+              <li key={ev.id} className="group flex gap-3">
+                {/* Timeline rail: dot + connecting line. */}
+                <div className="flex flex-col items-center">
+                  <span
+                    className={cn(
+                      "flex size-7 shrink-0 items-center justify-center rounded-full",
+                      "transition-transform duration-200 group-hover:scale-110",
+                      eventMeta.iconBg,
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                  </span>
+                  {!isLast && <span className="w-px flex-1 bg-border" />}
+                </div>
+                <div
+                  className={cn(
+                    "-mx-2 mb-1 flex min-w-0 flex-1 items-center justify-between gap-2 rounded-lg px-2 pb-3 pt-0.5",
+                    "transition-colors duration-200 group-hover:bg-m3-surface-container-low",
+                  )}
+                >
+                  <span className="min-w-0 flex-1 truncate text-sm text-m3-on-surface">
+                    {t(
+                      `teacher_interview_gap_report.integrity.event.${ev.event_type}`,
+                      { defaultValue: ev.event_type },
+                    )}
+                  </span>
+                  <span
+                    className={cn(
+                      "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                      severityMeta.badge,
+                    )}
+                  >
+                    {t(
+                      `teacher_interview_gap_report.integrity.severity.${ev.severity}`,
+                      { defaultValue: ev.severity },
+                    )}
+                  </span>
+                  <span className="shrink-0 whitespace-nowrap text-xs tabular-nums text-m3-on-surface-variant">
+                    {formatDate(ev.created_at)}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </GlassCard>
   );
 }
@@ -559,7 +877,9 @@ function TranscriptCard({
                   <p className="text-sm text-m3-on-surface leading-relaxed">
                     {turn.content_text ??
                       (turn.has_audio
-                        ? t("teacher_interview_gap_report.transcript.audio_only")
+                        ? t(
+                            "teacher_interview_gap_report.transcript.audio_only",
+                          )
                         : "—")}
                   </p>
                 </li>
@@ -993,9 +1313,10 @@ function NotesCard({
 // map of criterion → note phrases. Bullets without a recognizable "tag:" prefix
 // (or tagged with a non-rubric key like "theory_performance") are collected
 // under a null key so they still surface as general notes.
-function groupNotesByCriterion(
-  bullets: string[],
-): { byCriterion: Map<string, string[]>; untagged: string[] } {
+function groupNotesByCriterion(bullets: string[]): {
+  byCriterion: Map<string, string[]>;
+  untagged: string[];
+} {
   const byCriterion = new Map<string, string[]>();
   const untagged: string[] = [];
   for (const bullet of bullets) {
@@ -1023,9 +1344,17 @@ function scoreBand(score: number): {
   text: string;
 } {
   if (score >= 4)
-    return { labelKey: "band_strong", bar: "bg-emerald-500", text: "text-emerald-700" };
+    return {
+      labelKey: "band_strong",
+      bar: "bg-emerald-500",
+      text: "text-emerald-700",
+    };
   if (score >= 2.5)
-    return { labelKey: "band_developing", bar: "bg-amber-500", text: "text-amber-700" };
+    return {
+      labelKey: "band_developing",
+      bar: "bg-amber-500",
+      text: "text-amber-700",
+    };
   return { labelKey: "band_weak", bar: "bg-red-500", text: "text-red-600" };
 }
 
@@ -1045,11 +1374,7 @@ function criterionLabel(
     .join(" ");
 }
 
-function CriterionBreakdown({
-  report,
-}: {
-  report: GapReportAuthoringRead;
-}) {
+function CriterionBreakdown({ report }: { report: GapReportAuthoringRead }) {
   const { t } = useTranslation();
   const breakdown = report.per_criterion_breakdown ?? {};
   const weights = (report.rubric_weights ?? {}) as Record<string, number>;
@@ -1063,7 +1388,11 @@ function CriterionBreakdown({
   }));
 
   const asNum = (v: unknown): number | null =>
-    typeof v === "number" ? v : typeof v === "string" && v.trim() ? Number(v) : null;
+    typeof v === "number"
+      ? v
+      : typeof v === "string" && v.trim()
+        ? Number(v)
+        : null;
   const totalScore = asNum(summary.total_score);
   const outcomesMet = asNum(summary.outcomes_met);
   const outcomesTotal = asNum(summary.outcomes_total);
@@ -1076,13 +1405,17 @@ function CriterionBreakdown({
   const extraStrengths = [
     ...[...strengths.byCriterion.entries()]
       .filter(([k]) => !rubricKeys.has(k))
-      .flatMap(([k, notes]) => notes.map((n) => `${criterionLabel(k, t)}: ${n}`)),
+      .flatMap(([k, notes]) =>
+        notes.map((n) => `${criterionLabel(k, t)}: ${n}`),
+      ),
     ...strengths.untagged,
   ];
   const extraWeaknesses = [
     ...[...weaknesses.byCriterion.entries()]
       .filter(([k]) => !rubricKeys.has(k))
-      .flatMap(([k, notes]) => notes.map((n) => `${criterionLabel(k, t)}: ${n}`)),
+      .flatMap(([k, notes]) =>
+        notes.map((n) => `${criterionLabel(k, t)}: ${n}`),
+      ),
     ...weaknesses.untagged,
   ];
 
@@ -1161,11 +1494,7 @@ function CriterionBreakdown({
       {/* Visual per-criterion score charts: radar for the overall shape and a
           horizontal bar for exact comparison. Both read the same 0–5 means. */}
       {chartData.length > 0 && (
-        <div
-          className={
-            showRadar ? "grid gap-4 sm:grid-cols-2" : "grid gap-4"
-          }
-        >
+        <div className={showRadar ? "grid gap-4 sm:grid-cols-2" : "grid gap-4"}>
           {showRadar && (
             <div className="rounded-xl bg-m3-surface-container-lowest p-2">
               <ResponsiveContainer width="100%" height={220}>
@@ -1240,7 +1569,11 @@ function CriterionBreakdown({
                   }}
                   formatter={(value) => [`${value} / 5`, ""]}
                 />
-                <Bar dataKey="score" radius={[0, 6, 6, 0]} isAnimationActive={false}>
+                <Bar
+                  dataKey="score"
+                  radius={[0, 6, 6, 0]}
+                  isAnimationActive={false}
+                >
                   {chartData.map((row) => {
                     const band = scoreBand(row.score);
                     return (
@@ -1339,7 +1672,10 @@ function CriterionBreakdown({
             {t("teacher_interview_gap_report.labels.other_notes")}
           </p>
           {extraStrengths.map((note, i) => (
-            <p key={`eg-${i}`} className="text-xs text-emerald-700 leading-relaxed">
+            <p
+              key={`eg-${i}`}
+              className="text-xs text-emerald-700 leading-relaxed"
+            >
               <span className="font-bold mr-1">+</span>
               {note}
             </p>
@@ -1356,3 +1692,196 @@ function CriterionBreakdown({
   );
 }
 
+// Human-readable label for each violation tag the persona-adherence judge can
+// emit. Falls back to a humanized tag so an unknown/new tag still renders.
+function violationLabel(
+  tag: string,
+  t: (k: string, opts?: Record<string, unknown>) => string,
+): string {
+  const label = t(
+    `teacher_interview_gap_report.persona_adherence.violations.${tag}`,
+    {
+      defaultValue: "",
+    },
+  );
+  if (label) return label;
+  return tag
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+// Tone-consistency score band (0–10) → color + label. Mirrors scoreBand's
+// three-tier scheme so the persona card reads consistently with the rubric.
+function toneBand(score: number): {
+  bar: string;
+  text: string;
+  labelKey: string;
+} {
+  if (score >= 8)
+    return {
+      bar: "bg-emerald-500",
+      text: "text-emerald-700",
+      labelKey: "band_consistent",
+    };
+  if (score >= 5)
+    return {
+      bar: "bg-amber-500",
+      text: "text-amber-700",
+      labelKey: "band_mixed",
+    };
+  return { bar: "bg-red-500", text: "text-red-600", labelKey: "band_off" };
+}
+
+/**
+ * Teacher-only tone diagnostic: did the AI interviewer hold the configured
+ * persona? Renders nothing when a session was never audited (older sessions,
+ * no interviewer turns, or the judge was unavailable) so the tab stays clean.
+ * This never affects the student's pass/fail — it is guidance for the teacher.
+ */
+function PersonaAdherenceCard({ report }: { report: GapReportAuthoringRead }) {
+  const { t } = useTranslation();
+  const audit = report.persona_adherence;
+  // Absent or explicitly unavailable → don't render the card at all.
+  if (!audit || audit.available === false) return null;
+  const score =
+    typeof audit.tone_consistency === "number" ? audit.tone_consistency : null;
+  if (score === null) return null;
+
+  const band = toneBand(score);
+  const pct = Math.max(0, Math.min(100, (score / 10) * 100));
+  const violations = audit.violations ?? [];
+  const driftTurns = audit.drift_turns ?? [];
+  // declared_answer is the one violation that touches grading fairness (the
+  // interviewer leaked answer content), so surface it as a prominent warning.
+  const hasAnswerLeak = violations.includes("declared_answer");
+
+  return (
+    <GlassCard className="p-6 space-y-4 mt-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {score >= 8 ? (
+            <ShieldCheck
+              className="h-5 w-5 text-emerald-600"
+              aria-hidden="true"
+            />
+          ) : (
+            <ShieldAlert
+              className="h-5 w-5 text-amber-600"
+              aria-hidden="true"
+            />
+          )}
+          <h2 className="font-headline font-bold text-base text-m3-primary">
+            {t("teacher_interview_gap_report.persona_adherence.title")}
+          </h2>
+        </div>
+        <span className="text-xs text-m3-on-surface-variant">
+          {t("teacher_interview_gap_report.persona_adherence.tone_only")}
+        </span>
+      </div>
+
+      {/* Headline tone-consistency score with a 0–10 bar. */}
+      <div className="space-y-1.5">
+        <div className="flex items-baseline justify-between">
+          <span className={cn("text-sm font-bold", band.text)}>
+            {t(
+              `teacher_interview_gap_report.persona_adherence.${band.labelKey}`,
+            )}
+          </span>
+          <span className="text-lg font-extrabold tabular-nums text-m3-on-surface">
+            {score}
+            <span className="text-xs font-medium text-m3-on-surface-variant">
+              /10
+            </span>
+          </span>
+        </div>
+        <div className="h-2 rounded-full bg-m3-surface-container-high overflow-hidden">
+          <div
+            className={cn("h-full rounded-full", band.bar)}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Answer-leak warning — the most serious flag, elevated visually. */}
+      {hasAnswerLeak && (
+        <div className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 p-3">
+          <AlertTriangle
+            className="h-4 w-4 shrink-0 text-red-600 mt-0.5"
+            aria-hidden="true"
+          />
+          <p className="text-xs text-red-700 leading-relaxed">
+            {t(
+              "teacher_interview_gap_report.persona_adherence.answer_leak_warning",
+            )}
+          </p>
+        </div>
+      )}
+
+      {/* Observed traits (0–4) so the teacher compares intent vs. reality. */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {(
+          [
+            ["warmth_observed", "warmth"],
+            ["directness_observed", "directness"],
+            ["verbosity_observed", "verbosity"],
+            ["formality_observed", "formality"],
+          ] as const
+        ).map(([field, labelKey]) => {
+          const value = audit[field];
+          if (typeof value !== "number") return null;
+          return (
+            <div
+              key={field}
+              className="rounded-xl bg-m3-surface-container-low p-3 text-center"
+            >
+              <p className="text-lg font-extrabold text-m3-on-surface tabular-nums">
+                {value}
+                <span className="text-xs font-medium text-m3-on-surface-variant">
+                  /4
+                </span>
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-m3-on-surface-variant mt-0.5">
+                {t(
+                  `teacher_interview_gap_report.persona_adherence.traits.${labelKey}`,
+                )}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Non-leak violation tags, if any. */}
+      {violations.filter((v) => v !== "declared_answer").length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {violations
+            .filter((v) => v !== "declared_answer")
+            .map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800"
+              >
+                {violationLabel(tag, t)}
+              </span>
+            ))}
+        </div>
+      )}
+
+      {/* Judge's reasoning + which turns drifted. */}
+      {audit.reasoning && (
+        <div className="rounded-xl bg-m3-surface-container-lowest p-4 space-y-2">
+          <p className="text-xs text-m3-on-surface leading-relaxed">
+            {audit.reasoning}
+          </p>
+          {driftTurns.length > 0 && (
+            <p className="text-[11px] text-m3-on-surface-variant">
+              {t("teacher_interview_gap_report.persona_adherence.drift_turns", {
+                turns: driftTurns.join(", "),
+              })}
+            </p>
+          )}
+        </div>
+      )}
+    </GlassCard>
+  );
+}

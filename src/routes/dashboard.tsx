@@ -3,28 +3,34 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useMyCourses } from "@/lib/api/hooks/courses";
-import { useNotifications } from "@/lib/api/hooks/notifications";
+import {
+  useNotificationInboxSync,
+  useNotifications,
+} from "@/lib/api/hooks/notifications";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StatCard } from "@/components/ui/stat-card";
+import { useSrDashboardSummary } from "@/lib/api/hooks/spaced-repetition";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
 import type { Course } from "@/lib/api/types";
 import {
   ArrowRight,
+  Bell,
+  BookOpen,
+  Bot,
+  Brain,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  BookOpen,
-  Bell,
-  CheckCircle2,
-  GraduationCap,
-  Bot,
-  Mic,
   FileText,
+  GraduationCap,
+  Mic,
+  Unlock,
 } from "lucide-react";
 
 function CourseProgressCard({ course }: { course: Course }) {
@@ -152,6 +158,9 @@ export default function DashboardPage() {
   const { items: myCourses, isLoading: coursesLoading } = useMyCourses(8);
   const { items: notifications, isLoading: notificationsLoading } =
     useNotifications();
+  // Keep the dashboard's notification list current without a reload.
+  useNotificationInboxSync();
+  const { data: sr, isLoading: srLoading } = useSrDashboardSummary();
 
   const firstName = getAuthDisplayName(user).split(" ")[0];
   const initials = getAuthUserInitials(user);
@@ -212,18 +221,53 @@ export default function DashboardPage() {
             icon={Bell}
             variant="surface"
           />
+          {/* Retention (R-hat) replaces the old hardcoded "Quizzes: —". Quizzes
+              are never "graded" in this system — answering updates EF and gives
+              instant per-question feedback — so the old tile described a system
+              that doesn't exist. Shows an em-dash when the student has no tracked
+              cards: 0% retention would read as catastrophic rather than "no data
+              yet". */}
           <StatCard
-            label={t("dashboard.stats.quizzes")}
-            value="—"
-            sublabel={t("dashboard.stats.quizzes_sub")}
-            icon={FileText}
+            label={t("dashboard.stats.retention")}
+            value={
+              srLoading
+                ? "—"
+                : sr?.has_retention_data
+                  ? `${Math.round((sr.avg_kr_estimate ?? 0) * 100)}%`
+                  : "—"
+            }
+            sublabel={
+              sr?.has_retention_data
+                ? t("dashboard.stats.retention_sub", {
+                    mature: sr.lessons_mature,
+                    total: sr.lessons_total,
+                  })
+                : t("dashboard.stats.retention_no_data")
+            }
+            icon={Brain}
             variant="surface"
           />
+          {/* Progression readiness replaces "Interviews: Scheduled". Interviews
+              are available-on-demand once unlocked, never scheduled, so the old
+              subtext described a different product. This shows how close the
+              nearest locked lesson is to opening. */}
           <StatCard
-            label={t("dashboard.stats.interviews")}
-            value="—"
-            sublabel={t("dashboard.stats.interviews_sub")}
-            icon={Mic}
+            label={t("dashboard.stats.next_unlock")}
+            value={
+              srLoading
+                ? "—"
+                : sr?.next_unlock_lesson_title
+                  ? `${Math.round(sr.next_unlock_progress_pct)}%`
+                  : t("dashboard.stats.all_unlocked")
+            }
+            sublabel={
+              sr?.next_unlock_lesson_title
+                ? t("dashboard.stats.next_unlock_sub", {
+                    lesson: sr.next_unlock_lesson_title,
+                  })
+                : t("dashboard.stats.next_unlock_none")
+            }
+            icon={Unlock}
             variant="surface"
           />
         </section>

@@ -20,10 +20,16 @@
     "search": "Tìm kiếm",
     "submit": "Gửi",
     "close": "Đóng",
+    "back_to_top": "Lên đầu trang",
     "yes": "Có",
     "no": "Không",
     "breadcrumb_aria": "Đường dẫn",
-    "unsaved_changes_warning": "Bạn có thay đổi chưa được lưu. Rời khỏi trang sẽ làm mất các thay đổi này."
+    "unsaved_changes_warning": "Bạn có thay đổi chưa được lưu. Rời khỏi trang sẽ làm mất các thay đổi này.",
+    "unsaved": {
+      "title": "Bạn có chắc muốn thoát?",
+      "description": "Bạn có thay đổi chưa lưu. Nếu thoát bây giờ, các thay đổi sẽ bị mất.",
+      "quit": "Thoát"
+    }
   },
   "entity_select": {
     "selected_count": "Đã chọn {{count}}",
@@ -39,6 +45,8 @@
     "my_courses": "Khoá của tôi",
     "students": "Sinh viên",
     "department_courses": "Khoá của khoa",
+    "manager_courses": "Khoá học",
+    "enrolment": "Ghi danh",
     "active_users": "Người dùng đang hoạt động",
     "content": "Nội dung",
     "users": "Người dùng",
@@ -50,7 +58,10 @@
     "settings": "Cài đặt",
     "profile": "Hồ sơ",
     "logout": "Đăng xuất",
-    "admin": "Quản trị"
+    "admin": "Quản trị",
+    "system_config": "Cấu hình hệ thống",
+    "job_health": "Sức khoẻ tác vụ",
+    "help": "Trợ giúp"
   },
   "auth": {
     "sign_in": "Đăng nhập",
@@ -120,7 +131,8 @@
     "ai_mock_title": "Bao gồm phỏng vấn AI",
     "ai_mock_body": "Hoàn thành từng module để mở khóa buổi phỏng vấn AI. Nhận phản hồi thời gian thực, câu hỏi tiếp theo thích ứng và đánh giá chi tiết về cách bạn giải thích kỹ thuật.",
     "start_learning": "Bắt đầu học",
-    "modules": "Chương"
+    "modules": "Chương",
+    "contact_title": "Liên hệ giảng viên"
   },
   "settings_security": {
     "title": "Bảo mật tài khoản",
@@ -175,20 +187,12 @@
   "teacher_dashboard": {
     "title": "Bảng điều khiển Giảng viên",
     "subtitle": "Quản lý khóa học, tài liệu và tạo AI.",
-    "new_course": "Khóa học mới",
-    "stats": {
-      "total_courses": "Tổng số khóa học",
-      "published": "Đã xuất bản",
-      "drafts": "Bản nháp",
-      "ai_enabled": "Hỗ trợ AI"
-    },
     "your_courses": {
       "title": "Khóa học của bạn",
       "subtitle": "Nhấn để quản lý học phần, bài học và tài liệu",
       "view_all": "Xem tất cả",
       "no_courses_yet": "Chưa có khóa học nào",
       "create_first": "Tạo khóa học đầu tiên của bạn để bắt đầu.",
-      "create_course": "Tạo khóa học",
       "manage": "Quản lý"
     },
     "status": {
@@ -201,10 +205,31 @@
       "intermediate": "Trung cấp",
       "advanced": "Nâng cao"
     },
-    "actions": {
-      "ungraded_quizzes": "bài kiểm tra cần chấm",
-      "pending_interviews": "phỏng vấn chờ đánh giá",
-      "draft_courses": "bản nháp cần xuất bản"
+    "signals": {
+      "cards_awaiting_review": "Chờ bạn xem xét",
+      "cards_awaiting_review_sub": "Câu hỏi kiểm tra + phỏng vấn",
+      "students_below_ef": "Học viên đang tụt lại",
+      "students_below_ef_sub": "Độ dễ trung bình dưới 2.0",
+      "avg_retention": "Ghi nhớ trung bình (EF)",
+      "avg_retention_sub": "2.5 là mức chuẩn lý tưởng",
+      "cards_overdue": "Thẻ quá hạn",
+      "cards_overdue_sub": "Đã qua ngày ôn tập"
+    },
+    "review": {
+      "title": "Cần bạn xem xét",
+      "subtitle": "Nội dung do AI tạo đang chờ quyết định của người dùng.",
+      "all_clear": "Không có gì chờ bạn — hàng đợi xem xét đã trống.",
+      "quiz_cards": "Câu hỏi kiểm tra chờ xem xét",
+      "quiz_cards_hint": "Câu hỏi chưa duyệt sẽ không đến được học viên",
+      "interview_questions": "Câu hỏi phỏng vấn chờ duyệt",
+      "interview_questions_hint": "Đang chờ bạn duyệt / sửa / từ chối",
+      "missing_texp": "Bài kiểm tra đã xuất bản thiếu thời gian dự kiến",
+      "missing_texp_hint": "Thiếu nó, điểm ghi nhớ sẽ về mức trung tính",
+      "materials_ready": "Tài liệu đã sẵn sàng tạo bài kiểm tra",
+      "materials_ready_hint": "Đã nạp xong, chưa tạo bài kiểm tra",
+      "ungraded_quizzes": "Lượt kiểm tra cần chấm",
+      "pending_interviews": "Phỏng vấn chờ đánh giá",
+      "course_pending": "{{count}} mục chờ xem xét trong khoá này"
     }
   },
   "teacher_course_settings": {
@@ -258,6 +283,16 @@
       "body": "\"{{title}}\" và các mô-đun, bài học, nội dung của khóa học sẽ bị xóa. Quản trị viên có thể khôi phục.",
       "deleted": "Đã xóa khóa học",
       "failed": "Không thể xóa khóa học. Vui lòng thử lại."
+    },
+    "contact": {
+      "section_title": "Thông tin liên hệ",
+      "section_hint": "Hiển thị trên trang khóa học để học viên có thể liên hệ với bạn. Tất cả các trường đều không bắt buộc.",
+      "email": "Email",
+      "email_placeholder": "ban@example.com",
+      "phone": "Số điện thoại",
+      "phone_placeholder": "+84 555 000 000",
+      "website": "Trang web",
+      "social": "Mạng xã hội"
     }
   },
   "teacher_quiz_attempt": {
@@ -319,8 +354,6 @@
     "n_courses_plural": "{{count}} khóa học",
     "published_suffix": " · {{count}} đã xuất bản",
     "draft_suffix": " · {{count}} bản nháp",
-    "new_course": "Khóa học mới",
-    "create_course": "Tạo khóa học",
     "filter_all": "Tất cả",
     "filter_published": "Đã xuất bản",
     "filter_draft": "Bản nháp",
@@ -374,7 +407,11 @@
       "title": "Phiên phỏng vấn đang diễn ra",
       "body": "Bạn có một buổi phỏng vấn vẫn đang diễn ra. Hãy hoàn thành trước khi bắt đầu buổi mới.",
       "continue": "Tiếp tục phiên gần nhất"
-    }
+    },
+    "knowledge_map": "Sơ đồ kiến thức",
+    "km_zoom_in": "Phóng to",
+    "km_zoom_out": "Thu nhỏ",
+    "km_fit": "Vừa khung nhìn"
   },
   "placeholder": {
     "body": "Trang này sắp có. Quay lại sau khi quá trình chuyển API hoàn tất.",
@@ -419,7 +456,6 @@
     "title": "Ngân hàng câu hỏi",
     "subtitle": "Câu hỏi phỏng vấn tái sử dụng",
     "subtitle_course": "Câu hỏi phỏng vấn tái sử dụng · {{course}}",
-    "back_to_course": "Quay lại khóa học",
     "how_to_add": "Đây là kho câu hỏi phỏng vấn dùng chung của khóa học. Để thêm câu hỏi, hãy mở một buổi phỏng vấn rồi dùng \"Thêm vào ngân hàng câu hỏi\" trên một câu hỏi. Nhập chúng vào các buổi phỏng vấn khác từ tab Câu hỏi.",
     "search_placeholder": "Tìm câu hỏi, câu trả lời, thẻ…",
     "filter_type": "Loại",
@@ -440,11 +476,29 @@
     "saved": "Đã cập nhật câu hỏi",
     "deleted": "Đã xóa câu hỏi khỏi ngân hàng",
     "delete_title": "Xóa khỏi ngân hàng câu hỏi?",
-    "delete_body": "Thao tác này xóa câu hỏi khỏi ngân hàng của khóa học. Các câu hỏi đã nhập vào buổi phỏng vấn không bị ảnh hưởng."
+    "delete_body": "Thao tác này xóa câu hỏi khỏi ngân hàng của khóa học. Các câu hỏi đã nhập vào buổi phỏng vấn không bị ảnh hưởng.",
+    "how_it_works": "Cách hoạt động",
+    "clear_filters": "Xóa bộ lọc",
+    "filter_by_tag": "Lọc theo thẻ {{tag}}",
+    "add_tag": "Thêm thẻ",
+    "stat_total": "Câu hỏi",
+    "stat_tags": "Thẻ",
+    "stat_with_answer": "Có đáp án",
+    "stat_of_total": "/ {{total}}"
   },
   "teacher_common": {
     "drag_to_reorder": "Kéo để sắp xếp",
+    "delete_item": "Xóa mục",
+    "delete_item_title": "Xóa mục này?",
+    "delete_item_body": "\"{{title}}\" sẽ bị xóa khỏi chương này. Không thể hoàn tác.",
+    "delete_item_confirm": "Xóa",
+    "item_removed": "Đã xóa mục",
     "publish_item": "Xuất bản",
+    "duplicate_item": "Nhân bản",
+    "duplicate_module": "Nhân bản chương",
+    "item_duplicated": "Đã nhân bản thành bản nháp.",
+    "module_duplicated": "Đã nhân bản chương thành bản nháp.",
+    "duplicate_failed": "Không thể nhân bản.",
     "publish_failed": "Không thể xuất bản",
     "item_published": "Đã xuất bản \"{{title}}\".",
     "publish_progress": "{{published}}/{{total}} mục đã xuất bản",
@@ -546,6 +600,7 @@
     "title": "Quản lý đội ngũ",
     "subtitle": "Phân công giảng viên và xem danh sách lớp.",
     "no_permission": "Không có quyền truy cập",
+    "new_course": "Khóa học mới",
     "load_failed": "Không thể tải danh sách khóa học.",
     "empty_title": "Bạn chưa được phân công khóa học nào để quản lý.",
     "empty_body": "Khi quản trị viên gán khóa học vào phạm vi của bạn, danh sách sẽ xuất hiện tại đây.",
@@ -554,6 +609,13 @@
       "published": "Đã xuất bản",
       "archived": "Đã lưu trữ"
     }
+  },
+  "management_enrolment": {
+    "title": "Ghi danh",
+    "subtitle": "Quản lý ai được ghi danh vào từng khóa học — thêm học viên, nhập hàng loạt và mã mời.",
+    "no_permission": "Không có quyền truy cập",
+    "empty_title": "Chưa có khóa học nào để quản lý ghi danh.",
+    "empty_body": "Khi khóa học được gán cho tổ chức của bạn, chúng sẽ xuất hiện tại đây."
   },
   "google_callback": {
     "in_progress": "Đang hoàn tất đăng nhập Google...",
@@ -626,7 +688,8 @@
       "evaluating": "Đang chấm…",
       "in_progress": "Đang diễn ra",
       "evaluation_failed": "Chấm điểm thất bại",
-      "not_graded": "Không chấm điểm"
+      "not_graded": "Không chấm điểm",
+      "practice": "Thi thử"
     }
   },
   "me_interview_result": {
@@ -655,7 +718,19 @@
     "back": "Quay lại bảng điều khiển",
     "title": "Thẻ cần ôn",
     "loading": "Đang tải...",
-    "empty_subtitle": "Không có thẻ nào trong hàng đợi",
+    "empty_subtitle": "Bạn đã ôn hết rồi",
+    "summary": "{{count}} thẻ cần ôn trong {{courses}} khóa học",
+    "summary_plural": "{{count}} thẻ cần ôn trong {{courses}} khóa học",
+    "start_review": "Bắt đầu ôn ({{count}})",
+    "group_count": "{{count}} cần ôn",
+    "review_course": "Ôn tập",
+    "load_more": "Tải thêm",
+    "recall_hint": "mức độ ghi nhớ",
+    "strength": {
+      "strong": "Vững",
+      "building": "Đang hình thành",
+      "shaky": "Cần cải thiện"
+    },
     "n_cards": "{{count}} thẻ",
     "n_cards_plural": "{{count}} thẻ",
     "n_overdue_suffix": " • {{count}} cần ôn ngay",
@@ -665,8 +740,32 @@
     "days_left": "Còn {{count}} ngày",
     "ef_label": "EF",
     "last_q": "Q gần nhất: {{q}}",
-    "empty_title": "Bạn đã hoàn thành tốt!",
-    "empty_body": "Không còn thẻ nào cần ôn tập hôm nay. Hãy quay lại sau khi học bài mới.",
+    "empty_title": "Hiện chưa có thẻ nào cần ôn",
+    "empty_body": "Bạn đã ôn hết. Thẻ mới sẽ xuất hiện ở đây khi đến hạn.",
+    "back_to_dashboard": "Quay lại bảng điều khiển"
+  },
+  "study_review": {
+    "title": "Phiên ôn tập",
+    "back": "Quay lại",
+    "progress": "Thẻ {{current}} / {{total}}",
+    "session_progress": "Tiến độ",
+    "stat_correct": "Đúng",
+    "stat_remaining": "Còn lại",
+    "load_failed": "Không thể tải phiên ôn tập.",
+    "submit": "Gửi",
+    "submit_failed": "Không gửi được — hãy thử lại.",
+    "next": "Thẻ tiếp theo",
+    "finish": "Hoàn thành",
+    "correct": "Chính xác!",
+    "incorrect": "Chưa đúng.",
+    "correct_answer": "Đáp án",
+    "next_in": "Ôn lại sau {{days}} ngày.",
+    "next_in_plural": "Ôn lại sau {{days}} ngày.",
+    "will_repeat": "Bạn sẽ gặp lại thẻ này sớm thôi.",
+    "done_title": "Hoàn thành phiên ôn!",
+    "done_body": "Bạn trả lời đúng {{correct}} / {{total}}.",
+    "empty_title": "Không có thẻ để ôn",
+    "empty_body": "Bạn đã ôn hết. Hãy quay lại khi có thẻ đến hạn.",
     "back_to_dashboard": "Quay lại bảng điều khiển"
   },
   "settings_notifications": {
@@ -682,7 +781,8 @@
       "course_announcement": "Thông báo khóa học",
       "system": "Hệ thống",
       "material_processing": "Xử lý tài liệu",
-      "quiz_generation": "Tạo câu hỏi"
+      "quiz_generation": "Tạo câu hỏi",
+      "interview_generation": "Tạo câu hỏi phỏng vấn"
     },
     "channel": {
       "email": "Email",
@@ -743,7 +843,8 @@
       "course_announcement": "Thông báo khóa học",
       "system": "Hệ thống",
       "material_processing": "Xử lý tài liệu",
-      "quiz_generation": "Tạo câu hỏi"
+      "quiz_generation": "Tạo câu hỏi",
+      "interview_generation": "Tạo câu hỏi phỏng vấn"
     },
     "errors": {
       "mark_read_failed": "Không thể đánh dấu đã đọc",
@@ -998,10 +1099,13 @@
       "enrolled_sub": "Khóa học đang theo",
       "notifications": "Thông báo",
       "notifications_sub": "Chưa đọc",
-      "quizzes": "Bài kiểm tra",
-      "quizzes_sub": "Đang chờ chấm",
-      "interviews": "Phỏng vấn",
-      "interviews_sub": "Đã lên lịch"
+      "retention": "Ghi nhớ",
+      "retention_sub": "{{mature}}/{{total}} bài đã thành thục",
+      "retention_no_data": "Chưa có thẻ nào được theo dõi",
+      "next_unlock": "Mở khóa tiếp theo",
+      "next_unlock_sub": "Tiến tới \"{{lesson}}\"",
+      "next_unlock_none": "Không có bài bị khóa",
+      "all_unlocked": "Đã mở hết"
     },
     "your_courses": "Khóa học của bạn",
     "your_courses_sub": "Tiếp tục từ nơi bạn đã dừng",
@@ -1246,7 +1350,8 @@
         "value": "Giá trị",
         "count": "Số lượng",
         "status": "Trạng thái",
-        "type": "Loại"
+        "type": "Loại",
+        "share": "Tỉ lệ"
       },
       "active": {
         "dau_label": "Người dùng hoạt động hằng ngày (DAU)",
@@ -1422,10 +1527,17 @@
       "empty_body": "Khi có người dùng đăng ký, danh sách sẽ xuất hiện tại đây.",
       "empty_search": "Không có người dùng phù hợp",
       "search_placeholder": "Tìm theo tên hoặc email…",
+      "filter_role": "Lọc theo vai trò",
+      "all_roles": "Tất cả vai trò",
+      "filter_organization": "Lọc theo tổ chức",
+      "all_organizations": "Tất cả tổ chức",
+      "no_organization": "—",
       "back_to_list": "Quay lại danh sách",
       "profile_section": "Hồ sơ",
       "cols": {
         "user": "Người dùng",
+        "role": "Vai trò",
+        "organization": "Tổ chức",
         "status": "Trạng thái",
         "joined": "Ngày tham gia"
       },
@@ -1454,14 +1566,20 @@
         "title": "Vai trò & phân quyền",
         "count": "{{count}} vai trò",
         "count_plural": "{{count}} vai trò",
+        "none": "Chưa có vai trò",
         "empty": "Người dùng chưa được gán vai trò nào.",
         "assign_new": "Gán vai trò mới",
         "role": "Vai trò",
         "scope": "Phạm vi",
+        "organization": "Tổ chức",
+        "org_unit": "Đơn vị",
         "organization_id": "ID tổ chức",
         "org_unit_id": "ID đơn vị",
         "course_id": "ID khoá học",
         "select_role": "— Chọn vai trò —",
+        "select_organization": "— Chọn tổ chức —",
+        "select_org_unit": "— Chọn đơn vị —",
+        "select_org_first": "— Hãy chọn tổ chức trước —",
         "scope_organization": "Tổ chức",
         "scope_org_unit": "Đơn vị",
         "scope_course": "Khoá học",
@@ -1596,6 +1714,65 @@
         "user_search_loading": "Đang tải danh sách...",
         "user_search_empty": "Không tìm thấy người dùng nào khớp."
       }
+    },
+    "dashboard": {
+      "subtitle": "Vận hành nền tảng — chi phí, thông lượng, lỗi và bảo mật.",
+      "rows": {
+        "needs_action": "Cần xử lý",
+        "cost": "Ảnh chụp chi phí (7 ngày)",
+        "activity": "Hoạt động nền tảng",
+        "attention": "Cần chú ý"
+      },
+      "tiles": {
+        "job_failure_rate": "Tỉ lệ job lỗi",
+        "job_failure_detail": "{{failed}}/{{total}} job, 7 ngày",
+        "queue_depth": "Độ sâu hàng đợi",
+        "queue_depth_detail": "Đang chờ + đang chạy",
+        "failed_ai_calls": "Lệnh gọi AI lỗi",
+        "window_30d": "30 ngày qua",
+        "window_7d": "7 ngày qua",
+        "system_health": "Sức khoẻ hệ thống",
+        "system_health_detail": "API · Postgres · Redis · migration",
+        "no_baseline": "Chưa có tuần trước",
+        "interview_pass_rate": "Tỉ lệ đạt phỏng vấn",
+        "pass_rate_detail": "{{evaluated}} lượt đã đánh giá, 7 ngày",
+        "pass_rate_low_sample": "Chỉ {{evaluated}} lượt từ {{students}} học viên — mẫu quá nhỏ",
+        "low_sample_chip": "Mẫu nhỏ"
+      },
+      "health": {
+        "ok": "Bình thường",
+        "degraded": "Suy giảm",
+        "unknown": "Không rõ"
+      },
+      "cost": {
+        "spend_7d": "Chi phí 7 ngày",
+        "no_prior": "Chưa có chi phí kỳ trước",
+        "projected_month": "Dự báo cuối tháng",
+        "projected_detail": "Ngoại suy từ chi phí hiện tại",
+        "top_driver": "Nguồn chi phí lớn nhất",
+        "top_driver_detail": "{{usd}} trong 7 ngày qua",
+        "slowest_model": "Model chậm nhất",
+        "slowest_detail": "p95 {{p95}}, 7 ngày",
+        "prev_window": "7 ngày trước: {{usd}}"
+      },
+      "activity": {
+        "active_users": "Người dùng hoạt động 7 ngày",
+        "active_users_value": "{{wau}}/{{total}}",
+        "active_users_detail": "{{today}} hoạt động hôm nay",
+        "quiz_sessions": "Lượt kiểm tra hoàn thành",
+        "interview_sessions": "Lượt phỏng vấn",
+        "materials_ingested": "Tài liệu đã nạp",
+        "sessions_by_students": "Từ {{students}} học viên, 7 ngày"
+      },
+      "attention": {
+        "materials_stuck": "Tài liệu bị treo xử lý quá 1 giờ",
+        "quizzes_missing_texp": "Bài kiểm tra đã xuất bản thiếu thời gian dự kiến",
+        "configs_unreviewed": "Cấu hình phỏng vấn chưa có câu hỏi được duyệt",
+        "orgs_inactive": "Tổ chức không hoạt động trong 30 ngày",
+        "audit_review": "Xem lại thay đổi quyền và đăng nhập thất bại",
+        "all_clear": "Không có mục nào tồn đọng — tất cả đều ổn.",
+        "also_clear": "{{count}} mục kiểm tra khác đều ổn."
+      }
     }
   },
   "languages": {
@@ -1606,6 +1783,7 @@
   "sections": {
     "student": "Học viên",
     "teacher": "Giảng viên",
+    "manager": "Quản lý",
     "admin": "Quản trị"
   },
   "sidebar": {
@@ -1628,13 +1806,18 @@
     },
     "empty_states": {
       "no_report": "Chưa có báo cáo lỗ hổng",
+      "not_graded": "Phiên này không được chấm",
       "no_overview": "AI chưa sinh phần tổng quan.",
       "no_detail": "Không có dữ liệu chi tiết theo tiêu chí.",
       "no_study_plan": "AI chưa đề xuất bước học cụ thể.",
       "no_source_quiz": "Buổi phỏng vấn này không đi kèm với một lượt làm quiz, nên không có quiz nguồn để đối chiếu."
     },
     "errors": {
-      "no_view_permission_or_ungraded": "Phiên phỏng vấn này chưa được chấm hoặc bạn không có quyền xem báo cáo."
+      "pending_grading": "Hệ thống đang chấm. Báo cáo lỗ hổng sẽ được tạo tự động sau khi chấm xong — bạn vui lòng quay lại sau ít phút.",
+      "never_graded": "Sinh viên đã thoát trước khi trả lời câu nào, nên không có gì để chấm và lượt này sẽ không có báo cáo lỗ hổng.",
+      "in_progress": "Buổi phỏng vấn này vẫn đang diễn ra. Báo cáo lỗ hổng được tạo sau khi sinh viên nộp bài.",
+      "forbidden": "Bạn không có quyền xem báo cáo này.",
+      "load_failed": "Không tải được báo cáo lỗ hổng. Vui lòng thử lại."
     },
     "sections": {
       "title": "Báo cáo lỗ hổng phỏng vấn",
@@ -1651,11 +1834,53 @@
       "integrity": "Liêm chính",
       "sources": "Nguồn"
     },
+    "persona_adherence": {
+      "title": "Phong cách người phỏng vấn",
+      "tone_only": "Chỉ về giọng điệu — không ảnh hưởng điểm",
+      "band_consistent": "Giữ đúng phong cách",
+      "band_mixed": "Có lúc lệch",
+      "band_off": "Lệch phong cách",
+      "answer_leak_warning": "Người phỏng vấn có thể đã tiết lộ nội dung đáp án trong phiên. Điều này không làm thay đổi điểm của học viên, nhưng hãy xem lại các lượt được đánh dấu — nó có thể ảnh hưởng tính công bằng.",
+      "drift_turns": "Giọng điệu lệch ở lượt: {{turns}}",
+      "traits": {
+        "warmth": "Độ ấm áp",
+        "directness": "Độ thẳng thắn",
+        "verbosity": "Độ dài dòng",
+        "formality": "Độ trang trọng"
+      },
+      "violations": {
+        "over_polite_for_strict": "Quá ấm áp so với phong cách nghiêm khắc",
+        "cold_for_supportive": "Quá lạnh lùng so với phong cách hỗ trợ",
+        "repeated_candidate_answer": "Nhại lại câu trả lời của học viên",
+        "identity_confusion": "Lẫn lộn vai trò người phỏng vấn"
+      }
+    },
     "integrity": {
       "clean_title": "Không có cảnh báo liêm chính",
       "clean_body": "Không ghi nhận việc mất tiêu điểm, chuyển tab hay thoát toàn màn hình trong buổi phỏng vấn này.",
       "flagged_title": "Đã ghi nhận tín hiệu liêm chính",
       "summary": "{{tab}} lần chuyển tab, {{focus}} lần mất tiêu điểm, {{fullscreen}} lần thoát toàn màn hình trong phiên này.",
+      "timeline_title": "Dòng thời gian sự kiện",
+      "filter_group_label": "Lọc dòng thời gian theo loại tín hiệu",
+      "showing_count": "Hiển thị {{count}}",
+      "filter_empty": "Buổi phỏng vấn này không ghi nhận sự kiện nào thuộc loại này.",
+      "filter": {
+        "total": "Tất cả tín hiệu",
+        "tab_switch": "Chuyển tab",
+        "fullscreen_exit": "Toàn màn hình",
+        "focus_lost": "Mất tiêu điểm"
+      },
+      "risk": {
+        "low_title": "Liêm chính ổn định",
+        "low_badge": "Thấp",
+        "low_body": "Không ghi nhận chuyển tab hay thoát toàn màn hình. Việc mất tiêu điểm đơn lẻ ít đáng ngại.",
+        "moderate_title": "Có một vài tín hiệu",
+        "moderate_badge": "Trung bình",
+        "moderate_body": "{{count}} tín hiệu mức cảnh báo (chuyển tab / thoát toàn màn hình) trong phiên này. Nên xem qua.",
+        "high_title": "Tín hiệu lặp lại nhiều lần",
+        "high_badge": "Cao",
+        "high_body": "{{count}} tín hiệu mức cảnh báo (chuyển tab / thoát toàn màn hình) trong phiên này. Khuyến nghị xem xét kỹ."
+      },
       "event": {
         "tab_switch": "Đã chuyển khỏi tab phỏng vấn",
         "focus_lost": "Cửa sổ phỏng vấn mất tiêu điểm",
@@ -1742,7 +1967,8 @@
       "your_correct": "Bạn chọn · Đúng",
       "your_incorrect": "Bạn chọn",
       "correct": "Đáp án đúng"
-    }
+    },
+    "overall_feedback": "Nhận xét tổng thể"
   },
   "course_quiz": {
     "empty": {
@@ -1843,9 +2069,19 @@
       "max_attempts_reached": "Bạn đã dùng hết số lượt làm bài quiz này.",
       "quiz_cooldown_active": "Bài quiz đang trong thời gian chờ. Vui lòng thử lại sau.",
       "quiz_cooldown_active_at": "Bài quiz đang trong thời gian chờ đến {{time}}.",
+      "quiz_subnet_blocked": "Bạn không ở trong mạng được phép làm bài quiz này.",
       "save_answer_failed": "Không thể lưu câu trả lời",
       "auto_submitted_timeout": "Đã hết giờ. Bài quiz đã được nộp tự động.",
       "submit_failed": "Không thể nộp bài quiz"
+    },
+    "password": {
+      "title": "Yêu cầu mật khẩu",
+      "description": "Bài quiz này được bảo vệ bằng mật khẩu. Nhập mật khẩu do giáo viên cung cấp để bắt đầu.",
+      "placeholder": "Mật khẩu bài quiz",
+      "submit": "Bắt đầu làm bài",
+      "submitting": "Đang bắt đầu…",
+      "incorrect": "Mật khẩu không đúng. Vui lòng thử lại.",
+      "required_error": "Vui lòng nhập mật khẩu bài quiz."
     },
     "empty_states": {
       "no_quiz_found": "Không tìm thấy bài quiz",
@@ -1858,7 +2094,8 @@
       "failed_summary": "Bạn đạt {{score}}% và cần {{passing}}% để qua."
     },
     "status": {
-      "currently_doing": "ĐANG LÀM"
+      "currently_doing": "ĐANG LÀM",
+      "saved": "Đã lưu"
     },
     "instructions": {
       "choose_best": "Chọn đáp án phù hợp nhất; có thể đánh dấu để xem lại sau."
@@ -1869,12 +2106,34 @@
       "passed_banner_title": "Bạn đã vượt qua bài kiểm tra này",
       "passed_banner_best": "Điểm cao nhất {{score}}%",
       "best_label": "Cao nhất {{score}}%"
+    },
+    "pagination": {
+      "per_page_label": "Số câu mỗi trang",
+      "per_page_all": "Tất cả",
+      "page_of": "Trang {{page}}/{{pages}}",
+      "prev_page": "Trang trước",
+      "next_page": "Trang sau",
+      "showing": "Hiển thị {{from}}–{{to}} trong {{total}}",
+      "save_page": "Lưu câu trả lời ở trang này",
+      "unanswered_warning": "{{count}} câu ở trang này chưa có câu trả lời."
     }
   },
   "course_interview": {
     "integrity_warning": {
       "title": "Bạn đã rời khỏi cửa sổ phỏng vấn",
       "body": "Hành vi này được ghi lại để giáo viên xem lại. Vui lòng ở lại tab này cho đến khi kết thúc phỏng vấn."
+    },
+    "fullscreen": {
+      "prompt_title": "Chuyển sang chế độ toàn màn hình",
+      "prompt_description": "Buổi phỏng vấn sẽ chạy toàn màn hình để bạn không bị phân tán. Menu của ứng dụng được ẩn cho đến khi phỏng vấn kết thúc.",
+      "enter": "Vào toàn màn hình",
+      "continue_windowed": "Tiếp tục trong cửa sổ",
+      "exit_warning_title": "Bạn đã thoát chế độ toàn màn hình",
+      "exit_warning_description": "Vui lòng quay lại toàn màn hình và ở đó cho đến khi phỏng vấn kết thúc.",
+      "exit_warning_recorded_one": "Lần thoát này đã được ghi lại để giáo viên xem lại ({{count}} lần).",
+      "exit_warning_recorded_other": "Lần thoát này đã được ghi lại để giáo viên xem lại ({{count}} lần).",
+      "reenter": "Quay lại toàn màn hình",
+      "stay_windowed": "Ở lại trong cửa sổ"
     },
     "hybrid": {
       "prestart_hint": "Phỏng vấn kết hợp — bạn có thể gõ hoặc nói câu trả lời",
@@ -1908,6 +2167,8 @@
       "answer_placeholder": "Nhập câu trả lời hoặc bắt đầu nói…",
       "answer_locked": "Vui lòng đợi người phỏng vấn nói xong…",
       "send_hint": "Enter để gửi · Shift + Enter để xuống dòng",
+      "send_hint_send": "gửi",
+      "send_hint_newline": "xuống dòng",
       "start_speaking": "Bắt đầu nói",
       "mute_microphone": "Dừng nghe",
       "audio_input": "Đầu vào âm thanh",
@@ -2200,6 +2461,27 @@
     },
     "voice": {
       "dropped_fallback_text": "Mất kết nối thoại — đang tiếp tục bằng văn bản. Tiến trình của bạn đã được lưu."
+    },
+    "mode": {
+      "legend": "Chế độ phỏng vấn",
+      "assessment_title": "Phỏng vấn tính điểm",
+      "assessment_help": "Được tính vào kết quả và dùng một lượt thi.",
+      "practice_title": "Thi thử",
+      "practice_help_other": "Không chấm điểm, không tốn lượt thi. Còn {{count}} lần thi thử.",
+      "criteria_title": "Bạn sẽ được đánh giá theo",
+      "banner": "Đang thi thử — không chấm điểm, không tốn lượt thi.",
+      "chip": "Thi thử",
+      "errors": {
+        "practice_limit": "Bạn đã dùng hết lượt thi thử của bài phỏng vấn này.",
+        "practice_unavailable": "Bài phỏng vấn này chưa mở thi thử."
+      },
+      "results_title": "Đã xong buổi thi thử",
+      "results_summary": "Không có gì bị chấm điểm và không tốn lượt thi. Đây là những gì buổi thi thử đã bao được.",
+      "results_criteria_title": "Buổi thi thử của bạn đã bao được gì",
+      "results_pending": "Đang xem lại buổi thi thử của bạn…",
+      "criterion_met": "Đã thể hiện được",
+      "criterion_not_met": "Chưa thể hiện được",
+      "results_unavailable": "Không xem lại được buổi thi thử này. Không có gì bị chấm điểm và số lượt thi của bạn không bị ảnh hưởng."
     }
   },
   "management_career_path_detail": {
@@ -2430,7 +2712,12 @@
     },
     "tabs": {
       "by_student": "Theo học viên",
-      "by_question": "Theo câu hỏi"
+      "by_question": "Theo câu hỏi",
+      "responses": "Câu trả lời",
+      "statistics": "Thống kê",
+      "grading": "Chấm tay",
+      "gradebook": "Bảng điểm",
+      "audit": "Nhật ký"
     },
     "per_student": {
       "col_student": "Học viên",
@@ -2470,6 +2757,89 @@
         "dedup": "Lọc trùng",
         "persistence": "Lưu"
       }
+    },
+    "reports": {
+      "download": "Tải xuống",
+      "download_csv": "Bảng hiện tại → CSV",
+      "download_xlsx": "Bảng hiện tại → XLSX",
+      "download_started": "Đã bắt đầu tải xuống",
+      "download_failed": "Tải xuống thất bại",
+      "responses": {
+        "student": "Học viên",
+        "attempt": "Lần #",
+        "question": "Câu hỏi",
+        "their_answer": "Câu trả lời",
+        "correct_answer": "Đáp án đúng",
+        "is_correct": "Đúng?",
+        "points": "Điểm",
+        "empty": "Chưa có câu trả lời nào."
+      },
+      "statistics": {
+        "question": "Câu hỏi",
+        "facility": "Độ dễ (% đúng)",
+        "discrimination": "Độ phân biệt",
+        "no_data": "—",
+        "legend_title": "Về các chỉ số này",
+        "legend_facility": "Độ dễ = tỷ lệ học viên trả lời đúng. Thấp hơn nghĩa là khó hơn.",
+        "legend_discrimination": "Độ phân biệt = mức độ câu hỏi phân tách học viên giỏi với học viên yếu (point-biserial, -1..+1). ≥0.3 là tốt; gần 0 hoặc âm là yếu.",
+        "empty": "Chưa đủ lượt làm để tính thống kê."
+      }
+    },
+    "regrade": {
+      "action": "Chấm lại",
+      "title": "Chấm lại các lượt làm",
+      "description": "Tính lại các câu trả lời đã lưu theo định nghĩa câu hỏi hiện tại. Xem trước thay đổi rồi mới áp dụng.",
+      "dry_run_hint": "Bản xem trước cho biết câu trả lời nào sẽ thay đổi. Không có gì được lưu cho đến khi bạn áp dụng.",
+      "scanned": "Câu trả lời đã quét",
+      "changed": "Câu trả lời thay đổi",
+      "attempts": "Lượt làm bị ảnh hưởng",
+      "col_change": "Lượt làm / Câu hỏi",
+      "col_old": "Cũ",
+      "col_new": "Mới",
+      "preview_action": "Xem trước thay đổi",
+      "commit_action": "Áp dụng chấm lại",
+      "committed": "Đã chấm lại — {{count}} câu trả lời thay đổi.",
+      "dry_run_failed": "Không thể xem trước việc chấm lại.",
+      "commit_failed": "Không thể áp dụng việc chấm lại."
+    },
+    "grading_queue": {
+      "title": "Câu trả lời chờ chấm",
+      "empty": "Không có gì để chấm — tất cả đã được chấm tự động hoặc đã chấm.",
+      "col_student": "Học viên",
+      "col_question": "Câu hỏi",
+      "col_answer": "Câu trả lời",
+      "score_label": "Điểm",
+      "feedback_label": "Nhận xét (tùy chọn)",
+      "save": "Lưu điểm",
+      "saved": "Đã lưu điểm.",
+      "save_failed": "Không thể lưu điểm."
+    },
+    "grading": {
+      "empty": "Không có câu trả lời nào cần chấm tay.",
+      "invalid_score": "Nhập điểm hợp lệ.",
+      "graded": "Đã chấm điểm.",
+      "grade_failed": "Không thể lưu điểm.",
+      "no_answer": "(chưa có câu trả lời)",
+      "score_label": "Điểm",
+      "feedback_label": "Nhận xét",
+      "feedback_placeholder": "Nhận xét cho học viên (tuỳ chọn)…",
+      "grade_action": "Lưu điểm"
+    },
+    "gradebook": {
+      "empty": "Chưa có điểm nào được ghi nhận.",
+      "col_student": "Học viên",
+      "col_grade": "Điểm",
+      "col_passed": "Trạng thái",
+      "col_method": "Phương thức",
+      "col_attempts": "Số lần làm",
+      "passed": "Đạt",
+      "failed": "Chưa đạt"
+    },
+    "audit": {
+      "empty": "Chưa có sự kiện nào.",
+      "col_event": "Sự kiện",
+      "col_when": "Thời điểm",
+      "col_details": "Chi tiết"
     }
   },
   "teacher_outcomes": {
@@ -2490,14 +2860,18 @@
     "update_failed": "Không thể cập nhật chuẩn đầu ra",
     "delete_failed": "Không thể xóa chuẩn đầu ra",
     "delete_title": "Xóa chuẩn đầu ra này?",
-    "delete_description": "Các câu hỏi được gắn với nó sẽ trở về không có chuẩn đầu ra. Các chuẩn còn lại được đánh số lại tự động."
+    "delete_description": "Các câu hỏi được gắn với nó sẽ trở về không có chuẩn đầu ra. Các chuẩn còn lại được đánh số lại tự động.",
+    "child_added": "Đã thêm mục tiêu con",
+    "add_child": "Thêm mục tiêu con",
+    "add_child_placeholder": "Nội dung mục tiêu con…"
   },
   "quiz_generation": {
     "outcomes": {
       "label": "Chuẩn đầu ra mục tiêu",
       "select_all": "Chọn tất cả",
       "empty": "Khóa học này chưa có chuẩn đầu ra nào. Câu hỏi sẽ được tạo mà không gắn nhãn chuẩn đầu ra.",
-      "badge": "L.O.{{n}}"
+      "badge": "L.O.{{n}}",
+      "parent_hint": "gồm mục tiêu con"
     }
   },
   "teacher_quiz_manage": {
@@ -2521,7 +2895,9 @@
       "count_out_of_range": "Số lượng câu hỏi phải nằm trong khoảng 1-50",
       "publish_missing_t_exp": "Cần đặt thời gian dự kiến cho mọi câu hỏi trước khi xuất bản. Dùng nút 'Đặt nhanh thời gian'.",
       "bulk_select_required": "Hãy chọn ít nhất một câu hỏi.",
-      "bulk_seconds_positive": "Thời gian dự kiến phải lớn hơn 0 giây."
+      "bulk_seconds_positive": "Thời gian dự kiến phải lớn hơn 0 giây.",
+      "at_least_one_correct": "Phải có ít nhất một đáp án đúng",
+      "expected_time_required": "Thời gian trả lời dự kiến là bắt buộc và phải lớn hơn 0."
     },
     "toasts": {
       "deleted": "Đã xoá bài kiểm tra",
@@ -2564,8 +2940,10 @@
       "publish": "Xuất bản",
       "delete_quiz_tooltip": "Xoá bài kiểm tra, câu hỏi, lượt làm bài và mục module",
       "add_question": "Thêm câu hỏi",
-      "view_as_student": "Xem như học viên",
-      "view_results": "Kết quả"
+      "view_results": "Kết quả",
+      "add_question_of_type": "Thêm câu hỏi loại khác",
+      "add_other_type": "+ Loại khác…",
+      "preview": "Xem thử"
     },
     "status": {
       "published": "Đã xuất bản",
@@ -2580,16 +2958,22 @@
     },
     "confirm_publish": {
       "title": "Xuất bản bài kiểm tra này?",
-      "body": "Thao tác này sẽ xuất bản {{count}} câu hỏi và hiển thị bài kiểm tra cho học viên. Bạn có thể xem thử như học viên trước, hoặc xuất bản ngay."
+      "body_preview": "Thao tác này sẽ xuất bản {{count}} câu hỏi và hiển thị bài kiểm tra cho học viên. Hãy xem thử như học viên trước để kiểm tra, rồi xuất bản.",
+      "body_confirm": "Thao tác này sẽ xuất bản {{count}} câu hỏi và hiển thị bài kiểm tra cho học viên. Bạn có chắc chắn muốn xuất bản?"
     },
-    "confirm_delete_question": "Xoá câu hỏi này? Không thể hoàn tác.",
+    "confirm_delete_question": {
+      "title": "Xóa câu hỏi này?",
+      "body": "Câu hỏi sẽ bị xóa. Bạn sẽ có vài giây để hoàn tác trước khi nó bị xóa vĩnh viễn."
+    },
     "combo_undo": {
       "message": "Đang xoá {{count}} câu hỏi…",
       "undo": "Hoàn tác ({{count}})"
     },
     "banners": {
-      "missing_expected_time": "{{count}} câu chưa có thời gian dự kiến. Cần đặt thời gian trước khi xuất bản.",
-      "pending_review": "{{count}} câu hỏi chưa được duyệt và sẽ không hiển thị cho học viên. Hãy duyệt để thêm vào; dù sao chúng vẫn được giữ làm bản nháp."
+      "missing_expected_time": "{{count}} câu hỏi chưa có thời gian dự kiến. Hãy đặt trước khi xuất bản.",
+      "pending_review": "{{count}} câu hỏi chưa được duyệt và sẽ không hiển thị cho học viên. Hãy duyệt để thêm vào; dù sao chúng vẫn được giữ làm bản nháp.",
+      "unsaved_default_time": "{{count}} câu hỏi đã có thời gian dự kiến gợi ý {{seconds}}s trong ô nhập nhưng chưa lưu. Hãy lưu để giá trị được ghi lại.",
+      "save_default_time": "Lưu các thời gian này"
     },
     "empty": {
       "no_questions_title": "Chưa có câu hỏi",
@@ -2598,20 +2982,33 @@
     "ai_panel": {
       "title": "Tạo bằng AI",
       "description": "Sinh câu hỏi từ tài liệu bài học đã sẵn sàng.",
-      "open_generator": "Mở trình tạo"
+      "open_generator": "Mở trình tạo",
+      "import_export_file": "Nhập / Xuất file"
     },
     "question_nav": {
-      "title": "Nhảy tới câu hỏi"
+      "title": "Nhảy tới câu hỏi",
+      "status_approved": "Đã duyệt",
+      "status_pending": "Chờ duyệt",
+      "status_error": "Lỗi",
+      "status_saved": "Đã lưu",
+      "status_unsaved": "Chưa lưu",
+      "status_selected": "Đã chọn",
+      "status_focused": "Đang xem",
+      "error_count": "{{count}} lỗi",
+      "unsaved_count": "{{count}} chưa lưu",
+      "legend_title": "Ý nghĩa các màu"
     },
     "bulk_time": {
-      "title": "Đặt nhanh thời gian",
       "selected_count": "{{selected}}/{{total}} đã chọn",
       "duration_seconds": "Thời gian (giây)",
       "seconds_suffix": "giây",
       "select_all": "Chọn tất cả",
       "deselect": "Bỏ chọn",
-      "apply": "Áp dụng cho đã chọn",
-      "approve_selected": "Duyệt đã chọn"
+      "idle_hint": "Chọn câu hỏi để thao tác hàng loạt",
+      "apply_short": "Đặt thời gian",
+      "approve_short": "Duyệt",
+      "delete_short": "Xoá",
+      "question_count": "{{count}} câu hỏi"
     },
     "questions": {
       "sr_select": "Chọn câu hỏi {{position}}",
@@ -2627,7 +3024,11 @@
       "explanation_label": "Giải thích",
       "approve": "Duyệt",
       "regenerate": "Tái tạo",
-      "explanation_inline": "Giải thích:"
+      "duplicate": "Nhân bản",
+      "duplicate_success": "Đã nhân bản câu hỏi (thêm bản sao ở trạng thái chờ duyệt).",
+      "duplicate_error": "Không thể nhân bản câu hỏi.",
+      "explanation_inline": "Giải thích:",
+      "mark_correct": "Đánh dấu đáp án {{key}} là đúng"
     },
     "generate_modal": {
       "title": "Tạo câu hỏi bằng AI",
@@ -2732,7 +3133,70 @@
       },
       "save_button": "Lưu cấu hình",
       "unsaved_changes": "Bạn có thay đổi chưa lưu",
-      "reset_button": "Huỷ thay đổi"
+      "reset_button": "Huỷ thay đổi",
+      "review": {
+        "title": "Tùy chọn xem lại",
+        "description": "Kiểm soát những gì học viên thấy sau khi nộp bài. Chọn một thiết lập sẵn, hoặc tùy chỉnh theo từng mốc thời gian.",
+        "windows": {
+          "immediately_after": "Ngay sau khi nộp",
+          "later_while_open": "Sau đó, khi còn mở",
+          "after_close": "Sau khi quiz đóng"
+        },
+        "flags": {
+          "show_score": "Điểm số",
+          "show_correctness": "Đúng/sai từng câu",
+          "show_correct_answers": "Đáp án đúng",
+          "show_explanation": "Giải thích",
+          "show_points": "Điểm mỗi câu"
+        },
+        "presets_label": "Thiết lập sẵn",
+        "presets": {
+          "everything": "Hiện mọi thứ",
+          "score_now_rest_after_close": "Điểm ngay, đáp án sau khi đóng",
+          "nothing_until_close": "Không hiện gì đến khi đóng",
+          "nothing": "Không bao giờ hiện kết quả",
+          "custom": "Tùy chỉnh"
+        },
+        "customize": "Tùy chỉnh theo mốc thời gian",
+        "window_hints": {
+          "immediately_after": "Ngay khi học viên nộp bài làm.",
+          "later_while_open": "Khi họ quay lại trước lúc quiz đóng.",
+          "after_close": "Sau khi quiz đã đóng với tất cả mọi người."
+        },
+        "shown_count": "Hiện {{shown}}/{{total}}",
+        "show_all": "Hiện tất cả",
+        "hide_all": "Ẩn tất cả"
+      },
+      "access": {
+        "title": "Quy tắc truy cập",
+        "description": "Giới hạn ai được bắt đầu làm bài.",
+        "password_label": "Mật khẩu",
+        "password_hint": "Học viên phải nhập để bắt đầu. Để trống nếu không cần.",
+        "password_placeholder": "Không có mật khẩu",
+        "subnet_label": "IP / subnet cho phép",
+        "subnet_hint": "CIDR hoặc IP, cách nhau bằng dấu phẩy. Trống = mọi mạng.",
+        "browser_security_label": "Chế độ bảo mật trình duyệt",
+        "browser_security_desc": "Yêu cầu cửa sổ trình duyệt an toàn/khóa khi làm bài."
+      },
+      "timing": {
+        "title": "Kiểm soát thời gian",
+        "description": "Điều gì xảy ra khi bài làm có giới hạn thời gian hết giờ.",
+        "overdue_label": "Khi hết giờ",
+        "overdue_hint": "Cách đóng bài chưa nộp khi quá hạn.",
+        "overdue_autosubmit": "Tự nộp (chấm phần đã trả lời)",
+        "overdue_graceperiod": "Gia hạn thêm, rồi tự nộp",
+        "overdue_autoabandon": "Bỏ (không chấm điểm)",
+        "grace_label": "Thời gian gia hạn (giây)",
+        "grace_hint": "Thời gian thêm sau hạn chót trước khi tự nộp."
+      },
+      "overrides": {
+        "title": "Ngoại lệ",
+        "description": "Cấp cho từng học viên ngoại lệ về số lần làm và giới hạn thời gian. Ngoại lệ theo học viên được ưu tiên hơn cài đặt gốc."
+      },
+      "feedback": {
+        "title": "Phản hồi theo dải điểm",
+        "description": "Hiển thị thông điệp cho học viên dựa trên điểm cuối. Các dải không được chồng nhau."
+      }
     },
     "preview": {
       "title": "Xem trước cho học viên",
@@ -2741,14 +3205,119 @@
       "empty_body": "Thêm câu hỏi trong tab Câu hỏi hoặc dùng AI để tạo nhanh.",
       "empty_approved_body": "Chưa có câu hỏi nào được duyệt. Hãy duyệt câu hỏi trong tab Câu hỏi — học viên chỉ thấy câu hỏi đã duyệt.",
       "no_content": "(Chưa có nội dung)",
-      "correct": "Đúng"
+      "correct": "Đúng",
+      "edit_question": "Chỉnh sửa",
+      "correct_pairs": "Các cặp đúng",
+      "correct_order": "Thứ tự đúng",
+      "tolerance": "± {{value}}",
+      "matching_note": "Học viên thấy các giá trị bên phải đã được trộn và chọn một cho mỗi mục.",
+      "ordering_note": "Học viên thấy các mục này đã được trộn và sắp xếp lại.",
+      "multi_select_note": "Nhiều đáp án đúng — học viên thấy ô chọn (checkbox)."
+    },
+    "import_export": {
+      "title": "Nhập / Xuất câu hỏi",
+      "description": "Nhập câu hỏi từ file Moodle GIFT hoặc XML, hoặc xuất câu hỏi của quiz này.",
+      "export_title": "Xuất",
+      "import_title": "Nhập",
+      "format_label": "Định dạng",
+      "upload": "Tải file lên",
+      "import_action": "Nhập",
+      "empty_content": "Hãy dán hoặc tải nội dung file trước.",
+      "imported": "Đã nhập {{count}} câu hỏi.",
+      "import_failed": "Nhập thất bại — file có thể bị lỗi định dạng.",
+      "export_failed": "Xuất thất bại.",
+      "result_summary": "Đã nhập {{imported}}, bỏ qua {{skipped}}."
+    },
+    "overrides": {
+      "user_id_label": "ID học viên",
+      "user_id_placeholder": "UUID của học viên",
+      "user_required": "Cần ID học viên",
+      "max_attempts_label": "Số lần tối đa",
+      "time_limit_label": "Giới hạn thời gian (giây)",
+      "add_action": "Thêm ngoại lệ",
+      "added": "Đã thêm ngoại lệ",
+      "add_failed": "Không thể thêm ngoại lệ",
+      "deleted": "Đã xóa ngoại lệ",
+      "delete_failed": "Không thể xóa ngoại lệ",
+      "delete_action": "Xóa ngoại lệ",
+      "empty": "Chưa có ngoại lệ nào.",
+      "attempts_badge": "{{count}} lần",
+      "title": "Ngoại lệ",
+      "description": "Cấp cho từng học viên ngoại lệ về số lần làm và giới hạn thời gian. Ngoại lệ theo học viên được ưu tiên hơn cài đặt gốc."
+    },
+    "feedback_bands": {
+      "empty": "Chưa có dải phản hồi. Thêm một dải để hiển thị thông điệp theo điểm.",
+      "min": "Tối thiểu %",
+      "max": "Tối đa %",
+      "text_placeholder": "Thông điệp phản hồi cho dải điểm này",
+      "remove": "Xóa dải",
+      "add": "Thêm dải",
+      "save": "Lưu dải",
+      "saved": "Đã lưu dải phản hồi",
+      "save_failed": "Không thể lưu dải phản hồi",
+      "overlap": "Các dải không được chồng nhau",
+      "invalid": "Mỗi dải cần tối thiểu < tối đa"
+    },
+    "type_editor": {
+      "numerical_label": "Đáp án dạng số",
+      "numeric_answer": "Đáp án đúng",
+      "numeric_tolerance": "Sai số cho phép (±)",
+      "numeric_hint": "Câu trả lời của học viên đúng nếu nằm trong khoảng ± sai số so với giá trị đúng.",
+      "matching_label": "Các cặp ghép",
+      "match_left": "Vế trái",
+      "match_right": "Vế phải (ghép)",
+      "remove_pair": "Xóa cặp",
+      "add_pair": "Thêm cặp",
+      "matching_hint": "Học viên thấy các giá trị vế phải bị xáo trộn và ghép với từng vế trái. Phải ghép đúng tất cả mới được điểm.",
+      "ordering_label": "Thứ tự đúng",
+      "move_up": "Di chuyển lên",
+      "move_down": "Di chuyển xuống",
+      "remove_item": "Xóa mục",
+      "add_item": "Thêm mục",
+      "ordering_hint": "Thứ tự ở đây LÀ đáp án đúng. Học viên thấy các mục bị xáo trộn và phải sắp xếp lại.",
+      "multi_select_label": "Cho phép nhiều đáp án đúng",
+      "multi_select_desc": "Khi bật, học viên thấy ô chọn (checkbox) và có thể chọn nhiều hơn một đáp án.",
+      "type_true_false": "Đúng / Sai",
+      "type_short_answer": "Trả lời ngắn",
+      "type_numerical": "Dạng số",
+      "type_matching": "Ghép cặp",
+      "type_ordering": "Sắp xếp"
+    },
+    "published_readonly_banner": "Bài kiểm tra này đã được xuất bản. Câu hỏi và các cài đặt ảnh hưởng đến chấm điểm, thời gian hoặc cách hiển thị bị đóng băng để không làm gián đoạn học viên đang làm bài. Bạn vẫn có thể sửa tiêu đề, mô tả, lịch trình và nhắc nhở. Hãy lưu trữ (archive) bài kiểm tra trước nếu muốn thay đổi những mục khác.",
+    "confirm_bulk_delete": {
+      "title": "Xoá {{count}} câu hỏi?",
+      "body": "Các câu hỏi đã chọn sẽ bị xoá khỏi bài kiểm tra này. Bạn có vài giây để hoàn tác trước khi lưu.",
+      "confirm": "Xoá {{count}} câu hỏi"
     }
   },
   "teacher_interview_config": {
+    "published_freeze": {
+      "banner": "Buổi phỏng vấn này đã xuất bản, nên các thiết lập ảnh hưởng đến cách tiến hành, cách chấm và số lượt làm lại đã bị khoá — có thể đang có sinh viên làm bài, và thay đổi giữa kỳ sẽ khiến các sinh viên bị áp những quy định khác nhau. Bạn vẫn sửa được tiêu đề. Hãy bỏ xuất bản nếu cần đổi những thiết lập còn lại.",
+      "tooltip": "Đã khoá khi xuất bản — bỏ xuất bản để thay đổi."
+    },
     "persona": {
       "strict": "Nghiêm khắc",
       "neutral": "Trung lập",
       "supportive": "Hỗ trợ"
+    },
+    "persona_traits": {
+      "advanced_label": "Nâng cao: tinh chỉnh giọng điệu persona",
+      "help": "Tùy chọn. Điều chỉnh từng thang giọng điệu (0–4) trên nền preset của persona. Điều này chỉ nắn cách diễn đạt — không ảnh hưởng điểm số, độ khó, hay câu hỏi nào được hỏi. Giữ nguyên preset nếu muốn dùng persona như mặc định.",
+      "reset": "Đặt lại về preset persona",
+      "trait": {
+        "warmth": "Độ ấm áp",
+        "directness": "Độ thẳng thắn",
+        "verbosity": "Độ dài dòng",
+        "formality": "Độ trang trọng",
+        "ack_frequency": "Tần suất ghi nhận"
+      },
+      "trait_hint": {
+        "warmth": "Người phỏng vấn nghe ấm áp và trấn an đến mức nào (0 = lạnh lùng, 4 = khích lệ).",
+        "directness": "Cách diễn đạt thẳng hay mềm (0 = rào đón nhiều, 4 = thẳng thắn).",
+        "verbosity": "Người phỏng vấn nói nhiều đến đâu (0 = ngắn gọn, 4 = mở rộng).",
+        "formality": "Văn phong và cách chọn từ (0 = thân mật, 4 = trang trọng).",
+        "ack_frequency": "Tần suất người phỏng vấn ghi nhận câu trả lời (0 = hiếm khi, 4 = hầu như luôn)."
+      }
     },
     "voice": {
       "aura-2-thalia-en": "Thalia (Nữ, rõ ràng)",
@@ -2770,6 +3339,8 @@
     },
     "voice_guide": {
       "open": "Xem hướng dẫn giọng & phong cách",
+      "open_persona": "Hướng dẫn phong cách AI",
+      "open_voice": "Hướng dẫn giọng nói",
       "title": "Hướng dẫn giọng đọc & phong cách AI",
       "subtitle": "Mô tả cách hành xử của từng phong cách và âm sắc của từng giọng tiếng Anh. Phong cách quyết định thái độ; giọng quyết định âm thanh khi đọc (chỉ áp dụng phiên tiếng Anh).",
       "persona_heading": "Phong cách (thái độ & hành vi)",
@@ -2914,7 +3485,7 @@
       "learning_outcomes": "Chuẩn đầu ra",
       "learning_outcomes_short": "Chuẩn đầu ra",
       "generate": "Tạo câu hỏi",
-      "generate_short": "Tạo",
+      "generate_short": "Tạo câu hỏi",
       "questions": "Ngân hàng câu hỏi",
       "questions_short": "Câu hỏi",
       "adaptive_readiness": "Mức sẵn sàng thích ứng",
@@ -2932,6 +3503,12 @@
     "confirm_delete": {
       "title": "Xoá phỏng vấn này?",
       "body": "Hành động này sẽ xoá vĩnh viễn {{title}} cùng các câu hỏi và bản ghi liên quan."
+    },
+    "confirm_unsaved": {
+      "title": "Lưu thay đổi?",
+      "body": "Bạn có thay đổi chưa lưu trong tab Cài đặt. Lưu ngay trước khi chuyển tab, hoặc để từ từ lưu sau.",
+      "confirm": "Lưu liền",
+      "cancel": "Từ từ"
     },
     "sections": {
       "general": {
@@ -2953,7 +3530,7 @@
       "title": "Tiêu đề",
       "title_placeholder": "Nhập tiêu đề phỏng vấn…",
       "persona": "Phong cách AI",
-      "duration_label": "Thời lượng (phút)",
+      "duration_label": "Thời lượng",
       "duration_hint": "Để trống = không giới hạn",
       "duration_placeholder": "vd. 30",
       "attempts_label": "Số lần thử",
@@ -2961,16 +3538,38 @@
       "cooldown_label": "Thời gian chờ (giờ)",
       "cooldown_hint": "Thời gian chờ tối thiểu giữa các lần thi; để trống = không chờ",
       "cooldown_placeholder": "vd. 24",
-      "voice_label": "Giọng AI (tiếng Anh)",
-      "voice_hint": "Giọng Deepgram cho phiên tiếng Anh; tiếng Việt dùng giọng trình duyệt",
+      "voice_label": "Giọng AI",
+      "voice_hint": "",
       "voice_default": "Giọng mặc định",
-      "criteria_label": "Số tiêu chí cần đạt",
-      "criteria_hint": "Số rubric outcome tối thiểu để vượt qua",
+      "criteria_label": "Tối thiểu để đạt",
+      "criteria_hint": "Số learning outcome tối thiểu học viên phải đạt để vượt qua",
       "criteria_placeholder": "vd. 2",
       "lock_ef_label": "Khoá nâng EF của quiz đến khi đạt",
       "lock_ef_desc": "Học viên phải vượt phỏng vấn trước khi spaced repetition tăng khoảng cách ôn tập.",
       "supplementary_label": "Hướng dẫn bổ sung",
-      "supplementary_placeholder": "VD: Tập trung vào tình huống thực tế, tránh câu hỏi học thuộc lòng…"
+      "supplementary_placeholder": "VD: Tập trung vào tình huống thực tế, tránh câu hỏi học thuộc lòng…",
+      "notes_label": "Ghi chú hướng dẫn (định hình câu hỏi được sinh)",
+      "notes_hint": "Hướng dẫn dạng văn bản đưa vào bộ sinh câu hỏi. Không dùng để chấm điểm.",
+      "rubric_label": "Tiêu chí chấm điểm",
+      "rubric_hint": "Các tiêu chí AI dùng để chấm mỗi câu trả lời. Để trống để dùng tiêu chí mặc định (độ chính xác kỹ thuật, giao tiếp, giải quyết vấn đề, tính chuyên nghiệp). Mô tả là tùy chọn nhưng cải thiện đáng kể tính nhất quán khi chấm.",
+      "rubric_empty": "Chưa có tiêu chí riêng — câu trả lời được chấm theo tiêu chí mặc định.",
+      "rubric_name_placeholder": "Tên tiêu chí, VD: chiều sâu",
+      "rubric_weight": "Trọng số",
+      "rubric_description_placeholder": "Ý nghĩa của tiêu chí, VD: Nêu được các đánh đổi cụ thể thay vì chỉ định nghĩa",
+      "rubric_add": "Thêm tiêu chí",
+      "rubric_remove": "Xóa tiêu chí",
+      "rubric_at_cap": "Tối đa {{max}} tiêu chí",
+      "interviewer_role": "Người phỏng vấn",
+      "interviewer_role_hint": "Người phỏng vấn xuất hiện với vai nào. Chỉ đổi cách diễn đạt — không đổi độ khó, câu hỏi hay điểm.",
+      "practice_label": "Cho phép thi thử",
+      "practice_hint": "Sinh viên được thi thử một lần, không chấm điểm. Không tốn lượt thi, không kích hoạt thời gian chờ.",
+      "practice_rubric_notice": "Sinh viên cũng sẽ thấy nội dung các chuẩn đầu ra trước buổi thi thử. Trọng số và ngưỡng đạt vẫn được giấu.",
+      "practice_empty_warning": "Chưa có câu hỏi nào được đánh dấu thi thử nên chức năng chưa chạy được. Hãy chuyển ít nhất một câu đã duyệt sang bộ thi thử từ menu của câu đó."
+    },
+    "units": {
+      "minutes": "phút",
+      "attempts": "lần",
+      "outcomes": "LO"
     },
     "security": {
       "title": "Bảo mật & Tính toàn vẹn",
@@ -3015,6 +3614,9 @@
       "empty": "Chưa có chuẩn đầu ra. Hãy thêm ít nhất một — nếu không có, không thể xuất bản và mọi sinh viên đều bị tự động trượt.",
       "weight_label": "Trọng số",
       "weight_badge": "Trọng số {{weight}}/5",
+      "weight_decrease": "Giảm trọng số",
+      "weight_increase": "Tăng trọng số",
+      "no_course_outcomes": "Khóa học này chưa có chuẩn đầu ra. Hãy thêm ở trang khóa học trước, rồi import vào đây.",
       "type_knowledge": "Kiến thức",
       "type_skill": "Kỹ năng",
       "type_attitude": "Thái độ",
@@ -3029,7 +3631,7 @@
       "imported": "Đã nhập {{count}} chuẩn đầu ra",
       "import_all_added": "Tất cả chuẩn đầu ra của khóa học đã được thêm ở đây. Hãy định nghĩa thêm ở cấp khóa học để nhập vào.",
       "course_lo_code": "L.O.{{n}}",
-      "section_help": "Xác định điều sinh viên phải thể hiện để đạt phỏng vấn. Câu hỏi do AI tạo và tiêu chí đánh giá được căn chỉnh theo các chuẩn đầu ra này.",
+      "section_help": "Được import từ chuẩn đầu ra của khóa học. Câu hỏi do AI tạo và tiêu chí đánh giá được căn chỉnh theo các chuẩn này. Điều chỉnh trọng số để thay đổi mức độ quan trọng.",
       "statement_label": "Nội dung chuẩn đầu ra",
       "summary_outcomes": "{{count}} chuẩn đầu ra",
       "summary_assigned": "{{count}} câu hỏi được gán",
@@ -3040,7 +3642,8 @@
       "coverage_summary": "{{covered}} trên {{total}} chuẩn đầu ra có ít nhất một câu hỏi.",
       "pass_threshold": "Sinh viên phải đạt ít nhất {{required}} trên {{total}} chuẩn đầu ra để qua.",
       "empty_title": "Chưa có chuẩn đầu ra",
-      "empty_body": "Chuẩn đầu ra xác định điều sinh viên phải thể hiện và giúp AI tạo câu hỏi phù hợp. Hãy thêm ít nhất một trước khi xuất bản phỏng vấn này.",
+      "empty_body": "Chuẩn đầu ra được định nghĩa ở cấp khóa học và import vào đây. Hãy import ít nhất một trước khi xuất bản phỏng vấn này.",
+      "remove": "Bỏ khỏi phỏng vấn",
       "templates_hint": "Mẫu nhanh — nhấn để bắt đầu từ một nội dung gợi ý:",
       "template_labels": {
         "explain_concept": "Giải thích khái niệm",
@@ -3153,6 +3756,11 @@
       "density_compact": "Thu gọn",
       "density_comfortable": "Thoáng",
       "unsaved_confirm": "Bạn có thay đổi chưa lưu. Bỏ các thay đổi này?",
+      "duplicate_title": "Câu hỏi này có vẻ đã có rồi",
+      "duplicate_description": "Một câu hỏi rất giống đã có trong buổi phỏng vấn này. Bạn vẫn có thể lưu nếu khác biệt là có chủ đích.",
+      "duplicate_existing": "Câu hỏi đã có",
+      "duplicate_save_anyway": "Vẫn lưu",
+      "duplicate_go_back": "Quay lại chỉnh sửa",
       "missing_lo": "Thiếu chuẩn đầu ra",
       "ai_generated": "Do AI tạo",
       "manually_added": "Thêm thủ công",
@@ -3219,6 +3827,16 @@
         "status_changed": "Đã đổi trạng thái sang {{status}}",
         "outcome_changed": "Đã gán chuẩn đầu ra: {{outcome}}",
         "moved": "Đã chuyển câu hỏi tới vị trí {{position}}"
+      },
+      "remove_filter": "Bỏ bộ lọc {{label}}",
+      "reorder_off_filtered": "Kéo để sắp xếp đang tắt vì có bộ lọc. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối, hoặc xoá bộ lọc.",
+      "reorder_off_grouped": "Kéo để sắp xếp đang tắt vì câu hỏi đang nhóm theo module. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối.",
+      "practice": {
+        "move_to_practice": "Dùng cho thi thử",
+        "move_to_graded": "Dùng cho bài chấm điểm",
+        "moved_to_practice": "Đã chuyển sang bộ câu hỏi thi thử.",
+        "moved_to_graded": "Đã chuyển lại bộ câu hỏi chấm điểm.",
+        "badge": "Thi thử"
       }
     },
     "review_status": {
@@ -3257,12 +3875,20 @@
       "success_body": "Câu hỏi mới đã được thêm vào bộ nháp. Đóng cửa sổ để xem.",
       "processing": "Đang xử lý…",
       "start_button": "Bắt đầu sinh",
+      "elapsed": "Thời gian đã trôi",
       "outcomes_label": "Chuẩn đầu ra mục tiêu (tùy chọn)",
       "outcomes_hint": "Chọn những chuẩn đầu ra rubric mà lượt tạo này nên tập trung. Bỏ trống tất cả để bao quát mọi chuẩn đầu ra.",
       "outcomes_empty": "Chưa có chuẩn đầu ra nào cho bài phỏng vấn này. Thêm ở tab Chuẩn đầu ra — việc tạo sẽ bao quát tất cả.",
       "outcomes_select_all": "Chọn tất cả",
       "outcomes_clear": "Bỏ chọn",
       "outcomes_badge": "CĐR {{n}}"
+    },
+    "interviewer_role": {
+      "generic_assistant": "Trợ lý ảo (mặc định)",
+      "backend_tech_lead": "Tech lead backend",
+      "staff_engineer": "Staff engineer",
+      "eng_manager": "Engineering manager",
+      "hr_screener": "Chuyên viên tuyển dụng"
     }
   },
   "teacher_lesson_manage": {
@@ -3453,8 +4079,34 @@
       "legend_prereq": "Tiên quyết",
       "legend_related": "Liên quan",
       "showing_top": "Top {{shown}} trong {{total}} khái niệm",
-      "open_full": "Mở đồ thị đầy đủ",
-      "viewer_coming_soon": "Trình xem đồ thị tri thức sẽ sớm có"
+      "expand": "Mở rộng",
+      "node_count": "{{count}} khái niệm",
+      "zoom_in": "Phóng to",
+      "zoom_out": "Thu nhỏ",
+      "fit_view": "Vừa khung nhìn",
+      "detail_hint": "Kéo để di chuyển · cuộn để phóng to · nhấp vào khái niệm để xem liên kết",
+      "rel_prerequisites": "Điều kiện tiên quyết",
+      "rel_unlocks": "Mở khóa",
+      "rel_related": "Liên quan",
+      "rel_none": "Không có",
+      "layout_label": "Bố cục",
+      "layout_circular": "Vòng tròn",
+      "layout_tree": "Cây",
+      "edit": "Chỉnh sửa",
+      "editor_title": "Chỉnh sửa sơ đồ kiến thức",
+      "source_label": "Nguồn sơ đồ",
+      "source_ai": "AI",
+      "source_curated": "Tự soạn",
+      "edit_ai_disabled": "Sơ đồ AI được tạo lại sau mỗi lần tải lên nên không thể chỉnh sửa. Chuyển sang Tự soạn để tự biên tập.",
+      "publish": "Xuất bản",
+      "publish_title": "Xuất bản sơ đồ kiến thức tự soạn cho học viên",
+      "publish_confirm_title": "Xuất bản sơ đồ kiến thức?",
+      "publish_confirm_first": "Học viên sẽ thấy sơ đồ kiến thức của bạn ({{count}} nút) trong màn hình đọc bài học.",
+      "publish_confirm_replace": "Thao tác này thay thế sơ đồ học viên đang thấy bằng bản đã lưu mới nhất của bạn ({{count}} nút).",
+      "save_and_publish": "Lưu và xuất bản",
+      "save_publish_confirm_title": "Lưu và xuất bản sơ đồ kiến thức?",
+      "published_badge": "Đã xuất bản",
+      "published_at": "Đã xuất bản {{date}}"
     },
     "history": {
       "title": "Lịch sử tài liệu",
@@ -3537,7 +4189,9 @@
     "my_journey": "Hành trình của tôi",
     "overview": "Tổng quan",
     "content": "Nội dung",
-    "pathways": "Lộ trình",
+    "pathways": "Lộ trình nghề nghiệp",
+    "manager_courses": "Khoá học",
+    "enrolment": "Ghi danh",
     "analytics": "Phân tích",
     "management": "Quản lý",
     "system": "Hệ thống"
@@ -3619,5 +4273,43 @@
     "success": {
       "created": "Đã tạo bài kiểm tra"
     }
+  },
+  "teacher_kg_editor": {
+    "title": "Trình chỉnh sửa sơ đồ kiến thức",
+    "add_node": "Thêm nút",
+    "delete_node": "Xóa nút",
+    "make_primary": "Đặt làm nút chính",
+    "is_primary": "Nút chính",
+    "node_detail": "Chi tiết nút",
+    "field_label": "Nhãn",
+    "field_type": "Loại",
+    "field_definition": "Định nghĩa",
+    "field_weight": "Mức độ quan trọng",
+    "new_node_label": "Khái niệm mới",
+    "edge_exists": "Quan hệ này đã tồn tại",
+    "canvas_label": "Khung sơ đồ kiến thức",
+    "seeded_hint": "Được tạo sẵn từ sơ đồ khái niệm AI — chỉnh sửa tùy ý, rồi Lưu.",
+    "undo": "Hoàn tác",
+    "redo": "Làm lại",
+    "save": "Lưu",
+    "saved": "Đã lưu",
+    "save_failed": "Lưu thất bại",
+    "unsaved": "Thay đổi chưa lưu",
+    "publish": "Xuất bản",
+    "published": "Đã xuất bản",
+    "published_state": "Đã xuất bản cho học viên",
+    "publish_failed": "Xuất bản thất bại",
+    "err_no_nodes": "Thêm ít nhất một nút trước khi lưu.",
+    "err_no_primary": "Đánh dấu đúng một nút làm nút chính (trung tâm).",
+    "err_many_primary": "Chỉ một nút được làm nút chính — bạn đang có {{count}}.",
+    "arrow_mode": "Mũi tên",
+    "arrow_kind": "Loại mũi tên",
+    "arrow_pick_source": "Đã bật chế độ mũi tên — nhấp vào nút BẮT ĐẦU (Esc để thoát)",
+    "arrow_pick_target": "Giờ nhấp vào nút ĐÍCH ({{relation}})",
+    "rel_prerequisite": "Là tiên quyết của",
+    "rel_related": "Liên quan đến",
+    "edge_detail": "Quan hệ",
+    "reverse_arrow": "Đảo chiều",
+    "delete_arrow": "Xóa mũi tên"
   }
 }

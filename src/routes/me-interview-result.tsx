@@ -16,10 +16,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import {
-  useGapReport,
-  useInterviewSession,
-} from "@/lib/api/hooks/interviews";
+import { useGapReport, useInterviewSession } from "@/lib/api/hooks/interviews";
 import type { InterviewSessionPublic } from "@/lib/api/types";
 
 /**

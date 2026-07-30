@@ -53,15 +53,17 @@ export const queryKeys = {
   },
 
   discussions: {
-    topics: (lessonId: string) =>
-      ["discussions", "topics", lessonId] as const,
+    topics: (lessonId: string) => ["discussions", "topics", lessonId] as const,
     comments: (topicId: string) =>
       ["discussions", "comments", topicId] as const,
   },
 
   sr: {
+    dashboardSummary: () => ["sr", "dashboard-summary"] as const,
     cardsDue: (lessonId?: string, limit?: number) =>
       ["sr", "cards-due", lessonId, limit] as const,
+    reviewQueue: (lessonId?: string, limit?: number) =>
+      ["sr", "review-queue", lessonId, limit] as const,
     lessonSummary: (lessonId: string) =>
       ["sr", "lesson-summary", lessonId] as const,
     courseOverview: (courseId: string) =>
@@ -79,6 +81,7 @@ export const queryKeys = {
 
   admin: {
     statsOverview: () => ["admin", "stats", "overview"] as const,
+    dashboard: () => ["admin", "stats", "dashboard"] as const,
     activeUsers: () => ["admin", "stats", "active-users"] as const,
     content: () => ["admin", "stats", "content"] as const,
     statsHealth: (since: string) =>
@@ -218,11 +221,29 @@ export const queryKeys = {
     attemptDetail: (courseId: string, attemptId: string) =>
       ["quizzes", "attempt-detail", courseId, attemptId] as const,
     results: (quizId: string) => ["quizzes", "results", quizId] as const,
+    // --- Moodle-parity phases (backend 0044-0057) ---
+    regradeRun: (quizId: string, runId: string) =>
+      ["quizzes", "regrade-run", quizId, runId] as const,
+    overrides: (quizId: string) => ["quizzes", "overrides", quizId] as const,
+    feedbackBands: (quizId: string) =>
+      ["quizzes", "feedback-bands", quizId] as const,
+    gradebook: (quizId: string) => ["quizzes", "gradebook", quizId] as const,
+    needsGrading: (quizId: string) =>
+      ["quizzes", "needs-grading", quizId] as const,
+    responsesReport: (quizId: string) =>
+      ["quizzes", "report-responses", quizId] as const,
+    statisticsReport: (quizId: string) =>
+      ["quizzes", "report-statistics", quizId] as const,
+    auditEvents: (quizId: string) =>
+      ["quizzes", "audit-events", quizId] as const,
   },
 
   interviews: {
     list: (cursor?: string) => ["interviews", "list", cursor] as const,
     detail: (id: string) => ["interviews", "detail", id] as const,
+    practice: (id: string) => ["interviews", "practice", id] as const,
+    practiceFeedback: (sessionId: string) =>
+      ["interviews", "practice-feedback", sessionId] as const,
     session: (sessionId: string) =>
       ["interviews", "session", sessionId] as const,
     mySessions: () => ["interviews", "my-sessions"] as const,

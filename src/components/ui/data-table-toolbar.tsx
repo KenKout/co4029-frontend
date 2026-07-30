@@ -2,6 +2,7 @@ import * as React from "react";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -116,6 +117,7 @@ export function DataTableToolbar({
         <div className="relative min-w-[180px] max-w-xs flex-1">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-m3-on-surface-variant/50 pointer-events-none" />
           <Input
+            size="sm"
             value={search ?? ""}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={searchPlaceholder}
@@ -218,23 +220,30 @@ function InlineFilter({
 
   return (
     <div className="relative">
-      <select
+      {/* The clear button overlays the trigger's right edge, so the trigger gets
+          extra right padding when a value is set to keep the chevron and the X
+          from colliding. Empty-string is the "no filter" option, not a
+          placeholder — clearing maps it back to `undefined` for the caller. */}
+      <Select
+        size="sm"
+        aria-label={def.label}
         value={value ?? ""}
-        onChange={(e) => onChange(e.target.value || undefined)}
+        onValueChange={(next) => onChange(next || undefined)}
+        options={[
+          { value: "", label: def.label },
+          ...def.options.map((opt) => ({
+            value: opt.value,
+            label: opt.label,
+          })),
+        ]}
         className={cn(
-          "h-7 cursor-pointer appearance-none rounded-md border px-2.5 pr-7 text-xs font-medium transition-colors outline-none",
+          "w-auto",
+          value && "pr-7",
           value
             ? "border-m3-primary/30 bg-m3-primary/5 text-m3-primary"
             : "border-m3-outline-variant/30 bg-m3-surface-container-low text-m3-on-surface-variant hover:bg-m3-surface-container-high",
         )}
-      >
-        <option value="">{def.label}</option>
-        {def.options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      />
       {value && (
         <button
           type="button"
@@ -307,20 +316,18 @@ function FilterDialog({
                 <label className="text-xs font-medium text-m3-on-surface-variant">
                   {f.label}
                 </label>
-                <select
+                <Select
+                  aria-label={f.label}
                   value={values[f.id] ?? ""}
-                  onChange={(e) =>
-                    onChange?.(f.id, e.target.value || undefined)
-                  }
-                  className="w-full rounded-md border border-m3-outline-variant/30 bg-m3-surface-container-low px-2.5 py-1.5 text-sm cursor-pointer outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20"
-                >
-                  <option value="">All</option>
-                  {f.options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={(next) => onChange?.(f.id, next || undefined)}
+                  options={[
+                    { value: "", label: "All" },
+                    ...f.options.map((opt) => ({
+                      value: opt.value,
+                      label: opt.label,
+                    })),
+                  ]}
+                />
               </div>
             ))}
           </div>

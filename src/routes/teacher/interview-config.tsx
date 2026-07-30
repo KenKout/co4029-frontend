@@ -1,4 +1,16 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, ReactElement } from "react";
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Collapsible } from "@base-ui/react/collapsible";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
@@ -13,6 +25,7 @@ import {
   Clock,
   HelpCircle,
   Loader2,
+  Lock,
   MoreVertical,
   Pencil,
   Plus,
@@ -30,13 +43,10 @@ import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -78,8 +88,26 @@ import type {
   InterviewGenerationRunPublic,
   InterviewOutcomeAuthoring,
   InterviewQuestionAuthoring,
+  PersonaProfileRead,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import {
+  hasFrozenFields,
+  isFieldFrozen,
+} from "@/lib/interview/published-field-freeze";
+import { Select } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  PERSONA_TRAIT_PRESETS,
+  type PersonaKey,
+} from "@/lib/interview/persona-traits";
+import {
+  type RubricCriterion,
+  MAX_CRITERIA,
+  MAX_CRITERION_NAME_CHARS,
+  parseSupplementaryInstructions,
+  serializeSupplementaryInstructions,
+} from "@/lib/interview/supplementary-instructions";
 
 type SupportedMode = NonNullable<InterviewConfigUpdate["supported_modes"]>;
 type Persona = NonNullable<InterviewConfigUpdate["persona"]>;
@@ -90,12 +118,7 @@ type SecurityResponsePolicy =
   | "warn_and_continue"
   | "end_and_flag";
 
-type TabId =
-  | "settings"
-  | "learning-outcomes"
-  | "generate"
-  | "questions"
-  | "adaptive-readiness";
+type TabId = "settings" | "generate" | "questions" | "adaptive-readiness";
 
 interface GenerationFormState {
   mode: GenerationMode;
@@ -121,13 +144,62 @@ interface SettingsDraft {
   cooldown_hours: string;
   min_outcomes_to_pass: string;
   lock_quiz_ef_until_pass: boolean;
-  supplementary_instructions: string;
+  practice_mode_enabled: boolean;
+  // The single `supplementary_instructions` column is split for editing into
+  // free prose (`notes`, fed to the generation prompt) and the structured
+  // scoring rubric (`rubric_criteria`). They are re-joined on save by
+  // `serializeSupplementaryInstructions`.
+  notes: string;
+  rubric_criteria: RubricCriterion[];
   security_response_policy: SecurityResponsePolicy;
   security_max_consecutive_attempts: string;
   security_custom_refusal_en: string;
   security_custom_refusal_vi: string;
   security_incident_summary_enabled: boolean;
+  // Optional per-trait persona overrides (Phase 3). Empty object = no override
+  // (use the persona preset as-is). Each trait 0-4; opening_style optional.
+  persona_profile: PersonaProfileOverride;
 }
+
+// Local editable shape for the per-trait override panel. All optional so a
+// teacher can nudge one dial; absent keys fall back to the persona preset.
+interface PersonaProfileOverride {
+  warmth?: number;
+  directness?: number;
+  verbosity?: number;
+  formality?: number;
+  ack_frequency?: number;
+  // Who the interviewer presents as. Not a 0-4 dial and not diffed against the
+  // persona preset — identity is its own axis, so it is sent whenever the
+  // teacher picks anything other than the generic assistant.
+  interviewer_role?: InterviewerRole;
+}
+
+/** Professional identity presets. MUST stay in sync with the backend
+ *  `InterviewerRoleLiteral` (schemas/authoring.py) and the preset table in
+ *  orchestrator/interviewer_identity.py. */
+type InterviewerRole =
+  | "generic_assistant"
+  | "backend_tech_lead"
+  | "staff_engineer"
+  | "eng_manager"
+  | "hr_screener";
+
+const INTERVIEWER_ROLE_KEYS: InterviewerRole[] = [
+  "generic_assistant",
+  "backend_tech_lead",
+  "staff_engineer",
+  "eng_manager",
+  "hr_screener",
+];
+
+const PERSONA_TRAIT_KEYS = [
+  "warmth",
+  "directness",
+  "verbosity",
+  "formality",
+  "ack_frequency",
+] as const;
 
 function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
   return {
@@ -151,7 +223,13 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
         ? ""
         : String(config.min_outcomes_to_pass),
     lock_quiz_ef_until_pass: config.lock_quiz_ef_until_pass,
-    supplementary_instructions: config.supplementary_instructions ?? "",
+    practice_mode_enabled: config.practice_mode_enabled ?? false,
+    ...(() => {
+      const parsed = parseSupplementaryInstructions(
+        config.supplementary_instructions,
+      );
+      return { notes: parsed.notes, rubric_criteria: parsed.criteria };
+    })(),
     security_response_policy:
       config.security_response_policy ?? "warn_and_continue",
     security_max_consecutive_attempts: String(
@@ -161,6 +239,32 @@ function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
     security_custom_refusal_vi: config.security_custom_refusal_vi ?? "",
     security_incident_summary_enabled:
       config.security_incident_summary_enabled ?? true,
+    // Seed the override panel from whatever the backend resolved. When the
+    // config has no stored overrides this equals the preset, so the sliders
+    // simply show the preset values; a teacher only creates a real override by
+    // moving one away from its preset (see the diff computed on save).
+    persona_profile: personaOverrideFromResolved(
+      config.persona_profile_resolved,
+    ),
+  };
+}
+
+// Extract just the editable trait dials from the resolved profile. Returns an
+// empty object when nothing is resolvable, so the panel falls back to preset
+// values via `effectivePersonaTraits`.
+function personaOverrideFromResolved(
+  resolved: PersonaProfileRead | null | undefined,
+): PersonaProfileOverride {
+  if (!resolved) return {};
+  return {
+    warmth: resolved.warmth,
+    directness: resolved.directness,
+    verbosity: resolved.verbosity,
+    formality: resolved.formality,
+    ack_frequency: resolved.ack_frequency,
+    interviewer_role:
+      (resolved as { interviewer_role?: InterviewerRole }).interviewer_role ??
+      "generic_assistant",
   };
 }
 
@@ -172,6 +276,70 @@ function integerOrNull(value: string): number | null {
 }
 
 const PERSONA_KEYS: Persona[] = ["strict", "neutral", "supportive"];
+
+// The effective trait values shown on the sliders: the teacher's override if
+// present, else the persona preset. Keeps the panel in sync when the persona
+// dropdown changes and no explicit override exists for a trait yet.
+function effectivePersonaTraits(
+  persona: Persona,
+  override: PersonaProfileOverride,
+): Record<(typeof PERSONA_TRAIT_KEYS)[number], number> {
+  const preset =
+    PERSONA_TRAIT_PRESETS[persona as PersonaKey] ??
+    PERSONA_TRAIT_PRESETS.neutral;
+  const presetByKey: Record<(typeof PERSONA_TRAIT_KEYS)[number], number> = {
+    warmth: preset.warmth,
+    directness: preset.directness,
+    verbosity: preset.verbosity,
+    formality: preset.formality,
+    ack_frequency: preset.ackFrequency,
+  };
+  const out = { ...presetByKey };
+  for (const key of PERSONA_TRAIT_KEYS) {
+    const v = override[key];
+    if (typeof v === "number") out[key] = v;
+  }
+  return out;
+}
+
+// Build the persona_profile payload sent on save: only the traits the teacher
+// actually moved AWAY from the preset become an override. When nothing differs,
+// return null so the config falls back to the bare preset (no stored override).
+function personaOverridePayload(
+  persona: Persona,
+  override: PersonaProfileOverride,
+): PersonaProfileOverride | null {
+  const preset =
+    PERSONA_TRAIT_PRESETS[persona as PersonaKey] ??
+    PERSONA_TRAIT_PRESETS.neutral;
+  const presetByKey: Record<(typeof PERSONA_TRAIT_KEYS)[number], number> = {
+    warmth: preset.warmth,
+    directness: preset.directness,
+    verbosity: preset.verbosity,
+    formality: preset.formality,
+    ack_frequency: preset.ackFrequency,
+  };
+  const diff: PersonaProfileOverride = {};
+  let hasOverride = false;
+  for (const key of PERSONA_TRAIT_KEYS) {
+    const v = override[key];
+    if (typeof v === "number" && v !== presetByKey[key]) {
+      diff[key] = v;
+      hasOverride = true;
+    }
+  }
+  // Identity has no preset to differ from, so it is carried whenever it is set
+  // to something other than the default. Without this the role would be dropped
+  // on any config whose tone dials all match the preset.
+  if (
+    override.interviewer_role &&
+    override.interviewer_role !== "generic_assistant"
+  ) {
+    diff.interviewer_role = override.interviewer_role;
+    hasOverride = true;
+  }
+  return hasOverride ? diff : null;
+}
 // Deepgram Aura-2 English voices. MUST stay in sync with the backend allow-list
 // (services.narration.ALLOWED_TTS_VOICES / schemas.authoring.TtsVoiceLiteral).
 // Empty value ("") = deployment default (settings.deepgram_tts_model_en).
@@ -223,6 +391,15 @@ export default function InterviewConfigPage() {
       (questions ?? []).filter((q) => q.review_status === "approved").length,
     [questions],
   );
+  // Approved questions in the practice partition. Mirrors the server's own
+  // gate, so the form can warn before a student hits the 409.
+  const practiceQuestionCount = useMemo(
+    () =>
+      (questions ?? []).filter(
+        (q) => q.review_status === "approved" && q.practice_only,
+      ).length,
+    [questions],
+  );
 
   const updateConfig = useUpdateInterviewConfig(configId);
   const publishConfig = usePublishInterviewConfig(configId);
@@ -255,8 +432,10 @@ export default function InterviewConfigPage() {
       id: outcomeId,
       nonce: (prev?.nonce ?? 0) + 1,
     }));
-    // Switch to the Review tab so the filtered questions are visible.
-    setActiveTab("questions");
+    // Switch to the Review tab so the filtered questions are visible. Routed
+    // through the guard: this link also leaves Settings, so unsaved edits must
+    // prompt here exactly as they do for a direct tab click.
+    requestTabChange("questions");
   }
   const [generationForm, setGenerationForm] = useState<GenerationFormState>({
     mode: "outcome-based" as GenerationMode,
@@ -296,6 +475,39 @@ export default function InterviewConfigPage() {
     return JSON.stringify(draft) !== JSON.stringify(saved);
   }, [draft, config]);
 
+  // ── Unsaved-changes guard on tab switch ────────────────────────────────────
+  // Leaving Settings with unsaved edits is not destructive (panels stay mounted,
+  // so the draft survives), but it is easy to forget and then lose the work on a
+  // later reload. Intercepting the tab switch asks once: save now, or carry on
+  // and save later. The pending tab is remembered so either answer lands the
+  // teacher where they were going.
+  const [pendingTab, setPendingTab] = useState<TabId | null>(null);
+
+  function requestTabChange(next: TabId) {
+    if (next === activeTab) return;
+    if (activeTab === "settings" && settingsDirty) {
+      setPendingTab(next);
+      return;
+    }
+    setActiveTab(next);
+  }
+
+  /** "Later" — keep the unsaved draft and switch anyway. */
+  function discardSaveAndSwitch() {
+    const next = pendingTab;
+    setPendingTab(null);
+    if (next) setActiveTab(next);
+  }
+
+  /** "Save now" — persist first, and only switch if the save succeeded. */
+  async function saveAndSwitch() {
+    const next = pendingTab;
+    const ok = await saveSettings();
+    if (!ok) return; // stay put with the dialog open so the error is actionable
+    setPendingTab(null);
+    if (next) setActiveTab(next);
+  }
+
   // ── Section-nav status derivation ──────────────────────────────────────────
   // Pure read of existing state — no business logic added. Settings is
   // "completed" once the single required field (title) is present; Learning
@@ -320,22 +532,6 @@ export default function InterviewConfigPage() {
             "teacher_interview_config.section_nav.status.settings_incomplete",
           ),
         };
-
-    const outcomesStatus: SectionStatus =
-      outcomeCount > 0
-        ? {
-            kind: "completed",
-            label: t(
-              "teacher_interview_config.section_nav.status.outcomes_count",
-              {
-                count: outcomeCount,
-              },
-            ),
-          }
-        : {
-            kind: "warning",
-            label: t("teacher_interview_config.section_nav.status.not_added"),
-          };
 
     const generateStatus: SectionStatus =
       draftCount > 0
@@ -377,14 +573,6 @@ export default function InterviewConfigPage() {
         status: settingsStatus,
       },
       {
-        id: "learning-outcomes",
-        label: t("teacher_interview_config.section_nav.learning_outcomes"),
-        shortLabel: t(
-          "teacher_interview_config.section_nav.learning_outcomes_short",
-        ),
-        status: outcomesStatus,
-      },
-      {
         id: "generate",
         label: t("teacher_interview_config.section_nav.generate"),
         shortLabel: t("teacher_interview_config.section_nav.generate_short"),
@@ -408,9 +596,29 @@ export default function InterviewConfigPage() {
   }, [t, settingsComplete, outcomeCount, draftCount, approvedCount]);
 
   if (configLoading) {
+    // Shaped like the screen it precedes — header, tab strip, then the first
+    // settings card — rather than a bare spinner on an empty page. This guard
+    // is also why QuestionBank has no loading state of its own: it never
+    // renders while the config query is in flight.
     return (
-      <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-m3-secondary" />
+      <div className="mx-auto w-full max-w-6xl space-y-5 px-4 py-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-48" />
+            <Skeleton className="h-7 w-72" />
+          </div>
+          <Skeleton className="h-9 w-28 rounded-lg" />
+        </div>
+        <Skeleton className="h-14 w-full rounded-xl" />
+        <div className="space-y-4">
+          {[0, 1, 2].map((card) => (
+            <Skeleton
+              key={card}
+              className="h-40 w-full rounded-xl"
+              style={{ animationDelay: `${card * 120}ms` } as CSSProperties}
+            />
+          ))}
+        </div>
       </div>
     );
   }
@@ -459,15 +667,30 @@ export default function InterviewConfigPage() {
 
   async function handleSaveSettings(event: React.FormEvent) {
     event.preventDefault();
-    if (!draft) return;
+    await saveSettings();
+  }
+
+  /**
+   * Persist the settings draft. Returns true only when the save actually
+   * succeeded, so callers that need to act on the result — e.g. the
+   * unsaved-changes dialog, which must not navigate away after a failed save —
+   * can branch on it. Validation failure and request failure both return false
+   * (each already surfaces its own toast).
+   */
+  async function saveSettings(): Promise<boolean> {
+    if (!draft) return false;
     if (!draft.title.trim()) {
       toast.error(t("teacher_interview_config.errors.title_required"));
-      return;
+      return false;
     }
     try {
       await updateConfig.mutateAsync({
         title: draft.title.trim(),
         persona: draft.persona,
+        persona_profile: personaOverridePayload(
+          draft.persona,
+          draft.persona_profile,
+        ),
         // Empty selection → null (deployment default voice).
         tts_voice: (draft.tts_voice || null) as TtsVoice | null,
         supported_modes: draft.supported_modes,
@@ -476,8 +699,11 @@ export default function InterviewConfigPage() {
         cooldown_hours: integerOrNull(draft.cooldown_hours),
         min_outcomes_to_pass: integerOrNull(draft.min_outcomes_to_pass),
         lock_quiz_ef_until_pass: draft.lock_quiz_ef_until_pass,
-        supplementary_instructions:
-          draft.supplementary_instructions.trim() || null,
+        practice_mode_enabled: draft.practice_mode_enabled,
+        supplementary_instructions: serializeSupplementaryInstructions({
+          notes: draft.notes,
+          criteria: draft.rubric_criteria,
+        }),
         security_response_policy: draft.security_response_policy,
         security_max_consecutive_attempts:
           integerOrNull(draft.security_max_consecutive_attempts) ?? 3,
@@ -491,11 +717,13 @@ export default function InterviewConfigPage() {
       setJustSaved(true);
       window.setTimeout(() => setJustSaved(false), 2500);
       toast.success(t("teacher_interview_config.toasts.config_saved"));
+      return true;
     } catch (err: unknown) {
       toast.error(
         (err as Error).message ||
           t("teacher_interview_config.toasts.save_failed"),
       );
+      return false;
     }
   }
 
@@ -591,8 +819,14 @@ export default function InterviewConfigPage() {
         source_lesson_ids: [],
         target_outcome_ids: generationForm.target_outcome_ids,
         persona: draft?.persona,
-        supplementary_instructions:
-          draft?.supplementary_instructions.trim() || null,
+        // Send the same serialized blob the config stores; the backend strips
+        // the structured keys and feeds only the prose to the generation prompt.
+        supplementary_instructions: draft
+          ? serializeSupplementaryInstructions({
+              notes: draft.notes,
+              criteria: draft.rubric_criteria,
+            })
+          : null,
       });
       setActiveRunId(result.run_id);
       toast.success(t("teacher_interview_config.toasts.generation_started"));
@@ -808,7 +1042,7 @@ export default function InterviewConfigPage() {
       <TabBar
         items={navItems}
         activeTab={activeTab}
-        onSelect={setActiveTab}
+        onSelect={requestTabChange}
         ariaLabel={t("teacher_interview_config.section_nav.aria_label")}
       />
 
@@ -818,7 +1052,7 @@ export default function InterviewConfigPage() {
           outcomeCount={outcomeCount}
           approvedCount={approvedCount}
           draftCount={draftCount}
-          onGoTo={setActiveTab}
+          onGoTo={requestTabChange}
         />
       )}
 
@@ -829,8 +1063,10 @@ export default function InterviewConfigPage() {
               <section
                 id="settings"
                 hidden={activeTab !== "settings"}
+                data-active={activeTab === "settings"}
                 role="tabpanel"
                 aria-labelledby="tab-settings"
+                className="space-y-6"
               >
                 <SettingsForm
                   draft={draft}
@@ -840,26 +1076,24 @@ export default function InterviewConfigPage() {
                   dirty={settingsDirty}
                   justSaved={justSaved}
                   updatedAt={config?.updated_at ?? null}
-                />
-              </section>
-              <section
-                id="learning-outcomes"
-                hidden={activeTab !== "learning-outcomes"}
-                role="tabpanel"
-                aria-labelledby="tab-learning-outcomes"
-              >
-                <LearningOutcomes
-                  configId={configId}
-                  courseId={courseId}
-                  outcomes={outcomes ?? []}
-                  questions={questions ?? []}
-                  minOutcomesToPass={config.min_outcomes_to_pass ?? null}
-                  onViewQuestions={handleViewOutcomeQuestions}
+                  practiceQuestionCount={practiceQuestionCount}
+                  status={config.status}
+                  outcomesSlot={
+                    <LearningOutcomes
+                      configId={configId}
+                      courseId={courseId}
+                      outcomes={outcomes ?? []}
+                      questions={questions ?? []}
+                      minOutcomesToPass={config.min_outcomes_to_pass ?? null}
+                      onViewQuestions={handleViewOutcomeQuestions}
+                    />
+                  }
                 />
               </section>
               <section
                 id="generate"
                 hidden={activeTab !== "generate"}
+                data-active={activeTab === "generate"}
                 role="tabpanel"
                 aria-labelledby="tab-generate"
               >
@@ -878,6 +1112,7 @@ export default function InterviewConfigPage() {
               <section
                 id="questions"
                 hidden={activeTab !== "questions"}
+                data-active={activeTab === "questions"}
                 role="tabpanel"
                 aria-labelledby="tab-questions"
               >
@@ -894,6 +1129,7 @@ export default function InterviewConfigPage() {
               <section
                 id="adaptive-readiness"
                 hidden={activeTab !== "adaptive-readiness"}
+                data-active={activeTab === "adaptive-readiness"}
                 role="tabpanel"
                 aria-labelledby="tab-adaptive-readiness"
               >
@@ -902,7 +1138,7 @@ export default function InterviewConfigPage() {
                   questions={questions ?? []}
                   outcomes={outcomes ?? []}
                   timeLimitMinutes={config.time_limit_minutes ?? null}
-                  onGoTo={setActiveTab}
+                  onGoTo={requestTabChange}
                 />
               </section>
             </>
@@ -921,6 +1157,27 @@ export default function InterviewConfigPage() {
         cancelLabel={t("common.cancel")}
         onConfirm={handleDelete}
         isPending={deleteConfig.isPending}
+      />
+
+      {/* Unsaved Settings changes, raised when leaving the Settings tab.
+          Non-destructive: "Later" keeps the draft (panels stay mounted) and just
+          switches, so the confirm button is `default`, not `destructive`.
+          Dismissing (Escape / backdrop) cancels the switch and stays on
+          Settings — the safe default when the intent is unclear. */}
+      <ConfirmDialog
+        open={pendingTab !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingTab(null);
+        }}
+        title={t("teacher_interview_config.confirm_unsaved.title")}
+        description={t("teacher_interview_config.confirm_unsaved.body")}
+        confirmLabel={t("teacher_interview_config.confirm_unsaved.confirm")}
+        cancelLabel={t("teacher_interview_config.confirm_unsaved.cancel")}
+        confirmVariant="default"
+        onConfirm={saveAndSwitch}
+        onCancel={discardSaveAndSwitch}
+        isPending={updateConfig.isPending}
+        dismissOnBackdrop
       />
     </div>
   );
@@ -1118,7 +1375,7 @@ function TabBar({
               aria-controls={item.id}
               onClick={() => onSelect(item.id as TabId)}
               className={cn(
-                "group relative z-10 min-w-fit flex-1 rounded-md px-3 py-2 text-left transition-colors duration-300",
+                "group relative z-10 min-w-fit flex-1 rounded-md px-3 py-2 text-center transition-colors duration-300",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
                 "whitespace-nowrap cursor-pointer",
                 // Text color switches with the sliding pill; the pill itself
@@ -1128,25 +1385,31 @@ function TabBar({
                   : "text-m3-on-surface hover:bg-surface-muted",
               )}
             >
-              <span className="flex items-center gap-2">
-                {statusDot(status)}
-                <span className="text-[13px] font-bold">
-                  <span className="lg:hidden xl:inline">{item.label}</span>
-                  <span className="hidden lg:inline xl:hidden">
-                    {item.shortLabel ?? item.label}
+              {/* Two stacked rows: the tab name (with its status dot) on top,
+                  and the sub-status affix (e.g. "Completed" / "None yet")
+                  centered on a SECOND line beneath it so the name stays the
+                  visual anchor and the status reads as a caption. */}
+              <span className="flex flex-col items-center justify-center gap-0.5">
+                <span className="flex items-center justify-center gap-2">
+                  {statusDot(status)}
+                  <span className="text-[13px] font-bold">
+                    <span className="lg:hidden xl:inline">{item.label}</span>
+                    <span className="hidden lg:inline xl:hidden">
+                      {item.shortLabel ?? item.label}
+                    </span>
                   </span>
                 </span>
+                {status.kind !== "none" && (
+                  <span
+                    className={cn(
+                      "text-[11px] leading-tight transition-colors duration-300",
+                      isActive ? "text-white/80" : "text-m3-on-surface-variant",
+                    )}
+                  >
+                    {status.label}
+                  </span>
+                )}
               </span>
-              {status.kind !== "none" && (
-                <span
-                  className={cn(
-                    "mt-0.5 block text-[11px] leading-tight transition-colors duration-300",
-                    isActive ? "text-white/80" : "text-m3-on-surface-variant",
-                  )}
-                >
-                  {status.label}
-                </span>
-              )}
             </button>
           );
         })}
@@ -1192,7 +1455,7 @@ function PublishReadiness({
       label: t("teacher_interview_config.publish_readiness.outcomes", {
         count: outcomeCount,
       }),
-      tab: "learning-outcomes",
+      tab: "settings",
     },
     {
       key: "questions",
@@ -1205,6 +1468,10 @@ function PublishReadiness({
     },
   ];
   const allDone = items.every((i) => i.done);
+  // Which items flipped false→true since the last render. Used to pop ONLY the
+  // tick that just became done: animating on `item.done` alone would replay the
+  // bounce on every re-render (i.e. on every keystroke in the settings form).
+  const justCompleted = useJustCompleted(items);
 
   return (
     <div
@@ -1240,7 +1507,14 @@ function PublishReadiness({
                 )}
               >
                 {item.done ? (
-                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                  <Check
+                    className={cn(
+                      "h-3.5 w-3.5",
+                      justCompleted.has(item.key) &&
+                        "motion-safe:animate-[scale-in_0.3s_cubic-bezier(0.16,1,0.3,1)_both]",
+                    )}
+                    aria-hidden="true"
+                  />
                 ) : (
                   <TriangleAlert className="h-3.5 w-3.5" aria-hidden="true" />
                 )}
@@ -1254,7 +1528,79 @@ function PublishReadiness({
   );
 }
 
-function SettingsForm({
+/**
+ * Keys of checklist items that flipped from not-done to done since the previous
+ * render, so a completion can be acknowledged exactly once.
+ *
+ * A ref (not state) on purpose: this derives from props the parent already
+ * re-renders on, so storing it in state would add a second render pass for no
+ * benefit. Items are compared by key, so reordering the checklist is safe.
+ */
+function useJustCompleted(
+  items: { key: string; done: boolean }[],
+): Set<string> {
+  const prev = useRef<Map<string, boolean>>(new Map());
+  const justCompleted = new Set<string>();
+  for (const item of items) {
+    if (item.done && prev.current.get(item.key) === false) {
+      justCompleted.add(item.key);
+    }
+  }
+  prev.current = new Map(items.map((i) => [i.key, i.done]));
+  return justCompleted;
+}
+
+/**
+ * A titled settings group rendered as its own bordered card. Groups related
+ * fields under one heading so the Settings tab reads as a set of tidy cards
+ * (FormBold-style grouping) instead of one long scrolling column — keeps the
+ * existing Material 3 tokens.
+ */
+function SettingsCard({
+  title,
+  description,
+  children,
+  stagger = 0,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  /** Position in the card column, used to stagger the reveal (0 = first). */
+  stagger?: number;
+}) {
+  return (
+    <section
+      // Enter animation runs unconditionally rather than via the `.reveal`
+      // IntersectionObserver: `.reveal` sets a hard `opacity: 0` and useReveal()
+      // unobserves after the first intersection, so a card that mounts while its
+      // tab panel is `hidden` would never receive `.visible` and would stay
+      // permanently invisible. A plain keyframe cannot get stuck.
+      // opacity+transform only → compositor-only, no reflow.
+      className="motion-safe:animate-[fade-in-up_0.4s_cubic-bezier(0.16,1,0.3,1)_both] rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low/40 p-5 lg:p-6 space-y-4 transition-colors duration-200 hover:border-m3-outline-variant/70"
+      style={{ animationDelay: `${revealDelayMs(stagger)}ms` } as CSSProperties}
+    >
+      <div className="space-y-1">
+        <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
+          {title}
+        </h3>
+        {description && (
+          <p className="text-xs text-m3-on-surface-variant">{description}</p>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/** Stagger step, capped so the whole column is revealed within ~360ms. */
+function revealDelayMs(index: number): number {
+  const STEP_MS = 60;
+  const MAX_STEPS = 6;
+  return Math.min(Math.max(index, 0), MAX_STEPS) * STEP_MS;
+}
+
+/** Exported for tests: asserts which inputs the published freeze disables. */
+export function SettingsForm({
   draft,
   setDraft,
   onSubmit,
@@ -1262,6 +1608,9 @@ function SettingsForm({
   dirty,
   justSaved,
   updatedAt,
+  practiceQuestionCount,
+  status,
+  outcomesSlot,
 }: {
   draft: SettingsDraft;
   setDraft: React.Dispatch<React.SetStateAction<SettingsDraft | null>>;
@@ -1270,9 +1619,28 @@ function SettingsForm({
   dirty: boolean;
   justSaved: boolean;
   updatedAt: string | null;
+  /** Approved questions in the practice partition. Zero means enabling practice
+      changes nothing, which the form says out loud rather than leaving the
+      teacher to find out from a student. */
+  practiceQuestionCount: number;
+  /** Config status. On "published", settings that change how the interview is
+      conducted or graded are frozen (the backend PATCH returns 409 for them),
+      so the form dims them rather than inviting an edit that cannot save. */
+  status: string | null | undefined;
+  /** Learning-outcomes panel, injected between Guidance and Security so the
+      outcomes sit above the (now bottom-most) Security & Integrity block. */
+  outcomesSlot?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const [securityOpen, setSecurityOpen] = useState(false);
+  const [personaAdvancedOpen, setPersonaAdvancedOpen] = useState(false);
+  const anyFrozen = hasFrozenFields(status);
+  const frozenReason = t("teacher_interview_config.published_freeze.tooltip");
+  /** Frozen-field props for a `Field`, keyed by its PATCH payload name. */
+  const lock = (field: string) => ({
+    frozen: isFieldFrozen(field, status),
+    frozenReason,
+  });
   function update<K extends keyof SettingsDraft>(
     key: K,
     value: SettingsDraft[K],
@@ -1281,11 +1649,23 @@ function SettingsForm({
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="bg-m3-surface-container-lowest border border-m3-outline-variant/60 rounded-xl p-6 lg:p-8 space-y-8 shadow-glass"
-    >
-      <Section
+    <form onSubmit={onSubmit} className="space-y-6">
+      {/* Why half the form is dimmed. Without this, a greyed-out field reads as
+          a bug or a permissions problem; the fix (unpublish) is not guessable. */}
+      {anyFrozen && (
+        <div
+          className="flex items-start gap-3 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          role="status"
+        >
+          <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <p>{t("teacher_interview_config.published_freeze.banner")}</p>
+        </div>
+      )}
+
+      {/* Card 1 — Basics: identity + interviewer style grouped together, with
+          persona/voice on one row (FormBold-style two-up layout). */}
+      <SettingsCard
+        stagger={0}
         title={t("teacher_interview_config.sections.general.title")}
         description={t("teacher_interview_config.sections.general.description")}
       >
@@ -1294,55 +1674,193 @@ function SettingsForm({
             value={draft.title}
             onChange={(e) => update("title", e.target.value)}
             placeholder={t("teacher_interview_config.fields.title_placeholder")}
-            className="bg-m3-surface text-sm"
           />
         </Field>
-      </Section>
-
-      <Section title={t("teacher_interview_config.sections.style.title")}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label={t("teacher_interview_config.fields.persona")}>
-            <select
+          <Field
+            label={t("teacher_interview_config.fields.persona")}
+            {...lock("persona")}
+          >
+            <Select<Persona>
               value={draft.persona}
-              onChange={(e) => update("persona", e.target.value as Persona)}
-              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-            >
-              {PERSONA_KEYS.map((p) => (
-                <option key={p} value={p}>
-                  {t(`teacher_interview_config.persona.${p}`)}
-                </option>
-              ))}
-            </select>
+              onValueChange={(next) => update("persona", next)}
+              options={PERSONA_KEYS.map((p) => ({
+                value: p,
+                label: t(`teacher_interview_config.persona.${p}`),
+              }))}
+            />
             <VoicePersonaGuideSheet focus="persona" />
+          </Field>
+          {/* Who the interviewer presents as. Orthogonal to persona: persona is
+              HOW they sound, this is WHO they are. Like persona it shapes
+              language only — never difficulty, question choice, or scoring. */}
+          <Field
+            label={t("teacher_interview_config.fields.interviewer_role")}
+            hint={t("teacher_interview_config.fields.interviewer_role_hint")}
+            {...lock("persona_profile")}
+          >
+            <Select<InterviewerRole>
+              value={
+                draft.persona_profile.interviewer_role ?? "generic_assistant"
+              }
+              onValueChange={(next) =>
+                update("persona_profile", {
+                  ...draft.persona_profile,
+                  interviewer_role: next,
+                })
+              }
+              options={INTERVIEWER_ROLE_KEYS.map((r) => ({
+                value: r,
+                label: t(`teacher_interview_config.interviewer_role.${r}`),
+              }))}
+            />
           </Field>
           <Field
             label={t("teacher_interview_config.fields.voice_label")}
             hint={t("teacher_interview_config.fields.voice_hint")}
+            {...lock("tts_voice")}
           >
-            <select
+            <Select
               value={draft.tts_voice}
-              onChange={(e) => update("tts_voice", e.target.value)}
-              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-            >
-              <option value="">
-                {t("teacher_interview_config.fields.voice_default")}
-              </option>
-              {VOICE_KEYS.map((v) => (
-                <option key={v} value={v}>
-                  {t(`teacher_interview_config.voice.${v}`)}
-                </option>
-              ))}
-            </select>
+              onValueChange={(next) => update("tts_voice", next)}
+              options={[
+                {
+                  value: "",
+                  label: t("teacher_interview_config.fields.voice_default"),
+                },
+                ...VOICE_KEYS.map((v) => ({
+                  value: v as string,
+                  label: t(`teacher_interview_config.voice.${v}`),
+                })),
+              ]}
+            />
             <VoicePersonaGuideSheet focus="voice" />
           </Field>
         </div>
-      </Section>
 
-      <Section title={t("teacher_interview_config.sections.rules.title")}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Advanced: optional per-trait persona overrides (Phase 3). Collapsed
+            by default — the persona preset is enough for most teachers; the
+            sliders let a power user fine-tune tone without a new persona. Every
+            dial is TONE ONLY and never affects scoring (backend enforces this).
+            An override exists only for a trait moved away from its preset.
+
+            Base UI Collapsible rather than the hand-rolled grid-rows trick this
+            used to share with the Security panel. Two reasons, both correctness
+            rather than polish: the old version left the collapsed content in the
+            DOM at opacity-0, so every slider inside stayed in the tab order and
+            keyboard users landed on invisible controls; and it animated a grid
+            track, which is a layout property recomputed every frame, against
+            this file's own compositor-only convention. Collapsible unmounts the
+            panel when closed and animates its height via a CSS variable. */}
+        <Collapsible.Root
+          open={personaAdvancedOpen}
+          onOpenChange={setPersonaAdvancedOpen}
+          className={cn(
+            "mt-4 block rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-4",
+            isFieldFrozen("persona_profile", status) && "opacity-60",
+          )}
+        >
+          <Collapsible.Trigger className="flex w-full cursor-pointer list-none items-center gap-3 text-left">
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-m3-primary/10 text-m3-primary">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-extrabold text-m3-on-surface">
+                {t("teacher_interview_config.persona_traits.advanced_label")}
+                {isFieldFrozen("persona_profile", status) && (
+                  <Lock
+                    className="ml-1.5 inline-block h-3 w-3 align-text-top"
+                    aria-hidden="true"
+                  />
+                )}
+              </span>
+              <span className="block text-xs text-m3-on-surface-variant">
+                {t("teacher_interview_config.persona_traits.help")}
+              </span>
+            </span>
+            <ChevronDown
+              className={`h-5 w-5 shrink-0 text-m3-on-surface-variant transition-transform duration-300 ${
+                personaAdvancedOpen ? "rotate-180" : ""
+              }`}
+              aria-hidden="true"
+            />
+          </Collapsible.Trigger>
+
+          <Collapsible.Panel className="h-[var(--collapsible-panel-height)] overflow-hidden transition-[height] duration-300 ease-out data-[ending-style]:h-0 data-[starting-style]:h-0">
+            <div>
+              <div className="mt-5 space-y-4 border-t border-m3-outline-variant/20 pt-5">
+                {(() => {
+                  const effective = effectivePersonaTraits(
+                    draft.persona,
+                    draft.persona_profile,
+                  );
+                  return PERSONA_TRAIT_KEYS.map((traitKey) => (
+                    <div key={traitKey} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label
+                          htmlFor={`persona-trait-${traitKey}`}
+                          className="text-xs font-medium text-m3-on-surface"
+                        >
+                          {t(
+                            `teacher_interview_config.persona_traits.trait.${traitKey}`,
+                          )}
+                        </label>
+                        <span className="text-xs tabular-nums text-m3-on-surface-variant">
+                          {effective[traitKey]} / 4
+                        </span>
+                      </div>
+                      <input
+                        id={`persona-trait-${traitKey}`}
+                        type="range"
+                        min={0}
+                        max={4}
+                        step={1}
+                        value={effective[traitKey]}
+                        disabled={isFieldFrozen("persona_profile", status)}
+                        onChange={(e) =>
+                          update("persona_profile", {
+                            ...draft.persona_profile,
+                            [traitKey]: Number(e.target.value),
+                          })
+                        }
+                        className="w-full cursor-pointer accent-m3-primary disabled:cursor-not-allowed"
+                      />
+                      <p className="text-[11px] text-m3-on-surface-variant">
+                        {t(
+                          `teacher_interview_config.persona_traits.trait_hint.${traitKey}`,
+                        )}
+                      </p>
+                    </div>
+                  ));
+                })()}
+                <button
+                  type="button"
+                  onClick={() => update("persona_profile", {})}
+                  disabled={isFieldFrozen("persona_profile", status)}
+                  className="text-xs font-medium text-m3-primary hover:underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60"
+                >
+                  {t("teacher_interview_config.persona_traits.reset")}
+                </button>
+              </div>
+            </div>
+          </Collapsible.Panel>
+        </Collapsible.Root>
+      </SettingsCard>
+
+      {/* Card 2 — Scoring & timing: the three numeric knobs on one 3-up row. */}
+      <SettingsCard
+        stagger={1}
+        title={t("teacher_interview_config.sections.rules.title")}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* All three are unbounded-by-default numeric knobs whose empty state
+              means something ("unlimited"), so each carries its unit inside the
+              field — an anonymous empty box gave no clue whether it wanted
+              minutes, seconds or a count. */}
           <Field
             label={t("teacher_interview_config.fields.duration_label")}
             hint={t("teacher_interview_config.fields.duration_hint")}
+            {...lock("time_limit_minutes")}
           >
             <Input
               type="number"
@@ -1353,12 +1871,13 @@ function SettingsForm({
               placeholder={t(
                 "teacher_interview_config.fields.duration_placeholder",
               )}
-              className="bg-m3-surface text-sm"
+              endAdornment={t("teacher_interview_config.units.minutes")}
             />
           </Field>
           <Field
             label={t("teacher_interview_config.fields.attempts_label")}
             hint={t("teacher_interview_config.fields.duration_hint")}
+            {...lock("max_attempts")}
           >
             <Input
               type="number"
@@ -1368,27 +1887,13 @@ function SettingsForm({
               placeholder={t(
                 "teacher_interview_config.fields.attempts_placeholder",
               )}
-              className="bg-m3-surface text-sm"
-            />
-          </Field>
-          <Field
-            label={t("teacher_interview_config.fields.cooldown_label")}
-            hint={t("teacher_interview_config.fields.cooldown_hint")}
-          >
-            <Input
-              type="number"
-              min={1}
-              value={draft.cooldown_hours}
-              onChange={(e) => update("cooldown_hours", e.target.value)}
-              placeholder={t(
-                "teacher_interview_config.fields.cooldown_placeholder",
-              )}
-              className="bg-m3-surface text-sm"
+              endAdornment={t("teacher_interview_config.units.attempts")}
             />
           </Field>
           <Field
             label={t("teacher_interview_config.fields.criteria_label")}
             hint={t("teacher_interview_config.fields.criteria_hint")}
+            {...lock("min_outcomes_to_pass")}
           >
             <Input
               type="number"
@@ -1398,47 +1903,131 @@ function SettingsForm({
               placeholder={t(
                 "teacher_interview_config.fields.criteria_placeholder",
               )}
-              className="bg-m3-surface text-sm"
+              endAdornment={t("teacher_interview_config.units.outcomes")}
             />
           </Field>
         </div>
 
-        <ToggleRow
-          label={t("teacher_interview_config.fields.lock_ef_label")}
-          description={t("teacher_interview_config.fields.lock_ef_desc")}
-          value={draft.lock_quiz_ef_until_pass}
-          onChange={(v) => update("lock_quiz_ef_until_pass", v)}
-        />
-      </Section>
+        {/* Practice mode. Full width under the numeric grid because it needs
+            two lines of consequence text, not a one-line hint. */}
+        <div
+          className={cn(
+            "mt-4 rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-lowest p-3",
+            isFieldFrozen("practice_mode_enabled", status) && "opacity-60",
+          )}
+          title={
+            isFieldFrozen("practice_mode_enabled", status)
+              ? frozenReason
+              : undefined
+          }
+        >
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={draft.practice_mode_enabled}
+              disabled={isFieldFrozen("practice_mode_enabled", status)}
+              onChange={(e) =>
+                update("practice_mode_enabled", e.target.checked)
+              }
+              className="mt-0.5 size-4 shrink-0 accent-m3-primary"
+            />
+            <span className="min-w-0">
+              <span className="block text-sm font-bold text-m3-on-surface">
+                {t("teacher_interview_config.fields.practice_label")}
+              </span>
+              <span className="mt-1 block text-xs leading-5 text-m3-on-surface-variant">
+                {t("teacher_interview_config.fields.practice_hint")}
+              </span>
+            </span>
+          </label>
 
-      <Section
+          {/* Both consequences of ticking this box, stated rather than
+              discovered: it discloses criterion text to students, and it does
+              nothing at all until questions are moved into the practice set. */}
+          {draft.practice_mode_enabled && (
+            <div className="mt-3 space-y-2 border-t border-m3-outline-variant/30 pt-3">
+              <p className="text-xs leading-5 text-m3-on-surface-variant">
+                {t("teacher_interview_config.fields.practice_rubric_notice")}
+              </p>
+              {practiceQuestionCount === 0 && (
+                <p
+                  className="flex items-start gap-1.5 rounded-lg bg-amber-50 px-2.5 py-2 text-xs font-semibold leading-5 text-amber-800"
+                  role="status"
+                >
+                  <TriangleAlert
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                    aria-hidden="true"
+                  />
+                  {t("teacher_interview_config.fields.practice_empty_warning")}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </SettingsCard>
+
+      {/* Card 3 — Guidance for AI: free-text prose (fed to the question
+          generator) plus the structured scoring rubric (graded against). */}
+      <SettingsCard
+        stagger={2}
         title={t("teacher_interview_config.sections.guidance.title")}
         description={t(
           "teacher_interview_config.sections.guidance.description",
         )}
       >
-        <Field label={t("teacher_interview_config.fields.supplementary_label")}>
-          <textarea
-            value={draft.supplementary_instructions}
-            onChange={(e) =>
-              update("supplementary_instructions", e.target.value)
-            }
+        <Field
+          label={t("teacher_interview_config.fields.notes_label")}
+          hint={t("teacher_interview_config.fields.notes_hint")}
+          {...lock("supplementary_instructions")}
+        >
+          <Textarea
+            value={draft.notes}
+            onChange={(e) => update("notes", e.target.value)}
             rows={4}
             placeholder={t(
               "teacher_interview_config.fields.supplementary_placeholder",
             )}
-            className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
           />
         </Field>
-      </Section>
 
-      <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-4">
-        <button
-          type="button"
-          aria-expanded={securityOpen}
-          onClick={() => setSecurityOpen((open) => !open)}
-          className="flex w-full cursor-pointer list-none items-center gap-3 text-left"
+        {/* The rubric is serialized into supplementary_instructions, which the
+            evaluator reads — so it freezes with that field, not separately. */}
+        <div
+          className={cn(
+            isFieldFrozen("supplementary_instructions", status) &&
+              "pointer-events-none opacity-60",
+          )}
+          title={
+            isFieldFrozen("supplementary_instructions", status)
+              ? frozenReason
+              : undefined
+          }
+          aria-disabled={
+            isFieldFrozen("supplementary_instructions", status) || undefined
+          }
         >
+          <RubricEditor
+            criteria={draft.rubric_criteria}
+            onChange={(next) => update("rubric_criteria", next)}
+          />
+        </div>
+      </SettingsCard>
+
+      {/* Learning outcomes sit above Security & Integrity (which is now the
+          bottom-most block). Injected here as a slot so it lives inside the
+          settings flow without SettingsForm needing to know the outcomes API. */}
+      {outcomesSlot}
+
+      {/* Collapsible for the same reasons as the persona panel above: this one
+          holds a response-policy select, a max-attempts number and two custom
+          refusal textareas, all of which stayed tabbable while the section was
+          closed. */}
+      <Collapsible.Root
+        open={securityOpen}
+        onOpenChange={setSecurityOpen}
+        className="block rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-4"
+      >
+        <Collapsible.Trigger className="flex w-full cursor-pointer list-none items-center gap-3 text-left">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-500/10 text-emerald-700">
             <ShieldCheck className="h-5 w-5" />
           </span>
@@ -1459,16 +2048,10 @@ function SettingsForm({
             }`}
             aria-hidden="true"
           />
-        </button>
+        </Collapsible.Trigger>
 
-        <div
-          className={`grid transition-all duration-300 ease-in-out ${
-            securityOpen
-              ? "grid-rows-[1fr] opacity-100"
-              : "grid-rows-[0fr] opacity-0"
-          }`}
-        >
-          <div className="overflow-hidden">
+        <Collapsible.Panel className="h-[var(--collapsible-panel-height)] overflow-hidden transition-[height] duration-300 ease-out data-[ending-style]:h-0 data-[starting-style]:h-0">
+          <div>
             <div className="mt-5 space-y-5 border-t border-m3-outline-variant/20 pt-5">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
@@ -1491,32 +2074,30 @@ function SettingsForm({
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
                   label={t("teacher_interview_config.security.response_policy")}
+                  {...lock("security_response_policy")}
                 >
-                  <select
+                  <Select<SecurityResponsePolicy>
                     value={draft.security_response_policy}
-                    onChange={(e) =>
-                      update(
-                        "security_response_policy",
-                        e.target.value as SecurityResponsePolicy,
-                      )
+                    onValueChange={(next) =>
+                      update("security_response_policy", next)
                     }
-                    className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-                  >
-                    {[
-                      "continue_and_log",
-                      "warn_and_continue",
-                      "end_and_flag",
-                    ].map((policy) => (
-                      <option key={policy} value={policy}>
-                        {t(
-                          `teacher_interview_config.security.policy.${policy}`,
-                        )}
-                      </option>
-                    ))}
-                  </select>
+                    options={(
+                      [
+                        "continue_and_log",
+                        "warn_and_continue",
+                        "end_and_flag",
+                      ] as SecurityResponsePolicy[]
+                    ).map((policy) => ({
+                      value: policy,
+                      label: t(
+                        `teacher_interview_config.security.policy.${policy}`,
+                      ),
+                    }))}
+                  />
                 </Field>
                 <Field
                   label={t("teacher_interview_config.security.max_attempts")}
+                  {...lock("security_max_consecutive_attempts")}
                 >
                   <Input
                     type="number"
@@ -1529,40 +2110,26 @@ function SettingsForm({
                         e.target.value,
                       )
                     }
-                    className="bg-m3-surface text-sm"
                   />
                 </Field>
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-2">
-                <Field label={t("teacher_interview_config.security.custom_en")}>
-                  <textarea
+              <div className="grid gap-4">
+                <Field
+                  label={t("teacher_interview_config.security.custom_en")}
+                  {...lock("security_custom_refusal_en")}
+                >
+                  <Textarea
                     rows={3}
                     maxLength={500}
                     value={draft.security_custom_refusal_en}
                     onChange={(e) =>
                       update("security_custom_refusal_en", e.target.value)
                     }
-                    className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
                   />
                   <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
                     {draft.security_custom_refusal_en.trim() ||
                       t("teacher_interview_config.security.preview_en")}
-                  </p>
-                </Field>
-                <Field label={t("teacher_interview_config.security.custom_vi")}>
-                  <textarea
-                    rows={3}
-                    maxLength={500}
-                    value={draft.security_custom_refusal_vi}
-                    onChange={(e) =>
-                      update("security_custom_refusal_vi", e.target.value)
-                    }
-                    className="w-full resize-none rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-                  />
-                  <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
-                    {draft.security_custom_refusal_vi.trim() ||
-                      t("teacher_interview_config.security.preview_vi")}
                   </p>
                 </Field>
               </div>
@@ -1582,15 +2149,22 @@ function SettingsForm({
               </p>
             </div>
           </div>
-        </div>
-      </div>
+        </Collapsible.Panel>
+      </Collapsible.Root>
 
       <div className="flex items-center justify-between gap-3 pt-4 border-t border-m3-outline-variant/20">
         <p className="text-[11px] text-m3-on-surface-variant">
           {t("teacher_interview_config.actions.save_config_scope_hint")}
         </p>
         <div className="flex items-center gap-3 shrink-0">
+          {/* Keyed on the status it will render: a key on the element returned
+              *inside* SaveStatus would do nothing (React only diffs keys among
+              siblings), so the remount that triggers the enter animation has to
+              be forced from the call site. */}
           <SaveStatus
+            key={
+              saving ? "saving" : dirty ? "dirty" : justSaved ? "saved" : "idle"
+            }
             saving={saving}
             dirty={dirty}
             justSaved={justSaved}
@@ -1630,43 +2204,60 @@ function SaveStatus({
   updatedAt: string | null;
 }) {
   const { t, i18n } = useTranslation();
-  if (saving) {
+
+  // Every branch shares one animated shell. The remount that replays the enter
+  // animation is forced by a `key` at the CALL SITE (a key here would be inert —
+  // React only diffs keys among siblings). This is the feedback for the page's
+  // primary action (saving settings), so the 250ms is worth it.
+  // opacity+transform only → compositor-only, no reflow.
+  function shell(children: React.ReactNode, className: string) {
     return (
       <span
         role="status"
         aria-live="polite"
-        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-m3-on-surface-variant"
+        className={cn(
+          "inline-flex items-center gap-1.5 text-[11px] motion-safe:animate-[fade-in-up_0.25s_ease-out_both]",
+          className,
+        )}
       >
-        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-        {t("teacher_interview_config.save_status.saving")}
+        {children}
       </span>
     );
   }
+
+  if (saving) {
+    return shell(
+      <>
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        {t("teacher_interview_config.save_status.saving")}
+      </>,
+      "font-semibold text-m3-on-surface-variant",
+    );
+  }
   if (dirty) {
-    return (
-      <span
-        role="status"
-        aria-live="polite"
-        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700"
-      >
+    return shell(
+      <>
         <span
           className="h-2 w-2 rounded-full bg-amber-500"
           aria-hidden="true"
         />
         {t("teacher_interview_config.save_status.unsaved")}
-      </span>
+      </>,
+      "font-semibold text-amber-700",
     );
   }
   if (justSaved) {
-    return (
-      <span
-        role="status"
-        aria-live="polite"
-        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600"
-      >
-        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+    return shell(
+      <>
+        {/* Tick pops in rather than appearing flat — the one moment on this
+            page worth a beat of acknowledgement. */}
+        <CheckCircle2
+          className="h-3.5 w-3.5 motion-safe:animate-[scale-in_0.3s_cubic-bezier(0.16,1,0.3,1)_both]"
+          aria-hidden="true"
+        />
         {t("teacher_interview_config.save_status.saved")}
-      </span>
+      </>,
+      "font-semibold text-emerald-600",
     );
   }
   if (updatedAt) {
@@ -1682,6 +2273,42 @@ function SaveStatus({
     );
   }
   return null;
+}
+
+/** Format seconds as m:ss (matches the quiz generation progress readout). */
+function formatElapsedSeconds(seconds: number): string {
+  if (seconds < 0) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+/**
+ * Live-ticking elapsed timer for a generation run (mirrors the quiz
+ * GenerationProgress behaviour). Ticks locally off `startedAt` while running
+ * and freezes at `frozenEnd` once the run reaches a terminal state.
+ */
+function useGenerationElapsed(
+  startedAt: string | null | undefined,
+  frozenEnd: string | null | undefined,
+): number {
+  const [now, setNow] = useState(() => Date.now());
+  const running = Boolean(startedAt) && !frozenEnd;
+
+  useEffect(() => {
+    if (!running) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [running]);
+
+  return useMemo(() => {
+    if (!startedAt) return 0;
+    const start = new Date(startedAt).getTime();
+    if (Number.isNaN(start)) return 0;
+    const endMs = frozenEnd ? new Date(frozenEnd).getTime() : now;
+    const end = Number.isNaN(endMs) ? now : endMs;
+    return Math.max(0, (end - start) / 1000);
+  }, [startedAt, frozenEnd, now]);
 }
 
 function GenerationSection({
@@ -1727,6 +2354,13 @@ function GenerationSection({
   // questions_persisted / question_count_requested once the run finishes.
   const progress = readGenerationProgress(run);
 
+  // Live elapsed timer (quiz-style): ticks while running, freezes on finish.
+  const isTerminal = failed || completed || run?.status === "cancelled";
+  const elapsed = useGenerationElapsed(
+    run?.started_at,
+    isTerminal ? (run?.finished_at ?? null) : null,
+  );
+
   return (
     <div className="rounded-xl border-2 border-dashed border-m3-secondary/30 bg-m3-secondary/[0.03] p-6 lg:p-8 space-y-5">
       <Section
@@ -1735,23 +2369,24 @@ function GenerationSection({
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label={t("teacher_interview_config.generate.mode_label")}>
-            <select
+            <Select<GenerationMode>
               value={generationForm.mode}
-              onChange={(e) =>
-                updateGeneration("mode", e.target.value as GenerationMode)
-              }
-              className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
-            >
-              <option value="outcome-based">
-                {t("teacher_interview_config.generate.mode_outcome")}
-              </option>
-              <option value="topic">
-                {t("teacher_interview_config.generate.mode_topic")}
-              </option>
-              <option value="coverage">
-                {t("teacher_interview_config.generate.mode_coverage")}
-              </option>
-            </select>
+              onValueChange={(next) => updateGeneration("mode", next)}
+              options={[
+                {
+                  value: "outcome-based",
+                  label: t("teacher_interview_config.generate.mode_outcome"),
+                },
+                {
+                  value: "topic",
+                  label: t("teacher_interview_config.generate.mode_topic"),
+                },
+                {
+                  value: "coverage",
+                  label: t("teacher_interview_config.generate.mode_coverage"),
+                },
+              ]}
+            />
           </Field>
           <Field label={t("teacher_interview_config.generate.count_label")}>
             <Input
@@ -1765,7 +2400,6 @@ function GenerationSection({
                   Math.floor(Number(e.target.value)) || 0,
                 )
               }
-              className="bg-m3-surface text-sm"
             />
           </Field>
         </div>
@@ -1849,7 +2483,9 @@ function GenerationSection({
                 >
                   {generationForm.target_outcome_ids.length === outcomes.length
                     ? t("teacher_interview_config.generate.outcomes_clear")
-                    : t("teacher_interview_config.generate.outcomes_select_all")}
+                    : t(
+                        "teacher_interview_config.generate.outcomes_select_all",
+                      )}
                 </button>
               </div>
               {outcomes.map((outcome, index) => {
@@ -1884,7 +2520,12 @@ function GenerationSection({
                       }
                       className="h-4 w-4"
                     />
-                    <span className="shrink-0 rounded-md bg-violet-100 px-1.5 py-0.5 text-[11px] font-bold text-violet-700">
+                    {/* Was bg-violet-100/text-violet-700. Purple is banned by
+                        the design system; it survived because the guard script
+                        greps a directory that no longer exists and so passes
+                        unconditionally. Uses the primary token like every other
+                        index badge in this file. */}
+                    <span className="shrink-0 rounded-md bg-m3-primary/10 px-1.5 py-0.5 text-[11px] font-bold text-m3-primary">
                       {t("teacher_interview_config.generate.outcomes_badge", {
                         n: index + 1,
                       })}
@@ -1909,7 +2550,6 @@ function GenerationSection({
             placeholder={t(
               "teacher_interview_config.generate.focus_placeholder",
             )}
-            className="bg-m3-surface text-sm"
           />
         </Field>
 
@@ -1923,7 +2563,6 @@ function GenerationSection({
             placeholder={t(
               "teacher_interview_config.generate.avoid_placeholder",
             )}
-            className="bg-m3-surface text-sm"
           />
         </Field>
 
@@ -1942,50 +2581,72 @@ function GenerationSection({
                   : "border-blue-200 bg-blue-50 text-blue-800",
             )}
           >
-            <div className="flex items-center gap-2 font-bold">
-              {inProgress ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : failed ? (
-                <X className="h-4 w-4" />
-              ) : (
-                <CheckCircle2 className="h-4 w-4" />
-              )}
-              {inProgress
-                ? t("teacher_interview_config.generate.in_progress")
-                : failed
-                  ? t("teacher_interview_config.generate.failed")
-                  : t("teacher_interview_config.generate.completed")}
-              {progress && !failed && (
-                <span className="ml-auto tabular-nums font-extrabold">
-                  {progress.accepted}/{progress.target}
+            {/* Header: status icon + headline on the left; stepped % (when
+                known) + live elapsed timer on the right — mirrors the quiz
+                GenerationProgress layout. */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2 font-bold">
+                {inProgress ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                ) : failed ? (
+                  <X className="h-4 w-4 shrink-0" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                )}
+                <span className="truncate">
+                  {inProgress
+                    ? t("teacher_interview_config.generate.in_progress")
+                    : failed
+                      ? t("teacher_interview_config.generate.failed")
+                      : t("teacher_interview_config.generate.completed")}
                 </span>
-              )}
+              </div>
+              <div className="flex shrink-0 items-center gap-3 text-xs tabular-nums">
+                {progress && !failed && (
+                  <span className="font-extrabold">
+                    {progress.accepted}/{progress.target}
+                  </span>
+                )}
+                <span
+                  className="opacity-80"
+                  title={t("teacher_interview_config.generate.elapsed")}
+                >
+                  {formatElapsedSeconds(elapsed)}
+                </span>
+              </div>
             </div>
 
-            {progress && !failed && (
+            {!failed && (
               <div className="mt-2 space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
                   <span>
                     {completed
                       ? t("teacher_interview_config.generate.phase_done")
-                      : progress.phase === "saving"
+                      : progress?.phase === "saving"
                         ? t("teacher_interview_config.generate.phase_saving")
                         : t(
                             "teacher_interview_config.generate.phase_generating",
                           )}
                   </span>
-                  <span className="tabular-nums">{progress.percent}%</span>
+                  {progress && (
+                    <span className="tabular-nums">{progress.percent}%</span>
+                  )}
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-current/15">
-                  <div
-                    className={cn(
-                      "h-full rounded-full transition-[width] duration-500 ease-out",
-                      completed ? "bg-emerald-500" : "bg-blue-500",
-                    )}
-                    style={{
-                      width: `${Math.max(progress.percent, inProgress ? 6 : 0)}%`,
-                    }}
-                  />
+                  {progress ? (
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-[width] duration-500 ease-out",
+                        completed ? "bg-emerald-500" : "bg-blue-500",
+                      )}
+                      style={{
+                        width: `${Math.max(progress.percent, inProgress ? 6 : 0)}%`,
+                      }}
+                    />
+                  ) : (
+                    /* No checkpoint yet — indeterminate pulse instead of a fake 0%. */
+                    <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-500/60" />
+                  )}
                 </div>
               </div>
             )}
@@ -2053,18 +2714,80 @@ function Section({
 function Field({
   label,
   hint,
+  frozen = false,
+  frozenReason,
   children,
 }: {
   label: React.ReactNode;
   hint?: string;
+  /** Dim + disable this field (frozen while the config is published). */
+  frozen?: boolean;
+  /** Tooltip explaining why, shown on the dimmed field. */
+  frozenReason?: string;
   children: React.ReactNode;
 }) {
+  const generatedId = useId();
+  // Associate the label with its control, and disable it when frozen.
+  //
+  // Done by cloning rather than by wrapping the control in the <label>:
+  // implicit association would swallow any other interactive child, and the
+  // persona field puts a "View guide" button next to its Select, which would
+  // then toggle the Select when clicked.
+  //
+  // The FIRST element child is treated as the control. Earlier this only fired
+  // for a lone child, which quietly did nothing on exactly the fields that have
+  // a sibling: AI persona and AI voice both render `Select` + a "View guide"
+  // link, so they stayed fully operable while dimmed — the freeze looked applied
+  // but the dropdown still changed the value. Later children (a guide link, a
+  // preview paragraph) are deliberately left alone: reading the persona guide is
+  // harmless on a published config, and disabling it would remove information
+  // for no gain.
+  const childArray = Children.toArray(children);
+  const controlIndex = childArray.findIndex((child) => isValidElement(child));
+  const control =
+    controlIndex >= 0 ? (childArray[controlIndex] as ReactElement) : null;
+  const childProps = (control?.props ?? {}) as {
+    id?: string;
+    disabled?: boolean;
+  };
+  const controlId = childProps.id ?? (control ? generatedId : undefined);
+  // A frozen field is disabled at the control, not merely dimmed: greying an
+  // input the teacher can still type into (only to have the save 409) is worse
+  // than not dimming it at all. `disabled` is only forced ON — a control the
+  // caller already disabled for its own reason stays disabled.
+  const extraProps: { id?: string; disabled?: boolean } = {};
+  if (control && !childProps.id) extraProps.id = generatedId;
+  if (control && frozen) extraProps.disabled = true;
+  const wired =
+    control && Object.keys(extraProps).length > 0
+      ? childArray.map((child, index) =>
+          index === controlIndex
+            ? cloneElement(
+                control as ReactElement<{ id?: string; disabled?: boolean }>,
+                extraProps,
+              )
+            : child,
+        )
+      : children;
+
   return (
-    <div className="space-y-1.5">
-      <label className="block text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+    <div
+      className={cn("space-y-1.5", frozen && "opacity-60")}
+      title={frozen ? frozenReason : undefined}
+    >
+      <label
+        htmlFor={controlId}
+        className="block text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant"
+      >
         {label}
+        {frozen && (
+          <Lock
+            className="ml-1.5 inline-block h-3 w-3 align-text-top"
+            aria-hidden="true"
+          />
+        )}
       </label>
-      {children}
+      {wired}
       {hint && <p className="text-[11px] text-m3-on-surface-variant">{hint}</p>}
     </div>
   );
@@ -2077,6 +2800,130 @@ function Field({
  * choosing. ``focus`` scrolls/hints which table is most relevant to the field
  * the link sits under, but both tables are always present.
  */
+function RubricEditor({
+  criteria,
+  onChange,
+}: {
+  criteria: RubricCriterion[];
+  onChange: (next: RubricCriterion[]) => void;
+}) {
+  const { t } = useTranslation();
+
+  function updateAt(index: number, patch: Partial<RubricCriterion>) {
+    onChange(criteria.map((c, i) => (i === index ? { ...c, ...patch } : c)));
+  }
+
+  function removeAt(index: number) {
+    onChange(criteria.filter((_, i) => i !== index));
+  }
+
+  function addCriterion() {
+    if (criteria.length >= MAX_CRITERIA) return;
+    onChange([...criteria, { name: "", weight: 1, description: "" }]);
+  }
+
+  const atCap = criteria.length >= MAX_CRITERIA;
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <label className="block text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+          {t("teacher_interview_config.fields.rubric_label")}
+        </label>
+        <p className="text-[11px] text-m3-on-surface-variant">
+          {t("teacher_interview_config.fields.rubric_hint")}
+        </p>
+      </div>
+
+      {criteria.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-m3-outline-variant/40 bg-m3-surface px-3 py-4 text-center text-xs text-m3-on-surface-variant">
+          {t("teacher_interview_config.fields.rubric_empty")}
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {criteria.map((criterion, index) => (
+            <div
+              key={index}
+              className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface p-3 space-y-2"
+            >
+              <div className="flex items-start gap-2">
+                <div className="flex-1 space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                    <Input
+                      value={criterion.name}
+                      maxLength={MAX_CRITERION_NAME_CHARS}
+                      onChange={(e) =>
+                        updateAt(index, { name: e.target.value })
+                      }
+                      placeholder={t(
+                        "teacher_interview_config.fields.rubric_name_placeholder",
+                      )}
+                    />
+                    <label className="flex items-center gap-2 text-xs text-m3-on-surface-variant">
+                      <span className="whitespace-nowrap">
+                        {t("teacher_interview_config.fields.rubric_weight")}
+                      </span>
+                      <Input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={String(criterion.weight)}
+                        onChange={(e) =>
+                          updateAt(index, {
+                            weight: Math.max(1, Number(e.target.value) || 1),
+                          })
+                        }
+                        className="w-20"
+                      />
+                    </label>
+                  </div>
+                  <Textarea
+                    value={criterion.description}
+                    onChange={(e) =>
+                      updateAt(index, { description: e.target.value })
+                    }
+                    rows={2}
+                    placeholder={t(
+                      "teacher_interview_config.fields.rubric_description_placeholder",
+                    )}
+                    className="rounded-lg py-2"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeAt(index)}
+                  aria-label={t(
+                    "teacher_interview_config.fields.rubric_remove",
+                  )}
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-m3-on-surface-variant hover:bg-m3-error/10 hover:text-m3-error cursor-pointer"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={addCriterion}
+        disabled={atCap}
+        className="gap-1.5"
+      >
+        <Plus className="h-4 w-4" />
+        {atCap
+          ? t("teacher_interview_config.fields.rubric_at_cap", {
+              max: MAX_CRITERIA,
+            })
+          : t("teacher_interview_config.fields.rubric_add")}
+      </Button>
+    </div>
+  );
+}
+
 function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
   const { t } = useTranslation();
   return (
@@ -2090,7 +2937,11 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
         }
       >
         <HelpCircle className="h-3 w-3" aria-hidden="true" />
-        {t("teacher_interview_config.voice_guide.open")}
+        {t(
+          focus === "persona"
+            ? "teacher_interview_config.voice_guide.open_persona"
+            : "teacher_interview_config.voice_guide.open_voice",
+        )}
       </SheetTrigger>
       <SheetContent className="w-full overflow-y-auto p-6 sm:max-w-md">
         <div className="space-y-6">
@@ -2107,7 +2958,8 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
           <section
             className={cn(
               "space-y-2",
-              focus === "persona" && "rounded-lg ring-1 ring-m3-primary/30 p-2 -m-2",
+              focus === "persona" &&
+                "rounded-lg ring-1 ring-m3-primary/30 p-2 -m-2",
             )}
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
@@ -2116,7 +2968,10 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
             <table className="w-full text-left text-xs">
               <tbody>
                 {PERSONA_KEYS.map((p) => (
-                  <tr key={p} className="border-b border-m3-outline-variant/20 align-top">
+                  <tr
+                    key={p}
+                    className="border-b border-m3-outline-variant/20 align-top"
+                  >
                     <th
                       scope="row"
                       className="whitespace-nowrap py-2 pr-3 font-semibold text-m3-on-surface"
@@ -2124,7 +2979,9 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
                       {t(`teacher_interview_config.persona.${p}`)}
                     </th>
                     <td className="py-2 text-m3-on-surface-variant">
-                      {t(`teacher_interview_config.voice_guide.persona_desc.${p}`)}
+                      {t(
+                        `teacher_interview_config.voice_guide.persona_desc.${p}`,
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -2136,7 +2993,8 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
           <section
             className={cn(
               "space-y-2",
-              focus === "voice" && "rounded-lg ring-1 ring-m3-primary/30 p-2 -m-2",
+              focus === "voice" &&
+                "rounded-lg ring-1 ring-m3-primary/30 p-2 -m-2",
             )}
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
@@ -2148,7 +3006,10 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
             <table className="w-full text-left text-xs">
               <tbody>
                 {VOICE_KEYS.map((v) => (
-                  <tr key={v} className="border-b border-m3-outline-variant/20 align-top">
+                  <tr
+                    key={v}
+                    className="border-b border-m3-outline-variant/20 align-top"
+                  >
                     <th
                       scope="row"
                       className="whitespace-nowrap py-2 pr-3 font-semibold text-m3-on-surface"
@@ -2156,7 +3017,9 @@ function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
                       {t(`teacher_interview_config.voice.${v}`)}
                     </th>
                     <td className="py-2 text-m3-on-surface-variant">
-                      {t(`teacher_interview_config.voice_guide.voice_desc.${v}`)}
+                      {t(
+                        `teacher_interview_config.voice_guide.voice_desc.${v}`,
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -2197,10 +3060,16 @@ function ToggleRow({
           value ? "bg-m3-primary" : "bg-m3-surface-container-high",
         )}
       >
+        {/* Knob moves by transform, not by `left`. Animating `left` under
+            `transition-all` recomputed layout on every frame of every toggle;
+            a translate runs on the compositor and matches the opacity/transform
+            rule the rest of this file follows. */}
         <span
           className={cn(
-            "absolute top-1 w-4 h-4 rounded-full shadow-sm transition-all duration-200",
-            value ? "left-6 bg-surface-elev" : "left-1 bg-slate-400",
+            "absolute top-1 left-1 w-4 h-4 rounded-full shadow-sm transition-[transform,background-color] duration-200 ease-out",
+            value
+              ? "translate-x-5 bg-surface-elev"
+              : "translate-x-0 bg-slate-400",
           )}
         />
       </button>

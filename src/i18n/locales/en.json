@@ -20,10 +20,16 @@
     "search": "Search",
     "submit": "Submit",
     "close": "Close",
+    "back_to_top": "Back to top",
     "yes": "Yes",
     "no": "No",
     "breadcrumb_aria": "Breadcrumb",
-    "unsaved_changes_warning": "You have unsaved changes. Leaving the page will discard them."
+    "unsaved_changes_warning": "You have unsaved changes. Leaving the page will discard them.",
+    "unsaved": {
+      "title": "Are you sure you want to quit?",
+      "description": "You have unsaved changes. If you quit now, they will be lost.",
+      "quit": "Quit"
+    }
   },
   "entity_select": {
     "selected_count": "{{count}} selected",
@@ -39,6 +45,8 @@
     "my_courses": "My Courses",
     "students": "Students",
     "department_courses": "Department Courses",
+    "manager_courses": "Courses",
+    "enrolment": "Enrolment",
     "active_users": "Active Users",
     "content": "Content",
     "users": "Users",
@@ -49,7 +57,10 @@
     "settings": "Settings",
     "profile": "Profile",
     "logout": "Log Out",
-    "admin": "Admin"
+    "admin": "Admin",
+    "system_config": "System Config",
+    "job_health": "Job Health",
+    "help": "Help"
   },
   "auth": {
     "sign_in": "Sign in",
@@ -119,7 +130,8 @@
     "ai_mock_title": "AI mock interviews included",
     "ai_mock_body": "Complete each module to unlock an AI-powered mock interview. Get real-time feedback, adaptive follow-up questions, and a detailed assessment of your technical explanations.",
     "start_learning": "Start learning",
-    "modules": "Modules"
+    "modules": "Modules",
+    "contact_title": "Contact the instructor"
   },
   "settings_security": {
     "title": "Account security",
@@ -174,25 +186,12 @@
   "teacher_dashboard": {
     "title": "Teacher Dashboard",
     "subtitle": "Manage your courses, materials, and AI generation.",
-    "new_course": "New Course",
-    "stats": {
-      "total_courses": "Total Courses",
-      "published": "Published",
-      "drafts": "Drafts",
-      "ai_enabled": "AI Enabled"
-    },
-    "actions": {
-      "ungraded_quizzes": "quiz attempts to grade",
-      "pending_interviews": "interviews awaiting evaluation",
-      "draft_courses": "drafts to publish"
-    },
     "your_courses": {
       "title": "Your Courses",
       "subtitle": "Click to manage modules, lessons, and materials",
       "view_all": "View all",
       "no_courses_yet": "No courses yet",
       "create_first": "Create your first course to get started.",
-      "create_course": "Create Course",
       "manage": "Manage"
     },
     "status": {
@@ -204,6 +203,33 @@
       "beginner": "Beginner",
       "intermediate": "Intermediate",
       "advanced": "Advanced"
+    },
+    "signals": {
+      "cards_awaiting_review": "Awaiting your review",
+      "cards_awaiting_review_sub": "Quiz + interview questions",
+      "students_below_ef": "Students falling behind",
+      "students_below_ef_sub": "Avg easiness below 2.0",
+      "avg_retention": "Avg retention (EF)",
+      "avg_retention_sub": "2.5 is the ideal baseline",
+      "cards_overdue": "Cards overdue",
+      "cards_overdue_sub": "Past their review date"
+    },
+    "review": {
+      "title": "Needs your review",
+      "subtitle": "AI-generated content waiting on a human decision.",
+      "all_clear": "Nothing waiting on you — the review queue is clear.",
+      "quiz_cards": "Quiz cards pending review",
+      "quiz_cards_hint": "Generated cards can't reach students until approved",
+      "interview_questions": "Interview questions pending approval",
+      "interview_questions_hint": "Awaiting your approve / edit / reject",
+      "missing_texp": "Published quizzes missing expected time",
+      "missing_texp_hint": "Without it, retention scoring falls back to neutral",
+      "materials_ready": "Materials ready for quiz generation",
+      "materials_ready_hint": "Ingestion finished, no quiz generated yet",
+      "ungraded_quizzes": "Quiz attempts to grade",
+      "pending_interviews": "Interviews awaiting evaluation",
+      "course_pending": "{{count}} item awaiting review in this course",
+      "course_pending_plural": "{{count}} items awaiting review in this course"
     }
   },
   "teacher_course_new": {
@@ -281,6 +307,16 @@
       "body": "\"{{title}}\" and its modules, lessons, and content will be removed. This can be restored by an administrator.",
       "deleted": "Course deleted",
       "failed": "Couldn't delete the course. Please try again."
+    },
+    "contact": {
+      "section_title": "Contact info",
+      "section_hint": "Shown on the course landing page so students can reach you. All fields are optional.",
+      "email": "Email",
+      "email_placeholder": "you@example.com",
+      "phone": "Phone",
+      "phone_placeholder": "+1 555 000 0000",
+      "website": "Website",
+      "social": "Social media"
     }
   },
   "teacher_quiz_attempt": {
@@ -342,8 +378,6 @@
     "n_courses_plural": "{{count}} courses",
     "published_suffix": " · {{count}} published",
     "draft_suffix": " · {{count}} draft",
-    "new_course": "New course",
-    "create_course": "Create course",
     "filter_all": "All",
     "filter_published": "Published",
     "filter_draft": "Draft",
@@ -397,7 +431,11 @@
       "title": "Interview session in progress",
       "body": "You have an interview that is still ongoing. Finish it before starting a new one.",
       "continue": "Continue latest session"
-    }
+    },
+    "knowledge_map": "Knowledge map",
+    "km_zoom_in": "Zoom in",
+    "km_zoom_out": "Zoom out",
+    "km_fit": "Fit to view"
   },
   "placeholder": {
     "body": "This page is coming soon. Check back after the API migration is complete.",
@@ -459,7 +497,6 @@
     "title": "Question bank",
     "subtitle": "Reusable interview questions",
     "subtitle_course": "Reusable interview questions · {{course}}",
-    "back_to_course": "Back to course",
     "how_to_add": "This is your course's shared pool of interview questions. To add questions, open any interview, then use \"Add to question bank\" on a question. Import them into other interviews from the interview's Questions tab.",
     "search_placeholder": "Search questions, answers, tags…",
     "filter_type": "Type",
@@ -480,11 +517,29 @@
     "saved": "Question updated",
     "deleted": "Question removed from bank",
     "delete_title": "Remove from question bank?",
-    "delete_body": "This removes the question from the course bank. Questions already imported into interviews are not affected."
+    "delete_body": "This removes the question from the course bank. Questions already imported into interviews are not affected.",
+    "how_it_works": "How it works",
+    "clear_filters": "Clear filters",
+    "filter_by_tag": "Filter by tag {{tag}}",
+    "add_tag": "Add tag",
+    "stat_total": "Questions",
+    "stat_tags": "Tags",
+    "stat_with_answer": "With answer",
+    "stat_of_total": "of {{total}}"
   },
   "teacher_common": {
     "drag_to_reorder": "Drag to reorder",
+    "delete_item": "Remove item",
+    "delete_item_title": "Remove this item?",
+    "delete_item_body": "\"{{title}}\" will be removed from this module. This can't be undone.",
+    "delete_item_confirm": "Remove",
+    "item_removed": "Item removed",
     "publish_item": "Publish",
+    "duplicate_item": "Duplicate",
+    "duplicate_module": "Duplicate module",
+    "item_duplicated": "Duplicated as a draft copy.",
+    "module_duplicated": "Module duplicated as a draft.",
+    "duplicate_failed": "Couldn't duplicate.",
     "publish_failed": "Couldn't publish",
     "item_published": "\"{{title}}\" published.",
     "publish_progress": "{{published}} of {{total}} items published",
@@ -587,6 +642,7 @@
     "title": "Team management",
     "subtitle": "Assign instructors and view class rosters.",
     "no_permission": "You do not have permission to access this page",
+    "new_course": "New course",
     "load_failed": "Couldn't load courses.",
     "empty_title": "You have no courses assigned to manage yet.",
     "empty_body": "When an admin assigns courses to your scope, they will appear here.",
@@ -595,6 +651,13 @@
       "published": "Published",
       "archived": "Archived"
     }
+  },
+  "management_enrolment": {
+    "title": "Enrolment",
+    "subtitle": "Manage who is enrolled in each course — add learners, bulk import, and invitation codes.",
+    "no_permission": "You do not have permission to access this page",
+    "empty_title": "No courses to manage enrolment for yet.",
+    "empty_body": "When courses are assigned to your organisation, they will appear here."
   },
   "google_callback": {
     "in_progress": "Finishing Google sign-in…",
@@ -667,7 +730,8 @@
       "evaluating": "Evaluating…",
       "in_progress": "In progress",
       "evaluation_failed": "Evaluation failed",
-      "not_graded": "Not graded"
+      "not_graded": "Not graded",
+      "practice": "Practice"
     }
   },
   "me_interview_result": {
@@ -696,7 +760,19 @@
     "back": "Back to dashboard",
     "title": "Cards due",
     "loading": "Loading…",
-    "empty_subtitle": "No cards in your queue",
+    "empty_subtitle": "You're all caught up",
+    "summary": "{{count}} card to review across {{courses}} course",
+    "summary_plural": "{{count}} cards to review across {{courses}} courses",
+    "start_review": "Start review ({{count}})",
+    "group_count": "{{count}} due",
+    "review_course": "Review",
+    "load_more": "Load more",
+    "recall_hint": "recall strength",
+    "strength": {
+      "strong": "Strong",
+      "building": "Building",
+      "shaky": "Needs work"
+    },
     "n_cards": "{{count}} card",
     "n_cards_plural": "{{count}} cards",
     "n_overdue_suffix": " • {{count}} due now",
@@ -709,8 +785,32 @@
     "days_left_plural": "{{count}} days left",
     "ef_label": "EF",
     "last_q": "Last Q: {{q}}",
-    "empty_title": "All caught up!",
-    "empty_body": "No cards left to review today. Come back after you've learned a new lesson.",
+    "empty_title": "Nothing due right now",
+    "empty_body": "Your reviews are all caught up. New cards appear here when they're due.",
+    "back_to_dashboard": "Back to dashboard"
+  },
+  "study_review": {
+    "title": "Review session",
+    "back": "Back",
+    "progress": "Card {{current}} of {{total}}",
+    "session_progress": "Progress",
+    "stat_correct": "Correct",
+    "stat_remaining": "Left",
+    "load_failed": "Couldn't load your review session.",
+    "submit": "Submit",
+    "submit_failed": "Couldn't submit — try again.",
+    "next": "Next card",
+    "finish": "Finish",
+    "correct": "Correct!",
+    "incorrect": "Not quite.",
+    "correct_answer": "Answer",
+    "next_in": "Next review in {{days}} day.",
+    "next_in_plural": "Next review in {{days}} days.",
+    "will_repeat": "You'll see this one again soon.",
+    "done_title": "Session complete!",
+    "done_body": "You got {{correct}} of {{total}} right.",
+    "empty_title": "Nothing to review",
+    "empty_body": "You're all caught up. Come back when cards are due.",
     "back_to_dashboard": "Back to dashboard"
   },
   "settings_notifications": {
@@ -726,7 +826,8 @@
       "course_announcement": "Course announcement",
       "system": "System",
       "material_processing": "Material processing",
-      "quiz_generation": "Quiz generation"
+      "quiz_generation": "Quiz generation",
+      "interview_generation": "Interview generation"
     },
     "channel": {
       "email": "Email",
@@ -787,7 +888,8 @@
       "course_announcement": "Course announcement",
       "system": "System",
       "material_processing": "Material processing",
-      "quiz_generation": "Quiz generation"
+      "quiz_generation": "Quiz generation",
+      "interview_generation": "Interview generation"
     },
     "errors": {
       "mark_read_failed": "Couldn't mark as read",
@@ -1049,10 +1151,13 @@
       "enrolled_sub": "Active courses",
       "notifications": "Notifications",
       "notifications_sub": "Unread",
-      "quizzes": "Quizzes",
-      "quizzes_sub": "Awaiting grade",
-      "interviews": "Interviews",
-      "interviews_sub": "Scheduled"
+      "retention": "Retention",
+      "retention_sub": "{{mature}}/{{total}} lessons mature",
+      "retention_no_data": "No cards tracked yet",
+      "next_unlock": "Next unlock",
+      "next_unlock_sub": "Toward \"{{lesson}}\"",
+      "next_unlock_none": "Nothing locked",
+      "all_unlocked": "All open"
     },
     "your_courses": "Your courses",
     "your_courses_sub": "Pick up where you left off",
@@ -1297,7 +1402,8 @@
         "value": "Value",
         "count": "Count",
         "status": "Status",
-        "type": "Type"
+        "type": "Type",
+        "share": "Share"
       },
       "active": {
         "dau_label": "Daily active users (DAU)",
@@ -1473,10 +1579,17 @@
       "empty_body": "When users are registered, they will appear here.",
       "empty_search": "No matching users",
       "search_placeholder": "Search by name or email…",
+      "filter_role": "Filter by role",
+      "all_roles": "All roles",
+      "filter_organization": "Filter by organization",
+      "all_organizations": "All organizations",
+      "no_organization": "—",
       "back_to_list": "Back to list",
       "profile_section": "Profile",
       "cols": {
         "user": "User",
+        "role": "Role",
+        "organization": "Organization",
         "status": "Status",
         "joined": "Joined"
       },
@@ -1505,14 +1618,20 @@
         "title": "Roles & permissions",
         "count": "{{count}} role",
         "count_plural": "{{count}} roles",
+        "none": "No role",
         "empty": "No roles assigned to this user.",
         "assign_new": "Assign new role",
         "role": "Role",
         "scope": "Scope",
+        "organization": "Organization",
+        "org_unit": "Org unit",
         "organization_id": "Organization ID",
         "org_unit_id": "Org unit ID",
         "course_id": "Course ID",
         "select_role": "— Select role —",
+        "select_organization": "— Select organization —",
+        "select_org_unit": "— Select org unit —",
+        "select_org_first": "— Select an organization first —",
         "scope_organization": "Organization",
         "scope_org_unit": "Org unit",
         "scope_course": "Course",
@@ -1647,6 +1766,65 @@
         "user_search_loading": "Loading users...",
         "user_search_empty": "No matching users found."
       }
+    },
+    "dashboard": {
+      "subtitle": "Platform operations — cost, throughput, failures and security.",
+      "rows": {
+        "needs_action": "Needs action",
+        "cost": "Cost snapshot (7 days)",
+        "activity": "Platform activity",
+        "attention": "Needs attention"
+      },
+      "tiles": {
+        "job_failure_rate": "Job failure rate",
+        "job_failure_detail": "{{failed}} of {{total}} jobs, 7d",
+        "queue_depth": "Queue depth",
+        "queue_depth_detail": "Pending + running now",
+        "failed_ai_calls": "Failed AI calls",
+        "window_30d": "Last 30 days",
+        "window_7d": "Last 7 days",
+        "system_health": "System health",
+        "system_health_detail": "API · Postgres · Redis · migrations",
+        "no_baseline": "No prior week",
+        "interview_pass_rate": "Interview pass rate",
+        "pass_rate_detail": "{{evaluated}} evaluated sessions, 7d",
+        "pass_rate_low_sample": "Only {{evaluated}} sessions from {{students}} students — too small to act on",
+        "low_sample_chip": "Low sample"
+      },
+      "health": {
+        "ok": "Healthy",
+        "degraded": "Degraded",
+        "unknown": "Unknown"
+      },
+      "cost": {
+        "spend_7d": "Spend 7d",
+        "no_prior": "No prior 7d spend",
+        "projected_month": "Projected month-end",
+        "projected_detail": "Extrapolated from spend so far",
+        "top_driver": "Top cost driver",
+        "top_driver_detail": "{{usd}} in the last 7d",
+        "slowest_model": "Slowest model",
+        "slowest_detail": "p95 {{p95}}, 7d",
+        "prev_window": "Previous 7d: {{usd}}"
+      },
+      "activity": {
+        "active_users": "Active users 7d",
+        "active_users_value": "{{wau}} of {{total}}",
+        "active_users_detail": "{{today}} active today",
+        "quiz_sessions": "Quiz sessions completed",
+        "interview_sessions": "Interview sessions",
+        "materials_ingested": "Materials ingested",
+        "sessions_by_students": "From {{students}} students, 7d"
+      },
+      "attention": {
+        "materials_stuck": "Materials stuck in processing over 1 hour",
+        "quizzes_missing_texp": "Published quizzes with cards missing expected time",
+        "configs_unreviewed": "Interview configs with no reviewed questions",
+        "orgs_inactive": "Organizations with no activity in 30 days",
+        "audit_review": "Review recent permission changes and failed logins",
+        "all_clear": "No outstanding items — all checks clear.",
+        "also_clear": "{{count}} other checks are clear."
+      }
     }
   },
   "languages": {
@@ -1657,6 +1835,7 @@
   "sections": {
     "student": "Student",
     "teacher": "Teacher",
+    "manager": "Manager",
     "admin": "Admin"
   },
   "sidebar": {
@@ -1679,13 +1858,18 @@
     },
     "empty_states": {
       "no_report": "No gap report yet",
+      "not_graded": "This session wasn't graded",
       "no_overview": "AI hasn't generated an overview yet.",
       "no_detail": "No detailed criterion data.",
       "no_study_plan": "AI hasn't suggested specific learning steps yet.",
       "no_source_quiz": "This interview wasn't paired with a quiz attempt, so there's no source quiz to compare against."
     },
     "errors": {
-      "no_view_permission_or_ungraded": "This interview session hasn't been graded or you don't have permission to view the report."
+      "pending_grading": "Grading is still running. The gap report is generated automatically once it finishes — check back shortly.",
+      "never_graded": "The student left before answering any question, so there was nothing to grade and no gap report will be generated for this attempt.",
+      "in_progress": "This interview is still in progress. The gap report is generated after the student submits.",
+      "forbidden": "You don't have permission to view this report.",
+      "load_failed": "Couldn't load the gap report. Please try again."
     },
     "sections": {
       "title": "Interview gap report",
@@ -1702,11 +1886,53 @@
       "integrity": "Integrity",
       "sources": "Sources"
     },
+    "persona_adherence": {
+      "title": "Interviewer persona",
+      "tone_only": "Tone only — does not affect the score",
+      "band_consistent": "Held the persona",
+      "band_mixed": "Drifted at times",
+      "band_off": "Off-persona",
+      "answer_leak_warning": "The interviewer may have revealed answer content during the session. This does not change the student's score, but review the flagged turns — it can affect fairness.",
+      "drift_turns": "Tone drifted at turn(s): {{turns}}",
+      "traits": {
+        "warmth": "Warmth",
+        "directness": "Directness",
+        "verbosity": "Verbosity",
+        "formality": "Formality"
+      },
+      "violations": {
+        "over_polite_for_strict": "Too warm for a strict persona",
+        "cold_for_supportive": "Too cold for a supportive persona",
+        "repeated_candidate_answer": "Parroted the candidate's answer",
+        "identity_confusion": "Lost track of interviewer role"
+      }
+    },
     "integrity": {
       "clean_title": "No integrity flags",
       "clean_body": "No focus loss, tab switching, or fullscreen exits were recorded during this interview.",
       "flagged_title": "Integrity signals recorded",
       "summary": "{{tab}} tab switch(es), {{focus}} focus loss, {{fullscreen}} fullscreen exit(s) during this session.",
+      "timeline_title": "Event timeline",
+      "filter_group_label": "Filter the event timeline by signal type",
+      "showing_count": "{{count}} shown",
+      "filter_empty": "No events of this type were recorded in this session.",
+      "filter": {
+        "total": "All signals",
+        "tab_switch": "Switching",
+        "fullscreen_exit": "Fullscreen",
+        "focus_lost": "Focus loss"
+      },
+      "risk": {
+        "low_title": "Integrity looks clean",
+        "low_badge": "Low",
+        "low_body": "No tab switches or fullscreen exits were recorded. Focus losses alone are low-signal.",
+        "moderate_title": "A few signals recorded",
+        "moderate_badge": "Moderate",
+        "moderate_body": "{{count}} warning-level signal(s) (tab switches / fullscreen exits) during this session. Worth a glance.",
+        "high_title": "Repeated signals recorded",
+        "high_badge": "High",
+        "high_body": "{{count}} warning-level signal(s) (tab switches / fullscreen exits) during this session. Review recommended."
+      },
       "event": {
         "tab_switch": "Switched away from the interview tab",
         "focus_lost": "Interview window lost focus",
@@ -1793,7 +2019,8 @@
       "your_correct": "Your answer · Correct",
       "your_incorrect": "Your answer",
       "correct": "Correct answer"
-    }
+    },
+    "overall_feedback": "Overall feedback"
   },
   "discussion": {
     "title": "Discussion",
@@ -1938,9 +2165,19 @@
       "max_attempts_reached": "You've used all your attempts for this quiz.",
       "quiz_cooldown_active": "This quiz is in cooldown. Try again later.",
       "quiz_cooldown_active_at": "This quiz is in cooldown until {{time}}.",
+      "quiz_subnet_blocked": "You're not on a network allowed to take this quiz.",
       "save_answer_failed": "Failed to save answer",
       "auto_submitted_timeout": "Time's up. Quiz was auto-submitted.",
       "submit_failed": "Failed to submit quiz"
+    },
+    "password": {
+      "title": "Password required",
+      "description": "This quiz is password-protected. Enter the password from your teacher to begin.",
+      "placeholder": "Quiz password",
+      "submit": "Start quiz",
+      "submitting": "Starting…",
+      "incorrect": "Incorrect password. Please try again.",
+      "required_error": "Please enter the quiz password."
     },
     "empty_states": {
       "no_quiz_found": "Quiz not found",
@@ -1953,16 +2190,39 @@
       "failed_summary": "You scored {{score}}% and need {{passing}}% to pass."
     },
     "status": {
-      "currently_doing": "In progress"
+      "currently_doing": "In progress",
+      "saved": "Saved"
     },
     "instructions": {
       "choose_best": "Choose the best answer; you can flag it for review later."
+    },
+    "pagination": {
+      "per_page_label": "Questions per page",
+      "per_page_all": "All",
+      "page_of": "Page {{page}} of {{pages}}",
+      "prev_page": "Previous page",
+      "next_page": "Next page",
+      "showing": "Showing {{from}}–{{to}} of {{total}}",
+      "save_page": "Save answers on this page",
+      "unanswered_warning": "{{count}} questions on this page have no answer yet."
     }
   },
   "course_interview": {
     "integrity_warning": {
       "title": "You left the interview window",
       "body": "This is recorded for your teacher to review. Please stay on this tab until the interview ends."
+    },
+    "fullscreen": {
+      "prompt_title": "Switch to fullscreen mode",
+      "prompt_description": "Your interview runs in fullscreen so nothing distracts you. The app menu is hidden until the interview ends.",
+      "enter": "Enter fullscreen",
+      "continue_windowed": "Continue in a window",
+      "exit_warning_title": "You left fullscreen mode",
+      "exit_warning_description": "Please return to fullscreen and stay there until the interview ends.",
+      "exit_warning_recorded_one": "This exit was recorded for your teacher to review ({{count}} time so far).",
+      "exit_warning_recorded_other": "This exit was recorded for your teacher to review ({{count}} times so far).",
+      "reenter": "Back to fullscreen",
+      "stay_windowed": "Stay in a window"
     },
     "hybrid": {
       "prestart_hint": "Hybrid interview — type your answers or speak them",
@@ -1999,6 +2259,8 @@
       "answer_placeholder": "Type your answer or start speaking…",
       "answer_locked": "Please wait for the interviewer to finish…",
       "send_hint": "Enter to send · Shift + Enter for a new line",
+      "send_hint_send": "send",
+      "send_hint_newline": "new line",
       "start_speaking": "Start speaking",
       "mute_microphone": "Stop listening",
       "audio_input": "Audio input",
@@ -2288,6 +2550,28 @@
     },
     "status": {
       "compiling_results": "Compiling interview results..."
+    },
+    "mode": {
+      "legend": "Interview mode",
+      "assessment_title": "Graded interview",
+      "assessment_help": "Counts towards your result and uses one attempt.",
+      "practice_title": "Practice run",
+      "practice_help_one": "Not graded, uses no attempt. {{count}} practice run left.",
+      "practice_help_other": "Not graded, uses no attempt. {{count}} practice runs left.",
+      "criteria_title": "What you'll be assessed on",
+      "banner": "Practice run — not graded, and no attempt used.",
+      "chip": "Practice",
+      "errors": {
+        "practice_limit": "You've used your practice run for this interview.",
+        "practice_unavailable": "Practice isn't available for this interview yet."
+      },
+      "results_title": "Practice run complete",
+      "results_summary": "Nothing was graded and no attempt was used. Here's what your rehearsal covered.",
+      "results_criteria_title": "What your practice run covered",
+      "results_pending": "Reviewing your practice run…",
+      "criterion_met": "Demonstrated",
+      "criterion_not_met": "Not demonstrated yet",
+      "results_unavailable": "We couldn't review this practice run. Nothing was graded, and your attempts are unaffected."
     }
   },
   "management_career_path_detail": {
@@ -2518,7 +2802,12 @@
     },
     "tabs": {
       "by_student": "By student",
-      "by_question": "By question"
+      "by_question": "By question",
+      "responses": "Responses",
+      "statistics": "Statistics",
+      "grading": "Manual grading",
+      "gradebook": "Gradebook",
+      "audit": "Audit log"
     },
     "per_student": {
       "col_student": "Student",
@@ -2558,6 +2847,89 @@
         "dedup": "Dedup",
         "persistence": "Saving"
       }
+    },
+    "reports": {
+      "download": "Download",
+      "download_csv": "Current view → CSV",
+      "download_xlsx": "Current view → XLSX",
+      "download_started": "Download started",
+      "download_failed": "Download failed",
+      "responses": {
+        "student": "Student",
+        "attempt": "Attempt #",
+        "question": "Question",
+        "their_answer": "Their answer",
+        "correct_answer": "Correct answer",
+        "is_correct": "Correct?",
+        "points": "Points",
+        "empty": "No responses yet."
+      },
+      "statistics": {
+        "question": "Question",
+        "facility": "Facility (% correct)",
+        "discrimination": "Discrimination",
+        "no_data": "—",
+        "legend_title": "About these metrics",
+        "legend_facility": "Facility = the share of students who answered correctly. Lower means harder.",
+        "legend_discrimination": "Discrimination = how well a question separates high scorers from low scorers (point-biserial, -1..+1). ≥0.3 is good; near 0 or negative is weak.",
+        "empty": "Not enough attempts to compute statistics."
+      }
+    },
+    "regrade": {
+      "action": "Regrade",
+      "title": "Regrade attempts",
+      "description": "Recompute stored answers against the current question definitions. Preview changes first, then commit.",
+      "dry_run_hint": "Preview shows which answers would change. Nothing is saved until you commit.",
+      "scanned": "Answers scanned",
+      "changed": "Answers changed",
+      "attempts": "Attempts affected",
+      "col_change": "Attempt / Question",
+      "col_old": "Old",
+      "col_new": "New",
+      "preview_action": "Preview changes",
+      "commit_action": "Commit regrade",
+      "committed": "Regrade committed — {{count}} answer(s) changed.",
+      "dry_run_failed": "Could not preview the regrade.",
+      "commit_failed": "Could not commit the regrade."
+    },
+    "grading_queue": {
+      "title": "Answers awaiting grading",
+      "empty": "Nothing to grade — all answers are auto-graded or already marked.",
+      "col_student": "Student",
+      "col_question": "Question",
+      "col_answer": "Answer",
+      "score_label": "Score",
+      "feedback_label": "Feedback (optional)",
+      "save": "Save grade",
+      "saved": "Grade saved.",
+      "save_failed": "Could not save grade."
+    },
+    "grading": {
+      "empty": "No answers awaiting manual grading.",
+      "invalid_score": "Enter a valid score.",
+      "graded": "Answer graded.",
+      "grade_failed": "Could not save the grade.",
+      "no_answer": "(no answer submitted)",
+      "score_label": "Score",
+      "feedback_label": "Feedback",
+      "feedback_placeholder": "Optional feedback for the student…",
+      "grade_action": "Save grade"
+    },
+    "gradebook": {
+      "empty": "No grades recorded yet.",
+      "col_student": "Student",
+      "col_grade": "Grade",
+      "col_passed": "Status",
+      "col_method": "Method",
+      "col_attempts": "Attempts",
+      "passed": "Passed",
+      "failed": "Failed"
+    },
+    "audit": {
+      "empty": "No audit events yet.",
+      "col_event": "Event",
+      "col_when": "When",
+      "col_details": "Details"
     }
   },
   "teacher_outcomes": {
@@ -2578,14 +2950,18 @@
     "update_failed": "Failed to update outcome",
     "delete_failed": "Failed to delete outcome",
     "delete_title": "Delete learning outcome?",
-    "delete_description": "Questions tagged with it revert to no outcome. Remaining outcomes renumber automatically."
+    "delete_description": "Questions tagged with it revert to no outcome. Remaining outcomes renumber automatically.",
+    "child_added": "Sub-outcome added",
+    "add_child": "Add sub-outcome",
+    "add_child_placeholder": "Sub-outcome statement…"
   },
   "quiz_generation": {
     "outcomes": {
       "label": "Target learning outcomes",
       "select_all": "Select all",
       "empty": "No learning outcomes defined for this course yet. Questions will be generated without outcome tagging.",
-      "badge": "L.O.{{n}}"
+      "badge": "L.O.{{n}}",
+      "parent_hint": "incl. sub-outcomes"
     }
   },
   "teacher_quiz_manage": {
@@ -2609,7 +2985,9 @@
       "count_out_of_range": "Question count must be between 1 and 50",
       "publish_missing_t_exp": "Set the expected time for every question before publishing. Use the 'Quick set time' button.",
       "bulk_select_required": "Please choose at least one question.",
-      "bulk_seconds_positive": "Expected time must be greater than 0 seconds."
+      "bulk_seconds_positive": "Expected time must be greater than 0 seconds.",
+      "at_least_one_correct": "At least one option must be marked correct",
+      "expected_time_required": "Expected response time is required and must be greater than 0."
     },
     "toasts": {
       "deleted": "Quiz deleted",
@@ -2652,8 +3030,10 @@
       "publish": "Publish",
       "delete_quiz_tooltip": "Delete quiz, questions, attempts, and module item",
       "add_question": "Add question",
-      "view_as_student": "View as student",
-      "view_results": "Results"
+      "view_results": "Results",
+      "add_question_of_type": "Add a question of another type",
+      "add_other_type": "+ Other type…",
+      "preview": "Preview"
     },
     "status": {
       "published": "Published",
@@ -2668,16 +3048,22 @@
     },
     "confirm_publish": {
       "title": "Publish this quiz?",
-      "body": "This will publish {{count}} question(s) and make the quiz visible to students. You can preview it as a student first, or publish now."
+      "body_preview": "This will publish {{count}} question(s) and make the quiz visible to students. Preview it as a student first to check how it looks, then publish.",
+      "body_confirm": "This will publish {{count}} question(s) and make the quiz visible to students. Ready to publish?"
     },
-    "confirm_delete_question": "Delete this question? This cannot be undone.",
+    "confirm_delete_question": {
+      "title": "Delete this question?",
+      "body": "The question will be removed. You'll have a few seconds to undo before it's permanently deleted."
+    },
     "combo_undo": {
       "message": "Deleting {{count}} question(s)…",
       "undo": "Undo ({{count}})"
     },
     "banners": {
-      "missing_expected_time": "{{count}} questions are missing an expected time. Set them before publishing.",
-      "pending_review": "{{count}} question(s) are not approved and won't be shown to students. Approve them to include them; they're kept as drafts either way."
+      "missing_expected_time": "{{count}} questions have no expected time. Set one before publishing.",
+      "pending_review": "{{count}} question(s) are not approved and won't be shown to students. Approve them to include them; they're kept as drafts either way.",
+      "unsaved_default_time": "{{count}} questions have a suggested expected time of {{seconds}}s filled in but not yet saved. Save them so the value is stored.",
+      "save_default_time": "Save these times"
     },
     "empty": {
       "no_questions_title": "No questions yet",
@@ -2686,20 +3072,33 @@
     "ai_panel": {
       "title": "Generate with AI",
       "description": "Generate questions from prepared lesson materials.",
-      "open_generator": "Open generator"
+      "open_generator": "Open generator",
+      "import_export_file": "Import / Export file"
     },
     "question_nav": {
-      "title": "Jump to question"
+      "title": "Jump to question",
+      "status_approved": "Approved",
+      "status_pending": "Pending review",
+      "status_error": "Error",
+      "status_saved": "Saved",
+      "status_unsaved": "Unsaved",
+      "status_selected": "Selected",
+      "status_focused": "Viewing",
+      "error_count": "{{count}} error",
+      "unsaved_count": "{{count}} unsaved",
+      "legend_title": "What the colours mean"
     },
     "bulk_time": {
-      "title": "Quick set time",
       "selected_count": "{{selected}}/{{total}} selected",
       "duration_seconds": "Time (seconds)",
       "seconds_suffix": "sec",
       "select_all": "Select all",
       "deselect": "Deselect",
-      "apply": "Apply to selected",
-      "approve_selected": "Approve selected"
+      "idle_hint": "Select questions for bulk actions",
+      "apply_short": "Set time",
+      "approve_short": "Approve",
+      "delete_short": "Delete",
+      "question_count": "{{count}} questions"
     },
     "questions": {
       "sr_select": "Select question {{position}}",
@@ -2715,7 +3114,11 @@
       "explanation_label": "Explanation",
       "approve": "Approve",
       "regenerate": "Regenerate",
-      "explanation_inline": "Explanation:"
+      "duplicate": "Duplicate",
+      "duplicate_success": "Question duplicated (added as a pending copy).",
+      "duplicate_error": "Could not duplicate the question.",
+      "explanation_inline": "Explanation:",
+      "mark_correct": "Mark option {{key}} as correct"
     },
     "generate_modal": {
       "title": "Generate questions with AI",
@@ -2820,7 +3223,70 @@
       },
       "save_button": "Save settings",
       "unsaved_changes": "You have unsaved changes",
-      "reset_button": "Discard"
+      "reset_button": "Discard",
+      "review": {
+        "title": "Review options",
+        "description": "Control what students see after they submit. Pick a preset, or customize per time window.",
+        "windows": {
+          "immediately_after": "Right after submit",
+          "later_while_open": "Later, while open",
+          "after_close": "After the quiz closes"
+        },
+        "flags": {
+          "show_score": "Score",
+          "show_correctness": "Whether each answer was right/wrong",
+          "show_correct_answers": "The correct answers",
+          "show_explanation": "Explanations",
+          "show_points": "Points per question"
+        },
+        "presets_label": "Preset",
+        "presets": {
+          "everything": "Show everything",
+          "score_now_rest_after_close": "Score now, answers after close",
+          "nothing_until_close": "Nothing until close",
+          "nothing": "Never show results",
+          "custom": "Custom"
+        },
+        "customize": "Customize per time window",
+        "window_hints": {
+          "immediately_after": "The moment a student submits their attempt.",
+          "later_while_open": "When they come back before the quiz closes.",
+          "after_close": "Once the quiz is closed to everyone."
+        },
+        "shown_count": "{{shown}} of {{total}} shown",
+        "show_all": "Show all",
+        "hide_all": "Hide all"
+      },
+      "access": {
+        "title": "Access rules",
+        "description": "Restrict who can start an attempt.",
+        "password_label": "Password",
+        "password_hint": "Students must enter this to start. Leave blank for none.",
+        "password_placeholder": "No password",
+        "subnet_label": "Allowed IP / subnet",
+        "subnet_hint": "Comma-separated CIDR or IPs. Blank = any network.",
+        "browser_security_label": "Browser security mode",
+        "browser_security_desc": "Signal a safe/locked-down browser window during the attempt."
+      },
+      "timing": {
+        "title": "Time enforcement",
+        "description": "What happens when a timed attempt runs out.",
+        "overdue_label": "When time expires",
+        "overdue_hint": "How an unsubmitted attempt is closed past its deadline.",
+        "overdue_autosubmit": "Auto-submit (grade what was answered)",
+        "overdue_graceperiod": "Grace period, then auto-submit",
+        "overdue_autoabandon": "Abandon (no grade)",
+        "grace_label": "Grace period (seconds)",
+        "grace_hint": "Extra time allowed after the deadline before auto-submit."
+      },
+      "overrides": {
+        "title": "Overrides",
+        "description": "Grant individual students exceptions to attempts and time limit. User overrides beat the base quiz settings."
+      },
+      "feedback": {
+        "title": "Grade-band feedback",
+        "description": "Show a message to students based on their final score. Bands must not overlap."
+      }
     },
     "preview": {
       "title": "Student preview",
@@ -2829,14 +3295,119 @@
       "empty_body": "Add questions in the Questions tab or use AI to generate them.",
       "empty_approved_body": "No approved questions yet. Approve questions in the Questions tab — students only see approved ones.",
       "no_content": "(No content)",
-      "correct": "Correct"
+      "correct": "Correct",
+      "edit_question": "Edit",
+      "correct_pairs": "Correct pairs",
+      "correct_order": "Correct order",
+      "tolerance": "± {{value}}",
+      "matching_note": "Students see the right-hand values shuffled and pick one per prompt.",
+      "ordering_note": "Students see these items shuffled and reorder them.",
+      "multi_select_note": "Multiple correct answers — students see checkboxes."
+    },
+    "import_export": {
+      "title": "Import / Export questions",
+      "description": "Import questions from a Moodle GIFT or XML file, or export this quiz's questions.",
+      "export_title": "Export",
+      "import_title": "Import",
+      "format_label": "Format",
+      "upload": "Upload file",
+      "import_action": "Import",
+      "empty_content": "Paste or upload file content first.",
+      "imported": "Imported {{count}} question(s).",
+      "import_failed": "Import failed — the file may be malformed.",
+      "export_failed": "Export failed.",
+      "result_summary": "Imported {{imported}}, skipped {{skipped}}."
+    },
+    "overrides": {
+      "user_id_label": "Student user ID",
+      "user_id_placeholder": "UUID of the student",
+      "user_required": "A student user ID is required",
+      "max_attempts_label": "Max attempts",
+      "time_limit_label": "Time limit (seconds)",
+      "add_action": "Add override",
+      "added": "Override added",
+      "add_failed": "Could not add override",
+      "deleted": "Override removed",
+      "delete_failed": "Could not remove override",
+      "delete_action": "Remove override",
+      "empty": "No overrides yet.",
+      "attempts_badge": "{{count}} attempts",
+      "title": "Overrides",
+      "description": "Grant individual students exceptions to attempts and time limit. User overrides beat the base quiz settings."
+    },
+    "feedback_bands": {
+      "empty": "No feedback bands. Add one to show score-based messages.",
+      "min": "Min %",
+      "max": "Max %",
+      "text_placeholder": "Feedback message shown for this score range",
+      "remove": "Remove band",
+      "add": "Add band",
+      "save": "Save bands",
+      "saved": "Feedback bands saved",
+      "save_failed": "Could not save feedback bands",
+      "overlap": "Bands must not overlap",
+      "invalid": "Each band needs min < max"
+    },
+    "type_editor": {
+      "numerical_label": "Numerical answer",
+      "numeric_answer": "Correct answer",
+      "numeric_tolerance": "Tolerance (±)",
+      "numeric_hint": "The learner's answer is correct if it falls within ± tolerance of the correct value.",
+      "matching_label": "Matching pairs",
+      "match_left": "Prompt (left)",
+      "match_right": "Match (right)",
+      "remove_pair": "Remove pair",
+      "add_pair": "Add pair",
+      "matching_hint": "Students see the right-hand values shuffled and match each prompt. All pairs must be correct to score.",
+      "ordering_label": "Ordering sequence",
+      "move_up": "Move up",
+      "move_down": "Move down",
+      "remove_item": "Remove item",
+      "add_item": "Add item",
+      "ordering_hint": "The order here IS the correct sequence. Students see the items shuffled and must reorder them.",
+      "multi_select_label": "Allow multiple correct answers",
+      "multi_select_desc": "When on, learners see checkboxes and may select more than one option.",
+      "type_true_false": "True / False",
+      "type_short_answer": "Short answer",
+      "type_numerical": "Numerical",
+      "type_matching": "Matching",
+      "type_ordering": "Ordering"
+    },
+    "published_readonly_banner": "This quiz is published. Questions and any settings that affect scoring, timing, or presentation are frozen so students mid-attempt aren't disrupted. You can still edit the title, description, schedule, and reminders. Archive the quiz first to change anything else.",
+    "confirm_bulk_delete": {
+      "title": "Delete {{count}} questions?",
+      "body": "The selected questions will be removed from this quiz. You'll have a few seconds to undo before it's saved.",
+      "confirm": "Delete {{count}} questions"
     }
   },
   "teacher_interview_config": {
+    "published_freeze": {
+      "banner": "This interview is published, so settings that change how it is conducted, graded, or retaken are locked — students may be taking it right now, and changing them mid-cohort would hold students to different rules. You can still edit the title. Unpublish to change anything else.",
+      "tooltip": "Locked while published — unpublish to change this."
+    },
     "persona": {
       "strict": "Strict",
       "neutral": "Neutral",
       "supportive": "Supportive"
+    },
+    "persona_traits": {
+      "advanced_label": "Advanced: fine-tune persona tone",
+      "help": "Optional. Nudge individual tone dials (0–4) on top of the persona preset. This shapes wording only — it never affects scoring, difficulty, or which questions are asked. Leave everything at the preset to use the persona as-is.",
+      "reset": "Reset to persona preset",
+      "trait": {
+        "warmth": "Warmth",
+        "directness": "Directness",
+        "verbosity": "Verbosity",
+        "formality": "Formality",
+        "ack_frequency": "Acknowledgement frequency"
+      },
+      "trait_hint": {
+        "warmth": "How warm and reassuring the interviewer sounds (0 = detached, 4 = encouraging).",
+        "directness": "How blunt vs. softened the phrasing is (0 = heavily hedged, 4 = direct).",
+        "verbosity": "How much the interviewer says (0 = terse, 4 = expansive).",
+        "formality": "Register and word choice (0 = casual, 4 = formal).",
+        "ack_frequency": "How often the interviewer acknowledges an answer (0 = rarely, 4 = almost always)."
+      }
     },
     "voice": {
       "aura-2-thalia-en": "Thalia (F, clear)",
@@ -2858,6 +3429,8 @@
     },
     "voice_guide": {
       "open": "View voice & persona guide",
+      "open_persona": "AI persona guide",
+      "open_voice": "Voice guide",
       "title": "AI voice & persona guide",
       "subtitle": "How each persona behaves and how each English voice sounds. Persona shapes tone and behaviour; voice sets the spoken sound (English sessions only).",
       "persona_heading": "Persona (tone & behaviour)",
@@ -3002,7 +3575,7 @@
       "learning_outcomes": "Learning Outcomes",
       "learning_outcomes_short": "Outcomes",
       "generate": "Generate Questions",
-      "generate_short": "Generate",
+      "generate_short": "Generate Questions",
       "questions": "Question Bank",
       "questions_short": "Questions",
       "adaptive_readiness": "Adaptive Readiness",
@@ -3020,6 +3593,12 @@
     "confirm_delete": {
       "title": "Delete this interview?",
       "body": "This permanently deletes {{title}} along with related questions and recordings."
+    },
+    "confirm_unsaved": {
+      "title": "Save your changes?",
+      "body": "You have unsaved changes in Settings. Save them before switching tab, or keep editing and save later.",
+      "confirm": "Save now",
+      "cancel": "Later"
     },
     "sections": {
       "general": {
@@ -3041,7 +3620,7 @@
       "title": "Title",
       "title_placeholder": "Enter interview title…",
       "persona": "AI persona",
-      "duration_label": "Duration (minutes)",
+      "duration_label": "Duration",
       "duration_hint": "Blank = unlimited",
       "duration_placeholder": "e.g. 30",
       "attempts_label": "Attempts",
@@ -3049,16 +3628,38 @@
       "cooldown_label": "Cooldown (hours)",
       "cooldown_hint": "Minimum wait between attempts; blank = none",
       "cooldown_placeholder": "e.g. 24",
-      "voice_label": "AI voice (English)",
-      "voice_hint": "Deepgram voice for English sessions; Vietnamese uses the browser voice",
+      "voice_label": "AI voice",
+      "voice_hint": "",
       "voice_default": "Default voice",
-      "criteria_label": "Required criteria count",
-      "criteria_hint": "Minimum rubric outcomes to pass",
+      "criteria_label": "Minimum to pass",
+      "criteria_hint": "Minimum number of learning outcomes a student must meet to pass",
       "criteria_placeholder": "e.g. 2",
       "lock_ef_label": "Lock quiz EF growth until pass",
       "lock_ef_desc": "Students must pass the interview before spaced repetition expands review intervals.",
       "supplementary_label": "Supplementary instructions",
-      "supplementary_placeholder": "e.g. Focus on real scenarios, avoid rote-memorization questions…"
+      "supplementary_placeholder": "e.g. Focus on real scenarios, avoid rote-memorization questions…",
+      "notes_label": "Guidance notes (shapes generated questions)",
+      "notes_hint": "Free-text guidance fed to the question generator. Not used for scoring.",
+      "rubric_label": "Scoring rubric",
+      "rubric_hint": "Criteria the AI grades each answer against. Leave empty to use the default rubric (technical accuracy, communication, problem-solving, professionalism). A description is optional but greatly improves grading consistency.",
+      "rubric_empty": "No custom criteria — answers are graded on the default rubric.",
+      "rubric_name_placeholder": "Criterion name, e.g. depth",
+      "rubric_weight": "Weight",
+      "rubric_description_placeholder": "What this criterion means, e.g. Cites concrete trade-offs rather than definitions",
+      "rubric_add": "Add criterion",
+      "rubric_remove": "Remove criterion",
+      "rubric_at_cap": "Maximum {{max}} criteria",
+      "interviewer_role": "Interviewer",
+      "interviewer_role_hint": "Who the interviewer presents as. Affects wording only — never difficulty, question choice, or scoring.",
+      "practice_label": "Allow practice runs",
+      "practice_hint": "Students may take one ungraded rehearsal. It uses no attempt, starts no cooldown, and is never scored.",
+      "practice_rubric_notice": "Students will also see the text of your learning outcomes before a practice run. Weights and the pass threshold stay hidden.",
+      "practice_empty_warning": "No question is marked for practice yet, so practice cannot start. Move at least one approved question to the practice set from its row menu."
+    },
+    "units": {
+      "minutes": "min",
+      "attempts": "times",
+      "outcomes": "LO"
     },
     "security": {
       "title": "Security & Integrity",
@@ -3103,6 +3704,9 @@
       "empty": "No outcomes yet. Add at least one — without outcomes the interview cannot be published and every student is auto-failed.",
       "weight_label": "Weight",
       "weight_badge": "Weight {{weight}}/5",
+      "weight_decrease": "Decrease weight",
+      "weight_increase": "Increase weight",
+      "no_course_outcomes": "This course has no learning outcomes yet. Add them on the course page first, then import them here.",
       "type_knowledge": "Knowledge",
       "type_skill": "Skill",
       "type_attitude": "Attitude",
@@ -3117,7 +3721,7 @@
       "imported": "Imported {{count}} outcome(s)",
       "import_all_added": "All course outcomes are already added here. Define more at the course level to import them.",
       "course_lo_code": "L.O.{{n}}",
-      "section_help": "Define what students must demonstrate to pass the interview. AI-generated questions and evaluation criteria are aligned with these outcomes.",
+      "section_help": "Imported from the course's learning outcomes. AI-generated questions and evaluation criteria are aligned with these. Adjust each outcome's weight to change how much it counts.",
       "statement_label": "Outcome statement",
       "summary_outcomes": "{{count}} outcomes",
       "summary_assigned": "{{count}} questions assigned",
@@ -3128,7 +3732,8 @@
       "coverage_summary": "{{covered}} of {{total}} outcomes are covered by at least one question.",
       "pass_threshold": "Students must satisfy at least {{required}} of the {{total}} outcomes to pass.",
       "empty_title": "No learning outcomes yet",
-      "empty_body": "Learning outcomes define what students must demonstrate and help the AI generate relevant questions. Add at least one before publishing this interview.",
+      "empty_body": "Learning outcomes are defined at the course level and imported here. Import at least one before publishing this interview.",
+      "remove": "Remove from interview",
       "templates_hint": "Quick templates — click to start from a suggested statement:",
       "template_labels": {
         "explain_concept": "Explain concepts",
@@ -3241,6 +3846,11 @@
       "density_compact": "Compact",
       "density_comfortable": "Comfortable",
       "unsaved_confirm": "You have unsaved changes. Discard them?",
+      "duplicate_title": "This looks like a question you already have",
+      "duplicate_description": "A very similar question is already in this interview. You can still save it if the difference matters.",
+      "duplicate_existing": "Existing question",
+      "duplicate_save_anyway": "Save anyway",
+      "duplicate_go_back": "Back to editing",
       "missing_lo": "Missing learning outcome",
       "ai_generated": "AI-generated",
       "manually_added": "Added manually",
@@ -3307,6 +3917,16 @@
         "status_changed": "Status changed to {{status}}",
         "outcome_changed": "Outcome set to {{outcome}}",
         "moved": "Question moved to position {{position}}"
+      },
+      "remove_filter": "Remove filter {{label}}",
+      "reorder_off_filtered": "Drag-to-reorder is off while filters are active. Use each question's menu to move it to the top or bottom, or clear the filters.",
+      "reorder_off_grouped": "Drag-to-reorder is off while questions are grouped by module. Use each question's menu to move it to the top or bottom.",
+      "practice": {
+        "move_to_practice": "Use for practice runs",
+        "move_to_graded": "Use for the graded interview",
+        "moved_to_practice": "Moved to the practice question set.",
+        "moved_to_graded": "Moved back to the graded question set.",
+        "badge": "Practice"
       }
     },
     "review_status": {
@@ -3350,7 +3970,15 @@
       "phase_done": "All questions generated",
       "success_body": "New questions were added to the draft set. Close to view them.",
       "processing": "Processing…",
-      "start_button": "Start generation"
+      "start_button": "Start generation",
+      "elapsed": "Elapsed time"
+    },
+    "interviewer_role": {
+      "generic_assistant": "Virtual assistant (default)",
+      "backend_tech_lead": "Backend tech lead",
+      "staff_engineer": "Staff engineer",
+      "eng_manager": "Engineering manager",
+      "hr_screener": "Talent partner"
     }
   },
   "teacher_lesson_manage": {
@@ -3541,8 +4169,34 @@
       "legend_prereq": "Prerequisite",
       "legend_related": "Related",
       "showing_top": "Top {{shown}} of {{total}} concepts",
-      "open_full": "Open full graph",
-      "viewer_coming_soon": "Knowledge graph viewer coming soon"
+      "expand": "Expand",
+      "node_count": "{{count}} concepts",
+      "zoom_in": "Zoom in",
+      "zoom_out": "Zoom out",
+      "fit_view": "Fit to view",
+      "detail_hint": "Drag to pan · scroll to zoom · click a concept for its links",
+      "rel_prerequisites": "Prerequisites",
+      "rel_unlocks": "Unlocks",
+      "rel_related": "Related",
+      "rel_none": "None",
+      "layout_label": "Layout",
+      "layout_circular": "Circular",
+      "layout_tree": "Tree",
+      "edit": "Edit",
+      "editor_title": "Edit knowledge graph",
+      "source_label": "Graph source",
+      "source_ai": "AI",
+      "source_curated": "Curated",
+      "edit_ai_disabled": "The AI graph is regenerated on every upload and can't be edited. Switch to Curated to author your own.",
+      "publish": "Publish",
+      "publish_title": "Publish the curated knowledge graph to students",
+      "publish_confirm_title": "Publish knowledge graph?",
+      "publish_confirm_first": "This makes your knowledge graph ({{count}} nodes) visible to students in the lesson reading view.",
+      "publish_confirm_replace": "This replaces the knowledge graph students currently see with your latest saved version ({{count}} nodes).",
+      "save_and_publish": "Save and publish",
+      "save_publish_confirm_title": "Save and publish knowledge graph?",
+      "published_badge": "Published",
+      "published_at": "Published {{date}}"
     },
     "history": {
       "title": "Material history",
@@ -3625,9 +4279,49 @@
     "my_journey": "My Journey",
     "overview": "Overview",
     "content": "Content",
-    "pathways": "Pathways",
+    "pathways": "Career Pathways",
+    "manager_courses": "Courses",
+    "enrolment": "Enrolment",
     "analytics": "Analytics",
     "management": "Management",
     "system": "System"
+  },
+  "teacher_kg_editor": {
+    "title": "Knowledge graph editor",
+    "add_node": "Add node",
+    "delete_node": "Delete node",
+    "make_primary": "Set as primary",
+    "is_primary": "Primary node",
+    "node_detail": "Node details",
+    "field_label": "Label",
+    "field_type": "Type",
+    "field_definition": "Definition",
+    "field_weight": "Importance",
+    "new_node_label": "New concept",
+    "edge_exists": "That relationship already exists",
+    "canvas_label": "Knowledge graph canvas",
+    "seeded_hint": "Seeded from the AI concept graph — edit freely, then Save.",
+    "undo": "Undo",
+    "redo": "Redo",
+    "save": "Save",
+    "saved": "Saved",
+    "save_failed": "Save failed",
+    "unsaved": "Unsaved changes",
+    "publish": "Publish",
+    "published": "Published",
+    "published_state": "Published to students",
+    "publish_failed": "Publish failed",
+    "err_no_nodes": "Add at least one node before saving.",
+    "err_no_primary": "Mark exactly one node as the primary (center) node.",
+    "err_many_primary": "Only one node can be primary — you have {{count}}.",
+    "arrow_mode": "Arrow",
+    "arrow_kind": "Arrow type",
+    "arrow_pick_source": "Arrow mode on — click the node the arrow starts FROM (Esc to exit)",
+    "arrow_pick_target": "Now click the node the arrow points TO ({{relation}})",
+    "rel_prerequisite": "Prerequisite of",
+    "rel_related": "Related to",
+    "edge_detail": "Relationship",
+    "reverse_arrow": "Reverse direction",
+    "delete_arrow": "Delete arrow"
   }
 }

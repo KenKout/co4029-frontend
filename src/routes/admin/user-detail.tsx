@@ -21,10 +21,28 @@ import {
   useListRoles,
   useRevokeUserAssignment,
 } from "@/lib/api/hooks/admin";
+import {
+  useOrganizations,
+  useOrgUnits,
+} from "@/lib/api/hooks/admin-organizations";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { RoleAssignmentRead } from "@/lib/api/types";
+
+// The backend admin user-detail endpoint enriches each assignment with
+// human-readable labels (role/org/unit/course names) after the committed
+// OpenAPI snapshot. Widen the generated type locally so the UI can show names
+// instead of raw UUIDs, falling back to the id when a label is absent.
+type EnrichedAssignment = RoleAssignmentRead & {
+  role_code?: string | null;
+  role_name?: string | null;
+  organization_name?: string | null;
+  org_unit_name?: string | null;
+  course_title?: string | null;
+  assignment_id?: string;
+};
 
 const STATUS_COLOR: Record<string, string> = {
   active: "bg-emerald-100 text-emerald-700",
@@ -125,6 +143,18 @@ function RoleAssignmentsSection({
   const [orgUnitId, setOrgUnitId] = useState<string>("");
   const [courseId, setCourseId] = useState<string>("");
 
+  // Organization + org-unit pickers for the assign-new-role form (replacing
+  // raw UUID text inputs). Units load for the chosen org; changing the org
+  // resets the selected unit so a stale cross-org unit can't be submitted.
+  const orgs = useOrganizations({ limit: 200 });
+  const orgOptions = orgs.items ?? [];
+  const orgUnits = useOrgUnits(organizationId || undefined);
+  const orgUnitOptions = orgUnits.data ?? [];
+
+  useEffect(() => {
+    setOrgUnitId("");
+  }, [organizationId]);
+
   const roleOptions = useMemo(
     () => (roles.data ?? []).map((r) => r.role),
     [roles.data],
@@ -135,24 +165,22 @@ function RoleAssignmentsSection({
     return m;
   }, [roleOptions]);
 
+  // Grant is valid only when a role is chosen and the scope's required target
+  // is filled. Used to disable the submit button instead of surfacing a toast
+  // after the click — the user sees up front what's still needed.
+  const isGrantValid = useMemo(() => {
+    if (!roleCode) return false;
+    if (scopeKind === "organization") return Boolean(organizationId.trim());
+    if (scopeKind === "org_unit") return Boolean(orgUnitId.trim());
+    if (scopeKind === "course") return Boolean(courseId.trim());
+    return true; // global scope needs no target
+  }, [roleCode, scopeKind, organizationId, orgUnitId, courseId]);
+
   const handleGrant = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!roleCode) {
-      toast.error(t("admin.users.roles.errors.select_role"));
-      return;
-    }
-    if (scopeKind === "organization" && !organizationId.trim()) {
-      toast.error(t("admin.users.roles.errors.need_org_id"));
-      return;
-    }
-    if (scopeKind === "org_unit" && !orgUnitId.trim()) {
-      toast.error(t("admin.users.roles.errors.need_unit_id"));
-      return;
-    }
-    if (scopeKind === "course" && !courseId.trim()) {
-      toast.error(t("admin.users.roles.errors.need_course_id"));
-      return;
-    }
+    // The submit button is disabled until the form is valid, so this is a
+    // belt-and-suspenders guard (e.g. Enter-key submit) — no toast needed.
+    if (!isGrantValid) return;
     grant.mutate(
       {
         role_code: roleCode,
@@ -202,22 +230,44 @@ function RoleAssignmentsSection({
         </p>
       ) : (
         <ul className="divide-y divide-border">
-          {assignments.map((a) => {
+          {(assignments as EnrichedAssignment[]).map((a) => {
+            const assignmentId = a.id ?? a.assignment_id ?? "";
+            // Prefer server-resolved names; fall back to catalog lookup, then id.
             const roleName =
+              a.role_name ??
               roleOptions.find((r) => r.id === a.role_id)?.name ??
               roleByCode[a.role_id] ??
+              a.role_code ??
               a.role_id;
+            // Scope description in plain language: "Organization · Acme" etc.,
+            // mapping each scope FK to its resolved entity name (never a UUID).
+            const scopeLabel = t(`admin.users.roles.scope_${a.scope_kind}`, {
+              defaultValue: a.scope_kind,
+            });
+            const scopeTarget =
+              a.scope_kind === "organization"
+                ? (a.organization_name ?? a.organization_id)
+                : a.scope_kind === "org_unit"
+                  ? (a.org_unit_name ?? a.org_unit_id)
+                  : a.scope_kind === "course"
+                    ? (a.course_title ?? a.course_id)
+                    : null;
             return (
-              <li key={a.id} className="py-3 flex items-start gap-3">
+              <li key={assignmentId} className="py-3 flex items-start gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-text-strong">
                     {roleName}
                   </p>
-                  <p className="text-xs text-text-muted mt-0.5 font-mono break-all">
-                    {t("admin.users.roles.scope")}: {a.scope_kind}
-                    {a.organization_id ? ` · org=${a.organization_id}` : ""}
-                    {a.org_unit_id ? ` · unit=${a.org_unit_id}` : ""}
-                    {a.course_id ? ` · course=${a.course_id}` : ""}
+                  <p className="text-xs text-text-muted mt-0.5">
+                    {scopeLabel}
+                    {scopeTarget ? (
+                      <>
+                        {" · "}
+                        <span className="font-medium text-text-strong">
+                          {scopeTarget}
+                        </span>
+                      </>
+                    ) : null}
                   </p>
                 </div>
                 <button
@@ -230,7 +280,7 @@ function RoleAssignmentsSection({
                         }),
                       )
                     ) {
-                      revoke.mutate(a.id, {
+                      revoke.mutate(assignmentId, {
                         onSuccess: () =>
                           toast.success(t("admin.users.roles.success.revoked")),
                         onError: (err) =>
@@ -263,63 +313,85 @@ function RoleAssignmentsSection({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="text-xs text-text-muted">
             {t("admin.users.roles.role")}
-            <select
+            <Select
               value={roleCode}
-              onChange={(e) => setRoleCode(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-border bg-surface-elev px-2 py-1.5 text-sm"
-              required
-            >
-              <option value="">{t("admin.users.roles.select_role")}</option>
-              {roleOptions.map((r) => (
-                <option key={r.id} value={r.code}>
-                  {r.name} ({r.code})
-                </option>
-              ))}
-            </select>
+              onValueChange={(next) => setRoleCode(next)}
+              options={[
+                { value: "", label: t("admin.users.roles.select_role") },
+                ...roleOptions.map((r) => ({
+                  value: r.code,
+                  label: `${r.name} (${r.code})`,
+                })),
+              ]}
+              className="mt-1"
+            />
           </label>
           <label className="text-xs text-text-muted">
             {t("admin.users.roles.scope")}
-            <select
+            <Select
               value={scopeKind}
-              onChange={(e) => setScopeKind(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-border bg-surface-elev px-2 py-1.5 text-sm"
-            >
-              <option value="organization">
-                {t("admin.users.roles.scope_organization")}
-              </option>
-              <option value="org_unit">
-                {t("admin.users.roles.scope_org_unit")}
-              </option>
-              <option value="course">
-                {t("admin.users.roles.scope_course")}
-              </option>
-              <option value="global">
-                {t("admin.users.roles.scope_global")}
-              </option>
-            </select>
+              onValueChange={(next) => setScopeKind(next)}
+              options={[
+                {
+                  value: "organization",
+                  label: t("admin.users.roles.scope_organization"),
+                },
+                {
+                  value: "org_unit",
+                  label: t("admin.users.roles.scope_org_unit"),
+                },
+                {
+                  value: "course",
+                  label: t("admin.users.roles.scope_course"),
+                },
+                {
+                  value: "global",
+                  label: t("admin.users.roles.scope_global"),
+                },
+              ]}
+              className="mt-1"
+            />
           </label>
           {scopeKind === "organization" || scopeKind === "org_unit" ? (
             <label className="text-xs text-text-muted">
-              {t("admin.users.roles.organization_id")}
-              <input
-                type="text"
+              {t("admin.users.roles.organization")}
+              <Select
                 value={organizationId}
-                onChange={(e) => setOrganizationId(e.target.value)}
-                placeholder="00000000-0000-0000-0000-00000000a001"
-                className="mt-1 block w-full rounded-md border border-border bg-surface-elev px-2 py-1.5 text-sm font-mono"
-                required={scopeKind === "organization"}
+                onValueChange={(next) => setOrganizationId(next)}
+                options={[
+                  {
+                    value: "",
+                    label: t("admin.users.roles.select_organization", {
+                      defaultValue: "— Select organization —",
+                    }),
+                  },
+                  ...orgOptions.map((o) => ({ value: o.id, label: o.name })),
+                ]}
+                className="mt-1"
               />
             </label>
           ) : null}
           {scopeKind === "org_unit" ? (
             <label className="text-xs text-text-muted">
-              {t("admin.users.roles.org_unit_id")}
-              <input
-                type="text"
+              {t("admin.users.roles.org_unit")}
+              <Select
                 value={orgUnitId}
-                onChange={(e) => setOrgUnitId(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-border bg-surface-elev px-2 py-1.5 text-sm font-mono"
-                required
+                onValueChange={(next) => setOrgUnitId(next)}
+                disabled={!organizationId}
+                options={[
+                  {
+                    value: "",
+                    label: !organizationId
+                      ? t("admin.users.roles.select_org_first", {
+                          defaultValue: "— Select an organization first —",
+                        })
+                      : t("admin.users.roles.select_org_unit", {
+                          defaultValue: "— Select org unit —",
+                        }),
+                  },
+                  ...orgUnitOptions.map((u) => ({ value: u.id, label: u.name })),
+                ]}
+                className="mt-1"
               />
             </label>
           ) : null}
@@ -338,8 +410,8 @@ function RoleAssignmentsSection({
         </div>
         <button
           type="submit"
-          disabled={grant.isPending}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:bg-m3-primary/90 disabled:opacity-50"
+          disabled={grant.isPending || !isGrantValid}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:bg-m3-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="h-3.5 w-3.5" />
           {grant.isPending

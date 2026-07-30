@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { apiPostBlob, ApiError } from "@/lib/api/client";
+import {
+  resolvePersonaTraits,
+  wordsPerMinuteFromTraits,
+  type PersonaTraits,
+} from "@/lib/interview/persona-traits";
 import { useSpeechSynthesis, type SpeechPersona } from "./use-speech-synthesis";
 
 /** Separate readiness and playout signals used to coordinate voice and text. */
@@ -45,11 +50,9 @@ const AUDIO_SOURCE_SCHEDULE_AHEAD_MS = 30;
 const AUDIO_KEEPALIVE_INT16 = 48;
 const AUDIO_LEAD_IN_AMPLITUDE = AUDIO_KEEPALIVE_INT16 / 32_768;
 const HAVE_FUTURE_DATA = 3;
-const PERSONA_WORDS_PER_MINUTE: Record<SpeechPersona, number> = {
-  strict: 135,
-  neutral: 155,
-  supportive: 160,
-};
+// Words-per-minute is DERIVED from the verbosity trait (see
+// lib/interview/persona-traits.wordsPerMinuteFromTraits), not a per-name table,
+// so a fourth persona or a teacher's per-trait override needs no edit here.
 
 class NarrationTimeoutError extends Error {}
 
@@ -60,6 +63,20 @@ interface ActiveAudioGraph {
 
 function nowMs(): number {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
+
+// TEMP DIAG (narration skip B): gated on localStorage so it can be toggled in
+// the deployed production build. Remove with the console.debug calls once the
+// skip root cause is confirmed.
+function narrationDebugEnabled(): boolean {
+  try {
+    return (
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("narrationDebug") === "1"
+    );
+  } catch {
+    return false;
+  }
 }
 
 /** Build a tiny near-silent WAV that opens and keeps the audio output route warm. */
@@ -105,13 +122,13 @@ function createAudioWarmupBlob(): Blob {
 
 function estimateSpeechDurationMs(
   text: string,
-  persona: SpeechPersona,
+  traits: PersonaTraits,
   lang: string,
 ): number {
   const words = text.trim().split(/\s+/u).filter(Boolean).length;
   const punctuationPauses = (text.match(/[.!?;:]/gu) ?? []).length * 180;
   const languageRate = lang.toLowerCase().startsWith("vi") ? 0.92 : 1;
-  const wordsPerMinute = PERSONA_WORDS_PER_MINUTE[persona] * languageRate;
+  const wordsPerMinute = wordsPerMinuteFromTraits(traits) * languageRate;
   return Math.max(800, (words * 60_000) / wordsPerMinute + punctuationPauses);
 }
 
@@ -155,8 +172,26 @@ export function useInterviewNarration(params: {
    * locale) so an English session viewed with a VI UI still uses server TTS.
    */
   serverNarrationEnabled?: boolean;
+  /**
+   * Resolved persona traits (preset merged with any teacher per-trait
+   * override). When present, these drive the browser-voice WPM estimate; else
+   * the ``persona`` label's preset traits are used. TONE ONLY.
+   */
+  traits?: PersonaTraits;
 }): UseInterviewNarration {
-  const { sessionId, persona, lang, serverNarrationEnabled = true } = params;
+  const {
+    sessionId,
+    persona,
+    lang,
+    serverNarrationEnabled = true,
+    traits,
+  } = params;
+  // Resolve once: explicit override traits win, else the persona preset.
+  // Memoised so the narrate callback's identity is stable across renders.
+  const resolvedTraits = useMemo(
+    () => traits ?? resolvePersonaTraits(persona),
+    [traits, persona],
+  );
   const browser = useSpeechSynthesis();
   const browserSpeak = browser.speak;
   const browserCancel = browser.cancel;
@@ -209,6 +244,21 @@ export function useInterviewNarration(params: {
   }, [stopAudioWarmup]);
 
   const cancel = useCallback(() => {
+    // TEMP DIAG (narration skip B): log every cancel so we can see when a new
+    // turn's narrate() aborts a prior turn whose audio hadn't started yet.
+    // Enable in the deployed build with: localStorage.narrationDebug = "1"
+    // (the workflow ships a production build, so import.meta.env.DEV is false).
+    // Remove this block once the skip root cause is confirmed.
+    if (narrationDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.debug(
+        `[narration] cancel — token ${tokenRef.current} -> ${tokenRef.current + 1}`,
+        {
+          hadAudioGraph: Boolean(audioGraphRef.current),
+          hadAudioEl: Boolean(audioRef.current),
+        },
+      );
+    }
     tokenRef.current += 1;
     stopAudioWarmup();
     if (audioGraphRef.current) {
@@ -248,6 +298,12 @@ export function useInterviewNarration(params: {
 
       cancel();
       const myToken = tokenRef.current;
+      if (narrationDebugEnabled()) {
+        // eslint-disable-next-line no-console
+        console.debug(
+          `[narration] narrate — token ${myToken}: "${clean.slice(0, 48)}${clean.length > 48 ? "…" : ""}"`,
+        );
+      }
       const warmupStartedAt = startAudioWarmup();
       const ensureAudioWarmup = async () => {
         if (warmupStartedAt !== null) {
@@ -306,7 +362,7 @@ export function useInterviewNarration(params: {
       const browserFallback = () => {
         if (fallbackStarted) return;
         fallbackStarted = true;
-        resolveDuration(estimateSpeechDurationMs(clean, persona, lang));
+        resolveDuration(estimateSpeechDurationMs(clean, resolvedTraits, lang));
         void (async () => {
           await ensureAudioWarmup();
           if (myToken !== tokenRef.current) return;
@@ -321,6 +377,7 @@ export function useInterviewNarration(params: {
             const speech = browserSpeak(clean, {
               lang,
               persona,
+              traits: resolvedTraits,
               onStart: handleBrowserSpeechStart,
             });
             await Promise.resolve(speech);
@@ -496,6 +553,7 @@ export function useInterviewNarration(params: {
     [
       sessionId,
       persona,
+      resolvedTraits,
       lang,
       serverNarrationEnabled,
       browserSpeak,

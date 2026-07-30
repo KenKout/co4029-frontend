@@ -23,7 +23,8 @@ type VerdictState =
   | "evaluating"
   | "in_progress"
   | "evaluation_failed"
-  | "not_graded";
+  | "not_graded"
+  | "practice";
 
 // Thesis §4.3: students see the binary verdict ONLY. A completed session whose
 // async evaluation hasn't landed yet (pass_verdict === null) must read as
@@ -31,6 +32,10 @@ type VerdictState =
 function verdictState(s: InterviewSessionPublic): VerdictState {
   if (s.status === "in_progress") return "in_progress";
   if (s.status === "failed") return "evaluation_failed";
+  // Ahead of every verdict branch. A finished practice run has a NULL
+  // pass_verdict by design, so without this it falls through to "evaluating"
+  // and spins forever waiting for a grade that is never coming.
+  if (s.session_mode === "practice") return "practice";
   if (s.status === "abandoned") return "not_graded";
   if (s.pass_verdict === true) return "passed";
   if (s.pass_verdict === false) return "not_passed";
@@ -44,6 +49,9 @@ const BADGE_CLASS: Record<VerdictState, string> = {
   in_progress: "bg-slate-100 text-slate-600",
   evaluation_failed: "bg-red-100 text-red-700",
   not_graded: "bg-slate-100 text-slate-600",
+  // Distinct from not_graded, which already means "abandoned". Sharing it would
+  // make a deliberate rehearsal and a walked-away attempt look identical.
+  practice: "bg-sky-100 text-sky-700",
 };
 
 function useFormatDate() {

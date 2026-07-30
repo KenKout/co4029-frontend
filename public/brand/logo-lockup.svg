@@ -1,0 +1,24 @@
+<!-- aBridgeAI · horizontal lockup. Clearspace = 1/2 mark height on all sides.
+     Minimum width 120px; below that use logo-mark.svg alone. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="330" height="72" viewBox="0 0 330 72" role="img" aria-label="aBridgeAI — The Cognitive Conduit">
+  <defs>
+    <linearGradient id="ab-lk" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e40af"/><stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(0,6) scale(0.6)">
+    <path d="M10 74 Q72 6 134 74" fill="none" stroke="url(#ab-lk)" stroke-width="12" stroke-linecap="round"/>
+    <rect x="0" y="72" width="144" height="12" rx="6" fill="url(#ab-lk)"/>
+    <rect x="18" y="84" width="11" height="26" rx="5.5" fill="#1e40af"/>
+    <rect x="115" y="84" width="11" height="26" rx="5.5" fill="#1e40af"/>
+    <g stroke="#93b4fc" stroke-width="5" stroke-linecap="round">
+      <line x1="41" y1="72" x2="41" y2="44"/><line x1="72" y1="72" x2="72" y2="32"/><line x1="103" y1="72" x2="103" y2="44"/>
+    </g>
+    <circle cx="72" cy="28" r="9" fill="#f59e0b"/>
+  </g>
+  <text x="116" y="36" font-size="36" font-weight="800" letter-spacing="-1.1" fill="#1e40af"
+        font-family="Inter, ui-sans-serif, system-ui, sans-serif">aBridge<tspan fill="#3b82f6">AI</tspan></text>
+  <circle cx="311" cy="26" r="4" fill="#f59e0b"/>
+  <text x="117" y="56" font-size="10" fill="#64748b" letter-spacing="3.2"
+        font-family="Inter, ui-sans-serif, system-ui, sans-serif">THE COGNITIVE CONDUIT</text>
+</svg>

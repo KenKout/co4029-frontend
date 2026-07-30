@@ -94,7 +94,8 @@ function DeleteButton({ course }: { course: CourseAuthoring }) {
           return;
         }
         del.mutate(course.id, {
-          onSuccess: () => toast.success(t("admin.course_detail.toasts.deleted")),
+          onSuccess: () =>
+            toast.success(t("admin.course_detail.toasts.deleted")),
           onError: (err) =>
             toast.error(
               (err as Error).message ||

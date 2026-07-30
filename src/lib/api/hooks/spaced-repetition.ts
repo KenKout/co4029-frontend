@@ -1,5 +1,5 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { apiFetch } from "../client";
+import { apiFetch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import { useInfinitePage } from "../use-infinite-page";
 import type {
@@ -9,6 +9,9 @@ import type {
   CohortKrResponse,
   DifficultCard,
   LessonOverviewItem,
+  ReviewQueue,
+  ReviewSubmitRequest,
+  ReviewSubmitResult,
   StudentLessonSummaryRead,
   StudentSrDetail,
 } from "../types";
@@ -51,9 +54,11 @@ export function useCardsDue(opts: UseCardsDueOptions = {}) {
       if (cursor) params.set("cursor", cursor);
       if (lim) params.set("limit", String(lim));
       const qs = params.toString();
-      const page = await apiFetch<CardsDuePage>(
-        qs ? `/me/cards-due?${qs}` : "/me/cards-due",
-      );
+      // The committed OpenAPI snapshot for CardsDuePage predates the
+      // course_slug enrichment, so cast the items to the widened CardDue.
+      const page = await apiFetch<Omit<CardsDuePage, "items"> & {
+        items: CardDue[];
+      }>(qs ? `/me/cards-due?${qs}` : "/me/cards-due");
       return {
         items: page.items,
         next_cursor: page.next_cursor ?? null,
@@ -62,6 +67,43 @@ export function useCardsDue(opts: UseCardsDueOptions = {}) {
     limit,
     enabled,
   });
+}
+
+/**
+ * Review queue — `GET /me/review/queue`. Due cards + their no-leak question
+ * payloads, so a student can resolve cards without re-taking the whole quiz.
+ * Not infinite: the review session pulls one batch, and the count shrinks as
+ * cards are answered (refetched on invalidation).
+ */
+export function useReviewQueue(opts: UseCardsDueOptions = {}) {
+  const { lessonId, limit = 20, enabled } = opts;
+  return useQuery({
+    queryKey: queryKeys.sr.reviewQueue(lessonId, limit),
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (lessonId) params.set("lesson_id", lessonId);
+      if (limit) params.set("limit", String(limit));
+      const qs = params.toString();
+      return apiFetch<ReviewQueue>(
+        qs ? `/me/review/queue?${qs}` : "/me/review/queue",
+      );
+    },
+    enabled,
+    staleTime: 0,
+  });
+}
+
+/**
+ * Submit one review answer — `POST /me/review/{questionId}`. Grades the answer,
+ * fires the SM-2 reschedule, and returns feedback + the remaining due count.
+ * Returns a plain async submit fn (not a react-query mutation) so the review
+ * page can drive its own local card-by-card state machine.
+ */
+export function submitReview(
+  questionId: string,
+  body: ReviewSubmitRequest,
+): Promise<ReviewSubmitResult> {
+  return apiPost<ReviewSubmitResult>(`/me/review/${questionId}`, body);
 }
 
 export function useLessonSrSummary(lessonId: string | undefined) {
@@ -173,5 +215,40 @@ export function useStudentSrDetail(
       ),
     enabled: !!courseId && !!studentId,
     staleTime: STALE_5M,
+  });
+}
+
+/**
+ * Cross-course SR rollup — `GET /me/sr-dashboard-summary`.
+ *
+ * Mirror of `StudentDashboardSummaryRead`. Declared locally rather than pulled
+ * from the generated schema because `openapi-snapshot.json` is stale and
+ * regenerating it sweeps in unrelated churn from other in-flight work.
+ */
+export interface SrDashboardSummary {
+  avg_kr_estimate: number;
+  /**
+   * False when the student has no tracked cards at all. Distinguishes "no data
+   * yet" from a genuine 0% — a new student must not be shown 0% retention.
+   */
+  has_retention_data: boolean;
+  lessons_mature: number;
+  lessons_learning: number;
+  lessons_locked: number;
+  lessons_total: number;
+  /** Same predicate as /me/cards-due, so these can't disagree. */
+  cards_due_now: number;
+  cards_total: number;
+  next_unlock_lesson_id: string | null;
+  next_unlock_lesson_title: string | null;
+  /** Progress toward tau_unlock on the nearest locked lesson, 0-100. */
+  next_unlock_progress_pct: number;
+}
+
+export function useSrDashboardSummary() {
+  return useQuery({
+    queryKey: queryKeys.sr.dashboardSummary(),
+    queryFn: () => apiFetch<SrDashboardSummary>("/me/sr-dashboard-summary"),
+    staleTime: 1000 * 60,
   });
 }

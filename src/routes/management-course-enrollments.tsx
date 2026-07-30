@@ -669,7 +669,7 @@ function CodesTab({ courseId }: { courseId: string }) {
               placeholder={t(
                 "management_course_enrollments.codes.code_placeholder",
               )}
-              className="text-sm font-mono"
+              className="font-mono"
               required
             />
           </div>
@@ -681,7 +681,6 @@ function CodesTab({ courseId }: { courseId: string }) {
               type="date"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
-              className="text-sm"
             />
           </div>
           <div className="space-y-1.5">
@@ -696,7 +695,6 @@ function CodesTab({ courseId }: { courseId: string }) {
               placeholder={t(
                 "management_course_enrollments.codes.max_uses_placeholder",
               )}
-              className="text-sm"
             />
           </div>
         </div>
@@ -1011,7 +1009,6 @@ function EditCodeModal({
             type="date"
             value={expiresAt}
             onChange={(e) => setExpiresAt(e.target.value)}
-            className="text-sm"
           />
         </div>
 
@@ -1027,7 +1024,6 @@ function EditCodeModal({
             placeholder={t(
               "management_course_enrollments.codes.max_uses_placeholder",
             )}
-            className="text-sm"
           />
         </div>
 

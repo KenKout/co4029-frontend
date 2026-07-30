@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import {
@@ -48,6 +48,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet, SheetClose, SheetContent } from "@/components/ui/sheet";
 import { ApiError } from "@/lib/api/client";
@@ -1278,29 +1279,31 @@ function FilterBar({
         <label className="text-xs font-semibold text-text-muted">
           {t("admin.ai_costs.filters.operation")}
         </label>
-        <select
+        <Select
           value={filters.operation ?? ""}
-          onChange={(e) => set("operation", e.target.value)}
-          className="w-40 h-9 rounded-md border border-border bg-surface px-2 text-sm text-text-strong"
-        >
-          <option value="">{t("admin.ai_costs.filters.any")}</option>
-          <option value="chat_completion">chat_completion</option>
-          <option value="embedding">embedding</option>
-        </select>
+          onValueChange={(next) => set("operation", next)}
+          options={[
+            { value: "", label: t("admin.ai_costs.filters.any") },
+            { value: "chat_completion", label: "chat_completion" },
+            { value: "embedding", label: "embedding" },
+          ]}
+          className="w-40 h-9"
+        />
       </div>
       <div className="space-y-1">
         <label className="text-xs font-semibold text-text-muted">
           {t("admin.ai_costs.filters.status")}
         </label>
-        <select
+        <Select
           value={filters.status ?? ""}
-          onChange={(e) => set("status", e.target.value)}
-          className="w-40 h-9 rounded-md border border-border bg-surface px-2 text-sm text-text-strong"
-        >
-          <option value="">{t("admin.ai_costs.filters.any")}</option>
-          <option value="success">success</option>
-          <option value="failed">failed</option>
-        </select>
+          onValueChange={(next) => set("status", next)}
+          options={[
+            { value: "", label: t("admin.ai_costs.filters.any") },
+            { value: "success", label: "success" },
+            { value: "failed", label: "failed" },
+          ]}
+          className="w-40 h-9"
+        />
       </div>
       {active ? (
         <Button
@@ -1420,11 +1423,15 @@ export default function AdminAiCostsPage() {
 
   const [period, setPeriod] = useState<AiCostsPeriod>("30d");
   const [dimension, setDimension] = useState<AiCostsDimension>("operation");
+  // Seed the status filter from ?status= so the admin dashboard's "Failed AI
+  // calls" tile deep-links straight to the failures instead of dropping the
+  // operator on the unfiltered view.
+  const search = useSearch({ strict: false }) as { status?: string };
   const [filters, setFilters] = useState<AiCostsFilters>({
     model: null,
     role: null,
     operation: null,
-    status: null,
+    status: search.status ?? null,
   });
   const [drilldown, setDrilldown] = useState<AiCostsByPipelineRow | null>(null);
 
@@ -1675,7 +1682,10 @@ export default function AdminAiCostsPage() {
               downloadCsv("ai-costs-by-model", byModel.data ?? [], [
                 { header: "model_name", value: (r) => r.model_name },
                 { header: "total_usd", value: (r) => r.total_usd },
-                { header: "usd_per_1m_tokens", value: (r) => r.usd_per_1m_tokens },
+                {
+                  header: "usd_per_1m_tokens",
+                  value: (r) => r.usd_per_1m_tokens,
+                },
                 { header: "latency_p50_ms", value: (r) => r.latency_p50_ms },
                 { header: "latency_p95_ms", value: (r) => r.latency_p95_ms },
                 { header: "total_tokens", value: (r) => r.total_tokens },

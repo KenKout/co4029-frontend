@@ -4,13 +4,15 @@ import {
   FileText,
   Video,
   FileCode,
+  CheckCircle2,
   RefreshCw,
   Loader2,
   Sparkles,
   Eye,
   EyeOff,
   Trash2,
-  Brain,
+  Maximize2,
+  Send,
   X,
   History,
   Undo2,
@@ -19,8 +21,12 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useTeacherLessonKnowledgeGraph,
+  useCuratedKnowledgeGraph,
+  useSaveCuratedKnowledgeGraph,
+  usePublishCuratedKnowledgeGraph,
   useTeacherMaterialStatus,
   useInitMaterialUpload,
   useCompleteMaterialUpload,
@@ -47,6 +53,10 @@ import type {
 import { uploadMultipart } from "@/lib/upload/multipart";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
+import { KnowledgeGraphDetail } from "./knowledge-graph-detail";
+import type { KgSource } from "./knowledge-graph-detail";
+import { KnowledgeGraphEditor } from "./knowledge-graph-editor";
 
 export const PROC_STATUS: Record<string, { color: string; spin?: boolean }> = {
   not_queued: { color: "bg-amber-50 text-amber-600" },
@@ -131,7 +141,13 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
 }
 
-export function ProgressBar({ value, label }: { value: number; label: string }) {
+export function ProgressBar({
+  value,
+  label,
+}: {
+  value: number;
+  label: string;
+}) {
   const pct = Math.max(0, Math.min(100, Math.round(value)));
   return (
     <div className="space-y-1.5">
@@ -401,26 +417,23 @@ export function SelectedFileForm({
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
           {t("teacher_lesson_materials.form.doc_type_label")}
         </label>
-        <select
+        <Select<NonNullable<MaterialUploadInit["material_type"]>>
+          aria-label={t("teacher_lesson_materials.form.doc_type_label")}
           disabled={uploading}
-          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30 disabled:opacity-60"
           value={form.material_type ?? "pdf"}
-          onChange={(e) =>
-            setForm((f) => ({
-              ...f,
-              material_type: e.target
-                .value as MaterialUploadInit["material_type"],
-            }))
+          onValueChange={(next) =>
+            setForm((f) => ({ ...f, material_type: next }))
           }
-        >
-          {MATERIAL_TYPE_OPTIONS.map((opt) => (
-            <option key={opt.value ?? "pdf"} value={opt.value ?? "pdf"}>
-              {opt.labelKey
-                ? t(`teacher_lesson_materials.doc_type.${opt.labelKey}`)
-                : opt.labelText}
-            </option>
-          ))}
-        </select>
+          options={MATERIAL_TYPE_OPTIONS.map((opt) => ({
+            value: (opt.value ?? "pdf") as NonNullable<
+              MaterialUploadInit["material_type"]
+            >,
+            label: opt.labelKey
+              ? t(`teacher_lesson_materials.doc_type.${opt.labelKey}`)
+              : opt.labelText,
+          }))}
+          className="bg-m3-surface-container-lowest"
+        />
       </div>
 
       <div className="flex items-center gap-6">
@@ -505,7 +518,11 @@ export function SelectedFileForm({
   );
 }
 
-export function ProcessingStatusCard({ material }: { material: LearningMaterial }) {
+export function ProcessingStatusCard({
+  material,
+}: {
+  material: LearningMaterial;
+}) {
   const { t } = useTranslation();
   const { data: status } = useTeacherMaterialStatus(material.id);
   const proc =
@@ -969,6 +986,75 @@ export function KnowledgeGraphPreview({
     readyCount,
   );
   const [hovered, setHovered] = useState<string | null>(null);
+  // Full-screen explorer. Only opened on demand, and it fetches the fuller
+  // graph (higher node limit) so "expand" actually shows more than the preview.
+  const [expanded, setExpanded] = useState(false);
+  // Which graph the detail screen is showing: the AI-derived concept graph
+  // (read-only) or the teacher's curated graph (editable / publishable).
+  const [kgSource, setKgSource] = useState<KgSource>("ai");
+  // Teacher-curated KG editor, launched from inside the detail screen.
+  const [editing, setEditing] = useState(false);
+  const { data: detailData } = useTeacherLessonKnowledgeGraph(
+    lessonId,
+    readyCount,
+    expanded ? 60 : undefined,
+  );
+  // Curated draft. Fetched whenever the card is mounted (not just when the
+  // detail screen opens) because the card's Publish button needs to know
+  // whether a graph exists and whether it has unpublished changes. Doubles as
+  // the detail screen's data when the Curated source is selected, so both
+  // modes render the SAME graph the editor writes to.
+  const { data: curatedData } = useCuratedKnowledgeGraph(lessonId);
+  const saveCurated = useSaveCuratedKnowledgeGraph(lessonId);
+  const publishCurated = usePublishCuratedKnowledgeGraph(lessonId);
+  // Publish is a student-visible action, so it goes through a confirmation.
+  const [confirmPublish, setConfirmPublish] = useState(false);
+
+  const curatedNodeCount = curatedData?.nodes.length ?? 0;
+  // Publish needs a graph with at least one node — that's the backend's only
+  // real requirement (it rejects an empty draft with 409).
+  //
+  // It deliberately does NOT require `exists`. A never-saved draft is seeded
+  // from the AI graph and has nodes; gating on `exists` hid the button in
+  // exactly that case, which is why publishing a fresh lesson was impossible.
+  // Instead we SAVE the seeded draft first — see handlePublishCurated.
+  const canPublish = curatedNodeCount > 0;
+
+  // The server has nothing (or something stale) for this lesson, so publishing
+  // alone would 409 / publish the wrong graph. Drives "Save and publish".
+  const needsSaveBeforePublish =
+    !curatedData?.exists || !!curatedData?.has_unpublished_changes;
+
+  const publishBusy = saveCurated.isPending || publishCurated.isPending;
+
+  // Live snapshot already matches the draft — nothing left to publish, so the
+  // card shows a "Published" marker instead of the button.
+  const isFullyPublished =
+    !!curatedData?.is_published && !curatedData?.has_unpublished_changes;
+
+  async function handlePublishCurated() {
+    if (!curatedData) return;
+    try {
+      // Publish snapshots the PERSISTED draft_json. A seeded-but-unsaved draft
+      // has no row at all, so publish must be preceded by a save or the backend
+      // raises 409 ("save a draft with at least one primary node first").
+      if (needsSaveBeforePublish) {
+        await saveCurated.mutateAsync({
+          nodes: curatedData.nodes,
+          edges: curatedData.edges,
+        });
+      }
+      await publishCurated.mutateAsync();
+      toast.success(t("teacher_kg_editor.published"));
+      setConfirmPublish(false);
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : t("teacher_kg_editor.publish_failed"),
+      );
+    }
+  }
 
   const W = 340;
   const H = 240;
@@ -994,11 +1080,72 @@ export function KnowledgeGraphPreview({
 
   return (
     <div className="glass ghost-border shadow-glass rounded-xl p-6 space-y-4">
-      <div className="flex items-center justify-center gap-2">
-        <Brain className="h-5 w-5 text-m3-secondary" />
-        <h3 className="font-headline font-bold text-lg text-m3-on-surface">
-          {t("teacher_lesson_materials.kg.title")}
-        </h3>
+      <div className="flex items-center justify-end gap-2">
+        {/* No title here: the lesson page already renders a "Knowledge Graph"
+            section heading directly above this card, so repeating it (with the
+            brain icon) read as a duplicate. */}
+        {/* Expand → full-screen detail screen, which is where the AI/Curated
+            source toggle and Edit live (so viewing and editing are two modes of
+            one screen). Always available: even with no AI graph, the teacher can
+            open it and switch to Curated to author one from scratch. */}
+        <div className="flex shrink-0 items-center gap-1.5">
+          {/* Publish the curated graph straight from the lesson page, without
+              opening the editor. Shown whenever there's a graph with nodes —
+              including a never-saved AI-seeded one, which we save on the way
+              through (label becomes "Save and publish").
+
+              Once the live snapshot matches the draft there is nothing to do, so
+              the button gives way to a static "Published" marker rather than
+              inviting a pointless re-publish. */}
+          {canPublish && !isFullyPublished && (
+            <button
+              type="button"
+              onClick={() => setConfirmPublish(true)}
+              disabled={publishBusy}
+              title={t("teacher_lesson_materials.kg.publish_title")}
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
+                needsSaveBeforePublish
+                  ? "bg-m3-primary text-white hover:bg-m3-primary/90"
+                  : "bg-m3-surface-container text-m3-on-surface-variant hover:text-m3-primary",
+                publishBusy && "opacity-60",
+              )}
+            >
+              {publishBusy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Send className="h-3.5 w-3.5" />
+              )}
+              {needsSaveBeforePublish
+                ? t("teacher_lesson_materials.kg.save_and_publish")
+                : t("teacher_lesson_materials.kg.publish")}
+            </button>
+          )}
+          {isFullyPublished && (
+            <span
+              title={
+                curatedData?.published_at
+                  ? t("teacher_lesson_materials.kg.published_at", {
+                      date: new Date(curatedData.published_at).toLocaleString(),
+                    })
+                  : undefined
+              }
+              className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {t("teacher_lesson_materials.kg.published_badge")}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            aria-label={t("teacher_lesson_materials.kg.expand")}
+            title={t("teacher_lesson_materials.kg.expand")}
+            className="rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -1240,6 +1387,102 @@ export function KnowledgeGraphPreview({
           </div>
         </>
       )}
+
+      {/* Full-screen explorer. Prefer the fuller detail fetch (limit=60) once
+          it lands; fall back to the preview data so opening feels instant
+          rather than waiting on the larger request. */}
+      {expanded && (
+        <KnowledgeGraphDetail
+          data={
+            kgSource === "curated"
+              ? ({
+                  // Project the curated graph into the viewer's shape. The
+                  // viewer treats nodes[0] as the centre, so the primary node is
+                  // hoisted to the front; `mention_count` is unused here so the
+                  // curated `weight` drives node size directly.
+                  enabled: true,
+                  lesson_id: lessonId,
+                  total_concepts: curatedData?.nodes.length ?? 0,
+                  nodes: [...(curatedData?.nodes ?? [])]
+                    .sort(
+                      (a, b) =>
+                        Number(b.is_primary) - Number(a.is_primary) ||
+                        b.weight - a.weight,
+                    )
+                    .map((n) => ({
+                      id: n.id,
+                      label: n.label,
+                      type: n.type,
+                      definition: n.definition ?? null,
+                      weight: n.weight,
+                    })),
+                  edges: (curatedData?.edges ?? []).map((e) => ({
+                    source: e.source,
+                    target: e.target,
+                    relation: e.relation,
+                    weight: 1,
+                  })),
+                } as LessonKnowledgeGraph)
+              : ((detailData ??
+                  data ?? {
+                    enabled: true,
+                    lesson_id: lessonId,
+                    total_concepts: 0,
+                    nodes: [],
+                    edges: [],
+                  }) as LessonKnowledgeGraph)
+          }
+          title={t("teacher_lesson_materials.kg.title")}
+          onClose={() => setExpanded(false)}
+          source={kgSource}
+          onSourceChange={setKgSource}
+          onEdit={() => setEditing(true)}
+        />
+      )}
+
+      {/* Teacher-curated KG editor (CRUD + primary rule + undo/redo +
+          save/publish). Launched from the detail screen's Edit button; mounts
+          its own full-screen portal above it and seeds from the AI KG on first
+          open. */}
+      {editing && (
+        <KnowledgeGraphEditor
+          lessonId={lessonId}
+          title={t("teacher_lesson_materials.kg.editor_title")}
+          onClose={() => setEditing(false)}
+        />
+      )}
+
+      {/* Publish confirmation. Publishing overwrites what students currently
+          see, so the copy states that plainly and names the node count. When
+          the draft isn't persisted yet the copy says so, since confirming will
+          save as well as publish. */}
+      <ConfirmDialog
+        open={confirmPublish}
+        onOpenChange={setConfirmPublish}
+        title={
+          needsSaveBeforePublish
+            ? t("teacher_lesson_materials.kg.save_publish_confirm_title")
+            : t("teacher_lesson_materials.kg.publish_confirm_title")
+        }
+        description={
+          curatedData?.is_published
+            ? t("teacher_lesson_materials.kg.publish_confirm_replace", {
+                count: curatedNodeCount,
+              })
+            : t("teacher_lesson_materials.kg.publish_confirm_first", {
+                count: curatedNodeCount,
+              })
+        }
+        confirmLabel={
+          needsSaveBeforePublish
+            ? t("teacher_lesson_materials.kg.save_and_publish")
+            : t("teacher_lesson_materials.kg.publish")
+        }
+        cancelLabel={t("common.cancel")}
+        confirmVariant="default"
+        isPending={publishBusy}
+        onConfirm={handlePublishCurated}
+      />
     </div>
   );
 }

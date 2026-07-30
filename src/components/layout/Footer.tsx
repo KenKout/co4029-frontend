@@ -167,7 +167,7 @@ export default function Footer() {
             <div className="bg-white/5 border border-white/10 rounded-2xl p-1">
               <div className="flex bg-[#0f172a] rounded-xl overflow-hidden p-1">
                 <Input
-                  className="flex-1 bg-transparent border-none text-sm text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-4 placeholder:text-slate-600"
+                  className="flex-1 bg-transparent border-none text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-4 placeholder:text-slate-600"
                   placeholder="Enter email address"
                   type="email"
                 />
@@ -191,15 +191,32 @@ export default function Footer() {
             rights reserved.
           </div>
           <div className="flex gap-6 text-xs font-medium text-slate-400">
-            <a className="hover:text-white transition-colors" href="#">
+            {/* These three were dead `href="#"` anchors. They now resolve to the
+                public policy pages. */}
+            <Link
+              className="hover:text-white transition-colors"
+              to="/policy/$slug"
+              params={{ slug: "privacy" }}
+            >
               Privacy Policy
-            </a>
-            <a className="hover:text-white transition-colors" href="#">
+            </Link>
+            <Link
+              className="hover:text-white transition-colors"
+              to="/policy/$slug"
+              params={{ slug: "terms" }}
+            >
               Terms of Service
-            </a>
-            <a className="hover:text-white transition-colors" href="#">
+            </Link>
+            <Link
+              className="hover:text-white transition-colors"
+              to="/policy/$slug"
+              params={{ slug: "cookies" }}
+            >
               Cookie Policy
-            </a>
+            </Link>
+            <Link className="hover:text-white transition-colors" to="/help">
+              Help
+            </Link>
           </div>
         </div>
       </div>

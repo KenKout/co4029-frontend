@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useAdminUsersSearch,
@@ -173,19 +174,15 @@ function InfoTab({ orgId }: { orgId: string }) {
           <span className="text-sm font-semibold text-text-strong">
             {t("admin.organizations.fields.status")}
           </span>
-          <select
+          <Select<OrganizationStatus>
             value={orgStatus}
-            onChange={(e) =>
-              setDraftStatus(e.target.value as OrganizationStatus)
-            }
-            className="mt-1 w-full h-10 rounded-md border border-m3-outline-variant px-3 text-sm bg-white"
-          >
-            {(["active", "inactive", "archived"] as const).map((k) => (
-              <option key={k} value={k}>
-                {t(`admin.organizations.status_label.${k}`)}
-              </option>
-            ))}
-          </select>
+            onValueChange={(next) => setDraftStatus(next)}
+            options={(["active", "inactive", "archived"] as const).map((k) => ({
+              value: k,
+              label: t(`admin.organizations.status_label.${k}`),
+            }))}
+            className="mt-1"
+          />
         </label>
         <div className="flex justify-end">
           <Button
@@ -371,12 +368,10 @@ function UnitsTab({ orgId }: { orgId: string }) {
           <span className="text-sm font-semibold text-text-strong">
             {t("admin.organizations.fields.unit_type")}
           </span>
-          <select
+          <Select<UnitType>
             value={unitType}
-            onChange={(e) => setUnitType(e.target.value as UnitType)}
-            className="mt-1 w-full h-10 rounded-md border border-m3-outline-variant px-3 text-sm bg-white"
-          >
-            {(
+            onValueChange={(next) => setUnitType(next)}
+            options={(
               [
                 "faculty",
                 "department",
@@ -385,12 +380,12 @@ function UnitsTab({ orgId }: { orgId: string }) {
                 "campus",
                 "other",
               ] as UnitType[]
-            ).map((k) => (
-              <option key={k} value={k}>
-                {t(`admin.organizations.unit_type_label.${k}`)}
-              </option>
-            ))}
-          </select>
+            ).map((k) => ({
+              value: k,
+              label: t(`admin.organizations.unit_type_label.${k}`),
+            }))}
+            className="mt-1"
+          />
         </label>
         <label className="md:col-span-5">
           <span className="text-sm font-semibold text-text-strong">
@@ -548,14 +543,11 @@ function MembershipRow({ m, orgId }: { m: MembershipRead; orgId: string }) {
         <div className="flex items-center gap-2 shrink-0">
           {editing ? (
             <>
-              <select
+              <Select<MembershipStatus>
                 value={draftStatus}
-                onChange={(e) =>
-                  setDraftStatus(e.target.value as MembershipStatus)
-                }
-                className="h-8 rounded-md border border-m3-outline-variant px-2 text-xs bg-white"
-              >
-                {(
+                onValueChange={(next) => setDraftStatus(next)}
+                size="sm"
+                options={(
                   [
                     "active",
                     "invited",
@@ -563,12 +555,12 @@ function MembershipRow({ m, orgId }: { m: MembershipRead; orgId: string }) {
                     "suspended",
                     "left",
                   ] as MembershipStatus[]
-                ).map((k) => (
-                  <option key={k} value={k}>
-                    {t(`admin.organizations.membership_status_label.${k}`)}
-                  </option>
-                ))}
-              </select>
+                ).map((k) => ({
+                  value: k,
+                  label: t(`admin.organizations.membership_status_label.${k}`),
+                }))}
+                className="w-32"
+              />
               <Button
                 type="button"
                 size="sm"
@@ -898,14 +890,10 @@ function MembershipsTab({ orgId }: { orgId: string }) {
               <span className="text-sm font-semibold text-text-strong">
                 {t("admin.organizations.fields.status")}
               </span>
-              <select
+              <Select<MembershipStatus>
                 value={memStatus}
-                onChange={(e) =>
-                  setMemStatus(e.target.value as MembershipStatus)
-                }
-                className="mt-1 w-full h-10 rounded-md border border-m3-outline-variant px-3 text-sm bg-white"
-              >
-                {(
+                onValueChange={(next) => setMemStatus(next)}
+                options={(
                   [
                     "active",
                     "invited",
@@ -913,12 +901,12 @@ function MembershipsTab({ orgId }: { orgId: string }) {
                     "suspended",
                     "left",
                   ] as MembershipStatus[]
-                ).map((k) => (
-                  <option key={k} value={k}>
-                    {t(`admin.organizations.membership_status_label.${k}`)}
-                  </option>
-                ))}
-              </select>
+                ).map((k) => ({
+                  value: k,
+                  label: t(`admin.organizations.membership_status_label.${k}`),
+                }))}
+                className="mt-1"
+              />
             </label>
             <label>
               <span className="text-sm font-semibold text-text-strong">

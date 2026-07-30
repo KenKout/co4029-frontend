@@ -40,12 +40,28 @@ const _BY_EXT: Record<string, FileKind> = {
   pdf: { Icon: FileText, colorClass: "text-red-500", label: "PDF" },
   doc: { Icon: FileText, colorClass: "text-blue-600", label: "Word" },
   docx: { Icon: FileText, colorClass: "text-blue-600", label: "Word" },
-  txt: { Icon: FileText, colorClass: "text-m3-on-surface-variant", label: "Text" },
-  md: { Icon: FileText, colorClass: "text-m3-on-surface-variant", label: "Markdown" },
+  txt: {
+    Icon: FileText,
+    colorClass: "text-m3-on-surface-variant",
+    label: "Text",
+  },
+  md: {
+    Icon: FileText,
+    colorClass: "text-m3-on-surface-variant",
+    label: "Markdown",
+  },
   ppt: { Icon: Presentation, colorClass: "text-orange-500", label: "Slides" },
   pptx: { Icon: Presentation, colorClass: "text-orange-500", label: "Slides" },
-  xls: { Icon: FileSpreadsheet, colorClass: "text-emerald-600", label: "Sheet" },
-  xlsx: { Icon: FileSpreadsheet, colorClass: "text-emerald-600", label: "Sheet" },
+  xls: {
+    Icon: FileSpreadsheet,
+    colorClass: "text-emerald-600",
+    label: "Sheet",
+  },
+  xlsx: {
+    Icon: FileSpreadsheet,
+    colorClass: "text-emerald-600",
+    label: "Sheet",
+  },
   csv: { Icon: FileSpreadsheet, colorClass: "text-emerald-600", label: "CSV" },
   mp4: { Icon: FileVideo, colorClass: "text-m3-secondary", label: "Video" },
   mov: { Icon: FileVideo, colorClass: "text-m3-secondary", label: "Video" },
@@ -105,8 +121,6 @@ export function fileKind({
   name?: string | null;
 }): FileKind {
   return (
-    _kindFromMime(mime ?? "") ??
-    (name ? _kindFromName(name) : null) ??
-    _DEFAULT
+    _kindFromMime(mime ?? "") ?? (name ? _kindFromName(name) : null) ?? _DEFAULT
   );
 }

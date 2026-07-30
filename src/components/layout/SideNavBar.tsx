@@ -7,6 +7,7 @@ import {
   LogOut,
   LayoutDashboard,
   Briefcase,
+  Building2,
   ShieldCheck,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -19,7 +20,7 @@ import {
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
-type SidebarRole = "student" | "teacher" | "admin";
+type SidebarRole = "student" | "teacher" | "manager" | "admin";
 
 interface RoleMeta {
   label: string;
@@ -40,6 +41,12 @@ const ROLE_META: Record<SidebarRole, RoleMeta> = {
     icon: Briefcase,
     color: "text-blue-600",
     bg: "bg-blue-50 border-blue-200",
+  },
+  manager: {
+    label: "sections.manager",
+    icon: Building2,
+    color: "text-teal-600",
+    bg: "bg-teal-50 border-teal-200",
   },
   admin: {
     label: "sections.admin",
@@ -251,7 +258,11 @@ export default function SideNavBar({
             <button
               type="button"
               onClick={onToggle}
-              title={collapsed ? t("sidebar.expand", { defaultValue: "Expand" }) : undefined}
+              title={
+                collapsed
+                  ? t("sidebar.expand", { defaultValue: "Expand" })
+                  : undefined
+              }
               aria-label={
                 collapsed
                   ? t("sidebar.expand", { defaultValue: "Expand" })

@@ -17,6 +17,43 @@ import type {
   TagPublic,
 } from "../types";
 
+/** Sort learning outcomes into tree order (parent before its children).
+ *
+ * `position` is per-parent since the L.O.x.y hierarchy landed, so several
+ * rows legitimately share `position = 1` and sorting on it flat interleaves
+ * branches (e.g. 1, 1.1, 2.1, 1.2, 2). We sort on the server-derived dotted
+ * `code` compared segment-wise as integers, so 1.2 < 1.10. Rows missing a
+ * code (learner endpoint before it stamps one) fall back to `position` and
+ * sort after coded rows rather than scrambling them.
+ */
+function outcomeSortKey(o: {
+  code?: string | null;
+  position: number;
+}): number[] {
+  const code = o.code?.trim();
+  if (!code) return [o.position];
+  const parts = code.split(".").map((p) => Number.parseInt(p, 10));
+  return parts.some(Number.isNaN) ? [o.position] : parts;
+}
+
+function sortOutcomeTree<T extends { code?: string | null; position: number }>(
+  list: T[],
+): T[] {
+  return [...list].sort((a, b) => {
+    const ka = outcomeSortKey(a);
+    const kb = outcomeSortKey(b);
+    for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
+      const va = ka[i];
+      const vb = kb[i];
+      // Shorter path is the ancestor → it sorts first (1 before 1.1).
+      if (va === undefined) return -1;
+      if (vb === undefined) return 1;
+      if (va !== vb) return va - vb;
+    }
+    return 0;
+  });
+}
+
 function buildPagedUrl(
   base: string,
   cursor: string | undefined,
@@ -117,7 +154,7 @@ export function useCourseOutcomes(courseId: string | undefined) {
       const list = await apiFetch<CourseLearningOutcomePublic[]>(
         `/courses/${courseId}/outcomes`,
       );
-      return [...list].sort((a, b) => a.position - b.position);
+      return sortOutcomeTree(list);
     },
     enabled: !!courseId,
   });
@@ -219,7 +256,7 @@ export function useTeacherCourseOutcomes(courseId: string | undefined) {
       const list = await apiFetch<CourseLearningOutcomeAuthoring[]>(
         `/teacher/courses/${courseId}/outcomes`,
       );
-      return [...list].sort((a, b) => a.position - b.position);
+      return sortOutcomeTree(list);
     },
     enabled: !!courseId,
   });
@@ -241,11 +278,23 @@ function useOutcomeInvalidation(courseId: string | undefined) {
 export function useCreateCourseOutcome(courseId: string | undefined) {
   const invalidate = useOutcomeInvalidation(courseId);
   return useMutation({
-    mutationFn: (outcome_text: string) =>
-      apiPost<CourseLearningOutcomeAuthoring>(
+    // parent_id (optional) nests the new outcome under an existing one for
+    // the L.O.x.y hierarchy; omit / null for a top-level outcome.
+    mutationFn: (
+      args: string | { outcome_text: string; parent_id?: string | null },
+    ) => {
+      const body =
+        typeof args === "string"
+          ? { outcome_text: args }
+          : {
+              outcome_text: args.outcome_text,
+              parent_id: args.parent_id ?? null,
+            };
+      return apiPost<CourseLearningOutcomeAuthoring>(
         `/teacher/courses/${courseId}/outcomes`,
-        { outcome_text },
-      ),
+        body,
+      );
+    },
     onSuccess: invalidate,
   });
 }
@@ -253,17 +302,26 @@ export function useCreateCourseOutcome(courseId: string | undefined) {
 export function useUpdateCourseOutcome(courseId: string | undefined) {
   const invalidate = useOutcomeInvalidation(courseId);
   return useMutation({
+    // parent_id is only sent when re-parenting (move within the tree); pass
+    // null to promote to top-level. Omit the key entirely to leave the
+    // parent unchanged — the backend distinguishes the two via fields_set.
     mutationFn: ({
       outcomeId,
       outcome_text,
+      parent_id,
     }: {
       outcomeId: string;
-      outcome_text: string;
-    }) =>
-      apiPatch<CourseLearningOutcomeAuthoring>(
+      outcome_text?: string;
+      parent_id?: string | null;
+    }) => {
+      const body: Record<string, unknown> = {};
+      if (outcome_text !== undefined) body.outcome_text = outcome_text;
+      if (parent_id !== undefined) body.parent_id = parent_id;
+      return apiPatch<CourseLearningOutcomeAuthoring>(
         `/teacher/courses/${courseId}/outcomes/${outcomeId}`,
-        { outcome_text },
-      ),
+        body,
+      );
+    },
     onSuccess: invalidate,
   });
 }

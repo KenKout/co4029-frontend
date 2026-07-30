@@ -78,6 +78,11 @@ export function ErrorBanner({
       aria-live={severity === "error" ? "assertive" : "polite"}
       className={cn(
         "flex items-start gap-3 rounded-2xl border px-4 py-3.5 shadow-editorial sm:px-5",
+        // A banner is inserted into normal flow, so without an entrance it
+        // shoves everything below it down in a single frame — during an
+        // interview that reads as the page breaking rather than as a warning
+        // arriving. Deliberately quick: this is an interruption, not decoration.
+        "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-2 motion-safe:duration-200 motion-safe:ease-out",
         palette,
         className,
       )}

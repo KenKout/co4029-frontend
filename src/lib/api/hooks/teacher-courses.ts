@@ -41,6 +41,22 @@ export interface TeacherDashboardStats {
   draft_courses: number;
   ungraded_quizzes: number;
   pending_interviews: number;
+  /**
+   * `{course_id: pending_count}` for AI-generated quiz + interview questions
+   * awaiting review. Courses with nothing pending are OMITTED, so treat a
+   * missing key as zero — drives the pending-review dot on the course cards.
+   */
+  pending_review_by_course: Record<string, number>;
+  // Human-in-the-Loop review queue.
+  quiz_cards_pending_review: number;
+  interview_questions_pending_review: number;
+  published_quizzes_missing_texp: number;
+  materials_ready_for_quiz_gen: number;
+  // Student performance (spaced repetition).
+  students_below_ef_threshold: number;
+  /** Mean SM-2 easiness factor across in-scope cards. 2.5 is the default/ideal. */
+  avg_retention_ef: number;
+  cards_overdue: number;
 }
 
 // Actionable counts for the teacher dashboard's clickable widgets. Scoped
@@ -48,8 +64,7 @@ export interface TeacherDashboardStats {
 export function useTeacherDashboardStats() {
   return useQuery({
     queryKey: ["teacher", "dashboard", "stats"],
-    queryFn: () =>
-      apiFetch<TeacherDashboardStats>("/teacher/dashboard/stats"),
+    queryFn: () => apiFetch<TeacherDashboardStats>("/teacher/dashboard/stats"),
     staleTime: 1000 * 60,
   });
 }
@@ -170,6 +185,9 @@ export function useCreateCourse() {
       qc.invalidateQueries({ queryKey: queryKeys.courses.bySlug(course.slug) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.detail(course.id) });
       qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
+      // Also refresh the manager/dept course list — creation now happens from
+      // /management/courses/new which returns to /dept.
+      qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
     },
   });
 }
@@ -358,10 +376,13 @@ export function useReorderModules(courseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (newOrder: string[]) =>
-      apiPut<ModuleAuthoring[]>(`/teacher/courses/${courseId}/modules/reorder`, {
-        course_id: courseId,
-        new_order: newOrder,
-      }),
+      apiPut<ModuleAuthoring[]>(
+        `/teacher/courses/${courseId}/modules/reorder`,
+        {
+          course_id: courseId,
+          new_order: newOrder,
+        },
+      ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.courses.content(courseId) });
       qc.invalidateQueries({
@@ -578,5 +599,51 @@ export function useUpdateModuleItem(courseId: string) {
       qc.invalidateQueries({
         queryKey: ["teacher", "courses", courseId, "content"],
       }),
+  });
+}
+
+/**
+ * Deep-clone a single module item (lesson / quiz / interview) in place.
+ * The backend copies the target as an independent draft (all content
+ * unpublished / review_status='pending') and appends a new pin at the end
+ * of the same module.
+ */
+export function useDuplicateModuleItem(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: string) =>
+      apiPost<ModuleItemAuthoring>(
+        `/teacher/module-items/${itemId}/duplicate`,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["teacher", "courses", courseId, "content"],
+      });
+      qc.invalidateQueries({ queryKey: queryKeys.courses.content(courseId) });
+      qc.invalidateQueries({
+        queryKey: ["courses", "module-lessons-authoring"],
+      });
+      qc.invalidateQueries({ queryKey: ["courses", "module-lessons"] });
+    },
+  });
+}
+
+/**
+ * Deep-clone a whole module: the module row + every item + every target,
+ * created as a new draft module at the end of the course. All duplicated
+ * content is unpublished.
+ */
+export function useDuplicateModule(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (moduleId: string) =>
+      apiPost<ModuleAuthoring>(`/teacher/modules/${moduleId}/duplicate`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.courses.modules(courseId) });
+      qc.invalidateQueries({ queryKey: queryKeys.courses.content(courseId) });
+      qc.invalidateQueries({
+        queryKey: ["teacher", "courses", courseId, "content"],
+      });
+    },
   });
 }

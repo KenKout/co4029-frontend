@@ -7,6 +7,7 @@ import { DesktopOnlyBanner } from "@/components/ui/desktop-only-banner";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import {
   adminNavGroups,
+  managerNavGroups,
   studentNavGroups,
   teacherNavGroups,
 } from "@/lib/navigation";
@@ -15,12 +16,21 @@ const DESKTOP_FIRST_PREFIXES = ["/admin", "/teacher", "/dept", "/management"];
 
 // URL prefixes that require elevated permissions.
 const ADMIN_PREFIXES = ["/admin"];
-const TEACHER_PREFIXES = ["/teacher", "/dept", "/management"];
+const TEACHER_PREFIXES = ["/teacher"];
+// Manager surfaces: course management (/dept), enrolment + career pathways
+// (/management). Gated on permissions the plain teacher role lacks.
+const MANAGER_PREFIXES = ["/dept", "/management"];
 
 // Permission codes that grant access. Mirror SectionSwitcher.tsx so the
 // header switcher and the route guard agree on who can reach what.
 const ADMIN_PERMS = ["system.administer"];
 const TEACHER_PERMS = ["course.create", "lesson.manage"];
+const MANAGER_PERMS = [
+  "course.assign_teacher",
+  "org_unit.manage",
+  "course.enrollment.create",
+  "course.enrollment.read",
+];
 
 function hasAny(
   perms: readonly string[],
@@ -38,19 +48,23 @@ export default function AuthenticatedLayout() {
   const onAdminPath = ADMIN_PREFIXES.some((p) =>
     location.pathname.startsWith(p),
   );
+  const onManagerPath = MANAGER_PREFIXES.some((p) =>
+    location.pathname.startsWith(p),
+  );
   const onTeacherPath = TEACHER_PREFIXES.some((p) =>
     location.pathname.startsWith(p),
   );
-  const needsCheck = onAdminPath || onTeacherPath;
+  const needsCheck = onAdminPath || onManagerPath || onTeacherPath;
 
   // Wait for the permission query to settle before deciding access. While
-  // loading we treat privileged paths as blocked to avoid flashing the admin
-  // sidebar to a student who happens to be in the middle of a check.
+  // loading we treat privileged paths as blocked to avoid flashing a
+  // privileged sidebar to a student who happens to be in the middle of a check.
   const permsReady = !permissions.isLoading;
   const isAllowed =
     !needsCheck ||
     (permsReady &&
       ((onAdminPath && hasAny(perms, ADMIN_PERMS)) ||
+        (onManagerPath && hasAny(perms, MANAGER_PERMS)) ||
         (onTeacherPath && hasAny(perms, TEACHER_PERMS))));
 
   useEffect(() => {
@@ -64,20 +78,25 @@ export default function AuthenticatedLayout() {
 
   // Pick nav items based on permission, not just URL — a student who
   // somehow lands on /admin/* should see the student sidebar while the
-  // redirect is in flight.
+  // redirect is in flight. Manager is checked before teacher because a manager
+  // holds course.create too (so would otherwise match the teacher section).
   const navGroups =
     isAllowed && onAdminPath
       ? adminNavGroups
-      : isAllowed && onTeacherPath
-        ? teacherNavGroups
-        : studentNavGroups;
+      : isAllowed && onManagerPath
+        ? managerNavGroups
+        : isAllowed && onTeacherPath
+          ? teacherNavGroups
+          : studentNavGroups;
 
   const role =
     isAllowed && onAdminPath
       ? ("admin" as const)
-      : isAllowed && onTeacherPath
-        ? ("teacher" as const)
-        : ("student" as const);
+      : isAllowed && onManagerPath
+        ? ("manager" as const)
+        : isAllowed && onTeacherPath
+          ? ("teacher" as const)
+          : ("student" as const);
 
   const showDesktopBanner = DESKTOP_FIRST_PREFIXES.some((p) =>
     location.pathname.startsWith(p),

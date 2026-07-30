@@ -51,6 +51,7 @@ import { useMyInterviewSessions } from "@/lib/api/hooks/interviews";
 // import { useCourseSrOverview } from "@/lib/api/hooks/spaced-repetition";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
 import { LessonDiscussionPanel } from "@/routes/_components/LessonDiscussionPanel";
+import { LessonKnowledgeMap } from "@/routes/_components/LessonKnowledgeMap";
 import ReactMarkdown from "react-markdown";
 import { queryKeys } from "@/lib/api/query-keys";
 import type {
@@ -374,13 +375,24 @@ function CourseLearnLoaded({
   // the focused player view. This gives students an orientation/"what's next"
   // surface the cramped sidebar can't, and makes the full curriculum visible
   // on arrival (the reason the tiny sidebar felt like the only navigation).
-  const [showHome, setShowHome] = useState(
-    () =>
-      seekSeconds === null &&
-      targetPage === null &&
-      !targetAnchor &&
-      !search.item,
-  );
+  // DERIVED from the URL rather than held in state.
+  //
+  // This used to be `useState`, kept in sync by hand from openLesson/goHome and
+  // from the ?item restore effect. That produced two bugs:
+  //   1. Clicking the "Learn" crumb appeared to do nothing — router navigation
+  //      is async, and because `lessonItems` isn't referentially stable (it
+  //      derives from `t`), the restore effect re-ran with the still-present
+  //      stale ?item and immediately flipped showHome back to false.
+  //   2. Browser Back only changes the search param (the component stays
+  //      mounted), and nothing flipped showHome back to true — so Back from a
+  //      lesson left the lesson on screen.
+  // Deriving it makes the URL the single source of truth: ?item present = a
+  // lesson is open, absent = course-home. Back/Forward then work for free.
+  const showHome =
+    !search.item &&
+    seekSeconds === null &&
+    targetPage === null &&
+    !targetAnchor;
   // Resume target = first non-completed lesson (falls back to the first).
   const resumeIdx = useMemo(() => {
     const i = lessonItems.findIndex((li) => {
@@ -398,31 +410,33 @@ function CourseLearnLoaded({
   );
   function openLesson(idx: number) {
     setActiveIdx(idx);
-    setShowHome(false);
     // Persist the opened lesson id in the URL (?item=<lessonId>) so that
     // returning from a quiz/interview sub-route — or refreshing — restores
     // this content view at the right lesson instead of bouncing back to the
     // course-home summary (Moodle-authentic resume behavior). Falls back to
     // the lesson index when the target id is missing.
+    //
+    // PUSHES a history entry (no `replace`). With replace:true the plain
+    // /learn entry was overwritten, so Back from a lesson skipped the Learn
+    // page entirely and landed on the course page.
     const openedId = lessonItems[idx]?.item.target?.id;
     void navigate({
       to: "/courses/$slug/learn",
       params: { slug },
       search: (prev) => ({ ...prev, item: openedId ?? String(idx) }),
-      replace: true,
     });
   }
 
-  // Return to the course-home summary: clear ?item= (so the restore effect
-  // below doesn't immediately re-open a lesson) and flip back to the home view.
-  // Backs the clickable "Learn" breadcrumb crumb.
+  // Return to the course-home summary: clear ?item= and flip back to the home
+  // view. Backs the clickable "Learn" breadcrumb crumb.
+  //
+  // Clearing ?item is all that's needed now that showHome is derived from the
+  // URL — no local flag to keep in sync, so the async navigation can't race it.
   function goHome() {
-    setShowHome(true);
     void navigate({
       to: "/courses/$slug/learn",
       params: { slug },
       search: (prev) => ({ ...prev, item: undefined }),
-      replace: true,
     });
   }
 
@@ -432,19 +446,14 @@ function CourseLearnLoaded({
   // fallback. No-op when the param is absent so the home landing is preserved.
   useEffect(() => {
     if (!search.item || lessonItems.length === 0) return;
-    let idx = lessonItems.findIndex(
-      (li) => li.item.target?.id === search.item,
-    );
+    let idx = lessonItems.findIndex((li) => li.item.target?.id === search.item);
     if (idx < 0) {
       const asNum = Number(search.item);
       if (Number.isInteger(asNum) && asNum >= 0 && asNum < lessonItems.length) {
         idx = asNum;
       }
     }
-    if (idx >= 0) {
-      setActiveIdx(idx);
-      setShowHome(false);
-    }
+    if (idx >= 0) setActiveIdx(idx);
   }, [search.item, lessonItems]);
 
   useEffect(() => {
@@ -1132,67 +1141,78 @@ function ReadingLessonPane({
   };
 
   return (
-    <GlassCard
-      className="p-6 sm:p-8 space-y-6"
-      data-testid="course-learn-reading"
-    >
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-m3-secondary" />
-          <span className="text-xs font-headline font-semibold uppercase tracking-wider text-m3-on-surface-variant">
-            {t("course_learn.reading_lesson")}
-          </span>
+    // space-y-6 here rather than relying on the parent: the pane now emits two
+    // sibling sections (Reading + Knowledge map) and owns the gap between them.
+    <div className="space-y-6">
+      <GlassCard
+        className="p-6 sm:p-8 space-y-6"
+        data-testid="course-learn-reading"
+      >
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-m3-secondary" />
+            <span className="text-xs font-headline font-semibold uppercase tracking-wider text-m3-on-surface-variant">
+              {t("course_learn.reading_lesson")}
+            </span>
+          </div>
+          {streamUrl && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={openFullscreen}
+              className="rounded-xl text-xs font-bold gap-1.5 text-m3-on-surface-variant hover:text-m3-primary"
+              data-testid="course-learn-reading-fullscreen"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+              {t("course_learn.reading_open_fullscreen")}
+            </Button>
+          )}
         </div>
-        {streamUrl && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={openFullscreen}
-            className="rounded-xl text-xs font-bold gap-1.5 text-m3-on-surface-variant hover:text-m3-primary"
-            data-testid="course-learn-reading-fullscreen"
-          >
-            <Maximize2 className="h-3.5 w-3.5" />
-            {t("course_learn.reading_open_fullscreen")}
-          </Button>
+
+        {lesson.summary && (
+          <p className="text-sm text-m3-on-surface-variant leading-relaxed">
+            {lesson.summary}
+          </p>
         )}
-      </div>
 
-      {lesson.summary && (
-        <p className="text-sm text-m3-on-surface-variant leading-relaxed">
-          {lesson.summary}
-        </p>
-      )}
+        {hasMaterial &&
+          (streamQuery.isLoading ? (
+            <div className="h-[600px] rounded-xl bg-m3-surface-container-low animate-pulse" />
+          ) : streamUrl ? (
+            <div className="mt-2 rounded-xl overflow-hidden border border-m3-outline-variant/30">
+              <iframe
+                src={streamUrl}
+                title={lesson.title}
+                className="w-full h-[600px] bg-white"
+                data-testid="course-learn-reading-iframe"
+              />
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-m3-outline-variant/40 p-6 text-sm text-m3-on-surface-variant">
+              {t("course_learn.reading_material_unavailable")}
+            </div>
+          ))}
 
-      {hasMaterial &&
-        (streamQuery.isLoading ? (
-          <div className="h-[600px] rounded-xl bg-m3-surface-container-low animate-pulse" />
-        ) : streamUrl ? (
-          <div className="mt-2 rounded-xl overflow-hidden border border-m3-outline-variant/30">
-            <iframe
-              src={streamUrl}
-              title={lesson.title}
-              className="w-full h-[600px] bg-white"
-              data-testid="course-learn-reading-iframe"
-            />
-          </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-m3-outline-variant/40 p-6 text-sm text-m3-on-surface-variant">
-            {t("course_learn.reading_material_unavailable")}
-          </div>
-        ))}
+        {hasNotes && (
+          <article className="prose prose-sm max-w-none prose-headings:font-headline prose-headings:text-m3-on-surface prose-p:text-m3-on-surface-variant prose-a:text-m3-primary">
+            <ReactMarkdown>{lesson.notes_markdown ?? ""}</ReactMarkdown>
+          </article>
+        )}
 
-      {hasNotes && (
-        <article className="prose prose-sm max-w-none prose-headings:font-headline prose-headings:text-m3-on-surface prose-p:text-m3-on-surface-variant prose-a:text-m3-primary">
-          <ReactMarkdown>{lesson.notes_markdown ?? ""}</ReactMarkdown>
-        </article>
-      )}
+        {!hasMaterial && !hasNotes && (
+          <p className="text-sm text-m3-on-surface-variant">
+            {t("course_learn.reading_empty")}
+          </p>
+        )}
+      </GlassCard>
 
-      {!hasMaterial && !hasNotes && (
-        <p className="text-sm text-m3-on-surface-variant">
-          {t("course_learn.reading_empty")}
-        </p>
-      )}
-    </GlassCard>
+      {/* Teacher-published knowledge map — its own section, sibling to the
+          Reading card rather than nested inside it: it describes the lesson's
+          concepts, not the reading material, and burying it under the document
+          made it read as part of that content. Renders nothing when no graph
+          has been published for this lesson. */}
+      <LessonKnowledgeMap lessonId={lesson.id} />
+    </div>
   );
 }
 

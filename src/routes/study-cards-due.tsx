@@ -1,162 +1,188 @@
+import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import {
-  ArrowLeft,
-  BookOpen,
-  Clock,
-  Flame,
-  Inbox,
-  RefreshCw,
-} from "lucide-react";
+import { ArrowLeft, BookOpen, Inbox, Layers, Play } from "lucide-react";
 import { useCardsDue } from "@/lib/api/hooks/spaced-repetition";
-import { InfiniteList } from "@/components/ui/InfiniteList";
 import { SectionHeader } from "@/components/ui/section-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import type { CardDue } from "@/lib/api/types";
-import { cn } from "@/lib/utils";
 
-function useRelativeDue() {
-  const { t } = useTranslation();
-  return (dueAt: string): { label: string; overdue: boolean } => {
-    const now = Date.now();
-    const due = new Date(dueAt).getTime();
-    const diffMs = due - now;
-    if (diffMs <= 0)
-      return { label: t("study_cards_due.due_now"), overdue: true };
-    const minutes = Math.round(diffMs / 60_000);
-    if (minutes < 60) {
-      return {
-        label: t("study_cards_due.minutes_left", { count: minutes }),
-        overdue: false,
-      };
-    }
-    const hours = Math.round(minutes / 60);
-    if (hours < 24) {
-      return {
-        label: t("study_cards_due.hours_left", { count: hours }),
-        overdue: false,
-      };
-    }
-    const days = Math.round(hours / 24);
-    return {
-      label: t("study_cards_due.days_left", { count: days }),
-      overdue: false,
-    };
-  };
+/**
+ * Turn the internal SM-2 EF (1.3–2.5) into a plain-language recall strength the
+ * student can act on. EF is the algorithm's confidence that the student knows
+ * the card; we bucket it into three human labels rather than showing "EF 1.70".
+ */
+function recallStrength(ef: number): { label: string; tone: string } {
+  if (ef >= 2.3) return { label: "strong", tone: "text-emerald-700 bg-emerald-50" };
+  if (ef >= 1.8) return { label: "building", tone: "text-amber-700 bg-amber-50" };
+  return { label: "shaky", tone: "text-red-700 bg-red-50" };
 }
 
-function CardDueRow({ card }: { card: CardDue }) {
-  const { t } = useTranslation();
-  const relativeDue = useRelativeDue();
-  const { label: dueLabel, overdue } = relativeDue(card.due_at);
-  return (
-    <div className="bg-m3-surface-container-lowest rounded-xl ghost-border shadow-editorial p-4 flex items-center gap-4 hover:bg-m3-surface-container-low transition-colors">
-      <div
-        className={cn(
-          "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-          overdue ? "bg-red-100" : "bg-m3-primary-fixed",
-        )}
-      >
-        {overdue ? (
-          <Flame className="h-5 w-5 text-red-600" />
-        ) : (
-          <RefreshCw className="h-5 w-5 text-m3-primary" />
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-semibold text-m3-on-surface truncate">
-            {card.lesson_title}
-          </p>
-          <span
-            className={cn(
-              "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 border",
-              overdue
-                ? "bg-red-50 text-red-700 border-red-200"
-                : "bg-m3-secondary-fixed text-m3-primary border-transparent",
-            )}
-          >
-            {dueLabel}
-          </span>
-        </div>
-        <p className="text-xs text-m3-on-surface-variant mt-0.5 flex items-center gap-3">
-          <span className="inline-flex items-center gap-1">
-            <BookOpen className="h-3 w-3" />
-            {t("study_cards_due.ef_label")} {card.ef.toFixed(2)}
-          </span>
-          {typeof card.last_q === "number" && (
-            <span>{t("study_cards_due.last_q", { q: card.last_q })}</span>
-          )}
-        </p>
-      </div>
-      <Clock className="h-4 w-4 text-m3-on-surface-variant shrink-0" />
-    </div>
-  );
+/** Group the flat due list by course so the student sees structure, not noise. */
+function groupByCourse(cards: CardDue[]) {
+  const groups = new Map<string, { title: string; slug: string; cards: CardDue[] }>();
+  for (const card of cards) {
+    const key = card.course_slug;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.cards.push(card);
+    } else {
+      groups.set(key, {
+        title: card.course_title,
+        slug: card.course_slug,
+        cards: [card],
+      });
+    }
+  }
+  return [...groups.values()].sort((a, b) => b.cards.length - a.cards.length);
 }
 
 export default function StudyCardsDuePage() {
   const { t } = useTranslation();
   const { items, hasNextPage, fetchNextPage, isFetchingNextPage, isLoading } =
-    useCardsDue({ limit: 20 });
+    useCardsDue({ limit: 100 });
 
-  const overdueCount = items.filter(
-    (c) => new Date(c.due_at).getTime() <= Date.now(),
-  ).length;
+  const groups = useMemo(() => groupByCourse(items), [items]);
 
   return (
     <div className="min-h-screen pb-12">
-      <div className="max-w-3xl mx-auto pb-6 space-y-6">
+      <div className="max-w-6xl mx-auto pb-6 space-y-6">
         <div className="flex items-center gap-3">
           <Link
             to="/dashboard/sr"
             className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
-            aria-label={t("study_cards_due.back")}
+            aria-label={t("study_cards_due.back", "Back")}
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <SectionHeader
-            title={t("study_cards_due.title")}
+            title={t("study_cards_due.title", "Cards due")}
             subtitle={
               isLoading
-                ? t("study_cards_due.loading")
+                ? t("study_cards_due.loading", "Loading…")
                 : items.length === 0
-                  ? t("study_cards_due.empty_subtitle")
-                  : `${t("study_cards_due.n_cards", { count: items.length })}${
-                      overdueCount > 0
-                        ? t("study_cards_due.n_overdue_suffix", {
-                            count: overdueCount,
-                          })
-                        : ""
-                    }`
+                  ? t("study_cards_due.empty_subtitle", "You're all caught up")
+                  : t("study_cards_due.summary", {
+                      count: items.length,
+                      courses: groups.length,
+                      defaultValue:
+                        "{{count}} card(s) to review across {{courses}} course(s)",
+                    })
             }
           />
         </div>
 
-        <InfiniteList<CardDue>
-          items={items}
-          hasNextPage={hasNextPage}
-          fetchNextPage={fetchNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          isLoading={isLoading}
-          className="space-y-3"
-          keyOf={(card) => card.question_id}
-          renderItem={(card) => <CardDueRow card={card} />}
-          empty={
-            <EmptyState
-              icon={Inbox}
-              title={t("study_cards_due.empty_title")}
-              description={t("study_cards_due.empty_body")}
-              cta={
-                <Link to="/dashboard/sr">
-                  <Button variant="default" className="cursor-pointer">
-                    {t("study_cards_due.back_to_dashboard")}
-                  </Button>
-                </Link>
-              }
-            />
-          }
-        />
+        {items.length === 0 && !isLoading ? (
+          <EmptyState
+            icon={Inbox}
+            title={t("study_cards_due.empty_title", "Nothing due right now")}
+            description={t(
+              "study_cards_due.empty_body",
+              "Your reviews are all caught up. New cards appear here when they're due.",
+            )}
+            cta={
+              <Link to="/dashboard/sr">
+                <Button variant="default" className="cursor-pointer">
+                  {t("study_cards_due.back_to_dashboard", "Back to dashboard")}
+                </Button>
+              </Link>
+            }
+          />
+        ) : (
+          <>
+            {/* Primary action: resolve the whole queue in a review session. */}
+            {items.length > 0 && (
+              <Link to="/study/review" className="inline-block">
+                <Button
+                  size="lg"
+                  className="gap-2 cursor-pointer bg-m3-primary text-white"
+                >
+                  <Play className="h-4 w-4" />
+                  {t("study_cards_due.start_review", {
+                    count: items.length,
+                    defaultValue: "Start review ({{count}})",
+                  })}
+                </Button>
+              </Link>
+            )}
+
+            {/* Grouped by course so the list reads as structure, not a wall. */}
+            <div className="space-y-5">
+              {groups.map((group) => (
+                <section key={group.slug} className="space-y-2">
+                  <div className="flex items-center gap-2 px-1">
+                    <Layers className="h-4 w-4 text-m3-primary" />
+                    <h2 className="text-sm font-headline font-bold text-m3-on-surface">
+                      {group.title}
+                    </h2>
+                    <span className="text-xs font-semibold text-m3-on-surface-variant">
+                      {t("study_cards_due.group_count", {
+                        count: group.cards.length,
+                        defaultValue: "{{count}} due",
+                      })}
+                    </span>
+                    <Link
+                      to="/study/review"
+                      className="ml-auto text-xs font-semibold text-m3-primary hover:underline"
+                    >
+                      {t("study_cards_due.review_course", "Review")}
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {group.cards.map((card) => (
+                      <CardDueRow key={card.question_id} card={card} />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+
+            {hasNextPage && (
+              <div className="flex justify-center pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="cursor-pointer"
+                >
+                  {isFetchingNextPage
+                    ? t("study_cards_due.loading", "Loading…")
+                    : t("study_cards_due.load_more", "Load more")}
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CardDueRow({ card }: { card: CardDue }) {
+  const { t } = useTranslation();
+  const strength = recallStrength(card.ef);
+  return (
+    <div className="bg-m3-surface-container-lowest rounded-xl ghost-border shadow-editorial p-4 flex items-center gap-4">
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-m3-primary-fixed">
+        <BookOpen className="h-5 w-5 text-m3-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-m3-on-surface truncate">
+          {card.lesson_title}
+        </p>
+        <div className="mt-1 flex items-center gap-2 flex-wrap">
+          <span
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${strength.tone}`}
+          >
+            {t(`study_cards_due.strength.${strength.label}`, {
+              defaultValue: strength.label,
+            })}
+          </span>
+          <span className="text-xs text-m3-on-surface-variant">
+            {t("study_cards_due.recall_hint", "recall strength")}
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
+import { RichContent } from "@/components/ui/rich-content";
 import { GradientProgress } from "@/components/ui/gradient-progress";
 import { useQuizAttemptReview, useStudentQuiz } from "@/lib/api/hooks/quizzes";
 import { useCourseBySlug } from "@/lib/api/hooks/courses";
@@ -190,6 +191,24 @@ export default function CourseQuizReviewPage() {
           </div>
         </GlassCard>
 
+        {/* Phase 8: overall grade-band feedback (only present when the teacher
+            configured a matching band AND the review window shows the score). */}
+        {(() => {
+          const fb = review as {
+            overall_feedback_text?: string | null;
+          };
+          return fb.overall_feedback_text ? (
+            <GlassCard className="p-5 border-l-4 border-m3-primary">
+              <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant mb-1">
+                {t("course_quiz_review.overall_feedback")}
+              </p>
+              <p className="text-sm text-m3-on-surface whitespace-pre-wrap">
+                {fb.overall_feedback_text}
+              </p>
+            </GlassCard>
+          ) : null;
+        })()}
+
         {/* Per-question breakdown */}
         <div className="space-y-4">
           <h2 className="font-headline font-bold text-lg text-m3-on-surface">
@@ -278,9 +297,16 @@ function ReviewQuestionCard({
           <span className="text-xs font-headline font-black text-m3-secondary tabular-nums shrink-0">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <p className="text-sm font-semibold text-m3-on-surface flex-1 min-w-0">
-            {question.prompt_text}
-          </p>
+          <div className="text-sm font-semibold text-m3-on-surface flex-1 min-w-0">
+            <RichContent
+              value={question.prompt_text}
+              format={
+                (question as { prompt_format?: string | null }).prompt_format ??
+                "plain"
+              }
+              inline
+            />
+          </div>
         </div>
         <span
           className={cn(
@@ -323,9 +349,15 @@ function ReviewQuestionCard({
             <p className="text-[10px] uppercase tracking-widest font-bold text-m3-primary mb-1">
               {t("course_quiz_review.explanation")}
             </p>
-            <p className="text-sm text-m3-on-surface whitespace-pre-wrap">
-              {question.explanation}
-            </p>
+            <div className="text-sm text-m3-on-surface">
+              <RichContent
+                value={question.explanation}
+                format={
+                  (question as { explanation_format?: string | null })
+                    .explanation_format ?? "plain"
+                }
+              />
+            </div>
           </div>
         </div>
       )}

@@ -104,6 +104,19 @@ export async function apiDelete(path: string): Promise<void> {
 }
 
 /**
+ * GET that returns the raw {@link Response} so callers can read the body as a
+ * Blob AND inspect headers (e.g. Content-Disposition for a download filename).
+ * Throws {@link ApiError} on non-2xx. Used by the report/export download helper.
+ */
+export async function apiGetResponse(path: string): Promise<Response> {
+  const res = await authenticatedFetch(path, { method: "GET" });
+  if (!res.ok) {
+    throw await readError(res);
+  }
+  return res;
+}
+
+/**
  * POST that returns a binary Blob (e.g. synthesized audio) instead of JSON.
  * Throws {@link ApiError} on non-2xx so callers can distinguish a real
  * failure (503 → fall back to browser TTS) from a successful audio response.

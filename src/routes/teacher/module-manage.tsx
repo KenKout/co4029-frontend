@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useTeacherCourseById,
   useTeacherCourseContent,
@@ -88,7 +89,7 @@ function ItemRow({
   onDragOver: (e: React.DragEvent) => void;
   onDrop: () => void;
   onDragEnd: () => void;
-  onDelete: () => void;
+  onDelete: (title: string) => void;
 }) {
   const { t } = useTranslation();
   const lesson = item.lesson;
@@ -262,9 +263,10 @@ function ItemRow({
           variant="ghost"
           size="icon"
           className="h-7 w-7 text-m3-error hover:bg-m3-error/10"
+          title={t("teacher_common.delete_item")}
           onClick={(e) => {
             e.stopPropagation();
-            onDelete();
+            onDelete(title);
           }}
         >
           <Trash2 className="h-3.5 w-3.5" />
@@ -595,7 +597,6 @@ function ModuleSettings({
             value={estimatedMinutes}
             onChange={(e) => setEstimatedMinutes(e.target.value)}
             placeholder="e.g. 60"
-            className="text-sm bg-m3-surface"
           />
         </div>
 
@@ -641,6 +642,13 @@ export default function ModuleManagePage() {
 
   const [dragSourceIdx, setDragSourceIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
+  // Pending item deletion — holds the item awaiting confirmation so the
+  // destructive delete only fires after the user confirms in the dialog.
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
 
   if (isLoading) {
     return (
@@ -723,9 +731,13 @@ export default function ModuleManagePage() {
     setDragOverIdx(null);
   }
 
-  function handleDeleteItem(itemId: string) {
-    deleteItem.mutate(itemId, {
-      onSuccess: () => toast.success("Item removed"),
+  function confirmDeleteItem() {
+    if (!pendingDelete) return;
+    deleteItem.mutate(pendingDelete.id, {
+      onSuccess: () => {
+        toast.success(t("teacher_common.item_removed"));
+        setPendingDelete(null);
+      },
       onError: (err) => toast.error((err as Error).message),
     });
   }
@@ -893,7 +905,7 @@ export default function ModuleManagePage() {
                     setDragSourceIdx(null);
                     setDragOverIdx(null);
                   }}
-                  onDelete={() => handleDeleteItem(item.id)}
+                  onDelete={(title) => setPendingDelete({ id: item.id, title })}
                 />
               ))}
 
@@ -906,6 +918,22 @@ export default function ModuleManagePage() {
           <ModuleSettings module={module} courseId={courseId} />
         </aside>
       </div>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title={t("teacher_common.delete_item_title")}
+        description={t("teacher_common.delete_item_body", {
+          title: pendingDelete?.title ?? "",
+        })}
+        confirmLabel={t("teacher_common.delete_item_confirm")}
+        cancelLabel={t("common.cancel", "Cancel")}
+        confirmVariant="destructive"
+        onConfirm={confirmDeleteItem}
+        isPending={deleteItem.isPending}
+      />
     </div>
   );
 }

@@ -1,0 +1,7 @@
+<!-- aBridgeAI · small-size mark. Struts dropped, stroke thickened so the
+     silhouette survives at 24-48px. Use below 48px. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="144" height="96" viewBox="0 0 144 96" role="img" aria-label="aBridgeAI">
+  <path d="M10 70 Q72 -2 134 70" fill="none" stroke="#1e40af" stroke-width="26" stroke-linecap="round"/>
+  <rect x="0" y="68" width="144" height="20" rx="10" fill="#1e40af"/>
+  <circle cx="72" cy="26" r="14" fill="#f59e0b"/>
+</svg>

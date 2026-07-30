@@ -60,6 +60,11 @@ export function useServerTable<T>({
   const [sort, setSort] = useState<SortState | null>(initialSort);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(initialPageSize);
+  // Optional stateful single-select filters (e.g. the admin users role/org
+  // filters). Static `filters` remain supported alongside these; all are sent
+  // as query params.
+  const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
+  const [orgFilter, setOrgFilter] = useState<string | undefined>(undefined);
 
   const debouncedSearch = useDebounced(search.trim(), debounceMs);
   const filterKey = JSON.stringify(filters ?? {});
@@ -67,18 +72,36 @@ export function useServerTable<T>({
   // Any change to what's *queried* (except page itself) resets to page 0.
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearch, sort?.columnId, sort?.direction, pageSize, filterKey]);
+  }, [
+    debouncedSearch,
+    sort?.columnId,
+    sort?.direction,
+    pageSize,
+    filterKey,
+    roleFilter,
+    orgFilter,
+  ]);
 
   const query = useQuery({
     queryKey: [
       ...queryKey,
-      { search: debouncedSearch, sort, page, pageSize, filterKey },
+      {
+        search: debouncedSearch,
+        sort,
+        page,
+        pageSize,
+        filterKey,
+        roleFilter,
+        orgFilter,
+      },
     ],
     queryFn: () => {
       const params = new URLSearchParams();
       params.set("page", String(page));
       params.set("page_size", String(pageSize));
       if (debouncedSearch) params.set("search", debouncedSearch);
+      if (roleFilter) params.set("role", roleFilter);
+      if (orgFilter) params.set("organization", orgFilter);
       if (sort?.columnId && sort.direction) {
         params.set("sort", sort.columnId);
         params.set("sort_dir", sort.direction);
@@ -100,6 +123,10 @@ export function useServerTable<T>({
     pageSize,
     search,
     setSearch,
+    roleFilter,
+    setRoleFilter,
+    orgFilter,
+    setOrgFilter,
     sort,
     setSort,
     setPage,

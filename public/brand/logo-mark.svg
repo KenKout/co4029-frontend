@@ -1,0 +1,20 @@
+<!-- aBridgeAI · primary mark (pier arch)
+     Palette: #1e40af → #1d4ed8, accent #f59e0b.
+     Use at >= 48px. Below that use logo-mark-solid.svg (struts drop out). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="144" height="110" viewBox="0 0 144 110" role="img" aria-label="aBridgeAI">
+  <defs>
+    <linearGradient id="ab-brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e40af"/><stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <path d="M10 74 Q72 6 134 74" fill="none" stroke="url(#ab-brand)" stroke-width="12" stroke-linecap="round"/>
+  <rect x="0" y="72" width="144" height="12" rx="6" fill="url(#ab-brand)"/>
+  <rect x="18" y="84" width="11" height="26" rx="5.5" fill="#1e40af"/>
+  <rect x="115" y="84" width="11" height="26" rx="5.5" fill="#1e40af"/>
+  <g stroke="#93b4fc" stroke-width="5" stroke-linecap="round">
+    <line x1="41" y1="72" x2="41" y2="44"/>
+    <line x1="72" y1="72" x2="72" y2="32"/>
+    <line x1="103" y1="72" x2="103" y2="44"/>
+  </g>
+  <circle cx="72" cy="28" r="9" fill="#f59e0b"/>
+</svg>

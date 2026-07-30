@@ -100,7 +100,10 @@ export function useQuestionPacing(
     }
     // Recompute immediately so a reload doesn't flash 0s.
     setElapsedSeconds(
-      Math.max(0, Math.floor((Date.now() - seenRef.current[questionId]) / 1000)),
+      Math.max(
+        0,
+        Math.floor((Date.now() - seenRef.current[questionId]) / 1000),
+      ),
     );
   }, [sessionId, questionId, active]);
 

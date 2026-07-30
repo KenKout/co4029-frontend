@@ -28,6 +28,9 @@ const CATEGORY_IDS: NotificationCategory[] = [
   "interview_result",
   "course_announcement",
   "system",
+  "material_processing",
+  "quiz_generation",
+  "interview_generation",
 ];
 
 const CHANNEL_IDS: NotificationChannel[] = ["email", "in_app"];

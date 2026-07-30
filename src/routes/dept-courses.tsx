@@ -2,9 +2,10 @@ import { useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { BookOpen, ChevronRight, Users } from "lucide-react";
+import { BookOpen, ChevronRight, Plus, Users } from "lucide-react";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import type { CourseAuthoring } from "@/lib/api/types";
 
@@ -63,6 +64,8 @@ export default function DeptCoursesPage() {
     perms.includes("course.assign_teacher") ||
     perms.includes("system.administer");
   const canRead = canAssign || perms.includes("course.enrollment.read");
+  const canCreate =
+    perms.includes("course.create") || perms.includes("system.administer");
 
   useEffect(() => {
     if (permissions.isLoading) return;
@@ -99,6 +102,16 @@ export default function DeptCoursesPage() {
       <PageHeader
         title={t("dept_courses.title")}
         subtitle={t("dept_courses.subtitle")}
+        action={
+          canCreate ? (
+            <Link to="/management/courses/new" className="shrink-0">
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                {t("dept_courses.new_course", { defaultValue: "New course" })}
+              </Button>
+            </Link>
+          ) : undefined
+        }
       />
 
       {!enabled || list.isLoading ? (
@@ -123,6 +136,14 @@ export default function DeptCoursesPage() {
           <p className="text-xs text-text-muted mt-1">
             {t("dept_courses.empty_body")}
           </p>
+          {canCreate && (
+            <Link to="/management/courses/new">
+              <Button size="sm" className="mt-4 gap-2">
+                <Plus className="h-4 w-4" />
+                {t("dept_courses.new_course", { defaultValue: "New course" })}
+              </Button>
+            </Link>
+          )}
         </div>
       ) : (
         <div>
