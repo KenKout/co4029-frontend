@@ -187,14 +187,12 @@
   "teacher_dashboard": {
     "title": "Bảng điều khiển Giảng viên",
     "subtitle": "Quản lý khóa học, tài liệu và tạo AI.",
-    "new_course": "Khóa học mới",
     "your_courses": {
       "title": "Khóa học của bạn",
       "subtitle": "Nhấn để quản lý học phần, bài học và tài liệu",
       "view_all": "Xem tất cả",
       "no_courses_yet": "Chưa có khóa học nào",
       "create_first": "Tạo khóa học đầu tiên của bạn để bắt đầu.",
-      "create_course": "Tạo khóa học",
       "manage": "Quản lý"
     },
     "status": {
@@ -356,8 +354,6 @@
     "n_courses_plural": "{{count}} khóa học",
     "published_suffix": " · {{count}} đã xuất bản",
     "draft_suffix": " · {{count}} bản nháp",
-    "new_course": "Khóa học mới",
-    "create_course": "Tạo khóa học",
     "filter_all": "Tất cả",
     "filter_published": "Đã xuất bản",
     "filter_draft": "Bản nháp",

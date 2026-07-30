@@ -1,4 +1,4 @@
-import { test, expect, type Page, type Route } from "@playwright/test";
+import { test, expect, type Route } from "@playwright/test";
 import { Client } from "pg";
 import { loginAs } from "./_helpers/login";
 import { resetSeed } from "./_helpers/seed-reset";
@@ -39,19 +39,6 @@ async function safeRowCount(
   } finally {
     await client.end().catch(() => undefined);
   }
-}
-
-async function isRouteWired(
-  page: Page,
-  path: string,
-  sentinel: string,
-): Promise<boolean> {
-  await page.goto(path, { waitUntil: "domcontentloaded" });
-  return page
-    .locator(sentinel)
-    .first()
-    .isVisible({ timeout: 5_000 })
-    .catch(() => false);
 }
 
 test.describe("integration-flow", () => {
@@ -119,42 +106,11 @@ test.describe("integration-flow", () => {
     ).toBeVisible({ timeout: 10_000 });
   });
 
-  test("03 teacher creates course (Wave 4)", async ({ page }) => {
-    await loginAs(page, "teacher");
-    const wired = await isRouteWired(page, "/teacher/courses/new", "h1");
-    test.skip(!wired, "/teacher/courses/new not wired or teacher blocked");
-
-    await expect(
-      page.getByRole("heading", { name: /New Course/i }).first(),
-    ).toBeVisible({ timeout: 10_000 });
-
-    const titleInput = page.locator("input").nth(0);
-    const slugInput = page.locator("input").nth(1);
-    const slugSuffix = Date.now().toString(36);
-
-    await titleInput.fill(`E2E Integration Course ${slugSuffix}`);
-    await slugInput.fill(`e2e-int-${slugSuffix}`);
-
-    const responsePromise = page
-      .waitForResponse(
-        (resp) =>
-          resp.url().includes("/api/v1/teacher/courses") &&
-          resp.request().method() === "POST",
-        { timeout: 10_000 },
-      )
-      .catch(() => null);
-
-    await page.getByRole("button", { name: /Create Course/i }).click();
-    const createResp = await responsePromise;
-
+  test("03 teacher creates course (Wave 4)", async () => {
     test.skip(
-      !createResp || createResp.status() >= 400,
-      `Teacher cannot create course (status=${createResp?.status() ?? "none"})`,
+      true,
+      "Course creation is manager-side; the teacher /teacher/courses/new route and its buttons were removed.",
     );
-
-    await page.waitForURL(/\/teacher\/courses\/[a-f0-9-]{36}/, {
-      timeout: 10_000,
-    });
   });
 
   test("04 teacher uploads small material (Wave 4)", async () => {

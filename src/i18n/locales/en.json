@@ -186,14 +186,12 @@
   "teacher_dashboard": {
     "title": "Teacher Dashboard",
     "subtitle": "Manage your courses, materials, and AI generation.",
-    "new_course": "New Course",
     "your_courses": {
       "title": "Your Courses",
       "subtitle": "Click to manage modules, lessons, and materials",
       "view_all": "View all",
       "no_courses_yet": "No courses yet",
       "create_first": "Create your first course to get started.",
-      "create_course": "Create Course",
       "manage": "Manage"
     },
     "status": {
@@ -380,8 +378,6 @@
     "n_courses_plural": "{{count}} courses",
     "published_suffix": " · {{count}} published",
     "draft_suffix": " · {{count}} draft",
-    "new_course": "New course",
-    "create_course": "Create course",
     "filter_all": "All",
     "filter_published": "Published",
     "filter_draft": "Draft",

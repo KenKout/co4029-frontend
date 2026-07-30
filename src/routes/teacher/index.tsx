@@ -9,7 +9,6 @@ import {
   Clock,
   FileEdit,
   MessageSquare,
-  Plus,
   Sparkles,
   TrendingDown,
 } from "lucide-react";
@@ -111,14 +110,6 @@ export default function TeacherDashboard() {
       <PageHeader
         title={t("teacher_dashboard.title")}
         subtitle={t("teacher_dashboard.subtitle")}
-        action={
-          <Link to="/teacher/courses/new">
-            <Button size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              {t("teacher_dashboard.new_course")}
-            </Button>
-          </Link>
-        }
       />
 
       {/* Headline signals. Replaces the old Total/Published/Drafts/AI-Enabled
