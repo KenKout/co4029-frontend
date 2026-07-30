@@ -2252,6 +2252,8 @@
       "answer_placeholder": "Type your answer or start speaking…",
       "answer_locked": "Please wait for the interviewer to finish…",
       "send_hint": "Enter to send · Shift + Enter for a new line",
+      "send_hint_send": "send",
+      "send_hint_newline": "new line",
       "start_speaking": "Start speaking",
       "mute_microphone": "Stop listening",
       "audio_input": "Audio input",

@@ -2253,6 +2253,56 @@ export function OnboardingActions({
   );
 }
 
+/**
+ * Keyboard hint under the answer box, rendered as keycaps rather than prose.
+ *
+ * Was a single sentence ("Enter to send · Shift + Enter for a new line") with one
+ * decorative `<kbd>Enter</kbd>` beside it in the focused composer, which put the
+ * same key in two visual languages at once. Now every key is a keycap and only
+ * the verbs are words, so the shortcut is scannable without reading a sentence.
+ *
+ * `aria-label` carries the original prose: a screen reader announcing
+ * "Enter send Shift plus Enter new line" as loose fragments is worse than the
+ * sentence it replaced, so the visual keycaps are hidden from the a11y tree and
+ * the sentence is what gets announced.
+ */
+function SendHint({ className }: { className?: string }) {
+  const { t } = useTranslation();
+  return (
+    <span
+      className={cn("inline-flex items-center gap-1.5", className)}
+      aria-label={t("course_interview.workspace.send_hint")}
+    >
+      <span className="inline-flex items-center gap-1" aria-hidden="true">
+        <Kbd>Enter</Kbd>
+        <span>{t("course_interview.workspace.send_hint_send")}</span>
+      </span>
+      {/* The Shift half drops on narrow screens: two keycap groups plus a timer
+          do not fit, and "Enter send" is the half a student needs first. Hiding
+          the whole hint instead would regress what mobile used to show. */}
+      <span
+        className="hidden items-center gap-1 sm:inline-flex"
+        aria-hidden="true"
+      >
+        <span className="text-border">·</span>
+        <Kbd>Shift</Kbd>
+        <span className="text-text-subtle">+</span>
+        <Kbd>Enter</Kbd>
+        <span>{t("course_interview.workspace.send_hint_newline")}</span>
+      </span>
+    </span>
+  );
+}
+
+/** One keycap. Shared so both composers render identical keys. */
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="rounded border border-border bg-surface-muted px-1 py-0.5 font-mono text-[10px] font-semibold leading-none text-text-muted">
+      {children}
+    </kbd>
+  );
+}
+
 export function AnswerComposer({
   value,
   draftLength,
@@ -2335,9 +2385,7 @@ export function AnswerComposer({
             className="block min-h-[72px] w-full resize-none overflow-y-auto bg-transparent pb-8 pr-12 text-[15px] leading-6 text-text-strong outline-none placeholder:text-text-subtle disabled:cursor-wait"
           />
 
-          <span className="absolute bottom-3 left-4 text-[10px] text-text-subtle">
-            {t("course_interview.workspace.send_hint")}
-          </span>
+          <SendHint className="absolute bottom-3 left-4 text-[10px] text-text-subtle" />
           <span className="sr-only" aria-live="polite">
             {t("course_interview.labels.character_count", {
               count: draftLength,
@@ -2886,16 +2934,10 @@ export function FocusedAnswerComposer({
 
         <div className="mt-2 flex items-center gap-2 text-[11px] text-text-subtle">
           {/* A11y (#8): keyboard-shortcut hint is discoverable at every
-              breakpoint (was hidden on mobile). Kbd styling makes the keys read
-              as keys, not prose. */}
-          <span className="inline-flex items-center gap-1">
-            <kbd className="rounded border border-border bg-surface-muted px-1 py-0.5 font-mono text-[10px] font-semibold text-text-muted">
-              Enter
-            </kbd>
-            <span className="hidden sm:inline">
-              {t("course_interview.workspace.send_hint")}
-            </span>
-          </span>
+              breakpoint (was hidden on mobile). Keys read as keys, not prose —
+              and the standalone <kbd>Enter</kbd> that used to sit beside the
+              sentence is gone, since SendHint now renders every key itself. */}
+          <SendHint />
           <span className="ml-auto font-mono font-semibold tabular-nums sm:hidden">
             {elapsed}
           </span>

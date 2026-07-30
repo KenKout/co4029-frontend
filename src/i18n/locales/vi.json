@@ -2160,6 +2160,8 @@
       "answer_placeholder": "Nhập câu trả lời hoặc bắt đầu nói…",
       "answer_locked": "Vui lòng đợi người phỏng vấn nói xong…",
       "send_hint": "Enter để gửi · Shift + Enter để xuống dòng",
+      "send_hint_send": "gửi",
+      "send_hint_newline": "xuống dòng",
       "start_speaking": "Bắt đầu nói",
       "mute_microphone": "Dừng nghe",
       "audio_input": "Đầu vào âm thanh",

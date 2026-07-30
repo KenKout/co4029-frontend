@@ -237,6 +237,39 @@ describe("AnswerComposer", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it("renders the send hint as keycaps, not a sentence", () => {
+    // Redesign: each key is its own <kbd> so the shortcut is scannable. Enter
+    // appears twice (send, and again in the Shift combo), Shift once.
+    renderComposer("");
+    const keys = Array.from(document.querySelectorAll("kbd")).map((k) =>
+      (k.textContent ?? "").trim(),
+    );
+    expect(keys).toEqual(["Enter", "Shift", "Enter"]);
+  });
+
+  it("keeps the shortcut announceable as a sentence", () => {
+    // The keycaps are aria-hidden, so without this label a screen reader would
+    // get "Enter send Shift + Enter new line" as loose fragments — worse than
+    // the prose it replaced.
+    renderComposer("");
+    expect(
+      screen.getByLabelText(/Enter để gửi.*Shift \+ Enter để xuống dòng/i),
+    ).toBeInTheDocument();
+  });
+
+  it("labels the keys with verbs only", () => {
+    // "Enter to send" collapses to a keycap + "gửi"; the word "Enter" must not
+    // also appear as prose next to its own keycap.
+    renderComposer("");
+    const hint = screen.getByLabelText(/Enter để gửi/i);
+    const visibleText = (hint.textContent ?? "").replace(
+      /Enter|Shift|\+|·/g,
+      "",
+    );
+    expect(visibleText.trim()).toMatch(/gửi/);
+    expect(visibleText.trim()).toMatch(/xuống dòng/);
+  });
+
   it("does not send an empty answer", () => {
     const onSubmit = renderComposer("   ");
     fireEvent.keyDown(screen.getByRole("textbox"), {
