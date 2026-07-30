@@ -394,6 +394,12 @@ const deptCourseDetailRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/dept-course-detail")),
 });
 
+const managementCourseNewRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/management/courses/new",
+  component: lazyRouteComponent(() => import("@/routes/management-course-new")),
+});
+
 const managementCourseEnrollmentsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/courses/$courseId/enrollments",
@@ -603,6 +609,7 @@ const routeTree = rootRoute.addChildren([
     adminAuditLogsRoute,
     deptCoursesRoute,
     deptCourseDetailRoute,
+    managementCourseNewRoute,
     managementCourseEnrollmentsRoute,
     managementEnrolmentRoute,
     careerPathsRoute,

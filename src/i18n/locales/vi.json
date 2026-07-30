@@ -601,6 +601,7 @@
     "title": "Quản lý đội ngũ",
     "subtitle": "Phân công giảng viên và xem danh sách lớp.",
     "no_permission": "Không có quyền truy cập",
+    "new_course": "Khóa học mới",
     "load_failed": "Không thể tải danh sách khóa học.",
     "empty_title": "Bạn chưa được phân công khóa học nào để quản lý.",
     "empty_body": "Khi quản trị viên gán khóa học vào phạm vi của bạn, danh sách sẽ xuất hiện tại đây.",

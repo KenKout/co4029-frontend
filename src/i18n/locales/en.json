@@ -643,6 +643,7 @@
     "title": "Team management",
     "subtitle": "Assign instructors and view class rosters.",
     "no_permission": "You do not have permission to access this page",
+    "new_course": "New course",
     "load_failed": "Couldn't load courses.",
     "empty_title": "You have no courses assigned to manage yet.",
     "empty_body": "When an admin assigns courses to your scope, they will appear here.",

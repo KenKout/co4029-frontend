@@ -185,6 +185,9 @@ export function useCreateCourse() {
       qc.invalidateQueries({ queryKey: queryKeys.courses.bySlug(course.slug) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.detail(course.id) });
       qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
+      // Also refresh the manager/dept course list — creation now happens from
+      // /management/courses/new which returns to /dept.
+      qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
     },
   });
 }
