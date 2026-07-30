@@ -9,7 +9,6 @@ import {
   Clock,
   TrendingUp,
   AlertTriangle,
-  UserCheck,
   UserMinus,
   Loader2,
   CheckCircle2,
@@ -26,7 +25,6 @@ import {
   useTeacherCourseById,
   useTeacherCourseRoster,
 } from "@/lib/api/hooks/teacher-courses";
-import { useUpdateEnrollment } from "@/lib/api/hooks/admin";
 import { useStudentQuizAttempts } from "@/lib/api/hooks/quizzes";
 import { useStudentInterviewSessions } from "@/lib/api/hooks/interviews";
 import {
@@ -188,26 +186,6 @@ export default function CourseStudentDetailPage() {
     ivTimeFilter !== "all";
 
   const student = roster?.students.find((s) => s.student_id === studentId);
-  const updateEnrollment = useUpdateEnrollment(
-    student?.enrollment_id ?? "",
-    courseId,
-  );
-  const [confirmAction, setConfirmAction] = useState<
-    "drop" | "activate" | null
-  >(null);
-
-  async function handleStatusChange(newStatus: string) {
-    if (!student) return;
-    try {
-      await updateEnrollment.mutateAsync({ status: newStatus });
-      toast.success(
-        `Student ${newStatus === "active" ? "reactivated" : "dropped"}.`,
-      );
-      setConfirmAction(null);
-    } catch (err: unknown) {
-      toast.error((err as Error).message || "Update failed");
-    }
-  }
 
   if (isLoading) {
     return (
@@ -645,87 +623,6 @@ export default function CourseStudentDetailPage() {
                 </span>
               </div>
             </div>
-
-            <div className="h-px bg-m3-outline-variant/10" />
-
-            {/* Actions */}
-            {confirmAction ? (
-              <div className="space-y-3 p-3 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low">
-                <p className="text-sm font-bold text-m3-on-surface text-center">
-                  {confirmAction === "drop"
-                    ? "Drop this student?"
-                    : "Reactivate this student?"}
-                </p>
-                <p className="text-xs text-m3-on-surface-variant text-center">
-                  {confirmAction === "drop"
-                    ? "They will lose access to the course content."
-                    : "They will regain access to the course."}
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setConfirmAction(null)}
-                    className="flex-1 py-2 rounded-xl border border-m3-outline-variant/30 text-xs font-bold text-m3-on-surface-variant hover:bg-m3-surface-container transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleStatusChange(
-                        confirmAction === "drop" ? "dropped" : "active",
-                      )
-                    }
-                    disabled={updateEnrollment.isPending}
-                    className={cn(
-                      "flex-1 py-2 rounded-xl text-xs font-bold text-white transition-colors cursor-pointer disabled:opacity-60",
-                      confirmAction === "drop"
-                        ? "bg-m3-error hover:opacity-90"
-                        : "bg-emerald-600 hover:opacity-90",
-                    )}
-                  >
-                    {updateEnrollment.isPending ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin mx-auto" />
-                    ) : (
-                      "Confirm"
-                    )}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {student.enrollment_status !== "active" && (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmAction("activate")}
-                    className="w-full flex items-center gap-2.5 p-3 rounded-xl hover:bg-emerald-50 text-emerald-700 transition-colors group text-left cursor-pointer"
-                  >
-                    <div className="p-1.5 rounded-lg bg-emerald-50">
-                      <UserCheck className="h-4 w-4 text-emerald-600" />
-                    </div>
-                    <span className="text-sm font-medium flex-1">
-                      Reactivate Student
-                    </span>
-                    <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                )}
-                {student.enrollment_status === "active" && (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmAction("drop")}
-                    className="w-full flex items-center gap-2.5 p-3 rounded-xl hover:bg-m3-error/5 text-m3-error transition-colors group text-left cursor-pointer"
-                  >
-                    <div className="p-1.5 rounded-lg bg-m3-error/10">
-                      <UserMinus className="h-4 w-4 text-m3-error" />
-                    </div>
-                    <span className="text-sm font-medium flex-1">
-                      Drop Student
-                    </span>
-                    <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                )}
-              </div>
-            )}
           </div>
 
           {/* At-risk alert */}

@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
-  Plus,
   BookOpen,
   Search,
   X,
@@ -60,20 +58,7 @@ export default function TeacherCoursesPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <PageHeader
-        title={t("teacher_courses_list.title")}
-        action={
-          <Link to="/teacher/courses/new" className="shrink-0">
-            <Button
-              size="sm"
-              className="gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <Plus className="h-4 w-4" />
-              {t("teacher_courses_list.new_course")}
-            </Button>
-          </Link>
-        }
-      />
+      <PageHeader title={t("teacher_courses_list.title")} />
 
       {/* Stat strip — the per-status breakdown promoted out of the subtitle
           into scannable tiles (same visual family as the dashboard). */}
@@ -201,15 +186,6 @@ export default function TeacherCoursesPage() {
             <p className="text-sm text-m3-on-surface-variant mt-2">
               {t("teacher_courses_list.empty_first_body")}
             </p>
-            <Link to="/teacher/courses/new">
-              <Button
-                size="sm"
-                className="mt-5 gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <Plus className="h-4 w-4" />
-                {t("teacher_courses_list.create_course")}
-              </Button>
-            </Link>
           </div>
         ) : (
           /* No-match — courses exist but the search/filter excluded them all.

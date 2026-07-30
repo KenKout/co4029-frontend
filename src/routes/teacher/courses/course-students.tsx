@@ -16,7 +16,6 @@ import {
   UserMinus,
   ArrowUpRight,
   Award,
-  UserPlus,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -248,22 +247,6 @@ export default function CourseStudentsPage() {
               {atRiskCount} student{atRiskCount !== 1 ? "s" : ""} need attention
             </div>
           )}
-          {/* Entry point to enrollment management (add / bulk-import / invite
-              codes). Previously only reachable buried inside course-manage —
-              surfaced here since this roster is where teachers look to add a
-              student. */}
-          <Link
-            to="/management/courses/$courseId/enrollments"
-            params={{ courseId }}
-          >
-            <button
-              type="button"
-              className="flex items-center gap-2 bg-m3-primary text-white rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-m3-primary/90 transition-colors cursor-pointer"
-            >
-              <UserPlus className="h-4 w-4" />
-              {t("teacher_course_students.manage_enrollments")}
-            </button>
-          </Link>
         </div>
       </div>
 

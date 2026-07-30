@@ -17,7 +17,6 @@ import {
   ArrowRight,
   Check,
   Users,
-  UserPlus,
   Activity,
   Settings,
   Save,
@@ -2288,21 +2287,6 @@ export default function CourseManagePage() {
                 <Brain className="h-4 w-4 text-m3-secondary" />
                 <span className="hidden sm:inline">
                   {t("teacher_common.nav_retention")}
-                </span>
-              </Button>
-            </Link>
-            <Link
-              to="/management/courses/$courseId/enrollments"
-              params={{ courseId }}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-m3-outline-variant/30 shrink-0"
-              >
-                <UserPlus className="h-4 w-4 text-m3-secondary" />
-                <span className="hidden sm:inline">
-                  {t("teacher_common.nav_manage_enrollments")}
                 </span>
               </Button>
             </Link>

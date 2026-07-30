@@ -227,12 +227,6 @@ export default function TeacherDashboard() {
             <p className="text-xs mt-1">
               {t("teacher_dashboard.your_courses.create_first")}
             </p>
-            <Link to="/teacher/courses/new">
-              <Button size="sm" className="mt-4 gap-2">
-                <Plus className="h-4 w-4" />
-                {t("teacher_dashboard.your_courses.create_course")}
-              </Button>
-            </Link>
           </div>
         ) : (
           <div className="grid gap-5 mt-4 sm:grid-cols-2 xl:grid-cols-3">
