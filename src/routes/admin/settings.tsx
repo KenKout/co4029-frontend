@@ -13,6 +13,7 @@ import {
 import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 
 const GROUP_ORDER = [
+  "ai",
   "chunking",
   "preprocessing",
   "knowledge_graph",
@@ -21,6 +22,7 @@ const GROUP_ORDER = [
 ] as const;
 
 const GROUP_LABELS: Record<string, string> = {
+  ai: "AI models (timeouts & retry)",
   chunking: "Chunking",
   preprocessing: "Document preprocessing",
   knowledge_graph: "Knowledge graph",
