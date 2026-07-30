@@ -3364,6 +3364,10 @@
     }
   },
   "teacher_interview_config": {
+    "published_freeze": {
+      "banner": "This interview is published, so settings that change how it is conducted or graded are locked — students may be taking it right now, and changing them mid-cohort would grade students against different rules. You can still edit the title, attempt limits and cooldown. Unpublish to change anything else.",
+      "tooltip": "Locked while published — unpublish to change this."
+    },
     "persona": {
       "strict": "Strict",
       "neutral": "Neutral",

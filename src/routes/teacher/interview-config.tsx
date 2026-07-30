@@ -24,6 +24,7 @@ import {
   Clock,
   HelpCircle,
   Loader2,
+  Lock,
   MoreVertical,
   Pencil,
   Plus,
@@ -89,6 +90,10 @@ import type {
   PersonaProfileRead,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import {
+  hasFrozenFields,
+  isFieldFrozen,
+} from "@/lib/interview/published-field-freeze";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -325,7 +330,10 @@ function personaOverridePayload(
   // Identity has no preset to differ from, so it is carried whenever it is set
   // to something other than the default. Without this the role would be dropped
   // on any config whose tone dials all match the preset.
-  if (override.interviewer_role && override.interviewer_role !== "generic_assistant") {
+  if (
+    override.interviewer_role &&
+    override.interviewer_role !== "generic_assistant"
+  ) {
     diff.interviewer_role = override.interviewer_role;
     hasOverride = true;
   }
@@ -1068,6 +1076,7 @@ export default function InterviewConfigPage() {
                   justSaved={justSaved}
                   updatedAt={config?.updated_at ?? null}
                   practiceQuestionCount={practiceQuestionCount}
+                  status={config.status}
                   outcomesSlot={
                     <LearningOutcomes
                       configId={configId}
@@ -1589,7 +1598,8 @@ function revealDelayMs(index: number): number {
   return Math.min(Math.max(index, 0), MAX_STEPS) * STEP_MS;
 }
 
-function SettingsForm({
+/** Exported for tests: asserts which inputs the published freeze disables. */
+export function SettingsForm({
   draft,
   setDraft,
   onSubmit,
@@ -1598,6 +1608,7 @@ function SettingsForm({
   justSaved,
   updatedAt,
   practiceQuestionCount,
+  status,
   outcomesSlot,
 }: {
   draft: SettingsDraft;
@@ -1611,6 +1622,10 @@ function SettingsForm({
       changes nothing, which the form says out loud rather than leaving the
       teacher to find out from a student. */
   practiceQuestionCount: number;
+  /** Config status. On "published", settings that change how the interview is
+      conducted or graded are frozen (the backend PATCH returns 409 for them),
+      so the form dims them rather than inviting an edit that cannot save. */
+  status: string | null | undefined;
   /** Learning-outcomes panel, injected between Guidance and Security so the
       outcomes sit above the (now bottom-most) Security & Integrity block. */
   outcomesSlot?: React.ReactNode;
@@ -1618,6 +1633,13 @@ function SettingsForm({
   const { t } = useTranslation();
   const [securityOpen, setSecurityOpen] = useState(false);
   const [personaAdvancedOpen, setPersonaAdvancedOpen] = useState(false);
+  const anyFrozen = hasFrozenFields(status);
+  const frozenReason = t("teacher_interview_config.published_freeze.tooltip");
+  /** Frozen-field props for a `Field`, keyed by its PATCH payload name. */
+  const lock = (field: string) => ({
+    frozen: isFieldFrozen(field, status),
+    frozenReason,
+  });
   function update<K extends keyof SettingsDraft>(
     key: K,
     value: SettingsDraft[K],
@@ -1627,6 +1649,18 @@ function SettingsForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
+      {/* Why half the form is dimmed. Without this, a greyed-out field reads as
+          a bug or a permissions problem; the fix (unpublish) is not guessable. */}
+      {anyFrozen && (
+        <div
+          className="flex items-start gap-3 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          role="status"
+        >
+          <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <p>{t("teacher_interview_config.published_freeze.banner")}</p>
+        </div>
+      )}
+
       {/* Card 1 — Basics: identity + interviewer style grouped together, with
           persona/voice on one row (FormBold-style two-up layout). */}
       <SettingsCard
@@ -1642,7 +1676,10 @@ function SettingsForm({
           />
         </Field>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label={t("teacher_interview_config.fields.persona")}>
+          <Field
+            label={t("teacher_interview_config.fields.persona")}
+            {...lock("persona")}
+          >
             <Select<Persona>
               value={draft.persona}
               onValueChange={(next) => update("persona", next)}
@@ -1659,6 +1696,7 @@ function SettingsForm({
           <Field
             label={t("teacher_interview_config.fields.interviewer_role")}
             hint={t("teacher_interview_config.fields.interviewer_role_hint")}
+            {...lock("persona_profile")}
           >
             <Select<InterviewerRole>
               value={
@@ -1679,6 +1717,7 @@ function SettingsForm({
           <Field
             label={t("teacher_interview_config.fields.voice_label")}
             hint={t("teacher_interview_config.fields.voice_hint")}
+            {...lock("tts_voice")}
           >
             <Select
               value={draft.tts_voice}
@@ -1809,6 +1848,7 @@ function SettingsForm({
           <Field
             label={t("teacher_interview_config.fields.duration_label")}
             hint={t("teacher_interview_config.fields.duration_hint")}
+            {...lock("time_limit_minutes")}
           >
             <Input
               type="number"
@@ -1825,6 +1865,7 @@ function SettingsForm({
           <Field
             label={t("teacher_interview_config.fields.attempts_label")}
             hint={t("teacher_interview_config.fields.duration_hint")}
+            {...lock("max_attempts")}
           >
             <Input
               type="number"
@@ -1840,6 +1881,7 @@ function SettingsForm({
           <Field
             label={t("teacher_interview_config.fields.criteria_label")}
             hint={t("teacher_interview_config.fields.criteria_hint")}
+            {...lock("min_outcomes_to_pass")}
           >
             <Input
               type="number"
@@ -1856,11 +1898,22 @@ function SettingsForm({
 
         {/* Practice mode. Full width under the numeric grid because it needs
             two lines of consequence text, not a one-line hint. */}
-        <div className="mt-4 rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-lowest p-3">
+        <div
+          className={cn(
+            "mt-4 rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-lowest p-3",
+            isFieldFrozen("practice_mode_enabled", status) && "opacity-60",
+          )}
+          title={
+            isFieldFrozen("practice_mode_enabled", status)
+              ? frozenReason
+              : undefined
+          }
+        >
           <label className="flex items-start gap-3">
             <input
               type="checkbox"
               checked={draft.practice_mode_enabled}
+              disabled={isFieldFrozen("practice_mode_enabled", status)}
               onChange={(e) =>
                 update("practice_mode_enabled", e.target.checked)
               }
@@ -1913,6 +1966,7 @@ function SettingsForm({
         <Field
           label={t("teacher_interview_config.fields.notes_label")}
           hint={t("teacher_interview_config.fields.notes_hint")}
+          {...lock("supplementary_instructions")}
         >
           <Textarea
             value={draft.notes}
@@ -1924,10 +1978,27 @@ function SettingsForm({
           />
         </Field>
 
-        <RubricEditor
-          criteria={draft.rubric_criteria}
-          onChange={(next) => update("rubric_criteria", next)}
-        />
+        {/* The rubric is serialized into supplementary_instructions, which the
+            evaluator reads — so it freezes with that field, not separately. */}
+        <div
+          className={cn(
+            isFieldFrozen("supplementary_instructions", status) &&
+              "pointer-events-none opacity-60",
+          )}
+          title={
+            isFieldFrozen("supplementary_instructions", status)
+              ? frozenReason
+              : undefined
+          }
+          aria-disabled={
+            isFieldFrozen("supplementary_instructions", status) || undefined
+          }
+        >
+          <RubricEditor
+            criteria={draft.rubric_criteria}
+            onChange={(next) => update("rubric_criteria", next)}
+          />
+        </div>
       </SettingsCard>
 
       {/* Learning outcomes sit above Security & Integrity (which is now the
@@ -1991,6 +2062,7 @@ function SettingsForm({
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
                   label={t("teacher_interview_config.security.response_policy")}
+                  {...lock("security_response_policy")}
                 >
                   <Select<SecurityResponsePolicy>
                     value={draft.security_response_policy}
@@ -2013,6 +2085,7 @@ function SettingsForm({
                 </Field>
                 <Field
                   label={t("teacher_interview_config.security.max_attempts")}
+                  {...lock("security_max_consecutive_attempts")}
                 >
                   <Input
                     type="number"
@@ -2030,7 +2103,10 @@ function SettingsForm({
               </div>
 
               <div className="grid gap-4">
-                <Field label={t("teacher_interview_config.security.custom_en")}>
+                <Field
+                  label={t("teacher_interview_config.security.custom_en")}
+                  {...lock("security_custom_refusal_en")}
+                >
                   <Textarea
                     rows={3}
                     maxLength={500}
@@ -2626,10 +2702,16 @@ function Section({
 function Field({
   label,
   hint,
+  frozen = false,
+  frozenReason,
   children,
 }: {
   label: React.ReactNode;
   hint?: string;
+  /** Dim + disable this field (frozen while the config is published). */
+  frozen?: boolean;
+  /** Tooltip explaining why, shown on the dimmed field. */
+  frozenReason?: string;
   children: React.ReactNode;
 }) {
   const generatedId = useId();
@@ -2648,22 +2730,42 @@ function Field({
   // would be worse than no association at all. Input, Textarea and Select all
   // accept and forward `id`, so the common cases are covered.
   const onlyChild = isValidElement(children) ? children : null;
-  const childProps = (onlyChild?.props ?? {}) as { id?: string };
+  const childProps = (onlyChild?.props ?? {}) as {
+    id?: string;
+    disabled?: boolean;
+  };
   const controlId = childProps.id ?? (onlyChild ? generatedId : undefined);
+  // A frozen field is disabled at the control, not merely dimmed: greying an
+  // input the teacher can still type into (only to have the save 409) is worse
+  // than not dimming it at all. `disabled` is only forced ON — a control the
+  // caller already disabled for its own reason stays disabled.
+  const extraProps: { id?: string; disabled?: boolean } = {};
+  if (onlyChild && !childProps.id) extraProps.id = generatedId;
+  if (onlyChild && frozen) extraProps.disabled = true;
   const wired =
-    onlyChild && !childProps.id
-      ? cloneElement(onlyChild as ReactElement<{ id?: string }>, {
-          id: generatedId,
-        })
+    onlyChild && Object.keys(extraProps).length > 0
+      ? cloneElement(
+          onlyChild as ReactElement<{ id?: string; disabled?: boolean }>,
+          extraProps,
+        )
       : children;
 
   return (
-    <div className="space-y-1.5">
+    <div
+      className={cn("space-y-1.5", frozen && "opacity-60")}
+      title={frozen ? frozenReason : undefined}
+    >
       <label
         htmlFor={controlId}
         className="block text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant"
       >
         {label}
+        {frozen && (
+          <Lock
+            className="ml-1.5 inline-block h-3 w-3 align-text-top"
+            aria-hidden="true"
+          />
+        )}
       </label>
       {wired}
       {hint && <p className="text-[11px] text-m3-on-surface-variant">{hint}</p>}
