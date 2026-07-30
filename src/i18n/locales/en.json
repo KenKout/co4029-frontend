@@ -1852,13 +1852,18 @@
     },
     "empty_states": {
       "no_report": "No gap report yet",
+      "not_graded": "This session wasn't graded",
       "no_overview": "AI hasn't generated an overview yet.",
       "no_detail": "No detailed criterion data.",
       "no_study_plan": "AI hasn't suggested specific learning steps yet.",
       "no_source_quiz": "This interview wasn't paired with a quiz attempt, so there's no source quiz to compare against."
     },
     "errors": {
-      "no_view_permission_or_ungraded": "This interview session hasn't been graded or you don't have permission to view the report."
+      "pending_grading": "Grading is still running. The gap report is generated automatically once it finishes — check back shortly.",
+      "never_graded": "The student left before answering any question, so there was nothing to grade and no gap report will be generated for this attempt.",
+      "in_progress": "This interview is still in progress. The gap report is generated after the student submits.",
+      "forbidden": "You don't have permission to view this report.",
+      "load_failed": "Couldn't load the gap report. Please try again."
     },
     "sections": {
       "title": "Interview gap report",

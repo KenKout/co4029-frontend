@@ -1800,13 +1800,18 @@
     },
     "empty_states": {
       "no_report": "Chưa có báo cáo lỗ hổng",
+      "not_graded": "Phiên này không được chấm",
       "no_overview": "AI chưa sinh phần tổng quan.",
       "no_detail": "Không có dữ liệu chi tiết theo tiêu chí.",
       "no_study_plan": "AI chưa đề xuất bước học cụ thể.",
       "no_source_quiz": "Buổi phỏng vấn này không đi kèm với một lượt làm quiz, nên không có quiz nguồn để đối chiếu."
     },
     "errors": {
-      "no_view_permission_or_ungraded": "Phiên phỏng vấn này chưa được chấm hoặc bạn không có quyền xem báo cáo."
+      "pending_grading": "Hệ thống đang chấm. Báo cáo lỗ hổng sẽ được tạo tự động sau khi chấm xong — bạn vui lòng quay lại sau ít phút.",
+      "never_graded": "Sinh viên đã thoát trước khi trả lời câu nào, nên không có gì để chấm và lượt này sẽ không có báo cáo lỗ hổng.",
+      "in_progress": "Buổi phỏng vấn này vẫn đang diễn ra. Báo cáo lỗ hổng được tạo sau khi sinh viên nộp bài.",
+      "forbidden": "Bạn không có quyền xem báo cáo này.",
+      "load_failed": "Không tải được báo cáo lỗ hổng. Vui lòng thử lại."
     },
     "sections": {
       "title": "Báo cáo lỗ hổng phỏng vấn",

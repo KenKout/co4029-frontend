@@ -44,6 +44,10 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { cn } from "@/lib/utils";
 import {
+  classifyMissingGapReport,
+  gapReportReasonI18nKey,
+} from "@/lib/interview/gap-report-availability";
+import {
   useInterviewIntegrityEvents,
   useInterviewTranscript,
   useSaveGapReportNotes,
@@ -261,6 +265,25 @@ export default function InterviewGapReportPage() {
   }
 
   if (isError || !report) {
+    // Never render `ApiError.message` here: it is `API ${status}: ${body}`, so a
+    // routine "not graded yet" 404 leaked the raw
+    // {"detail":{"error":"not_found","resource":"gap_report","id":...}} payload.
+    //
+    // The teacher-facing distinction is not the HTTP code but whether the report
+    // is still coming: grading is async, so a `completed` session 404s for a
+    // while and then works — but an `abandoned` session is never enqueued for
+    // evaluation at all, so telling that teacher to "check back shortly" sends
+    // them to wait for something that will never arrive.
+    const apiStatus =
+      error && typeof error === "object" && "status" in error
+        ? (error as { status?: number }).status
+        : undefined;
+    const reason = classifyMissingGapReport(apiStatus, session?.status);
+    const headingKey =
+      reason === "never_graded"
+        ? "teacher_interview_gap_report.empty_states.not_graded"
+        : "teacher_interview_gap_report.empty_states.no_report";
+
     return (
       <div className="text-center py-24 text-m3-on-surface-variant space-y-4">
         <div className="flex justify-center">
@@ -270,13 +293,10 @@ export default function InterviewGapReportPage() {
         </div>
         <div>
           <p className="font-headline font-bold text-m3-on-surface">
-            {t("teacher_interview_gap_report.empty_states.no_report")}
+            {t(headingKey)}
           </p>
           <p className="text-sm mt-1 max-w-md mx-auto">
-            {(error as Error | undefined)?.message ||
-              t(
-                "teacher_interview_gap_report.errors.no_view_permission_or_ungraded",
-              )}
+            {t(gapReportReasonI18nKey(reason))}
           </p>
         </div>
         <Button variant="outline" className="gap-2" onClick={goBack}>
