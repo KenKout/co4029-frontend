@@ -456,7 +456,6 @@
     "title": "Ngân hàng câu hỏi",
     "subtitle": "Câu hỏi phỏng vấn tái sử dụng",
     "subtitle_course": "Câu hỏi phỏng vấn tái sử dụng · {{course}}",
-    "back_to_course": "Quay lại khóa học",
     "how_to_add": "Đây là kho câu hỏi phỏng vấn dùng chung của khóa học. Để thêm câu hỏi, hãy mở một buổi phỏng vấn rồi dùng \"Thêm vào ngân hàng câu hỏi\" trên một câu hỏi. Nhập chúng vào các buổi phỏng vấn khác từ tab Câu hỏi.",
     "search_placeholder": "Tìm câu hỏi, câu trả lời, thẻ…",
     "filter_type": "Loại",

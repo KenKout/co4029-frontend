@@ -246,9 +246,6 @@ export default function CourseQuestionBankPage() {
               })
             : t("teacher_question_bank.subtitle")
         }
-        backTo="/teacher/courses/$courseId"
-        backParams={{ courseId }}
-        backLabel={t("teacher_question_bank.back_to_course")}
         action={
           <button
             type="button"

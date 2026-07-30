@@ -195,8 +195,34 @@ export default function CourseShell() {
         </div>
       </div>
 
-      {/* Active tab renders here. */}
-      <Outlet />
+      {/* Active tab renders here.
+          Each course tab is its own ROUTE (not a `hidden` tabpanel), so the
+          `[role="tabpanel"][data-active="true"] > *` rule in app.css never
+          applied here — only question-bank looked animated, and only because it
+          hand-rolls `fade-in-up` on its own inner sections. Wrapping the Outlet
+          gives every tab the same entrance for free.
+
+          `key` is what makes it re-run: without it React keeps the same DOM node
+          across tabs, the animation plays once on mount and never again. Keyed on
+          the segment (not the full pathname) so drilling into a sub-page of the
+          same tab does not re-trigger it.
+
+          Deliberately NOT `both`/`forwards`: a retained fill would leave a
+          `transform` on this wrapper forever, and a transformed ancestor becomes
+          the containing block for `position: sticky`/`fixed` descendants — which
+          would silently break the `lg:sticky lg:top-24` sidebar in the Students
+          tab. `backwards` still hides the pre-animation frame (no flash of
+          shifted content) without persisting the transform afterwards.
+
+          opacity+transform only → compositor-only, no reflow. Users with
+          prefers-reduced-motion get the near-instant version via the global
+          override in app.css. */}
+      <div
+        key={activeSegment}
+        className="animate-[fade-in-up_0.35s_cubic-bezier(0.16,1,0.3,1)_backwards]"
+      >
+        <Outlet />
+      </div>
 
       <ConfirmDialog
         open={confirmDelete}
