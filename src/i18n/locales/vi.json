@@ -1522,8 +1522,18 @@
       "list_subtitle": "Danh sách người dùng theo phạm vi quyền của bạn.",
       "empty_title": "Chưa có người dùng nào",
       "empty_body": "Khi có người dùng đăng ký, danh sách sẽ xuất hiện tại đây.",
+      "empty_search": "Không có người dùng phù hợp",
+      "search_placeholder": "Tìm theo tên hoặc email…",
+      "filter_role": "Lọc theo vai trò",
+      "all_roles": "Tất cả vai trò",
       "back_to_list": "Quay lại danh sách",
       "profile_section": "Hồ sơ",
+      "cols": {
+        "user": "Người dùng",
+        "role": "Vai trò",
+        "status": "Trạng thái",
+        "joined": "Ngày tham gia"
+      },
       "status": {
         "active": "Đang hoạt động",
         "invited": "Đã mời",
@@ -1549,6 +1559,7 @@
         "title": "Vai trò & phân quyền",
         "count": "{{count}} vai trò",
         "count_plural": "{{count}} vai trò",
+        "none": "Chưa có vai trò",
         "empty": "Người dùng chưa được gán vai trò nào.",
         "assign_new": "Gán vai trò mới",
         "role": "Vai trò",

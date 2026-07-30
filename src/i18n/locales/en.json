@@ -1574,8 +1574,18 @@
       "list_subtitle": "List of users within your permission scope.",
       "empty_title": "No users yet",
       "empty_body": "When users are registered, they will appear here.",
+      "empty_search": "No matching users",
+      "search_placeholder": "Search by name or email…",
+      "filter_role": "Filter by role",
+      "all_roles": "All roles",
       "back_to_list": "Back to list",
       "profile_section": "Profile",
+      "cols": {
+        "user": "User",
+        "role": "Role",
+        "status": "Status",
+        "joined": "Joined"
+      },
       "status": {
         "active": "Active",
         "invited": "Invited",
@@ -1601,6 +1611,7 @@
         "title": "Roles & permissions",
         "count": "{{count}} role",
         "count_plural": "{{count}} roles",
+        "none": "No role",
         "empty": "No roles assigned to this user.",
         "assign_new": "Assign new role",
         "role": "Role",
