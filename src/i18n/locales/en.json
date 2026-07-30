@@ -1906,6 +1906,12 @@
       "flagged_title": "Integrity signals recorded",
       "summary": "{{tab}} tab switch(es), {{focus}} focus loss, {{fullscreen}} fullscreen exit(s) during this session.",
       "timeline_title": "Event timeline",
+      "filter_group_label": "Filter the event timeline by signal type",
+      "showing_count": "{{count}} shown",
+      "filter_empty": "No events of this type were recorded in this session.",
+      "filter": {
+        "total": "All signals"
+      },
       "risk": {
         "low_title": "Integrity looks clean",
         "low_badge": "Low",

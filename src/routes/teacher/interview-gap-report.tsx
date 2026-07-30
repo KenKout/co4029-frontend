@@ -15,6 +15,7 @@ import {
   Loader2,
   Maximize,
   MonitorX,
+  ListFilter,
   Pencil,
   Save,
   ShieldAlert,
@@ -405,31 +406,72 @@ const INTEGRITY_EVENT_META: Record<
   },
 };
 
-/** One compact stat tile in the integrity breakdown row. */
-function IntegrityStat({
+/** The sub-tabs inside Integrity: "all events" plus one per event type. */
+type IntegrityFilter =
+  | "total"
+  | "tab_switch"
+  | "fullscreen_exit"
+  | "focus_lost";
+
+/**
+ * One filter tab in the integrity breakdown row.
+ *
+ * Doubles as the stat tile it replaced — the count is the headline, so the tabs
+ * carry the same information the old passive tiles did while also being the
+ * control that filters the timeline. `aria-pressed` (not `aria-selected`) because
+ * these are toggle buttons in a group, not an ARIA tablist: the panel below is a
+ * filtered list, not four separate panels.
+ */
+function IntegrityFilterTab({
   icon: Icon,
   count,
   label,
-  active,
+  selected,
+  warning,
+  onSelect,
 }: {
   icon: typeof MonitorX;
   count: number;
   label: string;
-  active: boolean;
+  selected: boolean;
+  /** Warning-level type with at least one hit — tinted amber even when unselected. */
+  warning: boolean;
+  onSelect: () => void;
 }) {
+  const empty = count === 0;
   return (
-    <div
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
       className={cn(
-        "flex items-center gap-3 rounded-xl border p-3",
-        active
-          ? "border-amber-200 bg-amber-50/50"
-          : "border-border bg-surface-muted/40",
+        "group flex w-full items-center gap-3 rounded-xl border p-3 text-left",
+        // Hover/press feedback: lift + shadow on the way in, settle on click.
+        // transform+shadow+colour only, so this stays off the layout path.
+        "cursor-pointer transition-all duration-200",
+        "hover:-translate-y-0.5 hover:shadow-editorial active:translate-y-0 active:scale-[0.98]",
+        selected
+          ? warning
+            ? "border-amber-400 bg-amber-50 ring-2 ring-amber-200"
+            : "border-m3-primary/50 bg-m3-primary-fixed ring-2 ring-m3-primary/20"
+          : warning
+            ? "border-amber-200 bg-amber-50/50 hover:border-amber-300"
+            : "border-border bg-surface-muted/40 hover:border-m3-primary/30",
+        // An empty bucket is still clickable (it explains the zero), but it
+        // should not compete for attention with one that has hits.
+        empty && !selected && "opacity-70 hover:opacity-100",
       )}
     >
       <div
         className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-lg",
-          active ? "bg-amber-100 text-amber-700" : "bg-white text-text-subtle",
+          "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-200",
+          selected
+            ? warning
+              ? "bg-amber-200 text-amber-900"
+              : "bg-m3-primary text-white"
+            : warning
+              ? "bg-amber-100 text-amber-700"
+              : "bg-white text-text-subtle group-hover:text-m3-primary",
         )}
       >
         <Icon className="h-4 w-4" />
@@ -437,8 +479,14 @@ function IntegrityStat({
       <div className="min-w-0">
         <p
           className={cn(
-            "text-lg font-bold leading-none tabular-nums",
-            active ? "text-amber-800" : "text-text-subtle",
+            "text-lg font-bold leading-none tabular-nums transition-colors duration-200",
+            selected
+              ? warning
+                ? "text-amber-900"
+                : "text-m3-primary"
+              : warning
+                ? "text-amber-800"
+                : "text-text-subtle",
           )}
         >
           {count}
@@ -447,17 +495,19 @@ function IntegrityStat({
           {label}
         </p>
       </div>
-    </div>
+    </button>
   );
 }
 
 // FR-5.8 teacher review surface: the proctoring-signal timeline for a session.
 // Signals are recorded across every mode (text / hybrid / voice) — see Gap 1.
 // A clean session shows a reassuring green state rather than an empty box.
-function IntegrityCard({ sessionId }: { sessionId: string }) {
+/** Exported for tests: asserts the sub-tab filtering of the event timeline. */
+export function IntegrityCard({ sessionId }: { sessionId: string }) {
   const { t } = useTranslation();
   const { data, isLoading } = useInterviewIntegrityEvents(sessionId);
   const events = data?.events ?? [];
+  const [filter, setFilter] = useState<IntegrityFilter>("total");
 
   const counts = {
     total: events.length,
@@ -473,6 +523,12 @@ function IntegrityCard({ sessionId }: { sessionId: string }) {
   const warningCount = counts.tabSwitch + counts.fullscreenExit;
   const risk: "low" | "moderate" | "high" =
     warningCount === 0 ? "low" : warningCount <= 3 ? "moderate" : "high";
+
+  // The timeline shows one bucket at a time. "total" keeps the full chronology;
+  // the other three narrow to a single event_type so a teacher can read the tab
+  // switches without scrolling past interleaved focus-loss noise.
+  const visibleEvents =
+    filter === "total" ? events : events.filter((e) => e.event_type === filter);
 
   if (isLoading) {
     return (
@@ -571,88 +627,137 @@ function IntegrityCard({ sessionId }: { sessionId: string }) {
           </div>
         </div>
 
-        {/* Per-type breakdown so the teacher sees WHAT happened, not just how
-            many rows. */}
-        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-          <IntegrityStat
+        {/* Per-type breakdown, doubling as the filter for the timeline below.
+            Four buckets: everything, then one per event type. Clicking one shows
+            only that type, so a teacher can read the 7 tab switches without
+            scrolling past 14 interleaved focus-loss rows. */}
+        <div
+          className="mt-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4"
+          role="group"
+          aria-label={t(
+            "teacher_interview_gap_report.integrity.filter_group_label",
+          )}
+        >
+          <IntegrityFilterTab
+            icon={ListFilter}
+            count={counts.total}
+            selected={filter === "total"}
+            warning={false}
+            onSelect={() => setFilter("total")}
+            label={t("teacher_interview_gap_report.integrity.filter.total")}
+          />
+          <IntegrityFilterTab
             icon={MonitorX}
             count={counts.tabSwitch}
-            active={counts.tabSwitch > 0}
+            selected={filter === "tab_switch"}
+            warning={counts.tabSwitch > 0}
+            onSelect={() => setFilter("tab_switch")}
             label={t("teacher_interview_gap_report.integrity.event.tab_switch")}
           />
-          <IntegrityStat
+          <IntegrityFilterTab
             icon={Maximize}
             count={counts.fullscreenExit}
-            active={counts.fullscreenExit > 0}
+            selected={filter === "fullscreen_exit"}
+            warning={counts.fullscreenExit > 0}
+            onSelect={() => setFilter("fullscreen_exit")}
             label={t(
               "teacher_interview_gap_report.integrity.event.fullscreen_exit",
             )}
           />
-          <IntegrityStat
+          <IntegrityFilterTab
             icon={Eye}
             count={counts.focusLost}
-            active={false}
+            selected={filter === "focus_lost"}
+            warning={false}
+            onSelect={() => setFilter("focus_lost")}
             label={t("teacher_interview_gap_report.integrity.event.focus_lost")}
           />
         </div>
       </div>
 
-      {/* Chronological timeline. */}
-      <div className="px-5 pt-4">
+      {/* Chronological timeline, narrowed to the selected bucket. */}
+      <div className="flex items-center justify-between gap-3 px-5 pt-4">
         <h4 className="text-[11px] font-bold uppercase tracking-wide text-text-subtle">
           {t("teacher_interview_gap_report.integrity.timeline_title")}
         </h4>
+        <span className="shrink-0 text-[11px] tabular-nums text-m3-on-surface-variant">
+          {t("teacher_interview_gap_report.integrity.showing_count", {
+            count: visibleEvents.length,
+          })}
+        </span>
       </div>
-      <ol className="max-h-80 overflow-y-auto px-5 py-3">
-        {events.map((ev, index) => {
-          const eventMeta =
-            INTEGRITY_EVENT_META[ev.event_type] ??
-            INTEGRITY_EVENT_META.focus_lost;
-          const severityMeta =
-            INTEGRITY_SEVERITY_META[ev.severity] ??
-            INTEGRITY_SEVERITY_META.info;
-          const Icon = eventMeta.icon;
-          const isLast = index === events.length - 1;
-          return (
-            <li key={ev.id} className="flex gap-3">
-              {/* Timeline rail: dot + connecting line. */}
-              <div className="flex flex-col items-center">
-                <span
+      {visibleEvents.length === 0 ? (
+        // A zero bucket is reachable on purpose (the tab shows its 0), so it needs
+        // to say why it is empty instead of rendering a blank strip.
+        <div className="px-5 py-6">
+          <p className="rounded-xl border border-dashed border-border bg-surface-muted/40 px-4 py-6 text-center text-xs text-m3-on-surface-variant">
+            {t("teacher_interview_gap_report.integrity.filter_empty")}
+          </p>
+        </div>
+      ) : (
+        <ol
+          // Keyed on the filter so switching buckets replays the entrance
+          // animation and makes the list visibly change even when two buckets
+          // happen to have a similar-looking first row.
+          key={filter}
+          className="max-h-80 animate-[fade-in-up_0.25s_ease-out_backwards] overflow-y-auto px-5 py-3"
+        >
+          {visibleEvents.map((ev, index) => {
+            const eventMeta =
+              INTEGRITY_EVENT_META[ev.event_type] ??
+              INTEGRITY_EVENT_META.focus_lost;
+            const severityMeta =
+              INTEGRITY_SEVERITY_META[ev.severity] ??
+              INTEGRITY_SEVERITY_META.info;
+            const Icon = eventMeta.icon;
+            const isLast = index === visibleEvents.length - 1;
+            return (
+              <li key={ev.id} className="group flex gap-3">
+                {/* Timeline rail: dot + connecting line. */}
+                <div className="flex flex-col items-center">
+                  <span
+                    className={cn(
+                      "flex size-7 shrink-0 items-center justify-center rounded-full",
+                      "transition-transform duration-200 group-hover:scale-110",
+                      eventMeta.iconBg,
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                  </span>
+                  {!isLast && <span className="w-px flex-1 bg-border" />}
+                </div>
+                <div
                   className={cn(
-                    "flex size-7 shrink-0 items-center justify-center rounded-full",
-                    eventMeta.iconBg,
+                    "-mx-2 mb-1 flex min-w-0 flex-1 items-center justify-between gap-2 rounded-lg px-2 pb-3 pt-0.5",
+                    "transition-colors duration-200 group-hover:bg-m3-surface-container-low",
                   )}
                 >
-                  <Icon className="h-3.5 w-3.5" />
-                </span>
-                {!isLast && <span className="w-px flex-1 bg-border" />}
-              </div>
-              <div className="flex min-w-0 flex-1 items-center justify-between gap-2 pb-4">
-                <span className="min-w-0 flex-1 truncate text-sm text-m3-on-surface">
-                  {t(
-                    `teacher_interview_gap_report.integrity.event.${ev.event_type}`,
-                    { defaultValue: ev.event_type },
-                  )}
-                </span>
-                <span
-                  className={cn(
-                    "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                    severityMeta.badge,
-                  )}
-                >
-                  {t(
-                    `teacher_interview_gap_report.integrity.severity.${ev.severity}`,
-                    { defaultValue: ev.severity },
-                  )}
-                </span>
-                <span className="shrink-0 whitespace-nowrap text-xs tabular-nums text-m3-on-surface-variant">
-                  {formatDate(ev.created_at)}
-                </span>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+                  <span className="min-w-0 flex-1 truncate text-sm text-m3-on-surface">
+                    {t(
+                      `teacher_interview_gap_report.integrity.event.${ev.event_type}`,
+                      { defaultValue: ev.event_type },
+                    )}
+                  </span>
+                  <span
+                    className={cn(
+                      "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                      severityMeta.badge,
+                    )}
+                  >
+                    {t(
+                      `teacher_interview_gap_report.integrity.severity.${ev.severity}`,
+                      { defaultValue: ev.severity },
+                    )}
+                  </span>
+                  <span className="shrink-0 whitespace-nowrap text-xs tabular-nums text-m3-on-surface-variant">
+                    {formatDate(ev.created_at)}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </GlassCard>
   );
 }

@@ -1854,6 +1854,12 @@
       "flagged_title": "Đã ghi nhận tín hiệu liêm chính",
       "summary": "{{tab}} lần chuyển tab, {{focus}} lần mất tiêu điểm, {{fullscreen}} lần thoát toàn màn hình trong phiên này.",
       "timeline_title": "Dòng thời gian sự kiện",
+      "filter_group_label": "Lọc dòng thời gian theo loại tín hiệu",
+      "showing_count": "Hiển thị {{count}}",
+      "filter_empty": "Buổi phỏng vấn này không ghi nhận sự kiện nào thuộc loại này.",
+      "filter": {
+        "total": "Tất cả tín hiệu"
+      },
       "risk": {
         "low_title": "Liêm chính ổn định",
         "low_badge": "Thấp",
