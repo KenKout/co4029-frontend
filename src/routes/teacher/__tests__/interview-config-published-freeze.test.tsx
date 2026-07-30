@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import * as React from "react";
 
 import { SettingsForm } from "@/routes/teacher/interview-config";
@@ -65,10 +66,82 @@ function controlFor(labelText: RegExp): HTMLElement {
   return control!;
 }
 
+/**
+ * Open the "Advanced: fine-tune persona tone" Collapsible.
+ *
+ * Its panel is unmounted while closed (deliberately — see the route comment: the
+ * old version left sliders in the tab order at opacity-0), so the sliders do not
+ * exist until it is expanded.
+ */
+async function openAdvancedPanel(): Promise<void> {
+  const trigger = screen.getByText(/Nâng cao|Advanced/i).closest("button");
+  expect(trigger, "no Advanced trigger button").not.toBeNull();
+  await userEvent.click(trigger!);
+}
+
 describe("SettingsForm published freeze", () => {
   it("disables the duration input on a published config", () => {
     renderForm("published");
     expect(controlFor(/duration|time limit|thời lượng/i)).toBeDisabled();
+  });
+
+  it("disables the AI persona dropdown, which sits next to a guide link", () => {
+    // Regression: `Field` only injected `disabled` when it had a LONE element
+    // child. AI persona and AI voice each render `Select` + "View guide", so the
+    // injection silently skipped them — they looked dimmed but the dropdown
+    // still changed the value, which is the worst of both worlds.
+    renderForm("published");
+    expect(controlFor(/^Phong cách AI$|^AI persona$/i)).toBeDisabled();
+  });
+
+  it("disables the AI voice dropdown, which also has a sibling link", () => {
+    renderForm("published");
+    expect(controlFor(/^Giọng AI$|^AI voice$/i)).toBeDisabled();
+  });
+
+  it("leaves the persona dropdown usable on a draft", () => {
+    renderForm("draft");
+    expect(controlFor(/^Phong cách AI$|^AI persona$/i)).not.toBeDisabled();
+  });
+
+  it("disables every fine-tune persona tone slider when published", async () => {
+    // The Advanced panel writes persona_profile, which is frozen. The panel may
+    // still be opened and read — only the controls inside are locked. It is a
+    // Collapsible, so the sliders are unmounted until it is opened.
+    const { container } = renderForm("published");
+    await openAdvancedPanel();
+    const sliders = container.querySelectorAll('input[type="range"]');
+    expect(sliders.length).toBeGreaterThan(0);
+    for (const slider of sliders) expect(slider).toBeDisabled();
+  });
+
+  it("disables the persona-trait reset button when published", async () => {
+    // Reset writes persona_profile too, so leaving it live would let a teacher
+    // wipe the overrides on a live interview.
+    renderForm("published");
+    await openAdvancedPanel();
+    expect(
+      screen.getByRole("button", { name: /^Đặt lại về preset|^Reset to/i }),
+    ).toBeDisabled();
+  });
+
+  it("leaves the tone sliders usable on a draft", async () => {
+    const { container } = renderForm("draft");
+    await openAdvancedPanel();
+    const sliders = container.querySelectorAll('input[type="range"]');
+    expect(sliders.length).toBeGreaterThan(0);
+    for (const slider of sliders) expect(slider).not.toBeDisabled();
+  });
+
+  it("disables the custom-refusal textarea, which has a preview sibling", () => {
+    // Same shape as the persona/voice bug: Textarea + a <p> preview, so the
+    // old lone-child check skipped it too.
+    renderForm("published");
+    const textarea = screen
+      .getAllByRole("textbox")
+      .find((el) => el.tagName === "TEXTAREA");
+    expect(textarea).toBeDefined();
+    expect(textarea).toBeDisabled();
   });
 
   it("leaves the duration input editable on a draft", () => {

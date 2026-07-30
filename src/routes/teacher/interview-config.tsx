@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactElement } from "react";
 import {
+  Children,
   cloneElement,
   isValidElement,
   useEffect,
@@ -1754,7 +1755,10 @@ export function SettingsForm({
         <Collapsible.Root
           open={personaAdvancedOpen}
           onOpenChange={setPersonaAdvancedOpen}
-          className="mt-4 block rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-4"
+          className={cn(
+            "mt-4 block rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-4",
+            isFieldFrozen("persona_profile", status) && "opacity-60",
+          )}
         >
           <Collapsible.Trigger className="flex w-full cursor-pointer list-none items-center gap-3 text-left">
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-m3-primary/10 text-m3-primary">
@@ -1763,6 +1767,12 @@ export function SettingsForm({
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-extrabold text-m3-on-surface">
                 {t("teacher_interview_config.persona_traits.advanced_label")}
+                {isFieldFrozen("persona_profile", status) && (
+                  <Lock
+                    className="ml-1.5 inline-block h-3 w-3 align-text-top"
+                    aria-hidden="true"
+                  />
+                )}
               </span>
               <span className="block text-xs text-m3-on-surface-variant">
                 {t("teacher_interview_config.persona_traits.help")}
@@ -1806,13 +1816,14 @@ export function SettingsForm({
                         max={4}
                         step={1}
                         value={effective[traitKey]}
+                        disabled={isFieldFrozen("persona_profile", status)}
                         onChange={(e) =>
                           update("persona_profile", {
                             ...draft.persona_profile,
                             [traitKey]: Number(e.target.value),
                           })
                         }
-                        className="w-full cursor-pointer accent-m3-primary"
+                        className="w-full cursor-pointer accent-m3-primary disabled:cursor-not-allowed"
                       />
                       <p className="text-[11px] text-m3-on-surface-variant">
                         {t(
@@ -1825,7 +1836,8 @@ export function SettingsForm({
                 <button
                   type="button"
                   onClick={() => update("persona_profile", {})}
-                  className="text-xs font-medium text-m3-primary hover:underline"
+                  disabled={isFieldFrozen("persona_profile", status)}
+                  className="text-xs font-medium text-m3-primary hover:underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60"
                 >
                   {t("teacher_interview_config.persona_traits.reset")}
                 </button>
@@ -2715,38 +2727,46 @@ function Field({
   children: React.ReactNode;
 }) {
   const generatedId = useId();
-  // Associate the label with its control. The label was previously a bare
-  // <label> with no htmlFor, so a screen reader announced most of this form's
-  // inputs as unlabelled — and clicking a label did not focus its field.
+  // Associate the label with its control, and disable it when frozen.
   //
   // Done by cloning rather than by wrapping the control in the <label>:
   // implicit association would swallow any other interactive child, and the
   // persona field puts a "View guide" button next to its Select, which would
   // then toggle the Select when clicked.
   //
-  // Only a single element child that does not already carry an id is wired.
-  // Anything else (multiple children, a fragment, plain text) keeps today's
-  // behaviour rather than pointing htmlFor at an id that does not exist, which
-  // would be worse than no association at all. Input, Textarea and Select all
-  // accept and forward `id`, so the common cases are covered.
-  const onlyChild = isValidElement(children) ? children : null;
-  const childProps = (onlyChild?.props ?? {}) as {
+  // The FIRST element child is treated as the control. Earlier this only fired
+  // for a lone child, which quietly did nothing on exactly the fields that have
+  // a sibling: AI persona and AI voice both render `Select` + a "View guide"
+  // link, so they stayed fully operable while dimmed — the freeze looked applied
+  // but the dropdown still changed the value. Later children (a guide link, a
+  // preview paragraph) are deliberately left alone: reading the persona guide is
+  // harmless on a published config, and disabling it would remove information
+  // for no gain.
+  const childArray = Children.toArray(children);
+  const controlIndex = childArray.findIndex((child) => isValidElement(child));
+  const control =
+    controlIndex >= 0 ? (childArray[controlIndex] as ReactElement) : null;
+  const childProps = (control?.props ?? {}) as {
     id?: string;
     disabled?: boolean;
   };
-  const controlId = childProps.id ?? (onlyChild ? generatedId : undefined);
+  const controlId = childProps.id ?? (control ? generatedId : undefined);
   // A frozen field is disabled at the control, not merely dimmed: greying an
   // input the teacher can still type into (only to have the save 409) is worse
   // than not dimming it at all. `disabled` is only forced ON — a control the
   // caller already disabled for its own reason stays disabled.
   const extraProps: { id?: string; disabled?: boolean } = {};
-  if (onlyChild && !childProps.id) extraProps.id = generatedId;
-  if (onlyChild && frozen) extraProps.disabled = true;
+  if (control && !childProps.id) extraProps.id = generatedId;
+  if (control && frozen) extraProps.disabled = true;
   const wired =
-    onlyChild && Object.keys(extraProps).length > 0
-      ? cloneElement(
-          onlyChild as ReactElement<{ id?: string; disabled?: boolean }>,
-          extraProps,
+    control && Object.keys(extraProps).length > 0
+      ? childArray.map((child, index) =>
+          index === controlIndex
+            ? cloneElement(
+                control as ReactElement<{ id?: string; disabled?: boolean }>,
+                extraProps,
+              )
+            : child,
         )
       : children;
 
