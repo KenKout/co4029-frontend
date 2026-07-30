@@ -723,18 +723,39 @@ export default function AdminSettingsPage() {
 
   // Scroll-spy for the section rail.
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // The toolbar is sticky at 64px (below the global top bar) and wraps to more
+  // rows on narrow widths, so its height is not fixed. Measure it and offset
+  // the sticky section headers + scroll-spy line from its real bottom edge —
+  // otherwise a wrapped toolbar overlaps the section header underneath it.
+  const GLOBAL_TOP = 64; // h-16 top bar the toolbar sticks under
+  const GAP = 8;
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [toolbarH, setToolbarH] = useState(72);
+  useEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+    const measure = () => setToolbarH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // Where a sticky section header parks, and the scroll-spy activation line.
+  const sectionTop = GLOBAL_TOP + toolbarH + GAP;
+
   useEffect(() => {
     if (dense) return;
     const onScroll = () => {
       let current = "";
       for (const g of visibleGroups) {
         const el = document.getElementById(`section-${g}`);
-        if (el && el.getBoundingClientRect().top <= 140) current = g;
+        if (el && el.getBoundingClientRect().top <= sectionTop + 4) current = g;
       }
-      // A short final section can never scroll its top past the 140px
-      // activation line — the page bottom stops first — so it would never
-      // highlight. When we're within a hair of the bottom, force the last
-      // section active regardless of its top.
+      // A short final section can never scroll its top past the activation
+      // line — the page bottom stops first — so it would never highlight.
+      // When we're within a hair of the bottom, force the last section active
+      // regardless of its top.
       const doc = document.documentElement;
       const atBottom =
         window.innerHeight + window.scrollY >= doc.scrollHeight - 2;
@@ -750,12 +771,14 @@ export default function AdminSettingsPage() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [dense, visibleGroups]);
+  }, [dense, visibleGroups, sectionTop]);
 
   const scrollToSection = (g: string) => {
     const el = document.getElementById(`section-${g}`);
     if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY - 120;
+    // Land the section just below the sticky header stack, not under it.
+    const top =
+      el.getBoundingClientRect().top + window.scrollY - (sectionTop + 12);
     window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
   };
 
@@ -822,7 +845,10 @@ export default function AdminSettingsPage() {
           </p>
 
           {/* ── Sticky toolbar ── */}
-          <div className="sticky top-16 z-10 -mx-1 mt-4 rounded-lg border border-slate-200 bg-white/95 px-3 py-2.5 shadow-sm backdrop-blur">
+          <div
+            ref={toolbarRef}
+            className="sticky top-16 z-10 -mx-1 mt-4 rounded-lg border border-slate-200 bg-white/95 px-3 py-2.5 shadow-sm backdrop-blur"
+          >
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative min-w-[180px] flex-1">
                 <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -946,13 +972,18 @@ export default function AdminSettingsPage() {
                   <section
                     key={group}
                     id={`section-${group}`}
-                    className="scroll-mt-40 rounded-lg border border-slate-200 bg-white"
+                    className="rounded-lg border border-slate-200 bg-white"
+                    style={{ scrollMarginTop: sectionTop + 12 }}
                   >
-                    {/* Sticky section header inside a long card — offset to sit
-                        just below the global top bar + the sticky toolbar.
-                        NB: the section must NOT be overflow-hidden or this
-                        sticky child stops sticking. */}
-                    <div className="sticky top-[140px] z-[5] rounded-t-lg border-b border-slate-200 bg-white/95 px-5 py-3 backdrop-blur">
+                    {/* Sticky section header inside a long card — parks just
+                        below the global top bar + the (variable-height) sticky
+                        toolbar, measured at runtime so a wrapped toolbar can't
+                        overlap it. NB: the section must NOT be overflow-hidden
+                        or this sticky child stops sticking. */}
+                    <div
+                      className="sticky z-[5] rounded-t-lg border-b border-slate-200 bg-white/95 px-5 py-3 backdrop-blur"
+                      style={{ top: sectionTop }}
+                    >
                       <div className="flex items-center justify-between gap-2">
                         <h2 className="text-lg font-semibold text-slate-900">
                           {GROUP_LABELS[group] ?? group}
