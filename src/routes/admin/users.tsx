@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Mail, Search, Users } from "lucide-react";
+import { Building2, Mail, Search, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,12 +9,17 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 import { useListRoles } from "@/lib/api/hooks/admin";
+import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 import type { User } from "@/lib/api/types";
 
-// The backend UserRead gained a `roles` field (list of active role codes)
-// after the committed OpenAPI snapshot, so widen the generated type locally
-// rather than reading an untyped property. Mirrors the use-server-table.ts note.
-type UserWithRoles = User & { roles?: string[] };
+// The backend UserRead gained roles[] + organization fields after the
+// committed OpenAPI snapshot, so widen the generated type locally rather than
+// reading untyped properties. Mirrors the use-server-table.ts note.
+type UserWithRoles = User & {
+  roles?: string[];
+  organization_id?: string | null;
+  organization_name?: string | null;
+};
 
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
@@ -103,7 +108,11 @@ export default function AdminUsersPage() {
     return (code: string) => byCode.get(code) ?? code;
   }, [roleOptions]);
 
-  // Server-side search + sort + role filter + page across the whole user set.
+  // Organization list drives the org filter dropdown (id → name).
+  const orgs = useOrganizations({ limit: 200 });
+  const orgOptions = orgs.items ?? [];
+
+  // Server-side search + sort + role/org filter + page across the whole set.
   const table = useServerTable<UserWithRoles>({
     queryKey: ["admin", "users", "search"],
     path: "/users/search",
@@ -146,6 +155,24 @@ export default function AdminUsersPage() {
         cell: (u) => (
           <RoleBadges roles={u.roles ?? []} labelFor={labelFor} />
         ),
+      },
+      {
+        // Not sortable: primary org is a cross-table aggregate (membership).
+        id: "organization",
+        header: t("admin.users.cols.organization", {
+          defaultValue: "Organization",
+        }),
+        cell: (u) =>
+          u.organization_name ? (
+            <span className="inline-flex items-center gap-1.5 text-sm text-text-strong">
+              <Building2 className="h-3.5 w-3.5 text-text-muted shrink-0" />
+              <span className="truncate">{u.organization_name}</span>
+            </span>
+          ) : (
+            <span className="text-xs text-text-muted italic">
+              {t("admin.users.no_organization", { defaultValue: "—" })}
+            </span>
+          ),
       },
       {
         id: "status",
@@ -225,7 +252,7 @@ export default function AdminUsersPage() {
           sort={table.sort}
           onSortChange={table.setSort}
           emptyState={
-            table.search || table.roleFilter
+            table.search || table.roleFilter || table.orgFilter
               ? t("admin.users.empty_search", {
                   defaultValue: "No matching users",
                 })
@@ -259,6 +286,25 @@ export default function AdminUsersPage() {
                 {roleOptions.map((r) => (
                   <option key={r.id} value={r.code}>
                     {r.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={table.orgFilter ?? ""}
+                onChange={(e) => table.setOrgFilter(e.target.value || undefined)}
+                className="h-9 rounded-md border border-border bg-surface px-3 text-sm text-text-strong outline-none focus:border-primary cursor-pointer max-w-[220px]"
+                aria-label={t("admin.users.filter_organization", {
+                  defaultValue: "Filter by organization",
+                })}
+              >
+                <option value="">
+                  {t("admin.users.all_organizations", {
+                    defaultValue: "All organizations",
+                  })}
+                </option>
+                {orgOptions.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
                   </option>
                 ))}
               </select>
