@@ -719,8 +719,13 @@ export default function AdminSettingsPage() {
           </aside>
         )}
 
-        {/* ── Content ── */}
-        <div ref={contentRef} className="min-w-0 flex-1 lg:max-w-[1040px]">
+        {/* ── Content ── In table mode the rail is hidden, so drop the width
+            cap and let the table fill the (centered) container — otherwise the
+            capped column hugs the left edge with dead space on the right. */}
+        <div
+          ref={contentRef}
+          className={cn("min-w-0 flex-1", !dense && "lg:max-w-[1040px]")}
+        >
           <h1 className="text-2xl font-semibold text-slate-900">
             {t("admin.settings.title", { defaultValue: "Runtime settings" })}
           </h1>
