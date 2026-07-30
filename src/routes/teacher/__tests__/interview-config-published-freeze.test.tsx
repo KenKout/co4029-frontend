@@ -155,9 +155,16 @@ describe("SettingsForm published freeze", () => {
     expect(controlFor(/^Tiêu đề$|^Title$/i)).not.toBeDisabled();
   });
 
-  it("keeps attempt limits editable when published", () => {
+  it("disables attempt limits when published", () => {
+    // Read before a session exists, so editing them cannot corrupt a live run —
+    // frozen anyway because they are the terms of assessment: lowering the cap
+    // mid-cohort strands a student who already spent an attempt.
     renderForm("published");
-    // Read before a session exists, so they gate only NEW attempts.
+    expect(controlFor(/^Số lần thử$|^Attempts$/i)).toBeDisabled();
+  });
+
+  it("leaves attempt limits editable on a draft", () => {
+    renderForm("draft");
     expect(controlFor(/^Số lần thử$|^Attempts$/i)).not.toBeDisabled();
   });
 

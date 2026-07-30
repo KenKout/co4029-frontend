@@ -3283,7 +3283,7 @@
   },
   "teacher_interview_config": {
     "published_freeze": {
-      "banner": "Buổi phỏng vấn này đã xuất bản, nên các thiết lập ảnh hưởng đến cách tiến hành và cách chấm đã bị khoá — có thể đang có sinh viên làm bài, và thay đổi giữa kỳ sẽ khiến các sinh viên bị chấm theo những tiêu chuẩn khác nhau. Bạn vẫn sửa được tiêu đề, số lượt làm và thời gian chờ. Hãy bỏ xuất bản nếu cần đổi những thiết lập còn lại.",
+      "banner": "Buổi phỏng vấn này đã xuất bản, nên các thiết lập ảnh hưởng đến cách tiến hành, cách chấm và số lượt làm lại đã bị khoá — có thể đang có sinh viên làm bài, và thay đổi giữa kỳ sẽ khiến các sinh viên bị áp những quy định khác nhau. Bạn vẫn sửa được tiêu đề. Hãy bỏ xuất bản nếu cần đổi những thiết lập còn lại.",
       "tooltip": "Đã khoá khi xuất bản — bỏ xuất bản để thay đổi."
     },
     "persona": {

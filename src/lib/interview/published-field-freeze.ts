@@ -18,11 +18,17 @@
  * rules. Unpublishing lifts every restriction.
  */
 
-/** Draft keys that may still be saved on a published config. */
+/**
+ * Draft keys that may still be saved on a published config.
+ *
+ * Note what is NOT here: `max_attempts` / `cooldown_hours`. They are read before
+ * a session exists, so editing them cannot corrupt an interview in flight — but
+ * they are the terms of assessment. Lowering the cap mid-cohort strands a student
+ * who already spent an attempt in good faith; raising it gives later students
+ * more chances than earlier ones got.
+ */
 const PUBLISHED_EDITABLE_FIELDS = new Set<string>([
   "title",
-  "max_attempts",
-  "cooldown_hours",
   "security_incident_summary_enabled",
   "lock_quiz_ef_until_pass",
 ]);

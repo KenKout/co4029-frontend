@@ -8,6 +8,10 @@ import {
 // Settings the backend freezes on a published config, because taking.py /
 // orchestrator / evaluation.py read them while an interview runs or is graded.
 const FROZEN = [
+  // Read before a session exists, so they cannot corrupt a run in flight — but
+  // they are the terms of assessment, so they freeze too.
+  "max_attempts",
+  "cooldown_hours",
   "persona",
   "persona_profile",
   "supported_modes",
@@ -26,8 +30,6 @@ const FROZEN = [
 // authoring.py::_PUBLISHED_EDITABLE_CONFIG_FIELDS exactly.
 const EDITABLE = [
   "title",
-  "max_attempts",
-  "cooldown_hours",
   "security_incident_summary_enabled",
   "lock_quiz_ef_until_pass",
 ];
