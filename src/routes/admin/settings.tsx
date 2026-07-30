@@ -644,11 +644,25 @@ export default function AdminSettingsPage() {
         const el = document.getElementById(`section-${g}`);
         if (el && el.getBoundingClientRect().top <= 140) current = g;
       }
+      // A short final section can never scroll its top past the 140px
+      // activation line — the page bottom stops first — so it would never
+      // highlight. When we're within a hair of the bottom, force the last
+      // section active regardless of its top.
+      const doc = document.documentElement;
+      const atBottom =
+        window.innerHeight + window.scrollY >= doc.scrollHeight - 2;
+      if (atBottom && visibleGroups.length > 0) {
+        current = visibleGroups[visibleGroups.length - 1];
+      }
       setActiveSection(current || visibleGroups[0] || "");
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, [dense, visibleGroups]);
 
   const scrollToSection = (g: string) => {
@@ -660,7 +674,7 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="px-4 py-6">
-      <div className="mx-auto flex max-w-[1160px] gap-8">
+      <div className="mx-auto flex max-w-[1440px] gap-8">
         {/* ── Section rail ── */}
         {!dense && (
           <aside className="hidden w-[200px] shrink-0 lg:block">
@@ -706,7 +720,7 @@ export default function AdminSettingsPage() {
         )}
 
         {/* ── Content ── */}
-        <div ref={contentRef} className="min-w-0 flex-1 lg:max-w-[860px]">
+        <div ref={contentRef} className="min-w-0 flex-1 lg:max-w-[1040px]">
           <h1 className="text-2xl font-semibold text-slate-900">
             {t("admin.settings.title", { defaultValue: "Runtime settings" })}
           </h1>
