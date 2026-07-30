@@ -1763,6 +1763,13 @@
     "manager": "Quản lý",
     "admin": "Quản trị"
   },
+  "tenant_switcher": {
+    "aria": "Chuyển tổ chức",
+    "all_tenants": "Tất cả tổ chức",
+    "search_placeholder": "Tìm tổ chức…",
+    "loading": "Đang tải…",
+    "empty": "Không tìm thấy tổ chức"
+  },
   "sidebar": {
     "collapse": "Thu gọn",
     "expand": "Mở rộng"
