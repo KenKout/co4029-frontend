@@ -728,28 +728,16 @@
     "start_review": "Bắt đầu ôn ({{count}})",
     "group_count": "{{count}} cần ôn",
     "review_course": "Ôn tập",
-    "load_more": "Tải thêm",
-    "recall_hint": "mức độ ghi nhớ",
-    "strength": {
-      "strong": "Vững",
-      "building": "Đang hình thành",
-      "shaky": "Cần cải thiện"
-    },
-    "n_cards": "{{count}} thẻ",
-    "n_overdue_suffix": " • {{count}} cần ôn ngay",
-    "due_now": "Cần ôn ngay",
-    "minutes_left": "Còn {{count}} phút",
-    "hours_left": "Còn {{count}} giờ",
-    "days_left": "Còn {{count}} ngày",
-    "ef_label": "EF",
-    "last_q": "Q gần nhất: {{q}}",
     "empty_title": "Hiện chưa có thẻ nào cần ôn",
     "empty_body": "Bạn đã ôn hết. Thẻ mới sẽ xuất hiện ở đây khi đến hạn.",
     "back_to_dashboard": "Quay lại bảng điều khiển",
     "summary_other": "{{count}} thẻ cần ôn trong {{courses}} khóa học",
     "summary_one": "{{count}} thẻ cần ôn trong {{courses}} khóa học",
-    "n_cards_other": "{{count}} thẻ",
-    "n_cards_one": "{{count}} thẻ"
+    "lesson_count": "{{count}} đến hạn",
+    "lesson_count_one": "{{count}} đến hạn",
+    "lesson_count_other": "{{count}} đến hạn",
+    "group_count_one": "{{count}} đến hạn",
+    "group_count_other": "{{count}} đến hạn"
   },
   "study_review": {
     "title": "Phiên ôn tập",
@@ -780,7 +768,11 @@
     "keep_reviewing": "Tiếp tục ôn tập",
     "all_caught_up": "Bạn đã ôn tập xong tất cả!",
     "show_hint": "Xem gợi ý",
-    "hint_counts": "Dùng gợi ý được tính là nhớ lại có hỗ trợ."
+    "hint_counts": "Dùng gợi ý được tính là nhớ lại có hỗ trợ.",
+    "capped_title": "Đó là phần ôn tập hôm nay của bạn",
+    "capped_body": "Bạn đã đạt giới hạn {{cap}} thẻ hôm nay. Còn {{remaining}} thẻ đang chờ — hãy quay lại ngày mai để giữ nhịp ôn tập.",
+    "capped_done": "Đã hoàn thành giới hạn hôm nay. Còn {{remaining}} thẻ — hãy quay lại ngày mai.",
+    "today_progress": "{{done}} trên {{cap}} lượt ôn hôm nay"
   },
   "settings_notifications": {
     "title": "Tùy chọn thông báo",

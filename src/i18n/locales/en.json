@@ -772,34 +772,16 @@
     "start_review": "Start review ({{count}})",
     "group_count": "{{count}} due",
     "review_course": "Review",
-    "load_more": "Load more",
-    "recall_hint": "recall strength",
-    "strength": {
-      "strong": "Strong",
-      "building": "Building",
-      "shaky": "Needs work"
-    },
-    "n_cards": "{{count}} card",
-    "n_overdue_suffix": " • {{count}} due now",
-    "due_now": "Due now",
-    "minutes_left": "{{count}} min left",
-    "hours_left": "{{count}} hour left",
-    "days_left": "{{count}} day left",
-    "ef_label": "EF",
-    "last_q": "Last Q: {{q}}",
     "empty_title": "Nothing due right now",
     "empty_body": "Your reviews are all caught up. New cards appear here when they're due.",
     "back_to_dashboard": "Back to dashboard",
     "summary_other": "{{count}} cards to review across {{courses}} courses",
     "summary_one": "{{count}} card to review across {{courses}} course",
-    "n_cards_other": "{{count}} cards",
-    "n_cards_one": "{{count}} card",
-    "minutes_left_other": "{{count}} mins left",
-    "minutes_left_one": "{{count}} min left",
-    "hours_left_other": "{{count}} hours left",
-    "hours_left_one": "{{count}} hour left",
-    "days_left_other": "{{count}} days left",
-    "days_left_one": "{{count}} day left"
+    "lesson_count": "{{count}} due",
+    "lesson_count_one": "{{count}} due",
+    "lesson_count_other": "{{count}} due",
+    "group_count_one": "{{count}} due",
+    "group_count_other": "{{count}} due"
   },
   "study_review": {
     "title": "Review session",
@@ -830,7 +812,11 @@
     "keep_reviewing": "Keep reviewing",
     "all_caught_up": "You're all caught up!",
     "show_hint": "Show hint",
-    "hint_counts": "Using a hint counts as assisted recall."
+    "hint_counts": "Using a hint counts as assisted recall.",
+    "capped_title": "That's your reviews for today",
+    "capped_body": "You've hit today's cap of {{cap}}. {{remaining}} cards are waiting — come back tomorrow to keep your streak steady.",
+    "capped_done": "That's today's cap done. {{remaining}} cards remain — come back tomorrow.",
+    "today_progress": "{{done}} of {{cap}} reviews today"
   },
   "settings_notifications": {
     "title": "Notification preferences",

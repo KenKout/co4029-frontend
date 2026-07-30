@@ -758,6 +758,12 @@ export interface ReviewCard {
 export interface ReviewQueue {
   items: ReviewCard[];
   total_due: number;
+  /** Admin daily review cap; 0 = unlimited. Bounds the queue only. */
+  daily_cap: number;
+  /** Cards already reviewed today (counts toward the cap). */
+  reviewed_today: number;
+  /** Cards still allowed today; 0 with total_due > 0 = capped out. */
+  daily_remaining: number;
 }
 export interface ReviewSubmitRequest {
   selected_option_id?: string | null;

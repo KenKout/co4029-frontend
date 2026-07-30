@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, BookOpen, Inbox, Layers, Play } from "lucide-react";
@@ -9,61 +9,114 @@ import { Button } from "@/components/ui/button";
 import type { CardDue } from "@/lib/api/types";
 
 /**
- * Turn the internal SM-2 EF (1.3–2.5) into a plain-language recall strength the
- * student can act on. EF is the algorithm's confidence that the student knows
- * the card; we bucket it into three human labels rather than showing "EF 1.70".
+ * Group the flat due list into course → lesson counts.
+ *
+ * Deliberately a COUNT view, not a browsable card list. Two reasons, both
+ * pedagogical rather than cosmetic:
+ *   1. A per-card list invites cherry-picking — students skip the cards they
+ *      dread, which is exactly what breaks spaced repetition. Counts + a single
+ *      "Review" action keep the queue order authoritative (most-overdue first,
+ *      enforced server-side).
+ *   2. We do NOT surface per-card recall strength / EF here. EF is an internal
+ *      scheduler parameter; showing "strong" on a card that's due reads as a
+ *      bug (you review at the edge of forgetting — that's the point) and
+ *      priming a student's expectation before they attempt changes how they
+ *      attempt. Anki shows nothing about a card before you try it; we match.
  */
-function recallStrength(ef: number): { label: string; tone: string } {
-  if (ef >= 2.3) return { label: "strong", tone: "text-emerald-700 bg-emerald-50" };
-  if (ef >= 1.8) return { label: "building", tone: "text-amber-700 bg-amber-50" };
-  return { label: "shaky", tone: "text-red-700 bg-red-50" };
+interface LessonBucket {
+  lessonId: string;
+  lessonTitle: string;
+  count: number;
+}
+interface CourseBucket {
+  courseSlug: string;
+  courseTitle: string;
+  count: number;
+  lessons: LessonBucket[];
 }
 
-/** Group the flat due list by course so the student sees structure, not noise. */
-function groupByCourse(cards: CardDue[]) {
-  const groups = new Map<string, { title: string; slug: string; cards: CardDue[] }>();
+function groupByCourse(cards: CardDue[]): CourseBucket[] {
+  const courses = new Map<
+    string,
+    { title: string; lessons: Map<string, LessonBucket> }
+  >();
   for (const card of cards) {
-    const key = card.course_slug;
-    const existing = groups.get(key);
-    if (existing) {
-      existing.cards.push(card);
+    let course = courses.get(card.course_slug);
+    if (!course) {
+      course = { title: card.course_title, lessons: new Map() };
+      courses.set(card.course_slug, course);
+    }
+    const lesson = course.lessons.get(card.lesson_id);
+    if (lesson) {
+      lesson.count += 1;
     } else {
-      groups.set(key, {
-        title: card.course_title,
-        slug: card.course_slug,
-        cards: [card],
+      course.lessons.set(card.lesson_id, {
+        lessonId: card.lesson_id,
+        lessonTitle: card.lesson_title,
+        count: 1,
       });
     }
   }
-  return [...groups.values()].sort((a, b) => b.cards.length - a.cards.length);
+  return [...courses.entries()]
+    .map(([slug, c]) => {
+      const lessons = [...c.lessons.values()].sort((a, b) => b.count - a.count);
+      return {
+        courseSlug: slug,
+        courseTitle: c.title,
+        count: lessons.reduce((n, l) => n + l.count, 0),
+        lessons,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
 }
+
+// Cap on how many extra pages we auto-drain to make the counts accurate. At
+// limit=100/page this covers a 1,000-card backlog before we stop and show "+".
+const MAX_AUTODRAIN_PAGES = 10;
 
 export default function StudyCardsDuePage() {
   const { t } = useTranslation();
   // Deep-link scoping: the SR reminder builds `?lesson={id}` for a single-lesson
   // backlog; a per-course "Review" builds `?course={slug}`. Honour both so the
-  // list a student lands on matches what they clicked, instead of the whole
-  // backlog every time.
+  // counts a student lands on match what they clicked, not the whole backlog.
   const { lesson, course } = useSearch({ strict: false }) as {
     lesson?: string;
     course?: string;
   };
-  const { items, hasNextPage, fetchNextPage, isFetchingNextPage, isLoading } =
-    useCardsDue({ limit: 100, lessonId: lesson, courseSlug: course });
+  const {
+    items,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useCardsDue({ limit: 100, lessonId: lesson, courseSlug: course });
+
+  // Drain remaining pages so the grouped counts reflect the TRUE backlog rather
+  // than the first 100 due cards — a count that lies undercuts the "finishable
+  // goal" framing. Bounded so a pathological backlog can't loop forever; past
+  // the cap we render the count with a trailing "+".
+  const pagesDrained = Math.ceil(items.length / 100);
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage && pagesDrained < MAX_AUTODRAIN_PAGES) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, pagesDrained, fetchNextPage]);
 
   const groups = useMemo(() => groupByCourse(items), [items]);
+  const total = items.length;
+  const approx = hasNextPage; // hit the drain cap — counts are a floor
 
-  // Carry the active scope onto the review links so "Start review" resolves the
-  // same cards the student is looking at. Both keys are always present (as
-  // undefined when unset) to satisfy the route's search-param shape.
-  const reviewSearch = useMemo<{ lesson: string | undefined; course: string | undefined }>(
-    () => ({ lesson, course }),
-    [lesson, course],
-  );
+  // Carry the active scope onto the top-level review link so "Start review"
+  // resolves the same cards the student is looking at. Both keys are always
+  // present (undefined when unset) to satisfy the route's search-param shape.
+  const reviewSearch = useMemo<{
+    lesson: string | undefined;
+    course: string | undefined;
+  }>(() => ({ lesson, course }), [lesson, course]);
 
   return (
     <div className="min-h-screen pb-12">
-      <div className="max-w-6xl mx-auto pb-6 space-y-6">
+      <div className="max-w-3xl mx-auto pb-6 space-y-6">
         <div className="flex items-center gap-3">
           <Link
             to="/dashboard/sr"
@@ -77,10 +130,10 @@ export default function StudyCardsDuePage() {
             subtitle={
               isLoading
                 ? t("study_cards_due.loading", "Loading…")
-                : items.length === 0
+                : total === 0
                   ? t("study_cards_due.empty_subtitle", "You're all caught up")
                   : t("study_cards_due.summary", {
-                      count: items.length,
+                      count: total,
                       courses: groups.length,
                       defaultValue:
                         "{{count}} card(s) to review across {{courses}} course(s)",
@@ -89,7 +142,7 @@ export default function StudyCardsDuePage() {
           />
         </div>
 
-        {items.length === 0 && !isLoading ? (
+        {total === 0 && !isLoading ? (
           <EmptyState
             icon={Inbox}
             title={t("study_cards_due.empty_title", "Nothing due right now")}
@@ -107,103 +160,90 @@ export default function StudyCardsDuePage() {
           />
         ) : (
           <>
-            {/* Primary action: resolve the whole queue in a review session. */}
-            {items.length > 0 && (
-              <Link
-                to="/study/review"
-                search={reviewSearch}
-                className="inline-block"
-              >
+            {/* Primary action: resolve the queue in order (most-overdue first).
+                No per-card list to pick from — you review what's next. */}
+            {total > 0 && (
+              <Link to="/study/review" search={reviewSearch} className="block">
                 <Button
                   size="lg"
-                  className="gap-2 cursor-pointer bg-m3-primary text-white"
+                  className="w-full sm:w-auto gap-2 cursor-pointer bg-m3-primary text-white"
                 >
                   <Play className="h-4 w-4" />
                   {t("study_cards_due.start_review", {
-                    count: items.length,
+                    count: total,
                     defaultValue: "Start review ({{count}})",
                   })}
+                  {approx ? "+" : ""}
                 </Button>
               </Link>
             )}
 
-            {/* Grouped by course so the list reads as structure, not a wall. */}
-            <div className="space-y-5">
+            {/* Course → lesson COUNTS. A lesson with 4 due cards shows once as
+                "4 due", not four indistinguishable rows. */}
+            <div className="space-y-4">
               {groups.map((group) => (
-                <section key={group.slug} className="space-y-2">
-                  <div className="flex items-center gap-2 px-1">
-                    <Layers className="h-4 w-4 text-m3-primary" />
-                    <h2 className="text-sm font-headline font-bold text-m3-on-surface">
-                      {group.title}
+                <section
+                  key={group.courseSlug}
+                  className="rounded-xl ghost-border bg-m3-surface-container-lowest overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 px-4 py-3 border-b border-m3-outline-variant/20">
+                    <Layers className="h-4 w-4 text-m3-primary shrink-0" />
+                    <h2 className="text-sm font-headline font-bold text-m3-on-surface min-w-0 truncate">
+                      {group.courseTitle}
                     </h2>
-                    <span className="text-xs font-semibold text-m3-on-surface-variant">
+                    <span className="text-xs font-semibold text-m3-on-surface-variant whitespace-nowrap">
                       {t("study_cards_due.group_count", {
-                        count: group.cards.length,
+                        count: group.count,
                         defaultValue: "{{count}} due",
                       })}
                     </span>
                     <Link
                       to="/study/review"
-                      search={{ lesson: undefined, course: group.slug }}
-                      className="ml-auto text-xs font-semibold text-m3-primary hover:underline"
+                      search={{ lesson: undefined, course: group.courseSlug }}
+                      className="ml-auto shrink-0 text-xs font-semibold text-m3-primary hover:underline"
                     >
                       {t("study_cards_due.review_course", "Review")}
                     </Link>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {group.cards.map((card) => (
-                      <CardDueRow key={card.question_id} card={card} />
+                  <ul className="divide-y divide-m3-outline-variant/10">
+                    {group.lessons.map((l) => (
+                      <li
+                        key={l.lessonId}
+                        className="flex items-center gap-3 px-4 py-2.5"
+                      >
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-m3-primary-fixed">
+                          <BookOpen className="h-4 w-4 text-m3-primary" />
+                        </div>
+                        <span className="flex-1 min-w-0 truncate text-sm text-m3-on-surface">
+                          {l.lessonTitle}
+                        </span>
+                        <span className="text-xs font-semibold text-m3-on-surface-variant tabular-nums whitespace-nowrap">
+                          {t("study_cards_due.lesson_count", {
+                            count: l.count,
+                            defaultValue: "{{count}} due",
+                          })}
+                        </span>
+                        <Link
+                          to="/study/review"
+                          search={{ lesson: l.lessonId, course: undefined }}
+                          className="text-xs font-semibold text-m3-primary hover:underline shrink-0"
+                        >
+                          {t("study_cards_due.review_course", "Review")}
+                        </Link>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </section>
               ))}
             </div>
 
-            {hasNextPage && (
-              <div className="flex justify-center pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => fetchNextPage()}
-                  disabled={isFetchingNextPage}
-                  className="cursor-pointer"
-                >
-                  {isFetchingNextPage
-                    ? t("study_cards_due.loading", "Loading…")
-                    : t("study_cards_due.load_more", "Load more")}
-                </Button>
-              </div>
+            {isFetchingNextPage && (
+              <p className="text-center text-xs text-m3-on-surface-variant">
+                {t("study_cards_due.loading", "Loading…")}
+              </p>
             )}
           </>
         )}
-      </div>
-    </div>
-  );
-}
-
-function CardDueRow({ card }: { card: CardDue }) {
-  const { t } = useTranslation();
-  const strength = recallStrength(card.ef);
-  return (
-    <div className="bg-m3-surface-container-lowest rounded-xl ghost-border shadow-editorial p-4 flex items-center gap-4">
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-m3-primary-fixed">
-        <BookOpen className="h-5 w-5 text-m3-primary" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-m3-on-surface truncate">
-          {card.lesson_title}
-        </p>
-        <div className="mt-1 flex items-center gap-2 flex-wrap">
-          <span
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${strength.tone}`}
-          >
-            {t(`study_cards_due.strength.${strength.label}`, {
-              defaultValue: strength.label,
-            })}
-          </span>
-          <span className="text-xs text-m3-on-surface-variant">
-            {t("study_cards_due.recall_hint", "recall strength")}
-          </span>
-        </div>
       </div>
     </div>
   );

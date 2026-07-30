@@ -49,6 +49,14 @@ export default function StudyReviewPage() {
   // Full due backlog across everything (unscoped by the server), so the done
   // screen can say how many cards remain beyond the ones in this batch.
   const totalDue = data?.total_due ?? 0;
+  // Daily-cap accounting. dailyCap 0 = unlimited. cappedOut = the queue is
+  // empty specifically because today's cap is used up (not because the student
+  // is genuinely caught up), so we show "come back tomorrow" instead of a
+  // misleading "all done".
+  const dailyCap = data?.daily_cap ?? 0;
+  const reviewedToday = data?.reviewed_today ?? 0;
+  const dailyRemaining = data?.daily_remaining ?? 0;
+  const cappedOut = dailyCap > 0 && dailyRemaining === 0 && totalDue > 0;
   const [index, setIndex] = useState(0);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -75,15 +83,31 @@ export default function StudyReviewPage() {
   const done = index >= total;
 
   if (total === 0) {
+    // Capped out vs genuinely caught up are different messages: one says "come
+    // back tomorrow" (work remains, you've hit today's healthy limit), the
+    // other celebrates an empty backlog.
     return (
       <div className="max-w-2xl mx-auto pt-10">
         <EmptyState
           icon={Inbox}
-          title={t("study_review.empty_title", "Nothing to review")}
-          description={t(
-            "study_review.empty_body",
-            "You're all caught up. Come back when cards are due.",
-          )}
+          title={
+            cappedOut
+              ? t("study_review.capped_title", "That's your reviews for today")
+              : t("study_review.empty_title", "Nothing to review")
+          }
+          description={
+            cappedOut
+              ? t("study_review.capped_body", {
+                  cap: dailyCap,
+                  remaining: totalDue,
+                  defaultValue:
+                    "You've hit today's cap of {{cap}}. {{remaining}} cards are waiting — come back tomorrow to keep your streak steady.",
+                })
+              : t(
+                  "study_review.empty_body",
+                  "You're all caught up. Come back when cards are due.",
+                )
+          }
           cta={
             <Link to="/dashboard/sr">
               <Button variant="default" className="cursor-pointer">
@@ -103,6 +127,13 @@ export default function StudyReviewPage() {
     // the queue, so the honest "still waiting" figure is total_due minus what
     // they just worked through, floored at zero.
     const remaining = Math.max(0, totalDue - answeredCount);
+    // With a daily cap, "Keep reviewing" only helps if today's allowance still
+    // has room after this batch. dailyRemaining was the allowance at load; the
+    // student just spent `answeredCount` of it.
+    const capRemainingNow =
+      dailyCap > 0 ? Math.max(0, dailyRemaining - answeredCount) : remaining;
+    const moreToday = remaining > 0 && capRemainingNow > 0;
+    const cappedForToday = remaining > 0 && dailyCap > 0 && capRemainingNow === 0;
     return (
       <div className="max-w-2xl mx-auto pt-10 text-center space-y-4">
         <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center">
@@ -118,7 +149,7 @@ export default function StudyReviewPage() {
             defaultValue: "You got {{correct}} of {{total}} right.",
           })}
         </p>
-        {remaining > 0 ? (
+        {moreToday ? (
           <div className="mx-auto max-w-sm rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 space-y-3">
             <p className="text-sm font-semibold text-amber-800">
               {t("study_review.remaining_backlog", {
@@ -131,6 +162,16 @@ export default function StudyReviewPage() {
                 {t("study_review.keep_reviewing", "Keep reviewing")}
               </Button>
             </Link>
+          </div>
+        ) : cappedForToday ? (
+          <div className="mx-auto max-w-sm rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">
+            <p className="text-sm font-semibold text-emerald-800">
+              {t("study_review.capped_done", {
+                remaining,
+                defaultValue:
+                  "That's today's cap done. {{remaining}} cards remain — come back tomorrow.",
+              })}
+            </p>
           </div>
         ) : (
           <p className="text-sm font-semibold text-emerald-700">
@@ -205,6 +246,15 @@ export default function StudyReviewPage() {
                   />
                 </div>
               </div>
+              {dailyCap > 0 && (
+                <div className="text-[11px] text-m3-on-surface-variant">
+                  {t("study_review.today_progress", {
+                    done: reviewedToday + answeredCount,
+                    cap: dailyCap,
+                    defaultValue: "{{done}} of {{cap}} reviews today",
+                  })}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-emerald-50 p-3 text-center">
                   <div className="text-xl font-headline font-black text-emerald-700 tabular-nums">
