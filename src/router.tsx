@@ -198,12 +198,62 @@ const teacherCoursesRoute = createRoute({
   ),
 });
 
+// Course-scoped layout: renders the persistent header + tab bar + <Outlet/>.
+// The "tab" routes below nest under it (so switching tabs keeps the bar and
+// highlights the active one). Drill-down editors (lesson/module/quiz/student
+// detail) stay siblings under authenticatedRoute for a full-screen view.
 const teacherCourseManageRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId",
   component: lazyRouteComponent(
+    () => import("@/routes/teacher/courses/course-shell"),
+  ),
+});
+
+const teacherCourseCurriculumRoute = createRoute({
+  getParentRoute: () => teacherCourseManageRoute,
+  path: "/",
+  component: lazyRouteComponent(
     () => import("@/routes/teacher/courses/course-manage"),
   ),
+});
+
+const teacherCourseStudentsRoute = createRoute({
+  getParentRoute: () => teacherCourseManageRoute,
+  path: "students",
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/courses/course-students"),
+  ),
+});
+
+const teacherCourseProgressRoute = createRoute({
+  getParentRoute: () => teacherCourseManageRoute,
+  path: "progress",
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/courses/course-progress"),
+  ),
+});
+
+const teacherCourseAssessmentsRoute = createRoute({
+  getParentRoute: () => teacherCourseManageRoute,
+  path: "assessments",
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/courses/course-assessments"),
+  ),
+});
+
+const teacherCourseQuestionBankRoute = createRoute({
+  getParentRoute: () => teacherCourseManageRoute,
+  path: "question-bank",
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/courses/course-question-bank"),
+  ),
+});
+
+const teacherSrCohortRoute = createRoute({
+  getParentRoute: () => teacherCourseManageRoute,
+  path: "sr-cohort",
+  component: lazyRouteComponent(() => import("@/routes/teacher/sr-cohort")),
 });
 
 const teacherLessonManageRoute = createRoute({
@@ -266,14 +316,6 @@ const teacherStudentsHubRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/students",
   component: lazyRouteComponent(() => import("@/routes/teacher/students-hub")),
-});
-
-const teacherCourseStudentsRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
-  path: "/teacher/courses/$courseId/students",
-  component: lazyRouteComponent(
-    () => import("@/routes/teacher/courses/course-students"),
-  ),
 });
 
 const teacherCourseStudentDetailRoute = createRoute({
@@ -478,32 +520,10 @@ const studyReviewRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/study-review")),
 });
 
-const teacherSrCohortRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
-  path: "/teacher/courses/$courseId/sr-cohort",
-  component: lazyRouteComponent(() => import("@/routes/teacher/sr-cohort")),
-});
-
 const teacherSrAtRiskRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/at-risk",
   component: lazyRouteComponent(() => import("@/routes/teacher/sr-at-risk")),
-});
-
-const teacherCourseProgressRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
-  path: "/teacher/courses/$courseId/progress",
-  component: lazyRouteComponent(
-    () => import("@/routes/teacher/courses/course-progress"),
-  ),
-});
-
-const teacherCourseAssessmentsRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
-  path: "/teacher/courses/$courseId/assessments",
-  component: lazyRouteComponent(
-    () => import("@/routes/teacher/courses/course-assessments"),
-  ),
 });
 
 const teacherCourseQuizAttemptDetailRoute = createRoute({
@@ -519,14 +539,6 @@ const teacherSrStudentDetailRoute = createRoute({
   path: "/teacher/courses/$courseId/students/$studentId/sr",
   component: lazyRouteComponent(
     () => import("@/routes/teacher/sr-student-detail"),
-  ),
-});
-
-const teacherCourseQuestionBankRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
-  path: "/teacher/courses/$courseId/question-bank",
-  component: lazyRouteComponent(
-    () => import("@/routes/teacher/courses/course-question-bank"),
   ),
 });
 
@@ -580,7 +592,14 @@ const routeTree = rootRoute.addChildren([
     notificationsRoute,
     teacherRoute,
     teacherCoursesRoute,
-    teacherCourseManageRoute,
+    teacherCourseManageRoute.addChildren([
+      teacherCourseCurriculumRoute,
+      teacherCourseStudentsRoute,
+      teacherCourseProgressRoute,
+      teacherCourseAssessmentsRoute,
+      teacherCourseQuestionBankRoute,
+      teacherSrCohortRoute,
+    ]),
     teacherLessonManageRoute,
     teacherModuleManageRoute,
     teacherQuizManageRoute,
@@ -589,7 +608,6 @@ const routeTree = rootRoute.addChildren([
     teacherInterviewConfigRoute,
     teacherInterviewGapReportRoute,
     teacherStudentsHubRoute,
-    teacherCourseStudentsRoute,
     teacherCourseStudentDetailRoute,
     adminHealthRoute,
     adminSettingsRoute,
@@ -622,13 +640,9 @@ const routeTree = rootRoute.addChildren([
     srDashboardRoute,
     studyCardsDueRoute,
     studyReviewRoute,
-    teacherSrCohortRoute,
     teacherSrAtRiskRoute,
-    teacherCourseProgressRoute,
-    teacherCourseAssessmentsRoute,
     teacherCourseQuizAttemptDetailRoute,
     teacherSrStudentDetailRoute,
-    teacherCourseQuestionBankRoute,
   ]),
   callbackRoute,
 ]);

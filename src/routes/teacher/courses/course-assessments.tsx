@@ -204,27 +204,7 @@ export default function CourseAssessmentsPage() {
   return (
     <div className="min-h-screen pb-12">
       <div className="max-w-6xl mx-auto space-y-6">
-        <Breadcrumbs
-          items={[
-            { label: "My Courses", to: "/teacher/courses" },
-            {
-              label: course?.title ?? "—",
-              to: "/teacher/courses/$courseId",
-              params: { courseId },
-            },
-            { label: "Assessments" },
-          ]}
-        />
-
-        <div className="flex items-center gap-3">
-          <Link
-            to="/teacher/courses/$courseId"
-            params={{ courseId }}
-            className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
-            aria-label="Back to course"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
+        <div className="pt-2">
           <SectionHeader
             title="Assessments"
             subtitle="Every quiz attempt and interview session in this course."

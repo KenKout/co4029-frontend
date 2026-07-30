@@ -2068,13 +2068,9 @@ function AddModuleForm({
 
 export default function CourseManagePage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
-  const { data: course } = useTeacherCourseById(courseId);
   const { data: content, isLoading } = useTeacherCourseContent(courseId);
   const [addingModule, setAddingModule] = useState(false);
-  const deleteCourse = useDeleteTeacherCourse(courseId);
-  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const modules = content?.modules ?? [];
 
@@ -2147,153 +2143,8 @@ export default function CourseManagePage() {
     });
   }
 
-  async function handleDeleteCourse() {
-    try {
-      await deleteCourse.mutateAsync();
-      toast.success(t("teacher_course_settings.delete.deleted"));
-      setConfirmDelete(false);
-      void navigate({ to: "/teacher/courses" });
-    } catch (err: unknown) {
-      toast.error(
-        (err as Error).message || t("teacher_course_settings.delete.failed"),
-      );
-    }
-  }
-
   return (
     <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        <Link to="/teacher/courses">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-xs text-m3-on-surface-variant mb-0.5">
-            <Link
-              to="/teacher/courses"
-              className="hover:text-m3-primary transition-colors"
-            >
-              {t("teacher_courses_list.title")}
-            </Link>
-            <ArrowRight className="h-3 w-3" />
-            <span className="truncate">{course?.title ?? "…"}</span>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <h1 className="min-w-0 flex-1 text-xl font-headline font-bold text-m3-on-surface truncate">
-              {course?.title ?? t("teacher_common.curriculum_fallback_title")}
-            </h1>
-            {/* Delete — destructive, pushed to the right of the course name.
-                Red hover fill + subtle lift; press-down on click. */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setConfirmDelete(true)}
-              disabled={deleteCourse.isPending}
-              className="shrink-0 gap-2 border-destructive/40 text-destructive transition-all hover:-translate-y-0.5 hover:bg-destructive hover:text-white hover:shadow-md active:translate-y-0 active:scale-95"
-            >
-              <Trash2 className="h-4 w-4" />
-              {t("teacher_course_settings.delete.button")}
-            </Button>
-          </div>
-          <p className="text-xs text-m3-on-surface-variant mt-0.5">
-            {t("teacher_common.module_count", { count: modules.length })}
-            {modules.length > 0 &&
-              t("teacher_common.lesson_count_suffix", {
-                count: modules.reduce(
-                  (acc, m) =>
-                    acc +
-                    (m.items ?? []).filter((i) => i.item_type === "lesson")
-                      .length,
-                  0,
-                ),
-              })}
-          </p>
-
-          {/* Course navigation — moved below the course name so the header
-              stays clean and the nav wraps as its own row. */}
-          <div className="flex flex-wrap items-center gap-2 mt-3">
-            <Link
-              to="/teacher/courses/$courseId/students"
-              params={{ courseId }}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-m3-outline-variant/30 shrink-0"
-              >
-                <Users className="h-4 w-4 text-m3-secondary" />
-                <span className="hidden sm:inline">
-                  {t("teacher_common.nav_students")}
-                </span>
-              </Button>
-            </Link>
-            <Link
-              to="/teacher/courses/$courseId/progress"
-              params={{ courseId }}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-m3-outline-variant/30 shrink-0"
-              >
-                <Activity className="h-4 w-4 text-m3-secondary" />
-                <span className="hidden sm:inline">
-                  {t("teacher_common.nav_progress")}
-                </span>
-              </Button>
-            </Link>
-            <Link
-              to="/teacher/courses/$courseId/assessments"
-              params={{ courseId }}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-m3-outline-variant/30 shrink-0"
-              >
-                <ClipboardList className="h-4 w-4 text-m3-secondary" />
-                <span className="hidden sm:inline">
-                  {t("teacher_common.nav_assessments")}
-                </span>
-              </Button>
-            </Link>
-            <Link
-              to="/teacher/courses/$courseId/question-bank"
-              params={{ courseId }}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-m3-outline-variant/30 shrink-0"
-              >
-                <Library className="h-4 w-4 text-m3-secondary" />
-                <span className="hidden sm:inline">
-                  {t("teacher_common.nav_question_bank")}
-                </span>
-              </Button>
-            </Link>
-            <Link
-              to="/teacher/courses/$courseId/sr-cohort"
-              params={{ courseId }}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-m3-outline-variant/30 shrink-0"
-              >
-                <Brain className="h-4 w-4 text-m3-secondary" />
-                <span className="hidden sm:inline">
-                  {t("teacher_common.nav_retention")}
-                </span>
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* Course Settings — the panel carries its own titled, collapsible
           header (icon + "Course Settings" + status summary), so an outer
           <h2> here just duplicated that title. Panel stands alone. */}
@@ -2446,19 +2297,6 @@ export default function CourseManagePage() {
         )}
       </section>
 
-      <ConfirmDialog
-        open={confirmDelete}
-        onOpenChange={setConfirmDelete}
-        title={t("teacher_course_settings.delete.title")}
-        description={t("teacher_course_settings.delete.body", {
-          title: course?.title ?? "",
-        })}
-        confirmLabel={t("teacher_course_settings.delete.button")}
-        cancelLabel={t("common.cancel", "Cancel")}
-        confirmVariant="destructive"
-        onConfirm={handleDeleteCourse}
-        isPending={deleteCourse.isPending}
-      />
       {/* Long page (settings + outcomes + every module) — floating jump back
           to the top once scrolled down. */}
       <ScrollToTop />

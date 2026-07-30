@@ -195,44 +195,14 @@ export default function CourseStudentsPage() {
 
   return (
     <div className="max-w-[1440px] mx-auto pb-16">
-      {/* ── Breadcrumb ── */}
-      <div className="flex items-center gap-1.5 text-xs text-m3-on-surface-variant pt-4 pb-6">
-        <Link
-          to="/teacher/courses"
-          className="hover:text-m3-primary transition-colors"
-        >
-          {t("teacher_courses_list.title")}
-        </Link>
-        <ArrowRight className="h-3 w-3" />
-        <Link
-          to="/teacher/courses/$courseId"
-          params={{ courseId }}
-          className="hover:text-m3-primary transition-colors truncate max-w-[200px]"
-        >
-          {course?.title ?? "…"}
-        </Link>
-        <ArrowRight className="h-3 w-3" />
-        <span className="text-m3-on-surface font-medium">Students</span>
-      </div>
-
-      {/* ── Header ── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-8">
+      {/* ── Header ── (course title + tabs live in the shell above) */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-8 pt-2">
         <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <Link to="/teacher/courses/$courseId" params={{ courseId }}>
-              <button
-                type="button"
-                className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-            </Link>
-            <span className="text-m3-secondary font-headline font-bold text-xs tracking-widest uppercase">
-              Student Management
-            </span>
-          </div>
-          <h1 className="font-headline font-extrabold text-4xl lg:text-5xl text-m3-primary tracking-tight leading-tight">
-            {course?.title ?? "Students"}
+          <span className="text-m3-secondary font-headline font-bold text-xs tracking-widest uppercase">
+            Student Management
+          </span>
+          <h1 className="font-headline font-extrabold text-3xl lg:text-4xl text-m3-primary tracking-tight leading-tight">
+            {t("teacher_common.nav_students")}
           </h1>
           <p className="text-m3-on-surface-variant text-sm">
             {students.length} enrolled &bull; {activeCount} active &bull;{" "}

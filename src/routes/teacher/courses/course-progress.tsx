@@ -118,27 +118,7 @@ export default function TeacherCourseProgressPage() {
   return (
     <div className="min-h-screen pb-12">
       <div className="max-w-6xl mx-auto space-y-6">
-        <Breadcrumbs
-          items={[
-            { label: t("teacher_courses_list.title"), to: "/teacher/courses" },
-            {
-              label: course?.title ?? "—",
-              to: "/teacher/courses/$courseId",
-              params: { courseId },
-            },
-            { label: t("teacher_progress.breadcrumb") },
-          ]}
-        />
-
-        <div className="flex items-center gap-3">
-          <Link
-            to="/teacher/courses/$courseId"
-            params={{ courseId }}
-            className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
-            aria-label={t("teacher_progress.back")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
+        <div className="pt-2">
           <SectionHeader
             title={t("teacher_progress.title")}
             subtitle={t("teacher_progress.subtitle")}
