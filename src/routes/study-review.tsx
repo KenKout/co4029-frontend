@@ -65,14 +65,26 @@ export default function StudyReviewPage() {
   const [correctCount, setCorrectCount] = useState(0);
 
   // After every answer the SM-2 write reschedules the card (a wrong answer
-  // pushes it to the 24h cooldown, a pass advances it), so the cards-due list,
-  // the dashboard tile, and the review queue itself are all now stale. The
-  // submit endpoint isn't a react-query mutation, so nothing auto-invalidates —
-  // do it here. Without this, returning to /study/cards-due shows the card the
-  // student just answered (the "it still lives in cards-due" bug).
+  // pushes it to the 24h cooldown, a pass advances it), so the cards-due list
+  // and the dashboard tile are now stale. The submit endpoint isn't a
+  // react-query mutation, so nothing auto-invalidates — do it here. Without
+  // this, returning to /study/cards-due shows the card just answered (the "it
+  // still lives in cards-due" bug).
+  //
+  // The review-queue is invalidated with refetchType:"none": we mark it stale
+  // (so it refetches on the next mount / when the student navigates back) but
+  // do NOT refetch it mid-session. An active refetch would shrink the `cards`
+  // array under the walkthrough — since ReviewCardView is keyed on
+  // question_id, cards[index] would resolve to a different card, remounting the
+  // component with fresh state and instantly skipping past the feedback the
+  // student is still reading. "Keep reviewing" (restartSession) does the
+  // explicit refetch when the student is ready for the next batch.
   const invalidateSrCaches = () => {
     void queryClient.invalidateQueries({ queryKey: ["sr", "cards-due"] });
-    void queryClient.invalidateQueries({ queryKey: ["sr", "review-queue"] });
+    void queryClient.invalidateQueries({
+      queryKey: ["sr", "review-queue"],
+      refetchType: "none",
+    });
     void queryClient.invalidateQueries({
       queryKey: queryKeys.sr.dashboardSummary(),
     });
