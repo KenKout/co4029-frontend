@@ -51,10 +51,10 @@ vi.mock("lucide-react", () => ({
   Volume2: () => <div data-testid="volume-icon" />,
   Clock3: () => <div data-testid="clock-icon" />,
   Loader2: () => <div data-testid="loader-icon" />,
-  // Still required: voice-controls imports VoiceStatusIndicator from
-  // interview-workspace, and that module pulls in lib/interview/format's
-  // TURN_KIND_VISUALS at module scope. Deletable once VoiceStatusIndicator is
-  // extracted and this file stops importing the workspace module entirely.
+  // This mock replaces lucide-react wholesale, so every icon reachable at import
+  // time must exist here. These three are referenced by TURN_KIND_VISUALS in
+  // lib/interview/format, which voice-controls reaches via VoiceStatusIndicator
+  // in ./conversation — not by voice-controls itself.
   Sparkles: () => <div data-testid="sparkles-icon" />,
   CircleHelp: () => <div data-testid="circle-help-icon" />,
   MessageSquareText: () => <div data-testid="message-square-text-icon" />,
