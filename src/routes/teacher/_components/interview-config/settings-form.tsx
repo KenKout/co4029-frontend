@@ -9,9 +9,7 @@
  */
 
 import { useState } from "react";
-import type {
-  FormEvent,
-} from "react";
+import type { FormEvent } from "react";
 import { Collapsible } from "@base-ui/react/collapsible";
 import { useTranslation } from "react-i18next";
 import {
