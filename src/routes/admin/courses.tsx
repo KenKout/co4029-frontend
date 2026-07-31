@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { Archive, BookOpen, RotateCcw, Search, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Archive, BookOpen, RotateCcw, Trash2 } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
@@ -261,18 +261,15 @@ export default function AdminCoursesPage() {
           }
           toolbar={
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="relative max-w-md flex-1 min-w-[12rem]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-                <Input
-                  type="text"
-                  value={table.search}
-                  onChange={(e) => table.setSearch(e.target.value)}
-                  placeholder={t("admin.courses_list.search_placeholder", {
-                    defaultValue: "Search by title or slug…",
-                  })}
-                  className="pl-10"
-                />
-              </div>
+              <SearchInput
+                wrapperClassName="max-w-md flex-1 min-w-[12rem]"
+                value={table.search}
+                onChange={(e) => table.setSearch(e.target.value)}
+                placeholder={t("admin.courses_list.search_placeholder", {
+                  defaultValue: "Search by title or slug…",
+                })}
+                className="pl-10"
+              />
               <label className="inline-flex items-center gap-2 text-sm text-text-strong select-none shrink-0">
                 <input
                   type="checkbox"

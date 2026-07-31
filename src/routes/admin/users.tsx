@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Building2, Mail, Search, Users } from "lucide-react";
+import { Building2, Mail, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
@@ -250,18 +250,15 @@ export default function AdminUsersPage() {
           }
           toolbar={
             <div className="flex flex-wrap items-center gap-3">
-              <div className="relative max-w-md flex-1 min-w-[220px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-                <Input
-                  type="text"
-                  value={table.search}
-                  onChange={(e) => table.setSearch(e.target.value)}
-                  placeholder={t("admin.users.search_placeholder", {
-                    defaultValue: "Search by name or email…",
-                  })}
-                  className="pl-10"
-                />
-              </div>
+              <SearchInput
+                wrapperClassName="max-w-md flex-1 min-w-[220px]"
+                value={table.search}
+                onChange={(e) => table.setSearch(e.target.value)}
+                placeholder={t("admin.users.search_placeholder", {
+                  defaultValue: "Search by name or email…",
+                })}
+                className="pl-10"
+              />
               <select
                 value={table.roleFilter ?? ""}
                 onChange={(e) =>

@@ -6,7 +6,6 @@ import {
   Globe,
   Layers,
   Plus,
-  Search,
   Trash2,
   Users,
   X,
@@ -16,6 +15,7 @@ import { toast } from "sonner";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -651,23 +651,19 @@ function UserSearchCombobox({
 
   return (
     <div className="relative">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-        <Input
-          type="text"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
-          placeholder={t(
-            "admin.organizations.memberships.user_search_placeholder",
-          )}
-          className="pl-10"
-        />
-      </div>
+      <SearchInput
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder={t(
+          "admin.organizations.memberships.user_search_placeholder",
+        )}
+        className="pl-10"
+      />
       {open && (
         <div className="absolute z-10 mt-1 w-full rounded-md border border-m3-outline-variant bg-white shadow-lg max-h-64 overflow-auto">
           {isLoading ? (

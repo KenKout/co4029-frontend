@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Building2, Plus, Search, X } from "lucide-react";
+import { Building2, Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -282,16 +283,13 @@ export default function AdminOrganizationsPage() {
               : t("admin.organizations.empty_title")
           }
           toolbar={
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-              <Input
-                type="text"
-                value={table.search}
-                onChange={(e) => table.setSearch(e.target.value)}
-                placeholder={t("admin.organizations.search_placeholder")}
-                className="pl-10"
-              />
-            </div>
+            <SearchInput
+              wrapperClassName="max-w-md"
+              value={table.search}
+              onChange={(e) => table.setSearch(e.target.value)}
+              placeholder={t("admin.organizations.search_placeholder")}
+              className="pl-10"
+            />
           }
         />
       )}
