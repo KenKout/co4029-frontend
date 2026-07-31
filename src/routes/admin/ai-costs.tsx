@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import {
@@ -41,7 +41,10 @@ import {
   type AiCostsPeriod,
   type AiModelPricingInput,
 } from "@/lib/api/hooks/admin";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { downloadCsv } from "@/lib/csv-export";
 import { StatCard } from "@/components/ui/stat-card";
@@ -1417,7 +1420,6 @@ function PipelineDrilldownSheet({
 export default function AdminAiCostsPage() {
   const { t } = useTranslation();
   const fmt = useFormatters();
-  const navigate = useNavigate();
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
 
@@ -1435,13 +1437,9 @@ export default function AdminAiCostsPage() {
   });
   const [drilldown, setDrilldown] = useState<AiCostsByPipelineRow | null>(null);
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canAdmin) {
-      toast.error(t("admin.users.roles.errors.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canAdmin, navigate, t]);
+  useRequirePermission(canAdmin, {
+    messageKey: "common.no_permission",
+  });
 
   const summary = useAiCostsSummary(period, filters);
   const byCategory = useAiCostsByCategory({ period, dimension, filters });

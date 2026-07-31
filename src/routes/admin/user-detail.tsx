@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import {
@@ -25,7 +25,10 @@ import {
   useOrganizations,
   useOrgUnits,
 } from "@/lib/api/hooks/admin-organizations";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import { formatDateTime, resolveLocale } from "@/lib/format/date";
 import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
 import { USER_STATUS_TOKENS } from "@/lib/status-tokens";
@@ -418,7 +421,6 @@ function RoleAssignmentsSection({
 
 export default function AdminUserDetailPage() {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
   const params = useParams({ strict: false }) as { userId?: string };
   const userId = params.userId ?? "";
   const locale = i18n.resolvedLanguage ?? i18n.language ?? "en";
@@ -428,13 +430,9 @@ export default function AdminUserDetailPage() {
 
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canAdmin) {
-      toast.error(t("admin.users.roles.errors.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canAdmin, navigate, t]);
+  useRequirePermission(canAdmin, {
+    messageKey: "common.no_permission",
+  });
 
   const enabled = !permissions.isLoading && canAdmin && Boolean(userId);
   const detail = useAdminUser(enabled ? userId : "");

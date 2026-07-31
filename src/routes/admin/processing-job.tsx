@@ -1,10 +1,12 @@
-import { useEffect } from "react";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { useProcessingJob, useRetryProcessingJob } from "@/lib/api/hooks/admin";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,20 +48,15 @@ function Field({
 export default function AdminProcessingJobPage() {
   const { t } = useTranslation();
   const formatDate = useFormatDateTime();
-  const navigate = useNavigate();
   const params = useParams({ strict: false }) as { jobId?: string };
   const jobId = params.jobId ?? "";
 
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canAdmin) {
-      toast.error(t("admin.users.roles.errors.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canAdmin, navigate, t]);
+  useRequirePermission(canAdmin, {
+    messageKey: "common.no_permission",
+  });
 
   const enabled = !permissions.isLoading && canAdmin && Boolean(jobId);
   const job = useProcessingJob(enabled ? jobId : "");

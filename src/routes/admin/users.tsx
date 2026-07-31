@@ -1,13 +1,15 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
 import { Building2, Mail, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import { useListRoles } from "@/lib/api/hooks/admin";
 import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 import type { User } from "@/lib/api/types";
@@ -80,13 +82,9 @@ export default function AdminUsersPage() {
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canAdmin) {
-      toast.error(t("admin.users.roles.errors.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canAdmin, navigate, t]);
+  useRequirePermission(canAdmin, {
+    messageKey: "common.no_permission",
+  });
 
   // Role list drives both the filter dropdown and the code→name label map for
   // the Role column, so the labels stay in sync with the seeded catalog.

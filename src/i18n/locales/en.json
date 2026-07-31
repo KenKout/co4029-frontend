@@ -29,7 +29,8 @@
       "title": "Are you sure you want to quit?",
       "description": "You have unsaved changes. If you quit now, they will be lost.",
       "quit": "Quit"
-    }
+    },
+    "no_permission": "You do not have permission to access this page"
   },
   "entity_select": {
     "selected_count": "{{count}} selected",

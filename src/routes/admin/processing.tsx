@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -16,7 +16,10 @@ import {
   useProcessingQueue,
   useRetryProcessingJob,
 } from "@/lib/api/hooks/admin";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
 import { StatCard } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -160,7 +163,6 @@ function JobsTable({
 export default function AdminProcessingPage() {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? i18n.language ?? "en";
-  const navigate = useNavigate();
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
 
@@ -171,13 +173,9 @@ export default function AdminProcessingPage() {
   const [statusFilter, setStatusFilter] = useState<string>(search.status ?? "");
   const [retryingId, setRetryingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canAdmin) {
-      toast.error(t("admin.users.roles.errors.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canAdmin, navigate, t]);
+  useRequirePermission(canAdmin, {
+    messageKey: "common.no_permission",
+  });
 
   const queue = useProcessingQueue();
   const jobs = useProcessingJobs(

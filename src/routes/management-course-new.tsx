@@ -21,7 +21,10 @@ import {
   useSlugAvailability,
 } from "@/lib/api/hooks/teacher-courses";
 import { useMe } from "@/lib/api/hooks/auth";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 
 type Level = "" | "beginner" | "intermediate" | "advanced";
 
@@ -39,13 +42,10 @@ export default function ManagementCourseNewPage() {
   const permissions = usePermissions();
   const canCreate = permissions.has("course.create");
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canCreate) {
-      toast.error(t("dept_courses.no_permission"));
-      void navigate({ to: "/dept", replace: true });
-    }
-  }, [permissions.isLoading, canCreate, navigate, t]);
+  useRequirePermission(canCreate, {
+    messageKey: "dept_courses.no_permission",
+    redirectTo: "/dept",
+  });
 
   const [form, setForm] = useState({
     title: "",

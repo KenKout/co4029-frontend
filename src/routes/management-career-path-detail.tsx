@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -24,7 +24,10 @@ import {
   type SelectableEntity,
 } from "@/components/ui/entity-multi-select-dialog";
 import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import { useCourseCatalogue } from "@/lib/api/hooks/courses";
 import { useAdminUsersSearch } from "@/lib/api/hooks/admin-organizations";
 import {
@@ -58,7 +61,6 @@ const TAB_DEFS: { key: TabKey; icon: typeof BookOpen }[] = [
 
 export default function ManagementCareerPathDetailPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { id } = useParams({ strict: false }) as { id: string };
   const permissions = usePermissions();
   // Backend gates career-path authoring on course lifecycle codes (manager
@@ -70,13 +72,9 @@ export default function ManagementCareerPathDetailPage() {
     "system.administer",
   );
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canManage) {
-      toast.error(t("admin.users.roles.errors.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canManage, navigate, t]);
+  useRequirePermission(canManage, {
+    messageKey: "common.no_permission",
+  });
 
   const enabled = !permissions.isLoading && canManage;
   const path = useManagedCareerPath(enabled ? id : undefined);

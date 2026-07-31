@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -8,7 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
 import { useDeleteCourse, useRestoreCourse } from "@/lib/api/hooks/admin";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import { useFormatDateTime } from "@/lib/format/date";
 import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
 import { ADMIN_COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
@@ -106,13 +109,9 @@ export default function AdminCoursesPage() {
   const [includeDeleted, setIncludeDeleted] = useState(true);
   const formatDate = useFormatDateTime();
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canAdmin) {
-      toast.error(t("admin.users.roles.errors.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canAdmin, navigate, t]);
+  useRequirePermission(canAdmin, {
+    messageKey: "common.no_permission",
+  });
 
   // Server-side search + sort + page across every course (the old
   // InfiniteList had no search). `include_deleted` is a server filter.

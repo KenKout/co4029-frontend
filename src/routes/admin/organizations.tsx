@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Building2, Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -11,7 +11,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
 import { useCreateOrganization } from "@/lib/api/hooks/admin-organizations";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import type {
   OrganizationRead,
   OrganizationStatus,
@@ -165,13 +168,9 @@ export default function AdminOrganizationsPage() {
     pageSize: 25,
   });
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canManage) {
-      toast.error(t("admin.users.roles.errors.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canManage, navigate, t]);
+  useRequirePermission(canManage, {
+    messageKey: "common.no_permission",
+  });
 
   const columns: DataTableColumn<OrganizationRead>[] = [
     {

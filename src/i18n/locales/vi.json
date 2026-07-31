@@ -29,7 +29,8 @@
       "title": "Bạn có chắc muốn thoát?",
       "description": "Bạn có thay đổi chưa lưu. Nếu thoát bây giờ, các thay đổi sẽ bị mất.",
       "quit": "Thoát"
-    }
+    },
+    "no_permission": "Không có quyền truy cập"
   },
   "entity_select": {
     "selected_count": "Đã chọn {{count}}",

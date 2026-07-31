@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
   Building2,
@@ -34,7 +34,10 @@ import {
   usePatchMembership,
   usePatchOrganization,
 } from "@/lib/api/hooks/admin-organizations";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import { formatDateTime, resolveLocale } from "@/lib/format/date";
 import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
 import { ORG_MEMBERSHIP_STATUS_TOKENS } from "@/lib/status-tokens";
@@ -1031,7 +1034,6 @@ function MembershipsTab({ orgId }: { orgId: string }) {
 
 export default function AdminOrganizationDetailPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { orgId } = useParams({ strict: false });
   const [tab, setTab] = useState<TabKey>("info");
   const permissions = usePermissions();
@@ -1043,13 +1045,9 @@ export default function AdminOrganizationDetailPage() {
     "user.bulk_import",
   );
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canManage) {
-      toast.error(t("admin.users.roles.errors.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canManage, navigate, t]);
+  useRequirePermission(canManage, {
+    messageKey: "common.no_permission",
+  });
 
   if (!orgId) return null;
   if (permissions.isLoading || isLoading) {

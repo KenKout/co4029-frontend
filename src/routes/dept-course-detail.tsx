@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { useState } from "react";
+import { Link, useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import {
@@ -20,7 +20,10 @@ import {
   useDeptCourses,
   useRemoveTeacher,
 } from "@/lib/api/hooks/dept";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
 import type { RosterEntry, TeacherAssignmentRead } from "@/lib/api/types";
 
@@ -227,7 +230,6 @@ function StudentRow({ entry }: { entry: RosterEntry }) {
 
 export default function DeptCourseDetailPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
 
   const permissions = usePermissions();
@@ -237,13 +239,9 @@ export default function DeptCourseDetailPage() {
   );
   const canRead = canAssign || permissions.has("course.enrollment.read");
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canRead) {
-      toast.error(t("dept_course_detail.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canRead, navigate, t]);
+  useRequirePermission(canRead, {
+    messageKey: "dept_course_detail.no_permission",
+  });
 
   const enabled = !permissions.isLoading && canRead;
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Trans, useTranslation } from "react-i18next";
@@ -8,7 +8,10 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import {
   useCreateCareerPath,
   useListManagedCareerPaths,
@@ -208,7 +211,6 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
 
 export default function ManagementCareerPathsPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const permissions = usePermissions();
 
   // Career-path authoring is gated on course lifecycle codes on the backend
@@ -222,13 +224,9 @@ export default function ManagementCareerPathsPage() {
     "system.administer",
   );
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canManage) {
-      toast.error(t("management_career_paths.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canManage, navigate, t]);
+  useRequirePermission(canManage, {
+    messageKey: "management_career_paths.no_permission",
+  });
 
   const [includeArchived, setIncludeArchived] = useState(false);
   const [creating, setCreating] = useState(false);

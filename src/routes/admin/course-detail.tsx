@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import {
@@ -15,7 +14,10 @@ import {
   useCourseProcessingJobs,
   useRestoreCourse,
 } from "@/lib/api/hooks/admin";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import { StatCard } from "@/components/ui/stat-card";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -130,20 +132,15 @@ function JobsTable({ jobs }: { jobs: ProcessingJobRow[] }) {
 export default function AdminCourseDetailPage() {
   const { t } = useTranslation();
   const { formatDate, formatNumber, formatUsd } = useFormatters();
-  const navigate = useNavigate();
   const params = useParams({ strict: false }) as { courseId?: string };
   const courseId = params.courseId ?? "";
 
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canAdmin) {
-      toast.error(t("admin.users.roles.errors.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canAdmin, navigate, t]);
+  useRequirePermission(canAdmin, {
+    messageKey: "common.no_permission",
+  });
 
   const enabled = !permissions.isLoading && canAdmin && Boolean(courseId);
   const audit = useCourseAudit(enabled ? courseId : "");
