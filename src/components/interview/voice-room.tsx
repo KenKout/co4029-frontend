@@ -19,7 +19,7 @@ import type { RealtimeTokenResponse } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { VoiceControls } from "./voice-controls";
 import { VoiceTranscript } from "./voice-transcript";
-import type { ConversationTurn } from "./interview-workspace";
+import type { ConversationTurn } from "@/lib/interview/types";
 
 interface VoiceRoomProps {
   sessionId: string;

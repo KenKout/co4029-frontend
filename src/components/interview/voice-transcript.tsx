@@ -10,8 +10,8 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { formatRelativeInterviewTime } from "./interview-workspace";
-import type { ConversationTurn } from "./interview-workspace";
+import { formatRelativeInterviewTime } from "@/lib/interview/format";
+import type { ConversationTurn } from "@/lib/interview/types";
 
 interface VoiceTranscriptProps {
   className?: string;

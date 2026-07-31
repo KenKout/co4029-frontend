@@ -38,7 +38,6 @@ import {
   Wifi,
   WifiOff,
   X,
-  type LucideIcon,
 } from "lucide-react";
 
 import { AiTypingMessage } from "@/components/interview/ai-typing-message";
@@ -83,119 +82,24 @@ export type {
   TurnKindVisual,
 };
 
-/** Resolves competing runtime signals into one canonical primary UI state. */
-export function resolveInterviewState({
-  connected = true,
-  hasError = false,
-  thinking = false,
-  speaking = false,
-  listening = false,
-  paused = false,
-}: InterviewStateSignals): InterviewAgentStatus {
-  if (!connected) return "disconnected";
-  if (hasError) return "error";
-  if (thinking) return "thinking";
-  if (speaking) return "speaking";
-  if (listening) return "listening";
-  if (paused) return "paused";
-  return "idle";
-}
+// Pure helpers now live in lib/interview/. Imported for local use AND re-exported
+// so consumers of this module keep working until the barrel is retired;
+// STATUS_LABELS and TURN_KIND_VISUALS moved with them, which is what lets sibling
+// modules import a formatter without pulling in every component in this file.
+import {
+  STATUS_LABELS,
+  formatRelativeInterviewTime,
+  resolveInterviewState,
+  turnKindVisual,
+} from "@/lib/interview/format";
+import { useInterviewTimer } from "@/lib/interview/use-interview-timer";
 
-export function formatRelativeInterviewTime(totalSeconds: number | undefined) {
-  const safeSeconds = Math.max(0, Math.floor(totalSeconds ?? 0));
-  const hours = Math.floor(safeSeconds / 3600);
-  const minutes = Math.floor((safeSeconds % 3600) / 60);
-  const seconds = safeSeconds % 60;
-
-  return hours > 0
-    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
-    : `${minutes}:${String(seconds).padStart(2, "0")}`;
-}
-
-/**
- * Per-turn-kind visual treatment (B-Tier-1 #12): an icon + accent color so the
- * transcript stream is scannable — a question reads differently from a hint,
- * clarification, follow-up, or wrap-up ceremony. Icon is shown in the AI turn's
- * avatar; `accent`/`badgeClass` tint the kind badge. Returns null for a plain
- * question/opening (the default Bot avatar + neutral badge already suit those).
- */
-
-const TURN_KIND_VISUALS: Partial<
-  Record<NonNullable<ConversationTurn["kind"]>, TurnKindVisual>
-> = {
-  hint: {
-    icon: Sparkles,
-    avatarClass: "border-amber-200 bg-amber-50 text-amber-600",
-    badgeClass: "bg-amber-100 text-amber-700",
-    labelKey: "course_interview.workspace.small_hint",
-  },
-  clarification: {
-    icon: CircleHelp,
-    avatarClass: "border-sky-200 bg-sky-50 text-sky-600",
-    badgeClass: "bg-sky-100 text-sky-700",
-    labelKey: "course_interview.workspace.interviewer_clarification",
-  },
-  followup: {
-    icon: MessageSquareText,
-    avatarClass: "border-violet-200 bg-violet-50 text-violet-600",
-    badgeClass: "bg-violet-100 text-violet-700",
-    labelKey: "course_interview.sections.follow_up",
-  },
-  closing: {
-    icon: Check,
-    avatarClass: "border-primary/15 bg-primary-soft text-primary",
-    badgeClass: "bg-primary-soft text-primary",
-    labelKey: "course_interview.sections.wrap_up",
-  },
+export {
+  formatRelativeInterviewTime,
+  resolveInterviewState,
+  turnKindVisual,
+  useInterviewTimer,
 };
-
-export function turnKindVisual(
-  kind: ConversationTurn["kind"] | undefined,
-): TurnKindVisual | null {
-  if (!kind) return null;
-  return TURN_KIND_VISUALS[kind] ?? null;
-}
-
-const STATUS_LABELS: Record<InterviewAgentStatus, string> = {
-  idle: "course_interview.workspace.status.idle",
-  listening: "course_interview.workspace.status.listening",
-  paused: "course_interview.workspace.status.paused",
-  thinking: "course_interview.workspace.status.thinking",
-  speaking: "course_interview.workspace.status.speaking",
-  error: "course_interview.workspace.status.error",
-  disconnected: "course_interview.workspace.status.disconnected",
-};
-
-export function useInterviewTimer(
-  active: boolean,
-  startedAtMs?: number | null,
-) {
-  const [seconds, setSeconds] = useState(0);
-  const startedAtRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!active) {
-      return;
-    }
-
-    if (startedAtMs != null) startedAtRef.current = startedAtMs;
-    else if (startedAtRef.current === null) startedAtRef.current = Date.now();
-    const update = () => {
-      if (startedAtRef.current === null) return;
-      setSeconds(Math.floor((Date.now() - startedAtRef.current) / 1000));
-    };
-    update();
-    const timer = window.setInterval(update, 1000);
-    return () => window.clearInterval(timer);
-  }, [active, startedAtMs]);
-
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
-  return hours > 0
-    ? `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`
-    : `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
-}
 
 export function VoiceStatusIndicator({
   status,
