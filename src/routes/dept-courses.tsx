@@ -7,28 +7,12 @@ import { useDeptCourses } from "@/lib/api/hooks/dept";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import type { CourseAuthoring } from "@/lib/api/types";
 
-const STATUS_COLOR: Record<string, string> = {
-  draft: "bg-amber-100 text-amber-700",
-  published: "bg-emerald-100 text-emerald-700",
-  archived: "bg-slate-100 text-slate-500",
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const { t } = useTranslation();
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
-  const label = t(`dept_courses.status.${status}`, { defaultValue: status });
-  return (
-    <span
-      className={`inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md ${cls}`}
-    >
-      {label}
-    </span>
-  );
-}
-
 function CourseRow({ course }: { course: CourseAuthoring }) {
+  const { t } = useTranslation();
   return (
     <Link
       to="/dept/courses/$courseId"
@@ -47,7 +31,14 @@ function CourseRow({ course }: { course: CourseAuthoring }) {
             {course.slug}
           </p>
         </div>
-        <StatusBadge status={course.status} />
+        <StatusBadge
+          status={course.status}
+          tokens={COURSE_STATUS_TOKENS}
+          size="11px"
+          label={t(`dept_courses.status.${course.status}`, {
+            defaultValue: course.status,
+          })}
+        />
         <ChevronRight className="h-4 w-4 text-text-muted shrink-0" />
       </div>
     </Link>

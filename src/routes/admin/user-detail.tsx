@@ -27,6 +27,8 @@ import {
 } from "@/lib/api/hooks/admin-organizations";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { formatDateTime, resolveLocale } from "@/lib/format/date";
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { USER_STATUS_TOKENS } from "@/lib/status-tokens";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,25 +47,14 @@ type EnrichedAssignment = RoleAssignmentRead & {
   assignment_id?: string;
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700",
-  invited: "bg-amber-100 text-amber-700",
-  disabled: "bg-red-100 text-red-700",
-  inactive: "bg-red-100 text-red-700",
-  pending: "bg-slate-100 text-slate-700",
-  suspended: "bg-red-100 text-red-700",
-};
-
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
-  const label = t(`admin.users.status.${status}`, { defaultValue: status });
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-md ${cls}`}
-    >
-      {label}
-    </span>
+    <SharedStatusBadge
+      status={status}
+      tokens={USER_STATUS_TOKENS}
+      label={t(`admin.users.status.${status}`, { defaultValue: status })}
+    />
   );
 }
 

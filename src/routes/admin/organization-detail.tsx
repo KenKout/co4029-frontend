@@ -36,6 +36,8 @@ import {
 } from "@/lib/api/hooks/admin-organizations";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { formatDateTime, resolveLocale } from "@/lib/format/date";
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { ORG_MEMBERSHIP_STATUS_TOKENS } from "@/lib/status-tokens";
 import type {
   MembershipRead,
   MembershipStatus,
@@ -47,15 +49,6 @@ type TabKey = "info" | "domains" | "units" | "memberships";
 
 const TAB_KEYS: TabKey[] = ["info", "domains", "units", "memberships"];
 
-const STATUS_COLOR: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700",
-  inactive: "bg-amber-100 text-amber-700",
-  archived: "bg-slate-100 text-slate-700",
-  invited: "bg-sky-100 text-sky-700",
-  suspended: "bg-red-100 text-red-700",
-  left: "bg-slate-100 text-slate-600",
-};
-
 function StatusBadge({
   status,
   type = "org",
@@ -64,18 +57,16 @@ function StatusBadge({
   type?: "org" | "membership";
 }) {
   const { t } = useTranslation();
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
   const ns =
     type === "org"
       ? "admin.organizations.status_label"
       : "admin.organizations.membership_status_label";
-  const label = t(`${ns}.${status}`, { defaultValue: status });
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-md ${cls}`}
-    >
-      {label}
-    </span>
+    <SharedStatusBadge
+      status={status}
+      tokens={ORG_MEMBERSHIP_STATUS_TOKENS}
+      label={t(`${ns}.${status}`, { defaultValue: status })}
+    />
   );
 }
 

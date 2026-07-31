@@ -6,35 +6,17 @@ import { ArrowRight, GraduationCap, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import {
   useCreateCareerPath,
   useListManagedCareerPaths,
 } from "@/lib/api/hooks/career-paths";
+import { COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import type { CareerPathAuthoring } from "@/lib/api/types";
 
-const STATUS_COLOR: Record<string, string> = {
-  draft: "bg-amber-100 text-amber-700",
-  published: "bg-emerald-100 text-emerald-700",
-  archived: "bg-slate-100 text-slate-500",
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const { t } = useTranslation();
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
-  const label = t(`management_career_paths.status.${status}`, {
-    defaultValue: status,
-  });
-  return (
-    <span
-      className={`inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md ${cls}`}
-    >
-      {label}
-    </span>
-  );
-}
-
 function PathRow({ path }: { path: CareerPathAuthoring }) {
+  const { t } = useTranslation();
   return (
     <Link
       to="/management/career-paths/$id"
@@ -53,7 +35,14 @@ function PathRow({ path }: { path: CareerPathAuthoring }) {
             {path.slug}
           </p>
         </div>
-        <StatusBadge status={path.status} />
+        <StatusBadge
+          status={path.status}
+          tokens={COURSE_STATUS_TOKENS}
+          size="11px"
+          label={t(`management_career_paths.status.${path.status}`, {
+            defaultValue: path.status,
+          })}
+        />
         <ArrowRight className="h-4 w-4 text-m3-on-surface-variant shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
       </div>
     </Link>

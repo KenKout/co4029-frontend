@@ -15,25 +15,19 @@ import type {
   OrganizationRead,
   OrganizationStatus,
 } from "@/lib/api/types/admin-organizations";
-
-const STATUS_COLOR: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700",
-  inactive: "bg-amber-100 text-amber-700",
-  archived: "bg-slate-100 text-slate-700",
-};
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { ORG_STATUS_TOKENS } from "@/lib/status-tokens";
 
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
-  const label = t(`admin.organizations.status_label.${status}`, {
-    defaultValue: status,
-  });
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-md ${cls}`}
-    >
-      {label}
-    </span>
+    <SharedStatusBadge
+      status={status}
+      tokens={ORG_STATUS_TOKENS}
+      label={t(`admin.organizations.status_label.${status}`, {
+        defaultValue: status,
+      })}
+    />
   );
 }
 

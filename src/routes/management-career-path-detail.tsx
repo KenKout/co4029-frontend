@@ -45,6 +45,7 @@ import type {
   StudentPathProgressAuthoring,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { COURSE_STATUS_TOKENS, statusToken } from "@/lib/status-tokens";
 
 type TabKey = "courses" | "students" | "progress";
 
@@ -53,12 +54,6 @@ const TAB_DEFS: { key: TabKey; icon: typeof BookOpen }[] = [
   { key: "students", icon: Users },
   { key: "progress", icon: Upload },
 ];
-
-const STATUS_COLOR: Record<string, string> = {
-  draft: "bg-amber-100 text-amber-700",
-  published: "bg-emerald-100 text-emerald-700",
-  archived: "bg-slate-100 text-slate-500",
-};
 
 export default function ManagementCareerPathDetailPage() {
   const { t } = useTranslation();
@@ -113,7 +108,7 @@ export default function ManagementCareerPathDetailPage() {
   }
 
   const data = path.data;
-  const statusCls = STATUS_COLOR[data.status] ?? "bg-slate-100 text-slate-700";
+  const statusCls = statusToken(COURSE_STATUS_TOKENS, data.status);
   const statusLabel = t(`management_career_path_detail.status.${data.status}`, {
     defaultValue: data.status,
   });

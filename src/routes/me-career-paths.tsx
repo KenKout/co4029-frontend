@@ -13,13 +13,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { useMyCareerEnrollments } from "@/lib/api/hooks/career-paths";
 import { useFormatDate } from "@/lib/format/date";
+import { ENROLLMENT_STATUS_TOKENS, statusToken } from "@/lib/status-tokens";
 import type { MyCareerEnrollmentRead } from "@/lib/api/types";
-
-const STATUS_COLOR: Record<MyCareerEnrollmentRead["status"], string> = {
-  active: "bg-emerald-100 text-emerald-700",
-  completed: "bg-m3-primary-fixed text-m3-primary",
-  dropped: "bg-slate-100 text-slate-500",
-};
 
 function EnrollmentRow({ item }: { item: MyCareerEnrollmentRead }) {
   const { t } = useTranslation();
@@ -50,7 +45,7 @@ function EnrollmentRow({ item }: { item: MyCareerEnrollmentRead }) {
               </span>
             ) : (
               <span
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${STATUS_COLOR[item.status]}`}
+                className={`text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${statusToken(ENROLLMENT_STATUS_TOKENS, item.status)}`}
               >
                 {t(`me_career_paths.status.${item.status}`)}
               </span>

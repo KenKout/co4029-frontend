@@ -10,23 +10,21 @@ import { useServerTable } from "@/lib/api/use-server-table";
 import { useDeleteCourse, useRestoreCourse } from "@/lib/api/hooks/admin";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { useFormatDateTime } from "@/lib/format/date";
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { ADMIN_COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import type { CourseAuthoring } from "@/lib/api/types";
-
-const STATUS_COLOR: Record<string, string> = {
-  draft: "bg-amber-100 text-amber-700",
-  published: "bg-emerald-100 text-emerald-700",
-  archived: "bg-slate-200 text-slate-700",
-};
 
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md ${cls}`}
-    >
-      {t(`admin.courses_list.row_status.${status}`, { defaultValue: status })}
-    </span>
+    <SharedStatusBadge
+      status={status}
+      tokens={ADMIN_COURSE_STATUS_TOKENS}
+      size="11px"
+      label={t(`admin.courses_list.row_status.${status}`, {
+        defaultValue: status,
+      })}
+    />
   );
 }
 

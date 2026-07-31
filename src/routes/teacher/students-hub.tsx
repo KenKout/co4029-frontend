@@ -6,12 +6,7 @@ import { useTeacherCourses } from "@/lib/api/hooks/teacher-courses";
 import { PageHeader } from "@/components/ui/page-header";
 import type { Course } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
-
-const STATUS_COLORS: Record<string, string> = {
-  published: "bg-emerald-100 text-emerald-700",
-  draft: "bg-amber-50 text-amber-700",
-  archived: "bg-slate-100 text-slate-500",
-};
+import { TEACHER_COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 
 /**
  * Course-agnostic "Students" hub. Gives the sidebar a landing target (every
@@ -67,7 +62,7 @@ export default function TeacherStudentsHubPage() {
                   <Badge
                     className={cn(
                       "text-[10px] font-semibold border-0 shrink-0",
-                      STATUS_COLORS[course.status] ??
+                      TEACHER_COURSE_STATUS_TOKENS[course.status] ??
                         "bg-slate-100 text-slate-500",
                     )}
                   >

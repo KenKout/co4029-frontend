@@ -11,6 +11,8 @@ import { usePermissions } from "@/lib/auth/use-permissions";
 import { useListRoles } from "@/lib/api/hooks/admin";
 import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 import type { User } from "@/lib/api/types";
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { USER_STATUS_TOKENS } from "@/lib/status-tokens";
 
 // The backend UserRead gained roles[] + organization fields after the
 // committed OpenAPI snapshot, so widen the generated type locally rather than
@@ -23,22 +25,13 @@ type UserWithRoles = User & {
 
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
-  const STATUS_COLOR: Record<string, string> = {
-    active: "bg-emerald-100 text-emerald-700",
-    invited: "bg-amber-100 text-amber-700",
-    disabled: "bg-red-100 text-red-700",
-    inactive: "bg-red-100 text-red-700",
-    pending: "bg-slate-100 text-slate-700",
-    suspended: "bg-red-100 text-red-700",
-  };
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
-  const label = t(`admin.users.status.${status}`, { defaultValue: status });
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md ${cls}`}
-    >
-      {label}
-    </span>
+    <SharedStatusBadge
+      status={status}
+      tokens={USER_STATUS_TOKENS}
+      size="11px"
+      label={t(`admin.users.status.${status}`, { defaultValue: status })}
+    />
   );
 }
 

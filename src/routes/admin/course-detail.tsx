@@ -20,23 +20,12 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ProcessingJobRow } from "@/lib/api/types";
-
-const JOB_STATUS_COLOR: Record<string, string> = {
-  pending: "bg-slate-100 text-slate-700",
-  running: "bg-blue-100 text-blue-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  failed: "bg-red-100 text-red-700",
-  cancelled: "bg-slate-200 text-slate-700",
-};
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { JOB_STATUS_TOKENS } from "@/lib/status-tokens";
 
 function JobStatusBadge({ status }: { status: string }) {
-  const cls = JOB_STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md ${cls}`}
-    >
-      {status}
-    </span>
+    <SharedStatusBadge status={status} tokens={JOB_STATUS_TOKENS} size="11px" />
   );
 }
 

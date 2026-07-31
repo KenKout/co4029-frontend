@@ -21,6 +21,9 @@ import { ApiError } from "@/lib/api/client";
 import { StatCard } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ProcessingJobOut } from "@/lib/api/types";
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { JOB_STATUS_TOKENS } from "@/lib/status-tokens";
+import { formatDateTime, resolveLocale } from "@/lib/format/date";
 
 const STATUS_FILTERS = [
   { value: "", i18nKey: "admin.processing.filters.all" },
@@ -31,31 +34,16 @@ const STATUS_FILTERS = [
   { value: "cancelled", i18nKey: "admin.processing.filters.cancelled" },
 ] as const;
 
-const JOB_STATUS_COLOR: Record<string, string> = {
-  pending: "bg-slate-100 text-slate-700",
-  running: "bg-blue-100 text-blue-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  failed: "bg-red-100 text-red-700",
-  cancelled: "bg-slate-200 text-slate-700",
-};
-
 function JobStatusBadge({ status }: { status: string }) {
-  const cls = JOB_STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md ${cls}`}
-    >
-      {status}
-    </span>
+    <SharedStatusBadge status={status} tokens={JOB_STATUS_TOKENS} size="11px" />
   );
 }
 
-function formatDate(iso: string | null | undefined, locale: string): string {
-  if (!iso) return "—";
-  return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(iso));
+// Thin wrapper over the shared formatter; the call site passes the raw i18n
+// language, resolveLocale maps it. Same short date+time output.
+function formatDate(iso: string | null | undefined, language: string): string {
+  return formatDateTime(iso, resolveLocale(language));
 }
 
 function formatNumber(n: number | undefined | null, locale: string): string {
