@@ -31,7 +31,12 @@ import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  avatarInitials,
+} from "@/components/ui/avatar";
 import { ApiError, apiFetch } from "@/lib/api/client";
 import {
   useCourseBySlug,
@@ -75,15 +80,6 @@ interface FlatItem {
 
 const TABS = ["Lesson Notes", "Discussion", "Resources"] as const;
 type Tab = (typeof TABS)[number];
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 function buildFlatItems(
   modules: ModulePublic[],
@@ -1324,7 +1320,7 @@ function InstructorBlock({ instructor }: { instructor: InstructorRead }) {
           />
         ) : null}
         <AvatarFallback className="gradient-primary text-white text-xl font-bold font-headline">
-          {initials(instructor.display_name)}
+          {avatarInitials(instructor.display_name, { uppercase: true })}
         </AvatarFallback>
       </Avatar>
       <div className="text-center sm:text-left">

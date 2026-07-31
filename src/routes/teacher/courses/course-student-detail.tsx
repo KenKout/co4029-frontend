@@ -30,6 +30,7 @@ import {
   InterviewSessionsTable,
 } from "@/routes/teacher/_components/assessment-tables";
 import { cn } from "@/lib/utils";
+import { avatarInitials, avatarColor } from "@/components/ui/avatar";
 
 /* ── Helpers ── */
 const RISK_META: Record<string, { label: string; badge: string; bar: string }> =
@@ -65,27 +66,6 @@ const ENROLL_META: Record<string, { label: string; badge: string }> = {
   dropped: { label: "Dropped", badge: "bg-slate-100 text-slate-500" },
   waitlisted: { label: "Waitlist", badge: "bg-amber-100 text-amber-700" },
 };
-
-const AVATAR_COLORS = [
-  "bg-m3-primary-fixed text-m3-primary",
-  "bg-blue-100 text-blue-800",
-  "bg-emerald-100 text-emerald-700",
-  "bg-amber-100 text-amber-700",
-  "bg-pink-100 text-pink-700",
-  "bg-sky-100 text-sky-700",
-];
-
-function avatarInitials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  return (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
-}
-
-function avatarColor(studentId: string) {
-  let hash = 0;
-  for (let i = 0; i < studentId.length; i++)
-    hash = studentId.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
 
 function relDate(iso: string | null) {
   if (!iso) return "Never";

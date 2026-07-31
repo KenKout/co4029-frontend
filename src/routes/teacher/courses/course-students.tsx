@@ -26,6 +26,7 @@ import { GradientProgress } from "@/components/ui/gradient-progress";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { avatarInitials, avatarColor } from "@/components/ui/avatar";
 
 /* ── Risk / status helpers ── */
 const RISK_META: Record<string, { label: string; badge: string; dot: string }> =
@@ -73,27 +74,7 @@ const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
   { key: "dropped", label: "Dropped" },
 ];
 
-/* ── Avatar initials + colour ── */
-function avatarInitials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  return (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
-}
-
-const AVATAR_COLORS = [
-  "bg-m3-primary-fixed text-m3-primary",
-  "bg-blue-100 text-blue-800",
-  "bg-emerald-100 text-emerald-700",
-  "bg-amber-100 text-amber-700",
-  "bg-pink-100 text-pink-700",
-  "bg-sky-100 text-sky-700",
-];
-
-function avatarColor(studentId: string) {
-  let hash = 0;
-  for (let i = 0; i < studentId.length; i++)
-    hash = studentId.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
+/* ── Avatar initials + colour: shared helpers from ui/avatar ── */
 
 function relDate(iso: string | null) {
   if (!iso) return "Never";

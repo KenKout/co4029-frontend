@@ -62,6 +62,29 @@ export const PERSONA_TRAIT_KEYS = [
 
 export const PERSONA_KEYS: Persona[] = ["strict", "neutral", "supportive"];
 
+// Deepgram Aura-2 English voices. MUST stay in sync with the backend allow-list
+// (services.narration.ALLOWED_TTS_VOICES / schemas.authoring.TtsVoiceLiteral).
+// Empty value ("") = deployment default (settings.deepgram_tts_model_en).
+// English-only: Vietnamese sessions have no server TTS, so this is ignored there.
+export const VOICE_KEYS: TtsVoice[] = [
+  "aura-2-thalia-en",
+  "aura-2-andromeda-en",
+  "aura-2-helena-en",
+  "aura-2-apollo-en",
+  "aura-2-arcas-en",
+  "aura-2-aries-en",
+  "aura-2-asteria-en",
+  "aura-2-athena-en",
+  "aura-2-hera-en",
+  "aura-2-hyperion-en",
+  "aura-2-luna-en",
+  "aura-2-orion-en",
+  "aura-2-orpheus-en",
+  "aura-2-ophelia-en",
+  "aura-2-zeus-en",
+  "aura-2-vesta-en",
+];
+
 /** Local editable shape for the per-trait override panel. All optional so a
  *  teacher can nudge one dial; absent keys fall back to the persona preset. */
 export interface PersonaProfileOverride {

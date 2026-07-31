@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, avatarInitials } from "@/components/ui/avatar";
 import {
   useCreateComment,
   useCreateDiscussionTopic,
@@ -28,12 +28,6 @@ import {
   useUpdateDiscussionTopic,
 } from "@/lib/api/hooks/discussions";
 import type { DiscussionComment, DiscussionTopic } from "@/lib/api/types";
-
-function initialsOf(name: string | null | undefined): string {
-  if (!name) return "?";
-  const parts = name.trim().split(/\s+/);
-  return (parts[0]?.[0] ?? "").concat(parts[1]?.[0] ?? "").toUpperCase() || "?";
-}
 
 // ── Comment row ────────────────────────────────────────────────────────────
 
@@ -59,7 +53,9 @@ function CommentRow({
   return (
     <div className="flex gap-3">
       <Avatar size="sm" className="size-8 shrink-0">
-        <AvatarFallback className="text-xs">{initialsOf(name)}</AvatarFallback>
+        <AvatarFallback className="text-xs">
+          {avatarInitials(name, { uppercase: true, fallback: "?" })}
+        </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">

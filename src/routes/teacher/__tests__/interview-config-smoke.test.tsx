@@ -3,12 +3,11 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
 
+import { PublishReadiness, TabBar } from "@/routes/teacher/interview-config";
 import {
-  PublishReadiness,
   RubricEditor,
-  TabBar,
   VoicePersonaGuideSheet,
-} from "@/routes/teacher/interview-config";
+} from "@/routes/teacher/_components/interview-config/rubric-and-guide";
 
 /**
  * Render-smoke coverage for the interview-config pieces that had NO test.

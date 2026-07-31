@@ -19,7 +19,12 @@ import {
   Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  avatarInitials,
+} from "@/components/ui/avatar";
 import { GlassCard } from "@/components/ui/glass-card";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { ApiError } from "@/lib/api/client";
@@ -69,15 +74,6 @@ function SkeletonBlock({ className }: { className?: string }) {
       )}
     />
   );
-}
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 }
 
 export default function CourseDetailPage() {
@@ -318,7 +314,7 @@ function InstructorLine({ instructor }: { instructor: InstructorRead | null }) {
           />
         ) : null}
         <AvatarFallback className="gradient-secondary text-white text-xs font-bold">
-          {initials(instructor.display_name)}
+          {avatarInitials(instructor.display_name, { uppercase: true })}
         </AvatarFallback>
       </Avatar>
       <span>
@@ -493,7 +489,7 @@ function InstructorCard({ course }: { course: CoursePublic }) {
               />
             ) : null}
             <AvatarFallback className="gradient-primary text-white text-xl font-bold">
-              {initials(instructor.display_name)}
+              {avatarInitials(instructor.display_name, { uppercase: true })}
             </AvatarFallback>
           </Avatar>
           <div className="space-y-3 flex-1">
@@ -656,7 +652,9 @@ function CtaCard({
                 />
               ) : null}
               <AvatarFallback className="gradient-primary text-white text-xs font-bold">
-                {initials(course.instructor.display_name)}
+                {avatarInitials(course.instructor.display_name, {
+                  uppercase: true,
+                })}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
