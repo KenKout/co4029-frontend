@@ -7,12 +7,10 @@ import { Track } from "livekit-client";
 import { Check, Clock3, Pause, PhoneOff, Play, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { EndInterviewDialog } from "@/components/interview/dialogs";
 import { resolveInterviewState } from "@/lib/interview/format";
 import type { InterviewAgentStatus } from "@/lib/interview/types";
-import {
-  EndInterviewDialog,
-  VoiceStatusIndicator,
-} from "./interview-workspace";
+import { VoiceStatusIndicator } from "./interview-workspace";
 
 interface VoiceControlsProps {
   onEndInterview: () => void;
