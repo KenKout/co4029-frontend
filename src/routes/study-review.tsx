@@ -42,7 +42,7 @@ export default function StudyReviewPage() {
     course?: string;
   };
   const queryClient = useQueryClient();
-  const { data, isLoading, isError, refetch, isFetching } = useReviewQueue({
+  const { data, isLoading, isError } = useReviewQueue({
     limit: 20,
     lessonId: lesson,
     courseSlug: course,
@@ -88,17 +88,6 @@ export default function StudyReviewPage() {
     void queryClient.invalidateQueries({
       queryKey: queryKeys.sr.dashboardSummary(),
     });
-  };
-
-  // "Keep reviewing" / "next batch": refetch the queue and reset the local
-  // walkthrough. A plain <Link> to the same route is a no-op (same location),
-  // which is why the old button did nothing — we must actively refetch and
-  // reset the card index instead.
-  const restartSession = async () => {
-    setIndex(0);
-    setAnsweredCount(0);
-    setCorrectCount(0);
-    await refetch();
   };
 
   if (isLoading) {
@@ -197,16 +186,14 @@ export default function StudyReviewPage() {
                 defaultValue: "{{count}} more cards still due.",
               })}
             </p>
-            <Button
-              variant="default"
-              size="sm"
-              className="cursor-pointer"
-              disabled={isFetching}
-              onClick={() => void restartSession()}
-            >
-              {isFetching && <Loader2 className="h-4 w-4 animate-spin" />}
-              {t("study_review.keep_reviewing", "Keep reviewing")}
-            </Button>
+            {/* Send the student back to the cards-due overview to pick what to
+                review next. The cards-due cache was invalidated on each answer,
+                so its counts are already fresh. */}
+            <Link to="/study/cards-due" search={{ lesson, course }}>
+              <Button variant="default" size="sm" className="cursor-pointer">
+                {t("study_review.keep_reviewing", "Keep reviewing")}
+              </Button>
+            </Link>
           </div>
         ) : cappedForToday ? (
           <div className="mx-auto max-w-sm rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">
