@@ -55,7 +55,6 @@ import type {
   InterviewOnboardingAction,
   InterviewOnboardingStage,
   InterviewSessionFinishResponse,
-  InterviewSessionHistoryTurn,
   InterviewSessionMode,
   InterviewSessionStartRequest,
   InterviewSessionStartResponse,
@@ -112,133 +111,19 @@ import {
 } from "@/lib/interview/use-question-pacing";
 import { useIntegrityReporter } from "@/components/interview/use-integrity-reporter";
 import { useInterviewFullscreen } from "@/components/interview/use-interview-fullscreen";
-import { normalizeQuestionText } from "@/lib/interview/question-content";
 import { planTransition } from "@/lib/interview/transition-sequencing";
-
-function questionTypeLabel(
-  type: string | null | undefined,
-  t: (k: string) => string,
-) {
-  switch (type) {
-    case "conceptual":
-      return t("course_interview.question_types.conceptual");
-    case "behavioral":
-      return t("course_interview.question_types.behavioral");
-    case "technical":
-      return t("course_interview.question_types.technical");
-    case "situational":
-      return t("course_interview.question_types.situational");
-    case "system_design":
-      return t("course_interview.question_types.system_design");
-    default:
-      return null;
-  }
-}
-
-function makeAiTurn(
-  question: InterviewQuestionPublic,
-  isFollowUp = false,
-  elapsedSeconds = 0,
-): ConversationTurn {
-  // Normalize at the data-mapping seam (spec §6): strip any guardrail / policy /
-  // wrapper text that leaked into prompt_text so the Question Card only ever
-  // renders the actual question. Fall back to the raw prompt only when
-  // sanitization removed everything (avoids a blank card for an odd-but-valid
-  // prompt the patterns over-matched).
-  const { text } = normalizeQuestionText(question.prompt_text);
-  return {
-    id: `q-${question.id}-${isFollowUp ? "f" : "m"}`,
-    role: "ai",
-    text: text || question.prompt_text,
-    elapsedSeconds,
-    questionType: question.question_type,
-    isFollowUp,
-    kind: isFollowUp ? "followup" : "question",
-  };
-}
-
-function makeFollowUpTurn(
-  text: string,
-  key: string,
-  elapsedSeconds: number,
-  kind: "followup" | "clarification" | "hint" = "followup",
-): ConversationTurn {
-  return {
-    id: `f-${key}`,
-    role: "ai",
-    text,
-    elapsedSeconds,
-    isFollowUp: true,
-    kind,
-  };
-}
-
-function makeUserTurn(
-  text: string,
-  key: string,
-  elapsedSeconds?: number,
-  kind: "answer" | "clarification" | "hint" = "answer",
-): ConversationTurn {
-  return { id: `a-${key}`, role: "user", text, elapsedSeconds, kind };
-}
-
-type InterviewTurnAction =
-  | "answer"
-  | "repeat"
-  | "clarify"
-  | "explain_term"
-  | "hint";
-
-type InterviewPhase =
-  | "prestart"
-  | "opening"
-  | "readiness"
-  | "transition"
-  | "questioning"
-  | "closing"
-  | "results";
-
-type FinishReason = "natural" | "ended_early" | "timed_out";
-
-function makeCeremonyTurn(
-  kind: "opening" | "briefing" | "transition" | "closing",
-  text: string,
-  sessionId: string,
-  elapsedSeconds?: number,
-): ConversationTurn {
-  return {
-    id: `${kind}-${sessionId}`,
-    role: "ai",
-    text,
-    elapsedSeconds,
-    kind,
-  };
-}
-
-function restoreHistoryTurn(
-  turn: InterviewSessionHistoryTurn,
-): ConversationTurn {
-  return {
-    id: turn.id,
-    role: turn.role,
-    text: turn.content_text,
-    elapsedSeconds: turn.elapsed_seconds ?? undefined,
-    questionType: turn.question_type,
-    isFollowUp: turn.is_follow_up,
-    kind: turn.kind,
-  };
-}
-
-/** A stable idempotency key for one answer submission (adaptive safeguard #1). */
-function newTurnKey(): string {
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
-    return crypto.randomUUID();
-  }
-  return `tk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
+import {
+  makeAiTurn,
+  makeCeremonyTurn,
+  makeFollowUpTurn,
+  makeUserTurn,
+  newTurnKey,
+  questionTypeLabel,
+  restoreHistoryTurn,
+  type FinishReason,
+  type InterviewPhase,
+  type InterviewTurnAction,
+} from "@/lib/interview/turn-factory";
 
 export default function CourseInterviewPage() {
   const { t, i18n } = useTranslation();
@@ -569,7 +454,9 @@ export default function CourseInterviewPage() {
   useEffect(() => {
     if (autoResumeTriedRef.current) return;
     if (sessionId || !resumableSession || previousSessionsLoading) return;
-    let marker: string | null = null;
+    // Read inside a try because sessionStorage throws in some privacy modes;
+    // a failed read means "no marker", i.e. do not auto-resume.
+    let marker: string | null;
     try {
       marker = window.sessionStorage.getItem(ACTIVE_MARKER_KEY);
     } catch {
