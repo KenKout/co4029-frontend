@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import {
   useAssignTeacher,
   useCourseRoster,
@@ -307,14 +308,12 @@ export default function DeptCourseDetailPage() {
           {canAssign && <AssignTeacherForm courseId={courseId} />}
 
           {teachers.isLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-16 bg-surface-muted animate-pulse rounded-lg"
-                />
-              ))}
-            </div>
+            <PageSkeleton
+              rows={3}
+              rounded="rounded-lg"
+              bg="bg-surface-muted"
+              gap="space-y-2"
+            />
           ) : teachers.isError ? (
             <div className="bg-surface-elev border border-border rounded-lg p-5">
               <p className="text-sm text-danger">
@@ -364,14 +363,12 @@ export default function DeptCourseDetailPage() {
             </div>
           )}
           {roster.isLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="h-16 bg-surface-muted animate-pulse rounded-lg"
-                />
-              ))}
-            </div>
+            <PageSkeleton
+              rows={4}
+              rounded="rounded-lg"
+              bg="bg-surface-muted"
+              gap="space-y-2"
+            />
           ) : roster.isError ? (
             <div className="bg-surface-elev border border-border rounded-lg p-5">
               <p className="text-sm text-danger">

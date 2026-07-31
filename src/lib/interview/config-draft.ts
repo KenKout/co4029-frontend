@@ -99,6 +99,20 @@ export interface PersonaProfileOverride {
   interviewer_role?: InterviewerRole;
 }
 
+export interface GenerationFormState {
+  mode: GenerationMode;
+  question_count: number;
+  focus_topics: string;
+  avoid_topics: string;
+  // Modules the generation should draw from. Empty = the interview's own
+  // module (backend default). Multi-select lets a teacher scope one interview
+  // across several modules.
+  source_module_ids: string[];
+  // Interview rubric-outcome ids to target. Empty = every outcome (backend
+  // default). Lets a teacher focus a run on specific learning outcomes.
+  target_outcome_ids: string[];
+}
+
 export interface SettingsDraft {
   title: string;
   persona: Persona;

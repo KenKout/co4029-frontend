@@ -8,6 +8,7 @@ import { usePermissions } from "@/lib/auth/use-permissions";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import type { CourseAuthoring } from "@/lib/api/types";
 
@@ -70,14 +71,12 @@ export default function DeptCoursesPage() {
 
   if (permissions.isLoading) {
     return (
-      <div className="space-y-3 pb-12">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-16 bg-surface-muted animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
+      <PageSkeleton
+        rows={3}
+        rounded="rounded-lg"
+        bg="bg-surface-muted"
+        className="pb-12"
+      />
     );
   }
 
@@ -105,14 +104,7 @@ export default function DeptCoursesPage() {
       />
 
       {!enabled || list.isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="h-16 bg-surface-muted animate-pulse rounded-lg"
-            />
-          ))}
-        </div>
+        <PageSkeleton rows={5} rounded="rounded-lg" bg="bg-surface-muted" />
       ) : list.isError ? (
         <div className="bg-surface-elev border border-border rounded-lg p-5">
           <p className="text-sm text-danger">{t("dept_courses.load_failed")}</p>

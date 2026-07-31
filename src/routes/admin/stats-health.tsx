@@ -5,6 +5,7 @@ import { useStatsHealth } from "@/lib/api/hooks/admin";
 import { useFormatCount } from "@/lib/format/number";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Select } from "@/components/ui/select";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 
 type MetricRow = {
   key: string;
@@ -128,14 +129,7 @@ export default function AdminStatsHealthPage() {
           <p className="text-sm text-danger">{t("admin.stats.load_failed")}</p>
         </div>
       ) : isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-16 bg-surface-muted animate-pulse rounded-xl"
-            />
-          ))}
-        </div>
+        <PageSkeleton rows={3} bg="bg-surface-muted" />
       ) : !data ? (
         <div className="bg-surface-elev border border-border rounded-lg p-10 text-center">
           <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-text-subtle" />

@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import {
   EntityMultiSelectDialog,
   type SelectableEntity,
@@ -83,16 +84,7 @@ export default function ManagementCareerPathDetailPage() {
   const [tab, setTab] = useState<TabKey>("courses");
 
   if (!enabled || path.isLoading) {
-    return (
-      <div className="space-y-3 pb-12">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-16 bg-m3-surface-container animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
-    );
+    return <PageSkeleton rows={3} rounded="rounded-lg" className="pb-12" />;
   }
 
   if (path.isError || !path.data) {
@@ -533,14 +525,12 @@ function CoursesTab({ id }: { id: string }) {
 
   if (list.isLoading) {
     return (
-      <div className="space-y-2">
-        {[1, 2].map((i) => (
-          <div
-            key={i}
-            className="h-14 bg-m3-surface-container animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
+      <PageSkeleton
+        rows={2}
+        height="h-14"
+        rounded="rounded-lg"
+        gap="space-y-2"
+      />
     );
   }
 
@@ -894,14 +884,12 @@ function StudentsTab({ id }: { id: string }) {
       )}
 
       {progress.isLoading ? (
-        <div className="space-y-2">
-          {[1, 2].map((i) => (
-            <div
-              key={i}
-              className="h-14 bg-m3-surface-container animate-pulse rounded-lg"
-            />
-          ))}
-        </div>
+        <PageSkeleton
+          rows={2}
+          height="h-14"
+          rounded="rounded-lg"
+          gap="space-y-2"
+        />
       ) : rows.length === 0 ? (
         <div className="rounded-xl bg-m3-surface-container-lowest ghost-border p-10 text-center">
           <Users className="h-8 w-8 mx-auto mb-3 text-m3-outline" />
@@ -1016,14 +1004,12 @@ function ProgressTab({ id }: { id: string }) {
 
   if (progress.isLoading) {
     return (
-      <div className="space-y-2">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-14 bg-m3-surface-container animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
+      <PageSkeleton
+        rows={3}
+        height="h-14"
+        rounded="rounded-lg"
+        gap="space-y-2"
+      />
     );
   }
 

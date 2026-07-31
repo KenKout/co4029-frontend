@@ -21,6 +21,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ProcessingJobRow } from "@/lib/api/types";
 import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { JOB_STATUS_TOKENS } from "@/lib/status-tokens";
 
 function JobStatusBadge({ status }: { status: string }) {
@@ -299,14 +300,13 @@ export default function AdminCourseDetailPage() {
             </p>
           </div>
         ) : jobs.isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-12 bg-surface-muted animate-pulse rounded-lg"
-              />
-            ))}
-          </div>
+          <PageSkeleton
+            rows={3}
+            height="h-12"
+            rounded="rounded-lg"
+            bg="bg-surface-muted"
+            gap="space-y-2"
+          />
         ) : (
           <JobsTable jobs={jobs.data ?? []} />
         )}

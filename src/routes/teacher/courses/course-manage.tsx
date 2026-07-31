@@ -5,6 +5,7 @@ import { Plus, GripVertical, CheckCheck, CircleDot } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import {
   useTeacherCourseContent,
   useReorderModules,
@@ -143,14 +144,7 @@ export default function CourseManagePage() {
         </div>
 
         {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2].map((i) => (
-              <div
-                key={i}
-                className="h-16 bg-m3-surface-container animate-pulse rounded-xl"
-              />
-            ))}
-          </div>
+          <PageSkeleton rows={2} />
         ) : (
           <div className="space-y-3">
             {/* Horizontal quick-nav bar (T#3/#4): jump to any module + see its

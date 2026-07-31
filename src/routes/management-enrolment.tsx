@@ -6,6 +6,7 @@ import { ChevronRight, GraduationCap, Users } from "lucide-react";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { PageHeader } from "@/components/ui/page-header";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import type { CourseAuthoring } from "@/lib/api/types";
@@ -44,14 +45,12 @@ export default function ManagementEnrolmentPage() {
 
   if (permissions.isLoading) {
     return (
-      <div className="space-y-3 pb-12">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-16 bg-surface-muted animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
+      <PageSkeleton
+        rows={3}
+        bg="bg-surface-muted"
+        rounded="rounded-lg"
+        className="pb-12"
+      />
     );
   }
 
@@ -67,14 +66,7 @@ export default function ManagementEnrolmentPage() {
       />
 
       {!enabled || list.isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="h-16 bg-surface-muted animate-pulse rounded-lg"
-            />
-          ))}
-        </div>
+        <PageSkeleton rows={5} bg="bg-surface-muted" rounded="rounded-lg" />
       ) : courses.length === 0 ? (
         <div className="text-center py-16 text-text-muted">
           <GraduationCap className="h-10 w-10 mx-auto mb-3 opacity-40" />

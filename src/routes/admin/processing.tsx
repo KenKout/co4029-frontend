@@ -22,6 +22,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ProcessingJobOut } from "@/lib/api/types";
 import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { JOB_STATUS_TOKENS } from "@/lib/status-tokens";
 import { formatDateTime, resolveLocale } from "@/lib/format/date";
 
@@ -314,14 +315,13 @@ export default function AdminProcessingPage() {
             </p>
           </div>
         ) : jobs.isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="h-12 bg-surface-muted animate-pulse rounded-lg"
-              />
-            ))}
-          </div>
+          <PageSkeleton
+            rows={4}
+            height="h-12"
+            rounded="rounded-lg"
+            bg="bg-surface-muted"
+            gap="space-y-2"
+          />
         ) : (
           <JobsTable
             jobs={sortedJobs}

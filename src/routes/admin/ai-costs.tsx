@@ -51,6 +51,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet, SheetClose, SheetContent } from "@/components/ui/sheet";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { ApiError } from "@/lib/api/client";
 import type {
   AiCostsByCategory as AiCostsByCategoryRow,
@@ -1628,14 +1629,13 @@ export default function AdminAiCostsPage() {
             </p>
           </div>
         ) : byUser.isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-12 bg-surface-muted animate-pulse rounded-lg"
-              />
-            ))}
-          </div>
+          <PageSkeleton
+            rows={3}
+            height="h-12"
+            rounded="rounded-lg"
+            bg="bg-surface-muted"
+            gap="space-y-2"
+          />
         ) : (
           <TopUsersTable rows={byUser.data ?? []} />
         )}
@@ -1652,14 +1652,13 @@ export default function AdminAiCostsPage() {
             </p>
           </div>
         ) : byPipeline.isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-12 bg-surface-muted animate-pulse rounded-lg"
-              />
-            ))}
-          </div>
+          <PageSkeleton
+            rows={3}
+            height="h-12"
+            rounded="rounded-lg"
+            bg="bg-surface-muted"
+            gap="space-y-2"
+          />
         ) : (
           <PipelineTable
             rows={byPipeline.data ?? []}
@@ -1720,14 +1719,13 @@ export default function AdminAiCostsPage() {
             </p>
           </div>
         ) : recent.isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="h-12 bg-surface-muted animate-pulse rounded-lg"
-              />
-            ))}
-          </div>
+          <PageSkeleton
+            rows={5}
+            height="h-12"
+            rounded="rounded-lg"
+            bg="bg-surface-muted"
+            gap="space-y-2"
+          />
         ) : (
           <RecentCallsTable rows={recent.data ?? []} />
         )}

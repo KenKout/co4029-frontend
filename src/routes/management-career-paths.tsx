@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import {
   useCreateCareerPath,
@@ -239,16 +240,7 @@ export default function ManagementCareerPathsPage() {
   });
 
   if (permissions.isLoading || !enabled) {
-    return (
-      <div className="space-y-3 pb-12">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-16 bg-m3-surface-container animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
-    );
+    return <PageSkeleton rows={3} rounded="rounded-lg" className="pb-12" />;
   }
 
   const paths = list.data ?? [];
@@ -283,16 +275,7 @@ export default function ManagementCareerPathsPage() {
         </span>
       </label>
 
-      {list.isLoading && (
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-16 bg-m3-surface-container animate-pulse rounded-xl"
-            />
-          ))}
-        </div>
-      )}
+      {list.isLoading && <PageSkeleton rows={3} gap="space-y-2" />}
 
       {list.isError && (
         <div className="rounded-xl bg-m3-error-container border border-m3-error/20 p-6 text-center">

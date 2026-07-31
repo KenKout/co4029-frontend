@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Loader2, CheckCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import {
   useTeacherLessonMaterials,
   useTeacherProcessingSummary,
@@ -75,14 +76,7 @@ export function MaterialHistorySection({ lessonId }: { lessonId: string }) {
 
       {/* Processed-material list with the two-click delete confirm. */}
       {materialsLoading ? (
-        <div className="space-y-3">
-          {[1, 2].map((i) => (
-            <div
-              key={i}
-              className="h-16 bg-m3-surface-container animate-pulse rounded-xl"
-            />
-          ))}
-        </div>
+        <PageSkeleton rows={2} />
       ) : materials.length === 0 ? (
         <div className="text-center py-10 text-m3-on-surface-variant bg-m3-surface-container-low/50 rounded-xl">
           <FileText className="h-9 w-9 mx-auto mb-3 opacity-20" />

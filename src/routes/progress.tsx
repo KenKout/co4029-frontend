@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, BarChart3, BookOpen, Brain, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useMyCourses } from "@/lib/api/hooks/courses";
 import { useMyCourseProgress } from "@/lib/api/hooks/progress";
 import { useCardsDue } from "@/lib/api/hooks/spaced-repetition";
@@ -68,14 +69,7 @@ export default function ProgressPage() {
           {t("progress_page.courses_heading")}
         </h2>
         {courses.isLoading ? (
-          <div className="space-y-2">
-            {[1, 2].map((i) => (
-              <div
-                key={i}
-                className="h-20 bg-m3-surface-container animate-pulse rounded-xl"
-              />
-            ))}
-          </div>
+          <PageSkeleton rows={2} height="h-20" gap="space-y-2" />
         ) : courses.isError ? (
           <div className="rounded-xl bg-m3-surface-container-lowest ghost-border p-10 text-center">
             <p className="text-sm text-m3-error">
