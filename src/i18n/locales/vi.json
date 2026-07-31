@@ -4382,7 +4382,7 @@
         "description": "Không lần gộp nào được tạo ra đoạn lớn hơn giá trị này, dù do bước nào đề xuất."
       },
       "chunking__min_window_tokens": {
-        "label": "Sàn hấp thụ cửa sổ quá nhỏ (token)",
+        "label": "Sàn hấp thụ cửa sổ nhỏ (token)",
         "description": "Các cửa sổ nhỏ hơn giá trị này được gộp vào cửa sổ lân cận cùng vai trò để những mẩu ngăn cách slide không bao giờ trở thành một đoạn riêng."
       },
       "chunking__parallelism": {

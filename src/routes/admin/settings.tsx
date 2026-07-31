@@ -772,11 +772,17 @@ export default function AdminSettingsPage() {
     0,
   );
 
-  // Scroll-spy for the section rail. The section rail is what navigates; the
-  // toolbar and section headers are NOT sticky, so a fixed activation line
-  // near the top of the viewport is all we need.
+  // Scroll-spy for the section rail. A global sticky header (ContentTopBar,
+  // 64px) sits above the scroll container, so both the jump target and the
+  // activation line must clear it. HEADER_OFFSET is where a jumped-to section
+  // top comes to rest (header height + a little breathing room); SPY_TOLERANCE
+  // is a band below that within which a section still counts as "active". The
+  // tolerance MUST exceed the jump landing point, otherwise the section you
+  // just clicked lands a few px short of the activation line and never
+  // highlights (the original bug: landed at +8 but activated only at <= +4).
   const contentRef = useRef<HTMLDivElement>(null);
-  const SPY_LINE = 120;
+  const HEADER_OFFSET = 80;
+  const SPY_TOLERANCE = HEADER_OFFSET + 12;
 
   useEffect(() => {
     if (dense) return;
@@ -784,7 +790,7 @@ export default function AdminSettingsPage() {
       let current = "";
       for (const g of visibleGroups) {
         const el = document.getElementById(`section-${g}`);
-        if (el && el.getBoundingClientRect().top <= SPY_LINE + 4) current = g;
+        if (el && el.getBoundingClientRect().top <= SPY_TOLERANCE) current = g;
       }
       // A short final section can never scroll its top past the activation
       // line — the page bottom stops first — so it would never highlight.
@@ -810,7 +816,7 @@ export default function AdminSettingsPage() {
   const scrollToSection = (g: string) => {
     const el = document.getElementById(`section-${g}`);
     if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY - (SPY_LINE + 8);
+    const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
     window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
   };
 
@@ -1002,7 +1008,7 @@ export default function AdminSettingsPage() {
                     key={group}
                     id={`section-${group}`}
                     className="rounded-lg border border-slate-200 bg-white"
-                    style={{ scrollMarginTop: SPY_LINE + 8 }}
+                    style={{ scrollMarginTop: HEADER_OFFSET }}
                   >
                     {/* Section header — plain (not sticky), so it never
                         overlaps or gets overlapped. The section rail handles
