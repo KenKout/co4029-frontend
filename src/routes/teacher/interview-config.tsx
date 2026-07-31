@@ -76,8 +76,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/api/query-keys";
 import type {
   InterviewConfigAuthoring,
-  InterviewConfigUpdate,
-  InterviewGenerationRequest,
   InterviewGenerationRunPublic,
   InterviewOutcomeAuthoring,
   PersonaProfileRead,
@@ -100,17 +98,20 @@ import {
   parseSupplementaryInstructions,
   serializeSupplementaryInstructions,
 } from "@/lib/interview/supplementary-instructions";
-
-type SupportedMode = NonNullable<InterviewConfigUpdate["supported_modes"]>;
-type Persona = NonNullable<InterviewConfigUpdate["persona"]>;
-type TtsVoice = NonNullable<InterviewConfigUpdate["tts_voice"]>;
-type GenerationMode = InterviewGenerationRequest["mode"];
-type SecurityResponsePolicy =
-  | "continue_and_log"
-  | "warn_and_continue"
-  | "end_and_flag";
-
-type TabId = "settings" | "generate" | "questions" | "adaptive-readiness";
+import {
+  INTERVIEWER_ROLE_KEYS,
+  PERSONA_KEYS,
+  PERSONA_TRAIT_KEYS,
+  integerOrNull,
+  type GenerationMode,
+  type InterviewerRole,
+  type Persona,
+  type PersonaProfileOverride,
+  type SecurityResponsePolicy,
+  type SettingsDraft,
+  type TabId,
+  type TtsVoice,
+} from "@/lib/interview/config-draft";
 
 interface GenerationFormState {
   mode: GenerationMode;
@@ -125,73 +126,6 @@ interface GenerationFormState {
   // default). Lets a teacher focus a run on specific learning outcomes.
   target_outcome_ids: string[];
 }
-
-interface SettingsDraft {
-  title: string;
-  persona: Persona;
-  tts_voice: string;
-  supported_modes: SupportedMode;
-  time_limit_minutes: string;
-  max_attempts: string;
-  cooldown_hours: string;
-  min_outcomes_to_pass: string;
-  lock_quiz_ef_until_pass: boolean;
-  practice_mode_enabled: boolean;
-  // The single `supplementary_instructions` column is split for editing into
-  // free prose (`notes`, fed to the generation prompt) and the structured
-  // scoring rubric (`rubric_criteria`). They are re-joined on save by
-  // `serializeSupplementaryInstructions`.
-  notes: string;
-  rubric_criteria: RubricCriterion[];
-  security_response_policy: SecurityResponsePolicy;
-  security_max_consecutive_attempts: string;
-  security_custom_refusal_en: string;
-  security_custom_refusal_vi: string;
-  security_incident_summary_enabled: boolean;
-  // Optional per-trait persona overrides (Phase 3). Empty object = no override
-  // (use the persona preset as-is). Each trait 0-4; opening_style optional.
-  persona_profile: PersonaProfileOverride;
-}
-
-// Local editable shape for the per-trait override panel. All optional so a
-// teacher can nudge one dial; absent keys fall back to the persona preset.
-interface PersonaProfileOverride {
-  warmth?: number;
-  directness?: number;
-  verbosity?: number;
-  formality?: number;
-  ack_frequency?: number;
-  // Who the interviewer presents as. Not a 0-4 dial and not diffed against the
-  // persona preset — identity is its own axis, so it is sent whenever the
-  // teacher picks anything other than the generic assistant.
-  interviewer_role?: InterviewerRole;
-}
-
-/** Professional identity presets. MUST stay in sync with the backend
- *  `InterviewerRoleLiteral` (schemas/authoring.py) and the preset table in
- *  orchestrator/interviewer_identity.py. */
-type InterviewerRole =
-  | "generic_assistant"
-  | "backend_tech_lead"
-  | "staff_engineer"
-  | "eng_manager"
-  | "hr_screener";
-
-const INTERVIEWER_ROLE_KEYS: InterviewerRole[] = [
-  "generic_assistant",
-  "backend_tech_lead",
-  "staff_engineer",
-  "eng_manager",
-  "hr_screener",
-];
-
-const PERSONA_TRAIT_KEYS = [
-  "warmth",
-  "directness",
-  "verbosity",
-  "formality",
-  "ack_frequency",
-] as const;
 
 function draftFromConfig(config: InterviewConfigAuthoring): SettingsDraft {
   return {
@@ -259,15 +193,6 @@ function personaOverrideFromResolved(
       "generic_assistant",
   };
 }
-
-function integerOrNull(value: string): number | null {
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) ? Math.round(parsed) : null;
-}
-
-const PERSONA_KEYS: Persona[] = ["strict", "neutral", "supportive"];
 
 // The effective trait values shown on the sliders: the teacher's override if
 // present, else the persona preset. Keeps the panel in sync when the persona
@@ -2916,7 +2841,11 @@ export function RubricEditor({
   );
 }
 
-export function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
+export function VoicePersonaGuideSheet({
+  focus,
+}: {
+  focus: "persona" | "voice";
+}) {
   const { t } = useTranslation();
   return (
     <Sheet>
