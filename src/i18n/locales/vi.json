@@ -116,7 +116,6 @@
     "breadcrumb_courses": "Khóa học",
     "ai_enhanced": "Tăng cường AI",
     "modules_count": "{{count}} module",
-    "modules_count_plural": "{{count}} modules",
     "instructor_unknown": "Giảng viên không xác định",
     "created_by": "Bởi",
     "what_youll_learn": "Bạn sẽ học được",
@@ -132,7 +131,9 @@
     "ai_mock_body": "Hoàn thành từng module để mở khóa buổi phỏng vấn AI. Nhận phản hồi thời gian thực, câu hỏi tiếp theo thích ứng và đánh giá chi tiết về cách bạn giải thích kỹ thuật.",
     "start_learning": "Bắt đầu học",
     "modules": "Chương",
-    "contact_title": "Liên hệ giảng viên"
+    "contact_title": "Liên hệ giảng viên",
+    "modules_count_other": "{{count}} modules",
+    "modules_count_one": "{{count}} module"
   },
   "settings_security": {
     "title": "Bảo mật tài khoản",
@@ -351,7 +352,6 @@
   "teacher_courses_list": {
     "title": "Khóa học của tôi",
     "n_courses": "{{count}} khóa học",
-    "n_courses_plural": "{{count}} khóa học",
     "published_suffix": " · {{count}} đã xuất bản",
     "draft_suffix": " · {{count}} bản nháp",
     "filter_all": "Tất cả",
@@ -376,7 +376,9 @@
     "no_match_body": "Hãy thử từ khóa khác hoặc xóa bộ lọc.",
     "clear_filters": "Xóa bộ lọc",
     "students_label": "Học viên",
-    "modules_label": "Mô-đun"
+    "modules_label": "Mô-đun",
+    "n_courses_other": "{{count}} khóa học",
+    "n_courses_one": "{{count}} khóa học"
   },
   "course_learn": {
     "lesson_unavailable_title": "Bài học không khả dụng",
@@ -654,7 +656,6 @@
     "subtitle": "Theo dõi tiến độ học tập trên các lộ trình bạn đã đăng ký.",
     "section_title": "Đã đăng ký",
     "n_paths": "{{count}} lộ trình",
-    "n_paths_plural": "{{count}} lộ trình",
     "load_failed_title": "Không thể tải danh sách lộ trình",
     "load_failed_body": "Vui lòng thử lại sau ít phút.",
     "retry": "Thử lại",
@@ -666,14 +667,15 @@
       "active": "Đang học",
       "completed": "Hoàn thành",
       "dropped": "Đã bỏ"
-    }
+    },
+    "n_paths_other": "{{count}} lộ trình",
+    "n_paths_one": "{{count}} lộ trình"
   },
   "me_interviews": {
     "title": "Phỏng vấn của tôi",
     "subtitle": "Các lần phỏng vấn thử trước đây và kết quả của bạn.",
     "section_title": "Các lần thử",
     "n_sessions": "{{count}} lần",
-    "n_sessions_plural": "{{count}} lần",
     "load_failed_title": "Không thể tải danh sách phỏng vấn",
     "load_failed_body": "Vui lòng thử lại sau ít phút.",
     "retry": "Thử lại",
@@ -690,7 +692,9 @@
       "evaluation_failed": "Chấm điểm thất bại",
       "not_graded": "Không chấm điểm",
       "practice": "Thi thử"
-    }
+    },
+    "n_sessions_other": "{{count}} lần",
+    "n_sessions_one": "{{count}} lần"
   },
   "me_interview_result": {
     "back_to_list": "Quay lại danh sách phỏng vấn",
@@ -701,7 +705,6 @@
     "back": "Quay lại",
     "load_failed": "Không thể tải lộ trình",
     "n_courses": "{{count}} khóa học",
-    "n_courses_plural": "{{count}} khóa học",
     "completed_courses": "Đã hoàn thành {{completed}}/{{total}} khóa học",
     "overall_progress": "Tổng tiến độ",
     "continue_learning": "Tiếp tục học",
@@ -712,7 +715,9 @@
     "empty": "Lộ trình này chưa có khóa học nào.",
     "course_required": "Khóa học bắt buộc",
     "course_optional": "Tự chọn",
-    "course_progress_label": "Tiến độ"
+    "course_progress_label": "Tiến độ",
+    "n_courses_other": "{{count}} khóa học",
+    "n_courses_one": "{{count}} khóa học"
   },
   "study_cards_due": {
     "back": "Quay lại bảng điều khiển",
@@ -720,29 +725,19 @@
     "loading": "Đang tải...",
     "empty_subtitle": "Bạn đã ôn hết rồi",
     "summary": "{{count}} thẻ cần ôn trong {{courses}} khóa học",
-    "summary_plural": "{{count}} thẻ cần ôn trong {{courses}} khóa học",
     "start_review": "Bắt đầu ôn ({{count}})",
     "group_count": "{{count}} cần ôn",
     "review_course": "Ôn tập",
-    "load_more": "Tải thêm",
-    "recall_hint": "mức độ ghi nhớ",
-    "strength": {
-      "strong": "Vững",
-      "building": "Đang hình thành",
-      "shaky": "Cần cải thiện"
-    },
-    "n_cards": "{{count}} thẻ",
-    "n_cards_plural": "{{count}} thẻ",
-    "n_overdue_suffix": " • {{count}} cần ôn ngay",
-    "due_now": "Cần ôn ngay",
-    "minutes_left": "Còn {{count}} phút",
-    "hours_left": "Còn {{count}} giờ",
-    "days_left": "Còn {{count}} ngày",
-    "ef_label": "EF",
-    "last_q": "Q gần nhất: {{q}}",
     "empty_title": "Hiện chưa có thẻ nào cần ôn",
     "empty_body": "Bạn đã ôn hết. Thẻ mới sẽ xuất hiện ở đây khi đến hạn.",
-    "back_to_dashboard": "Quay lại bảng điều khiển"
+    "back_to_dashboard": "Quay lại bảng điều khiển",
+    "summary_other": "{{count}} thẻ cần ôn trong {{courses}} khóa học",
+    "summary_one": "{{count}} thẻ cần ôn trong {{courses}} khóa học",
+    "lesson_count": "{{count}} đến hạn",
+    "lesson_count_one": "{{count}} đến hạn",
+    "lesson_count_other": "{{count}} đến hạn",
+    "group_count_one": "{{count}} đến hạn",
+    "group_count_other": "{{count}} đến hạn"
   },
   "study_review": {
     "title": "Phiên ôn tập",
@@ -760,13 +755,24 @@
     "incorrect": "Chưa đúng.",
     "correct_answer": "Đáp án",
     "next_in": "Ôn lại sau {{days}} ngày.",
-    "next_in_plural": "Ôn lại sau {{days}} ngày.",
     "will_repeat": "Bạn sẽ gặp lại thẻ này sớm thôi.",
     "done_title": "Hoàn thành phiên ôn!",
     "done_body": "Bạn trả lời đúng {{correct}} / {{total}}.",
     "empty_title": "Không có thẻ để ôn",
     "empty_body": "Bạn đã ôn hết. Hãy quay lại khi có thẻ đến hạn.",
-    "back_to_dashboard": "Quay lại bảng điều khiển"
+    "back_to_dashboard": "Quay lại bảng điều khiển",
+    "next_in_other": "Ôn lại sau {{days}} ngày.",
+    "next_in_one": "Ôn lại sau {{days}} ngày.",
+    "remaining_backlog_one": "Còn {{count}} thẻ nữa đến hạn.",
+    "remaining_backlog_other": "Còn {{count}} thẻ nữa đến hạn.",
+    "keep_reviewing": "Tiếp tục ôn tập",
+    "all_caught_up": "Bạn đã ôn tập xong tất cả!",
+    "show_hint": "Xem gợi ý",
+    "hint_counts": "Dùng gợi ý được tính là nhớ lại có hỗ trợ.",
+    "capped_title": "Đó là phần ôn tập hôm nay của bạn",
+    "capped_body": "Bạn đã đạt giới hạn {{cap}} thẻ hôm nay. Còn {{remaining}} thẻ đang chờ — hãy quay lại ngày mai để giữ nhịp ôn tập.",
+    "capped_done": "Đã hoàn thành giới hạn hôm nay. Còn {{remaining}} thẻ — hãy quay lại ngày mai.",
+    "today_progress": "{{done}} trên {{cap}} lượt ôn hôm nay"
   },
   "settings_notifications": {
     "title": "Tùy chọn thông báo",
@@ -973,7 +979,6 @@
     "histogram_subtitle": "Số sinh viên trong mỗi khoảng độ ghi nhớ",
     "kr_hint": "Độ ghi nhớ (thuật ngữ: \"KR\", knowledge retention): ước tính của mô hình về khả năng sinh viên nhớ được nội dung ngay lúc này, từ 0% đến 100%. Càng cao càng tốt.",
     "student_count": "{{count}} sinh viên",
-    "student_count_plural": "{{count}} sinh viên",
     "kr_axis": "Độ ghi nhớ",
     "students_axis": "Số sinh viên",
     "kr_tooltip_label": "Độ ghi nhớ",
@@ -1011,7 +1016,9 @@
       "correct": "Đúng",
       "incorrect": "Sai",
       "accuracy_value": "{{correct}}/{{total}} đúng"
-    }
+    },
+    "student_count_other": "{{count}} sinh viên",
+    "student_count_one": "{{count}} sinh viên"
   },
   "management_career_paths": {
     "title": "Quản lý lộ trình",
@@ -1059,12 +1066,13 @@
     "card_chip": "Lộ trình nghề nghiệp",
     "enrolled_badge": "Đã đăng ký",
     "n_courses": "{{count}} khóa học",
-    "n_courses_plural": "{{count}} khóa học",
     "load_failed_title": "Không thể tải danh sách lộ trình",
     "load_failed_body": "Vui lòng thử lại sau ít phút.",
     "retry": "Thử lại",
     "empty_title": "Chưa có lộ trình nào",
-    "empty_body": "Khi quản lý xuất bản lộ trình mới, danh sách sẽ xuất hiện tại đây."
+    "empty_body": "Khi quản lý xuất bản lộ trình mới, danh sách sẽ xuất hiện tại đây.",
+    "n_courses_other": "{{count}} khóa học",
+    "n_courses_one": "{{count}} khóa học"
   },
   "courses_list": {
     "ai_chip": "HỖ TRỢ BỞI AI",
@@ -1092,7 +1100,6 @@
     "active_session": "Phiên đang hoạt động",
     "welcome": "Chào mừng trở lại, {{name}}.",
     "enrolled_count": "Bạn đang theo học {{count}} khóa học.",
-    "enrolled_count_plural": "Bạn đang theo học {{count}} khóa học.",
     "explore_intro": "Khám phá thư viện khóa học để bắt đầu hành trình học tập.",
     "stats": {
       "enrolled": "Đã đăng ký",
@@ -1127,7 +1134,9 @@
     "ready_body": "Hoàn thành các khóa học đã đăng ký, làm bài kiểm tra do AI tạo và luyện tập các kịch bản phỏng vấn thực tế — tất cả đều được theo dõi và cá nhân hóa theo lộ trình học của bạn.",
     "view_progress": "Xem tiến độ",
     "ask_ai": "Hỏi trợ lý AI",
-    "ai_chip": "Hỗ trợ bởi AI"
+    "ai_chip": "Hỗ trợ bởi AI",
+    "enrolled_count_other": "Bạn đang theo học {{count}} khóa học.",
+    "enrolled_count_one": "Bạn đang theo học {{count}} khóa học."
   },
   "admin": {
     "audit": {
@@ -1565,7 +1574,6 @@
       "roles": {
         "title": "Vai trò & phân quyền",
         "count": "{{count}} vai trò",
-        "count_plural": "{{count}} vai trò",
         "none": "Chưa có vai trò",
         "empty": "Người dùng chưa được gán vai trò nào.",
         "assign_new": "Gán vai trò mới",
@@ -1608,7 +1616,9 @@
           "revoked": "Đã thu hồi vai trò",
           "disabled": "Đã vô hiệu hoá. Đã thu hồi {{count}} phiên.",
           "enabled": "Đã kích hoạt lại người dùng"
-        }
+        },
+        "count_other": "{{count}} vai trò",
+        "count_one": "{{count}} vai trò"
       },
       "confirm_disable": {
         "title": "Vô hiệu hoá người dùng?",
@@ -2441,9 +2451,10 @@
         "back_to_lesson": "Tiếp tục vào bài học",
         "retry": "Thử lại",
         "attempts_left": "Còn {{count}} lần thử",
-        "attempts_left_plural": "Còn {{count}} lần thử",
         "cooldown": "Bạn có thể thử lại sau {{when}}",
-        "no_attempts": "Bạn đã dùng hết số lần thử cho bài phỏng vấn này. Hãy xem lại kế hoạch học tập bên dưới và liên hệ giảng viên nếu cần thêm lượt thử."
+        "no_attempts": "Bạn đã dùng hết số lần thử cho bài phỏng vấn này. Hãy xem lại kế hoạch học tập bên dưới và liên hệ giảng viên nếu cần thêm lượt thử.",
+        "attempts_left_other": "Còn {{count}} lần thử",
+        "attempts_left_one": "Còn {{count}} lần thử"
       }
     },
     "intro": {
@@ -2457,7 +2468,8 @@
     },
     "criteria": {
       "assessed_on": "Đánh giá trên {{count}} tiêu chí",
-      "assessed_on_plural": "Đánh giá trên {{count}} tiêu chí"
+      "assessed_on_other": "Đánh giá trên {{count}} tiêu chí",
+      "assessed_on_one": "Đánh giá trên {{count}} tiêu chí"
     },
     "voice": {
       "dropped_fallback_text": "Mất kết nối thoại — đang tiếp tục bằng văn bản. Tiến trình của bạn đã được lưu."
@@ -3765,7 +3777,6 @@
       "ai_generated": "Do AI tạo",
       "manually_added": "Thêm thủ công",
       "source_count": "{{count}} nguồn",
-      "source_count_plural": "{{count}} nguồn",
       "no_answer": "Chưa có câu trả lời mẫu",
       "move_to_top": "Chuyển lên đầu",
       "move_to_bottom": "Chuyển xuống cuối",
@@ -3837,7 +3848,9 @@
         "moved_to_practice": "Đã chuyển sang bộ câu hỏi thi thử.",
         "moved_to_graded": "Đã chuyển lại bộ câu hỏi chấm điểm.",
         "badge": "Thi thử"
-      }
+      },
+      "source_count_other": "{{count}} nguồn",
+      "source_count_one": "{{count}} nguồn"
     },
     "review_status": {
       "pending": "Chờ duyệt",
@@ -4311,5 +4324,118 @@
     "edge_detail": "Quan hệ",
     "reverse_arrow": "Đảo chiều",
     "delete_arrow": "Xóa mũi tên"
+  },
+  "admin_settings": {
+    "group": {
+      "ai": "Mô hình AI",
+      "chunking": "Phân đoạn (chunking)",
+      "preprocessing": "Tiền xử lý",
+      "knowledge_graph": "Đồ thị tri thức",
+      "retrieval": "Truy xuất",
+      "spaced_repetition": "Lặp lại ngắt quãng",
+      "notifications": "Thông báo"
+    },
+    "item": {
+      "ai__llm_timeout_seconds": {
+        "label": "Thời gian chờ LLM — hàng loạt (giây)",
+        "description": "Thời gian chờ mỗi lần gọi cho các vai trò LLM nền/hàng loạt (trích xuất, làm giàu dữ liệu, trích xuất đồ thị tri thức, OCR). Tăng lên cho các lần nạp dữ liệu dài với ngữ cảnh lớn; giảm xuống để phát hiện endpoint bị treo sớm hơn."
+      },
+      "ai__llm_interactive_timeout_seconds": {
+        "label": "Thời gian chờ LLM — tương tác (giây)",
+        "description": "Thời gian chờ mỗi lần gọi cho các bước tương tác nơi người dùng đang chờ (lên ý tưởng / tạo / kiểm tra bài kiểm tra và phỏng vấn, cùng các vai trò trong lúc phỏng vấn). Đặt chặt hơn thời gian chờ hàng loạt để một endpoint bị treo không khiến người dùng phải chờ hết giới hạn của chế độ hàng loạt."
+      },
+      "ai__embedding_timeout_seconds": {
+        "label": "Thời gian chờ embedding (giây)",
+        "description": "Thời gian chờ mỗi lần gọi cho các yêu cầu embedding."
+      },
+      "ai__rate_limit_max_attempts": {
+        "label": "Số lần thử tối đa khi bị giới hạn tần suất (429)",
+        "description": "Tổng số lần thử cho một lần gọi LLM/embedding liên tục trả về HTTP 429 (bị giới hạn tần suất): 1 lần đầu cộng (N-1) lần thử lại. Chỉ 429 mới được thử lại tại chỗ; mọi lỗi khác được chuyển lên cơ chế thử lại ở cấp tác vụ. Đặt 1 để tắt việc thử lại 429 tại chỗ."
+      },
+      "ai__rate_limit_base_delay_seconds": {
+        "label": "Độ trễ cơ sở khi lùi lại lúc bị giới hạn tần suất (giây)",
+        "description": "Độ trễ cơ sở cho cơ chế lùi lại theo cấp số nhân giữa các lần thử lại 429 khi nhà cung cấp không gửi header Retry-After. Độ trễ = cơ sở * 2^(lần thử-1) cộng nhiễu ngẫu nhiên, giới hạn bởi độ trễ tối đa bên dưới."
+      },
+      "ai__rate_limit_max_delay_seconds": {
+        "label": "Độ trễ tối đa khi lùi lại lúc bị giới hạn tần suất (giây)",
+        "description": "Giới hạn trên cho mỗi lần chờ giữa các lần thử lại 429, áp dụng cho cả cơ chế lùi lại theo cấp số nhân lẫn giá trị Retry-After do nhà cung cấp gửi."
+      },
+      "chunking__max_tokens": {
+        "label": "Kích thước cửa sổ (token)",
+        "description": "Giới hạn trên của một cửa sổ dựa trên quy tắc trước khi bước xác định ranh giới gộp chúng lại. Cửa sổ lớn hơn mang nhiều ngữ cảnh hơn cho mỗi embedding nhưng truy xuất kém chính xác hơn."
+      },
+      "chunking__overlap_tokens": {
+        "label": "Độ chồng lấp cửa sổ (token)",
+        "description": "Số token được lặp lại giữa hai cửa sổ liền kề để một thông tin bị cắt ngang ranh giới vẫn còn nguyên trong một trong hai cửa sổ."
+      },
+      "chunking__llm_boundary_enabled": {
+        "label": "LLM quyết định ranh giới đoạn",
+        "description": "Cho một mô hình nhẹ gộp các cửa sổ liên tiếp cùng phát triển một ý, thay vì gộp theo độ tương đồng embedding. Khi tắt sẽ quay về dùng ngưỡng gộp theo độ tương đồng."
+      },
+      "chunking__llm_boundary_batch_size": {
+        "label": "Kích thước lô xác định ranh giới (số cửa sổ)",
+        "description": "Số cửa sổ đưa cho mô hình xác định ranh giới mỗi lần gọi. Giới hạn nằm ở độ chính xác của mô hình trên một danh sách dài, không phải ở cửa sổ ngữ cảnh."
+      },
+      "chunking__llm_boundary_max_carry": {
+        "label": "Giới hạn chuyển tiếp khi xác định ranh giới (số cửa sổ)",
+        "description": "Số cửa sổ tối đa có thể được giữ lại khỏi một lô và hiển thị lại ở lô kế tiếp. Giới hạn nhóm ở cuối mà mô hình chưa thấy được phần tiếp theo."
+      },
+      "chunking__glue_threshold": {
+        "label": "Ngưỡng gộp theo độ tương đồng",
+        "description": "Độ tương đồng cosine mà trên ngưỡng đó các cửa sổ liền kề sẽ được gộp. Chỉ dùng ở nhánh dự phòng — bước xác định ranh giới bằng LLM sẽ thay thế nó."
+      },
+      "chunking__max_window_tokens": {
+        "label": "Trần kích thước đoạn sau khi gộp (token)",
+        "description": "Không lần gộp nào được tạo ra đoạn lớn hơn giá trị này, dù do bước nào đề xuất."
+      },
+      "chunking__min_window_tokens": {
+        "label": "Sàn hấp thụ cửa sổ nhỏ (token)",
+        "description": "Các cửa sổ nhỏ hơn giá trị này được gộp vào cửa sổ lân cận cùng vai trò để những mẩu ngăn cách slide không bao giờ trở thành một đoạn riêng."
+      },
+      "chunking__parallelism": {
+        "label": "Số luồng làm giàu dữ liệu đồng thời",
+        "description": "Số đoạn được làm giàu dữ liệu đồng thời, mỗi đoạn trong một phiên cơ sở dữ liệu riêng."
+      },
+      "chunking__llm_enrichment_enabled": {
+        "label": "Làm giàu dữ liệu bằng LLM",
+        "description": "Tiêu đề mục, câu ngữ cảnh, khái niệm chính và các mệnh đề cho mỗi đoạn. Khi tắt, chất lượng truy xuất giảm mạnh — embedding được tạo ra chính từ câu ngữ cảnh."
+      },
+      "preprocess__ocr_enabled": {
+        "label": "OCR các trang chỉ có hình ảnh",
+        "description": "Đọc lại những trang có hình nhưng không có lớp văn bản. Khi tắt sẽ mất hoàn toàn các trang đó."
+      },
+      "preprocess__ocr_dpi": {
+        "label": "DPI kết xuất khi OCR",
+        "description": "Độ phân giải mà trang được kết xuất thành ảnh trước khi gọi mô hình thị giác. Cao hơn giúp ích cho bảng dày đặc nhưng tốn chi phí hơn."
+      },
+      "preprocess__ocr_advisory_max_pages": {
+        "label": "Ngưỡng cảnh báo số trang OCR",
+        "description": "Ghi cảnh báo khi vượt quá số trang OCR này trong một tài liệu. Chỉ mang tính khuyến cáo — không cắt bớt, vì bỏ trang là xóa nội dung chứ không phải tiết kiệm chi phí. Đặt 0 để tắt cảnh báo."
+      },
+      "preprocess__figure_page_max_words": {
+        "label": "Trần số từ của slide dạng hình",
+        "description": "Một trang có ít hơn số từ này mà có ảnh phủ đáng kể sẽ được coi là hình và gửi đi OCR. Tăng lên nếu các slide sơ đồ có tiêu đề vẫn bị đọc ra rỗng."
+      },
+      "preprocess__figure_area_min": {
+        "label": "Sàn diện tích phủ của hình",
+        "description": "Tỷ lệ diện tích trang mà một ảnh phải phủ để được tính là nội dung chứ không phải trang trí."
+      },
+      "knowledge_graph__enabled": {
+        "label": "Xây dựng đồ thị tri thức",
+        "description": "Trích xuất khái niệm và quan hệ của mỗi đoạn vào Neo4j. Khi tắt sẽ bỏ qua bước này cùng chi phí của nó."
+      },
+      "retrieval__deprioritized_ratio": {
+        "label": "Số chia giới hạn tóm tắt/ôn tập",
+        "description": "Tối đa floor(giới hạn / N) đoạn dạng tóm tắt, ôn tập hoặc trang bìa được đưa tới bộ tạo. Giá trị nhỏ hơn cho phép nhiều đoạn loại này lọt vào hơn."
+      },
+      "notifications__sr_reminder_cooldown_hours": {
+        "label": "Thời gian chờ giữa các nhắc nhở lặp lại ngắt quãng (giờ)",
+        "description": "Khoảng cách tối thiểu giữa các nhắc nhở thẻ đến hạn ôn tập cho cùng một học viên. Hệ thống vẫn quét mỗi giờ để bắt kịp thẻ tồn đọng mới, nhưng học viên đã nhận nhắc nhở trong khoảng thời gian này sẽ bị bỏ qua — nên ở mặc định 24 giờ, họ nhận tối đa một nhắc nhở ôn tập mỗi ngày dù có bao nhiêu thẻ quá hạn."
+      },
+      "spaced_repetition__daily_review_cap": {
+        "label": "Giới hạn ôn tập mỗi ngày (thẻ/ngày)",
+        "description": "Số thẻ ôn tập lặp lại ngắt quãng tối đa mà một học viên được đưa ra để ôn trong một ngày, để lượng thẻ tồn đọng lớn vẫn là một mục tiêu hằng ngày có thể hoàn thành thay vì một bức tường vô tận. Các thẻ đã ôn trong ngày được tính vào giới hạn. Điều này chỉ giới hạn HÀNG ĐỢI ÔN TẬP — không bao giờ thay đổi điều kiện mở khóa bài học hay điểm ghi nhớ, nên tiến độ không bị ảnh hưởng. Đặt 0 để không giới hạn (đưa ra toàn bộ thẻ tồn đọng)."
+      }
+    }
   }
 }

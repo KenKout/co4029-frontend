@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
 
-import { SettingsForm } from "@/routes/teacher/interview-config";
+import { SettingsForm } from "@/routes/teacher/_components/interview-config/settings-form";
 /**
  * The published freeze, asserted on the real form rather than on the helper.
  *

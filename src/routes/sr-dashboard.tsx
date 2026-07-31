@@ -234,6 +234,7 @@ export default function SrDashboardPage() {
             />
             <Link
               to="/study/cards-due"
+              search={{ lesson: undefined, course: undefined }}
               className="inline-flex items-center gap-2 gradient-primary text-white rounded-xl font-semibold px-4 py-2 text-sm shadow-glass hover:opacity-90 transition-opacity self-start sm:self-auto cursor-pointer"
             >
               {t("sr_dashboard.review_now")}

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { useInterviewSessionsForConfig } from "@/lib/api/hooks/interviews";
+import { formatDate } from "@/lib/format/date";
 import type { InterviewSessionSummary } from "@/lib/api/types";
 
 type VerdictState =
@@ -36,17 +37,6 @@ const BADGE_CLASS: Record<VerdictState, string> = {
   evaluation_failed: "bg-red-100 text-red-700",
   not_graded: "bg-slate-100 text-slate-600",
 };
-
-function formatDate(iso: string | null | undefined, locale: string): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(locale, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-}
 
 // PLACEHOLDER_LIST
 export function InterviewSessionsList({ configId }: { configId: string }) {

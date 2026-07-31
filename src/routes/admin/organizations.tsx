@@ -1,39 +1,34 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Building2, Plus, Search, X } from "lucide-react";
+import { Building2, Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
 import { useCreateOrganization } from "@/lib/api/hooks/admin-organizations";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import type {
   OrganizationRead,
   OrganizationStatus,
 } from "@/lib/api/types/admin-organizations";
-
-const STATUS_COLOR: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700",
-  inactive: "bg-amber-100 text-amber-700",
-  archived: "bg-slate-100 text-slate-700",
-};
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { ORG_STATUS_TOKENS } from "@/lib/status-tokens";
 
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
-  const label = t(`admin.organizations.status_label.${status}`, {
-    defaultValue: status,
-  });
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-md ${cls}`}
-    >
-      {label}
-    </span>
+    <SharedStatusBadge
+      status={status}
+      tokens={ORG_STATUS_TOKENS}
+      label={t(`admin.organizations.status_label.${status}`, {
+        defaultValue: status,
+      })}
+    />
   );
 }
 
@@ -154,15 +149,12 @@ function CreateOrgDialog({ onClose }: { onClose: () => void }) {
 export default function AdminOrganizationsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const permissions = useMyPermissions();
-  const canManage = useMemo(() => {
-    const perms = permissions.data?.permissions ?? [];
-    return (
-      perms.includes("system.administer") ||
-      perms.includes("org_unit.manage") ||
-      perms.includes("user.bulk_import")
-    );
-  }, [permissions.data]);
+  const permissions = usePermissions();
+  const canManage = permissions.hasAny(
+    "system.administer",
+    "org_unit.manage",
+    "user.bulk_import",
+  );
 
   const [showCreate, setShowCreate] = useState(false);
 
@@ -291,16 +283,13 @@ export default function AdminOrganizationsPage() {
               : t("admin.organizations.empty_title")
           }
           toolbar={
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-              <Input
-                type="text"
-                value={table.search}
-                onChange={(e) => table.setSearch(e.target.value)}
-                placeholder={t("admin.organizations.search_placeholder")}
-                className="pl-10"
-              />
-            </div>
+            <SearchInput
+              wrapperClassName="max-w-md"
+              value={table.search}
+              onChange={(e) => table.setSearch(e.target.value)}
+              placeholder={t("admin.organizations.search_placeholder")}
+              className="pl-10"
+            />
           }
         />
       )}

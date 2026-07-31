@@ -58,7 +58,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
 import {
-  BLOOM_LEVELS,
   type BloomDistribution,
   BloomDistributionInput,
   CoverageOptionsForm,

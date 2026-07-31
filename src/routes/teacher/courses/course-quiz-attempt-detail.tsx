@@ -16,6 +16,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Badge } from "@/components/ui/badge";
 import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
+import { formatDurationShort as fmtDuration } from "@/lib/format/date";
 import {
   useCourseQuizAttemptDetail,
   type QuizAttemptIntegrityEvent,
@@ -34,13 +35,6 @@ function fmtDateTime(iso: string | null | undefined): string {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function fmtDuration(seconds: number | null | undefined): string {
-  if (seconds == null) return "—";
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
 /* ── Integrity severity → colour ── */

@@ -228,7 +228,6 @@ export function AiTypingMessage({
       callbacksRef.current.onTypingChange?.(false);
     };
     // A turn is keyed by its parent, so its presentation intentionally runs once.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const preparationKey =

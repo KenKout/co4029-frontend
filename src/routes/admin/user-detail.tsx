@@ -25,7 +25,10 @@ import {
   useOrganizations,
   useOrgUnits,
 } from "@/lib/api/hooks/admin-organizations";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
+import { formatDateTime, resolveLocale } from "@/lib/format/date";
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { USER_STATUS_TOKENS } from "@/lib/status-tokens";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,34 +47,21 @@ type EnrichedAssignment = RoleAssignmentRead & {
   assignment_id?: string;
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700",
-  invited: "bg-amber-100 text-amber-700",
-  disabled: "bg-red-100 text-red-700",
-  inactive: "bg-red-100 text-red-700",
-  pending: "bg-slate-100 text-slate-700",
-  suspended: "bg-red-100 text-red-700",
-};
-
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
-  const label = t(`admin.users.status.${status}`, { defaultValue: status });
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-md ${cls}`}
-    >
-      {label}
-    </span>
+    <SharedStatusBadge
+      status={status}
+      tokens={USER_STATUS_TOKENS}
+      label={t(`admin.users.status.${status}`, { defaultValue: status })}
+    />
   );
 }
 
-function formatDate(iso: string | null | undefined, locale: string): string {
-  if (!iso) return "—";
-  return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(iso));
+// Thin wrapper over the shared date/time formatter; call sites pass the raw
+// i18n language, resolveLocale maps it to BCP-47. Same short date+time output.
+function formatDate(iso: string | null | undefined, language: string): string {
+  return formatDateTime(iso, resolveLocale(language));
 }
 
 function ConfirmDisableDialog({
@@ -389,7 +379,10 @@ function RoleAssignmentsSection({
                           defaultValue: "— Select org unit —",
                         }),
                   },
-                  ...orgUnitOptions.map((u) => ({ value: u.id, label: u.name })),
+                  ...orgUnitOptions.map((u) => ({
+                    value: u.id,
+                    label: u.name,
+                  })),
                 ]}
                 className="mt-1"
               />
@@ -430,9 +423,8 @@ export default function AdminUserDetailPage() {
   const userId = params.userId ?? "";
   const locale = i18n.resolvedLanguage ?? i18n.language ?? "en";
 
-  const permissions = useMyPermissions();
-  const canAdmin =
-    permissions.data?.permissions.includes("system.administer") ?? false;
+  const permissions = usePermissions();
+  const canAdmin = permissions.has("system.administer");
 
   const [confirmOpen, setConfirmOpen] = useState(false);
 

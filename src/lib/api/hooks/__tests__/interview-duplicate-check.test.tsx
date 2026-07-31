@@ -106,7 +106,9 @@ describe("isActionableDuplicate", () => {
 
   it("is false when the check itself errored", () => {
     expect(
-      isActionableDuplicate(verdict({ error: "embedding backend unavailable" })),
+      isActionableDuplicate(
+        verdict({ error: "embedding backend unavailable" }),
+      ),
     ).toBe(false);
   });
 

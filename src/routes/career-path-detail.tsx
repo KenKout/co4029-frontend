@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import {
   useCareerPath,
   useCareerPathProgress,
@@ -115,14 +116,7 @@ export default function CareerPathDetailPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="h-8 w-48 bg-m3-surface-container animate-pulse rounded-lg" />
         <div className="h-32 bg-m3-surface-container animate-pulse rounded-xl" />
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-20 bg-m3-surface-container animate-pulse rounded-xl"
-            />
-          ))}
-        </div>
+        <PageSkeleton rows={3} height="h-20" gap="space-y-2" />
       </div>
     );
   }

@@ -216,8 +216,6 @@ function InlineFilter({
   value?: string;
   onChange: (v: string | undefined) => void;
 }) {
-  const activeLabel = def.options.find((o) => o.value === value)?.label;
-
   return (
     <div className="relative">
       {/* The clear button overlays the trigger's right edge, so the trigger gets

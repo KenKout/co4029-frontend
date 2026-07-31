@@ -197,7 +197,7 @@ export function useQuestionFocusTime(options?: {
       }
     },
     // ensureObserver is stable in practice (only reads refs + threshold).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [closeSegment, openSegment, threshold],
   );
 

@@ -20,7 +20,8 @@ import {
   useCreateCourse,
   useSlugAvailability,
 } from "@/lib/api/hooks/teacher-courses";
-import { useMe, useMyPermissions } from "@/lib/api/hooks/auth";
+import { useMe } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 
 type Level = "" | "beginner" | "intermediate" | "advanced";
 
@@ -35,9 +36,8 @@ export default function ManagementCourseNewPage() {
   // Course creation is a manager capability (backend gates POST /teacher/courses
   // on `course.create`, held by manager/admin only). Guard the screen so a user
   // without the permission is bounced instead of hitting a 403 on submit.
-  const permissions = useMyPermissions();
-  const canCreate =
-    permissions.data?.permissions.includes("course.create") ?? false;
+  const permissions = usePermissions();
+  const canCreate = permissions.has("course.create");
 
   useEffect(() => {
     if (permissions.isLoading) return;

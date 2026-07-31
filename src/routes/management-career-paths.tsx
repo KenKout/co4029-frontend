@@ -2,45 +2,22 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Trans, useTranslation } from "react-i18next";
-import {
-  ArrowLeft,
-  ArrowRight,
-  GraduationCap,
-  Loader2,
-  Plus,
-} from "lucide-react";
+import { ArrowRight, GraduationCap, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import {
   useCreateCareerPath,
   useListManagedCareerPaths,
 } from "@/lib/api/hooks/career-paths";
+import { COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import type { CareerPathAuthoring } from "@/lib/api/types";
 
-const STATUS_COLOR: Record<string, string> = {
-  draft: "bg-amber-100 text-amber-700",
-  published: "bg-emerald-100 text-emerald-700",
-  archived: "bg-slate-100 text-slate-500",
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const { t } = useTranslation();
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
-  const label = t(`management_career_paths.status.${status}`, {
-    defaultValue: status,
-  });
-  return (
-    <span
-      className={`inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md ${cls}`}
-    >
-      {label}
-    </span>
-  );
-}
-
 function PathRow({ path }: { path: CareerPathAuthoring }) {
+  const { t } = useTranslation();
   return (
     <Link
       to="/management/career-paths/$id"
@@ -59,7 +36,14 @@ function PathRow({ path }: { path: CareerPathAuthoring }) {
             {path.slug}
           </p>
         </div>
-        <StatusBadge status={path.status} />
+        <StatusBadge
+          status={path.status}
+          tokens={COURSE_STATUS_TOKENS}
+          size="11px"
+          label={t(`management_career_paths.status.${path.status}`, {
+            defaultValue: path.status,
+          })}
+        />
         <ArrowRight className="h-4 w-4 text-m3-on-surface-variant shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
       </div>
     </Link>
@@ -225,18 +209,18 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
 export default function ManagementCareerPathsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const permissions = useMyPermissions();
+  const permissions = usePermissions();
 
-  const perms = permissions.data?.permissions ?? [];
   // Career-path authoring is gated on course lifecycle codes on the backend
   // (see career_paths/routers/authoring.py _PATH_MANAGE_CODES), which the
   // manager role holds. There is no `career_path.manage` code in the catalog —
   // checking it here locked everyone but admins out of a surface the backend
   // already allows managers to use.
-  const canManage =
-    perms.includes("course.create") ||
-    perms.includes("course.update") ||
-    perms.includes("system.administer");
+  const canManage = permissions.hasAny(
+    "course.create",
+    "course.update",
+    "system.administer",
+  );
 
   useEffect(() => {
     if (permissions.isLoading) return;
@@ -256,16 +240,7 @@ export default function ManagementCareerPathsPage() {
   });
 
   if (permissions.isLoading || !enabled) {
-    return (
-      <div className="space-y-3 pb-12">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-16 bg-m3-surface-container animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
-    );
+    return <PageSkeleton rows={3} rounded="rounded-lg" className="pb-12" />;
   }
 
   const paths = list.data ?? [];
@@ -300,16 +275,7 @@ export default function ManagementCareerPathsPage() {
         </span>
       </label>
 
-      {list.isLoading && (
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-16 bg-m3-surface-container animate-pulse rounded-xl"
-            />
-          ))}
-        </div>
-      )}
+      {list.isLoading && <PageSkeleton rows={3} gap="space-y-2" />}
 
       {list.isError && (
         <div className="rounded-xl bg-m3-error-container border border-m3-error/20 p-6 text-center">

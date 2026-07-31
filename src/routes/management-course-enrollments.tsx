@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import {
   AlertCircle,
   ArrowLeft,
-  ArrowRight,
   ChevronDown,
   ChevronUp,
   Copy,
@@ -21,7 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { FileDropzone } from "@/components/ui/file-dropzone";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import {
   useBulkEnroll,
   useCreateInvitationCode,
@@ -115,11 +115,11 @@ export default function ManagementCourseEnrollmentsPage() {
   const navigate = useNavigate();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
 
-  const permissions = useMyPermissions();
-  const canManage =
-    permissions.data?.permissions.includes("course.enrollment.create") ??
-    permissions.data?.permissions.includes("system.administer") ??
-    false;
+  const permissions = usePermissions();
+  const canManage = permissions.hasAny(
+    "course.enrollment.create",
+    "system.administer",
+  );
 
   useEffect(() => {
     if (permissions.isLoading) return;
@@ -136,14 +136,12 @@ export default function ManagementCourseEnrollmentsPage() {
 
   if (permissions.isLoading || !enabled) {
     return (
-      <div className="space-y-3 pb-12">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-16 bg-surface-muted animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
+      <PageSkeleton
+        rows={3}
+        rounded="rounded-lg"
+        bg="bg-surface-muted"
+        className="pb-12"
+      />
     );
   }
 
@@ -238,14 +236,12 @@ function RosterTab({ courseId }: { courseId: string }) {
 
   if (isLoading) {
     return (
-      <div className="space-y-2">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-14 bg-m3-surface-container animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
+      <PageSkeleton
+        rows={3}
+        height="h-14"
+        rounded="rounded-lg"
+        gap="space-y-2"
+      />
     );
   }
 
@@ -750,14 +746,12 @@ function CodesList({
   const { t } = useTranslation();
   if (isLoading) {
     return (
-      <div className="space-y-2">
-        {[1, 2].map((i) => (
-          <div
-            key={i}
-            className="h-14 bg-m3-surface-container animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
+      <PageSkeleton
+        rows={2}
+        height="h-14"
+        rounded="rounded-lg"
+        gap="space-y-2"
+      />
     );
   }
 

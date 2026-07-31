@@ -77,7 +77,10 @@ export function QuestionCard({
       toast.error(
         err instanceof ApiError && err.message
           ? err.message
-          : t("teacher_quiz_manage.editor.duplicate_error", "Could not duplicate the question"),
+          : t(
+              "teacher_quiz_manage.editor.duplicate_error",
+              "Could not duplicate the question",
+            ),
       );
     }
   }

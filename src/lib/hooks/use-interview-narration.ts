@@ -250,7 +250,6 @@ export function useInterviewNarration(params: {
     // (the workflow ships a production build, so import.meta.env.DEV is false).
     // Remove this block once the skip root cause is confirmed.
     if (narrationDebugEnabled()) {
-      // eslint-disable-next-line no-console
       console.debug(
         `[narration] cancel — token ${tokenRef.current} -> ${tokenRef.current + 1}`,
         {
@@ -299,7 +298,6 @@ export function useInterviewNarration(params: {
       cancel();
       const myToken = tokenRef.current;
       if (narrationDebugEnabled()) {
-        // eslint-disable-next-line no-console
         console.debug(
           `[narration] narrate — token ${myToken}: "${clean.slice(0, 48)}${clean.length > 48 ? "…" : ""}"`,
         );
@@ -536,7 +534,7 @@ export function useInterviewNarration(params: {
             browserFallback();
           } else {
             // Authentication/validation failures should stay silent.
-            // eslint-disable-next-line no-console
+
             console.warn("narration request failed", error.status);
             stopAudioWarmup();
             resolveStarted();

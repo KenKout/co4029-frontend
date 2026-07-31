@@ -4,43 +4,16 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { useProcessingJob, useRetryProcessingJob } from "@/lib/api/hooks/admin";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const JOB_STATUS_COLOR: Record<string, string> = {
-  pending: "bg-slate-100 text-slate-700",
-  running: "bg-blue-100 text-blue-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  failed: "bg-red-100 text-red-700",
-  cancelled: "bg-slate-200 text-slate-700",
-};
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { JOB_STATUS_TOKENS } from "@/lib/status-tokens";
+import { useFormatDateTime } from "@/lib/format/date";
 
 function JobStatusBadge({ status }: { status: string }) {
-  const cls = JOB_STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
-  return (
-    <span
-      className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-md ${cls}`}
-    >
-      {status}
-    </span>
-  );
-}
-
-function useFormatDate() {
-  const { i18n } = useTranslation();
-  const locale =
-    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
-      ? "vi-VN"
-      : "en-US";
-  return (iso: string | null | undefined): string => {
-    if (!iso) return "—";
-    return new Intl.DateTimeFormat(locale, {
-      dateStyle: "short",
-      timeStyle: "short",
-    }).format(new Date(iso));
-  };
+  return <SharedStatusBadge status={status} tokens={JOB_STATUS_TOKENS} />;
 }
 
 function Field({
@@ -72,14 +45,13 @@ function Field({
 
 export default function AdminProcessingJobPage() {
   const { t } = useTranslation();
-  const formatDate = useFormatDate();
+  const formatDate = useFormatDateTime();
   const navigate = useNavigate();
   const params = useParams({ strict: false }) as { jobId?: string };
   const jobId = params.jobId ?? "";
 
-  const permissions = useMyPermissions();
-  const canAdmin =
-    permissions.data?.permissions.includes("system.administer") ?? false;
+  const permissions = usePermissions();
+  const canAdmin = permissions.has("system.administer");
 
   useEffect(() => {
     if (permissions.isLoading) return;

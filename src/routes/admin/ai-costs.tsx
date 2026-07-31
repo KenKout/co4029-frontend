@@ -41,7 +41,7 @@ import {
   type AiCostsPeriod,
   type AiModelPricingInput,
 } from "@/lib/api/hooks/admin";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { downloadCsv } from "@/lib/csv-export";
 import { StatCard } from "@/components/ui/stat-card";
@@ -51,6 +51,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet, SheetClose, SheetContent } from "@/components/ui/sheet";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { ApiError } from "@/lib/api/client";
 import type {
   AiCostsByCategory as AiCostsByCategoryRow,
@@ -1417,9 +1418,8 @@ export default function AdminAiCostsPage() {
   const { t } = useTranslation();
   const fmt = useFormatters();
   const navigate = useNavigate();
-  const permissions = useMyPermissions();
-  const canAdmin =
-    permissions.data?.permissions.includes("system.administer") ?? false;
+  const permissions = usePermissions();
+  const canAdmin = permissions.has("system.administer");
 
   const [period, setPeriod] = useState<AiCostsPeriod>("30d");
   const [dimension, setDimension] = useState<AiCostsDimension>("operation");
@@ -1629,14 +1629,13 @@ export default function AdminAiCostsPage() {
             </p>
           </div>
         ) : byUser.isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-12 bg-surface-muted animate-pulse rounded-lg"
-              />
-            ))}
-          </div>
+          <PageSkeleton
+            rows={3}
+            height="h-12"
+            rounded="rounded-lg"
+            bg="bg-surface-muted"
+            gap="space-y-2"
+          />
         ) : (
           <TopUsersTable rows={byUser.data ?? []} />
         )}
@@ -1653,14 +1652,13 @@ export default function AdminAiCostsPage() {
             </p>
           </div>
         ) : byPipeline.isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-12 bg-surface-muted animate-pulse rounded-lg"
-              />
-            ))}
-          </div>
+          <PageSkeleton
+            rows={3}
+            height="h-12"
+            rounded="rounded-lg"
+            bg="bg-surface-muted"
+            gap="space-y-2"
+          />
         ) : (
           <PipelineTable
             rows={byPipeline.data ?? []}
@@ -1721,14 +1719,13 @@ export default function AdminAiCostsPage() {
             </p>
           </div>
         ) : recent.isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="h-12 bg-surface-muted animate-pulse rounded-lg"
-              />
-            ))}
-          </div>
+          <PageSkeleton
+            rows={5}
+            height="h-12"
+            rounded="rounded-lg"
+            bg="bg-surface-muted"
+            gap="space-y-2"
+          />
         ) : (
           <RecentCallsTable rows={recent.data ?? []} />
         )}

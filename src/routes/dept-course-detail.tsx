@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import {
   useAssignTeacher,
   useCourseRoster,
@@ -19,7 +20,7 @@ import {
   useDeptCourses,
   useRemoveTeacher,
 } from "@/lib/api/hooks/dept";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
 import type { RosterEntry, TeacherAssignmentRead } from "@/lib/api/types";
 
@@ -229,12 +230,12 @@ export default function DeptCourseDetailPage() {
   const navigate = useNavigate();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
 
-  const permissions = useMyPermissions();
-  const perms = permissions.data?.permissions ?? [];
-  const canAssign =
-    perms.includes("course.assign_teacher") ||
-    perms.includes("system.administer");
-  const canRead = canAssign || perms.includes("course.enrollment.read");
+  const permissions = usePermissions();
+  const canAssign = permissions.hasAny(
+    "course.assign_teacher",
+    "system.administer",
+  );
+  const canRead = canAssign || permissions.has("course.enrollment.read");
 
   useEffect(() => {
     if (permissions.isLoading) return;
@@ -307,14 +308,12 @@ export default function DeptCourseDetailPage() {
           {canAssign && <AssignTeacherForm courseId={courseId} />}
 
           {teachers.isLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-16 bg-surface-muted animate-pulse rounded-lg"
-                />
-              ))}
-            </div>
+            <PageSkeleton
+              rows={3}
+              rounded="rounded-lg"
+              bg="bg-surface-muted"
+              gap="space-y-2"
+            />
           ) : teachers.isError ? (
             <div className="bg-surface-elev border border-border rounded-lg p-5">
               <p className="text-sm text-danger">
@@ -364,14 +363,12 @@ export default function DeptCourseDetailPage() {
             </div>
           )}
           {roster.isLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="h-16 bg-surface-muted animate-pulse rounded-lg"
-                />
-              ))}
-            </div>
+            <PageSkeleton
+              rows={4}
+              rounded="rounded-lg"
+              bg="bg-surface-muted"
+              gap="space-y-2"
+            />
           ) : roster.isError ? (
             <div className="bg-surface-elev border border-border rounded-lg p-5">
               <p className="text-sm text-danger">

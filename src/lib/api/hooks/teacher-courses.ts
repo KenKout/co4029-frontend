@@ -612,9 +612,7 @@ export function useDuplicateModuleItem(courseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (itemId: string) =>
-      apiPost<ModuleItemAuthoring>(
-        `/teacher/module-items/${itemId}/duplicate`,
-      ),
+      apiPost<ModuleItemAuthoring>(`/teacher/module-items/${itemId}/duplicate`),
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: ["teacher", "courses", courseId, "content"],

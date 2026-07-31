@@ -6,7 +6,6 @@ import {
   Globe,
   Layers,
   Plus,
-  Search,
   Trash2,
   Users,
   X,
@@ -16,6 +15,7 @@ import { toast } from "sonner";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -34,7 +34,10 @@ import {
   usePatchMembership,
   usePatchOrganization,
 } from "@/lib/api/hooks/admin-organizations";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
+import { formatDateTime, resolveLocale } from "@/lib/format/date";
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { ORG_MEMBERSHIP_STATUS_TOKENS } from "@/lib/status-tokens";
 import type {
   MembershipRead,
   MembershipStatus,
@@ -46,15 +49,6 @@ type TabKey = "info" | "domains" | "units" | "memberships";
 
 const TAB_KEYS: TabKey[] = ["info", "domains", "units", "memberships"];
 
-const STATUS_COLOR: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700",
-  inactive: "bg-amber-100 text-amber-700",
-  archived: "bg-slate-100 text-slate-700",
-  invited: "bg-sky-100 text-sky-700",
-  suspended: "bg-red-100 text-red-700",
-  left: "bg-slate-100 text-slate-600",
-};
-
 function StatusBadge({
   status,
   type = "org",
@@ -63,27 +57,24 @@ function StatusBadge({
   type?: "org" | "membership";
 }) {
   const { t } = useTranslation();
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
   const ns =
     type === "org"
       ? "admin.organizations.status_label"
       : "admin.organizations.membership_status_label";
-  const label = t(`${ns}.${status}`, { defaultValue: status });
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-md ${cls}`}
-    >
-      {label}
-    </span>
+    <SharedStatusBadge
+      status={status}
+      tokens={ORG_MEMBERSHIP_STATUS_TOKENS}
+      label={t(`${ns}.${status}`, { defaultValue: status })}
+    />
   );
 }
 
-function formatDate(iso: string | null | undefined, locale: string): string {
-  if (!iso) return "—";
-  return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(iso));
+// Thin wrapper over the shared date/time formatter so the existing call sites
+// (which pass the raw i18n language) keep working; resolveLocale maps it to a
+// BCP-47 locale. Same short-date + short-time output as before.
+function formatDate(iso: string | null | undefined, language: string): string {
+  return formatDateTime(iso, resolveLocale(language));
 }
 
 // ---------------------------------------------------------------------------
@@ -660,23 +651,19 @@ function UserSearchCombobox({
 
   return (
     <div className="relative">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-        <Input
-          type="text"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
-          placeholder={t(
-            "admin.organizations.memberships.user_search_placeholder",
-          )}
-          className="pl-10"
-        />
-      </div>
+      <SearchInput
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder={t(
+          "admin.organizations.memberships.user_search_placeholder",
+        )}
+        className="pl-10"
+      />
       {open && (
         <div className="absolute z-10 mt-1 w-full rounded-md border border-m3-outline-variant bg-white shadow-lg max-h-64 overflow-auto">
           {isLoading ? (
@@ -1047,17 +1034,14 @@ export default function AdminOrganizationDetailPage() {
   const navigate = useNavigate();
   const { orgId } = useParams({ strict: false });
   const [tab, setTab] = useState<TabKey>("info");
-  const permissions = useMyPermissions();
+  const permissions = usePermissions();
   const { data: org, isLoading } = useOrganization(orgId);
 
-  const canManage = useMemo(() => {
-    const perms = permissions.data?.permissions ?? [];
-    return (
-      perms.includes("system.administer") ||
-      perms.includes("org_unit.manage") ||
-      perms.includes("user.bulk_import")
-    );
-  }, [permissions.data]);
+  const canManage = permissions.hasAny(
+    "system.administer",
+    "org_unit.manage",
+    "user.bulk_import",
+  );
 
   useEffect(() => {
     if (permissions.isLoading) return;

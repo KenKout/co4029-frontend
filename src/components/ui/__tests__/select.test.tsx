@@ -130,7 +130,9 @@ describe("Select", () => {
 
     render(<VoiceHarness />);
     await user.click(screen.getByRole("combobox", { name: "AI voice" }));
-    await user.click(await screen.findByRole("option", { name: "Default voice" }));
+    await user.click(
+      await screen.findByRole("option", { name: "Default voice" }),
+    );
 
     expect(onChange).toHaveBeenCalledExactlyOnceWith("");
     await waitFor(() =>

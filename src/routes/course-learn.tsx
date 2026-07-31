@@ -24,7 +24,6 @@ import {
   Download,
   Sparkles,
   HelpCircle,
-  XCircle,
   // Lock,
 } from "lucide-react";
 import "@vidstack/react/player/styles/base.css";
@@ -32,7 +31,13 @@ import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  avatarInitials,
+} from "@/components/ui/avatar";
 import { ApiError, apiFetch } from "@/lib/api/client";
 import {
   useCourseBySlug,
@@ -76,15 +81,6 @@ interface FlatItem {
 
 const TABS = ["Lesson Notes", "Discussion", "Resources"] as const;
 type Tab = (typeof TABS)[number];
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 function buildFlatItems(
   modules: ModulePublic[],
@@ -1236,14 +1232,7 @@ function ResourcesPanel({
       </div>
 
       {!resources ? (
-        <div className="space-y-2">
-          {[1, 2].map((i) => (
-            <div
-              key={i}
-              className="h-12 rounded-xl bg-m3-surface-container animate-pulse"
-            />
-          ))}
-        </div>
+        <PageSkeleton rows={2} height="h-12" gap="space-y-2" />
       ) : resources.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
           <div className="w-12 h-12 rounded-full bg-m3-surface-container flex items-center justify-center">
@@ -1325,7 +1314,7 @@ function InstructorBlock({ instructor }: { instructor: InstructorRead }) {
           />
         ) : null}
         <AvatarFallback className="gradient-primary text-white text-xl font-bold font-headline">
-          {initials(instructor.display_name)}
+          {avatarInitials(instructor.display_name, { uppercase: true })}
         </AvatarFallback>
       </Avatar>
       <div className="text-center sm:text-left">

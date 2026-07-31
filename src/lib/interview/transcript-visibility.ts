@@ -20,7 +20,7 @@
  * Pure so the sequencing rule is unit-testable and identical on every surface
  * (docked panel, overlay drawer, and the inline stage list).
  */
-import type { ConversationTurn } from "@/components/interview/interview-workspace";
+import type { ConversationTurn } from "@/lib/interview/types";
 
 /**
  * Drop the newest AI turn when it has not finished presenting.

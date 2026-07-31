@@ -1,17 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Users, Target, TrendingUp, Clock, Award, Percent } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
+import { fmtPercent } from "@/lib/format/number";
 import type { QuizResultsSummary } from "@/lib/api/types";
-
-/** Format a 0..100 score as a whole-or-1-decimal percent, or an em dash when null. */
-function fmtPercent(value: number | null): string {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return "—";
-  }
-  const rounded = Math.round(value * 10) / 10;
-  const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
-  return `${text}%`;
-}
 
 /** Format seconds as `Xm Ys` (or `Ys` under a minute), or an em dash when null. */
 function fmtDuration(seconds: number | null): string {

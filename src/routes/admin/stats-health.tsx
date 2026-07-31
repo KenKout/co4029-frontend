@@ -2,8 +2,10 @@ import { useMemo, useState } from "react";
 import { AlertTriangle, Bot, Loader, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useStatsHealth } from "@/lib/api/hooks/admin";
+import { useFormatCount } from "@/lib/format/number";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Select } from "@/components/ui/select";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 
 type MetricRow = {
   key: string;
@@ -20,18 +22,6 @@ const WINDOW_HOURS: Record<Window, number> = {
   "7d": 24 * 7,
   "30d": 24 * 30,
 };
-
-function useFormatCount() {
-  const { i18n } = useTranslation();
-  const locale =
-    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
-      ? "vi-VN"
-      : "en-US";
-  return (n: number | undefined): string => {
-    if (n === undefined || n === null) return "—";
-    return new Intl.NumberFormat(locale).format(n);
-  };
-}
 
 export default function AdminStatsHealthPage() {
   const { t } = useTranslation();
@@ -139,14 +129,7 @@ export default function AdminStatsHealthPage() {
           <p className="text-sm text-danger">{t("admin.stats.load_failed")}</p>
         </div>
       ) : isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-16 bg-surface-muted animate-pulse rounded-xl"
-            />
-          ))}
-        </div>
+        <PageSkeleton rows={3} bg="bg-surface-muted" />
       ) : !data ? (
         <div className="bg-surface-elev border border-border rounded-lg p-10 text-center">
           <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-text-subtle" />

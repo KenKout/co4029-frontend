@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useContentStats } from "@/lib/api/hooks/admin";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { MaterialTypeIcon } from "@/components/ui/material-type-icon";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { cn } from "@/lib/utils";
 
 type Bucket = { [key: string]: unknown };
@@ -182,14 +183,12 @@ export default function AdminStatsContentPage() {
           <p className="text-sm text-danger">{t("admin.stats.load_failed")}</p>
         </div>
       ) : isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-32 bg-surface-muted animate-pulse rounded-xl"
-            />
-          ))}
-        </div>
+        <PageSkeleton
+          rows={3}
+          height="h-32"
+          bg="bg-surface-muted"
+          gap="space-y-4"
+        />
       ) : (
         <div className="space-y-4">
           <BreakdownTable

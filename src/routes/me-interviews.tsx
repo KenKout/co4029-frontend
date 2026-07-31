@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { useMyInterviewSessions } from "@/lib/api/hooks/interviews";
+import { useFormatDate } from "@/lib/format/date";
 import type { InterviewSessionPublic } from "@/lib/api/types";
 
 type VerdictState =
@@ -53,24 +54,6 @@ const BADGE_CLASS: Record<VerdictState, string> = {
   // make a deliberate rehearsal and a walked-away attempt look identical.
   practice: "bg-sky-100 text-sky-700",
 };
-
-function useFormatDate() {
-  const { i18n } = useTranslation();
-  const locale =
-    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
-      ? "vi-VN"
-      : "en-US";
-  return (iso: string | null | undefined): string => {
-    if (!iso) return "—";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString(locale, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
-}
 
 function SessionRow({ item }: { item: InterviewSessionPublic }) {
   const { t } = useTranslation();

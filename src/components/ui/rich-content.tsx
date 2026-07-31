@@ -58,7 +58,6 @@ export function RichContent({
           inline && "prose-p:my-0",
           className,
         )}
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: text }}
       />
     );

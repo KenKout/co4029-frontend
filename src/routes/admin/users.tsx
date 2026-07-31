@@ -1,16 +1,18 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Building2, Mail, Search, Users } from "lucide-react";
+import { Building2, Mail, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { useListRoles } from "@/lib/api/hooks/admin";
 import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 import type { User } from "@/lib/api/types";
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { USER_STATUS_TOKENS } from "@/lib/status-tokens";
 
 // The backend UserRead gained roles[] + organization fields after the
 // committed OpenAPI snapshot, so widen the generated type locally rather than
@@ -23,22 +25,13 @@ type UserWithRoles = User & {
 
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
-  const STATUS_COLOR: Record<string, string> = {
-    active: "bg-emerald-100 text-emerald-700",
-    invited: "bg-amber-100 text-amber-700",
-    disabled: "bg-red-100 text-red-700",
-    inactive: "bg-red-100 text-red-700",
-    pending: "bg-slate-100 text-slate-700",
-    suspended: "bg-red-100 text-red-700",
-  };
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
-  const label = t(`admin.users.status.${status}`, { defaultValue: status });
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md ${cls}`}
-    >
-      {label}
-    </span>
+    <SharedStatusBadge
+      status={status}
+      tokens={USER_STATUS_TOKENS}
+      size="11px"
+      label={t(`admin.users.status.${status}`, { defaultValue: status })}
+    />
   );
 }
 
@@ -84,9 +77,8 @@ function RoleBadges({
 export default function AdminUsersPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const permissions = useMyPermissions();
-  const canAdmin =
-    permissions.data?.permissions.includes("system.administer") ?? false;
+  const permissions = usePermissions();
+  const canAdmin = permissions.has("system.administer");
 
   useEffect(() => {
     if (permissions.isLoading) return;
@@ -152,9 +144,7 @@ export default function AdminUsersPage() {
         // Not sortable: roles are a cross-table aggregate, not a User column.
         id: "roles",
         header: t("admin.users.cols.role", { defaultValue: "Role" }),
-        cell: (u) => (
-          <RoleBadges roles={u.roles ?? []} labelFor={labelFor} />
-        ),
+        cell: (u) => <RoleBadges roles={u.roles ?? []} labelFor={labelFor} />,
       },
       {
         // Not sortable: primary org is a cross-table aggregate (membership).
@@ -260,21 +250,20 @@ export default function AdminUsersPage() {
           }
           toolbar={
             <div className="flex flex-wrap items-center gap-3">
-              <div className="relative max-w-md flex-1 min-w-[220px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-                <Input
-                  type="text"
-                  value={table.search}
-                  onChange={(e) => table.setSearch(e.target.value)}
-                  placeholder={t("admin.users.search_placeholder", {
-                    defaultValue: "Search by name or email…",
-                  })}
-                  className="pl-10"
-                />
-              </div>
+              <SearchInput
+                wrapperClassName="max-w-md flex-1 min-w-[220px]"
+                value={table.search}
+                onChange={(e) => table.setSearch(e.target.value)}
+                placeholder={t("admin.users.search_placeholder", {
+                  defaultValue: "Search by name or email…",
+                })}
+                className="pl-10"
+              />
               <select
                 value={table.roleFilter ?? ""}
-                onChange={(e) => table.setRoleFilter(e.target.value || undefined)}
+                onChange={(e) =>
+                  table.setRoleFilter(e.target.value || undefined)
+                }
                 className="h-9 rounded-md border border-border bg-surface px-3 text-sm text-text-strong outline-none focus:border-primary cursor-pointer"
                 aria-label={t("admin.users.filter_role", {
                   defaultValue: "Filter by role",
@@ -291,7 +280,9 @@ export default function AdminUsersPage() {
               </select>
               <select
                 value={table.orgFilter ?? ""}
-                onChange={(e) => table.setOrgFilter(e.target.value || undefined)}
+                onChange={(e) =>
+                  table.setOrgFilter(e.target.value || undefined)
+                }
                 className="h-9 rounded-md border border-border bg-surface px-3 text-sm text-text-strong outline-none focus:border-primary cursor-pointer max-w-[220px]"
                 aria-label={t("admin.users.filter_organization", {
                   defaultValue: "Filter by organization",

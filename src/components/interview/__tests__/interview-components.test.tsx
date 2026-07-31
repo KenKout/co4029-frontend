@@ -17,26 +17,33 @@ vi.mock("@tanstack/react-router", () => ({
 
 import {
   AnswerComposer,
-  ConversationMessage,
-  EndConfirmationPanel,
-  EndInterviewDialog,
   AnswerControls,
   FocusedAnswerComposer,
-  FocusedInterviewStage,
-  InterviewHeader,
-  LeaveInterviewDialog,
+} from "../composer";
+import { OnboardingActions } from "../onboarding-actions";
+import {
+  ConversationMessage,
   MessageTurnActions,
-  OnboardingActions,
-  StartInterviewDialog,
-  QuestionCard,
-  TranscriptDrawer,
-  TranscriptPanel,
   UserTypingIndicator,
   VoiceStatusIndicator,
+} from "../conversation";
+import {
+  EndConfirmationPanel,
+  EndInterviewDialog,
+  LeaveInterviewDialog,
+  StartInterviewDialog,
+} from "../dialogs";
+import {
+  FocusedInterviewStage,
+  InterviewHeader,
+  QuestionCard,
+} from "../stages";
+import { TranscriptDrawer, TranscriptPanel } from "../transcript";
+import {
   formatRelativeInterviewTime,
   resolveInterviewState,
-  useInterviewTimer,
-} from "../interview-workspace";
+} from "@/lib/interview/format";
+import { useInterviewTimer } from "@/lib/interview/use-interview-timer";
 import { SubmittedAnswerConfirmation } from "../submitted-answer-confirmation";
 
 describe("formatRelativeInterviewTime", () => {

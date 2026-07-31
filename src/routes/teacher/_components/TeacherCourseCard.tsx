@@ -4,6 +4,7 @@ import { Sparkles, GraduationCap, Clock, Users, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Course } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
+import { TEACHER_COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 
 // Same gradient palette as the public /courses cards, so the teacher-side
 // cards read as the same product surface. Index-cycled for visual variety.
@@ -15,12 +16,6 @@ const CARD_GRADIENTS = [
   "from-amber-500 via-orange-500 to-red-500",
   "from-blue-500 via-blue-600 to-sky-500",
 ];
-
-const STATUS_COLORS: Record<string, string> = {
-  published: "bg-emerald-100 text-emerald-700",
-  draft: "bg-amber-50 text-amber-700",
-  archived: "bg-slate-100 text-slate-500",
-};
 
 /**
  * Teacher-side course card matching the public /courses card design: a
@@ -109,7 +104,8 @@ export function TeacherCourseCard({
             <Badge
               className={cn(
                 "border-0 text-[10px] font-semibold",
-                STATUS_COLORS[course.status] ?? "bg-slate-100 text-slate-500",
+                TEACHER_COURSE_STATUS_TOKENS[course.status] ??
+                  "bg-slate-100 text-slate-500",
               )}
             >
               {t(`teacher_dashboard.status.${course.status}`, {

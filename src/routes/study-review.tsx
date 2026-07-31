@@ -1,11 +1,13 @@
 import { useMemo, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useSearch } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Inbox,
+  Lightbulb,
   Loader2,
   PartyPopper,
   XCircle,
@@ -14,6 +16,7 @@ import {
   submitReview,
   useReviewQueue,
 } from "@/lib/api/hooks/spaced-repetition";
+import { queryKeys } from "@/lib/api/query-keys";
 import { SectionHeader } from "@/components/ui/section-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -32,12 +35,60 @@ import { cn } from "@/lib/utils";
  */
 export default function StudyReviewPage() {
   const { t } = useTranslation();
-  const { data, isLoading, isError } = useReviewQueue({ limit: 20 });
+  // Scope the session to a lesson or course when the entry link carried it
+  // (per-course "Review" or the SR reminder deep-link). Omitted = full backlog.
+  const { lesson, course } = useSearch({ strict: false }) as {
+    lesson?: string;
+    course?: string;
+  };
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError } = useReviewQueue({
+    limit: 20,
+    lessonId: lesson,
+    courseSlug: course,
+  });
 
   const cards = useMemo(() => data?.items ?? [], [data]);
+  // Full due backlog across everything (unscoped by the server), so the done
+  // screen can say how many cards remain beyond the ones in this batch.
+  const totalDue = data?.total_due ?? 0;
+  // Daily-cap accounting. dailyCap 0 = unlimited. cappedOut = the queue is
+  // empty specifically because today's cap is used up (not because the student
+  // is genuinely caught up), so we show "come back tomorrow" instead of a
+  // misleading "all done".
+  const dailyCap = data?.daily_cap ?? 0;
+  const reviewedToday = data?.reviewed_today ?? 0;
+  const dailyRemaining = data?.daily_remaining ?? 0;
+  const cappedOut = dailyCap > 0 && dailyRemaining === 0 && totalDue > 0;
   const [index, setIndex] = useState(0);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+
+  // After every answer the SM-2 write reschedules the card (a wrong answer
+  // pushes it to the 24h cooldown, a pass advances it), so the cards-due list
+  // and the dashboard tile are now stale. The submit endpoint isn't a
+  // react-query mutation, so nothing auto-invalidates — do it here. Without
+  // this, returning to /study/cards-due shows the card just answered (the "it
+  // still lives in cards-due" bug).
+  //
+  // The review-queue is invalidated with refetchType:"none": we mark it stale
+  // (so it refetches on the next mount / when the student navigates back) but
+  // do NOT refetch it mid-session. An active refetch would shrink the `cards`
+  // array under the walkthrough — since ReviewCardView is keyed on
+  // question_id, cards[index] would resolve to a different card, remounting the
+  // component with fresh state and instantly skipping past the feedback the
+  // student is still reading. "Keep reviewing" (restartSession) does the
+  // explicit refetch when the student is ready for the next batch.
+  const invalidateSrCaches = () => {
+    void queryClient.invalidateQueries({ queryKey: ["sr", "cards-due"] });
+    void queryClient.invalidateQueries({
+      queryKey: ["sr", "review-queue"],
+      refetchType: "none",
+    });
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.sr.dashboardSummary(),
+    });
+  };
 
   if (isLoading) {
     return (
@@ -61,15 +112,31 @@ export default function StudyReviewPage() {
   const done = index >= total;
 
   if (total === 0) {
+    // Capped out vs genuinely caught up are different messages: one says "come
+    // back tomorrow" (work remains, you've hit today's healthy limit), the
+    // other celebrates an empty backlog.
     return (
       <div className="max-w-2xl mx-auto pt-10">
         <EmptyState
           icon={Inbox}
-          title={t("study_review.empty_title", "Nothing to review")}
-          description={t(
-            "study_review.empty_body",
-            "You're all caught up. Come back when cards are due.",
-          )}
+          title={
+            cappedOut
+              ? t("study_review.capped_title", "That's your reviews for today")
+              : t("study_review.empty_title", "Nothing to review")
+          }
+          description={
+            cappedOut
+              ? t("study_review.capped_body", {
+                  cap: dailyCap,
+                  remaining: totalDue,
+                  defaultValue:
+                    "You've hit today's cap of {{cap}}. {{remaining}} cards are waiting — come back tomorrow to keep your streak steady.",
+                })
+              : t(
+                  "study_review.empty_body",
+                  "You're all caught up. Come back when cards are due.",
+                )
+          }
           cta={
             <Link to="/dashboard/sr">
               <Button variant="default" className="cursor-pointer">
@@ -83,6 +150,20 @@ export default function StudyReviewPage() {
   }
 
   if (done) {
+    // total_due was the full backlog when the queue loaded, before this
+    // session's answers. Passing cards leave the backlog; failing ones stay
+    // due — but either way the student cleared `answeredCount` from the top of
+    // the queue, so the honest "still waiting" figure is total_due minus what
+    // they just worked through, floored at zero.
+    const remaining = Math.max(0, totalDue - answeredCount);
+    // With a daily cap, "Keep reviewing" only helps if today's allowance still
+    // has room after this batch. dailyRemaining was the allowance at load; the
+    // student just spent `answeredCount` of it.
+    const capRemainingNow =
+      dailyCap > 0 ? Math.max(0, dailyRemaining - answeredCount) : remaining;
+    const moreToday = remaining > 0 && capRemainingNow > 0;
+    const cappedForToday =
+      remaining > 0 && dailyCap > 0 && capRemainingNow === 0;
     return (
       <div className="max-w-2xl mx-auto pt-10 text-center space-y-4">
         <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center">
@@ -98,11 +179,45 @@ export default function StudyReviewPage() {
             defaultValue: "You got {{correct}} of {{total}} right.",
           })}
         </p>
-        <Link to="/dashboard/sr">
-          <Button variant="default" className="cursor-pointer">
-            {t("study_review.back_to_dashboard", "Back to dashboard")}
-          </Button>
-        </Link>
+        {moreToday ? (
+          <div className="mx-auto max-w-sm rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 space-y-3">
+            <p className="text-sm font-semibold text-amber-800">
+              {t("study_review.remaining_backlog", {
+                count: remaining,
+                defaultValue: "{{count}} more cards still due.",
+              })}
+            </p>
+            {/* Send the student back to the cards-due overview to pick what to
+                review next. The cards-due cache was invalidated on each answer,
+                so its counts are already fresh. */}
+            <Link to="/study/cards-due" search={{ lesson, course }}>
+              <Button variant="default" size="sm" className="cursor-pointer">
+                {t("study_review.keep_reviewing", "Keep reviewing")}
+              </Button>
+            </Link>
+          </div>
+        ) : cappedForToday ? (
+          <div className="mx-auto max-w-sm rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">
+            <p className="text-sm font-semibold text-emerald-800">
+              {t("study_review.capped_done", {
+                remaining,
+                defaultValue:
+                  "That's today's cap done. {{remaining}} cards remain — come back tomorrow.",
+              })}
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm font-semibold text-emerald-700">
+            {t("study_review.all_caught_up", "You're all caught up!")}
+          </p>
+        )}
+        <div>
+          <Link to="/dashboard/sr">
+            <Button variant="outline" className="cursor-pointer">
+              {t("study_review.back_to_dashboard", "Back to dashboard")}
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -116,6 +231,7 @@ export default function StudyReviewPage() {
         <div className="flex items-center gap-3">
           <Link
             to="/study/cards-due"
+            search={{ lesson, course }}
             className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
             aria-label={t("study_review.back", "Back")}
           >
@@ -140,6 +256,10 @@ export default function StudyReviewPage() {
             onResolved={(result) => {
               setAnsweredCount((c) => c + 1);
               if (result.correct) setCorrectCount((c) => c + 1);
+              // The card was just rescheduled server-side — clear the stale
+              // cards-due / dashboard / queue caches so other surfaces reflect
+              // it immediately (fixes the card lingering in cards-due).
+              invalidateSrCaches();
             }}
             onNext={() => setIndex((i) => i + 1)}
             isLast={index === total - 1}
@@ -163,6 +283,15 @@ export default function StudyReviewPage() {
                   />
                 </div>
               </div>
+              {dailyCap > 0 && (
+                <div className="text-[11px] text-m3-on-surface-variant">
+                  {t("study_review.today_progress", {
+                    done: reviewedToday + answeredCount,
+                    cap: dailyCap,
+                    defaultValue: "{{done}} of {{cap}} reviews today",
+                  })}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-emerald-50 p-3 text-center">
                   <div className="text-xl font-headline font-black text-emerald-700 tabular-nums">
@@ -206,7 +335,16 @@ function ReviewCardView({
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<ReviewSubmitResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Track real hint usage — the quiz-taking path does the same, and the SM-2
+  // Q grade depends on it (correct WITH hint → Q∈{1,2}, WITHOUT → Q∈{3,4,5}).
+  // Hardcoding false here would grade a review card on a different scale than
+  // the exact same card answered inside a quiz.
+  const [hintShown, setHintShown] = useState(false);
   const startedAt = useRef<number>(Date.now());
+
+  const hintText = (card.question as { hint_text?: string | null }).hint_text;
+  const hintFormat =
+    (card.question as { hint_format?: string }).hint_format ?? "plain";
 
   const hasAnswer =
     selectedOptionId !== null || (answerText ?? "").trim().length > 0;
@@ -220,7 +358,7 @@ function ReviewCardView({
       const res = await submitReview(card.question_id, {
         selected_option_id: selectedOptionId,
         answer_text: answerText,
-        hint_used: false,
+        hint_used: hintShown,
         t_actual_ms: Date.now() - startedAt.current,
       });
       setResult(res);
@@ -260,6 +398,42 @@ function ReviewCardView({
         onSelectOption={(id) => !graded && setSelectedOptionId(id)}
         onAnswerTextChange={(v) => !graded && setAnswerText(v)}
       />
+
+      {/* Hint — parity with the quiz-taking flow. Viewing it flags the answer
+          as assisted recall, which caps the SM-2 grade at Q≤2 so a hinted
+          review can't inflate the card's interval the way an unaided one does.
+          Only offered before grading and only when the question carries one. */}
+      {hintText && !graded && (
+        <div>
+          {hintShown ? (
+            <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 flex items-start gap-2">
+              <Lightbulb className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
+              <div className="min-w-0 space-y-0.5">
+                <RichContent
+                  value={hintText}
+                  format={hintFormat}
+                  className="text-sm text-amber-900"
+                />
+                <p className="text-[11px] text-amber-700/80">
+                  {t(
+                    "study_review.hint_counts",
+                    "Using a hint counts as assisted recall.",
+                  )}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setHintShown(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline cursor-pointer"
+            >
+              <Lightbulb className="h-4 w-4" />
+              {t("study_review.show_hint", "Show hint")}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Feedback after grading */}
       {graded && (

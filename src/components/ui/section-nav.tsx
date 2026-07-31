@@ -260,7 +260,6 @@ export function SectionNav({
     const timer = window.setTimeout(() => scrollToSection(hash), 60);
     return () => window.clearTimeout(timer);
     // Run once on mount only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

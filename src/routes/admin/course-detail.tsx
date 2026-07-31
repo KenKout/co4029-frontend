@@ -15,28 +15,18 @@ import {
   useCourseProcessingJobs,
   useRestoreCourse,
 } from "@/lib/api/hooks/admin";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { StatCard } from "@/components/ui/stat-card";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ProcessingJobRow } from "@/lib/api/types";
-
-const JOB_STATUS_COLOR: Record<string, string> = {
-  pending: "bg-slate-100 text-slate-700",
-  running: "bg-blue-100 text-blue-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  failed: "bg-red-100 text-red-700",
-  cancelled: "bg-slate-200 text-slate-700",
-};
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { JOB_STATUS_TOKENS } from "@/lib/status-tokens";
 
 function JobStatusBadge({ status }: { status: string }) {
-  const cls = JOB_STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md ${cls}`}
-    >
-      {status}
-    </span>
+    <SharedStatusBadge status={status} tokens={JOB_STATUS_TOKENS} size="11px" />
   );
 }
 
@@ -144,9 +134,8 @@ export default function AdminCourseDetailPage() {
   const params = useParams({ strict: false }) as { courseId?: string };
   const courseId = params.courseId ?? "";
 
-  const permissions = useMyPermissions();
-  const canAdmin =
-    permissions.data?.permissions.includes("system.administer") ?? false;
+  const permissions = usePermissions();
+  const canAdmin = permissions.has("system.administer");
 
   useEffect(() => {
     if (permissions.isLoading) return;
@@ -311,14 +300,13 @@ export default function AdminCourseDetailPage() {
             </p>
           </div>
         ) : jobs.isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-12 bg-surface-muted animate-pulse rounded-lg"
-              />
-            ))}
-          </div>
+          <PageSkeleton
+            rows={3}
+            height="h-12"
+            rounded="rounded-lg"
+            bg="bg-surface-muted"
+            gap="space-y-2"
+          />
         ) : (
           <JobsTable jobs={jobs.data ?? []} />
         )}

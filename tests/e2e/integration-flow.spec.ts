@@ -4,7 +4,6 @@ import { loginAs } from "./_helpers/login";
 import { resetSeed } from "./_helpers/seed-reset";
 
 const SEED_COURSE_ID = "00000000-0000-0000-0000-00000000c001";
-const SEED_COURSE_SLUG = "e2e-smoke-course";
 const SEED_MODULE_ID = "00000000-0000-0000-0000-00000000e001";
 
 const DEFAULT_DATABASE_URL =

@@ -3,7 +3,6 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
-  ArrowLeft,
   Brain,
   CheckCircle2,
   ChevronRight,
@@ -32,10 +31,10 @@ import {
   useDifficultCards,
 } from "@/lib/api/hooks/spaced-repetition";
 import { useCourse, useCourseModules } from "@/lib/api/hooks/courses";
+import { useRelDate } from "@/lib/format/date";
 import { apiFetch } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import { SectionHeader } from "@/components/ui/section-header";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Select } from "@/components/ui/select";
 import type { LessonPublic, ModulePublic } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -153,26 +152,9 @@ function CohortHistogram({
   );
 }
 
-// Relative-date formatter. Reuses the at-risk page's date i18n keys
-// (teacher_sr_at_risk.*) since they already exist in both locales.
-function useRelDate() {
-  const { t } = useTranslation();
-  return (iso: string | null | undefined) => {
-    if (!iso) return t("teacher_sr_at_risk.no_activity");
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const d = new Date(iso);
-    d.setHours(0, 0, 0, 0);
-    const days = Math.round((today.getTime() - d.getTime()) / 86_400_000);
-    if (days <= 0) return t("teacher_sr_at_risk.today");
-    if (days === 1) return t("teacher_sr_at_risk.yesterday");
-    if (days < 7) return t("teacher_sr_at_risk.days_ago", { count: days });
-    if (days < 30)
-      return t("teacher_sr_at_risk.weeks_ago", { count: Math.floor(days / 7) });
-    return t("teacher_sr_at_risk.months_ago", { count: Math.floor(days / 30) });
-  };
-}
-
+// Relative-date formatter reuses the at-risk page's date i18n keys
+// (teacher_sr_at_risk.*, the useRelDate defaults) since they already exist in
+// both locales.
 function efMeta(meanEf: number) {
   if (meanEf < 1.6) {
     return {
@@ -366,7 +348,7 @@ function CardStudentResultsPanel({
 export default function TeacherSrCohortPage() {
   const { t } = useTranslation();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
-  const { data: course } = useCourse(courseId);
+  useCourse(courseId);
   const { lessons, isLoading: lessonsLoading } =
     useAllLessonsForCourse(courseId);
 

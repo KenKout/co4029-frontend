@@ -237,10 +237,6 @@ export default function QuizManagePage() {
   const approvedCount = questions.filter(
     (q) => q.review_status === "approved",
   ).length;
-  const pendingReviewCount = questions.length - approvedCount;
-  // Advisory only — surfaces "N pending" so the teacher knows some questions
-  // won't be published, but it no longer blocks publishing.
-  const hasPendingReview = pendingReviewCount > 0;
   const publishDisabled =
     publishQuiz.isPending || isPublished || approvedCount === 0;
 

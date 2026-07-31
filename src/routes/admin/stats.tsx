@@ -20,27 +20,15 @@ import { useTranslation } from "react-i18next";
 import { ActionTile, type ActionSeverity } from "@/components/ui/action-tile";
 import { useAdminDashboard } from "@/lib/api/hooks/admin";
 import { useReadyz } from "@/lib/api/hooks/infra";
+import { useAppLocale } from "@/lib/format/date";
+import { formatCount, formatUsd } from "@/lib/format/number";
 import { cn } from "@/lib/utils";
 
 function useFormatters() {
-  const { i18n } = useTranslation();
-  const locale =
-    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
-      ? "vi-VN"
-      : "en-US";
+  const locale = useAppLocale();
   return {
-    count: (n: number | undefined | null): string =>
-      n === undefined || n === null
-        ? "—"
-        : new Intl.NumberFormat(locale).format(n),
-    usd: (n: number | undefined | null): string =>
-      n === undefined || n === null
-        ? "—"
-        : new Intl.NumberFormat(locale, {
-            style: "currency",
-            currency: "USD",
-            maximumFractionDigits: n < 10 ? 2 : 0,
-          }).format(n),
+    count: (n: number | undefined | null): string => formatCount(n, locale),
+    usd: (n: number | undefined | null): string => formatUsd(n, locale),
     pct: (n: number | undefined | null, digits = 0): string =>
       n === undefined || n === null ? "—" : `${n.toFixed(digits)}%`,
     seconds: (ms: number | undefined | null): string =>

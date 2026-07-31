@@ -2,46 +2,30 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { Archive, BookOpen, RotateCcw, Search, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Archive, BookOpen, RotateCcw, Trash2 } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
 import { useDeleteCourse, useRestoreCourse } from "@/lib/api/hooks/admin";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
+import { useFormatDateTime } from "@/lib/format/date";
+import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
+import { ADMIN_COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import type { CourseAuthoring } from "@/lib/api/types";
-
-const STATUS_COLOR: Record<string, string> = {
-  draft: "bg-amber-100 text-amber-700",
-  published: "bg-emerald-100 text-emerald-700",
-  archived: "bg-slate-200 text-slate-700",
-};
 
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
-  const cls = STATUS_COLOR[status] ?? "bg-slate-100 text-slate-700";
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md ${cls}`}
-    >
-      {t(`admin.courses_list.row_status.${status}`, { defaultValue: status })}
-    </span>
+    <SharedStatusBadge
+      status={status}
+      tokens={ADMIN_COURSE_STATUS_TOKENS}
+      size="11px"
+      label={t(`admin.courses_list.row_status.${status}`, {
+        defaultValue: status,
+      })}
+    />
   );
-}
-
-function useFormatDate() {
-  const { i18n } = useTranslation();
-  const locale =
-    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
-      ? "vi-VN"
-      : "en-US";
-  return (iso: string | null | undefined): string => {
-    if (!iso) return "—";
-    return new Intl.DateTimeFormat(locale, {
-      dateStyle: "short",
-      timeStyle: "short",
-    }).format(new Date(iso));
-  };
 }
 
 function RestoreButton({ course }: { course: CourseAuthoring }) {
@@ -117,11 +101,10 @@ function DeleteButton({ course }: { course: CourseAuthoring }) {
 export default function AdminCoursesPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const permissions = useMyPermissions();
-  const canAdmin =
-    permissions.data?.permissions.includes("system.administer") ?? false;
+  const permissions = usePermissions();
+  const canAdmin = permissions.has("system.administer");
   const [includeDeleted, setIncludeDeleted] = useState(true);
-  const formatDate = useFormatDate();
+  const formatDate = useFormatDateTime();
 
   useEffect(() => {
     if (permissions.isLoading) return;
@@ -278,18 +261,15 @@ export default function AdminCoursesPage() {
           }
           toolbar={
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="relative max-w-md flex-1 min-w-[12rem]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-                <Input
-                  type="text"
-                  value={table.search}
-                  onChange={(e) => table.setSearch(e.target.value)}
-                  placeholder={t("admin.courses_list.search_placeholder", {
-                    defaultValue: "Search by title or slug…",
-                  })}
-                  className="pl-10"
-                />
-              </div>
+              <SearchInput
+                wrapperClassName="max-w-md flex-1 min-w-[12rem]"
+                value={table.search}
+                onChange={(e) => table.setSearch(e.target.value)}
+                placeholder={t("admin.courses_list.search_placeholder", {
+                  defaultValue: "Search by title or slug…",
+                })}
+                className="pl-10"
+              />
               <label className="inline-flex items-center gap-2 text-sm text-text-strong select-none shrink-0">
                 <input
                   type="checkbox"

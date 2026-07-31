@@ -1,7 +1,12 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, ShieldCheck, Briefcase, Building2 } from "lucide-react";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import {
+  LayoutDashboard,
+  ShieldCheck,
+  Briefcase,
+  Building2,
+} from "lucide-react";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { cn } from "@/lib/utils";
 
 interface SectionLink {
@@ -62,8 +67,8 @@ const MANAGER_EXTRA_PREFIXES = ["/dept"];
 export default function SectionSwitcher() {
   const { t } = useTranslation();
   const location = useLocation();
-  const permissions = useMyPermissions();
-  const perms = permissions.data?.permissions ?? [];
+  const permissions = usePermissions();
+  const perms = permissions.permissions;
 
   const visible = SECTIONS.filter((s) => s.show(perms));
   if (visible.length <= 1) return null;

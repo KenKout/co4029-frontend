@@ -61,6 +61,7 @@ import type {
   InterviewSessionStartResponse,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { formatElapsedLabel } from "@/lib/format/date";
 import { VoiceRoom } from "@/components/interview/voice-room";
 import { useSpeechDictation } from "@/lib/hooks/use-speech-dictation";
 import { type SpeechPersona } from "@/lib/hooks/use-speech-synthesis";
@@ -69,19 +70,23 @@ import { resolvePersonaTraits } from "@/lib/interview/persona-traits";
 import {
   EndConfirmationPanel,
   EndInterviewDialog,
-  FocusedAnswerComposer,
-  FocusedInterviewStage,
   FullscreenExitWarningDialog,
   FullscreenPromptDialog,
-  InterviewHeader,
   LeaveInterviewDialog,
   StartInterviewDialog,
-  TranscriptPanel,
-  type ConversationTurn,
-  type InterviewAgentStatus,
-  resolveInterviewState,
-  useInterviewTimer,
-} from "@/components/interview/interview-workspace";
+} from "@/components/interview/dialogs";
+import { FocusedAnswerComposer } from "@/components/interview/composer";
+import {
+  FocusedInterviewStage,
+  InterviewHeader,
+} from "@/components/interview/stages";
+import { TranscriptPanel } from "@/components/interview/transcript";
+import { resolveInterviewState } from "@/lib/interview/format";
+import { useInterviewTimer } from "@/lib/interview/use-interview-timer";
+import type {
+  ConversationTurn,
+  InterviewAgentStatus,
+} from "@/lib/interview/types";
 import { SetupChecklist } from "@/components/interview/setup-checklist";
 import {
   InterviewProgressSteps,
@@ -233,21 +238,6 @@ function newTurnKey(): string {
     return crypto.randomUUID();
   }
   return `tk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-/**
- * Human-readable elapsed label for the results facts row (#16), e.g. "12m 04s"
- * or "1h 03m". Seconds are dropped once we're past an hour to keep it compact.
- */
-function formatElapsedLabel(totalSeconds: number): string {
-  const safe = Math.max(0, Math.floor(totalSeconds));
-  const hours = Math.floor(safe / 3600);
-  const minutes = Math.floor((safe % 3600) / 60);
-  const seconds = safe % 60;
-  if (hours > 0) {
-    return `${hours}h ${String(minutes).padStart(2, "0")}m`;
-  }
-  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 }
 
 export default function CourseInterviewPage() {
@@ -487,7 +477,6 @@ export default function CourseInterviewPage() {
     }
     // answerText/answer.state are read as a one-shot guard at question entry;
     // re-running on their every change would fight live typing.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestion?.id, phase, restoreDraftAutosave]);
 
   useEffect(() => {
@@ -592,7 +581,6 @@ export default function CourseInterviewPage() {
     void handleStart();
     // handleStart is a stable declaration read at call time; resumableSession /
     // loading are the real triggers. Guarded by the ref so it fires once.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumableSession, sessionId, previousSessionsLoading, ACTIVE_MARKER_KEY]);
 
   // The pass/fail verdict is produced by an async worker (~1-2 min) AFTER
@@ -705,7 +693,6 @@ export default function CourseInterviewPage() {
   // Stop dictation whenever the question changes or the answer is sent.
   useEffect(() => {
     if (dictation.listening) dictation.stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestion?.id, onboardingStage]);
 
   // The AI "speaks" each question aloud while it types out on screen (see
@@ -1201,7 +1188,7 @@ export default function CourseInterviewPage() {
     },
     // The dictation/narration methods are stable and are intentionally read at
     // call time; including their wrapper objects would restart timeout effects.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [sessionId, phase, finish, t],
   );
 
@@ -2929,10 +2916,7 @@ export default function CourseInterviewPage() {
               status={agentStatus}
               onEndInterview={openEndDialog}
             />
-          ) : phase === "opening" ||
-            phase ===
-              "readiness" ? // so render no bottom bar at all (no composer, no wind-down). // Onboarding: the SetupChecklist above is the sole input surface,
-          null : (
+          ) : phase === "opening" || phase === "readiness" ? null : ( // so render no bottom bar at all (no composer, no wind-down). // Onboarding: the SetupChecklist above is the sole input surface,
             // Same min-height as the composer this replaces, so the stage above
             // does not lurch upward when the input surface swaps out for the
             // wind-down message and back again.

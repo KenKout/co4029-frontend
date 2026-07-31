@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   ArrowUp,
   BookOpen,
-  ChevronRight,
   Loader2,
   Plus,
   Trash2,
@@ -19,12 +18,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import {
   EntityMultiSelectDialog,
   type SelectableEntity,
 } from "@/components/ui/entity-multi-select-dialog";
 import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { useCourseCatalogue } from "@/lib/api/hooks/courses";
 import { useAdminUsersSearch } from "@/lib/api/hooks/admin-organizations";
 import {
@@ -46,6 +46,7 @@ import type {
   StudentPathProgressAuthoring,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { COURSE_STATUS_TOKENS, statusToken } from "@/lib/status-tokens";
 
 type TabKey = "courses" | "students" | "progress";
 
@@ -55,25 +56,19 @@ const TAB_DEFS: { key: TabKey; icon: typeof BookOpen }[] = [
   { key: "progress", icon: Upload },
 ];
 
-const STATUS_COLOR: Record<string, string> = {
-  draft: "bg-amber-100 text-amber-700",
-  published: "bg-emerald-100 text-emerald-700",
-  archived: "bg-slate-100 text-slate-500",
-};
-
 export default function ManagementCareerPathDetailPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams({ strict: false }) as { id: string };
-  const permissions = useMyPermissions();
-  const perms = permissions.data?.permissions ?? [];
+  const permissions = usePermissions();
   // Backend gates career-path authoring on course lifecycle codes (manager
   // holds them); there is no `career_path.manage` code. See the sibling
   // management-career-paths.tsx for the rationale.
-  const canManage =
-    perms.includes("course.create") ||
-    perms.includes("course.update") ||
-    perms.includes("system.administer");
+  const canManage = permissions.hasAny(
+    "course.create",
+    "course.update",
+    "system.administer",
+  );
 
   useEffect(() => {
     if (permissions.isLoading) return;
@@ -89,16 +84,7 @@ export default function ManagementCareerPathDetailPage() {
   const [tab, setTab] = useState<TabKey>("courses");
 
   if (!enabled || path.isLoading) {
-    return (
-      <div className="space-y-3 pb-12">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-16 bg-m3-surface-container animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
-    );
+    return <PageSkeleton rows={3} rounded="rounded-lg" className="pb-12" />;
   }
 
   if (path.isError || !path.data) {
@@ -114,7 +100,7 @@ export default function ManagementCareerPathDetailPage() {
   }
 
   const data = path.data;
-  const statusCls = STATUS_COLOR[data.status] ?? "bg-slate-100 text-slate-700";
+  const statusCls = statusToken(COURSE_STATUS_TOKENS, data.status);
   const statusLabel = t(`management_career_path_detail.status.${data.status}`, {
     defaultValue: data.status,
   });
@@ -539,14 +525,12 @@ function CoursesTab({ id }: { id: string }) {
 
   if (list.isLoading) {
     return (
-      <div className="space-y-2">
-        {[1, 2].map((i) => (
-          <div
-            key={i}
-            className="h-14 bg-m3-surface-container animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
+      <PageSkeleton
+        rows={2}
+        height="h-14"
+        rounded="rounded-lg"
+        gap="space-y-2"
+      />
     );
   }
 
@@ -900,14 +884,12 @@ function StudentsTab({ id }: { id: string }) {
       )}
 
       {progress.isLoading ? (
-        <div className="space-y-2">
-          {[1, 2].map((i) => (
-            <div
-              key={i}
-              className="h-14 bg-m3-surface-container animate-pulse rounded-lg"
-            />
-          ))}
-        </div>
+        <PageSkeleton
+          rows={2}
+          height="h-14"
+          rounded="rounded-lg"
+          gap="space-y-2"
+        />
       ) : rows.length === 0 ? (
         <div className="rounded-xl bg-m3-surface-container-lowest ghost-border p-10 text-center">
           <Users className="h-8 w-8 mx-auto mb-3 text-m3-outline" />
@@ -1022,14 +1004,12 @@ function ProgressTab({ id }: { id: string }) {
 
   if (progress.isLoading) {
     return (
-      <div className="space-y-2">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-14 bg-m3-surface-container animate-pulse rounded-lg"
-          />
-        ))}
-      </div>
+      <PageSkeleton
+        rows={3}
+        height="h-14"
+        rounded="rounded-lg"
+        gap="space-y-2"
+      />
     );
   }
 
