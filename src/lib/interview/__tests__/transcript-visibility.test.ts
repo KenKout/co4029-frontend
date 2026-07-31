@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { ConversationTurn } from "@/components/interview/interview-workspace";
+import type { ConversationTurn } from "@/lib/interview/types";
 import {
   visibleTranscriptCount,
   visibleTranscriptTurns,

@@ -65,23 +65,23 @@ import type {
   InterviewOnboardingStage,
 } from "@/lib/api/types";
 
-export type InterviewAgentStatus =
-  | "idle"
-  | "listening"
-  | "paused"
-  | "thinking"
-  | "speaking"
-  | "error"
-  | "disconnected";
+import type {
+  ConversationTurn,
+  InterviewAgentStatus,
+  InterviewStateSignals,
+  TurnKindVisual,
+} from "@/lib/interview/types";
 
-export interface InterviewStateSignals {
-  connected?: boolean;
-  hasError?: boolean;
-  thinking?: boolean;
-  speaking?: boolean;
-  listening?: boolean;
-  paused?: boolean;
-}
+// Types live in lib/interview/types.ts so lib/ does not import back from
+// components/ (see that file's header for the cycle this broke). Re-exported here
+// because ~8 consumers import them from this path; the barrel goes away once the
+// extraction is finished.
+export type {
+  ConversationTurn,
+  InterviewAgentStatus,
+  InterviewStateSignals,
+  TurnKindVisual,
+};
 
 /** Resolves competing runtime signals into one canonical primary UI state. */
 export function resolveInterviewState({
@@ -99,26 +99,6 @@ export function resolveInterviewState({
   if (listening) return "listening";
   if (paused) return "paused";
   return "idle";
-}
-
-export interface ConversationTurn {
-  id: string;
-  role: "ai" | "user";
-  text: string;
-  /** Seconds elapsed since assessment start; omitted during onboarding. */
-  elapsedSeconds?: number;
-  questionType?: string | null;
-  isFollowUp?: boolean;
-  kind?:
-    | "opening"
-    | "briefing"
-    | "transition"
-    | "question"
-    | "followup"
-    | "clarification"
-    | "hint"
-    | "answer"
-    | "closing";
 }
 
 export function formatRelativeInterviewTime(totalSeconds: number | undefined) {
@@ -139,15 +119,6 @@ export function formatRelativeInterviewTime(totalSeconds: number | undefined) {
  * avatar; `accent`/`badgeClass` tint the kind badge. Returns null for a plain
  * question/opening (the default Bot avatar + neutral badge already suit those).
  */
-export interface TurnKindVisual {
-  icon: LucideIcon;
-  /** Tailwind classes for the avatar bubble (bg + text). */
-  avatarClass: string;
-  /** Tailwind classes for the kind badge (bg + text). */
-  badgeClass: string;
-  /** i18n key for the badge label. */
-  labelKey: string;
-}
 
 const TURN_KIND_VISUALS: Partial<
   Record<NonNullable<ConversationTurn["kind"]>, TurnKindVisual>
