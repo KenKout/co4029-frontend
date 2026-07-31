@@ -2,8 +2,6 @@ import { useState, useMemo } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft,
-  ArrowRight,
   Search,
   Filter,
   Users,
@@ -114,7 +112,7 @@ function relDate(iso: string | null) {
 export default function CourseStudentsPage() {
   const { t } = useTranslation();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
-  const { data: course } = useTeacherCourseById(courseId);
+  useTeacherCourseById(courseId);
   const { data: roster, isLoading } = useTeacherCourseRoster(courseId);
 
   const [search, setSearch] = useState("");
@@ -635,7 +633,6 @@ export default function CourseStudentsPage() {
               const top = [...students].sort(
                 (a, b) => b.progress_percent - a.progress_percent,
               )[0];
-              const aColor = avatarColor(top.student_id);
               return (
                 <Link
                   to="/teacher/courses/$courseId/students/$studentId"

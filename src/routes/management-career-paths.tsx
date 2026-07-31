@@ -2,13 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Trans, useTranslation } from "react-i18next";
-import {
-  ArrowLeft,
-  ArrowRight,
-  GraduationCap,
-  Loader2,
-  Plus,
-} from "lucide-react";
+import { ArrowRight, GraduationCap, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";

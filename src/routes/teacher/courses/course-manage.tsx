@@ -4,7 +4,6 @@ import { Link, useParams, useNavigate } from "@tanstack/react-router";
 import { apiPatch, apiPost } from "@/lib/api/client";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft,
   Plus,
   ChevronDown,
   Video,
@@ -14,21 +13,16 @@ import {
   Mic,
   Pencil,
   Loader2,
-  ArrowRight,
   Check,
   Users,
-  Activity,
   Settings,
   Save,
   ExternalLink,
-  Brain,
-  ClipboardList,
   CornerDownRight,
   ListChecks,
   Copy,
   Trash2,
   X,
-  Library,
   ImageIcon,
   Camera,
   Clock,
@@ -44,7 +38,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { Select } from "@/components/ui/select";
 import {
@@ -55,7 +48,6 @@ import {
   useUpdateModule,
   useUpdateCourse,
   useUploadCourseThumbnail,
-  useDeleteTeacherCourse,
   useReorderModuleItems,
   useReorderModules,
   useUpdateLesson,
@@ -177,7 +169,7 @@ function CourseSettingsPanel({ courseId }: { courseId: string }) {
 
   // Drag-and-drop onto the thumbnail tile — same flicker-proof lifecycle as
   // every other upload surface; keeps the live image preview.
-  const { dragging: thumbDragging, dropProps: thumbDropProps } = useFileDrop({
+  useFileDrop({
     onFile: stageThumbnailFile,
     disabled: uploadThumbnail.isPending,
   });
@@ -956,47 +948,50 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
                               {outcome.outcome_text}
                             </span>
                             {editable && (
-                            <div className="flex items-center gap-1 shrink-0">
-                              <Button
-                                type="button"
-                                size="icon-sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  startEdit(outcome.id, outcome.outcome_text)
-                                }
-                                aria-label={t("teacher_outcomes.edit", "Edit")}
-                              >
-                                <Pencil className="h-4 w-4 text-m3-on-surface-variant" />
-                              </Button>
-                              <Button
-                                type="button"
-                                size="icon-sm"
-                                variant="ghost"
-                                onClick={() => startAddChild(outcome.id)}
-                                aria-label={t(
-                                  "teacher_outcomes.add_child",
-                                  "Add sub-outcome",
-                                )}
-                                title={t(
-                                  "teacher_outcomes.add_child",
-                                  "Add sub-outcome",
-                                )}
-                              >
-                                <CornerDownRight className="h-4 w-4 text-m3-on-surface-variant" />
-                              </Button>
-                              <Button
-                                type="button"
-                                size="icon-sm"
-                                variant="ghost"
-                                onClick={() => setPendingDeleteId(outcome.id)}
-                                aria-label={t(
-                                  "teacher_outcomes.delete",
-                                  "Delete",
-                                )}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    startEdit(outcome.id, outcome.outcome_text)
+                                  }
+                                  aria-label={t(
+                                    "teacher_outcomes.edit",
+                                    "Edit",
+                                  )}
+                                >
+                                  <Pencil className="h-4 w-4 text-m3-on-surface-variant" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  onClick={() => startAddChild(outcome.id)}
+                                  aria-label={t(
+                                    "teacher_outcomes.add_child",
+                                    "Add sub-outcome",
+                                  )}
+                                  title={t(
+                                    "teacher_outcomes.add_child",
+                                    "Add sub-outcome",
+                                  )}
+                                >
+                                  <CornerDownRight className="h-4 w-4 text-m3-on-surface-variant" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  onClick={() => setPendingDeleteId(outcome.id)}
+                                  aria-label={t(
+                                    "teacher_outcomes.delete",
+                                    "Delete",
+                                  )}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
                             )}
                           </>
                         )}
@@ -1114,7 +1109,6 @@ function LearningOutcomesPanel({ courseId }: { courseId: string }) {
 function AddLessonPills({
   moduleId,
   courseId,
-  nextPosition,
   itemCount,
 }: {
   moduleId: string;
@@ -1337,9 +1331,14 @@ function ModuleItemRow({
     e.preventDefault();
     duplicateItem.mutate(item.id, {
       onSuccess: () =>
-        toast.success(t("teacher_common.item_duplicated", "Duplicated as a draft copy")),
+        toast.success(
+          t("teacher_common.item_duplicated", "Duplicated as a draft copy"),
+        ),
       onError: (err: unknown) =>
-        toast.error((err as Error).message || t("teacher_common.duplicate_failed", "Could not duplicate")),
+        toast.error(
+          (err as Error).message ||
+            t("teacher_common.duplicate_failed", "Could not duplicate"),
+        ),
     });
   }
   const lessonType = item.target?.lesson_type ?? lesson?.lesson_type ?? "video";

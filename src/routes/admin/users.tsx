@@ -151,9 +151,7 @@ export default function AdminUsersPage() {
         // Not sortable: roles are a cross-table aggregate, not a User column.
         id: "roles",
         header: t("admin.users.cols.role", { defaultValue: "Role" }),
-        cell: (u) => (
-          <RoleBadges roles={u.roles ?? []} labelFor={labelFor} />
-        ),
+        cell: (u) => <RoleBadges roles={u.roles ?? []} labelFor={labelFor} />,
       },
       {
         // Not sortable: primary org is a cross-table aggregate (membership).
@@ -273,7 +271,9 @@ export default function AdminUsersPage() {
               </div>
               <select
                 value={table.roleFilter ?? ""}
-                onChange={(e) => table.setRoleFilter(e.target.value || undefined)}
+                onChange={(e) =>
+                  table.setRoleFilter(e.target.value || undefined)
+                }
                 className="h-9 rounded-md border border-border bg-surface px-3 text-sm text-text-strong outline-none focus:border-primary cursor-pointer"
                 aria-label={t("admin.users.filter_role", {
                   defaultValue: "Filter by role",
@@ -290,7 +290,9 @@ export default function AdminUsersPage() {
               </select>
               <select
                 value={table.orgFilter ?? ""}
-                onChange={(e) => table.setOrgFilter(e.target.value || undefined)}
+                onChange={(e) =>
+                  table.setOrgFilter(e.target.value || undefined)
+                }
                 className="h-9 rounded-md border border-border bg-surface px-3 text-sm text-text-strong outline-none focus:border-primary cursor-pointer max-w-[220px]"
                 aria-label={t("admin.users.filter_organization", {
                   defaultValue: "Filter by organization",

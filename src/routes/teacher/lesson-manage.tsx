@@ -3,7 +3,6 @@ import { Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
-  ArrowRight,
   Play,
   FileText,
   Download,
@@ -16,7 +15,6 @@ import {
   Code,
   Image,
   Upload,
-  Sparkles,
   BookOpen,
   Video,
   X,

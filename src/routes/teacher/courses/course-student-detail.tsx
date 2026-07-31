@@ -15,9 +15,7 @@ import {
   ChevronRight,
   ClipboardList,
   MessageSquare,
-  XCircle,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { GradientProgress } from "@/components/ui/gradient-progress";
 import { Select } from "@/components/ui/select";

@@ -611,7 +611,9 @@ function SettingsTable({
           <Switch
             checked={Boolean(s.effective_value)}
             disabled={setMutation.isPending}
-            onCheckedChange={(c) => setMutation.mutate({ key: s.key, value: c })}
+            onCheckedChange={(c) =>
+              setMutation.mutate({ key: s.key, value: c })
+            }
             aria-label={settingLabel(t, s)}
           />
         ) : (
@@ -625,7 +627,8 @@ function SettingsTable({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 const v = Number((e.target as HTMLInputElement).value);
-                if (!Number.isNaN(v)) setMutation.mutate({ key: s.key, value: v });
+                if (!Number.isNaN(v))
+                  setMutation.mutate({ key: s.key, value: v });
               }
             }}
             onBlur={(e) => {
@@ -682,9 +685,7 @@ function SettingsTable({
       getRowId={(n) => n.id}
       getSubRows={(n) => (n.kind === "group" ? n.children : undefined)}
       defaultExpanded
-      rowClassName={(n) =>
-        n.kind === "group" ? "bg-slate-50/60" : undefined
-      }
+      rowClassName={(n) => (n.kind === "group" ? "bg-slate-50/60" : undefined)}
       actionsHeader={<span className="sr-only">Reset</span>}
       actions={(node) => {
         if (node.kind === "group") return null;
@@ -752,7 +753,6 @@ export default function AdminSettingsPage() {
       map.set(s.group, list);
     }
     return map;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.data, search, overriddenOnly, orgId, t]);
 
   const visibleGroups = GROUP_ORDER.filter((g) => grouped.has(g));
@@ -761,11 +761,9 @@ export default function AdminSettingsPage() {
   const overrideCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const s of settings.data ?? []) {
-      if (isOverriddenAtScope(s))
-        counts[s.group] = (counts[s.group] ?? 0) + 1;
+      if (isOverriddenAtScope(s)) counts[s.group] = (counts[s.group] ?? 0) + 1;
     }
     return counts;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.data, orgId]);
   const totalOverrides = Object.values(overrideCounts).reduce(
     (a, b) => a + b,

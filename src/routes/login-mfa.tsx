@@ -37,7 +37,7 @@ export default function LoginMfaPage() {
   // forever and the verify button stayed disabled. A boring
   // useState survives all of that.
   const [challengeId, setChallengeId] = useState<string | null>(null);
-  const [challengeError, setChallengeError] = useState<string | null>(null);
+  const [, setChallengeError] = useState<string | null>(null);
   const [challengeLoading, setChallengeLoading] = useState(false);
 
   async function requestChallenge() {
@@ -90,7 +90,6 @@ export default function LoginMfaPage() {
     // ``requestChallenge`` is a stable closure over setters; deps
     // only track auth-state inputs to keep the array shape constant
     // across HMR swaps.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isAuthenticated, requiresMfa, search.next, navigate, t]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

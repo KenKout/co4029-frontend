@@ -475,7 +475,7 @@ export function KnowledgeGraphEditor({
       const id = requestAnimationFrame(() => fitToView());
       return () => cancelAnimationFrame(id);
     }
-  }, [fitToView, initialized.current]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fitToView, initialized.current]);
 
   // Glide the camera so a node lands in the centre of the canvas — identical to
   // the read-only detail screen's focusNode, so selecting a concept behaves the

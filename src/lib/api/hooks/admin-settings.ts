@@ -12,7 +12,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { apiDelete, apiFetch, apiPut } from "@/lib/api/client";
 
-export type SettingSource = "organization" | "global" | "environment" | "default";
+export type SettingSource =
+  | "organization"
+  | "global"
+  | "environment"
+  | "default";
 
 export interface RuntimeSetting {
   key: string;

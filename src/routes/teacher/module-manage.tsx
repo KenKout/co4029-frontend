@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
-  ArrowRight,
   BarChart3,
   Video,
   HelpCircle,
@@ -38,7 +37,6 @@ import { useCreateQuiz } from "@/lib/api/hooks/quizzes";
 import { useCreateInterviewConfig } from "@/lib/api/hooks/interviews";
 import type {
   CourseContentItem,
-  CourseContentLesson,
   CourseContentModule,
 } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";

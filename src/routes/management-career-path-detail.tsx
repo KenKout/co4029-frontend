@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   ArrowUp,
   BookOpen,
-  ChevronRight,
   Loader2,
   Plus,
   Trash2,

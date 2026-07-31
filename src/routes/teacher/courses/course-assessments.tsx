@@ -1,14 +1,12 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import {
-  ArrowLeft,
   CheckCircle2,
   ClipboardList,
   MessageSquare,
   Users,
   X,
 } from "lucide-react";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -31,7 +29,7 @@ type Tab = "quizzes" | "interviews";
 export default function CourseAssessmentsPage() {
   const navigate = useNavigate();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
-  const { data: course } = useTeacherCourseById(courseId);
+  useTeacherCourseById(courseId);
   const { data: quizAttempts, isLoading: quizzesLoading } =
     useCourseQuizAttempts(courseId);
   const { data: interviewSessions, isLoading: interviewsLoading } =
@@ -192,7 +190,6 @@ export default function CourseAssessmentsPage() {
       });
     }
     return chips;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, titleFilter, resultFilter, timeFilter, tab]);
 
   const quizPassRate = useMemo(() => {

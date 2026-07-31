@@ -687,7 +687,6 @@ function Dot() {
 // ── Delete confirmation dialog ────────────────────────────────────────────────
 
 function DeleteConfirm({
-  outcome,
   assignedCount,
   pending,
   onCancel,

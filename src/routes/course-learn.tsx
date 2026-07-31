@@ -24,7 +24,6 @@ import {
   Download,
   Sparkles,
   HelpCircle,
-  XCircle,
   // Lock,
 } from "lucide-react";
 import "@vidstack/react/player/styles/base.css";

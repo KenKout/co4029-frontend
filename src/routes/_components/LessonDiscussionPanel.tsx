@@ -28,7 +28,6 @@ import {
   useUpdateDiscussionTopic,
 } from "@/lib/api/hooks/discussions";
 import type { DiscussionComment, DiscussionTopic } from "@/lib/api/types";
-import { cn } from "@/lib/utils";
 
 function initialsOf(name: string | null | undefined): string {
   if (!name) return "?";

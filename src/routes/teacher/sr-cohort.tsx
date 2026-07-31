@@ -3,7 +3,6 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
-  ArrowLeft,
   Brain,
   CheckCircle2,
   ChevronRight,
@@ -35,7 +34,6 @@ import { useCourse, useCourseModules } from "@/lib/api/hooks/courses";
 import { apiFetch } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import { SectionHeader } from "@/components/ui/section-header";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Select } from "@/components/ui/select";
 import type { LessonPublic, ModulePublic } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -366,7 +364,7 @@ function CardStudentResultsPanel({
 export default function TeacherSrCohortPage() {
   const { t } = useTranslation();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
-  const { data: course } = useCourse(courseId);
+  useCourse(courseId);
   const { lessons, isLoading: lessonsLoading } =
     useAllLessonsForCourse(courseId);
 

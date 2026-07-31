@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import {
   Activity,
   AlertTriangle,
-  ArrowLeft,
   CheckCircle2,
   Clock,
   PlayCircle,
@@ -16,7 +15,6 @@ import {
   useTeacherCourseById,
   useTeacherCourseRoster,
 } from "@/lib/api/hooks/teacher-courses";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { SectionHeader } from "@/components/ui/section-header";
 import { GradientProgress } from "@/components/ui/gradient-progress";
 import { cn } from "@/lib/utils";
@@ -39,7 +37,7 @@ export default function TeacherCourseProgressPage() {
   const { t } = useTranslation();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
 
-  const { data: course } = useTeacherCourseById(courseId);
+  useTeacherCourseById(courseId);
   const { data: roster, isLoading: rosterLoading } =
     useTeacherCourseRoster(courseId);
   const { data: cohort, isLoading: cohortLoading } =

@@ -641,10 +641,7 @@ export function QuestionBank({
    * run and vice versa. That is what stops a rehearsal pre-revealing the exam,
    * so moving a question here removes it from the assessment.
    */
-  async function setPracticeOnly(
-    q: InterviewQuestionAuthoring,
-    next: boolean,
-  ) {
+  async function setPracticeOnly(q: InterviewQuestionAuthoring, next: boolean) {
     if ((q.practice_only ?? false) === next) return;
     setSavingId(q.id);
     try {
@@ -2208,8 +2205,6 @@ function QuestionCard({
   onDropCard,
 }: QuestionCardProps) {
   const { t } = useTranslation();
-  const meta = statusMeta(q.review_status);
-  const StatusIcon = meta.Icon;
   const sourceCount = Array.isArray(q.source_refs_json)
     ? q.source_refs_json.length
     : 0;

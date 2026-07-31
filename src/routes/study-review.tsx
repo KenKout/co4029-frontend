@@ -162,7 +162,8 @@ export default function StudyReviewPage() {
     const capRemainingNow =
       dailyCap > 0 ? Math.max(0, dailyRemaining - answeredCount) : remaining;
     const moreToday = remaining > 0 && capRemainingNow > 0;
-    const cappedForToday = remaining > 0 && dailyCap > 0 && capRemainingNow === 0;
+    const cappedForToday =
+      remaining > 0 && dailyCap > 0 && capRemainingNow === 0;
     return (
       <div className="max-w-2xl mx-auto pt-10 text-center space-y-4">
         <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center">

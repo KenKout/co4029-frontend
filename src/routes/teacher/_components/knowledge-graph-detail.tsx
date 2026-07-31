@@ -369,21 +369,6 @@ export function KnowledgeGraphDetail({
     moved: boolean;
   }>({ kind: null, lastX: 0, lastY: 0, moved: false });
 
-  const clientToWorld = useCallback(
-    (clientX: number, clientY: number): KgVec => {
-      const svg = svgRef.current;
-      if (!svg) return { x: 0, y: 0 };
-      const rect = svg.getBoundingClientRect();
-      const sx = clientX - rect.left;
-      const sy = clientY - rect.top;
-      return {
-        x: (sx - transform.tx) / transform.scale,
-        y: (sy - transform.ty) / transform.scale,
-      };
-    },
-    [transform],
-  );
-
   const onPointerDownBackground = (e: React.PointerEvent) => {
     (e.target as Element).setPointerCapture?.(e.pointerId);
     drag.current = {

@@ -491,7 +491,6 @@ export default function CourseInterviewPage() {
     }
     // answerText/answer.state are read as a one-shot guard at question entry;
     // re-running on their every change would fight live typing.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestion?.id, phase, restoreDraftAutosave]);
 
   useEffect(() => {
@@ -596,7 +595,6 @@ export default function CourseInterviewPage() {
     void handleStart();
     // handleStart is a stable declaration read at call time; resumableSession /
     // loading are the real triggers. Guarded by the ref so it fires once.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumableSession, sessionId, previousSessionsLoading, ACTIVE_MARKER_KEY]);
 
   // The pass/fail verdict is produced by an async worker (~1-2 min) AFTER
@@ -709,7 +707,6 @@ export default function CourseInterviewPage() {
   // Stop dictation whenever the question changes or the answer is sent.
   useEffect(() => {
     if (dictation.listening) dictation.stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestion?.id, onboardingStage]);
 
   // The AI "speaks" each question aloud while it types out on screen (see
@@ -1205,7 +1202,7 @@ export default function CourseInterviewPage() {
     },
     // The dictation/narration methods are stable and are intentionally read at
     // call time; including their wrapper objects would restart timeout effects.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [sessionId, phase, finish, t],
   );
 

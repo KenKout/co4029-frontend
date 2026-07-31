@@ -150,7 +150,6 @@ export function VoiceRoom({
 
   useEffect(() => {
     void acquireToken();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   const handleDisconnected = useCallback(

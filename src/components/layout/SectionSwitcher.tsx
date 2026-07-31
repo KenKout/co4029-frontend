@@ -1,6 +1,11 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, ShieldCheck, Briefcase, Building2 } from "lucide-react";
+import {
+  LayoutDashboard,
+  ShieldCheck,
+  Briefcase,
+  Building2,
+} from "lucide-react";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { cn } from "@/lib/utils";
 

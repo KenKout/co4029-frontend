@@ -327,10 +327,9 @@ export type InterviewConfigUpdate = Schemas["InterviewConfigUpdate"] & {
 // `config` is re-declared so the widened InterviewConfigPublic (with
 // practice_mode_enabled) reaches the lobby; the snapshot's nested type is the
 // pre-split shape.
-export type InterviewForTakingPublic =
-  Schemas["InterviewForTakingPublic"] & {
-    config: InterviewConfigPublic;
-  };
+export type InterviewForTakingPublic = Schemas["InterviewForTakingPublic"] & {
+  config: InterviewConfigPublic;
+};
 export type InterviewSessionPublic = Schemas["InterviewSessionPublic"] & {
   // Proactive retake context (#7) — manually typed until the OpenAPI snapshot
   // is regenerated. remaining_attempts is null when unlimited; retake_available_at

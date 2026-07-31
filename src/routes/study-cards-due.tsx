@@ -83,13 +83,8 @@ export default function StudyCardsDuePage() {
     lesson?: string;
     course?: string;
   };
-  const {
-    items,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-    isLoading,
-  } = useCardsDue({ limit: 100, lessonId: lesson, courseSlug: course });
+  const { items, hasNextPage, fetchNextPage, isFetchingNextPage, isLoading } =
+    useCardsDue({ limit: 100, lessonId: lesson, courseSlug: course });
 
   // Drain remaining pages so the grouped counts reflect the TRUE backlog rather
   // than the first 100 due cards — a count that lies undercuts the "finishable
@@ -97,7 +92,11 @@ export default function StudyCardsDuePage() {
   // the cap we render the count with a trailing "+".
   const pagesDrained = Math.ceil(items.length / 100);
   useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage && pagesDrained < MAX_AUTODRAIN_PAGES) {
+    if (
+      hasNextPage &&
+      !isFetchingNextPage &&
+      pagesDrained < MAX_AUTODRAIN_PAGES
+    ) {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, pagesDrained, fetchNextPage]);

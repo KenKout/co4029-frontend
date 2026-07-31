@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import {
   AlertCircle,
   ArrowLeft,
-  ArrowRight,
   ChevronDown,
   ChevronUp,
   Copy,

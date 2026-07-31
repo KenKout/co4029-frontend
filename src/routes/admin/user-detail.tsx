@@ -389,7 +389,10 @@ function RoleAssignmentsSection({
                           defaultValue: "— Select org unit —",
                         }),
                   },
-                  ...orgUnitOptions.map((u) => ({ value: u.id, label: u.name })),
+                  ...orgUnitOptions.map((u) => ({
+                    value: u.id,
+                    label: u.name,
+                  })),
                 ]}
                 className="mt-1"
               />

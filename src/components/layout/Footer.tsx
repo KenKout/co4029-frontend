@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Sparkles, MoveRight } from "lucide-react";
+import { MoveRight } from "lucide-react";
 
 const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg

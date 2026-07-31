@@ -58,9 +58,11 @@ export function useCardsDue(opts: UseCardsDueOptions = {}) {
       const qs = params.toString();
       // The committed OpenAPI snapshot for CardsDuePage predates the
       // course_slug enrichment, so cast the items to the widened CardDue.
-      const page = await apiFetch<Omit<CardsDuePage, "items"> & {
-        items: CardDue[];
-      }>(qs ? `/me/cards-due?${qs}` : "/me/cards-due");
+      const page = await apiFetch<
+        Omit<CardsDuePage, "items"> & {
+          items: CardDue[];
+        }
+      >(qs ? `/me/cards-due?${qs}` : "/me/cards-due");
       return {
         items: page.items,
         next_cursor: page.next_cursor ?? null,

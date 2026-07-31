@@ -1,15 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import {
-  PanelLeftClose,
-  PanelLeftOpen,
-  Loader2,
-  LogOut,
-  LayoutDashboard,
-  Briefcase,
-  Building2,
-  ShieldCheck,
-} from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Loader2, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
@@ -22,40 +13,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type SidebarRole = "student" | "teacher" | "manager" | "admin";
 
-interface RoleMeta {
-  label: string;
-  icon: typeof LayoutDashboard;
-  color: string;
-  bg: string;
-}
-
-const ROLE_META: Record<SidebarRole, RoleMeta> = {
-  student: {
-    label: "sections.student",
-    icon: LayoutDashboard,
-    color: "text-violet-600",
-    bg: "bg-violet-50 border-violet-200",
-  },
-  teacher: {
-    label: "sections.teacher",
-    icon: Briefcase,
-    color: "text-blue-600",
-    bg: "bg-blue-50 border-blue-200",
-  },
-  manager: {
-    label: "sections.manager",
-    icon: Building2,
-    color: "text-teal-600",
-    bg: "bg-teal-50 border-teal-200",
-  },
-  admin: {
-    label: "sections.admin",
-    icon: ShieldCheck,
-    color: "text-rose-600",
-    bg: "bg-rose-50 border-rose-200",
-  },
-};
-
 interface SideNavBarProps {
   navGroups: NavGroup[];
   role: SidebarRole;
@@ -66,7 +23,7 @@ interface SideNavBarProps {
 
 export default function SideNavBar({
   navGroups,
-  role,
+  role: _role,
   className,
   collapsed = false,
   onToggle,
@@ -76,9 +33,6 @@ export default function SideNavBar({
   const { logout } = useAuth();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const meta = ROLE_META[role];
-  const RoleIcon = meta.icon;
 
   const labelOf = (item: NavItem) =>
     item.i18nKey ? t(item.i18nKey, { defaultValue: item.label }) : item.label;

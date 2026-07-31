@@ -19,7 +19,6 @@ import {
   Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GlassCard } from "@/components/ui/glass-card";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";

@@ -4,10 +4,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "@/components/layout/AppShell";
 import { DesktopOnlyBanner } from "@/components/ui/desktop-only-banner";
-import {
-  hasAnyPermission,
-  usePermissions,
-} from "@/lib/auth/use-permissions";
+import { hasAnyPermission, usePermissions } from "@/lib/auth/use-permissions";
 import {
   adminNavGroups,
   managerNavGroups,

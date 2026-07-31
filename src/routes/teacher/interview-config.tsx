@@ -16,9 +16,6 @@ import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
   Archive,
   ArrowLeft,
-  ArrowRight,
-  ArrowUp,
-  ArrowDown,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -27,7 +24,6 @@ import {
   Loader2,
   Lock,
   MoreVertical,
-  Pencil,
   Plus,
   Save,
   ShieldCheck,
@@ -63,9 +59,7 @@ import { LearningOutcomes } from "@/routes/teacher/_components/learning-outcomes
 import { AdaptiveReadinessPanel } from "@/routes/teacher/_components/adaptive-readiness-panel";
 import {
   useArchiveInterviewConfig,
-  useCreateInterviewQuestion,
   useDeleteInterviewConfig,
-  useDeleteInterviewQuestion,
   useGenerateInterviewQuestions,
   useInterviewForAuthoring,
   useInterviewGenerationRun,
@@ -73,7 +67,6 @@ import {
   useUnarchiveInterviewConfig,
   useUnpublishInterviewConfig,
   useUpdateInterviewConfig,
-  useUpdateInterviewQuestion,
 } from "@/lib/api/hooks/interviews";
 import {
   useTeacherCourseById,
@@ -87,7 +80,6 @@ import type {
   InterviewGenerationRequest,
   InterviewGenerationRunPublic,
   InterviewOutcomeAuthoring,
-  InterviewQuestionAuthoring,
   PersonaProfileRead,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
