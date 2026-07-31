@@ -19,8 +19,8 @@ import {
   AnswerComposer,
   AnswerControls,
   FocusedAnswerComposer,
-  OnboardingActions,
 } from "../composer";
+import { OnboardingActions } from "../onboarding-actions";
 import {
   ConversationMessage,
   MessageTurnActions,
