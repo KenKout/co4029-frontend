@@ -25,18 +25,7 @@ import {
 } from "lucide-react";
 
 import { AiTypingMessage } from "@/components/interview/ai-typing-message";
-// Dialogs live in ./dialogs. Re-exported so consumers of this module keep working
-// until the barrel is retired.
-export {
-  EndConfirmationPanel,
-  EndInterviewDialog,
-  FullscreenExitWarningDialog,
-  FullscreenPromptDialog,
-  LeaveInterviewDialog,
-  StartInterviewDialog,
-} from "@/components/interview/dialogs";
-// Conversation surface lives in ./conversation. Imported for local use (the
-// stages compose these) and re-exported for the same barrel reason.
+// Conversation building blocks the stages compose.
 import {
   ConversationMessage,
   MessageTurnActions,
@@ -44,22 +33,13 @@ import {
   VoiceStatusIndicator,
 } from "@/components/interview/conversation";
 
-export {
-  ConversationMessage,
-  MessageTurnActions,
-  UserTypingIndicator,
-  VoiceStatusIndicator,
-};
-// Transcript surfaces live in ./transcript. Imported for local use (the focused
-// stage renders the drawer) and re-exported for the barrel.
+// The focused stage renders the transcript drawer.
 import {
   TranscriptDrawer,
   TranscriptPanel,
 } from "@/components/interview/transcript";
 
-export { TranscriptDrawer, TranscriptPanel };
-// Answer input surfaces live in ./composer. Imported for local use (the stages
-// render the controls) and re-exported for the barrel.
+// Answer input surfaces the stages render.
 import {
   AnswerComposer,
   AnswerControls,
@@ -68,13 +48,6 @@ import {
   OnboardingActions,
 } from "@/components/interview/composer";
 
-export {
-  AnswerComposer,
-  AnswerControls,
-  FocusedAnswerComposer,
-  InterviewControls,
-  OnboardingActions,
-};
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -83,39 +56,12 @@ import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration"
 import type {
   ConversationTurn,
   InterviewAgentStatus,
-  InterviewStateSignals,
-  TurnKindVisual,
 } from "@/lib/interview/types";
-
-// Types live in lib/interview/types.ts so lib/ does not import back from
-// components/ (see that file's header for the cycle this broke). Re-exported here
-// because ~8 consumers import them from this path; the barrel goes away once the
-// extraction is finished.
-export type {
-  ConversationTurn,
-  InterviewAgentStatus,
-  InterviewStateSignals,
-  TurnKindVisual,
-};
-
-// Pure helpers now live in lib/interview/. Imported for local use AND re-exported
-// so consumers of this module keep working until the barrel is retired;
-// STATUS_LABELS and TURN_KIND_VISUALS moved with them, which is what lets sibling
-// modules import a formatter without pulling in every component in this file.
 import {
-  STATUS_LABELS,
   formatRelativeInterviewTime,
   resolveInterviewState,
-  turnKindVisual,
 } from "@/lib/interview/format";
 import { useInterviewTimer } from "@/lib/interview/use-interview-timer";
-
-export {
-  formatRelativeInterviewTime,
-  resolveInterviewState,
-  turnKindVisual,
-  useInterviewTimer,
-};
 
 export function InterviewHeader({
   slug,

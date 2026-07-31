@@ -2,7 +2,8 @@
  * Conversation surface for the interview: the AI/candidate message turns, their
  * per-turn action row, the typing indicator, and the agent status pill.
  *
- * Extracted from `interview-workspace.tsx` (step 4 of that file's decomposition).
+ * Extracted from the former `interview-workspace.tsx` (step 4 of its
+ * decomposition; what remained is now `stages.tsx`).
  * Grouped together because they are the transcript stream's building blocks and
  * share the turn-kind visual vocabulary from `lib/interview/format`.
  */

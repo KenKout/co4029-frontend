@@ -2,15 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import * as React from "react";
 
+import { AnswerControls } from "../composer";
 import {
-  AnswerControls,
   FullscreenExitWarningDialog,
   FullscreenPromptDialog,
-  InterviewHeader,
-  QuestionCard,
-  TranscriptDrawer,
-  type ConversationTurn,
-} from "../interview-workspace";
+} from "../dialogs";
+import { InterviewHeader, QuestionCard } from "../stages";
+import { TranscriptDrawer } from "../transcript";
+import type { ConversationTurn } from "@/lib/interview/types";
 
 /**
  * Render-smoke coverage for the workspace exports that had NO test.

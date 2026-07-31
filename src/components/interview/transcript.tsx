@@ -2,7 +2,8 @@
  * Transcript surfaces: the shared turn list plus its two containers — an overlay
  * drawer (mobile / on-demand) and a docked side panel (desktop reflow).
  *
- * Extracted from `interview-workspace.tsx` (step 5 of that file's decomposition).
+ * Extracted from the former `interview-workspace.tsx` (step 5 of its
+ * decomposition; what remained is now `stages.tsx`).
  * All three share one visibility rule from `lib/interview/transcript-visibility`
  * so a count can never lead the turn it counts.
  */

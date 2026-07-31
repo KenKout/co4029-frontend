@@ -1,7 +1,8 @@
 /**
  * Confirmation and prompt dialogs for the interview session.
  *
- * Extracted from `interview-workspace.tsx` (step 3 of that file's decomposition).
+ * Extracted from the former `interview-workspace.tsx` (step 3 of its
+ * decomposition; what remained is now `stages.tsx`).
  * These are leaf components: they take open/callback props, render a
  * `ConfirmDialog`, and hold no interview state of their own — which is why they
  * were the first UI cluster to move.

@@ -69,19 +69,23 @@ import { resolvePersonaTraits } from "@/lib/interview/persona-traits";
 import {
   EndConfirmationPanel,
   EndInterviewDialog,
-  FocusedAnswerComposer,
-  FocusedInterviewStage,
   FullscreenExitWarningDialog,
   FullscreenPromptDialog,
-  InterviewHeader,
   LeaveInterviewDialog,
   StartInterviewDialog,
-  TranscriptPanel,
-  type ConversationTurn,
-  type InterviewAgentStatus,
-  resolveInterviewState,
-  useInterviewTimer,
-} from "@/components/interview/interview-workspace";
+} from "@/components/interview/dialogs";
+import { FocusedAnswerComposer } from "@/components/interview/composer";
+import {
+  FocusedInterviewStage,
+  InterviewHeader,
+} from "@/components/interview/stages";
+import { TranscriptPanel } from "@/components/interview/transcript";
+import { resolveInterviewState } from "@/lib/interview/format";
+import { useInterviewTimer } from "@/lib/interview/use-interview-timer";
+import type {
+  ConversationTurn,
+  InterviewAgentStatus,
+} from "@/lib/interview/types";
 import { SetupChecklist } from "@/components/interview/setup-checklist";
 import {
   InterviewProgressSteps,
@@ -2929,10 +2933,7 @@ export default function CourseInterviewPage() {
               status={agentStatus}
               onEndInterview={openEndDialog}
             />
-          ) : phase === "opening" ||
-            phase ===
-              "readiness" ? // so render no bottom bar at all (no composer, no wind-down). // Onboarding: the SetupChecklist above is the sole input surface,
-          null : (
+          ) : phase === "opening" || phase === "readiness" ? null : ( // so render no bottom bar at all (no composer, no wind-down). // Onboarding: the SetupChecklist above is the sole input surface,
             // Same min-height as the composer this replaces, so the stage above
             // does not lurch upward when the input surface swaps out for the
             // wind-down message and back again.

@@ -3,7 +3,8 @@
  * voice/type mode controls, the onboarding action row, and their shared keycap
  * hint and recording timer.
  *
- * Extracted from `interview-workspace.tsx` (step 6 of that file's decomposition).
+ * Extracted from the former `interview-workspace.tsx` (step 6 of its
+ * decomposition; what remained is now `stages.tsx`).
  * Moved last and as one unit because this is the most internally-coupled cluster:
  * `SendHint`/`Kbd` are shared by both composers, and `ComposerControl` /
  * `useRecordingTimer` are private helpers with no consumer outside this file.
