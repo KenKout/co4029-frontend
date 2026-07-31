@@ -34,19 +34,7 @@ import {
 } from "@/components/interview/conversation";
 
 // The focused stage renders the transcript drawer.
-import {
-  TranscriptDrawer,
-  TranscriptPanel,
-} from "@/components/interview/transcript";
-
-// Answer input surfaces the stages render.
-import {
-  AnswerComposer,
-  AnswerControls,
-  FocusedAnswerComposer,
-  InterviewControls,
-  OnboardingActions,
-} from "@/components/interview/composer";
+import { TranscriptDrawer } from "@/components/interview/transcript";
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -57,11 +45,7 @@ import type {
   ConversationTurn,
   InterviewAgentStatus,
 } from "@/lib/interview/types";
-import {
-  formatRelativeInterviewTime,
-  resolveInterviewState,
-} from "@/lib/interview/format";
-import { useInterviewTimer } from "@/lib/interview/use-interview-timer";
+import { formatRelativeInterviewTime } from "@/lib/interview/format";
 
 export function InterviewHeader({
   slug,
@@ -307,173 +291,6 @@ export function InterviewHeader({
         </div>
       </div>
     </header>
-  );
-}
-
-export function InterviewStage({
-  transcript,
-  status,
-  transcriptOpen,
-  isUserTyping,
-  questionTypeLabel,
-  speak,
-  onSpeakingChange,
-  onTurnPresented,
-  activeTurnActions,
-  activeTurnActionsVisible = false,
-  replayAvailable = true,
-}: {
-  transcript: ConversationTurn[];
-  status: InterviewAgentStatus;
-  transcriptOpen: boolean;
-  isUserTyping: boolean;
-  questionTypeLabel: (type: string | null | undefined) => string | null;
-  speak: (text: string) => void | Promise<void> | NarrationPresentation;
-  onSpeakingChange: (speaking: boolean) => void;
-  onTurnPresented?: (turn: ConversationTurn) => void;
-  activeTurnActions?: ReactNode;
-  activeTurnActionsVisible?: boolean;
-  replayAvailable?: boolean;
-}) {
-  const { t } = useTranslation();
-  const endRef = useRef<HTMLDivElement | null>(null);
-  const [presentedAiTurnIds, setPresentedAiTurnIds] = useState<
-    ReadonlySet<string>
-  >(() => new Set());
-  const [replayingTurnId, setReplayingTurnId] = useState<string | null>(null);
-  const replayLockRef = useRef(false);
-  const lastAiTurnId = useMemo(() => {
-    for (let index = transcript.length - 1; index >= 0; index -= 1) {
-      if (transcript[index].role === "ai") return transcript[index].id;
-    }
-    return null;
-  }, [transcript]);
-
-  const visibleTurns = transcriptOpen
-    ? transcript
-    : transcript.filter((turn) => turn.id === lastAiTurnId);
-  const latestAiPresentationComplete =
-    lastAiTurnId === null || presentedAiTurnIds.has(lastAiTurnId);
-  const replayBlockedByStatus =
-    status === "listening" || status === "thinking" || status === "speaking";
-
-  const replayTurn = useCallback(
-    async (turn: ConversationTurn) => {
-      if (
-        replayLockRef.current ||
-        !replayAvailable ||
-        !presentedAiTurnIds.has(turn.id) ||
-        !latestAiPresentationComplete ||
-        replayBlockedByStatus
-      ) {
-        return;
-      }
-
-      replayLockRef.current = true;
-      setReplayingTurnId(turn.id);
-      onSpeakingChange(true);
-      try {
-        const presentation = speak(turn.text);
-        if (
-          presentation &&
-          typeof presentation === "object" &&
-          "finished" in presentation
-        ) {
-          await presentation.finished.catch(() => undefined);
-        } else {
-          await Promise.resolve(presentation).catch(() => undefined);
-        }
-      } catch {
-        // Narration failures are non-fatal; the written message remains available.
-      } finally {
-        replayLockRef.current = false;
-        setReplayingTurnId(null);
-        onSpeakingChange(false);
-      }
-    },
-    [
-      latestAiPresentationComplete,
-      onSpeakingChange,
-      presentedAiTurnIds,
-      replayAvailable,
-      replayBlockedByStatus,
-      speak,
-    ],
-  );
-
-  const scrollToLatest = useCallback(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, []);
-
-  useEffect(() => {
-    scrollToLatest();
-  }, [
-    transcript,
-    transcriptOpen,
-    isUserTyping,
-    presentedAiTurnIds,
-    activeTurnActionsVisible,
-    scrollToLatest,
-  ]);
-
-  return (
-    <main
-      id="interview-transcript"
-      className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
-      aria-label={t("course_interview.workspace.transcript")}
-    >
-      <div className="mx-auto flex min-h-full w-full max-w-[900px] flex-col justify-start px-4 pb-12 pt-7 sm:px-8 sm:pb-16 sm:pt-10">
-        <div className="space-y-8">
-          {visibleTurns.map((turn) => (
-            <ConversationMessage
-              key={turn.id}
-              turn={turn}
-              label={questionTypeLabel(turn.questionType)}
-              isLatest={turn.id === lastAiTurnId}
-              speak={speak}
-              onTick={scrollToLatest}
-              onSpeakingChange={onSpeakingChange}
-              onPresentationComplete={() => {
-                setPresentedAiTurnIds((current) => {
-                  if (current.has(turn.id)) return current;
-                  const next = new Set(current);
-                  next.add(turn.id);
-                  return next;
-                });
-                onTurnPresented?.(turn);
-              }}
-              actions={turn.id === lastAiTurnId ? activeTurnActions : undefined}
-              actionsVisible={
-                turn.id === lastAiTurnId &&
-                presentedAiTurnIds.has(turn.id) &&
-                activeTurnActionsVisible
-              }
-              replayVisible={
-                turn.role === "ai" &&
-                replayAvailable &&
-                presentedAiTurnIds.has(turn.id)
-              }
-              replayDisabled={
-                turn.role !== "ai" ||
-                !replayAvailable ||
-                !presentedAiTurnIds.has(turn.id) ||
-                !latestAiPresentationComplete ||
-                replayBlockedByStatus ||
-                replayingTurnId !== null
-              }
-              isReplaying={replayingTurnId === turn.id}
-              onReplay={() => void replayTurn(turn)}
-            />
-          ))}
-          <UserTypingIndicator visible={isUserTyping} />
-        </div>
-
-        <div className="mt-8 pl-12">
-          <VoiceStatusIndicator status={status} />
-        </div>
-        <div ref={endRef} />
-      </div>
-    </main>
   );
 }
 
