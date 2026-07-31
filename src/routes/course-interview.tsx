@@ -61,6 +61,7 @@ import type {
   InterviewSessionStartResponse,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { formatElapsedLabel } from "@/lib/format/date";
 import { VoiceRoom } from "@/components/interview/voice-room";
 import { useSpeechDictation } from "@/lib/hooks/use-speech-dictation";
 import { type SpeechPersona } from "@/lib/hooks/use-speech-synthesis";
@@ -237,21 +238,6 @@ function newTurnKey(): string {
     return crypto.randomUUID();
   }
   return `tk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-/**
- * Human-readable elapsed label for the results facts row (#16), e.g. "12m 04s"
- * or "1h 03m". Seconds are dropped once we're past an hour to keep it compact.
- */
-function formatElapsedLabel(totalSeconds: number): string {
-  const safe = Math.max(0, Math.floor(totalSeconds));
-  const hours = Math.floor(safe / 3600);
-  const minutes = Math.floor((safe % 3600) / 60);
-  const seconds = safe % 60;
-  if (hours > 0) {
-    return `${hours}h ${String(minutes).padStart(2, "0")}m`;
-  }
-  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 }
 
 export default function CourseInterviewPage() {

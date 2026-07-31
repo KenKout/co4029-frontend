@@ -9,6 +9,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
 import { useDeleteCourse, useRestoreCourse } from "@/lib/api/hooks/admin";
 import { usePermissions } from "@/lib/auth/use-permissions";
+import { useFormatDateTime } from "@/lib/format/date";
 import type { CourseAuthoring } from "@/lib/api/types";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -27,21 +28,6 @@ function StatusBadge({ status }: { status: string }) {
       {t(`admin.courses_list.row_status.${status}`, { defaultValue: status })}
     </span>
   );
-}
-
-function useFormatDate() {
-  const { i18n } = useTranslation();
-  const locale =
-    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
-      ? "vi-VN"
-      : "en-US";
-  return (iso: string | null | undefined): string => {
-    if (!iso) return "—";
-    return new Intl.DateTimeFormat(locale, {
-      dateStyle: "short",
-      timeStyle: "short",
-    }).format(new Date(iso));
-  };
 }
 
 function RestoreButton({ course }: { course: CourseAuthoring }) {
@@ -120,7 +106,7 @@ export default function AdminCoursesPage() {
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
   const [includeDeleted, setIncludeDeleted] = useState(true);
-  const formatDate = useFormatDate();
+  const formatDate = useFormatDateTime();
 
   useEffect(() => {
     if (permissions.isLoading) return;

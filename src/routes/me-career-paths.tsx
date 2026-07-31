@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { useMyCareerEnrollments } from "@/lib/api/hooks/career-paths";
+import { useFormatDate } from "@/lib/format/date";
 import type { MyCareerEnrollmentRead } from "@/lib/api/types";
 
 const STATUS_COLOR: Record<MyCareerEnrollmentRead["status"], string> = {
@@ -19,24 +20,6 @@ const STATUS_COLOR: Record<MyCareerEnrollmentRead["status"], string> = {
   completed: "bg-m3-primary-fixed text-m3-primary",
   dropped: "bg-slate-100 text-slate-500",
 };
-
-function useFormatDate() {
-  const { i18n } = useTranslation();
-  const locale =
-    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
-      ? "vi-VN"
-      : "en-US";
-  return (iso: string | null | undefined): string => {
-    if (!iso) return "—";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString(locale, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
-}
 
 function EnrollmentRow({ item }: { item: MyCareerEnrollmentRead }) {
   const { t } = useTranslation();

@@ -16,24 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMe } from "@/lib/api/hooks/auth";
 import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
-
-function useFormatDateTime() {
-  const { i18n } = useTranslation();
-  const locale =
-    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
-      ? "vi-VN"
-      : "en-US";
-  return (iso: string | null | undefined): string => {
-    if (!iso) return "—";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString(locale, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
-}
+import { useFormatDate } from "@/lib/format/date";
 
 const STATUS_COLOR: Record<string, string> = {
   active: "bg-emerald-100 text-emerald-700",
@@ -86,7 +69,7 @@ export default function ProfilePage() {
   const { t } = useTranslation();
   const router = useRouter();
   const navigate = useNavigate();
-  const formatDate = useFormatDateTime();
+  const formatDate = useFormatDate();
   const { data: me, isLoading, isError } = useMe();
 
   // Profile is reachable from the avatar dropdown anywhere in the app.

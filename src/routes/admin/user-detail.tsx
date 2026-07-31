@@ -26,6 +26,7 @@ import {
   useOrgUnits,
 } from "@/lib/api/hooks/admin-organizations";
 import { usePermissions } from "@/lib/auth/use-permissions";
+import { formatDateTime, resolveLocale } from "@/lib/format/date";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -66,12 +67,10 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function formatDate(iso: string | null | undefined, locale: string): string {
-  if (!iso) return "—";
-  return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(iso));
+// Thin wrapper over the shared date/time formatter; call sites pass the raw
+// i18n language, resolveLocale maps it to BCP-47. Same short date+time output.
+function formatDate(iso: string | null | undefined, language: string): string {
+  return formatDateTime(iso, resolveLocale(language));
 }
 
 function ConfirmDisableDialog({

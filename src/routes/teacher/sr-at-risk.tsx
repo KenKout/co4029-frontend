@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAtRiskStudents } from "@/lib/api/hooks/spaced-repetition";
 import { useCourse } from "@/lib/api/hooks/courses";
+import { useRelDate } from "@/lib/format/date";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -64,24 +65,6 @@ const FLAG_LABEL_KEYS: Record<
 
 function activeFlagsOf(student: AtRiskStudent): FlagKey[] {
   return FLAG_KEYS.filter((k) => student[k]);
-}
-
-function useRelDate() {
-  const { t } = useTranslation();
-  return (iso: string | null | undefined) => {
-    if (!iso) return t("teacher_sr_at_risk.no_activity");
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const d = new Date(iso);
-    d.setHours(0, 0, 0, 0);
-    const days = Math.round((today.getTime() - d.getTime()) / 86_400_000);
-    if (days <= 0) return t("teacher_sr_at_risk.today");
-    if (days === 1) return t("teacher_sr_at_risk.yesterday");
-    if (days < 7) return t("teacher_sr_at_risk.days_ago", { count: days });
-    if (days < 30)
-      return t("teacher_sr_at_risk.weeks_ago", { count: Math.floor(days / 7) });
-    return t("teacher_sr_at_risk.months_ago", { count: Math.floor(days / 30) });
-  };
 }
 
 function WhyFlaggedChips({ student }: { student: AtRiskStudent }) {

@@ -35,6 +35,7 @@ import {
   usePatchOrganization,
 } from "@/lib/api/hooks/admin-organizations";
 import { usePermissions } from "@/lib/auth/use-permissions";
+import { formatDateTime, resolveLocale } from "@/lib/format/date";
 import type {
   MembershipRead,
   MembershipStatus,
@@ -78,12 +79,11 @@ function StatusBadge({
   );
 }
 
-function formatDate(iso: string | null | undefined, locale: string): string {
-  if (!iso) return "—";
-  return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(iso));
+// Thin wrapper over the shared date/time formatter so the existing call sites
+// (which pass the raw i18n language) keep working; resolveLocale maps it to a
+// BCP-47 locale. Same short-date + short-time output as before.
+function formatDate(iso: string | null | undefined, language: string): string {
+  return formatDateTime(iso, resolveLocale(language));
 }
 
 // ---------------------------------------------------------------------------
