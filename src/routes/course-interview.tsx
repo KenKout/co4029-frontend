@@ -110,7 +110,7 @@ import {
   clearQuestionPacing,
 } from "@/lib/interview/use-question-pacing";
 import { useIntegrityReporter } from "@/components/interview/use-integrity-reporter";
-import { useInterviewFullscreen } from "@/components/interview/use-interview-fullscreen";
+import { useFullscreenDeterrent } from "@/components/interview/use-fullscreen-deterrent";
 import { planTransition } from "@/lib/interview/transition-sequencing";
 import {
   makeAiTurn,
@@ -679,39 +679,9 @@ export default function CourseInterviewPage() {
         phase === "questioning" ||
         phase === "closing"),
   );
-  const [fullscreenPromptOpen, setFullscreenPromptOpen] = useState(false);
-  const [fullscreenWarningOpen, setFullscreenWarningOpen] = useState(false);
-  const [fullscreenExitCount, setFullscreenExitCount] = useState(0);
-  // Once the candidate explicitly chooses to stay windowed we stop re-asking,
-  // otherwise the prompt would reappear on every render pass of an active phase.
-  const fullscreenPromptedRef = useRef(false);
-
-  const handleFullscreenLost = useCallback(() => {
-    setFullscreenExitCount((count) => count + 1);
-    setFullscreenWarningOpen(true);
-  }, []);
-
-  const fullscreen = useInterviewFullscreen(interviewActive, {
-    onUnexpectedExit: handleFullscreenLost,
-  });
-
-  // Ask once, as soon as a session goes live.
-  useEffect(() => {
-    if (!interviewActive) {
-      fullscreenPromptedRef.current = false;
-      setFullscreenPromptOpen(false);
-      setFullscreenWarningOpen(false);
-      setFullscreenExitCount(0);
-      return;
-    }
-    if (fullscreenPromptedRef.current) return;
-    if (!fullscreen.supported || fullscreen.isFullscreen) {
-      fullscreenPromptedRef.current = true;
-      return;
-    }
-    fullscreenPromptedRef.current = true;
-    setFullscreenPromptOpen(true);
-  }, [interviewActive, fullscreen.supported, fullscreen.isFullscreen]);
+  // Fullscreen consent + exit-warning policy (ask once, count exits, reset on
+  // session end) lives in useFullscreenDeterrent.
+  const fullscreenDeterrent = useFullscreenDeterrent(interviewActive);
 
   // Once the session is over, restore the normal app shell (sidebar back).
   useEffect(() => {
@@ -1616,21 +1586,15 @@ export default function CourseInterviewPage() {
   const fullscreenDialogs = (
     <>
       <FullscreenPromptDialog
-        open={fullscreenPromptOpen}
-        onConfirm={() => {
-          setFullscreenPromptOpen(false);
-          void fullscreen.enter();
-        }}
-        onDecline={() => setFullscreenPromptOpen(false)}
+        open={fullscreenDeterrent.promptOpen}
+        onConfirm={fullscreenDeterrent.acceptPrompt}
+        onDecline={fullscreenDeterrent.declinePrompt}
       />
       <FullscreenExitWarningDialog
-        open={fullscreenWarningOpen}
-        exitCount={fullscreenExitCount}
-        onReenter={() => {
-          setFullscreenWarningOpen(false);
-          void fullscreen.enter();
-        }}
-        onDismiss={() => setFullscreenWarningOpen(false)}
+        open={fullscreenDeterrent.warningOpen}
+        exitCount={fullscreenDeterrent.exitCount}
+        onReenter={fullscreenDeterrent.reenter}
+        onDismiss={fullscreenDeterrent.dismissWarning}
       />
     </>
   );
