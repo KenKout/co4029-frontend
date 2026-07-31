@@ -16,6 +16,10 @@ import type {
   InterviewGenerationRequest,
 } from "@/lib/api/types";
 import type { RubricCriterion } from "@/lib/interview/supplementary-instructions";
+import {
+  PERSONA_TRAIT_PRESETS,
+  type PersonaKey,
+} from "@/lib/interview/persona-traits";
 
 export type SupportedMode = NonNullable<
   InterviewConfigUpdate["supported_modes"]
@@ -138,6 +142,33 @@ export interface SettingsDraft {
   // Optional per-trait persona overrides (Phase 3). Empty object = no override
   // (use the persona preset as-is). Each trait 0-4; opening_style optional.
   persona_profile: PersonaProfileOverride;
+}
+
+/**
+ * Resolve the traits a persona actually runs with: the preset, with any dial the
+ * teacher moved layered on top. Shared because the form renders these values and
+ * the save path diffs against them.
+ */
+export function effectivePersonaTraits(
+  persona: Persona,
+  override: PersonaProfileOverride,
+): Record<(typeof PERSONA_TRAIT_KEYS)[number], number> {
+  const preset =
+    PERSONA_TRAIT_PRESETS[persona as PersonaKey] ??
+    PERSONA_TRAIT_PRESETS.neutral;
+  const presetByKey: Record<(typeof PERSONA_TRAIT_KEYS)[number], number> = {
+    warmth: preset.warmth,
+    directness: preset.directness,
+    verbosity: preset.verbosity,
+    formality: preset.formality,
+    ack_frequency: preset.ackFrequency,
+  };
+  const out = { ...presetByKey };
+  for (const key of PERSONA_TRAIT_KEYS) {
+    const v = override[key];
+    if (typeof v === "number") out[key] = v;
+  }
+  return out;
 }
 
 /** "" and non-numeric input mean "unset", not zero. */
