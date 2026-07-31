@@ -1247,7 +1247,7 @@ function readGenerationProgress(
 // scroll-spy SectionNav: clicking a tab swaps which panel is shown (panels
 // stay mounted, hidden via `hidden`, so state/edits survive). Reuses the
 // SectionNavItem status model to render a small per-tab status affix.
-function TabBar({
+export function TabBar({
   items,
   activeTab,
   onSelect,
@@ -1415,7 +1415,7 @@ function TabBar({
 // outcome, ≥1 approved question) right where the Publish button lives, so the
 // teacher sees what's missing instead of hitting a disabled-button tooltip.
 // Each unmet item links to its tab.
-function PublishReadiness({
+export function PublishReadiness({
   settingsComplete,
   outcomeCount,
   approvedCount,
@@ -2792,7 +2792,7 @@ function Field({
  * choosing. ``focus`` scrolls/hints which table is most relevant to the field
  * the link sits under, but both tables are always present.
  */
-function RubricEditor({
+export function RubricEditor({
   criteria,
   onChange,
 }: {
@@ -2916,7 +2916,7 @@ function RubricEditor({
   );
 }
 
-function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
+export function VoicePersonaGuideSheet({ focus }: { focus: "persona" | "voice" }) {
   const { t } = useTranslation();
   return (
     <Sheet>
