@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
+import { fmtPercentScaled as fmtPercent } from "@/lib/format/number";
 import type { StatisticsReportRead } from "@/lib/api/hooks/quizzes";
 
 /** Color-code discrimination: green ≥0.3, amber 0.1–0.3, red <0.1, grey null. */
@@ -9,11 +10,6 @@ function discriminationClass(value: number | null): string {
   if (value >= 0.3) return "text-green-700";
   if (value >= 0.1) return "text-amber-600";
   return "text-red-700";
-}
-
-function fmtPercent(v: number | null): string {
-  if (v === null) return "—";
-  return `${(v * 100).toFixed(0)}%`;
 }
 
 /**

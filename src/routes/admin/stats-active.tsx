@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useActiveUsersStats } from "@/lib/api/hooks/admin";
+import { useFormatCount } from "@/lib/format/number";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 type MetricRow = {
@@ -16,18 +17,6 @@ type MetricRow = {
   value: number | undefined;
   icon: LucideIcon;
 };
-
-function useFormatCount() {
-  const { i18n } = useTranslation();
-  const locale =
-    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
-      ? "vi-VN"
-      : "en-US";
-  return (n: number | undefined): string => {
-    if (n === undefined || n === null) return "—";
-    return new Intl.NumberFormat(locale).format(n);
-  };
-}
 
 export default function AdminStatsActivePage() {
   const { t } = useTranslation();

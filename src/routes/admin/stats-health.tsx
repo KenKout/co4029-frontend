@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { AlertTriangle, Bot, Loader, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useStatsHealth } from "@/lib/api/hooks/admin";
+import { useFormatCount } from "@/lib/format/number";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Select } from "@/components/ui/select";
 
@@ -20,18 +21,6 @@ const WINDOW_HOURS: Record<Window, number> = {
   "7d": 24 * 7,
   "30d": 24 * 30,
 };
-
-function useFormatCount() {
-  const { i18n } = useTranslation();
-  const locale =
-    (i18n.resolvedLanguage ?? i18n.language ?? "en") === "vi"
-      ? "vi-VN"
-      : "en-US";
-  return (n: number | undefined): string => {
-    if (n === undefined || n === null) return "—";
-    return new Intl.NumberFormat(locale).format(n);
-  };
-}
 
 export default function AdminStatsHealthPage() {
   const { t } = useTranslation();
