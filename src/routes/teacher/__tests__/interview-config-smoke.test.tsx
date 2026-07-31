@@ -3,7 +3,10 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
 
-import { PublishReadiness, TabBar } from "@/routes/teacher/interview-config";
+import {
+  PublishReadiness,
+  TabBar,
+} from "@/routes/teacher/_components/interview-config/navigation";
 import {
   RubricEditor,
   VoicePersonaGuideSheet,
