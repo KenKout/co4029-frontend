@@ -10,13 +10,8 @@ import {
 import { ApiError } from "@/lib/api/client";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
-import { JOB_STATUS_TOKENS } from "@/lib/status-tokens";
+import { JobStatusBadgeMd as JobStatusBadge } from "@/components/ui/status-badges";
 import { useFormatDateTime } from "@/lib/format/date";
-
-function JobStatusBadge({ status }: { status: string }) {
-  return <SharedStatusBadge status={status} tokens={JOB_STATUS_TOKENS} />;
-}
 
 function Field({
   label,

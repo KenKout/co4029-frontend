@@ -43,6 +43,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirm } from "@/components/ui/use-confirm";
 import {
   useAddToInterviewQuestionBank,
   useCheckInterviewQuestionDuplicate,
@@ -166,6 +167,13 @@ export function QuestionBank({
   const checkDuplicate = useCheckInterviewQuestionDuplicate(configId);
   const addToBank = useAddToInterviewQuestionBank(courseId);
   const { data: bankItems } = useInterviewQuestionBank(courseId);
+  const { confirm: confirmAction, dialog: confirmActionDialog } = useConfirm({
+    title: t("teacher_interview_config.qbank.confirm_title", {
+      defaultValue: "Confirm",
+    }),
+    confirmLabel: t("common.confirm"),
+    cancelLabel: t("common.cancel"),
+  });
 
   // Position-ordered view; positions map to the visible "01, 02…" numbers.
   const sorted = useMemo(
@@ -582,11 +590,11 @@ export function QuestionBank({
     const targets = selectedQuestions;
     if (targets.length === 0 || bulkBusy) return;
     if (
-      !window.confirm(
-        t("teacher_interview_config.qbank.bulk.delete_confirm", {
+      !(await confirmAction({
+        description: t("teacher_interview_config.qbank.bulk.delete_confirm", {
           count: targets.length,
         }),
-      )
+      }))
     )
       return;
     setBulkBusy(true);
@@ -794,10 +802,12 @@ export function QuestionBank({
     setEditDirty(false);
     setExpanded((prev) => new Set(prev).add(q.id));
   }
-  function cancelEdit() {
+  async function cancelEdit() {
     if (
       editDirty &&
-      !window.confirm(t("teacher_interview_config.qbank.unsaved_confirm"))
+      !(await confirmAction({
+        description: t("teacher_interview_config.qbank.unsaved_confirm"),
+      }))
     )
       return;
     setEditingId(null);
@@ -1640,7 +1650,7 @@ export function QuestionBank({
                     onSetStatus={(s) => void setStatus(q, s)}
                     onSetOutcome={(o) => void setOutcome(q, o)}
                     onBeginEdit={() => beginEdit(q)}
-                    onCancelEdit={cancelEdit}
+                    onCancelEdit={() => void cancelEdit()}
                     onSaveEdit={() => void saveEdit()}
                     onChangeEditingText={(v) => {
                       setEditingText(v);
@@ -1751,6 +1761,8 @@ export function QuestionBank({
 
       {/* Screen-reader live region for status/reorder announcements */}
       <div ref={liveRegionRef} aria-live="polite" className="sr-only" />
+
+      {confirmActionDialog}
 
       {/* Advisory duplicate warning. Confirm is the non-destructive path here —
           the teacher is proceeding with their own question — so the save stays

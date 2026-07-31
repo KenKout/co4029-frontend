@@ -8,8 +8,7 @@ import {
 } from "@/lib/auth/use-permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
+import { CourseStatusBadge } from "@/components/ui/status-badges";
 import type { CourseAuthoring } from "@/lib/api/types";
 
 /**
@@ -92,14 +91,7 @@ export default function ManagementEnrolmentPage() {
                     {course.slug}
                   </p>
                 </div>
-                <StatusBadge
-                  status={course.status}
-                  tokens={COURSE_STATUS_TOKENS}
-                  size="11px"
-                  label={t(`dept_courses.status.${course.status}`, {
-                    defaultValue: course.status,
-                  })}
-                />
+                <CourseStatusBadge status={course.status} />
                 <ChevronRight className="h-4 w-4 text-text-muted shrink-0" />
               </div>
             </Link>

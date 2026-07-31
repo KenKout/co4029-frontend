@@ -9,6 +9,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { OrgStatusBadge as StatusBadge } from "@/components/ui/status-badges";
 import { useServerTable } from "@/lib/api/use-server-table";
 import { useCreateOrganization } from "@/lib/api/hooks/admin-organizations";
 import {
@@ -19,21 +20,6 @@ import type {
   OrganizationRead,
   OrganizationStatus,
 } from "@/lib/api/types/admin-organizations";
-import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
-import { ORG_STATUS_TOKENS } from "@/lib/status-tokens";
-
-function StatusBadge({ status }: { status: string }) {
-  const { t } = useTranslation();
-  return (
-    <SharedStatusBadge
-      status={status}
-      tokens={ORG_STATUS_TOKENS}
-      label={t(`admin.organizations.status_label.${status}`, {
-        defaultValue: status,
-      })}
-    />
-  );
-}
 
 function CreateOrgDialog({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();

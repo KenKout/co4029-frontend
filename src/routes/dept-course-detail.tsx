@@ -11,6 +11,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/use-confirm";
 import { Input } from "@/components/ui/input";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import {
@@ -85,10 +86,19 @@ function TeacherRow({
 }) {
   const { t } = useTranslation();
   const remove = useRemoveTeacher(courseId);
+  const { confirm: confirmRemove, dialog: confirmDialog } = useConfirm({
+    title: t("dept_course_detail.remove"),
+    confirmLabel: t("dept_course_detail.remove"),
+    cancelLabel: t("common.cancel"),
+  });
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
     const name = assignment.display_name || assignment.primary_email;
-    if (!window.confirm(t("dept_course_detail.remove_confirm", { name }))) {
+    if (
+      !(await confirmRemove({
+        description: t("dept_course_detail.remove_confirm", { name }),
+      }))
+    ) {
       return;
     }
     remove.mutate(assignment.user_id, {
@@ -120,13 +130,14 @@ function TeacherRow({
           type="button"
           variant="destructive"
           size="sm"
-          onClick={handleRemove}
+          onClick={() => void handleRemove()}
           disabled={remove.isPending}
         >
           <Trash2 className="h-3.5 w-3.5" />
           {t("dept_course_detail.remove")}
         </Button>
       )}
+      {confirmDialog}
     </div>
   );
 }

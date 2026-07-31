@@ -6,6 +6,8 @@ import { Archive, BookOpen, RotateCcw, Trash2 } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { AdminCourseStatusBadge as StatusBadge } from "@/components/ui/status-badges";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useServerTable } from "@/lib/api/use-server-table";
 import { useDeleteCourse, useRestoreCourse } from "@/lib/api/hooks/admin";
 import {
@@ -13,23 +15,7 @@ import {
   useRequirePermission,
 } from "@/lib/auth/use-permissions";
 import { useFormatDateTime } from "@/lib/format/date";
-import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
-import { ADMIN_COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import type { CourseAuthoring } from "@/lib/api/types";
-
-function StatusBadge({ status }: { status: string }) {
-  const { t } = useTranslation();
-  return (
-    <SharedStatusBadge
-      status={status}
-      tokens={ADMIN_COURSE_STATUS_TOKENS}
-      size="11px"
-      label={t(`admin.courses_list.row_status.${status}`, {
-        defaultValue: status,
-      })}
-    />
-  );
-}
 
 function RestoreButton({ course }: { course: CourseAuthoring }) {
   const { t } = useTranslation();
@@ -64,40 +50,53 @@ function RestoreButton({ course }: { course: CourseAuthoring }) {
 function DeleteButton({ course }: { course: CourseAuthoring }) {
   const { t } = useTranslation();
   const del = useDeleteCourse();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  function runDelete() {
+    setConfirmOpen(false);
+    del.mutate(course.id, {
+      onSuccess: () => toast.success(t("admin.course_detail.toasts.deleted")),
+      onError: (err) =>
+        toast.error(
+          (err as Error).message ||
+            t("admin.course_detail.toasts.delete_failed"),
+        ),
+    });
+  }
+
   return (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        // Cascade tombstone — confirm before deleting. It's reversible
-        // (Restore appears on the row afterwards), but it also removes the
-        // course's modules/lessons from every listing, so make it deliberate.
-        if (
-          !window.confirm(
-            t("admin.course_detail.delete_confirm", { title: course.title }),
-          )
-        ) {
-          return;
-        }
-        del.mutate(course.id, {
-          onSuccess: () =>
-            toast.success(t("admin.course_detail.toasts.deleted")),
-          onError: (err) =>
-            toast.error(
-              (err as Error).message ||
-                t("admin.course_detail.toasts.delete_failed"),
-            ),
-        });
-      }}
-      disabled={del.isPending}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-danger text-white hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
-    >
-      <Trash2 className="h-3.5 w-3.5" />
-      {del.isPending
-        ? t("admin.course_detail.deleting")
-        : t("admin.course_detail.delete")}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          // Cascade tombstone — confirm before deleting. It's reversible
+          // (Restore appears on the row afterwards), but it also removes the
+          // course's modules/lessons from every listing, so make it deliberate.
+          setConfirmOpen(true);
+        }}
+        disabled={del.isPending}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-danger text-white hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+        {del.isPending
+          ? t("admin.course_detail.deleting")
+          : t("admin.course_detail.delete")}
+      </button>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t("admin.course_detail.delete")}
+        description={t("admin.course_detail.delete_confirm", {
+          title: course.title,
+        })}
+        confirmLabel={t("admin.course_detail.delete")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={runDelete}
+        isPending={del.isPending}
+      />
+    </>
   );
 }
 

@@ -3,8 +3,10 @@ import { useNavigate } from "@tanstack/react-router";
 import { Building2, Mail, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SearchInput } from "@/components/ui/search-input";
+import { useFormatDate } from "@/lib/format/date";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { UserStatusBadge as StatusBadge } from "@/components/ui/status-badges";
 import { useServerTable } from "@/lib/api/use-server-table";
 import {
   usePermissions,
@@ -13,8 +15,6 @@ import {
 import { useListRoles } from "@/lib/api/hooks/admin";
 import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 import type { User } from "@/lib/api/types";
-import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
-import { USER_STATUS_TOKENS } from "@/lib/status-tokens";
 
 // The backend UserRead gained roles[] + organization fields after the
 // committed OpenAPI snapshot, so widen the generated type locally rather than
@@ -24,18 +24,6 @@ type UserWithRoles = User & {
   organization_id?: string | null;
   organization_name?: string | null;
 };
-
-function StatusBadge({ status }: { status: string }) {
-  const { t } = useTranslation();
-  return (
-    <SharedStatusBadge
-      status={status}
-      tokens={USER_STATUS_TOKENS}
-      size="11px"
-      label={t(`admin.users.status.${status}`, { defaultValue: status })}
-    />
-  );
-}
 
 const ROLE_BADGE_COLOR: Record<string, string> = {
   admin: "bg-rose-50 text-rose-700 border border-rose-200",
@@ -79,6 +67,7 @@ function RoleBadges({
 export default function AdminUsersPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const formatDate = useFormatDate();
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
 
@@ -175,12 +164,12 @@ export default function AdminUsersPage() {
         align: "right",
         cell: (u) => (
           <span className="text-xs text-text-muted whitespace-nowrap">
-            {u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}
+            {formatDate(u.created_at)}
           </span>
         ),
       },
     ],
-    [t, labelFor],
+    [t, labelFor, formatDate],
   );
 
   if (permissions.isLoading) {

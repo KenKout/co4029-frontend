@@ -9,29 +9,14 @@ import {
   Clock,
   Mail,
   Pencil,
-  ShieldCheck,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProfileStatusBadge as StatusBadge } from "@/components/ui/status-badges";
 import { useMe } from "@/lib/api/hooks/auth";
 import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
 import { useFormatDate } from "@/lib/format/date";
-import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
-import { USER_STATUS_TOKENS } from "@/lib/status-tokens";
-
-function StatusBadge({ status }: { status: string }) {
-  const { t } = useTranslation();
-  return (
-    <SharedStatusBadge
-      status={status}
-      tokens={USER_STATUS_TOKENS}
-      shape="pill"
-      icon={ShieldCheck}
-      label={t(`profile.status.${status}`, { defaultValue: status })}
-    />
-  );
-}
 
 interface InfoRowProps {
   icon: typeof Mail;

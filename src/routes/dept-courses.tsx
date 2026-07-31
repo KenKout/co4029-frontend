@@ -8,13 +8,11 @@ import {
 } from "@/lib/auth/use-permissions";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { CourseStatusBadge } from "@/components/ui/status-badges";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import type { CourseAuthoring } from "@/lib/api/types";
 
 function CourseRow({ course }: { course: CourseAuthoring }) {
-  const { t } = useTranslation();
   return (
     <Link
       to="/dept/courses/$courseId"
@@ -33,14 +31,7 @@ function CourseRow({ course }: { course: CourseAuthoring }) {
             {course.slug}
           </p>
         </div>
-        <StatusBadge
-          status={course.status}
-          tokens={COURSE_STATUS_TOKENS}
-          size="11px"
-          label={t(`dept_courses.status.${course.status}`, {
-            defaultValue: course.status,
-          })}
-        />
+        <CourseStatusBadge status={course.status} />
         <ChevronRight className="h-4 w-4 text-text-muted shrink-0" />
       </div>
     </Link>

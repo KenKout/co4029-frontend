@@ -30,11 +30,11 @@ import {
   useRequirePermission,
 } from "@/lib/auth/use-permissions";
 import { formatDateTime, resolveLocale } from "@/lib/format/date";
-import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
-import { USER_STATUS_TOKENS } from "@/lib/status-tokens";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Select } from "@/components/ui/select";
+import { useConfirm } from "@/components/ui/use-confirm";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UserStatusBadgeMd as StatusBadge } from "@/components/ui/status-badges";
 import type { RoleAssignmentRead } from "@/lib/api/types";
 
 // The backend admin user-detail endpoint enriches each assignment with
@@ -49,17 +49,6 @@ type EnrichedAssignment = RoleAssignmentRead & {
   course_title?: string | null;
   assignment_id?: string;
 };
-
-function StatusBadge({ status }: { status: string }) {
-  const { t } = useTranslation();
-  return (
-    <SharedStatusBadge
-      status={status}
-      tokens={USER_STATUS_TOKENS}
-      label={t(`admin.users.status.${status}`, { defaultValue: status })}
-    />
-  );
-}
 
 // Thin wrapper over the shared date/time formatter; call sites pass the raw
 // i18n language, resolveLocale maps it to BCP-47. Same short date+time output.
@@ -129,6 +118,11 @@ function RoleAssignmentsSection({
   const roles = useListRoles();
   const grant = useGrantUserAssignment(userId);
   const revoke = useRevokeUserAssignment(userId);
+  const { confirm: confirmRevoke, dialog: confirmDialog } = useConfirm({
+    title: t("admin.users.roles.revoke"),
+    confirmLabel: t("admin.users.roles.revoke"),
+    cancelLabel: t("common.cancel"),
+  });
 
   const [roleCode, setRoleCode] = useState<string>("");
   const [scopeKind, setScopeKind] = useState<string>("organization");
@@ -266,13 +260,12 @@ function RoleAssignmentsSection({
                 <button
                   type="button"
                   onClick={() => {
-                    if (
-                      window.confirm(
-                        t("admin.users.roles.revoke_confirm", {
-                          role: roleName,
-                        }),
-                      )
-                    ) {
+                    void confirmRevoke({
+                      description: t("admin.users.roles.revoke_confirm", {
+                        role: roleName,
+                      }),
+                    }).then((ok) => {
+                      if (!ok) return;
                       revoke.mutate(assignmentId, {
                         onSuccess: () =>
                           toast.success(t("admin.users.roles.success.revoked")),
@@ -282,7 +275,7 @@ function RoleAssignmentsSection({
                               t("admin.users.roles.errors.revoke_failed"),
                           ),
                       });
-                    }
+                    });
                   }}
                   disabled={revoke.isPending}
                   className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md text-red-700 hover:bg-red-50 disabled:opacity-50"
@@ -415,6 +408,7 @@ function RoleAssignmentsSection({
             : t("admin.users.roles.grant")}
         </button>
       </form>
+      {confirmDialog}
     </div>
   );
 }

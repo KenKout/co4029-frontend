@@ -22,15 +22,8 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ProcessingJobRow } from "@/lib/api/types";
-import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { JOB_STATUS_TOKENS } from "@/lib/status-tokens";
-
-function JobStatusBadge({ status }: { status: string }) {
-  return (
-    <SharedStatusBadge status={status} tokens={JOB_STATUS_TOKENS} size="11px" />
-  );
-}
+import { JobStatusBadge } from "@/components/ui/status-badges";
 
 function useFormatters() {
   const { i18n } = useTranslation();

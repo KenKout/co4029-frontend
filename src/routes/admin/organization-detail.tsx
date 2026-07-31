@@ -16,6 +16,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
+import { useConfirm } from "@/components/ui/use-confirm";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -39,8 +40,7 @@ import {
   useRequirePermission,
 } from "@/lib/auth/use-permissions";
 import { formatDateTime, resolveLocale } from "@/lib/format/date";
-import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
-import { ORG_MEMBERSHIP_STATUS_TOKENS } from "@/lib/status-tokens";
+import { OrgMembershipStatusBadge } from "@/components/ui/status-badges";
 import type {
   MembershipRead,
   MembershipStatus,
@@ -60,14 +60,15 @@ function StatusBadge({
   type?: "org" | "membership";
 }) {
   const { t } = useTranslation();
+  // Two namespaces behind one badge (org vs membership rows), so the label is
+  // resolved here rather than bound in status-badges.
   const ns =
     type === "org"
       ? "admin.organizations.status_label"
       : "admin.organizations.membership_status_label";
   return (
-    <SharedStatusBadge
+    <OrgMembershipStatusBadge
       status={status}
-      tokens={ORG_MEMBERSHIP_STATUS_TOKENS}
       label={t(`${ns}.${status}`, { defaultValue: status })}
     />
   );
@@ -201,6 +202,11 @@ function DomainsTab({ orgId }: { orgId: string }) {
   const remove = useDeleteDomain(orgId);
   const [domain, setDomain] = useState("");
   const [autoProvision, setAutoProvision] = useState(false);
+  const { confirm: confirmDelete, dialog: confirmDialog } = useConfirm({
+    title: t("admin.organizations.actions.delete"),
+    confirmLabel: t("admin.organizations.actions.delete"),
+    cancelLabel: t("common.cancel"),
+  });
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -219,7 +225,12 @@ function DomainsTab({ orgId }: { orgId: string }) {
   }
 
   async function handleRemove(id: string) {
-    if (!confirm(t("admin.organizations.confirm.delete_domain"))) return;
+    if (
+      !(await confirmDelete({
+        description: t("admin.organizations.confirm.delete_domain"),
+      }))
+    )
+      return;
     try {
       await remove.mutateAsync(id);
       toast.success(t("admin.organizations.toasts.delete_success"));
@@ -304,6 +315,7 @@ function DomainsTab({ orgId }: { orgId: string }) {
           ))}
         </ul>
       )}
+      {confirmDialog}
     </div>
   );
 }
@@ -316,6 +328,11 @@ function UnitsTab({ orgId }: { orgId: string }) {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [unitType, setUnitType] = useState<UnitType>("department");
+  const { confirm: confirmDelete, dialog: confirmDialog } = useConfirm({
+    title: t("admin.organizations.actions.delete"),
+    confirmLabel: t("admin.organizations.actions.delete"),
+    cancelLabel: t("common.cancel"),
+  });
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -339,7 +356,12 @@ function UnitsTab({ orgId }: { orgId: string }) {
   }
 
   async function handleRemove(id: string) {
-    if (!confirm(t("admin.organizations.confirm.delete_unit"))) return;
+    if (
+      !(await confirmDelete({
+        description: t("admin.organizations.confirm.delete_unit"),
+      }))
+    )
+      return;
     try {
       await remove.mutateAsync(id);
       toast.success(t("admin.organizations.toasts.delete_success"));
@@ -463,6 +485,7 @@ function UnitsTab({ orgId }: { orgId: string }) {
           ))}
         </ul>
       )}
+      {confirmDialog}
     </div>
   );
 }
@@ -476,6 +499,11 @@ function MembershipRow({ m, orgId }: { m: MembershipRead; orgId: string }) {
   const [draftStatus, setDraftStatus] = useState<MembershipStatus>(
     m.status as MembershipStatus,
   );
+  const { confirm: confirmDelete, dialog: confirmDialog } = useConfirm({
+    title: t("admin.organizations.actions.delete"),
+    confirmLabel: t("admin.organizations.actions.delete"),
+    cancelLabel: t("common.cancel"),
+  });
 
   async function handleSave() {
     try {
@@ -495,7 +523,12 @@ function MembershipRow({ m, orgId }: { m: MembershipRead; orgId: string }) {
   }
 
   async function handleRemove() {
-    if (!confirm(t("admin.organizations.confirm.delete_membership"))) return;
+    if (
+      !(await confirmDelete({
+        description: t("admin.organizations.confirm.delete_membership"),
+      }))
+    )
+      return;
     try {
       await remove.mutateAsync(m.id);
       toast.success(t("admin.organizations.toasts.delete_success"));
@@ -597,6 +630,7 @@ function MembershipRow({ m, orgId }: { m: MembershipRead; orgId: string }) {
           )}
         </div>
       </div>
+      {confirmDialog}
     </li>
   );
 }

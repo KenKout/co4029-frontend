@@ -24,9 +24,8 @@ import { ApiError } from "@/lib/api/client";
 import { StatCard } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ProcessingJobOut } from "@/lib/api/types";
-import { StatusBadge as SharedStatusBadge } from "@/components/ui/status-badge";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { JOB_STATUS_TOKENS } from "@/lib/status-tokens";
+import { JobStatusBadge } from "@/components/ui/status-badges";
 import { formatDateTime, resolveLocale } from "@/lib/format/date";
 
 const STATUS_FILTERS = [
@@ -37,12 +36,6 @@ const STATUS_FILTERS = [
   { value: "failed", i18nKey: "admin.processing.filters.failed" },
   { value: "cancelled", i18nKey: "admin.processing.filters.cancelled" },
 ] as const;
-
-function JobStatusBadge({ status }: { status: string }) {
-  return (
-    <SharedStatusBadge status={status} tokens={JOB_STATUS_TOKENS} size="11px" />
-  );
-}
 
 // Thin wrapper over the shared formatter; the call site passes the raw i18n
 // language, resolveLocale maps it. Same short date+time output.

@@ -54,7 +54,7 @@ describe("StatusBadge", () => {
         status="active"
         tokens={USER_STATUS_TOKENS}
         label="Active"
-        size="11px"
+        size="sm"
       />,
     );
     expect(container.querySelector("span")!.className).toContain("text-[11px]");
