@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { useProcessingJob, useRetryProcessingJob } from "@/lib/api/hooks/admin";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -77,9 +77,8 @@ export default function AdminProcessingJobPage() {
   const params = useParams({ strict: false }) as { jobId?: string };
   const jobId = params.jobId ?? "";
 
-  const permissions = useMyPermissions();
-  const canAdmin =
-    permissions.data?.permissions.includes("system.administer") ?? false;
+  const permissions = usePermissions();
+  const canAdmin = permissions.has("system.administer");
 
   useEffect(() => {
     if (permissions.isLoading) return;

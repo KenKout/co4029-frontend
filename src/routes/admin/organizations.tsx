@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Building2, Plus, Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
 import { useCreateOrganization } from "@/lib/api/hooks/admin-organizations";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import type {
   OrganizationRead,
   OrganizationStatus,
@@ -154,15 +154,12 @@ function CreateOrgDialog({ onClose }: { onClose: () => void }) {
 export default function AdminOrganizationsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const permissions = useMyPermissions();
-  const canManage = useMemo(() => {
-    const perms = permissions.data?.permissions ?? [];
-    return (
-      perms.includes("system.administer") ||
-      perms.includes("org_unit.manage") ||
-      perms.includes("user.bulk_import")
-    );
-  }, [permissions.data]);
+  const permissions = usePermissions();
+  const canManage = permissions.hasAny(
+    "system.administer",
+    "org_unit.manage",
+    "user.bulk_import",
+  );
 
   const [showCreate, setShowCreate] = useState(false);
 

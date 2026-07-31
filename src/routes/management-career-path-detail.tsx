@@ -24,7 +24,7 @@ import {
   type SelectableEntity,
 } from "@/components/ui/entity-multi-select-dialog";
 import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { useCourseCatalogue } from "@/lib/api/hooks/courses";
 import { useAdminUsersSearch } from "@/lib/api/hooks/admin-organizations";
 import {
@@ -65,15 +65,15 @@ export default function ManagementCareerPathDetailPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams({ strict: false }) as { id: string };
-  const permissions = useMyPermissions();
-  const perms = permissions.data?.permissions ?? [];
+  const permissions = usePermissions();
   // Backend gates career-path authoring on course lifecycle codes (manager
   // holds them); there is no `career_path.manage` code. See the sibling
   // management-career-paths.tsx for the rationale.
-  const canManage =
-    perms.includes("course.create") ||
-    perms.includes("course.update") ||
-    perms.includes("system.administer");
+  const canManage = permissions.hasAny(
+    "course.create",
+    "course.update",
+    "system.administer",
+  );
 
   useEffect(() => {
     if (permissions.isLoading) return;

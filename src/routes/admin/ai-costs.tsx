@@ -41,7 +41,7 @@ import {
   type AiCostsPeriod,
   type AiModelPricingInput,
 } from "@/lib/api/hooks/admin";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { downloadCsv } from "@/lib/csv-export";
 import { StatCard } from "@/components/ui/stat-card";
@@ -1417,9 +1417,8 @@ export default function AdminAiCostsPage() {
   const { t } = useTranslation();
   const fmt = useFormatters();
   const navigate = useNavigate();
-  const permissions = useMyPermissions();
-  const canAdmin =
-    permissions.data?.permissions.includes("system.administer") ?? false;
+  const permissions = usePermissions();
+  const canAdmin = permissions.has("system.administer");
 
   const [period, setPeriod] = useState<AiCostsPeriod>("30d");
   const [dimension, setDimension] = useState<AiCostsDimension>("operation");

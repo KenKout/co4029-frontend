@@ -34,7 +34,7 @@ import {
   usePatchMembership,
   usePatchOrganization,
 } from "@/lib/api/hooks/admin-organizations";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import type {
   MembershipRead,
   MembershipStatus,
@@ -1047,17 +1047,14 @@ export default function AdminOrganizationDetailPage() {
   const navigate = useNavigate();
   const { orgId } = useParams({ strict: false });
   const [tab, setTab] = useState<TabKey>("info");
-  const permissions = useMyPermissions();
+  const permissions = usePermissions();
   const { data: org, isLoading } = useOrganization(orgId);
 
-  const canManage = useMemo(() => {
-    const perms = permissions.data?.permissions ?? [];
-    return (
-      perms.includes("system.administer") ||
-      perms.includes("org_unit.manage") ||
-      perms.includes("user.bulk_import")
-    );
-  }, [permissions.data]);
+  const canManage = permissions.hasAny(
+    "system.administer",
+    "org_unit.manage",
+    "user.bulk_import",
+  );
 
   useEffect(() => {
     if (permissions.isLoading) return;

@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, GraduationCap, Users } from "lucide-react";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import type { CourseAuthoring } from "@/lib/api/types";
 
@@ -40,13 +40,13 @@ function StatusBadge({ status }: { status: string }) {
 export default function ManagementEnrolmentPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const permissions = useMyPermissions();
-  const perms = permissions.data?.permissions ?? [];
+  const permissions = usePermissions();
 
-  const canManage =
-    perms.includes("course.enrollment.create") ||
-    perms.includes("course.enrollment.read") ||
-    perms.includes("system.administer");
+  const canManage = permissions.hasAny(
+    "course.enrollment.create",
+    "course.enrollment.read",
+    "system.administer",
+  );
 
   useEffect(() => {
     if (permissions.isLoading) return;

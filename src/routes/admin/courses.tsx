@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useServerTable } from "@/lib/api/use-server-table";
 import { useDeleteCourse, useRestoreCourse } from "@/lib/api/hooks/admin";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import type { CourseAuthoring } from "@/lib/api/types";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -117,9 +117,8 @@ function DeleteButton({ course }: { course: CourseAuthoring }) {
 export default function AdminCoursesPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const permissions = useMyPermissions();
-  const canAdmin =
-    permissions.data?.permissions.includes("system.administer") ?? false;
+  const permissions = usePermissions();
+  const canAdmin = permissions.has("system.administer");
   const [includeDeleted, setIncludeDeleted] = useState(true);
   const formatDate = useFormatDate();
 

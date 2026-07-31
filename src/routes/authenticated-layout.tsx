@@ -4,7 +4,10 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "@/components/layout/AppShell";
 import { DesktopOnlyBanner } from "@/components/ui/desktop-only-banner";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import {
+  hasAnyPermission,
+  usePermissions,
+} from "@/lib/auth/use-permissions";
 import {
   adminNavGroups,
   managerNavGroups,
@@ -32,18 +35,11 @@ const MANAGER_PERMS = [
   "course.enrollment.read",
 ];
 
-function hasAny(
-  perms: readonly string[],
-  required: readonly string[],
-): boolean {
-  return required.some((p) => perms.includes(p));
-}
-
 export default function AuthenticatedLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const permissions = useMyPermissions();
-  const perms = permissions.data?.permissions ?? [];
+  const permissions = usePermissions();
+  const perms = permissions.permissions;
 
   const onAdminPath = ADMIN_PREFIXES.some((p) =>
     location.pathname.startsWith(p),
@@ -63,9 +59,9 @@ export default function AuthenticatedLayout() {
   const isAllowed =
     !needsCheck ||
     (permsReady &&
-      ((onAdminPath && hasAny(perms, ADMIN_PERMS)) ||
-        (onManagerPath && hasAny(perms, MANAGER_PERMS)) ||
-        (onTeacherPath && hasAny(perms, TEACHER_PERMS))));
+      ((onAdminPath && hasAnyPermission(perms, ADMIN_PERMS)) ||
+        (onManagerPath && hasAnyPermission(perms, MANAGER_PERMS)) ||
+        (onTeacherPath && hasAnyPermission(perms, TEACHER_PERMS))));
 
   useEffect(() => {
     if (!needsCheck) return;

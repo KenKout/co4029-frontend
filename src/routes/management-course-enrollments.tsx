@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { FileDropzone } from "@/components/ui/file-dropzone";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import {
   useBulkEnroll,
   useCreateInvitationCode,
@@ -115,11 +115,11 @@ export default function ManagementCourseEnrollmentsPage() {
   const navigate = useNavigate();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
 
-  const permissions = useMyPermissions();
-  const canManage =
-    permissions.data?.permissions.includes("course.enrollment.create") ??
-    permissions.data?.permissions.includes("system.administer") ??
-    false;
+  const permissions = usePermissions();
+  const canManage = permissions.hasAny(
+    "course.enrollment.create",
+    "system.administer",
+  );
 
   useEffect(() => {
     if (permissions.isLoading) return;

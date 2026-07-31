@@ -15,7 +15,7 @@ import {
   useCourseProcessingJobs,
   useRestoreCourse,
 } from "@/lib/api/hooks/admin";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { StatCard } from "@/components/ui/stat-card";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -144,9 +144,8 @@ export default function AdminCourseDetailPage() {
   const params = useParams({ strict: false }) as { courseId?: string };
   const courseId = params.courseId ?? "";
 
-  const permissions = useMyPermissions();
-  const canAdmin =
-    permissions.data?.permissions.includes("system.administer") ?? false;
+  const permissions = usePermissions();
+  const canAdmin = permissions.has("system.administer");
 
   useEffect(() => {
     if (permissions.isLoading) return;

@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import {
   useCreateCareerPath,
   useListManagedCareerPaths,
@@ -225,18 +225,18 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
 export default function ManagementCareerPathsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const permissions = useMyPermissions();
+  const permissions = usePermissions();
 
-  const perms = permissions.data?.permissions ?? [];
   // Career-path authoring is gated on course lifecycle codes on the backend
   // (see career_paths/routers/authoring.py _PATH_MANAGE_CODES), which the
   // manager role holds. There is no `career_path.manage` code in the catalog —
   // checking it here locked everyone but admins out of a surface the backend
   // already allows managers to use.
-  const canManage =
-    perms.includes("course.create") ||
-    perms.includes("course.update") ||
-    perms.includes("system.administer");
+  const canManage = permissions.hasAny(
+    "course.create",
+    "course.update",
+    "system.administer",
+  );
 
   useEffect(() => {
     if (permissions.isLoading) return;

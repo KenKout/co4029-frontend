@@ -25,7 +25,7 @@ import {
   useOrganizations,
   useOrgUnits,
 } from "@/lib/api/hooks/admin-organizations";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -430,9 +430,8 @@ export default function AdminUserDetailPage() {
   const userId = params.userId ?? "";
   const locale = i18n.resolvedLanguage ?? i18n.language ?? "en";
 
-  const permissions = useMyPermissions();
-  const canAdmin =
-    permissions.data?.permissions.includes("system.administer") ?? false;
+  const permissions = usePermissions();
+  const canAdmin = permissions.has("system.administer");
 
   const [confirmOpen, setConfirmOpen] = useState(false);
 

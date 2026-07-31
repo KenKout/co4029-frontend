@@ -16,7 +16,7 @@ import {
   useProcessingQueue,
   useRetryProcessingJob,
 } from "@/lib/api/hooks/admin";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
 import { StatCard } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -172,9 +172,8 @@ export default function AdminProcessingPage() {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? i18n.language ?? "en";
   const navigate = useNavigate();
-  const permissions = useMyPermissions();
-  const canAdmin =
-    permissions.data?.permissions.includes("system.administer") ?? false;
+  const permissions = usePermissions();
+  const canAdmin = permissions.has("system.administer");
 
   // Seed the filter from ?status= so the admin dashboard can deep-link straight
   // to the failed jobs ("Job failure rate" tile) instead of landing on the

@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { BookOpen, ChevronRight, Plus, Users } from "lucide-react";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
-import { useMyPermissions } from "@/lib/api/hooks/auth";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import type { CourseAuthoring } from "@/lib/api/types";
@@ -57,15 +57,14 @@ function CourseRow({ course }: { course: CourseAuthoring }) {
 export default function DeptCoursesPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const permissions = useMyPermissions();
-  const perms = permissions.data?.permissions ?? [];
+  const permissions = usePermissions();
 
-  const canAssign =
-    perms.includes("course.assign_teacher") ||
-    perms.includes("system.administer");
-  const canRead = canAssign || perms.includes("course.enrollment.read");
-  const canCreate =
-    perms.includes("course.create") || perms.includes("system.administer");
+  const canAssign = permissions.hasAny(
+    "course.assign_teacher",
+    "system.administer",
+  );
+  const canRead = canAssign || permissions.has("course.enrollment.read");
+  const canCreate = permissions.hasAny("course.create", "system.administer");
 
   useEffect(() => {
     if (permissions.isLoading) return;
