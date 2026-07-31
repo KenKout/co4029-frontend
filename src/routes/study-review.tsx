@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { Link, useSearch } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -15,6 +16,7 @@ import {
   submitReview,
   useReviewQueue,
 } from "@/lib/api/hooks/spaced-repetition";
+import { queryKeys } from "@/lib/api/query-keys";
 import { SectionHeader } from "@/components/ui/section-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -39,7 +41,8 @@ export default function StudyReviewPage() {
     lesson?: string;
     course?: string;
   };
-  const { data, isLoading, isError } = useReviewQueue({
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError, refetch, isFetching } = useReviewQueue({
     limit: 20,
     lessonId: lesson,
     courseSlug: course,
@@ -60,6 +63,31 @@ export default function StudyReviewPage() {
   const [index, setIndex] = useState(0);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+
+  // After every answer the SM-2 write reschedules the card (a wrong answer
+  // pushes it to the 24h cooldown, a pass advances it), so the cards-due list,
+  // the dashboard tile, and the review queue itself are all now stale. The
+  // submit endpoint isn't a react-query mutation, so nothing auto-invalidates —
+  // do it here. Without this, returning to /study/cards-due shows the card the
+  // student just answered (the "it still lives in cards-due" bug).
+  const invalidateSrCaches = () => {
+    void queryClient.invalidateQueries({ queryKey: ["sr", "cards-due"] });
+    void queryClient.invalidateQueries({ queryKey: ["sr", "review-queue"] });
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.sr.dashboardSummary(),
+    });
+  };
+
+  // "Keep reviewing" / "next batch": refetch the queue and reset the local
+  // walkthrough. A plain <Link> to the same route is a no-op (same location),
+  // which is why the old button did nothing — we must actively refetch and
+  // reset the card index instead.
+  const restartSession = async () => {
+    setIndex(0);
+    setAnsweredCount(0);
+    setCorrectCount(0);
+    await refetch();
+  };
 
   if (isLoading) {
     return (
@@ -157,11 +185,16 @@ export default function StudyReviewPage() {
                 defaultValue: "{{count}} more cards still due.",
               })}
             </p>
-            <Link to="/study/review" search={{ lesson, course }}>
-              <Button variant="default" size="sm" className="cursor-pointer">
-                {t("study_review.keep_reviewing", "Keep reviewing")}
-              </Button>
-            </Link>
+            <Button
+              variant="default"
+              size="sm"
+              className="cursor-pointer"
+              disabled={isFetching}
+              onClick={() => void restartSession()}
+            >
+              {isFetching && <Loader2 className="h-4 w-4 animate-spin" />}
+              {t("study_review.keep_reviewing", "Keep reviewing")}
+            </Button>
           </div>
         ) : cappedForToday ? (
           <div className="mx-auto max-w-sm rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">
@@ -223,6 +256,10 @@ export default function StudyReviewPage() {
             onResolved={(result) => {
               setAnsweredCount((c) => c + 1);
               if (result.correct) setCorrectCount((c) => c + 1);
+              // The card was just rescheduled server-side — clear the stale
+              // cards-due / dashboard / queue caches so other surfaces reflect
+              // it immediately (fixes the card lingering in cards-due).
+              invalidateSrCaches();
             }}
             onNext={() => setIndex((i) => i + 1)}
             isLast={index === total - 1}
