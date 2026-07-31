@@ -4317,5 +4317,118 @@
     "edge_detail": "Quan hệ",
     "reverse_arrow": "Đảo chiều",
     "delete_arrow": "Xóa mũi tên"
+  },
+  "admin_settings": {
+    "group": {
+      "ai": "Mô hình AI",
+      "chunking": "Phân đoạn (chunking)",
+      "preprocessing": "Tiền xử lý",
+      "knowledge_graph": "Đồ thị tri thức",
+      "retrieval": "Truy xuất",
+      "spaced_repetition": "Lặp lại ngắt quãng",
+      "notifications": "Thông báo"
+    },
+    "item": {
+      "ai__llm_timeout_seconds": {
+        "label": "Thời gian chờ LLM — hàng loạt (giây)",
+        "description": "Thời gian chờ mỗi lần gọi cho các vai trò LLM nền/hàng loạt (trích xuất, làm giàu dữ liệu, trích xuất đồ thị tri thức, OCR). Tăng lên cho các lần nạp dữ liệu dài với ngữ cảnh lớn; giảm xuống để phát hiện endpoint bị treo sớm hơn."
+      },
+      "ai__llm_interactive_timeout_seconds": {
+        "label": "Thời gian chờ LLM — tương tác (giây)",
+        "description": "Thời gian chờ mỗi lần gọi cho các bước tương tác nơi người dùng đang chờ (lên ý tưởng / tạo / kiểm tra bài kiểm tra và phỏng vấn, cùng các vai trò trong lúc phỏng vấn). Đặt chặt hơn thời gian chờ hàng loạt để một endpoint bị treo không khiến người dùng phải chờ hết giới hạn của chế độ hàng loạt."
+      },
+      "ai__embedding_timeout_seconds": {
+        "label": "Thời gian chờ embedding (giây)",
+        "description": "Thời gian chờ mỗi lần gọi cho các yêu cầu embedding."
+      },
+      "ai__rate_limit_max_attempts": {
+        "label": "Số lần thử tối đa khi bị giới hạn tần suất (429)",
+        "description": "Tổng số lần thử cho một lần gọi LLM/embedding liên tục trả về HTTP 429 (bị giới hạn tần suất): 1 lần đầu cộng (N-1) lần thử lại. Chỉ 429 mới được thử lại tại chỗ; mọi lỗi khác được chuyển lên cơ chế thử lại ở cấp tác vụ. Đặt 1 để tắt việc thử lại 429 tại chỗ."
+      },
+      "ai__rate_limit_base_delay_seconds": {
+        "label": "Độ trễ cơ sở khi lùi lại lúc bị giới hạn tần suất (giây)",
+        "description": "Độ trễ cơ sở cho cơ chế lùi lại theo cấp số nhân giữa các lần thử lại 429 khi nhà cung cấp không gửi header Retry-After. Độ trễ = cơ sở * 2^(lần thử-1) cộng nhiễu ngẫu nhiên, giới hạn bởi độ trễ tối đa bên dưới."
+      },
+      "ai__rate_limit_max_delay_seconds": {
+        "label": "Độ trễ tối đa khi lùi lại lúc bị giới hạn tần suất (giây)",
+        "description": "Giới hạn trên cho mỗi lần chờ giữa các lần thử lại 429, áp dụng cho cả cơ chế lùi lại theo cấp số nhân lẫn giá trị Retry-After do nhà cung cấp gửi."
+      },
+      "chunking__max_tokens": {
+        "label": "Kích thước cửa sổ (token)",
+        "description": "Giới hạn trên của một cửa sổ dựa trên quy tắc trước khi bước xác định ranh giới gộp chúng lại. Cửa sổ lớn hơn mang nhiều ngữ cảnh hơn cho mỗi embedding nhưng truy xuất kém chính xác hơn."
+      },
+      "chunking__overlap_tokens": {
+        "label": "Độ chồng lấp cửa sổ (token)",
+        "description": "Số token được lặp lại giữa hai cửa sổ liền kề để một thông tin bị cắt ngang ranh giới vẫn còn nguyên trong một trong hai cửa sổ."
+      },
+      "chunking__llm_boundary_enabled": {
+        "label": "LLM quyết định ranh giới đoạn",
+        "description": "Cho một mô hình nhẹ gộp các cửa sổ liên tiếp cùng phát triển một ý, thay vì gộp theo độ tương đồng embedding. Khi tắt sẽ quay về dùng ngưỡng gộp theo độ tương đồng."
+      },
+      "chunking__llm_boundary_batch_size": {
+        "label": "Kích thước lô xác định ranh giới (số cửa sổ)",
+        "description": "Số cửa sổ đưa cho mô hình xác định ranh giới mỗi lần gọi. Giới hạn nằm ở độ chính xác của mô hình trên một danh sách dài, không phải ở cửa sổ ngữ cảnh."
+      },
+      "chunking__llm_boundary_max_carry": {
+        "label": "Giới hạn chuyển tiếp khi xác định ranh giới (số cửa sổ)",
+        "description": "Số cửa sổ tối đa có thể được giữ lại khỏi một lô và hiển thị lại ở lô kế tiếp. Giới hạn nhóm ở cuối mà mô hình chưa thấy được phần tiếp theo."
+      },
+      "chunking__glue_threshold": {
+        "label": "Ngưỡng gộp theo độ tương đồng",
+        "description": "Độ tương đồng cosine mà trên ngưỡng đó các cửa sổ liền kề sẽ được gộp. Chỉ dùng ở nhánh dự phòng — bước xác định ranh giới bằng LLM sẽ thay thế nó."
+      },
+      "chunking__max_window_tokens": {
+        "label": "Trần kích thước đoạn sau khi gộp (token)",
+        "description": "Không lần gộp nào được tạo ra đoạn lớn hơn giá trị này, dù do bước nào đề xuất."
+      },
+      "chunking__min_window_tokens": {
+        "label": "Sàn hấp thụ cửa sổ quá nhỏ (token)",
+        "description": "Các cửa sổ nhỏ hơn giá trị này được gộp vào cửa sổ lân cận cùng vai trò để những mẩu ngăn cách slide không bao giờ trở thành một đoạn riêng."
+      },
+      "chunking__parallelism": {
+        "label": "Số luồng làm giàu dữ liệu đồng thời",
+        "description": "Số đoạn được làm giàu dữ liệu đồng thời, mỗi đoạn trong một phiên cơ sở dữ liệu riêng."
+      },
+      "chunking__llm_enrichment_enabled": {
+        "label": "Làm giàu dữ liệu bằng LLM",
+        "description": "Tiêu đề mục, câu ngữ cảnh, khái niệm chính và các mệnh đề cho mỗi đoạn. Khi tắt, chất lượng truy xuất giảm mạnh — embedding được tạo ra chính từ câu ngữ cảnh."
+      },
+      "preprocess__ocr_enabled": {
+        "label": "OCR các trang chỉ có hình ảnh",
+        "description": "Đọc lại những trang có hình nhưng không có lớp văn bản. Khi tắt sẽ mất hoàn toàn các trang đó."
+      },
+      "preprocess__ocr_dpi": {
+        "label": "DPI kết xuất khi OCR",
+        "description": "Độ phân giải mà trang được kết xuất thành ảnh trước khi gọi mô hình thị giác. Cao hơn giúp ích cho bảng dày đặc nhưng tốn chi phí hơn."
+      },
+      "preprocess__ocr_advisory_max_pages": {
+        "label": "Ngưỡng cảnh báo số trang OCR",
+        "description": "Ghi cảnh báo khi vượt quá số trang OCR này trong một tài liệu. Chỉ mang tính khuyến cáo — không cắt bớt, vì bỏ trang là xóa nội dung chứ không phải tiết kiệm chi phí. Đặt 0 để tắt cảnh báo."
+      },
+      "preprocess__figure_page_max_words": {
+        "label": "Trần số từ của slide dạng hình",
+        "description": "Một trang có ít hơn số từ này mà có ảnh phủ đáng kể sẽ được coi là hình và gửi đi OCR. Tăng lên nếu các slide sơ đồ có tiêu đề vẫn bị đọc ra rỗng."
+      },
+      "preprocess__figure_area_min": {
+        "label": "Sàn diện tích phủ của hình",
+        "description": "Tỷ lệ diện tích trang mà một ảnh phải phủ để được tính là nội dung chứ không phải trang trí."
+      },
+      "knowledge_graph__enabled": {
+        "label": "Xây dựng đồ thị tri thức",
+        "description": "Trích xuất khái niệm và quan hệ của mỗi đoạn vào Neo4j. Khi tắt sẽ bỏ qua bước này cùng chi phí của nó."
+      },
+      "retrieval__deprioritized_ratio": {
+        "label": "Số chia giới hạn tóm tắt/ôn tập",
+        "description": "Tối đa floor(giới hạn / N) đoạn dạng tóm tắt, ôn tập hoặc trang bìa được đưa tới bộ tạo. Giá trị nhỏ hơn cho phép nhiều đoạn loại này lọt vào hơn."
+      },
+      "notifications__sr_reminder_cooldown_hours": {
+        "label": "Thời gian chờ giữa các nhắc nhở lặp lại ngắt quãng (giờ)",
+        "description": "Khoảng cách tối thiểu giữa các nhắc nhở thẻ đến hạn ôn tập cho cùng một học viên. Hệ thống vẫn quét mỗi giờ để bắt kịp thẻ tồn đọng mới, nhưng học viên đã nhận nhắc nhở trong khoảng thời gian này sẽ bị bỏ qua — nên ở mặc định 24 giờ, họ nhận tối đa một nhắc nhở ôn tập mỗi ngày dù có bao nhiêu thẻ quá hạn."
+      },
+      "spaced_repetition__daily_review_cap": {
+        "label": "Giới hạn ôn tập mỗi ngày (thẻ/ngày)",
+        "description": "Số thẻ ôn tập lặp lại ngắt quãng tối đa mà một học viên được đưa ra để ôn trong một ngày, để lượng thẻ tồn đọng lớn vẫn là một mục tiêu hằng ngày có thể hoàn thành thay vì một bức tường vô tận. Các thẻ đã ôn trong ngày được tính vào giới hạn. Điều này chỉ giới hạn HÀNG ĐỢI ÔN TẬP — không bao giờ thay đổi điều kiện mở khóa bài học hay điểm ghi nhớ, nên tiến độ không bị ảnh hưởng. Đặt 0 để không giới hạn (đưa ra toàn bộ thẻ tồn đọng)."
+      }
+    }
   }
 }

@@ -4338,5 +4338,118 @@
     "edge_detail": "Relationship",
     "reverse_arrow": "Reverse direction",
     "delete_arrow": "Delete arrow"
+  },
+  "admin_settings": {
+    "group": {
+      "ai": "AI models",
+      "chunking": "Chunking",
+      "preprocessing": "Preprocessing",
+      "knowledge_graph": "Knowledge graph",
+      "retrieval": "Retrieval",
+      "spaced_repetition": "Spaced repetition",
+      "notifications": "Notifications"
+    },
+    "item": {
+      "ai__llm_timeout_seconds": {
+        "label": "LLM timeout — batch (seconds)",
+        "description": "Per-call timeout for background/batch LLM roles (extraction, enrichment, KG extraction, OCR). Raise it for long large-context ingest calls; lower it to fail a stalled endpoint sooner."
+      },
+      "ai__llm_interactive_timeout_seconds": {
+        "label": "LLM timeout — interactive (seconds)",
+        "description": "Per-call timeout for interactive stages where a user waits on a spinner (quiz + interview ideation / generation / validation and the interview runtime roles). Kept tighter than the batch timeout so a stalled endpoint can't hang the user for the full batch limit."
+      },
+      "ai__embedding_timeout_seconds": {
+        "label": "Embedding timeout (seconds)",
+        "description": "Per-call timeout for embedding requests."
+      },
+      "ai__rate_limit_max_attempts": {
+        "label": "Rate-limit (429) max attempts",
+        "description": "Total attempts for an LLM/embedding call that keeps returning HTTP 429 (rate-limited): 1 initial try plus (N-1) retries. Only 429 is retried inline; all other errors propagate to the job-level retry. 1 disables inline 429 retry."
+      },
+      "ai__rate_limit_base_delay_seconds": {
+        "label": "Rate-limit backoff base delay (seconds)",
+        "description": "Base delay for exponential backoff between 429 retries when the provider sends no Retry-After header. Delay = base * 2^(attempt-1) plus jitter, capped by the max delay below."
+      },
+      "ai__rate_limit_max_delay_seconds": {
+        "label": "Rate-limit backoff max delay (seconds)",
+        "description": "Upper bound on any single wait between 429 retries, applied to both the exponential backoff and a provider-supplied Retry-After."
+      },
+      "chunking__max_tokens": {
+        "label": "Window size (tokens)",
+        "description": "Upper bound on a single rule-based window before the boundary stage groups them. Larger windows carry more context per embedding but retrieve less precisely."
+      },
+      "chunking__overlap_tokens": {
+        "label": "Window overlap (tokens)",
+        "description": "Tokens repeated between adjacent windows so a fact split across a boundary survives in one of them."
+      },
+      "chunking__llm_boundary_enabled": {
+        "label": "LLM decides chunk boundaries",
+        "description": "Let a lite model group consecutive windows that develop one idea, instead of merging by embedding similarity. Off falls back to the similarity glue."
+      },
+      "chunking__llm_boundary_batch_size": {
+        "label": "Boundary batch size (windows)",
+        "description": "Windows shown to the boundary model per call. The limit is the model's accuracy over a long list, not the context window."
+      },
+      "chunking__llm_boundary_max_carry": {
+        "label": "Boundary carry-over cap (windows)",
+        "description": "Most windows that may be withheld from a batch and re-shown in the next one. Bounds the trailing group whose continuation the model could not see."
+      },
+      "chunking__glue_threshold": {
+        "label": "Similarity glue threshold",
+        "description": "Cosine similarity above which adjacent windows merge. Only consulted on the fallback path — the LLM boundary stage supersedes it."
+      },
+      "chunking__max_window_tokens": {
+        "label": "Merged chunk ceiling (tokens)",
+        "description": "No merge may produce a chunk larger than this, whichever stage proposes it."
+      },
+      "chunking__min_window_tokens": {
+        "label": "Tiny-window absorb floor (tokens)",
+        "description": "Windows below this are folded into a same-role neighbour so slide-divider artefacts never become their own chunk."
+      },
+      "chunking__parallelism": {
+        "label": "Enrichment concurrency",
+        "description": "Chunks enriched concurrently, each in its own DB session."
+      },
+      "chunking__llm_enrichment_enabled": {
+        "label": "LLM enrichment",
+        "description": "Section title, context sentence, key concepts and propositions per chunk. Off degrades retrieval sharply — the context sentence is what the embedding is built from."
+      },
+      "preprocess__ocr_enabled": {
+        "label": "OCR image-only pages",
+        "description": "Read back pages that carry a figure but no text layer. Off loses those pages entirely."
+      },
+      "preprocess__ocr_dpi": {
+        "label": "OCR render DPI",
+        "description": "Resolution the page is rasterised at before the vision call. Higher helps dense tables and costs more."
+      },
+      "preprocess__ocr_advisory_max_pages": {
+        "label": "OCR page warning threshold",
+        "description": "Logs a warning past this many OCR pages in one document. Advisory only — it does not truncate, because dropping pages deleted content rather than saving money. 0 silences the warning."
+      },
+      "preprocess__figure_page_max_words": {
+        "label": "Figure-slide word ceiling",
+        "description": "A page under this many words with real image coverage is treated as a figure and sent to OCR. Raise it if titled diagram slides are still coming through empty."
+      },
+      "preprocess__figure_area_min": {
+        "label": "Figure coverage floor",
+        "description": "Fraction of the page an image must cover to count as content rather than decoration."
+      },
+      "knowledge_graph__enabled": {
+        "label": "Build the knowledge graph",
+        "description": "Extract concepts and relationships per chunk into Neo4j. Off skips the stage and its cost."
+      },
+      "retrieval__deprioritized_ratio": {
+        "label": "Summary/review cap divisor",
+        "description": "At most floor(limit / N) summary, review or front-matter chunks reach the generator. Lower values admit more of them."
+      },
+      "notifications__sr_reminder_cooldown_hours": {
+        "label": "Spaced-repetition reminder cooldown (hours)",
+        "description": "Minimum gap between spaced-repetition due-card reminders for the same student. The scan still runs hourly to catch new backlog promptly, but a student who already got a reminder inside this window is skipped — so at the default of 24 they get at most one review reminder per day no matter how many cards are overdue."
+      },
+      "spaced_repetition__daily_review_cap": {
+        "label": "Daily review cap (cards/day)",
+        "description": "Maximum spaced-repetition cards a student is served for review in one day, so a large backlog stays a finishable daily goal instead of an unbounded wall. Cards already reviewed today count toward the cap. This bounds the REVIEW QUEUE only — it never changes lesson unlock eligibility or retention scoring, so progression is unaffected. Set to 0 for no cap (serve the whole backlog)."
+      }
+    }
   }
 }

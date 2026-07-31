@@ -46,6 +46,39 @@ const GROUP_LABELS: Record<string, string> = {
   notifications: "Notifications",
 };
 
+// Localised label / description / group-heading lookups. The backend registry
+// ships English label + description as data (settings_registry.py), so we key
+// translations by the setting key and fall back to the backend English when a
+// locale hasn't translated an entry yet — a newly-added setting therefore
+// renders in English until its keys land, never blank.
+type TFn = (key: string, opts?: Record<string, unknown>) => string;
+
+// Setting keys contain dots (e.g. "ai.llm_timeout_seconds"), which i18next
+// treats as its nested-key separator. Flatten them to a dot-free token so the
+// lookup resolves to a single leaf key rather than trying to walk a nested
+// object that doesn't exist.
+function i18nKey(settingKey: string): string {
+  return settingKey.replace(/\./g, "__");
+}
+
+function settingLabel(t: TFn, setting: RuntimeSetting): string {
+  return t(`admin_settings.item.${i18nKey(setting.key)}.label`, {
+    defaultValue: setting.label,
+  });
+}
+
+function settingDescription(t: TFn, setting: RuntimeSetting): string {
+  return t(`admin_settings.item.${i18nKey(setting.key)}.description`, {
+    defaultValue: setting.description,
+  });
+}
+
+function groupLabel(t: TFn, group: string): string {
+  return t(`admin_settings.group.${group}`, {
+    defaultValue: GROUP_LABELS[group] ?? group,
+  });
+}
+
 // A few groups only take effect on the next ingest of a document — changing
 // them never rewrites existing content. Stated once per section instead of a
 // badge shouting on every row.
@@ -324,9 +357,11 @@ function SettingRow({
   orgId?: string;
   showKeys: boolean;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const setMutation = useSetRuntimeSetting(orgId);
   const clearMutation = useClearRuntimeSetting(orgId);
+  const label = settingLabel(t, setting);
 
   const overrideAtThisScope =
     orgId !== undefined
@@ -337,7 +372,7 @@ function SettingRow({
     setMutation.mutate(
       { key: setting.key, value },
       {
-        onSuccess: () => toast.success(`${setting.label} saved`),
+        onSuccess: () => toast.success(`${label} saved`),
         onError: (err: unknown) =>
           toast.error(err instanceof Error ? err.message : "Could not save"),
       },
@@ -347,7 +382,7 @@ function SettingRow({
   const commitNumber = (raw: string) => {
     const parsed = Number(raw);
     if (raw.trim() === "" || Number.isNaN(parsed)) {
-      toast.error(`${setting.label} must be a number`);
+      toast.error(`${label} must be a number`);
       return;
     }
     save(parsed);
@@ -355,8 +390,11 @@ function SettingRow({
 
   // Split the description into a lead sentence (always shown) + the rest
   // (revealed on demand). The ingest guidance is worth keeping — just not all
-  // of it, always, at full width.
-  const [lead, ...restParts] = setting.description.split(/(?<=\.)\s+/);
+  // of it, always, at full width. Split the LOCALISED description so the
+  // sentence break lands correctly in the active language.
+  const [lead, ...restParts] = settingDescription(t, setting).split(
+    /(?<=\.)\s+/,
+  );
   const rest = restParts.join(" ").trim();
 
   // Scope comparison: when editing an org, show the global default it would
@@ -372,7 +410,7 @@ function SettingRow({
           checked={Boolean(setting.effective_value)}
           disabled={setMutation.isPending}
           onCheckedChange={(c) => save(c)}
-          aria-label={setting.label}
+          aria-label={label}
         />
         <span className="text-xs text-slate-500">
           {setting.effective_value ? "On" : "Off"}
@@ -399,7 +437,7 @@ function SettingRow({
                 className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"
               />
             )}
-            <span className="font-medium text-slate-900">{setting.label}</span>
+            <span className="font-medium text-slate-900">{label}</span>
             <ResolutionPopover setting={setting} />
             {rest && (
               <button
@@ -449,7 +487,7 @@ function SettingRow({
             disabled={!overrideAtThisScope || clearMutation.isPending}
             onClick={() =>
               clearMutation.mutate(setting.key, {
-                onSuccess: () => toast.success(`${setting.label} reset`),
+                onSuccess: () => toast.success(`${label} reset`),
               })
             }
           >
@@ -492,6 +530,7 @@ function SettingsTable({
   orgId?: string;
   showKeys: boolean;
 }) {
+  const { t } = useTranslation();
   const setMutation = useSetRuntimeSetting(orgId);
   const clearMutation = useClearRuntimeSetting(orgId);
 
@@ -525,7 +564,7 @@ function SettingsTable({
           return (
             <span className="flex items-center gap-2">
               <span className="font-semibold text-slate-800">
-                {GROUP_LABELS[node.group] ?? node.group}
+                {groupLabel(t, node.group)}
               </span>
               <span className="text-xs font-normal text-slate-400">
                 {node.count}
@@ -548,7 +587,9 @@ function SettingsTable({
                   className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"
                 />
               )}
-              <span className="font-medium text-slate-800">{s.label}</span>
+              <span className="font-medium text-slate-800">
+                {settingLabel(t, s)}
+              </span>
             </span>
             {showKeys && (
               <span className="font-mono text-[11px] text-slate-400">
@@ -571,7 +612,7 @@ function SettingsTable({
             checked={Boolean(s.effective_value)}
             disabled={setMutation.isPending}
             onCheckedChange={(c) => setMutation.mutate({ key: s.key, value: c })}
-            aria-label={s.label}
+            aria-label={settingLabel(t, s)}
           />
         ) : (
           <input
@@ -691,8 +732,15 @@ export default function AdminSettingsPage() {
     const map = new Map<string, RuntimeSetting[]>();
     for (const s of settings.data ?? []) {
       if (overriddenOnly && !isOverriddenAtScope(s)) continue;
+      // Match against the localised label/description AND the backend English
+      // (via key fallback) so search works whether the admin types Vietnamese
+      // or the original English term.
+      const localisedLabel = settingLabel(t, s).toLowerCase();
+      const localisedDesc = settingDescription(t, s).toLowerCase();
       if (
         q &&
+        !localisedLabel.includes(q) &&
+        !localisedDesc.includes(q) &&
         !s.label.toLowerCase().includes(q) &&
         !s.key.toLowerCase().includes(q) &&
         !(s.env_var ?? "").toLowerCase().includes(q) &&
@@ -705,7 +753,7 @@ export default function AdminSettingsPage() {
     }
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.data, search, overriddenOnly, orgId]);
+  }, [settings.data, search, overriddenOnly, orgId, t]);
 
   const visibleGroups = GROUP_ORDER.filter((g) => grouped.has(g));
 
@@ -792,7 +840,7 @@ export default function AdminSettingsPage() {
                           : "text-slate-600 hover:bg-slate-100",
                       )}
                     >
-                      <span className="truncate">{GROUP_LABELS[g] ?? g}</span>
+                      <span className="truncate">{groupLabel(t, g)}</span>
                       {count > 0 && (
                         <span
                           className={cn(
@@ -962,7 +1010,7 @@ export default function AdminSettingsPage() {
                     <div className="rounded-t-lg border-b border-slate-200 bg-white px-5 py-3">
                       <div className="flex items-center justify-between gap-2">
                         <h2 className="text-lg font-semibold text-slate-900">
-                          {GROUP_LABELS[group] ?? group}
+                          {groupLabel(t, group)}
                         </h2>
                         <span className="text-xs text-slate-400">
                           {rows.length} setting{rows.length !== 1 ? "s" : ""}
