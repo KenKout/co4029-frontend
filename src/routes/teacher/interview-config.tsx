@@ -14,7 +14,6 @@ import {
   Loader2,
   Lock,
   MoreVertical,
-  Plus,
   Save,
   ShieldCheck,
   Sparkles,
@@ -32,7 +31,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -82,9 +80,6 @@ import {
   type PersonaKey,
 } from "@/lib/interview/persona-traits";
 import {
-  type RubricCriterion,
-  MAX_CRITERIA,
-  MAX_CRITERION_NAME_CHARS,
   parseSupplementaryInstructions,
   serializeSupplementaryInstructions,
 } from "@/lib/interview/supplementary-instructions";
