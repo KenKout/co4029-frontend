@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Download, FileUp, Loader2, Upload, X } from "lucide-react";
+import { X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import {
   downloadQuizExport,
   useImportQuestionsFromFile,
   type ImportResult,
 } from "@/lib/api/hooks/quizzes";
+import { QuizExportSection } from "./QuizExportSection";
+import { QuizImportSection } from "./QuizImportSection";
 
 /**
  * Phase 11 — question import/export. Import parses a Moodle GIFT or XML file
@@ -87,109 +88,18 @@ export function ImportExportPanel({
           </Button>
         </div>
 
-        {/* Export */}
-        <div className="rounded-xl border border-m3-outline-variant/30 p-4 space-y-2">
-          <p className="text-sm font-bold text-m3-on-surface">
-            {t("teacher_quiz_manage.import_export.export_title")}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              disabled={exporting}
-              onClick={() => void handleExport("gift")}
-            >
-              <Download className="h-4 w-4" />
-              GIFT
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              disabled={exporting}
-              onClick={() => void handleExport("xml")}
-            >
-              <Download className="h-4 w-4" />
-              Moodle XML
-            </Button>
-          </div>
-        </div>
+        <QuizExportSection exporting={exporting} onExport={handleExport} />
 
-        {/* Import */}
-        <div className="rounded-xl border border-m3-outline-variant/30 p-4 space-y-3">
-          <p className="text-sm font-bold text-m3-on-surface">
-            {t("teacher_quiz_manage.import_export.import_title")}
-          </p>
-          <div className="flex items-center gap-3">
-            <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {t("teacher_quiz_manage.import_export.format_label")}
-            </label>
-            <Select<"gift" | "xml">
-              value={format}
-              onValueChange={(next) => setFormat(next)}
-              options={[
-                { value: "gift", label: "GIFT" },
-                { value: "xml", label: "Moodle XML" },
-              ]}
-              size="sm"
-              className="w-40"
-            />
-            <label className="inline-flex items-center gap-1.5 text-sm text-m3-primary cursor-pointer">
-              <FileUp className="h-4 w-4" />
-              {t("teacher_quiz_manage.import_export.upload")}
-              <input
-                type="file"
-                accept=".txt,.gift,.xml"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void handleFile(file);
-                }}
-              />
-            </label>
-          </div>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={8}
-            placeholder={t(
-              "teacher_quiz_manage.import_export.content_placeholder",
-            )}
-            className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface px-3 py-2 text-sm font-mono"
-          />
-
-          {result && (
-            <div className="rounded-lg bg-m3-surface-container-low p-3 text-sm space-y-1">
-              <p className="text-m3-on-surface">
-                {t("teacher_quiz_manage.import_export.result_summary", {
-                  imported: result.imported,
-                  skipped: result.skipped,
-                })}
-              </p>
-              {result.warnings.length > 0 && (
-                <ul className="list-disc pl-5 text-xs text-amber-700 space-y-0.5">
-                  {result.warnings.map((w, i) => (
-                    <li key={i}>{w}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-
-          <Button
-            className="gap-1.5"
-            disabled={importMut.isPending}
-            onClick={() => void handleImport()}
-          >
-            {importMut.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Upload className="h-4 w-4" />
-            )}
-            {t("teacher_quiz_manage.import_export.import_action")}
-          </Button>
-        </div>
+        <QuizImportSection
+          format={format}
+          onFormatChange={setFormat}
+          content={content}
+          onContentChange={setContent}
+          result={result}
+          importing={importMut.isPending}
+          onFile={handleFile}
+          onImport={handleImport}
+        />
       </div>
     </div>
   );

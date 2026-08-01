@@ -16,11 +16,13 @@
  * (lesson materials, video, avatar, CSV, …) can share one component.
  */
 import { useRef } from "react";
-import { CloudUpload, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { fileKind } from "@/lib/file-icons";
 import { useFileDrop } from "@/lib/use-file-drop";
 import { cn } from "@/lib/utils";
+import { DropzoneBusyContent } from "./file-dropzone/busy-content";
+import { DropzoneDragContent } from "./file-dropzone/drag-content";
+import { DropzoneIdleContent } from "./file-dropzone/idle-content";
 
 export interface FileDropzoneProps {
   onFile: (file: File) => void;
@@ -64,7 +66,6 @@ export function FileDropzone({
   });
 
   const kind = fileKind({ mime: dragMime });
-  const KindIcon = kind.Icon;
 
   return (
     <div
@@ -116,85 +117,25 @@ export function FileDropzone({
         // pointer-events-none on all inner content so children never become
         // drag targets (redundant with the depth counter, but it also stops
         // any stray hover/flicker at the child boundary — belt and braces).
-        <div
-          className={cn(
-            "pointer-events-none flex items-center justify-center",
-            compact ? "gap-3" : "flex-col gap-3",
-          )}
-        >
-          <Loader2
-            className={cn(
-              "animate-spin text-m3-secondary",
-              compact ? "h-5 w-5" : "h-8 w-8",
-            )}
-          />
-          <p className="font-headline font-bold text-m3-on-surface text-base">
-            {busyLabel ?? t("file_dropzone.uploading")}
-          </p>
-        </div>
+        <DropzoneBusyContent
+          compact={compact}
+          label={busyLabel ?? t("file_dropzone.uploading")}
+        />
       ) : dragging ? (
         // Drag-active: file-type logo (from MIME) + drop prompt. The spinning
         // ring is the border; the logo pulses to signal "release here".
-        <div
-          className={cn(
-            "pointer-events-none flex items-center justify-center",
-            compact ? "gap-3" : "flex-col gap-3",
-          )}
-        >
-          <div className="w-14 h-14 rounded-xl bg-m3-surface flex items-center justify-center shadow-ai-glow ai-pulse">
-            <KindIcon className={cn("h-7 w-7", kind.colorClass)} />
-          </div>
-          <div className={compact ? "text-left" : ""}>
-            <p className="font-headline font-bold text-m3-on-surface text-base">
-              {t("file_dropzone.drop_active")}
-            </p>
-            {dragMime && kind.label !== "File" && (
-              <p className="text-xs text-m3-on-surface-variant mt-0.5">
-                {kind.label}
-              </p>
-            )}
-          </div>
-        </div>
+        <DropzoneDragContent
+          compact={compact}
+          kind={kind}
+          dragMime={dragMime}
+          dropLabel={t("file_dropzone.drop_active")}
+        />
       ) : (
-        <div className="pointer-events-none">
-          <div
-            className={cn(
-              "flex items-center justify-center",
-              compact ? "gap-3" : "gap-3 mb-4",
-            )}
-          >
-            <div
-              className={cn(
-                "rounded-xl gradient-primary flex items-center justify-center shadow-ai-glow",
-                compact ? "w-10 h-10" : "w-14 h-14",
-              )}
-            >
-              <CloudUpload
-                className={cn("text-white", compact ? "h-5 w-5" : "h-7 w-7")}
-              />
-            </div>
-            {compact && (
-              <div className="text-left">
-                <p className="font-headline font-bold text-m3-on-surface text-sm">
-                  {idleTitle ?? t("file_dropzone.idle_title")}
-                </p>
-                {hint && (
-                  <p className="text-xs text-m3-on-surface-variant">{hint}</p>
-                )}
-              </div>
-            )}
-          </div>
-          {!compact && (
-            <>
-              <p className="font-headline font-bold text-m3-on-surface text-base mb-1">
-                {idleTitle ?? t("file_dropzone.idle_title")}
-              </p>
-              {hint && (
-                <p className="text-sm text-m3-on-surface-variant">{hint}</p>
-              )}
-            </>
-          )}
-        </div>
+        <DropzoneIdleContent
+          compact={compact}
+          title={idleTitle ?? t("file_dropzone.idle_title")}
+          hint={hint}
+        />
       )}
     </div>
   );

@@ -1,0 +1,148 @@
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+
+import type {
+  InterviewQuestionAuthoring,
+  InterviewQuestionBankItemRead,
+} from "@/lib/api/types";
+import type {
+  AddToBankMutation,
+  CreateQuestionMutation,
+  TranslateFn,
+} from "./types";
+
+/**
+ * Question bank: add-to-bank + import-from-bank (copy semantics). Extracted
+ * from the former 2.4k-line question-bank.tsx.
+ */
+export interface QuestionBankIoOptions {
+  configId: string;
+  sorted: InterviewQuestionAuthoring[];
+  bankItems: InterviewQuestionBankItemRead[] | undefined;
+  addToBank: AddToBankMutation;
+  createQuestion: CreateQuestionMutation;
+  announce: (msg: string) => void;
+  t: TranslateFn;
+}
+
+export function useQuestionBankIo(options: QuestionBankIoOptions) {
+  const {
+    configId,
+    sorted,
+    bankItems,
+    addToBank,
+    createQuestion,
+    announce,
+    t,
+  } = options;
+
+  const [bankingId, setBankingId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [selectedBank, setSelectedBank] = useState<Set<string>>(new Set());
+  const [importBusy, setImportBusy] = useState(false);
+
+  async function handleAddToBank(q: InterviewQuestionAuthoring) {
+    setBankingId(q.id);
+    try {
+      await addToBank.mutateAsync({
+        prompt_text: q.prompt_text,
+        question_type: q.question_type,
+        difficulty: q.difficulty ?? null,
+        model_answer: q.model_answer ?? null,
+        source_config_id: configId,
+      });
+      announce(t("teacher_interview_config.qbank.bank_added"));
+      toast.success(t("teacher_interview_config.qbank.bank_added"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    } finally {
+      setBankingId(null);
+    }
+  }
+
+  // Items already present in THIS config (by normalized prompt) are hidden
+  // from the import picker so a teacher can't obviously double-add.
+  const existingPrompts = useMemo(
+    () => new Set(sorted.map((q) => q.prompt_text.trim().toLowerCase())),
+    [sorted],
+  );
+  const importableBankItems = useMemo(
+    () =>
+      (bankItems ?? []).filter(
+        (b) => !existingPrompts.has(b.prompt_text.trim().toLowerCase()),
+      ),
+    [bankItems, existingPrompts],
+  );
+
+  // Prompts already present in the course bank (normalized). Drives the
+  // per-question "Add to bank" disabled state + "Already in bank" label.
+  const bankedPrompts = useMemo(
+    () =>
+      new Set((bankItems ?? []).map((b) => b.prompt_text.trim().toLowerCase())),
+    [bankItems],
+  );
+
+  function toggleBankSelection(id: string) {
+    setSelectedBank((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleImportFromBank() {
+    const chosen = importableBankItems.filter((b) => selectedBank.has(b.id));
+    if (chosen.length === 0) return;
+    setImportBusy(true);
+    let created = 0;
+    try {
+      // Sequential creates: the (config_id, position) unique constraint means
+      // parallel POSTs at the same position collide. Copy semantics — each
+      // becomes a fresh interview question the teacher can edit independently.
+      let position = sorted.length;
+      for (const b of chosen) {
+        position += 1;
+        await createQuestion.mutateAsync({
+          prompt_text: b.prompt_text,
+          question_type: b.question_type,
+          difficulty: b.difficulty ?? null,
+          model_answer: b.model_answer ?? null,
+          position,
+        });
+        created += 1;
+      }
+      announce(
+        t("teacher_interview_config.qbank.imported", { count: created }),
+      );
+      toast.success(
+        t("teacher_interview_config.qbank.imported", { count: created }),
+      );
+      setImporting(false);
+      setSelectedBank(new Set());
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    } finally {
+      setImportBusy(false);
+    }
+  }
+
+  function startImport() {
+    setSelectedBank(new Set());
+    setImporting(true);
+  }
+
+  return {
+    bankingId,
+    importing,
+    setImporting,
+    selectedBank,
+    importBusy,
+    importableBankItems,
+    bankedPrompts,
+    handleAddToBank,
+    toggleBankSelection,
+    handleImportFromBank,
+    startImport,
+  };
+}

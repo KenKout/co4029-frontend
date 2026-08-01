@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Trans, useTranslation } from "react-i18next";
@@ -6,18 +6,19 @@ import { ArrowRight, GraduationCap, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { CareerPathStatusBadge } from "@/components/ui/status-badges";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import {
   useCreateCareerPath,
   useListManagedCareerPaths,
 } from "@/lib/api/hooks/career-paths";
-import { COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import type { CareerPathAuthoring } from "@/lib/api/types";
 
 function PathRow({ path }: { path: CareerPathAuthoring }) {
-  const { t } = useTranslation();
   return (
     <Link
       to="/management/career-paths/$id"
@@ -36,14 +37,7 @@ function PathRow({ path }: { path: CareerPathAuthoring }) {
             {path.slug}
           </p>
         </div>
-        <StatusBadge
-          status={path.status}
-          tokens={COURSE_STATUS_TOKENS}
-          size="11px"
-          label={t(`management_career_paths.status.${path.status}`, {
-            defaultValue: path.status,
-          })}
-        />
+        <CareerPathStatusBadge status={path.status} />
         <ArrowRight className="h-4 w-4 text-m3-on-surface-variant shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
       </div>
     </Link>
@@ -208,7 +202,6 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
 
 export default function ManagementCareerPathsPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const permissions = usePermissions();
 
   // Career-path authoring is gated on course lifecycle codes on the backend
@@ -222,13 +215,9 @@ export default function ManagementCareerPathsPage() {
     "system.administer",
   );
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canManage) {
-      toast.error(t("management_career_paths.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canManage, navigate, t]);
+  useRequirePermission(canManage, {
+    messageKey: "management_career_paths.no_permission",
+  });
 
   const [includeArchived, setIncludeArchived] = useState(false);
   const [creating, setCreating] = useState(false);

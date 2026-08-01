@@ -1,19 +1,18 @@
-import { useEffect } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { BookOpen, ChevronRight, Plus, Users } from "lucide-react";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { CourseStatusBadge } from "@/components/ui/status-badges";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import type { CourseAuthoring } from "@/lib/api/types";
 
 function CourseRow({ course }: { course: CourseAuthoring }) {
-  const { t } = useTranslation();
   return (
     <Link
       to="/dept/courses/$courseId"
@@ -32,14 +31,7 @@ function CourseRow({ course }: { course: CourseAuthoring }) {
             {course.slug}
           </p>
         </div>
-        <StatusBadge
-          status={course.status}
-          tokens={COURSE_STATUS_TOKENS}
-          size="11px"
-          label={t(`dept_courses.status.${course.status}`, {
-            defaultValue: course.status,
-          })}
-        />
+        <CourseStatusBadge status={course.status} />
         <ChevronRight className="h-4 w-4 text-text-muted shrink-0" />
       </div>
     </Link>
@@ -48,7 +40,6 @@ function CourseRow({ course }: { course: CourseAuthoring }) {
 
 export default function DeptCoursesPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const permissions = usePermissions();
 
   const canAssign = permissions.hasAny(
@@ -58,13 +49,9 @@ export default function DeptCoursesPage() {
   const canRead = canAssign || permissions.has("course.enrollment.read");
   const canCreate = permissions.hasAny("course.create", "system.administer");
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canRead) {
-      toast.error(t("dept_courses.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canRead, navigate, t]);
+  useRequirePermission(canRead, {
+    messageKey: "dept_courses.no_permission",
+  });
 
   const enabled = !permissions.isLoading && canRead;
   const list = useDeptCourses();

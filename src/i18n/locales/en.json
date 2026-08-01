@@ -29,7 +29,8 @@
       "title": "Are you sure you want to quit?",
       "description": "You have unsaved changes. If you quit now, they will be lost.",
       "quit": "Quit"
-    }
+    },
+    "no_permission": "You do not have permission to access this page"
   },
   "entity_select": {
     "selected_count": "{{count}} selected",
@@ -1476,10 +1477,9 @@
         "role": "Role",
         "operation": "Operation",
         "status": "Status",
-        "model_placeholder": "e.g. gpt-4o",
-        "role_placeholder": "e.g. generator_main",
         "any": "Any",
-        "clear": "Clear filters"
+        "clear": "Clear filters",
+        "partial_note": "Filters apply to totals, breakdown and models. Top users, pipelines and recent calls always show all data."
       },
       "drilldown": {
         "title": "Pipeline detail",

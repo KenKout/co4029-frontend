@@ -4,11 +4,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useTrackToggle, useVoiceAssistant } from "@livekit/components-react";
 import { Track } from "livekit-client";
-import { Check, Clock3, Pause, PhoneOff, Play, RotateCcw } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { VoiceStatusIndicator } from "@/components/interview/conversation";
 import { EndInterviewDialog } from "@/components/interview/dialogs";
+import {
+  ElapsedBadge,
+  EndInterviewButton,
+  FinishAnswerButton,
+  MicToggleButton,
+} from "@/components/interview/voice-controls/call-buttons";
+import { useElapsedTimer } from "@/components/interview/voice-controls/use-elapsed-timer";
 import { resolveInterviewState } from "@/lib/interview/format";
 import type { InterviewAgentStatus } from "@/lib/interview/types";
 
@@ -16,22 +21,6 @@ interface VoiceControlsProps {
   onEndInterview: () => void;
   isEnding?: boolean;
   elapsed?: string;
-}
-
-function useElapsedTimer() {
-  const [seconds, setSeconds] = useState(0);
-  const startRef = useRef(Date.now());
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setSeconds(Math.floor((Date.now() - startRef.current) / 1000));
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, []);
-
-  const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
-  const remainingSeconds = String(seconds % 60).padStart(2, "0");
-  return `${minutes}:${remainingSeconds}`;
 }
 
 export function VoiceControls({
@@ -101,87 +90,33 @@ export function VoiceControls({
           }
         />
 
-        {micEnabled ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            onClick={() => {
-              setPausedByUser(true);
-              void toggle(false);
-            }}
-            disabled={
-              micPending || finishingAnswer || agentState === "speaking"
-            }
-            className="min-h-11"
-          >
-            <Pause className="h-4 w-4" />
-            <span className="hidden sm:inline">Pause</span>
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            onClick={() => {
-              setPausedByUser(false);
-              setMicError(false);
-              void toggle(true).catch(() => setMicError(true));
-            }}
-            disabled={
-              micPending || finishingAnswer || agentState === "speaking"
-            }
-            className="min-h-11"
-          >
-            {micPending ? (
-              <RotateCcw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Play className="h-4 w-4" />
-            )}
-            <span className="hidden sm:inline">
-              {pausedByUser ? "Resume" : "Start answering"}
-            </span>
-          </Button>
-        )}
+        <MicToggleButton
+          micEnabled={micEnabled}
+          micPending={micPending}
+          finishingAnswer={finishingAnswer}
+          agentSpeaking={agentState === "speaking"}
+          pausedByUser={pausedByUser}
+          toggle={toggle}
+          onPausedByUserChange={setPausedByUser}
+          onMicErrorChange={setMicError}
+        />
 
-        <Button
-          type="button"
-          size="lg"
-          onClick={() => {
-            setPausedByUser(false);
-            setFinishingAnswer(true);
-            void toggle(false);
-          }}
-          disabled={
-            !micEnabled ||
-            micPending ||
-            finishingAnswer ||
-            agentState === "speaking"
-          }
-          className="min-h-11"
-        >
-          <Check className="h-4 w-4" />
-          <span className="hidden sm:inline">Finish answer</span>
-        </Button>
+        <FinishAnswerButton
+          micEnabled={micEnabled}
+          micPending={micPending}
+          finishingAnswer={finishingAnswer}
+          agentSpeaking={agentState === "speaking"}
+          toggle={toggle}
+          onPausedByUserChange={setPausedByUser}
+          onFinishingAnswerChange={setFinishingAnswer}
+        />
 
-        <span className="ml-auto inline-flex items-center gap-1.5 px-1 font-mono text-xs font-semibold tabular-nums text-text-muted sm:px-2">
-          <Clock3 className="hidden h-3.5 w-3.5 sm:block" />
-          {elapsed}
-        </span>
+        <ElapsedBadge elapsed={elapsed} />
 
-        <Button
-          variant="destructive"
-          onClick={() => setConfirmOpen(true)}
-          disabled={isEnding}
-          className="min-h-11 rounded-lg px-3 font-semibold text-danger hover:bg-danger/10"
-          aria-label="End interview"
-          title="End interview"
-        >
-          <PhoneOff className="h-4 w-4" />
-          <span className="hidden sm:inline">
-            {isEnding ? "Ending…" : "End interview"}
-          </span>
-        </Button>
+        <EndInterviewButton
+          isEnding={isEnding}
+          onRequestEnd={() => setConfirmOpen(true)}
+        />
       </div>
 
       <EndInterviewDialog

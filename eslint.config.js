@@ -70,21 +70,25 @@ export default tseslint.config([
     },
     rules: {
       // --- File / function size --------------------------------------------
-      // max-lines is the BLUNT backstop: a file over 1000 lines is worth a
-      // second look, but line count is a weak proxy for complexity. The two
-      // rules below are the SHARP signal — a 200-line function with a dozen
-      // branches is the actual "break this up" trigger. They're `warn` because
-      // the codebase predates them (120+ functions over 150 lines today);
-      // errors here would just be noise. Fix them opportunistically.
+      // max-lines is the BLUNT backstop: line count is a weak proxy for
+      // complexity. The two rules below are the SHARP signal — a 200-line
+      // function with a dozen branches is the actual "break this up" trigger.
+      // 800 mirrors the backend's no-god-file LOC guard.
+      //
+      // All three were `warn` while the debt existed and are now `error`
+      // because all three reached zero, as the old note here said to do.
+      //
+      // Do NOT raise a limit to make code pass. That has been tried once:
+      // max-lines-per-function was quietly moved 150 -> 350 mid-refactor.
       "max-lines": [
         "error",
-        { max: 1000, skipBlankLines: true, skipComments: true },
+        { max: 800, skipBlankLines: true, skipComments: true },
       ],
       "max-lines-per-function": [
-        "warn",
+        "error",
         { max: 150, skipBlankLines: true, skipComments: true, IIFEs: true },
       ],
-      complexity: ["warn", 15],
+      complexity: ["error", 15],
 
       // --- Correctness (not style) -----------------------------------------
       // rules-of-hooks has no false positives by construction: a hook called
@@ -117,6 +121,63 @@ export default tseslint.config([
       "@typescript-eslint/no-empty-object-type": "off",
       "@typescript-eslint/no-explicit-any": "warn",
 
+      // --- Convention locks -------------------------------------------------
+      // These three pin migrations that are already finished, so they cost
+      // nothing today and stop the pattern creeping back in tomorrow.
+
+      // Native confirm() is unstyled, unlocalisable, and blocks the main
+      // thread. ui/confirm-dialog.tsx is the app's dialog (focus trap, scroll
+      // lock, role=alertdialog, i18n'd labels).
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "confirm",
+          message:
+            "Use <ConfirmDialog> from @/components/ui/confirm-dialog instead of native confirm().",
+        },
+        {
+          name: "alert",
+          message:
+            "Use a toast (sonner) or <ConfirmDialog> instead of native alert().",
+        },
+      ],
+
+      // no-restricted-globals only catches a BARE `confirm(...)` — a global
+      // reference. `window.confirm(...)` is a member expression and slips
+      // through it, so the property form needs its own rule.
+      "no-restricted-properties": [
+        "error",
+        {
+          object: "window",
+          property: "confirm",
+          message:
+            "Use <ConfirmDialog> from @/components/ui/confirm-dialog instead of window.confirm().",
+        },
+        {
+          object: "window",
+          property: "alert",
+          message:
+            "Use a toast (sonner) or <ConfirmDialog> instead of window.alert().",
+        },
+      ],
+
+      // The raw permissions query must only be read through usePermissions(),
+      // which centralises the data access + has/hasAny/hasAll checks. Currently
+      // at zero call sites outside the hook itself.
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@/lib/api/hooks/auth",
+              importNames: ["useMyPermissions"],
+              message:
+                "Use usePermissions() from @/lib/auth/use-permissions instead of reading the raw query.",
+            },
+          ],
+        },
+      ],
+
       // --- react-hooks opt-outs (taste / aggressive-on-legacy) -------------
       // These are genuinely noisy or aggressive on code that predates the v7
       // compiler rules. Correctness (rules-of-hooks) does NOT need to agree
@@ -139,17 +200,29 @@ export default tseslint.config([
   ...typeCheckedBlock,
 
   // Tests and config files: no size caps, and NOT type-checked (they don't
-  // live in the app tsconfig program).
+  // live in the app tsconfig program). Vitest uses *.test, Playwright *.spec.
   {
     files: [
       "**/*.test.{ts,tsx}",
+      "**/*.spec.{ts,tsx}",
       "**/__tests__/**/*.{ts,tsx}",
+      "tests/**/*.{ts,tsx}",
       "**/*.config.{js,ts}",
     ],
     rules: {
       "max-lines": "off",
       "max-lines-per-function": "off",
       complexity: "off",
+    },
+  },
+
+  // The permissions hook is the ONE legitimate consumer of the raw
+  // useMyPermissions query — it's the module the no-restricted-imports rule
+  // above funnels everyone else into.
+  {
+    files: ["src/lib/auth/use-permissions.ts"],
+    rules: {
+      "no-restricted-imports": "off",
     },
   },
 ]);

@@ -1,14 +1,14 @@
-import { useEffect } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, GraduationCap, Users } from "lucide-react";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  usePermissions,
+  useRequirePermission,
+} from "@/lib/auth/use-permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
+import { CourseStatusBadge } from "@/components/ui/status-badges";
 import type { CourseAuthoring } from "@/lib/api/types";
 
 /**
@@ -23,7 +23,6 @@ import type { CourseAuthoring } from "@/lib/api/types";
  */
 export default function ManagementEnrolmentPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const permissions = usePermissions();
 
   const canManage = permissions.hasAny(
@@ -32,13 +31,9 @@ export default function ManagementEnrolmentPage() {
     "system.administer",
   );
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canManage) {
-      toast.error(t("management_enrolment.no_permission"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canManage, navigate, t]);
+  useRequirePermission(canManage, {
+    messageKey: "management_enrolment.no_permission",
+  });
 
   const enabled = !permissions.isLoading && canManage;
   const list = useDeptCourses();
@@ -96,14 +91,7 @@ export default function ManagementEnrolmentPage() {
                     {course.slug}
                   </p>
                 </div>
-                <StatusBadge
-                  status={course.status}
-                  tokens={COURSE_STATUS_TOKENS}
-                  size="11px"
-                  label={t(`dept_courses.status.${course.status}`, {
-                    defaultValue: course.status,
-                  })}
-                />
+                <CourseStatusBadge status={course.status} />
                 <ChevronRight className="h-4 w-4 text-text-muted shrink-0" />
               </div>
             </Link>

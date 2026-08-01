@@ -1,0 +1,45 @@
+export const stats = [
+  { value: "500k+", label: "Active Learners" },
+  { value: "12k+", label: "AI-Enhanced Courses" },
+  { value: "94%", label: "Completion Rate" },
+  { value: "1.2M", label: "Skill Assessments" },
+];
+
+export const featuredCourses = [
+  {
+    title: "Full-Stack Engineering with AI Pair Programming",
+    instructor: "Dr. Sarah Chen",
+    tag: "Software Engineering",
+    tagColor: "bg-m3-primary-fixed text-m3-primary",
+    rating: "4.9",
+    students: "12.4k",
+    thumbFrom: "from-[#1e3a8a]",
+    thumbTo: "to-[#1e40af]",
+    overlayFrom: "from-[#1e3a8a]/80",
+    overlayTo: "to-[#1e40af]/60",
+  },
+  {
+    title: "Data Science & ML: From Foundations to Deployment",
+    instructor: "Prof. Marcus Liu",
+    tag: "Data Science",
+    tagColor: "bg-m3-secondary-fixed text-m3-secondary",
+    rating: "4.8",
+    students: "9.1k",
+    thumbFrom: "from-[#1d4ed8]",
+    thumbTo: "to-[#3b82f6]",
+    overlayFrom: "from-[#1d4ed8]/80",
+    overlayTo: "to-[#3b82f6]/60",
+  },
+  {
+    title: "Creative Direction in the Age of Generative AI",
+    instructor: "Amara Osei",
+    tag: "Creative Arts",
+    tagColor: "bg-[#e0f2f1] text-[#004a57]",
+    rating: "4.7",
+    students: "6.8k",
+    thumbFrom: "from-[#004a57]",
+    thumbTo: "to-[#00796b]",
+    overlayFrom: "from-[#004a57]/80",
+    overlayTo: "to-[#00796b]/60",
+  },
+];

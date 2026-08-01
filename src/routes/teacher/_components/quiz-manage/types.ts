@@ -41,6 +41,15 @@ export interface SettingsDraft {
   grace_period_seconds: string;
 }
 
+/**
+ * Key-wise patch callback the SettingsTab hands to each of its section
+ * components, so a section can write one field without owning the draft.
+ */
+export type SettingsUpdate = <K extends keyof SettingsDraft>(
+  key: K,
+  value: SettingsDraft[K],
+) => void;
+
 export interface QuestionDraft {
   prompt_text: string;
   hint_text: string;

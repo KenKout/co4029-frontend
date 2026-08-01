@@ -48,11 +48,19 @@ describe("SetupChecklist", () => {
       />,
     );
     expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
+    // The identity step is a single name field prefilled with the profile
+    // name, so accepting it stays a one-tap confirm (3fce036 replaced the
+    // separate confirm_identity / reject_identity pair with this field).
+    expect(
+      screen.getByLabelText(tr("course_interview.onboarding.ask_name")),
+    ).toHaveValue("Ada Lovelace");
     const confirm = screen.getByRole("button", {
-      name: tr("course_interview.onboarding.confirm_identity"),
+      name: tr("course_interview.onboarding.save_name"),
     });
     fireEvent.click(confirm);
-    expect(onAction).toHaveBeenCalledWith("confirm_identity");
+    expect(onAction).toHaveBeenCalledWith("set_name", {
+      name: "Ada Lovelace",
+    });
   });
 
   it("lets the candidate correct their name and submits set_name", () => {
@@ -64,17 +72,17 @@ describe("SetupChecklist", () => {
         onAction={onAction}
       />,
     );
-    // Reject the profile name → switches to the name-entry field.
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: tr("course_interview.onboarding.wrong_name"),
-      }),
-    );
-    expect(onAction).toHaveBeenCalledWith("reject_identity");
-
     const input = screen.getByLabelText(
       tr("course_interview.onboarding.ask_name"),
     );
+    // A blank name is not a name: the send action stays blocked.
+    fireEvent.change(input, { target: { value: "   " } });
+    expect(
+      screen.getByRole("button", {
+        name: tr("course_interview.onboarding.save_name"),
+      }),
+    ).toBeDisabled();
+
     fireEvent.change(input, { target: { value: "  Robin  " } });
     fireEvent.click(
       screen.getByRole("button", {

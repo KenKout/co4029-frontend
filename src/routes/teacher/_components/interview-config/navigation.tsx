@@ -20,6 +20,32 @@ import { cn } from "@/lib/utils";
 // scroll-spy SectionNav: clicking a tab swaps which panel is shown (panels
 // stay mounted, hidden via `hidden`, so state/edits survive). Reuses the
 // SectionNavItem status model to render a small per-tab status affix.
+function statusDot(status: SectionNavItem["status"]) {
+  const kind = status?.kind ?? "none";
+  if (kind === "completed")
+    return (
+      <span
+        className="h-1.5 w-1.5 rounded-full bg-emerald-500"
+        aria-hidden="true"
+      />
+    );
+  if (kind === "warning")
+    return (
+      <span
+        className="h-1.5 w-1.5 rounded-full bg-amber-500"
+        aria-hidden="true"
+      />
+    );
+  if (kind === "info")
+    return (
+      <span
+        className="h-1.5 w-1.5 rounded-full bg-m3-secondary"
+        aria-hidden="true"
+      />
+    );
+  return null;
+}
+
 export function TabBar({
   items,
   activeTab,
@@ -31,32 +57,6 @@ export function TabBar({
   onSelect: (id: TabId) => void;
   ariaLabel: string;
 }) {
-  function statusDot(status: SectionNavItem["status"]) {
-    const kind = status?.kind ?? "none";
-    if (kind === "completed")
-      return (
-        <span
-          className="h-1.5 w-1.5 rounded-full bg-emerald-500"
-          aria-hidden="true"
-        />
-      );
-    if (kind === "warning")
-      return (
-        <span
-          className="h-1.5 w-1.5 rounded-full bg-amber-500"
-          aria-hidden="true"
-        />
-      );
-    if (kind === "info")
-      return (
-        <span
-          className="h-1.5 w-1.5 rounded-full bg-m3-secondary"
-          aria-hidden="true"
-        />
-      );
-    return null;
-  }
-
   // Sliding colored indicator: an absolutely-positioned pill that measures the
   // active tab's offset/width and animates to it via CSS transform, so the
   // color glides between sections instead of snapping. Recomputed on tab

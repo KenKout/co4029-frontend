@@ -22,59 +22,22 @@
  *    against criteria literally named "technical"/"behavioral".
  */
 
-/** One teacher-defined scoring criterion. Weight is a positive number; the
- * backend normalises the set to sum to 1.0, so relative magnitude is what
- * matters, not the absolute value. Description is optional but is the single
- * biggest lever on judge quality. */
-export interface RubricCriterion {
-  name: string;
-  weight: number;
-  description: string;
-}
+import {
+  collectCriteria,
+  extractRawCriteria,
+  MAX_CRITERIA,
+  MAX_CRITERION_NAME_CHARS,
+  type RubricCriterion,
+} from "@/lib/interview/supplementary-instructions/criteria";
+
+export type { RubricCriterion };
+export { MAX_CRITERIA, MAX_CRITERION_NAME_CHARS };
 
 export interface SupplementaryInstructions {
   /** Free prose guidance for the generation prompt. */
   notes: string;
   /** Scoring rubric criteria. Empty = grade on the backend's 4-criterion default. */
   criteria: RubricCriterion[];
-}
-
-/** Backend caps criteria at 10 and criterion names at 64 chars. Mirror those
- * here so the UI can't build a payload the backend will silently truncate. */
-export const MAX_CRITERIA = 10;
-export const MAX_CRITERION_NAME_CHARS = 64;
-
-interface StoredCriterion {
-  name?: unknown;
-  weight?: unknown;
-  description?: unknown;
-}
-
-function coerceCriterion(entry: unknown): RubricCriterion | null {
-  if (typeof entry === "string") {
-    const name = entry.trim().slice(0, MAX_CRITERION_NAME_CHARS);
-    return name ? { name, weight: 1, description: "" } : null;
-  }
-  if (!entry || typeof entry !== "object") return null;
-  const raw = entry as StoredCriterion;
-  const rawName =
-    typeof raw.name === "string"
-      ? raw.name
-      : typeof (raw as { criterion?: unknown }).criterion === "string"
-        ? (raw as { criterion: string }).criterion
-        : "";
-  const name = rawName.trim().slice(0, MAX_CRITERION_NAME_CHARS);
-  if (!name) return null;
-  const weightNum =
-    typeof raw.weight === "number"
-      ? raw.weight
-      : typeof raw.weight === "string"
-        ? Number(raw.weight)
-        : NaN;
-  const weight = Number.isFinite(weightNum) && weightNum > 0 ? weightNum : 1;
-  const description =
-    typeof raw.description === "string" ? raw.description.trim() : "";
-  return { name, weight, description };
 }
 
 /**
@@ -103,26 +66,10 @@ export function parseSupplementaryInstructions(
   const obj = parsed as { notes?: unknown; evaluation_rubric?: unknown };
   const notes = typeof obj.notes === "string" ? obj.notes : "";
 
-  let rawCriteria: unknown[] = [];
-  const rubric = obj.evaluation_rubric;
-  if (Array.isArray(rubric)) {
-    rawCriteria = rubric;
-  } else if (rubric && typeof rubric === "object") {
-    const nested = (rubric as { criteria?: unknown }).criteria;
-    if (Array.isArray(nested)) rawCriteria = nested;
-  }
-
-  const seen = new Set<string>();
-  const criteria: RubricCriterion[] = [];
-  for (const entry of rawCriteria) {
-    if (criteria.length >= MAX_CRITERIA) break;
-    const criterion = coerceCriterion(entry);
-    if (!criterion || seen.has(criterion.name)) continue;
-    seen.add(criterion.name);
-    criteria.push(criterion);
-  }
-
-  return { notes, criteria };
+  return {
+    notes,
+    criteria: collectCriteria(extractRawCriteria(obj.evaluation_rubric)),
+  };
 }
 
 /**
