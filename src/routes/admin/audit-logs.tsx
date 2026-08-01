@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { Tabs } from "@/components/ui/tabs";
 import {
   useAuditHttp,
   useAuditRoleChanges,
@@ -16,6 +17,9 @@ import { DATA_CHANGE_TABLES, type DataChangeTable } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
 type TabKey = "role_changes" | "http" | "data_changes";
+
+/** Tab order for the strip. Same three sources as before, as data. */
+const TAB_KEYS: TabKey[] = ["role_changes", "http", "data_changes"];
 
 type RoleChangeRow = NonNullable<
   ReturnType<typeof useAuditRoleChanges>["data"]
@@ -68,22 +72,16 @@ export default function AdminAuditLogsPage() {
         </label>
       </div>
 
-      <div className="flex gap-2">
-        {(["role_changes", "http", "data_changes"] as TabKey[]).map((key) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={cn(
-              "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
-              tab === key
-                ? "bg-m3-primary text-white"
-                : "bg-m3-surface-container text-m3-on-surface-variant hover:bg-m3-surface-container-high",
-            )}
-          >
-            {t(`admin.audit.tabs.${key}`)}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        tabs={TAB_KEYS.map((key) => ({
+          key,
+          label: t(`admin.audit.tabs.${key}`),
+        }))}
+        value={tab}
+        onChange={setTab}
+        variant="contained"
+        ariaLabel={t("admin.audit.title")}
+      />
 
       {tab === "role_changes" ? (
         <RoleChangesTable sinceIso={sinceIso} />

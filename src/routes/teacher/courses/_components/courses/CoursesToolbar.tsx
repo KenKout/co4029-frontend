@@ -2,16 +2,20 @@ import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
-import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { Select } from "@/components/ui/select";
+import { Tabs, type TabDef } from "@/components/ui/tabs";
 
 import { STATUS_KEYS } from "./constants";
-import type { SortKey } from "./types";
+import type { SortKey, StatusFilter } from "./types";
 import type { TeacherCoursesController } from "./use-courses-controller";
 
 /**
- * Toolbar: search (own row) + status segmented control + sort. Extracted
- * verbatim from the former 234-line courses.tsx.
+ * Toolbar: search (own row) + status tabs + sort.
+ *
+ * The status buckets are a tab strip rather than a segmented control: they are
+ * the primary way this list is sliced, and the per-status counts they carry are
+ * the numbers the removed stat strip used to show in a separate box above. One
+ * control now both reports and applies each count.
  */
 export function CoursesToolbar({
   controller,
@@ -28,6 +32,13 @@ export function CoursesToolbar({
     setSort,
     counts,
   } = controller;
+
+  const tabs: TabDef<StatusFilter>[] = STATUS_KEYS.map((s) => ({
+    key: s,
+    label: t(`teacher_courses_list.filter_${s}`),
+    count: counts[s],
+  }));
+
   return (
     <div className="space-y-3">
       <div className="relative">
@@ -53,17 +64,15 @@ export function CoursesToolbar({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Status segmented control — shared component, per-status counts. */}
-        <SegmentedFilter
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        {/* Status tabs — shared strip, per-status counts as badges. */}
+        <Tabs
+          variant="outlined"
+          className="flex-1"
           ariaLabel={t("teacher_courses_list.filter_all")}
           value={statusFilter}
           onChange={setStatusFilter}
-          options={STATUS_KEYS.map((s) => ({
-            key: s,
-            label: t(`teacher_courses_list.filter_${s}`),
-            count: counts[s],
-          }))}
+          tabs={tabs}
         />
 
         {/* Sort */}

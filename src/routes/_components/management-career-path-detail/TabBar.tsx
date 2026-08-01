@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { cn } from "@/lib/utils";
+import { Tabs, type TabDef } from "@/components/ui/tabs";
 import { TAB_DEFS } from "./constants";
 import type { TabKey } from "./types";
 
 /**
- * The courses / students / progress tab strip. Driven off `TAB_DEFS` so the
- * markup below is the single rendering of a tab button.
+ * The courses / students / progress tab strip. Driven off `TAB_DEFS`, rendered by
+ * the shared outlined <Tabs> so this screen stays in step with the rest of the
+ * app.
  */
 export function TabBar({
   tab,
@@ -16,28 +17,13 @@ export function TabBar({
 }) {
   const { t } = useTranslation();
 
+  const tabs: TabDef<TabKey>[] = TAB_DEFS.map((tabDef) => ({
+    key: tabDef.key,
+    label: t(`management_career_path_detail.tabs.${tabDef.key}`),
+    icon: tabDef.icon,
+  }));
+
   return (
-    <div className="flex gap-1 border-b border-m3-outline-variant/30">
-      {TAB_DEFS.map((tabDef) => {
-        const Icon = tabDef.icon;
-        const active = tabDef.key === tab;
-        return (
-          <button
-            key={tabDef.key}
-            type="button"
-            onClick={() => onSelect(tabDef.key)}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px cursor-pointer",
-              active
-                ? "border-m3-primary text-m3-primary"
-                : "border-transparent text-m3-on-surface-variant hover:text-m3-on-surface",
-            )}
-          >
-            <Icon className="h-4 w-4" />
-            {t(`management_career_path_detail.tabs.${tabDef.key}`)}
-          </button>
-        );
-      })}
-    </div>
+    <Tabs tabs={tabs} value={tab} onChange={onSelect} variant="outlined" />
   );
 }

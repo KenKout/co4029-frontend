@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { cn } from "@/lib/utils";
+import { Tabs, type TabDef } from "@/components/ui/tabs";
 import { TABS } from "./constants";
 import type { TabKey } from "./types";
 
 /**
- * The roster / bulk / codes tab strip. Driven off `TABS` so the markup below is
- * the single rendering of a tab button.
+ * The roster / bulk / codes tab strip. Driven off `TABS`, rendered by the shared
+ * outlined <Tabs> so this screen stays in step with the rest of the app.
  */
 export function TabBar({
   tab,
@@ -16,28 +16,13 @@ export function TabBar({
 }) {
   const { t } = useTranslation();
 
+  const tabs: TabDef<TabKey>[] = TABS.map((tabItem) => ({
+    key: tabItem.key,
+    label: t(tabItem.labelKey),
+    icon: tabItem.icon,
+  }));
+
   return (
-    <div className="flex gap-1 border-b border-m3-outline-variant/30">
-      {TABS.map((tabItem) => {
-        const Icon = tabItem.icon;
-        const active = tabItem.key === tab;
-        return (
-          <button
-            key={tabItem.key}
-            type="button"
-            onClick={() => onSelect(tabItem.key)}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px cursor-pointer",
-              active
-                ? "border-m3-primary text-m3-primary"
-                : "border-transparent text-m3-on-surface-variant hover:text-m3-on-surface",
-            )}
-          >
-            <Icon className="h-4 w-4" />
-            {t(tabItem.labelKey)}
-          </button>
-        );
-      })}
-    </div>
+    <Tabs tabs={tabs} value={tab} onChange={onSelect} variant="outlined" />
   );
 }

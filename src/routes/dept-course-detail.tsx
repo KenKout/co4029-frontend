@@ -13,7 +13,7 @@ import {
 } from "@/lib/auth/use-permissions";
 import { DeptStudentsTab } from "./_components/dept-course-detail/StudentsTab";
 import { DeptTeachersTab } from "./_components/dept-course-detail/TeachersTab";
-import { TabButton } from "./_components/dept-course-detail/TabButton";
+import { Tabs } from "@/components/ui/tabs";
 import type { TabKey } from "./_components/dept-course-detail/types";
 
 export default function DeptCourseDetailPage() {
@@ -72,22 +72,24 @@ export default function DeptCourseDetailPage() {
         )}
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        <TabButton
-          active={tab === "teachers"}
-          onClick={() => setTab("teachers")}
-          count={teachers.data?.length}
-        >
-          {t("dept_course_detail.tabs.teachers")}
-        </TabButton>
-        <TabButton
-          active={tab === "students"}
-          onClick={() => setTab("students")}
-          count={roster.data?.length}
-        >
-          {t("dept_course_detail.tabs.students")}
-        </TabButton>
-      </div>
+      <Tabs
+        variant="contained"
+        value={tab}
+        onChange={setTab}
+        ariaLabel={t("dept_course_detail.title")}
+        tabs={[
+          {
+            key: "teachers" as TabKey,
+            label: t("dept_course_detail.tabs.teachers"),
+            count: teachers.data?.length,
+          },
+          {
+            key: "students" as TabKey,
+            label: t("dept_course_detail.tabs.students"),
+            count: roster.data?.length,
+          },
+        ]}
+      />
 
       <DeptTeachersTab
         active={tab === "teachers"}

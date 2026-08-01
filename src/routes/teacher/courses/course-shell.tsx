@@ -21,11 +21,11 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Tabs, useStickyTabs } from "@/components/ui/tabs";
 import {
   useTeacherCourseById,
   useDeleteTeacherCourse,
 } from "@/lib/api/hooks/teacher-courses";
-import { cn } from "@/lib/utils";
 
 /**
  * Course-scoped layout for the teacher workspace. Renders a persistent header
@@ -110,6 +110,7 @@ export default function CourseShell() {
   const { data: course } = useTeacherCourseById(courseId);
   const deleteCourse = useDeleteTeacherCourse(courseId);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { stuck, sentinelRef } = useStickyTabs();
 
   const base = `/teacher/courses/${courseId}`;
   // Determine active tab from the path segment right after the courseId.
@@ -167,33 +168,37 @@ export default function CourseShell() {
               {t("teacher_course_settings.delete.button")}
             </Button>
           </div>
-
-          {/* Persistent tab bar — stays across every course tab and highlights
-              the active one. */}
-          <nav className="flex flex-wrap items-center gap-1 mt-3 border-b border-m3-outline-variant/40">
-            {TABS.map((tab) => {
-              const active = tab.segment === activeSegment;
-              const Icon = tab.icon;
-              return (
-                <Link
-                  key={tab.key}
-                  to={tab.to}
-                  params={{ courseId }}
-                  className={cn(
-                    "flex items-center gap-2 rounded-t-lg px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
-                    active
-                      ? "border-m3-primary text-m3-primary"
-                      : "border-transparent text-m3-on-surface-variant hover:text-m3-primary hover:bg-m3-surface-container-low",
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t(tab.labelKey)}</span>
-                </Link>
-              );
-            })}
-          </nav>
         </div>
       </div>
+
+      {/* Persistent tab bar — stays across every course tab and highlights the
+          active one. Link mode: each tab is a real route, so the items must stay
+          anchors (right-click / middle-click / deep links).
+
+          Lifted OUT of the header's flex row to be a direct flow child: a
+          `position: sticky` element inside a flex item pins to that item's box,
+          not the page, so it would never actually stick there. Sticky pinning is
+          the same behaviour as the quiz-edit screen — long course tabs (roster,
+          question bank) scroll well past the header, and losing the tab strip
+          means scrolling back up just to switch. */}
+      <div ref={sentinelRef} aria-hidden className="h-px w-full" />
+      <Tabs
+        variant="outlined"
+        value={activeSegment}
+        ariaLabel={t("teacher_common.section_curriculum")}
+        sticky
+        stuck={stuck}
+        linkTo={(segment) => ({
+          to: TABS.find((tab) => tab.segment === segment)!.to,
+          params: { courseId },
+        })}
+        tabs={TABS.map((tab) => ({
+          key: tab.segment,
+          label: t(tab.labelKey),
+          icon: tab.icon,
+          labelHiddenOnMobile: true,
+        }))}
+      />
 
       {/* Active tab renders here.
           Each course tab is its own ROUTE (not a `hidden` tabpanel), so the
