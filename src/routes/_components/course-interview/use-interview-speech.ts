@@ -1,0 +1,105 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { useInterviewNarration } from "@/lib/hooks/use-interview-narration";
+import { useSpeechDictation } from "@/lib/hooks/use-speech-dictation";
+import { type SpeechPersona } from "@/lib/hooks/use-speech-synthesis";
+import { resolvePersonaTraits } from "@/lib/interview/persona-traits";
+import type { useInterviewPhaseState } from "./use-interview-phase-state";
+import type { useInterviewRouteData } from "./use-interview-route-data";
+import type { useInterviewTurnState } from "./use-interview-turn-state";
+
+/**
+ * Transport modes, browser dictation and AI narration. Sixth hook group in the
+ * page's hook order (see use-course-interview.ts) — moved verbatim from
+ * course-interview.tsx.
+ */
+export function useInterviewSpeech(
+  route: ReturnType<typeof useInterviewRouteData>,
+  turn: ReturnType<typeof useInterviewTurnState>,
+  phaseState: ReturnType<typeof useInterviewPhaseState>,
+) {
+  const { config, i18n } = route;
+  const { sessionId, currentQuestion, setAnswerText } = turn;
+  const { setInputMode, onboardingStage, interviewLanguage } = phaseState;
+
+  const supportedModes = useMemo(() => {
+    if (!config) return ["text" as const];
+    const mode = config.supported_modes;
+    return mode === "hybrid" ? (["text", "voice"] as const) : ([mode] as const);
+  }, [config]);
+
+  useEffect(() => {
+    if (!config) return;
+    if (config.supported_modes === "voice") setInputMode("voice");
+    else if (config.supported_modes === "text") setInputMode("text");
+    else setInputMode("hybrid");
+  }, [config]);
+
+  // A hybrid config runs a single text-driven session where each answer can be
+  // TYPED or SPOKEN (browser speech-to-text fills the answer, submitted via the
+  // same REST /respond path). This is distinct from the server-side LiveKit
+  // voice agent, which is only used when the student explicitly picks "voice".
+  const isHybrid = config?.supported_modes === "hybrid";
+
+  // Speech-to-text dictation for hybrid answers. Finalized chunks are appended
+  // to the current answer draft (with a separating space) so the student can
+  // dictate, then edit before sending.
+  const dictationLang = i18n.language?.startsWith("vi") ? "vi-VN" : "en-US";
+  const dictation = useSpeechDictation({
+    lang: dictationLang,
+    onResult: (finalText) =>
+      setAnswerText((prev) =>
+        prev.trim().length > 0 ? `${prev.trim()} ${finalText}` : finalText,
+      ),
+  });
+  // Stop dictation whenever the question changes or the answer is sent.
+  useEffect(() => {
+    if (dictation.listening) dictation.stop();
+  }, [currentQuestion?.id, onboardingStage]);
+
+  // The AI "speaks" each question aloud while it types out on screen (see
+  // AiTypingMessage). Server-side TTS (same voice as the LiveKit agent) with a
+  // browser-TTS fallback. Student-toggleable so it can be silenced.
+  const [voiceOn, setVoiceOn] = useState(true);
+  const speakLang = i18n.language?.startsWith("vi") ? "vi-VN" : "en-US";
+  // Persona drives the voice: a "strict" interview sounds firmer, a
+  // "supportive" one warmer. Resolve the persona label to its trait dials (no
+  // hardcoded per-name narrowing) and pass them through — prosody/WPM are then
+  // DERIVED from traits (see lib/interview/persona-traits). The learner config
+  // carries only the persona label, so this uses preset traits; teacher-tuned
+  // overrides shape the server voice + LLM phrasing, which is where they matter.
+  const speakTraits = resolvePersonaTraits(config?.persona);
+  const narration = useInterviewNarration({
+    sessionId,
+    persona: speakTraits.key as SpeechPersona,
+    traits: speakTraits,
+    lang: speakLang,
+    // Server TTS only works for English on this deployment (Deepgram Aura is
+    // English-only; the gateway serves no TTS model). Gate by the SESSION
+    // language — not the UI locale — so a VI session skips the always-503
+    // server call and narrates with the browser voice directly, while an EN
+    // session viewed under a VI UI still gets server (Deepgram) narration.
+    serverNarrationEnabled: interviewLanguage !== "vi",
+  });
+  const speakIfOn = useCallback(
+    (text: string) => {
+      if (voiceOn) return narration.narrate(text);
+      return { started: Promise.resolve(), finished: Promise.resolve() };
+    },
+    [voiceOn, narration],
+  );
+  // Silence any in-flight speech the moment the student mutes.
+  useEffect(() => {
+    if (!voiceOn) narration.cancel();
+  }, [voiceOn, narration]);
+
+  return {
+    supportedModes,
+    isHybrid,
+    dictation,
+    voiceOn,
+    setVoiceOn,
+    narration,
+    speakIfOn,
+  };
+}
