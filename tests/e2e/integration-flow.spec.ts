@@ -132,7 +132,7 @@ test.describe("integration-flow", () => {
 
     const client = new Client({ connectionString: databaseUrl() });
     await client.connect();
-    let quizId = "";
+    let quizId: string;
     try {
       const r = await client.query(
         "SELECT id::text AS id FROM quizzes WHERE module_id = $1 LIMIT 1",

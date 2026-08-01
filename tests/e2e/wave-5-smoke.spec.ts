@@ -310,7 +310,7 @@ test.describe("wave-5-smoke", () => {
   });
 
   test("12 no legacy hook imports remain", async () => {
-    let stdout = "";
+    let stdout: string;
     try {
       stdout = execSync(
         `grep -rE "useSelfEnroll\\|useRedeemInvitationCode\\|useTeacherRequestUploadUrl\\b" frontend-vite/src --include="*.ts" --include="*.tsx" | grep -v test || true`,

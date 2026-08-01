@@ -378,7 +378,7 @@ test.describe("wave-4-smoke", () => {
   });
 
   test("12 no legacy enrollment endpoint usages", async () => {
-    let stdout = "";
+    let stdout: string;
     try {
       stdout = execSync(
         `grep -rE "POST.*\\/me\\/enrollments|invitation-codes\\/redeem|useSelfEnroll|useRedeemInvitationCode" frontend-vite/src --include="*.ts" --include="*.tsx" | grep -v test || true`,
