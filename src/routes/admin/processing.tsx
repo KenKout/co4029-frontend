@@ -1,6 +1,5 @@
 import { ProcessingJobsSection } from "./_components/processing/ProcessingJobsSection";
-import { QueueStatsSection } from "./_components/processing/QueueStatsSection";
-import { StatusFilterBar } from "./_components/processing/StatusFilterBar";
+import { JobsTabs } from "./_components/processing/JobsTabs";
 import { useAdminProcessing } from "./_components/processing/use-admin-processing";
 
 export default function AdminProcessingPage() {
@@ -17,7 +16,7 @@ export default function AdminProcessingPage() {
   }
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-4 pb-12">
       <div>
         <h1 className="text-2xl font-headline font-bold text-text-strong">
           {t("admin.processing.title")}
@@ -27,9 +26,19 @@ export default function AdminProcessingPage() {
         </p>
       </div>
 
-      <QueueStatsSection c={c} />
+      {/* The six counter cards and the separate "Filter status" pill row are
+          gone: they showed and then re-listed the same six numbers. The counts
+          now ride on the tabs that filter by them. */}
+      <JobsTabs c={c} />
 
-      <StatusFilterBar c={c} />
+      {/* QueueStatsSection used to be the only thing reporting a queue-depth
+          fetch failure. The counts are now badges that just go missing, so the
+          error still needs saying out loud. */}
+      {c.queue.isError && (
+        <p className="text-sm text-danger">
+          {t("admin.processing.queue_load_failed")}
+        </p>
+      )}
 
       <ProcessingJobsSection c={c} />
     </div>
