@@ -1,79 +1,22 @@
 import { useEffect, useMemo } from "react";
 import { Link, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, BookOpen, Inbox, Layers, Play } from "lucide-react";
+import { ArrowLeft, Play } from "lucide-react";
 import { useCardsDue } from "@/lib/api/hooks/spaced-repetition";
 import { SectionHeader } from "@/components/ui/section-header";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import type { CardDue } from "@/lib/api/types";
+import { CardsDueCourseSection } from "@/routes/_components/study-cards-due/CardsDueCourseSection";
+import { CardsDueEmptyState } from "@/routes/_components/study-cards-due/CardsDueScreens";
+import {
+  groupByCourse,
+  MAX_AUTODRAIN_PAGES,
+} from "@/routes/_components/study-cards-due/helpers";
 
 /**
- * Group the flat due list into course → lesson counts.
- *
- * Deliberately a COUNT view, not a browsable card list. Two reasons, both
- * pedagogical rather than cosmetic:
- *   1. A per-card list invites cherry-picking — students skip the cards they
- *      dread, which is exactly what breaks spaced repetition. Counts + a single
- *      "Review" action keep the queue order authoritative (most-overdue first,
- *      enforced server-side).
- *   2. We do NOT surface per-card recall strength / EF here. EF is an internal
- *      scheduler parameter; showing "strong" on a card that's due reads as a
- *      bug (you review at the edge of forgetting — that's the point) and
- *      priming a student's expectation before they attempt changes how they
- *      attempt. Anki shows nothing about a card before you try it; we match.
+ * The due-cards overview: course → lesson counts plus a single "Start review"
+ * action. The grouping helper and the per-course section live in
+ * `_components/study-cards-due/`.
  */
-interface LessonBucket {
-  lessonId: string;
-  lessonTitle: string;
-  count: number;
-}
-interface CourseBucket {
-  courseSlug: string;
-  courseTitle: string;
-  count: number;
-  lessons: LessonBucket[];
-}
-
-function groupByCourse(cards: CardDue[]): CourseBucket[] {
-  const courses = new Map<
-    string,
-    { title: string; lessons: Map<string, LessonBucket> }
-  >();
-  for (const card of cards) {
-    let course = courses.get(card.course_slug);
-    if (!course) {
-      course = { title: card.course_title, lessons: new Map() };
-      courses.set(card.course_slug, course);
-    }
-    const lesson = course.lessons.get(card.lesson_id);
-    if (lesson) {
-      lesson.count += 1;
-    } else {
-      course.lessons.set(card.lesson_id, {
-        lessonId: card.lesson_id,
-        lessonTitle: card.lesson_title,
-        count: 1,
-      });
-    }
-  }
-  return [...courses.entries()]
-    .map(([slug, c]) => {
-      const lessons = [...c.lessons.values()].sort((a, b) => b.count - a.count);
-      return {
-        courseSlug: slug,
-        courseTitle: c.title,
-        count: lessons.reduce((n, l) => n + l.count, 0),
-        lessons,
-      };
-    })
-    .sort((a, b) => b.count - a.count);
-}
-
-// Cap on how many extra pages we auto-drain to make the counts accurate. At
-// limit=100/page this covers a 1,000-card backlog before we stop and show "+".
-const MAX_AUTODRAIN_PAGES = 10;
-
 export default function StudyCardsDuePage() {
   const { t } = useTranslation();
   // Deep-link scoping: the SR reminder builds `?lesson={id}` for a single-lesson
@@ -142,21 +85,7 @@ export default function StudyCardsDuePage() {
         </div>
 
         {total === 0 && !isLoading ? (
-          <EmptyState
-            icon={Inbox}
-            title={t("study_cards_due.empty_title", "Nothing due right now")}
-            description={t(
-              "study_cards_due.empty_body",
-              "Your reviews are all caught up. New cards appear here when they're due.",
-            )}
-            cta={
-              <Link to="/dashboard/sr">
-                <Button variant="default" className="cursor-pointer">
-                  {t("study_cards_due.back_to_dashboard", "Back to dashboard")}
-                </Button>
-              </Link>
-            }
-          />
+          <CardsDueEmptyState />
         ) : (
           <>
             {/* Primary action: resolve the queue in order (most-overdue first).
@@ -177,62 +106,9 @@ export default function StudyCardsDuePage() {
               </Link>
             )}
 
-            {/* Course → lesson COUNTS. A lesson with 4 due cards shows once as
-                "4 due", not four indistinguishable rows. */}
             <div className="space-y-4">
               {groups.map((group) => (
-                <section
-                  key={group.courseSlug}
-                  className="rounded-xl ghost-border bg-m3-surface-container-lowest overflow-hidden"
-                >
-                  <div className="flex items-center gap-2 px-4 py-3 border-b border-m3-outline-variant/20">
-                    <Layers className="h-4 w-4 text-m3-primary shrink-0" />
-                    <h2 className="text-sm font-headline font-bold text-m3-on-surface min-w-0 truncate">
-                      {group.courseTitle}
-                    </h2>
-                    <span className="text-xs font-semibold text-m3-on-surface-variant whitespace-nowrap">
-                      {t("study_cards_due.group_count", {
-                        count: group.count,
-                        defaultValue: "{{count}} due",
-                      })}
-                    </span>
-                    <Link
-                      to="/study/review"
-                      search={{ lesson: undefined, course: group.courseSlug }}
-                      className="ml-auto shrink-0 text-xs font-semibold text-m3-primary hover:underline"
-                    >
-                      {t("study_cards_due.review_course", "Review")}
-                    </Link>
-                  </div>
-                  <ul className="divide-y divide-m3-outline-variant/10">
-                    {group.lessons.map((l) => (
-                      <li
-                        key={l.lessonId}
-                        className="flex items-center gap-3 px-4 py-2.5"
-                      >
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-m3-primary-fixed">
-                          <BookOpen className="h-4 w-4 text-m3-primary" />
-                        </div>
-                        <span className="flex-1 min-w-0 truncate text-sm text-m3-on-surface">
-                          {l.lessonTitle}
-                        </span>
-                        <span className="text-xs font-semibold text-m3-on-surface-variant tabular-nums whitespace-nowrap">
-                          {t("study_cards_due.lesson_count", {
-                            count: l.count,
-                            defaultValue: "{{count}} due",
-                          })}
-                        </span>
-                        <Link
-                          to="/study/review"
-                          search={{ lesson: l.lessonId, course: undefined }}
-                          className="text-xs font-semibold text-m3-primary hover:underline shrink-0"
-                        >
-                          {t("study_cards_due.review_course", "Review")}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
+                <CardsDueCourseSection key={group.courseSlug} group={group} />
               ))}
             </div>
 
