@@ -64,6 +64,35 @@ export function Field({
   children: ReactNode;
 }) {
   const generatedId = useId();
+  const { controlId, wired } = wireControl(children, { frozen, generatedId });
+
+  return (
+    <div
+      className={cn("space-y-1.5", frozen && "opacity-60")}
+      title={frozen ? frozenReason : undefined}
+    >
+      <label
+        htmlFor={controlId}
+        className="block text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant"
+      >
+        {label}
+        {frozen && (
+          <Lock
+            className="ml-1.5 inline-block h-3 w-3 align-text-top"
+            aria-hidden="true"
+          />
+        )}
+      </label>
+      {wired}
+      {hint && <p className="text-[11px] text-m3-on-surface-variant">{hint}</p>}
+    </div>
+  );
+}
+
+function wireControl(
+  children: ReactNode,
+  { frozen, generatedId }: { frozen: boolean; generatedId: string },
+): { controlId: string | undefined; wired: ReactNode } {
   // Associate the label with its control, and disable it when frozen.
   //
   // Done by cloning rather than by wrapping the control in the <label>:
@@ -106,28 +135,7 @@ export function Field({
             : child,
         )
       : children;
-
-  return (
-    <div
-      className={cn("space-y-1.5", frozen && "opacity-60")}
-      title={frozen ? frozenReason : undefined}
-    >
-      <label
-        htmlFor={controlId}
-        className="block text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant"
-      >
-        {label}
-        {frozen && (
-          <Lock
-            className="ml-1.5 inline-block h-3 w-3 align-text-top"
-            aria-hidden="true"
-          />
-        )}
-      </label>
-      {wired}
-      {hint && <p className="text-[11px] text-m3-on-surface-variant">{hint}</p>}
-    </div>
-  );
+  return { controlId, wired };
 }
 
 export function ToggleRow({
