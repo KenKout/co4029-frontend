@@ -88,7 +88,7 @@ export default function AdminAiCostsPage() {
         <PeriodSelector value={period} onChange={setPeriod} />
       </div>
 
-      <FilterBar filters={filters} onChange={setFilters} />
+      <FilterBar filters={filters} onChange={setFilters} period={period} />
 
       <SummaryStatsSection summary={summary} period={period} />
 

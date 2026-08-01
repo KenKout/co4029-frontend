@@ -1470,10 +1470,9 @@
         "role": "Role",
         "operation": "Operation",
         "status": "Status",
-        "model_placeholder": "e.g. gpt-4o",
-        "role_placeholder": "e.g. generator_main",
         "any": "Any",
-        "clear": "Clear filters"
+        "clear": "Clear filters",
+        "partial_note": "Filters apply to totals, breakdown and models. Top users, pipelines and recent calls always show all data."
       },
       "drilldown": {
         "title": "Pipeline detail",

@@ -1412,10 +1412,9 @@
         "role": "Vai trò",
         "operation": "Loại thao tác",
         "status": "Trạng thái",
-        "model_placeholder": "vd: gpt-4o",
-        "role_placeholder": "vd: generator_main",
         "any": "Tất cả",
-        "clear": "Xoá bộ lọc"
+        "clear": "Xoá bộ lọc",
+        "partial_note": "Bộ lọc áp dụng cho tổng quan, phân tích và mô hình. Người dùng, pipeline và lệnh gọi gần đây luôn hiển thị toàn bộ dữ liệu."
       },
       "drilldown": {
         "title": "Chi tiết pipeline",
