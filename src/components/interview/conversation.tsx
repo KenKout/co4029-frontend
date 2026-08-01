@@ -6,26 +6,31 @@
  * decomposition; what remained is now `stages.tsx`).
  * Grouped together because they are the transcript stream's building blocks and
  * share the turn-kind visual vocabulary from `lib/interview/format`.
+ *
+ * The status glyph, the per-turn derived flags and the message bubble's regions
+ * live in `./conversation/` — this module keeps the four public components and
+ * their composition.
  */
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Bot,
-  CircleAlert,
-  Loader2,
-  Pause,
-  RotateCcw,
-  Volume2,
-  WifiOff,
-} from "lucide-react";
+import { RotateCcw } from "lucide-react";
 
-import { AiTypingMessage } from "@/components/interview/ai-typing-message";
+import {
+  AiMessageBody,
+  AiMessageHeader,
+  MessageAvatar,
+  UserMessageHeader,
+} from "@/components/interview/conversation/message-parts";
+import {
+  isNestedTurn,
+  shouldShowTimestamp,
+} from "@/components/interview/conversation/turn-meta";
+import { VoiceStatusGlyph } from "@/components/interview/conversation/voice-status-glyph";
 import { Button } from "@/components/ui/button";
 import {
   STATUS_LABELS,
   formatRelativeInterviewTime,
-  turnKindVisual,
 } from "@/lib/interview/format";
 import type {
   ConversationTurn,
@@ -64,54 +69,7 @@ export function VoiceStatusIndicator({
       aria-live="polite"
       aria-atomic="true"
     >
-      <span
-        className={cn(
-          "flex h-7 shrink-0 items-center justify-center gap-0.5",
-          compact ? "w-5" : "w-9",
-        )}
-        aria-hidden="true"
-      >
-        {status === "thinking" ? (
-          // B-Tier-1 #14: calm staggered pulse so a silent "thinking" beat reads
-          // as the interviewer composing, never as a frozen UI.
-          <span className="flex items-center gap-1">
-            {[0, 1, 2].map((dot) => (
-              <span
-                key={dot}
-                className="size-1.5 rounded-full bg-primary/80 motion-safe:animate-pulse"
-                style={{
-                  animationDelay: `${dot * 200}ms`,
-                  animationDuration: "1s",
-                }}
-              />
-            ))}
-          </span>
-        ) : animated ? (
-          // B-Tier-1 #14: a varied waveform reads as live audio (speaking /
-          // listening) rather than a flat, uniform bar set.
-          [0, 1, 2, 3, 4].map((bar) => (
-            <span
-              key={bar}
-              className={cn(
-                "w-0.5 rounded-full bg-primary motion-safe:animate-pulse",
-                ["h-2", "h-4", "h-3", "h-5", "h-2.5"][bar],
-              )}
-              style={{
-                animationDelay: `${bar * 110}ms`,
-                animationDuration: "0.9s",
-              }}
-            />
-          ))
-        ) : status === "error" ? (
-          <CircleAlert className="h-4 w-4" />
-        ) : status === "disconnected" ? (
-          <WifiOff className="h-4 w-4" />
-        ) : status === "paused" ? (
-          <Pause className="h-4 w-4 text-warning" />
-        ) : (
-          <span className="h-2 w-2 rounded-full bg-border-strong" />
-        )}
-      </span>
+      <VoiceStatusGlyph status={status} animated={animated} compact={compact} />
       <span className={cn("truncate", compact && "sr-only")}>
         {message ?? t(STATUS_LABELS[status])}
       </span>
@@ -169,17 +127,8 @@ export function ConversationMessage({
   const isAi = turn.role === "ai";
   const [textComplete, setTextComplete] = useState(!isAi || !isLatest);
   const relativeTime = formatRelativeInterviewTime(turn.elapsedSeconds);
-  const showTimestamp =
-    turn.elapsedSeconds !== undefined && (!isAi || textComplete);
-  // B-Tier-1 #11: nest sub-turns (hint / clarification / follow-up) under their
-  // parent question with a left indent + accent rail so the conversation reads
-  // as a hierarchy rather than a flat stream.
-  const isNestedKind =
-    isAi &&
-    (turn.kind === "hint" ||
-      turn.kind === "clarification" ||
-      turn.kind === "followup" ||
-      turn.isFollowUp === true);
+  const showTimestamp = shouldShowTimestamp(turn, isAi, textComplete);
+  const isNestedKind = isNestedTurn(turn, isAi);
 
   return (
     <article
@@ -195,22 +144,7 @@ export function ConversationMessage({
           : t("course_interview.workspace.you")
       }
     >
-      {isAi &&
-        (() => {
-          const kindVisual = turnKindVisual(turn.kind);
-          const AvatarIcon = kindVisual?.icon ?? Bot;
-          return (
-            <div
-              className={cn(
-                "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border",
-                kindVisual?.avatarClass ??
-                  "border-primary/15 bg-primary-soft text-primary",
-              )}
-            >
-              <AvatarIcon className="h-4 w-4" aria-hidden="true" />
-            </div>
-          );
-        })()}
+      {isAi && <MessageAvatar turn={turn} />}
 
       <div
         className={cn(
@@ -221,112 +155,34 @@ export function ConversationMessage({
         )}
       >
         {isAi && (
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-text-strong">
-              {t("course_interview.workspace.ai_interviewer")}
-            </span>
-            {(() => {
-              // B-Tier-1 #12: colored kind badge (hint/clarification/followup/
-              // wrap-up) so the transcript is scannable. Falls back to the
-              // question-type label pill for plain question/opening turns.
-              const kindVisual = turnKindVisual(turn.kind);
-              if (kindVisual) {
-                return (
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
-                      kindVisual.badgeClass,
-                    )}
-                  >
-                    {t(kindVisual.labelKey)}
-                  </span>
-                );
-              }
-              if (turn.isFollowUp) {
-                return (
-                  <span className="text-[11px] font-medium text-text-subtle">
-                    {t("course_interview.sections.follow_up")}
-                  </span>
-                );
-              }
-              if (label) {
-                return (
-                  <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-                    {label}
-                  </span>
-                );
-              }
-              return null;
-            })()}
-            {showTimestamp && (
-              <time className="ml-auto text-[11px] font-medium tabular-nums text-text-subtle">
-                {relativeTime}
-              </time>
-            )}
-            {replayVisible && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                disabled={replayDisabled}
-                onClick={onReplay}
-                aria-label={
-                  isReplaying
-                    ? t("course_interview.workspace.replaying_message")
-                    : t("course_interview.workspace.replay_message")
-                }
-                title={
-                  isReplaying
-                    ? t("course_interview.workspace.replaying_message")
-                    : t("course_interview.workspace.replay_message")
-                }
-                className={cn(
-                  "size-7 shrink-0 rounded-full text-text-muted hover:bg-primary-soft hover:text-primary disabled:opacity-40",
-                  !showTimestamp && "ml-auto",
-                )}
-              >
-                {isReplaying ? (
-                  <Loader2
-                    className="h-3.5 w-3.5 animate-spin"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
-                )}
-              </Button>
-            )}
-          </div>
+          <AiMessageHeader
+            turn={turn}
+            label={label}
+            showTimestamp={showTimestamp}
+            relativeTime={relativeTime}
+            replayVisible={replayVisible}
+            replayDisabled={replayDisabled}
+            isReplaying={isReplaying}
+            onReplay={onReplay}
+          />
         )}
 
         {!isAi && (
-          <div className="mb-1.5 flex items-center justify-between gap-3 text-[11px] font-medium text-text-muted">
-            <span>{t("course_interview.workspace.you")}</span>
-            {showTimestamp && (
-              <time className="tabular-nums text-text-subtle">
-                {relativeTime}
-              </time>
-            )}
-          </div>
+          <UserMessageHeader
+            showTimestamp={showTimestamp}
+            relativeTime={relativeTime}
+          />
         )}
 
         {isAi ? (
-          <AiTypingMessage
-            text={turn.text}
-            animate={isLatest}
+          <AiMessageBody
+            turn={turn}
+            isLatest={isLatest}
             speak={speak}
             onTick={onTick}
-            onTypingChange={onSpeakingChange}
+            onSpeakingChange={onSpeakingChange}
             onTextComplete={() => setTextComplete(true)}
             onPresentationComplete={onPresentationComplete}
-            presentationKind={
-              turn.kind === "opening" || turn.kind === "closing"
-                ? turn.kind
-                : "question"
-            }
-            className={cn(
-              "min-w-0 text-text-strong",
-              isLatest ? "text-lg leading-8 sm:text-xl" : "text-base leading-7",
-            )}
           />
         ) : (
           <p className="whitespace-pre-wrap text-sm leading-6 sm:text-base">

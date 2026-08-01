@@ -1,5 +1,13 @@
 import { useCallback, useReducer } from "react";
 
+import * as handle from "@/lib/interview/use-answer-state/actions";
+import {
+  createInitialAnswerState,
+  type AnswerAction,
+  type AnswerState,
+  type AnswerSubmissionStatus,
+} from "@/lib/interview/use-answer-state/state";
+
 /**
  * Structured answer-submission state machine (interview main-screen spec §7).
  *
@@ -16,166 +24,40 @@ import { useCallback, useReducer } from "react";
  * entries stay in the route's `transcript` state (spec: "Keep optimistic UI
  * state separate from confirmed transcript state"), and the reducer never adds
  * to the transcript — the route does that on the `submitted` transition.
+ *
+ * The state shape lives in `./use-answer-state/state` and one handler per
+ * action in `./use-answer-state/actions`; every name is re-exported here, so
+ * this module's public surface is unchanged.
  */
 
-export type AnswerSubmissionStatus =
-  | "draft"
-  | "recording"
-  | "reviewing"
-  | "submitting"
-  | "submitted"
-  | "failed";
-
-export interface AnswerState {
-  /** The question this answer belongs to; a new id resets the machine. */
-  questionId: string;
-  /** Current editable content (typed text or live/edited voice transcript). */
-  draft: string;
-  /** Latest successfully-submitted answer, kept for the confirmation card. */
-  submittedAnswer: string | null;
-  status: AnswerSubmissionStatus;
-  error: string | null;
-  /** Stable id for the in-flight/confirmed submission (transcript dedup key). */
-  submissionId?: string;
-}
-
-export type AnswerAction =
-  | { type: "reset"; questionId: string }
-  | { type: "editDraft"; draft: string }
-  | { type: "startRecording" }
-  | { type: "stopRecording"; draft?: string }
-  | { type: "review"; draft?: string }
-  | { type: "submit"; submissionId: string; draft?: string }
-  | { type: "submitSuccess"; submittedAnswer?: string }
-  | { type: "submitFailure"; error: string }
-  | { type: "restoreDraft"; draft?: string }
-  | { type: "reopen" };
-
-export function createInitialAnswerState(questionId: string): AnswerState {
-  return {
-    questionId,
-    draft: "",
-    submittedAnswer: null,
-    status: "draft",
-    error: null,
-    submissionId: undefined,
-  };
-}
+export type { AnswerState, AnswerSubmissionStatus, AnswerAction };
+export { createInitialAnswerState };
 
 export function answerReducer(
   state: AnswerState,
   action: AnswerAction,
 ): AnswerState {
   switch (action.type) {
-    case "reset": {
-      // A genuinely new question resets everything keyed by the new id.
-      // Guard: re-dispatching reset for the SAME question (e.g. an unrelated
-      // rerender that recomputes the id) must NOT wipe an in-progress draft.
-      if (action.questionId === state.questionId) return state;
-      return createInitialAnswerState(action.questionId);
-    }
-
-    case "editDraft": {
-      // Editing is only meaningful before/around submission. While submitting,
-      // ignore edits (composer is disabled) so we can't race the request.
-      if (state.status === "submitting" || state.status === "submitted")
-        return state;
-      return {
-        ...state,
-        draft: action.draft,
-        // Typing after a failure returns to a clean draft state, clearing the
-        // error banner but preserving the recovered content.
-        status: state.status === "failed" ? "draft" : state.status,
-        error: state.status === "failed" ? null : state.error,
-      };
-    }
-
-    case "startRecording": {
-      if (state.status === "submitting" || state.status === "submitted")
-        return state;
-      return { ...state, status: "recording", error: null };
-    }
-
-    case "stopRecording": {
-      if (state.status !== "recording") return state;
-      return {
-        ...state,
-        status: "draft",
-        draft: action.draft ?? state.draft,
-      };
-    }
-
-    case "review": {
-      if (state.status === "submitting" || state.status === "submitted")
-        return state;
-      return {
-        ...state,
-        status: "reviewing",
-        draft: action.draft ?? state.draft,
-        error: null,
-      };
-    }
-
-    case "submit": {
-      // Prevent duplicate submissions: only a draft/reviewing/recording/failed
-      // answer can transition into `submitting`. A second submit while one is
-      // already in flight is a no-op.
-      if (state.status === "submitting" || state.status === "submitted")
-        return state;
-      return {
-        ...state,
-        status: "submitting",
-        draft: action.draft ?? state.draft,
-        error: null,
-        submissionId: action.submissionId,
-      };
-    }
-
-    case "submitSuccess": {
-      if (state.status !== "submitting") return state;
-      const submitted = action.submittedAnswer ?? state.draft;
-      return {
-        ...state,
-        status: "submitted",
-        submittedAnswer: submitted,
-        // Editor content is only cleared AFTER server acknowledgement.
-        draft: "",
-        error: null,
-      };
-    }
-
-    case "submitFailure": {
-      if (state.status !== "submitting") return state;
-      // Preserve the draft so the candidate never loses their answer; expose
-      // retry via the `failed` status. The submissionId is retained so a retry
-      // reuses the same idempotency key and cannot create a duplicate.
-      return { ...state, status: "failed", error: action.error };
-    }
-
-    case "restoreDraft": {
-      // The submitted text was NOT a real answer (e.g. a natural-language end
-      // request that the backend turned into an end-confirmation). Roll back to
-      // a clean draft with the content restored so it never becomes a
-      // transcript entry, and the candidate keeps their text if they continue.
-      if (state.status !== "submitting") return state;
-      return {
-        ...state,
-        status: "draft",
-        draft: action.draft ?? state.draft,
-        error: null,
-        submissionId: undefined,
-      };
-    }
-
-    case "reopen": {
-      // The AI asked a follow-up / clarification / hint on the SAME question
-      // (no new questionId), so the candidate must answer again. Return to a
-      // clean draft on the current question while keeping `submittedAnswer` so
-      // the prior confirmation can collapse rather than vanish.
-      if (state.status !== "submitted") return state;
-      return { ...state, status: "draft", draft: "", error: null };
-    }
-
+    case "reset":
+      return handle.resetForQuestion(state, action);
+    case "editDraft":
+      return handle.editDraft(state, action);
+    case "startRecording":
+      return handle.startRecording(state);
+    case "stopRecording":
+      return handle.stopRecording(state, action);
+    case "review":
+      return handle.review(state, action);
+    case "submit":
+      return handle.submit(state, action);
+    case "submitSuccess":
+      return handle.submitSuccess(state, action);
+    case "submitFailure":
+      return handle.submitFailure(state, action);
+    case "restoreDraft":
+      return handle.restoreDraft(state, action);
+    case "reopen":
+      return handle.reopen(state);
     default:
       return state;
   }

@@ -1,11 +1,17 @@
-import { AlertTriangle, Info, WifiOff, X } from "lucide-react";
+import { WifiOff, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import {
+  SeverityIcon,
+  severityIconTone,
+  severityPalette,
+  type ErrorBannerSeverity,
+} from "@/components/interview/error-banner/severity";
 import { cn } from "@/lib/utils";
 
-export type ErrorBannerSeverity = "error" | "warning" | "info";
+export type { ErrorBannerSeverity };
 
 export interface ErrorBannerAction {
   label: string;
@@ -48,29 +54,6 @@ export function ErrorBanner({
 }) {
   const { t } = useTranslation();
 
-  const palette =
-    severity === "error"
-      ? "border-danger/30 bg-danger-soft/60"
-      : severity === "warning"
-        ? "border-warning/30 bg-accent-soft/50"
-        : "border-primary/25 bg-primary-soft/50";
-
-  const iconTone =
-    severity === "error"
-      ? "text-danger"
-      : severity === "warning"
-        ? "text-warning"
-        : "text-primary";
-
-  const defaultIcon =
-    severity === "info" ? (
-      <Info className="h-5 w-5" />
-    ) : severity === "warning" ? (
-      <AlertTriangle className="h-5 w-5" />
-    ) : (
-      <AlertTriangle className="h-5 w-5" />
-    );
-
   return (
     <div
       // assertive for errors (needs immediate attention), polite otherwise.
@@ -83,12 +66,15 @@ export function ErrorBanner({
         // interview that reads as the page breaking rather than as a warning
         // arriving. Deliberately quick: this is an interruption, not decoration.
         "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-2 motion-safe:duration-200 motion-safe:ease-out",
-        palette,
+        severityPalette(severity),
         className,
       )}
     >
-      <span className={cn("mt-0.5 shrink-0", iconTone)} aria-hidden="true">
-        {icon ?? defaultIcon}
+      <span
+        className={cn("mt-0.5 shrink-0", severityIconTone(severity))}
+        aria-hidden="true"
+      >
+        {icon ?? <SeverityIcon severity={severity} />}
       </span>
 
       <div className="min-w-0 flex-1">
