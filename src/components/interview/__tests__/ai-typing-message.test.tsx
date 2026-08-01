@@ -8,7 +8,7 @@ describe("AiTypingMessage", () => {
     vi.useRealTimers();
   });
 
-  it("starts showing a question promptly when narration readiness is delayed", async () => {
+  it("holds the question until narration starts, then releases it on the safety cap", async () => {
     vi.useFakeTimers();
     let markNarrationReady!: () => void;
     const speak = vi.fn(
@@ -31,8 +31,18 @@ describe("AiTypingMessage", () => {
     });
     expect(screen.getByRole("status")).toBeInTheDocument();
 
+    // Text must not race ahead of the voice: past the minimum preparation
+    // beat the question stays hidden while narration is still warming up.
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(650);
+      await vi.advanceTimersByTimeAsync(5_000);
+    });
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.queryByText("Hello")).not.toBeInTheDocument();
+
+    // The wait is a safety cap, not a hang: a narration that never starts
+    // still releases the question so the candidate is never stuck.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(16_500);
     });
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(screen.getByText(/^H/)).toBeInTheDocument();
