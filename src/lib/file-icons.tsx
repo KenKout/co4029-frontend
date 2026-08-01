@@ -84,25 +84,40 @@ const _BY_EXT: Record<string, FileKind> = {
   cpp: { Icon: FileCode, colorClass: "text-blue-400", label: "Code" },
 };
 
+/**
+ * MIME → kind, as an ORDERED table rather than a branch chain.
+ *
+ * Order is load-bearing and mirrors the previous `if` cascade exactly:
+ * `text/csv` must be tested before the generic `text/` prefix, and the
+ * substring rules (presentation → spreadsheet → word → zip) stay in that
+ * sequence because a single MIME can match more than one of them
+ * (e.g. `application/vnd.openxmlformats-officedocument.presentationml.
+ * presentation` contains both "presentation" and "document").
+ */
+const _MIME_RULES: ReadonlyArray<
+  readonly [match: (mime: string) => boolean, kind: FileKind]
+> = [
+  [(mime) => mime === "application/pdf", _BY_EXT.pdf],
+  [(mime) => mime.startsWith("video/"), _BY_EXT.mp4],
+  [(mime) => mime.startsWith("audio/"), _BY_EXT.mp3],
+  [(mime) => mime.startsWith("image/"), _BY_EXT.png],
+  [(mime) => mime === "text/csv", _BY_EXT.csv],
+  [(mime) => mime.startsWith("text/"), _BY_EXT.txt],
+  [
+    (mime) => mime.includes("presentation") || mime.includes("powerpoint"),
+    _BY_EXT.pptx,
+  ],
+  [
+    (mime) => mime.includes("spreadsheet") || mime.includes("excel"),
+    _BY_EXT.xlsx,
+  ],
+  [(mime) => mime.includes("word") || mime.includes("document"), _BY_EXT.docx],
+  [(mime) => mime.includes("zip") || mime.includes("compressed"), _BY_EXT.zip],
+];
+
 function _kindFromMime(mime: string): FileKind | null {
   if (!mime) return null;
-  if (mime === "application/pdf") return _BY_EXT.pdf;
-  if (mime.startsWith("video/")) return _BY_EXT.mp4;
-  if (mime.startsWith("audio/")) return _BY_EXT.mp3;
-  if (mime.startsWith("image/")) return _BY_EXT.png;
-  if (mime.startsWith("text/")) {
-    if (mime === "text/csv") return _BY_EXT.csv;
-    return _BY_EXT.txt;
-  }
-  if (mime.includes("presentation") || mime.includes("powerpoint")) {
-    return _BY_EXT.pptx;
-  }
-  if (mime.includes("spreadsheet") || mime.includes("excel")) {
-    return _BY_EXT.xlsx;
-  }
-  if (mime.includes("word") || mime.includes("document")) return _BY_EXT.docx;
-  if (mime.includes("zip") || mime.includes("compressed")) return _BY_EXT.zip;
-  return null;
+  return _MIME_RULES.find(([match]) => match(mime))?.[1] ?? null;
 }
 
 function _kindFromName(name: string): FileKind | null {

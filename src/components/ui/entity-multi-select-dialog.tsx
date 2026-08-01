@@ -1,23 +1,15 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { Loader2, Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
+import {
+  EntityDialogFooter,
+  EntityDialogHeader,
+} from "./entity-multi-select-dialog/chrome";
+import { EntityList } from "./entity-multi-select-dialog/list";
+import type { SelectableEntity } from "./entity-multi-select-dialog/types";
 
-/**
- * Shape every selectable entity must expose so the dialog can render,
- * key, and dedupe rows without knowing the concrete entity type.
- */
-export interface SelectableEntity {
-  /** Stable identifier used as the selection key + React key. */
-  id: string;
-  /** Primary line (course title, student display name / email). */
-  primaryLabel: string;
-  /** Secondary muted line (slug, email) — optional. */
-  secondaryLabel?: string | null;
-}
+export type { SelectableEntity } from "./entity-multi-select-dialog/types";
 
 interface EntityMultiSelectDialogProps<T extends SelectableEntity> {
   title: string;
@@ -118,20 +110,12 @@ export function EntityMultiSelectDialog<T extends SelectableEntity>({
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-lg bg-popover rounded-xl shadow-lg flex flex-col max-h-[80vh]"
       >
-        <div className="flex items-center justify-between gap-3 p-5 border-b border-m3-outline-variant/20">
-          <h2 className="text-lg font-headline font-bold text-m3-on-surface">
-            {title}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="text-m3-on-surface-variant hover:text-m3-on-surface disabled:opacity-40 cursor-pointer"
-            aria-label={t("common.cancel")}
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        <EntityDialogHeader
+          title={title}
+          onClose={onClose}
+          isSubmitting={isSubmitting}
+          cancelLabel={t("common.cancel")}
+        />
 
         <div className="p-5 pb-3 space-y-3">
           <div className="relative">
@@ -149,113 +133,27 @@ export function EntityMultiSelectDialog<T extends SelectableEntity>({
         </div>
 
         <div className="flex-1 overflow-auto px-2 min-h-[8rem]">
-          {isLoading ? (
-            <div className="p-4 space-y-2">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-12 bg-m3-surface-container animate-pulse rounded-lg"
-                />
-              ))}
-            </div>
-          ) : items.length === 0 ? (
-            <p className="p-6 text-center text-sm text-m3-on-surface-variant">
-              {emptyText}
-            </p>
-          ) : (
-            <ul className="py-1">
-              {/* Already-attached rows: checked + disabled, shown first. */}
-              {items
-                .filter((it) => alreadySelectedIds.has(it.id))
-                .map((it) => (
-                  <li key={it.id}>
-                    <div className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg opacity-60">
-                      <Checkbox checked disabled />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-m3-on-surface truncate">
-                          {it.primaryLabel}
-                        </p>
-                        {it.secondaryLabel && (
-                          <p className="text-xs text-m3-on-surface-variant truncate font-mono">
-                            {it.secondaryLabel}
-                          </p>
-                        )}
-                      </div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-m3-primary shrink-0">
-                        {alreadyAddedLabel}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              {/* Selectable rows. */}
-              {selectableItems.map((it) => {
-                const checked = picked.has(it.id);
-                return (
-                  <li key={it.id}>
-                    <button
-                      type="button"
-                      onClick={() => toggle(it)}
-                      aria-pressed={checked}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors cursor-pointer",
-                        checked
-                          ? "bg-m3-primary-fixed/40"
-                          : "hover:bg-m3-surface-container-low",
-                      )}
-                    >
-                      {/* Presentational only: the row <button> owns the toggle.
-                          A real onChange here would double-fire with the
-                          button's onClick and cancel itself out. */}
-                      <Checkbox
-                        checked={checked}
-                        readOnly
-                        tabIndex={-1}
-                        className="pointer-events-none"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-m3-on-surface truncate">
-                          {it.primaryLabel}
-                        </p>
-                        {it.secondaryLabel && (
-                          <p className="text-xs text-m3-on-surface-variant truncate font-mono">
-                            {it.secondaryLabel}
-                          </p>
-                        )}
-                      </div>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <EntityList<T>
+            isLoading={isLoading}
+            items={items}
+            selectableItems={selectableItems}
+            alreadySelectedIds={alreadySelectedIds}
+            picked={picked}
+            onToggle={toggle}
+            emptyText={emptyText}
+            alreadyAddedLabel={alreadyAddedLabel}
+          />
         </div>
 
-        <div className="flex items-center justify-between gap-3 p-5 border-t border-m3-outline-variant/20">
-          <span className="text-xs text-m3-on-surface-variant">
-            {t("entity_select.selected_count", { count: pickedCount })}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleConfirm}
-              disabled={pickedCount === 0 || isSubmitting}
-              className="gap-2"
-            >
-              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {t("entity_select.add_selected", { count: pickedCount })}
-            </Button>
-          </div>
-        </div>
+        <EntityDialogFooter
+          pickedCount={pickedCount}
+          isSubmitting={isSubmitting}
+          onClose={onClose}
+          onConfirm={handleConfirm}
+          countLabel={t("entity_select.selected_count", { count: pickedCount })}
+          cancelLabel={t("common.cancel")}
+          addLabel={t("entity_select.add_selected", { count: pickedCount })}
+        />
       </div>
     </div>
   );
