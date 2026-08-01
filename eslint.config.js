@@ -73,23 +73,22 @@ export default tseslint.config([
       // max-lines is the BLUNT backstop: line count is a weak proxy for
       // complexity. The two rules below are the SHARP signal — a 200-line
       // function with a dozen branches is the actual "break this up" trigger.
+      // 800 mirrors the backend's no-god-file LOC guard.
       //
-      // 800 / warn, mirroring the backend's no-god-file LOC guard. It is a WARN
-      // (not error) deliberately: ~24 files exceed 800 today, 10 of which
-      // already exceeded the previous 1000 threshold — i.e. the old
-      // `error, 1000` gate was already red, so it wasn't gating anything. A
-      // warn that everyone sees beats an error everyone bypasses. Promote to
-      // `error` once the count reaches zero; until then, treat a NEW warning in
-      // review as a blocker.
+      // All three were `warn` while the debt existed and are now `error`
+      // because all three reached zero, as the old note here said to do.
+      //
+      // Do NOT raise a limit to make code pass. That has been tried once:
+      // max-lines-per-function was quietly moved 150 -> 350 mid-refactor.
       "max-lines": [
-        "warn",
+        "error",
         { max: 800, skipBlankLines: true, skipComments: true },
       ],
       "max-lines-per-function": [
-        "warn",
-        { max: 350, skipBlankLines: true, skipComments: true, IIFEs: true },
+        "error",
+        { max: 150, skipBlankLines: true, skipComments: true, IIFEs: true },
       ],
-      complexity: ["warn", 15],
+      complexity: ["error", 15],
 
       // --- Correctness (not style) -----------------------------------------
       // rules-of-hooks has no false positives by construction: a hook called
@@ -201,11 +200,13 @@ export default tseslint.config([
   ...typeCheckedBlock,
 
   // Tests and config files: no size caps, and NOT type-checked (they don't
-  // live in the app tsconfig program).
+  // live in the app tsconfig program). Vitest uses *.test, Playwright *.spec.
   {
     files: [
       "**/*.test.{ts,tsx}",
+      "**/*.spec.{ts,tsx}",
       "**/__tests__/**/*.{ts,tsx}",
+      "tests/**/*.{ts,tsx}",
       "**/*.config.{js,ts}",
     ],
     rules: {
