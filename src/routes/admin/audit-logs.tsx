@@ -340,12 +340,16 @@ function DataChangesPanel() {
               setTable(next);
               setSubmittedId("");
             }}
-            size="sm"
             options={DATA_CHANGE_TABLES.map((tbl) => ({
               value: tbl,
               label: t(`admin.audit.data_changes.tables.${tbl}`),
             }))}
-            className="w-48 font-normal normal-case"
+            // Match the Input + Button on this row (both h-9). `size="sm"` (h-7)
+            // left the shorter Select's label floating above the taller Input's
+            // in the `items-end` row. Height is overridden per the Select's own
+            // token contract (explicit h-* survives tailwind-merge); radius and
+            // text size follow the row's controls rather than the sm chip token.
+            className="h-9 w-48 rounded-xl px-3 text-sm font-normal normal-case"
           />
         </label>
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant flex flex-col gap-1 flex-1 min-w-[280px]">
