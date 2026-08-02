@@ -12,8 +12,6 @@ export type StatusFilter =
   | "dropped"
   | "at_risk";
 
-export type SortKey = "progress" | "name" | "enrolled_at" | "risk";
-
 /** One row of the Cohort Overview risk breakdown. */
 export interface RiskBreakdownEntry {
   level: "high" | "medium" | "low" | "none";

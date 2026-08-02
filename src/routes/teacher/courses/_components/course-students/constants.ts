@@ -6,7 +6,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import type { SortKey, StatusFilter } from "./types";
+import type { StatusFilter } from "./types";
 
 /**
  * Risk / status lookup tables and the two static option lists of the course
@@ -58,14 +58,6 @@ export const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
   { key: "at_risk", label: "At Risk" },
   { key: "completed", label: "Completed" },
   { key: "dropped", label: "Dropped" },
-];
-
-/** Sort dropdown options, in their original order. */
-export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "progress", label: "Progress" },
-  { value: "name", label: "Name" },
-  { value: "enrolled_at", label: "Enrollment Date" },
-  { value: "risk", label: "Risk Level" },
 ];
 
 /** Risk levels in the order the Cohort Overview lists them. */
