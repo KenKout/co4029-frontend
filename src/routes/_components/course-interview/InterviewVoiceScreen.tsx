@@ -18,12 +18,10 @@ export function InterviewVoiceScreen({
   iv,
   course,
   config,
-  sessionId,
 }: {
   iv: CourseInterviewController;
   course: InterviewCourse;
   config: InterviewConfig;
-  sessionId: string;
 }) {
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
@@ -42,12 +40,14 @@ export function InterviewVoiceScreen({
         onToggleVoice={() => iv.setVoiceOn((current) => !current)}
         showVoiceControl={false}
       />
+      {/* The LiveKit room itself is owned by InterviewRoomProvider (mounted in
+          course-interview.tsx above every screen), so VoiceRoom is a consumer:
+          no token fetch, no <LiveKitRoom>, and the drop policy lives at the
+          provider. That is what keeps ONE room across a hybrid session. */}
       <VoiceRoom
-        sessionId={sessionId}
         elapsed={iv.elapsed}
         initialTranscript={iv.voiceInitialTranscriptRef.current}
         onCompleted={iv.handleVoiceCompleted}
-        onVoiceDropped={iv.handleVoiceDropped}
         onTranscriptChange={iv.setTranscript}
       />
       <LeaveBlockerDialog iv={iv} />
