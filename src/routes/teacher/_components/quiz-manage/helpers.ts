@@ -186,6 +186,9 @@ export function buildQuestionDraft(
           right: String(p.right ?? ""),
         }))
       : [],
+    match_distractors: Array.isArray(question.match_distractors)
+      ? question.match_distractors.map((d) => String(d))
+      : [],
     ordering_sequence: Array.isArray(question.ordering_sequence)
       ? question.ordering_sequence.map((s) => String(s))
       : [],

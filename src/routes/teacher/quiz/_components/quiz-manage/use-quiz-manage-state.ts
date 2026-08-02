@@ -9,6 +9,34 @@ import type {
 
 import type { QuizManageDataController } from "./use-quiz-manage-data";
 
+const TAB_KEYS: readonly TabKey[] = ["questions", "settings", "preview"];
+
+/**
+ * Remember the active tab per quiz for the length of the browser session.
+ *
+ * Opening the AI generator navigates to a separate route (`/generate`), which
+ * unmounts this page — so on the way back the tab state was lost and always
+ * reset to the "settings" default, dropping the teacher somewhere other than
+ * the Questions tab they left from. sessionStorage (not localStorage) so the
+ * memory is scoped to the current browsing session, not a permanent per-device
+ * preference.
+ */
+function tabStorageKey(quizId: string): string {
+  return `abridgeai.quizmanage.tab.${quizId}`;
+}
+
+function loadInitialTab(quizId: string): TabKey {
+  try {
+    const raw = window.sessionStorage.getItem(tabStorageKey(quizId));
+    if (raw && (TAB_KEYS as readonly string[]).includes(raw)) {
+      return raw as TabKey;
+    }
+  } catch {
+    // sessionStorage unavailable (private mode / disabled) — fall through.
+  }
+  return "settings";
+}
+
 /**
  * All local UI state for the quiz-manage page: the active tab, the settings
  * draft, dialog visibility, question selection, and the unsaved-work guard
@@ -18,13 +46,25 @@ import type { QuizManageDataController } from "./use-quiz-manage-data";
  * order the page used, so React's hook sequence is unchanged.
  */
 export function useQuizManageState({
+  quizId,
   quiz,
   questions,
 }: {
+  quizId: string;
   quiz: QuizManageDataController["quiz"];
   questions: QuizManageDataController["questions"];
 }) {
-  const [tab, setTab] = useState<TabKey>("settings");
+  const [tab, setTab] = useState<TabKey>(() => loadInitialTab(quizId));
+
+  // Persist the active tab so returning from the AI generator (a separate
+  // route that unmounts this page) lands back on the same tab.
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(tabStorageKey(quizId), tab);
+    } catch {
+      // best-effort
+    }
+  }, [quizId, tab]);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmPublish, setConfirmPublish] = useState(false);
   const [draft, setDraft] = useState<SettingsDraft | null>(null);

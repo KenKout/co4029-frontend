@@ -203,6 +203,10 @@ export interface QuizQuestionRichFields {
   numeric_answer?: number | string | null;
   numeric_tolerance?: number | string | null;
   match_pairs?: Array<{ left: string; right: string }> | null;
+  // Matching distractors: extra right-side choices with no left partner. The
+  // backend folds these into the shuffled match_choices pool served to
+  // students; teacher-only as a raw list.
+  match_distractors?: string[] | null;
   ordering_sequence?: string[] | null;
   // No-leak derived projections served to students (backend Phase 7). The raw
   // answer keys above are teacher-only; these shuffled lists are what a learner

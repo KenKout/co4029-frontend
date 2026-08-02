@@ -8,6 +8,8 @@ export interface TypeSpecificValue {
   numeric_answer: string;
   numeric_tolerance: string;
   match_pairs: Array<{ left: string; right: string }>;
+  /** Matching distractors: extra unpaired right-side choices. */
+  match_distractors: string[];
   ordering_sequence: string[];
 }
 

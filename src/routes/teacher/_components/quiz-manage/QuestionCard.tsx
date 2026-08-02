@@ -135,6 +135,7 @@ export function QuestionCard({
           numeric_answer: draft.numeric_answer,
           numeric_tolerance: draft.numeric_tolerance,
           match_pairs: draft.match_pairs,
+          match_distractors: draft.match_distractors,
           ordering_sequence: draft.ordering_sequence,
         }}
         onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}

@@ -39,6 +39,9 @@ const QUESTION_SEEDS: Record<
       { left: "Term 1", right: "Match 1" },
       { left: "Term 2", right: "Match 2" },
     ],
+    // Distractors start empty — classic 1:1 matching until the teacher adds
+    // extra unpaired choices in the card editor.
+    match_distractors: [],
   }),
   ordering: (base) => ({
     ...base,

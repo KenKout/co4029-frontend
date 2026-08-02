@@ -139,6 +139,11 @@ export function buildQuestionPatch({
           match_pairs: draft.match_pairs
             .filter((p) => p.left.trim() && p.right.trim())
             .map((p) => ({ left: p.left.trim(), right: p.right.trim() })),
+          // Distractors: extra unpaired choices. Trimmed + de-blanked; sent
+          // even when empty so clearing them all reverts to 1:1 matching.
+          match_distractors: draft.match_distractors
+            .map((d) => d.trim())
+            .filter((d) => d.length > 0),
         }
       : {}),
     ...(question.question_type === "ordering"

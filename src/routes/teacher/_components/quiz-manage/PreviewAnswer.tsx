@@ -168,6 +168,24 @@ function PreviewMatchingAnswer({ question }: PreviewAnswerProps) {
           </span>
         )}
       </div>
+      {Array.isArray(question.match_distractors) &&
+        question.match_distractors.length > 0 && (
+          <div className="mt-2 rounded-xl border-2 border-amber-300 bg-amber-50/50 px-3 py-2.5 text-sm text-m3-on-surface">
+            <div className="text-[10px] font-bold uppercase tracking-wide text-amber-700 mb-1">
+              {t("teacher_quiz_manage.type_editor.distractors_label")}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {question.match_distractors.map((distractor, i) => (
+                <span
+                  key={i}
+                  className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800"
+                >
+                  {distractor}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       <p className="mt-1.5 text-[11px] text-m3-on-surface-variant italic">
         {t("teacher_quiz_manage.preview.matching_note")}
       </p>
