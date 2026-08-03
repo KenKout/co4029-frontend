@@ -9,11 +9,16 @@ export function OutcomesHeader({
   showActions,
   showImportButton,
   onOpenImport,
+  disabled,
+  disabledReason,
   t,
 }: {
   showActions: boolean;
   showImportButton: boolean;
   onOpenImport: () => void;
+  /** Published configs freeze the outcomes (they are the grading criteria). */
+  disabled?: boolean;
+  disabledReason?: string;
   t: TranslateFn;
 }) {
   return (
@@ -33,7 +38,9 @@ export function OutcomesHeader({
               type="button"
               variant="outline"
               onClick={onOpenImport}
-              className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
+              disabled={disabled}
+              title={disabled ? disabledReason : undefined}
+              className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary disabled:pointer-events-auto disabled:opacity-50"
             >
               <BookOpen className="h-4 w-4" />
               {t("teacher_interview_config.outcomes.import_from_course")}
@@ -52,10 +59,15 @@ export function OutcomesHeader({
 export function OutcomesEmptyState({
   hasImportableOutcomes,
   onOpenImport,
+  disabled,
+  disabledReason,
   t,
 }: {
   hasImportableOutcomes: boolean;
   onOpenImport: () => void;
+  /** Published configs freeze the outcomes (they are the grading criteria). */
+  disabled?: boolean;
+  disabledReason?: string;
   t: TranslateFn;
 }) {
   return (
@@ -80,7 +92,9 @@ export function OutcomesEmptyState({
             type="button"
             variant="outline"
             onClick={onOpenImport}
-            className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
+            disabled={disabled}
+            title={disabled ? disabledReason : undefined}
+            className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary disabled:pointer-events-auto disabled:opacity-50"
             size="sm"
           >
             <BookOpen className="h-4 w-4" />

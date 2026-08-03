@@ -26,7 +26,10 @@ export function useLearningOutcomes({
   courseId,
   outcomes,
   questions,
-}: Omit<LearningOutcomesProps, "minOutcomesToPass" | "onViewQuestions">) {
+}: Omit<
+  LearningOutcomesProps,
+  "minOutcomesToPass" | "onViewQuestions" | "status"
+>) {
   const { t } = useTranslation();
   const createOutcome = useCreateInterviewOutcome(configId);
   const updateOutcome = useUpdateInterviewOutcome(configId);

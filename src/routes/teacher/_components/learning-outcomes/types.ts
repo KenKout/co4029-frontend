@@ -27,4 +27,12 @@ export interface LearningOutcomesProps {
   minOutcomesToPass: number | null | undefined;
   /** Scroll to the Question Bank and filter it to this outcome's questions. */
   onViewQuestions: (outcomeId: string) => void;
+  /**
+   * Config status. On "published" the whole section is read-only: the AI judges
+   * answers against these outcomes, so adding/removing/reweighting one mid-cohort
+   * would change how already-submitted answers score. The backend refuses the
+   * mutations (409 interview_published_setting_locked); this dims the controls
+   * so the teacher never types into an edit that cannot save.
+   */
+  status: string | null | undefined;
 }
