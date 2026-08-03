@@ -100,20 +100,74 @@ describe("parseControlEvent", () => {
         status: "completed",
         state_version: 77,
         state: {
+          // The full serialized InterviewSubmitAnswerResponse (the bridge
+          // publishes from_step_result().model_dump(mode="json")).
+          next_question: {
+            id: "22222222-2222-2222-2222-222222222222",
+            prompt_text: "What is an index?",
+            question_type: "technical",
+          },
           is_finished: false,
-          next_question_text: "What is an index?",
-          followup_text: null,
-          ai_turn_text: null,
-          question_type: "technical",
+          ai_followup_text: null,
           time_remaining_seconds: 600,
+          ai_turn_text: null,
+          language: "en",
+          should_narrate: null,
+          should_await_response: null,
+          should_finish: null,
+          assistance_kind: null,
+          pending_confirmation: null,
+          interaction_state: null,
+          transition_id: null,
+          transition_text: null,
+          transition_target: null,
         },
       }),
     );
     expect(parsed).not.toBeNull();
     expect(parsed!.status).toBe("completed");
     expect(parsed!.stateVersion).toBe(77);
-    expect(parsed!.state?.next_question_text).toBe("What is an index?");
+    // The OBJECT, not a prompt string: the client builds its transcript turn id
+    // from next_question.id and renders the held card from the object.
+    expect(parsed!.state?.next_question?.prompt_text).toBe("What is an index?");
+    expect(parsed!.state?.next_question?.id).toBe(
+      "22222222-2222-2222-2222-222222222222",
+    );
+    expect(parsed!.state?.next_question?.question_type).toBe("technical");
     expect(parsed!.state?.is_finished).toBe(false);
+    expect(parsed!.state?.time_remaining_seconds).toBe(600);
+  });
+
+  it("parses the transition fields a typed final answer carries", () => {
+    // The typed-final-answer path: a closing transition must survive the parse
+    // so the client can run the same closing sequence REST would trigger.
+    const parsed = parseControlEvent(
+      event({
+        state: {
+          next_question: null,
+          is_finished: true,
+          ai_followup_text: null,
+          time_remaining_seconds: 0,
+          ai_turn_text: null,
+          language: "en",
+          should_narrate: null,
+          should_await_response: null,
+          should_finish: true,
+          assistance_kind: null,
+          pending_confirmation: false,
+          interaction_state: "awaiting_end_confirmation",
+          transition_id: "transition:tk-1:end",
+          transition_text: "That concludes the interview.",
+          transition_target: "closing",
+        },
+      }),
+    );
+    expect(parsed).not.toBeNull();
+    expect(parsed!.state?.is_finished).toBe(true);
+    expect(parsed!.state?.should_finish).toBe(true);
+    expect(parsed!.state?.transition_target).toBe("closing");
+    expect(parsed!.state?.transition_text).toBe("That concludes the interview.");
+    expect(parsed!.state?.next_question).toBeNull();
   });
 
   it("reads the brain's state_version separately from the stream seq", () => {
@@ -187,10 +241,13 @@ describe("parseControlEvent", () => {
 
   it("coerces a malformed state rather than trusting it", () => {
     // A state whose is_finished is absent must not read as finished — that
-    // would end a live interview.
-    const parsed = parseControlEvent(event({ state: { next_question_text: 5 } }));
+    // would end a live interview. A mistyped next_question must degrade to null
+    // rather than poison the held Question Card.
+    const parsed = parseControlEvent(
+      event({ state: { next_question: 5, is_finished: "yes" } }),
+    );
     expect(parsed!.state?.is_finished).toBe(false);
-    expect(parsed!.state?.next_question_text).toBeNull();
+    expect(parsed!.state?.next_question).toBeNull();
   });
 });
 

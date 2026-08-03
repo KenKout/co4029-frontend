@@ -16,6 +16,8 @@
  * validation so it can be unit tested without a room.
  */
 
+import type { InterviewSubmitAnswerResponse } from "@/lib/api/types";
+
 /** Outbound: the candidate's typed text. SDK-standard topic. */
 export const TOPIC_CHAT = "lk.chat";
 
@@ -85,18 +87,17 @@ export type TurnRejection =
 /**
  * The structured state a COMPLETED event carries.
  *
- * Field-for-field the agent's `_control_state` projection, which mirrors the
- * REST `/respond` response body — so a client on this transport needs no extra
- * round-trip to learn the new interview state.
+ * This IS the REST `/respond` response body — the bridge publishes
+ * `InterviewSubmitAnswerResponse.model_dump(mode="json")` verbatim, built by the
+ * same `from_step_result` classmethod the REST route uses. `next_question` is
+ * the projected `InterviewQuestionPublic` the client needs to render the next
+ * Question Card; `transition_*`, `pending_confirmation` and the adaptive fields
+ * drive the same sequencing the REST path does.
+ *
+ * Every field is optional-with-null so a partially-populated frame degrades to
+ * "treat as absent" instead of throwing inside the stream handler.
  */
-export interface ControlTurnState {
-  is_finished: boolean;
-  next_question_text: string | null;
-  followup_text: string | null;
-  ai_turn_text: string | null;
-  question_type: string | null;
-  time_remaining_seconds: number | null;
-}
+export type ControlTurnState = InterviewSubmitAnswerResponse;
 
 export interface ControlEvent {
   status: ControlStatus;
@@ -135,16 +136,67 @@ function asNullableString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
+function asNullableBoolean(value: unknown): boolean | null {
+  return typeof value === "boolean" ? value : null;
+}
+
+const NEXT_QUESTION_TYPES = [
+  "conceptual",
+  "behavioral",
+  "technical",
+  "situational",
+  "system_design",
+] as const;
+
+/**
+ * Parse the serialized `InterviewSubmitAnswerResponse` inside a control event.
+ *
+ * Mirrors the backend's field-for-field contract. Every field is parsed with a
+ * safe-typed helper so a missing or mistyped member degrades to null instead of
+ * throwing inside the LiveKit stream handler.
+ */
 function parseState(value: unknown): ControlTurnState | null {
   const raw = asRecord(value);
   if (!raw) return null;
+
+  const nextQuestionRaw = asRecord(raw.next_question);
+  const rawQuestionType = asNullableString(nextQuestionRaw?.question_type);
+  const nextQuestion =
+    raw.next_question === null || raw.next_question === undefined
+      ? null
+      : nextQuestionRaw &&
+          typeof nextQuestionRaw.id === "string" &&
+          typeof nextQuestionRaw.prompt_text === "string" &&
+          rawQuestionType !== null &&
+          (NEXT_QUESTION_TYPES as readonly string[]).includes(rawQuestionType)
+        ? {
+            id: nextQuestionRaw.id,
+            prompt_text: nextQuestionRaw.prompt_text,
+            // Narrowed by the includes() guard above.
+            question_type: rawQuestionType as (typeof NEXT_QUESTION_TYPES)[number],
+          }
+        : null;
+
   return {
+    next_question: nextQuestion,
     is_finished: raw.is_finished === true,
-    next_question_text: asNullableString(raw.next_question_text),
-    followup_text: asNullableString(raw.followup_text),
-    ai_turn_text: asNullableString(raw.ai_turn_text),
-    question_type: asNullableString(raw.question_type),
+    ai_followup_text: asNullableString(raw.ai_followup_text),
     time_remaining_seconds: asNullableNumber(raw.time_remaining_seconds),
+    ai_turn_text: asNullableString(raw.ai_turn_text),
+    language: asNullableString(raw.language),
+    should_narrate: asNullableBoolean(raw.should_narrate),
+    should_await_response: asNullableBoolean(raw.should_await_response),
+    should_finish: asNullableBoolean(raw.should_finish),
+    assistance_kind: asNullableString(raw.assistance_kind) as
+      | ControlTurnState["assistance_kind"]
+      | null,
+    pending_confirmation: asNullableBoolean(raw.pending_confirmation),
+    interaction_state: asNullableString(raw.interaction_state),
+    transition_id: asNullableString(raw.transition_id),
+    transition_text: asNullableString(raw.transition_text),
+    transition_target: asNullableString(raw.transition_target) as
+      | ControlTurnState["transition_target"]
+      | null,
   };
 }
 

@@ -107,12 +107,27 @@ function control(over: Record<string, unknown> = {}) {
     turn_action: "answer",
     state_version: 7,
     state: {
+      // The full serialized InterviewSubmitAnswerResponse — the same shape the
+      // bridge publishes from from_step_result().model_dump(mode="json").
+      next_question: {
+        id: "11111111-1111-1111-1111-111111111111",
+        prompt_text: "Next one?",
+        question_type: "conceptual",
+      },
       is_finished: false,
-      next_question_text: "Next one?",
-      followup_text: null,
-      ai_turn_text: null,
-      question_type: "conceptual",
+      ai_followup_text: null,
       time_remaining_seconds: 900,
+      ai_turn_text: null,
+      language: "en",
+      should_narrate: null,
+      should_await_response: null,
+      should_finish: null,
+      assistance_kind: null,
+      pending_confirmation: null,
+      interaction_state: null,
+      transition_id: null,
+      transition_text: null,
+      transition_target: null,
     },
     ...over,
   };
@@ -262,7 +277,12 @@ describe("useInterviewChat — outcomes and the draft", () => {
     const outcome = await promise;
     expect(outcome.preserveDraft).toBe(false);
     expect(outcome.event.stateVersion).toBe(7);
-    expect(outcome.event.state?.next_question_text).toBe("Next one?");
+    // The next question comes through as the OBJECT the client renders the
+    // next Question Card from — id included, not just a prompt string.
+    expect(outcome.event.state?.next_question?.prompt_text).toBe("Next one?");
+    expect(outcome.event.state?.next_question?.id).toBe(
+      "11111111-1111-1111-1111-111111111111",
+    );
   });
 
   it("preserves the draft on a rejected turn and reports why", async () => {
