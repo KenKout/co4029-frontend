@@ -26,6 +26,10 @@ export function useFocusedStageTurns({
   currentQuestionNumber,
   replayAvailable,
   speak,
+  /** Replay path. Defaults to `speak`; a live-LiveKit session passes a
+   * replay-specific narrator so a user-initiated replay still works while the
+   * agent (not the client) is the voice for NEW turns. */
+  replaySpeak,
   onSpeakingChange,
   onTurnPresented,
   t,
@@ -36,6 +40,7 @@ export function useFocusedStageTurns({
   currentQuestionNumber: number;
   replayAvailable: boolean;
   speak: StageSpeak;
+  replaySpeak?: StageSpeak;
   onSpeakingChange: (speaking: boolean) => void;
   onTurnPresented: ((turn: ConversationTurn) => void) | undefined;
   t: TFunction;
@@ -114,7 +119,7 @@ export function useFocusedStageTurns({
       setReplayingTurnId(turn.id);
       onSpeakingChange(true);
       try {
-        const presentation = speak(turn.text);
+        const presentation = (replaySpeak ?? speak)(turn.text);
         if (
           presentation &&
           typeof presentation === "object" &&
@@ -130,7 +135,7 @@ export function useFocusedStageTurns({
         onSpeakingChange(false);
       }
     },
-    [onSpeakingChange, replayBlocked, speak],
+    [onSpeakingChange, replayBlocked, replaySpeak, speak],
   );
 
   const markPresented = useCallback(

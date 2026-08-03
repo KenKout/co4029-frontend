@@ -53,13 +53,17 @@ export function InterviewWorkspaceScreen({
   // (the actions are built outside the provider, where the room is not
   // reachable). The setter, not a direct ref write, so the immutability rule
   // never sees a prop mutation.
-  const { setChatBridge } = iv;
+  const { setChatBridge, setRoomConnected } = iv;
   useEffect(() => {
     setChatBridge(chat);
+    // The agent in the room speaks every utterance via LiveKit TTS; the
+    // workspace must not narrate the same text client-side (double voice).
+    setRoomConnected(chat.connected);
     return () => {
       setChatBridge(null);
+      setRoomConnected(false);
     };
-  }, [setChatBridge, chat]);
+  }, [setChatBridge, setRoomConnected, chat]);
 
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
@@ -77,6 +81,10 @@ export function InterviewWorkspaceScreen({
         questionLingering={iv.questionPacing.lingering}
         connected={iv.connected}
         voiceOn={iv.voiceOn}
+        // When the LiveKit agent is live in the room it is the voice; the
+        // client narration toggle cannot mute the room's audio track, so a
+        // live toggle would lie. Same convention as the voice screen.
+        showVoiceControl={!iv.roomConnected}
         onToggleVoice={() =>
           iv.setVoiceOn((current) => {
             if (current) iv.setAiSpeaking(false);
@@ -134,7 +142,7 @@ export function InterviewWorkspaceScreen({
             iv.setAiSpeaking(iv.voiceOn && speaking);
             iv.setAiPresenting(speaking);
           }}
-          onReplay={(turn) => void iv.speakIfOn(turn.text)}
+          onReplay={(turn) => void iv.replayIfOn(turn.text)}
           replayDisabled={!iv.voiceOn}
           replayingTurnId={null}
         />

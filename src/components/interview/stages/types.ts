@@ -77,6 +77,12 @@ export type FocusedInterviewStageProps = {
   isUserTyping: boolean;
   questionTypeLabel: QuestionTypeLabel;
   speak: StageSpeak;
+  /**
+   * Replay narrator, when it differs from `speak` (a live-LiveKit session:
+   * the agent is the voice for new turns, but replay is user-initiated and
+   * must still narrate client-side). Defaults to `speak`.
+   */
+  replaySpeak?: StageSpeak;
   onSpeakingChange: (speaking: boolean) => void;
   onTurnPresented?: (turn: ConversationTurn) => void;
   onClarifyQuestion?: () => void;

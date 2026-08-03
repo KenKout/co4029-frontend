@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useInterviewNarration } from "@/lib/hooks/use-interview-narration";
+import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration";
 import { useSpeechDictation } from "@/lib/hooks/use-speech-dictation";
 import { type SpeechPersona } from "@/lib/hooks/use-speech-synthesis";
 import { resolvePersonaTraits } from "@/lib/interview/persona-traits";
@@ -61,6 +62,14 @@ export function useInterviewSpeech(
   // AiTypingMessage). Server-side TTS (same voice as the LiveKit agent) with a
   // browser-TTS fallback. Student-toggleable so it can be silenced.
   const [voiceOn, setVoiceOn] = useState(true);
+  // When the LiveKit agent is live in the session's room it ALREADY speaks
+  // every utterance through the room's audio track (session.say → TTS). The
+  // client-side narration must then stay silent — otherwise the same words
+  // play twice: the agent's audio lands first, then the client replays the
+  // text as it types out, overlapping the agent. Set from the workspace
+  // screen (the only place the room is reachable), same ref pattern as
+  // `chatBridge`.
+  const [roomConnected, setRoomConnected] = useState(false);
   const speakLang = i18n.language?.startsWith("vi") ? "vi-VN" : "en-US";
   // Persona drives the voice: a "strict" interview sounds firmer, a
   // "supportive" one warmer. Resolve the persona label to its trait dials (no
@@ -81,12 +90,32 @@ export function useInterviewSpeech(
     // session viewed under a VI UI still gets server (Deepgram) narration.
     serverNarrationEnabled: interviewLanguage !== "vi",
   });
+  const silent = useCallback(
+    (): NarrationPresentation => ({
+      started: Promise.resolve(),
+      finished: Promise.resolve(),
+    }),
+    [],
+  );
   const speakIfOn = useCallback(
     (text: string) => {
+      // The LiveKit agent in the room is the voice; narrating client-side as
+      // well would double it (agent audio first, client replay on top).
+      if (roomConnected) return silent();
       if (voiceOn) return narration.narrate(text);
-      return { started: Promise.resolve(), finished: Promise.resolve() };
+      return silent();
     },
-    [voiceOn, narration],
+    [roomConnected, voiceOn, narration, silent],
+  );
+  // Replay is user-initiated and the agent will not re-say a past turn on
+  // demand, so it must NOT be silenced by the room gate: the only way to hear
+  // a turn again in a live session is client-side narration.
+  const replayIfOn = useCallback(
+    (text: string) => {
+      if (voiceOn) return narration.narrate(text);
+      return silent();
+    },
+    [voiceOn, narration, silent],
   );
   // Silence any in-flight speech the moment the student mutes.
   useEffect(() => {
@@ -99,7 +128,10 @@ export function useInterviewSpeech(
     dictation,
     voiceOn,
     setVoiceOn,
+    roomConnected,
+    setRoomConnected,
     narration,
     speakIfOn,
+    replayIfOn,
   };
 }
