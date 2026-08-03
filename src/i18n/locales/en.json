@@ -641,6 +641,13 @@
     "success": {
       "assigned": "Instructor assigned",
       "removed": "Assignment removed"
+    },
+    "delete": {
+      "button": "Delete course",
+      "title": "Delete course?",
+      "body": "This removes {{title}} and all its content from every listing. It's reversible (an admin can restore it), but make sure before you do it.",
+      "deleted": "Course deleted",
+      "failed": "Couldn't delete the course."
     }
   },
   "dept_courses": {
@@ -2653,7 +2660,11 @@
     },
     "placeholders": {
       "org_unit_uuid_optional": "Organization unit UUID (optional)",
-      "position_end": "End"
+      "position_end": "End",
+      "select_org_unit": "— Select org unit —",
+      "select_org_first": "— Select an organization first —",
+      "organization_fixed": "Organization of this path",
+      "loading_units": "Loading org units…"
     },
     "sections": {
       "add_course": "Add course",

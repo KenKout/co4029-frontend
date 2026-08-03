@@ -597,6 +597,13 @@
     "success": {
       "assigned": "Đã phân công giảng viên",
       "removed": "Đã gỡ phân công"
+    },
+    "delete": {
+      "button": "Xóa khóa học",
+      "title": "Xóa khóa học?",
+      "body": "Thao tác này sẽ gỡ {{title}} và toàn bộ nội dung khỏi mọi danh sách. Có thể khôi phục bởi admin (Restore), nhưng hãy chắc chắn trước khi xóa.",
+      "deleted": "Đã xóa khóa học",
+      "failed": "Không thể xóa khóa học."
     }
   },
   "dept_courses": {
@@ -2557,7 +2564,11 @@
     },
     "placeholders": {
       "org_unit_uuid_optional": "UUID đơn vị (tuỳ chọn)",
-      "position_end": "Cuối"
+      "position_end": "Cuối",
+      "select_org_unit": "— Chọn đơn vị —",
+      "select_org_first": "— Chọn tổ chức trước —",
+      "organization_fixed": "Tổ chức của lộ trình này",
+      "loading_units": "Đang tải đơn vị…"
     },
     "sections": {
       "add_course": "Thêm khóa học",

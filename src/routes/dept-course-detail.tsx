@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft } from "lucide-react";
 import {
   useCourseRoster,
   useCourseTeachers,
@@ -11,6 +10,7 @@ import {
   usePermissions,
   useRequirePermission,
 } from "@/lib/auth/use-permissions";
+import { DeptCourseHeader } from "./_components/dept-course-detail/DeptCourseHeader";
 import { DeptStudentsTab } from "./_components/dept-course-detail/StudentsTab";
 import { DeptTeachersTab } from "./_components/dept-course-detail/TeachersTab";
 import { Tabs } from "@/components/ui/tabs";
@@ -26,6 +26,9 @@ export default function DeptCourseDetailPage() {
     "system.administer",
   );
   const canRead = canAssign || permissions.has("course.enrollment.read");
+  // Course deletion is manager-owned (``course.delete``) — teachers and HOD
+  // never see the button, matching the backend gate on the same code.
+  const canDelete = permissions.hasAny("course.delete", "system.administer");
 
   useRequirePermission(canRead, {
     messageKey: "dept_course_detail.no_permission",
@@ -56,21 +59,7 @@ export default function DeptCourseDetailPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div>
-        <Link
-          to="/dept"
-          className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-m3-primary transition-colors mb-2"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t("dept_course_detail.back")}
-        </Link>
-        <h1 className="text-2xl font-headline font-bold text-text-strong">
-          {course?.title ?? t("dept_course_detail.course_fallback")}
-        </h1>
-        {course?.slug && (
-          <p className="text-sm text-text-muted mt-1">{course.slug}</p>
-        )}
-      </div>
+      <DeptCourseHeader course={course} courseId={courseId} canDelete={canDelete} />
 
       <Tabs
         variant="contained"

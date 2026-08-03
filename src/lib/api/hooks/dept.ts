@@ -74,3 +74,13 @@ export function useOrgUnitCourses(orgUnitId: string | undefined) {
     staleTime: 1000 * 60 * 2,
   });
 }
+
+export function useDeleteDeptCourse() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (courseId: string) => apiDelete(`/dept/courses/${courseId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
+    },
+  });
+}
