@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiDelete, apiFetch, apiPost } from "../client";
+import { apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import type {
   AssignTeacherRequest,
   CourseAuthoring,
+  CourseUpdate,
   RosterEntry,
   TeacherAssignmentCreated,
   TeacherAssignmentRead,
@@ -79,6 +80,18 @@ export function useDeleteDeptCourse() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (courseId: string) => apiDelete(`/dept/courses/${courseId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
+    },
+  });
+}
+
+/** Manager-owned course identity update (title/slug/…) on the dept surface. */
+export function useUpdateDeptCourse(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CourseUpdate) =>
+      apiPatch<CourseAuthoring>(`/dept/courses/${courseId}`, payload),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
     },

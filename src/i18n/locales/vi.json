@@ -604,6 +604,17 @@
       "body": "Thao tác này sẽ gỡ {{title}} và toàn bộ nội dung khỏi mọi danh sách. Có thể khôi phục bởi admin (Restore), nhưng hãy chắc chắn trước khi xóa.",
       "deleted": "Đã xóa khóa học",
       "failed": "Không thể xóa khóa học."
+    },
+    "edit": {
+      "button": "Chỉnh sửa",
+      "title_label": "Tên khóa học",
+      "slug_label": "Slug khóa học",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "saved": "Đã cập nhật khóa học",
+      "save_failed": "Không thể cập nhật khóa học.",
+      "title_required": "Vui lòng nhập tên khóa học.",
+      "slug_required": "Vui lòng nhập slug khóa học."
     }
   },
   "dept_courses": {

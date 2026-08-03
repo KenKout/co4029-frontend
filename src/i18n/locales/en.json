@@ -648,6 +648,17 @@
       "body": "This removes {{title}} and all its content from every listing. It's reversible (an admin can restore it), but make sure before you do it.",
       "deleted": "Course deleted",
       "failed": "Couldn't delete the course."
+    },
+    "edit": {
+      "button": "Edit",
+      "title_label": "Course title",
+      "slug_label": "Course slug",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saved": "Course updated",
+      "save_failed": "Couldn't update the course.",
+      "title_required": "Course title is required.",
+      "slug_required": "Course slug is required."
     }
   },
   "dept_courses": {
