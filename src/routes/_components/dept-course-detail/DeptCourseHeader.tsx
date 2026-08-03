@@ -25,16 +25,16 @@ export function DeptCourseHeader({
         <ArrowLeft className="h-3.5 w-3.5" />
         {t("dept_course_detail.back")}
       </Link>
-      <h1 className="text-2xl font-headline font-bold text-text-strong">
-        {course?.title ?? t("dept_course_detail.course_fallback")}
-      </h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="min-w-0 flex-1 text-2xl font-headline font-bold text-text-strong">
+          {course?.title ?? t("dept_course_detail.course_fallback")}
+        </h1>
+        {canDelete && course && (
+          <DeleteCourseButton courseId={courseId} courseTitle={course.title} />
+        )}
+      </div>
       {course?.slug && (
         <p className="text-sm text-text-muted mt-1">{course.slug}</p>
-      )}
-      {canDelete && course && (
-        <div className="mt-3">
-          <DeleteCourseButton courseId={courseId} courseTitle={course.title} />
-        </div>
       )}
     </div>
   );
