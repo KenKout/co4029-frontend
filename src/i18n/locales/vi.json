@@ -2436,10 +2436,13 @@
       "sending": "Đang gửi..."
     },
     "errors": {
-      "rate_limited": "Quá nhiều yêu cầu, vui lòng thử lại sau",
+      "rate_limited": "Bạn đã gửi quá nhiều yêu cầu, vui lòng thử lại sau",
       "start_failed": "Không thể bắt đầu phỏng vấn",
       "answer_required": "Vui lòng nhập câu trả lời",
       "send_failed": "Không thể gửi câu trả lời",
+      "send_failed_livekit": "Không thể gửi câu trả lời qua phiên trực tiếp. Vui lòng thử lại.",
+      "turn_in_flight": "Câu trả lời trước của bạn vẫn đang được xử lý — vui lòng chờ.",
+      "session_closing": "Buổi phỏng vấn đang kết thúc — câu trả lời của bạn chưa được ghi nhận.",
       "finish_failed": "Không thể kết thúc phỏng vấn",
       "no_question_available": "Phỏng vấn này chưa có câu hỏi nào được duyệt. Vui lòng liên hệ giáo viên."
     },

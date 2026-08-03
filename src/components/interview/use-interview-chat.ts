@@ -59,6 +59,13 @@ export interface UseInterviewChatResult {
   pending: boolean;
   /** Whether a turn can be sent right now. */
   canSend: boolean;
+  /**
+   * Whether the room is currently connected. Distinct from `canSend` (which
+   * also folds in `pending`): the transport decision needs to know the room is
+   * up even while a previous turn is still in flight, so it does not flip a
+   * live turn to REST mid-flight.
+   */
+  connected: boolean;
   /** Most recent control event seen, for surfacing agent-side rejections. */
   lastEvent: ControlEvent | null;
 }
@@ -272,6 +279,7 @@ export function useInterviewChat(
     sendTurn,
     pending,
     canSend: enabled && connected && !pending,
+    connected,
     lastEvent,
   };
 }

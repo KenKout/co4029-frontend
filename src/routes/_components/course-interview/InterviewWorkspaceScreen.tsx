@@ -1,11 +1,15 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ListChecks } from "lucide-react";
 
 import { EndInterviewDialog } from "@/components/interview/dialogs";
 import { ConnectionLostBanner } from "@/components/interview/error-banner";
+import { useInterviewRoomState } from "@/components/interview/interview-room-provider";
 import { InterviewProgressSteps } from "@/components/interview/interview-progress-steps";
 import { InterviewHeader } from "@/components/interview/stages";
 import { TranscriptPanel } from "@/components/interview/transcript";
+import { useInterviewChat } from "@/components/interview/use-interview-chat";
+import { livekitTextEnabled } from "@/lib/interview/text-transport";
 import { questionTypeLabel } from "@/lib/interview/turn-factory";
 import {
   FullscreenDialogs,
@@ -36,6 +40,26 @@ export function InterviewWorkspaceScreen({
 }) {
   const { t } = useTranslation();
   const questioning = iv.phase === "questioning";
+
+  // The LiveKit chat transport for typed turns. This screen is the only one
+  // rendered INSIDE the room provider, so it is the only place the room is
+  // reachable — mount the hook here and hand it to `handleRespond` through the
+  // controller's bridge ref (the actions are built outside the provider).
+  // Flag off → enabled false → canSend/connected stay false and the transport
+  // resolver picks REST, so nothing else changes.
+  const { room } = useInterviewRoomState();
+  const chat = useInterviewChat(room, { enabled: livekitTextEnabled() });
+  // Hand the hook to `handleRespond` through the controller's bridge setter
+  // (the actions are built outside the provider, where the room is not
+  // reachable). The setter, not a direct ref write, so the immutability rule
+  // never sees a prop mutation.
+  const { setChatBridge } = iv;
+  useEffect(() => {
+    setChatBridge(chat);
+    return () => {
+      setChatBridge(null);
+    };
+  }, [setChatBridge, chat]);
 
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-white">

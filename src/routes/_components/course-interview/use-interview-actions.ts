@@ -1,6 +1,7 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { toast } from "sonner";
 
+import type { UseInterviewChatResult } from "@/components/interview/use-interview-chat";
 import type {
   InterviewLanguage,
   InterviewOnboardingAction,
@@ -116,10 +117,32 @@ export function useInterviewActions(base: InterviewBase) {
     [sessionId, phase, finish, t],
   );
 
+  /**
+   * LiveKit chat capability for typed turns, mounted by the workspace screen
+   * (inside the room provider). `handleRespond` reads `chatBridge.current` at
+   * call time to pick the transport; when it is null or the flag is off, the
+   * REST path runs exactly as before.
+   */
+  const chatBridge = useRef<UseInterviewChatResult | null>(null);
+
+  /**
+   * Bridge setter for the workspace screen: mounts the chat hook (the only
+   * place the room is reachable) and hands it to `handleRespond`. Kept as a
+   * controller method rather than a direct `iv.chatBridge.current = ...`
+   * write so the screen never mutates a prop (hooks/immutability).
+   */
+  const setChatBridge = useCallback(
+    (chat: UseInterviewChatResult | null) => {
+      chatBridge.current = chat;
+    },
+    [],
+  );
+
   const ctx: InterviewActionsContext = {
     ...base,
     currentElapsedSeconds,
     beginClosing,
+    chatBridge,
   };
 
   const handleTurnPresented = useTurnPresentedHandler(base, {
@@ -149,6 +172,8 @@ export function useInterviewActions(base: InterviewBase) {
   return {
     currentElapsedSeconds,
     beginClosing,
+    chatBridge,
+    setChatBridge,
     handleTurnPresented,
     handleStart: startInterview,
     handleRetry: () => handleRetry(ctx),
