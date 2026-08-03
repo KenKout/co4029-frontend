@@ -71,6 +71,21 @@ describe("LearningOutcomes published freeze", () => {
     ).toBeDisabled();
   });
 
+  it("dims the whole section and shows a lock on a published config", () => {
+    renderPanel("published");
+    // The section is blurred/dimmed (opacity-60) exactly like the frozen
+    // settings cards, so a locked panel reads as locked rather than broken.
+    const heading = screen.getByRole("heading", {
+      name: /Chuẩn đầu ra|Learning outcomes/i,
+    });
+    const section = heading.closest("section");
+    expect(section).not.toBeNull();
+    expect(section).toHaveClass("opacity-60");
+    expect(section).toHaveAttribute("title");
+    // The heading carries the lock affordance next to its label.
+    expect(heading.querySelector("svg.lucide-lock")).not.toBeNull();
+  });
+
   it("disables the delete action on a published config", async () => {
     const user = userEvent.setup();
     renderPanel("published");

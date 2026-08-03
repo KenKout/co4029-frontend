@@ -1,4 +1,4 @@
-import { BookOpen, TriangleAlert } from "lucide-react";
+import { BookOpen, Lock, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -24,8 +24,17 @@ export function OutcomesHeader({
   return (
     <div className="flex items-start justify-between gap-3 flex-wrap">
       <div className="min-w-0 space-y-1">
-        <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
+        <h3
+          className="font-headline font-extrabold text-base text-m3-on-surface"
+          title={disabled ? disabledReason : undefined}
+        >
           {t("teacher_interview_config.outcomes.list_title")}
+          {disabled && (
+            <Lock
+              className="ml-1.5 inline-block h-3 w-3 align-text-top"
+              aria-hidden="true"
+            />
+          )}
         </h3>
         <p className="text-xs text-m3-on-surface-variant max-w-prose">
           {t("teacher_interview_config.outcomes.section_help")}
