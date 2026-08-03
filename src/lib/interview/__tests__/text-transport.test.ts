@@ -29,7 +29,9 @@ afterEach(() => {
 describe("resolveTextTransport", () => {
   it("stays on REST while the flag is off, even when everything else is ready", () => {
     // The deploy-safety property: shipping this code with the flag unset must be
-    // indistinguishable from before it existed.
+    // indistinguishable from before it existed. Stub explicitly rather than
+    // relying on the build-time env, which may carry "1" in some deployments.
+    vi.stubEnv("VITE_INTERVIEW_LK_TEXT", "0");
     expect(resolveTextTransport(HYBRID_READY)).toBe("rest");
   });
 
