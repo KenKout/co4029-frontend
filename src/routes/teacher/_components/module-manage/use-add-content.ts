@@ -67,6 +67,9 @@ export function useAddContent(options: {
         module_id: moduleId,
         title: quizTitle.trim(),
         description: "Draft quiz for this module.",
+        // Reminders (SR due-card pings) default ON for new quizzes — the
+        // teacher can turn them off per quiz in Settings.
+        reminders_enabled: true,
       });
       setQuizModalOpen(false);
       toast.success(t("teacher_quiz_new.success.created"));
