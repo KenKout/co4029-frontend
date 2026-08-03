@@ -145,4 +145,33 @@ describe("useInterviewSpeech double-voice gate", () => {
     // the only way to hear it again, so the room gate must not touch replay.
     expect(mocks.narrate).toHaveBeenCalledWith("Past turn");
   });
+
+  it("cuts in-flight client narration the moment the room handover starts", () => {
+    // The last setup turn may still be narrating when onboarding completes and
+    // the agent starts joining — without the cut its tail would overlap the
+    // agent's opening utterance.
+    const { result } = renderSpeech();
+    act(() => {
+      result.current.speakIfOn("You are all set!");
+    });
+    expect(mocks.narrate).toHaveBeenCalled();
+    mocks.cancel.mockClear();
+    act(() => {
+      result.current.setRoomConnected(true);
+    });
+    expect(mocks.cancel).toHaveBeenCalled();
+  });
+
+  it("does not re-cancel when the room state merely re-renders", () => {
+    const { result } = renderSpeech();
+    act(() => {
+      result.current.setRoomConnected(true);
+    });
+    mocks.cancel.mockClear();
+    // Same value re-set (room connected → re-render) must not cancel again.
+    act(() => {
+      result.current.setRoomConnected(true);
+    });
+    expect(mocks.cancel).not.toHaveBeenCalled();
+  });
 });

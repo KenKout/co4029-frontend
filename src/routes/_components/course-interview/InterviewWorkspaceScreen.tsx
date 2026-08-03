@@ -47,7 +47,7 @@ export function InterviewWorkspaceScreen({
   // controller's bridge ref (the actions are built outside the provider).
   // Flag off → enabled false → canSend/connected stay false and the transport
   // resolver picks REST, so nothing else changes.
-  const { room } = useInterviewRoomState();
+  const { room, connecting } = useInterviewRoomState();
   const chat = useInterviewChat(room, { enabled: livekitTextEnabled() });
   // Hand the hook to `handleRespond` through the controller's bridge setter
   // (the actions are built outside the provider, where the room is not
@@ -58,12 +58,16 @@ export function InterviewWorkspaceScreen({
     setChatBridge(chat);
     // The agent in the room speaks every utterance via LiveKit TTS; the
     // workspace must not narrate the same text client-side (double voice).
-    setRoomConnected(chat.connected);
+    // Gate on `connecting` too, not just `connected`: when onboarding ends,
+    // the token fetch + agent join are still in flight, and the first
+    // question arrives in that window — narrating it client-side would
+    // overlap the agent's opening once it lands in the room.
+    setRoomConnected(connecting || chat.connected);
     return () => {
       setChatBridge(null);
       setRoomConnected(false);
     };
-  }, [setChatBridge, setRoomConnected, chat]);
+  }, [setChatBridge, setRoomConnected, connecting, chat]);
 
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-white">

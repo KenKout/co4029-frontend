@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useInterviewNarration } from "@/lib/hooks/use-interview-narration";
 import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration";
@@ -121,6 +121,17 @@ export function useInterviewSpeech(
   useEffect(() => {
     if (!voiceOn) narration.cancel();
   }, [voiceOn, narration]);
+
+  // Agent-takeover cut: the moment the LiveKit room handover starts, the agent
+  // becomes the voice — cut any client narration still playing (typically the
+  // tail of the last setup turn, or a first question narrated during the
+  // connecting window before `connected` flipped). Without this the agent's
+  // opening utterance overlaps the tail of the setup narration.
+  const wasRoomConnectedRef = useRef(false);
+  useEffect(() => {
+    if (roomConnected && !wasRoomConnectedRef.current) narration.cancel();
+    wasRoomConnectedRef.current = roomConnected;
+  }, [roomConnected, narration]);
 
   return {
     supportedModes,
