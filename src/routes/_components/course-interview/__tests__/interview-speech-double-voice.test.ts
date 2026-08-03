@@ -69,6 +69,19 @@ function renderSpeech() {
   return renderHook(() => useInterviewSpeech(ROUTE, TURN, PHASE));
 }
 
+/**
+ * Simulate the workspace screen's render-phase write: it calls
+ * `setRoomConnectedRef` synchronously during render (the narration gate reads
+ * THAT), and flips the state in an effect (drives the cancel-on-handover +
+ * voice-toggle visibility).
+ */
+function setRoomLive(result: ReturnType<typeof renderSpeech>["result"], value: boolean) {
+  act(() => {
+    result.current.setRoomConnectedRef(value);
+    result.current.setRoomConnected(value);
+  });
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -88,14 +101,32 @@ describe("useInterviewSpeech double-voice gate", () => {
 
   it("stays silent when the LiveKit agent is live in the room", () => {
     const { result } = renderSpeech();
-    act(() => {
-      result.current.setRoomConnected(true);
-    });
+    setRoomLive(result, true);
     act(() => {
       result.current.speakIfOn("Hello");
     });
     // The agent speaks this through the room audio — the client must not
     // narrate it again on top.
+    expect(mocks.narrate).not.toHaveBeenCalled();
+  });
+
+  it("silences narration the instant the ref is set, even before a re-render", () => {
+    // The transition turn mounts in the SAME commit the room handover starts;
+    // its narrate() runs in a child effect before the parent state flip. The
+    // ref write during render is what must gate it — not the state.
+    mocks.narrate.mockReturnValue({
+      started: Promise.resolve(),
+      finished: Promise.resolve(),
+    });
+    const { result } = renderSpeech();
+    act(() => {
+      // Render-phase write only (no state flip yet — the state effect runs
+      // after this commit's child effects).
+      result.current.setRoomConnectedRef(true);
+    });
+    act(() => {
+      result.current.speakIfOn("Great, the introduction is complete");
+    });
     expect(mocks.narrate).not.toHaveBeenCalled();
   });
 
@@ -105,12 +136,8 @@ describe("useInterviewSpeech double-voice gate", () => {
       finished: Promise.resolve(),
     });
     const { result } = renderSpeech();
-    act(() => {
-      result.current.setRoomConnected(true);
-    });
-    act(() => {
-      result.current.setRoomConnected(false);
-    });
+    setRoomLive(result, true);
+    setRoomLive(result, false);
     act(() => {
       result.current.speakIfOn("Hello again");
     });
@@ -121,8 +148,8 @@ describe("useInterviewSpeech double-voice gate", () => {
     const { result } = renderSpeech();
     act(() => {
       result.current.setVoiceOn(true);
-      result.current.setRoomConnected(true);
     });
+    setRoomLive(result, true);
     act(() => {
       result.current.speakIfOn("Question text");
     });
@@ -135,9 +162,7 @@ describe("useInterviewSpeech double-voice gate", () => {
       finished: Promise.resolve(),
     });
     const { result } = renderSpeech();
-    act(() => {
-      result.current.setRoomConnected(true);
-    });
+    setRoomLive(result, true);
     act(() => {
       result.current.replayIfOn("Past turn");
     });
@@ -156,22 +181,16 @@ describe("useInterviewSpeech double-voice gate", () => {
     });
     expect(mocks.narrate).toHaveBeenCalled();
     mocks.cancel.mockClear();
-    act(() => {
-      result.current.setRoomConnected(true);
-    });
+    setRoomLive(result, true);
     expect(mocks.cancel).toHaveBeenCalled();
   });
 
   it("does not re-cancel when the room state merely re-renders", () => {
     const { result } = renderSpeech();
-    act(() => {
-      result.current.setRoomConnected(true);
-    });
+    setRoomLive(result, true);
     mocks.cancel.mockClear();
     // Same value re-set (room connected → re-render) must not cancel again.
-    act(() => {
-      result.current.setRoomConnected(true);
-    });
+    setRoomLive(result, true);
     expect(mocks.cancel).not.toHaveBeenCalled();
   });
 });

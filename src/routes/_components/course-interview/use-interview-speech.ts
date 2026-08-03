@@ -70,6 +70,19 @@ export function useInterviewSpeech(
   // screen (the only place the room is reachable), same ref pattern as
   // `chatBridge`.
   const [roomConnected, setRoomConnected] = useState(false);
+  // Render-phase mirror of `roomConnected` for the NARRATION decision. A plain
+  // state read inside `speakIfOn` is one render too late: the transition /
+  // first-question turn mounts, its AiTypingMessage effect calls `narrate()`
+  // (children effects run BEFORE the workspace screen's effect that flips the
+  // state), and by the time the cancel-on-handover fires the server TTS
+  // request is already in flight. The ref is written during render — before
+  // ANY effect — so `speakIfOn` sees the room handover synchronously. The
+  // workspace screen calls `setRoomConnectedRef` during render (ref write,
+  // no re-render) in addition to `setRoomConnected` (state, in an effect).
+  const roomConnectedRef = useRef(false);
+  const setRoomConnectedRef = useCallback((connected: boolean) => {
+    roomConnectedRef.current = connected;
+  }, []);
   const speakLang = i18n.language?.startsWith("vi") ? "vi-VN" : "en-US";
   // Persona drives the voice: a "strict" interview sounds firmer, a
   // "supportive" one warmer. Resolve the persona label to its trait dials (no
@@ -100,12 +113,15 @@ export function useInterviewSpeech(
   const speakIfOn = useCallback(
     (text: string) => {
       // The LiveKit agent in the room is the voice; narrating client-side as
-      // well would double it (agent audio first, client replay on top).
-      if (roomConnected) return silent();
+      // well would double it (agent audio first, client replay on top). Read
+      // the render-phase ref, not the state: the transition turn's narrate()
+      // runs in a child effect BEFORE the parent state flip would land, and
+      // a stale read there lets the overlap through.
+      if (roomConnectedRef.current) return silent();
       if (voiceOn) return narration.narrate(text);
       return silent();
     },
-    [roomConnected, voiceOn, narration, silent],
+    [voiceOn, narration, silent],
   );
   // Replay is user-initiated and the agent will not re-say a past turn on
   // demand, so it must NOT be silenced by the room gate: the only way to hear
@@ -141,6 +157,9 @@ export function useInterviewSpeech(
     setVoiceOn,
     roomConnected,
     setRoomConnected,
+    /** Render-phase signal for the narration gate (see declaration). */
+    roomConnectedRef,
+    setRoomConnectedRef,
     narration,
     speakIfOn,
     replayIfOn,

@@ -49,6 +49,13 @@ export function InterviewWorkspaceScreen({
   // resolver picks REST, so nothing else changes.
   const { room, connecting } = useInterviewRoomState();
   const chat = useInterviewChat(room, { enabled: livekitTextEnabled() });
+  // Render-phase write: the narration gate reads this ref synchronously when a
+  // turn's AiTypingMessage mounts. The transition / first-question turn can
+  // mount in the SAME commit the room handover starts, and its narrate() runs
+  // in a child effect BEFORE this screen's effect would flip the state — so
+  // the ref must be current during render, not after effects. (Ref write only;
+  // the state flip stays in the effect below to drive the cancel + toggle.)
+  iv.setRoomConnectedRef(connecting || chat.connected);
   // Hand the hook to `handleRespond` through the controller's bridge setter
   // (the actions are built outside the provider, where the room is not
   // reachable). The setter, not a direct ref write, so the immutability rule
