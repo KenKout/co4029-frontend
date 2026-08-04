@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, GraduationCap } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, GraduationCap, SignalHigh } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -88,11 +88,13 @@ function CtaInstructorRow({
 export function CtaCard({
   course,
   gradientClass,
+  moduleCount,
   progress,
   progressLoading,
 }: {
   course: CoursePublic;
   gradientClass: string;
+  moduleCount: number;
   progress?: MyCourseProgressSummary;
   progressLoading?: boolean;
 }) {
@@ -148,11 +150,36 @@ export function CtaCard({
           <div className="h-2 rounded-full bg-m3-surface-container-high animate-pulse" />
         )}
 
-        {/* Meta line: just duration + level, e.g. "120h - Advanced" (product
-            feedback 2026-08-04 — keep the sticky rail minimal). */}
+        {/* Modules row: label left, count right — justify-between (product
+            feedback: the count must sit flush right). */}
+        {moduleCount > 0 && (
+          <div className="flex items-center justify-between text-sm pt-1">
+            <span className="flex items-center gap-2 text-m3-on-surface-variant">
+              <BookOpen className="h-4 w-4 text-m3-outline" />
+              {t("course_detail.modules")}
+            </span>
+            <span className="font-semibold text-m3-on-surface text-sm">
+              {moduleCount}
+            </span>
+          </div>
+        )}
+
+        {/* Duration + level on ONE left-aligned row — explicitly NOT
+            justify-between (product feedback 2026-08-04). */}
         {(duration || level) && (
-          <div className="text-sm text-m3-on-surface-variant pt-1">
-            {[duration, level].filter(Boolean).join(" - ")}
+          <div className="flex items-center gap-4 text-sm text-m3-on-surface-variant pt-1">
+            {duration && (
+              <span className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-m3-outline" />
+                {duration}
+              </span>
+            )}
+            {level && (
+              <span className="flex items-center gap-1.5">
+                <SignalHigh className="h-4 w-4 text-m3-outline" />
+                {level}
+              </span>
+            )}
           </div>
         )}
 

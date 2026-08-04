@@ -102,6 +102,7 @@ export default function CourseDetailPage() {
             <CtaCard
               course={course}
               gradientClass={gradientClass}
+              moduleCount={moduleCount}
               progress={progress}
               progressLoading={progressLoading}
             />
