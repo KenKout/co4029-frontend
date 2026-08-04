@@ -26,6 +26,15 @@ function quizItem(id: string, position: number): ModuleItemPublic {
   } as ModuleItemPublic;
 }
 
+function lessonItem(id: string, position: number): ModuleItemPublic {
+  return {
+    id,
+    item_type: "lesson",
+    position,
+    target: { id, title: `lesson-${id}` },
+  } as ModuleItemPublic;
+}
+
 function flatItem(mod: string, it: ModuleItemPublic): FlatItem {
   return {
     moduleId: mod,
@@ -194,6 +203,20 @@ describe("earliestPendingItemId", () => {
 
 describe("itemStateFor quiz completion", () => {
   const emptyLessonMap = new Map<string, string>();
+
+  it("marks a completed lesson as completed even when it is the active one", () => {
+    const fi = flatItem("m1", lessonItem("l1", 1));
+    const map = new Map<string, string>([["l1", "completed"]]);
+    // The lesson is currently open (activeLessonId === l1) — completion must
+    // win so a done lesson stops showing the in-progress blue highlight.
+    expect(itemStateFor(fi, "l1", map)).toBe("completed");
+  });
+
+  it("marks the open but unfinished lesson as active", () => {
+    const fi = flatItem("m1", lessonItem("l1", 1));
+    const map = new Map<string, string>([["l1", "in_progress"]]);
+    expect(itemStateFor(fi, "l1", map)).toBe("active");
+  });
 
   it("marks a passed quiz as completed", () => {
     const fi = flatItem("m1", quizItem("q1", 1));

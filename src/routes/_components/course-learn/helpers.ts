@@ -46,10 +46,14 @@ export function buildFlatItems(
  * Curriculum row state for a flattened item. Extracted from the page shell so
  * the shell only has to close over the two values the decision depends on.
  *
- * Quiz items are "completed" when the per-quiz progress map says so — the
- * student passed the teacher's milestone OR failed with every allowed
- * attempt consumed (see ``QuizProgressRead.completed``). Interview items
- * have no completion signal yet and stay ``pending``.
+ * Completion WINS over the "currently open" affordance: a completed lesson
+ * must read as done (green check), not as the in-progress blue bar — the
+ * user's eye should land on what's left, and a done row that stays
+ * highlighted reads as "still to do" (bug report 2026-08-04: completed
+ * Introduction stayed blue for 30+ min). Quiz items are "completed" when
+ * the per-quiz progress map says so — passed the teacher's milestone OR
+ * failed with every allowed attempt consumed (``QuizProgressRead.completed``).
+ * Interview items have no completion signal yet and stay ``pending``.
  */
 export function itemStateFor(
   fi: FlatItem,
@@ -57,9 +61,6 @@ export function itemStateFor(
   lessonStatusMap: Map<string, string>,
   quizProgressMap?: Map<string, QuizProgressRead>,
 ): LessonState {
-  if (fi.item.item_type === "lesson" && fi.item.target?.id === activeLessonId) {
-    return "active";
-  }
   if (fi.item.item_type === "lesson" && fi.item.target?.id) {
     const id = fi.item.target.id;
     // if (lockedLessonIds.has(id)) return "locked"; // DEV: comment out to disable lock
@@ -67,6 +68,9 @@ export function itemStateFor(
   }
   if (fi.item.item_type === "quiz" && fi.item.target?.id && quizProgressMap) {
     if (quizProgressMap.get(fi.item.target.id)?.completed) return "completed";
+  }
+  if (fi.item.item_type === "lesson" && fi.item.target?.id === activeLessonId) {
+    return "active";
   }
   return "pending";
 }
