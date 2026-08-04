@@ -3,7 +3,9 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useDeleteCourse } from "@/lib/api/hooks/admin";
 import type { CourseAuthoring } from "@/lib/api/types";
 
@@ -17,33 +19,32 @@ export function DeleteButton({ course }: { course: CourseAuthoring }) {
     del.mutate(course.id, {
       onSuccess: () => toast.success(t("admin.course_detail.toasts.deleted")),
       onError: (err) =>
-        toast.error(
-          (err as Error).message ||
-            t("admin.course_detail.toasts.delete_failed"),
-        ),
+        toast.error(err.message || t("admin.course_detail.toasts.delete_failed")),
     });
   }
 
   return (
     <>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          // Cascade tombstone — confirm before deleting. It's reversible
-          // (Restore appears on the row afterwards), but it also removes the
-          // course's modules/lessons from every listing, so make it deliberate.
-          setConfirmOpen(true);
-        }}
-        disabled={del.isPending}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-danger text-white hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-        {del.isPending
-          ? t("admin.course_detail.deleting")
-          : t("admin.course_detail.delete")}
-      </button>
+      <Tooltip content={t("admin.course_detail.delete")}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("admin.course_detail.delete")}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Cascade tombstone — confirm before deleting. It's reversible
+            // (Restore appears on the row afterwards), but it also removes the
+            // course's modules/lessons from every listing, so make it deliberate.
+            setConfirmOpen(true);
+          }}
+          disabled={del.isPending}
+          className="text-destructive hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+        >
+          <Trash2 />
+        </Button>
+      </Tooltip>
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}

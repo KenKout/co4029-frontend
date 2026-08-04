@@ -1363,6 +1363,8 @@
     "courses_list": {
       "title": "Course management",
       "subtitle": "All courses including drafts and deleted.",
+      "search_placeholder": "Search by title or slug…",
+      "filter_status": "Status",
       "include_deleted": "Include deleted",
       "load_failed": "Couldn't load courses.",
       "empty_title": "No courses yet",

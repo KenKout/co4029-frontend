@@ -26,6 +26,9 @@ export function useAdminCourses() {
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
   const [includeDeleted, setIncludeDeleted] = useState(true);
+  // Server-side status filter (`status` query param on /admin/courses/search).
+  // Undefined = all statuses; draft | published | archived narrows the list.
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const formatDate = useFormatDateTime();
 
   useRequirePermission(canAdmin, {
@@ -33,12 +36,16 @@ export function useAdminCourses() {
   });
 
   // Server-side search + sort + page across every course (the old
-  // InfiniteList had no search). `include_deleted` is a server filter.
+  // InfiniteList had no search). `include_deleted` and `status` are server
+  // filters; falsy values are omitted from the query string by useServerTable.
   const table = useServerTable<CourseAuthoring>({
     queryKey: ["admin", "courses", "search"],
     path: "/admin/courses/search",
     pageSize: 25,
-    filters: { include_deleted: String(includeDeleted) },
+    filters: {
+      include_deleted: String(includeDeleted),
+      status: statusFilter,
+    },
     enabled: !permissions.isLoading && canAdmin,
   });
 
@@ -54,6 +61,8 @@ export function useAdminCourses() {
     canAdmin,
     includeDeleted,
     setIncludeDeleted,
+    statusFilter,
+    setStatusFilter,
     table,
     columns,
   };
