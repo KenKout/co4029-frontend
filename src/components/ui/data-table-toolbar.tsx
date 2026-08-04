@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { Tabs } from "@/components/ui/tabs";
+import {
+  FILTER_ALL_VALUE,
+  FilterBar,
+  type FilterDef,
+  type FilterValues,
+} from "@/components/ui/filter-bar";
+
+export type { FilterDef, FilterOption, FilterValues } from "@/components/ui/filter-bar";
 
 // ── Time-range presets ──────────────────────────────────────────────────────
 
@@ -33,21 +41,6 @@ const DEFAULT_TIME_OPTIONS: TimeRangeOption[] = [
   { value: "year", label: "Year" },
   { value: "all", label: "All" },
 ];
-
-// ── Filter definition ───────────────────────────────────────────────────────
-
-export interface FilterOption {
-  value: string;
-  label: string;
-}
-
-export interface FilterDef {
-  id: string;
-  label: string;
-  options: FilterOption[];
-}
-
-export type FilterValues = Record<string, string | undefined>;
 
 // ── Toolbar props ───────────────────────────────────────────────────────────
 
@@ -77,6 +70,10 @@ export interface DataTableToolbarProps {
   /** Fired when user clicks "Reset all" inside the dialog. */
   onResetAllFilters?: () => void;
 
+  /** Label of the inline "Clear filters" button (shown when a filter is set
+   *  and `onResetAllFilters` is provided). */
+  clearLabel?: string;
+
   /** Extra toolbar content (e.g. "Add" button) rendered at the end. */
   trailing?: React.ReactNode;
   className?: string;
@@ -99,6 +96,7 @@ export function DataTableToolbar({
   dialogFilterValues,
   onDialogFilterChange,
   onResetAllFilters,
+  clearLabel,
   trailing,
   className,
 }: DataTableToolbarProps) {
@@ -142,16 +140,18 @@ export function DataTableToolbar({
         />
       )}
 
-      {/* Inline filter chips */}
-      {hasFilters &&
-        filters.map((f) => (
-          <InlineFilter
-            key={f.id}
-            def={f}
-            value={filterValues?.[f.id]}
-            onChange={(v) => onFilterChange?.(f.id, v)}
-          />
-        ))}
+      {/* Inline filter chips — delegated to the shared FilterBar (the same
+          component the teacher Assessments / student-detail pages use), with
+          the toolbar's `undefined`-based values adapted to its "all" dialect. */}
+      {hasFilters && (
+        <ToolbarFilters
+          filters={filters}
+          values={filterValues}
+          onChange={onFilterChange}
+          onResetAll={onResetAllFilters}
+          clearLabel={clearLabel}
+        />
+      )}
 
       {/* Dialog filter button */}
       {hasDialogFilters && (
@@ -191,53 +191,33 @@ export function DataTableToolbar({
   );
 }
 
-// ── Inline filter (dropdown-style chip) ─────────────────────────────────────
-
-function InlineFilter({
-  def,
-  value,
+// ── Inline filters — thin adapter between the toolbar's `undefined`-based
+//    FilterValues and the shared FilterBar's "all" dialect. Kept out of
+//    DataTableToolbar itself to hold that component under the complexity cap.
+function ToolbarFilters({
+  filters,
+  values,
   onChange,
+  onResetAll,
+  clearLabel,
 }: {
-  def: FilterDef;
-  value?: string;
-  onChange: (v: string | undefined) => void;
+  filters: FilterDef[];
+  values?: FilterValues;
+  onChange?: (filterId: string, value: string | undefined) => void;
+  onResetAll?: () => void;
+  clearLabel?: string;
 }) {
   return (
-    <div className="relative">
-      {/* The clear button overlays the trigger's right edge, so the trigger gets
-          extra right padding when a value is set to keep the chevron and the X
-          from colliding. Empty-string is the "no filter" option, not a
-          placeholder — clearing maps it back to `undefined` for the caller. */}
-      <Select
-        size="sm"
-        aria-label={def.label}
-        value={value ?? ""}
-        onValueChange={(next) => onChange(next || undefined)}
-        options={[
-          { value: "", label: def.label },
-          ...def.options.map((opt) => ({
-            value: opt.value,
-            label: opt.label,
-          })),
-        ]}
-        className={cn(
-          "w-auto",
-          value && "pr-7",
-          value
-            ? "border-m3-primary/30 bg-m3-primary/5 text-m3-primary"
-            : "border-m3-outline-variant/30 bg-m3-surface-container-low text-m3-on-surface-variant hover:bg-m3-surface-container-high",
-        )}
-      />
-      {value && (
-        <button
-          type="button"
-          onClick={() => onChange(undefined)}
-          className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 text-m3-primary hover:bg-m3-primary/10 cursor-pointer"
-        >
-          <X className="h-3 w-3" />
-        </button>
-      )}
-    </div>
+    <FilterBar
+      filters={filters}
+      values={values ?? {}}
+      onChange={(filterId, value) =>
+        onChange?.(filterId, value === FILTER_ALL_VALUE ? undefined : value)
+      }
+      onResetAll={onResetAll}
+      clearLabel={clearLabel}
+      size="sm"
+    />
   );
 }
 

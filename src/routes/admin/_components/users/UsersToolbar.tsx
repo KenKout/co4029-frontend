@@ -47,6 +47,13 @@ export function UsersToolbar({ c }: { c: AdminUsersController }) {
         if (filterId === ROLE_FILTER_ID) table.setRoleFilter(value);
         else table.setOrgFilter(value);
       }}
+      onResetAllFilters={() => {
+        table.setRoleFilter(undefined);
+        table.setOrgFilter(undefined);
+      }}
+      clearLabel={t("admin.users.clear_filters", {
+        defaultValue: "Clear filters",
+      })}
     />
   );
 }

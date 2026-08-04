@@ -37,6 +37,10 @@ export function CoursesToolbar({ c }: { c: AdminCoursesController }) {
       filters={[statusFilterDef]}
       filterValues={{ status: statusFilter }}
       onFilterChange={(_filterId, value) => setStatusFilter(value)}
+      onResetAllFilters={() => setStatusFilter(undefined)}
+      clearLabel={t("admin.courses_list.clear_filters", {
+        defaultValue: "Clear filters",
+      })}
       trailing={
         <label className="inline-flex items-center gap-2 text-sm text-text-strong select-none shrink-0 cursor-pointer">
           <input
