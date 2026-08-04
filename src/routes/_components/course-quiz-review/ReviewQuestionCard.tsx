@@ -131,7 +131,10 @@ export function ReviewQuestionCard({
   const { t } = useTranslation();
 
   return (
-    <GlassCard className="p-6 space-y-5">
+    <GlassCard
+      id={`review-question-${question.question_id}`}
+      className="p-6 space-y-5 scroll-mt-24"
+    >
       <QuestionHeader question={question} index={index} />
 
       {question.options.length > 0 && (

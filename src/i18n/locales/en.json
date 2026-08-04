@@ -2028,6 +2028,7 @@
     "passed": "Passed",
     "failed": "Not passed",
     "passing_score": "Passing score",
+    "nav_title": "Question navigation",
     "questions_title": "Question breakdown",
     "correct": "Correct",
     "incorrect": "Incorrect",
