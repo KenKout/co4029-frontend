@@ -29,6 +29,7 @@ import { ReadingLessonBody } from "./_components/course-learn/ReadingLessonBody"
 import {
   activeTitleFor,
   deriveShowHome,
+  earliestPendingItemId,
   itemStateFor,
 } from "./_components/course-learn/helpers";
 import type {
@@ -273,6 +274,12 @@ function CourseLearnLoaded({
   const activeTitle = activeTitleFor(activeLesson, activeEntry);
   const itemState = (fi: FlatItem) =>
     itemStateFor(fi, activeLessonId, lessonStatusMap);
+  // Earliest item still to do — highlighted in the curriculum so the eye
+  // lands on the next step. Aligns with the home resume CTA.
+  const nextItemId = useMemo(
+    () => earliestPendingItemId(flatItems, itemState),
+    [flatItems, itemState],
+  );
 
   const curriculum: CurriculumProps = {
     sortedModules,
@@ -283,6 +290,7 @@ function CourseLearnLoaded({
     slug,
     activeModuleId: activeEntry?.moduleId,
     inProgressByConfigId,
+    nextItemId,
   };
 
   if (!lessonItems.length) {

@@ -35,6 +35,7 @@ export function CourseHome({
   resumeLabel,
   resumeStarted,
   inProgressByConfigId,
+  nextItemId,
 }: CourseHomeProps) {
   const { t } = useTranslation();
   const pct =
@@ -132,6 +133,7 @@ export function CourseHome({
               slug={slug}
               isActiveModule={activeModuleId === mod.id}
               inProgressByConfigId={inProgressByConfigId}
+              nextItemId={nextItemId}
             />
           ))}
         </div>

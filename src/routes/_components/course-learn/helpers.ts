@@ -62,6 +62,38 @@ export function itemStateFor(
 }
 
 /**
+ * Is every item in ``mod`` completed?
+ *
+ * Completion is lesson-scoped (``itemState`` only marks lessons whose
+ * progress status is ``completed``), so a module containing a quiz or an
+ * interview item is NEVER provably complete and stays expanded — the
+ * conservative choice until those surfaces carry completion data.
+ */
+export function moduleIsComplete(
+  mod: ModulePublic,
+  flatItems: FlatItem[],
+  itemState: (fi: FlatItem) => LessonState,
+): boolean {
+  const items = flatItems.filter((fi) => fi.moduleId === mod.id);
+  if (!items.length) return false;
+  return items.every((fi) => itemState(fi) === "completed");
+}
+
+/**
+ * Id of the earliest (in course order) item the student still has to do, or
+ * ``undefined`` when everything is done. "Pending" only — the currently open
+ * lesson (state ``active``) and completed items are excluded, so the
+ * highlight always points at the genuine next step.
+ */
+export function earliestPendingItemId(
+  flatItems: FlatItem[],
+  itemState: (fi: FlatItem) => LessonState,
+): string | undefined {
+  const fi = flatItems.find((item) => itemState(item) === "pending");
+  return fi?.item.id;
+}
+
+/**
  * Course-home landing predicate: `?item` absent AND no content deep-link.
  * The page shell's call site documents why this is URL-derived, not state.
  */

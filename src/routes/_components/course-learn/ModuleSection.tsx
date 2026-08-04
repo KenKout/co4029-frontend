@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { InterviewSessionPublic, ModulePublic } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { moduleIsComplete } from "./helpers";
 import type { FlatItem, LessonState, Translate } from "./types";
 
 /**
@@ -31,6 +32,7 @@ export function ModuleSection({
   slug,
   isActiveModule,
   inProgressByConfigId,
+  nextItemId,
 }: {
   mod: ModulePublic;
   flatItems: FlatItem[];
@@ -40,6 +42,7 @@ export function ModuleSection({
   slug: string;
   isActiveModule: boolean;
   inProgressByConfigId: Map<string, InterviewSessionPublic>;
+  nextItemId?: string;
 }) {
   const { t } = useTranslation();
   const modItems = flatItems
@@ -49,13 +52,26 @@ export function ModuleSection({
     }))
     .filter(({ fi }) => fi.moduleId === mod.id);
 
-  const [open, setOpen] = useState(isActiveModule);
+  // Extraneous-load reduction: a module whose every item is completed
+  // collapses on its own (the checkmark rows no longer need attention);
+  // incomplete modules stay expanded so the remaining work is visible. The
+  // module holding the active lesson always opens, and a manual toggle
+  // persists until the completion state actually changes.
+  const moduleComplete = moduleIsComplete(mod, flatItems, itemState);
+  const derivedOpen = isActiveModule || !moduleComplete;
+  const [open, setOpen] = useState(derivedOpen);
+  const [lastDerived, setLastDerived] = useState(derivedOpen);
 
   // Keep the module containing the active lesson expanded even if the
-  // student navigates between modules without manually re-opening it.
+  // student navigates between modules without manually re-opening it, and
+  // auto-collapse the moment a module becomes fully complete (or re-expand
+  // if it stops being complete).
   useEffect(() => {
-    if (isActiveModule) setOpen(true);
-  }, [isActiveModule]);
+    if (derivedOpen !== lastDerived) {
+      setOpen(derivedOpen);
+      setLastDerived(derivedOpen);
+    }
+  }, [derivedOpen, lastDerived]);
 
   if (!modItems.length) return null;
 
@@ -92,6 +108,7 @@ export function ModuleSection({
               onSelect={onSelect}
               slug={slug}
               inProgressByConfigId={inProgressByConfigId}
+              isNextUp={fi.item.id === nextItemId}
               t={t}
             />
           ))}
@@ -113,6 +130,7 @@ function CurriculumItemRow({
   onSelect,
   slug,
   inProgressByConfigId,
+  isNextUp,
   t,
 }: {
   fi: FlatItem;
@@ -121,6 +139,7 @@ function CurriculumItemRow({
   onSelect: (idx: number) => void;
   slug: string;
   inProgressByConfigId: Map<string, InterviewSessionPublic>;
+  isNextUp: boolean;
   t: Translate;
 }) {
   const isQuiz = fi.item.item_type === "quiz";
@@ -134,6 +153,10 @@ function CurriculumItemRow({
       "bg-m3-surface-container-lowest text-m3-primary shadow-sm font-medium hover:bg-m3-surface-container",
     state === "pending" &&
       "text-m3-on-surface-variant hover:bg-white/50 font-medium",
+    // The earliest item still to do gets a ring + emphasis so the student's
+    // eye lands on the exact next step without hunting through the list.
+    isNextUp &&
+      "ring-2 ring-m3-secondary/70 bg-m3-secondary/5 font-bold text-m3-on-surface hover:bg-m3-secondary/10",
     // state === "locked" && "opacity-40 cursor-not-allowed text-m3-outline", // DEV: comment out to disable lock
   );
 

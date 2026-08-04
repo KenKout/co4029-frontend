@@ -16,6 +16,7 @@ export function CurriculumSidebar({
   slug,
   activeModuleId,
   inProgressByConfigId,
+  nextItemId,
 }: CurriculumProps) {
   return (
     <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-4">
@@ -37,6 +38,7 @@ export function CurriculumSidebar({
               slug={slug}
               isActiveModule={activeModuleId === mod.id}
               inProgressByConfigId={inProgressByConfigId}
+              nextItemId={nextItemId}
             />
           ))}
         </div>
