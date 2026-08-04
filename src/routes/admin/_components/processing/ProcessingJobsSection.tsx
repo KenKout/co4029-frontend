@@ -4,7 +4,17 @@ import { JobsTable } from "./JobsTable";
 import type { AdminProcessingController } from "./use-admin-processing";
 
 function JobsBody({ c }: { c: AdminProcessingController }) {
-  const { t, jobs, sortedJobs, retryingId, handleRetry } = c;
+  const {
+    t,
+    jobs,
+    sortedJobs,
+    retryingId,
+    handleRetry,
+    timeRange,
+    setTimeRange,
+    searchText,
+    setSearchText,
+  } = c;
 
   if (jobs.isError) {
     return (
@@ -33,6 +43,10 @@ function JobsBody({ c }: { c: AdminProcessingController }) {
       jobs={sortedJobs}
       onRetry={handleRetry}
       retryingId={retryingId}
+      timeRange={timeRange}
+      onTimeRangeChange={setTimeRange}
+      search={searchText}
+      onSearchChange={setSearchText}
     />
   );
 }

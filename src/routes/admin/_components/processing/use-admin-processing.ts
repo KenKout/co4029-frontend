@@ -3,32 +3,66 @@ import { useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
-import {
-  useProcessingJobs,
-  useProcessingQueue,
-  useRetryProcessingJob,
-} from "@/lib/api/hooks/admin";
+import { useProcessingJobs, useRetryProcessingJob } from "@/lib/api/hooks/admin";
 import {
   usePermissions,
   useRequirePermission,
 } from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
 import type { ProcessingJobOut } from "@/lib/api/types";
+import type { TimeRange } from "@/components/ui/data-table-toolbar";
 
 /**
- * Permission gate, the status filter, the two polled queries and the retry
- * mutation.
+ * Translate a toolbar time range into the backend's required `since` bound.
+ * `all` uses the epoch so nothing is filtered out.
+ */
+export function sinceFromRange(range: TimeRange): string {
+  const now = Date.now();
+  switch (range) {
+    case "today": {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      return d.toISOString();
+    }
+    case "yesterday": {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      d.setHours(0, 0, 0, 0);
+      return d.toISOString();
+    }
+    case "week":
+      return new Date(now - 7 * 86_400_000).toISOString();
+    case "month":
+      return new Date(now - 30 * 86_400_000).toISOString();
+    case "6months":
+      return new Date(now - 180 * 86_400_000).toISOString();
+    case "year":
+      return new Date(now - 365 * 86_400_000).toISOString();
+    case "all":
+      return "1970-01-01T00:00:00.000Z";
+  }
+}
+
+export interface ProcessingCounts {
+  total: number;
+  pending: number;
+  running: number;
+  completed: number;
+  failed: number;
+  cancelled: number;
+}
+
+/**
+ * Permission gate, the status/time/search filters, the polled jobs query and
+ * the retry mutation.
  *
- * Hook call order and every query argument are identical to the original
- * component body: translation → permissions → route search → statusFilter
- * state → retryingId state → permission requirement → queue query → jobs query
- * (same `statusFilter ? { status: statusFilter } : undefined` argument, so both
- * polls keep their original cadence and enablement) → retry mutation → the
- * sorted-jobs memo.
+ * Tab counts are derived from the SAME jobs list the table renders (bounded
+ * only by the toolbar time range), so the badges can never disagree with the
+ * rows — the old queue-depth endpoint counted every job ever while the table
+ * silently fetched only the last 7 days.
  */
 export function useAdminProcessing() {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.resolvedLanguage ?? i18n.language ?? "en";
+  const { t } = useTranslation();
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
 
@@ -37,24 +71,54 @@ export function useAdminProcessing() {
   // unfiltered queue and making the operator re-select.
   const search = useSearch({ strict: false }) as { status?: string };
   const [statusFilter, setStatusFilter] = useState<string>(search.status ?? "");
+  // Toolbar time range — defaults to the same 7-day window the page used to
+  // apply silently, now visible and user-controllable.
+  const [timeRange, setTimeRange] = useState<TimeRange>("week");
+  const [searchText, setSearchText] = useState("");
   const [retryingId, setRetryingId] = useState<string | null>(null);
 
   useRequirePermission(canAdmin, {
     messageKey: "common.no_permission",
   });
 
-  const queue = useProcessingQueue();
-  const jobs = useProcessingJobs(
-    statusFilter ? { status: statusFilter } : undefined,
-  );
+  const since = sinceFromRange(timeRange);
+  const jobs = useProcessingJobs({
+    status: statusFilter || undefined,
+    since,
+  });
   const retry = useRetryProcessingJob();
 
+  /** Per-status counts over the range-filtered list (see docstring). */
+  const counts = useMemo<ProcessingCounts | undefined>(() => {
+    const list = jobs.data;
+    if (!list) return undefined;
+    const byStatus = (s: string) => list.filter((j) => j.status === s).length;
+    return {
+      total: list.length,
+      pending: byStatus("pending"),
+      running: byStatus("running"),
+      completed: byStatus("completed"),
+      failed: byStatus("failed"),
+      cancelled: byStatus("cancelled"),
+    };
+  }, [jobs.data]);
+
+  /** Range-filtered list, then search, then newest-updated first. */
   const sortedJobs = useMemo<ProcessingJobOut[]>(() => {
-    const list = jobs.data ?? [];
+    const q = searchText.trim().toLowerCase();
+    const list = (jobs.data ?? []).filter((job) => {
+      if (!q) return true;
+      return (
+        job.job_type.toLowerCase().includes(q) ||
+        job.entity_type.toLowerCase().includes(q) ||
+        job.entity_id.toLowerCase().includes(q) ||
+        job.status.toLowerCase().includes(q)
+      );
+    });
     return [...list].sort((a, b) =>
       a.updated_at < b.updated_at ? 1 : a.updated_at > b.updated_at ? -1 : 0,
     );
-  }, [jobs.data]);
+  }, [jobs.data, searchText]);
 
   const handleRetry = (jobId: string) => {
     setRetryingId(jobId);
@@ -75,13 +139,16 @@ export function useAdminProcessing() {
 
   return {
     t,
-    locale,
     permissionsLoading: permissions.isLoading,
     canAdmin,
     statusFilter,
     setStatusFilter,
+    timeRange,
+    setTimeRange,
+    searchText,
+    setSearchText,
+    counts,
     retryingId,
-    queue,
     jobs,
     sortedJobs,
     handleRetry,

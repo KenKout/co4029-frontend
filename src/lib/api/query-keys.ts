@@ -96,8 +96,8 @@ export const queryKeys = {
       ["admin", "courses", courseId, "processing", limit] as const,
     courseStats: () => ["admin", "courses", "stats"] as const,
     processingQueue: () => ["admin", "processing", "queue"] as const,
-    processingJobs: (status?: string) =>
-      ["admin", "processing", "jobs", status] as const,
+    processingJobs: (status?: string, since?: string) =>
+      ["admin", "processing", "jobs", status, since] as const,
     processingJob: (jobId: string) =>
       ["admin", "processing", "jobs", "detail", jobId] as const,
     permissions: () => ["admin", "permissions"] as const,

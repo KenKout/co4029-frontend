@@ -101,6 +101,14 @@ export function useFormatDateTime() {
   return (iso: string | null | undefined) => formatDateTime(iso, locale);
 }
 
+/** `useFormatDateTimeMedium` — active-locale medium date + time (see
+ *  `formatDateTimeMedium`). Use for detail pages where the short form's
+ *  2-digit year reads ambiguously. */
+export function useFormatDateTimeMedium() {
+  const locale = useAppLocale();
+  return (iso: string | null | undefined) => formatDateTimeMedium(iso, locale);
+}
+
 /**
  * Relative day label ("today" / "yesterday" / "N days ago" / weeks / months),
  * i18n-driven. Empty → the caller-supplied "no activity" key. Matches the

@@ -369,20 +369,24 @@ export function useProcessingQueue() {
   });
 }
 
-const PROCESSING_JOBS_WINDOW_MS = 1000 * 60 * 60 * 24 * 7;
-
-export function useProcessingJobs(opts?: {
+/**
+ * Jobs within a caller-supplied window. `since` is REQUIRED — the backend
+ * mandates it, and the page's time-range toolbar is the single source of
+ * truth for the window (no hidden default here; that was the bug where the
+ * tab counts showed every job while the table silently only fetched 7 days).
+ * `limit` defaults to the backend maximum so the client can derive accurate
+ * per-status tab counts from the same list the table renders.
+ */
+export function useProcessingJobs(opts: {
   status?: string;
-  since?: string;
+  since: string;
   limit?: number;
 }) {
   const status = opts?.status;
-  const since =
-    opts?.since ??
-    new Date(Date.now() - PROCESSING_JOBS_WINDOW_MS).toISOString();
-  const limit = opts?.limit ?? 50;
+  const since = opts.since;
+  const limit = opts?.limit ?? 500;
   return useQuery({
-    queryKey: queryKeys.admin.processingJobs(status),
+    queryKey: queryKeys.admin.processingJobs(status, since),
     queryFn: () => {
       const params = new URLSearchParams();
       params.set("since", since);

@@ -8,7 +8,7 @@ import {
   useRequirePermission,
 } from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
-import { useFormatDateTime } from "@/lib/format/date";
+import { useFormatDateTimeMedium } from "@/lib/format/date";
 
 /**
  * Permission gate, the polled job query and the retry mutation.
@@ -18,10 +18,13 @@ import { useFormatDateTime } from "@/lib/format/date";
  * permission requirement → job query (still keyed on the same
  * `enabled ? jobId : ""` argument, so polling and its terminal-state stop are
  * untouched) → retry mutation.
+ *
+ * Dates use the MEDIUM preset ("Aug 4, 2026, 09:31 AM") — the short form's
+ * 2-digit year ("8/4/26") read as a bug on this detail page.
  */
 export function useAdminProcessingJob() {
   const { t } = useTranslation();
-  const formatDate = useFormatDateTime();
+  const formatDate = useFormatDateTimeMedium();
   const params = useParams({ strict: false }) as { jobId?: string };
   const jobId = params.jobId ?? "";
 

@@ -1315,7 +1315,18 @@
       "jobs_load_failed": "Couldn't load jobs.",
       "no_jobs_match": "No jobs match this filter.",
       "filter_status": "Filter status",
-      "recent_jobs": "Recent jobs (7 days)",
+      "recent_jobs": "Recent jobs",
+      "search_placeholder": "Search jobs…",
+      "view_job": "View job",
+      "time": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "week": "Week",
+        "month": "Month",
+        "six_months": "6 Months",
+        "year": "Year",
+        "all": "All"
+      },
       "retry": "Retry",
       "stats": {
         "total": "Total jobs",
