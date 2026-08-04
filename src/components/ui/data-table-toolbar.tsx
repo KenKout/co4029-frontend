@@ -1,11 +1,12 @@
 import * as React from "react";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { SearchInput } from "@/components/ui/search-input";
+import { Tabs } from "@/components/ui/tabs";
 
 // ── Time-range presets ──────────────────────────────────────────────────────
 
@@ -60,6 +61,8 @@ export interface DataTableToolbarProps {
   timeRange?: TimeRange;
   onTimeRangeChange?: (range: TimeRange) => void;
   timeRangeOptions?: TimeRangeOption[];
+  /** Accessible name for the time-range tab strip. */
+  timeRangeAriaLabel?: string;
 
   /** Simple inline filters rendered as pill toggles. */
   filters?: FilterDef[];
@@ -88,6 +91,7 @@ export function DataTableToolbar({
   timeRange,
   onTimeRangeChange,
   timeRangeOptions = DEFAULT_TIME_OPTIONS,
+  timeRangeAriaLabel,
   filters,
   filterValues,
   onFilterChange,
@@ -112,48 +116,30 @@ export function DataTableToolbar({
 
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
-      {/* Search */}
+      {/* Search — the shared SearchInput, not a hand-rolled clone. */}
       {hasSearch && (
-        <div className="relative min-w-[180px] max-w-xs flex-1">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-m3-on-surface-variant/50 pointer-events-none" />
-          <Input
-            size="sm"
-            value={search ?? ""}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={searchPlaceholder}
-            className="pl-8 pr-7"
-          />
-          {search && (
-            <button
-              type="button"
-              onClick={() => onSearchChange("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-m3-on-surface-variant/50 hover:text-m3-on-surface cursor-pointer"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
+        <SearchInput
+          value={search ?? ""}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder={searchPlaceholder}
+          onClear={search ? () => onSearchChange("") : undefined}
+          wrapperClassName="min-w-[180px] max-w-xs flex-1"
+        />
       )}
 
-      {/* Time range pills */}
+      {/* Time range — the shared Tabs contained-pill strip (same filter look
+          as the status tabs), not hand-rolled buttons. */}
       {hasTimeRange && (
-        <div className="flex items-center gap-1 rounded-lg border border-m3-outline-variant/20 bg-m3-surface-container-low p-0.5">
-          {timeRangeOptions.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => onTimeRangeChange(opt.value)}
-              className={cn(
-                "rounded-md px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer",
-                timeRange === opt.value
-                  ? "bg-m3-primary text-m3-on-primary shadow-sm"
-                  : "text-m3-on-surface-variant hover:bg-m3-surface-container-high",
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          variant="contained"
+          ariaLabel={timeRangeAriaLabel}
+          tabs={timeRangeOptions.map((opt) => ({
+            key: opt.value,
+            label: opt.label,
+          }))}
+          value={timeRange ?? "all"}
+          onChange={onTimeRangeChange}
+        />
       )}
 
       {/* Inline filter chips */}

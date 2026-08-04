@@ -1260,6 +1260,7 @@
       "recent_jobs": "Job gần đây",
       "search_placeholder": "Tìm kiếm job…",
       "view_job": "Xem job",
+      "time_filter": "Lọc theo thời gian",
       "time": {
         "today": "Hôm nay",
         "yesterday": "Hôm qua",

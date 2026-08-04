@@ -142,6 +142,7 @@ export function JobsTable({
           timeRange={timeRange}
           onTimeRangeChange={onTimeRangeChange}
           timeRangeOptions={timeRangeOptions}
+          timeRangeAriaLabel={t("admin.processing.time_filter")}
         />
       }
       emptyState={

@@ -1318,6 +1318,7 @@
       "recent_jobs": "Recent jobs",
       "search_placeholder": "Search jobs…",
       "view_job": "View job",
+      "time_filter": "Filter by time",
       "time": {
         "today": "Today",
         "yesterday": "Yesterday",
