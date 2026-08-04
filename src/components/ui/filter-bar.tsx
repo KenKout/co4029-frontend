@@ -34,8 +34,6 @@ export interface FilterBarProps {
   onChange: (filterId: string, value: string) => void;
   /** When provided, a "Clear filters" button resets every filter. */
   onResetAll?: () => void;
-  /** Density — the toolbar uses `sm` to match its SearchInput height. */
-  size?: "default" | "sm";
   clearLabel?: string;
   className?: string;
 }
@@ -47,16 +45,16 @@ export interface FilterBarProps {
  * Extracted from the teacher filter bars (course Assessments page + course
  * student-detail) so the same control is defined once and reused — including
  * by the shared DataTableToolbar, which delegates its `filters` prop here.
- * Every filter is the shared styled Select (ui/select.tsx), never a native
- * <select>. `size="sm"` matches the toolbar's compact height; the teacher
- * pages use the default density.
+ * Every filter is the shared styled Select (ui/select.tsx) at the DEFAULT
+ * density, never a native <select> — deliberately no size option: the
+ * dropdowns must always sit on the same baseline as the search inputs they
+ * sit next to (both are h-10), or the row reads as misaligned.
  */
 export function FilterBar({
   filters,
   values,
   onChange,
   onResetAll,
-  size = "default",
   clearLabel = "Clear filters",
   className,
 }: FilterBarProps) {
@@ -71,7 +69,6 @@ export function FilterBar({
         <Select
           key={f.id}
           aria-label={f.label}
-          size={size}
           value={values[f.id] ?? FILTER_ALL_VALUE}
           onValueChange={(next) => onChange(f.id, next)}
           options={[
@@ -88,7 +85,7 @@ export function FilterBar({
         <button
           type="button"
           onClick={onResetAll}
-          className="h-9 rounded-lg px-3 text-sm font-medium text-m3-on-surface-variant transition-colors hover:bg-m3-surface-container"
+          className="h-10 rounded-lg px-3 text-sm font-medium text-m3-on-surface-variant transition-colors hover:bg-m3-surface-container"
         >
           {clearLabel}
         </button>

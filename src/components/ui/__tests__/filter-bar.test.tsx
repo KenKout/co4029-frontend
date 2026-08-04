@@ -30,11 +30,15 @@ const defs: FilterDef[] = [
 describe("shared FilterBar", () => {
   it("renders every filter as a styled combobox, never a native <select>", () => {
     render(<FilterBar filters={defs} values={{}} onChange={vi.fn()} />);
-    expect(
-      screen.getByRole("combobox", { name: "Status" }),
-    ).toBeInTheDocument();
+    const status = screen.getByRole("combobox", { name: "Status" });
+    expect(status).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Time" })).toBeInTheDocument();
     expect(document.querySelectorAll("select").length).toBe(0);
+    // Regression: the toolbar filters were `sm` (h-7) while the search box
+    // beside them is h-10 — the row read as misaligned. The shared FilterBar
+    // is deliberately fixed at the default Select height (h-10), same box as
+    // ui/input.tsx.
+    expect(status.className).toContain("h-10");
   });
 
   it("calls onChange with the picked value", async () => {

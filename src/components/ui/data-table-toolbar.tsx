@@ -216,7 +216,6 @@ function ToolbarFilters({
       }
       onResetAll={onResetAll}
       clearLabel={clearLabel}
-      size="sm"
     />
   );
 }

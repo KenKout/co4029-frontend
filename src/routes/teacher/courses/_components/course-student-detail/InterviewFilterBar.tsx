@@ -67,7 +67,6 @@ export function InterviewFilterBar({
         else setIvTimeFilter(value);
       }}
       onResetAll={clearIvFilters}
-      size="sm"
     />
   );
 }

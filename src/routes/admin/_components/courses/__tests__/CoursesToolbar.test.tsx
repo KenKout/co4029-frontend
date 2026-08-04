@@ -56,6 +56,20 @@ describe("admin courses toolbar", () => {
     expect(input).toHaveValue("sql");
   });
 
+  it("keeps the filter the same height as the search box", () => {
+    render(<Harness />);
+    const search = screen.getByPlaceholderText(
+      "admin.courses_list.search_placeholder",
+    );
+    const filter = screen.getByRole("combobox", {
+      name: "admin.courses_list.filter_status",
+    });
+    // Regression: the toolbar's filter chips were `sm` (h-7) next to the
+    // h-10 search box. Both must be the same box now (default Select size).
+    expect(search.className).toContain("h-10");
+    expect(filter.className).toContain("h-10");
+  });
+
   it("reflects the selected status on the filter chip (round-trip through statusFilter)", async () => {
     const user = userEvent.setup();
     render(<Harness />);
