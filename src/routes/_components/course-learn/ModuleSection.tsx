@@ -153,10 +153,13 @@ function CurriculumItemRow({
       "bg-m3-surface-container-lowest text-m3-primary shadow-sm font-medium hover:bg-m3-surface-container",
     state === "pending" &&
       "text-m3-on-surface-variant hover:bg-white/50 font-medium",
-    // The earliest item still to do gets a ring + emphasis so the student's
-    // eye lands on the exact next step without hunting through the list.
+    // The earliest item still to do gets a soft inner glow + emphasis so
+    // the student's eye lands on the exact next step without hunting
+    // through the list. Inner (inset) rather than outer shadow because the
+    // curriculum rows sit inside an overflow-hidden collapse container —
+    // an outer glow would be clipped. No border/ring per feedback.
     isNextUp &&
-      "ring-2 ring-m3-secondary/70 bg-m3-secondary/5 font-bold text-m3-on-surface hover:bg-m3-secondary/10",
+      "bg-m3-secondary/10 font-bold text-m3-on-surface shadow-[inset_0_0_14px_2px_rgba(59,130,246,0.16)] hover:bg-m3-secondary/15",
     // state === "locked" && "opacity-40 cursor-not-allowed text-m3-outline", // DEV: comment out to disable lock
   );
 
