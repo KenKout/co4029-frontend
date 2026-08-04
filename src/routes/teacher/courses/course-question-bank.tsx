@@ -48,24 +48,35 @@ export default function CourseQuestionBankPage() {
   const controllers = { filters, editor, deletion, view };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-6 space-y-5">
+    <div className="w-full py-6 space-y-5">
       <QuestionBankHeader course={course} view={view} />
 
-      <HelpPanel helpOpen={view.helpOpen} />
+      {/* ── 12-col grid: question list main + sticky stats/help sidebar ── */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* ── Main 8 cols ── */}
+        <div className="col-span-12 lg:col-span-8 space-y-5 min-w-0">
+          {/* Filters */}
+          {derived.hasItems && (
+            <QuestionBankFilters filters={filters} derived={derived} />
+          )}
 
-      {derived.hasItems && <QuestionBankStats derived={derived} />}
+          {/* Body */}
+          <QuestionBankBody
+            isLoading={isLoading}
+            derived={derived}
+            controllers={controllers}
+          />
+        </div>
 
-      {/* Filters */}
-      {derived.hasItems && (
-        <QuestionBankFilters filters={filters} derived={derived} />
-      )}
+        {/* ── Sidebar 4 cols ── */}
+        <div className="col-span-12 lg:col-span-4 space-y-5 lg:sticky lg:top-24 self-start">
+          {derived.hasItems && (
+            <QuestionBankStats derived={derived} className="lg:grid-cols-1" />
+          )}
 
-      {/* Body */}
-      <QuestionBankBody
-        isLoading={isLoading}
-        derived={derived}
-        controllers={controllers}
-      />
+          <HelpPanel helpOpen={view.helpOpen} />
+        </div>
+      </div>
 
       <DeleteQuestionDialog deletion={deletion} />
     </div>

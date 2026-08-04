@@ -19,7 +19,7 @@ export default function CourseStudentsPage() {
   const controller = useCourseStudentsController();
 
   return (
-    <div className="max-w-[1440px] mx-auto pb-16">
+    <div className="w-full pb-16">
       {/* ── Header ── (course title + tabs live in the shell above) */}
       <StudentsPageHeader controller={controller} />
 
