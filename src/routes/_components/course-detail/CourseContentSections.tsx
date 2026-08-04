@@ -128,7 +128,7 @@ export function CourseContentSection({
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="font-headline font-bold text-xl text-m3-on-surface">
           {t("course_detail.course_content")}

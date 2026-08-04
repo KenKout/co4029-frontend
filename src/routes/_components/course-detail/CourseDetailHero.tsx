@@ -28,8 +28,8 @@ export function CourseDetailHero({
     : null;
 
   return (
-    <div className="relative overflow-hidden border-b border-m3-outline-variant/20 pb-8">
-      <div className="max-w-none">
+    <div className="relative overflow-hidden border-b border-m3-outline-variant/20 pb-4">
+      <div className="w-full">
         <nav className="flex items-center gap-2 text-xs text-m3-on-surface-variant mb-6">
           <Link
             to="/courses"

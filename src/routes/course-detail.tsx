@@ -1,5 +1,6 @@
 import { useParams } from "@tanstack/react-router";
 import { ApiError } from "@/lib/api/client";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import {
   useCourseBySlug,
   useCourseContent,
@@ -68,7 +69,12 @@ export default function CourseDetailPage() {
 
   return (
     <div className="min-h-screen pb-28">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2">
+      {/* Same floating back-to-top affordance as the other long pages. */}
+      <ScrollToTop />
+
+      {/* Fluid width — no hard max-width (product feedback 2026-08-04):
+          the layout breathes with the viewport like the quiz review page. */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div className="lg:col-span-8 min-w-0 space-y-8">
             <CourseDetailHero
