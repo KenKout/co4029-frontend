@@ -78,9 +78,7 @@ export function NotificationsToolbar({
       onFilterChange={(filterId, value) => {
         if (filterId === STATUS_FILTER_ID) {
           c.setStatusFilter(
-            value === "unread" || value === "read"
-              ? (value as "unread" | "read")
-              : undefined,
+            value === "unread" || value === "read" ? value : undefined,
           );
         } else {
           c.setCategoryFilter(value as NotificationCategory | undefined);

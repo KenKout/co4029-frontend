@@ -31,7 +31,8 @@ export default function NotificationsPage() {
             actions (mark all read, delete read). */}
         <NotificationsToolbar c={c} />
 
-        {/* Grouping toggle */}
+        {/* Grouping toggle — parent rows of the hierarchical table group by
+            date (time buckets) or by type (category). */}
         <div className="flex items-center justify-between gap-3">
           <GroupByToggle
             value={c.groupBy}
@@ -45,9 +46,10 @@ export default function NotificationsPage() {
           </p>
         </div>
 
-        <div className="bg-m3-surface-container-lowest rounded-xl shadow-editorial ghost-border overflow-hidden">
-          <NotificationsList c={c} />
-        </div>
+        {/* Hierarchical table: time/category group rows expand to their
+            notification children; sticky icon column holds the actions.
+            DataTable carries its own bordered card. */}
+        <NotificationsList c={c} />
       </div>
 
       {/* 5s undo on delete (same countdown banner as the quiz question
