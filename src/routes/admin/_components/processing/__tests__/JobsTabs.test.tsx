@@ -9,14 +9,24 @@ import { render, screen, fireEvent } from "@testing-library/react";
  * must come up pre-selected and the jobs query must be issued with that status.
  * Simplifying the page must not quietly break that.
  *
- * Counts are derived from the SAME jobs list the table renders (the old
- * queue-depth source counted every job ever while the table silently only
- * fetched 7 days — the bug this screen was rebuilt around), so the assertions
- * below derive the expected badge numbers from the mocked job rows.
+ * Counts come from the dedicated SUMMARY endpoint over the same window as the
+ * jobs list — NOT from the (status-filtered) jobs query itself, whose badges
+ * collapsed every other tab to zero when one status was selected. The mocked
+ * summary below mirrors the 4-row JOBS fixture (2 completed, 1 failed,
+ * 1 pending) so the badge assertions encode the window-wide numbers.
  */
 
 let mockSearch: { status?: string } = {};
-const jobsCalls: (unknown | undefined)[] = [];
+const jobsCalls: unknown[] = [];
+
+const SUMMARY = {
+  total: 4,
+  pending: 1,
+  running: 0,
+  completed: 2,
+  failed: 1,
+  cancelled: 0,
+};
 
 const JOBS = [
   { id: "j1", status: "completed", job_type: "a", entity_type: "x", entity_id: "1", progress_percent: 100, retry_count: 0, updated_at: "2026-08-04T00:00:00Z" },
@@ -44,6 +54,11 @@ vi.mock("@/lib/api/hooks/admin", () => ({
     jobsCalls.push(arg);
     return { data: JOBS, isLoading: false, isError: false };
   },
+  useProcessingSummary: () => ({
+    data: SUMMARY,
+    isLoading: false,
+    isError: false,
+  }),
   useRetryProcessingJob: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
@@ -61,17 +76,29 @@ function Harness() {
 }
 
 describe("processing JobsTabs", () => {
-  it("renders one tab per status with counts derived from the jobs list", () => {
+  it("renders one tab per status with counts from the summary endpoint", () => {
     mockSearch = {};
     render(<Harness />);
     const tabs = screen.getAllByRole("tab");
     expect(tabs.length).toBe(6);
-    // counts come from the same list the table shows (4 rows: 2 completed,
-    // 1 failed, 1 pending) — never from a separate all-time tally
+    // counts mirror the mocked window-wide summary (4 jobs: 2 completed,
+    // 1 failed, 1 pending) — never a collapse onto the selected status
     expect(tabs[0].textContent).toContain("4"); // all / total
     expect(tabs[3].textContent).toContain("2"); // completed
     expect(tabs[4].textContent).toContain("1"); // failed
     expect(tabs[1].textContent).toContain("1"); // pending
+  });
+
+  it("REGRESSION: selecting a status tab keeps every other tab's count (summary is not the filtered list)", () => {
+    mockSearch = { status: "failed" };
+    render(<Harness />);
+    // The jobs query IS filtered (asserted separately below); the badges
+    // must NOT follow it — completed stays 2, pending stays 1, total 4.
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs[0].textContent).toContain("4"); // total
+    expect(tabs[3].textContent).toContain("2"); // completed — was 0 when derived from the filtered list
+    expect(tabs[4].textContent).toContain("1"); // failed
+    expect(tabs[1].textContent).toContain("1"); // pending — was 0
   });
 
   it("defaults to the All tab with no ?status=", () => {
@@ -110,10 +137,15 @@ describe("processing JobsTabs", () => {
     expect(screen.getByTestId("filter").textContent).toBe("failed");
   });
 
-  it("omits count badges while the jobs list is still loading", async () => {
+  it("omits count badges while the summary is still loading", async () => {
     vi.resetModules();
     vi.doMock("@/lib/api/hooks/admin", () => ({
       useProcessingJobs: () => ({
+        data: undefined,
+        isLoading: true,
+        isError: false,
+      }),
+      useProcessingSummary: () => ({
         data: undefined,
         isLoading: true,
         isError: false,

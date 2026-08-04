@@ -3,7 +3,7 @@ import { useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
-import { useProcessingJobs, useRetryProcessingJob } from "@/lib/api/hooks/admin";
+import { useProcessingJobs, useProcessingSummary, useRetryProcessingJob } from "@/lib/api/hooks/admin";
 import {
   usePermissions,
   useRequirePermission,
@@ -56,10 +56,12 @@ export interface ProcessingCounts {
  * Permission gate, the status/time/search filters, the polled jobs query and
  * the retry mutation.
  *
- * Tab counts are derived from the SAME jobs list the table renders (bounded
- * only by the toolbar time range), so the badges can never disagree with the
- * rows — the old queue-depth endpoint counted every job ever while the table
- * silently fetched only the last 7 days.
+ * Tab counts come from a dedicated SUMMARY endpoint over the same `since`
+ * window as the jobs list — NOT from the jobs query itself, which is
+ * status-filtered: deriving badges from the filtered list collapsed every
+ * other tab's count to zero the moment one status was selected (bug report
+ * 2026-08-04). The endpoint also stays exact when a window holds more rows
+ * than the list's 500-row cap.
  */
 export function useAdminProcessing() {
   const { t } = useTranslation();
@@ -92,22 +94,15 @@ export function useAdminProcessing() {
     status: statusFilter || undefined,
     since,
   });
+  const summary = useProcessingSummary(since);
   const retry = useRetryProcessingJob();
 
-  /** Per-status counts over the range-filtered list (see docstring). */
-  const counts = useMemo<ProcessingCounts | undefined>(() => {
-    const list = jobs.data;
-    if (!list) return undefined;
-    const byStatus = (s: string) => list.filter((j) => j.status === s).length;
-    return {
-      total: list.length,
-      pending: byStatus("pending"),
-      running: byStatus("running"),
-      completed: byStatus("completed"),
-      failed: byStatus("failed"),
-      cancelled: byStatus("cancelled"),
-    };
-  }, [jobs.data]);
+  /** Per-status counts over the range window (see docstring) — from the
+   *  summary endpoint, so they never collapse under the status filter. */
+  const counts = useMemo<ProcessingCounts | undefined>(
+    () => summary.data,
+    [summary.data],
+  );
 
   /** Range-filtered list, then search, then newest-updated first. */
   const sortedJobs = useMemo<ProcessingJobOut[]>(() => {
@@ -135,7 +130,7 @@ export function useAdminProcessing() {
           toast.error(t("admin.processing.toasts.only_failed"));
         } else {
           toast.error(
-            (err as Error).message || t("admin.processing.toasts.retry_failed"),
+            err.message || t("admin.processing.toasts.retry_failed"),
           );
         }
       },

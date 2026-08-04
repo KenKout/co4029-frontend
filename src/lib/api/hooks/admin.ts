@@ -370,6 +370,29 @@ export function useProcessingQueue() {
 }
 
 /**
+ * Per-status job counts over a caller-supplied window (`since`, same bound
+ * as `useProcessingJobs`). This is the source for the status-tab badges on
+ * the admin processing page: the table's jobs query is status-filtered, so
+ * deriving badges from it collapsed every other tab's count to zero the
+ * moment one status was selected; a client-side derivation from an
+ * unfiltered list would also be capped at the list limit.
+ */
+export function useProcessingSummary(since: string) {
+  return useQuery({
+    queryKey: queryKeys.admin.processingSummary(since),
+    queryFn: () => {
+      const params = new URLSearchParams();
+      params.set("since", since);
+      return apiFetch<ProcessingQueueDepth>(
+        `/admin/processing/summary?${params.toString()}`,
+      );
+    },
+    staleTime: 1000 * 10,
+    refetchInterval: 1000 * 30,
+  });
+}
+
+/**
  * Jobs within a caller-supplied window. `since` is REQUIRED — the backend
  * mandates it, and the page's time-range toolbar is the single source of
  * truth for the window (no hidden default here; that was the bug where the
