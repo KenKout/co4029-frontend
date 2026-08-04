@@ -1,9 +1,18 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BookOpen, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  CircleDashed,
+} from "lucide-react";
 import { useModuleItems } from "@/lib/api/hooks/courses";
-import type { ModulePublic } from "@/lib/api/types";
+import type { ModulePublic, MyCourseProgressSummary } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import {
+  lessonCount,
+  moduleCompletion,
+} from "@/routes/_components/course-detail/helpers";
 import { ItemTypeIcon, SkeletonBlock } from "./CourseDetailAtoms";
 
 /** The lesson / quiz / interview rows revealed under an open module. */
@@ -54,16 +63,35 @@ function ModuleItemsPanel({ moduleId }: { moduleId: string }) {
   );
 }
 
-/** One collapsible module header. */
+/** One collapsible module header, numbered and annotated with lesson count. */
 function ModuleRow({
   mod,
+  index,
   isOpen,
   onToggle,
+  progress,
 }: {
   mod: ModulePublic;
+  index: number;
   isOpen: boolean;
   onToggle: () => void;
+  progress?: MyCourseProgressSummary;
 }) {
+  const { t } = useTranslation();
+  const lessons = lessonCount(mod);
+  const completion = moduleCompletion(mod, progress);
+  const doneCount = completion === "complete"
+    ? lessons
+    : completion === "partial"
+      ? mod.items.filter(
+          (i) =>
+            i.item_type === "lesson" &&
+            progress?.lessons.some(
+              (l) => l.lesson_id === i.target?.id && l.status === "completed",
+            ),
+        ).length
+      : 0;
+
   return (
     <div
       className={cn(
@@ -77,21 +105,47 @@ function ModuleRow({
         onClick={onToggle}
         className="w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer transition-colors hover:bg-m3-primary/5"
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 min-w-0">
           <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110">
-            <BookOpen className="h-4 w-4 text-white" />
+            <span className="text-sm font-black text-white">{index + 1}</span>
           </div>
           <div className="min-w-0">
             <p className="font-headline font-semibold text-sm text-m3-on-surface leading-snug transition-colors group-hover:text-m3-primary">
               {mod.title}
             </p>
+            {lessons > 0 && (
+              <p className="text-[11px] text-m3-on-surface-variant mt-0.5">
+                {t("course_detail.lessons_count", { count: lessons })}
+              </p>
+            )}
           </div>
         </div>
-        {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-m3-outline shrink-0 ml-3 transition-colors group-hover:text-m3-primary" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-m3-outline shrink-0 ml-3 transition-all duration-200 group-hover:text-m3-primary group-hover:translate-y-0.5" />
-        )}
+
+        <div className="flex items-center gap-3 shrink-0 ml-3">
+          {/* Completion mark: green check when every lesson is done, a
+              "x/y" tally when partway through, nothing before start. */}
+          {completion === "complete" && (
+            <span
+              className="flex items-center gap-1 text-emerald-600"
+              title={t("course_detail.module_complete")}
+            >
+              <CheckCircle2 className="h-4 w-4" />
+            </span>
+          )}
+          {completion === "partial" && (
+            <span className="text-[11px] font-bold text-m3-secondary tabular-nums">
+              {doneCount}/{lessons}
+            </span>
+          )}
+          {completion === "none" && lessons > 0 && (
+            <CircleDashed className="h-4 w-4 text-m3-outline/60" />
+          )}
+          {isOpen ? (
+            <ChevronUp className="h-4 w-4 text-m3-outline shrink-0 transition-colors group-hover:text-m3-primary" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-m3-outline shrink-0 transition-all duration-200 group-hover:text-m3-primary group-hover:translate-y-0.5" />
+          )}
+        </div>
       </button>
 
       {isOpen && <ModuleItemsPanel moduleId={mod.id} />}
@@ -99,8 +153,14 @@ function ModuleRow({
   );
 }
 
-/** The course curriculum: modules, expandable one by one. */
-export function ModuleAccordion({ modules }: { modules: ModulePublic[] }) {
+/** The course curriculum: modules, expandable one by one, numbered. */
+export function ModuleAccordion({
+  modules,
+  progress,
+}: {
+  modules: ModulePublic[];
+  progress?: MyCourseProgressSummary;
+}) {
   const [open, setOpen] = useState<Set<string>>(new Set());
 
   function toggle(id: string) {
@@ -119,12 +179,14 @@ export function ModuleAccordion({ modules }: { modules: ModulePublic[] }) {
 
   return (
     <div className="space-y-2">
-      {sorted.map((mod) => (
+      {sorted.map((mod, idx) => (
         <ModuleRow
           key={mod.id}
           mod={mod}
+          index={idx}
           isOpen={open.has(mod.id)}
           onToggle={() => toggle(mod.id)}
+          progress={progress}
         />
       ))}
     </div>

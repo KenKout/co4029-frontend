@@ -1,4 +1,8 @@
-import type { CoursePublic } from "@/lib/api/types";
+import type {
+  CoursePublic,
+  ModulePublic,
+  MyCourseProgressSummary,
+} from "@/lib/api/types";
 
 const CARD_GRADIENTS = [
   "from-blue-500 via-blue-700 to-blue-800",
@@ -12,6 +16,52 @@ const CARD_GRADIENTS = [
 export function slugGradient(slug: string) {
   const hash = slug.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return CARD_GRADIENTS[Math.abs(hash) % CARD_GRADIENTS.length];
+}
+
+/**
+ * Exact wall-clock label for the course meta line. No rounding: 7200 min is
+ * "120h", 150 min is "2h 30m", 45 min is "45m". Null/absent/zero → null
+ * (the caller omits the meta segment entirely).
+ */
+export function formatEstimatedDuration(
+  minutes: number | null | undefined,
+): string | null {
+  if (minutes == null || minutes <= 0) return null;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+export type ModuleCompletion = "complete" | "partial" | "none";
+
+/** How many lesson-type items a module has (quizzes/interviews excluded). */
+export function lessonCount(mod: ModulePublic): number {
+  return mod.items.filter((i) => i.item_type === "lesson").length;
+}
+
+/**
+ * Per-module completion for the landing-page curriculum rows, derived from
+ * the enrolled student's course progress. Only lesson items are counted —
+ * quiz/interview items have no lesson-status signal on this page. A module
+ * is "complete" when every lesson item is completed, "partial" when at
+ * least one is, "none" when nothing is done (or progress is unavailable,
+ * e.g. anonymous / unenrolled / the course has no lesson items).
+ */
+export function moduleCompletion(
+  mod: ModulePublic,
+  progress: MyCourseProgressSummary | undefined,
+): ModuleCompletion {
+  const lessonIds = mod.items
+    .filter((i) => i.item_type === "lesson" && i.target?.id)
+    .map((i) => i.target!.id);
+  if (!lessonIds.length || !progress) return "none";
+  const statusById = new Map(progress.lessons.map((l) => [l.lesson_id, l.status]));
+  const done = lessonIds.filter((id) => statusById.get(id) === "completed").length;
+  if (done === lessonIds.length) return "complete";
+  if (done > 0) return "partial";
+  return "none";
 }
 
 /**

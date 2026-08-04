@@ -6,8 +6,8 @@ import {
   useCourseOutcomes,
   useCourseTags,
 } from "@/lib/api/hooks/courses";
+import { useMyCourseProgress } from "@/lib/api/hooks/progress";
 import {
-  AiMockInterviewCard,
   CourseContentSection,
   CourseOutcomesSection,
 } from "@/routes/_components/course-detail/CourseContentSections";
@@ -21,9 +21,16 @@ import { InstructorCard } from "@/routes/_components/course-detail/InstructorCar
 import { slugGradient } from "@/routes/_components/course-detail/helpers";
 
 /**
- * Public course landing page. The hero, curriculum, instructor card and CTA
- * card live in `_components/course-detail/`; this file owns the queries and the
- * loading / unavailable branches.
+ * Public course landing page, two-column layout:
+ *
+ * - Left (8/12): hero (breadcrumb, title, description, one-line meta, AI
+ *   teaser, tags), "What you'll learn", course content, instructor card.
+ * - Right (4/12): sticky CTA rail — cover, Continue/Start button, progress
+ *   bar for enrolled students, duration/level meta, instructor row.
+ *
+ * The hero, curriculum, instructor card and CTA card live in
+ * `_components/course-detail/`; this file owns the queries and the loading /
+ * unavailable branches.
  */
 export default function CourseDetailPage() {
   const { slug } = useParams({ strict: false }) as { slug: string };
@@ -37,6 +44,11 @@ export default function CourseDetailPage() {
   const { data: content, isLoading: contentLoading } =
     useCourseContent(courseId);
   const { data: tags } = useCourseTags(courseId);
+  // Enrolled-student progress (404 for anonymous/unenrolled → undefined):
+  // drives "Continue" + the progress bar on the CTA rail and the per-module
+  // ✓ marks in the curriculum.
+  const { data: progress, isLoading: progressLoading } =
+    useMyCourseProgress(courseId);
 
   const courseUnavailable =
     courseQuery.isError &&
@@ -54,27 +66,17 @@ export default function CourseDetailPage() {
   const gradientClass = slugGradient(slug);
   const moduleCount = content?.modules.length ?? 0;
 
-  const ctaCard = (
-    <CtaCard
-      course={course}
-      gradientClass={gradientClass}
-      moduleCount={moduleCount}
-      tags={tags}
-    />
-  );
-
   return (
     <div className="min-h-screen pb-28">
-      <CourseDetailHero
-        course={course}
-        moduleCount={moduleCount}
-        tags={tags}
-        ctaCard={ctaCard}
-      />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-8 min-w-0 space-y-8">
+            <CourseDetailHero
+              course={course}
+              moduleCount={moduleCount}
+              tags={tags}
+            />
 
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          <div className="flex-1 min-w-0 space-y-8">
             <CourseOutcomesSection
               outcomes={outcomes}
               isLoading={outcomesLoading}
@@ -84,16 +86,25 @@ export default function CourseDetailPage() {
               content={content}
               moduleCount={moduleCount}
               isLoading={contentLoading}
+              progress={progress}
             />
 
             {/* Bio + contact details in one section (self-hides when the
                 course has neither). */}
             <InstructorCard course={course} />
-
-            <AiMockInterviewCard />
           </div>
 
-          <div className="w-full lg:hidden">{ctaCard}</div>
+          {/* Sticky CTA rail — stays put next to the content on wide
+              screens, stacks below everything on mobile. */}
+          <div className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start w-full">
+            <CtaCard
+              course={course}
+              gradientClass={gradientClass}
+              moduleCount={moduleCount}
+              progress={progress}
+              progressLoading={progressLoading}
+            />
+          </div>
         </div>
       </div>
     </div>

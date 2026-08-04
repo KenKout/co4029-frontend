@@ -19,8 +19,19 @@ export interface CourseContactFields {
   contact_social_url?: string | null;
 }
 
+// Difficulty / effort for the landing-page meta line, exposed on the public
+// payload by backend CoursePublic (same hand-layered pattern as the contact
+// fields above — the committed openapi snapshot predates them). The SPA shows
+// them only when the backend fills them in.
+export interface CoursePublicMeta {
+  level?: "beginner" | "intermediate" | "advanced" | null;
+  estimated_minutes?: number | null;
+}
+
 export type Course = Schemas["CoursePublic"] & CourseContactFields;
-export type CoursePublic = Schemas["CoursePublic"] & CourseContactFields;
+export type CoursePublic = Schemas["CoursePublic"] &
+  CourseContactFields &
+  CoursePublicMeta;
 export type CourseAuthoring = Schemas["CourseAuthoring"] & CourseContactFields;
 export type CourseCreate = Schemas["CourseCreate"] & CourseContactFields;
 export type CourseUpdate = Schemas["CourseUpdate"] & CourseContactFields;

@@ -1,6 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, BookOpen, GraduationCap } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  Clock,
+  GraduationCap,
+  SignalHigh,
+} from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -8,8 +14,9 @@ import {
   avatarInitials,
 } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import type { CoursePublic, TagPublic } from "@/lib/api/types";
+import type { CoursePublic, MyCourseProgressSummary } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { formatEstimatedDuration } from "./helpers";
 
 /** Thumbnail (or gradient placeholder) at the top of the CTA card. */
 function CtaThumbnail({
@@ -76,19 +83,39 @@ function CtaInstructorRow({
   );
 }
 
-/** Start-learning card: thumbnail, CTA, module count, tags, instructor. */
+/**
+ * Start/continue card on the sticky right rail: thumbnail, CTA button,
+ * progress bar (enrolled students only), meta rows and the instructor.
+ *
+ * ``progress`` is the enrolled student's course summary; absent for
+ * anonymous / unenrolled visitors, in which case the card shows the plain
+ * "Start learning" affordance with no progress.
+ */
 export function CtaCard({
   course,
   gradientClass,
   moduleCount,
-  tags,
+  progress,
+  progressLoading,
 }: {
   course: CoursePublic;
   gradientClass: string;
   moduleCount: number;
-  tags: TagPublic[] | undefined;
+  progress?: MyCourseProgressSummary;
+  progressLoading?: boolean;
 }) {
   const { t } = useTranslation();
+
+  const started = Boolean(
+    progress &&
+      progress.lessons.some((l) => l.status !== "not_started"),
+  );
+  const percent = progress
+    ? Math.round(Number(progress.completion_percent))
+    : 0;
+  const duration = formatEstimatedDuration(course.estimated_minutes);
+  const level = course.level ? t(`course_detail.level_${course.level}`) : null;
+
   return (
     <div className="rounded-xl overflow-hidden shadow-editorial ghost-border bg-m3-surface-container-lowest">
       <CtaThumbnail course={course} gradientClass={gradientClass} />
@@ -100,10 +127,34 @@ export function CtaCard({
           className="block"
         >
           <Button className="w-full gradient-primary text-white font-bold rounded-xl py-5 h-auto text-base gap-2 shadow-ai-glow hover:opacity-90 transition-opacity">
-            {t("course_detail.start_learning")}
+            {started
+              ? t("course_detail.continue_learning")
+              : t("course_detail.start_learning")}
             <ArrowRight className="h-5 w-5" />
           </Button>
         </Link>
+
+        {/* Progress — only once the student has actually started. */}
+        {started && (
+          <div className="space-y-1.5">
+            <div className="h-2 rounded-full bg-m3-surface-container-high overflow-hidden">
+              <div
+                className="h-full gradient-primary rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, percent)}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-m3-on-surface-variant">
+                {t("course_detail.progress_label")}
+              </span>
+              <span className="font-bold text-m3-primary">{percent}%</span>
+            </div>
+          </div>
+        )}
+
+        {progressLoading && !progress && (
+          <div className="h-2 rounded-full bg-m3-surface-container-high animate-pulse" />
+        )}
 
         {moduleCount > 0 && (
           <div className="flex items-center justify-between text-sm pt-1">
@@ -117,16 +168,20 @@ export function CtaCard({
           </div>
         )}
 
-        {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pt-1 border-t border-m3-outline-variant/20">
-            {tags.map((tag) => (
-              <span
-                key={tag.id}
-                className="px-2.5 py-1 rounded-full bg-m3-secondary/8 text-m3-secondary text-[10px] font-semibold"
-              >
-                {tag.name}
+        {(duration || level) && (
+          <div className="flex items-center gap-4 text-sm text-m3-on-surface-variant pt-1">
+            {duration && (
+              <span className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-m3-outline" />
+                {duration}
               </span>
-            ))}
+            )}
+            {level && (
+              <span className="flex items-center gap-1.5">
+                <SignalHigh className="h-4 w-4 text-m3-outline" />
+                {level}
+              </span>
+            )}
           </div>
         )}
 

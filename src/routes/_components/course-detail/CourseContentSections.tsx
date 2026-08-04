@@ -1,17 +1,28 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Bot, CheckCircle2, GraduationCap } from "lucide-react";
+import { CheckCircle2, ChevronDown, GraduationCap } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import type {
   useCourseContent,
   useCourseOutcomes,
 } from "@/lib/api/hooks/courses";
+import type { MyCourseProgressSummary } from "@/lib/api/types";
 import { SkeletonBlock } from "./CourseDetailAtoms";
 import { ModuleAccordion } from "./ModuleAccordion";
 
 type CourseContentData = ReturnType<typeof useCourseContent>["data"];
 type CourseOutcomesData = ReturnType<typeof useCourseOutcomes>["data"];
 
-/** "What you'll learn" — hidden entirely when the course has no outcomes. */
+/** How many outcomes are shown before the "Show all" toggle kicks in. */
+const OUTCOMES_PREVIEW_COUNT = 6;
+
+/**
+ * "What you'll learn" — hidden entirely when the course has no outcomes.
+ *
+ * Shows the first six as tight one-liners (the landing page reads better
+ * with a short parallel list); a "Show all" toggle reveals the rest when a
+ * course carries more.
+ */
 export function CourseOutcomesSection({
   outcomes,
   isLoading,
@@ -20,9 +31,13 @@ export function CourseOutcomesSection({
   isLoading: boolean;
 }) {
   const { t } = useTranslation();
+  const [showAll, setShowAll] = useState(false);
 
   if (isLoading) return <SkeletonBlock className="h-48" />;
   if (!outcomes || outcomes.length === 0) return null;
+
+  const hasMore = outcomes.length > OUTCOMES_PREVIEW_COUNT;
+  const visible = showAll ? outcomes : outcomes.slice(0, OUTCOMES_PREVIEW_COUNT);
 
   return (
     <GlassCard className="p-6 sm:p-8">
@@ -33,15 +48,30 @@ export function CourseOutcomesSection({
         </h2>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {outcomes.map((outcome) => (
-          <div key={outcome.id} className="flex items-start gap-3">
+        {visible.map((outcome) => (
+          <div key={outcome.id} className="flex items-start gap-3 min-w-0">
             <CheckCircle2 className="h-4 w-4 text-m3-secondary shrink-0 mt-0.5 fill-m3-secondary/10" />
-            <p className="text-sm text-m3-on-surface-variant leading-snug">
+            <p
+              title={outcome.outcome_text}
+              className="text-sm text-m3-on-surface-variant leading-snug truncate"
+            >
               {outcome.outcome_text}
             </p>
           </div>
         ))}
       </div>
+      {hasMore && (
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          className="mt-4 flex items-center gap-1 text-xs font-bold text-m3-primary hover:text-m3-primary-dark transition-colors cursor-pointer"
+        >
+          {showAll ? t("course_detail.show_less") : t("course_detail.show_all")}
+          <ChevronDown
+            className={`h-3.5 w-3.5 transition-transform duration-200 ${showAll ? "rotate-180" : ""}`}
+          />
+        </button>
+      )}
     </GlassCard>
   );
 }
@@ -51,10 +81,12 @@ function CourseContentBody({
   content,
   moduleCount,
   isLoading,
+  progress,
 }: {
   content: CourseContentData;
   moduleCount: number;
   isLoading: boolean;
+  progress?: MyCourseProgressSummary;
 }) {
   const { t } = useTranslation();
 
@@ -69,7 +101,7 @@ function CourseContentBody({
   }
 
   if (content && moduleCount > 0) {
-    return <ModuleAccordion modules={content.modules} />;
+    return <ModuleAccordion modules={content.modules} progress={progress} />;
   }
 
   return (
@@ -86,10 +118,12 @@ export function CourseContentSection({
   content,
   moduleCount,
   isLoading,
+  progress,
 }: {
   content: CourseContentData;
   moduleCount: number;
   isLoading: boolean;
+  progress?: MyCourseProgressSummary;
 }) {
   const { t } = useTranslation();
 
@@ -110,29 +144,8 @@ export function CourseContentSection({
         content={content}
         moduleCount={moduleCount}
         isLoading={isLoading}
+        progress={progress}
       />
     </div>
-  );
-}
-
-/** The AI mock-interview teaser card. */
-export function AiMockInterviewCard() {
-  const { t } = useTranslation();
-  return (
-    <GlassCard className="p-6 sm:p-8 bg-gradient-to-br from-m3-secondary/5 to-m3-primary/5">
-      <div className="flex items-start gap-4">
-        <div className="w-11 h-11 rounded-xl gradient-secondary flex items-center justify-center shrink-0">
-          <Bot className="h-5 w-5 text-white" />
-        </div>
-        <div className="flex-1 space-y-2">
-          <h3 className="font-headline font-bold text-m3-primary text-base">
-            {t("course_detail.ai_mock_title")}
-          </h3>
-          <p className="text-sm text-m3-on-surface-variant leading-relaxed">
-            {t("course_detail.ai_mock_body")}
-          </p>
-        </div>
-      </div>
-    </GlassCard>
   );
 }
