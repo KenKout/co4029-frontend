@@ -37,8 +37,6 @@ function buildColumns(
     {
       id: "job",
       header: t("admin.processing.cols.job"),
-      sortable: true,
-      sortValue: (job) => job.job_type,
       cell: (job) => (
         <Link
           to="/admin/processing/$jobId"
@@ -53,8 +51,6 @@ function buildColumns(
     {
       id: "entity",
       header: t("admin.processing.cols.entity"),
-      sortable: true,
-      sortValue: (job) => `${job.entity_type}/${job.entity_id}`,
       cell: (job) => (
         <span className="font-mono text-xs text-text-muted">
           {job.entity_type}/{job.entity_id.slice(0, 8)}…
@@ -64,8 +60,6 @@ function buildColumns(
     {
       id: "status",
       header: t("admin.processing.cols.status"),
-      sortable: true,
-      sortValue: (job) => job.status,
       cell: (job) => <JobStatusBadge status={job.status} />,
     },
     {

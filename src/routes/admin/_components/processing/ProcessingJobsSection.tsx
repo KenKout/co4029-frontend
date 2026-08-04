@@ -52,12 +52,5 @@ function JobsBody({ c }: { c: AdminProcessingController }) {
 }
 
 export function ProcessingJobsSection({ c }: { c: AdminProcessingController }) {
-  return (
-    <div>
-      <h2 className="text-lg font-headline font-bold text-text-strong mb-3">
-        {c.t("admin.processing.recent_jobs")}
-      </h2>
-      <JobsBody c={c} />
-    </div>
-  );
+  return <JobsBody c={c} />;
 }
