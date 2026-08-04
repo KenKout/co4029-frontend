@@ -3,6 +3,7 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { useQuizAttemptReview, useStudentQuiz } from "@/lib/api/hooks/quizzes";
 import { useCourseBySlug } from "@/lib/api/hooks/courses";
 import { computeReviewStats } from "@/routes/_components/course-quiz-review/helpers";
@@ -84,6 +85,8 @@ export default function CourseQuizReviewPage() {
 
   return (
     <div className="min-h-[70vh] pb-20">
+      {/* Same floating back-to-top affordance as the taking screen. */}
+      <ScrollToTop />
       <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-8 xl:col-span-9 space-y-6 min-w-0">
