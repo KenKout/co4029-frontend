@@ -936,7 +936,37 @@
     },
     "success": {
       "all_marked": "All marked as read"
-    }
+    },
+    "search_placeholder": "Search notifications…",
+    "filter_status": "Status",
+    "filter_status_all": "All",
+    "filter_unread": "Unread",
+    "filter_read": "Read",
+    "filter_category": "Category",
+    "filter_category_all": "All categories",
+    "delete_read": "Delete read ({{count}})",
+    "group_by": "Group by",
+    "group_date": "Date",
+    "group_type": "Type",
+    "group_today": "Today",
+    "group_yesterday": "Yesterday",
+    "group_this_week": "This week",
+    "group_earlier": "Earlier",
+    "undo_message": "Deleting {{count}} notification(s)…",
+    "undo": "Undo ({{count}})",
+    "clear_filters": "Clear filters",
+    "empty_filtered_title": "No matching notifications",
+    "empty_filtered_body": "Try adjusting your filters or search.",
+    "time": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "Week",
+      "month": "Month",
+      "six_months": "6 Months",
+      "year": "Year",
+      "all": "All"
+    },
+    "showing_count": "{{count}} shown"
   },
   "teacher_sr_student_detail": {
     "breadcrumb_detail": "Detail",

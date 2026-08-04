@@ -892,7 +892,37 @@
     },
     "success": {
       "all_marked": "Đã đánh dấu tất cả đã đọc"
-    }
+    },
+    "search_placeholder": "Tìm thông báo…",
+    "filter_status": "Trạng thái",
+    "filter_status_all": "Tất cả",
+    "filter_unread": "Chưa đọc",
+    "filter_read": "Đã đọc",
+    "filter_category": "Loại",
+    "filter_category_all": "Tất cả loại",
+    "delete_read": "Xóa đã đọc ({{count}})",
+    "group_by": "Nhóm theo",
+    "group_date": "Ngày",
+    "group_type": "Loại",
+    "group_today": "Hôm nay",
+    "group_yesterday": "Hôm qua",
+    "group_this_week": "Tuần này",
+    "group_earlier": "Trước đó",
+    "undo_message": "Đang xóa {{count}} thông báo…",
+    "undo": "Hoàn tác ({{count}})",
+    "clear_filters": "Xóa bộ lọc",
+    "empty_filtered_title": "Không có thông báo phù hợp",
+    "empty_filtered_body": "Hãy thử điều chỉnh bộ lọc hoặc tìm kiếm.",
+    "time": {
+      "today": "Hôm nay",
+      "yesterday": "Hôm qua",
+      "week": "Tuần",
+      "month": "Tháng",
+      "six_months": "6 tháng",
+      "year": "Năm",
+      "all": "Tất cả"
+    },
+    "showing_count": "{{count}} hiển thị"
   },
   "teacher_sr_student_detail": {
     "breadcrumb_detail": "Chi tiết",
