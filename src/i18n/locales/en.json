@@ -143,6 +143,8 @@
     "lessons_count_other": "{{count}} lessons",
     "show_all": "Show all",
     "show_less": "Show less",
+    "copy_email": "Copy email",
+    "copy_phone": "Copy phone number",
     "level_beginner": "Beginner",
     "level_intermediate": "Intermediate",
     "level_advanced": "Advanced"

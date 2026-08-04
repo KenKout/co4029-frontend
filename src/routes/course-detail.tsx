@@ -77,11 +77,7 @@ export default function CourseDetailPage() {
       <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div className="lg:col-span-8 min-w-0 space-y-8">
-            <CourseDetailHero
-              course={course}
-              moduleCount={moduleCount}
-              tags={tags}
-            />
+            <CourseDetailHero course={course} tags={tags} />
 
             <CourseOutcomesSection
               outcomes={outcomes}
@@ -106,7 +102,6 @@ export default function CourseDetailPage() {
             <CtaCard
               course={course}
               gradientClass={gradientClass}
-              moduleCount={moduleCount}
               progress={progress}
               progressLoading={progressLoading}
             />

@@ -1,31 +1,22 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Bot, Clock, GraduationCap, Sparkles } from "lucide-react";
+import { Bot, Sparkles } from "lucide-react";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import type { CoursePublic, TagPublic } from "@/lib/api/types";
-import { formatEstimatedDuration } from "./helpers";
 
 /**
- * The page header: breadcrumb, AI chip, title, description, one-line meta
- * (instructor · modules · duration · level), the AI mock-interview teaser
- * line and tag pills. The CTA card lives in its own sticky rail (CtaCard),
- * not inside this hero.
+ * The page header: breadcrumb, AI chip, title, full-width description, the
+ * AI mock-interview teaser line and tag pills. The CTA card lives in its own
+ * sticky rail (CtaCard), not inside this hero.
  */
 export function CourseDetailHero({
   course,
-  moduleCount,
   tags,
 }: {
   course: CoursePublic;
-  moduleCount: number;
   tags: TagPublic[] | undefined;
 }) {
   const { t } = useTranslation();
-
-  const duration = formatEstimatedDuration(course.estimated_minutes);
-  const level = course.level
-    ? t(`course_detail.level_${course.level}`)
-    : null;
 
   return (
     <div className="relative overflow-hidden border-b border-m3-outline-variant/20 pb-4">
@@ -53,37 +44,13 @@ export function CourseDetailHero({
             {course.title}
           </h1>
 
+          {/* Full-width description; long words/URLs wrap instead of
+              overflowing the column. */}
           {course.description && (
-            <p className="text-m3-on-surface-variant text-base sm:text-lg leading-relaxed max-w-2xl">
+            <p className="text-m3-on-surface-variant text-base sm:text-lg leading-relaxed w-full break-words">
               {course.description}
             </p>
           )}
-
-          {/* One-line meta: instructor · modules · duration · level. Each
-              segment hides itself when the data is absent. */}
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-sm text-m3-on-surface-variant">
-            {course.instructor && (
-              <span className="font-semibold text-m3-on-surface">
-                {course.instructor.display_name}
-              </span>
-            )}
-            {course.instructor && (moduleCount > 0 || duration || level) && (
-              <span className="text-m3-outline">·</span>
-            )}
-            {moduleCount > 0 && (
-              <span className="flex items-center gap-1.5">
-                <GraduationCap className="h-4 w-4" />
-                {t("course_detail.modules_count", { count: moduleCount })}
-              </span>
-            )}
-            {duration && (
-              <span className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4" />
-                {duration}
-              </span>
-            )}
-            {level && <span>{level}</span>}
-          </div>
 
           {/* AI mock-interview teaser, one tight line (was a full card at
               the bottom of the page; the wireframe wants it in the hero). */}

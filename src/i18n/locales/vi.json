@@ -144,6 +144,8 @@
     "lessons_count_other": "{{count}} bài giảng",
     "show_all": "Xem tất cả",
     "show_less": "Thu gọn",
+    "copy_email": "Sao chép email",
+    "copy_phone": "Sao chép số điện thoại",
     "level_beginner": "Cơ bản",
     "level_intermediate": "Trung cấp",
     "level_advanced": "Nâng cao"
