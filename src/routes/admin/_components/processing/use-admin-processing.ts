@@ -81,7 +81,13 @@ export function useAdminProcessing() {
     messageKey: "common.no_permission",
   });
 
-  const since = sinceFromRange(timeRange);
+  // CRITICAL: `since` MUST be stable between renders. It feeds the react-query
+  // key, and sinceFromRange() returns a fresh ISO string every call — an
+  // un-memoized value made the key change on every render, so each poll
+  // resolution re-rendered the page, which minted a new key, which refetched…
+  // an infinite API spam loop (bug report 2026-08-04). Memoizing on the range
+  // makes the key stable until the user actually changes the range.
+  const since = useMemo(() => sinceFromRange(timeRange), [timeRange]);
   const jobs = useProcessingJobs({
     status: statusFilter || undefined,
     since,
