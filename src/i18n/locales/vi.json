@@ -1311,6 +1311,7 @@
       "include_deleted": "Bao gồm đã xóa",
       "load_failed": "Không thể tải danh sách khóa học.",
       "empty_title": "Chưa có khóa học nào",
+      "empty_search": "Không có khóa học phù hợp",
       "empty_body": "Khi giảng viên tạo khóa học, danh sách sẽ xuất hiện tại đây.",
       "back_to_admin": "Quay lại quản trị",
       "row_status": {

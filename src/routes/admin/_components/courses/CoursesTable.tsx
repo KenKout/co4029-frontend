@@ -6,7 +6,7 @@ import { RestoreButton } from "./RestoreButton";
 import type { AdminCoursesController } from "./use-admin-courses";
 
 export function CoursesTable({ c }: { c: AdminCoursesController }) {
-  const { t, navigate, table, columns } = c;
+  const { t, navigate, table, columns, statusFilter } = c;
   return (
     <DataTable
       columns={columns}
@@ -38,7 +38,9 @@ export function CoursesTable({ c }: { c: AdminCoursesController }) {
       sort={table.sort}
       onSortChange={table.setSort}
       emptyState={
-        table.search
+        // Mirror the users table: any narrowing (search OR status filter)
+        // that yields zero rows is "no matches", not "system is empty".
+        table.search || statusFilter
           ? t("admin.courses_list.empty_search", {
               defaultValue: "No matching courses",
             })

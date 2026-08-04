@@ -1369,6 +1369,7 @@
       "include_deleted": "Include deleted",
       "load_failed": "Couldn't load courses.",
       "empty_title": "No courses yet",
+      "empty_search": "No matching courses",
       "empty_body": "When instructors create courses, they will appear here.",
       "back_to_admin": "Back to admin",
       "row_status": {
