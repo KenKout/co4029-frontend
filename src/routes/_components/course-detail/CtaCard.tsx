@@ -1,6 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, BookOpen, Clock, GraduationCap, SignalHigh } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  Clock,
+  GraduationCap,
+  Lock,
+  SignalHigh,
+} from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -78,12 +85,63 @@ function CtaInstructorRow({
 }
 
 /**
+ * The CTA button: enrolled students get Start/Continue (a link into the
+ * learn page); unenrolled students get a locked, non-clickable state —
+ * per BR they must not be able to start learning.
+ */
+function CtaActionButton({
+  slug,
+  started,
+  enrolled,
+  enrollmentLoading,
+}: {
+  slug: string;
+  started: boolean;
+  enrolled: boolean;
+  enrollmentLoading?: boolean;
+}) {
+  const { t } = useTranslation();
+
+  if (enrolled) {
+    return (
+      <Link to="/courses/$slug/learn" params={{ slug }} className="block">
+        <Button className="w-full gradient-primary text-white font-bold rounded-xl py-5 h-auto text-base gap-2 shadow-ai-glow hover:opacity-90 transition-opacity">
+          {started
+            ? t("course_detail.continue_learning")
+            : t("course_detail.start_learning")}
+          <ArrowRight className="h-5 w-5" />
+        </Button>
+      </Link>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <Button
+        disabled
+        className="w-full rounded-xl py-5 h-auto text-base gap-2 opacity-70 cursor-not-allowed bg-m3-surface-container-high text-m3-on-surface-variant"
+        title={t("course_detail.enroll_required_body")}
+      >
+        <Lock className="h-5 w-5" />
+        {t("course_detail.enroll_required")}
+      </Button>
+      {!enrollmentLoading && (
+        <p className="text-[11px] text-m3-on-surface-variant leading-snug text-center px-2">
+          {t("course_detail.enroll_required_hint")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
  * Start/continue card on the sticky right rail: thumbnail, CTA button,
  * progress bar (enrolled students only), meta rows and the instructor.
  *
  * ``progress`` is the enrolled student's course summary; absent for
- * anonymous / unenrolled visitors, in which case the card shows the plain
- * "Start learning" affordance with no progress.
+ * anonymous / unenrolled visitors. Per BR, an unenrolled student must not
+ * be able to start learning: the CTA becomes a locked, non-clickable
+ * "enrollment required" state instead of a link into the learn page.
  */
 export function CtaCard({
   course,
@@ -91,12 +149,16 @@ export function CtaCard({
   moduleCount,
   progress,
   progressLoading,
+  enrolled,
+  enrollmentLoading,
 }: {
   course: CoursePublic;
   gradientClass: string;
   moduleCount: number;
   progress?: MyCourseProgressSummary;
   progressLoading?: boolean;
+  enrolled: boolean;
+  enrollmentLoading?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -115,21 +177,15 @@ export function CtaCard({
       <CtaThumbnail course={course} gradientClass={gradientClass} />
 
       <div className="p-5 space-y-5">
-        <Link
-          to="/courses/$slug/learn"
-          params={{ slug: course.slug }}
-          className="block"
-        >
-          <Button className="w-full gradient-primary text-white font-bold rounded-xl py-5 h-auto text-base gap-2 shadow-ai-glow hover:opacity-90 transition-opacity">
-            {started
-              ? t("course_detail.continue_learning")
-              : t("course_detail.start_learning")}
-            <ArrowRight className="h-5 w-5" />
-          </Button>
-        </Link>
+        <CtaActionButton
+          slug={course.slug}
+          started={started}
+          enrolled={enrolled}
+          enrollmentLoading={enrollmentLoading}
+        />
 
         {/* Progress — only once the student has actually started. */}
-        {started && (
+        {enrolled && started && (
           <div className="space-y-1.5">
             <div className="h-2 rounded-full bg-m3-surface-container-high overflow-hidden">
               <div
@@ -146,7 +202,7 @@ export function CtaCard({
           </div>
         )}
 
-        {progressLoading && !progress && (
+        {enrolled && progressLoading && !progress && (
           <div className="h-2 rounded-full bg-m3-surface-container-high animate-pulse" />
         )}
 

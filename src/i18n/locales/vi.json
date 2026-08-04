@@ -148,7 +148,11 @@
     "copy_phone": "Sao chép số điện thoại",
     "level_beginner": "Cơ bản",
     "level_intermediate": "Trung cấp",
-    "level_advanced": "Nâng cao"
+    "level_advanced": "Nâng cao",
+    "enroll_required": "Cần ghi danh",
+    "enroll_required_body": "Bạn chưa được ghi danh vào khóa học này. Hãy liên hệ quản lý để được ghi danh trước khi truy cập nội dung.",
+    "enroll_required_hint": "Liên hệ quản lý để được ghi danh",
+    "back_to_course": "Quay lại khóa học"
   },
   "settings_security": {
     "title": "Bảo mật tài khoản",

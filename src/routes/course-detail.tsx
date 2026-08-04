@@ -8,6 +8,7 @@ import {
   useCourseTags,
 } from "@/lib/api/hooks/courses";
 import { useMyCourseProgress } from "@/lib/api/hooks/progress";
+import { useMyEnrollment } from "@/lib/api/hooks/me";
 import {
   CourseContentSection,
   CourseOutcomesSection,
@@ -25,9 +26,12 @@ import { slugGradient } from "@/routes/_components/course-detail/helpers";
  * Public course landing page, two-column layout:
  *
  * - Left (8/12): hero (breadcrumb, title, description, one-line meta, AI
- *   teaser, tags), "What you'll learn", course content, instructor card.
- * - Right (4/12): sticky CTA rail — cover, Continue/Start button, progress
- *   bar for enrolled students, duration/level meta, instructor row.
+ *   teaser, tags), "What you'll learn", instructor card. The course-content
+ *   curriculum is enrollment-gated (BR): an unenrolled student sees the
+ *   landing page as pure advertisement — no item list, no Start button.
+ * - Right (4/12): sticky CTA rail — cover, Continue/Start button for
+ *   enrolled students, a locked "enrollment required" state otherwise;
+ *   progress bar for enrolled students, duration/level meta, instructor row.
  *
  * The hero, curriculum, instructor card and CTA card live in
  * `_components/course-detail/`; this file owns the queries and the loading /
@@ -40,10 +44,18 @@ export default function CourseDetailPage() {
   const course = courseQuery.data;
   const courseId = course?.id;
 
+  // Enrollment state drives the whole gated surface: content tree fetch,
+  // curriculum section, CTA button. 404 (no enrollment row) → not enrolled.
+  const { data: enrollment, isLoading: enrollmentLoading } =
+    useMyEnrollment(courseId);
+  const enrolled = Boolean(enrollment);
+
   const { data: outcomes, isLoading: outcomesLoading } =
     useCourseOutcomes(courseId);
-  const { data: content, isLoading: contentLoading } =
-    useCourseContent(courseId);
+  // BR: only enrolled students may fetch the course items tree.
+  const { data: content, isLoading: contentLoading } = useCourseContent(
+    enrolled ? courseId : undefined,
+  );
   const { data: tags } = useCourseTags(courseId);
   // Enrolled-student progress (404 for anonymous/unenrolled → undefined):
   // drives "Continue" + the progress bar on the CTA rail and the per-module
@@ -84,12 +96,15 @@ export default function CourseDetailPage() {
               isLoading={outcomesLoading}
             />
 
-            <CourseContentSection
-              content={content}
-              moduleCount={moduleCount}
-              isLoading={contentLoading}
-              progress={progress}
-            />
+            {/* BR: the item tree is only displayable to enrolled students. */}
+            {enrolled && (
+              <CourseContentSection
+                content={content}
+                moduleCount={moduleCount}
+                isLoading={contentLoading}
+                progress={progress}
+              />
+            )}
 
             {/* Bio + contact details in one section (self-hides when the
                 course has neither). */}
@@ -105,6 +120,8 @@ export default function CourseDetailPage() {
               moduleCount={moduleCount}
               progress={progress}
               progressLoading={progressLoading}
+              enrolled={enrolled}
+              enrollmentLoading={enrollmentLoading}
             />
           </div>
         </div>
