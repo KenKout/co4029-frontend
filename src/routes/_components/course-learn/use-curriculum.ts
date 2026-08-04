@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
 import { useMyInterviewSessions } from "@/lib/api/hooks/interviews";
 import { queryKeys } from "@/lib/api/query-keys";
@@ -7,6 +7,7 @@ import type {
   InterviewSessionPublic,
   ModuleItemPublic,
   ModulePublic,
+  QuizProgressRead,
 } from "@/lib/api/types";
 import { buildFlatItems } from "./helpers";
 import type { FlatItem, Translate } from "./types";
@@ -41,6 +42,29 @@ export function useModuleItemsMap(
     });
     return next;
   }, [moduleIds, results]);
+}
+
+/**
+ * Per-quiz completion state for the calling student in the course, keyed by
+ * quiz id. Completion follows the teacher-configured milestone: passed (per
+ * the grade-of-record) OR failed with every allowed attempt consumed and
+ * nothing in flight → completed. Used by the curriculum to let quiz items
+ * participate in auto-collapse + next-item highlighting.
+ */
+export function useMyQuizProgress(
+  courseId: string,
+): Map<string, QuizProgressRead> {
+  const { data } = useQuery({
+    queryKey: queryKeys.quizzes.progress(courseId),
+    queryFn: () =>
+      apiFetch<QuizProgressRead[]>(`/courses/${courseId}/quiz-progress`),
+    enabled: !!courseId,
+  });
+  return useMemo(() => {
+    const map = new Map<string, QuizProgressRead>();
+    for (const row of data ?? []) map.set(row.quiz_id, row);
+    return map;
+  }, [data]);
 }
 
 /**

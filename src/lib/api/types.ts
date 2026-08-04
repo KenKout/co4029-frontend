@@ -175,6 +175,19 @@ export type QuizForTakingPublic = Schemas["QuizForTakingPublic"];
 export type QuizForAuthoring = Schemas["QuizForAuthoringPublic"];
 export type QuizForAuthoringPublic = Schemas["QuizForAuthoringPublic"];
 export type QuizAttempt = Schemas["QuizAttemptRead"];
+// Hand-layered (snapshot can't be regenerated in isolation — see
+// CourseContactFields): the learner quiz-progress endpoint landed in
+// backend a5334c0 and isn't in the committed openapi snapshot yet.
+export interface QuizProgressRead {
+  quiz_id: string;
+  attempts_used: number;
+  max_attempts: number | null;
+  allow_retakes: boolean;
+  passed: boolean | null;
+  grade_percent: number | null;
+  completed: boolean;
+  attempts_remaining: number | null;
+}
 export type QuizAttemptRead = Schemas["QuizAttemptRead"];
 export type QuizAttemptReviewRead = Schemas["QuizAttemptReviewRead"];
 export type QuizAttemptReviewQuestion = Schemas["QuizAttemptReviewQuestion"];

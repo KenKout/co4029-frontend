@@ -2,6 +2,7 @@ import type {
   LessonPublic,
   ModuleItemPublic,
   ModulePublic,
+  QuizProgressRead,
 } from "@/lib/api/types";
 import type { FlatItem, LessonState } from "./types";
 import type { LearnUrlState } from "./use-learn-url-state";
@@ -44,11 +45,17 @@ export function buildFlatItems(
 /**
  * Curriculum row state for a flattened item. Extracted from the page shell so
  * the shell only has to close over the two values the decision depends on.
+ *
+ * Quiz items are "completed" when the per-quiz progress map says so — the
+ * student passed the teacher's milestone OR failed with every allowed
+ * attempt consumed (see ``QuizProgressRead.completed``). Interview items
+ * have no completion signal yet and stay ``pending``.
  */
 export function itemStateFor(
   fi: FlatItem,
   activeLessonId: string | undefined,
   lessonStatusMap: Map<string, string>,
+  quizProgressMap?: Map<string, QuizProgressRead>,
 ): LessonState {
   if (fi.item.item_type === "lesson" && fi.item.target?.id === activeLessonId) {
     return "active";
@@ -58,16 +65,20 @@ export function itemStateFor(
     // if (lockedLessonIds.has(id)) return "locked"; // DEV: comment out to disable lock
     if (lessonStatusMap.get(id) === "completed") return "completed";
   }
+  if (fi.item.item_type === "quiz" && fi.item.target?.id && quizProgressMap) {
+    if (quizProgressMap.get(fi.item.target.id)?.completed) return "completed";
+  }
   return "pending";
 }
 
 /**
  * Is every item in ``mod`` completed?
  *
- * Completion is lesson-scoped (``itemState`` only marks lessons whose
- * progress status is ``completed``), so a module containing a quiz or an
- * interview item is NEVER provably complete and stays expanded — the
- * conservative choice until those surfaces carry completion data.
+ * Completion is decided by ``itemState``: lessons via their progress status,
+ * quizzes via the milestone rule (passed OR failed-with-all-attempts-used —
+ * see ``QuizProgressRead.completed``, threaded through ``itemStateFor``).
+ * Interview items have no completion signal yet, so a module containing one
+ * is never provably complete and stays expanded.
  */
 export function moduleIsComplete(
   mod: ModulePublic,

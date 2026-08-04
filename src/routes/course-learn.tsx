@@ -41,6 +41,7 @@ import {
   useCurriculumItems,
   useInProgressInterviewSessions,
   useModuleItemsMap,
+  useMyQuizProgress,
 } from "./_components/course-learn/use-curriculum";
 import {
   useActiveLessonContent,
@@ -158,6 +159,9 @@ function CourseLearnLoaded({
     t,
   );
   const inProgressByConfigId = useInProgressInterviewSessions(course.id);
+  // Quiz completion (passed OR failed-with-attempts-exhausted) lets quiz
+  // items participate in auto-collapse + next-item highlighting.
+  const quizProgressMap = useMyQuizProgress(course.id);
 
   const [activeIdx, setActiveIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>("Lesson Notes");
@@ -273,7 +277,7 @@ function CourseLearnLoaded({
 
   const activeTitle = activeTitleFor(activeLesson, activeEntry);
   const itemState = (fi: FlatItem) =>
-    itemStateFor(fi, activeLessonId, lessonStatusMap);
+    itemStateFor(fi, activeLessonId, lessonStatusMap, quizProgressMap);
   // Earliest item still to do — highlighted in the curriculum so the eye
   // lands on the next step. Aligns with the home resume CTA.
   const nextItemId = useMemo(

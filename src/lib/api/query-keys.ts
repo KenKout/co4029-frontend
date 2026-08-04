@@ -221,6 +221,8 @@ export const queryKeys = {
     attemptDetail: (courseId: string, attemptId: string) =>
       ["quizzes", "attempt-detail", courseId, attemptId] as const,
     results: (quizId: string) => ["quizzes", "results", quizId] as const,
+    progress: (courseId: string) =>
+      ["quizzes", "course-progress", courseId] as const,
     // --- Moodle-parity phases (backend 0044-0057) ---
     regradeRun: (quizId: string, runId: string) =>
       ["quizzes", "regrade-run", quizId, runId] as const,
