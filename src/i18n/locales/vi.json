@@ -1161,7 +1161,21 @@
     "empty_no_courses_body": "Khóa học sẽ xuất hiện tại đây sau khi được xuất bản.",
     "empty_no_match_title": "Không tìm thấy khóa học",
     "empty_no_match_body": "Thử điều chỉnh từ khóa tìm kiếm để xem thêm khóa học.",
-    "clear_search": "Xóa tìm kiếm"
+    "clear_search": "Xóa tìm kiếm",
+    "scope_label": "Phạm vi khóa học",
+    "scope_all": "Tất cả",
+    "scope_enrolled": "Đã ghi danh",
+    "scope_completed": "Hoàn thành",
+    "view_label": "Chế độ xem",
+    "view_cards": "Dạng thẻ",
+    "view_list": "Dạng danh sách",
+    "enrolled_badge": "Đang học",
+    "completed_badge": "Hoàn thành",
+    "empty_no_enrolled_title": "Bạn chưa ghi danh khóa học nào",
+    "empty_no_enrolled_body": "Nhờ quản lý ghi danh cho bạn — khóa học của bạn sẽ hiện ở đây.",
+    "empty_no_completed_title": "Chưa có khóa học hoàn thành",
+    "empty_no_completed_body": "Tiếp tục học nhé — khóa học đã hoàn thành sẽ hiện ở đây để bạn ôn tập bất cứ lúc nào.",
+    "browse_all": "Xem tất cả khóa học"
   },
   "dashboard": {
     "active_session": "Phiên đang hoạt động",

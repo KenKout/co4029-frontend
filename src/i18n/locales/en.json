@@ -1219,7 +1219,21 @@
     "empty_no_courses_body": "Courses will appear here once published.",
     "empty_no_match_title": "No matching courses",
     "empty_no_match_body": "Try adjusting your search keywords to see more courses.",
-    "clear_search": "Clear search"
+    "clear_search": "Clear search",
+    "scope_label": "Course scope",
+    "scope_all": "All",
+    "scope_enrolled": "Enrolled",
+    "scope_completed": "Completed",
+    "view_label": "View mode",
+    "view_cards": "Card view",
+    "view_list": "List view",
+    "enrolled_badge": "Enrolled",
+    "completed_badge": "Completed",
+    "empty_no_enrolled_title": "You haven't enrolled in any courses yet",
+    "empty_no_enrolled_body": "Ask your manager to enroll you — your courses will show up here.",
+    "empty_no_completed_title": "No completed courses yet",
+    "empty_no_completed_body": "Keep learning — finished courses appear here so you can review or practice anytime.",
+    "browse_all": "Browse all courses"
   },
   "dashboard": {
     "active_session": "Active session",
