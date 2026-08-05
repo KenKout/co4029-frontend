@@ -4,36 +4,24 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  LiveKitRoom,
-  RoomAudioRenderer,
   useConnectionState,
   useVoiceAssistant,
 } from "@livekit/components-react";
-import { ConnectionState, DisconnectReason } from "livekit-client";
+import { ConnectionState } from "livekit-client";
 import "@livekit/components-styles";
 import { Bot } from "lucide-react";
-import { toast } from "sonner";
 
-import { useInterviewRealtimeToken } from "@/lib/api/hooks/interviews";
-import type { RealtimeTokenResponse } from "@/lib/api/types";
+import { useInterviewRoomState } from "./interview-room-provider";
 import { cn } from "@/lib/utils";
 import { VoiceControls } from "./voice-controls";
 import { VoiceTranscript } from "./voice-transcript";
 import type { ConversationTurn } from "@/lib/interview/types";
 
 interface VoiceRoomProps {
-  sessionId: string;
   elapsed?: string;
   initialTranscript?: ConversationTurn[];
   onCompleted: (reason: "natural" | "ended_early") => void;
   onTranscriptChange?: (turns: ConversationTurn[]) => void;
-  /**
-   * Called when the LiveKit room drops for a reason OTHER than a natural
-   * agent departure or an explicit end (resilience A-Tier-1 #3): a transient
-   * network / server disconnect that should NOT finalize+grade the session.
-   * The route offers to continue the interview in text instead.
-   */
-  onVoiceDropped?: () => void;
 }
 
 function RoomContent({
@@ -119,71 +107,39 @@ function RoomContent({
   );
 }
 
+/**
+ * Consumer of the hoisted interview room (see `interview-room-provider.tsx`).
+ *
+ * This component used to OWN the room: it minted the token itself and rendered
+ * `<LiveKitRoom>`. It no longer does, so a hybrid session can hold one room
+ * across both the voice screen and the text workspace. Token acquisition and the
+ * disconnect policy moved to the provider / its mount site; everything below the
+ * provider (RoomContent, the transcript, the controls) is unchanged.
+ *
+ * The wrapper div reproduces the class list `<LiveKitRoom>` used to apply, so the
+ * rendered DOM keeps the same flex structure it had before the hoist.
+ */
 export function VoiceRoom({
-  sessionId,
   elapsed,
   initialTranscript,
   onCompleted,
   onTranscriptChange,
-  onVoiceDropped,
 }: VoiceRoomProps) {
-  const [tokenData, setTokenData] = useState<RealtimeTokenResponse | null>(
-    null,
-  );
   const [isEnding, setIsEnding] = useState(false);
-  const [isFetchingToken, setIsFetchingToken] = useState(false);
-  const fetchToken = useInterviewRealtimeToken(sessionId);
-
-  const acquireToken = useCallback(async () => {
-    setIsFetchingToken(true);
-    try {
-      const data = await fetchToken.mutateAsync();
-      setTokenData(data);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to get voice token";
-      toast.error(message);
-    } finally {
-      setIsFetchingToken(false);
-    }
-  }, [fetchToken]);
-
-  useEffect(() => {
-    void acquireToken();
-  }, [sessionId]);
-
-  const handleDisconnected = useCallback(
-    (reason?: DisconnectReason) => {
-      // A client-initiated disconnect is the user's own End action — handled by
-      // handleEndInterview, nothing to do here.
-      if (reason === DisconnectReason.CLIENT_INITIATED) return;
-      // Natural agent departure (the interview genuinely finished) is signalled
-      // separately by the agentWasPresent effect in RoomContent → onCompleted.
-      // A SERVER_SHUTDOWN / DUPLICATE_IDENTITY / other transient drop is a
-      // FAILURE, not completion — don't finalize+grade the session. Offer the
-      // text fallback when a handler is wired; otherwise fall back to the prior
-      // behaviour so no path silently stalls (resilience A-Tier-1 #3).
-      if (onVoiceDropped) {
-        onVoiceDropped();
-        return;
-      }
-      onCompleted("natural");
-    },
-    [onCompleted, onVoiceDropped],
-  );
+  const { room, connecting } = useInterviewRoomState();
 
   const handleEndInterview = useCallback(() => {
     setIsEnding(true);
     onCompleted("ended_early");
   }, [onCompleted]);
 
-  if (isFetchingToken || !tokenData) {
+  if (connecting || !room) {
     return (
       <div className="flex min-h-0 flex-1 items-center justify-center px-6 text-center">
         <div>
           <span className="mx-auto mb-4 block size-8 rounded-full border-2 border-primary/20 border-t-primary motion-safe:animate-spin" />
           <p className="text-sm text-text-muted motion-safe:animate-pulse">
-            {isFetchingToken ? "Setting up voice interview…" : "Initializing…"}
+            {connecting ? "Setting up voice interview…" : "Initializing…"}
           </p>
         </div>
       </div>
@@ -191,16 +147,7 @@ export function VoiceRoom({
   }
 
   return (
-    <LiveKitRoom
-      serverUrl={tokenData.url}
-      token={tokenData.token}
-      connect
-      audio
-      video={false}
-      onDisconnected={handleDisconnected}
-      className="flex min-h-0 flex-1 flex-col bg-white"
-    >
-      <RoomAudioRenderer />
+    <div className="flex min-h-0 flex-1 flex-col bg-white">
       <RoomContent
         onEndInterview={handleEndInterview}
         isEnding={isEnding}
@@ -209,6 +156,6 @@ export function VoiceRoom({
         initialTranscript={initialTranscript}
         onTranscriptChange={onTranscriptChange}
       />
-    </LiveKitRoom>
+    </div>
   );
 }

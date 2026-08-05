@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useInterviewNarration } from "@/lib/hooks/use-interview-narration";
+import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration";
 import { useSpeechDictation } from "@/lib/hooks/use-speech-dictation";
 import { type SpeechPersona } from "@/lib/hooks/use-speech-synthesis";
 import { resolvePersonaTraits } from "@/lib/interview/persona-traits";
@@ -61,6 +62,27 @@ export function useInterviewSpeech(
   // AiTypingMessage). Server-side TTS (same voice as the LiveKit agent) with a
   // browser-TTS fallback. Student-toggleable so it can be silenced.
   const [voiceOn, setVoiceOn] = useState(true);
+  // When the LiveKit agent is live in the session's room it ALREADY speaks
+  // every utterance through the room's audio track (session.say → TTS). The
+  // client-side narration must then stay silent — otherwise the same words
+  // play twice: the agent's audio lands first, then the client replays the
+  // text as it types out, overlapping the agent. Set from the workspace
+  // screen (the only place the room is reachable), same ref pattern as
+  // `chatBridge`.
+  const [roomConnected, setRoomConnected] = useState(false);
+  // Render-phase mirror of `roomConnected` for the NARRATION decision. A plain
+  // state read inside `speakIfOn` is one render too late: the transition /
+  // first-question turn mounts, its AiTypingMessage effect calls `narrate()`
+  // (children effects run BEFORE the workspace screen's effect that flips the
+  // state), and by the time the cancel-on-handover fires the server TTS
+  // request is already in flight. The ref is written during render — before
+  // ANY effect — so `speakIfOn` sees the room handover synchronously. The
+  // workspace screen calls `setRoomConnectedRef` during render (ref write,
+  // no re-render) in addition to `setRoomConnected` (state, in an effect).
+  const roomConnectedRef = useRef(false);
+  const setRoomConnectedRef = useCallback((connected: boolean) => {
+    roomConnectedRef.current = connected;
+  }, []);
   const speakLang = i18n.language?.startsWith("vi") ? "vi-VN" : "en-US";
   // Persona drives the voice: a "strict" interview sounds firmer, a
   // "supportive" one warmer. Resolve the persona label to its trait dials (no
@@ -81,17 +103,51 @@ export function useInterviewSpeech(
     // session viewed under a VI UI still gets server (Deepgram) narration.
     serverNarrationEnabled: interviewLanguage !== "vi",
   });
+  const silent = useCallback(
+    (): NarrationPresentation => ({
+      started: Promise.resolve(),
+      finished: Promise.resolve(),
+    }),
+    [],
+  );
   const speakIfOn = useCallback(
     (text: string) => {
+      // The LiveKit agent in the room is the voice; narrating client-side as
+      // well would double it (agent audio first, client replay on top). Read
+      // the render-phase ref, not the state: the transition turn's narrate()
+      // runs in a child effect BEFORE the parent state flip would land, and
+      // a stale read there lets the overlap through.
+      if (roomConnectedRef.current) return silent();
       if (voiceOn) return narration.narrate(text);
-      return { started: Promise.resolve(), finished: Promise.resolve() };
+      return silent();
     },
-    [voiceOn, narration],
+    [voiceOn, narration, silent],
+  );
+  // Replay is user-initiated and the agent will not re-say a past turn on
+  // demand, so it must NOT be silenced by the room gate: the only way to hear
+  // a turn again in a live session is client-side narration.
+  const replayIfOn = useCallback(
+    (text: string) => {
+      if (voiceOn) return narration.narrate(text);
+      return silent();
+    },
+    [voiceOn, narration, silent],
   );
   // Silence any in-flight speech the moment the student mutes.
   useEffect(() => {
     if (!voiceOn) narration.cancel();
   }, [voiceOn, narration]);
+
+  // Agent-takeover cut: the moment the LiveKit room handover starts, the agent
+  // becomes the voice — cut any client narration still playing (typically the
+  // tail of the last setup turn, or a first question narrated during the
+  // connecting window before `connected` flipped). Without this the agent's
+  // opening utterance overlaps the tail of the setup narration.
+  const wasRoomConnectedRef = useRef(false);
+  useEffect(() => {
+    if (roomConnected && !wasRoomConnectedRef.current) narration.cancel();
+    wasRoomConnectedRef.current = roomConnected;
+  }, [roomConnected, narration]);
 
   return {
     supportedModes,
@@ -99,7 +155,13 @@ export function useInterviewSpeech(
     dictation,
     voiceOn,
     setVoiceOn,
+    roomConnected,
+    setRoomConnected,
+    /** Render-phase signal for the narration gate (see declaration). */
+    roomConnectedRef,
+    setRoomConnectedRef,
     narration,
     speakIfOn,
+    replayIfOn,
   };
 }

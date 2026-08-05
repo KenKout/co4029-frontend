@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 import "@vidstack/react/player/styles/base.css";
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
@@ -29,6 +29,7 @@ import { ReadingLessonBody } from "./_components/course-learn/ReadingLessonBody"
 import {
   activeTitleFor,
   deriveShowHome,
+  earliestPendingItemId,
   itemStateFor,
 } from "./_components/course-learn/helpers";
 import type {
@@ -40,6 +41,7 @@ import {
   useCurriculumItems,
   useInProgressInterviewSessions,
   useModuleItemsMap,
+  useMyQuizProgress,
 } from "./_components/course-learn/use-curriculum";
 import {
   useActiveLessonContent,
@@ -57,8 +59,12 @@ export default function CourseLearnPage() {
   const courseQuery = useCourseBySlug(slug);
   const course = courseQuery.data;
   const courseId = course?.id;
-  const { data: content, isLoading: contentLoading } =
-    useCourseContent(courseId);
+  const {
+    data: content,
+    isLoading: contentLoading,
+    isError: contentError,
+    error: contentErrorObj,
+  } = useCourseContent(courseId);
 
   const sortedModules = useMemo<ModulePublic[]>(() => {
     if (!content) return [];
@@ -70,11 +76,22 @@ export default function CourseLearnPage() {
     courseQuery.error instanceof ApiError &&
     courseQuery.error.status === 404;
 
+  // BR: an unenrolled student cannot reach the learn page — the content
+  // tree 403s with not_enrolled; render an explicit panel instead of an
+  // empty curriculum.
+  const notEnrolled =
+    contentError &&
+    contentErrorObj instanceof ApiError &&
+    contentErrorObj.status === 403 &&
+    (contentErrorObj.parsedBody as { detail?: { error?: string } } | null)
+      ?.detail?.error === "not_enrolled";
+
   return (
     <CourseLearnView
       slug={slug}
       courseLoading={courseQuery.isLoading}
       courseUnavailable={courseUnavailable}
+      notEnrolled={notEnrolled}
       course={course}
       contentLoading={contentLoading}
       sortedModules={sortedModules}
@@ -86,6 +103,7 @@ function CourseLearnView({
   slug,
   courseLoading,
   courseUnavailable,
+  notEnrolled,
   course,
   contentLoading,
   sortedModules,
@@ -93,6 +111,7 @@ function CourseLearnView({
   slug: string;
   courseLoading: boolean;
   courseUnavailable: boolean;
+  notEnrolled: boolean;
   course: ReturnType<typeof useCourseBySlug>["data"];
   contentLoading: boolean;
   sortedModules: ModulePublic[];
@@ -105,6 +124,28 @@ function CourseLearnView({
         <div className="space-y-3 w-64">
           <div className="h-4 rounded-full bg-m3-surface-container animate-pulse" />
           <div className="h-4 rounded-full bg-m3-surface-container animate-pulse w-3/4" />
+        </div>
+      </div>
+    );
+  }
+
+  if (notEnrolled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <div className="text-center space-y-4 max-w-md">
+          <Lock className="h-10 w-10 mx-auto text-m3-outline" />
+          <p className="text-m3-on-surface font-headline font-bold text-xl">
+            {t("course_detail.enroll_required")}
+          </p>
+          <p className="text-sm text-m3-on-surface-variant">
+            {t("course_detail.enroll_required_body")}
+          </p>
+          <Link to="/courses/$slug" params={{ slug }}>
+            <Button className="gradient-primary text-white rounded-xl gap-2">
+              {t("course_detail.back_to_course")}{" "}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       </div>
     );
@@ -157,6 +198,9 @@ function CourseLearnLoaded({
     t,
   );
   const inProgressByConfigId = useInProgressInterviewSessions(course.id);
+  // Quiz completion (passed OR failed-with-attempts-exhausted) lets quiz
+  // items participate in auto-collapse + next-item highlighting.
+  const quizProgressMap = useMyQuizProgress(course.id);
 
   const [activeIdx, setActiveIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>("Lesson Notes");
@@ -272,7 +316,13 @@ function CourseLearnLoaded({
 
   const activeTitle = activeTitleFor(activeLesson, activeEntry);
   const itemState = (fi: FlatItem) =>
-    itemStateFor(fi, activeLessonId, lessonStatusMap);
+    itemStateFor(fi, activeLessonId, lessonStatusMap, quizProgressMap);
+  // Earliest item still to do — highlighted in the curriculum so the eye
+  // lands on the next step. Aligns with the home resume CTA.
+  const nextItemId = useMemo(
+    () => earliestPendingItemId(flatItems, itemState),
+    [flatItems, itemState],
+  );
 
   const curriculum: CurriculumProps = {
     sortedModules,
@@ -283,6 +333,7 @@ function CourseLearnLoaded({
     slug,
     activeModuleId: activeEntry?.moduleId,
     inProgressByConfigId,
+    nextItemId,
   };
 
   if (!lessonItems.length) {

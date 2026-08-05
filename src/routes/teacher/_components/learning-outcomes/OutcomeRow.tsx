@@ -17,10 +17,14 @@ import { WeightStepper } from "./WeightStepper";
 function OutcomeRowActions({
   onViewQuestions,
   onRequestDelete,
+  disabled,
+  disabledReason,
   t,
 }: {
   onViewQuestions: () => void;
   onRequestDelete: () => void;
+  disabled?: boolean;
+  disabledReason?: string;
   t: TranslateFn;
 }) {
   return (
@@ -50,6 +54,8 @@ function OutcomeRowActions({
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={onRequestDelete}
+            disabled={disabled}
+            title={disabled ? disabledReason : undefined}
             className="gap-2 text-red-700 focus:text-red-700 focus:bg-red-50"
           >
             <Trash2 className="h-4 w-4" />
@@ -73,6 +79,8 @@ export function OutcomeRow({
   index,
   questionCount,
   saving,
+  disabled,
+  disabledReason,
   handlers,
   t,
 }: {
@@ -80,6 +88,9 @@ export function OutcomeRow({
   index: number;
   questionCount: number;
   saving: boolean;
+  /** Published configs freeze the outcomes (they are the grading criteria). */
+  disabled?: boolean;
+  disabledReason?: string;
   handlers: OutcomeRowHandlers;
   t: TranslateFn;
 }) {
@@ -122,16 +133,21 @@ export function OutcomeRow({
         </div>
 
         {/* Weight stepper — the one inline-editable knob, saved
-            immediately (no edit mode / no save button). */}
+            immediately (no edit mode / no save button). Frozen on a
+            published config: reweighting changes how every answer scores. */}
         <WeightStepper
           weight={outcome.importance_weight}
           busy={saving}
+          disabled={disabled}
+          disabledReason={disabledReason}
           onChange={(next) => handlers.onChangeWeight(outcome, next)}
         />
 
         <OutcomeRowActions
           onViewQuestions={() => handlers.onViewQuestions(outcome.id)}
           onRequestDelete={() => handlers.onRequestDelete(outcome)}
+          disabled={disabled}
+          disabledReason={disabledReason}
           t={t}
         />
       </div>

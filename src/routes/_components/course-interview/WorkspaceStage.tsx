@@ -43,6 +43,7 @@ export function WorkspaceStage({
       isUserTyping={resolveIsUserTyping(iv)}
       questionTypeLabel={(type) => questionTypeLabel(type, t)}
       speak={iv.speakIfOn}
+      replaySpeak={iv.replayIfOn}
       onSpeakingChange={(speaking) => {
         iv.setAiSpeaking(iv.voiceOn && speaking);
         iv.setAiPresenting(speaking);

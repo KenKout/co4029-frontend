@@ -69,6 +69,9 @@ export interface QuestionDraft {
   numeric_answer: string;
   numeric_tolerance: string;
   match_pairs: Array<{ left: string; right: string }>;
+  // Matching distractors: extra unpaired right-side choices. Empty = classic
+  // 1:1 matching.
+  match_distractors: string[];
   ordering_sequence: string[];
 }
 

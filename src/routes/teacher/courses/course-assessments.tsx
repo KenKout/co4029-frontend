@@ -22,32 +22,41 @@ export default function CourseAssessmentsPage() {
 
   return (
     <div className="min-h-screen pb-12">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="pt-2">
-          <SectionHeader
-            title="Assessments"
-            subtitle="Every quiz attempt and interview session in this course."
-          />
+      <div className="pt-2">
+        <SectionHeader
+          title="Assessments"
+          subtitle="Every quiz attempt and interview session in this course."
+        />
+      </div>
+
+      {/* ── 12-col grid: main content + sticky summary sidebar ── */}
+      <div className="mt-6 grid grid-cols-12 gap-6">
+        {/* ── Main 8 cols ── */}
+        <div className="col-span-12 lg:col-span-8 space-y-6 min-w-0">
+          <AssessmentTabBar controller={controller} />
+
+          <AssessmentFilterBar controller={controller} />
+
+          {controller.activeChips.length > 0 && (
+            <ActiveFilterChips controller={controller} />
+          )}
+
+          <p className="text-xs text-m3-on-surface-variant">
+            {controller.tab === "quizzes"
+              ? `Showing ${controller.filteredQuizAttempts.length} of ${controller.quizAttempts?.length ?? 0}`
+              : `Showing ${controller.filteredInterviewSessions.length} of ${controller.interviewSessions?.length ?? 0}`}
+          </p>
+
+          <AssessmentResultsPanel controller={controller} />
         </div>
 
-        {/* Summary tiles */}
-        <AssessmentSummaryTiles controller={controller} />
-
-        <AssessmentTabBar controller={controller} />
-
-        <AssessmentFilterBar controller={controller} />
-
-        {controller.activeChips.length > 0 && (
-          <ActiveFilterChips controller={controller} />
-        )}
-
-        <p className="text-xs text-m3-on-surface-variant">
-          {controller.tab === "quizzes"
-            ? `Showing ${controller.filteredQuizAttempts.length} of ${controller.quizAttempts?.length ?? 0}`
-            : `Showing ${controller.filteredInterviewSessions.length} of ${controller.interviewSessions?.length ?? 0}`}
-        </p>
-
-        <AssessmentResultsPanel controller={controller} />
+        {/* ── Sidebar 4 cols ── */}
+        <div className="col-span-12 lg:col-span-4 space-y-6 lg:sticky lg:top-24 self-start">
+          <AssessmentSummaryTiles
+            controller={controller}
+            className="lg:grid-cols-1"
+          />
+        </div>
       </div>
     </div>
   );

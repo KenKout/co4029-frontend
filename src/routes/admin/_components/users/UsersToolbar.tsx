@@ -1,57 +1,59 @@
-import { SearchInput } from "@/components/ui/search-input";
+import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
 
 import type { AdminUsersController } from "./use-admin-users";
 
-/** Search box plus the role and organization filter dropdowns. */
+const ROLE_FILTER_ID = "role";
+const ORG_FILTER_ID = "organization";
+
+/**
+ * Search box plus role and organization filter chips, built on the shared
+ * DataTableToolbar so this toolbar matches the other admin tables (courses,
+ * processing jobs). The role/org option lists are the same catalogs that
+ * drive the Role column labels, so the filters can't drift from the data.
+ * Values ride the server-table's built-in roleFilter/orgFilter state, which
+ * sends `role` / `organization` query params.
+ */
 export function UsersToolbar({ c }: { c: AdminUsersController }) {
   const { t, table, roleOptions, orgOptions } = c;
+
+  const filterDefs: FilterDef[] = [
+    {
+      id: ROLE_FILTER_ID,
+      label: t("admin.users.filter_role", { defaultValue: "Filter by role" }),
+      options: roleOptions.map((r) => ({ value: r.code, label: r.name })),
+    },
+    {
+      id: ORG_FILTER_ID,
+      label: t("admin.users.filter_organization", {
+        defaultValue: "Filter by organization",
+      }),
+      options: orgOptions.map((o) => ({ value: o.id, label: o.name })),
+    },
+  ];
+
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <SearchInput
-        wrapperClassName="max-w-md flex-1 min-w-[220px]"
-        value={table.search}
-        onChange={(e) => table.setSearch(e.target.value)}
-        placeholder={t("admin.users.search_placeholder", {
-          defaultValue: "Search by name or email…",
-        })}
-        className="pl-10"
-      />
-      <select
-        value={table.roleFilter ?? ""}
-        onChange={(e) => table.setRoleFilter(e.target.value || undefined)}
-        className="h-9 rounded-md border border-border bg-surface px-3 text-sm text-text-strong outline-none focus:border-primary cursor-pointer"
-        aria-label={t("admin.users.filter_role", {
-          defaultValue: "Filter by role",
-        })}
-      >
-        <option value="">
-          {t("admin.users.all_roles", { defaultValue: "All roles" })}
-        </option>
-        {roleOptions.map((r) => (
-          <option key={r.id} value={r.code}>
-            {r.name}
-          </option>
-        ))}
-      </select>
-      <select
-        value={table.orgFilter ?? ""}
-        onChange={(e) => table.setOrgFilter(e.target.value || undefined)}
-        className="h-9 rounded-md border border-border bg-surface px-3 text-sm text-text-strong outline-none focus:border-primary cursor-pointer max-w-[220px]"
-        aria-label={t("admin.users.filter_organization", {
-          defaultValue: "Filter by organization",
-        })}
-      >
-        <option value="">
-          {t("admin.users.all_organizations", {
-            defaultValue: "All organizations",
-          })}
-        </option>
-        {orgOptions.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.name}
-          </option>
-        ))}
-      </select>
-    </div>
+    <DataTableToolbar
+      search={table.search}
+      onSearchChange={table.setSearch}
+      searchPlaceholder={t("admin.users.search_placeholder", {
+        defaultValue: "Search by name or email…",
+      })}
+      filters={filterDefs}
+      filterValues={{
+        role: table.roleFilter,
+        organization: table.orgFilter,
+      }}
+      onFilterChange={(filterId, value) => {
+        if (filterId === ROLE_FILTER_ID) table.setRoleFilter(value);
+        else table.setOrgFilter(value);
+      }}
+      onResetAllFilters={() => {
+        table.setRoleFilter(undefined);
+        table.setOrgFilter(undefined);
+      }}
+      clearLabel={t("admin.users.clear_filters", {
+        defaultValue: "Clear filters",
+      })}
+    />
   );
 }

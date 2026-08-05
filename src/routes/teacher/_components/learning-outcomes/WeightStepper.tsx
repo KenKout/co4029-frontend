@@ -12,17 +12,25 @@ import { Loader2, Minus, Plus } from "lucide-react";
 export function WeightStepper({
   weight,
   busy,
+  disabled,
+  disabledReason,
   onChange,
 }: {
   weight: number;
   busy: boolean;
+  /** Published configs freeze the outcomes (they are the grading criteria). */
+  disabled?: boolean;
+  disabledReason?: string;
   onChange: (next: number) => void;
 }) {
   const { t } = useTranslation();
   const MIN = 1;
   const MAX = 5;
   return (
-    <div className="flex shrink-0 flex-col items-center gap-0.5">
+    <div
+      className="flex shrink-0 flex-col items-center gap-0.5"
+      title={disabled ? disabledReason : undefined}
+    >
       <span className="text-[10px] font-bold uppercase tracking-wider text-m3-on-surface-variant">
         {t("teacher_interview_config.outcomes.weight_label")}
       </span>
@@ -31,7 +39,7 @@ export function WeightStepper({
           type="button"
           aria-label={t("teacher_interview_config.outcomes.weight_decrease")}
           title={t("teacher_interview_config.outcomes.weight_decrease")}
-          disabled={busy || weight <= MIN}
+          disabled={busy || disabled || weight <= MIN}
           onClick={() => onChange(weight - 1)}
           className="grid h-7 w-7 place-items-center rounded-l-lg text-m3-on-surface-variant transition-colors hover:bg-m3-primary/10 hover:text-m3-primary disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
         >
@@ -51,7 +59,7 @@ export function WeightStepper({
           type="button"
           aria-label={t("teacher_interview_config.outcomes.weight_increase")}
           title={t("teacher_interview_config.outcomes.weight_increase")}
-          disabled={busy || weight >= MAX}
+          disabled={busy || disabled || weight >= MAX}
           onClick={() => onChange(weight + 1)}
           className="grid h-7 w-7 place-items-center rounded-r-lg text-m3-on-surface-variant transition-colors hover:bg-m3-primary/10 hover:text-m3-primary disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
         >

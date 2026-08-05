@@ -1,3 +1,6 @@
+import type { MutableRefObject } from "react";
+
+import type { UseInterviewChatResult } from "@/components/interview/use-interview-chat";
 import type { FinishReason } from "@/lib/interview/turn-factory";
 import type { useInterviewDrafts } from "./use-interview-drafts";
 import type { useInterviewPhaseState } from "./use-interview-phase-state";
@@ -30,4 +33,12 @@ export type InterviewBase = ReturnType<typeof useInterviewRouteData> &
 export type InterviewActionsContext = InterviewBase & {
   currentElapsedSeconds: () => number;
   beginClosing: (reason: FinishReason) => Promise<void>;
+  /**
+   * LiveKit chat capability, written by the workspace screen (the only place
+   * inside the room provider) once `useInterviewChat` has mounted. `handleRespond`
+   * reads it at call time to decide the transport — a mutable ref, not a prop,
+   * because the actions are built OUTSIDE the provider while the room only
+   * exists INSIDE it.
+   */
+  chatBridge: MutableRefObject<UseInterviewChatResult | null>;
 };

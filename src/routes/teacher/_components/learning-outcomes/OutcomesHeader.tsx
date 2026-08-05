@@ -1,4 +1,4 @@
-import { BookOpen, TriangleAlert } from "lucide-react";
+import { BookOpen, Lock, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -9,18 +9,32 @@ export function OutcomesHeader({
   showActions,
   showImportButton,
   onOpenImport,
+  disabled,
+  disabledReason,
   t,
 }: {
   showActions: boolean;
   showImportButton: boolean;
   onOpenImport: () => void;
+  /** Published configs freeze the outcomes (they are the grading criteria). */
+  disabled?: boolean;
+  disabledReason?: string;
   t: TranslateFn;
 }) {
   return (
     <div className="flex items-start justify-between gap-3 flex-wrap">
       <div className="min-w-0 space-y-1">
-        <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
+        <h3
+          className="font-headline font-extrabold text-base text-m3-on-surface"
+          title={disabled ? disabledReason : undefined}
+        >
           {t("teacher_interview_config.outcomes.list_title")}
+          {disabled && (
+            <Lock
+              className="ml-1.5 inline-block h-3 w-3 align-text-top"
+              aria-hidden="true"
+            />
+          )}
         </h3>
         <p className="text-xs text-m3-on-surface-variant max-w-prose">
           {t("teacher_interview_config.outcomes.section_help")}
@@ -33,7 +47,9 @@ export function OutcomesHeader({
               type="button"
               variant="outline"
               onClick={onOpenImport}
-              className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
+              disabled={disabled}
+              title={disabled ? disabledReason : undefined}
+              className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary disabled:pointer-events-auto disabled:opacity-50"
             >
               <BookOpen className="h-4 w-4" />
               {t("teacher_interview_config.outcomes.import_from_course")}
@@ -52,10 +68,15 @@ export function OutcomesHeader({
 export function OutcomesEmptyState({
   hasImportableOutcomes,
   onOpenImport,
+  disabled,
+  disabledReason,
   t,
 }: {
   hasImportableOutcomes: boolean;
   onOpenImport: () => void;
+  /** Published configs freeze the outcomes (they are the grading criteria). */
+  disabled?: boolean;
+  disabledReason?: string;
   t: TranslateFn;
 }) {
   return (
@@ -80,7 +101,9 @@ export function OutcomesEmptyState({
             type="button"
             variant="outline"
             onClick={onOpenImport}
-            className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
+            disabled={disabled}
+            title={disabled ? disabledReason : undefined}
+            className="gap-2 hover:bg-primary/10 hover:border-primary/40 hover:text-primary disabled:pointer-events-auto disabled:opacity-50"
             size="sm"
           >
             <BookOpen className="h-4 w-4" />

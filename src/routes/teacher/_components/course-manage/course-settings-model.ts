@@ -140,11 +140,13 @@ export function isCourseSettingsDirty(args: {
   );
 }
 
-/** Course meta half of the Save payload. */
+/**
+ * Course meta half of the Save payload. Title/slug are deliberately absent:
+ * they are course identity, edited manager-side on the dept course page
+ * (backend rejects title/slug changes from the teacher surface with 403).
+ */
 function buildCourseMetaPayload(values: CourseSettingsValues): CourseUpdate {
   return {
-    slug: values.slug.trim() || undefined,
-    title: values.title.trim() || undefined,
     description: values.description.trim() || undefined,
     level: (values.level || undefined) as
       | "beginner"

@@ -1,9 +1,7 @@
-import { useState } from "react";
 import {
   Link,
   Outlet,
   useLocation,
-  useNavigate,
   useParams,
 } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -15,21 +13,15 @@ import {
   ClipboardList,
   GripVertical,
   Library,
-  Trash2,
   Users,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Tabs, useStickyTabs } from "@/components/ui/tabs";
-import {
-  useTeacherCourseById,
-  useDeleteTeacherCourse,
-} from "@/lib/api/hooks/teacher-courses";
+import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
 
 /**
  * Course-scoped layout for the teacher workspace. Renders a persistent header
- * (back link, course title, delete) plus a tab bar that stays put across the
+ * (back link, course title) plus a tab bar that stays put across the
  * per-course tabs (Curriculum / Students / Progress / Assessments / Question
  * bank / Retention) and highlights the active one. Tab pages render into the
  * <Outlet/> below it, so switching tabs no longer bounces back to Curriculum.
@@ -104,12 +96,9 @@ const TABS: TabDef[] = [
 
 export default function CourseShell() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const location = useLocation();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
   const { data: course } = useTeacherCourseById(courseId);
-  const deleteCourse = useDeleteTeacherCourse(courseId);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const { stuck, sentinelRef } = useStickyTabs();
 
   const base = `/teacher/courses/${courseId}`;
@@ -118,19 +107,6 @@ export default function CourseShell() {
     ? location.pathname.slice(base.length).replace(/^\//, "")
     : "";
   const activeSegment = rest.split("/")[0] ?? "";
-
-  async function handleDeleteCourse() {
-    try {
-      await deleteCourse.mutateAsync();
-      toast.success(t("teacher_course_settings.delete.deleted"));
-      setConfirmDelete(false);
-      void navigate({ to: "/teacher/courses" });
-    } catch (err: unknown) {
-      toast.error(
-        (err as Error).message || t("teacher_course_settings.delete.failed"),
-      );
-    }
-  }
 
   return (
     <div className="space-y-6 pb-12">
@@ -156,17 +132,6 @@ export default function CourseShell() {
             <h1 className="min-w-0 flex-1 text-xl font-headline font-bold text-m3-on-surface truncate">
               {course?.title ?? t("teacher_common.curriculum_fallback_title")}
             </h1>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setConfirmDelete(true)}
-              disabled={deleteCourse.isPending}
-              className="shrink-0 gap-2 border-destructive/40 text-destructive transition-all hover:-translate-y-0.5 hover:bg-destructive hover:text-white hover:shadow-md active:translate-y-0 active:scale-95"
-            >
-              <Trash2 className="h-4 w-4" />
-              {t("teacher_course_settings.delete.button")}
-            </Button>
           </div>
         </div>
       </div>
@@ -228,20 +193,6 @@ export default function CourseShell() {
       >
         <Outlet />
       </div>
-
-      <ConfirmDialog
-        open={confirmDelete}
-        onOpenChange={setConfirmDelete}
-        title={t("teacher_course_settings.delete.title")}
-        description={t("teacher_course_settings.delete.body", {
-          title: course?.title ?? "",
-        })}
-        confirmLabel={t("teacher_course_settings.delete.button")}
-        cancelLabel={t("common.cancel", "Cancel")}
-        confirmVariant="destructive"
-        onConfirm={handleDeleteCourse}
-        isPending={deleteCourse.isPending}
-      />
     </div>
   );
 }

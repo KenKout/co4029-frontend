@@ -369,20 +369,47 @@ export function useProcessingQueue() {
   });
 }
 
-const PROCESSING_JOBS_WINDOW_MS = 1000 * 60 * 60 * 24 * 7;
+/**
+ * Per-status job counts over a caller-supplied window (`since`, same bound
+ * as `useProcessingJobs`). This is the source for the status-tab badges on
+ * the admin processing page: the table's jobs query is status-filtered, so
+ * deriving badges from it collapsed every other tab's count to zero the
+ * moment one status was selected; a client-side derivation from an
+ * unfiltered list would also be capped at the list limit.
+ */
+export function useProcessingSummary(since: string) {
+  return useQuery({
+    queryKey: queryKeys.admin.processingSummary(since),
+    queryFn: () => {
+      const params = new URLSearchParams();
+      params.set("since", since);
+      return apiFetch<ProcessingQueueDepth>(
+        `/admin/processing/summary?${params.toString()}`,
+      );
+    },
+    staleTime: 1000 * 10,
+    refetchInterval: 1000 * 30,
+  });
+}
 
-export function useProcessingJobs(opts?: {
+/**
+ * Jobs within a caller-supplied window. `since` is REQUIRED — the backend
+ * mandates it, and the page's time-range toolbar is the single source of
+ * truth for the window (no hidden default here; that was the bug where the
+ * tab counts showed every job while the table silently only fetched 7 days).
+ * `limit` defaults to the backend maximum so the client can derive accurate
+ * per-status tab counts from the same list the table renders.
+ */
+export function useProcessingJobs(opts: {
   status?: string;
-  since?: string;
+  since: string;
   limit?: number;
 }) {
   const status = opts?.status;
-  const since =
-    opts?.since ??
-    new Date(Date.now() - PROCESSING_JOBS_WINDOW_MS).toISOString();
-  const limit = opts?.limit ?? 50;
+  const since = opts.since;
+  const limit = opts?.limit ?? 500;
   return useQuery({
-    queryKey: queryKeys.admin.processingJobs(status),
+    queryKey: queryKeys.admin.processingJobs(status, since),
     queryFn: () => {
       const params = new URLSearchParams();
       params.set("since", since);

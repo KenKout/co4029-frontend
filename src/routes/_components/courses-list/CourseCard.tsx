@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { GraduationCap, Sparkles } from "lucide-react";
+import { CheckCircle2, GraduationCap, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Course } from "@/lib/api/types";
@@ -15,12 +15,43 @@ const CARD_GRADIENTS = [
   "from-blue-500 via-blue-600 to-sky-500",
 ];
 
+/**
+ * Enrollment-state badge shown on catalogue cards/rows (top-left over the
+ * thumbnail on cards, inline next to the title in list rows). Only active
+ * and completed enrollments get a badge — dropped/waitlisted and
+ * unenrolled courses stay unmarked.
+ */
+export function EnrollmentStatusBadge({
+  status,
+}: {
+  status: "active" | "completed";
+}) {
+  const { t } = useTranslation();
+  return (
+    <Badge
+      className={cn(
+        "border border-white/20 backdrop-blur-sm text-[10px] font-semibold tracking-wide text-white",
+        status === "completed"
+          ? "bg-emerald-600/90"
+          : "bg-m3-primary/90",
+      )}
+    >
+      {status === "completed" && <CheckCircle2 className="h-2.5 w-2.5" />}
+      {status === "completed"
+        ? t("courses_list.completed_badge")
+        : t("courses_list.enrolled_badge")}
+    </Badge>
+  );
+}
+
 export function CourseCard({
   course,
   index,
+  status,
 }: {
   course: Course;
   index: number;
+  status?: "active" | "completed";
 }) {
   const { t } = useTranslation();
   const gradientClass = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
@@ -48,6 +79,13 @@ export function CourseCard({
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+          {/* Enrollment badge — top-left so it never collides with the AI
+              Boost badge at bottom-right. */}
+          {status && (
+            <div className="absolute top-3 left-3 z-10">
+              <EnrollmentStatusBadge status={status} />
+            </div>
+          )}
           {/* AI Boost badge moved bottom-right so an uploaded image's top area
               stays clear (matches the teacher card). */}
           <Badge className="absolute bottom-3 right-3 z-10 bg-black/40 text-white border border-white/20 backdrop-blur-sm text-[10px] font-semibold tracking-wide">

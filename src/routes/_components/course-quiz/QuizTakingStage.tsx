@@ -26,6 +26,41 @@ export function QuizTakingStage({
   const view = deriveTakingView(session, quiz);
   const summaryItems = buildSummaryItems(session);
 
+  /**
+   * Jump to a question from the summary rail.
+   *
+   * Setting the active index is not enough on the 5 / 10 / All layouts: the
+   * target card is already on screen (or one page-switch away), so nothing
+   * moves and the click feels dead. So we also scroll the card into view.
+   *
+   * The card may live on a different page — `setActiveIdx` makes the pagination
+   * effect switch pages on a LATER commit, so the node isn't in the DOM yet on
+   * this tick. Retry across a few animation frames until it mounts, then scroll
+   * (honouring reduced-motion, matching the teacher navigator's behaviour).
+   */
+  const jumpToQuestion = (index: number) => {
+    const question = displayQuestions[index];
+    session.setActiveIdx(index);
+    if (!question) return;
+    let attempts = 0;
+    const tryScroll = () => {
+      const el = document.getElementById(`quiz-question-${question.id}`);
+      if (el) {
+        const reduceMotion =
+          typeof window !== "undefined" &&
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        el.scrollIntoView({
+          behavior: reduceMotion ? "auto" : "smooth",
+          block: "start",
+        });
+        return;
+      }
+      if (attempts++ < 10) window.requestAnimationFrame(tryScroll);
+    };
+    window.requestAnimationFrame(tryScroll);
+  };
+
   return (
     <div className="min-h-[70vh] pb-20">
       <QuizTakingTopBar
@@ -66,7 +101,7 @@ export function QuizTakingStage({
               flaggedCount={view.flaggedCount}
               total={displayQuestions.length}
               passingScore={view.passingScore}
-              onJump={(index) => session.setActiveIdx(index)}
+              onJump={jumpToQuestion}
             />
           </div>
         </div>

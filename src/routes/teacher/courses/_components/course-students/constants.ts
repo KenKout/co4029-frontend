@@ -1,12 +1,4 @@
-import {
-  AlertTriangle,
-  Award,
-  UserCheck,
-  UserMinus,
-  type LucideIcon,
-} from "lucide-react";
-
-import type { SortKey, StatusFilter } from "./types";
+import type { StatusFilter } from "./types";
 
 /**
  * Risk / status lookup tables and the two static option lists of the course
@@ -60,54 +52,8 @@ export const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
   { key: "dropped", label: "Dropped" },
 ];
 
-/** Sort dropdown options, in their original order. */
-export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "progress", label: "Progress" },
-  { value: "name", label: "Name" },
-  { value: "enrolled_at", label: "Enrollment Date" },
-  { value: "risk", label: "Risk Level" },
-];
-
 /** Risk levels in the order the Cohort Overview lists them. */
 export const RISK_LEVELS = ["high", "medium", "low", "none"] as const;
-
-/** Sidebar "Quick Filters" shortcuts, in their original order. */
-export const QUICK_FILTERS: {
-  icon: LucideIcon;
-  label: string;
-  color: string;
-  bg: string;
-  filter: StatusFilter;
-}[] = [
-  {
-    icon: AlertTriangle,
-    label: "At-Risk Students",
-    color: "text-amber-600",
-    bg: "bg-amber-50",
-    filter: "at_risk",
-  },
-  {
-    icon: UserCheck,
-    label: "Active Students",
-    color: "text-emerald-600",
-    bg: "bg-emerald-50",
-    filter: "active",
-  },
-  {
-    icon: Award,
-    label: "Completed Course",
-    color: "text-m3-primary",
-    bg: "bg-m3-primary-fixed",
-    filter: "completed",
-  },
-  {
-    icon: UserMinus,
-    label: "Dropped Students",
-    color: "text-slate-500",
-    bg: "bg-slate-100",
-    filter: "dropped",
-  },
-];
 
 /** Sort weights for the "Risk Level" sort key. */
 export const RISK_SORT_ORDER = { high: 3, medium: 2, low: 1, none: 0 };

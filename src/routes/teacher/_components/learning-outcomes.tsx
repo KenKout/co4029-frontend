@@ -1,5 +1,6 @@
 import { ImportFromCoursePanel } from "./learning-outcomes/ImportFromCoursePanel";
 import { DeleteConfirm } from "./learning-outcomes/DeleteConfirm";
+import { cn } from "@/lib/utils";
 import {
   OutcomesEmptyState,
   OutcomesHeader,
@@ -26,6 +27,7 @@ export function LearningOutcomes({
   questions,
   minOutcomesToPass,
   onViewQuestions,
+  status,
 }: LearningOutcomesProps) {
   const controller = useLearningOutcomes({
     configId,
@@ -58,13 +60,24 @@ export function LearningOutcomes({
     setWeight,
     doDelete,
   } = controller;
+  /** Published interviews judge answers against these outcomes — read-only. */
+  const frozen = status === "published";
+  const frozenReason = t("teacher_interview_config.published_freeze.tooltip");
 
   return (
-    <section className="rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low/40 p-5 lg:p-6 space-y-4">
+    <section
+      className={cn(
+        "rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low/40 p-5 lg:p-6 space-y-4 transition-opacity",
+        frozen && "opacity-60",
+      )}
+      title={frozen ? frozenReason : undefined}
+    >
       <OutcomesHeader
         showActions={hasOutcomes && !importing}
         showImportButton={(courseOutcomes?.length ?? 0) > 0}
         onOpenImport={openImport}
+        disabled={frozen}
+        disabledReason={frozenReason}
         t={t}
       />
 
@@ -105,6 +118,8 @@ export function LearningOutcomes({
           <OutcomesEmptyState
             hasImportableOutcomes={importableOutcomes.length > 0}
             onOpenImport={openImport}
+            disabled={frozen}
+            disabledReason={frozenReason}
             t={t}
           />
         )
@@ -117,6 +132,8 @@ export function LearningOutcomes({
               index={idx}
               questionCount={questionCountByOutcome.get(o.id) ?? 0}
               saving={savingId === o.id}
+              disabled={frozen}
+              disabledReason={frozenReason}
               handlers={{
                 onViewQuestions,
                 onRequestDelete: setConfirmDelete,

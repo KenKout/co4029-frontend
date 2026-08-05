@@ -56,31 +56,43 @@ export default function TeacherSrCohortPage() {
 
   return (
     <div className="min-h-screen pb-12">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <CohortPageHeader courseId={courseId} t={t} />
+      <CohortPageHeader courseId={courseId} t={t} />
 
-        <LessonPickerCard
-          lessons={lessons}
-          lessonsLoading={lessonsLoading}
-          selectedLessonId={selectedLessonId}
-          onSelect={setSelectedLessonId}
-          t={t}
-        />
+      {/* ── 12-col grid: histogram + difficult cards main, sticky lesson
+          picker sidebar. The picker drives every panel below it, so it sits
+          on the right on wide screens (like the Students tab's sidebar). On
+          narrow screens it stacks FIRST (order-1) — if it came after the
+          content, users would scroll past the histogram just to switch
+          lessons. ── */}
+      <div className="mt-6 grid grid-cols-12 gap-6">
+        {/* ── Main 8 cols ── */}
+        <div className="col-span-12 lg:col-span-8 order-2 lg:order-1 space-y-6 min-w-0">
+          <CohortKrSection
+            cohort={cohort}
+            cohortLoading={cohortLoading}
+            histogramTotal={histogramTotal}
+            selectedLesson={selectedLesson}
+            t={t}
+          />
 
-        <CohortKrSection
-          cohort={cohort}
-          cohortLoading={cohortLoading}
-          histogramTotal={histogramTotal}
-          selectedLesson={selectedLesson}
-          t={t}
-        />
+          <DifficultCardsSection
+            difficult={difficult}
+            difficultLoading={difficultLoading}
+            courseId={courseId}
+            t={t}
+          />
+        </div>
 
-        <DifficultCardsSection
-          difficult={difficult}
-          difficultLoading={difficultLoading}
-          courseId={courseId}
-          t={t}
-        />
+        {/* ── Sidebar 4 cols ── */}
+        <div className="col-span-12 lg:col-span-4 order-1 lg:order-2 space-y-6 lg:sticky lg:top-24 self-start">
+          <LessonPickerCard
+            lessons={lessons}
+            lessonsLoading={lessonsLoading}
+            selectedLessonId={selectedLessonId}
+            onSelect={setSelectedLessonId}
+            t={t}
+          />
+        </div>
       </div>
     </div>
   );

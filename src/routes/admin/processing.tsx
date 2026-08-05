@@ -28,17 +28,9 @@ export default function AdminProcessingPage() {
 
       {/* The six counter cards and the separate "Filter status" pill row are
           gone: they showed and then re-listed the same six numbers. The counts
-          now ride on the tabs that filter by them. */}
+          now ride on the tabs that filter by them (derived from the same
+          range-filtered list the table renders, so they can't disagree). */}
       <JobsTabs c={c} />
-
-      {/* QueueStatsSection used to be the only thing reporting a queue-depth
-          fetch failure. The counts are now badges that just go missing, so the
-          error still needs saying out loud. */}
-      {c.queue.isError && (
-        <p className="text-sm text-danger">
-          {t("admin.processing.queue_load_failed")}
-        </p>
-      )}
 
       <ProcessingJobsSection c={c} />
     </div>

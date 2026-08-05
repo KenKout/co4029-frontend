@@ -265,21 +265,6 @@ export function usePublishCourse(courseId: string) {
   });
 }
 
-// Soft-deletes the course (reversible tombstone on the backend). Returns 204,
-// so there's no response body to parse.
-export function useDeleteTeacherCourse(courseId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: () => apiDelete(`/teacher/courses/${courseId}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
-      qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
-      qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
-      qc.invalidateQueries({ queryKey: ["teacher", "courses", courseId] });
-    },
-  });
-}
-
 export function useArchiveCourse(courseId: string) {
   const qc = useQueryClient();
   return useMutation({

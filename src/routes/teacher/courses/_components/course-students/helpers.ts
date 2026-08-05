@@ -1,7 +1,7 @@
 import type { RosterStudent } from "@/lib/api/types/teacher";
 
-import { RISK_LEVELS, RISK_META, RISK_SORT_ORDER } from "./constants";
-import type { RiskBreakdownEntry, SortKey, StatusFilter } from "./types";
+import { RISK_LEVELS, RISK_META } from "./constants";
+import type { RiskBreakdownEntry, StatusFilter } from "./types";
 
 /**
  * Pure roster helpers, moved verbatim out of the former 658-line
@@ -50,26 +50,6 @@ export function narrowRosterStudents(
   }
 
   return list;
-}
-
-/** Comparator for the four sort keys, unchanged from the inline version. */
-export function compareRosterStudents(
-  sortKey: SortKey,
-): (a: RosterStudent, b: RosterStudent) => number {
-  return (a, b) => {
-    if (sortKey === "name") return a.display_name.localeCompare(b.display_name);
-    if (sortKey === "progress") return b.progress_percent - a.progress_percent;
-    if (sortKey === "enrolled_at")
-      return b.enrolled_at.localeCompare(a.enrolled_at);
-    if (sortKey === "risk") {
-      const order = RISK_SORT_ORDER;
-      return (
-        (order[b.at_risk_level as keyof typeof order] ?? 0) -
-        (order[a.at_risk_level as keyof typeof order] ?? 0)
-      );
-    }
-    return 0;
-  };
 }
 
 /** Per-risk-level counts + percentages for the Cohort Overview card. */

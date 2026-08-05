@@ -26,7 +26,7 @@ import {
   runConfigAction,
   splitTopics,
 } from "@/routes/teacher/_components/interview-config/config-actions";
-import { buildConfigUpdatePayload } from "@/routes/teacher/_components/interview-config/draft-mapping";
+import { buildConfigUpdatePayload, draftFromConfig } from "@/routes/teacher/_components/interview-config/draft-mapping";
 import type { useConfigMutations } from "@/routes/teacher/_components/interview-config/use-config-mutations";
 
 export interface ConfigActionsDeps {
@@ -76,7 +76,19 @@ export function createConfigActions(deps: ConfigActionsDeps): ConfigActions {
       return false;
     }
     try {
-      await mutations.updateConfig.mutateAsync(buildConfigUpdatePayload(draft));
+      // Diff against the saved config so a published interview accepts a
+      // title-only edit: the backend freeze treats every sent field as
+      // "changed", so echoing the whole form back would 409 on the frozen
+      // settings even though none of them moved. `supported_modes` uses the
+      // config's REAL saved value (not the draft's normalized "hybrid") so a
+      // legacy text/voice config still re-normalizes on save.
+      const baseline = {
+        ...draftFromConfig(deps.config),
+        supported_modes: deps.config.supported_modes,
+      };
+      await mutations.updateConfig.mutateAsync(
+        buildConfigUpdatePayload(draft, baseline),
+      );
       deps.setJustSaved(true);
       window.setTimeout(() => deps.setJustSaved(false), 2500);
       toast.success(t("teacher_interview_config.toasts.config_saved"));

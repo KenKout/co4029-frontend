@@ -180,6 +180,7 @@ export function QuestionsTab({
         {!published && (
           <QuestionsTabAddControls
             onAddQuestion={onAddQuestion}
+            onOpenGenerator={onOpenGenerator}
             addPending={addPending}
           />
         )}

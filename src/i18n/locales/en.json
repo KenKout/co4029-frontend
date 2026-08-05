@@ -129,11 +129,29 @@
     "instructor_role": "Instructor",
     "ai_mock_title": "AI mock interviews included",
     "ai_mock_body": "Complete each module to unlock an AI-powered mock interview. Get real-time feedback, adaptive follow-up questions, and a detailed assessment of your technical explanations.",
+    "ai_mock_hero_line": "AI mock interview after every module",
     "start_learning": "Start learning",
+    "continue_learning": "Continue learning",
+    "progress_label": "Progress",
+    "module_complete": "Module complete",
     "modules": "Modules",
     "contact_title": "Contact the instructor",
     "modules_count_other": "{{count}} modules",
-    "modules_count_one": "{{count}} module"
+    "modules_count_one": "{{count}} module",
+    "lessons_count": "{{count}} lesson",
+    "lessons_count_one": "{{count}} lesson",
+    "lessons_count_other": "{{count}} lessons",
+    "show_all": "Show all",
+    "show_less": "Show less",
+    "copy_email": "Copy email",
+    "copy_phone": "Copy phone number",
+    "level_beginner": "Beginner",
+    "level_intermediate": "Intermediate",
+    "level_advanced": "Advanced",
+    "enroll_required": "Enrollment required",
+    "enroll_required_body": "You're not enrolled in this course yet. Contact your manager to get enrolled before you can access the content.",
+    "enroll_required_hint": "Contact your manager to get enrolled",
+    "back_to_course": "Back to course"
   },
   "settings_security": {
     "title": "Account security",
@@ -641,6 +659,24 @@
     "success": {
       "assigned": "Instructor assigned",
       "removed": "Assignment removed"
+    },
+    "delete": {
+      "button": "Delete course",
+      "title": "Delete course?",
+      "body": "This removes {{title}} and all its content from every listing. It's reversible (an admin can restore it), but make sure before you do it.",
+      "deleted": "Course deleted",
+      "failed": "Couldn't delete the course."
+    },
+    "edit": {
+      "button": "Edit",
+      "title_label": "Course title",
+      "slug_label": "Course slug",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saved": "Course updated",
+      "save_failed": "Couldn't update the course.",
+      "title_required": "Course title is required.",
+      "slug_required": "Course slug is required."
     }
   },
   "dept_courses": {
@@ -904,7 +940,37 @@
     },
     "success": {
       "all_marked": "All marked as read"
-    }
+    },
+    "search_placeholder": "Search notifications…",
+    "filter_status": "Status",
+    "filter_status_all": "All",
+    "filter_unread": "Unread",
+    "filter_read": "Read",
+    "filter_category": "Category",
+    "filter_category_all": "All categories",
+    "delete_read": "Delete read ({{count}})",
+    "group_by": "Group by",
+    "group_date": "Date",
+    "group_type": "Type",
+    "group_today": "Today",
+    "group_yesterday": "Yesterday",
+    "group_this_week": "This week",
+    "group_earlier": "Earlier",
+    "undo_message": "Deleting {{count}} notification(s)…",
+    "undo": "Undo ({{count}})",
+    "clear_filters": "Clear filters",
+    "empty_filtered_title": "No matching notifications",
+    "empty_filtered_body": "Try adjusting your filters or search.",
+    "time": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "Week",
+      "month": "Month",
+      "six_months": "6 Months",
+      "year": "Year",
+      "all": "All"
+    },
+    "showing_count": "{{count}} shown"
   },
   "teacher_sr_student_detail": {
     "breadcrumb_detail": "Detail",
@@ -1153,7 +1219,21 @@
     "empty_no_courses_body": "Courses will appear here once published.",
     "empty_no_match_title": "No matching courses",
     "empty_no_match_body": "Try adjusting your search keywords to see more courses.",
-    "clear_search": "Clear search"
+    "clear_search": "Clear search",
+    "scope_label": "Course scope",
+    "scope_all": "All",
+    "scope_enrolled": "Enrolled",
+    "scope_completed": "Completed",
+    "view_label": "View mode",
+    "view_cards": "Card view",
+    "view_list": "List view",
+    "enrolled_badge": "Enrolled",
+    "completed_badge": "Completed",
+    "empty_no_enrolled_title": "You haven't enrolled in any courses yet",
+    "empty_no_enrolled_body": "Ask your manager to enroll you — your courses will show up here.",
+    "empty_no_completed_title": "No completed courses yet",
+    "empty_no_completed_body": "Keep learning — finished courses appear here so you can review or practice anytime.",
+    "browse_all": "Browse all courses"
   },
   "dashboard": {
     "active_session": "Active session",
@@ -1283,7 +1363,19 @@
       "jobs_load_failed": "Couldn't load jobs.",
       "no_jobs_match": "No jobs match this filter.",
       "filter_status": "Filter status",
-      "recent_jobs": "Recent jobs (7 days)",
+      "recent_jobs": "Recent jobs",
+      "search_placeholder": "Search jobs…",
+      "view_job": "View job",
+      "time_filter": "Filter by time",
+      "time": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "week": "Week",
+        "month": "Month",
+        "six_months": "6 Months",
+        "year": "Year",
+        "all": "All"
+      },
       "retry": "Retry",
       "stats": {
         "total": "Total jobs",
@@ -1319,9 +1411,13 @@
     "courses_list": {
       "title": "Course management",
       "subtitle": "All courses including drafts and deleted.",
+      "search_placeholder": "Search by title or slug…",
+      "filter_status": "Status",
+      "clear_filters": "Clear filters",
       "include_deleted": "Include deleted",
       "load_failed": "Couldn't load courses.",
       "empty_title": "No courses yet",
+      "empty_search": "No matching courses",
       "empty_body": "When instructors create courses, they will appear here.",
       "empty_search": "No matching courses",
       "search_placeholder": "Search by title or slug…",
@@ -1598,6 +1694,7 @@
       "all_roles": "All roles",
       "filter_organization": "Filter by organization",
       "all_organizations": "All organizations",
+      "clear_filters": "Clear filters",
       "no_organization": "—",
       "back_to_list": "Back to list",
       "profile_section": "Profile",
@@ -2017,6 +2114,7 @@
     "passed": "Passed",
     "failed": "Not passed",
     "passing_score": "Passing score",
+    "nav_title": "Question navigation",
     "questions_title": "Question breakdown",
     "correct": "Correct",
     "incorrect": "Incorrect",
@@ -2532,6 +2630,9 @@
       "start_failed": "Failed to start interview",
       "answer_required": "Please enter an answer",
       "send_failed": "Failed to send answer",
+      "send_failed_livekit": "Your answer could not be sent over the live session. Please try again.",
+      "turn_in_flight": "Your previous answer is still being processed — please wait.",
+      "session_closing": "The interview is closing — your answer was not recorded.",
       "finish_failed": "Failed to finish interview",
       "no_question_available": "This interview has no approved questions yet. Please contact your teacher."
     },
@@ -2660,7 +2761,11 @@
     },
     "placeholders": {
       "org_unit_uuid_optional": "Organization unit UUID (optional)",
-      "position_end": "End"
+      "position_end": "End",
+      "select_org_unit": "— Select org unit —",
+      "select_org_first": "— Select an organization first —",
+      "organization_fixed": "Organization of this path",
+      "loading_units": "Loading org units…"
     },
     "sections": {
       "add_course": "Add course",
@@ -3049,8 +3154,11 @@
       "delete_quiz_tooltip": "Delete quiz, questions, attempts, and module item",
       "add_question": "Add question",
       "view_results": "Results",
-      "add_question_of_type": "Add a question of another type",
-      "add_other_type": "+ Other type…",
+      "add_typed": "Add {{type}}",
+      "add_question_menu_label": "Choose a question type to add",
+      "add_question_type_header": "Question type",
+      "add_default_badge": "default",
+      "add_generate_with_ai": "Generate with AI…",
       "preview": "Preview"
     },
     "status": {
@@ -3377,6 +3485,11 @@
       "remove_pair": "Remove pair",
       "add_pair": "Add pair",
       "matching_hint": "Students see the right-hand values shuffled and match each prompt. All pairs must be correct to score.",
+      "distractors_label": "Distractors (optional)",
+      "distractor_placeholder": "Extra wrong choice (no match)",
+      "add_distractor": "Add distractor",
+      "remove_distractor": "Remove distractor",
+      "distractors_hint": "Extra right-hand choices with no matching prompt. They join the shuffled choices to make guessing harder, but are never a correct answer.",
       "ordering_label": "Ordering sequence",
       "move_up": "Move up",
       "move_down": "Move down",
@@ -3385,6 +3498,7 @@
       "ordering_hint": "The order here IS the correct sequence. Students see the items shuffled and must reorder them.",
       "multi_select_label": "Allow multiple correct answers",
       "multi_select_desc": "When on, learners see checkboxes and may select more than one option.",
+      "type_multiple_choice": "Multiple choice",
       "type_true_false": "True / False",
       "type_short_answer": "Short answer",
       "type_numerical": "Numerical",

@@ -1,13 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useMutation,
   useQuery,
   useQueryClient,
   type InfiniteData,
 } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import { useInfinitePage, type Page } from "../use-infinite-page";
+import i18n from "@/i18n";
 import type {
   Notification,
   NotificationChannel,
@@ -51,6 +53,28 @@ export function useNotifications(limit = 20) {
     },
     limit,
   });
+}
+
+/**
+ * The full inbox, loaded without a pagination UI: keeps calling `fetchNextPage`
+ * until the cursor is exhausted, so the page renders every notification at
+ * once (client-side filtering/grouping) instead of an infinite list. Same
+ * cache shape as `useNotifications` — the read/delete mutations keep working
+ * on it.
+ */
+export function useAllNotifications(limit = 100) {
+  const page = useNotifications(limit);
+  const { hasNextPage, isFetchingNextPage, isLoading, fetchNextPage } = page;
+
+  // Pull remaining pages in the background. Guarded by hasNextPage +
+  // isFetchingNextPage so the loop can't stack concurrent fetches.
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage && !isLoading) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, isLoading, fetchNextPage]);
+
+  return page;
 }
 
 /**
@@ -233,6 +257,165 @@ export function useMarkAllNotificationsRead() {
       qc.invalidateQueries({ queryKey: UNREAD_KEY });
     },
   });
+}
+
+// ── Deferred (undoable) deletes ────────────────────────────────────────────
+
+/** One notification staged for deferred deletion. */
+export interface PendingNotificationDelete {
+  id: string;
+  /** Label for the undo banner (notification title). */
+  label: string;
+}
+
+export interface UsePendingNotificationDeletesResult {
+  /** IDs currently staged (hidden from the list, not yet deleted). */
+  pendingIds: Set<string>;
+  /** Number of notifications in the active combo. */
+  comboCount: number;
+  /** Whole seconds left before the combo commits. 0 when idle. */
+  secondsLeft: number;
+  /** Stage a notification for deletion; refreshes the combo timer. */
+  queueDelete: (item: PendingNotificationDelete) => void;
+  /** Cancel the whole combo — nothing was deleted server-side. */
+  undo: () => void;
+  /** Commit immediately (skip the countdown). */
+  flushNow: () => void;
+}
+
+/**
+ * Combo-undo for inbox deletion — same deferred pattern as the quiz-question
+ * delete (usePendingQuestionDeletes): deletes are staged and hidden
+ * immediately, a single 5s countdown runs, and the staged DELETEs are flushed
+ * when it expires or the page unmounts. Undo is free because nothing reached
+ * the server yet. Per-notification DELETE route (soft-dismiss server-side);
+ * the batch fires concurrently and tolerates partial failure.
+ */
+export function usePendingNotificationDeletes(
+  windowMs = 5000,
+): UsePendingNotificationDeletesResult {
+  const qc = useQueryClient();
+  const [pending, setPending] = useState<
+    Map<string, PendingNotificationDelete>
+  >(new Map());
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  // Ids whose DELETE is in flight (or whose refetch hasn't landed yet) — keeps
+  // rows hidden continuously from click to final state (no reappear flicker).
+  const [inFlight, setInFlight] = useState<Set<string>>(() => new Set());
+
+  const pendingRef = useRef(pending);
+  pendingRef.current = pending;
+
+  const commitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tickTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const deadline = useRef<number>(0);
+
+  const clearTimers = useCallback(() => {
+    if (commitTimer.current) {
+      clearTimeout(commitTimer.current);
+      commitTimer.current = null;
+    }
+    if (tickTimer.current) {
+      clearInterval(tickTimer.current);
+      tickTimer.current = null;
+    }
+  }, []);
+
+  const invalidate = useCallback(async () => {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: INBOX_KEY }),
+      qc.invalidateQueries({ queryKey: UNREAD_KEY }),
+    ]);
+  }, [qc]);
+
+  const commit = useCallback(
+    async (ids: string[]) => {
+      if (ids.length === 0) return;
+      setInFlight((prev) => {
+        const next = new Set(prev);
+        for (const id of ids) next.add(id);
+        return next;
+      });
+      try {
+        const results = await Promise.allSettled(
+          ids.map((id) => apiDelete(`/me/notifications/${id}`)),
+        );
+        const failed = results.filter((r) => r.status === "rejected").length;
+        if (failed > 0) {
+          toast.error(i18n.t("notifications.errors.delete_failed"));
+        }
+        await invalidate();
+      } finally {
+        setInFlight((prev) => {
+          const next = new Set(prev);
+          for (const id of ids) next.delete(id);
+          return next;
+        });
+      }
+    },
+    [invalidate],
+  );
+
+  const undo = useCallback(() => {
+    clearTimers();
+    setPending(new Map());
+    setSecondsLeft(0);
+  }, [clearTimers]);
+
+  const flushNow = useCallback(() => {
+    clearTimers();
+    const ids = [...pendingRef.current.keys()];
+    setPending(new Map());
+    setSecondsLeft(0);
+    void commit(ids);
+  }, [clearTimers, commit]);
+
+  const queueDelete = useCallback(
+    (item: PendingNotificationDelete) => {
+      setPending((prev) => {
+        const next = new Map(prev);
+        next.set(item.id, item);
+        return next;
+      });
+      clearTimers();
+      deadline.current = Date.now() + windowMs;
+      setSecondsLeft(Math.ceil(windowMs / 1000));
+      tickTimer.current = setInterval(() => {
+        const remainingMs = deadline.current - Date.now();
+        setSecondsLeft(Math.max(0, Math.ceil(remainingMs / 1000)));
+      }, 250);
+      commitTimer.current = setTimeout(() => {
+        clearTimers();
+        const ids = [...pendingRef.current.keys()];
+        setPending(new Map());
+        setSecondsLeft(0);
+        void commit(ids);
+      }, windowMs);
+    },
+    [clearTimers, commit, windowMs],
+  );
+
+  // On unmount (navigate away mid-combo), flush staged deletes so the intent
+  // isn't silently lost. Runs once.
+  useEffect(() => {
+    return () => {
+      const ids = [...pendingRef.current.keys()];
+      if (ids.length > 0) {
+        if (commitTimer.current) clearTimeout(commitTimer.current);
+        if (tickTimer.current) clearInterval(tickTimer.current);
+        void commit(ids);
+      }
+    };
+  }, []);
+
+  return {
+    pendingIds: new Set([...pending.keys(), ...inFlight]),
+    comboCount: pending.size,
+    secondsLeft,
+    queueDelete,
+    undo,
+    flushNow,
+  };
 }
 
 export function useNotificationPreferences() {

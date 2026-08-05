@@ -1,6 +1,5 @@
 import { CohortOverviewCard } from "./_components/course-students/CohortOverviewCard";
 import { CohortStatCards } from "./_components/course-students/CohortStatCards";
-import { QuickFiltersCard } from "./_components/course-students/QuickFiltersCard";
 import { RosterFilterBar } from "./_components/course-students/RosterFilterBar";
 import { RosterTable } from "./_components/course-students/RosterTable";
 import { StudentsPageHeader } from "./_components/course-students/StudentsPageHeader";
@@ -20,7 +19,7 @@ export default function CourseStudentsPage() {
   const controller = useCourseStudentsController();
 
   return (
-    <div className="max-w-[1440px] mx-auto pb-16">
+    <div className="w-full pb-16">
       {/* ── Header ── (course title + tabs live in the shell above) */}
       <StudentsPageHeader controller={controller} />
 
@@ -36,7 +35,6 @@ export default function CourseStudentsPage() {
         {/* ── Sidebar 4 cols ── */}
         <div className="col-span-12 lg:col-span-4 space-y-6 lg:sticky lg:top-24 self-start">
           <CohortOverviewCard controller={controller} />
-          <QuickFiltersCard controller={controller} />
           {controller.students.length > 0 && (
             <TopPerformerCard controller={controller} />
           )}

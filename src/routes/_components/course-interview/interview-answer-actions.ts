@@ -6,6 +6,7 @@ import {
   isAwaitingEndConfirmation,
   isClosingTurn,
 } from "@/lib/interview/end-confirmation";
+import { resolveTextTransport } from "@/lib/interview/text-transport";
 import { planTransition } from "@/lib/interview/transition-sequencing";
 import {
   makeCeremonyTurn,
@@ -13,6 +14,7 @@ import {
   makeUserTurn,
   newTurnKey,
 } from "@/lib/interview/turn-factory";
+import type { TurnRejection } from "@/lib/interview/control-protocol";
 import { resolveAssistanceTurnKind } from "./helpers";
 import type { InterviewActionsContext } from "./types";
 
@@ -275,6 +277,88 @@ async function applyRespondResult(
 }
 
 /**
+ * A user-facing message for an agent-side rejection of a typed turn.
+ *
+ * The control stream rejects a turn before it is graded (draft is preserved);
+ * the message must tell the candidate WHY, not just that it failed — some of
+ * these they can act on (wait for the previous turn), others they cannot
+ * (the interview is closing).
+ */
+function rejectionMessage(
+  rejection: TurnRejection | null,
+  t: InterviewActionsContext["t"],
+): string {
+  switch (rejection) {
+    case "turn_in_flight":
+      return t("course_interview.errors.turn_in_flight");
+    case "session_closing":
+      return t("course_interview.errors.session_closing");
+    default:
+      return t("course_interview.errors.send_failed_livekit");
+  }
+}
+
+/**
+ * Send the turn over `lk.chat` and drive the shared lifecycle from the
+ * control event's state. Extracted from `handleRespond` so the transport
+ * branch stays a one-liner; the outcome handling is identical to the REST
+ * path's post-acknowledgement flow.
+ */
+async function sendTurnViaLiveKit(
+  ctx: InterviewActionsContext,
+  args: { text: string; turnKey: string; questionId: string },
+): Promise<void> {
+  const chat = ctx.chatBridge.current;
+  if (!chat) return;
+  const outcome = await chat.sendTurn({
+    text: args.text,
+    turnAction: "answer",
+    turnKey: args.turnKey,
+  });
+  // Rejected / failed / timed out: the agent did NOT grade this turn —
+  // keep the draft and say why (same lifecycle as a REST error).
+  if (outcome.event.status !== "completed" || !outcome.event.state) {
+    const message = rejectionMessage(outcome.event.rejection, ctx.t);
+    ctx.submitFailed(message);
+    ctx.setAnswerText(args.text);
+    toast.error(message);
+    return;
+  }
+  // The control payload is the full InterviewSubmitAnswerResponse — the
+  // SAME shape REST returns — so the shared lifecycle applies unchanged.
+  await applyRespondResult(ctx, {
+    result: outcome.event.state,
+    submissionId: args.turnKey,
+    trimmed: args.text,
+    questionId: args.questionId,
+  });
+}
+
+/**
+ * Decide whether this turn goes over `lk.chat`, and whether a submit is even
+ * allowed right now. Kept out of `handleRespond` because the live-vs-REST
+ * decision plus the duplicate-submission guard together exceed the complexity
+ * budget of a single function.
+ */
+function resolveSubmitGate(ctx: InterviewActionsContext): {
+  viaLiveKit: boolean;
+  blocked: boolean;
+} {
+  const chat = ctx.chatBridge.current;
+  const transport = resolveTextTransport({
+    inputMode: ctx.inputMode,
+    onboardingStage: ctx.onboardingStage,
+    roomConnected: chat?.connected ?? false,
+  });
+  const viaLiveKit = transport === "livekit" && chat !== null;
+  const blocked =
+    ctx.answer.state.status === "submitting" ||
+    ctx.answer.state.status === "submitted" ||
+    (viaLiveKit ? chat!.pending : ctx.respond.isPending);
+  return { viaLiveKit, blocked };
+}
+
+/**
  * Submit the candidate's answer through the structured lifecycle (spec §2/§7):
  *
  *  1. `submitting`  — draft preserved, submit disabled, one submission only.
@@ -286,20 +370,25 @@ async function applyRespondResult(
  *
  * `retrySubmissionId` reuses the prior idempotency key so a retry after a
  * failure cannot create a duplicate transcript entry server- or client-side.
+ *
+ * Transport: when the LiveKit text transport is active (flag on + hybrid +
+ * onboarding done + room connected — see `resolveTextTransport`), the turn is
+ * sent over `lk.chat` and resolved from the control topic; the control event's
+ * `state` IS the full `InterviewSubmitAnswerResponse`, so `applyRespondResult`
+ * runs identically on both transports. Otherwise the REST `/respond` path runs,
+ * unchanged from before this feature existed.
  */
 export async function handleRespond(
   ctx: InterviewActionsContext,
   answerOverride?: string,
   options: { retrySubmissionId?: string } = {},
 ) {
-  if (!ctx.currentQuestion || !ctx.sessionId || ctx.respond.isPending) return;
-  // Guard against duplicate submissions from the state machine itself.
-  if (
-    ctx.answer.state.status === "submitting" ||
-    ctx.answer.state.status === "submitted"
-  ) {
-    return;
-  }
+  if (!ctx.currentQuestion || !ctx.sessionId) return;
+  // The chat hook is mounted by the workspace screen (inside the room
+  // provider); null here means flag off, text-only session, or onboarding —
+  // all of which resolve to REST.
+  const { viaLiveKit, blocked } = resolveSubmitGate(ctx);
+  if (blocked) return;
   const pendingInterim = ctx.dictation.listening ? ctx.dictation.stop() : "";
   const sourceText = answerOverride ?? ctx.answerText;
   const trimmed = [sourceText.trim(), pendingInterim]
@@ -313,28 +402,37 @@ export async function handleRespond(
 
   const questionId = ctx.currentQuestion.id;
   // Stable submission id doubles as the transcript turn id and the server
-  // idempotency key, so a retry reuses it and never double-inserts.
+  // idempotency key, so a retry reuses it and never double-inserts. On the
+  // live transport it is also the control stream's `turn_key`.
   const submissionId = options.retrySubmissionId ?? newTurnKey();
   ctx.beginSubmit(submissionId, trimmed);
 
   try {
-    const result = await ctx.respond.mutateAsync({
-      session_id: ctx.sessionId,
-      session_question_id: questionId,
-      answer_text: trimmed,
-      turn_action: "answer",
-      // Idempotency key so a network retry never double-inserts the answer
-      // or re-runs the adaptive pipeline (adaptive safeguard #1). Legacy
-      // backend ignores it harmlessly.
-      turn_key: submissionId,
-    });
+    if (viaLiveKit) {
+      await sendTurnViaLiveKit(ctx, {
+        text: trimmed,
+        turnKey: submissionId,
+        questionId,
+      });
+    } else {
+      const result = await ctx.respond.mutateAsync({
+        session_id: ctx.sessionId,
+        session_question_id: questionId,
+        answer_text: trimmed,
+        turn_action: "answer",
+        // Idempotency key so a network retry never double-inserts the answer
+        // or re-runs the adaptive pipeline (adaptive safeguard #1). Legacy
+        // backend ignores it harmlessly.
+        turn_key: submissionId,
+      });
 
-    await applyRespondResult(ctx, {
-      result,
-      submissionId,
-      trimmed,
-      questionId,
-    });
+      await applyRespondResult(ctx, {
+        result,
+        submissionId,
+        trimmed,
+        questionId,
+      });
+    }
   } catch (err) {
     reportAnswerFailure(ctx, err, trimmed);
   }

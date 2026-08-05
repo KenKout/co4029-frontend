@@ -142,3 +142,53 @@ export function savePageSize(size: QuizPageSize): void {
     // best-effort
   }
 }
+
+/* ------------------------------------------------------------------------- *
+ * Add-question default type (authoring)
+ *
+ * The Add-question split button remembers the last type the teacher chose from
+ * its dropdown and makes it the primary click for next time — so someone
+ * authoring a matching quiz isn't forced back through the menu on every add.
+ * Per-device, like the page-size preference: an authoring-comfort choice, not
+ * quiz state, so it carries across quizzes.
+ * ------------------------------------------------------------------------- */
+
+/** Manual question types the Add-question control can seed. */
+export type AddQuestionType =
+  | "multiple_choice"
+  | "true_false"
+  | "short_answer"
+  | "numerical"
+  | "matching"
+  | "ordering";
+
+const ADD_QUESTION_TYPES: readonly AddQuestionType[] = [
+  "multiple_choice",
+  "true_false",
+  "short_answer",
+  "numerical",
+  "matching",
+  "ordering",
+];
+
+const ADD_QUESTION_TYPE_KEY = "abridgeai.addquestiontype";
+
+export function loadAddQuestionType(): AddQuestionType {
+  try {
+    const raw = window.localStorage.getItem(ADD_QUESTION_TYPE_KEY);
+    if (raw && (ADD_QUESTION_TYPES as readonly string[]).includes(raw)) {
+      return raw as AddQuestionType;
+    }
+    return "multiple_choice";
+  } catch {
+    return "multiple_choice";
+  }
+}
+
+export function saveAddQuestionType(type: AddQuestionType): void {
+  try {
+    window.localStorage.setItem(ADD_QUESTION_TYPE_KEY, type);
+  } catch {
+    // best-effort
+  }
+}

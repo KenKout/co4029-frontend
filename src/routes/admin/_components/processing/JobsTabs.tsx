@@ -11,22 +11,24 @@ import type { AdminProcessingController } from "./use-admin-processing";
  * showed them, the next row filtered by them — so the count now sits on the
  * control that applies it.
  *
- * Counts come from the queue-depth query (already polled for the old cards), so
- * this is not an extra request. While it loads, `count` is left undefined and
- * the badge is simply omitted rather than rendering a placeholder 0, which would
- * read as a real "no jobs" answer.
+ * Counts come from the SAME range-filtered jobs list the table renders
+ * (computed in the controller), so the badges always agree with the rows —
+ * the previous queue-depth source counted every job ever while the table
+ * only fetched the last 7 days. While the jobs query loads, `count` is left
+ * undefined and the badge is simply omitted rather than rendering a
+ * placeholder 0, which would read as a real "no jobs" answer.
  *
  * The tab `value` is the API `?status=` string, so the dashboard's
  * `/admin/processing?status=failed` deep link still selects the Failed tab.
  */
 export function JobsTabs({ c }: { c: AdminProcessingController }) {
-  const { t, statusFilter, setStatusFilter, queue } = c;
+  const { t, statusFilter, setStatusFilter, counts } = c;
 
   const tabs: TabDef<string>[] = STATUS_FILTERS.map((opt) => ({
     key: opt.value,
     label: t(opt.i18nKey),
     icon: opt.icon,
-    count: queue.data ? queue.data[opt.countKey] : undefined,
+    count: counts ? counts[opt.countKey] : undefined,
   }));
 
   return (

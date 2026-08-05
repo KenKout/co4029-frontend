@@ -149,8 +149,36 @@ export function personaOverridePayload(
  * The PATCH body for a settings save. Extracted verbatim from `saveSettings` so
  * the page keeps only the validate → mutate → toast flow: every conversion from
  * the string-based draft back to the API shape lives here.
+ *
+ * When a `baseline` draft (the saved config, serialized the same way) is given,
+ * only fields that actually differ from it are included. This is what lets a
+ * teacher retitle a PUBLISHED interview: the backend freeze
+ * (`assert_config_settings_editable`) whitelists `title`, but it sees every
+ * explicitly-sent field as "changed" — so echoing the whole form back would 409
+ * on the frozen settings even though none of them moved. Diffing turns a
+ * title-only edit into a title-only PATCH. With no baseline (or a draft that
+ * differs everywhere), behaviour is unchanged from before.
  */
 export function buildConfigUpdatePayload(
+  draft: SettingsDraft,
+  baseline?: SettingsDraft,
+): InterviewConfigUpdate {
+  const next = buildFullConfigUpdatePayload(draft);
+  if (!baseline) return next;
+  const prev = buildFullConfigUpdatePayload(baseline);
+  const changed: Record<string, unknown> = {};
+  for (const key of Object.keys(next)) {
+    // Serialize-compare: number-vs-string coercions on the wire (e.g. blank
+    // minutes → null) must not mark an untouched field as changed.
+    if (JSON.stringify(next[key as keyof InterviewConfigUpdate]) !==
+        JSON.stringify(prev[key as keyof InterviewConfigUpdate])) {
+      changed[key] = next[key as keyof InterviewConfigUpdate];
+    }
+  }
+  return changed as unknown as InterviewConfigUpdate;
+}
+
+function buildFullConfigUpdatePayload(
   draft: SettingsDraft,
 ): InterviewConfigUpdate {
   return {

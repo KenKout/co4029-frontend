@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Globe, Mail, Phone, Share2 } from "lucide-react";
+import { Check, Copy, Globe, Mail, Phone, Share2 } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -11,8 +12,6 @@ import type { CoursePublic, InstructorRead } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { deriveContactLinks, prettyUrl } from "./helpers";
 
-const ROW_CLASS =
-  "flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors group";
 const ICON_CLASS =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary/8 text-m3-primary group-hover:bg-m3-primary/15 transition-colors";
 
@@ -52,8 +51,48 @@ function InstructorBio({ instructor }: { instructor: InstructorRead }) {
 }
 
 /**
- * Contact rows. Sub-headed rather than given their own card, and only
- * divided from the bio when both halves are present.
+ * Small inline copy affordance (Copy icon → green Check for ~1.2s), same
+ * pattern as ConfigKeyReveal. Only email/phone rows get one.
+ */
+function CopyContactButton({
+  value,
+  ariaLabel,
+}: {
+  value: string;
+  ariaLabel: string;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const copy = () => {
+    void navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1200);
+    });
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      aria-label={ariaLabel}
+      title={ariaLabel}
+      className="shrink-0 p-1.5 rounded-lg text-m3-outline transition-colors hover:text-m3-primary hover:bg-m3-primary/8 cursor-pointer"
+    >
+      {copied ? (
+        <Check className="h-3.5 w-3.5 text-emerald-600" />
+      ) : (
+        <Copy className="h-3.5 w-3.5" />
+      )}
+    </button>
+  );
+}
+
+/**
+ * Contact rows, two per line on wide screens (product feedback 2026-08-04:
+ * "align 2 each side"), with word-break so long emails/URLs wrap instead of
+ * overflowing the cell. Email and phone additionally get a copy button.
+ * Sub-headed rather than given their own card, and only divided from the
+ * bio when both halves are present.
  */
 function ContactRows({
   course,
@@ -74,34 +113,52 @@ function ContactRows({
       <h3 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant mb-3">
         {t("course_detail.contact_title")}
       </h3>
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {email && (
-          <a href={`mailto:${email}`} className={ROW_CLASS}>
-            <span className={ICON_CLASS}>
-              <Mail className="h-4 w-4" />
-            </span>
-            <span className="truncate">{email}</span>
-          </a>
+          <div className="flex items-center gap-2 min-w-0">
+            <a
+              href={`mailto:${email}`}
+              className="group flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors flex-1 min-w-0"
+            >
+              <span className={ICON_CLASS}>
+                <Mail className="h-4 w-4" />
+              </span>
+              <span className="break-words min-w-0">{email}</span>
+            </a>
+            <CopyContactButton
+              value={email}
+              ariaLabel={t("course_detail.copy_email")}
+            />
+          </div>
         )}
         {phone && (
-          <a href={`tel:${phone.replace(/\s+/g, "")}`} className={ROW_CLASS}>
-            <span className={ICON_CLASS}>
-              <Phone className="h-4 w-4" />
-            </span>
-            <span className="truncate">{phone}</span>
-          </a>
+          <div className="flex items-center gap-2 min-w-0">
+            <a
+              href={`tel:${phone.replace(/\s+/g, "")}`}
+              className="group flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors flex-1 min-w-0"
+            >
+              <span className={ICON_CLASS}>
+                <Phone className="h-4 w-4" />
+              </span>
+              <span className="break-words min-w-0">{phone}</span>
+            </a>
+            <CopyContactButton
+              value={phone}
+              ariaLabel={t("course_detail.copy_phone")}
+            />
+          </div>
         )}
         {website && (
           <a
             href={website}
             target="_blank"
             rel="noopener noreferrer"
-            className={ROW_CLASS}
+            className="group flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors min-w-0"
           >
             <span className={ICON_CLASS}>
               <Globe className="h-4 w-4" />
             </span>
-            <span className="truncate">{prettyUrl(website)}</span>
+            <span className="break-words min-w-0">{prettyUrl(website)}</span>
           </a>
         )}
         {social && (
@@ -109,12 +166,12 @@ function ContactRows({
             href={social}
             target="_blank"
             rel="noopener noreferrer"
-            className={ROW_CLASS}
+            className="group flex items-center gap-3 text-sm text-m3-on-surface hover:text-m3-primary transition-colors min-w-0"
           >
             <span className={ICON_CLASS}>
               <Share2 className="h-4 w-4" />
             </span>
-            <span className="truncate">{prettyUrl(social)}</span>
+            <span className="break-words min-w-0">{prettyUrl(social)}</span>
           </a>
         )}
       </div>

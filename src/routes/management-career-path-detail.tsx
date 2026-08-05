@@ -63,6 +63,7 @@ export default function ManagementCareerPathDetailPage() {
         initialName={data.name}
         initialDescription={data.description ?? ""}
         initialOrgUnitId={data.org_unit_id ?? ""}
+        initialOrganizationId={data.organization_id}
       />
 
       <TabBar tab={tab} onSelect={setTab} />

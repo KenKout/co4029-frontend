@@ -5,6 +5,8 @@ import {
   Users,
 } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+
 import { SummaryTile } from "./SummaryTile";
 import type { CourseAssessmentsController } from "./use-course-assessments-controller";
 
@@ -12,11 +14,17 @@ import type { CourseAssessmentsController } from "./use-course-assessments-contr
  * The four summary tiles above the Assessments tabs — students assessed, quiz
  * attempts, quiz pass rate and interview sessions. Extracted verbatim from the
  * former 458-line course-assessments.tsx.
+ *
+ * `className` lets the page restack the strip when it lives in a sidebar
+ * (e.g. `lg:grid-cols-1` to stack the tiles); tailwind-merge resolves the
+ * conflict with the default `sm:grid-cols-4`.
  */
 export function AssessmentSummaryTiles({
   controller,
+  className,
 }: {
   controller: CourseAssessmentsController;
+  className?: string;
 }) {
   const {
     distinctStudents,
@@ -27,7 +35,7 @@ export function AssessmentSummaryTiles({
     interviewsLoading,
   } = controller;
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className={cn("grid grid-cols-2 sm:grid-cols-4 gap-3", className)}>
       <SummaryTile
         icon={Users}
         label="Students assessed"

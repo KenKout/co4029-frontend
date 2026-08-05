@@ -64,6 +64,9 @@ export function useAddLessonItems(options: {
         module_id: moduleId,
         title: t("teacher_common.new_quiz_title", { number: itemCount + 1 }),
         description: t("teacher_common.new_quiz_description"),
+        // Reminders (SR due-card pings) default ON for new quizzes — the
+        // teacher can turn them off per quiz in Settings.
+        reminders_enabled: true,
       });
       void navigate({
         to: "/teacher/courses/$courseId/quizzes/$quizId",

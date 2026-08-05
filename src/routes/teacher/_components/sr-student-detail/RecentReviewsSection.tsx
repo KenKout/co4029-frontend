@@ -15,12 +15,12 @@ function EfBadge({ ef, t }: { ef: number; t: TranslateFn }) {
         "text-[10px] font-bold px-2.5 py-1 rounded-full border w-fit inline-flex items-center gap-1.5",
         meta.cls,
       )}
-      title={t("teacher_sr_cohort.ef_hint")}
+      // Plain-language label only; the raw EF value moves to the tooltip so a
+      // teacher who doesn't know SM-2 isn't staring at a meaningless number
+      // per review (EF also changes after every review, which reads as noise).
+      title={`${t("teacher_sr_cohort.ef_hint")} · EF ${ef.toFixed(2)}`}
     >
       {t(meta.labelKey)}
-      <span className="font-mono font-medium opacity-70">
-        EF {ef.toFixed(2)}
-      </span>
     </span>
   );
 }

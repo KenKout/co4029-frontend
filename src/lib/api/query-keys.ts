@@ -96,8 +96,10 @@ export const queryKeys = {
       ["admin", "courses", courseId, "processing", limit] as const,
     courseStats: () => ["admin", "courses", "stats"] as const,
     processingQueue: () => ["admin", "processing", "queue"] as const,
-    processingJobs: (status?: string) =>
-      ["admin", "processing", "jobs", status] as const,
+    processingSummary: (since: string) =>
+      ["admin", "processing", "summary", since] as const,
+    processingJobs: (status?: string, since?: string) =>
+      ["admin", "processing", "jobs", status, since] as const,
     processingJob: (jobId: string) =>
       ["admin", "processing", "jobs", "detail", jobId] as const,
     permissions: () => ["admin", "permissions"] as const,
@@ -221,6 +223,8 @@ export const queryKeys = {
     attemptDetail: (courseId: string, attemptId: string) =>
       ["quizzes", "attempt-detail", courseId, attemptId] as const,
     results: (quizId: string) => ["quizzes", "results", quizId] as const,
+    progress: (courseId: string) =>
+      ["quizzes", "course-progress", courseId] as const,
     // --- Moodle-parity phases (backend 0044-0057) ---
     regradeRun: (quizId: string, runId: string) =>
       ["quizzes", "regrade-run", quizId, runId] as const,

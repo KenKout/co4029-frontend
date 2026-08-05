@@ -74,7 +74,20 @@ export function useMarkLessonComplete(opts?: {
         `/me/progress/lessons/${lessonId}/complete`,
         {},
       ),
-    onSuccess: (_, lessonId) => {
+    onSuccess: (result, lessonId) => {
+      // Optimistic in-place patch so the curriculum (status map) flips
+      // instantly — closes the stale window while the invalidated refetch
+      // lands the authoritative payload.
+      patchCourseSummaryCache(
+        qc,
+        opts?.courseId,
+        lessonId,
+        result.status,
+      );
+      qc.setQueryData(
+        queryKeys.progress.lesson(opts?.lessonId ?? lessonId),
+        result,
+      );
       void qc.invalidateQueries({
         queryKey: queryKeys.progress.lesson(opts?.lessonId ?? lessonId),
       });
@@ -98,7 +111,17 @@ export function useUnmarkLessonComplete(opts?: {
         `/me/progress/lessons/${lessonId}/uncomplete`,
         {},
       ),
-    onSuccess: (_, lessonId) => {
+    onSuccess: (result, lessonId) => {
+      patchCourseSummaryCache(
+        qc,
+        opts?.courseId,
+        lessonId,
+        result.status,
+      );
+      qc.setQueryData(
+        queryKeys.progress.lesson(opts?.lessonId ?? lessonId),
+        result,
+      );
       void qc.invalidateQueries({
         queryKey: queryKeys.progress.lesson(opts?.lessonId ?? lessonId),
       });
@@ -109,6 +132,43 @@ export function useUnmarkLessonComplete(opts?: {
       }
     },
   });
+}
+
+/**
+ * Flip one lesson's status inside the cached course summary so every
+ * consumer of the status map (learn curriculum, button, course detail)
+ * reflects the new state immediately. Recomputes the aggregate counters.
+ */
+function patchCourseSummaryCache(
+  qc: ReturnType<typeof useQueryClient>,
+  courseId: string | undefined,
+  lessonId: string,
+  status: string,
+) {
+  if (!courseId) return;
+  qc.setQueryData<MyCourseProgressSummary>(
+    queryKeys.progress.myCourse(courseId),
+    (prev) => {
+      if (!prev) return prev;
+      const lessons = prev.lessons.map((l) =>
+        l.lesson_id === lessonId ? { ...l, status } : l,
+      );
+      const completed = lessons.filter((l) => l.status === "completed").length;
+      const inProgress = lessons.filter((l) => l.status === "in_progress").length;
+      const total = prev.total_lessons || lessons.length;
+      const pct =
+        total > 0 ? Math.round((completed / total) * 10000) / 100 : 0;
+      return {
+        ...prev,
+        lessons,
+        completed_lessons: completed,
+        in_progress_lessons: inProgress,
+        not_started_lessons: Math.max(0, total - completed - inProgress),
+        // Serialized as string on the wire (backend Decimal).
+        completion_percent: String(pct),
+      };
+    },
+  );
 }
 
 export function useCohortProgress(courseId: string | null | undefined) {

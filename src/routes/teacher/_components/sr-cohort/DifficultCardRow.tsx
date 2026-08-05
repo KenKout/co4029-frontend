@@ -63,12 +63,13 @@ export function DifficultCardRow({
             "text-xs font-bold px-2.5 py-1 rounded-full border w-fit inline-flex items-center gap-1.5",
             meta.cls,
           )}
-          title={t("teacher_sr_cohort.ef_hint")}
+          // Raw EF stays accessible to teachers who understand SM-2, but the
+          // badge itself shows only the plain-language label — a bare EF
+          // number means nothing to a teacher who doesn't know the algorithm
+          // (see sr-cohort ef_hint).
+          title={`${t("teacher_sr_cohort.ef_hint")} · EF ${card.mean_ef.toFixed(2)}`}
         >
           {difficultyLabel}
-          <span className="font-mono font-medium opacity-70">
-            EF {card.mean_ef.toFixed(2)}
-          </span>
         </span>
         <span className="text-sm text-m3-on-surface-variant inline-flex items-center gap-1">
           <Users className="h-3.5 w-3.5" />

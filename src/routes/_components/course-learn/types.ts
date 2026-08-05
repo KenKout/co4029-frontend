@@ -41,4 +41,6 @@ export interface CurriculumProps {
   slug: string;
   activeModuleId?: string;
   inProgressByConfigId: Map<string, InterviewSessionPublic>;
+  /** Id of the earliest pending item (course order) — the row to highlight. */
+  nextItemId?: string;
 }

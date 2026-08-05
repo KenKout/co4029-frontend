@@ -19,8 +19,19 @@ export interface CourseContactFields {
   contact_social_url?: string | null;
 }
 
+// Difficulty / effort for the landing-page meta line, exposed on the public
+// payload by backend CoursePublic (same hand-layered pattern as the contact
+// fields above — the committed openapi snapshot predates them). The SPA shows
+// them only when the backend fills them in.
+export interface CoursePublicMeta {
+  level?: "beginner" | "intermediate" | "advanced" | null;
+  estimated_minutes?: number | null;
+}
+
 export type Course = Schemas["CoursePublic"] & CourseContactFields;
-export type CoursePublic = Schemas["CoursePublic"] & CourseContactFields;
+export type CoursePublic = Schemas["CoursePublic"] &
+  CourseContactFields &
+  CoursePublicMeta;
 export type CourseAuthoring = Schemas["CourseAuthoring"] & CourseContactFields;
 export type CourseCreate = Schemas["CourseCreate"] & CourseContactFields;
 export type CourseUpdate = Schemas["CourseUpdate"] & CourseContactFields;
@@ -175,6 +186,19 @@ export type QuizForTakingPublic = Schemas["QuizForTakingPublic"];
 export type QuizForAuthoring = Schemas["QuizForAuthoringPublic"];
 export type QuizForAuthoringPublic = Schemas["QuizForAuthoringPublic"];
 export type QuizAttempt = Schemas["QuizAttemptRead"];
+// Hand-layered (snapshot can't be regenerated in isolation — see
+// CourseContactFields): the learner quiz-progress endpoint landed in
+// backend a5334c0 and isn't in the committed openapi snapshot yet.
+export interface QuizProgressRead {
+  quiz_id: string;
+  attempts_used: number;
+  max_attempts: number | null;
+  allow_retakes: boolean;
+  passed: boolean | null;
+  grade_percent: number | null;
+  completed: boolean;
+  attempts_remaining: number | null;
+}
 export type QuizAttemptRead = Schemas["QuizAttemptRead"];
 export type QuizAttemptReviewRead = Schemas["QuizAttemptReviewRead"];
 export type QuizAttemptReviewQuestion = Schemas["QuizAttemptReviewQuestion"];
@@ -203,6 +227,10 @@ export interface QuizQuestionRichFields {
   numeric_answer?: number | string | null;
   numeric_tolerance?: number | string | null;
   match_pairs?: Array<{ left: string; right: string }> | null;
+  // Matching distractors: extra right-side choices with no left partner. The
+  // backend folds these into the shuffled match_choices pool served to
+  // students; teacher-only as a raw list.
+  match_distractors?: string[] | null;
   ordering_sequence?: string[] | null;
   // No-leak derived projections served to students (backend Phase 7). The raw
   // answer keys above are teacher-only; these shuffled lists are what a learner

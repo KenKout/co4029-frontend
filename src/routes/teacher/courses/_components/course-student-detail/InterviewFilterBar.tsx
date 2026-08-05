@@ -1,14 +1,14 @@
-import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import { FilterBar, type FilterDef } from "@/components/ui/filter-bar";
 
 import { INTERVIEW_RESULT_OPTIONS, INTERVIEW_TIME_OPTIONS } from "./constants";
 import type { StudentInterviewFiltersController } from "./use-student-interview-filters";
 
 /**
  * Interview / Result / Time dropdowns of the Interview Attempts section, plus
- * the Clear filters button. Extracted verbatim from the former 659-line
- * course-student-detail.tsx — the controls mirror the course Assessments page
- * so teachers get the same filters in both places.
+ * the Clear filters button. Delegates to the shared FilterBar (ui/filter-bar
+ * .tsx) — the same component the course Assessments page and the
+ * DataTableToolbar use, so teachers get the same filters everywhere with one
+ * implementation.
  */
 export function InterviewFilterBar({
   filters,
@@ -23,51 +23,50 @@ export function InterviewFilterBar({
     ivTimeFilter,
     setIvTimeFilter,
     ivInterviewTitles,
-    ivFiltersActive,
     clearIvFilters,
   } = filters;
+
+  const filterDefs: FilterDef[] = [
+    {
+      id: "interview",
+      label: "Filter by interview",
+      allLabel: "All interviews",
+      options: ivInterviewTitles.map((title) => ({
+        value: title,
+        label: title,
+      })),
+      className: "w-44",
+    },
+    {
+      id: "result",
+      label: "Filter by result",
+      allLabel: "All results",
+      options: INTERVIEW_RESULT_OPTIONS,
+      className: "w-40",
+    },
+    {
+      id: "time",
+      label: "Filter by time",
+      allLabel: "All time",
+      options: INTERVIEW_TIME_OPTIONS,
+      className: "w-36",
+    },
+  ];
+
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <Select
-        value={ivInterviewFilter}
-        onValueChange={(next) => setIvInterviewFilter(next)}
-        size="sm"
-        className="w-44"
-        aria-label="Filter by interview"
-        options={[
-          { value: "all", label: "All interviews" },
-          ...ivInterviewTitles.map((title) => ({
-            value: title,
-            label: title,
-          })),
-        ]}
-      />
-      <Select
-        value={ivResultFilter}
-        onValueChange={(next) => setIvResultFilter(next)}
-        size="sm"
-        className="w-40"
-        aria-label="Filter by result"
-        options={INTERVIEW_RESULT_OPTIONS}
-      />
-      <Select
-        value={ivTimeFilter}
-        onValueChange={(next) => setIvTimeFilter(next)}
-        size="sm"
-        className="w-36"
-        aria-label="Filter by time"
-        options={INTERVIEW_TIME_OPTIONS}
-      />
-      {ivFiltersActive && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 text-xs"
-          onClick={clearIvFilters}
-        >
-          Clear filters
-        </Button>
-      )}
-    </div>
+    <FilterBar
+      filters={filterDefs}
+      values={{
+        interview: ivInterviewFilter,
+        result: ivResultFilter,
+        time: ivTimeFilter,
+      }}
+      onChange={(filterId, value) => {
+        if (filterId === "interview") setIvInterviewFilter(value);
+        else if (filterId === "result") setIvResultFilter(value);
+        else setIvTimeFilter(value);
+      }}
+      onResetAll={clearIvFilters}
+    />
   );
 }

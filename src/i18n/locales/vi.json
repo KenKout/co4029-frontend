@@ -130,11 +130,29 @@
     "instructor_role": "Giảng viên",
     "ai_mock_title": "Bao gồm phỏng vấn AI",
     "ai_mock_body": "Hoàn thành từng module để mở khóa buổi phỏng vấn AI. Nhận phản hồi thời gian thực, câu hỏi tiếp theo thích ứng và đánh giá chi tiết về cách bạn giải thích kỹ thuật.",
+    "ai_mock_hero_line": "Phỏng vấn AI mô phỏng sau mỗi module",
     "start_learning": "Bắt đầu học",
+    "continue_learning": "Tiếp tục học",
+    "progress_label": "Tiến độ",
+    "module_complete": "Hoàn thành module",
     "modules": "Chương",
     "contact_title": "Liên hệ giảng viên",
     "modules_count_other": "{{count}} modules",
-    "modules_count_one": "{{count}} module"
+    "modules_count_one": "{{count}} module",
+    "lessons_count": "{{count}} bài giảng",
+    "lessons_count_one": "{{count}} bài giảng",
+    "lessons_count_other": "{{count}} bài giảng",
+    "show_all": "Xem tất cả",
+    "show_less": "Thu gọn",
+    "copy_email": "Sao chép email",
+    "copy_phone": "Sao chép số điện thoại",
+    "level_beginner": "Cơ bản",
+    "level_intermediate": "Trung cấp",
+    "level_advanced": "Nâng cao",
+    "enroll_required": "Cần ghi danh",
+    "enroll_required_body": "Bạn chưa được ghi danh vào khóa học này. Hãy liên hệ quản lý để được ghi danh trước khi truy cập nội dung.",
+    "enroll_required_hint": "Liên hệ quản lý để được ghi danh",
+    "back_to_course": "Quay lại khóa học"
   },
   "settings_security": {
     "title": "Bảo mật tài khoản",
@@ -597,6 +615,24 @@
     "success": {
       "assigned": "Đã phân công giảng viên",
       "removed": "Đã gỡ phân công"
+    },
+    "delete": {
+      "button": "Xóa khóa học",
+      "title": "Xóa khóa học?",
+      "body": "Thao tác này sẽ gỡ {{title}} và toàn bộ nội dung khỏi mọi danh sách. Có thể khôi phục bởi admin (Restore), nhưng hãy chắc chắn trước khi xóa.",
+      "deleted": "Đã xóa khóa học",
+      "failed": "Không thể xóa khóa học."
+    },
+    "edit": {
+      "button": "Chỉnh sửa",
+      "title_label": "Tên khóa học",
+      "slug_label": "Slug khóa học",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "saved": "Đã cập nhật khóa học",
+      "save_failed": "Không thể cập nhật khóa học.",
+      "title_required": "Vui lòng nhập tên khóa học.",
+      "slug_required": "Vui lòng nhập slug khóa học."
     }
   },
   "dept_courses": {
@@ -860,7 +896,37 @@
     },
     "success": {
       "all_marked": "Đã đánh dấu tất cả đã đọc"
-    }
+    },
+    "search_placeholder": "Tìm thông báo…",
+    "filter_status": "Trạng thái",
+    "filter_status_all": "Tất cả",
+    "filter_unread": "Chưa đọc",
+    "filter_read": "Đã đọc",
+    "filter_category": "Loại",
+    "filter_category_all": "Tất cả loại",
+    "delete_read": "Xóa đã đọc ({{count}})",
+    "group_by": "Nhóm theo",
+    "group_date": "Ngày",
+    "group_type": "Loại",
+    "group_today": "Hôm nay",
+    "group_yesterday": "Hôm qua",
+    "group_this_week": "Tuần này",
+    "group_earlier": "Trước đó",
+    "undo_message": "Đang xóa {{count}} thông báo…",
+    "undo": "Hoàn tác ({{count}})",
+    "clear_filters": "Xóa bộ lọc",
+    "empty_filtered_title": "Không có thông báo phù hợp",
+    "empty_filtered_body": "Hãy thử điều chỉnh bộ lọc hoặc tìm kiếm.",
+    "time": {
+      "today": "Hôm nay",
+      "yesterday": "Hôm qua",
+      "week": "Tuần",
+      "month": "Tháng",
+      "six_months": "6 tháng",
+      "year": "Năm",
+      "all": "Tất cả"
+    },
+    "showing_count": "{{count}} hiển thị"
   },
   "teacher_sr_student_detail": {
     "breadcrumb_detail": "Chi tiết",
@@ -1095,7 +1161,21 @@
     "empty_no_courses_body": "Khóa học sẽ xuất hiện tại đây sau khi được xuất bản.",
     "empty_no_match_title": "Không tìm thấy khóa học",
     "empty_no_match_body": "Thử điều chỉnh từ khóa tìm kiếm để xem thêm khóa học.",
-    "clear_search": "Xóa tìm kiếm"
+    "clear_search": "Xóa tìm kiếm",
+    "scope_label": "Phạm vi khóa học",
+    "scope_all": "Tất cả",
+    "scope_enrolled": "Đã ghi danh",
+    "scope_completed": "Hoàn thành",
+    "view_label": "Chế độ xem",
+    "view_cards": "Dạng thẻ",
+    "view_list": "Dạng danh sách",
+    "enrolled_badge": "Đang học",
+    "completed_badge": "Hoàn thành",
+    "empty_no_enrolled_title": "Bạn chưa ghi danh khóa học nào",
+    "empty_no_enrolled_body": "Nhờ quản lý ghi danh cho bạn — khóa học của bạn sẽ hiện ở đây.",
+    "empty_no_completed_title": "Chưa có khóa học hoàn thành",
+    "empty_no_completed_body": "Tiếp tục học nhé — khóa học đã hoàn thành sẽ hiện ở đây để bạn ôn tập bất cứ lúc nào.",
+    "browse_all": "Xem tất cả khóa học"
   },
   "dashboard": {
     "active_session": "Phiên đang hoạt động",
@@ -1225,7 +1305,19 @@
       "jobs_load_failed": "Không thể tải danh sách job.",
       "no_jobs_match": "Không có job nào khớp bộ lọc.",
       "filter_status": "Lọc trạng thái",
-      "recent_jobs": "Job gần đây (7 ngày)",
+      "recent_jobs": "Job gần đây",
+      "search_placeholder": "Tìm kiếm job…",
+      "view_job": "Xem job",
+      "time_filter": "Lọc theo thời gian",
+      "time": {
+        "today": "Hôm nay",
+        "yesterday": "Hôm qua",
+        "week": "Tuần",
+        "month": "Tháng",
+        "six_months": "6 tháng",
+        "year": "Năm",
+        "all": "Tất cả"
+      },
       "retry": "Thử lại",
       "stats": {
         "total": "Tổng job",
@@ -1261,9 +1353,13 @@
     "courses_list": {
       "title": "Quản lý khóa học",
       "subtitle": "Danh sách tất cả khóa học (bao gồm bản nháp + đã xóa).",
+      "search_placeholder": "Tìm theo tiêu đề hoặc slug…",
+      "filter_status": "Trạng thái",
+      "clear_filters": "Xóa bộ lọc",
       "include_deleted": "Bao gồm đã xóa",
       "load_failed": "Không thể tải danh sách khóa học.",
       "empty_title": "Chưa có khóa học nào",
+      "empty_search": "Không có khóa học phù hợp",
       "empty_body": "Khi giảng viên tạo khóa học, danh sách sẽ xuất hiện tại đây.",
       "empty_search": "Không có khóa học phù hợp",
       "search_placeholder": "Tìm theo tên hoặc slug…",
@@ -1540,6 +1636,7 @@
       "all_roles": "Tất cả vai trò",
       "filter_organization": "Lọc theo tổ chức",
       "all_organizations": "Tất cả tổ chức",
+      "clear_filters": "Xóa bộ lọc",
       "no_organization": "—",
       "back_to_list": "Quay lại danh sách",
       "profile_section": "Hồ sơ",
@@ -1959,6 +2056,7 @@
     "passed": "Đạt",
     "failed": "Chưa đạt",
     "passing_score": "Điểm đạt",
+    "nav_title": "Điều hướng câu hỏi",
     "questions_title": "Chi tiết từng câu hỏi",
     "correct": "Đúng",
     "incorrect": "Sai",
@@ -2425,10 +2523,13 @@
       "sending": "Đang gửi..."
     },
     "errors": {
-      "rate_limited": "Quá nhiều yêu cầu, vui lòng thử lại sau",
+      "rate_limited": "Bạn đã gửi quá nhiều yêu cầu, vui lòng thử lại sau",
       "start_failed": "Không thể bắt đầu phỏng vấn",
       "answer_required": "Vui lòng nhập câu trả lời",
       "send_failed": "Không thể gửi câu trả lời",
+      "send_failed_livekit": "Không thể gửi câu trả lời qua phiên trực tiếp. Vui lòng thử lại.",
+      "turn_in_flight": "Câu trả lời trước của bạn vẫn đang được xử lý — vui lòng chờ.",
+      "session_closing": "Buổi phỏng vấn đang kết thúc — câu trả lời của bạn chưa được ghi nhận.",
       "finish_failed": "Không thể kết thúc phỏng vấn",
       "no_question_available": "Phỏng vấn này chưa có câu hỏi nào được duyệt. Vui lòng liên hệ giáo viên."
     },
@@ -2564,7 +2665,11 @@
     },
     "placeholders": {
       "org_unit_uuid_optional": "UUID đơn vị (tuỳ chọn)",
-      "position_end": "Cuối"
+      "position_end": "Cuối",
+      "select_org_unit": "— Chọn đơn vị —",
+      "select_org_first": "— Chọn tổ chức trước —",
+      "organization_fixed": "Tổ chức của lộ trình này",
+      "loading_units": "Đang tải đơn vị…"
     },
     "sections": {
       "add_course": "Thêm khóa học",
@@ -2953,8 +3058,11 @@
       "delete_quiz_tooltip": "Xoá bài kiểm tra, câu hỏi, lượt làm bài và mục module",
       "add_question": "Thêm câu hỏi",
       "view_results": "Kết quả",
-      "add_question_of_type": "Thêm câu hỏi loại khác",
-      "add_other_type": "+ Loại khác…",
+      "add_typed": "Thêm {{type}}",
+      "add_question_menu_label": "Chọn loại câu hỏi để thêm",
+      "add_question_type_header": "Loại câu hỏi",
+      "add_default_badge": "mặc định",
+      "add_generate_with_ai": "Tạo bằng AI…",
       "preview": "Xem thử"
     },
     "status": {
@@ -3281,6 +3389,11 @@
       "remove_pair": "Xóa cặp",
       "add_pair": "Thêm cặp",
       "matching_hint": "Học viên thấy các giá trị vế phải bị xáo trộn và ghép với từng vế trái. Phải ghép đúng tất cả mới được điểm.",
+      "distractors_label": "Lựa chọn gây nhiễu (tùy chọn)",
+      "distractor_placeholder": "Lựa chọn sai thừa (không ghép)",
+      "add_distractor": "Thêm lựa chọn gây nhiễu",
+      "remove_distractor": "Xóa lựa chọn gây nhiễu",
+      "distractors_hint": "Các lựa chọn vế phải không ghép với vế trái nào. Chúng được trộn vào để việc đoán khó hơn, nhưng không bao giờ là đáp án đúng.",
       "ordering_label": "Thứ tự đúng",
       "move_up": "Di chuyển lên",
       "move_down": "Di chuyển xuống",
@@ -3289,6 +3402,7 @@
       "ordering_hint": "Thứ tự ở đây LÀ đáp án đúng. Học viên thấy các mục bị xáo trộn và phải sắp xếp lại.",
       "multi_select_label": "Cho phép nhiều đáp án đúng",
       "multi_select_desc": "Khi bật, học viên thấy ô chọn (checkbox) và có thể chọn nhiều hơn một đáp án.",
+      "type_multiple_choice": "Trắc nghiệm",
       "type_true_false": "Đúng / Sai",
       "type_short_answer": "Trả lời ngắn",
       "type_numerical": "Dạng số",

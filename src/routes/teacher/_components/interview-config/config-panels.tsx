@@ -118,6 +118,7 @@ export function ConfigPanels({
                     questions={questions ?? []}
                     minOutcomesToPass={config.min_outcomes_to_pass ?? null}
                     onViewQuestions={onViewOutcomeQuestions}
+                    status={config.status}
                   />
                 }
               />

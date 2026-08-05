@@ -14,6 +14,7 @@ export function TypeSpecificMatchingEditor({
 }: TypeSpecificEditorProps) {
   const { t } = useTranslation();
   const pairs = value.match_pairs;
+  const distractors = value.match_distractors;
 
   return (
     <div className="space-y-2">
@@ -76,6 +77,60 @@ export function TypeSpecificMatchingEditor({
       <p className="text-[11px] text-m3-on-surface-variant">
         {t("teacher_quiz_manage.type_editor.matching_hint")}
       </p>
+
+      {/* Distractors: extra unpaired right-side choices. They join the shuffled
+          choice pool but are never a correct answer, so the last prompt isn't a
+          forced pick and elimination is harder. Optional — no rows = 1:1. */}
+      <div className="mt-4 space-y-2 border-t border-m3-outline-variant/20 pt-4">
+        <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+          {t("teacher_quiz_manage.type_editor.distractors_label")}
+        </label>
+        {distractors.map((distractor, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <span className="w-6 shrink-0 text-center text-m3-on-surface-variant">
+              ✗
+            </span>
+            <input
+              type="text"
+              value={distractor}
+              disabled={disabled}
+              placeholder={t("teacher_quiz_manage.type_editor.distractor_placeholder")}
+              onChange={(e) => {
+                const next = distractors.map((d, i) =>
+                  i === idx ? e.target.value : d,
+                );
+                onChange({ match_distractors: next });
+              }}
+              className="flex-1 rounded-lg border-2 border-amber-300 bg-amber-50/50 px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:border-m3-primary"
+            />
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() =>
+                onChange({
+                  match_distractors: distractors.filter((_, i) => i !== idx),
+                })
+              }
+              aria-label={t("teacher_quiz_manage.type_editor.remove_distractor")}
+              className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-40"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => onChange({ match_distractors: [...distractors, ""] })}
+          className="flex items-center gap-1.5 text-sm text-m3-primary font-medium hover:underline disabled:opacity-40"
+        >
+          <Plus className="h-4 w-4" />
+          {t("teacher_quiz_manage.type_editor.add_distractor")}
+        </button>
+        <p className="text-[11px] text-m3-on-surface-variant">
+          {t("teacher_quiz_manage.type_editor.distractors_hint")}
+        </p>
+      </div>
     </div>
   );
 }

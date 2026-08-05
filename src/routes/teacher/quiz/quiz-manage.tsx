@@ -34,7 +34,7 @@ export default function QuizManagePage() {
 
   const data = useQuizManageData(courseId, quizId);
   const { quiz, questions, courseModule, pendingDeletes } = data;
-  const state = useQuizManageState({ quiz, questions });
+  const state = useQuizManageState({ quizId, quiz, questions });
   const sticky = useStickyActions();
 
   if (data.authoringLoading || data.contentLoading) {

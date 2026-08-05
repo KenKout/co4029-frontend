@@ -1,11 +1,15 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ListChecks } from "lucide-react";
 
 import { EndInterviewDialog } from "@/components/interview/dialogs";
 import { ConnectionLostBanner } from "@/components/interview/error-banner";
+import { useInterviewRoomState } from "@/components/interview/interview-room-provider";
 import { InterviewProgressSteps } from "@/components/interview/interview-progress-steps";
 import { InterviewHeader } from "@/components/interview/stages";
 import { TranscriptPanel } from "@/components/interview/transcript";
+import { useInterviewChat } from "@/components/interview/use-interview-chat";
+import { livekitTextEnabled } from "@/lib/interview/text-transport";
 import { questionTypeLabel } from "@/lib/interview/turn-factory";
 import {
   FullscreenDialogs,
@@ -37,6 +41,41 @@ export function InterviewWorkspaceScreen({
   const { t } = useTranslation();
   const questioning = iv.phase === "questioning";
 
+  // The LiveKit chat transport for typed turns. This screen is the only one
+  // rendered INSIDE the room provider, so it is the only place the room is
+  // reachable — mount the hook here and hand it to `handleRespond` through the
+  // controller's bridge ref (the actions are built outside the provider).
+  // Flag off → enabled false → canSend/connected stay false and the transport
+  // resolver picks REST, so nothing else changes.
+  const { room, connecting } = useInterviewRoomState();
+  const chat = useInterviewChat(room, { enabled: livekitTextEnabled() });
+  // Render-phase write: the narration gate reads this ref synchronously when a
+  // turn's AiTypingMessage mounts. The transition / first-question turn can
+  // mount in the SAME commit the room handover starts, and its narrate() runs
+  // in a child effect BEFORE this screen's effect would flip the state — so
+  // the ref must be current during render, not after effects. (Ref write only;
+  // the state flip stays in the effect below to drive the cancel + toggle.)
+  iv.setRoomConnectedRef(connecting || chat.connected);
+  // Hand the hook to `handleRespond` through the controller's bridge setter
+  // (the actions are built outside the provider, where the room is not
+  // reachable). The setter, not a direct ref write, so the immutability rule
+  // never sees a prop mutation.
+  const { setChatBridge, setRoomConnected } = iv;
+  useEffect(() => {
+    setChatBridge(chat);
+    // The agent in the room speaks every utterance via LiveKit TTS; the
+    // workspace must not narrate the same text client-side (double voice).
+    // Gate on `connecting` too, not just `connected`: when onboarding ends,
+    // the token fetch + agent join are still in flight, and the first
+    // question arrives in that window — narrating it client-side would
+    // overlap the agent's opening once it lands in the room.
+    setRoomConnected(connecting || chat.connected);
+    return () => {
+      setChatBridge(null);
+      setRoomConnected(false);
+    };
+  }, [setChatBridge, setRoomConnected, connecting, chat]);
+
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
       <InterviewHeader
@@ -53,6 +92,10 @@ export function InterviewWorkspaceScreen({
         questionLingering={iv.questionPacing.lingering}
         connected={iv.connected}
         voiceOn={iv.voiceOn}
+        // When the LiveKit agent is live in the room it is the voice; the
+        // client narration toggle cannot mute the room's audio track, so a
+        // live toggle would lie. Same convention as the voice screen.
+        showVoiceControl={!iv.roomConnected}
         onToggleVoice={() =>
           iv.setVoiceOn((current) => {
             if (current) iv.setAiSpeaking(false);
@@ -110,7 +153,7 @@ export function InterviewWorkspaceScreen({
             iv.setAiSpeaking(iv.voiceOn && speaking);
             iv.setAiPresenting(speaking);
           }}
-          onReplay={(turn) => void iv.speakIfOn(turn.text)}
+          onReplay={(turn) => void iv.replayIfOn(turn.text)}
           replayDisabled={!iv.voiceOn}
           replayingTurnId={null}
         />
