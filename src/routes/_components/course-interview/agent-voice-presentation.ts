@@ -134,6 +134,35 @@ export interface AgentVoiceCoordinator {
   present: (text: string) => NarrationPresentation;
 }
 
+/**
+ * Does the LiveKit agent own the spoken voice right now?
+ *
+ * Exported and pure so the regression below is pinned against the REAL
+ * predicate. A test that re-implements this logic passes whatever the shipped
+ * code does — which is exactly how a copy of it stayed green while the bug it
+ * described was reintroduced.
+ *
+ * A connected room is NOT sufficient. A WARMED room (opened during setup so the
+ * ~10-13s worker startup overlaps onboarding) is connected with nobody in it:
+ * the client is still the only voice and narrates the ceremony lines itself.
+ * `use-interview-speech.ts` cancels in-flight narration on the handover edge, so
+ * treating a warm connection as a handover truncated the greeting — reported as
+ * «đọc được "Hi Xà" xong dừng lại». Session bd61e0f3: warm token 16:51:46.397,
+ * greeting fetched 16:51:46.409 (17.8s of audio), cancelled a beat later when
+ * the room finished connecting.
+ *
+ * Gating on completed onboarding is exactly the moment the agent is dispatched.
+ */
+export function resolveAgentOwnsTheVoice(args: {
+  onboardingStage: string | null | undefined;
+  roomWanted: boolean;
+  connecting: boolean;
+  chatConnected: boolean;
+}): boolean {
+  if (args.onboardingStage !== "completed") return false;
+  return args.roomWanted || args.connecting || args.chatConnected;
+}
+
 /** Map `useVoiceAssistant()` output onto a phase, without leaking SDK strings. */
 export function resolveAgentVoicePhase(
   agentPresent: boolean,

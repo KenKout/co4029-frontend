@@ -13,7 +13,10 @@ import { TranscriptPanel } from "@/components/interview/transcript";
 import { useInterviewChat } from "@/components/interview/use-interview-chat";
 import { livekitTextEnabled } from "@/lib/interview/text-transport";
 import { questionTypeLabel } from "@/lib/interview/turn-factory";
-import { resolveAgentVoicePhase } from "./agent-voice-presentation";
+import {
+  resolveAgentOwnsTheVoice,
+  resolveAgentVoicePhase,
+} from "./agent-voice-presentation";
 import {
   FullscreenDialogs,
   LeaveBlockerDialog,
@@ -72,7 +75,25 @@ export function InterviewWorkspaceScreen({
   // "phát ok rồi giữa chừng đứng lại rồi phát lại từ đầu". `roomWanted` is
   // false during the transition beat, so the client-only transition line is
   // still allowed through.
-  const agentOwnsTheVoice = roomWanted || connecting || chat.connected;
+  // The room being connected is NOT the same as the agent owning the voice.
+  //
+  // A WARMED room (opened during setup so the worker startup overlaps
+  // onboarding) is connected with nobody in it: the client is still the only
+  // voice, and the setup ceremony lines are narrated client-side. Treating that
+  // connection as a handover cut the greeting off mid-sentence — reported as
+  // «đọc được "Hi Xà" xong dừng lại», session bd61e0f3: warm token at
+  // 16:51:46.397, greeting fetched at 16:51:46.409 (17.8s of audio), then the
+  // room finished connecting a beat later and cancelled it.
+  //
+  // `agentOwnsTheVoice` is therefore gated on onboarding being complete, which
+  // is exactly when the agent is dispatched. Before that the room may be up,
+  // but the client keeps the voice.
+  const agentOwnsTheVoice = resolveAgentOwnsTheVoice({
+    onboardingStage: iv.onboardingStage,
+    roomWanted,
+    connecting,
+    chatConnected: chat.connected,
+  });
   iv.setRoomConnectedRef(agentOwnsTheVoice);
   // Same value, second consumer: it tells the pacing coordinator an agent is
   // COMING, which `lk.agent.state` cannot say until the agent has already
