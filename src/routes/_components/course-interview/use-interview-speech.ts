@@ -127,6 +127,13 @@ export function useInterviewSpeech(
   const setAgentVoicePhase = useCallback((phase: AgentVoicePhase) => {
     agentVoiceRef.current.setPhase(phase);
   }, []);
+  // Whether an agent is on its way, before `lk.agent.state` exists. Question
+  // one mounts DURING the join (~10-13s), when no phase has been reported yet
+  // and that is indistinguishable from a text-only session — without this the
+  // turn degraded to the settled presentation and outran the voice.
+  const setAgentExpected = useCallback((expected: boolean) => {
+    agentVoiceRef.current.setAgentExpected(expected);
+  }, []);
   const speakIfOn = useCallback(
     (text: string) => {
       // The LiveKit agent in the room is the voice; narrating client-side as
@@ -182,5 +189,7 @@ export function useInterviewSpeech(
     replayIfOn,
     /** Feed the agent's `lk.agent.state` in so agent-spoken turns stay paced. */
     setAgentVoicePhase,
+    /** Feed `roomWanted` in so a turn can wait for an agent still joining. */
+    setAgentExpected,
   };
 }

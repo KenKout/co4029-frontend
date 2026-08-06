@@ -73,6 +73,12 @@ export function InterviewWorkspaceScreen({
   // still allowed through.
   const agentOwnsTheVoice = roomWanted || connecting || chat.connected;
   iv.setRoomConnectedRef(agentOwnsTheVoice);
+  // Same value, second consumer: it tells the pacing coordinator an agent is
+  // COMING, which `lk.agent.state` cannot say until the agent has already
+  // joined (~10-13s later). Without it question one mounted with no reported
+  // phase, took the "nothing will ever speak" fallback, and typed itself out
+  // before the agent said a word.
+  iv.setAgentExpected(agentOwnsTheVoice);
   // Same reason this is a render-phase write: a turn mounting in the handover
   // commit calls speak() from a child effect, and a phase delivered one effect
   // later would arrive after that turn already decided how to pace itself.

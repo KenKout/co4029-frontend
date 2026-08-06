@@ -159,13 +159,44 @@ describe("agent voice coordinator", () => {
   });
 
   it("degrades to the previous behaviour when no agent phase is ever reported", async () => {
-    // Flag off, agent never joined, or a future SDK stops publishing the
-    // attribute: the turn must NOT wait on a signal that will never arrive.
+    // Flag off, or a text-only session: no agent will EVER speak, so the turn
+    // must NOT wait on a signal that will never arrive.
     const coordinator = createAgentVoiceCoordinator();
 
     const presentation = coordinator.present("Some question text.");
     expect(await settledNow(presentation.started)).toBe(true);
     expect(await settledNow(presentation.finished)).toBe(true);
+  });
+
+  it("waits for an agent that is expected but has not joined yet", async () => {
+    // THE regression this whole file keeps chasing. Question one mounts DURING
+    // the join: measured on session d6cb2619 the turn mounts ~13:09:05 and
+    // room_join lands at 13:09:14.5. At mount `useVoiceAssistant()` has no
+    // agent, so no phase has ever been reported — indistinguishable from a
+    // text-only session unless the workspace says an agent is coming.
+    const coordinator = createAgentVoiceCoordinator();
+    coordinator.setAgentExpected(true);
+
+    const presentation = coordinator.present("Question one.");
+    // Must NOT fall through to the settled fallback.
+    expect(await settledNow(presentation.started)).toBe(false);
+    expect(presentation.durationMs).toBeDefined();
+
+    // ...and releases when the agent finally speaks, ~10s later in production.
+    coordinator.setPhase("quiet");
+    coordinator.setPhase("speaking");
+    expect(await settledNow(presentation.started)).toBe(true);
+  });
+
+  it("stops waiting once an expected agent turns out not to be coming", async () => {
+    // Room dropped / handover abandoned: the workspace clears the flag and new
+    // turns must go back to narrating immediately.
+    const coordinator = createAgentVoiceCoordinator();
+    coordinator.setAgentExpected(true);
+    coordinator.setAgentExpected(false);
+
+    const presentation = coordinator.present("Question one.");
+    expect(await settledNow(presentation.started)).toBe(true);
   });
 
   it("still reports unknown-only phases as no signal", async () => {

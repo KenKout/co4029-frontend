@@ -33,11 +33,18 @@ export type AgentVoicePhase = "unknown" | "quiet" | "speaking";
 /**
  * Cap on how long a turn's text waits for the agent to start speaking.
  *
- * Covers room handover + agent-side TTS for question one (observed: a few
- * seconds). On expiry the text types anyway — a late caption beats a stalled
- * screen.
+ * Sized from measurement, not guesswork. Token mint → `voice.room_join` on this
+ * deployment: 10.0s, 13.2s, 13.3s (sessions 43a25e3d, 38b75255, d6cb2619), and
+ * the agent then runs its own TTS (~3.0-3.6s for a question-length utterance)
+ * before any audio arrives. So the realistic worst case is ~17s and the
+ * previous 6s cap expired while the agent was still joining — the text was
+ * released early and outran the voice anyway.
+ *
+ * 20s leaves headroom over that without letting a genuinely dead room pin the
+ * screen indefinitely. On expiry the text types anyway: a late caption beats a
+ * stalled screen.
  */
-export const AGENT_VOICE_START_TIMEOUT_MS = 6_000;
+export const AGENT_VOICE_START_TIMEOUT_MS = 20_000;
 
 /**
  * Cap on how long a turn stays "presenting" after the agent began speaking.
@@ -94,6 +101,27 @@ export function estimateAgentSpeechMs(text: string): number {
 export interface AgentVoiceCoordinator {
   /** Report the agent's current phase. Idempotent; only transitions settle waiters. */
   setPhase: (phase: AgentVoicePhase) => void;
+  /**
+   * Declare that an agent is EXPECTED to speak, before one has appeared.
+   *
+   * Without this the coordinator could not tell "no agent will ever speak"
+   * (flag off, text-only session — must not wait) from "the agent is still
+   * joining" (must wait). It resolved that ambiguity with `everReported`, which
+   * only flips once `lk.agent.state` has actually been published — i.e. once
+   * the agent is already IN the room.
+   *
+   * Question one mounts before that. Measured on session d6cb2619: the turn
+   * mounts ~13:09:05 and `room_join` lands at 13:09:14.5, so for ~10s
+   * `everReported` was false, `present()` returned the settled fallback, and
+   * the text typed itself out at base speed long before the voice — the
+   * reported "text chạy gần hết voice mới phát".
+   *
+   * The workspace already knows the answer: `roomWanted` (the provider's
+   * `active`) is true across the whole join. Feeding it here lets a turn wait
+   * for an agent that has not arrived yet, while a text-only session still
+   * degrades to the settled presentation exactly as before.
+   */
+  setAgentExpected: (expected: boolean) => void;
   /** The presentation handle for one agent-spoken turn. */
   present: (text: string) => NarrationPresentation;
 }
@@ -127,6 +155,11 @@ export function createAgentVoiceCoordinator(): AgentVoiceCoordinator {
   // "the agent is quiet" from "this build never reports agent state", so the
   // gate must not make a turn wait on a signal that may never arrive.
   let everReported = false;
+  // Set by the workspace from `roomWanted`: an agent is on its way even though
+  // `lk.agent.state` has not been published yet. Without it a turn mounting
+  // during the join window degraded to the settled presentation and outran the
+  // voice by the whole join duration (~10s measured).
+  let agentExpected = false;
   const startWaiters = new Set<() => void>();
   const endWaiters = new Set<() => void>();
 
@@ -163,8 +196,16 @@ export function createAgentVoiceCoordinator(): AgentVoiceCoordinator {
       }
     },
 
+    setAgentExpected: (expected: boolean) => {
+      agentExpected = expected;
+    },
+
     present: (text: string): NarrationPresentation => {
-      if (!everReported) return settledPresentation();
+      // Only skip the wait when nothing will ever speak: no agent has reported
+      // a phase AND none is on the way. During the join both are the same
+      // observable state (`state === undefined`), which is why `agentExpected`
+      // has to come from outside.
+      if (!everReported && !agentExpected) return settledPresentation();
 
       // The agent never reports how LONG it will speak — `lk.agent.state` is a
       // start/stop signal only. Without a duration the runner falls back to the
