@@ -47,6 +47,7 @@ describe("client keeps the voice through setup", () => {
           roomWanted: true,
           connecting: false,
           chatConnected: true,
+          pendingFirstQuestion: false,
         }),
       ).toBe(false);
     },
@@ -59,6 +60,7 @@ describe("client keeps the voice through setup", () => {
         roomWanted: true,
         connecting: true,
         chatConnected: false,
+        pendingFirstQuestion: false,
       }),
     ).toBe(false);
   });
@@ -70,6 +72,60 @@ describe("client keeps the voice through setup", () => {
         roomWanted: false,
         connecting: false,
         chatConnected: false,
+        pendingFirstQuestion: false,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("the post-onboarding transition beat", () => {
+  /**
+   * The line "Great—the introduction is complete. Let's begin. Here is your
+   * first question." exists ONLY client-side — the agent never receives it, so
+   * only client narration can voice it.
+   *
+   * `roomActive` holds the room back for this one beat via
+   * `!pendingFirstQuestion`. Warm-room defeated that guard: `connect` became
+   * `active || warm`, so the room is already UP from warming and the hold delays
+   * nothing. The instant onboarding completed, the client was muted for a line
+   * the agent does not have — reported as the transition line and question one
+   * both being silent.
+   */
+  it("keeps the client voice while the first question is pending", () => {
+    expect(
+      agentOwnsTheVoice({
+        onboardingStage: "completed",
+        roomWanted: true,
+        connecting: false,
+        chatConnected: true,
+        pendingFirstQuestion: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("hands over once the transition has been presented", () => {
+    // handleTurnPresented clears pendingFirstQuestion; from here the agent owns
+    // question one, which it genuinely has.
+    expect(
+      agentOwnsTheVoice({
+        onboardingStage: "completed",
+        roomWanted: true,
+        connecting: false,
+        chatConnected: true,
+        pendingFirstQuestion: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("still refuses to hand over mid-setup even with no pending question", () => {
+    // The two guards are independent; neither should mask the other.
+    expect(
+      agentOwnsTheVoice({
+        onboardingStage: "readiness",
+        roomWanted: true,
+        connecting: false,
+        chatConnected: true,
+        pendingFirstQuestion: false,
       }),
     ).toBe(false);
   });
@@ -85,6 +141,7 @@ describe("agent takes the voice once setup is done", () => {
         roomWanted: true,
         connecting: false,
         chatConnected: false,
+        pendingFirstQuestion: false,
       }),
     ).toBe(true);
   });
@@ -98,6 +155,7 @@ describe("agent takes the voice once setup is done", () => {
         roomWanted: true,
         connecting: true,
         chatConnected: false,
+        pendingFirstQuestion: false,
       }),
     ).toBe(true);
   });
@@ -109,6 +167,7 @@ describe("agent takes the voice once setup is done", () => {
         roomWanted: false,
         connecting: false,
         chatConnected: true,
+        pendingFirstQuestion: false,
       }),
     ).toBe(true);
   });
@@ -122,6 +181,7 @@ describe("agent takes the voice once setup is done", () => {
         roomWanted: false,
         connecting: false,
         chatConnected: false,
+        pendingFirstQuestion: false,
       }),
     ).toBe(false);
   });

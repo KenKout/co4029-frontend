@@ -158,8 +158,23 @@ export function resolveAgentOwnsTheVoice(args: {
   roomWanted: boolean;
   connecting: boolean;
   chatConnected: boolean;
+  pendingFirstQuestion: boolean;
 }): boolean {
   if (args.onboardingStage !== "completed") return false;
+  // The post-onboarding transition line ("Great—the introduction is complete.
+  // Let's begin. Here is your first question.") exists ONLY client-side — the
+  // agent never receives it, so only client narration can voice it.
+  //
+  // `roomActive` in course-interview.tsx holds the room back for exactly this
+  // beat via `!pendingFirstQuestion`. That guard stopped working when warm-room
+  // added `connect: active || warm`: the room is already UP from warming, so the
+  // hold no longer delays anything, and the moment onboarding completed this
+  // predicate muted the client for a line the agent does not have. Reported as
+  // the transition line AND question one both being silent.
+  //
+  // So mirror the same beat here: while a first question is pending, the client
+  // still owns the voice regardless of the room being live.
+  if (args.pendingFirstQuestion) return false;
   return args.roomWanted || args.connecting || args.chatConnected;
 }
 

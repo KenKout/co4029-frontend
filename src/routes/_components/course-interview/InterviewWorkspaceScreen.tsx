@@ -93,6 +93,7 @@ export function InterviewWorkspaceScreen({
     roomWanted,
     connecting,
     chatConnected: chat.connected,
+    pendingFirstQuestion: Boolean(iv.pendingFirstQuestion),
   });
   iv.setRoomConnectedRef(agentOwnsTheVoice);
   // Same value, second consumer: it tells the pacing coordinator an agent is
