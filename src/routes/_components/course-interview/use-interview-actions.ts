@@ -12,6 +12,7 @@ import {
   type InterviewTurnAction,
 } from "@/lib/interview/turn-factory";
 import { clearQuestionPacing } from "@/lib/interview/use-question-pacing";
+import { clientOwnsClosing } from "./agent-voice-presentation";
 import { handleRespond } from "./interview-answer-actions";
 import {
   handleAssistance,
@@ -44,6 +45,7 @@ export function useInterviewActions(base: InterviewBase) {
     phase,
     dictation,
     narration,
+    claimClosingForClient,
     finish,
     t,
     leaveBlocker,
@@ -74,6 +76,21 @@ export function useInterviewActions(base: InterviewBase) {
       if (!sessionId || phase === "closing" || phase === "results") return;
       if (dictation.listening) dictation.stop();
       narration.cancel();
+      // Who reads the goodbye depends on WHO ended the interview.
+      //
+      // "natural" means the turn pipeline reported finished — on a live room the
+      // agent already ran submit_session and spoke that same closing string
+      // itself (orchestration_bridge returns it as `speak_text`). The client
+      // must stay silent or the candidate hears it twice.
+      //
+      // "ended_early" (End button / leaving) and "timed_out" (the client's own
+      // timer) never reach the agent at all: `POST /finish` writes the ceremony
+      // message and enqueues evaluation, and that is the whole of it. Nobody
+      // was reading the goodbye on those paths.
+      //
+      // Claimed BEFORE the request so the ref is set by the time the closing
+      // turn mounts and calls speak().
+      if (clientOwnsClosing(reason)) claimClosingForClient();
       const closingElapsedSeconds = currentElapsedSeconds();
       setAnswerText("");
       setEndDialogOpen(false);
@@ -114,7 +131,7 @@ export function useInterviewActions(base: InterviewBase) {
     // The dictation/narration methods are stable and are intentionally read at
     // call time; including their wrapper objects would restart timeout effects.
 
-    [sessionId, phase, finish, t],
+    [sessionId, phase, finish, t, claimClosingForClient],
   );
 
   /**

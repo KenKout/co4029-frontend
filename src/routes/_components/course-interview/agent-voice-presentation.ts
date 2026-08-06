@@ -163,6 +163,30 @@ export function resolveAgentOwnsTheVoice(args: {
   return args.roomWanted || args.connecting || args.chatConnected;
 }
 
+/**
+ * Does the CLIENT read the closing goodbye, rather than the agent?
+ *
+ * Exported and pure so the test exercises the shipped rule instead of a copy.
+ *
+ * The answer depends on who ended the interview, because only one of the two
+ * endings reaches the agent:
+ *
+ * - `"natural"` — the turn pipeline reported finished. On a live room the agent
+ *   itself ran `submit_session` and spoke that same closing string
+ *   (`orchestration_bridge` returns it as `speak_text`), so the client must stay
+ *   silent or the candidate hears the goodbye twice.
+ * - `"ended_early"` / `"timed_out"` — the End button, leaving, or the client's
+ *   own timer. `POST /finish` writes the ceremony message and enqueues
+ *   evaluation and tells the agent NOTHING, so there is no agent utterance to
+ *   wait for. Before this, the goodbye appeared on screen and nobody read it.
+ *
+ * With no room at all the client narrates regardless, so this only changes
+ * behaviour for a live session.
+ */
+export function clientOwnsClosing(reason: string): boolean {
+  return reason !== "natural";
+}
+
 /** Map `useVoiceAssistant()` output onto a phase, without leaking SDK strings. */
 export function resolveAgentVoicePhase(
   agentPresent: boolean,
