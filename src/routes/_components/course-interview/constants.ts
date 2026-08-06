@@ -4,7 +4,7 @@ import {
   History,
   ListChecks,
   Loader2,
-  RotateCcw,
+  XCircle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -16,9 +16,18 @@ import {
  */
 
 /**
- * Verdict phase — drives the hero treatment. "retry" (failed verdict) is
- * deliberately encouraging (primary, not red); red is reserved for an
- * evaluation-system failure so a normal fail never feels punitive.
+ * Verdict phase — drives the hero treatment.
+ *
+ * "retry" IS the failed verdict, and it now reads as one: an X on red, titled
+ * "Not passed". It used to borrow the encouraging primary gradient and the
+ * title "Interview completed" on the theory that a normal fail should not feel
+ * punitive — but "completed" beside a retry arrow does not tell the candidate
+ * they failed, which is the one thing the screen has to communicate. The
+ * supportive framing lives in the summary line and the study plan below, where
+ * it can be specific instead of ambiguous.
+ *
+ * `eval_failed` keeps its own red-with-warning-triangle treatment: a grader
+ * crash is not the candidate's failure, so the two must stay visually distinct.
  */
 export type ResultPhase =
   | "pass"
@@ -35,7 +44,7 @@ export const RESULT_HERO_TONE_CLASS: Record<ResultPhase, string> = {
   abandoned: "bg-m3-surface-container text-m3-on-surface-variant",
   evaluating:
     "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary",
-  retry: "bg-gradient-to-br from-m3-primary to-m3-secondary text-white",
+  retry: "bg-gradient-to-br from-red-500 to-rose-600 text-white",
 };
 
 export const RESULT_HERO_ICON: Record<ResultPhase, LucideIcon> = {
@@ -43,7 +52,7 @@ export const RESULT_HERO_ICON: Record<ResultPhase, LucideIcon> = {
   pass: CheckCircle2,
   eval_failed: AlertTriangle,
   evaluating: Loader2,
-  retry: RotateCcw,
+  retry: XCircle,
   abandoned: History,
 };
 
@@ -53,7 +62,7 @@ export const RESULT_HERO_TITLE_KEY: Record<ResultPhase, string> = {
   abandoned: "course_interview.results.abandoned",
   evaluating: "course_interview.results.evaluating",
   pass: "course_interview.results.passed",
-  retry: "course_interview.results.completed",
+  retry: "course_interview.results.failed",
 };
 
 export const RESULT_HERO_SUMMARY_KEY: Record<ResultPhase, string> = {
@@ -63,4 +72,21 @@ export const RESULT_HERO_SUMMARY_KEY: Record<ResultPhase, string> = {
   evaluating: "course_interview.results.evaluating_summary",
   pass: "course_interview.results.pass_summary",
   retry: "course_interview.results.fail_summary",
+};
+
+/**
+ * Heading colour, so the title tone matches the badge.
+ *
+ * The heading used to be hard-coded `text-m3-primary` for every phase, which
+ * was fine while every badge was blue-ish. With the fail badge now red, a blue
+ * "Not passed" under a red X reads as two different signals — the eye takes the
+ * headline colour as the verdict.
+ */
+export const RESULT_HERO_TITLE_CLASS: Record<ResultPhase, string> = {
+  practice: "text-m3-primary",
+  pass: "text-emerald-600",
+  eval_failed: "text-danger",
+  abandoned: "text-m3-on-surface-variant",
+  evaluating: "text-m3-primary",
+  retry: "text-red-600",
 };

@@ -2561,6 +2561,7 @@
     "results": {
       "passed": "Đạt yêu cầu",
       "completed": "Đã hoàn tất phỏng vấn",
+      "failed": "Chưa đạt",
       "evaluating": "Đang chấm câu trả lời của bạn…",
       "evaluating_summary": "AI đang chấm câu trả lời của bạn theo các mục tiêu học tập. Quá trình này thường mất khoảng một phút — kết quả sẽ tự động hiển thị tại đây.",
       "pass_summary": "Bạn đã đạt đủ số mục tiêu học tập để vượt qua buổi phỏng vấn này.",

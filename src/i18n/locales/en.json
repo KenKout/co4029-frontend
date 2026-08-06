@@ -2664,6 +2664,7 @@
     "results": {
       "passed": "Passed",
       "completed": "Interview completed",
+      "failed": "Not passed",
       "evaluating": "Evaluating your answers…",
       "evaluating_summary": "Our AI is grading your responses against the learning outcomes. This usually takes a minute — the result will appear here automatically.",
       "pass_summary": "You met enough of the learning outcomes to pass this interview.",

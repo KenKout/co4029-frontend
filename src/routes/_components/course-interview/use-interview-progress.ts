@@ -84,7 +84,6 @@ export function useInterviewProgress(
       description: t("course_interview.integrity_warning.body"),
     });
   }, [t]);
-  useIntegrityReporter(sessionId, { onWarning: handleIntegrityWarning });
 
   // ── Immersive fullscreen (proctoring) ──────────────────────────────────────
   // A live session runs fullscreen with the app sidebar unmounted. Entering
@@ -95,6 +94,22 @@ export function useInterviewProgress(
     sessionId,
     hasFinishResult: Boolean(finishResult),
     phase,
+  });
+
+  // Integrity monitoring is scoped to the LIVE session, not to the session id.
+  //
+  // `sessionId` outlives the interview: it is still set on the results screen,
+  // so gating on it alone kept the tab-switch / fullscreen-exit listeners
+  // attached while the candidate read their verdict and study plan. Reading the
+  // recommended material means leaving the tab — which fired a "this is logged"
+  // toast and POSTed integrity events for behaviour that is not only allowed
+  // but encouraged at that point.
+  //
+  // `interviewActive` is already false once `finishResult` lands (and for the
+  // prestart screen), so passing it here stops monitoring at exactly the moment
+  // the assessment ends. Recording during the live session is unchanged.
+  useIntegrityReporter(interviewActive ? sessionId : null, {
+    onWarning: handleIntegrityWarning,
   });
   // Fullscreen consent + exit-warning policy (ask once, count exits, reset on
   // session end) lives in useFullscreenDeterrent.
