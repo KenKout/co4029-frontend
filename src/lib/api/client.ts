@@ -60,6 +60,20 @@ async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
     throw await readError(res);
   }
 
+  // A 204 (and a 205) has NO body, so `res.json()` rejects with
+  // "Unexpected end of JSON input" — turning a successful call into a thrown
+  // error at the call site. That is not hypothetical: POST /realtime-agent
+  // returns 204, its caller treated the rejection as "the agent could not be
+  // dispatched", and tore down a room the agent had in fact just joined
+  // (session 5a3995ec, dispatch 204 at 17:14:22, client re-minted at 17:14:47
+  // and the candidate got no voice).
+  //
+  // Callers of a no-content endpoint type it as `Promise<void>`, so resolving
+  // with undefined matches what they already expect.
+  if (res.status === 204 || res.status === 205) {
+    return undefined as T;
+  }
+
   return res.json() as Promise<T>;
 }
 
