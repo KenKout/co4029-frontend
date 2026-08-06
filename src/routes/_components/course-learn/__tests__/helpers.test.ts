@@ -199,6 +199,35 @@ describe("earliestPendingItemId", () => {
       ),
     ).toBe("l2");
   });
+
+  it("never highlights an interview, even though it reads as pending", () => {
+    // An interview has no completion signal (itemStateFor resolves lessons and
+    // quizzes only), so it is permanently "pending". Highlighting it would
+    // park a blue "do this next" glow on it forever — including after the
+    // student has finished it — and contradict the course-home "Next up"
+    // label, which resolves against lessons only.
+    const flat = [
+      flatItem("m1", item("l1", "lesson", 1)),
+      flatItem("m1", item("iv1", "interview", 2)),
+      flatItem("m2", item("l2", "lesson", 1)),
+    ];
+    expect(
+      earliestPendingItemId(
+        flat,
+        stateFor({ l1: "completed", iv1: "pending", l2: "pending" }),
+      ),
+    ).toBe("l2");
+  });
+
+  it("returns undefined when only interviews are left", () => {
+    const flat = [
+      flatItem("m1", item("l1", "lesson", 1)),
+      flatItem("m1", item("iv1", "interview", 2)),
+    ];
+    expect(
+      earliestPendingItemId(flat, stateFor({ l1: "completed", iv1: "pending" })),
+    ).toBeUndefined();
+  });
 });
 
 describe("itemStateFor quiz completion", () => {

@@ -99,12 +99,24 @@ export function moduleIsComplete(
  * ``undefined`` when everything is done. "Pending" only — the currently open
  * lesson (state ``active``) and completed items are excluded, so the
  * highlight always points at the genuine next step.
+ *
+ * Interview items are SKIPPED. They have no completion signal at all
+ * (``itemStateFor`` resolves completion for lessons and quizzes only), so an
+ * interview is permanently ``pending`` — it would capture this highlight the
+ * moment it appears in the course and never release it, even after the
+ * student has finished it. That both parked a blue "do this next" glow on a
+ * done interview and contradicted the course-home "Next up" label, which
+ * resolves against lessons only (``resumeIdx``). Skipping them keeps the two
+ * surfaces telling the student the same thing.
  */
 export function earliestPendingItemId(
   flatItems: FlatItem[],
   itemState: (fi: FlatItem) => LessonState,
 ): string | undefined {
-  const fi = flatItems.find((item) => itemState(item) === "pending");
+  const fi = flatItems.find(
+    (item) =>
+      item.item.item_type !== "interview" && itemState(item) === "pending",
+  );
   return fi?.item.id;
 }
 
