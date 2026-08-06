@@ -772,6 +772,7 @@
       },
       "locked_hard": "Bạn chưa thể mở các khóa học này.",
       "locked_soft": "Bạn có thể xem các khóa học này, nhưng hãy hoàn thành giai đoạn trước.",
+      "started_while_locked": "Bạn đã bắt đầu sớm hơn thứ tự — chặng trước vẫn chưa xong.",
       "progress": "Đã xong {{done}}/{{total}}",
       "optional_quota": "Chọn {{count}} khóa học tự chọn",
       "start": "Bắt đầu",

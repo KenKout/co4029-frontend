@@ -889,6 +889,13 @@ export interface StartCourseResult {
   created: boolean;
   /** Advisory only; the attention cap never blocks. */
   over_concurrency_cap: boolean;
+  /**
+   * The stage is LOCKED but its enforcement is not 'hard', so the Start was
+   * allowed anyway. Only 'hard' blocks (403) — 'soft' warns and 'advisory' is
+   * display-only. Surface this or the student is never told they are working
+   * ahead of the path.
+   */
+  stage_locked_warning?: boolean;
 }
 
 export type CareerPathProgressRead = Schemas["CareerPathProgressRead"] & {

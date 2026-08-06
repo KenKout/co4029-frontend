@@ -245,6 +245,12 @@ function StageCourseRow({
         if (result.over_concurrency_cap) {
           toast.warning(t(`${prefix}.cap_warning`, { count: 0 }));
         }
+        // The stage was locked but its enforcement is soft/advisory, so the
+        // server let the Start through. Say so — otherwise "allowed" and
+        // "allowed while locked" look identical to the student.
+        if (result.stage_locked_warning) {
+          toast.warning(t(`${prefix}.started_while_locked`));
+        }
       },
       onError: (err) =>
         toast.error((err as Error).message || t(`${prefix}.start_failed`)),

@@ -816,6 +816,7 @@
       },
       "locked_hard": "You cannot open these courses yet.",
       "locked_soft": "You can look at these courses, but finish the earlier stage first.",
+      "started_while_locked": "You started this ahead of schedule — the earlier stage is not finished yet.",
       "progress": "{{done}} of {{total}} done",
       "optional_quota": "Pick {{count}} of the optional courses",
       "start": "Start",
