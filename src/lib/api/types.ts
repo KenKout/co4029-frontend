@@ -846,6 +846,18 @@ export type CourseProgressSummaryWithStage = Schemas["CourseProgressSummary"] & 
   /** `course_enrollments.status === 'completed'` — NOT completion_percent>=100. */
   satisfied?: boolean;
   is_enrolled?: boolean;
+  /**
+   * Gradeable units in the course: lessons + quizzes + interviews. 0 means the
+   * course can never be completed (the publish gate rejects such a course).
+   *
+   * `completion_percent` on the generated shape is a percentage of these units,
+   * not a lesson average — the same measure `satisfied` is decided by. These
+   * counts expose the numerator/denominator so the UI can show "4/6 done"
+   * instead of only a bar. Keep in sync with
+   * abridgeai/features/career_paths/schemas/public.py.
+   */
+  unit_total?: number;
+  unit_done?: number;
 };
 
 export interface StageProgressRead {

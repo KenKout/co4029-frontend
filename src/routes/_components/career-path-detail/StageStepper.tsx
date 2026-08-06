@@ -180,6 +180,36 @@ function StageBlock({
   );
 }
 
+/** Progress bar plus the "4/6 done" count for an enrolled course.
+ *
+ * Extracted from ``StageCourseRow`` to keep that function under the
+ * complexity ceiling: adding the unit counts pushed it to 16 (max 15). The
+ * split is along a real seam — this is the only part of the row that renders
+ * progress, and it needs nothing but the two numbers.
+ */
+function CourseUnitProgress({ done, total }: { done: number; total: number }) {
+  const { t } = useTranslation();
+  const percent = total > 0 ? Math.round((done * 100) / total) : 0;
+  return (
+    <div className="mt-2">
+      <div className="h-1.5 w-full bg-m3-surface-container rounded-full overflow-hidden">
+        <div
+          className="h-full bg-m3-primary transition-all"
+          style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
+        />
+      </div>
+      {/* Counts, not just a bar: completion spans lessons, quizzes and
+          interviews now, so "4/6 done" tells a student there is something
+          left without making them hunt for which item. */}
+      {total > 0 && (
+        <p className="mt-1 text-[11px] text-m3-on-surface-variant">
+          {t("career_path_detail.stages.units_done", { done, total })}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function StageCourseRow({
   careerPathId,
   course,
@@ -195,11 +225,14 @@ function StageCourseRow({
   const prefix = "career_path_detail.stages";
   const start = useStartCourse(careerPathId);
 
-  const completion = course.completion_percent ?? 0;
-  // `satisfied` is the enrollment status, NOT completion_percent — a course can
-  // read 100% lessons and still not be satisfied if it was never enrolled.
+  // `satisfied` is the enrollment status, NOT completion_percent. Both are now
+  // measured over the same gradeable units (lessons + quizzes + interviews),
+  // but they still differ for a course the student never enrolled in: that has
+  // no status row at all, so it can read 100% and remain unsatisfied.
   const satisfied = course.satisfied === true;
   const enrolled = course.is_enrolled === true;
+  const unitTotal = course.unit_total ?? 0;
+  const unitDone = course.unit_done ?? 0;
   // `hard` enforcement on a locked stage is the only case that truly blocks.
   const blocked = !stage.unlocked && stage.enforcement === "hard";
 
@@ -239,16 +272,7 @@ function StageCourseRow({
           </span>
           {!enrolled && <span>{t(`${prefix}.not_started_yet`)}</span>}
         </div>
-        {enrolled && (
-          <div className="mt-2">
-            <div className="h-1.5 w-full bg-m3-surface-container rounded-full overflow-hidden">
-              <div
-                className="h-full bg-m3-primary transition-all"
-                style={{ width: `${Math.min(100, Math.max(0, completion))}%` }}
-              />
-            </div>
-          </div>
-        )}
+        {enrolled && <CourseUnitProgress done={unitDone} total={unitTotal} />}
       </div>
       {satisfied ? (
         <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />

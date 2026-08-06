@@ -824,7 +824,8 @@
       "already_started": "You already started this course",
       "start_failed": "Could not start this course",
       "cap_warning": "You have {{count}} courses open in this path. Finishing some before starting more will help you keep up.",
-      "not_started_yet": "Not started"
+      "not_started_yet": "Not started",
+      "units_done": "{{done}}/{{total}} done"
     }
   },
   "study_cards_due": {

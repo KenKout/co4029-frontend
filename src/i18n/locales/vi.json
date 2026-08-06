@@ -780,7 +780,8 @@
       "already_started": "Bạn đã bắt đầu khóa học này",
       "start_failed": "Không thể bắt đầu khóa học này",
       "cap_warning": "Bạn đang mở {{count}} khóa học trong lộ trình này. Hãy hoàn thành một vài khóa trước khi mở thêm để theo kịp.",
-      "not_started_yet": "Chưa bắt đầu"
+      "not_started_yet": "Chưa bắt đầu",
+      "units_done": "Đã xong {{done}}/{{total}}"
     }
   },
   "study_cards_due": {
