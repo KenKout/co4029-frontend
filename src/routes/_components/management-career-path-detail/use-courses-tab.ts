@@ -34,6 +34,12 @@ export function useCoursesTab(id: string, t: TFunction) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [courseQuery, setCourseQuery] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  /**
+   * Which stage the picker will attach to. Every course item belongs to a
+   * stage (backend migration 0070), so the picker must know its target before
+   * it can add anything.
+   */
+  const [targetStageId, setTargetStageId] = useState<string | null>(null);
 
   const catalogue = useCourseCatalogue(pickerOpen);
 
@@ -43,6 +49,20 @@ export function useCoursesTab(id: string, t: TFunction) {
     if (!order) return false;
     return courseOrderChanged(order, baseRows);
   }, [order, baseRows]);
+
+  /** Attached courses grouped by `stage_id`, each group in position order. */
+  const rowsByStage = useMemo(() => {
+    const grouped = new Map<string, CareerPathCourseAuthoring[]>();
+    for (const row of rows) {
+      const bucket = grouped.get(row.stage_id);
+      if (bucket) bucket.push(row);
+      else grouped.set(row.stage_id, [row]);
+    }
+    for (const bucket of grouped.values()) {
+      bucket.sort((a, b) => a.position - b.position);
+    }
+    return grouped;
+  }, [rows]);
 
   // Map the catalogue to the dialog shape and filter client-side by
   // title/slug (the /courses endpoint has no q= param). Already-attached
@@ -56,14 +76,29 @@ export function useCoursesTab(id: string, t: TFunction) {
     [catalogue.data, courseQuery],
   );
 
+  function openPickerForStage(stageId: string) {
+    setTargetStageId(stageId);
+    setPickerOpen(true);
+  }
+
   async function handleConfirmCourses(selected: SelectableEntity[]) {
+    if (!targetStageId) {
+      toast.error(
+        t("management_career_path_detail.stages.errors.pick_stage_first"),
+      );
+      return;
+    }
     setSubmitting(true);
     let ok = 0;
     // Backend has only a single-item add route; loop sequentially so each
     // gets an append position and one failure doesn't abort the rest.
     for (const entity of selected) {
       try {
-        await add.mutateAsync({ course_id: entity.id, is_required: true });
+        await add.mutateAsync({
+          stage_id: targetStageId,
+          course_id: entity.id,
+          is_required: true,
+        });
         ok += 1;
       } catch (err) {
         toast.error(
@@ -83,10 +118,26 @@ export function useCoursesTab(id: string, t: TFunction) {
     setCourseQuery("");
   }
 
-  function move(idx: number, delta: number) {
+  /**
+   * Swap two courses WITHIN one stage.
+   *
+   * `idx`/`delta` are indices inside `stageId`'s own group, not into the flat
+   * list — positions are unique per `(stage_id, position)` now, so reordering
+   * is a per-stage operation. The buffer stays a flat array because the
+   * reorder endpoint takes the full ordered id list and renumbers each stage
+   * from the relative order within it.
+   */
+  function moveInStage(stageId: string, idx: number, delta: number) {
+    const group = rowsByStage.get(stageId) ?? [];
     const target = idx + delta;
-    if (target < 0 || target >= rows.length) return;
-    setOrder(swapRows(rows, idx, target));
+    if (target < 0 || target >= group.length) return;
+    const a = group[idx];
+    const b = group[target];
+    if (!a || !b) return;
+    const flatA = rows.findIndex((r) => r.course_id === a.course_id);
+    const flatB = rows.findIndex((r) => r.course_id === b.course_id);
+    if (flatA < 0 || flatB < 0) return;
+    setOrder(swapRows(rows, flatA, flatB));
   }
 
   function handleSubmitReorder() {
@@ -132,11 +183,14 @@ export function useCoursesTab(id: string, t: TFunction) {
     catalogue,
     baseRows,
     rows,
+    rowsByStage,
+    targetStageId,
+    openPickerForStage,
     hasReorderChanges,
     alreadyAddedCourseIds,
     courseCandidates,
     handleConfirmCourses,
-    move,
+    moveInStage,
     handleSubmitReorder,
     closePicker,
     removeLocally,

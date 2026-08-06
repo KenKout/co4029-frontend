@@ -2,30 +2,45 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { ArrowDown, ArrowUp } from "lucide-react";
+import { Select } from "@/components/ui/select";
 import { useRemoveCareerPathCourse } from "@/lib/api/hooks/career-paths";
-import type { CareerPathCourseAuthoring } from "@/lib/api/types";
+import type {
+  CareerPathCourseAuthoring,
+  CareerPathStageAuthoring,
+} from "@/lib/api/types";
 import { RemoveRowButtons } from "./RemoveRowButtons";
 import type { CoursesTabController } from "./use-courses-tab";
+import type { StagesTabController } from "./use-stages-tab";
 
 /**
- * One attached course: reorder arrows, position chip, title/slug, the
- * required-or-optional marker and the remove control.
+ * One attached course inside its stage: reorder arrows (scoped to the stage,
+ * since `(stage_id, position)` is what is unique now), position chip,
+ * title/slug, the required-or-optional marker, the satisfied-by indicator, a
+ * move-to-another-stage select and the remove control.
  */
 export function CourseInPathRow({
   row,
   index,
+  stageTotal,
   pathId,
   controller,
+  stages,
+  stagesController,
 }: {
   row: CareerPathCourseAuthoring;
+  /** Index WITHIN the stage, not the flat list. */
   index: number;
+  /** Number of courses in this row's stage. */
+  stageTotal: number;
   pathId: string;
   controller: CoursesTabController;
+  stages: CareerPathStageAuthoring[];
+  stagesController: StagesTabController;
 }) {
   const { t } = useTranslation();
   const remove = useRemoveCareerPathCourse(pathId, row.course_id);
   const [confirming, setConfirming] = useState(false);
-  const total = controller.rows.length;
+  const prefix = "management_career_path_detail.stages";
 
   function handleRemove() {
     remove.mutate(undefined, {
@@ -42,12 +57,16 @@ export function CourseInPathRow({
     });
   }
 
+  const requiredOrOptional = t(
+    "management_career_path_detail.labels.required_or_optional",
+  );
+
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-card ghost-border">
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-m3-surface-container-low ghost-border">
       <div className="flex flex-col gap-0.5 shrink-0">
         <button
           type="button"
-          onClick={() => controller.move(index, -1)}
+          onClick={() => controller.moveInStage(row.stage_id, index, -1)}
           disabled={index === 0}
           className="p-1 rounded hover:bg-m3-surface-container disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
           title={t("management_career_path_detail.actions.move_up")}
@@ -56,8 +75,8 @@ export function CourseInPathRow({
         </button>
         <button
           type="button"
-          onClick={() => controller.move(index, 1)}
-          disabled={index === total - 1}
+          onClick={() => controller.moveInStage(row.stage_id, index, 1)}
+          disabled={index === stageTotal - 1}
           className="p-1 rounded hover:bg-m3-surface-container disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
           title={t("management_career_path_detail.actions.move_down")}
         >
@@ -71,7 +90,7 @@ export function CourseInPathRow({
         <p className="text-sm font-semibold text-m3-on-surface truncate">
           {row.course_title}
         </p>
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex flex-wrap items-center gap-2 mt-0.5">
           <span className="text-[11px] font-mono text-m3-on-surface-variant truncate">
             {row.course_slug}
           </span>
@@ -82,13 +101,36 @@ export function CourseInPathRow({
                 : "text-[10px] font-bold uppercase text-m3-on-surface-variant"
             }
           >
-            {t(
-              "management_career_path_detail.labels.required_or_optional",
-            ).split(" / ")[row.is_required ? 0 : 1] ??
-              t("management_career_path_detail.labels.required_or_optional")}
+            {requiredOrOptional.split(" / ")[row.is_required ? 0 : 1] ??
+              requiredOrOptional}
+          </span>
+          {/* Satisfied-by is display-only: the backend accepts 'pass' in the
+              CHECK for a future graded variant, but only 'completion' has an
+              evaluator today. */}
+          <span className="text-[10px] text-m3-on-surface-variant">
+            {t(`${prefix}.fields.satisfied_by`)}:{" "}
+            {t(`${prefix}.satisfied_by.${row.satisfied_by}`)}
           </span>
         </div>
       </div>
+      {stages.length > 1 && (
+        <div className="shrink-0 w-40 hidden sm:block">
+          <Select<string>
+            value={row.stage_id}
+            onValueChange={(next) => {
+              if (next !== row.stage_id) {
+                stagesController.handleMoveCourse(row.course_id, next);
+              }
+            }}
+            size="sm"
+            options={stages.map((s) => ({
+              value: s.id,
+              label: stagesController.stageLabel(s),
+            }))}
+            aria-label={t(`${prefix}.move_to_stage`)}
+          />
+        </div>
+      )}
       <RemoveRowButtons
         confirming={confirming}
         isPending={remove.isPending}
