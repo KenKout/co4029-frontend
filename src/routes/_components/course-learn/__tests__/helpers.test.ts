@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import type { ModuleItemPublic, ModulePublic, QuizProgressRead } from "@/lib/api/types";
+import type {
+  InterviewProgressRead,
+  ModuleItemPublic,
+  ModulePublic,
+  QuizProgressRead,
+} from "@/lib/api/types";
 
 import {
   earliestPendingItemId,
@@ -33,6 +38,35 @@ function lessonItem(id: string, position: number): ModuleItemPublic {
     position,
     target: { id, title: `lesson-${id}` },
   } as ModuleItemPublic;
+}
+
+function interviewItem(id: string, position: number): ModuleItemPublic {
+  return {
+    id,
+    item_type: "interview",
+    position,
+    // target.id is the interview CONFIG id — the key the progress map uses.
+    target: { id, title: `interview-${id}` },
+  } as ModuleItemPublic;
+}
+
+function interviewProgress(
+  over: Partial<InterviewProgressRead> & { interview_config_id: string },
+): InterviewProgressRead {
+  return {
+    attempts_used: 0,
+    attempts_in_flight: 0,
+    attempts_graded: 0,
+    passed: false,
+    completed: false,
+    ...over,
+  };
+}
+
+function interviewProgressMap(
+  rows: InterviewProgressRead[],
+): Map<string, InterviewProgressRead> {
+  return new Map(rows.map((r) => [r.interview_config_id, r]));
 }
 
 function flatItem(mod: string, it: ModuleItemPublic): FlatItem {
@@ -305,5 +339,135 @@ describe("itemStateFor quiz completion", () => {
   it("ignores the progress map when the row is absent (data still loading)", () => {
     const fi = flatItem("m1", quizItem("q1", 1));
     expect(itemStateFor(fi, undefined, emptyLessonMap)).toBe("pending");
+  });
+});
+
+describe("itemStateFor interview completion", () => {
+  const emptyLessonMap = new Map<string, string>();
+  const noQuizzes = new Map<string, QuizProgressRead>();
+
+  it("marks a passed interview as completed", () => {
+    // The headline ask: one successful attempt puts the tag on the row.
+    const fi = flatItem("m1", interviewItem("iv1", 1));
+    const map = interviewProgressMap([
+      interviewProgress({
+        interview_config_id: "iv1",
+        completed: true,
+        passed: true,
+        attempts_used: 2,
+        attempts_graded: 2,
+      }),
+    ]);
+    expect(itemStateFor(fi, undefined, emptyLessonMap, noQuizzes, map)).toBe(
+      "completed",
+    );
+  });
+
+  it("keeps an interview failed on every attempt PENDING", () => {
+    // The deliberate divergence from quizzes: a quiz completes once attempts
+    // run out, an interview does not. The tag means "đạt", so a student who
+    // has not passed still has this to do.
+    const fi = flatItem("m1", interviewItem("iv1", 1));
+    const map = interviewProgressMap([
+      interviewProgress({
+        interview_config_id: "iv1",
+        completed: false,
+        passed: false,
+        attempts_used: 3,
+        attempts_graded: 3,
+      }),
+    ]);
+    expect(itemStateFor(fi, undefined, emptyLessonMap, noQuizzes, map)).toBe(
+      "pending",
+    );
+  });
+
+  it("keeps an interview awaiting evaluation pending", () => {
+    // Grading is an ARQ job: attempts_used > attempts_graded means the verdict
+    // has not landed. Not a pass, and not a fail either.
+    const fi = flatItem("m1", interviewItem("iv1", 1));
+    const map = interviewProgressMap([
+      interviewProgress({
+        interview_config_id: "iv1",
+        attempts_used: 1,
+        attempts_graded: 0,
+      }),
+    ]);
+    expect(itemStateFor(fi, undefined, emptyLessonMap, noQuizzes, map)).toBe(
+      "pending",
+    );
+  });
+
+  it("keeps a never-attempted interview pending", () => {
+    const fi = flatItem("m1", interviewItem("iv1", 1));
+    const map = interviewProgressMap([
+      interviewProgress({ interview_config_id: "iv1" }),
+    ]);
+    expect(itemStateFor(fi, undefined, emptyLessonMap, noQuizzes, map)).toBe(
+      "pending",
+    );
+  });
+
+  it("treats an interview as pending when the map has no row for it", () => {
+    const fi = flatItem("m1", interviewItem("iv1", 1));
+    expect(
+      itemStateFor(fi, undefined, emptyLessonMap, noQuizzes, new Map()),
+    ).toBe("pending");
+  });
+
+  it("degrades to pending when the interview map is not passed at all", () => {
+    // A caller that has not loaded the map must keep the old behaviour rather
+    // than throwing — the argument is optional on purpose.
+    const fi = flatItem("m1", interviewItem("iv1", 1));
+    expect(itemStateFor(fi, undefined, emptyLessonMap, noQuizzes)).toBe(
+      "pending",
+    );
+  });
+
+  it("does not let an interview pass leak onto a quiz row", () => {
+    // Separate maps, separate id spaces. A shared id must not cross over.
+    const fi = flatItem("m1", quizItem("same-id", 1));
+    const map = interviewProgressMap([
+      interviewProgress({
+        interview_config_id: "same-id",
+        completed: true,
+        passed: true,
+      }),
+    ]);
+    expect(itemStateFor(fi, undefined, emptyLessonMap, noQuizzes, map)).toBe(
+      "pending",
+    );
+  });
+});
+
+describe("moduleIsComplete with interviews", () => {
+  it("collapses a module once its interview is passed", () => {
+    // Previously impossible: interviews carried no completion signal, so a
+    // module holding one could never auto-collapse.
+    const flat = [
+      flatItem("m1", lessonItem("l1", 1)),
+      flatItem("m1", interviewItem("iv1", 2)),
+    ];
+    expect(
+      moduleIsComplete(
+        mod("m1"),
+        flat,
+        stateFor({ l1: "completed", iv1: "completed" }),
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps a module open while its interview is unpassed", () => {
+    const flat = [
+      flatItem("m1", lessonItem("l1", 1)),
+      flatItem("m1", interviewItem("iv1", 2)),
+    ];
+    expect(
+      moduleIsComplete(
+        mod("m1"),
+        flat,
+        stateFor({ l1: "completed", iv1: "pending" }),
+      ),
+    ).toBe(false);
   });
 });

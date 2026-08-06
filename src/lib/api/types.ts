@@ -199,6 +199,26 @@ export interface QuizProgressRead {
   completed: boolean;
   attempts_remaining: number | null;
 }
+// Hand-layered for the same reason as QuizProgressRead above: the learner
+// interview-progress endpoint landed in backend 2f21c9e and isn't in the
+// committed openapi snapshot yet.
+//
+// Completion rule differs from quizzes ON PURPOSE (user decision 2026-08-06):
+// `completed` is true only when at least one non-practice attempt PASSED. A
+// quiz also completes on failed-with-attempts-exhausted; an interview does
+// not, so the tag reads as "passed" and a student who failed every attempt
+// keeps the item pending.
+//
+// `attempts_graded` < `attempts_used` means evaluation (an ARQ job) has not
+// caught up yet — those attempts are neither passed nor failed.
+export interface InterviewProgressRead {
+  interview_config_id: string;
+  attempts_used: number;
+  attempts_in_flight: number;
+  attempts_graded: number;
+  passed: boolean;
+  completed: boolean;
+}
 export type QuizAttemptRead = Schemas["QuizAttemptRead"];
 export type QuizAttemptReviewRead = Schemas["QuizAttemptReviewRead"];
 export type QuizAttemptReviewQuestion = Schemas["QuizAttemptReviewQuestion"];

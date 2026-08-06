@@ -251,6 +251,8 @@ export const queryKeys = {
     session: (sessionId: string) =>
       ["interviews", "session", sessionId] as const,
     mySessions: () => ["interviews", "my-sessions"] as const,
+    progress: (courseId: string) =>
+      ["interviews", "progress", courseId] as const,
     gapReport: (sessionId: string) =>
       ["interviews", "gap-report", sessionId] as const,
     configAuthoring: (configId: string) =>
