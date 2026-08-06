@@ -12,7 +12,7 @@ import {
   type InterviewTurnAction,
 } from "@/lib/interview/turn-factory";
 import { clearQuestionPacing } from "@/lib/interview/use-question-pacing";
-import { clientOwnsClosing } from "./agent-voice-presentation";
+import { shouldPresentGoodbye } from "./agent-voice-presentation";
 import { handleRespond } from "./interview-answer-actions";
 import {
   handleAssistance,
@@ -45,7 +45,6 @@ export function useInterviewActions(base: InterviewBase) {
     phase,
     dictation,
     narration,
-    claimClosingForClient,
     finish,
     t,
     leaveBlocker,
@@ -76,21 +75,18 @@ export function useInterviewActions(base: InterviewBase) {
       if (!sessionId || phase === "closing" || phase === "results") return;
       if (dictation.listening) dictation.stop();
       narration.cancel();
-      // Who reads the goodbye depends on WHO ended the interview.
+      // Whether the goodbye is shown at all depends on WHO ended the interview.
       //
-      // "natural" means the turn pipeline reported finished — on a live room the
-      // agent already ran submit_session and spoke that same closing string
-      // itself (orchestration_bridge returns it as `speak_text`). The client
-      // must stay silent or the candidate hears it twice.
+      // "natural" — the turn pipeline finished, so on a live room the agent is
+      // speaking that closing over LiveKit right now. Keep the two-turn ending:
+      // present the goodbye, then move to the result when it finishes.
       //
-      // "ended_early" (End button / leaving) and "timed_out" (the client's own
-      // timer) never reach the agent at all: `POST /finish` writes the ceremony
-      // message and enqueues evaluation, and that is the whole of it. Nobody
-      // was reading the goodbye on those paths.
-      //
-      // Claimed BEFORE the request so the ref is set by the time the closing
-      // turn mounts and calls speak().
-      if (clientOwnsClosing(reason)) claimClosingForClient();
+      // "ended_early" (End button / leaving) and "timed_out" — the candidate is
+      // done and wants out, and the agent is not involved on these paths at all
+      // (POST /finish only writes the ceremony message and enqueues the
+      // evaluation). Holding them ~10s for a farewell they did not ask for is
+      // pure friction, so go straight to the result. The goodbye is still
+      // persisted server-side, so it remains in the transcript.
       const closingElapsedSeconds = currentElapsedSeconds();
       setAnswerText("");
       setEndDialogOpen(false);
@@ -104,8 +100,10 @@ export function useInterviewActions(base: InterviewBase) {
         clearQuestionPacing(sessionId);
         setCurrentQuestion(null);
         setPendingFirstQuestion(null);
-        setPendingFinishResult(result);
-        if (result.closing_text) {
+        if (shouldPresentGoodbye({ reason, closingText: result.closing_text })) {
+          // Presenting this turn is what advances closing -> results
+          // (see use-interview-sequencing's handleTurnPresented).
+          setPendingFinishResult(result);
           setTranscript((previous) => [
             ...previous.filter((turn) => turn.kind !== "closing"),
             makeCeremonyTurn(
@@ -116,9 +114,12 @@ export function useInterviewActions(base: InterviewBase) {
             ),
           ]);
         } else {
+          // No goodbye turn is rendered, so nothing would ever fire the
+          // presentation trigger — enter the result directly. Also covers a
+          // server that returned no closing_text at all.
+          setPendingFinishResult(null);
           setPhase("results");
           setFinishResult(result);
-          setPendingFinishResult(null);
         }
       } catch (error) {
         setPhase("questioning");
@@ -131,7 +132,7 @@ export function useInterviewActions(base: InterviewBase) {
     // The dictation/narration methods are stable and are intentionally read at
     // call time; including their wrapper objects would restart timeout effects.
 
-    [sessionId, phase, finish, t, claimClosingForClient],
+    [sessionId, phase, finish, t],
   );
 
   /**

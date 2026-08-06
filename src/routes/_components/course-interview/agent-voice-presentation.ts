@@ -164,27 +164,45 @@ export function resolveAgentOwnsTheVoice(args: {
 }
 
 /**
- * Does the CLIENT read the closing goodbye, rather than the agent?
+ * Did the AGENT end the interview itself, rather than the candidate?
  *
- * Exported and pure so the test exercises the shipped rule instead of a copy.
+ * Exported and pure so tests exercise the shipped rule instead of a copy.
  *
- * The answer depends on who ended the interview, because only one of the two
- * endings reaches the agent:
+ * Only `"natural"` comes from the turn pipeline: `orchestration_bridge` runs
+ * `submit_session` and returns the closing as `speak_text`, so on a live room
+ * the agent is speaking that goodbye over LiveKit right then. Everything else —
+ * `"ended_early"` (End button, leaving) and `"timed_out"` (the client's own
+ * timer) — never reaches the agent at all: `POST /finish` writes the ceremony
+ * message and enqueues evaluation, and that is the whole of it.
  *
- * - `"natural"` — the turn pipeline reported finished. On a live room the agent
- *   itself ran `submit_session` and spoke that same closing string
- *   (`orchestration_bridge` returns it as `speak_text`), so the client must stay
- *   silent or the candidate hears the goodbye twice.
- * - `"ended_early"` / `"timed_out"` — the End button, leaving, or the client's
- *   own timer. `POST /finish` writes the ceremony message and enqueues
- *   evaluation and tells the agent NOTHING, so there is no agent utterance to
- *   wait for. Before this, the goodbye appeared on screen and nobody read it.
- *
- * With no room at all the client narrates regardless, so this only changes
- * behaviour for a live session.
+ * Which is why the two endings differ on screen: a natural end plays its
+ * goodbye and then shows the result, while the candidate-initiated endings go
+ * straight to the result rather than holding them ~10s for a farewell they did
+ * not ask for. The goodbye is still persisted server-side, so it stays in the
+ * transcript either way.
  */
-export function clientOwnsClosing(reason: string): boolean {
-  return reason !== "natural";
+export function agentEndedTheInterview(reason: string): boolean {
+  return reason === "natural";
+}
+
+/**
+ * Does the ending render a goodbye turn, or go straight to the result?
+ *
+ * Load-bearing beyond politeness: presenting the closing turn is what advances
+ * `phase` from "closing" to "results" (`handleTurnPresented` in
+ * use-interview-sequencing). So whenever this returns false the caller MUST
+ * enter the result directly — otherwise nothing fires the trigger and the screen
+ * hangs on the interview view forever.
+ *
+ * False when the candidate ended it themselves (no agent involved, and they
+ * should not be held for a farewell they opted out of) or when the server
+ * returned no closing text at all.
+ */
+export function shouldPresentGoodbye(args: {
+  reason: string;
+  closingText: string | null | undefined;
+}): boolean {
+  return agentEndedTheInterview(args.reason) && Boolean(args.closingText);
 }
 
 /** Map `useVoiceAssistant()` output onto a phase, without leaking SDK strings. */

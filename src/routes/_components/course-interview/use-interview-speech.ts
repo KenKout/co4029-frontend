@@ -134,19 +134,6 @@ export function useInterviewSpeech(
   const setAgentExpected = useCallback((expected: boolean) => {
     agentVoiceRef.current.setAgentExpected(expected);
   }, []);
-  /**
-   * True once the client owns the closing goodbye instead of the agent.
-   *
-   * Set by `beginClosing()` — the End-button path. `POST /finish` writes the
-   * ceremony message and enqueues evaluation but sends the agent nothing, so
-   * the agent has no closing to speak; only a turn that finishes through the
-   * pipeline gives it one. A ref (not state) because `speakIfOn` reads it
-   * during render, same reason as `roomConnectedRef`.
-   */
-  const closingOwnedByClientRef = useRef(false);
-  const claimClosingForClient = useCallback(() => {
-    closingOwnedByClientRef.current = true;
-  }, []);
   const speakIfOn = useCallback(
     (text: string) => {
       // The LiveKit agent in the room is the voice; narrating client-side as
@@ -154,17 +141,7 @@ export function useInterviewSpeech(
       // the render-phase ref, not the state: the transition turn's narrate()
       // runs in a child effect BEFORE the parent state flip would land, and
       // a stale read there lets the overlap through.
-      //
-      // EXCEPT the closing that follows the End button. That path is
-      // `beginClosing()` → `POST /finish` → `result.closing_text`, and /finish
-      // never tells the agent anything: it writes the ceremony message and
-      // enqueues evaluation. The agent only speaks a closing when the TURN
-      // pipeline finishes (`speak_text` with `is_finished`). So deferring to the
-      // agent here meant the goodbye appeared on screen and nobody read it.
-      // Silencing the client is only correct when something else will speak.
-      if (roomConnectedRef.current && !closingOwnedByClientRef.current) {
-        return agentVoiceRef.current.present(text);
-      }
+      if (roomConnectedRef.current) return agentVoiceRef.current.present(text);
       if (voiceOn) return narration.narrate(text);
       return silent();
     },
@@ -214,10 +191,5 @@ export function useInterviewSpeech(
     setAgentVoicePhase,
     /** Feed `roomWanted` in so a turn can wait for an agent still joining. */
     setAgentExpected,
-    /**
-     * Hand the closing goodbye to the client. Called by `beginClosing()`,
-     * because `POST /finish` gives the agent nothing to say.
-     */
-    claimClosingForClient,
   };
 }
