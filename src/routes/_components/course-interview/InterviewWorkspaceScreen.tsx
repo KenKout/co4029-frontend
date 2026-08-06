@@ -49,7 +49,7 @@ export function InterviewWorkspaceScreen({
   // controller's bridge ref (the actions are built outside the provider).
   // Flag off → enabled false → canSend/connected stay false and the transport
   // resolver picks REST, so nothing else changes.
-  const { room, connecting } = useInterviewRoomState();
+  const { room, connecting, roomWanted } = useInterviewRoomState();
   const chat = useInterviewChat(room, { enabled: livekitTextEnabled() });
   // The agent's own voice phase (`lk.agent.state`), published as a participant
   // attribute and surfaced here. This is the ONLY thing that knows when the
@@ -63,7 +63,16 @@ export function InterviewWorkspaceScreen({
   // in a child effect BEFORE this screen's effect would flip the state — so
   // the ref must be current during render, not after effects. (Ref write only;
   // the state flip stays in the effect below to drive the cancel + toggle.)
-  iv.setRoomConnectedRef(connecting || chat.connected);
+  //
+  // `roomWanted`, not just `connecting`: the token prefetch means the token is
+  // already in hand the instant `active` flips, so `connecting` is false while
+  // the agent is still joining. That left the gate open for the whole join
+  // window and the client narrated question one on top of the agent —
+  // "phát ok rồi giữa chừng đứng lại rồi phát lại từ đầu". `roomWanted` is
+  // false during the transition beat, so the client-only transition line is
+  // still allowed through.
+  const agentOwnsTheVoice = roomWanted || connecting || chat.connected;
+  iv.setRoomConnectedRef(agentOwnsTheVoice);
   // Same reason this is a render-phase write: a turn mounting in the handover
   // commit calls speak() from a child effect, and a phase delivered one effect
   // later would arrive after that turn already decided how to pace itself.
@@ -77,16 +86,15 @@ export function InterviewWorkspaceScreen({
     setChatBridge(chat);
     // The agent in the room speaks every utterance via LiveKit TTS; the
     // workspace must not narrate the same text client-side (double voice).
-    // Gate on `connecting` too, not just `connected`: when onboarding ends,
-    // the token fetch + agent join are still in flight, and the first
-    // question arrives in that window — narrating it client-side would
-    // overlap the agent's opening once it lands in the room.
-    setRoomConnected(connecting || chat.connected);
+    // Same predicate as the render-phase write above, so the state that drives
+    // the cancel-on-handover and the voice toggle can never disagree with the
+    // ref the gate actually reads.
+    setRoomConnected(agentOwnsTheVoice);
     return () => {
       setChatBridge(null);
       setRoomConnected(false);
     };
-  }, [setChatBridge, setRoomConnected, connecting, chat]);
+  }, [setChatBridge, setRoomConnected, agentOwnsTheVoice, chat]);
 
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-white">

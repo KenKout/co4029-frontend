@@ -38,6 +38,24 @@ interface InterviewRoomState {
   room: Room | undefined;
   /** True while the token request is in flight or no token has arrived yet. */
   connecting: boolean;
+  /**
+   * True when this session is MEANT to hold a live room right now (the `active`
+   * prop), regardless of how far the connection has actually got.
+   *
+   * The narration gate needs this rather than `connecting`. `connecting` is only
+   * true while a token is being fetched, and the prefetch deliberately mints the
+   * token during the transition beat — so by the time `active` flips, the token
+   * is already in hand, `connecting` is false, the room is not connected yet,
+   * and the gate is wide open for exactly as long as the agent takes to join.
+   * The client then narrates question one, the agent joins ~10s later and says
+   * the same question from the top: "phát ok rồi giữa chừng đứng lại rồi phát
+   * lại từ đầu".
+   *
+   * `active` is false during the beat (the caller holds it back while the
+   * client-only transition line plays), so gating on it does NOT re-mute that
+   * line — which is the trap `connecting` was introduced to avoid.
+   */
+  roomWanted: boolean;
   /** Set when the token request failed; the room cannot be joined. */
   tokenError: string | null;
 }
@@ -45,6 +63,7 @@ interface InterviewRoomState {
 const InterviewRoomStateContext = createContext<InterviewRoomState>({
   room: undefined,
   connecting: false,
+  roomWanted: false,
   tokenError: null,
 });
 
@@ -179,6 +198,10 @@ export function InterviewRoomProvider({
     // transition line. Reporting "connecting" there would trip the narration
     // gate and mute exactly the line this beat exists to let through.
     connecting: active && (isFetchingToken || !tokenData),
+    // Also `active`, and for the narration gate this is the one that matters:
+    // it stays true across the whole join, including the window where the
+    // token is already in hand but the agent has not arrived yet.
+    roomWanted: active,
     tokenError,
   };
 
