@@ -5,6 +5,7 @@ import type {
 import { InterviewerAssistance } from "./InterviewerAssistance";
 import { QuestionCard } from "./QuestionCard";
 import type { QuestionTypeLabel, StageSpeak } from "./types";
+import type { TranscriptionLike } from "./use-agent-spoken-text";
 
 /** The assessed branch of the stage: the active question card plus, when the
  * candidate asked for help, the clarification/hint card beneath it. */
@@ -27,6 +28,8 @@ export function FocusedStageQuestionBlock({
   hintUsed,
   markPresented,
   replayTurn,
+  agentSpeaks = false,
+  agentTranscriptions,
 }: {
   activeTurn: ConversationTurn;
   assistanceTurn: ConversationTurn | null;
@@ -46,6 +49,9 @@ export function FocusedStageQuestionBlock({
   hintUsed: boolean;
   markPresented: (turn: ConversationTurn) => void;
   replayTurn: (turn: ConversationTurn) => Promise<void>;
+  /** The LiveKit agent voices this turn — mirror its synced transcript. */
+  agentSpeaks?: boolean;
+  agentTranscriptions?: readonly TranscriptionLike[];
 }) {
   return (
     <div className="space-y-3">
@@ -59,6 +65,8 @@ export function FocusedStageQuestionBlock({
           questionTypeLabel(currentQuestionType)
         }
         speak={speak}
+        agentSpeaks={agentSpeaks}
+        agentTranscriptions={agentTranscriptions}
         onSpeakingChange={onSpeakingChange}
         onPresentationComplete={() => markPresented(activeTurn)}
         onReplay={() => void replayTurn(activeTurn)}

@@ -5,6 +5,7 @@ import type {
   ConversationTurn,
   InterviewAgentStatus,
 } from "@/lib/interview/types";
+import type { TranscriptionLike } from "./use-agent-spoken-text";
 
 /**
  * Shared prop contracts for the interview stage components, extracted verbatim
@@ -63,6 +64,14 @@ export type QuestionCardProps = {
   replayDisabled?: boolean;
   clarificationDisabled?: boolean;
   isReplaying?: boolean;
+  /**
+   * True when the LiveKit agent voices this turn, so the card mirrors the
+   * agent's audio-synchronised transcript instead of running its own
+   * typewriter. See QuestionCardPrompt.
+   */
+  agentSpeaks?: boolean;
+  /** The agent's audio-synchronised transcript segments. */
+  agentTranscriptions?: readonly TranscriptionLike[];
 };
 
 export type FocusedInterviewStageProps = {
@@ -83,6 +92,15 @@ export type FocusedInterviewStageProps = {
    * must still narrate client-side). Defaults to `speak`.
    */
   replaySpeak?: StageSpeak;
+  /**
+   * True when a LiveKit agent is in the room voicing the turns. The question
+   * card then mirrors the agent's audio-synchronised transcript
+   * (`sync_transcription`) instead of running its own typewriter, which is the
+   * only way the text and the voice can actually stay in step.
+   */
+  agentSpeaks?: boolean;
+  /** The agent's audio-synchronised transcript segments, read in the room. */
+  agentTranscriptions?: readonly TranscriptionLike[];
   onSpeakingChange: (speaking: boolean) => void;
   onTurnPresented?: (turn: ConversationTurn) => void;
   onClarifyQuestion?: () => void;
