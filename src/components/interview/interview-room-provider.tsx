@@ -56,6 +56,7 @@ export function useInterviewRoomState(): InterviewRoomState {
 export function InterviewRoomProvider({
   sessionId,
   active,
+  prefetch = false,
   audio,
   onUnexpectedDisconnect,
   children,
@@ -63,6 +64,16 @@ export function InterviewRoomProvider({
   sessionId: string | null;
   /** Whether this session should hold a live room right now. */
   active: boolean;
+  /**
+   * Mint the join token WITHOUT connecting yet.
+   *
+   * The caller holds `active` back for one beat while the client narrates the
+   * onboarding transition line (only the client can voice it — the agent never
+   * receives that text). Without a prefetch the token round-trip would then
+   * start only after the beat, adding dead air before question one. With it,
+   * the token is already in hand and `connect` flips the moment `active` does.
+   */
+  prefetch?: boolean;
   /** Publish the microphone. False for a typing candidate in hybrid mode. */
   audio: boolean;
   /**
@@ -86,11 +97,12 @@ export function InterviewRoomProvider({
   const [tokenError, setTokenError] = useState<string | null>(null);
   const fetchToken = useInterviewRealtimeToken(sessionId);
 
-  // Fetch once per session, the first time a room is wanted. Deliberately not
-  // keyed on `active` alone: a voice→text→voice switch must reuse the token
-  // rather than mint a new one (and re-dispatch the agent).
+  // Fetch once per session, the first time a room is wanted OR prefetched.
+  // Deliberately not keyed on `active` alone: a voice→text→voice switch must
+  // reuse the token rather than mint a new one (and re-dispatch the agent).
+  const wantToken = active || prefetch;
   useEffect(() => {
-    if (!active || !sessionId || tokenData || isFetchingToken) return;
+    if (!wantToken || !sessionId || tokenData || isFetchingToken) return;
     let cancelled = false;
     setIsFetchingToken(true);
     setTokenError(null);
@@ -113,7 +125,7 @@ export function InterviewRoomProvider({
       cancelled = true;
     };
     // fetchToken is a fresh mutation object each render; including it would loop.
-  }, [active, sessionId]);
+  }, [wantToken, sessionId]);
 
   // Drop a stale token when the session changes, so a second attempt in the
   // same mounted page never joins the previous session's room.
@@ -162,6 +174,10 @@ export function InterviewRoomProvider({
 
   const state: InterviewRoomState = {
     room,
+    // `active`, NOT `wantToken`: during the prefetch beat the room is
+    // deliberately not wanted yet, and the client is still narrating the
+    // transition line. Reporting "connecting" there would trip the narration
+    // gate and mute exactly the line this beat exists to let through.
     connecting: active && (isFetchingToken || !tokenData),
     tokenError,
   };

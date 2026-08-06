@@ -35,12 +35,28 @@ export default function CourseInterviewPage() {
   // `voiceActive` alone reproduces the previous behaviour exactly (the room used
   // to exist precisely while the voice screen was mounted). The hybrid clause is
   // additive and gated by the flag, so with the flag off this is unchanged.
+  //
+  // `pendingFirstQuestion` holds the room back for ONE beat. When onboarding
+  // completes the server sends a transition line ("Great — the introduction is
+  // complete. Let's begin. Here is your first question."). That line exists
+  // ONLY on the REST/client side: the agent never receives it, so only the
+  // client narration can voice it. Bringing the room up immediately silenced
+  // it (the narration gate mutes the client the moment the room is live), and
+  // the candidate then heard nothing until the agent joined and read its intro
+  // plus question one back to back — the reported "doesn't read it, then
+  // delays and reads it together with question 1".
+  //
+  // The flag is cleared by handleTurnPresented the instant the transition has
+  // finished presenting, so the room comes up one beat later and the agent
+  // still owns question one. The token prefetch is unaffected (the provider
+  // fetches on `active`), so this costs the handover nothing but the beat.
   const roomActive =
     Boolean(sessionId) &&
     (iv.voiceActive ||
       (livekitTextEnabled() &&
         iv.inputMode === "hybrid" &&
-        iv.onboardingStage === "completed"));
+        iv.onboardingStage === "completed" &&
+        !iv.pendingFirstQuestion));
 
   const screen = (() => {
     // ── Loading state ────────────────────────────────────────────────────────
@@ -80,6 +96,15 @@ export default function CourseInterviewPage() {
     <InterviewRoomProvider
       sessionId={sessionId}
       active={roomActive}
+      // Mint the token during the transition beat so the room can connect the
+      // instant the beat ends — the hold above must not cost dead air before
+      // question one.
+      prefetch={
+        Boolean(sessionId) &&
+        livekitTextEnabled() &&
+        iv.inputMode === "hybrid" &&
+        iv.onboardingStage === "completed"
+      }
       // Publish the mic only on the voice screen. A hybrid candidate who is
       // typing holds the room open (so `lk.chat` has a connection) but must not
       // have their microphone captured.
