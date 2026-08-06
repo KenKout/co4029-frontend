@@ -17,7 +17,14 @@
  *     exactly as unmounting used to
  *   - the hook disconnects on unmount, so leaving the page still tears down
  */
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   RoomAudioRenderer,
   RoomContext,
@@ -31,7 +38,7 @@ import {
 } from "livekit-client";
 import { toast } from "sonner";
 
-import { useInterviewRealtimeToken } from "@/lib/api/hooks/interviews";
+import { useDispatchInterviewAgent, useInterviewRealtimeToken } from "@/lib/api/hooks/interviews";
 import type { RealtimeTokenResponse } from "@/lib/api/types";
 
 interface InterviewRoomState {
@@ -76,6 +83,8 @@ export function InterviewRoomProvider({
   sessionId,
   active,
   prefetch = false,
+  warm = false,
+  agentWanted = false,
   audio,
   onUnexpectedDisconnect,
   children,
@@ -93,6 +102,26 @@ export function InterviewRoomProvider({
    * the token is already in hand and `connect` flips the moment `active` does.
    */
   prefetch?: boolean;
+  /**
+   * Open the room DURING onboarding, before the interviewer exists.
+   *
+   * Mints a warm token (no agent dispatch) and connects with it, so the ~10-13s
+   * LiveKit worker startup overlaps the setup the candidate is doing anyway
+   * instead of being dead air in front of question one. The room is genuinely
+   * live — it simply has nobody in it yet.
+   *
+   * Kept separate from `active`: `active` still means "this session is in its
+   * interview", which drives the narration gate and the disconnect policy. A
+   * warmed room must not make the client think the agent owns the voice.
+   */
+  warm?: boolean;
+  /**
+   * Send the interviewer in. Flip this once onboarding is complete.
+   *
+   * Only has an effect on a warmed room — a normally-minted token already
+   * carries its dispatch. Fires exactly once per session.
+   */
+  agentWanted?: boolean;
   /** Publish the microphone. False for a typing candidate in hybrid mode. */
   audio: boolean;
   /**
@@ -115,26 +144,41 @@ export function InterviewRoomProvider({
   const [isFetchingToken, setIsFetchingToken] = useState(false);
   const [tokenError, setTokenError] = useState<string | null>(null);
   const fetchToken = useInterviewRealtimeToken(sessionId);
+  const dispatchAgent = useDispatchInterviewAgent(sessionId);
 
-  // Fetch once per session, the first time a room is wanted OR prefetched.
-  // Deliberately not keyed on `active` alone: a voice→text→voice switch must
-  // reuse the token rather than mint a new one (and re-dispatch the agent).
-  const wantToken = active || prefetch;
+  // Fetch once per session, the first time a room is wanted OR prefetched OR
+  // warmed. Deliberately not keyed on `active` alone: a voice→text→voice switch
+  // must reuse the token rather than mint a new one (and re-dispatch the agent).
+  const wantToken = active || prefetch || warm;
+  // Whether the token in hand starts the interviewer on join. A token minted
+  // during onboarding cannot (the backend refuses to dispatch that early), so
+  // the agent has to be sent in explicitly later.
+  const mintedWarmRef = useRef(false);
   useEffect(() => {
     if (!wantToken || !sessionId || tokenData || isFetchingToken) return;
     let cancelled = false;
+    // Warm ONLY while nothing else already wants a real room: once `active` or
+    // `prefetch` is true the session is past onboarding, and a dispatching
+    // token is both allowed and simpler (no second call to get wrong).
+    const mintWarm = warm && !active && !prefetch;
     setIsFetchingToken(true);
     setTokenError(null);
     void (async () => {
       try {
-        const data = await fetchToken.mutateAsync();
-        if (!cancelled) setTokenData(data);
+        const data = await fetchToken.mutateAsync({ warm: mintWarm });
+        if (!cancelled) {
+          mintedWarmRef.current = mintWarm;
+          setTokenData(data);
+        }
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to get voice token";
         if (!cancelled) {
           setTokenError(message);
-          toast.error(message);
+          // A failed WARM mint is not worth interrupting the candidate over:
+          // the room simply is not pre-opened, and the normal mint still runs
+          // when onboarding completes. Only a real one gets a toast.
+          if (!mintWarm) toast.error(message);
         }
       } finally {
         if (!cancelled) setIsFetchingToken(false);
@@ -144,13 +188,40 @@ export function InterviewRoomProvider({
       cancelled = true;
     };
     // fetchToken is a fresh mutation object each render; including it would loop.
-  }, [wantToken, sessionId]);
+  }, [wantToken, sessionId, warm, active, prefetch]);
+
+  // Send the interviewer into a warmed room, once and only once.
+  //
+  // Skipped entirely when the token already carried its dispatch, so the
+  // original flow makes no extra call. If this fails the candidate would sit in
+  // a room with nobody in it, so the token is dropped: the next mint runs with
+  // `warm=false` and dispatches the agent the old way.
+  const dispatchedRef = useRef(false);
+  useEffect(() => {
+    if (!agentWanted || !sessionId || dispatchedRef.current) return;
+    if (!tokenData || !mintedWarmRef.current) return;
+    dispatchedRef.current = true;
+    void (async () => {
+      try {
+        await dispatchAgent.mutateAsync();
+      } catch {
+        // Fall back to the embedded-dispatch path rather than leaving an empty
+        // room: clearing the token re-runs the mint, this time without `warm`.
+        dispatchedRef.current = false;
+        mintedWarmRef.current = false;
+        setTokenData(null);
+      }
+    })();
+    // dispatchAgent is a fresh mutation object each render; including it loops.
+  }, [agentWanted, sessionId, tokenData]);
 
   // Drop a stale token when the session changes, so a second attempt in the
   // same mounted page never joins the previous session's room.
   useEffect(() => {
     setTokenData(null);
     setTokenError(null);
+    mintedWarmRef.current = false;
+    dispatchedRef.current = false;
   }, [sessionId]);
 
   const handleDisconnected = useCallback(
@@ -168,7 +239,12 @@ export function InterviewRoomProvider({
   const { room } = useLiveKitRoom({
     serverUrl: tokenData?.url,
     token: tokenData?.token,
-    connect: active && Boolean(tokenData),
+    // `active || warm`: warming is pointless unless the client actually
+    // CONNECTS during setup — that connection is what overlaps the worker
+    // startup with onboarding. `active` still gates everything else (narration,
+    // disconnect policy, mic), so a warmed room does not read as a live
+    // interview anywhere but here.
+    connect: (active || warm) && Boolean(tokenData),
     audio,
     video: false,
     onDisconnected: handleDisconnected,

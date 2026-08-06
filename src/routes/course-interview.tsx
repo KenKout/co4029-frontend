@@ -105,6 +105,21 @@ export default function CourseInterviewPage() {
         iv.inputMode === "hybrid" &&
         iv.onboardingStage === "completed"
       }
+      // Open the room DURING setup, so the ~10-13s LiveKit worker startup
+      // overlaps the onboarding the candidate is doing anyway rather than
+      // sitting in front of question one as dead air. The warm token carries no
+      // agent dispatch, so nothing can start speaking early.
+      warm={
+        Boolean(sessionId) &&
+        (iv.inputMode === "hybrid" || iv.inputMode === "voice") &&
+        iv.onboardingStage !== "completed"
+      }
+      // ...and send the interviewer in the moment setup is done. Only acts on a
+      // room that was actually warmed; a normally-minted token already carries
+      // its dispatch.
+      agentWanted={
+        Boolean(sessionId) && iv.onboardingStage === "completed"
+      }
       // Publish the mic only on the voice screen. A hybrid candidate who is
       // typing holds the room open (so `lk.chat` has a connection) but must not
       // have their microphone captured.
