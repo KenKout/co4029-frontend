@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useVoiceAssistant } from "@livekit/components-react";
 import { ListChecks } from "lucide-react";
 
 import { EndInterviewDialog } from "@/components/interview/dialogs";
@@ -11,6 +12,7 @@ import { TranscriptPanel } from "@/components/interview/transcript";
 import { useInterviewChat } from "@/components/interview/use-interview-chat";
 import { livekitTextEnabled } from "@/lib/interview/text-transport";
 import { questionTypeLabel } from "@/lib/interview/turn-factory";
+import { resolveAgentVoicePhase } from "./agent-voice-presentation";
 import {
   FullscreenDialogs,
   LeaveBlockerDialog,
@@ -49,6 +51,12 @@ export function InterviewWorkspaceScreen({
   // resolver picks REST, so nothing else changes.
   const { room, connecting } = useInterviewRoomState();
   const chat = useInterviewChat(room, { enabled: livekitTextEnabled() });
+  // The agent's own voice phase (`lk.agent.state`), published as a participant
+  // attribute and surfaced here. This is the ONLY thing that knows when the
+  // agent actually starts and stops speaking, and the workspace is the only
+  // component inside the room provider — so it is read here and pushed into the
+  // speech hook, same wiring as `setChatBridge` / `setRoomConnected`.
+  const { agent, state: agentState } = useVoiceAssistant();
   // Render-phase write: the narration gate reads this ref synchronously when a
   // turn's AiTypingMessage mounts. The transition / first-question turn can
   // mount in the SAME commit the room handover starts, and its narrate() runs
@@ -56,6 +64,10 @@ export function InterviewWorkspaceScreen({
   // the ref must be current during render, not after effects. (Ref write only;
   // the state flip stays in the effect below to drive the cancel + toggle.)
   iv.setRoomConnectedRef(connecting || chat.connected);
+  // Same reason this is a render-phase write: a turn mounting in the handover
+  // commit calls speak() from a child effect, and a phase delivered one effect
+  // later would arrive after that turn already decided how to pace itself.
+  iv.setAgentVoicePhase(resolveAgentVoicePhase(Boolean(agent), agentState));
   // Hand the hook to `handleRespond` through the controller's bridge setter
   // (the actions are built outside the provider, where the room is not
   // reachable). The setter, not a direct ref write, so the immutability rule
