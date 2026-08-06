@@ -591,14 +591,15 @@
     "no_permission": "Không có quyền truy cập",
     "tabs": {
       "teachers": "Giảng viên",
-      "students": "Sinh viên"
+      "students": "Sinh viên",
+      "settings": "Cài đặt"
     },
     "no_name": "(Chưa đặt tên)",
     "remove": "Gỡ",
     "remove_confirm": "Gỡ giảng viên {{name}}?",
     "assign_label": "Phân công giảng viên (user_id UUID)",
     "assign_button": "Thêm",
-    "assign_help": "Nhập user_id của giảng viên. Tính năng tìm kiếm theo email/tên sẽ được bổ sung ở Wave 5.",
+    "assign_help": "Chỉ hiện giảng viên thuộc cùng đơn vị với khóa học này.",
     "enrolled_at": "Đăng ký: {{date}}",
     "load_failed_teachers": "Không thể tải danh sách giảng viên.",
     "load_failed_students": "Không thể tải danh sách sinh viên.",
@@ -612,7 +613,6 @@
       "pending": "Chờ duyệt"
     },
     "errors": {
-      "invalid_uuid": "Vui lòng nhập user_id dạng UUID hợp lệ",
       "remove_failed": "Không thể gỡ giảng viên: {{detail}}",
       "assign_failed": "Không thể phân công: {{detail}}"
     },
@@ -637,7 +637,10 @@
       "save_failed": "Không thể cập nhật khóa học.",
       "title_required": "Vui lòng nhập tên khóa học.",
       "slug_required": "Vui lòng nhập slug khóa học."
-    }
+    },
+    "assign_placeholder": "Chọn giảng viên…",
+    "assign_none_available": "Đơn vị này chưa có giảng viên nào. Hãy cấp quyền giảng viên cho một người trước.",
+    "assign_all_assigned": "Mọi giảng viên của đơn vị này đã được phân công vào khóa học."
   },
   "dept_courses": {
     "title": "Quản lý đội ngũ",

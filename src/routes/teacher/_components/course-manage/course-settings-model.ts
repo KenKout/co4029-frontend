@@ -121,19 +121,38 @@ export function initialCourseSettings(
   };
 }
 
+/** Fields a TEACHER can actually save; the rest are manager-owned. */
+const TEACHER_SETTINGS_FIELDS = new Set<CourseSettingsField>([
+  "description",
+  "estimatedMinutes",
+  "contactEmail",
+  "contactPhone",
+  "contactWebsiteUrl",
+  "contactSocialUrl",
+]);
+
 /**
  * Whether the buffered form differs from the saved course (a staged thumbnail
  * counts). Same comparisons, same order, same short-circuit as the original
  * `||` chain.
+ *
+ * `scope` narrows which fields count: on the teacher surface a manager-only
+ * field can never be saved, so letting it mark the form dirty would enable a
+ * Save that either does nothing or 403s.
  */
 export function isCourseSettingsDirty(args: {
   draft: CourseSettingsValues;
   saved: CourseSettingsValues;
   stagedThumbnail: File | null;
+  scope?: "teacher" | "manager";
 }): boolean {
-  const { draft, saved, stagedThumbnail } = args;
+  const { draft, saved, stagedThumbnail, scope = "manager" } = args;
   if (stagedThumbnail !== null) return true;
-  return COURSE_SETTINGS_FIELDS.some((field) =>
+  const fields =
+    scope === "teacher"
+      ? COURSE_SETTINGS_FIELDS.filter((f) => TEACHER_SETTINGS_FIELDS.has(f))
+      : COURSE_SETTINGS_FIELDS;
+  return fields.some((field) =>
     TRIMMED_SETTINGS_FIELDS.has(field)
       ? draft[field].trim() !== saved[field]
       : draft[field] !== saved[field],
@@ -141,13 +160,29 @@ export function isCourseSettingsDirty(args: {
 }
 
 /**
- * Course meta half of the Save payload. Title/slug are deliberately absent:
- * they are course identity, edited manager-side on the dept course page
- * (backend rejects title/slug changes from the teacher surface with 403).
+ * Course meta a TEACHER may patch. `course.update` is the CONTENT permission:
+ * description and the study-time estimate. Title/slug (identity), status
+ * (lifecycle) and level / caps / thumbnail (delivery policy) are manager-owned
+ * and the backend 403s the whole PATCH if any of them appear, so they must not
+ * be in a teacher payload even unchanged.
  */
 function buildCourseMetaPayload(values: CourseSettingsValues): CourseUpdate {
   return {
     description: values.description.trim() || undefined,
+    estimated_minutes: values.estimatedMinutes
+      ? Number(values.estimatedMinutes)
+      : undefined,
+  };
+}
+
+/**
+ * The manager-only half: identity, lifecycle and delivery policy. Sent from
+ * the dept course page, which holds `course.delete`.
+ */
+function buildManagerMetaPayload(values: CourseSettingsValues): CourseUpdate {
+  return {
+    title: values.title.trim() || undefined,
+    slug: values.slug.trim() || undefined,
     level: (values.level || undefined) as
       | "beginner"
       | "intermediate"
@@ -158,9 +193,6 @@ function buildCourseMetaPayload(values: CourseSettingsValues): CourseUpdate {
       | "published"
       | "archived"
       | undefined,
-    estimated_minutes: values.estimatedMinutes
-      ? Number(values.estimatedMinutes)
-      : undefined,
     enrollment_cap: values.enrollmentCap
       ? Number(values.enrollmentCap)
       : undefined,
@@ -184,9 +216,24 @@ function buildContactPayload(values: CourseSettingsValues): CourseUpdate {
   };
 }
 
-/** The full PATCH body Save sends for the settings form. */
+/** The PATCH body the TEACHER surface sends: content fields + own contact. */
 export function buildCourseUpdatePayload(
   values: CourseSettingsValues,
 ): CourseUpdate {
   return { ...buildCourseMetaPayload(values), ...buildContactPayload(values) };
+}
+
+/**
+ * The PATCH body the MANAGER surface sends: everything, since `course.delete`
+ * covers both halves. Kept as one call so the dept page cannot accidentally
+ * ship a payload that silently drops the teacher-editable fields.
+ */
+export function buildManagerCourseUpdatePayload(
+  values: CourseSettingsValues,
+): CourseUpdate {
+  return {
+    ...buildManagerMetaPayload(values),
+    ...buildCourseMetaPayload(values),
+    ...buildContactPayload(values),
+  };
 }

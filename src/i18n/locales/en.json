@@ -635,14 +635,15 @@
     "no_permission": "You do not have permission to access this page",
     "tabs": {
       "teachers": "Instructors",
-      "students": "Students"
+      "students": "Students",
+      "settings": "Settings"
     },
     "no_name": "(no name yet)",
     "remove": "Remove",
     "remove_confirm": "Remove instructor {{name}}?",
     "assign_label": "Assign instructor (user_id UUID)",
     "assign_button": "Add",
-    "assign_help": "Enter the instructor's user_id. Search by email/name will arrive in Wave 5.",
+    "assign_help": "Only instructors in this course's organization are listed.",
     "enrolled_at": "Enrolled: {{date}}",
     "load_failed_teachers": "Couldn't load instructors.",
     "load_failed_students": "Couldn't load students.",
@@ -656,7 +657,6 @@
       "pending": "Pending"
     },
     "errors": {
-      "invalid_uuid": "Please enter a valid UUID user_id",
       "remove_failed": "Couldn't remove instructor: {{detail}}",
       "assign_failed": "Couldn't assign: {{detail}}"
     },
@@ -681,7 +681,10 @@
       "save_failed": "Couldn't update the course.",
       "title_required": "Course title is required.",
       "slug_required": "Course slug is required."
-    }
+    },
+    "assign_placeholder": "Choose an instructor…",
+    "assign_none_available": "No instructors in this organization yet. Give a teacher the instructor role first.",
+    "assign_all_assigned": "Every instructor in this organization is already on this course."
   },
   "dept_courses": {
     "title": "Team management",

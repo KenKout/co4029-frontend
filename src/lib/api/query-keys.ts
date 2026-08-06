@@ -177,6 +177,8 @@ export const queryKeys = {
     courses: () => ["dept", "courses"] as const,
     teachers: (courseId: string) =>
       ["dept", "courses", courseId, "teachers"] as const,
+    assignableTeachers: (courseId: string) =>
+      ["dept", "courses", courseId, "assignable-teachers"] as const,
     roster: (courseId: string) =>
       ["dept", "courses", courseId, "roster"] as const,
     orgUnitCourses: (orgUnitId: string) =>

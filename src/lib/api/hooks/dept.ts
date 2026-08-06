@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import type {
+  AssignableTeacher,
   AssignTeacherRequest,
   CourseAuthoring,
   CourseUpdate,
@@ -28,6 +29,24 @@ export function useCourseTeachers(courseId: string | undefined) {
   });
 }
 
+/**
+ * Teachers this course may be staffed with: same organization, teacher role.
+ *
+ * The org filter is applied server-side from the course, so this hook passes
+ * no org parameter — there is nothing for the client to get wrong.
+ */
+export function useAssignableTeachers(courseId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.dept.assignableTeachers(courseId ?? ""),
+    queryFn: () =>
+      apiFetch<AssignableTeacher[]>(
+        `/dept/courses/${courseId}/assignable-teachers`,
+      ),
+    enabled: Boolean(courseId),
+    staleTime: 1000 * 60,
+  });
+}
+
 export function useAssignTeacher(courseId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -39,6 +58,11 @@ export function useAssignTeacher(courseId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: queryKeys.dept.teachers(courseId),
+      });
+      // The picker shows already_assigned, so it is stale the moment an
+      // assignment lands.
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.assignableTeachers(courseId),
       });
     },
   });
@@ -52,6 +76,11 @@ export function useRemoveTeacher(courseId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: queryKeys.dept.teachers(courseId),
+      });
+      // Removing a teacher makes them selectable again, so the picker's
+      // already_assigned flags are stale too.
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.assignableTeachers(courseId),
       });
     },
   });

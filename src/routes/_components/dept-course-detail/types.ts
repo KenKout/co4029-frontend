@@ -1,4 +1,4 @@
-export type TabKey = "teachers" | "students";
+export type TabKey = "teachers" | "students" | "settings";
 
 export interface ListQueryState<T> {
   isLoading: boolean;
