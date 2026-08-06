@@ -61,6 +61,20 @@ describe("resolveAgentVoicePhase", () => {
     expect(resolveAgentVoicePhase(true, "disconnected")).toBe("unknown");
     expect(resolveAgentVoicePhase(true, "connecting")).toBe("unknown");
   });
+
+  it("reports FAILED when the worker could not start", () => {
+    // Distinct from unknown: unknown means "keep waiting", failed means "stop".
+    // The SDK reports `failed` (plus failureReasons) when the agent job could
+    // not run — previously this fell through to unknown and every turn waited
+    // out the full 20s start timeout in silence.
+    expect(resolveAgentVoicePhase(true, "failed")).toBe("failed");
+  });
+
+  it("reports failed even though no agent participant exists", () => {
+    // The failure arrives WITHOUT an agent in the room, so the check has to
+    // precede the agentPresent guard or it is swallowed as unknown.
+    expect(resolveAgentVoicePhase(false, "failed")).toBe("failed");
+  });
 });
 
 describe("agent speech duration estimate", () => {
@@ -196,6 +210,32 @@ describe("agent voice coordinator", () => {
     coordinator.setAgentExpected(false);
 
     const presentation = coordinator.present("Question one.");
+    expect(await settledNow(presentation.started)).toBe(true);
+  });
+
+  it("releases a waiting turn the moment the agent fails", async () => {
+    // Without this a crashed worker left the text pinned for the full 20s start
+    // timeout with no voice and no explanation. The text is all the candidate
+    // is going to get, so it must appear now.
+    const coordinator = createAgentVoiceCoordinator();
+    coordinator.setAgentExpected(true);
+
+    const presentation = coordinator.present("Question one.");
+    expect(await settledNow(presentation.started)).toBe(false);
+
+    coordinator.setPhase("failed");
+    expect(await settledNow(presentation.started)).toBe(true);
+    expect(await settledNow(presentation.finished)).toBe(true);
+  });
+
+  it("does not make later turns wait once the agent has failed", async () => {
+    // `agentExpected` stays true (the room is still wanted), so without an
+    // explicit failed check each subsequent turn would wait all over again.
+    const coordinator = createAgentVoiceCoordinator();
+    coordinator.setAgentExpected(true);
+    coordinator.setPhase("failed");
+
+    const presentation = coordinator.present("Question two.");
     expect(await settledNow(presentation.started)).toBe(true);
   });
 

@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useVoiceAssistant } from "@livekit/components-react";
-import { ListChecks } from "lucide-react";
+import { useStartAudio, useVoiceAssistant } from "@livekit/components-react";
+import { ListChecks, Volume2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { EndInterviewDialog } from "@/components/interview/dialogs";
 import { ConnectionLostBanner } from "@/components/interview/error-banner";
@@ -79,6 +80,42 @@ export function InterviewWorkspaceScreen({
   // phase, took the "nothing will ever speak" fallback, and typed itself out
   // before the agent said a word.
   iv.setAgentExpected(agentOwnsTheVoice);
+
+  // ── Agent failed to start ──────────────────────────────────────────────────
+  // `lk.agent.state === "failed"` is the SDK's report that the worker could not
+  // start or crashed. Previously it fell through to the "unknown" phase, which
+  // means "keep waiting", so every turn sat out the full 20s start timeout in
+  // silence and the candidate got no explanation at all. Tell them once: the
+  // interview still works, it is just text now.
+  const agentFailed = agentState === "failed";
+  const failureToldRef = useRef(false);
+  useEffect(() => {
+    if (!agentFailed || failureToldRef.current) return;
+    failureToldRef.current = true;
+    toast.warning(t("course_interview.agent_failed.title"), {
+      description: t("course_interview.agent_failed.body"),
+      duration: 10_000,
+    });
+  }, [agentFailed, t]);
+
+  // ── Autoplay unlock ────────────────────────────────────────────────────────
+  // Browsers block audio until a user gesture, and `RoomAudioRenderer` alone
+  // gives the candidate no way to grant it — they would simply hear nothing and
+  // have nothing to click. `useStartAudio` reports whether playback is allowed
+  // and hands back the opener; the starter template ships the same affordance.
+  //
+  // This is NOT covered by the existing `startAudioWarmup`: that unlocks the
+  // Web Audio context used by the REST narration path, not the agent's LiveKit
+  // audio track.
+  // `mergedProps` carries the onClick that performs the unlock AND a
+  // `display: none` style once playback is allowed — so the button hides itself
+  // and this does not need its own visibility logic. Spread it, as the starter
+  // template does, rather than reaching for a bare `startAudio` (there isn't
+  // one on this hook).
+  const { mergedProps: startAudioProps, canPlayAudio } = useStartAudio({
+    room,
+    props: {},
+  });
   // Same reason this is a render-phase write: a turn mounting in the handover
   // commit calls speak() from a child effect, and a phase delivered one effect
   // later would arrive after that turn already decided how to pace itself.
@@ -159,6 +196,28 @@ export function InterviewWorkspaceScreen({
           <ConnectionLostBanner
             onRetry={() => iv.setConnected(navigator.onLine)}
           />
+        </div>
+      )}
+
+      {/* Autoplay is blocked until the candidate gestures. Without this they
+          would simply hear nothing and have nothing to click — the browser
+          gives no affordance of its own. Only shown while a room is actually
+          wanted, so a text-only session never sees it. */}
+      {agentOwnsTheVoice && !canPlayAudio && (
+        <div className="mx-auto w-full max-w-[840px] px-4 pt-3">
+          <button
+            type="button"
+            {...startAudioProps}
+            // AFTER the spread on purpose. `mergedProps` sets
+            // `style.display = "block"`, which would override the flex layout
+            // and un-centre the icon; the guard above already handles
+            // visibility, so the hook's display value is not needed.
+            style={undefined}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-m3-primary/30 bg-m3-primary/5 px-4 py-3 text-sm font-bold text-m3-primary transition-colors hover:bg-m3-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
+          >
+            <Volume2 className="h-4 w-4" aria-hidden="true" />
+            {t("course_interview.enable_audio")}
+          </button>
         </div>
       )}
 

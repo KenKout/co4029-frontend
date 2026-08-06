@@ -27,8 +27,16 @@
  */
 import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration";
 
-/** What the agent's voice is doing right now, as far as the client can tell. */
-export type AgentVoicePhase = "unknown" | "quiet" | "speaking";
+/**
+ * What the agent's voice is doing, as far as this client can tell.
+ *
+ * `failed` is distinct from `unknown` on purpose, and the distinction is
+ * load-bearing: `unknown` means "no usable signal yet, keep waiting" (the join
+ * window), whereas `failed` means "the agent is not coming, stop waiting". They
+ * used to be the same value, so a crashed worker made a turn sit out the full
+ * 20s start timeout in silence before releasing its text.
+ */
+export type AgentVoicePhase = "unknown" | "quiet" | "speaking" | "failed";
 
 /**
  * Cap on how long a turn's text waits for the agent to start speaking.
@@ -131,6 +139,12 @@ export function resolveAgentVoicePhase(
   agentPresent: boolean,
   state: string | undefined,
 ): AgentVoicePhase {
+  // `failed` is reported by the SDK when the worker could not start or crashed,
+  // and it arrives WITHOUT an agent participant — so this check has to come
+  // before the `agentPresent` guard or it would be swallowed as "unknown" and
+  // the turn would wait out the full start timeout for an agent that is never
+  // coming.
+  if (state === "failed") return "failed";
   if (!agentPresent) return "unknown";
   if (state === "speaking") return "speaking";
   if (
@@ -141,7 +155,8 @@ export function resolveAgentVoicePhase(
   ) {
     return "quiet";
   }
-  // "disconnected" / "connecting" / anything newer: no usable voice signal.
+  // "disconnected" / "connecting" / "pre-connect-buffering" / anything newer:
+  // no usable voice signal YET. Distinct from `failed` — these are transient.
   return "unknown";
 }
 
@@ -191,6 +206,12 @@ export function createAgentVoiceCoordinator(): AgentVoiceCoordinator {
       phase = next;
       if (next === "speaking") {
         drain(startWaiters);
+      } else if (next === "failed") {
+        // The agent is not coming. Release EVERY waiter immediately rather than
+        // letting each turn burn its 20s start timeout in silence: the text is
+        // all the candidate is going to get, so it should appear now.
+        drain(startWaiters);
+        drain(endWaiters);
       } else if (wasSpeaking) {
         drain(endWaiters);
       }
@@ -206,6 +227,10 @@ export function createAgentVoiceCoordinator(): AgentVoiceCoordinator {
       // observable state (`state === undefined`), which is why `agentExpected`
       // has to come from outside.
       if (!everReported && !agentExpected) return settledPresentation();
+      // The agent already failed: waiting is pointless, and `agentExpected` is
+      // still true (the room is still "wanted"), so without this a turn arriving
+      // after the failure would wait the full timeout all over again.
+      if (phase === "failed") return settledPresentation();
 
       // The agent never reports how LONG it will speak — `lk.agent.state` is a
       // start/stop signal only. Without a duration the runner falls back to the
