@@ -429,6 +429,10 @@
       "body": "Bạn có một buổi phỏng vấn vẫn đang diễn ra. Hãy hoàn thành trước khi bắt đầu buổi mới.",
       "continue": "Tiếp tục phiên gần nhất"
     },
+    "interview_grading": "Đang chấm",
+    "interview_grading_aria": "Đã nộp {{count}} lần, đang chờ chấm",
+    "interview_not_passed": "Chưa đạt",
+    "interview_not_passed_aria": "Đã chấm {{count}} lần, chưa đạt",
     "knowledge_map": "Sơ đồ kiến thức",
     "km_zoom_in": "Phóng to",
     "km_zoom_out": "Thu nhỏ",
@@ -754,7 +758,31 @@
     "course_optional": "Tự chọn",
     "course_progress_label": "Tiến độ",
     "n_courses_other": "{{count}} khóa học",
-    "n_courses_one": "{{count}} khóa học"
+    "n_courses_one": "{{count}} khóa học",
+    "stages": {
+      "title": "Các giai đoạn của bạn",
+      "subtitle": "Hoàn thành một giai đoạn để mở giai đoạn tiếp theo.",
+      "unnamed": "Giai đoạn {{position}}",
+      "locked": "Đang khoá",
+      "open": "Đang mở",
+      "done": "Đã xong",
+      "locked_reason": {
+        "after_previous": "Sẽ mở khi bạn hoàn thành giai đoạn trước đó.",
+        "after_previous_required": "Sẽ mở khi bạn hoàn thành các khóa bắt buộc của giai đoạn trước đó."
+      },
+      "locked_hard": "Bạn chưa thể mở các khóa học này.",
+      "locked_soft": "Bạn có thể xem các khóa học này, nhưng hãy hoàn thành giai đoạn trước.",
+      "progress": "Đã xong {{done}}/{{total}}",
+      "optional_quota": "Chọn {{count}} khóa học tự chọn",
+      "start": "Bắt đầu",
+      "starting": "Đang bắt đầu…",
+      "continue": "Tiếp tục lộ trình →",
+      "already_started": "Bạn đã bắt đầu khóa học này",
+      "start_failed": "Không thể bắt đầu khóa học này",
+      "cap_warning": "Bạn đang mở {{count}} khóa học trong lộ trình này. Hãy hoàn thành một vài khóa trước khi mở thêm để theo kịp.",
+      "not_started_yet": "Chưa bắt đầu",
+      "units_done": "Đã xong {{done}}/{{total}}"
+    }
   },
   "study_cards_due": {
     "back": "Quay lại bảng điều khiển",
@@ -2540,6 +2568,7 @@
     "results": {
       "passed": "Đạt yêu cầu",
       "completed": "Đã hoàn tất phỏng vấn",
+      "failed": "Chưa đạt",
       "evaluating": "Đang chấm câu trả lời của bạn…",
       "evaluating_summary": "AI đang chấm câu trả lời của bạn theo các mục tiêu học tập. Quá trình này thường mất khoảng một phút — kết quả sẽ tự động hiển thị tại đây.",
       "pass_summary": "Bạn đã đạt đủ số mục tiêu học tập để vượt qua buổi phỏng vấn này.",
@@ -2707,6 +2736,73 @@
       "student": "Sinh viên",
       "completed_courses": "Khóa học hoàn thành",
       "total_progress": "Tổng tiến độ"
+    },
+    "stages": {
+      "title": "Giai đoạn",
+      "hint": "Nhóm các khóa học thành giai đoạn. Một giai đoạn mở ra khi sinh viên hoàn thành giai đoạn trước đó.",
+      "add": "Thêm giai đoạn",
+      "unnamed": "Giai đoạn {{position}}",
+      "course_count_one": "{{count}} khóa học",
+      "course_count_other": "{{count}} khóa học",
+      "empty": "Chưa có giai đoạn nào. Hãy thêm một giai đoạn rồi gán khóa học vào đó.",
+      "empty_stage": "Giai đoạn này chưa có khóa học nào.",
+      "settings": "Cài đặt giai đoạn",
+      "delete": "Xoá giai đoạn",
+      "move_up": "Chuyển giai đoạn lên",
+      "move_down": "Chuyển giai đoạn xuống",
+      "save_order": "Lưu thứ tự giai đoạn",
+      "select_stage": "Giai đoạn",
+      "move_to_stage": "Chuyển sang giai đoạn",
+      "fields": {
+        "title": "Tên giai đoạn",
+        "title_placeholder": "Để trống sẽ hiện \"Giai đoạn 1\"",
+        "description": "Mô tả",
+        "min_optional": "Số khóa học tự chọn cần hoàn thành",
+        "min_optional_hint": "Sinh viên phải hoàn thành bao nhiêu khóa học tự chọn của giai đoạn này. Để 0 nghĩa là các khóa tự chọn chỉ là học thêm.",
+        "unlock_policy": "Khi nào giai đoạn này mở",
+        "enforcement": "Nếu giai đoạn vẫn đang khoá",
+        "max_concurrent": "Số khóa học cùng lúc",
+        "max_concurrent_hint": "Giới hạn nhẹ về số khóa học của lộ trình này mà sinh viên nên mở cùng lúc. Để trống là không giới hạn. Chỉ hiện cảnh báo — không bao giờ chặn.",
+        "satisfied_by": "Được tính là xong khi"
+      },
+      "unlock_policy": {
+        "always": "Luôn mở",
+        "after_previous": "Sau khi hoàn thành giai đoạn trước",
+        "after_previous_required": "Sau khi hoàn thành các khóa bắt buộc của giai đoạn trước",
+        "first_stage_note": "Giai đoạn đầu tiên luôn mở — nếu bị khoá thì không ai có thể bắt đầu lộ trình."
+      },
+      "enforcement": {
+        "hard": "Chặn truy cập",
+        "soft": "Hiện cảnh báo nhưng vẫn cho vào",
+        "advisory": "Chỉ ghi chú trên giao diện",
+        "hint": "Chỉ áp dụng cho giai đoạn đang khoá. Không ảnh hưởng tới giới hạn \"số khóa học cùng lúc\", vì giới hạn đó không bao giờ chặn."
+      },
+      "satisfied_by": {
+        "completion": "Khóa học đã hoàn thành",
+        "pass": "Khóa học đã đạt",
+        "locked_note": "Hiện chỉ dùng \"đã hoàn thành\"."
+      },
+      "warnings": {
+        "title": "Hãy kiểm tra trước khi tiếp tục",
+        "stage_becomes_implicitly_unlocked": "Giai đoạn này giờ ở vị trí đầu nên luôn mở — sinh viên có thể bắt đầu ngay, dù cài đặt của nó ghi khác.",
+        "stage_may_become_locked": "Giai đoạn này không còn ở vị trí đầu nên cài đặt của chính nó sẽ được áp dụng. Nó có thể khoá lại với sinh viên đang học dở."
+      },
+      "errors": {
+        "create_failed": "Không thể tạo giai đoạn",
+        "update_failed": "Không thể lưu giai đoạn",
+        "delete_failed": "Không thể xoá giai đoạn",
+        "reorder_failed": "Không thể lưu thứ tự giai đoạn",
+        "move_course_failed": "Không thể chuyển khóa học",
+        "stage_in_use": "Không thể xoá giai đoạn này: vẫn còn khóa học, hoặc đã có sinh viên hoàn thành nó.",
+        "pick_stage_first": "Hãy chọn giai đoạn trước"
+      },
+      "toasts": {
+        "created": "Đã thêm giai đoạn",
+        "updated": "Đã lưu giai đoạn",
+        "deleted": "Đã xoá giai đoạn",
+        "order_updated": "Đã lưu thứ tự giai đoạn",
+        "course_moved": "Đã chuyển khóa học"
+      }
     }
   },
   "management_course_enrollments": {

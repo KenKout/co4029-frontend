@@ -16,6 +16,7 @@ export function CurriculumSidebar({
   slug,
   activeModuleId,
   inProgressByConfigId,
+  interviewProgressMap,
   nextItemId,
 }: CurriculumProps) {
   return (
@@ -38,6 +39,7 @@ export function CurriculumSidebar({
               slug={slug}
               isActiveModule={activeModuleId === mod.id}
               inProgressByConfigId={inProgressByConfigId}
+              interviewProgressMap={interviewProgressMap}
               nextItemId={nextItemId}
             />
           ))}

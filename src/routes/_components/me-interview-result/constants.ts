@@ -3,7 +3,7 @@ import {
   CheckCircle2,
   Loader2,
   MinusCircle,
-  RotateCcw,
+  XCircle,
 } from "lucide-react";
 import type { ResultPhase } from "./types";
 
@@ -15,6 +15,10 @@ import type { ResultPhase } from "./types";
  * 45). `ResultPhase` is a closed union of five members, so each table is a
  * total `Record` — a new phase becomes a compile error here rather than
  * silently falling through to the "retry" default the chains used.
+ *
+ * Kept in step with `course-interview/constants.ts` on purpose: this is the
+ * read-only historical view of the same verdict, so a fail must not read as
+ * "Not passed" on one screen and "Interview completed" on the other.
  */
 
 export const HERO_TONE_CLASS: Record<ResultPhase, string> = {
@@ -23,7 +27,7 @@ export const HERO_TONE_CLASS: Record<ResultPhase, string> = {
   abandoned: "bg-m3-surface-container text-m3-on-surface-variant",
   evaluating:
     "bg-gradient-to-br from-m3-surface-container to-m3-surface-container-high text-m3-primary",
-  retry: "bg-gradient-to-br from-m3-primary to-m3-secondary text-white",
+  retry: "bg-gradient-to-br from-red-500 to-rose-600 text-white",
 };
 
 export const HERO_ICON: Record<ResultPhase, typeof CheckCircle2> = {
@@ -31,7 +35,7 @@ export const HERO_ICON: Record<ResultPhase, typeof CheckCircle2> = {
   eval_failed: AlertTriangle,
   evaluating: Loader2,
   abandoned: MinusCircle,
-  retry: RotateCcw,
+  retry: XCircle,
 };
 
 export const HERO_TITLE_KEY: Record<ResultPhase, string> = {
@@ -39,7 +43,7 @@ export const HERO_TITLE_KEY: Record<ResultPhase, string> = {
   abandoned: "course_interview.results.abandoned",
   evaluating: "course_interview.results.evaluating",
   pass: "course_interview.results.passed",
-  retry: "course_interview.results.completed",
+  retry: "course_interview.results.failed",
 };
 
 export const HERO_SUMMARY_KEY: Record<ResultPhase, string> = {
@@ -48,4 +52,16 @@ export const HERO_SUMMARY_KEY: Record<ResultPhase, string> = {
   evaluating: "course_interview.results.evaluating_summary",
   pass: "course_interview.results.pass_summary",
   retry: "course_interview.results.fail_summary",
+};
+
+/**
+ * Heading colour, mirroring `course-interview/constants.ts`. A blue "Not
+ * passed" under a red X reads as two conflicting signals.
+ */
+export const HERO_TITLE_CLASS: Record<ResultPhase, string> = {
+  pass: "text-emerald-600",
+  eval_failed: "text-danger",
+  abandoned: "text-m3-on-surface-variant",
+  evaluating: "text-m3-primary",
+  retry: "text-red-600",
 };

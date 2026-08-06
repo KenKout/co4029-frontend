@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   RESULT_HERO_ICON,
   RESULT_HERO_SUMMARY_KEY,
+  RESULT_HERO_TITLE_CLASS,
   RESULT_HERO_TITLE_KEY,
   RESULT_HERO_TONE_CLASS,
   type ResultPhase,
@@ -39,6 +40,7 @@ export function ResultsVerdictHero({
   const heroToneClass = RESULT_HERO_TONE_CLASS[resultPhase];
   const HeroIcon = RESULT_HERO_ICON[resultPhase];
   const heroTitleKey = RESULT_HERO_TITLE_KEY[resultPhase];
+  const heroTitleClass = RESULT_HERO_TITLE_CLASS[resultPhase];
   const heroSummaryKey = RESULT_HERO_SUMMARY_KEY[resultPhase];
   const { elapsedResultSeconds, resultAttemptNumber, resultDate } = facts;
 
@@ -72,7 +74,12 @@ export function ResultsVerdictHero({
           aria-hidden="true"
         />
       </div>
-      <h2 className="font-headline font-extrabold text-2xl text-m3-primary mb-1.5">
+      <h2
+        className={cn(
+          "font-headline font-extrabold text-2xl mb-1.5",
+          heroTitleClass,
+        )}
+      >
         {t(heroTitleKey)}
       </h2>
       <p className="text-m3-on-surface-variant text-sm mb-6 mx-auto max-w-md leading-relaxed">

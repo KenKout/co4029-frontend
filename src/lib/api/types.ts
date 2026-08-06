@@ -199,6 +199,26 @@ export interface QuizProgressRead {
   completed: boolean;
   attempts_remaining: number | null;
 }
+// Hand-layered for the same reason as QuizProgressRead above: the learner
+// interview-progress endpoint landed in backend 2f21c9e and isn't in the
+// committed openapi snapshot yet.
+//
+// Completion rule differs from quizzes ON PURPOSE (user decision 2026-08-06):
+// `completed` is true only when at least one non-practice attempt PASSED. A
+// quiz also completes on failed-with-attempts-exhausted; an interview does
+// not, so the tag reads as "passed" and a student who failed every attempt
+// keeps the item pending.
+//
+// `attempts_graded` < `attempts_used` means evaluation (an ARQ job) has not
+// caught up yet — those attempts are neither passed nor failed.
+export interface InterviewProgressRead {
+  interview_config_id: string;
+  attempts_used: number;
+  attempts_in_flight: number;
+  attempts_graded: number;
+  passed: boolean;
+  completed: boolean;
+}
 export type QuizAttemptRead = Schemas["QuizAttemptRead"];
 export type QuizAttemptReviewRead = Schemas["QuizAttemptReviewRead"];
 export type QuizAttemptReviewQuestion = Schemas["QuizAttemptReviewQuestion"];
@@ -733,14 +753,152 @@ export type AiCallRecord = Schemas["RecentCallOut"];
 
 export type CareerPathPublic = Schemas["CareerPathPublic"];
 export type CareerPathCoursePublic = Schemas["CareerPathCoursePublic"];
-export type CareerPathAuthoring = Schemas["CareerPathAuthoring"];
-export type CareerPathCourseAuthoring = Schemas["CareerPathCourseAuthoring"];
+export type CareerPathAuthoring = Schemas["CareerPathAuthoring"] & {
+  /** Path-level attention cap (backend migration 0070). NULL = unlimited. */
+  max_concurrent?: number | null;
+};
 export type CareerPathCreate = Schemas["CareerPathCreate"];
-export type CareerPathUpdate = Schemas["CareerPathUpdate"];
-export type CareerPathCourseAdd = Schemas["CareerPathCourseAdd"];
+export type CareerPathUpdate = Schemas["CareerPathUpdate"] & {
+  /** Path-level attention cap (backend migration 0070). */
+  max_concurrent?: number | null;
+};
 export type CareerPathCourseReorder = Schemas["CareerPathCourseReorder"];
 export type CareerPathStudentEnroll = Schemas["CareerPathStudentEnroll"];
-export type CareerPathProgressRead = Schemas["CareerPathProgressRead"];
+
+// Career-path STAGES (backend migration 0070). Hand-defined here for the same
+// reason as the curated-KG + contact shapes above: the committed
+// openapi-snapshot.json can't be regenerated in isolation right now without
+// pulling in unrelated in-flight backend drift. The backend already serves and
+// accepts these shapes on the management stage routes and the learner
+// progress/start routes. Keep in sync with
+// abridgeai/features/career_paths/schemas/{authoring,public}.py until a
+// coordinated snapshot refresh lands.
+export type CareerPathUnlockPolicy =
+  | "always"
+  | "after_previous"
+  | "after_previous_required";
+export type CareerPathStageEnforcement = "hard" | "soft" | "advisory";
+export type CareerPathSatisfiedBy = "completion" | "pass";
+
+export interface CareerPathStageAuthoring {
+  id: string;
+  career_path_id: string;
+  position: number;
+  /** NULL means unnamed — render `Stage {position}` via i18n, never a
+   *  server-side English default. */
+  title: string | null;
+  description: string | null;
+  min_optional_to_complete: number;
+  unlock_policy: CareerPathUnlockPolicy;
+  enforcement: CareerPathStageEnforcement;
+  course_count: number;
+}
+
+export interface CareerPathStageCreate {
+  title?: string | null;
+  description?: string | null;
+  position?: number | null;
+  min_optional_to_complete?: number;
+  unlock_policy?: CareerPathUnlockPolicy;
+  enforcement?: CareerPathStageEnforcement;
+}
+
+export type CareerPathStageUpdate = Partial<{
+  title: string | null;
+  description: string | null;
+  min_optional_to_complete: number;
+  unlock_policy: CareerPathUnlockPolicy;
+  enforcement: CareerPathStageEnforcement;
+}>;
+
+/** Reorder WARNS instead of rewriting unlock_policy — surface these to the
+ *  manager rather than swallowing them. */
+export interface CareerPathStageReorderWarning {
+  stage_id: string;
+  code: "stage_becomes_implicitly_unlocked" | "stage_may_become_locked" | string;
+  message: string;
+}
+
+export interface CareerPathStageReorderResult {
+  stages: CareerPathStageAuthoring[];
+  warnings: CareerPathStageReorderWarning[];
+}
+
+export type CareerPathCourseAuthoring =
+  Schemas["CareerPathCourseAuthoring"] & {
+    stage_id: string;
+    satisfied_by: CareerPathSatisfiedBy;
+  };
+
+export type CareerPathCourseAdd = Schemas["CareerPathCourseAdd"] & {
+  stage_id: string;
+  satisfied_by?: CareerPathSatisfiedBy;
+};
+
+export interface CareerPathCourseMove {
+  stage_id: string;
+  position?: number | null;
+}
+
+export type CourseProgressSummaryWithStage = Schemas["CourseProgressSummary"] & {
+  stage_id?: string | null;
+  is_required?: boolean;
+  /** `course_enrollments.status === 'completed'` — NOT completion_percent>=100. */
+  satisfied?: boolean;
+  is_enrolled?: boolean;
+  /**
+   * Gradeable units in the course: lessons + quizzes + interviews. 0 means the
+   * course can never be completed (the publish gate rejects such a course).
+   *
+   * `completion_percent` on the generated shape is a percentage of these units,
+   * not a lesson average — the same measure `satisfied` is decided by. These
+   * counts expose the numerator/denominator so the UI can show "4/6 done"
+   * instead of only a bar. Keep in sync with
+   * abridgeai/features/career_paths/schemas/public.py.
+   */
+  unit_total?: number;
+  unit_done?: number;
+};
+
+export interface StageProgressRead {
+  stage_id: string;
+  position: number;
+  title: string | null;
+  description: string | null;
+  min_optional_to_complete: number;
+  unlock_policy: CareerPathUnlockPolicy;
+  enforcement: CareerPathStageEnforcement;
+  /** Stage 1 is always unlocked whatever its stored policy says. */
+  unlocked: boolean;
+  complete: boolean;
+  /** Latched in student_stage_progress — completion never goes backward. */
+  latched: boolean;
+  required_count: number;
+  satisfied_required: number;
+  optional_count: number;
+  satisfied_optional: number;
+  stage_total: number;
+  stage_done: number;
+  courses: CourseProgressSummaryWithStage[];
+}
+
+export interface StartCourseResult {
+  course_id: string;
+  stage_id: string;
+  /** false when an enrollment already existed — Start is idempotent. */
+  created: boolean;
+  /** Advisory only; the attention cap never blocks. */
+  over_concurrency_cap: boolean;
+}
+
+export type CareerPathProgressRead = Schemas["CareerPathProgressRead"] & {
+  stages?: StageProgressRead[];
+  formula_version?: number;
+  max_concurrent?: number | null;
+  active_in_path?: number;
+  over_concurrency_cap?: boolean;
+  courses: CourseProgressSummaryWithStage[];
+};
 /**
  * The enrollment list contract does not require aggregate progress. Some
  * deployments enrich the same response with these values, while the learner

@@ -41,6 +41,7 @@ import {
   useCurriculumItems,
   useInProgressInterviewSessions,
   useModuleItemsMap,
+  useMyInterviewProgress,
   useMyQuizProgress,
 } from "./_components/course-learn/use-curriculum";
 import {
@@ -201,6 +202,11 @@ function CourseLearnLoaded({
   // Quiz completion (passed OR failed-with-attempts-exhausted) lets quiz
   // items participate in auto-collapse + next-item highlighting.
   const quizProgressMap = useMyQuizProgress(course.id);
+  // Interview completion (a PASS on any non-practice attempt) lets interview
+  // items show the same completed tag as quizzes and stop blocking a module's
+  // auto-collapse. Called after the quiz hook — this file's hook order is
+  // load-bearing, see use-curriculum.ts.
+  const interviewProgressMap = useMyInterviewProgress(course.id);
 
   const [activeIdx, setActiveIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>("Lesson Notes");
@@ -316,7 +322,13 @@ function CourseLearnLoaded({
 
   const activeTitle = activeTitleFor(activeLesson, activeEntry);
   const itemState = (fi: FlatItem) =>
-    itemStateFor(fi, activeLessonId, lessonStatusMap, quizProgressMap);
+    itemStateFor(
+      fi,
+      activeLessonId,
+      lessonStatusMap,
+      quizProgressMap,
+      interviewProgressMap,
+    );
   // Earliest item still to do — highlighted in the curriculum so the eye
   // lands on the next step. Aligns with the home resume CTA.
   const nextItemId = useMemo(
@@ -333,6 +345,7 @@ function CourseLearnLoaded({
     slug,
     activeModuleId: activeEntry?.moduleId,
     inProgressByConfigId,
+    interviewProgressMap,
     nextItemId,
   };
 

@@ -251,6 +251,8 @@ export const queryKeys = {
     session: (sessionId: string) =>
       ["interviews", "session", sessionId] as const,
     mySessions: () => ["interviews", "my-sessions"] as const,
+    progress: (courseId: string) =>
+      ["interviews", "progress", courseId] as const,
     gapReport: (sessionId: string) =>
       ["interviews", "gap-report", sessionId] as const,
     configAuthoring: (configId: string) =>
@@ -310,6 +312,8 @@ export const queryKeys = {
       ["career-paths", "mgmt-detail", id] as const,
     managementCourses: (id: string) =>
       ["career-paths", "mgmt-courses", id] as const,
+    managementStages: (id: string) =>
+      ["career-paths", "mgmt-stages", id] as const,
     teacherProgress: (id: string) =>
       ["career-paths", "teacher-progress", id] as const,
     readiness: (id: string) => ["career-paths", "readiness", id] as const,

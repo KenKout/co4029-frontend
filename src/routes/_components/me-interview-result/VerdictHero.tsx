@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   HERO_ICON,
   HERO_SUMMARY_KEY,
+  HERO_TITLE_CLASS,
   HERO_TITLE_KEY,
   HERO_TONE_CLASS,
 } from "./constants";
@@ -27,6 +28,7 @@ export default function VerdictHero({ hero }: { hero: VerdictHeroProps }) {
   const heroToneClass = HERO_TONE_CLASS[phase];
   const HeroIcon = HERO_ICON[phase];
   const heroTitleKey = HERO_TITLE_KEY[phase];
+  const heroTitleClass = HERO_TITLE_CLASS[phase];
   const heroSummaryKey = HERO_SUMMARY_KEY[phase];
 
   return (
@@ -51,7 +53,12 @@ export default function VerdictHero({ hero }: { hero: VerdictHeroProps }) {
           aria-hidden="true"
         />
       </div>
-      <h1 className="mb-1.5 font-headline text-2xl font-extrabold text-m3-primary">
+      <h1
+        className={cn(
+          "mb-1.5 font-headline text-2xl font-extrabold",
+          heroTitleClass,
+        )}
+      >
         {t(heroTitleKey)}
       </h1>
       <p className="mx-auto mb-6 max-w-md text-sm leading-relaxed text-m3-on-surface-variant">

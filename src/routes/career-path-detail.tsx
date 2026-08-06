@@ -16,6 +16,7 @@ import {
   CareerPathErrorState,
   CareerPathLoadingState,
 } from "./_components/career-path-detail/States";
+import { StageStepper } from "./_components/career-path-detail/StageStepper";
 
 export default function CareerPathDetailPage() {
   const { slug } = useParams({ strict: false }) as { slug: string };
@@ -44,6 +45,8 @@ export default function CareerPathDetailPage() {
   const progressByCourseId = new Map(
     (progress.data?.courses ?? []).map((c) => [c.course_id, c]),
   );
+  const courseMeta = new Map(data.courses.map((c) => [c.course_id, c]));
+  const stages = progress.data?.stages ?? [];
   const firstIncomplete = data.courses.find((c) => {
     const p = progressByCourseId.get(c.course_id);
     return !p || p.completion_percent < 100;
@@ -67,10 +70,24 @@ export default function CareerPathDetailPage() {
 
       <CareerPathEnrollmentNotice enrolled={enrolled} />
 
-      <CareerPathCourseList
-        courses={data.courses}
-        progressByCourseId={progressByCourseId}
-      />
+      {/* Enrolled students see the stage stepper (locked stages greyed, not
+          hidden, with a Start button per course). Anyone browsing the
+          published path without an enrollment still gets the flat course
+          list — there are no stages to evaluate for them. */}
+      {enrolled && stages.length > 0 ? (
+        <StageStepper
+          careerPathId={data.id}
+          stages={stages}
+          courseMeta={courseMeta}
+          overConcurrencyCap={progress.data?.over_concurrency_cap}
+          activeInPath={progress.data?.active_in_path}
+        />
+      ) : (
+        <CareerPathCourseList
+          courses={data.courses}
+          progressByCourseId={progressByCourseId}
+        />
+      )}
     </div>
   );
 }

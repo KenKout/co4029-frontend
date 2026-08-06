@@ -1,4 +1,5 @@
 import type {
+  InterviewProgressRead,
   LessonPublic,
   ModuleItemPublic,
   ModulePublic,
@@ -43,6 +44,35 @@ export function buildFlatItems(
 }
 
 /**
+ * Whether a single item counts as completed, by item type.
+ *
+ * Split out of ``itemStateFor`` because adding the interview branch inline
+ * pushed that function past the eslint complexity ceiling (15). Returns
+ * ``false`` whenever the relevant map has not loaded, so a caller mid-fetch
+ * degrades to "not completed" rather than throwing.
+ */
+function itemIsCompleted(
+  fi: FlatItem,
+  lessonStatusMap: Map<string, string>,
+  quizProgressMap?: Map<string, QuizProgressRead>,
+  interviewProgressMap?: Map<string, InterviewProgressRead>,
+): boolean {
+  const targetId = fi.item.target?.id;
+  if (!targetId) return false;
+  switch (fi.item.item_type) {
+    case "lesson":
+      // if (lockedLessonIds.has(targetId)) return "locked"; // DEV: comment out to disable lock
+      return lessonStatusMap.get(targetId) === "completed";
+    case "quiz":
+      return quizProgressMap?.get(targetId)?.completed === true;
+    case "interview":
+      return interviewProgressMap?.get(targetId)?.completed === true;
+    default:
+      return false;
+  }
+}
+
+/**
  * Curriculum row state for a flattened item. Extracted from the page shell so
  * the shell only has to close over the two values the decision depends on.
  *
@@ -53,21 +83,25 @@ export function buildFlatItems(
  * Introduction stayed blue for 30+ min). Quiz items are "completed" when
  * the per-quiz progress map says so — passed the teacher's milestone OR
  * failed with every allowed attempt consumed (``QuizProgressRead.completed``).
- * Interview items have no completion signal yet and stay ``pending``.
+ *
+ * Interview items are "completed" when the per-interview progress map says so,
+ * which — unlike quizzes — means PASSED and nothing else (user decision
+ * 2026-08-06; see ``InterviewProgressRead``). A student who has attempted an
+ * interview and not passed it stays ``pending``, because the tag is meant to
+ * read as "đạt". Both progress maps are optional so a caller that has not
+ * loaded them yet degrades to the previous behaviour rather than throwing.
  */
 export function itemStateFor(
   fi: FlatItem,
   activeLessonId: string | undefined,
   lessonStatusMap: Map<string, string>,
   quizProgressMap?: Map<string, QuizProgressRead>,
+  interviewProgressMap?: Map<string, InterviewProgressRead>,
 ): LessonState {
-  if (fi.item.item_type === "lesson" && fi.item.target?.id) {
-    const id = fi.item.target.id;
-    // if (lockedLessonIds.has(id)) return "locked"; // DEV: comment out to disable lock
-    if (lessonStatusMap.get(id) === "completed") return "completed";
-  }
-  if (fi.item.item_type === "quiz" && fi.item.target?.id && quizProgressMap) {
-    if (quizProgressMap.get(fi.item.target.id)?.completed) return "completed";
+  if (
+    itemIsCompleted(fi, lessonStatusMap, quizProgressMap, interviewProgressMap)
+  ) {
+    return "completed";
   }
   if (fi.item.item_type === "lesson" && fi.item.target?.id === activeLessonId) {
     return "active";
@@ -80,9 +114,12 @@ export function itemStateFor(
  *
  * Completion is decided by ``itemState``: lessons via their progress status,
  * quizzes via the milestone rule (passed OR failed-with-all-attempts-used —
- * see ``QuizProgressRead.completed``, threaded through ``itemStateFor``).
- * Interview items have no completion signal yet, so a module containing one
- * is never provably complete and stays expanded.
+ * see ``QuizProgressRead.completed``), interviews via a PASS
+ * (``InterviewProgressRead.completed``, threaded through ``itemStateFor``).
+ *
+ * A module containing an interview can therefore now auto-collapse once that
+ * interview is passed — previously it never could, because interviews carried
+ * no completion signal at all.
  */
 export function moduleIsComplete(
   mod: ModulePublic,
@@ -99,12 +136,27 @@ export function moduleIsComplete(
  * ``undefined`` when everything is done. "Pending" only — the currently open
  * lesson (state ``active``) and completed items are excluded, so the
  * highlight always points at the genuine next step.
+ *
+ * Interview items are still SKIPPED, even though they now have a completion
+ * signal. Under the interview rule a never-passed interview is PERMANENTLY
+ * pending (failing does not complete it, unlike a quiz running out of
+ * attempts), so letting interviews claim this highlight would reproduce the
+ * original bug: a blue "do this next" glow parked on an interview the student
+ * has already attempted, indefinitely, and contradicting the course-home
+ * "Next up" label which resolves against lessons only (``resumeIdx``).
+ *
+ * Passing an interview still matters here — it feeds ``moduleIsComplete`` and
+ * the row's own completed styling; it just does not participate in choosing
+ * the next step.
  */
 export function earliestPendingItemId(
   flatItems: FlatItem[],
   itemState: (fi: FlatItem) => LessonState,
 ): string | undefined {
-  const fi = flatItems.find((item) => itemState(item) === "pending");
+  const fi = flatItems.find(
+    (item) =>
+      item.item.item_type !== "interview" && itemState(item) === "pending",
+  );
   return fi?.item.id;
 }
 

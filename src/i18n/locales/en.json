@@ -454,6 +454,10 @@
       "body": "You have an interview that is still ongoing. Finish it before starting a new one.",
       "continue": "Continue latest session"
     },
+    "interview_grading": "Being marked",
+    "interview_grading_aria": "Attempt {{count}} submitted, awaiting marking",
+    "interview_not_passed": "Not passed yet",
+    "interview_not_passed_aria": "{{count}} graded attempt(s), not passed yet",
     "knowledge_map": "Knowledge map",
     "km_zoom_in": "Zoom in",
     "km_zoom_out": "Zoom out",
@@ -798,7 +802,31 @@
     "course_optional": "Optional",
     "course_progress_label": "Progress",
     "n_courses_other": "{{count}} courses",
-    "n_courses_one": "{{count}} course"
+    "n_courses_one": "{{count}} course",
+    "stages": {
+      "title": "Your stages",
+      "subtitle": "Finish a stage to open the next one.",
+      "unnamed": "Stage {{position}}",
+      "locked": "Locked",
+      "open": "Open",
+      "done": "Done",
+      "locked_reason": {
+        "after_previous": "Opens when you finish the stage before this one.",
+        "after_previous_required": "Opens when you finish the required courses of the stage before this one."
+      },
+      "locked_hard": "You cannot open these courses yet.",
+      "locked_soft": "You can look at these courses, but finish the earlier stage first.",
+      "progress": "{{done}} of {{total}} done",
+      "optional_quota": "Pick {{count}} of the optional courses",
+      "start": "Start",
+      "starting": "Starting…",
+      "continue": "Continue path →",
+      "already_started": "You already started this course",
+      "start_failed": "Could not start this course",
+      "cap_warning": "You have {{count}} courses open in this path. Finishing some before starting more will help you keep up.",
+      "not_started_yet": "Not started",
+      "units_done": "{{done}}/{{total}} done"
+    }
   },
   "study_cards_due": {
     "back": "Back to dashboard",
@@ -2643,6 +2671,7 @@
     "results": {
       "passed": "Passed",
       "completed": "Interview completed",
+      "failed": "Not passed",
       "evaluating": "Evaluating your answers…",
       "evaluating_summary": "Our AI is grading your responses against the learning outcomes. This usually takes a minute — the result will appear here automatically.",
       "pass_summary": "You met enough of the learning outcomes to pass this interview.",
@@ -2803,6 +2832,73 @@
       "student": "Student",
       "completed_courses": "Completed courses",
       "total_progress": "Total progress"
+    },
+    "stages": {
+      "title": "Stages",
+      "hint": "Group courses into stages. A stage opens for a student once the stage before it is done.",
+      "add": "Add stage",
+      "unnamed": "Stage {{position}}",
+      "course_count_one": "{{count}} course",
+      "course_count_other": "{{count}} courses",
+      "empty": "No stages yet. Add one, then attach courses to it.",
+      "empty_stage": "No courses in this stage yet.",
+      "settings": "Stage settings",
+      "delete": "Delete stage",
+      "move_up": "Move stage up",
+      "move_down": "Move stage down",
+      "save_order": "Save stage order",
+      "select_stage": "Stage",
+      "move_to_stage": "Move to stage",
+      "fields": {
+        "title": "Stage name",
+        "title_placeholder": "Leave empty to show \"Stage 1\"",
+        "description": "Description",
+        "min_optional": "Optional courses needed to finish",
+        "min_optional_hint": "How many of this stage's optional courses a student must finish. 0 means optional courses are extra.",
+        "unlock_policy": "When this stage opens",
+        "enforcement": "If the stage is still locked",
+        "max_concurrent": "Courses at once",
+        "max_concurrent_hint": "A gentle limit on how many courses of this path a student should have open at once. Leave empty for no limit. This only shows a warning — it never blocks anyone.",
+        "satisfied_by": "Counts as done when"
+      },
+      "unlock_policy": {
+        "always": "Always open",
+        "after_previous": "After the previous stage is finished",
+        "after_previous_required": "After the previous stage's required courses are finished",
+        "first_stage_note": "The first stage is always open — a locked first stage could never be started."
+      },
+      "enforcement": {
+        "hard": "Block access",
+        "soft": "Show a warning, still allow",
+        "advisory": "Only mark it in the interface",
+        "hint": "This applies to locked stages only. It has no effect on the \"courses at once\" limit, which never blocks."
+      },
+      "satisfied_by": {
+        "completion": "The course is completed",
+        "pass": "The course is passed",
+        "locked_note": "Only \"completed\" is available for now."
+      },
+      "warnings": {
+        "title": "Check these before you continue",
+        "stage_becomes_implicitly_unlocked": "This stage is now first, so it is always open — students can start it right away, even though its setting says otherwise.",
+        "stage_may_become_locked": "This stage is no longer first, so its own setting now applies. It may lock again for students working in it right now."
+      },
+      "errors": {
+        "create_failed": "Could not create the stage",
+        "update_failed": "Could not save the stage",
+        "delete_failed": "Could not delete the stage",
+        "reorder_failed": "Could not save the stage order",
+        "move_course_failed": "Could not move the course",
+        "stage_in_use": "This stage cannot be deleted: it still has courses, or a student has already finished it.",
+        "pick_stage_first": "Pick a stage first"
+      },
+      "toasts": {
+        "created": "Stage added",
+        "updated": "Stage saved",
+        "deleted": "Stage deleted",
+        "order_updated": "Stage order saved",
+        "course_moved": "Course moved"
+      }
     }
   },
   "management_course_enrollments": {

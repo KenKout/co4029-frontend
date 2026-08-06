@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useVoiceAssistant } from "@livekit/components-react";
 
 import { SetupChecklist } from "@/components/interview/setup-checklist";
 import { FocusedInterviewStage } from "@/components/interview/stages";
@@ -27,6 +28,17 @@ export function WorkspaceStage({
   const { dictation } = iv;
   const questioning = iv.phase === "questioning";
   const onboardingStage = resolveSetupStage(iv.phase, iv.onboardingStage);
+  // When an agent is in the room it is the voice, and livekit-agents publishes
+  // a transcript already paced to its real TTS playout (sync_transcription is
+  // set in realtime/agent.py). The question card mirrors that instead of
+  // animating its own guess at the speed. No agent → the card keeps the
+  // typewriter, so text-only sessions are untouched.
+  //
+  // Read HERE, not in the card: this component is inside the room provider,
+  // whereas QuestionCard also renders outside any room and useVoiceAssistant
+  // throws without a RoomContext.
+  const { agent, agentTranscriptions } = useVoiceAssistant();
+  const agentSpeaks = Boolean(agent);
 
   return (
     <FocusedInterviewStage
@@ -44,6 +56,8 @@ export function WorkspaceStage({
       questionTypeLabel={(type) => questionTypeLabel(type, t)}
       speak={iv.speakIfOn}
       replaySpeak={iv.replayIfOn}
+      agentSpeaks={agentSpeaks}
+      agentTranscriptions={agentTranscriptions}
       onSpeakingChange={(speaking) => {
         iv.setAiSpeaking(iv.voiceOn && speaking);
         iv.setAiPresenting(speaking);

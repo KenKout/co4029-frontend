@@ -5,6 +5,10 @@ import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration"
 import { useSpeechDictation } from "@/lib/hooks/use-speech-dictation";
 import { type SpeechPersona } from "@/lib/hooks/use-speech-synthesis";
 import { resolvePersonaTraits } from "@/lib/interview/persona-traits";
+import {
+  createAgentVoiceCoordinator,
+  type AgentVoicePhase,
+} from "./agent-voice-presentation";
 import type { useInterviewPhaseState } from "./use-interview-phase-state";
 import type { useInterviewRouteData } from "./use-interview-route-data";
 import type { useInterviewTurnState } from "./use-interview-turn-state";
@@ -110,6 +114,26 @@ export function useInterviewSpeech(
     }),
     [],
   );
+  // Pacing for turns the AGENT speaks. Returning `silent()` for those turns is
+  // what silences the client correctly, but it also handed AiTypingMessage an
+  // already-resolved `started` — and that promise is exactly what holds the
+  // text back until the voice begins. So the typewriter was released instantly
+  // while the agent still had to join and synthesize, and question one was
+  // nearly fully typed before the voice came up. The coordinator replaces the
+  // lost signal with the agent's own `lk.agent.state` (fed by the workspace
+  // screen), and degrades to the old settled presentation when no agent phase
+  // is ever reported.
+  const agentVoiceRef = useRef(createAgentVoiceCoordinator());
+  const setAgentVoicePhase = useCallback((phase: AgentVoicePhase) => {
+    agentVoiceRef.current.setPhase(phase);
+  }, []);
+  // Whether an agent is on its way, before `lk.agent.state` exists. Question
+  // one mounts DURING the join (~10-13s), when no phase has been reported yet
+  // and that is indistinguishable from a text-only session — without this the
+  // turn degraded to the settled presentation and outran the voice.
+  const setAgentExpected = useCallback((expected: boolean) => {
+    agentVoiceRef.current.setAgentExpected(expected);
+  }, []);
   const speakIfOn = useCallback(
     (text: string) => {
       // The LiveKit agent in the room is the voice; narrating client-side as
@@ -117,7 +141,7 @@ export function useInterviewSpeech(
       // the render-phase ref, not the state: the transition turn's narrate()
       // runs in a child effect BEFORE the parent state flip would land, and
       // a stale read there lets the overlap through.
-      if (roomConnectedRef.current) return silent();
+      if (roomConnectedRef.current) return agentVoiceRef.current.present(text);
       if (voiceOn) return narration.narrate(text);
       return silent();
     },
@@ -163,5 +187,9 @@ export function useInterviewSpeech(
     narration,
     speakIfOn,
     replayIfOn,
+    /** Feed the agent's `lk.agent.state` in so agent-spoken turns stay paced. */
+    setAgentVoicePhase,
+    /** Feed `roomWanted` in so a turn can wait for an agent still joining. */
+    setAgentExpected,
   };
 }
