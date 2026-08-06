@@ -896,6 +896,14 @@ export interface StartCourseResult {
    * ahead of the path.
    */
   stage_locked_warning?: boolean;
+  /**
+   * Courses of this path the caller has active, counted AFTER this Start. The
+   * cap warning interpolates it — do NOT hardcode a count, that shipped once
+   * and rendered "you have 0 courses open in this path".
+   */
+  active_in_path?: number;
+  /** The path's attention cap, or null when unset. Advisory: never blocks. */
+  max_concurrent?: number | null;
 }
 
 export type CareerPathProgressRead = Schemas["CareerPathProgressRead"] & {

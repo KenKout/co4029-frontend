@@ -243,7 +243,12 @@ function StageCourseRow({
           toast.info(t(`${prefix}.already_started`));
         }
         if (result.over_concurrency_cap) {
-          toast.warning(t(`${prefix}.cap_warning`, { count: 0 }));
+          // Use the count the server actually measured. This was hardcoded to
+          // 0 once, which rendered "you have 0 courses open in this path" —
+          // the one number that can never be true when the cap is exceeded.
+          toast.warning(
+            t(`${prefix}.cap_warning`, { count: result.active_in_path ?? 0 }),
+          );
         }
         // The stage was locked but its enforcement is soft/advisory, so the
         // server let the Start through. Say so — otherwise "allowed" and

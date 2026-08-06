@@ -780,7 +780,7 @@
       "continue": "Tiếp tục lộ trình →",
       "already_started": "Bạn đã bắt đầu khóa học này",
       "start_failed": "Không thể bắt đầu khóa học này",
-      "cap_warning": "Bạn đang mở {{count}} khóa học trong lộ trình này. Hãy hoàn thành một vài khóa trước khi mở thêm để theo kịp.",
+      "cap_warning_other": "Bạn đang mở {{count}} khóa học trong lộ trình này. Hãy hoàn thành một vài khóa trước khi mở thêm để theo kịp.",
       "not_started_yet": "Chưa bắt đầu",
       "units_done": "Đã xong {{done}}/{{total}}"
     }
@@ -2253,6 +2253,11 @@
       "title": "Bạn đã rời khỏi cửa sổ phỏng vấn",
       "body": "Hành vi này được ghi lại để giáo viên xem lại. Vui lòng ở lại tab này cho đến khi kết thúc phỏng vấn."
     },
+    "agent_failed": {
+      "title": "Không kết nối được giọng nói",
+      "body": "Giọng nói AI không khởi động được, buổi phỏng vấn tiếp tục bằng chữ. Câu trả lời của bạn vẫn được chấm như bình thường."
+    },
+    "enable_audio": "Bật tiếng người phỏng vấn",
     "fullscreen": {
       "prompt_title": "Chuyển sang chế độ toàn màn hình",
       "prompt_description": "Buổi phỏng vấn sẽ chạy toàn màn hình để bạn không bị phân tán. Menu của ứng dụng được ẩn cho đến khi phỏng vấn kết thúc.",

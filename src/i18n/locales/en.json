@@ -824,7 +824,8 @@
       "continue": "Continue path →",
       "already_started": "You already started this course",
       "start_failed": "Could not start this course",
-      "cap_warning": "You have {{count}} courses open in this path. Finishing some before starting more will help you keep up.",
+      "cap_warning_one": "You have {{count}} course open in this path. Finishing it before starting more will help you keep up.",
+      "cap_warning_other": "You have {{count}} courses open in this path. Finishing some before starting more will help you keep up.",
       "not_started_yet": "Not started",
       "units_done": "{{done}}/{{total}} done"
     }
@@ -2348,6 +2349,11 @@
       "title": "You left the interview window",
       "body": "This is recorded for your teacher to review. Please stay on this tab until the interview ends."
     },
+    "agent_failed": {
+      "title": "Voice interviewer unavailable",
+      "body": "The AI voice could not start, so the interview continues in text. Your answers are still graded exactly the same way."
+    },
+    "enable_audio": "Enable interviewer audio",
     "fullscreen": {
       "prompt_title": "Switch to fullscreen mode",
       "prompt_description": "Your interview runs in fullscreen so nothing distracts you. The app menu is hidden until the interview ends.",
