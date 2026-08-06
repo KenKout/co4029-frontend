@@ -454,6 +454,10 @@
       "body": "You have an interview that is still ongoing. Finish it before starting a new one.",
       "continue": "Continue latest session"
     },
+    "interview_grading": "Being marked",
+    "interview_grading_aria": "Attempt {{count}} submitted, awaiting marking",
+    "interview_not_passed": "Not passed yet",
+    "interview_not_passed_aria": "{{count}} graded attempt(s), not passed yet",
     "knowledge_map": "Knowledge map",
     "km_zoom_in": "Zoom in",
     "km_zoom_out": "Zoom out",

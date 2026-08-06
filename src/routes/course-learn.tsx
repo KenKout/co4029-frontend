@@ -345,6 +345,7 @@ function CourseLearnLoaded({
     slug,
     activeModuleId: activeEntry?.moduleId,
     inProgressByConfigId,
+    interviewProgressMap,
     nextItemId,
   };
 

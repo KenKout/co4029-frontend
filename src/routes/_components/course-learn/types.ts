@@ -1,5 +1,6 @@
 import type { useTranslation } from "react-i18next";
 import type {
+  InterviewProgressRead,
   InterviewSessionPublic,
   ModuleItemPublic,
   ModulePublic,
@@ -41,6 +42,13 @@ export interface CurriculumProps {
   slug: string;
   activeModuleId?: string;
   inProgressByConfigId: Map<string, InterviewSessionPublic>;
+  /**
+   * Per-interview progress, used ONLY for the pending-row badge
+   * ("not passed yet" / "being marked"). Completion itself already comes
+   * through `itemState`, so this is presentational detail, not a second
+   * source of truth.
+   */
+  interviewProgressMap?: Map<string, InterviewProgressRead>;
   /** Id of the earliest pending item (course order) — the row to highlight. */
   nextItemId?: string;
 }

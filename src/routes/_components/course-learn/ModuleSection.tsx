@@ -13,9 +13,15 @@ import {
   HelpCircle,
   // Lock,
 } from "lucide-react";
-import type { InterviewSessionPublic, ModulePublic } from "@/lib/api/types";
+import type {
+  InterviewProgressRead,
+  InterviewSessionPublic,
+  ModulePublic,
+} from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { moduleIsComplete } from "./helpers";
+import { interviewRowBadge } from "./interview-row-badge";
+import type { InterviewRowBadge } from "./interview-row-badge";
 import type { FlatItem, LessonState, Translate } from "./types";
 
 /**
@@ -32,6 +38,7 @@ export function ModuleSection({
   slug,
   isActiveModule,
   inProgressByConfigId,
+  interviewProgressMap,
   nextItemId,
 }: {
   mod: ModulePublic;
@@ -42,6 +49,7 @@ export function ModuleSection({
   slug: string;
   isActiveModule: boolean;
   inProgressByConfigId: Map<string, InterviewSessionPublic>;
+  interviewProgressMap?: Map<string, InterviewProgressRead>;
   nextItemId?: string;
 }) {
   const { t } = useTranslation();
@@ -108,6 +116,7 @@ export function ModuleSection({
               onSelect={onSelect}
               slug={slug}
               inProgressByConfigId={inProgressByConfigId}
+              interviewProgressMap={interviewProgressMap}
               isNextUp={fi.item.id === nextItemId}
               t={t}
             />
@@ -116,6 +125,24 @@ export function ModuleSection({
       </div>
     </div>
   );
+}
+
+/**
+ * The badge for an interview row, or `null` for any other item type.
+ *
+ * A thin wrapper over `interviewRowBadge` that also does the item-type and
+ * target-id narrowing — inlining those two checks in `CurriculumItemRow` tips
+ * it past the eslint complexity ceiling (15), which tsc and the build do not
+ * catch.
+ */
+function badgeForRow(
+  fi: FlatItem,
+  interviewProgressMap?: Map<string, InterviewProgressRead>,
+): InterviewRowBadge {
+  if (fi.item.item_type !== "interview") return null;
+  const configId = fi.item.target?.id;
+  if (!configId) return null;
+  return interviewRowBadge(interviewProgressMap?.get(configId));
 }
 
 /**
@@ -130,6 +157,7 @@ function CurriculumItemRow({
   onSelect,
   slug,
   inProgressByConfigId,
+  interviewProgressMap,
   isNextUp,
   t,
 }: {
@@ -139,12 +167,16 @@ function CurriculumItemRow({
   onSelect: (idx: number) => void;
   slug: string;
   inProgressByConfigId: Map<string, InterviewSessionPublic>;
+  interviewProgressMap?: Map<string, InterviewProgressRead>;
   isNextUp: boolean;
   t: Translate;
 }) {
   const isQuiz = fi.item.item_type === "quiz";
   const isInterview = fi.item.item_type === "interview";
   const quizId = isQuiz ? fi.item.target?.id : null;
+  // Distinguishes "attempted but not passed" and "awaiting marking" from
+  // "never opened", all three of which are otherwise the same pending row.
+  const badge = badgeForRow(fi, interviewProgressMap);
 
   const className = cn(
     "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
@@ -169,6 +201,8 @@ function CurriculumItemRow({
       isQuiz={isQuiz}
       isInterview={isInterview}
       label={fi.label}
+      badge={badge}
+      t={t}
     />
   );
 
@@ -225,17 +259,64 @@ function CurriculumItemRow({
   );
 }
 
+/**
+ * The small pill on a pending interview row.
+ *
+ * Amber for "not passed yet" (actionable — retake it), neutral for "being
+ * marked" (nothing to do but wait). Deliberately NOT red: the interview is
+ * retryable and `max_attempts` is unlimited on every config here, so a failure
+ * is a step, not a dead end.
+ */
+function InterviewStateBadge({
+  badge,
+  t,
+}: {
+  badge: NonNullable<InterviewRowBadge>;
+  t: Translate;
+}) {
+  const grading = badge.kind === "grading";
+  return (
+    <span
+      className={cn(
+        // No ml-auto: the label already carries flex-1, so the badge sits
+        // right after the (truncated) title rather than being pushed away
+        // from it.
+        "shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase leading-none tracking-tight",
+        grading
+          ? "bg-m3-surface-container text-m3-on-surface-variant"
+          : "bg-amber-100 text-amber-700",
+      )}
+      aria-label={t(
+        grading
+          ? "course_learn.interview_grading_aria"
+          : "course_learn.interview_not_passed_aria",
+        { count: badge.attemptCount },
+      )}
+    >
+      {t(
+        grading
+          ? "course_learn.interview_grading"
+          : "course_learn.interview_not_passed",
+      )}
+    </span>
+  );
+}
+
 /** The icon + label content shared by every curriculum row variant. */
 function CurriculumItemInner({
   state,
   isQuiz,
   isInterview,
   label,
+  badge,
+  t,
 }: {
   state: LessonState;
   isQuiz: boolean;
   isInterview: boolean;
   label: string;
+  badge?: InterviewRowBadge;
+  t: Translate;
 }) {
   const LessonIcon = PlayCircle;
 
@@ -259,6 +340,7 @@ function CurriculumItemInner({
       )}
 
       <span className="truncate leading-snug flex-1">{label}</span>
+      {badge && <InterviewStateBadge badge={badge} t={t} />}
       <BookOpen className="h-3 w-3 opacity-0" />
     </>
   );

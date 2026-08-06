@@ -35,6 +35,7 @@ export function CourseHome({
   resumeLabel,
   resumeStarted,
   inProgressByConfigId,
+  interviewProgressMap,
   nextItemId,
 }: CourseHomeProps) {
   const { t } = useTranslation();
@@ -133,6 +134,7 @@ export function CourseHome({
               slug={slug}
               isActiveModule={activeModuleId === mod.id}
               inProgressByConfigId={inProgressByConfigId}
+              interviewProgressMap={interviewProgressMap}
               nextItemId={nextItemId}
             />
           ))}

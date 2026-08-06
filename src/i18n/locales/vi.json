@@ -429,6 +429,10 @@
       "body": "Bạn có một buổi phỏng vấn vẫn đang diễn ra. Hãy hoàn thành trước khi bắt đầu buổi mới.",
       "continue": "Tiếp tục phiên gần nhất"
     },
+    "interview_grading": "Đang chấm",
+    "interview_grading_aria": "Đã nộp {{count}} lần, đang chờ chấm",
+    "interview_not_passed": "Chưa đạt",
+    "interview_not_passed_aria": "Đã chấm {{count}} lần, chưa đạt",
     "knowledge_map": "Sơ đồ kiến thức",
     "km_zoom_in": "Phóng to",
     "km_zoom_out": "Thu nhỏ",
