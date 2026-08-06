@@ -27,6 +27,22 @@ import { TOPIC_CHAT, TOPIC_CONTROL } from "@/lib/interview/control-protocol";
  *   localParticipant.sendText    (text, { topic, attributes })
  *   localParticipant.publishData (the DEPRECATED path, asserted unused)
  */
+/**
+ * The RoomEvent livekit-client emits when the room enters each state.
+ *
+ * Mirrors the SDK so the double cannot be gentler than production. Note
+ * `SignalReconnecting`: it fires on its own when only the signal channel drops
+ * (media keeps flowing), so a hook that listens for `Reconnecting` alone never
+ * hears about it.
+ */
+const STATE_EVENT: Record<ConnectionState, RoomEvent> = {
+  [ConnectionState.Connected]: RoomEvent.Connected,
+  [ConnectionState.Disconnected]: RoomEvent.Disconnected,
+  [ConnectionState.Connecting]: RoomEvent.Reconnecting,
+  [ConnectionState.Reconnecting]: RoomEvent.Reconnecting,
+  [ConnectionState.SignalReconnecting]: RoomEvent.SignalReconnecting,
+};
+
 function makeFakeRoom() {
   const listeners = new Map<string, Set<() => void>>();
   const handlers = new Map<
@@ -84,13 +100,19 @@ function makeFakeRoom() {
         await Promise.resolve();
       });
     },
+    /**
+     * Move the room to `next` and fire the event the real SDK would.
+     *
+     * The mapping matters: an earlier version fired only Connected /
+     * Disconnected, which meant a hook that forgot to subscribe
+     * `SignalReconnecting` still passed — the fake never emitted the event that
+     * would have exposed it. Keep this mirroring livekit-client, and prefer a
+     * failure here over a friendlier double.
+     */
     setState(next: ConnectionState) {
       room.state = next;
       act(() => {
-        const event =
-          next === ConnectionState.Connected
-            ? RoomEvent.Connected
-            : RoomEvent.Disconnected;
+        const event = STATE_EVENT[next];
         listeners.get(event)?.forEach((cb) => cb());
       });
     },
@@ -404,6 +426,44 @@ describe("useInterviewChat — ordering and reconnect", () => {
 
     await fake.emitControl(control({ status: "completed" }));
     await expect(promise).resolves.toBeTruthy();
+  });
+});
+
+describe("useInterviewChat — connected tracks every room state", () => {
+  /**
+   * `connected` is what `resolveTextTransport` reads to decide LiveKit vs REST,
+   * so a state this hook fails to notice routes typed turns onto a channel that
+   * is not carrying them.
+   */
+  it.each([
+    ConnectionState.Disconnected,
+    ConnectionState.Reconnecting,
+    ConnectionState.SignalReconnecting,
+  ])("reports NOT connected in %s", async (state) => {
+    const fake = makeFakeRoom();
+    const { result } = renderHook(() => useInterviewChat(fake.room));
+    expect(result.current.connected).toBe(true);
+
+    fake.setState(state);
+    await waitFor(() => expect(result.current.connected).toBe(false));
+  });
+
+  it("reports NOT connected during signalReconnecting specifically", async () => {
+    // Called out on its own because it is the one that hid: the SDK documents
+    // it as "not noticeable to users most of the time" — media keeps flowing
+    // and RoomEvent.Reconnecting never fires — so a hook subscribing only the
+    // other four events kept reporting a stale `connected: true` while
+    // `lk.chat` and the control topic were both down.
+    const fake = makeFakeRoom();
+    const { result } = renderHook(() => useInterviewChat(fake.room));
+
+    fake.setState(ConnectionState.SignalReconnecting);
+    await waitFor(() => expect(result.current.connected).toBe(false));
+    expect(result.current.canSend).toBe(false);
+
+    // ...and recovers when the signal channel comes back.
+    fake.setState(ConnectionState.Connected);
+    await waitFor(() => expect(result.current.connected).toBe(true));
   });
 });
 

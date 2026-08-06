@@ -80,6 +80,15 @@ const DEFAULT_TURN_TIMEOUT_MS = 60_000;
  * stale render: the room can drop between renders and nothing would re-run
  * otherwise. Reconnecting counts as NOT connected — a turn sent mid-reconnect
  * would write into a stream the agent is not reading.
+ *
+ * `SignalReconnecting` is subscribed for the same reason, and it is the easy
+ * one to miss: the SDK documents it as "not noticeable to users most of the
+ * time" because media keeps flowing, so `RoomEvent.Reconnecting` never fires.
+ * Without it `room.state` becomes `signalReconnecting` while this hook still
+ * reports the last value it saw — `connected: true` — and the transport
+ * resolver keeps routing typed turns onto a signal channel that is currently
+ * broken. `lk.chat` and the control topic both ride that channel, so the turn
+ * either throws on send or waits out the 60s control timeout.
  */
 function useRoomConnected(room: Room | undefined): boolean {
   const [connected, setConnected] = useState(
@@ -93,15 +102,18 @@ function useRoomConnected(room: Room | undefined): boolean {
     }
     const sync = () => setConnected(room.state === ConnectionState.Connected);
     sync();
-    room.on(RoomEvent.Connected, sync);
-    room.on(RoomEvent.Disconnected, sync);
-    room.on(RoomEvent.Reconnected, sync);
-    room.on(RoomEvent.Reconnecting, sync);
+    // Every event that can change `room.state`. Missing one leaves this hook
+    // reporting a stale value until some unrelated event happens to fire.
+    const events = [
+      RoomEvent.Connected,
+      RoomEvent.Disconnected,
+      RoomEvent.Reconnected,
+      RoomEvent.Reconnecting,
+      RoomEvent.SignalReconnecting,
+    ] as const;
+    for (const event of events) room.on(event, sync);
     return () => {
-      room.off(RoomEvent.Connected, sync);
-      room.off(RoomEvent.Disconnected, sync);
-      room.off(RoomEvent.Reconnected, sync);
-      room.off(RoomEvent.Reconnecting, sync);
+      for (const event of events) room.off(event, sync);
     };
   }, [room]);
 
