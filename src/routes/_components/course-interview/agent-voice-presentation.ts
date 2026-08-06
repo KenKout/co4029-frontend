@@ -48,11 +48,54 @@ export const AGENT_VOICE_START_TIMEOUT_MS = 6_000;
  */
 export const AGENT_VOICE_END_TIMEOUT_MS = 20_000;
 
+/**
+ * Words per minute assumed for the agent's TTS when estimating how long a turn
+ * will take to speak.
+ *
+ * The agent publishes no duration — `lk.agent.state` only says *that* it is
+ * speaking, never for how long — so the typewriter needs an estimate to pace
+ * against. Measured on this deployment: Deepgram Aura-2 (`aura-2-orpheus-en`)
+ * takes 5.98s for the 15-word question "What is the primary difference between
+ * operational processing and information processing in an organizational
+ * context?", i.e. ~151 wpm once the sentence-final pause is accounted for.
+ *
+ * That matches `wordsPerMinuteFromTraits`' neutral landing (150), which is the
+ * same figure the browser-voice path already estimates with — so this is the
+ * existing model applied to the agent path, not a new invented constant.
+ */
+const AGENT_WORDS_PER_MINUTE = 150;
+
+/** Pause the agent's TTS takes at each sentence/clause boundary, in ms. */
+const AGENT_PUNCTUATION_PAUSE_MS = 180;
+
+/** Floor, mirroring `estimateSpeechDurationMs` — a stub utterance still takes time. */
+const AGENT_MIN_DURATION_MS = 800;
+
+/**
+ * Estimate how long the agent will spend speaking `text`.
+ *
+ * Deliberately the same shape as `estimateSpeechDurationMs` in
+ * `use-interview-narration/audio-support` (words ÷ wpm, plus a fixed pause per
+ * punctuation mark). Kept local rather than imported because that helper takes
+ * `PersonaTraits` and a language and applies a Vietnamese rate factor, none of
+ * which apply here: the agent's voice is chosen server-side and the client has
+ * no visibility into it.
+ */
+export function estimateAgentSpeechMs(text: string): number {
+  const words = text.trim().split(/\s+/u).filter(Boolean).length;
+  if (words === 0) return AGENT_MIN_DURATION_MS;
+  const pauses = (text.match(/[.!?;:]/gu) ?? []).length * AGENT_PUNCTUATION_PAUSE_MS;
+  return Math.max(
+    AGENT_MIN_DURATION_MS,
+    (words * 60_000) / AGENT_WORDS_PER_MINUTE + pauses,
+  );
+}
+
 export interface AgentVoiceCoordinator {
   /** Report the agent's current phase. Idempotent; only transitions settle waiters. */
   setPhase: (phase: AgentVoicePhase) => void;
   /** The presentation handle for one agent-spoken turn. */
-  present: () => NarrationPresentation;
+  present: (text: string) => NarrationPresentation;
 }
 
 /** Map `useVoiceAssistant()` output onto a phase, without leaking SDK strings. */
@@ -120,14 +163,23 @@ export function createAgentVoiceCoordinator(): AgentVoiceCoordinator {
       }
     },
 
-    present: (): NarrationPresentation => {
+    present: (text: string): NarrationPresentation => {
       if (!everReported) return settledPresentation();
+
+      // The agent never reports how LONG it will speak — `lk.agent.state` is a
+      // start/stop signal only. Without a duration the runner falls back to the
+      // per-character base delays (~4.9s for the 15-word question measured
+      // above) while the audio actually runs 5.98s, so the text finishes about
+      // a second early and reads as "voice chậm hơn text". Supplying an
+      // estimate makes the runner stretch the delays to match.
+      const durationMs = Promise.resolve(estimateAgentSpeechMs(text));
 
       // Agent already mid-utterance: this turn's text belongs with it now.
       if (phase === "speaking") {
         return {
           started: Promise.resolve(),
           finished: waitFor(endWaiters, AGENT_VOICE_END_TIMEOUT_MS),
+          durationMs,
         };
       }
 
@@ -145,7 +197,7 @@ export function createAgentVoiceCoordinator(): AgentVoiceCoordinator {
           ? waitFor(endWaiters, AGENT_VOICE_END_TIMEOUT_MS)
           : undefined,
       );
-      return { started, finished };
+      return { started, finished, durationMs };
     },
   };
 }

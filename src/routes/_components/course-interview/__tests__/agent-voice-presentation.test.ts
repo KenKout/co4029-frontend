@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   AGENT_VOICE_START_TIMEOUT_MS,
   createAgentVoiceCoordinator,
+  estimateAgentSpeechMs,
   resolveAgentVoicePhase,
 } from "../agent-voice-presentation";
 
@@ -62,12 +63,49 @@ describe("resolveAgentVoicePhase", () => {
   });
 });
 
+describe("agent speech duration estimate", () => {
+  /**
+   * The reported turn. `lk.agent.state` says only THAT the agent is speaking,
+   * never for how long, so without an estimate the runner uses its
+   * per-character base delays (~4.9s here) while the real audio runs 5.98s —
+   * the text lands about a second early ("voice chậm hơn text").
+   */
+  const REPORTED_QUESTION =
+    "What is the primary difference between operational processing and " +
+    "information processing in an organizational context?";
+
+  it("lands within a few hundred ms of the measured Deepgram audio", () => {
+    // Measured on this deployment with aura-2-orpheus-en: 5.976s.
+    const estimate = estimateAgentSpeechMs(REPORTED_QUESTION);
+    expect(Math.abs(estimate - 5_976)).toBeLessThan(400);
+  });
+
+  it("is meaningfully longer than the unpaced typewriter would take", () => {
+    // The bug: base delays finish early. The estimate must exceed them or the
+    // runner has nothing to stretch.
+    expect(estimateAgentSpeechMs(REPORTED_QUESTION)).toBeGreaterThan(4_920);
+  });
+
+  it("scales with length", () => {
+    const short = estimateAgentSpeechMs("Why?");
+    const long = estimateAgentSpeechMs(REPORTED_QUESTION);
+    expect(long).toBeGreaterThan(short);
+  });
+
+  it("never returns zero for empty or whitespace text", () => {
+    // A zero duration would make pacedDelays collapse every gap to 1ms and the
+    // whole turn would appear instantly.
+    expect(estimateAgentSpeechMs("")).toBeGreaterThan(0);
+    expect(estimateAgentSpeechMs("   ")).toBeGreaterThan(0);
+  });
+});
+
 describe("agent voice coordinator", () => {
   it("holds the text until the agent actually starts speaking", async () => {
     const coordinator = createAgentVoiceCoordinator();
     coordinator.setPhase("quiet"); // agent present, not yet speaking
 
-    const presentation = coordinator.present();
+    const presentation = coordinator.present("Some question text.");
     // THE regression: this used to be resolved already, so the text ran ahead
     // of the voice.
     expect(await settledNow(presentation.started)).toBe(false);
@@ -76,11 +114,32 @@ describe("agent voice coordinator", () => {
     expect(await settledNow(presentation.started)).toBe(true);
   });
 
+  it("supplies a duration so the runner can pace the typing", async () => {
+    // THE regression this file exists for the second time: `started` alone
+    // fixes WHEN the text begins, not HOW FAST it runs. Without durationMs the
+    // runner keeps its per-character base delays and the text still finishes
+    // before the audio.
+    const coordinator = createAgentVoiceCoordinator();
+    coordinator.setPhase("quiet");
+
+    const presentation = coordinator.present("Hello there, candidate.");
+    expect(presentation.durationMs).toBeDefined();
+    expect(await presentation.durationMs).toBeGreaterThan(0);
+  });
+
+  it("supplies a duration on the already-speaking path too", async () => {
+    const coordinator = createAgentVoiceCoordinator();
+    coordinator.setPhase("speaking");
+
+    const presentation = coordinator.present("Hello there, candidate.");
+    expect(await presentation.durationMs).toBeGreaterThan(0);
+  });
+
   it("keeps the turn presenting until the agent stops speaking", async () => {
     const coordinator = createAgentVoiceCoordinator();
     coordinator.setPhase("quiet");
 
-    const presentation = coordinator.present();
+    const presentation = coordinator.present("Some question text.");
     coordinator.setPhase("speaking");
     await presentation.started;
 
@@ -94,7 +153,7 @@ describe("agent voice coordinator", () => {
     const coordinator = createAgentVoiceCoordinator();
     coordinator.setPhase("speaking");
 
-    const presentation = coordinator.present();
+    const presentation = coordinator.present("Some question text.");
     expect(await settledNow(presentation.started)).toBe(true);
     expect(await settledNow(presentation.finished)).toBe(false);
   });
@@ -104,7 +163,7 @@ describe("agent voice coordinator", () => {
     // attribute: the turn must NOT wait on a signal that will never arrive.
     const coordinator = createAgentVoiceCoordinator();
 
-    const presentation = coordinator.present();
+    const presentation = coordinator.present("Some question text.");
     expect(await settledNow(presentation.started)).toBe(true);
     expect(await settledNow(presentation.finished)).toBe(true);
   });
@@ -113,7 +172,7 @@ describe("agent voice coordinator", () => {
     const coordinator = createAgentVoiceCoordinator();
     coordinator.setPhase("unknown");
 
-    const presentation = coordinator.present();
+    const presentation = coordinator.present("Some question text.");
     expect(await settledNow(presentation.started)).toBe(true);
   });
 
@@ -123,7 +182,7 @@ describe("agent voice coordinator", () => {
       const coordinator = createAgentVoiceCoordinator();
       coordinator.setPhase("quiet");
 
-      const presentation = coordinator.present();
+      const presentation = coordinator.present("Some question text.");
       expect(await settledNow(presentation.started)).toBe(false);
 
       // A late caption beats a screen stuck on the preparing indicator.
@@ -140,14 +199,14 @@ describe("agent voice coordinator", () => {
     const coordinator = createAgentVoiceCoordinator();
     coordinator.setPhase("quiet");
 
-    const first = coordinator.present();
+    const first = coordinator.present("Some question text.");
     coordinator.setPhase("speaking");
     await first.started;
     coordinator.setPhase("quiet");
     await first.finished;
 
     // Next turn must wait for the NEXT utterance, not reuse the last one.
-    const second = coordinator.present();
+    const second = coordinator.present("Some question text.");
     expect(await settledNow(second.started)).toBe(false);
     coordinator.setPhase("speaking");
     expect(await settledNow(second.started)).toBe(true);
@@ -158,7 +217,7 @@ describe("agent voice coordinator", () => {
     const coordinator = createAgentVoiceCoordinator();
     coordinator.setPhase("quiet");
 
-    const presentation = coordinator.present();
+    const presentation = coordinator.present("Some question text.");
     coordinator.setPhase("quiet");
     coordinator.setPhase("quiet");
     expect(await settledNow(presentation.started)).toBe(false);

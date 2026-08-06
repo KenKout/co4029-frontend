@@ -134,7 +134,7 @@ export function useInterviewSpeech(
       // the render-phase ref, not the state: the transition turn's narrate()
       // runs in a child effect BEFORE the parent state flip would land, and
       // a stale read there lets the overlap through.
-      if (roomConnectedRef.current) return agentVoiceRef.current.present();
+      if (roomConnectedRef.current) return agentVoiceRef.current.present(text);
       if (voiceOn) return narration.narrate(text);
       return silent();
     },
