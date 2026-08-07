@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { useMe } from "@/lib/api/hooks/auth";
+import { useObjectUrl } from "@/lib/use-object-url";
 import {
   usePermissions,
   useRequirePermission,
@@ -56,6 +57,9 @@ export default function ManagementCourseNewPage() {
   const controller = useCourseForm(false, gate.restored?.form);
   const { form, canSubmit } = controller;
   const [thumbnail, setThumbnail] = useState<File | null>(null);
+  // One blob URL for the picked file, shared by the picker and the card
+  // preview so they cannot disagree about what was chosen.
+  const thumbnailUrl = useObjectUrl(thumbnail);
   const wizard = useCourseWizardState(t, form, gate, pathId, stageId);
 
   const levelOptions = useMemo(
@@ -124,7 +128,12 @@ export default function ManagementCourseNewPage() {
 
           <CourseSettingsFields controller={controller} t={t} />
 
-          <ThumbnailField file={thumbnail} onChange={setThumbnail} t={t} />
+          <ThumbnailField
+            file={thumbnail}
+            previewUrl={thumbnailUrl}
+            onChange={setThumbnail}
+            t={t}
+          />
 
           {wizard.isRunning && wizard.currentStep && (
             <p className="flex items-center gap-2 text-xs text-m3-on-surface-variant">
@@ -147,7 +156,7 @@ export default function ManagementCourseNewPage() {
             otherwise push its own bottom out of reach while the rail stays
             pinned. */}
         <div className="lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto space-y-6">
-          <CourseCardPreview form={form} t={t} />
+          <CourseCardPreview form={form} thumbnailUrl={thumbnailUrl} t={t} />
           <TeacherPickerSection controller={controller} t={t} />
         </div>
       </div>

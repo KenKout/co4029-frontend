@@ -8,9 +8,12 @@ import type { CourseFormValues } from "./use-course-form";
  */
 export function CourseCardPreview({
   form,
+  thumbnailUrl,
   t,
 }: {
   form: CourseFormValues;
+  /** Blob URL of the picked cover image, or null while none is chosen. */
+  thumbnailUrl?: string | null;
   t: TFunction;
 }) {
   return (
@@ -25,10 +28,23 @@ export function CourseCardPreview({
         </p>
         <div className="flex flex-col bg-card rounded-xl overflow-hidden shadow-editorial ghost-border">
           <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-blue-500 via-blue-700 to-blue-800">
+            {/* The chosen cover replaces the gradient placeholder. This is the
+                only place the manager sees the image in the context it will
+                actually appear in — the picker shows the file, this shows the
+                card. */}
+            {thumbnailUrl && (
+              <img
+                src={thumbnailUrl}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-            <div className="absolute inset-0 flex items-center justify-center opacity-20">
-              <GraduationCap className="h-16 w-16 text-white" />
-            </div>
+            {!thumbnailUrl && (
+              <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                <GraduationCap className="h-16 w-16 text-white" />
+              </div>
+            )}
             <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
               <span className="inline-flex items-center gap-1 rounded-md bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white backdrop-blur-sm border border-white/20">
                 <Sparkles className="h-2.5 w-2.5" />

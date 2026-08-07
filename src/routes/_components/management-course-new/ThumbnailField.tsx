@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { TFunction } from "i18next";
 import { ImagePlus, X } from "lucide-react";
+import { useObjectUrl } from "@/lib/use-object-url";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
@@ -16,30 +17,29 @@ const MAX_BYTES = 5 * 1024 * 1024;
  * way to blow the quota and take the whole draft down with it. A crash loses
  * the image selection only — every typed field survives. The restore banner
  * says so rather than letting the manager assume the image came back.
+ *
+ * The blob URL is owned by the page and shared with the card preview, so both
+ * show the same chosen image from a single `createObjectURL` call.
  */
 export function ThumbnailField({
   file,
+  previewUrl,
   onChange,
   t,
 }: {
   file: File | null;
+  /**
+   * Blob URL owned by the page and shared with the card preview. Falls back to
+   * a locally-derived one so the component still works standalone.
+   */
+  previewUrl?: string | null;
   onChange: (file: File | null) => void;
   t: TFunction;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-
-  // Object URLs leak unless revoked; re-created whenever the file changes.
-  useEffect(() => {
-    if (!file) {
-      setPreview(null);
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+  const localUrl = useObjectUrl(previewUrl === undefined ? file : null);
+  const preview = previewUrl ?? localUrl;
 
   function handlePick(picked: File | null) {
     setError(null);
