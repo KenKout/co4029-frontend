@@ -64,6 +64,22 @@ export const AGENT_VOICE_START_TIMEOUT_MS = 20_000;
 export const AGENT_VOICE_END_TIMEOUT_MS = 20_000;
 
 /**
+ * How long an expected agent may take to appear before it is treated as failed.
+ *
+ * `lk.agent.state === "failed"` only covers a worker that joined and then
+ * reported failure; it cannot describe an agent that was never dispatched,
+ * because there is no participant to publish the attribute. That case is real —
+ * the worker reports itself unavailable above `interview_voice_load_threshold`
+ * (~4100 times on a shared box) and LiveKit will not dispatch to it — and it
+ * left the candidate in an empty room with the phase stuck on "unknown", which
+ * means "keep waiting".
+ *
+ * 25s sits above both the measured join (10-13s) and the SDK's own 20s agent
+ * timeout, so a slow-but-successful join is never pre-empted.
+ */
+export const AGENT_JOIN_DEADLINE_MS = 25_000;
+
+/**
  * Words per minute assumed for the agent's TTS when estimating how long a turn
  * will take to speak.
  *

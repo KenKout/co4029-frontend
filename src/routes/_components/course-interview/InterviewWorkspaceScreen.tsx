@@ -1,8 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useStartAudio, useVoiceAssistant } from "@livekit/components-react";
 import { ListChecks, Volume2 } from "lucide-react";
-import { toast } from "sonner";
 
 import { EndInterviewDialog } from "@/components/interview/dialogs";
 import { ConnectionLostBanner } from "@/components/interview/error-banner";
@@ -17,6 +16,7 @@ import {
   resolveAgentOwnsTheVoice,
   resolveAgentVoicePhase,
 } from "./agent-voice-presentation";
+import { useAgentFailure } from "./use-agent-failure";
 import {
   FullscreenDialogs,
   LeaveBlockerDialog,
@@ -104,21 +104,15 @@ export function InterviewWorkspaceScreen({
   iv.setAgentExpected(agentOwnsTheVoice);
 
   // ── Agent failed to start ──────────────────────────────────────────────────
-  // `lk.agent.state === "failed"` is the SDK's report that the worker could not
-  // start or crashed. Previously it fell through to the "unknown" phase, which
-  // means "keep waiting", so every turn sat out the full 20s start timeout in
-  // silence and the candidate got no explanation at all. Tell them once: the
-  // interview still works, it is just text now.
-  const agentFailed = agentState === "failed";
-  const failureToldRef = useRef(false);
-  useEffect(() => {
-    if (!agentFailed || failureToldRef.current) return;
-    failureToldRef.current = true;
-    toast.warning(t("course_interview.agent_failed.title"), {
-      description: t("course_interview.agent_failed.body"),
-      duration: 10_000,
-    });
-  }, [agentFailed, t]);
+  // Two ways the voice can be dead: `lk.agent.state === "failed"` (worker
+  // joined, then failed) or the join deadline passing with no participant at
+  // all (worker unavailable, never dispatched — publishes no state, so time is
+  // the only signal). Both surface the same toast, once.
+  const { joinTimedOut } = useAgentFailure({
+    expected: agentOwnsTheVoice,
+    agentPresent: Boolean(agent),
+    state: agentState,
+  });
 
   // ── Autoplay unlock ────────────────────────────────────────────────────────
   // Browsers block audio until a user gesture, and `RoomAudioRenderer` alone
@@ -141,7 +135,15 @@ export function InterviewWorkspaceScreen({
   // Same reason this is a render-phase write: a turn mounting in the handover
   // commit calls speak() from a child effect, and a phase delivered one effect
   // later would arrive after that turn already decided how to pace itself.
-  iv.setAgentVoicePhase(resolveAgentVoicePhase(Boolean(agent), agentState));
+  //
+  // `joinTimedOut` maps onto the same "failed" phase the coordinator already
+  // drains on, so a turn mounting after the deadline releases its text
+  // immediately instead of waiting out the 20s start timeout.
+  iv.setAgentVoicePhase(
+    joinTimedOut
+      ? "failed"
+      : resolveAgentVoicePhase(Boolean(agent), agentState),
+  );
   // Hand the hook to `handleRespond` through the controller's bridge setter
   // (the actions are built outside the provider, where the room is not
   // reachable). The setter, not a direct ref write, so the immutability rule

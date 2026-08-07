@@ -6,7 +6,8 @@ import {
   isAwaitingEndConfirmation,
   isClosingTurn,
 } from "@/lib/interview/end-confirmation";
-import { resolveTextTransport } from "@/lib/interview/text-transport";
+import { decideTextTransport } from "@/lib/interview/text-transport";
+import { reportTextTransport } from "@/lib/interview/transport-reporter";
 import { planTransition } from "@/lib/interview/transition-sequencing";
 import {
   makeCeremonyTurn,
@@ -345,12 +346,13 @@ function resolveSubmitGate(ctx: InterviewActionsContext): {
   blocked: boolean;
 } {
   const chat = ctx.chatBridge.current;
-  const transport = resolveTextTransport({
+  const decision = decideTextTransport({
     inputMode: ctx.inputMode,
     onboardingStage: ctx.onboardingStage,
     roomConnected: chat?.connected ?? false,
   });
-  const viaLiveKit = transport === "livekit" && chat !== null;
+  reportTextTransport(ctx.sessionId, decision);
+  const viaLiveKit = decision.transport === "livekit" && chat !== null;
   const blocked =
     ctx.answer.state.status === "submitting" ||
     ctx.answer.state.status === "submitted" ||
