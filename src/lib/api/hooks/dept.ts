@@ -31,6 +31,23 @@ export function useCourseTeachers(courseId: string | undefined) {
 }
 
 /**
+ * Teachers available for a course that has not been created yet.
+ *
+ * The create wizard staffs the course in the same form that creates it, so
+ * there is no course id to scope by. The server derives the organization from
+ * the caller's token — the same org `create_course` stamps on the new row — so
+ * the picker cannot offer someone the follow-up assignment would reject.
+ */
+export function useAssignableTeachersForNewCourse(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.dept.assignableTeachersForNew(),
+    queryFn: () => apiFetch<AssignableTeacher[]>("/dept/assignable-teachers"),
+    enabled,
+    staleTime: 1000 * 60,
+  });
+}
+
+/**
  * Is this course actually deliverable? Teacher, content, career-path placement
  * and status — asked before publish rather than discovered as a 409 after.
  */

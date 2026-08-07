@@ -4461,7 +4461,32 @@
     "preview_label": "Xem trước",
     "preview_title_placeholder": "Tiêu đề khóa học của bạn",
     "preview_desc_placeholder": "Mô tả khóa học sẽ hiển thị ở đây.",
-    "attach_to_stage_failed": "Đã tạo khóa học nhưng chưa thêm được vào chặng. Hãy thêm từ trang lộ trình."
+    "attach_to_stage_failed": "Đã tạo khóa học nhưng chưa thêm được vào chặng. Hãy thêm từ trang lộ trình.",
+    "teachers_heading": "Giảng viên",
+    "teachers_help": "Được phân công ngay khi khóa học được tạo. Chỉ hiện giảng viên thuộc đơn vị của bạn.",
+    "thumbnail_heading": "Ảnh bìa",
+    "thumbnail_pick": "Chọn ảnh",
+    "thumbnail_too_large": "Ảnh này lớn hơn 5 MB. Hãy chọn ảnh nhỏ hơn.",
+    "draft_title": "Đã khôi phục nội dung chưa lưu",
+    "draft_help": "Bạn đang điền dở biểu mẫu này. Phần chữ đã được giữ trên máy — riêng ảnh bìa thì không.",
+    "draft_restore": "Khôi phục",
+    "draft_partial_title": "Khóa học này đã được tạo rồi",
+    "draft_partial_help": "Khóa học đã tồn tại, nhưng vài bước sau chưa xong. Hãy tiếp tục để hoàn tất. Làm lại từ đầu sẽ tạo ra một khóa học trùng.",
+    "draft_resume": "Hoàn tất các bước còn lại",
+    "draft_discard": "Bắt đầu lại",
+    "partial_success": "Đã tạo khóa học, nhưng các bước sau chưa xong: {{steps}}. Bấm lại nút để thử lại đúng những bước đó.",
+    "step": {
+      "create": "tạo khóa học",
+      "thumbnail": "ảnh bìa",
+      "teachers": "phân công giảng viên",
+      "attachToStage": "thêm vào lộ trình nghề"
+    },
+    "step_running": {
+      "create": "Đang tạo khóa học…",
+      "thumbnail": "Đang tải ảnh bìa…",
+      "teachers": "Đang phân công giảng viên…",
+      "attachToStage": "Đang thêm vào lộ trình nghề…"
+    }
   },
   "discussion": {
     "title": "Thảo luận",

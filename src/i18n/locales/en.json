@@ -276,7 +276,32 @@
     "preview_label": "Preview",
     "preview_title_placeholder": "Your course title",
     "preview_desc_placeholder": "Your course description will appear here.",
-    "attach_to_stage_failed": "The course was created but could not be added to the stage. Add it from the path page."
+    "attach_to_stage_failed": "The course was created but could not be added to the stage. Add it from the path page.",
+    "teachers_heading": "Instructors",
+    "teachers_help": "Assigned as soon as the course is created. Only instructors in your organization are listed.",
+    "thumbnail_heading": "Cover image",
+    "thumbnail_pick": "Choose an image",
+    "thumbnail_too_large": "That image is over 5 MB. Choose a smaller one.",
+    "draft_title": "Unsaved course recovered",
+    "draft_help": "You left this form part-way through. Your text was kept on this device — the cover image was not.",
+    "draft_restore": "Restore it",
+    "draft_partial_title": "This course was already created",
+    "draft_partial_help": "The course exists, but some follow-up steps did not finish. Continue to complete them. Starting over would create a second copy of the same course.",
+    "draft_resume": "Finish the remaining steps",
+    "draft_discard": "Start fresh",
+    "partial_success": "Course created, but these did not finish: {{steps}}. Press the button again to retry just those.",
+    "step": {
+      "create": "creating the course",
+      "thumbnail": "cover image",
+      "teachers": "assigning instructors",
+      "attachToStage": "adding to the career path"
+    },
+    "step_running": {
+      "create": "Creating the course…",
+      "thumbnail": "Uploading the cover image…",
+      "teachers": "Assigning instructors…",
+      "attachToStage": "Adding it to the career path…"
+    }
   },
   "teacher_course_settings": {
     "title": "Course Settings",

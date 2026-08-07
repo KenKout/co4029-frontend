@@ -181,6 +181,9 @@ export const queryKeys = {
       ["dept", "courses", courseId, "assignable-teachers"] as const,
     readiness: (courseId: string) =>
       ["dept", "courses", courseId, "readiness"] as const,
+    /** Teacher picker for a course that does not exist yet (create wizard). */
+    assignableTeachersForNew: () =>
+      ["dept", "assignable-teachers", "new"] as const,
     roster: (courseId: string) =>
       ["dept", "courses", courseId, "roster"] as const,
     orgUnitCourses: (orgUnitId: string) =>
