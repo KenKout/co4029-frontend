@@ -271,18 +271,22 @@ export function StartInterviewDialog({
   const { t, i18n } = useTranslation();
   const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
   const isVietnamese = activeLanguage?.startsWith("vi") ?? false;
+  // Kept in step with `course_interview.start_dialog` in the locale files —
+  // these are the values used when a translation is missing, so copy that drifts
+  // here ships to whoever hits that path. One short line: the confirmation only
+  // needs to say that setup comes first and the graded clock is not running yet.
   const fallbackCopy = isVietnamese
     ? {
-        title: "Bạn đã sẵn sàng bắt đầu?",
+        title: "Bạn chắc chắn muốn bắt đầu?",
         description:
-          "Trợ lý phỏng vấn ảo sẽ xác nhận âm thanh, ngôn ngữ và mức độ sẵn sàng trước. Đồng hồ chỉ bắt đầu sau khi bạn xác nhận sẵn sàng.",
-        cancel: "Chưa sẵn sàng",
+          "Sẽ có bước chuẩn bị trước — đồng hồ chấm điểm chỉ bắt đầu khi bạn xác nhận sẵn sàng.",
+        cancel: "Quay lại",
       }
     : {
-        title: "Ready to begin?",
+        title: "Ready to start?",
         description:
-          "The virtual interviewer will confirm audio, language, and readiness first. The assessed timer starts only after you confirm that you are ready.",
-        cancel: "Not yet",
+          "Setup comes first — the graded timer starts only when you confirm you are ready.",
+        cancel: "Back",
       };
 
   return (

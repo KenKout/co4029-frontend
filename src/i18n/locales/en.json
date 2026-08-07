@@ -2569,9 +2569,9 @@
       "cancel": "Not now"
     },
     "start_dialog": {
-      "title": "Join the interview setup?",
-      "description": "The aBridgeAI virtual interviewer will first confirm your identity, audio, language, and readiness. Your assessed interview timer will start only after you confirm that you are ready. AI voice is on by default.",
-      "cancel": "Not yet"
+      "title": "Ready to start?",
+      "description": "Setup comes first — the graded timer starts only when you confirm you are ready.",
+      "cancel": "Back"
     },
     "steps": {
       "aria_label": "Interview progress",

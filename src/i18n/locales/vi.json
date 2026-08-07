@@ -2442,9 +2442,9 @@
       "cancel": "Chưa tiếp tục"
     },
     "start_dialog": {
-      "title": "Tham gia bước chuẩn bị phỏng vấn?",
-      "description": "Trợ lý phỏng vấn ảo aBridgeAI sẽ xác nhận danh tính, âm thanh, ngôn ngữ và mức độ sẵn sàng của bạn. Đồng hồ đánh giá chỉ bắt đầu sau khi bạn xác nhận sẵn sàng. Giọng đọc AI được bật mặc định.",
-      "cancel": "Chưa sẵn sàng"
+      "title": "Bạn chắc chắn muốn bắt đầu?",
+      "description": "Sẽ có bước chuẩn bị trước — đồng hồ chấm điểm chỉ bắt đầu khi bạn xác nhận sẵn sàng.",
+      "cancel": "Quay lại"
     },
     "steps": {
       "aria_label": "Tiến trình phỏng vấn",
