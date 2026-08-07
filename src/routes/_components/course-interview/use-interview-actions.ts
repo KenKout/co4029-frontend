@@ -100,7 +100,9 @@ export function useInterviewActions(base: InterviewBase) {
         clearQuestionPacing(sessionId);
         setCurrentQuestion(null);
         setPendingFirstQuestion(null);
-        if (shouldPresentGoodbye({ reason, closingText: result.closing_text })) {
+        if (
+          shouldPresentGoodbye({ reason, closingText: result.closing_text })
+        ) {
           // Presenting this turn is what advances closing -> results
           // (see use-interview-sequencing's handleTurnPresented).
           setPendingFinishResult(result);
@@ -149,12 +151,9 @@ export function useInterviewActions(base: InterviewBase) {
    * controller method rather than a direct `iv.chatBridge.current = ...`
    * write so the screen never mutates a prop (hooks/immutability).
    */
-  const setChatBridge = useCallback(
-    (chat: UseInterviewChatResult | null) => {
-      chatBridge.current = chat;
-    },
-    [],
-  );
+  const setChatBridge = useCallback((chat: UseInterviewChatResult | null) => {
+    chatBridge.current = chat;
+  }, []);
 
   const ctx: InterviewActionsContext = {
     ...base,
@@ -213,7 +212,8 @@ export function useInterviewActions(base: InterviewBase) {
     handleEndCancel: () => handleEndCancel(ctx),
     handleVoiceCompleted: (reason: "natural" | "ended_early") =>
       handleVoiceCompleted(ctx, reason),
-    handleVoiceDropped: () => handleVoiceDropped(ctx),
+    handleVoiceDropped: (opts?: { messageKey?: string }) =>
+      handleVoiceDropped(ctx, opts),
     stayInInterview,
     leaveInterviewOpen,
   };
