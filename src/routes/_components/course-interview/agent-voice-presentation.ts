@@ -179,6 +179,35 @@ export function resolveAgentOwnsTheVoice(args: {
 }
 
 /**
+ * Should the room be opened/kept open with a warm (non-dispatching) token?
+ *
+ * Two windows, not one:
+ *
+ * 1. During onboarding — the point of warm-room: the ~10-13s LiveKit worker
+ *    startup overlaps setup instead of preceding question one.
+ * 2. Through the transition beat that follows it. `roomActive` is deliberately
+ *    false while `pendingFirstQuestion` holds, so the client can voice the
+ *    transition line the agent never receives. If `warm` also went false there,
+ *    `connect` (`active || warm`) would drop and re-establish the WebRTC session
+ *    mid-utterance — the teardown re-idles the audio output route and clips the
+ *    opening syllables. Reported as «bị voice thiếu 2 3 chữ đầu (nhưng sau đó
+ *    đọc tiếp đúng nhịp)».
+ *
+ * Warming past onboarding costs nothing: the provider only mints a warm token
+ * while nothing else wants a real room, and by then the agent is dispatched.
+ */
+export function shouldWarmRoom(args: {
+  sessionId: string | null;
+  inputMode: string;
+  onboardingStage: string | null | undefined;
+  pendingFirstQuestion: boolean;
+}): boolean {
+  if (!args.sessionId) return false;
+  if (args.inputMode !== "hybrid" && args.inputMode !== "voice") return false;
+  return args.onboardingStage !== "completed" || args.pendingFirstQuestion;
+}
+
+/**
  * Did the AGENT end the interview itself, rather than the candidate?
  *
  * Exported and pure so tests exercise the shipped rule instead of a copy.

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { shouldWarmRoom } from "../agent-voice-presentation";
+
 /**
  * When the room is warmed, and when the interviewer is sent in.
  *
@@ -18,16 +20,20 @@ import { describe, expect, it } from "vitest";
 type Mode = "voice" | "text" | "hybrid";
 
 /** `warm` prop, as computed by the page shell. */
+// The REAL predicate, imported. A local re-implementation once stayed green
+// after the fix under test was reverted — never again.
 function shouldWarm(args: {
   sessionId: string | null;
   inputMode: Mode;
   onboardingStage: string | null;
+  pendingFirstQuestion?: boolean;
 }): boolean {
-  return Boolean(
-    args.sessionId &&
-      (args.inputMode === "hybrid" || args.inputMode === "voice") &&
-      args.onboardingStage !== "completed",
-  );
+  return shouldWarmRoom({
+    sessionId: args.sessionId,
+    inputMode: args.inputMode,
+    onboardingStage: args.onboardingStage,
+    pendingFirstQuestion: Boolean(args.pendingFirstQuestion),
+  });
 }
 
 /** `agentWanted` prop, as computed by the page shell. */
@@ -74,9 +80,27 @@ describe("warming the room during setup", () => {
     expect(shouldWarm({ ...SETUP, inputMode: "text" })).toBe(false);
   });
 
-  it("stops warming once onboarding is complete", () => {
+  it("keeps warming through the transition beat", () => {
+    // `roomActive` is false while pendingFirstQuestion holds, so the client can
+    // voice the transition line the agent never receives. If `warm` dropped too,
+    // `connect` would tear down and re-establish the WebRTC session mid-
+    // utterance and clip its opening syllables.
+    expect(
+      shouldWarm({ ...DONE, inputMode: "hybrid", pendingFirstQuestion: true }),
+    ).toBe(true);
+  });
+
+  it("stops warming once the transition has been presented", () => {
     // From here the normal dispatching token is both allowed and simpler.
-    expect(shouldWarm({ ...DONE, inputMode: "hybrid" })).toBe(false);
+    expect(
+      shouldWarm({ ...DONE, inputMode: "hybrid", pendingFirstQuestion: false }),
+    ).toBe(false);
+  });
+
+  it("never warms a text-only session even mid-transition", () => {
+    expect(
+      shouldWarm({ ...DONE, inputMode: "text", pendingFirstQuestion: true }),
+    ).toBe(false);
   });
 
   it("does not warm before a session exists", () => {
