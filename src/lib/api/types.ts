@@ -1006,6 +1006,7 @@ export type Paths = paths;
 // Hand-written types for voice interview (endpoints not in generated openapi-types)
 export type {
   RealtimeTokenResponse,
+  RealtimeAgentDispatchResponse,
   IntegrityEventType,
   IntegrityEventSeverity,
   IntegrityEvent,

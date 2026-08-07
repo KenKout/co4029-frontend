@@ -38,6 +38,7 @@ import type {
   InterviewSubmitAnswerRequest,
   InterviewSubmitAnswerResponse,
   InterviewTranscriptRead,
+  RealtimeAgentDispatchResponse,
   RealtimeTokenResponse,
 } from "../types";
 
@@ -1023,7 +1024,9 @@ export function useDispatchInterviewAgent(
 ) {
   return useMutation({
     mutationFn: () =>
-      apiPost<void>(`/interview-sessions/${sessionId}/realtime-agent`),
+      apiPost<RealtimeAgentDispatchResponse>(
+        `/interview-sessions/${sessionId}/realtime-agent`,
+      ),
   });
 }
 
