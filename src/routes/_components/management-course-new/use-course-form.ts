@@ -13,10 +13,13 @@ export interface CourseLevelOption {
 /**
  * Every field the wizard collects.
  *
- * `CourseCreate` already accepts the settings and contact columns, so all of
- * this lands in the SINGLE create request — only teachers, the cover image and
- * the career-path placement need follow-up calls, because they are
- * sub-resources of a course that does not exist yet.
+ * `CourseCreate` already accepts the settings columns, so all of this lands in
+ * the SINGLE create request — only teachers, the cover image and the
+ * career-path placement need follow-up calls, because they are sub-resources
+ * of a course that does not exist yet.
+ *
+ * Contact details are not here: they belong to the teacher, who fills them in
+ * from the course settings panel once assigned.
  *
  * Numeric fields are held as strings: they come from text inputs, and an empty
  * input has to stay distinguishable from a deliberate 0.
@@ -29,10 +32,6 @@ export interface CourseFormValues {
   estimated_minutes: string;
   expected_completion_days: string;
   enrollment_cap: string;
-  contact_email: string;
-  contact_phone: string;
-  contact_website_url: string;
-  contact_social_url: string;
   /** Chosen in the teacher picker; assigned after the course row exists. */
   teacherIds: string[];
 }
@@ -45,10 +44,6 @@ export const EMPTY_COURSE_FORM: CourseFormValues = {
   estimated_minutes: "",
   expected_completion_days: "",
   enrollment_cap: "",
-  contact_email: "",
-  contact_phone: "",
-  contact_website_url: "",
-  contact_social_url: "",
   teacherIds: [],
 };
 

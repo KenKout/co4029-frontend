@@ -72,7 +72,7 @@ export default function ManagementCourseNewPage() {
   }
 
   return (
-    <div className="max-w-5xl space-y-6 pb-12">
+    <div className="space-y-6 pb-12">
       <Breadcrumbs
         items={[
           { label: t("dept_courses.title"), to: "/dept" },
@@ -100,7 +100,12 @@ export default function ManagementCourseNewPage() {
         />
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      {/* Fluid two-column split rather than a fixed 320px rail on a capped
+          page: the sidebar already varies between 64px and 256px, so a hard
+          width left the form squeezed at some widths and stranded in
+          whitespace at others. Both columns now scale with what is actually
+          available. */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] items-start">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -121,8 +126,6 @@ export default function ManagementCourseNewPage() {
 
           <ThumbnailField file={thumbnail} onChange={setThumbnail} t={t} />
 
-          <TeacherPickerSection controller={controller} t={t} />
-
           {wizard.isRunning && wizard.currentStep && (
             <p className="flex items-center gap-2 text-xs text-m3-on-surface-variant">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -137,7 +140,16 @@ export default function ManagementCourseNewPage() {
           />
         </form>
 
-        <CourseCardPreview form={form} t={t} />
+        {/* Sticky right rail. `top-16` matches the ContentTopBar's h-16 (and
+            the convention the other sticky rails in the app already use), and
+            the max-height is viewport-relative so the rail scrolls internally
+            instead of growing past the fold — a long instructor list would
+            otherwise push its own bottom out of reach while the rail stays
+            pinned. */}
+        <div className="lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto space-y-6">
+          <CourseCardPreview form={form} t={t} />
+          <TeacherPickerSection controller={controller} t={t} />
+        </div>
       </div>
     </div>
   );

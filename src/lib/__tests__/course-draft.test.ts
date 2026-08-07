@@ -16,10 +16,6 @@ const emptyForm: CourseDraftForm = {
   estimated_minutes: "",
   expected_completion_days: "",
   enrollment_cap: "",
-  contact_email: "",
-  contact_phone: "",
-  contact_website_url: "",
-  contact_social_url: "",
   teacherIds: [],
 };
 

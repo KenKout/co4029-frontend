@@ -39,7 +39,9 @@ export function TeacherPickerSection({
   }
 
   return (
-    <div className="space-y-3">
+    // Its own card now that it sits on the page background beside the preview,
+    // rather than inside the form card.
+    <div className="bg-card ghost-border shadow-editorial rounded-xl p-4 space-y-3">
       <div>
         <h2 className="text-sm font-bold text-m3-on-surface flex items-center gap-2">
           <UserPlus className="h-4 w-4" />
@@ -60,7 +62,10 @@ export function TeacherPickerSection({
           {t("dept_course_detail.assign_none_available")}
         </p>
       ) : (
-        <ul className="space-y-1.5 max-h-64 overflow-y-auto">
+        /* No max-height here: the sticky rail is already the scroll container,
+           and nesting a second one gives two scrollbars where the inner list
+           traps the wheel before the rail ever moves. */
+        <ul className="space-y-1.5">
           {teachers.map((teacher) => {
             const selected = form.teacherIds.includes(teacher.user_id);
             return (

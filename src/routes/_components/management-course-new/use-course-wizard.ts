@@ -87,10 +87,8 @@ function buildCreatePayload(form: CourseDraftForm) {
       form.expected_completion_days,
     ),
     enrollment_cap: toNumberOrUndefined(form.enrollment_cap),
-    contact_email: trimmedOrUndefined(form.contact_email),
-    contact_phone: trimmedOrUndefined(form.contact_phone),
-    contact_website_url: trimmedOrUndefined(form.contact_website_url),
-    contact_social_url: trimmedOrUndefined(form.contact_social_url),
+    // No contact_* here: those are the teacher's own details, filled in from
+    // the course settings panel once assigned.
   };
 }
 

@@ -132,9 +132,6 @@ export function draftIsRestorable(draft: CourseDraft | null): boolean {
   if (draft.courseId) return true;
   const f = draft.form;
   return Boolean(
-    f.title.trim() ||
-      f.description.trim() ||
-      f.teacherIds.length > 0 ||
-      f.contact_email.trim(),
+    f.title.trim() || f.description.trim() || f.teacherIds.length > 0,
   );
 }

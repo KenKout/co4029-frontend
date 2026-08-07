@@ -14,8 +14,12 @@ export function CourseCardPreview({
   t: TFunction;
 }) {
   return (
+    /* Hidden on narrow screens (the form matters more than the preview
+       there), but the column itself still renders because the teacher picker
+       lives in it and must never disappear. Stickiness belongs to the column
+       now, not to this card. */
     <div className="hidden lg:block">
-      <div className="sticky top-4 space-y-2">
+      <div className="space-y-2">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-m3-on-surface-variant">
           {t("teacher_course_new.preview_label")}
         </p>
