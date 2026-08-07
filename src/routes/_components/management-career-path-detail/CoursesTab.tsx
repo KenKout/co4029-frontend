@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, Layers, Plus, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { AlertTriangle, FilePlus, Layers, Plus, X } from "lucide-react";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { CourseInPathRow } from "./CourseInPathRow";
 import { CoursePickerDialog } from "./CoursePickerDialog";
@@ -130,14 +131,29 @@ export function CoursesTab({ id }: { id: string }) {
                     />
                   ))}
                 </StageCard>
-                <button
-                  type="button"
-                  onClick={() => controller.openPickerForStage(stage.id)}
-                  className="ml-4 inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold text-m3-primary hover:bg-m3-primary-fixed cursor-pointer"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  {t("management_career_path_detail.actions.add_courses")}
-                </button>
+                <div className="ml-4 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => controller.openPickerForStage(stage.id)}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold text-m3-primary hover:bg-m3-primary-fixed cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    {t("management_career_path_detail.actions.add_courses")}
+                  </button>
+                  {/* Create-and-attach in one step. The picker only offers
+                      courses that already exist, so without this the manager
+                      leaves the path, creates a course, and has to remember to
+                      come back and attach it — the omission the readiness
+                      checklist reports as "not on any career path". */}
+                  <Link
+                    to="/management/courses/new"
+                    search={{ pathId: id, stageId: stage.id }}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container cursor-pointer"
+                  >
+                    <FilePlus className="h-3.5 w-3.5" />
+                    {t("management_career_path_detail.actions.new_course")}
+                  </Link>
+                </div>
               </div>
             );
           })}

@@ -5,6 +5,7 @@ import type {
   AssignableTeacher,
   AssignTeacherRequest,
   CourseAuthoring,
+  CourseReadiness,
   CourseUpdate,
   RosterEntry,
   TeacherAssignmentCreated,
@@ -26,6 +27,20 @@ export function useCourseTeachers(courseId: string | undefined) {
       apiFetch<TeacherAssignmentRead[]>(`/dept/courses/${courseId}/teachers`),
     enabled: Boolean(courseId),
     staleTime: 1000 * 60,
+  });
+}
+
+/**
+ * Is this course actually deliverable? Teacher, content, career-path placement
+ * and status — asked before publish rather than discovered as a 409 after.
+ */
+export function useCourseReadiness(courseId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.dept.readiness(courseId ?? ""),
+    queryFn: () =>
+      apiFetch<CourseReadiness>(`/dept/courses/${courseId}/readiness`),
+    enabled: Boolean(courseId),
+    staleTime: 1000 * 30,
   });
 }
 
@@ -64,6 +79,10 @@ export function useAssignTeacher(courseId: string) {
       void qc.invalidateQueries({
         queryKey: queryKeys.dept.assignableTeachers(courseId),
       });
+      // The checklist counts teachers, so it moved too.
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.readiness(courseId),
+      });
     },
   });
 }
@@ -81,6 +100,10 @@ export function useRemoveTeacher(courseId: string) {
       // already_assigned flags are stale too.
       void qc.invalidateQueries({
         queryKey: queryKeys.dept.assignableTeachers(courseId),
+      });
+      // The checklist counts teachers, so it moved too.
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.readiness(courseId),
       });
     },
   });

@@ -640,7 +640,23 @@
     },
     "assign_placeholder": "Chọn giảng viên…",
     "assign_none_available": "Đơn vị này chưa có giảng viên nào. Hãy cấp quyền giảng viên cho một người trước.",
-    "assign_all_assigned": "Mọi giảng viên của đơn vị này đã được phân công vào khóa học."
+    "assign_all_assigned": "Mọi giảng viên của đơn vị này đã được phân công vào khóa học.",
+    "readiness": {
+      "title": "Mức sẵn sàng",
+      "teacher": "Đã có giảng viên",
+      "teacher_ok_other": "{{count}} giảng viên",
+      "teacher_missing": "Chưa ai được phân công xây dựng hay dạy khóa này.",
+      "content": "Đã có nội dung để tính điểm",
+      "content_ok_other": "{{count}} bài học, quiz hoặc phỏng vấn đã đăng",
+      "content_missing": "Cần có trước khi đăng khóa học — sinh viên không thể hoàn thành khóa rỗng.",
+      "path": "Đã thuộc lộ trình nghề",
+      "path_missing": "Chưa thuộc lộ trình nào, nên sinh viên không có đường nào để tới.",
+      "published": "Đã đăng",
+      "status_draft": "Vẫn là bản nháp — sinh viên chưa thấy.",
+      "status_published": "Đã đăng, sinh viên thấy được.",
+      "status_archived": "Đã lưu trữ.",
+      "blocks_stage": "Khóa này là bắt buộc trong một lộ trình nhưng chưa có gì để tính điểm, nên không sinh viên nào hoàn thành được — chặng đó và mọi chặng sau bị khóa vĩnh viễn. Hãy thêm và đăng một bài học, quiz hoặc phỏng vấn."
+    }
   },
   "dept_courses": {
     "title": "Quản lý đội ngũ",
@@ -2683,7 +2699,8 @@
       "save_order": "Lưu thứ tự",
       "register": "Đăng ký",
       "add_courses": "Thêm khóa học",
-      "register_students": "Thêm sinh viên"
+      "register_students": "Thêm sinh viên",
+      "new_course": "Tạo khóa mới"
     },
     "fields": {
       "name": "Tên",
@@ -4443,7 +4460,8 @@
     "create_failed": "Không thể tạo khóa học",
     "preview_label": "Xem trước",
     "preview_title_placeholder": "Tiêu đề khóa học của bạn",
-    "preview_desc_placeholder": "Mô tả khóa học sẽ hiển thị ở đây."
+    "preview_desc_placeholder": "Mô tả khóa học sẽ hiển thị ở đây.",
+    "attach_to_stage_failed": "Đã tạo khóa học nhưng chưa thêm được vào chặng. Hãy thêm từ trang lộ trình."
   },
   "discussion": {
     "title": "Thảo luận",

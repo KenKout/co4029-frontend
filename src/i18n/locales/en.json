@@ -275,7 +275,8 @@
     "create_failed": "Failed to create course",
     "preview_label": "Preview",
     "preview_title_placeholder": "Your course title",
-    "preview_desc_placeholder": "Your course description will appear here."
+    "preview_desc_placeholder": "Your course description will appear here.",
+    "attach_to_stage_failed": "The course was created but could not be added to the stage. Add it from the path page."
   },
   "teacher_course_settings": {
     "title": "Course Settings",
@@ -684,7 +685,25 @@
     },
     "assign_placeholder": "Choose an instructor…",
     "assign_none_available": "No instructors in this organization yet. Give a teacher the instructor role first.",
-    "assign_all_assigned": "Every instructor in this organization is already on this course."
+    "assign_all_assigned": "Every instructor in this organization is already on this course.",
+    "readiness": {
+      "title": "Readiness",
+      "teacher": "Instructor assigned",
+      "teacher_ok_one": "{{count}} instructor",
+      "teacher_ok_other": "{{count}} instructors",
+      "teacher_missing": "Nobody is assigned to build or teach this course yet.",
+      "content": "Has something to grade",
+      "content_ok_one": "{{count}} published lesson, quiz or interview",
+      "content_ok_other": "{{count}} published lessons, quizzes or interviews",
+      "content_missing": "Needed before this course can be published — students cannot complete an empty course.",
+      "path": "On a career path",
+      "path_missing": "Not on any career path, so students have no way to reach it.",
+      "published": "Published",
+      "status_draft": "Still a draft — not visible to students.",
+      "status_published": "Live and visible to students.",
+      "status_archived": "Archived.",
+      "blocks_stage": "This course is required on a career path but has nothing to grade, so no student can ever finish it — that stage and every stage after it stay locked. Add and publish a lesson, quiz or interview."
+    }
   },
   "dept_courses": {
     "title": "Team management",
@@ -2780,7 +2799,8 @@
       "save_order": "Save order",
       "register": "Register",
       "add_courses": "Add courses",
-      "register_students": "Add students"
+      "register_students": "Add students",
+      "new_course": "New course"
     },
     "fields": {
       "name": "Name",

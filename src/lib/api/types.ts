@@ -882,18 +882,13 @@ export interface StageProgressRead {
   courses: CourseProgressSummaryWithStage[];
 }
 
-/**
- * A teacher the manager may assign to a course. The list is org-scoped
- * server-side from the course, so every entry is already a legal choice —
- * render it, do not filter it.
- */
-export interface AssignableTeacher {
-  user_id: string;
-  primary_email: string;
-  display_name?: string | null;
-  /** Already teaches this course: show as chosen, do not offer a no-op. */
-  already_assigned?: boolean;
-}
+// Dept/manager course types live in their own module — this file hit the
+// 800-line eslint cap. Re-exported so importers need not know that.
+export type {
+  AssignableTeacher,
+  CoursePathPlacement,
+  CourseReadiness,
+} from "./types-dept";
 
 export interface StartCourseResult {
   course_id: string;

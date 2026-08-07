@@ -1,5 +1,6 @@
 import { CourseSettingsPanel } from "@/routes/teacher/_components/course-manage/CourseSettingsPanel";
 import { LearningOutcomesPanel } from "@/routes/teacher/_components/course-manage/LearningOutcomesPanel";
+import { ReadinessChecklist } from "./ReadinessChecklist";
 
 /**
  * Manager-owned course configuration: identity (title/slug), lifecycle
@@ -27,6 +28,10 @@ export function DeptSettingsTab({
 
   return (
     <div className="space-y-4">
+      {/* Readiness first: it answers "what is still missing" before the
+          manager starts editing fields, and its content row reads the same
+          count as the publish gate. */}
+      <ReadinessChecklist courseId={courseId} />
       <CourseSettingsPanel courseId={courseId} scope="manager" />
       <LearningOutcomesPanel courseId={courseId} />
     </div>

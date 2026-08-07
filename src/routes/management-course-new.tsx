@@ -1,10 +1,11 @@
 import { useMemo } from "react";
-import { useNavigate, Link } from "@tanstack/react-router";
+import { useNavigate, useSearch, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { useAddCareerPathCourse } from "@/lib/api/hooks/career-paths";
 import { useCreateCourse } from "@/lib/api/hooks/teacher-courses";
 import { useMe } from "@/lib/api/hooks/auth";
 import {
@@ -27,6 +28,11 @@ export default function ManagementCourseNewPage() {
   const navigate = useNavigate();
   const { data: me } = useMe();
   const createCourse = useCreateCourse();
+  // Optional career-path context, set when the manager arrived from a stage's
+  // "New course" button. No cast needed — the route's `validateSearch` already
+  // types both keys as optional strings.
+  const { pathId, stageId } = useSearch({ strict: false });
+  const attachToStage = useAddCareerPathCourse(pathId ?? "");
 
   // Course creation is a manager capability (backend gates POST /teacher/courses
   // on `course.create`, held by manager/admin only). Guard the screen so a user
@@ -61,6 +67,34 @@ export default function ManagementCourseNewPage() {
           : undefined,
       });
       toast.success(t("teacher_course_new.created"));
+
+      // Came from a career-path stage: attach the new course there and go back
+      // to the path. Without this the manager creates a course, lands on the
+      // course page, and has to remember to go add it to the stage — the exact
+      // omission the readiness checklist flags as "not on any career path".
+      if (pathId && stageId) {
+        try {
+          await attachToStage.mutateAsync({
+            stage_id: stageId,
+            course_id: course.id,
+            is_required: true,
+          });
+          await navigate({
+            to: "/management/career-paths/$id",
+            params: { id: pathId },
+          });
+          return;
+        } catch (err: unknown) {
+          // The course DID get created; only the attach failed. Say so
+          // explicitly and still land on the course rather than implying the
+          // whole thing failed and inviting a duplicate.
+          toast.error(
+            (err as Error).message ||
+              t("teacher_course_new.attach_to_stage_failed"),
+          );
+        }
+      }
+
       navigate({
         to: "/dept/courses/$courseId",
         params: { courseId: course.id },
