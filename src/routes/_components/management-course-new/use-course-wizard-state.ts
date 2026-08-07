@@ -105,6 +105,40 @@ export function useCourseWizardState(
     return () => window.clearTimeout(id);
   }, [form, runner.isRunning, bannerOpen, pathId, stageId]);
 
+  /**
+   * The course EXISTS and is missing pieces.
+   *
+   * Naming what did not land beats a generic failure: a manager told
+   * "creation failed" goes and creates a second course, which is the outcome
+   * this whole design avoids. The resume state is held so pressing the button
+   * again continues from the failed step rather than starting over.
+   */
+  function handlePartialSuccess(
+    values: CourseFormValues,
+    courseId: string,
+    failed: string[],
+  ): void {
+    toast.warning(
+      t("teacher_course_new.partial_success", {
+        steps: failed
+          .map((step) => t(`teacher_course_new.step.${step}`))
+          .join(", "),
+      }),
+    );
+    // `done` is read back from the draft the runner just wrote — it holds
+    // every step that DID land. Hardcoding an empty list would throw that
+    // progress away and make the retry redo work that already succeeded.
+    const persisted = loadCourseDraft();
+    setRestored({
+      form: values,
+      courseId,
+      done: persisted?.done ?? [],
+      pathId,
+      stageId,
+      savedAt: Date.now(),
+    });
+  }
+
   async function submit(
     values: CourseFormValues,
     thumbnail: File | null,
@@ -121,26 +155,7 @@ export function useCourseWizardState(
     if (!result) return; // create failed; the runner already explained why
 
     if (result.failed.length > 0) {
-      // The course EXISTS and is missing pieces. Naming them beats a generic
-      // failure: a manager told "creation failed" goes and creates a second
-      // course, which is the outcome this whole design avoids.
-      toast.warning(
-        t("teacher_course_new.partial_success", {
-          steps: result.failed
-            .map((step) => t(`teacher_course_new.step.${step}`))
-            .join(", "),
-        }),
-      );
-      // Hold the resume state so pressing the button again continues from the
-      // failed step instead of starting over.
-      setRestored({
-        form: values,
-        courseId: result.courseId,
-        done: [],
-        pathId,
-        stageId,
-        savedAt: Date.now(),
-      });
+      handlePartialSuccess(values, result.courseId, result.failed);
       await navigate({
         to: "/dept/courses/$courseId",
         params: { courseId: result.courseId },

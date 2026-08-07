@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSlugAvailability } from "@/lib/api/hooks/teacher-courses";
 
 export type Level = "" | "beginner" | "intermediate" | "advanced";
@@ -74,22 +74,33 @@ export interface CourseFormController {
 export function useCourseForm(
   isCreatePending: boolean,
   /**
-   * Values recovered from a localStorage draft. Passed as the initial state
-   * rather than applied via an effect so the form never renders empty first
-   * and then visibly repopulates.
+   * Values recovered from a localStorage draft.
+   *
+   * Applied via an effect keyed on identity, NOT as useState's initial value:
+   * React reads that initialiser once, on the first render, and the restore
+   * decision is a button the manager presses afterwards. Seeding state with it
+   * meant the recovered values were computed, handed over, and silently
+   * dropped — the Restore button did nothing at all.
    */
-  initialForm?: CourseFormValues,
+  restoredForm?: CourseFormValues,
 ): CourseFormController {
-  const [form, setForm] = useState<CourseFormValues>(
-    initialForm ?? EMPTY_COURSE_FORM,
-  );
-  // A restored draft's slug is whatever the manager last had; treat it as
-  // hand-edited so retyping the title cannot silently overwrite it.
-  const [slugManuallyEdited, setSlugManuallyEdited] = useState(
-    initialForm !== undefined &&
-      Boolean(initialForm.slug) &&
-      initialForm.slug !== slugify(initialForm.title),
-  );
+  const [form, setForm] = useState<CourseFormValues>(EMPTY_COURSE_FORM);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+
+  // Adopt a restored draft when one arrives. Keyed on the object's identity so
+  // it runs once per restore: re-running on every render would fight the
+  // manager's typing, resetting each keystroke back to the draft.
+  const appliedRef = useRef<CourseFormValues | null>(null);
+  useEffect(() => {
+    if (!restoredForm || appliedRef.current === restoredForm) return;
+    appliedRef.current = restoredForm;
+    setForm(restoredForm);
+    // The restored slug is whatever the manager last had. Treat it as
+    // hand-edited whenever it is non-empty, so retyping the title cannot
+    // silently overwrite it — including the case where it happens to equal
+    // slugify(title), since it was still deliberately carried over.
+    setSlugManuallyEdited(Boolean(restoredForm.slug.trim()));
+  }, [restoredForm]);
 
   // Debounce the slug before hitting the availability endpoint so we don't
   // fire a request on every keystroke.
