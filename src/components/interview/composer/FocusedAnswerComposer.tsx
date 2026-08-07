@@ -15,6 +15,7 @@ export function FocusedAnswerComposer({
   onSubmit,
   onFinishRecording,
   sending,
+  submitLocked,
   micAvailable,
   micActive,
   micPaused = false,
@@ -37,6 +38,11 @@ export function FocusedAnswerComposer({
   onSubmit: () => void;
   onFinishRecording: () => void;
   sending: boolean;
+  /**
+   * Wider than `sending`: also true while the answer is accepted but the AI has
+   * not replied yet. Omit to keep the previous `sending`-derived behaviour.
+   */
+  submitLocked?: boolean;
   micAvailable: boolean;
   micActive: boolean;
   micPaused?: boolean;
@@ -59,24 +65,24 @@ export function FocusedAnswerComposer({
   const [mode, setMode] = useState<AnswerMode>(
     micActive || micPaused ? "voice" : "type",
   );
-  const canSubmit =
-    value.trim().length > 0 &&
-    !sending &&
-    status !== "thinking" &&
-    status !== "speaking" &&
-    status !== "disconnected";
-  const voiceDisabled =
-    sending ||
-    status === "thinking" ||
-    status === "speaking" ||
-    status === "disconnected";
+  // `locked` (can't submit) is deliberately wider than `sending` (a request is
+  // in flight). `sending` drives the spinner and the "sending…" label, so it must
+  // stay true only while something is actually being sent; `locked` also covers
+  // the beat AFTER the turn is accepted but BEFORE the AI's reply mounts, which
+  // is when a second answer used to get through to a handler that silently
+  // dropped it. Defaults to `sending` so a caller that does not pass it behaves
+  // exactly as before.
+  const locked =
+    submitLocked ??
+    (sending ||
+      status === "thinking" ||
+      status === "speaking" ||
+      status === "disconnected");
+  const canSubmit = value.trim().length > 0 && !locked;
+  const voiceDisabled = locked;
   // While the AI is thinking or speaking (or the turn is submitting), lock the
   // text field so the candidate can't type over the interviewer's message.
-  const inputDisabled =
-    sending ||
-    status === "thinking" ||
-    status === "speaking" ||
-    status === "disconnected";
+  const inputDisabled = locked;
 
   useEffect(() => {
     if (!micAvailable && mode === "voice") setMode("type");

@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import { FocusedAnswerComposer } from "@/components/interview/composer";
 import { Button } from "@/components/ui/button";
+import { isComposerLocked } from "@/lib/interview/composer-lock";
 import type { CourseInterviewController } from "./use-course-interview";
 import { WorkspaceWindDown } from "./WorkspaceWindDown";
 
@@ -9,10 +10,26 @@ import { WorkspaceWindDown } from "./WorkspaceWindDown";
  * Everything below the interview stage: the wrap-up skip bar, and the bottom
  * input surface. Moved verbatim out of course-interview.tsx.
  */
-export function WorkspaceInputArea({ iv }: { iv: CourseInterviewController }) {
+export function WorkspaceInputArea({
+  iv,
+  chatPending = false,
+}: {
+  iv: CourseInterviewController;
+  /** In-flight flag of the LiveKit text transport, when that transport is live. */
+  chatPending?: boolean;
+}) {
   const { t } = useTranslation();
   const { dictation } = iv;
   const questioning = iv.phase === "questioning";
+  const sending = iv.respond.isPending || iv.onboarding.isPending;
+  // Wider than `sending` on purpose — see isComposerLocked. Keeps the composer
+  // shut through the beat between "turn accepted" and "AI has replied", which is
+  // when a second answer used to reach a handler that silently discarded it.
+  const submitLocked = isComposerLocked({
+    answerStatus: iv.answer.state.status,
+    requestPending: sending || chatPending,
+    agentStatus: iv.agentStatus,
+  });
 
   return (
     <>
@@ -53,7 +70,8 @@ export function WorkspaceInputArea({ iv }: { iv: CourseInterviewController }) {
           onChange={iv.setAnswerText}
           onSubmit={() => void iv.handleRespond()}
           onFinishRecording={() => void iv.handleRespond()}
-          sending={iv.respond.isPending || iv.onboarding.isPending}
+          sending={sending}
+          submitLocked={submitLocked}
           micAvailable={Boolean(iv.isHybrid && dictation.supported)}
           micActive={dictation.listening}
           micPaused={dictation.paused}

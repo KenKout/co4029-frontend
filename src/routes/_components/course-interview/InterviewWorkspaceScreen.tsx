@@ -246,7 +246,8 @@ export function InterviewWorkspaceScreen({
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="flex min-w-0 flex-1 flex-col">
           <WorkspaceStage iv={iv} submissionSlot={renderSubmissionSlot(iv)} />
-          <WorkspaceInputArea iv={iv} />
+          {/* chat.pending from here, not iv.chatBridge: that is a ref. */}
+          <WorkspaceInputArea iv={iv} chatPending={chat.pending} />
         </div>
 
         <TranscriptPanel
