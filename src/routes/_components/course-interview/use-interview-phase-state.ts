@@ -58,11 +58,11 @@ export function useInterviewPhaseState(
   // (no server voice) — otherwise the bar sat frozen on "Waiting for your
   // answer" the whole time the interviewer was clearly typing a reply.
   const [aiPresenting, setAiPresenting] = useState(false);
-  // AI turns whose presentation (typing + narration) has finished. The docked
-  // TranscriptPanel is rendered here rather than inside FocusedInterviewStage,
-  // so it needs its own view of this — otherwise a question the interviewer had
-  // not finished reading appeared in the panel in full (the panel renders turns
-  // with isLatest={false}, which paints text immediately).
+  // AI turns whose presentation (typing + narration) has finished. The route
+  // keeps its own view of this because surfaces rendered OUTSIDE
+  // FocusedInterviewStage gate on it — currently the setup checklist, which may
+  // only reveal the next step once the interviewer has finished reading the
+  // turn that asked for it.
   const [presentedAiTurnIds, setPresentedAiTurnIds] = useState<
     ReadonlySet<string>
   >(() => new Set<string>());

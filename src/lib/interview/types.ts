@@ -1,13 +1,11 @@
 /**
  * Shared types for the interview workspace UI.
  *
- * Extracted from `components/interview/interview-workspace.tsx` to break a real
- * import cycle: `lib/interview/transcript-visibility.ts` needed `ConversationTurn`
- * from the component module, while that module imports
- * `visibleTranscriptTurns`/`visibleTranscriptCount` back from it. That only
- * survived because the inbound edge was `import type` and erased at compile time —
- * the moment anything on that path needed a value import it would have broken.
- * With the types here, `lib/` no longer points back at `components/`.
+ * Extracted from `components/interview/interview-workspace.tsx` so `lib/` does
+ * not point back at `components/`: modules under `lib/` need `ConversationTurn`,
+ * and sourcing it from a component module created an import cycle that only
+ * survived because the inbound edge was `import type` and erased at compile
+ * time. Keeping these types here means a value import on that path is safe.
  */
 
 import type { LucideIcon } from "lucide-react";
