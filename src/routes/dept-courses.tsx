@@ -16,6 +16,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import {
   Avatar,
   AvatarFallback,
+  AvatarImage,
   avatarColor,
   avatarInitials,
 } from "@/components/ui/avatar";
@@ -73,6 +74,12 @@ function InstructorCell({
   return (
     <div className="flex items-center gap-2 min-w-0">
       <Avatar size="sm" className={avatarColor(instructor.user_id)}>
+        {instructor.avatar_url && (
+          <AvatarImage
+            src={instructor.avatar_url}
+            alt={instructor.display_name}
+          />
+        )}
         <AvatarFallback>
           {avatarInitials(instructor.display_name, { uppercase: true })}
         </AvatarFallback>
