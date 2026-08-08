@@ -10,7 +10,6 @@ import type {
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
-  useNotificationInboxSync,
   usePendingNotificationDeletes,
   useUnreadCount,
   useAllNotifications,
@@ -46,7 +45,7 @@ export function useNotificationsPage() {
   const { data: unread } = useUnreadCount();
   const unreadCount = unread?.unread ?? 0;
   // Pull newly-arrived notifications into the open list without a reload.
-  useNotificationInboxSync();
+  // (The app-wide arrival toast lives in AppShell's sync instance.)
 
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();

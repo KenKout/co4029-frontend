@@ -1,9 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { clearAuthSession } from "@/lib/auth";
+import { useNotificationInboxSync } from "@/lib/api/hooks/notifications";
+import type { Notification } from "@/lib/api/types";
 import SideNavBar from "./SideNavBar";
 import ContentTopBar from "./ContentTopBar";
 import { type NavGroup } from "@/lib/navigation";
@@ -31,10 +35,41 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
   // than the route alone — the pre-start lobby keeps normal navigation.
   const [immersive, setImmersive] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const routerLocation = useRouterState({ select: (s) => s.location });
   const isInterviewWorkspace = /^\/courses\/[^/]+\/interview\/[^/]+/.test(
     routerLocation.pathname,
   );
+
+  // Realtime arrival toast: the inbox-sync hook watches the polled unread
+  // count and hands us the notifications that actually arrived; we surface
+  // them as a tappable toast that deep-links into the inbox.
+  const handleNewNotifications = useCallback(
+    (items: Notification[]) => {
+      const first = items[0];
+      if (!first) return;
+      const single = items.length === 1;
+      toast.info(
+        single
+          ? t("notifications.realtime_title_one")
+          : t("notifications.realtime_title_other", { count: items.length }),
+        {
+          description: single
+            ? (first.body ?? first.title).slice(0, 120)
+            : items
+                .map((n) => n.title)
+                .join(", ")
+                .slice(0, 120),
+          action: {
+            label: t("notifications.realtime_view"),
+            onClick: () => void navigate({ to: "/notifications" }),
+          },
+        },
+      );
+    },
+    [t, navigate],
+  );
+  useNotificationInboxSync({ onNew: handleNewNotifications });
 
   useEffect(() => {
     const enterImmersive = () => {

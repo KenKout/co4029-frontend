@@ -1057,7 +1057,10 @@
       "apply": "Apply",
       "clear": "Clear"
     },
-    "showing_count": "{{count}} shown"
+    "showing_count": "{{count}} shown",
+    "realtime_title_one": "New notification",
+    "realtime_title_other": "{{count}} new notifications",
+    "realtime_view": "View"
   },
   "teacher_sr_student_detail": {
     "breadcrumb_detail": "Detail",
@@ -2453,6 +2456,7 @@
       "you": "You",
       "replay_message": "Play this AI message again",
       "replaying_message": "Playing this AI message again",
+      "agent_thinking": "Interviewer is thinking…",
       "user_typing": "User is typing…",
       "preparing_question": "AI interviewer is preparing the question…",
       "preparing_greeting": "AI interviewer is joining you…",

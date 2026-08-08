@@ -135,22 +135,70 @@ const PREFS_KEY = queryKeys.notifications.preferences();
  * new notification costs one extra request at the moment it arrives rather than
  * N requests every interval.
  *
- * Call this from a component that renders the inbox list.
+ * When the count bumps, a lightweight probe fetches the newest page to learn
+ * WHICH notifications arrived and hands them to `onNew` (ids never seen before
+ * in this session). This is what powers the realtime arrival toast. The probe
+ * is best-effort: a failure only skips the toast, never the badge or the list.
+ *
+ * Call this from a component that renders the inbox list (or from a global
+ * layout to keep the toast alive app-wide).
  */
-export function useNotificationInboxSync(options?: { pollMs?: number }) {
+export function useNotificationInboxSync(options?: {
+  pollMs?: number;
+  /** Called once per newly arrived batch of notifications. */
+  onNew?: (items: Notification[]) => void;
+}) {
   const qc = useQueryClient();
   const { data } = useUnreadCount(options);
   const unread = data?.unread;
   const previous = useRef<number | undefined>(undefined);
+  // Ids this session has already seen, so a count bump that merely refetches
+  // known rows (someone else marked one read) never re-toasts.
+  const seenIds = useRef<Set<string> | null>(null);
+  const onNew = options?.onNew;
+
+  // Seed from any inbox cache the user has already built this session (they
+  // opened the notifications page before), so the first arrival after mount
+  // doesn't re-toast everything that's already on screen.
+  useEffect(() => {
+    const cache = qc.getQueryData<InboxCache>(INBOX_KEY);
+    if (cache) {
+      const ids = new Set<string>();
+      for (const page of cache.pages) {
+        for (const n of page.items) ids.add(n.id);
+      }
+      seenIds.current = ids;
+    }
+  }, [qc]);
 
   useEffect(() => {
     if (unread === undefined) return;
     // Skip the first observation: the list has just mounted and fetched.
     if (previous.current !== undefined && previous.current !== unread) {
       void qc.invalidateQueries({ queryKey: INBOX_KEY });
+      void (async () => {
+        try {
+          const items = await apiFetch<Notification[]>(
+            "/me/notifications?limit=8",
+          );
+          const list = Array.isArray(items) ? items : [];
+          const known = seenIds.current;
+          if (known === null) {
+            // First bump after a fresh mount: learn the current ids without
+            // toasting everything that's already there.
+            seenIds.current = new Set(list.map((n) => n.id));
+            return;
+          }
+          const fresh = list.filter((n) => !known.has(n.id));
+          for (const n of list) known.add(n.id);
+          if (fresh.length > 0) onNew?.(fresh);
+        } catch {
+          // Best-effort: the badge and the list invalidation already ran.
+        }
+      })();
     }
     previous.current = unread;
-  }, [unread, qc]);
+  }, [unread, qc, onNew]);
 }
 
 function mapInboxItems(

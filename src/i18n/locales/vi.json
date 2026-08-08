@@ -983,7 +983,10 @@
       "apply": "Áp dụng",
       "clear": "Xóa"
     },
-    "showing_count": "{{count}} hiển thị"
+    "showing_count": "{{count}} hiển thị",
+    "realtime_title_one": "Thông báo mới",
+    "realtime_title_other": "{{count}} thông báo mới",
+    "realtime_view": "Xem"
   },
   "teacher_sr_student_detail": {
     "breadcrumb_detail": "Chi tiết",
@@ -2325,6 +2328,7 @@
       "you": "Bạn",
       "replay_message": "Phát lại tin nhắn AI này",
       "replaying_message": "Đang phát lại tin nhắn AI này",
+      "agent_thinking": "Người phỏng vấn đang suy nghĩ…",
       "user_typing": "Người dùng đang nhập…",
       "preparing_question": "Người phỏng vấn AI đang chuẩn bị câu hỏi…",
       "preparing_greeting": "Người phỏng vấn AI đang tham gia…",

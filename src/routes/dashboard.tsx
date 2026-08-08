@@ -2,10 +2,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useMyCourses } from "@/lib/api/hooks/courses";
-import {
-  useNotificationInboxSync,
-  useNotifications,
-} from "@/lib/api/hooks/notifications";
+import { useNotifications } from "@/lib/api/hooks/notifications";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { useSrDashboardSummary } from "@/lib/api/hooks/spaced-repetition";
@@ -25,8 +22,6 @@ export default function DashboardPage() {
   const { items: myCourses, isLoading: coursesLoading } = useMyCourses(8);
   const { items: notifications, isLoading: notificationsLoading } =
     useNotifications();
-  // Keep the dashboard's notification list current without a reload.
-  useNotificationInboxSync();
   const { data: sr, isLoading: srLoading } = useSrDashboardSummary();
 
   const firstName = getAuthDisplayName(user).split(" ")[0];
