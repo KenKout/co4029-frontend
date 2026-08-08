@@ -68,13 +68,19 @@ export function useCoursesTab(id: string, t: TFunction) {
   // title/slug. The candidates endpoint returns the full org catalogue
   // (ANY status — a draft path may hold draft courses), so rows carry a
   // status badge letting the manager tell draft from published at a glance.
+  // Already-attached courses are dropped from the list entirely — per the
+  // "remove, not disable" rule, an attached course has no business in a
+  // picker whose job is picking NEW courses.
   const alreadyAddedCourseIds = useMemo(
     () => new Set(baseRows.map((r) => r.course_id)),
     [baseRows],
   );
   const courseCandidates: SelectableEntity[] = useMemo(
-    () => toCourseCandidates(catalogue.data, courseQuery),
-    [catalogue.data, courseQuery],
+    () =>
+      toCourseCandidates(catalogue.data, courseQuery).filter(
+        (c) => !alreadyAddedCourseIds.has(c.id),
+      ),
+    [catalogue.data, courseQuery, alreadyAddedCourseIds],
   );
 
   function openPickerForStage(stageId: string) {
