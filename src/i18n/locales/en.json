@@ -2919,7 +2919,7 @@
       "move_to_stage": "Move to stage",
       "fields": {
         "title": "Stage name",
-        "title_placeholder": "Leave empty to show \"Stage 1\"",
+        "title_placeholder": "Leave empty to show \"Stage {{position}}\"",
         "description": "Description",
         "min_optional": "Optional courses needed to finish",
         "min_optional_hint": "How many of this stage's optional courses a student must finish. 0 means optional courses are extra.",

@@ -2793,7 +2793,7 @@
       "move_to_stage": "Chuyển sang giai đoạn",
       "fields": {
         "title": "Tên giai đoạn",
-        "title_placeholder": "Để trống sẽ hiện \"Giai đoạn 1\"",
+        "title_placeholder": "Để trống để hiển thị \"Giai đoạn {{position}}\"",
         "description": "Mô tả",
         "min_optional": "Số khóa học tự chọn cần hoàn thành",
         "min_optional_hint": "Sinh viên phải hoàn thành bao nhiêu khóa học tự chọn của giai đoạn này. Để 0 nghĩa là các khóa tự chọn chỉ là học thêm.",
