@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
 import { Select } from "@/components/ui/select";
-import { Tooltip } from "@/components/ui/tooltip";
+import { InfoTooltip } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import type {
   CareerPathStageAuthoring,
@@ -121,11 +121,10 @@ export function StageSettingsPopover({
       <div className="flex flex-col gap-1">
         <span className="text-xs font-semibold text-m3-on-surface-variant flex items-center gap-1">
           {t(`${prefix}.fields.enforcement`)}
-          <Tooltip content={t(`${prefix}.enforcement.hint`)}>
-            <Button variant="ghost" type="button" aria-label={t(`${prefix}.enforcement.hint`)}>
-              <Info className="h-3 w-3 text-m3-on-surface-variant" />
-            </Button>
-          </Tooltip>
+          <InfoTooltip
+            content={t(`${prefix}.enforcement.hint`)}
+            label={t(`${prefix}.enforcement.hint`)}
+          />
         </span>
         <Select<CareerPathStageEnforcement>
           value={enforcement}
@@ -202,11 +201,10 @@ function StageIdentityFields({
       <label className="flex flex-col gap-1">
         <span className="text-xs font-semibold text-m3-on-surface-variant flex items-center gap-1">
           {t(`${prefix}.fields.min_optional`)}
-          <Tooltip content={t(`${prefix}.fields.min_optional_hint`)}>
-            <Button variant="ghost" type="button" aria-label={t(`${prefix}.fields.min_optional_hint`)}>
-              <Info className="h-3 w-3 text-m3-on-surface-variant" />
-            </Button>
-          </Tooltip>
+          <InfoTooltip
+            content={t(`${prefix}.fields.min_optional_hint`)}
+            label={t(`${prefix}.fields.min_optional_hint`)}
+          />
         </span>
         <input
           type="number"
