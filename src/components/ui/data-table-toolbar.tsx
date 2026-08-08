@@ -278,7 +278,6 @@ function TimeRangeSelect({
   return (
     <>
       <Select
-        size="sm"
         aria-label={merged.ariaLabel}
         value={value}
         onValueChange={(next) => {
@@ -290,7 +289,10 @@ function TimeRangeSelect({
           }
         }}
         options={selectOptions}
-        className="min-w-[9.5rem]"
+        // Same density + width dialect as the FilterBar selects it sits next
+        // to (h-10, w-44) — the shared Select trigger is `w-full` by default,
+        // so a bare min-width would stretch this into its own full-width row.
+        className="w-44"
       />
       {hasCustom && (
         <CustomRangeDialog
