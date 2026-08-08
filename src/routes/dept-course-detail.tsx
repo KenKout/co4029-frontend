@@ -36,6 +36,13 @@ export default function DeptCourseDetailPage() {
   // Course deletion is manager-owned (``course.delete``) — teachers and HOD
   // never see the button, matching the backend gate on the same code.
   const canDelete = permissions.hasAny("course.delete", "system.administer");
+  // The enrollments page requires ``course.enrollment.create``, which an HOD
+  // does NOT have (they only get ``.read``). Gate the link on the permission
+  // that page actually enforces, or the button dead-ends on a redirect.
+  const canManageEnrollments = permissions.hasAny(
+    "course.enrollment.create",
+    "system.administer",
+  );
 
   useRequirePermission(canRead, {
     messageKey: "dept_course_detail.no_permission",
@@ -112,7 +119,7 @@ export default function DeptCourseDetailPage() {
       <DeptStudentsTab
         active={tab === "students"}
         roster={roster}
-        canAssign={canAssign}
+        canManageEnrollments={canManageEnrollments}
         courseId={courseId}
       />
 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Avatar,
   AvatarFallback,
+  AvatarImage,
   avatarColor,
   avatarInitials,
 } from "@/components/ui/avatar";
@@ -20,7 +21,10 @@ import type { TeacherAssignmentRead } from "@/lib/api/types";
  *
  * The avatar treatment is deliberately identical to `InstructorCell` on the
  * worklist — the same person was previously drawn as a generic cap icon here
- * and as an initialled avatar there.
+ * and as an initialled avatar there. It now also renders the uploaded photo
+ * when there is one (`avatar_url`, presigned by the backend); showing initials
+ * for a teacher who has an avatar made this table look like a different
+ * person's row from the worklist it is reached from.
  */
 export function TeacherIdentityCell({
   assignment,
@@ -32,6 +36,9 @@ export function TeacherIdentityCell({
   return (
     <div className="flex items-center gap-3 min-w-0">
       <Avatar size="sm" className={avatarColor(assignment.user_id)}>
+        {assignment.avatar_url && (
+          <AvatarImage src={assignment.avatar_url} alt={name} />
+        )}
         <AvatarFallback>
           {avatarInitials(name, { uppercase: true })}
         </AvatarFallback>

@@ -140,26 +140,38 @@ describe("dateBucketFor", () => {
 });
 
 describe("groupNotifications", () => {
+  // Dates are relative to real "now" — hardcoded absolute dates made this
+  // suite a time-bomb that started failing the moment the calendar passed
+  // them (a notification "today" from last week buckets as this_week).
+  const now = new Date();
+  const today = new Date(now);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const thisWeek = new Date(now);
+  thisWeek.setDate(thisWeek.getDate() - 3);
+  const earlier = new Date(now);
+  earlier.setDate(earlier.getDate() - 30);
+
   const items = [
     makeNotification({
       id: "a",
       category: "quiz_generation",
-      created_at: "2026-08-04T08:00:00Z",
+      created_at: today.toISOString(),
     }),
     makeNotification({
       id: "b",
       category: "lesson_unlock",
-      created_at: "2026-08-03T08:00:00Z",
+      created_at: yesterday.toISOString(),
     }),
     makeNotification({
       id: "c",
       category: "quiz_generation",
-      created_at: "2026-08-02T08:00:00Z",
+      created_at: thisWeek.toISOString(),
     }),
     makeNotification({
       id: "d",
       category: "system",
-      created_at: "2026-07-01T08:00:00Z",
+      created_at: earlier.toISOString(),
     }),
   ];
 

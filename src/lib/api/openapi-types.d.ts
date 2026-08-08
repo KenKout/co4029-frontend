@@ -10678,6 +10678,8 @@ export interface components {
             completed_at?: string | null;
             /** Dropped At */
             dropped_at?: string | null;
+            /** Avatar Url */
+            avatar_url?: string | null;
         };
         /** RosterProgressRead */
         RosterProgressRead: {
@@ -11107,6 +11109,8 @@ export interface components {
             active_from?: string | null;
             /** Active Until */
             active_until?: string | null;
+            /** Avatar Url */
+            avatar_url?: string | null;
         };
         /** TimeBucket */
         TimeBucket: {

@@ -15,13 +15,18 @@ import type { ListQueryState } from "./types";
 /**
  * Roster tab — read-only view of who is enrolled; all mutation lives on
  * `/management/courses/{id}/enrollments` (add / bulk import / invite codes),
- * which the "Manage enrolments" button links to.
+ * which the "Manage enrollments" button links to.
+ *
+ * The link is gated on `course.enrollment.create` — the permission that page
+ * itself requires — not on `course.assign_teacher`. An HOD has the latter but
+ * not the former, so gating on staffing rights offered them a button that
+ * bounced them straight back to the dashboard with an error toast.
  */
 function EmptyStudents({
-  canAssign,
+  canManageEnrollments,
   courseId,
 }: {
-  canAssign: boolean;
+  canManageEnrollments: boolean;
   courseId: string;
 }) {
   const { t } = useTranslation();
@@ -31,7 +36,7 @@ function EmptyStudents({
       <p className="text-sm font-medium text-text-strong">
         {t("dept_course_detail.empty_students_title")}
       </p>
-      {canAssign && (
+      {canManageEnrollments && (
         <Link
           to="/management/courses/$courseId/enrollments"
           params={{ courseId }}
@@ -47,12 +52,12 @@ function EmptyStudents({
 export function DeptStudentsTab({
   active,
   roster,
-  canAssign,
+  canManageEnrollments,
   courseId,
 }: {
   active: boolean;
   roster: ListQueryState<RosterEntry>;
-  canAssign: boolean;
+  canManageEnrollments: boolean;
   courseId: string;
 }) {
   const { t } = useTranslation();
@@ -106,7 +111,7 @@ export function DeptStudentsTab({
 
   return (
     <div className="space-y-4">
-      {canAssign && (
+      {canManageEnrollments && (
         <div className="flex justify-end">
           <Link
             to="/management/courses/$courseId/enrollments"
@@ -145,7 +150,10 @@ export function DeptStudentsTab({
             query ? (
               t("dept_course_detail.empty_search_students")
             ) : (
-              <EmptyStudents canAssign={canAssign} courseId={courseId} />
+              <EmptyStudents
+                canManageEnrollments={canManageEnrollments}
+                courseId={courseId}
+              />
             )
           }
           toolbar={

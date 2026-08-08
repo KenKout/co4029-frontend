@@ -667,6 +667,8 @@
   "dept_course_detail": {
     "back": "Team management",
     "course_fallback": "Course",
+    "title": "Course staffing",
+    "manage_enrollments": "Manage enrollments",
     "no_permission": "You do not have permission to access this page",
     "tabs": {
       "teachers": "Instructors",

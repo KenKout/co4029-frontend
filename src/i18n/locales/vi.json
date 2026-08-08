@@ -597,6 +597,8 @@
   "dept_course_detail": {
     "back": "Quản lý đội ngũ",
     "course_fallback": "Khóa học",
+    "title": "Phân công khóa học",
+    "manage_enrollments": "Quản lý ghi danh",
     "no_permission": "Không có quyền truy cập",
     "tabs": {
       "teachers": "Giảng viên",
