@@ -4643,6 +4643,7 @@
     "content": "Content",
     "pathways": "Career Pathways",
     "manager_courses": "Courses",
+    "users": "Users",
     "enrolment": "Enrolment",
     "analytics": "Analytics",
     "management": "Management",
@@ -4799,5 +4800,9 @@
         "description": "Maximum spaced-repetition cards a student is served for review in one day, so a large backlog stays a finishable daily goal instead of an unbounded wall. Cards already reviewed today count toward the cap. This bounds the REVIEW QUEUE only — it never changes lesson unlock eligibility or retention scoring, so progression is unaffected. Set to 0 for no cap (serve the whole backlog)."
       }
     }
+  },
+  "management_users": {
+    "title": "Users",
+    "subtitle": "Accounts in your organization. You can disable or re-enable teachers and students — peer manager/HOD/admin accounts are protected."
   }
 }

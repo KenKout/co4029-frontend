@@ -4515,7 +4515,8 @@
     "enrolment": "Ghi danh",
     "analytics": "Phân tích",
     "management": "Quản lý",
-    "system": "Hệ thống"
+    "system": "Hệ thống",
+    "users": "Người dùng"
   },
   "teacher_course_new": {
     "title": "Khóa học mới",
@@ -4772,5 +4773,9 @@
         "description": "Số thẻ ôn tập lặp lại ngắt quãng tối đa mà một học viên được đưa ra để ôn trong một ngày, để lượng thẻ tồn đọng lớn vẫn là một mục tiêu hằng ngày có thể hoàn thành thay vì một bức tường vô tận. Các thẻ đã ôn trong ngày được tính vào giới hạn. Điều này chỉ giới hạn HÀNG ĐỢI ÔN TẬP — không bao giờ thay đổi điều kiện mở khóa bài học hay điểm ghi nhớ, nên tiến độ không bị ảnh hưởng. Đặt 0 để không giới hạn (đưa ra toàn bộ thẻ tồn đọng)."
       }
     }
+  },
+  "management_users": {
+    "title": "Người dùng",
+    "subtitle": "Tài khoản trong tổ chức của bạn. Bạn có thể vô hiệu hóa hoặc kích hoạt lại giáo viên và sinh viên — tài khoản đồng cấp (manager/HOD/admin) được bảo vệ."
   }
 }

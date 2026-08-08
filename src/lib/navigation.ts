@@ -183,6 +183,12 @@ export const managerNavItems: NavItem[] = [
     href: "/management/career-paths",
     icon: Briefcase,
   },
+  {
+    label: "Users",
+    i18nKey: "nav.users",
+    href: "/management/users",
+    icon: Users,
+  },
 ];
 
 export const managerNavGroups: NavGroup[] = [
@@ -207,6 +213,18 @@ export const managerNavGroups: NavGroup[] = [
         i18nKey: "nav.career_paths",
         href: "/management/career-paths",
         icon: Briefcase,
+      },
+    ],
+  },
+  {
+    label: "Users",
+    i18nKey: "nav_groups.users",
+    items: [
+      {
+        label: "Users",
+        i18nKey: "nav.users",
+        href: "/management/users",
+        icon: Users,
       },
     ],
   },
