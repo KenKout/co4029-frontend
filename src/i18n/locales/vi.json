@@ -975,7 +975,13 @@
       "month": "Tháng",
       "six_months": "6 tháng",
       "year": "Năm",
-      "all": "Tất cả"
+      "all": "Tất cả",
+      "custom": "Khoảng tùy chỉnh…",
+      "custom_title": "Khoảng thời gian tùy chỉnh",
+      "from": "Từ",
+      "to": "Đến",
+      "apply": "Áp dụng",
+      "clear": "Xóa"
     },
     "showing_count": "{{count}} hiển thị"
   },
@@ -1367,7 +1373,13 @@
         "month": "Tháng",
         "six_months": "6 tháng",
         "year": "Năm",
-        "all": "Tất cả"
+        "all": "Tất cả",
+        "custom": "Khoảng tùy chỉnh…",
+        "custom_title": "Khoảng thời gian tùy chỉnh",
+        "from": "Từ",
+        "to": "Đến",
+        "apply": "Áp dụng",
+        "clear": "Xóa"
       },
       "retry": "Thử lại",
       "stats": {

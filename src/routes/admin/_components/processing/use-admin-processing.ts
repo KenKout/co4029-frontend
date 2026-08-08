@@ -10,11 +10,15 @@ import {
 } from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
 import type { ProcessingJobOut } from "@/lib/api/types";
-import type { TimeRange } from "@/components/ui/data-table-toolbar";
+import type {
+  CustomTimeRange,
+  TimeRange,
+} from "@/components/ui/data-table-toolbar";
 
 /**
  * Translate a toolbar time range into the backend's required `since` bound.
- * `all` uses the epoch so nothing is filtered out.
+ * `all` uses the epoch so nothing is filtered out. A `custom` range is
+ * resolved by the hook (it needs the picked dates), not here.
  */
 export function sinceFromRange(range: TimeRange): string {
   const now = Date.now();
@@ -38,9 +42,25 @@ export function sinceFromRange(range: TimeRange): string {
       return new Date(now - 180 * 86_400_000).toISOString();
     case "year":
       return new Date(now - 365 * 86_400_000).toISOString();
+    case "custom":
     case "all":
       return "1970-01-01T00:00:00.000Z";
   }
+}
+
+/** Resolve a custom from/to pair (``YYYY-MM-DD``) into ISO instants. The
+ *  ``to`` day is inclusive — it becomes ``to + 1 day`` at UTC midnight. */
+export function boundsFromCustom(
+  range: CustomTimeRange | undefined,
+): { since: string; until?: string } {
+  if (!range?.from) {
+    return { since: "1970-01-01T00:00:00.000Z" };
+  }
+  const since = new Date(`${range.from}T00:00:00.000Z`).toISOString();
+  if (!range.to) return { since };
+  const until = new Date(`${range.to}T00:00:00.000Z`);
+  until.setUTCDate(until.getUTCDate() + 1);
+  return { since, until: until.toISOString() };
 }
 
 export interface ProcessingCounts {
@@ -76,6 +96,10 @@ export function useAdminProcessing() {
   // Toolbar time range — defaults to the same 7-day window the page used to
   // apply silently, now visible and user-controllable.
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
+  // Picked from/to dates when `timeRange === "custom"`.
+  const [customRange, setCustomRange] = useState<CustomTimeRange | undefined>(
+    undefined,
+  );
   const [searchText, setSearchText] = useState("");
   const [retryingId, setRetryingId] = useState<string | null>(null);
 
@@ -89,12 +113,20 @@ export function useAdminProcessing() {
   // resolution re-rendered the page, which minted a new key, which refetched…
   // an infinite API spam loop (bug report 2026-08-04). Memoizing on the range
   // makes the key stable until the user actually changes the range.
-  const since = useMemo(() => sinceFromRange(timeRange), [timeRange]);
+  const since = useMemo(() => {
+    if (timeRange === "custom") return boundsFromCustom(customRange).since;
+    return sinceFromRange(timeRange);
+  }, [timeRange, customRange]);
+  const until = useMemo(() => {
+    if (timeRange === "custom") return boundsFromCustom(customRange).until;
+    return undefined;
+  }, [timeRange, customRange]);
   const jobs = useProcessingJobs({
     status: statusFilter || undefined,
     since,
+    until,
   });
-  const summary = useProcessingSummary(since);
+  const summary = useProcessingSummary(since, until);
   const retry = useRetryProcessingJob();
 
   /** Per-status counts over the range window (see docstring) — from the
@@ -146,6 +178,8 @@ export function useAdminProcessing() {
     setStatusFilter,
     timeRange,
     setTimeRange,
+    customRange,
+    setCustomRange,
     searchText,
     setSearchText,
     counts,

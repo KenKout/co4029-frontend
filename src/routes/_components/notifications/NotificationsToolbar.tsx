@@ -73,6 +73,16 @@ export function NotificationsToolbar({
       onTimeRangeChange={(range: TimeRange) => c.setTimeRange(range)}
       timeRangeOptions={buildTimeRangeOptions(t)}
       timeRangeAriaLabel={t("notifications.filter_status")}
+      customTimeRange={c.customRange}
+      onCustomTimeRangeChange={c.setCustomRange}
+      timeRangeLabels={{
+        customOption: t("notifications.time.custom"),
+        dialogTitle: t("notifications.time.custom_title"),
+        from: t("notifications.time.from"),
+        to: t("notifications.time.to"),
+        apply: t("notifications.time.apply"),
+        clear: t("notifications.time.clear"),
+      }}
       filters={filters}
       filterValues={{ status: c.statusFilter, category: c.categoryFilter }}
       onFilterChange={(filterId, value) => {

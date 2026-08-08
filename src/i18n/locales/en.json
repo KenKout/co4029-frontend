@@ -1049,7 +1049,13 @@
       "month": "Month",
       "six_months": "6 Months",
       "year": "Year",
-      "all": "All"
+      "all": "All",
+      "custom": "Custom range…",
+      "custom_title": "Custom time range",
+      "from": "From",
+      "to": "To",
+      "apply": "Apply",
+      "clear": "Clear"
     },
     "showing_count": "{{count}} shown"
   },
@@ -1455,7 +1461,13 @@
         "month": "Month",
         "six_months": "6 Months",
         "year": "Year",
-        "all": "All"
+        "all": "All",
+        "custom": "Custom range…",
+        "custom_title": "Custom time range",
+        "from": "From",
+        "to": "To",
+        "apply": "Apply",
+        "clear": "Clear"
       },
       "retry": "Retry",
       "stats": {
