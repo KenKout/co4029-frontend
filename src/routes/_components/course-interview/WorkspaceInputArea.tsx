@@ -83,8 +83,6 @@ export function WorkspaceInputArea({
           onMicResume={dictation.resume}
           onMicCancel={dictation.cancel}
           onMicRetry={dictation.retry}
-          transcriptOpen={iv.transcriptOpen}
-          onTranscriptToggle={() => iv.setTranscriptOpen((open) => !open)}
           elapsed={iv.elapsed}
           status={iv.agentStatus}
           onEndInterview={iv.openEndDialog}

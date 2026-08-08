@@ -471,7 +471,7 @@
   },
   "teacher_interview_config_new": {
     "modal_title": "Tạo phỏng vấn AI mới",
-    "modal_description": "Nhập tiêu đề trước — bạn sẽ chọn phong cách, hình thức, thời lượng, kết quả học tập và sinh câu hỏi ở màn hình kế tiếp.",
+    "modal_description": "Vui lòng nhập tiêu đề cho buổi phỏng vấn.",
     "fields": {
       "title": "Tiêu đề",
       "title_placeholder": "VD: Phỏng vấn module Cấu trúc dữ liệu"

@@ -8,7 +8,6 @@ import {
   FullscreenPromptDialog,
 } from "../dialogs";
 import { InterviewHeader, QuestionCard } from "../stages";
-import { TranscriptDrawer } from "../transcript";
 import type { ConversationTurn } from "@/lib/interview/types";
 
 /**
@@ -99,44 +98,10 @@ describe("QuestionCard (smoke)", () => {
   });
 });
 
-describe("TranscriptDrawer (smoke)", () => {
-  it("renders a trigger carrying the visible turn count", () => {
-    render(
-      <TranscriptDrawer
-        open={false}
-        onOpenChange={() => undefined}
-        transcript={[turn(), turn({ id: "t2", role: "user", kind: "answer" })]}
-        questionTypeLabel={() => null}
-        speak={() => undefined}
-        onSpeakingChange={() => undefined}
-        onReplay={() => undefined}
-        replayDisabled={false}
-        replayingTurnId={null}
-      />,
-    );
-    expect(screen.getByText("2")).toBeInTheDocument();
-  });
-
-  it("counts only presented AI turns when presentation ids are supplied", () => {
-    // Same rule as the list itself: the badge must not lead the turn it counts,
-    // which would re-introduce the "answer showed early" tell.
-    render(
-      <TranscriptDrawer
-        open={false}
-        onOpenChange={() => undefined}
-        transcript={[turn({ id: "a1" }), turn({ id: "a2" })]}
-        presentedAiTurnIds={new Set(["a1"])}
-        questionTypeLabel={() => null}
-        speak={() => undefined}
-        onSpeakingChange={() => undefined}
-        onReplay={() => undefined}
-        replayDisabled={false}
-        replayingTurnId={null}
-      />,
-    );
-    expect(screen.getByText("1")).toBeInTheDocument();
-  });
-});
+// The transcript drawer/panel and their visibility rule were removed: the stage
+// renders the conversation inline, so a second on-demand copy of it was pure
+// duplication (and never carried the agent's live utterances). Their smoke
+// coverage went with them.
 
 describe("fullscreen dialogs (smoke)", () => {
   it("renders the fullscreen prompt when open", () => {

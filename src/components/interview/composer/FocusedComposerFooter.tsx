@@ -1,19 +1,21 @@
 import { useTranslation } from "react-i18next";
-import { MessageSquareText, PhoneOff } from "lucide-react";
+import { PhoneOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { SendHint } from "./SendHint";
 
-/** Keycap hint plus the mobile-only timer, transcript and end-call actions. */
+/**
+ * Keycap hint plus the mobile-only timer and end-call action.
+ *
+ * The transcript toggle that used to sit here is gone: the stage renders the
+ * conversation inline at every breakpoint, so the button opened a second,
+ * less complete copy of what the candidate was already reading.
+ */
 export function FocusedComposerFooter({
   elapsed,
-  transcriptOpen,
-  onTranscriptToggle,
   onEndInterview,
 }: {
   elapsed: string;
-  transcriptOpen: boolean;
-  onTranscriptToggle: () => void;
   onEndInterview: () => void;
 }) {
   const { t } = useTranslation();
@@ -28,17 +30,6 @@ export function FocusedComposerFooter({
       <span className="ml-auto font-mono font-semibold tabular-nums sm:hidden">
         {elapsed}
       </span>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-lg"
-        onClick={onTranscriptToggle}
-        aria-pressed={transcriptOpen}
-        className="size-11 sm:hidden"
-        aria-label={t("course_interview.workspace.view_transcript")}
-      >
-        <MessageSquareText className="h-4 w-4" />
-      </Button>
       <Button
         type="button"
         variant="destructive"

@@ -96,10 +96,7 @@ export function WorkspaceStage({
         transcript={iv.transcript}
         liveAgentTurns={liveAgentTurns}
         status={iv.agentStatus}
-        transcriptOpen={iv.transcriptOpen}
-        onTranscriptOpenChange={iv.setTranscriptOpen}
         submissionSlot={submissionSlot}
-        transcriptDocked
         assessmentActive={questioning}
         currentQuestionNumber={iv.currentQuestionNumber}
         totalQuestions={iv.totalQuestions}

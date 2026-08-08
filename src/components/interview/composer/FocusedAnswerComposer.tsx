@@ -25,8 +25,6 @@ export function FocusedAnswerComposer({
   onMicResume,
   onMicCancel,
   onMicRetry,
-  transcriptOpen,
-  onTranscriptToggle,
   elapsed,
   status,
   onEndInterview,
@@ -52,8 +50,6 @@ export function FocusedAnswerComposer({
   onMicResume: () => void;
   onMicCancel: () => void;
   onMicRetry?: () => void;
-  transcriptOpen: boolean;
-  onTranscriptToggle: () => void;
   elapsed: string;
   status: InterviewAgentStatus;
   onEndInterview: () => void;
@@ -160,8 +156,6 @@ export function FocusedAnswerComposer({
 
         <FocusedComposerFooter
           elapsed={elapsed}
-          transcriptOpen={transcriptOpen}
-          onTranscriptToggle={onTranscriptToggle}
           onEndInterview={onEndInterview}
         />
       </section>

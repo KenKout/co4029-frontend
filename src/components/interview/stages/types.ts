@@ -82,8 +82,6 @@ export type QuestionCardProps = {
 export type FocusedInterviewStageProps = {
   transcript: ConversationTurn[];
   status: InterviewAgentStatus;
-  transcriptOpen: boolean;
-  onTranscriptOpenChange: (open: boolean) => void;
   assessmentActive: boolean;
   currentQuestionNumber: number;
   totalQuestions?: number | null;
@@ -125,7 +123,4 @@ export type FocusedInterviewStageProps = {
    * cannot also appear here.
    */
   liveAgentTurns?: readonly ConversationTurn[];
-  /** When the desktop docked transcript panel is open, hide the in-composer
-   * transcript trigger so it isn't duplicated. */
-  transcriptDocked?: boolean;
 };

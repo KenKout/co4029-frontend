@@ -38,7 +38,6 @@ import {
   InterviewHeader,
   QuestionCard,
 } from "../stages";
-import { TranscriptDrawer, TranscriptPanel } from "../transcript";
 import {
   formatRelativeInterviewTime,
   resolveInterviewState,
@@ -539,8 +538,6 @@ describe("P0 focused interview room", () => {
       <FocusedInterviewStage
         transcript={transcript}
         status="idle"
-        transcriptOpen={false}
-        onTranscriptOpenChange={() => undefined}
         assessmentActive
         currentQuestionNumber={1}
         totalQuestions={null}
@@ -814,8 +811,6 @@ describe("P0 focused interview room", () => {
           onMicPause={() => undefined}
           onMicResume={() => undefined}
           onMicCancel={() => undefined}
-          transcriptOpen={false}
-          onTranscriptToggle={() => undefined}
           elapsed="00:10"
           status="idle"
           onEndInterview={() => undefined}
@@ -857,8 +852,6 @@ describe("P0 focused interview room", () => {
         onMicPause={() => undefined}
         onMicResume={() => undefined}
         onMicCancel={() => undefined}
-        transcriptOpen={false}
-        onTranscriptToggle={() => undefined}
         elapsed="00:10"
         status="thinking"
         onEndInterview={() => undefined}
@@ -872,49 +865,6 @@ describe("P0 focused interview room", () => {
         name: i18n.t("course_interview.actions.sending"),
       }),
     ).toBeDisabled();
-  });
-
-  it("keeps history collapsed by default and restores focus after Escape", async () => {
-    function TranscriptHarness() {
-      const [open, setOpen] = useState(false);
-      return (
-        <TranscriptDrawer
-          open={open}
-          onOpenChange={setOpen}
-          transcript={[
-            {
-              id: "prior",
-              role: "user",
-              text: "A prior answer",
-              kind: "answer",
-            },
-          ]}
-          questionTypeLabel={() => null}
-          speak={() => undefined}
-          onSpeakingChange={() => undefined}
-          onReplay={() => undefined}
-          replayDisabled={false}
-          replayingTurnId={null}
-        />
-      );
-    }
-
-    render(<TranscriptHarness />);
-    const trigger = screen.getByRole("button", {
-      name: new RegExp(
-        i18n.t("course_interview.workspace.view_transcript"),
-        "i",
-      ),
-    });
-    expect(screen.queryByText("A prior answer")).not.toBeInTheDocument();
-    trigger.focus();
-    fireEvent.click(trigger);
-    expect(await screen.findByText("A prior answer")).toBeInTheDocument();
-    fireEvent.keyDown(document, { key: "Escape" });
-    await waitFor(() =>
-      expect(screen.queryByText("A prior answer")).not.toBeInTheDocument(),
-    );
-    await waitFor(() => expect(trigger).toHaveFocus());
   });
 
   it("shows an actionable microphone permission recovery", () => {
@@ -962,8 +912,6 @@ describe("P0 focused interview room", () => {
     };
     const commonProps = {
       status: "idle" as const,
-      transcriptOpen: false,
-      onTranscriptOpenChange: () => undefined,
       assessmentActive: false,
       currentQuestionNumber: 1,
       totalQuestions: null,
@@ -1037,8 +985,6 @@ describe("P0 focused interview room", () => {
       <FocusedInterviewStage
         transcript={transcript}
         status="thinking"
-        transcriptOpen={false}
-        onTranscriptOpenChange={() => undefined}
         assessmentActive
         currentQuestionNumber={1}
         totalQuestions={null}
@@ -1074,136 +1020,5 @@ describe("P0 focused interview room", () => {
     expect(onView).toHaveBeenCalledTimes(1);
     unmount();
     vi.useRealTimers();
-  });
-});
-
-describe("TranscriptPanel (desktop reflow)", () => {
-  const baseProps = {
-    transcript: [
-      {
-        id: "prior",
-        role: "user" as const,
-        text: "A prior answer",
-        kind: "answer" as const,
-      },
-    ],
-    questionTypeLabel: () => null,
-    speak: () => undefined,
-    onSpeakingChange: () => undefined,
-    onReplay: () => undefined,
-    replayDisabled: false,
-    replayingTurnId: null,
-  };
-
-  it("renders in-flow (not a fixed overlay) when open and hides when closed", () => {
-    const { rerender } = render(
-      <TranscriptPanel open={false} onClose={() => undefined} {...baseProps} />,
-    );
-    expect(screen.queryByText("A prior answer")).not.toBeInTheDocument();
-
-    rerender(<TranscriptPanel open onClose={() => undefined} {...baseProps} />);
-    const panel = screen.getByText("A prior answer").closest("aside");
-    expect(panel).not.toBeNull();
-    expect(panel).toHaveClass("shrink-0");
-    expect(panel?.className).not.toContain("fixed");
-  });
-
-  it("uses the singular message form for a single-message transcript", () => {
-    render(<TranscriptPanel open onClose={() => undefined} {...baseProps} />);
-    expect(
-      screen.getByText(
-        i18n.t("course_interview.workspace.transcript_count", { count: 1 }),
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("uses the plural message form and drops 'in chronological order'", () => {
-    render(
-      <TranscriptPanel
-        open
-        onClose={() => undefined}
-        {...baseProps}
-        transcript={[
-          { id: "a", role: "ai", text: "Q", kind: "question" },
-          { id: "b", role: "user", text: "A", kind: "answer" },
-        ]}
-      />,
-    );
-    expect(
-      screen.getByText(
-        i18n.t("course_interview.workspace.transcript_count", { count: 2 }),
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText(/chronological order|thứ tự thời gian/i),
-    ).not.toBeInTheDocument();
-  });
-
-  it("withholds an AI turn that has not finished being read aloud", () => {
-    // The route appends a question to `transcript` BEFORE narration starts, and
-    // this panel renders turns with isLatest={false} (no typing animation), so
-    // without the presented-ids filter the full question text was readable here
-    // while the main stage still showed its "preparing" indicator.
-    render(
-      <TranscriptPanel
-        open
-        onClose={() => undefined}
-        {...baseProps}
-        transcript={[
-          { id: "q1", role: "ai", text: "Already read out", kind: "question" },
-          { id: "a1", role: "user", text: "My answer", kind: "answer" },
-          { id: "q2", role: "ai", text: "Still being read", kind: "question" },
-        ]}
-        presentedAiTurnIds={new Set(["q1"])}
-      />,
-    );
-
-    expect(screen.getByText("Already read out")).toBeInTheDocument();
-    expect(screen.getByText("My answer")).toBeInTheDocument();
-    expect(screen.queryByText("Still being read")).not.toBeInTheDocument();
-    // The count must match what is rendered, or the badge leaks the arrival.
-    expect(
-      screen.getByText(
-        i18n.t("course_interview.workspace.transcript_count", { count: 2 }),
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("reveals the AI turn once its presentation completes", () => {
-    render(
-      <TranscriptPanel
-        open
-        onClose={() => undefined}
-        {...baseProps}
-        transcript={[
-          { id: "q1", role: "ai", text: "Already read out", kind: "question" },
-          { id: "q2", role: "ai", text: "Now finished", kind: "question" },
-        ]}
-        presentedAiTurnIds={new Set(["q1", "q2"])}
-      />,
-    );
-    expect(screen.getByText("Now finished")).toBeInTheDocument();
-  });
-
-  it("keeps restored history visible when nothing has been presented yet", () => {
-    // A resumed session replays server history that never went through the
-    // presentation lifecycle. Only the LAST AI turn may be withheld, or the
-    // whole transcript would blank out on resume.
-    render(
-      <TranscriptPanel
-        open
-        onClose={() => undefined}
-        {...baseProps}
-        transcript={[
-          { id: "q1", role: "ai", text: "Restored question", kind: "question" },
-          { id: "a1", role: "user", text: "Restored answer", kind: "answer" },
-          { id: "q2", role: "ai", text: "Newest question", kind: "question" },
-        ]}
-        presentedAiTurnIds={new Set<string>()}
-      />,
-    );
-    expect(screen.getByText("Restored question")).toBeInTheDocument();
-    expect(screen.getByText("Restored answer")).toBeInTheDocument();
-    expect(screen.queryByText("Newest question")).not.toBeInTheDocument();
   });
 });

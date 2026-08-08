@@ -93,12 +93,10 @@ export function InterviewHeader({
   );
 }
 
-/** Focus-mode stage: one active prompt, status, and an on-demand transcript. */
+/** Focus-mode stage: one active prompt, the running conversation, and status. */
 export function FocusedInterviewStage({
   transcript,
   status,
-  transcriptOpen,
-  onTranscriptOpenChange,
   assessmentActive,
   currentQuestionNumber,
   totalQuestions,
@@ -120,7 +118,6 @@ export function FocusedInterviewStage({
   replayAvailable = true,
   submissionSlot,
   liveAgentTurns,
-  transcriptDocked = false,
 }: FocusedInterviewStageProps) {
   const { t } = useTranslation();
   const {
@@ -235,17 +232,6 @@ export function FocusedInterviewStage({
           status={status}
           statusMessage={statusMessage}
           onRetry={onRetry}
-          transcript={transcript}
-          transcriptOpen={transcriptOpen}
-          transcriptDocked={transcriptDocked}
-          onTranscriptOpenChange={onTranscriptOpenChange}
-          presentedAiTurnIds={presentedAiTurnIds}
-          questionTypeLabel={questionTypeLabel}
-          speak={speak}
-          onSpeakingChange={onSpeakingChange}
-          replayBlocked={replayBlocked}
-          replayingTurnId={replayingTurnId}
-          replayTurn={replayTurn}
         />
 
         <UserTypingIndicator visible={isUserTyping} />

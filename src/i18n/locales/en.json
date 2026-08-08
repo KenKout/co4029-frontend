@@ -522,7 +522,7 @@
   },
   "teacher_interview_config_new": {
     "modal_title": "New AI interview",
-    "modal_description": "Give it a title now — you'll set persona, mode, duration, learning outcomes and generate questions on the next screen.",
+    "modal_description": "Please type in your interview's title.",
     "fields": {
       "title": "Title",
       "title_placeholder": "e.g., Data Structures module interview"
