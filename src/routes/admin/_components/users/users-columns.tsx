@@ -1,5 +1,12 @@
-import { Building2, Mail, Users } from "lucide-react";
+import { Building2, Mail } from "lucide-react";
 
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  avatarColor,
+  avatarInitials,
+} from "@/components/ui/avatar";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { UserStatusBadge as StatusBadge } from "@/components/ui/status-badges";
 
@@ -21,9 +28,14 @@ export function buildUserColumns(
         const displayName = u.profile?.display_name?.trim() || u.primary_email;
         return (
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-full bg-m3-primary-fixed flex items-center justify-center shrink-0">
-              <Users className="h-4 w-4 text-m3-primary" />
-            </div>
+            <Avatar size="sm" className={avatarColor(u.id)}>
+              {u.profile?.avatar_url && (
+                <AvatarImage src={u.profile.avatar_url} alt={displayName} />
+              )}
+              <AvatarFallback>
+                {avatarInitials(displayName, { uppercase: true })}
+              </AvatarFallback>
+            </Avatar>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-text-strong truncate">
                 {displayName}
