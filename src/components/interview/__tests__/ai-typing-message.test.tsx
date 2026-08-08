@@ -20,7 +20,7 @@ describe("AiTypingMessage", () => {
 
     render(<AiTypingMessage text="Hello" animate speak={speak} />);
 
-    expect(speak).toHaveBeenCalledWith("Hello");
+    expect(speak).toHaveBeenCalledWith("Hello", { agentVoiced: true });
     expect(screen.getByRole("status")).toHaveTextContent(
       /đang chuẩn bị câu hỏi/i,
     );

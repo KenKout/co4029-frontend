@@ -2,11 +2,22 @@
  * Typed interview turns over the session's ONE LiveKit room.
  *
  * Sends the candidate's text on `lk.chat` with `turn_action` / `turn_key` as
- * stream attributes, and resolves the turn from the `abridge.interview.control`
+ * stream attributes, and settles the turn from the `abridge.interview.control`
  * topic — NOT from the send promise. That distinction is the point of this hook:
- * `sendText` resolving only means the bytes left the browser, while the turn is
- * not decided until the agent has run it through the interview brain and
- * published `completed` / `rejected` / `failed`.
+ * `sendText` resolving only means the bytes left the browser, while the agent has
+ * not confirmed it took the turn until it acks on control.
+ *
+ * A turn settles on `accepted`, and there is deliberately NO timeout. The agent
+ * streams: it acks, then reports every state change as a session-scoped snapshot
+ * on the same topic. There is no later instant at which one structured turn
+ * result becomes true, so waiting past the ack means waiting for a message that
+ * never comes — which is exactly how a 60s ceiling came to report "could not be
+ * sent" for answers the agent had already heard and answered.
+ *
+ * The control topic carries both channels, and `registerTextStreamHandler` is
+ * per-topic and THROWS on a duplicate. So there is one handler here that fans
+ * out internally: turn acks resolve waiters, snapshots go to state and to
+ * `onSnapshot`.
  *
  * Why `room.localParticipant.sendText` rather than `useChat().send`:
  * `setupChat`'s send publishes the message a SECOND time through the deprecated
@@ -24,12 +35,13 @@ import { ConnectionState, RoomEvent, type Room } from "livekit-client";
 
 import {
   chatAttributes,
-  isTerminalStatus,
   parseControlEvent,
+  settlesTurn,
   shouldPreserveDraft,
   TOPIC_CHAT,
   TOPIC_CONTROL,
   type ControlEvent,
+  type StateSnapshot,
   type TurnAction,
 } from "@/lib/interview/control-protocol";
 
@@ -42,36 +54,46 @@ export interface ChatTurnOutcome {
 
 export interface UseInterviewChatResult {
   /**
-   * Send a typed turn and resolve once the agent reports a terminal status.
+   * Send a typed turn and resolve once the agent acks it on the control topic.
    *
    * Rejects only when the message could not be sent at all; a turn the agent
    * refuses resolves with `rejected` so the caller can keep the draft and show
-   * the reason.
+   * the reason. Resolving with `accepted` means "the agent has your text", never
+   * "your answer has been graded".
    */
   sendTurn: (args: {
     text: string;
     turnAction: TurnAction;
     turnKey: string;
-    /** Give up waiting for control after this long. Default 60s. */
-    timeoutMs?: number;
   }) => Promise<ChatTurnOutcome>;
-  /** True from send until the terminal control event (or timeout). */
+  /** True from send until the agent acks (or refuses) the turn. */
   pending: boolean;
   /** Whether a turn can be sent right now. */
   canSend: boolean;
   /**
-   * Whether the room is currently connected. Distinct from `canSend` (which
-   * also folds in `pending`): the transport decision needs to know the room is
-   * up even while a previous turn is still in flight, so it does not flip a
-   * live turn to REST mid-flight.
+   * Whether the room is currently connected. Distinct from `canSend` (which also
+   * folds in `pending`): the voice-handover gate needs to know the room is up
+   * even while a previous turn is still in flight.
    */
   connected: boolean;
   /** Most recent control event seen, for surfacing agent-side rejections. */
   lastEvent: ControlEvent | null;
+  /** Most recent session snapshot, or null before the first one lands. */
+  snapshot: StateSnapshot | null;
 }
 
-/** Default ceiling on how long a turn may stay pending. */
-const DEFAULT_TURN_TIMEOUT_MS = 60_000;
+export interface UseInterviewChatOptions {
+  enabled?: boolean;
+  /**
+   * Called for every snapshot that passes the `seq` guard, in arrival order.
+   *
+   * A callback rather than a second stream handler: registration is per-topic and
+   * the SDK throws on a duplicate, so the one handler below fans out. Read
+   * through a ref so a new closure identity each render cannot churn that
+   * registration.
+   */
+  onSnapshot?: (snapshot: StateSnapshot) => void;
+}
 
 /**
  * Live connection state of a room.
@@ -85,10 +107,10 @@ const DEFAULT_TURN_TIMEOUT_MS = 60_000;
  * one to miss: the SDK documents it as "not noticeable to users most of the
  * time" because media keeps flowing, so `RoomEvent.Reconnecting` never fires.
  * Without it `room.state` becomes `signalReconnecting` while this hook still
- * reports the last value it saw — `connected: true` — and the transport
- * resolver keeps routing typed turns onto a signal channel that is currently
- * broken. `lk.chat` and the control topic both ride that channel, so the turn
- * either throws on send or waits out the 60s control timeout.
+ * reports the last value it saw — `connected: true` — so the composer stays
+ * unlocked and writes a turn onto a signal channel that is currently broken.
+ * `lk.chat` and the control topic both ride that channel, so the turn either
+ * throws on send or hangs until the drop effect releases it.
  */
 function useRoomConnected(room: Room | undefined): boolean {
   const [connected, setConnected] = useState(
@@ -122,22 +144,27 @@ function useRoomConnected(room: Room | undefined): boolean {
 
 export function useInterviewChat(
   room: Room | undefined,
-  options?: { enabled?: boolean },
+  options?: UseInterviewChatOptions,
 ): UseInterviewChatResult {
   const enabled = options?.enabled ?? true;
   const [pending, setPending] = useState(false);
   const connected = useRoomConnected(room);
   const [lastEvent, setLastEvent] = useState<ControlEvent | null>(null);
+  const [snapshot, setSnapshot] = useState<StateSnapshot | null>(null);
 
-  // Turns awaiting a terminal control event, keyed by turn_key. A map (not a
-  // single slot) because a late event for an abandoned turn must be discardable
-  // without disturbing the current one.
+  const onSnapshotRef = useRef(options?.onSnapshot);
+  onSnapshotRef.current = options?.onSnapshot;
+
+  // Turns awaiting their ack, keyed by turn_key. A map (not a single slot)
+  // because a late event for an abandoned turn must be discardable without
+  // disturbing the current one.
   const waitingRef = useRef(
     new Map<string, (outcome: ChatTurnOutcome) => void>(),
   );
-  // Highest `seq` seen. Control events are ordered by this, never by arrival:
-  // after a reconnect an older event can still land, and applying it would roll
-  // the UI back to a previous turn's state.
+  // Highest `seq` seen — the WHOLE ordering protocol, shared by both channels on
+  // this topic. Control events are ordered by this, never by arrival: after a
+  // reconnect an older event can still land, and applying it would roll the UI
+  // back to a previous turn's or snapshot's state.
   const lastSeqRef = useRef(-1);
 
   // Subscribe to the control topic for the room's lifetime, not per-send: an
@@ -158,8 +185,9 @@ export function useInterviewChat(
           return;
         }
         const event = parseControlEvent(raw);
-        // A malformed control message is dropped rather than thrown: the turn
-        // still resolves by timeout, and a parser bug must not break the room.
+        // A malformed control message is dropped rather than thrown: the room
+        // drop path still releases any waiter, and a parser bug must not tear
+        // down the room over one frame.
         if (!event) return;
 
         // Out-of-order / replayed event: ignore. `seq` is strictly increasing
@@ -169,8 +197,14 @@ export function useInterviewChat(
 
         setLastEvent(event);
 
-        if (!isTerminalStatus(event.status)) return;
-        // `accepted` is not terminal, so anything here settles the turn.
+        if (!settlesTurn(event.status)) {
+          const next = event.snapshot;
+          if (!next) return;
+          setSnapshot(next);
+          onSnapshotRef.current?.(next);
+          return;
+        }
+
         const key = event.turnKey;
         if (!key) return;
         const resolve = waitingRef.current.get(key);
@@ -196,7 +230,9 @@ export function useInterviewChat(
   }, [room, enabled]);
 
   // Fail every in-flight turn when the room drops, so the composer cannot sit
-  // pending forever waiting for control that can no longer arrive.
+  // pending forever waiting for an ack that can no longer arrive. With the
+  // timeout gone this is the ONLY thing that releases a stuck waiter, so it is
+  // load-bearing rather than defensive.
   useEffect(() => {
     if (connected) return;
     const waiting = waitingRef.current;
@@ -212,6 +248,7 @@ export function useInterviewChat(
           rejection: null,
           state: null,
           errorClass: "RoomDisconnected",
+          snapshot: null,
         },
         // A turn cut off mid-flight was never graded — keep the draft so the
         // candidate can retry (same turn_key stays idempotent server-side).
@@ -227,17 +264,15 @@ export function useInterviewChat(
       text: string;
       turnAction: TurnAction;
       turnKey: string;
-      timeoutMs?: number;
     }): Promise<ChatTurnOutcome> => {
       if (!room || room.state !== ConnectionState.Connected) {
         throw new Error("interview room is not connected");
       }
 
       const { text, turnAction, turnKey } = args;
-      const timeoutMs = args.timeoutMs ?? DEFAULT_TURN_TIMEOUT_MS;
 
-      // Register the waiter BEFORE sending: the agent can publish `accepted`
-      // and even `completed` before `sendText` resolves.
+      // Register the waiter BEFORE sending: the agent acks as soon as the text
+      // arrives, which can be before `sendText` resolves.
       const settled = new Promise<ChatTurnOutcome>((resolve) => {
         waitingRef.current.set(turnKey, resolve);
       });
@@ -254,33 +289,14 @@ export function useInterviewChat(
         throw err;
       }
 
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      const timedOut = new Promise<ChatTurnOutcome>((resolve) => {
-        timer = setTimeout(() => {
-          waitingRef.current.delete(turnKey);
-          resolve({
-            event: {
-              status: "failed",
-              turnKey,
-              seq: -1,
-              turnAction,
-              stateVersion: null,
-              rejection: null,
-              state: null,
-              errorClass: "ControlTimeout",
-            },
-            // Ambiguous: the agent may have graded the turn and we simply never
-            // heard. Keeping the draft is the safe half — a retry reuses the
-            // turn_key, which `take_session_step` treats idempotently.
-            preserveDraft: true,
-          });
-        }, timeoutMs);
-      });
-
+      // No ceiling on this wait. The only ways it can fail to settle are a
+      // refusal (which the agent publishes) and the room going away (handled by
+      // the drop effect above) — a slow LLM turn is not one of them, and
+      // synthesising a failure for it reported a phantom send failure for a turn
+      // the candidate had already been answered.
       try {
-        return await Promise.race([settled, timedOut]);
+        return await settled;
       } finally {
-        if (timer) clearTimeout(timer);
         setPending(false);
       }
     },
@@ -293,5 +309,6 @@ export function useInterviewChat(
     canSend: enabled && connected && !pending,
     connected,
     lastEvent,
+    snapshot,
   };
 }

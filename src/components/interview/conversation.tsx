@@ -108,6 +108,7 @@ export function ConversationMessage({
   replayDisabled = true,
   isReplaying = false,
   onReplay,
+  streaming = false,
 }: {
   turn: ConversationTurn;
   label?: string | null;
@@ -122,6 +123,7 @@ export function ConversationMessage({
   replayDisabled?: boolean;
   isReplaying?: boolean;
   onReplay?: () => void;
+  streaming?: boolean;
 }) {
   const { t } = useTranslation();
   const isAi = turn.role === "ai";
@@ -148,13 +150,17 @@ export function ConversationMessage({
 
       <div
         className={cn(
-          "max-w-[85%] sm:max-w-[78%]",
+          // The interviewer is prose, not a chat bubble: it spans the column so
+          // its header controls (replay) sit at the container edge rather than
+          // floating in at 78%. The candidate's own turns stay capped and
+          // right-aligned, which is what makes the two sides readable as a
+          // conversation. Line length is bounded on the text itself, not here.
           isAi
             ? "w-full py-1"
-            : "rounded-xl border border-border bg-surface-muted px-4 py-3 text-text-body",
+            : "max-w-[85%] rounded-xl border border-border bg-surface-muted px-4 py-3 text-text-body sm:max-w-[78%]",
         )}
       >
-        {isAi && (
+        {isAi ? (
           <AiMessageHeader
             turn={turn}
             label={label}
@@ -165,9 +171,7 @@ export function ConversationMessage({
             isReplaying={isReplaying}
             onReplay={onReplay}
           />
-        )}
-
-        {!isAi && (
+        ) : (
           <UserMessageHeader
             showTimestamp={showTimestamp}
             relativeTime={relativeTime}
@@ -175,9 +179,10 @@ export function ConversationMessage({
         )}
 
         {isAi ? (
-          <AiMessageBody
+          <AgentBody
             turn={turn}
             isLatest={isLatest}
+            streaming={streaming}
             speak={speak}
             onTick={onTick}
             onSpeakingChange={onSpeakingChange}
@@ -196,6 +201,53 @@ export function ConversationMessage({
         )}
       </div>
     </article>
+  );
+}
+
+/**
+ * Picks how an interviewer turn renders.
+ *
+ * A live agent utterance re-renders with more text on every transcription frame,
+ * so it CANNOT go through `AiTypingMessage`: that seeds its `shown` state on the
+ * first render and never re-reads `text`, freezing the bubble at whatever arrived
+ * first.
+ */
+function AgentBody({
+  turn,
+  isLatest,
+  streaming,
+  speak,
+  onTick,
+  onSpeakingChange,
+  onTextComplete,
+  onPresentationComplete,
+}: {
+  turn: ConversationTurn;
+  isLatest: boolean;
+  streaming: boolean;
+  speak: (text: string) => void | Promise<void> | NarrationPresentation;
+  onTick: () => void;
+  onSpeakingChange: (speaking: boolean) => void;
+  onTextComplete: () => void;
+  onPresentationComplete?: () => void;
+}) {
+  if (streaming) {
+    return (
+      <p className="min-w-0 whitespace-pre-wrap text-base leading-7 text-text-strong">
+        {turn.text}
+      </p>
+    );
+  }
+  return (
+    <AiMessageBody
+      turn={turn}
+      isLatest={isLatest}
+      speak={speak}
+      onTick={onTick}
+      onSpeakingChange={onSpeakingChange}
+      onTextComplete={onTextComplete}
+      onPresentationComplete={onPresentationComplete}
+    />
   );
 }
 
@@ -247,8 +299,47 @@ export function MessageTurnActions({
 }
 
 export function UserTypingIndicator({ visible = true }: { visible?: boolean }) {
+  return (
+    <TypingIndicator
+      visible={visible}
+      side="user"
+      labelKey="course_interview.workspace.user_typing"
+    />
+  );
+}
+
+/**
+ * The interviewer's counterpart, shown while the agent is composing.
+ *
+ * The candidate has no other signal on the native path: the agent's reply only
+ * becomes visible once transcription starts arriving, and the gap before that is
+ * a whole LLM round-trip of blank screen.
+ */
+export function AgentThinkingIndicator({
+  visible = true,
+}: {
+  visible?: boolean;
+}) {
+  return (
+    <TypingIndicator
+      visible={visible}
+      side="agent"
+      labelKey="course_interview.workspace.agent_thinking"
+    />
+  );
+}
+
+function TypingIndicator({
+  visible,
+  side,
+  labelKey,
+}: {
+  visible: boolean;
+  side: "user" | "agent";
+  labelKey: string;
+}) {
   const { t } = useTranslation();
-  const label = t("course_interview.workspace.user_typing");
+  const label = t(labelKey);
   const [mounted, setMounted] = useState(visible);
   const [shown, setShown] = useState(false);
 
@@ -278,13 +369,21 @@ export function UserTypingIndicator({ visible = true }: { visible?: boolean }) {
       aria-live="polite"
       aria-atomic="true"
       className={cn(
-        "flex w-full justify-end motion-safe:transition-[opacity,transform] motion-safe:duration-200 motion-safe:ease-out",
+        "flex w-full motion-safe:transition-[opacity,transform] motion-safe:duration-200 motion-safe:ease-out",
+        side === "user" ? "justify-end" : "justify-start",
         shown
           ? "translate-y-0 opacity-100"
           : "pointer-events-none translate-y-2 opacity-0",
       )}
     >
-      <div className="flex max-w-[85%] items-center gap-2.5 rounded-xl border border-border bg-surface-muted px-4 py-3 sm:max-w-[78%]">
+      <div
+        className={cn(
+          "flex max-w-[85%] items-center gap-2.5 rounded-xl border px-4 py-3 sm:max-w-[78%]",
+          side === "user"
+            ? "border-border bg-surface-muted"
+            : "border-primary/15 bg-primary-soft",
+        )}
+      >
         <span className="flex items-center gap-1" aria-hidden="true">
           <span className="size-1.5 rounded-full bg-primary/70 motion-safe:animate-bounce [animation-delay:-300ms]" />
           <span className="size-1.5 rounded-full bg-primary/70 motion-safe:animate-bounce [animation-delay:-150ms]" />

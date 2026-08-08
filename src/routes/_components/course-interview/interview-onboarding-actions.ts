@@ -6,6 +6,7 @@ import type {
   InterviewQuestionPublic,
 } from "@/lib/api/types";
 import {
+  makeAiTurn,
   makeCeremonyTurn,
   makeUserTurn,
   newTurnKey,
@@ -51,14 +52,9 @@ function appendOnboardingAiTurn(
   ctx.setTranscript((previous) => [
     ...previous,
     makeCeremonyTurn(
-      result.is_complete
-        ? "transition"
-        : result.onboarding_stage === "readiness"
-          ? "briefing"
-          : "opening",
+      result.onboarding_stage === "readiness" ? "briefing" : "opening",
       result.ai_text!,
       `${ctx.sessionId}-${turnKey}`,
-      result.is_complete ? 0 : undefined,
     ),
   ]);
 }
@@ -73,13 +69,47 @@ function startAssessmentFromOnboarding(
     : Date.now();
   ctx.sessionStartedAtRef.current = assessmentStart;
   ctx.setAssessmentStartedAtMs(assessmentStart);
-  ctx.sessionDeadlineAtRef.current =
+  ctx.setSessionDeadlineAt(
     result.time_remaining_seconds == null
       ? null
-      : Date.now() + result.time_remaining_seconds * 1000;
+      : Date.now() + result.time_remaining_seconds * 1000,
+  );
   ctx.timeoutTriggeredRef.current = false;
-  ctx.setPendingFirstQuestion(firstQuestion);
-  ctx.setPhase("transition");
+  revealFirstQuestion(ctx, firstQuestion);
+}
+
+/**
+ * Show question one immediately and let the interviewer speak it.
+ *
+ * Replaces a two-step beat that no longer had a first step. The server's
+ * "Great — the introduction is complete. Let's begin. Here is your first
+ * question." was parked as a `transition` turn, and the room was held back while
+ * it presented so the CLIENT could narrate it. But `resolveAgentOwnsTheVoice`
+ * returns true the moment onboarding completes, so the narration gate had already
+ * muted the client — the line was silent text, and the only thing the hold still
+ * bought was a delayed agent join. The candidate got dead air, then heard the
+ * agent start mid-way through the presentation and rush to catch up.
+ *
+ * So the line is gone (the agent owns its own opening: `NativeInterviewAgent.
+ * on_enter` speaks the question verbatim) and the card is committed here. It has
+ * to be a TRANSCRIPT turn, not just `currentQuestion` — the pinned card is the
+ * last AI turn in the transcript.
+ */
+function revealFirstQuestion(
+  ctx: InterviewActionsContext,
+  question: InterviewQuestionPublic,
+): void {
+  ctx.setCurrentQuestion(question);
+  ctx.setPhase("questioning");
+  if (ctx.inputMode === "voice") {
+    ctx.setVoiceActive(true);
+  }
+  ctx.setTranscript((previous) => {
+    const turn = makeAiTurn(question, false, 0);
+    return previous.some((existing) => existing.id === turn.id)
+      ? previous
+      : [...previous, turn];
+  });
 }
 
 export async function handleOnboarding(
@@ -124,7 +154,12 @@ export async function handleOnboarding(
     void ctx.i18n.changeLanguage(result.interview_language);
     ctx.setOnboardingStage(result.onboarding_stage);
 
-    if (result.ai_text) {
+    // Not on completion: `ai_text` is then the server's "Great — the introduction
+    // is complete. Let's begin. Here is your first question." handoff, and the
+    // interviewer owns its own opening now (see `revealFirstQuestion`). Appending
+    // it put a line on screen that nobody ever spoke — and because its kind is not
+    // one the live agent voices, nothing downstream could drop it.
+    if (result.ai_text && !result.is_complete) {
       appendOnboardingAiTurn(ctx, result, turnKey);
     }
 

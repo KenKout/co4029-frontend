@@ -1,9 +1,16 @@
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useVoiceAssistant } from "@livekit/components-react";
+import {
+  useTranscriptions,
+  useVoiceAssistant,
+} from "@livekit/components-react";
 
-import { SetupChecklist } from "@/components/interview/setup-checklist";
+import { SetupChecklistDialog } from "@/components/interview/setup-checklist-dialog";
 import { FocusedInterviewStage } from "@/components/interview/stages";
+import {
+  liveAgentConversationTurns,
+  mergeTranscriptionSegments,
+} from "@/components/interview/voice-transcript/display-items";
 import { useMicrophoneAvailability } from "@/lib/hooks/use-microphone-availability";
 import { questionTypeLabel } from "@/lib/interview/turn-factory";
 import type { CourseInterviewController } from "./use-course-interview";
@@ -43,95 +50,135 @@ export function WorkspaceStage({
   // throws without a RoomContext.
   const { agent, agentTranscriptions } = useVoiceAssistant();
   const agentSpeaks = Boolean(agent);
+  // The agent's follow-ups and probes reach the client ONLY as transcription —
+  // the server commits no turn for them — so without this they were dropped and
+  // the candidate saw their own answer followed by silence.
+  const allStreams = useTranscriptions();
+  const liveAgentTurns = useMemo(
+    () =>
+      liveAgentConversationTurns(
+        mergeTranscriptionSegments(
+          agentTranscriptions,
+          allStreams,
+          agent?.identity,
+        ),
+        iv.assessmentStartedAtMs,
+      ),
+    [
+      agent?.identity,
+      agentTranscriptions,
+      allStreams,
+      iv.assessmentStartedAtMs,
+    ],
+  );
+
+  // The modal is shown ONLY between the interviewer's turns: it hides while a
+  // request is in flight and while the new turn is being spoken, then returns with
+  // the next step revealed. Per step, not once — a latch kept it open over a
+  // speaking interviewer with the next step's buttons already live.
+  //
+  // `presentedAiTurnIds` is the route's record of turns whose presentation
+  // completed, which is the same gate the checklist used when it rendered inline.
+  const lastAiTurnId = useMemo(() => {
+    for (let index = iv.transcript.length - 1; index >= 0; index -= 1) {
+      if (iv.transcript[index].role === "ai") return iv.transcript[index].id;
+    }
+    return null;
+  }, [iv.transcript]);
+  const setupReady =
+    lastAiTurnId !== null &&
+    iv.presentedAiTurnIds.has(lastAiTurnId) &&
+    !iv.onboarding.isPending;
 
   return (
-    <FocusedInterviewStage
-      transcript={iv.transcript}
-      status={iv.agentStatus}
-      transcriptOpen={iv.transcriptOpen}
-      onTranscriptOpenChange={iv.setTranscriptOpen}
-      submissionSlot={submissionSlot}
-      transcriptDocked
-      assessmentActive={questioning}
-      currentQuestionNumber={iv.currentQuestionNumber}
-      totalQuestions={iv.totalQuestions}
-      currentQuestionType={iv.currentQuestion?.question_type}
-      isUserTyping={resolveIsUserTyping(iv)}
-      questionTypeLabel={(type) => questionTypeLabel(type, t)}
-      speak={iv.speakIfOn}
-      replaySpeak={iv.replayIfOn}
-      agentSpeaks={agentSpeaks}
-      agentTranscriptions={agentTranscriptions}
-      onSpeakingChange={(speaking) => {
-        iv.setAiSpeaking(iv.voiceOn && speaking);
-        iv.setAiPresenting(speaking);
-      }}
-      onTurnPresented={iv.handleTurnPresented}
-      onClarifyQuestion={
-        questioning
-          ? () =>
-              void iv.handleAssistance(
-                t("course_interview.workspace.clarification_request"),
-                "clarify",
-                t("course_interview.workspace.clarification_request"),
-              )
-          : undefined
-      }
-      onRequestHint={
-        questioning
-          ? () =>
-              void iv.handleAssistance(
-                t("course_interview.workspace.hint_request"),
-                "hint",
-                t("course_interview.workspace.hint_request"),
-              )
-          : undefined
-      }
-      onExplainTerm={
-        questioning
-          ? (term) =>
-              void iv.handleAssistance(
-                t("course_interview.workspace.term_request", { term }),
-                "explain_term",
-                t("course_interview.workspace.term_request", { term }),
-              )
-          : undefined
-      }
-      statusMessage={resolveStageStatusMessage(iv, t)}
-      onRetry={() => {
-        if (!iv.connected) {
-          iv.setConnected(navigator.onLine);
-        } else if (iv.dictationHasError) {
-          dictation.retry();
-        } else {
-          void (iv.phase === "opening" || iv.phase === "readiness"
-            ? iv.handleOnboarding()
-            : iv.handleRespond());
+    <>
+      <FocusedInterviewStage
+        transcript={iv.transcript}
+        liveAgentTurns={liveAgentTurns}
+        status={iv.agentStatus}
+        transcriptOpen={iv.transcriptOpen}
+        onTranscriptOpenChange={iv.setTranscriptOpen}
+        submissionSlot={submissionSlot}
+        transcriptDocked
+        assessmentActive={questioning}
+        currentQuestionNumber={iv.currentQuestionNumber}
+        totalQuestions={iv.totalQuestions}
+        currentQuestionType={iv.currentQuestion?.question_type}
+        isUserTyping={resolveIsUserTyping(iv)}
+        questionTypeLabel={(type) => questionTypeLabel(type, t)}
+        speak={iv.speakIfOn}
+        replaySpeak={iv.replayIfOn}
+        agentSpeaks={agentSpeaks}
+        agentTranscriptions={agentTranscriptions}
+        onSpeakingChange={(speaking) => {
+          iv.setAiSpeaking(iv.voiceOn && speaking);
+          iv.setAiPresenting(speaking);
+        }}
+        onTurnPresented={iv.handleTurnPresented}
+        onClarifyQuestion={
+          questioning
+            ? () =>
+                void iv.handleAssistance(
+                  t("course_interview.workspace.clarification_request"),
+                  "clarify",
+                  t("course_interview.workspace.clarification_request"),
+                )
+            : undefined
         }
-      }}
-      replayAvailable={iv.voiceOn}
-      activeTurnActions={
-        onboardingStage !== null ? (
-          <SetupChecklist
-            stage={onboardingStage}
-            candidateName={iv.candidateName}
-            language={iv.interviewLanguage}
-            micConnected={microphone.available}
-            disabled={iv.onboarding.isPending || iv.aiSpeaking}
-            pending={iv.onboarding.isPending}
-            onLanguageChange={(language) => {
-              iv.setInterviewLanguage(language);
-              void i18n.changeLanguage(language);
-            }}
-            onAction={(action, payload) =>
-              void iv.handleOnboarding(action, payload?.language, payload?.name)
-            }
-          />
-        ) : undefined
-      }
-      activeTurnActionsVisible={
-        onboardingStage !== null && !iv.onboarding.isPending
-      }
-    />
+        onRequestHint={
+          questioning
+            ? () =>
+                void iv.handleAssistance(
+                  t("course_interview.workspace.hint_request"),
+                  "hint",
+                  t("course_interview.workspace.hint_request"),
+                )
+            : undefined
+        }
+        onExplainTerm={
+          questioning
+            ? (term) =>
+                void iv.handleAssistance(
+                  t("course_interview.workspace.term_request", { term }),
+                  "explain_term",
+                  t("course_interview.workspace.term_request", { term }),
+                )
+            : undefined
+        }
+        statusMessage={resolveStageStatusMessage(iv, t)}
+        onRetry={() => {
+          if (!iv.connected) {
+            iv.setConnected(navigator.onLine);
+          } else if (iv.dictationHasError) {
+            dictation.retry();
+          } else {
+            void (iv.phase === "opening" || iv.phase === "readiness"
+              ? iv.handleOnboarding()
+              : iv.handleRespond());
+          }
+        }}
+        replayAvailable={iv.voiceOn}
+      />
+      {onboardingStage !== null && (
+        <SetupChecklistDialog
+          open={setupReady}
+          stage={onboardingStage}
+          candidateName={iv.candidateName}
+          language={iv.interviewLanguage}
+          micConnected={microphone.available}
+          // The modal is only mounted between turns, so there is nothing to guard
+          // against here beyond a request already in flight.
+          disabled={iv.onboarding.isPending}
+          pending={iv.onboarding.isPending}
+          onLanguageChange={(language) => {
+            iv.setInterviewLanguage(language);
+            void i18n.changeLanguage(language);
+          }}
+          onAction={(action, payload) =>
+            void iv.handleOnboarding(action, payload?.language, payload?.name)
+          }
+        />
+      )}
+    </>
   );
 }

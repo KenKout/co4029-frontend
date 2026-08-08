@@ -5,18 +5,19 @@ import type {
   ConversationTurn,
   InterviewAgentStatus,
 } from "@/lib/interview/types";
+import { stageHistoryTurns } from "./helpers";
 import type { StageSpeak } from "./types";
 import { useStageAnnouncement } from "./use-stage-announcement";
 
 /**
  * All of the focused stage's turn bookkeeping: which AI turn is active, which
- * assistance turn hangs off it, which turns have finished presenting, replay
- * locking, and the polite screen-reader announcement.
+ * assistance turn hangs off it, what came before them, which turns have finished
+ * presenting, replay locking, and the polite screen-reader announcement.
  *
- * The hook calls are in exactly the order the pre-split component used them
- * (two `useState`, `useRef`, three `useMemo`, `useEffect`, two `useCallback`,
- * one `useMemo`) with identical dependency arrays, so React sees the same hook
- * sequence it always did. `t` is passed in rather than resolved here so the
+ * The hook calls stay in the order the pre-split component used them (two
+ * `useState`, `useRef`, then the `useMemo` group, `useEffect`, two
+ * `useCallback`, one `useMemo`) with identical dependency arrays, so React sees
+ * a stable hook sequence. `t` is passed in rather than resolved here so the
  * caller's single `useTranslation()` stays first in the order.
  */
 export function useFocusedStageTurns({
@@ -32,6 +33,8 @@ export function useFocusedStageTurns({
   replaySpeak,
   onSpeakingChange,
   onTurnPresented,
+  liveAgentTurns,
+  agentSpeaks = false,
   t,
 }: {
   transcript: ConversationTurn[];
@@ -41,6 +44,8 @@ export function useFocusedStageTurns({
   replayAvailable: boolean;
   speak: StageSpeak;
   replaySpeak?: StageSpeak;
+  liveAgentTurns?: readonly ConversationTurn[];
+  agentSpeaks?: boolean;
   onSpeakingChange: (speaking: boolean) => void;
   onTurnPresented: ((turn: ConversationTurn) => void) | undefined;
   t: TFunction;
@@ -82,15 +87,14 @@ export function useFocusedStageTurns({
     }
     return null;
   }, [activeTurnIndex, assessmentActive, transcript]);
-  const hintUsed = useMemo(
-    () =>
-      assessmentActive &&
-      activeTurnIndex >= 0 &&
-      transcript
-        .slice(activeTurnIndex + 1)
-        .some((turn) => turn.role === "ai" && turn.kind === "hint"),
-    [activeTurnIndex, assessmentActive, transcript],
-  );
+  const hintUsed = useHintUsed(transcript, activeTurnIndex, assessmentActive);
+  const historyTurns = useStageHistory({
+    transcript,
+    activeTurn,
+    assistanceTurn,
+    liveAgentTurns,
+    agentSpeaks,
+  });
 
   useEffect(() => {
     if (!activeTurn) return;
@@ -163,10 +167,48 @@ export function useFocusedStageTurns({
     replayingTurnId,
     activeTurn,
     assistanceTurn,
+    historyTurns,
     hintUsed,
     replayBlocked,
     replayTurn,
     markPresented,
     announcement,
   };
+}
+
+
+function useStageHistory(args: {
+  transcript: ConversationTurn[];
+  activeTurn: ConversationTurn | null;
+  assistanceTurn: ConversationTurn | null;
+  liveAgentTurns: readonly ConversationTurn[] | undefined;
+  agentSpeaks: boolean;
+}): ConversationTurn[] {
+  const { transcript, activeTurn, assistanceTurn, liveAgentTurns, agentSpeaks } =
+    args;
+  return useMemo(
+    () =>
+      stageHistoryTurns(transcript, activeTurn, assistanceTurn, {
+        liveTurns: liveAgentTurns,
+        agentSpeaks,
+      }),
+    [activeTurn, agentSpeaks, assistanceTurn, liveAgentTurns, transcript],
+  );
+}
+
+
+function useHintUsed(
+  transcript: ConversationTurn[],
+  activeTurnIndex: number,
+  assessmentActive: boolean,
+): boolean {
+  return useMemo(
+    () =>
+      assessmentActive &&
+      activeTurnIndex >= 0 &&
+      transcript
+        .slice(activeTurnIndex + 1)
+        .some((turn) => turn.role === "ai" && turn.kind === "hint"),
+    [activeTurnIndex, assessmentActive, transcript],
+  );
 }

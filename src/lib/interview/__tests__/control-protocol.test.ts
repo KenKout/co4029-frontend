@@ -10,9 +10,9 @@ import {
   TOPIC_TRANSCRIPTION,
   TURN_ACTIONS,
   chatAttributes,
-  isTerminalStatus,
   isValidTurnKey,
   parseControlEvent,
+  settlesTurn,
   shouldPreserveDraft,
 } from "../control-protocol";
 import { newTurnKey } from "../turn-factory";
@@ -166,7 +166,9 @@ describe("parseControlEvent", () => {
     expect(parsed!.state?.is_finished).toBe(true);
     expect(parsed!.state?.should_finish).toBe(true);
     expect(parsed!.state?.transition_target).toBe("closing");
-    expect(parsed!.state?.transition_text).toBe("That concludes the interview.");
+    expect(parsed!.state?.transition_text).toBe(
+      "That concludes the interview.",
+    );
     expect(parsed!.state?.next_question).toBeNull();
   });
 
@@ -252,13 +254,20 @@ describe("parseControlEvent", () => {
 });
 
 describe("turn lifecycle helpers", () => {
-  it("treats only accepted as non-terminal", () => {
-    // The composer must stay pending on `accepted` and release on the rest;
-    // getting this backwards either hangs the editor or unlocks it too early.
-    expect(isTerminalStatus("accepted")).toBe(false);
-    expect(isTerminalStatus("completed")).toBe(true);
-    expect(isTerminalStatus("rejected")).toBe(true);
-    expect(isTerminalStatus("failed")).toBe(true);
+  it("settles a turn on every turn-scoped status, including accepted", () => {
+    // `accepted` settling is the whole contract change: the native agent streams,
+    // so it acks and never publishes a per-turn result. A composer that waits
+    // past the ack waits forever — which is the 60s "could not be sent" bug.
+    expect(settlesTurn("accepted")).toBe(true);
+    expect(settlesTurn("completed")).toBe(true);
+    expect(settlesTurn("rejected")).toBe(true);
+    expect(settlesTurn("failed")).toBe(true);
+  });
+
+  it("never settles a turn on a snapshot", () => {
+    // Session-scoped: its turn_key is null, so it owns no turn and must not
+    // release a waiter that is still expecting an ack.
+    expect(settlesTurn("snapshot")).toBe(false);
   });
 
   it("preserves the draft on rejected and failed only", () => {
@@ -272,9 +281,150 @@ describe("turn lifecycle helpers", () => {
   });
 });
 
+describe("parseControlEvent — snapshots", () => {
+  function snapshotEvent(snapshot: Record<string, unknown>): string {
+    return JSON.stringify({
+      status: "snapshot",
+      turn_key: null,
+      seq: 9,
+      turn_action: "answer",
+      snapshot,
+    });
+  }
+
+  const FULL = {
+    current_question_id: "33333333-3333-3333-3333-333333333333",
+    current_question_text: "Why is a B-tree used for an index?",
+    question_number: 2,
+    questions_remaining: 3,
+    questions_total: 5,
+    outcomes_covered: 1,
+    outcomes_required: 4,
+    is_finished: false,
+    has_time_limit: true,
+    time_remaining_seconds: 480,
+  };
+
+  it("parses every field of a full snapshot", () => {
+    const parsed = parseControlEvent(snapshotEvent(FULL));
+    expect(parsed).not.toBeNull();
+    expect(parsed!.status).toBe("snapshot");
+    expect(parsed!.turnKey).toBeNull();
+    expect(parsed!.seq).toBe(9);
+    expect(parsed!.snapshot).toEqual({
+      currentQuestionId: "33333333-3333-3333-3333-333333333333",
+      currentQuestionText: "Why is a B-tree used for an index?",
+      questionNumber: 2,
+      questionsRemaining: 3,
+      questionsTotal: 5,
+      outcomesCovered: 1,
+      outcomesRequired: 4,
+      isFinished: false,
+      hasTimeLimit: true,
+      timeRemainingSeconds: 480,
+    });
+  });
+
+  it("keeps an untimed session distinguishable from a missing countdown", () => {
+    // This is the entire reason `has_time_limit` exists: both shapes below send
+    // `time_remaining_seconds: null`, and the client must arm a timer for
+    // neither — but only one of them is allowed to CLEAR an existing deadline.
+    const untimed = parseControlEvent(
+      snapshotEvent({
+        ...FULL,
+        has_time_limit: false,
+        time_remaining_seconds: null,
+      }),
+    );
+    expect(untimed!.snapshot!.hasTimeLimit).toBe(false);
+    expect(untimed!.snapshot!.timeRemainingSeconds).toBeNull();
+
+    const timedButSilent = parseControlEvent(
+      snapshotEvent({
+        ...FULL,
+        has_time_limit: true,
+        time_remaining_seconds: null,
+      }),
+    );
+    expect(timedButSilent!.snapshot!.hasTimeLimit).toBe(true);
+  });
+
+  it("infers a time limit from a present countdown when the flag is absent", () => {
+    // Protocol drift must not silently disarm the session timer, so an absent
+    // boolean falls back to "a countdown implies a limit" rather than to false.
+    const { has_time_limit: _omitted, ...withoutFlag } = FULL;
+    const parsed = parseControlEvent(snapshotEvent(withoutFlag));
+    expect(parsed!.snapshot!.hasTimeLimit).toBe(true);
+
+    const noCountdown = parseControlEvent(
+      snapshotEvent({ ...withoutFlag, time_remaining_seconds: null }),
+    );
+    expect(noCountdown!.snapshot!.hasTimeLimit).toBe(false);
+  });
+
+  it("degrades a malformed counter to zero rather than NaN", () => {
+    // The counters feed a progress ratio; NaN there paints an empty bar forever.
+    const parsed = parseControlEvent(
+      snapshotEvent({
+        ...FULL,
+        question_number: "2",
+        outcomes_required: -1,
+        questions_remaining: 1.5,
+      }),
+    );
+    expect(parsed!.snapshot!.questionNumber).toBe(0);
+    expect(parsed!.snapshot!.outcomesRequired).toBe(0);
+    expect(parsed!.snapshot!.questionsRemaining).toBe(0);
+  });
+
+  it("carries a null question when the session is between questions", () => {
+    const parsed = parseControlEvent(
+      snapshotEvent({
+        ...FULL,
+        current_question_id: null,
+        current_question_text: null,
+        question_number: 0,
+      }),
+    );
+    expect(parsed!.snapshot!.currentQuestionId).toBeNull();
+    expect(parsed!.snapshot!.currentQuestionText).toBeNull();
+  });
+
+  it("drops a snapshot event whose payload is missing or not an object", () => {
+    // A snapshot IS its payload, so one without a usable payload carries nothing.
+    expect(
+      parseControlEvent(
+        JSON.stringify({ status: "snapshot", turn_key: null, seq: 3 }),
+      ),
+    ).toBeNull();
+    expect(
+      parseControlEvent(
+        JSON.stringify({
+          status: "snapshot",
+          turn_key: null,
+          seq: 3,
+          snapshot: "nope",
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("leaves `snapshot` null on every turn-scoped status", () => {
+    expect(
+      parseControlEvent(event({ status: "accepted" }))!.snapshot,
+    ).toBeNull();
+    expect(
+      parseControlEvent(event({ status: "completed" }))!.snapshot,
+    ).toBeNull();
+  });
+});
+
 describe("chatAttributes", () => {
   it("emits exactly the two attribute keys the agent validates", () => {
-    const attrs = chatAttributes({ turnAction: "hint", turnKey: "tk-abcdefgh" });
+    const attrs = chatAttributes({
+      turnAction: "hint",
+      turnKey: "tk-abcdefgh",
+    });
     expect(attrs).toEqual({
       turn_action: "hint",
       turn_key: "tk-abcdefgh",

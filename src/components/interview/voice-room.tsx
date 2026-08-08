@@ -3,13 +3,15 @@
  * presenting it as a focused AI-agent call workspace.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   useConnectionState,
+  useStartAudio,
   useVoiceAssistant,
 } from "@livekit/components-react";
 import { ConnectionState } from "livekit-client";
 import "@livekit/components-styles";
-import { Bot } from "lucide-react";
+import { Bot, Volume2 } from "lucide-react";
 
 import { useInterviewRoomState } from "./interview-room-provider";
 import { useAgentJoinWatchdog } from "@/routes/_components/course-interview/use-agent-join-watchdog";
@@ -50,9 +52,26 @@ function RoomContent({
   agentExpected: boolean;
   onAgentNeverJoined?: () => void;
 }) {
+  const { t } = useTranslation();
   const connectionState = useConnectionState();
   const { agent, state: agentState } = useVoiceAssistant();
   const agentWasPresent = useRef(false);
+  // ── Autoplay unlock ────────────────────────────────────────────────────────
+  // Same affordance the text workspace already ships (see
+  // InterviewWorkspaceScreen.tsx, "Autoplay unlock"). It matters MORE here:
+  // voice is the primary mode, the agent only joins and publishes its track
+  // ~10-13s after the candidate's click (AGENT_JOIN_DEADLINE_MS), and by then
+  // the browser's transient user activation has expired — so `RoomAudioRenderer`
+  // attaches an <audio> element whose play() is rejected and the candidate hears
+  // nothing at all, on a screen that gives them nothing to click.
+  //
+  // `mergedProps` carries the onClick that performs the unlock; the guard on
+  // `canPlayAudio` below handles visibility.
+  const { room } = useInterviewRoomState();
+  const { mergedProps: startAudioProps, canPlayAudio } = useStartAudio({
+    room,
+    props: {},
+  });
 
   useEffect(() => {
     if (agent) {
@@ -109,6 +128,24 @@ function RoomContent({
               <p className="mt-1 text-xs text-text-muted motion-safe:animate-pulse">
                 Connecting to voice interview…
               </p>
+            )}
+            {/* Same autoplay-unlock affordance as the text workspace: the agent
+                joins ~10-13s after "Start", past the browser's transient user
+                activation, so the candidate must be able to grant audio. */}
+            {!canPlayAudio && (
+              <button
+                type="button"
+                {...startAudioProps}
+                // AFTER the spread on purpose: `mergedProps` sets
+                // `style.display = "block"`, which would break this flex
+                // column; the `!canPlayAudio` guard above already handles
+                // visibility, so the hook's display value is not needed.
+                style={undefined}
+                className="mt-4 flex w-full max-w-[420px] items-center justify-center gap-2 rounded-lg border border-m3-primary/30 bg-m3-primary/5 px-4 py-3 text-sm font-bold text-m3-primary transition-colors hover:bg-m3-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
+              >
+                <Volume2 className="h-4 w-4" aria-hidden="true" />
+                {t("course_interview.enable_audio")}
+              </button>
             )}
           </div>
 

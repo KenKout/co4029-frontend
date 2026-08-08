@@ -1,5 +1,4 @@
 import { InterviewRoomProvider } from "@/components/interview/interview-room-provider";
-import { livekitTextEnabled } from "@/lib/interview/text-transport";
 import { shouldWarmRoom } from "./_components/course-interview/agent-voice-presentation";
 import { InterviewLobbyScreen } from "./_components/course-interview/InterviewLobbyScreen";
 import { InterviewResultsScreen } from "./_components/course-interview/InterviewResultsScreen";
@@ -33,9 +32,9 @@ export default function CourseInterviewPage() {
 
   // Whether this session should hold a live room right now.
   //
-  // `voiceActive` alone reproduces the previous behaviour exactly (the room used
-  // to exist precisely while the voice screen was mounted). The hybrid clause is
-  // additive and gated by the flag, so with the flag off this is unchanged.
+  // `voiceActive` covers the voice screen, which is where the room used to live
+  // exclusively. The hybrid clause is what gives a typing candidate a room at
+  // all: typed turns ride `lk.chat` on it, so without it there is no transport.
   //
   // `pendingFirstQuestion` holds the room back for ONE beat. When onboarding
   // completes the server sends a transition line ("Great — the introduction is
@@ -54,8 +53,7 @@ export default function CourseInterviewPage() {
   const roomActive =
     Boolean(sessionId) &&
     (iv.voiceActive ||
-      (livekitTextEnabled() &&
-        iv.inputMode === "hybrid" &&
+      (iv.inputMode === "hybrid" &&
         iv.onboardingStage === "completed" &&
         !iv.pendingFirstQuestion));
 
@@ -102,7 +100,6 @@ export default function CourseInterviewPage() {
       // question one.
       prefetch={
         Boolean(sessionId) &&
-        livekitTextEnabled() &&
         iv.inputMode === "hybrid" &&
         iv.onboardingStage === "completed"
       }
@@ -139,9 +136,10 @@ export default function CourseInterviewPage() {
       // have their microphone captured.
       audio={iv.voiceActive}
       // Only treat a drop as a voice failure while the candidate is actually in
-      // the voice room. A drop while they are typing is recoverable on its own:
-      // the text transport falls back to REST, so tearing the session down to
-      // text mode (and toasting about voice) would be wrong there.
+      // the voice room. `handleVoiceDropped` degrades the session to text mode,
+      // which for a typing candidate is both meaningless and wrong — their
+      // recovery is rejoining the SAME room, which the SDK drives itself.
+      // Surfacing that as a rejoin affordance is migration step 4, not built here.
       onUnexpectedDisconnect={
         iv.voiceActive
           ? () => {

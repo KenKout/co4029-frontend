@@ -17,6 +17,7 @@ import type { TranscriptionLike } from "./use-agent-spoken-text";
  * cancellable presentation handle. */
 export type StageSpeak = (
   text: string,
+  options?: { agentVoiced?: boolean },
 ) => void | Promise<void> | NarrationPresentation;
 
 /** Maps a raw question type onto its localized label, or null when unknown. */
@@ -37,6 +38,12 @@ export type InterviewHeaderProps = {
   expectedDurationMinutes?: number | null;
   currentQuestion?: number | null;
   totalQuestions?: number | null;
+  /**
+   * Rubric coverage 0-100 from the agent's session snapshot. Takes precedence
+   * over both the question-count and the elapsed-time bars: it is the only one of
+   * the three that measures what the verdict is judged on.
+   */
+  outcomeProgress?: number | null;
   connected?: boolean;
   voiceOn: boolean;
   onToggleVoice: () => void;
@@ -113,6 +120,14 @@ export type FocusedInterviewStageProps = {
   replayAvailable?: boolean;
   /** Secondary confirmation for the most recently submitted answer (spec §8). */
   submissionSlot?: ReactNode;
+  /**
+   * Agent utterances that exist ONLY as transcription — follow-ups and probes the
+   * server never commits as turns, so nothing in `transcript` will ever carry
+   * them. Derived in the room (where `useVoiceAssistant` / `useTranscriptions`
+   * are reachable) and already filtered so an utterance the question card mirrors
+   * cannot also appear here.
+   */
+  liveAgentTurns?: readonly ConversationTurn[];
   /** When the desktop docked transcript panel is open, hide the in-composer
    * transcript trigger so it isn't duplicated. */
   transcriptDocked?: boolean;

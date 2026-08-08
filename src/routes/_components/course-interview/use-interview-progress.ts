@@ -4,7 +4,10 @@ import { toast } from "sonner";
 import { useFullscreenDeterrent } from "@/components/interview/use-fullscreen-deterrent";
 import { useIntegrityReporter } from "@/components/interview/use-integrity-reporter";
 import { resolveInterviewState } from "@/lib/interview/format";
-import type { InterviewAgentStatus } from "@/lib/interview/types";
+import type {
+  InterviewAgentStatus,
+  InterviewSessionProgress,
+} from "@/lib/interview/types";
 import { useInterviewTimer } from "@/lib/interview/use-interview-timer";
 import { useQuestionPacing } from "@/lib/interview/use-question-pacing";
 import { isInterviewActive } from "./helpers";
@@ -13,6 +16,49 @@ import type { useInterviewRouteData } from "./use-interview-route-data";
 import type { useInterviewServerSync } from "./use-interview-server-sync";
 import type { useInterviewSpeech } from "./use-interview-speech";
 import type { useInterviewTurnState } from "./use-interview-turn-state";
+
+/**
+ * Question count, total and rubric coverage for the header.
+ *
+ * The agent's snapshot is authoritative once it has published one. `fallbackNumber`
+ * (counted off the transcript) covers the beat before the room is up and the
+ * onboarding/REST-start phases that precede it, where there is no snapshot yet.
+ *
+ * `outcomeProgress` is what the pass/fail verdict is actually built from, so it is
+ * the honest thing to draw the bar off — the question count only says how far
+ * through the bank the interview is, not how much of the rubric is satisfied.
+ */
+function resolveProgressView(
+  progress: InterviewSessionProgress | null,
+  fallbackNumber: number,
+): {
+  currentQuestionNumber: number;
+  totalQuestions: number | null;
+  outcomeProgress: number | null;
+} {
+  if (!progress || progress.questionNumber <= 0) {
+    return {
+      currentQuestionNumber: fallbackNumber,
+      totalQuestions: null,
+      outcomeProgress: null,
+    };
+  }
+  return {
+    currentQuestionNumber: progress.questionNumber,
+    // The learner API still exposes no total, but the snapshot does by
+    // construction: the question it is on plus the ones the selector can offer.
+    // The server's own pool size. Summing the index and the remainder mixed two
+    // sources and let the denominator grow mid-interview.
+    totalQuestions: progress.questionsTotal,
+    outcomeProgress:
+      progress.outcomesRequired > 0
+        ? Math.min(
+            100,
+            (progress.outcomesCovered / progress.outcomesRequired) * 100,
+          )
+        : null,
+  };
+}
 
 /**
  * Timers, pacing, proctoring signals and the derived agent status. Seventh hook
@@ -27,7 +73,7 @@ export function useInterviewProgress(
   speech: ReturnType<typeof useInterviewSpeech>,
 ) {
   const { t } = route;
-  const { sessionId, currentQuestion, transcript } = turnState;
+  const { sessionId, currentQuestion, transcript, answer } = turnState;
   const {
     phase,
     assessmentStartedAtMs,
@@ -35,8 +81,10 @@ export function useInterviewProgress(
     connected,
     aiSpeaking,
     aiPresenting,
+    turnPending,
+    sessionProgress,
   } = phaseState;
-  const { respond, onboarding } = serverSync;
+  const { onboarding } = serverSync;
   const { dictation } = speech;
 
   // Id of the most recently-added AI turn — only this one animates (types) and
@@ -47,7 +95,7 @@ export function useInterviewProgress(
       phase !== "results",
     assessmentStartedAtMs,
   );
-  const currentQuestionNumber = useMemo(() => {
+  const transcriptQuestionNumber = useMemo(() => {
     const questionIds = new Set(
       transcript
         .filter((turn) => turn.kind === "question")
@@ -55,10 +103,8 @@ export function useInterviewProgress(
     );
     return Math.max(1, questionIds.size);
   }, [transcript]);
-  // The public learner API intentionally reveals questions one at a time and
-  // currently does not expose a total. The header/card render an honest
-  // indeterminate fallback until that existing nullable field is populated.
-  const totalQuestions: number | null = null;
+  const { currentQuestionNumber, totalQuestions, outcomeProgress } =
+    resolveProgressView(sessionProgress, transcriptQuestionNumber);
   // Per-question pacing (#2): a gentle per-question elapsed cue in the header
   // (the session timer alone gives no signal of lingering on one question).
   const questionPacing = useQuestionPacing(
@@ -126,8 +172,11 @@ export function useInterviewProgress(
   );
   const agentStatus: InterviewAgentStatus = resolveInterviewState({
     connected,
-    hasError: respond.isError || onboarding.isError || dictationHasError,
-    thinking: respond.isPending || onboarding.isPending,
+    hasError:
+      answer.state.status === "failed" ||
+      onboarding.isError ||
+      dictationHasError,
+    thinking: turnPending || onboarding.isPending,
     speaking: aiSpeaking || aiPresenting,
     listening: dictation.listening,
     paused: dictation.paused,
@@ -137,6 +186,7 @@ export function useInterviewProgress(
     elapsed,
     currentQuestionNumber,
     totalQuestions,
+    outcomeProgress,
     questionPacing,
     fullscreenDeterrent,
     dictationHasError,

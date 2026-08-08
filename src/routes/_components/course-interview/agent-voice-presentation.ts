@@ -177,20 +177,25 @@ export function resolveAgentOwnsTheVoice(args: {
   pendingFirstQuestion: boolean;
 }): boolean {
   if (args.onboardingStage !== "completed") return false;
-  // The post-onboarding transition line ("Great—the introduction is complete.
-  // Let's begin. Here is your first question.") exists ONLY client-side — the
-  // agent never receives it, so only client narration can voice it.
+  // Once onboarding is complete the agent owns the voice unconditionally — no
+  // per-beat exception, in particular not for `pendingFirstQuestion`.
   //
-  // `roomActive` in course-interview.tsx holds the room back for exactly this
-  // beat via `!pendingFirstQuestion`. That guard stopped working when warm-room
-  // added `connect: active || warm`: the room is already UP from warming, so the
-  // hold no longer delays anything, and the moment onboarding completed this
-  // predicate muted the client for a line the agent does not have. Reported as
-  // the transition line AND question one both being silent.
+  // The tempting exception is the post-onboarding transition line ("…Here is your
+  // first question."), which exists only client-side and which the agent never
+  // receives, so only browser narration can voice it. Carving that out puts TWO
+  // voices on one beat: the native agent speaks question one the instant it joins
+  // (`native_runtime.NativeInterviewAgent.on_enter`) and warm-room makes that
+  // almost immediate, so the browser's speech-synthesis voice reads the ceremony
+  // line over the agent's Deepgram voice asking the question. Two utterances at
+  // once is heard as an interviewer talking "super fast".
   //
-  // So mirror the same beat here: while a first question is pending, the client
-  // still owns the voice regardless of the room being live.
-  if (args.pendingFirstQuestion) return false;
+  // Cost of having no exception: the transition line is typed but never spoken.
+  // That is the cheaper failure — one consistent interviewer voice beats a
+  // ceremony line in a second voice on top of the question — and `present()`
+  // paces its typewriter to the agent's audio, so text and voice stay in step.
+  //
+  // Text-only sessions are unaffected: no room is opened for them, so
+  // `roomWanted` and `chatConnected` are both false and the client keeps the voice.
   return args.roomWanted || args.connecting || args.chatConnected;
 }
 

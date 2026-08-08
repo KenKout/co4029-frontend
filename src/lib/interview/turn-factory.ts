@@ -12,11 +12,11 @@
  * transcript. Prefixes are q-/f-/a- plus the ceremony kind.
  */
 
+import type { InterviewSessionHistoryTurn } from "@/lib/api/types";
 import type {
-  InterviewQuestionPublic,
-  InterviewSessionHistoryTurn,
-} from "@/lib/api/types";
-import type { ConversationTurn } from "@/lib/interview/types";
+  ConversationTurn,
+  InterviewQuestionView,
+} from "@/lib/interview/types";
 import { normalizeQuestionText } from "@/lib/interview/question-content";
 
 export type InterviewTurnAction =
@@ -58,7 +58,7 @@ export function questionTypeLabel(
 }
 
 export function makeAiTurn(
-  question: InterviewQuestionPublic,
+  question: InterviewQuestionView,
   isFollowUp = false,
   elapsedSeconds = 0,
 ): ConversationTurn {
@@ -130,6 +130,7 @@ export function restoreHistoryTurn(
     questionType: turn.question_type,
     isFollowUp: turn.is_follow_up,
     kind: turn.kind,
+    restored: true,
   };
 }
 

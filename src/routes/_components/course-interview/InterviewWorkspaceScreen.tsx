@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useStartAudio, useVoiceAssistant } from "@livekit/components-react";
 import { ListChecks, Volume2 } from "lucide-react";
@@ -10,7 +9,6 @@ import { InterviewProgressSteps } from "@/components/interview/interview-progres
 import { InterviewHeader } from "@/components/interview/stages";
 import { TranscriptPanel } from "@/components/interview/transcript";
 import { useInterviewChat } from "@/components/interview/use-interview-chat";
-import { livekitTextEnabled } from "@/lib/interview/text-transport";
 import { questionTypeLabel } from "@/lib/interview/turn-factory";
 import {
   resolveAgentOwnsTheVoice,
@@ -26,6 +24,7 @@ import type {
   InterviewConfig,
   InterviewCourse,
 } from "./use-course-interview";
+import { useWorkspaceControllerBridge } from "./use-workspace-controller-bridge";
 import { renderSubmissionSlot } from "./workspace-helpers";
 import { WorkspaceInputArea } from "./WorkspaceInputArea";
 import { WorkspaceStage } from "./WorkspaceStage";
@@ -49,12 +48,15 @@ export function InterviewWorkspaceScreen({
 
   // The LiveKit chat transport for typed turns. This screen is the only one
   // rendered INSIDE the room provider, so it is the only place the room is
-  // reachable — mount the hook here and hand it to `handleRespond` through the
+  // reachable — mount the hook here and hand it to the turn handlers through the
   // controller's bridge ref (the actions are built outside the provider).
-  // Flag off → enabled false → canSend/connected stay false and the transport
-  // resolver picks REST, so nothing else changes.
+  //
+  // `onSnapshot` is the session's whole state feed: the question it is on, the
+  // countdown, progress, and whether it has finished. It is a callback rather
+  // than an effect on `chat.snapshot` because two consecutive snapshots can carry
+  // identical content and must each be applied in order.
   const { room, connecting, roomWanted } = useInterviewRoomState();
-  const chat = useInterviewChat(room, { enabled: livekitTextEnabled() });
+  const chat = useInterviewChat(room, { onSnapshot: iv.handleStateSnapshot });
   // The agent's own voice phase (`lk.agent.state`), published as a participant
   // attribute and surfaced here. This is the ONLY thing that knows when the
   // agent actually starts and stops speaking, and the workspace is the only
@@ -144,24 +146,7 @@ export function InterviewWorkspaceScreen({
       ? "failed"
       : resolveAgentVoicePhase(Boolean(agent), agentState),
   );
-  // Hand the hook to `handleRespond` through the controller's bridge setter
-  // (the actions are built outside the provider, where the room is not
-  // reachable). The setter, not a direct ref write, so the immutability rule
-  // never sees a prop mutation.
-  const { setChatBridge, setRoomConnected } = iv;
-  useEffect(() => {
-    setChatBridge(chat);
-    // The agent in the room speaks every utterance via LiveKit TTS; the
-    // workspace must not narrate the same text client-side (double voice).
-    // Same predicate as the render-phase write above, so the state that drives
-    // the cancel-on-handover and the voice toggle can never disagree with the
-    // ref the gate actually reads.
-    setRoomConnected(agentOwnsTheVoice);
-    return () => {
-      setChatBridge(null);
-      setRoomConnected(false);
-    };
-  }, [setChatBridge, setRoomConnected, agentOwnsTheVoice, chat]);
+  useWorkspaceControllerBridge({ iv, chat, agentOwnsTheVoice });
 
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
@@ -175,6 +160,7 @@ export function InterviewWorkspaceScreen({
         expectedDurationMinutes={config.time_limit_minutes}
         currentQuestion={questioning ? iv.currentQuestionNumber : null}
         totalQuestions={iv.totalQuestions}
+        outcomeProgress={iv.outcomeProgress}
         questionElapsed={questioning ? iv.questionPacing.elapsedSeconds : null}
         questionLingering={iv.questionPacing.lingering}
         connected={iv.connected}

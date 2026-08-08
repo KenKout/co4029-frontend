@@ -32,7 +32,7 @@ export function resolveSetupStage(
 
 export function resolveIsUserTyping(iv: CourseInterviewController): boolean {
   return (
-    !iv.respond.isPending &&
+    !iv.turnPending &&
     !iv.onboarding.isPending &&
     (iv.answerText.trim().length > 0 || iv.dictation.interim.trim().length > 0)
   );
@@ -56,21 +56,15 @@ export function resolveStageStatusMessage(
  * once the answer is no longer the active one (next question / follow-up).
  */
 export function renderSubmissionSlot(iv: CourseInterviewController): ReactNode {
-  const { currentQuestion, recentSubmission, answer } = iv;
-  // Open the transcript (docked panel on desktop, Sheet on mobile) at the full
-  // submitted answer.
-  const openTranscript = () => iv.setTranscriptOpen(true);
+  const { answer } = iv;
   const answerStatus = answer.state;
-  const isCurrentSubmitted =
-    answerStatus.status === "submitted" &&
-    recentSubmission?.questionId === currentQuestion?.id;
 
   return iv.phase !== "questioning" ? null : iv.endConfirming ? (
     <EndConfirmationPanel
       prompt={iv.endConfirmPrompt}
       onContinue={() => void iv.handleEndCancel()}
       onEndAndSubmit={() => void iv.handleEndConfirm()}
-      isPending={iv.respond.isPending}
+      isPending={iv.turnPending}
     />
   ) : answerStatus.status === "submitting" ? (
     // B-Tier-1 #13: unmistakable in-flight state while the answer is sent.
@@ -88,13 +82,6 @@ export function renderSubmissionSlot(iv: CourseInterviewController): ReactNode {
         })
       }
       onContinueEditing={() => answer.setDraft(answerStatus.draft)}
-    />
-  ) : recentSubmission ? (
-    <SubmittedAnswerConfirmation
-      status="submitted"
-      answer={recentSubmission.answer}
-      previous={!isCurrentSubmitted}
-      onViewFullAnswer={openTranscript}
     />
   ) : null;
 }

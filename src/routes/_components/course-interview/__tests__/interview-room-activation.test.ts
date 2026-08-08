@@ -22,7 +22,6 @@ import { describe, expect, it } from "vitest";
 function roomActive(args: {
   sessionId: string | null;
   voiceActive: boolean;
-  flagOn: boolean;
   inputMode: "voice" | "text" | "hybrid";
   onboardingStage: string;
   pendingFirstQuestion: unknown;
@@ -30,8 +29,7 @@ function roomActive(args: {
   return (
     Boolean(args.sessionId) &&
     (args.voiceActive ||
-      (args.flagOn &&
-        args.inputMode === "hybrid" &&
+      (args.inputMode === "hybrid" &&
         args.onboardingStage === "completed" &&
         !args.pendingFirstQuestion))
   );
@@ -39,13 +37,11 @@ function roomActive(args: {
 
 function prefetch(args: {
   sessionId: string | null;
-  flagOn: boolean;
   inputMode: "voice" | "text" | "hybrid";
   onboardingStage: string;
 }): boolean {
   return (
     Boolean(args.sessionId) &&
-    args.flagOn &&
     args.inputMode === "hybrid" &&
     args.onboardingStage === "completed"
   );
@@ -54,7 +50,6 @@ function prefetch(args: {
 const BASE = {
   sessionId: "s-1",
   voiceActive: false,
-  flagOn: true,
   inputMode: "hybrid" as const,
   onboardingStage: "completed",
   pendingFirstQuestion: null as unknown,
@@ -97,13 +92,10 @@ describe("hybrid room activation vs the transition beat", () => {
     expect(prefetch(onboarding)).toBe(false);
   });
 
-  it("stays down with the flag off, and does not prefetch", () => {
-    const flagOff = { ...BASE, flagOn: false };
-    expect(roomActive(flagOff)).toBe(false);
-    expect(prefetch(flagOff)).toBe(false);
-  });
-
   it("stays down for a pure-text session", () => {
+    // A `supported_modes: "text"` config never joins a room, so it has no way to
+    // send a typed turn at all now that REST /respond is gone. Pinned here as the
+    // known gap rather than silently reintroducing a second transport for it.
     const text = { ...BASE, inputMode: "text" as const };
     expect(roomActive(text)).toBe(false);
     expect(prefetch(text)).toBe(false);

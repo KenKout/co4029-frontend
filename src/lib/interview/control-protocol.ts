@@ -67,13 +67,30 @@ export function isValidTurnKey(key: string): boolean {
   return TURN_KEY_RE.test(key);
 }
 
-export type ControlStatus = "accepted" | "completed" | "rejected" | "failed";
+/**
+ * Two channels share this one topic and one `seq`.
+ *
+ * `accepted` / `rejected` / `completed` / `failed` are TURN-scoped and correlate
+ * to a `turn_key`. `snapshot` is SESSION-scoped: `turn_key` is null, no turn owns
+ * it, and it is absolute rather than a delta.
+ *
+ * `completed` and `failed` exist for the legacy routed agent only. The native
+ * agent streams, so a turn has no single instant where one structured result
+ * becomes true — it acks, then reports state changes as snapshots.
+ */
+export type ControlStatus =
+  | "accepted"
+  | "completed"
+  | "rejected"
+  | "failed"
+  | "snapshot";
 
 const CONTROL_STATUSES: readonly ControlStatus[] = [
   "accepted",
   "completed",
   "rejected",
   "failed",
+  "snapshot",
 ];
 
 export type TurnRejection =
@@ -99,6 +116,40 @@ export type TurnRejection =
  */
 export type ControlTurnState = InterviewSubmitAnswerResponse;
 
+/**
+ * The server's whole view of the session, carried by a `snapshot` event.
+ *
+ * Absolute, never a delta: a client replaces its view wholesale, so there is no
+ * field-level merge to get wrong and a dropped snapshot self-heals on the next
+ * one. Mirrors the backend's `StateSnapshot`.
+ */
+export interface StateSnapshot {
+  currentQuestionId: string | null;
+  currentQuestionText: string | null;
+  questionNumber: number;
+  questionsRemaining: number;
+  /**
+   * The size of the session's question pool — the counter's denominator.
+   *
+   * Sent explicitly rather than derived as `questionNumber + questionsRemaining`:
+   * those come from different server-side sources and drifted apart, walking the
+   * header from "1 of 3" to "of 4" mid-interview.
+   */
+  questionsTotal: number;
+  outcomesCovered: number;
+  outcomesRequired: number;
+  isFinished: boolean;
+  /**
+   * Whether the session has a deadline at all.
+   *
+   * Exists because `timeRemainingSeconds === null` is otherwise ambiguous: an
+   * untimed session and a backend that stopped sending the field look identical,
+   * and guessing wrong either invents a deadline or silently kills the timer.
+   */
+  hasTimeLimit: boolean;
+  timeRemainingSeconds: number | null;
+}
+
 export interface ControlEvent {
   status: ControlStatus;
   /** Correlates to the `turn_key` sent on `lk.chat`. Null when none was sent. */
@@ -120,6 +171,8 @@ export interface ControlEvent {
   rejection: TurnRejection | null;
   state: ControlTurnState | null;
   errorClass: string | null;
+  /** Present on `snapshot` only; null on every turn-scoped status. */
+  snapshot: StateSnapshot | null;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -138,6 +191,42 @@ function asNullableString(value: unknown): string | null {
 
 function asNullableBoolean(value: unknown): boolean | null {
   return typeof value === "boolean" ? value : null;
+}
+
+/** A non-negative counter; anything else degrades to 0 rather than NaN. */
+function asCount(value: unknown): number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0
+    ? value
+    : 0;
+}
+
+/**
+ * Parse the `snapshot` payload, field by field, in the same shape as `parseState`.
+ *
+ * `hasTimeLimit` falls back to "a countdown implies a limit" when the boolean is
+ * absent. Defaulting it to false instead would silently disarm the session timer
+ * on any protocol drift, which is the one failure mode the field was added to
+ * make impossible.
+ */
+function parseSnapshot(value: unknown): StateSnapshot | null {
+  const raw = asRecord(value);
+  if (!raw) return null;
+  const timeRemainingSeconds = asNullableNumber(raw.time_remaining_seconds);
+  return {
+    currentQuestionId: asNullableString(raw.current_question_id),
+    currentQuestionText: asNullableString(raw.current_question_text),
+    questionNumber: asCount(raw.question_number),
+    questionsRemaining: asCount(raw.questions_remaining),
+    questionsTotal: asCount(raw.questions_total),
+    outcomesCovered: asCount(raw.outcomes_covered),
+    outcomesRequired: asCount(raw.outcomes_required),
+    isFinished: raw.is_finished === true,
+    hasTimeLimit:
+      typeof raw.has_time_limit === "boolean"
+        ? raw.has_time_limit
+        : timeRemainingSeconds !== null,
+    timeRemainingSeconds,
+  };
 }
 
 const NEXT_QUESTION_TYPES = [
@@ -173,7 +262,8 @@ function parseState(value: unknown): ControlTurnState | null {
             id: nextQuestionRaw.id,
             prompt_text: nextQuestionRaw.prompt_text,
             // Narrowed by the includes() guard above.
-            question_type: rawQuestionType as (typeof NEXT_QUESTION_TYPES)[number],
+            question_type:
+              rawQuestionType as (typeof NEXT_QUESTION_TYPES)[number],
           }
         : null;
 
@@ -243,6 +333,14 @@ export function parseControlEvent(raw: string): ControlEvent | null {
 
   const rejection = asNullableString(payload.rejection) as TurnRejection | null;
 
+  // A snapshot IS its payload, so a snapshot without one carries no information
+  // and is dropped like any other malformed frame. `seq` is not consumed for it,
+  // which is safe: the agent's counter keeps climbing, so the next event still
+  // passes the monotonic guard.
+  const snapshot =
+    status === "snapshot" ? parseSnapshot(payload.snapshot) : null;
+  if (status === "snapshot" && !snapshot) return null;
+
   return {
     status: status as ControlStatus,
     turnKey: asNullableString(payload.turn_key),
@@ -252,20 +350,29 @@ export function parseControlEvent(raw: string): ControlEvent | null {
     rejection,
     state: parseState(payload.state),
     errorClass: asNullableString(payload.error_class),
+    snapshot,
   };
 }
 
-/** A control status that ends a turn — the composer may leave pending. */
-export function isTerminalStatus(status: ControlStatus): boolean {
-  return status !== "accepted";
+/**
+ * Whether this status settles the turn its `turn_key` names.
+ *
+ * Every turn-scoped status does, INCLUDING `accepted`. A streaming agent has no
+ * later instant at which one structured turn result becomes true, so a composer
+ * that waits past the ack waits for a message that never arrives. `snapshot` is
+ * session-scoped and settles nothing.
+ */
+export function settlesTurn(status: ControlStatus): boolean {
+  return status !== "snapshot";
 }
 
 /**
  * Whether the candidate's draft should survive this outcome.
  *
  * `rejected` and `failed` both keep it: a rejected turn was never graded, and a
- * failed one may be retried with the SAME turn_key (`take_session_step` is
- * idempotent on it). Only a completed turn clears the editor.
+ * failed one may be retried with the SAME turn_key (the agent is idempotent on
+ * it). `accepted` clears it — the text reached the agent, which is the only
+ * acknowledgement a streaming turn ever gets.
  */
 export function shouldPreserveDraft(status: ControlStatus): boolean {
   return status === "rejected" || status === "failed";

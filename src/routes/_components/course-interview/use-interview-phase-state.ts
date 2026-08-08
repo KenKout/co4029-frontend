@@ -6,12 +6,15 @@ import { useInterviewPracticeFeedback } from "@/lib/api/hooks/interviews";
 import type {
   InterviewLanguage,
   InterviewOnboardingStage,
-  InterviewQuestionPublic,
   InterviewSessionFinishResponse,
   InterviewSessionMode,
 } from "@/lib/api/types";
 import { getAuthDisplayName } from "@/lib/auth";
-import type { ConversationTurn } from "@/lib/interview/types";
+import type {
+  ConversationTurn,
+  InterviewQuestionView,
+  InterviewSessionProgress,
+} from "@/lib/interview/types";
 import type { InterviewPhase } from "@/lib/interview/turn-factory";
 import type { useInterviewRouteData } from "./use-interview-route-data";
 import type { useInterviewTurnState } from "./use-interview-turn-state";
@@ -82,13 +85,13 @@ export function useInterviewPhaseState(
     i18n.language?.startsWith("vi") ? "vi" : "en",
   );
   const [pendingFirstQuestion, setPendingFirstQuestion] =
-    useState<InterviewQuestionPublic | null>(null);
+    useState<InterviewQuestionView | null>(null);
   // Mid-interview advance: the next question is held here while the standardized
   // transition turn is shown + narrated (Natural Interview Transitions spec).
   // The Question Card is revealed ONLY after the transition finishes presenting
   // (via handleTurnPresented), so the card never appears alongside its transition.
   const [pendingNextQuestion, setPendingNextQuestion] =
-    useState<InterviewQuestionPublic | null>(null);
+    useState<InterviewQuestionView | null>(null);
   // True while the final-question transition is showing before the goodbye
   // (spec §ending: two short turns — final transition, then existing closing).
   const [pendingFinalTransition, setPendingFinalTransition] = useState(false);
@@ -120,8 +123,21 @@ export function useInterviewPhaseState(
   const [assessmentStartedAtMs, setAssessmentStartedAtMs] = useState<
     number | null
   >(null);
-  const sessionDeadlineAtRef = useRef<number | null>(null);
+  // STATE, not a ref: `useInterviewTimeout` schedules a `setTimeout` from this,
+  // and a ref cannot appear in that effect's dependency array — so a mid-session
+  // reconciliation left the old timer running. It only looked correct because a
+  // reconcile used to coincide with a `questioning ⇄ transition` phase flip;
+  // snapshots decouple the two, which turns that into a dead-timer bug.
+  const [sessionDeadlineAt, setSessionDeadlineAt] = useState<number | null>(
+    null,
+  );
   const timeoutTriggeredRef = useRef(false);
+  // The live turn's in-flight flag, mirrored up from `useInterviewChat` by the
+  // workspace screen (the only component inside the room provider). Everything
+  // that used to read `respond.isPending` reads this instead.
+  const [turnPending, setTurnPending] = useState(false);
+  const [sessionProgress, setSessionProgress] =
+    useState<InterviewSessionProgress | null>(null);
 
   return {
     finishResult,
@@ -173,7 +189,12 @@ export function useInterviewPhaseState(
     voiceInitialTranscriptRef,
     assessmentStartedAtMs,
     setAssessmentStartedAtMs,
-    sessionDeadlineAtRef,
+    sessionDeadlineAt,
+    setSessionDeadlineAt,
     timeoutTriggeredRef,
+    turnPending,
+    setTurnPending,
+    sessionProgress,
+    setSessionProgress,
   };
 }

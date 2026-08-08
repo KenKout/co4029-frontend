@@ -1,8 +1,13 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 // Conversation building blocks the stages compose.
-import { UserTypingIndicator } from "@/components/interview/conversation";
+import {
+  AgentThinkingIndicator,
+  UserTypingIndicator,
+} from "@/components/interview/conversation";
 
+import { FocusedStageConversation } from "./stages/FocusedStageConversation";
 import { FocusedStageIntroBadge } from "./stages/FocusedStageIntroBadge";
 import { FocusedStageOnboardingTurn } from "./stages/FocusedStageOnboardingTurn";
 import { FocusedStagePlaceholder } from "./stages/FocusedStagePlaceholder";
@@ -31,6 +36,7 @@ export function InterviewHeader({
   expectedDurationMinutes,
   currentQuestion,
   totalQuestions,
+  outcomeProgress,
   connected = true,
   voiceOn,
   onToggleVoice,
@@ -46,6 +52,7 @@ export function InterviewHeader({
     expectedDurationMinutes,
     currentQuestion,
     totalQuestions,
+    outcomeProgress,
   });
 
   return (
@@ -113,6 +120,7 @@ export function FocusedInterviewStage({
   activeTurnActionsVisible = false,
   replayAvailable = true,
   submissionSlot,
+  liveAgentTurns,
   transcriptDocked = false,
 }: FocusedInterviewStageProps) {
   const { t } = useTranslation();
@@ -121,6 +129,7 @@ export function FocusedInterviewStage({
     replayingTurnId,
     activeTurn,
     assistanceTurn,
+    historyTurns,
     hintUsed,
     replayBlocked,
     replayTurn,
@@ -136,6 +145,8 @@ export function FocusedInterviewStage({
     replaySpeak,
     onSpeakingChange,
     onTurnPresented,
+    liveAgentTurns,
+    agentSpeaks,
     t,
   });
 
@@ -166,51 +177,61 @@ export function FocusedInterviewStage({
           transcript={transcript}
         />
 
-        {activeTurn ? (
-          assessmentActive ? (
-            <FocusedStageQuestionBlock
-              activeTurn={activeTurn}
-              assistanceTurn={assistanceTurn}
-              status={status}
-              currentQuestionNumber={currentQuestionNumber}
-              totalQuestions={totalQuestions}
-              currentQuestionType={currentQuestionType}
-              questionTypeLabel={questionTypeLabel}
-              speak={speak}
-              onSpeakingChange={onSpeakingChange}
-              onClarifyQuestion={onClarifyQuestion}
-              onRequestHint={onRequestHint}
-              onExplainTerm={onExplainTerm}
-              presentedAiTurnIds={presentedAiTurnIds}
-              replayBlocked={replayBlocked}
-              replayingTurnId={replayingTurnId}
-              hintUsed={hintUsed}
-              markPresented={markPresented}
-              replayTurn={replayTurn}
-              agentSpeaks={agentSpeaks}
-              agentTranscriptions={agentTranscriptions}
-            />
+        <PinnedQuestion>
+          {activeTurn ? (
+            assessmentActive ? (
+              <FocusedStageQuestionBlock
+                activeTurn={activeTurn}
+                assistanceTurn={assistanceTurn}
+                status={status}
+                currentQuestionNumber={currentQuestionNumber}
+                totalQuestions={totalQuestions}
+                currentQuestionType={currentQuestionType}
+                questionTypeLabel={questionTypeLabel}
+                speak={speak}
+                onSpeakingChange={onSpeakingChange}
+                onClarifyQuestion={onClarifyQuestion}
+                onRequestHint={onRequestHint}
+                onExplainTerm={onExplainTerm}
+                presentedAiTurnIds={presentedAiTurnIds}
+                replayBlocked={replayBlocked}
+                replayingTurnId={replayingTurnId}
+                hintUsed={hintUsed}
+                markPresented={markPresented}
+                replayTurn={replayTurn}
+                agentSpeaks={agentSpeaks}
+                agentTranscriptions={agentTranscriptions}
+              />
+            ) : (
+              <FocusedStageOnboardingTurn
+                activeTurn={activeTurn}
+                questionTypeLabel={questionTypeLabel}
+                speak={speak}
+                onSpeakingChange={onSpeakingChange}
+                activeTurnActions={activeTurnActions}
+                activeTurnActionsVisible={activeTurnActionsVisible}
+                presentedAiTurnIds={presentedAiTurnIds}
+                replayAvailable={replayAvailable}
+                replayBlocked={replayBlocked}
+                replayingTurnId={replayingTurnId}
+                markPresented={markPresented}
+                replayTurn={replayTurn}
+              />
+            )
           ) : (
-            <FocusedStageOnboardingTurn
-              activeTurn={activeTurn}
-              questionTypeLabel={questionTypeLabel}
-              speak={speak}
-              onSpeakingChange={onSpeakingChange}
-              activeTurnActions={activeTurnActions}
-              activeTurnActionsVisible={activeTurnActionsVisible}
-              presentedAiTurnIds={presentedAiTurnIds}
-              replayAvailable={replayAvailable}
-              replayBlocked={replayBlocked}
-              replayingTurnId={replayingTurnId}
-              markPresented={markPresented}
-              replayTurn={replayTurn}
-            />
-          )
-        ) : (
-          <FocusedStagePlaceholder />
-        )}
+            <FocusedStagePlaceholder />
+          )}
+        </PinnedQuestion>
+
+        <FocusedStageConversation
+          turns={historyTurns}
+          speak={speak}
+          onSpeakingChange={onSpeakingChange}
+        />
 
         {submissionSlot}
+
+        <AgentThinkingIndicator visible={status === "thinking"} />
 
         <FocusedStageStatusBar
           status={status}
@@ -232,5 +253,19 @@ export function FocusedInterviewStage({
         <UserTypingIndicator visible={isUserTyping} />
       </div>
     </main>
+  );
+}
+
+/**
+ * Keeps the current question in view while the conversation beneath it scrolls.
+ *
+ * `z-10` so it stays under `ContentTopBar` (z-20) per AGENTS.md, and the negative
+ * margins let its background span the full column width when stuck.
+ */
+function PinnedQuestion({ children }: { children: ReactNode }) {
+  return (
+    <div className="sticky top-0 z-10 -mx-4 bg-surface px-4 pt-1 pb-3 sm:-mx-8 sm:px-8">
+      {children}
+    </div>
   );
 }

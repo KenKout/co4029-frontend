@@ -1,7 +1,9 @@
 import { useState } from "react";
 
-import type { InterviewQuestionPublic } from "@/lib/api/types";
-import type { ConversationTurn } from "@/lib/interview/types";
+import type {
+  ConversationTurn,
+  InterviewQuestionView,
+} from "@/lib/interview/types";
 import { useAnswerState } from "@/lib/interview/use-answer-state";
 
 /**
@@ -12,7 +14,7 @@ import { useAnswerState } from "@/lib/interview/use-answer-state";
 export function useInterviewTurnState() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] =
-    useState<InterviewQuestionPublic | null>(null);
+    useState<InterviewQuestionView | null>(null);
   const [transcript, setTranscript] = useState<ConversationTurn[]>([]);
   const [answerText, setAnswerText] = useState("");
   // Structured submission status for the CURRENT question's answer (spec §7):

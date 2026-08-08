@@ -6,6 +6,7 @@ import type {
   InterviewLanguage,
   InterviewOnboardingAction,
 } from "@/lib/api/types";
+import type { StateSnapshot } from "@/lib/interview/control-protocol";
 import {
   makeCeremonyTurn,
   type FinishReason,
@@ -20,6 +21,7 @@ import {
   handleEndConfirm,
 } from "./interview-assistance-actions";
 import { handleOnboarding } from "./interview-onboarding-actions";
+import { applyStateSnapshot } from "./interview-snapshot-actions";
 import {
   handleRetry,
   handleStart,
@@ -139,9 +141,8 @@ export function useInterviewActions(base: InterviewBase) {
 
   /**
    * LiveKit chat capability for typed turns, mounted by the workspace screen
-   * (inside the room provider). `handleRespond` reads `chatBridge.current` at
-   * call time to pick the transport; when it is null or the flag is off, the
-   * REST path runs exactly as before.
+   * (inside the room provider). Every turn handler reads `chatBridge.current` at
+   * call time; a null bridge means the room is not up and no turn can be sent.
    */
   const chatBridge = useRef<UseInterviewChatResult | null>(null);
 
@@ -166,6 +167,17 @@ export function useInterviewActions(base: InterviewBase) {
     currentElapsedSeconds,
     beginClosing,
   });
+
+  /**
+   * Apply a server snapshot. Stable identity so the chat hook's stored callback
+   * never churns, and it reads `ctx` — which is rebuilt every render — so it
+   * always sees current state rather than the state at subscription time.
+   */
+  const ctxRef = useRef(ctx);
+  ctxRef.current = ctx;
+  const handleStateSnapshot = useCallback((snapshot: StateSnapshot) => {
+    applyStateSnapshot(ctxRef.current, snapshot);
+  }, []);
 
   useInterviewTimeout(base, beginClosing);
 
@@ -192,6 +204,7 @@ export function useInterviewActions(base: InterviewBase) {
     chatBridge,
     setChatBridge,
     handleTurnPresented,
+    handleStateSnapshot,
     handleStart: startInterview,
     handleRetry: () => handleRetry(ctx),
     handleOnboarding: (

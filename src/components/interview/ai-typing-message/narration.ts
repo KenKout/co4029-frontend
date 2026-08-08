@@ -18,7 +18,18 @@ export type PresentationPhase = "preparing" | "typing" | "complete";
 
 export type LegacyNarration = void | Promise<void>;
 
-export type Speak = (text: string) => LegacyNarration | NarrationPresentation;
+/**
+ * `agentVoiced: false` marks text the LiveKit agent will NOT say — the
+ * client-authored ceremony lines (the post-onboarding transition, briefings).
+ * The narrator must then neither speak it nor pace it to the agent's audio, or
+ * the line sits in silence being timed against a DIFFERENT utterance.
+ */
+export type SpeakOptions = { agentVoiced?: boolean };
+
+export type Speak = (
+  text: string,
+  options?: SpeakOptions,
+) => LegacyNarration | NarrationPresentation;
 
 export function prefersReducedMotion(): boolean {
   return (

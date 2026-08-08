@@ -17,24 +17,34 @@ export function ChecklistRow({
   value?: string;
   children?: React.ReactNode;
 }) {
+  // A step the candidate has not reached is not rendered at all: setup reveals one
+  // step at a time, so finishing a step hides its controls and the next appears.
+  // Faded placeholder rows made the modal look like three simultaneous demands.
+  if (state === "upcoming") return null;
+
   return (
     <li
       className={cn(
-        "flex items-start gap-3 rounded-xl border px-4 py-3 transition-colors",
+        // Centre the icon against a single-line row; only anchor it to the top
+        // when the row expands (the identity row's name field), where centring
+        // would float it beside the input instead of its label.
+        "flex gap-3 rounded-xl border px-4 py-3 transition-colors",
+        // Announce the newly revealed step rather than letting it pop in.
+        state === "active" &&
+          "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 motion-safe:ease-out",
+        children ? "items-start" : "items-center",
         state === "done" && "border-success/30 bg-success/5",
         state === "active" &&
           "border-primary/40 bg-primary-soft/40 shadow-editorial",
-        state === "upcoming" && "border-border bg-surface-muted/40 opacity-70",
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
-          "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full border",
+          "inline-flex size-8 shrink-0 items-center justify-center rounded-full border",
+          children && "mt-0.5",
           state === "done" && "border-success bg-success text-white",
           state === "active" && "border-primary/30 bg-white text-primary",
-          state === "upcoming" &&
-            "border-border-strong bg-white text-text-subtle",
         )}
       >
         {state === "done" ? (

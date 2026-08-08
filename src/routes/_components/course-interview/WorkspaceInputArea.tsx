@@ -15,19 +15,19 @@ export function WorkspaceInputArea({
   chatPending = false,
 }: {
   iv: CourseInterviewController;
-  /** In-flight flag of the LiveKit text transport, when that transport is live. */
+  /** In-flight flag of the LiveKit turn transport, read directly from the hook. */
   chatPending?: boolean;
 }) {
   const { t } = useTranslation();
   const { dictation } = iv;
   const questioning = iv.phase === "questioning";
-  const sending = iv.respond.isPending || iv.onboarding.isPending;
+  const sending = chatPending || iv.onboarding.isPending;
   // Wider than `sending` on purpose — see isComposerLocked. Keeps the composer
   // shut through the beat between "turn accepted" and "AI has replied", which is
   // when a second answer used to reach a handler that silently discarded it.
   const submitLocked = isComposerLocked({
     answerStatus: iv.answer.state.status,
-    requestPending: sending || chatPending,
+    requestPending: sending,
     agentStatus: iv.agentStatus,
   });
 
@@ -43,7 +43,7 @@ export function WorkspaceInputArea({
               type="button"
               variant="outline"
               size="sm"
-              disabled={iv.respond.isPending}
+              disabled={iv.turnPending}
               onClick={() => void iv.beginClosing("natural")}
               className="gap-1.5 bg-white"
             >

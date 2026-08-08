@@ -27,7 +27,7 @@ export function useInterviewDrafts(
     phase,
     pollingCompletion,
     setConnected,
-    sessionDeadlineAtRef,
+    setSessionDeadlineAt,
     timeoutTriggeredRef,
   } = phaseState;
 
@@ -97,16 +97,33 @@ export function useInterviewDrafts(
     withResolver: true,
   });
 
-  // Server-authoritative timer reconciliation (resilience A-Tier-1 #4): the
-  // backend returns the true whole-second countdown on each turn. Re-anchor the
-  // locally computed deadline to the server clock so client clock skew or a
-  // throttled background tab can't drift the timeout. Ignored when the session
-  // has no time limit (server returns null) or the value is non-finite.
-  const reconcileDeadline = useCallback((remainingSeconds?: number | null) => {
-    if (remainingSeconds == null || !Number.isFinite(remainingSeconds)) return;
-    sessionDeadlineAtRef.current = Date.now() + remainingSeconds * 1000;
-    timeoutTriggeredRef.current = false;
-  }, []);
+  // Server-authoritative timer reconciliation (resilience A-Tier-1 #4): re-anchor
+  // the locally computed deadline to the server clock so client clock skew or a
+  // throttled background tab can't drift the timeout.
+  //
+  // `hasTimeLimit` is taken, not inferred. A null countdown alone cannot
+  // distinguish an untimed session from a backend that stopped sending the
+  // field, and the two demand opposite actions: clear the deadline, or leave the
+  // last known one armed.
+  const reconcileDeadline = useCallback(
+    (args: { hasTimeLimit: boolean; timeRemainingSeconds: number | null }) => {
+      const { hasTimeLimit, timeRemainingSeconds } = args;
+      if (!hasTimeLimit) {
+        setSessionDeadlineAt(null);
+        timeoutTriggeredRef.current = false;
+        return;
+      }
+      if (
+        timeRemainingSeconds == null ||
+        !Number.isFinite(timeRemainingSeconds)
+      ) {
+        return;
+      }
+      setSessionDeadlineAt(Date.now() + timeRemainingSeconds * 1000);
+      timeoutTriggeredRef.current = false;
+    },
+    [setSessionDeadlineAt],
+  );
 
   return {
     restoreDraftAutosave,

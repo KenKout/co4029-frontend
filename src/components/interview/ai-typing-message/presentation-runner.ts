@@ -24,6 +24,8 @@ export type PresentationRunOptions = {
   shouldType: boolean;
   text: string;
   speak: Speak;
+  /** False for client-authored ceremony text the agent never voices. */
+  agentVoiced?: boolean;
   callbacks: () => PresentationCallbacks;
   setShown: (value: string) => void;
   setPhase: (value: PresentationPhase) => void;
@@ -57,9 +59,13 @@ function createTimerPool(): TimerPool {
   };
 }
 
-function startNarration(speak: Speak, text: string): NarrationPresentation {
+function startNarration(
+  speak: Speak,
+  text: string,
+  agentVoiced: boolean,
+): NarrationPresentation {
   try {
-    return normalizePresentation(speak(text));
+    return normalizePresentation(speak(text, { agentVoiced }));
   } catch {
     return {
       started: Promise.resolve(),
@@ -249,7 +255,11 @@ export function runPresentation(options: PresentationRunOptions): () => void {
 
   void runTurn({
     options,
-    presentation: startNarration(options.speak, options.text),
+    presentation: startNarration(
+      options.speak,
+      options.text,
+      options.agentVoiced ?? true,
+    ),
     wait: pool.wait,
     isCancelled: () => cancelled,
   });

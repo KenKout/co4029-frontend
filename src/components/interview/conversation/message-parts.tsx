@@ -175,6 +175,22 @@ export function UserMessageHeader({
   );
 }
 
+/**
+ * Whether the LiveKit agent actually says this turn out loud.
+ *
+ * The ceremony beats are authored on the client and never reach the agent, so it
+ * has no audio for them. Pacing them to whatever the agent IS saying — question
+ * one, which it starts the moment it joins — makes the line crawl in silence
+ * while a different utterance plays underneath it.
+ */
+function agentVoicesTurn(turn: ConversationTurn): boolean {
+  return (
+    turn.kind !== "transition" &&
+    turn.kind !== "briefing" &&
+    turn.kind !== "opening"
+  );
+}
+
 export function AiMessageBody({
   turn,
   isLatest,
@@ -197,6 +213,7 @@ export function AiMessageBody({
       text={turn.text}
       animate={isLatest}
       speak={speak}
+      agentVoiced={agentVoicesTurn(turn)}
       onTick={onTick}
       onTypingChange={onSpeakingChange}
       onTextComplete={onTextComplete}

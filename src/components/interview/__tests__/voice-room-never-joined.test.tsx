@@ -10,6 +10,7 @@ import { AGENT_JOIN_DEADLINE_MS } from "@/routes/_components/course-interview/ag
 // not about LiveKit itself.
 
 let mockAgent: object | undefined = undefined;
+let mockCanPlayAudio = true;
 
 vi.mock("@livekit/components-react", () => ({
   useConnectionState: () => "connected",
@@ -23,6 +24,10 @@ vi.mock("@livekit/components-react", () => ({
     enabled: false,
     pending: false,
     toggle: vi.fn(),
+  }),
+  useStartAudio: () => ({
+    mergedProps: { onClick: vi.fn() },
+    canPlayAudio: mockCanPlayAudio,
   }),
 }));
 
@@ -50,6 +55,7 @@ describe("VoiceRoom agent never joins", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     mockAgent = undefined;
+    mockCanPlayAudio = true;
   });
 
   afterEach(() => {
@@ -88,5 +94,27 @@ describe("VoiceRoom agent never joins", () => {
     });
 
     expect(onAgentNeverJoined).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the enable-audio button while playback is blocked and hides it once allowed", () => {
+    const { queryByRole, rerender } = render(
+      <VoiceRoom onCompleted={vi.fn()} onAgentNeverJoined={vi.fn()} />,
+    );
+    mockCanPlayAudio = false;
+    rerender(<VoiceRoom onCompleted={vi.fn()} onAgentNeverJoined={vi.fn()} />);
+    // The setup flips i18n to vi asynchronously, so match either locale.
+    expect(
+      queryByRole("button", {
+        name: /Enable interviewer audio|Bật tiếng người phỏng vấn/,
+      }),
+    ).not.toBeNull();
+
+    mockCanPlayAudio = true;
+    rerender(<VoiceRoom onCompleted={vi.fn()} onAgentNeverJoined={vi.fn()} />);
+    expect(
+      queryByRole("button", {
+        name: /Enable interviewer audio|Bật tiếng người phỏng vấn/,
+      }),
+    ).toBeNull();
   });
 });

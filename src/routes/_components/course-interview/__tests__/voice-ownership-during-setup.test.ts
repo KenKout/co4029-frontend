@@ -80,18 +80,19 @@ describe("client keeps the voice through setup", () => {
 
 describe("the post-onboarding transition beat", () => {
   /**
-   * The line "Great—the introduction is complete. Let's begin. Here is your
-   * first question." exists ONLY client-side — the agent never receives it, so
-   * only client narration can voice it.
+   * The one beat where two voices can collide.
    *
-   * `roomActive` holds the room back for this one beat via
-   * `!pendingFirstQuestion`. Warm-room defeated that guard: `connect` became
-   * `active || warm`, so the room is already UP from warming and the hold delays
-   * nothing. The instant onboarding completed, the client was muted for a line
-   * the agent does not have — reported as the transition line and question one
-   * both being silent.
+   * The transition line ("…Here is your first question.") is client-only text the
+   * agent never receives, which argues for letting the client narrate it. But the
+   * native agent speaks question one the instant it joins, and warm-room makes
+   * that immediate — so narrating here means the browser voice reads the ceremony
+   * line OVER the agent's voice asking the question. Heard as an interviewer
+   * talking "super fast".
+   *
+   * The agent therefore owns the voice through this beat too. The line is typed,
+   * not spoken.
    */
-  it("keeps the client voice while the first question is pending", () => {
+  it("hands over even while the first question is pending, so only one voice speaks", () => {
     expect(
       agentOwnsTheVoice({
         onboardingStage: "completed",
@@ -100,7 +101,7 @@ describe("the post-onboarding transition beat", () => {
         chatConnected: true,
         pendingFirstQuestion: true,
       }),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("hands over once the transition has been presented", () => {

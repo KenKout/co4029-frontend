@@ -8,7 +8,11 @@ import type {
   ChatTurnOutcome,
   UseInterviewChatResult,
 } from "../use-interview-chat";
-import { TOPIC_CHAT, TOPIC_CONTROL } from "@/lib/interview/control-protocol";
+import {
+  TOPIC_CHAT,
+  TOPIC_CONTROL,
+  type StateSnapshot,
+} from "@/lib/interview/control-protocol";
 
 /**
  * A stand-in for `Room` that mirrors the REAL API surface this hook touches.
@@ -156,17 +160,11 @@ function control(over: Record<string, unknown> = {}) {
 }
 
 /**
- * Start a turn inside `act` so the synchronous `setPending(true)` — and the
- * microtask in which `sendText` resolves — are both applied before the test
- * asserts. Without this React warns, and `pending` reads as its pre-update
- * value, which would make the pending-gate assertions vacuous.
- */
-/**
  * Start a turn inside a SYNCHRONOUS act().
  *
- * `sendTurn` returns a promise that deliberately stays pending until a terminal
- * control event arrives, so `await act(async () => ...)` never settles and every
- * test using it times out. Sync act is the right tool: it flushes the
+ * `sendTurn` returns a promise that deliberately stays pending until the agent's
+ * ack arrives, so `await act(async () => ...)` never settles and every test using
+ * it times out. Sync act is the right tool: it flushes the
  * `setPending(true)` state update that happens synchronously on send, which is
  * all React needs to stop warning, and leaves the returned promise alone for the
  * test to resolve on its own terms.
@@ -247,9 +245,10 @@ describe("useInterviewChat — sending", () => {
 });
 
 describe("useInterviewChat — pending is driven by control, not by send", () => {
-  it("stays pending after sendText resolves, until a terminal event", async () => {
+  it("stays pending after sendText resolves, until the agent acks", async () => {
     // This is the requirement that separates this hook from a plain mutation:
-    // bytes leaving the browser says nothing about whether the turn was graded.
+    // bytes leaving the browser says nothing about whether the agent took the
+    // turn — only the control topic does.
     const fake = makeFakeRoom();
     const { result } = renderHook(() => useInterviewChat(fake.room));
 
@@ -258,37 +257,90 @@ describe("useInterviewChat — pending is driven by control, not by send", () =>
     // sendText has already resolved by now.
     await waitFor(() => expect(result.current.pending).toBe(true));
 
-    await fake.emitControl(control());
+    await fake.emitControl(control({ status: "accepted", state: null }));
     await promise;
     await waitFor(() => expect(result.current.pending).toBe(false));
   });
 
-  it("does NOT settle the turn on `accepted`", async () => {
-    // `accepted` means the agent took the turn, not that the brain finished.
+  it("settles the turn on `accepted`", async () => {
+    // The load-bearing case of this whole migration. A streaming agent acks and
+    // then never publishes a per-turn result, so waiting past the ack waits for
+    // a message that never comes — the composer spun for 60s and then reported a
+    // send failure for an answer the agent had already answered.
+    const fake = makeFakeRoom();
+    const { result } = renderHook(() => useInterviewChat(fake.room));
+
+    const promise = startTurn(result, TURN);
+    await waitFor(() => expect(fake.sendText).toHaveBeenCalled());
+
+    await fake.emitControl(control({ status: "accepted", state: null }));
+
+    const outcome = await promise;
+    expect(outcome.event.status).toBe("accepted");
+    expect(outcome.preserveDraft).toBe(false);
+  });
+
+  it("never resolves an unacked turn on its own", async () => {
+    // There is deliberately NO timeout: a slow LLM turn must not synthesise a
+    // phantom failure for a turn that is still being worked on. Only a refusal or
+    // a room drop can end this wait.
+    vi.useFakeTimers();
     const fake = makeFakeRoom();
     const { result } = renderHook(() => useInterviewChat(fake.room));
 
     let settled = false;
-    const started = startTurn(result, TURN);
-    const promise = started.then((outcome) => {
+    const promise = startTurn(result, TURN).then((outcome) => {
       settled = true;
       return outcome;
     });
-    await waitFor(() => expect(fake.sendText).toHaveBeenCalled());
-
-    await fake.emitControl(control({ status: "accepted", seq: 1, state: null }));
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
     expect(settled).toBe(false);
     expect(result.current.pending).toBe(true);
 
-    await fake.emitControl(control({ status: "completed", seq: 2 }));
-    const outcome = await promise;
+    vi.useRealTimers();
+    await fake.emitControl(control({ status: "accepted", state: null }));
+    await promise;
     expect(settled).toBe(true);
-    expect(outcome.event.status).toBe("completed");
+  });
+
+  it("ignores a routed `completed` that trails an already-settled turn", async () => {
+    // The legacy routed agent still emits `completed` after its ack. That arrives
+    // for a turn this hook has already handed back, so it must not resurrect a
+    // waiter or throw — it is just the newest event.
+    const fake = makeFakeRoom();
+    const { result } = renderHook(() => useInterviewChat(fake.room));
+
+    const promise = startTurn(result, TURN);
+    await waitFor(() => expect(fake.sendText).toHaveBeenCalled());
+    await fake.emitControl(control({ status: "accepted", seq: 1, state: null }));
+    const outcome = await promise;
+    expect(outcome.event.status).toBe("accepted");
+
+    await fake.emitControl(control({ status: "completed", seq: 2 }));
+    expect(result.current.lastEvent?.status).toBe("completed");
+    await waitFor(() => expect(result.current.pending).toBe(false));
   });
 });
 
 describe("useInterviewChat — outcomes and the draft", () => {
-  it("clears the draft only on completed", async () => {
+  it("clears the draft on an ack, with no state to render from", async () => {
+    // The native agent's ack carries no `state` at all. Clearing the editor is
+    // driven by "the agent has your text", which is all it will ever say.
+    const fake = makeFakeRoom();
+    const { result } = renderHook(() => useInterviewChat(fake.room));
+
+    const promise = startTurn(result, TURN);
+    await waitFor(() => expect(fake.sendText).toHaveBeenCalled());
+    await fake.emitControl(
+      control({ status: "accepted", state: null, state_version: undefined }),
+    );
+
+    const outcome = await promise;
+    expect(outcome.preserveDraft).toBe(false);
+    expect(outcome.event.state).toBeNull();
+  });
+
+  it("still parses a routed completed payload verbatim", async () => {
     const fake = makeFakeRoom();
     const { result } = renderHook(() => useInterviewChat(fake.room));
 
@@ -429,11 +481,122 @@ describe("useInterviewChat — ordering and reconnect", () => {
   });
 });
 
+/** A well-formed session snapshot, as the backend's StateSnapshot.to_dict emits. */
+function snapshotEvent(
+  over: Record<string, unknown> = {},
+  payload: Record<string, unknown> = {},
+) {
+  return {
+    status: "snapshot",
+    turn_key: null,
+    seq: 1,
+    turn_action: "answer",
+    snapshot: {
+      current_question_id: "44444444-4444-4444-4444-444444444444",
+      current_question_text: "What does a covering index buy you?",
+      question_number: 2,
+      questions_remaining: 2,
+      outcomes_covered: 1,
+      outcomes_required: 3,
+      is_finished: false,
+      has_time_limit: true,
+      time_remaining_seconds: 300,
+      ...payload,
+    },
+    ...over,
+  };
+}
+
+describe("useInterviewChat — session snapshots", () => {
+  it("surfaces a snapshot on state and to onSnapshot, in arrival order", async () => {
+    // One handler, two channels: registration is per-topic and the SDK throws on
+    // a duplicate, so the snapshot feed has to be a fan-out from the same reader
+    // the turn acks come through.
+    const fake = makeFakeRoom();
+    const seen: StateSnapshot[] = [];
+    const { result } = renderHook(() =>
+      useInterviewChat(fake.room, { onSnapshot: (s) => seen.push(s) }),
+    );
+
+    await fake.emitControl(snapshotEvent({ seq: 1 }));
+    await fake.emitControl(
+      snapshotEvent({ seq: 2 }, { question_number: 3, questions_remaining: 1 }),
+    );
+
+    expect(seen.map((s) => s.questionNumber)).toEqual([2, 3]);
+    expect(result.current.snapshot?.questionNumber).toBe(3);
+    expect(result.current.snapshot?.currentQuestionText).toBe(
+      "What does a covering index buy you?",
+    );
+  });
+
+  it("drops an out-of-order snapshot rather than rolling state backwards", async () => {
+    // Both channels share one `seq`, and a reconnect can replay. Applying an older
+    // snapshot would put the UI back on a question the interview has left.
+    const fake = makeFakeRoom();
+    const seen: StateSnapshot[] = [];
+    const { result } = renderHook(() =>
+      useInterviewChat(fake.room, { onSnapshot: (s) => seen.push(s) }),
+    );
+
+    await fake.emitControl(snapshotEvent({ seq: 5 }, { question_number: 4 }));
+    await fake.emitControl(snapshotEvent({ seq: 2 }, { question_number: 1 }));
+
+    expect(seen).toHaveLength(1);
+    expect(result.current.snapshot?.questionNumber).toBe(4);
+  });
+
+  it("does not settle a pending turn", async () => {
+    // Its turn_key is null: no turn owns it, so a snapshot arriving mid-turn must
+    // leave the composer waiting for its ack.
+    const fake = makeFakeRoom();
+    const { result } = renderHook(() => useInterviewChat(fake.room));
+
+    let settled = false;
+    const promise = startTurn(result, TURN).then((outcome) => {
+      settled = true;
+      return outcome;
+    });
+    await waitFor(() => expect(fake.sendText).toHaveBeenCalled());
+
+    await fake.emitControl(snapshotEvent({ seq: 1 }));
+    expect(settled).toBe(false);
+    expect(result.current.pending).toBe(true);
+
+    await fake.emitControl(
+      control({ status: "accepted", seq: 2, state: null }),
+    );
+    await promise;
+    expect(settled).toBe(true);
+  });
+
+  it("shares the seq counter with turn acks", async () => {
+    // A single counter for the whole topic. A turn ack at seq 4 must make a
+    // snapshot at seq 3 stale, not just other snapshots.
+    const fake = makeFakeRoom();
+    const seen: StateSnapshot[] = [];
+    const { result } = renderHook(() =>
+      useInterviewChat(fake.room, { onSnapshot: (s) => seen.push(s) }),
+    );
+
+    const promise = startTurn(result, TURN);
+    await waitFor(() => expect(fake.sendText).toHaveBeenCalled());
+    await fake.emitControl(control({ status: "accepted", seq: 4, state: null }));
+    await promise;
+
+    await fake.emitControl(snapshotEvent({ seq: 3 }));
+    expect(seen).toHaveLength(0);
+
+    await fake.emitControl(snapshotEvent({ seq: 5 }));
+    expect(seen).toHaveLength(1);
+  });
+});
+
 describe("useInterviewChat — connected tracks every room state", () => {
   /**
-   * `connected` is what `resolveTextTransport` reads to decide LiveKit vs REST,
-   * so a state this hook fails to notice routes typed turns onto a channel that
-   * is not carrying them.
+   * `connected` is the only signal that the one transport is usable, so a state
+   * this hook fails to notice leaves the composer writing typed turns onto a
+   * channel that is not carrying them.
    */
   it.each([
     ConnectionState.Disconnected,

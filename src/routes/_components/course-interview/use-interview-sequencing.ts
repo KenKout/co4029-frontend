@@ -117,13 +117,17 @@ export function useInterviewTimeout(
   const {
     sessionId,
     phase,
-    sessionDeadlineAtRef,
+    sessionDeadlineAt,
     timeoutTriggeredRef,
     setVoiceActive,
   } = base;
 
+  // `sessionDeadlineAt` is in the deps, which is the whole point: a snapshot can
+  // reconcile the deadline without any phase change, and the pending timer must
+  // be torn down and rescheduled against the new value. Before this it only
+  // rescheduled on the next `questioning ⇄ transition` flip.
   useEffect(() => {
-    const deadline = sessionDeadlineAtRef.current;
+    const deadline = sessionDeadlineAt;
     if (
       !sessionId ||
       deadline === null ||
@@ -146,5 +150,5 @@ export function useInterviewTimeout(
     }
     const timer = window.setTimeout(trigger, remaining);
     return () => window.clearTimeout(timer);
-  }, [beginClosing, phase, sessionId]);
+  }, [beginClosing, phase, sessionId, sessionDeadlineAt]);
 }

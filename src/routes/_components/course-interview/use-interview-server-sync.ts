@@ -4,7 +4,6 @@ import {
   useFinishInterview,
   useGapReport,
   useInterviewOnboarding,
-  useInterviewRespond,
   useInterviewSession,
 } from "@/lib/api/hooks/interviews";
 import { resolveFinishFlags, resolveVerdictState } from "./interview-verdict";
@@ -35,7 +34,8 @@ export function useInterviewServerSync(
     setPollingCompletion,
   } = phaseState;
 
-  const respond = useInterviewRespond(sessionId);
+  // No `useInterviewRespond` here. Typed turns go over `lk.chat`; onboarding is
+  // the only REST turn surface left, and it has its own endpoint.
   const onboarding = useInterviewOnboarding(sessionId);
   const finish = useFinishInterview(sessionId);
   // Poll-gating rationale for both queries below lives in interview-verdict.ts.
@@ -155,7 +155,6 @@ export function useInterviewServerSync(
   }, [pollingCompletion, sessionStatus]);
 
   return {
-    respond,
     onboarding,
     finish,
     evaluationUnavailable,

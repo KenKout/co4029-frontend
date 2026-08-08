@@ -32,7 +32,7 @@ function abandonStartWithoutQuestion(ctx: InterviewActionsContext) {
   ctx.setTranscript([]);
   ctx.sessionStartedAtRef.current = null;
   ctx.setAssessmentStartedAtMs(null);
-  ctx.sessionDeadlineAtRef.current = null;
+  ctx.setSessionDeadlineAt(null);
   ctx.setPhase("prestart");
 }
 
@@ -51,10 +51,11 @@ function beginQuestioning(
     : Date.now();
   ctx.sessionStartedAtRef.current = assessmentStart;
   ctx.setAssessmentStartedAtMs(assessmentStart);
-  ctx.sessionDeadlineAtRef.current =
+  ctx.setSessionDeadlineAt(
     payload.time_remaining_seconds == null
       ? null
-      : Date.now() + payload.time_remaining_seconds * 1000;
+      : Date.now() + payload.time_remaining_seconds * 1000,
+  );
   ctx.setPhase("questioning");
   ctx.setCurrentQuestion(firstQuestion);
   ctx.setTranscript(
@@ -78,7 +79,7 @@ function beginOnboarding(
   const { payload, restoredTranscript, stage } = args;
   ctx.sessionStartedAtRef.current = null;
   ctx.setAssessmentStartedAtMs(null);
-  ctx.sessionDeadlineAtRef.current = null;
+  ctx.setSessionDeadlineAt(null);
   ctx.setCurrentQuestion(null);
   ctx.setPhase(stage === "readiness" ? "readiness" : "opening");
   ctx.setTranscript(
@@ -249,7 +250,7 @@ export async function handleRetry(ctx: InterviewActionsContext) {
   ctx.setPhase("prestart");
   ctx.sessionStartedAtRef.current = null;
   ctx.setAssessmentStartedAtMs(null);
-  ctx.sessionDeadlineAtRef.current = null;
+  ctx.setSessionDeadlineAt(null);
   ctx.timeoutTriggeredRef.current = false;
   try {
     // Explicitly graded. "Retry" on the results screen means another real

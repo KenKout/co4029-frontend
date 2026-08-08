@@ -1,50 +1,57 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { handleRespond } from "@/routes/_components/course-interview/interview-answer-actions";
 import type { InterviewActionsContext } from "@/routes/_components/course-interview/types";
 
 /**
- * The typed-answer transport branch of `handleRespond`.
+ * The typed-answer lifecycle of `handleRespond`.
  *
- * With the flag off, a submitted answer MUST go over REST `/respond` — that is
- * the production path today, and this feature must not disturb it. With the
- * flag on and a connected hybrid room, the same answer must go over `lk.chat`
- * (the hook's `sendTurn`), and the control event's `state` — which is the full
- * `InterviewSubmitAnswerResponse` — must drive the SAME `applyRespondResult`
- * lifecycle the REST path uses.
+ * There is ONE transport. A submitted answer goes over `lk.chat` (the hook's
+ * `sendTurn`) and is settled by the agent's ack on the control topic. The ack
+ * carries no state — everything the UI derives from an answer (next question,
+ * countdown, finished) arrives later as a session snapshot — so this suite pins
+ * what the ack itself must do: commit the turn exactly once, clear the composer,
+ * and never call the REST `/respond` mutation, which no longer exists on this
+ * path.
  *
- * The three failure modes the control stream can report (rejected / failed /
- * timed out) must keep the draft and NOT advance, exactly like a REST error.
+ * The two refusal modes (rejected / failed) must keep the draft and NOT advance.
  */
 
 const QUESTION = { id: "11111111-1111-1111-1111-111111111111" };
 
-/** A completed control event carrying a minimal but valid response body. */
-function completedOutcome(overrides: Record<string, unknown> = {}) {
+/** The agent's ack: received and being worked on, with no structured result. */
+function acceptedOutcome() {
   return {
     event: {
-      status: "completed",
+      status: "accepted",
       turnKey: "tk-1",
       seq: 3,
       turnAction: "answer",
-      stateVersion: 4,
+      stateVersion: null,
       rejection: null,
       errorClass: null,
-      state: {
-        is_finished: false,
-        next_question: null,
-        ai_followup_text: null,
-        ai_turn_text: null,
-        transition_text: null,
-        transition_target: null,
-        time_remaining_seconds: 540,
-        should_finish: false,
-        should_await_response: false,
-        interaction_state: "answering",
-        ...overrides,
-      },
+      state: null,
+      snapshot: null,
     },
     preserveDraft: false,
+  };
+}
+
+function refusedOutcome(over: Record<string, unknown> = {}) {
+  return {
+    event: {
+      status: "rejected",
+      turnKey: "tk-1",
+      seq: 2,
+      turnAction: "answer",
+      stateVersion: null,
+      rejection: "turn_in_flight",
+      errorClass: null,
+      state: null,
+      snapshot: null,
+      ...over,
+    },
+    preserveDraft: true,
   };
 }
 
@@ -56,7 +63,6 @@ function makeCtx(overrides: Record<string, unknown> = {}) {
     inputMode: "hybrid",
     onboardingStage: "completed",
     answer: { state: { status: "idle" } },
-    respond: { isPending: false, mutateAsync: vi.fn() },
     dictation: { listening: false, stop: vi.fn() },
     answerText: "my answer",
     t: (key: string) => key,
@@ -67,13 +73,12 @@ function makeCtx(overrides: Record<string, unknown> = {}) {
     submitSucceeded: vi.fn(),
     clearDraftAutosave: vi.fn(),
     setRecentSubmission: vi.fn(),
+    reopenForFollowUp: vi.fn(),
     currentElapsedSeconds: () => 42,
     reconcileDeadline: vi.fn(),
     setPendingNextQuestion: vi.fn(),
     setPhase: vi.fn(),
-    setPendingFinalTransition: vi.fn(),
-    setClosingCeremonyActive: vi.fn(),
-    reopenForFollowUp: vi.fn(),
+    setSessionProgress: vi.fn(),
     beginClosing: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
@@ -85,7 +90,7 @@ function liveChat(sendTurnImpl?: () => Promise<unknown>) {
     sendTurn: vi.fn(
       sendTurnImpl ??
         (() =>
-          Promise.resolve(completedOutcome()) as ReturnType<
+          Promise.resolve(acceptedOutcome()) as ReturnType<
             NonNullable<InterviewActionsContext["chatBridge"]["current"]>["sendTurn"]
           >),
     ),
@@ -93,103 +98,94 @@ function liveChat(sendTurnImpl?: () => Promise<unknown>) {
     canSend: true,
     connected: true,
     lastEvent: null,
+    snapshot: null,
   };
 }
 
-beforeEach(() => {
-  vi.stubEnv("VITE_INTERVIEW_LK_TEXT", "1");
-});
+function calls(fn: unknown): unknown[][] {
+  return (fn as { mock: { calls: unknown[][] } }).mock.calls;
+}
 
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
-
-describe("handleRespond transport", () => {
-  it("uses REST when the flag is off, even with a connected room", async () => {
-    vi.stubEnv("VITE_INTERVIEW_LK_TEXT", "0");
-    const respond = { isPending: false, mutateAsync: vi.fn().mockResolvedValue({}) };
-    const chat = liveChat();
-    const ctx = makeCtx({
-      respond,
-      chatBridge: { current: chat },
-    });
-
-    await handleRespond(ctx);
-
-    expect(respond.mutateAsync).toHaveBeenCalledTimes(1);
-    expect(
-      (respond.mutateAsync as unknown as { mock: { calls: unknown[][] } }).mock
-        .calls[0][0],
-    ).toMatchObject({
-      session_question_id: QUESTION.id,
-      answer_text: "my answer",
-      turn_action: "answer",
-    });
-    expect(chat.sendTurn).not.toHaveBeenCalled();
-  });
-
-  it("uses REST when the room is not connected, even with the flag on", async () => {
-    const respond = { isPending: false, mutateAsync: vi.fn().mockResolvedValue({}) };
-    const chat = liveChat();
-    const ctx = makeCtx({
-      respond,
-      chatBridge: { current: { ...chat, connected: false, canSend: false } },
-    });
-
-    await handleRespond(ctx);
-
-    expect(respond.mutateAsync).toHaveBeenCalledTimes(1);
-    expect(chat.sendTurn).not.toHaveBeenCalled();
-  });
-
-  it("sends the answer over lk.chat when the live transport is active", async () => {
-    const respond = { isPending: false, mutateAsync: vi.fn() };
-    const chat = liveChat();
-    const ctx = makeCtx({ respond, chatBridge: { current: chat } });
-
-    await handleRespond(ctx);
-
-    expect(chat.sendTurn).toHaveBeenCalledTimes(1);
-    expect(
-      (chat.sendTurn as unknown as { mock: { calls: unknown[][] } }).mock.calls[0][0],
-    ).toMatchObject({
-      text: "my answer",
-      turnAction: "answer",
-      turnKey: expect.any(String),
-    });
-    // The REST mutation must NOT be touched on the live path.
-    expect(respond.mutateAsync).not.toHaveBeenCalled();
-  });
-
-  it("runs the same applyRespondResult lifecycle from the control event state", async () => {
+describe("handleRespond over lk.chat", () => {
+  it("sends the answer on lk.chat with the answer action and a turn key", async () => {
     const chat = liveChat();
     const ctx = makeCtx({ chatBridge: { current: chat } });
 
     await handleRespond(ctx);
 
-    // The answer is committed to the transcript exactly once (deduped by the
-    // submission id), with the response's authoritative deadline re-anchored.
+    expect(chat.sendTurn).toHaveBeenCalledTimes(1);
+    expect(calls(chat.sendTurn)[0][0]).toMatchObject({
+      text: "my answer",
+      turnAction: "answer",
+      turnKey: expect.any(String),
+    });
+  });
+
+  it("commits the turn on `accepted`, without waiting for grading", async () => {
+    // The ack is the only acknowledgement a streaming turn gets. The answer lands
+    // in the transcript, the composer clears, and the autosaved draft is dropped —
+    // all on "the agent has your text", never on "your answer has been graded".
+    const chat = liveChat();
+    const ctx = makeCtx({ chatBridge: { current: chat } });
+
+    await handleRespond(ctx);
+
     expect(ctx.submitSucceeded).toHaveBeenCalledTimes(1);
-    expect(ctx.reconcileDeadline).toHaveBeenCalledWith(540);
     expect(ctx.setTranscript).toHaveBeenCalledTimes(1);
+    expect(ctx.clearDraftAutosave).toHaveBeenCalledTimes(1);
+    expect(ctx.setAnswerText).toHaveBeenCalledWith("");
+    expect(ctx.setRecentSubmission).toHaveBeenCalledWith({
+      answer: "my answer",
+      questionId: QUESTION.id,
+      submissionId: expect.any(String),
+    });
+  });
+
+  it("reuses one id as the transcript key and the wire turn_key", async () => {
+    // A retry reuses it, so neither the client transcript nor the agent can end up
+    // with the answer twice.
+    const chat = liveChat();
+    const ctx = makeCtx({ chatBridge: { current: chat } });
+
+    await handleRespond(ctx, undefined, { retrySubmissionId: "tk-retry-1234" });
+
+    expect(calls(chat.sendTurn)[0][0]).toMatchObject({
+      turnKey: "tk-retry-1234",
+    });
+    expect(ctx.setRecentSubmission).toHaveBeenCalledWith(
+      expect.objectContaining({ submissionId: "tk-retry-1234" }),
+    );
+  });
+
+  it("reopens the answer for a follow-up on the same question", async () => {
+    // `submitted` locks the composer until a NEW question arrives, but the native
+    // agent often probes further on THIS one — no tool call, so no snapshot and
+    // nothing else would ever unlock it.
+    const chat = liveChat();
+    const ctx = makeCtx({ chatBridge: { current: chat } });
+
+    await handleRespond(ctx);
+
+    expect(ctx.reopenForFollowUp).toHaveBeenCalledTimes(1);
+  });
+
+  it("derives no session state from the ack", async () => {
+    // Deliberate: the deadline, the next question and the finished flag are all
+    // snapshot-driven now. Reading them from a turn result is what froze the UI
+    // when the native agent stopped sending one.
+    const chat = liveChat();
+    const ctx = makeCtx({ chatBridge: { current: chat } });
+
+    await handleRespond(ctx);
+
+    expect(ctx.reconcileDeadline).not.toHaveBeenCalled();
+    expect(ctx.setPendingNextQuestion).not.toHaveBeenCalled();
+    expect(ctx.setPhase).not.toHaveBeenCalled();
+    expect(ctx.beginClosing).not.toHaveBeenCalled();
   });
 
   it("preserves the draft and does not advance on a rejection", async () => {
-    const chat = liveChat(() =>
-      Promise.resolve({
-        event: {
-          status: "rejected",
-          turnKey: "tk-1",
-          seq: 2,
-          turnAction: "answer",
-          stateVersion: null,
-          rejection: "turn_in_flight",
-          errorClass: null,
-          state: null,
-        },
-        preserveDraft: true,
-      }),
-    );
+    const chat = liveChat(() => Promise.resolve(refusedOutcome()));
     const ctx = makeCtx({ chatBridge: { current: chat } });
 
     await handleRespond(ctx);
@@ -202,21 +198,19 @@ describe("handleRespond transport", () => {
     expect(ctx.reconcileDeadline).not.toHaveBeenCalled();
   });
 
-  it("preserves the draft on a control timeout (ambiguous outcome)", async () => {
+  it("preserves the draft when the room drops mid-turn", async () => {
+    // With no timeout left, this is the ambiguous-outcome case: the turn may or
+    // may not have reached the agent, so the text goes back in the composer and a
+    // retry reuses the same turn_key.
     const chat = liveChat(() =>
-      Promise.resolve({
-        event: {
+      Promise.resolve(
+        refusedOutcome({
           status: "failed",
-          turnKey: "tk-1",
-          seq: -1,
-          turnAction: "answer",
-          stateVersion: null,
           rejection: null,
-          errorClass: "ControlTimeout",
-          state: null,
-        },
-        preserveDraft: true,
-      }),
+          errorClass: "RoomDisconnected",
+          seq: -1,
+        }),
+      ),
     );
     const ctx = makeCtx({ chatBridge: { current: chat } });
 
@@ -229,18 +223,36 @@ describe("handleRespond transport", () => {
     expect(ctx.setTranscript).not.toHaveBeenCalled();
   });
 
-  it("uses REST for a session that has not finished onboarding", async () => {
-    const respond = { isPending: false, mutateAsync: vi.fn().mockResolvedValue({}) };
+  it("reports a failure rather than sending when there is no room", async () => {
+    // There is no second door: without a bridge the turn cannot go anywhere, and
+    // failing loudly beats a composer that silently does nothing.
+    const ctx = makeCtx({ chatBridge: { current: null } });
+
+    await handleRespond(ctx);
+
+    expect(ctx.beginSubmit).not.toHaveBeenCalled();
+    expect(ctx.setTranscript).not.toHaveBeenCalled();
+  });
+
+  it("refuses a second submit while a turn is pending", async () => {
+    const chat = { ...liveChat(), pending: true };
+    const ctx = makeCtx({ chatBridge: { current: chat } });
+
+    await handleRespond(ctx);
+
+    expect(chat.sendTurn).not.toHaveBeenCalled();
+    expect(ctx.beginSubmit).not.toHaveBeenCalled();
+  });
+
+  it("refuses a second submit while the answer is already acknowledged", async () => {
     const chat = liveChat();
     const ctx = makeCtx({
-      respond,
-      onboardingStage: "preparation",
       chatBridge: { current: chat },
+      answer: { state: { status: "submitted" } },
     });
 
     await handleRespond(ctx);
 
-    expect(respond.mutateAsync).toHaveBeenCalledTimes(1);
     expect(chat.sendTurn).not.toHaveBeenCalled();
   });
 });

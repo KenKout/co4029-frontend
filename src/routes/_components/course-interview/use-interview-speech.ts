@@ -135,7 +135,12 @@ export function useInterviewSpeech(
     agentVoiceRef.current.setAgentExpected(expected);
   }, []);
   const speakIfOn = useCallback(
-    (text: string) => {
+    (text: string, options?: { agentVoiced?: boolean }) => {
+      // Ceremony text the agent never says: present it immediately rather than
+      // waiting on — and pacing to — an utterance that is not this one.
+      if (roomConnectedRef.current && options?.agentVoiced === false) {
+        return silent();
+      }
       // The LiveKit agent in the room is the voice; narrating client-side as
       // well would double it (agent audio first, client replay on top). Read
       // the render-phase ref, not the state: the transition turn's narrate()

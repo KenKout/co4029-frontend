@@ -18,6 +18,7 @@ export interface AiTypingMessageProps {
   text: string;
   animate: boolean;
   speak: Speak;
+  agentVoiced?: boolean;
   onTick?: () => void;
   onTypingChange?: (typing: boolean) => void;
   onTextComplete?: () => void;
@@ -30,6 +31,7 @@ export function AiTypingMessage({
   text,
   animate,
   speak,
+  agentVoiced,
   onTick,
   onTypingChange,
   onTextComplete,
@@ -66,6 +68,7 @@ export function AiTypingMessage({
       shouldType,
       text,
       speak,
+      agentVoiced,
       callbacks: () => callbacksRef.current,
       setShown,
       setPhase,
