@@ -5262,6 +5262,19 @@ export interface components {
             organization_id: string;
             instructor?: components["schemas"]["InstructorAuthoring"] | null;
             /**
+             * Student Count
+             * @description Course-health projection: active enrollments. Not
+             *     persisted; defaults to 0 so single-course reads that don't
+             *     populate it still validate.
+             */
+            student_count: number;
+            /**
+             * Module Count
+             * @description Course-health projection: non-deleted module count.
+             *     Not persisted; defaults to 0.
+             */
+            module_count: number;
+            /**
              * Status
              * @enum {string}
              */

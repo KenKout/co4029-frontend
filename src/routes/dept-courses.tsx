@@ -1,6 +1,7 @@
-import { Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { BookOpen, ChevronRight, Plus, Users } from "lucide-react";
+import { BookOpen, Plus, UserPlus, Users } from "lucide-react";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
 import {
   usePermissions,
@@ -10,43 +11,228 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { CourseStatusBadge } from "@/components/ui/status-badges";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { SearchInput } from "@/components/ui/search-input";
+import {
+  Avatar,
+  AvatarFallback,
+  avatarColor,
+  avatarInitials,
+} from "@/components/ui/avatar";
 import type { CourseAuthoring } from "@/lib/api/types";
 
-function CourseRow({ course }: { course: CourseAuthoring }) {
+/**
+ * Manager/HOD course worklist — the merged view that replaced the old
+ * "/dept" (Team management) and "/management/enrolment" (Enrolment) pair,
+ * which were the same list rendered twice with different row links.
+ *
+ * One table, two row actions:
+ *   * Enrol      → /management/courses/{id}/enrollments   (enrolment perms)
+ *   * Teachers   → /dept/courses/{id} (teachers tab)      (assign_teacher)
+ *
+ * The backend now populates student_count / module_count / instructor on
+ * GET /dept/courses, so a row tells a manager at a glance that a course
+ * with no teacher and no content cannot be published — the publish-gate
+ * failure surfaced in the list instead of as a 409 at publish time.
+ */
+
+function CourseTitleCell({ course }: { course: CourseAuthoring }) {
   return (
-    <Link
-      to="/dept/courses/$courseId"
-      params={{ courseId: course.id }}
-      className="block bg-surface-elev border border-border rounded-lg p-4 mb-2 hover:border-border-strong hover:shadow-editorial transition-colors duration-150"
-    >
-      <div className="flex items-center gap-4">
-        <div className="w-9 h-9 rounded-md bg-m3-primary-fixed flex items-center justify-center shrink-0">
-          <BookOpen className="h-4 w-4 text-m3-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-text-strong truncate">
-            {course.title}
-          </p>
-          <p className="text-xs text-text-muted truncate mt-0.5">
-            {course.slug}
-          </p>
-        </div>
-        <CourseStatusBadge status={course.status} />
-        <ChevronRight className="h-4 w-4 text-text-muted shrink-0" />
+    <div className="flex items-start gap-3 min-w-0">
+      <div className="w-9 h-9 rounded-md bg-m3-primary-fixed flex items-center justify-center shrink-0">
+        <BookOpen className="h-4 w-4 text-m3-primary" />
       </div>
-    </Link>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-text-strong truncate">
+          {course.title}
+        </p>
+        <p className="text-xs text-text-muted font-mono truncate mt-0.5">
+          {course.slug}
+        </p>
+      </div>
+    </div>
   );
+}
+
+function InstructorCell({
+  course,
+  t,
+}: {
+  course: CourseAuthoring;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}) {
+  const instructor = course.instructor;
+  if (!instructor?.display_name) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
+        <UserPlus className="h-3 w-3" />
+        {t("dept_courses.instructor_unassigned")}
+      </span>
+    );
+  }
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <Avatar size="sm" className={avatarColor(instructor.user_id)}>
+        <AvatarFallback>
+          {avatarInitials(instructor.display_name, { uppercase: true })}
+        </AvatarFallback>
+      </Avatar>
+      <span className="text-sm text-text-strong truncate">
+        {instructor.display_name}
+      </span>
+    </div>
+  );
+}
+
+function StudentsCell({ course }: { course: CourseAuthoring }) {
+  const cap = course.enrollment_cap;
+  if (!cap || cap <= 0) {
+    return (
+      <span className="text-sm tabular-nums text-text-strong">
+        {course.student_count}
+      </span>
+    );
+  }
+  const pct = Math.min(100, Math.round((course.student_count / cap) * 100));
+  return (
+    <div className="flex flex-col gap-1 min-w-[7rem]">
+      <span className="text-sm tabular-nums text-text-strong">
+        {course.student_count} / {cap}
+      </span>
+      <div
+        role="progressbar"
+        aria-valuenow={course.student_count}
+        aria-valuemin={0}
+        aria-valuemax={cap}
+        className="h-1.5 w-full max-w-[7rem] rounded-full bg-m3-surface-container"
+      >
+        <div
+          className={`h-full rounded-full ${
+            course.student_count >= cap
+              ? "bg-amber-500"
+              : "bg-m3-primary"
+          }`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ContentCell({
+  course,
+  t,
+}: {
+  course: CourseAuthoring;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}) {
+  return (
+    <span className="text-sm tabular-nums text-text-strong">
+      {t("dept_courses.modules", {
+        count: course.module_count,
+      })}
+    </span>
+  );
+}
+
+function RowActions({
+  course,
+  canEnrol,
+  canStaff,
+}: {
+  course: CourseAuthoring;
+  canEnrol: boolean;
+  canStaff: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center gap-1.5">
+      {canEnrol && (
+        <Link
+          to="/management/courses/$courseId/enrollments"
+          params={{ courseId: course.id }}
+          onClick={(e) => e.stopPropagation()}
+          className="h-8 px-3 inline-flex items-center gap-1.5 rounded-full bg-m3-primary text-m3-on-primary text-xs font-semibold hover:opacity-90"
+        >
+          <Users className="h-3.5 w-3.5" />
+          {t("dept_courses.action_enrol")}
+        </Link>
+      )}
+      {canStaff && (
+        <Link
+          to="/dept/courses/$courseId"
+          params={{ courseId: course.id }}
+          onClick={(e) => e.stopPropagation()}
+          className="h-8 px-3 inline-flex items-center gap-1.5 rounded-full text-xs font-semibold text-m3-on-surface-variant bg-m3-surface-container hover:bg-m3-surface-container-high"
+        >
+          <UserPlus className="h-3.5 w-3.5" />
+          {t("dept_courses.action_teachers")}
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function buildColumns(
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): DataTableColumn<CourseAuthoring>[] {
+  return [
+    {
+      id: "title",
+      header: t("dept_courses.col_course"),
+      sortable: true,
+      sortValue: (c) => c.title.toLowerCase(),
+      cell: (c) => <CourseTitleCell course={c} />,
+    },
+    {
+      id: "instructor",
+      header: t("dept_courses.col_instructor"),
+      sortable: true,
+      sortValue: (c) => c.instructor?.display_name?.toLowerCase() ?? "",
+      cell: (c) => <InstructorCell course={c} t={t} />,
+    },
+    {
+      id: "students",
+      header: t("dept_courses.col_students"),
+      sortable: true,
+      sortValue: (c) => c.student_count,
+      align: "left",
+      cell: (c) => <StudentsCell course={c} />,
+    },
+    {
+      id: "content",
+      header: t("dept_courses.col_content"),
+      sortable: true,
+      sortValue: (c) => c.module_count,
+      cell: (c) => <ContentCell course={c} t={t} />,
+    },
+    {
+      id: "status",
+      header: t("dept_courses.col_status"),
+      sortable: true,
+      sortValue: (c) => c.status,
+      cell: (c) => <CourseStatusBadge status={c.status} />,
+    },
+  ];
 }
 
 export default function DeptCoursesPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const permissions = usePermissions();
+  const [query, setQuery] = useState("");
 
-  const canAssign = permissions.hasAny(
+  const canEnrol = permissions.hasAny(
+    "course.enrollment.create",
+    "course.enrollment.read",
+    "system.administer",
+  );
+  const canStaff = permissions.hasAny(
     "course.assign_teacher",
     "system.administer",
   );
-  const canRead = canAssign || permissions.has("course.enrollment.read");
+  // Merged gate: anyone who could see either of the two old pages.
+  const canRead = canStaff || canEnrol;
   const canCreate = permissions.hasAny("course.create", "system.administer");
 
   useRequirePermission(canRead, {
@@ -55,6 +241,17 @@ export default function DeptCoursesPage() {
 
   const enabled = !permissions.isLoading && canRead;
   const list = useDeptCourses();
+
+  const courses = useMemo(() => {
+    const all = list.data ?? [];
+    const q = query.trim().toLowerCase();
+    if (!q) return all;
+    return all.filter((c) =>
+      [c.title, c.slug, c.instructor?.display_name]
+        .filter(Boolean)
+        .some((s) => (s as string).toLowerCase().includes(q)),
+    );
+  }, [list.data, query]);
 
   if (permissions.isLoading) {
     return (
@@ -71,7 +268,13 @@ export default function DeptCoursesPage() {
     return null;
   }
 
-  const courses = list.data ?? [];
+  const onRowClick = (course: CourseAuthoring) =>
+    void navigate({
+      to: "/dept/courses/$courseId",
+      params: { courseId: course.id },
+    });
+
+  const columns = buildColumns(t);
 
   return (
     <div className="space-y-6 pb-12">
@@ -96,30 +299,46 @@ export default function DeptCoursesPage() {
         <div className="bg-surface-elev border border-border rounded-lg p-5">
           <p className="text-sm text-danger">{t("dept_courses.load_failed")}</p>
         </div>
-      ) : courses.length === 0 ? (
-        <div className="bg-surface-elev border border-border rounded-lg p-10 text-center">
-          <Users className="h-10 w-10 mx-auto mb-3 text-text-subtle" />
-          <p className="text-sm font-medium text-text-strong">
-            {t("dept_courses.empty_title")}
-          </p>
-          <p className="text-xs text-text-muted mt-1">
-            {t("dept_courses.empty_body")}
-          </p>
-          {canCreate && (
-            <Link to="/management/courses/new">
-              <Button size="sm" className="mt-4 gap-2">
-                <Plus className="h-4 w-4" />
-                {t("dept_courses.new_course", { defaultValue: "New course" })}
-              </Button>
-            </Link>
-          )}
-        </div>
       ) : (
-        <div>
-          {courses.map((course) => (
-            <CourseRow key={course.id} course={course} />
-          ))}
-        </div>
+        <DataTable
+          columns={columns}
+          data={courses}
+          getRowId={(c) => c.id}
+          onRowClick={onRowClick}
+          actions={(course) => (
+            <RowActions
+              course={course}
+              canEnrol={canEnrol}
+              canStaff={canStaff}
+            />
+          )}
+          actionsHeader={t("dept_courses.col_actions")}
+          pagination
+          pageSize={10}
+          pageSizeOptions={[10, 25, 50]}
+          emptyState={
+            query
+              ? t("dept_courses.empty_search", {
+                  defaultValue: "No matching courses",
+                })
+              : t("dept_courses.empty_title")
+          }
+          toolbar={
+            <div className="flex flex-wrap items-center gap-3">
+              <SearchInput
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onClear={query ? () => setQuery("") : undefined}
+                placeholder={t("dept_courses.search_placeholder")}
+                wrapperClassName="w-full sm:w-72"
+                aria-label={t("dept_courses.search_placeholder")}
+              />
+              <p className="text-xs text-text-muted">
+                {t("dept_courses.count", { count: courses.length })}
+              </p>
+            </div>
+          }
+        />
       )}
     </div>
   );

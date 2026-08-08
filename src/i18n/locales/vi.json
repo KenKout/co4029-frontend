@@ -662,8 +662,8 @@
     }
   },
   "dept_courses": {
-    "title": "Quản lý đội ngũ",
-    "subtitle": "Phân công giảng viên và xem danh sách lớp.",
+    "title": "Khóa học",
+    "subtitle": "Ghi danh học viên và phân công giảng viên cho các khóa học.",
     "no_permission": "Không có quyền truy cập",
     "new_course": "Khóa học mới",
     "load_failed": "Không thể tải danh sách khóa học.",
@@ -673,7 +673,20 @@
       "draft": "Bản nháp",
       "published": "Đã xuất bản",
       "archived": "Đã lưu trữ"
-    }
+    },
+    "empty_search": "Không có khóa học phù hợp",
+    "search_placeholder": "Tìm khóa học hoặc giảng viên…",
+    "count_other": "{{count}} khóa học",
+    "col_course": "Khóa học",
+    "col_instructor": "Giảng viên",
+    "col_students": "Học viên",
+    "col_content": "Nội dung",
+    "col_status": "Trạng thái",
+    "action_enrol": "Ghi danh",
+    "action_teachers": "Giảng viên",
+    "instructor_unassigned": "Chưa phân công",
+    "modules_other": "{{count}} mô-đun",
+    "col_actions": "Thao tác"
   },
   "management_enrolment": {
     "title": "Ghi danh",

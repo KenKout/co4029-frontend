@@ -178,12 +178,6 @@ export const managerNavItems: NavItem[] = [
     icon: BookOpen,
   },
   {
-    label: "Enrolment",
-    i18nKey: "nav.enrolment",
-    href: "/management/enrolment",
-    icon: GraduationCap,
-  },
-  {
     label: "Career Pathways",
     i18nKey: "nav.career_paths",
     href: "/management/career-paths",
@@ -201,18 +195,6 @@ export const managerNavGroups: NavGroup[] = [
         i18nKey: "nav.manager_courses",
         href: "/dept",
         icon: BookOpen,
-      },
-    ],
-  },
-  {
-    label: "Enrolment",
-    i18nKey: "nav_groups.enrolment",
-    items: [
-      {
-        label: "Enrolment",
-        i18nKey: "nav.enrolment",
-        href: "/management/enrolment",
-        icon: GraduationCap,
       },
     ],
   },
