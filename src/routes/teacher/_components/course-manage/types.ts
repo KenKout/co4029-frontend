@@ -54,16 +54,18 @@ export interface ModuleItemStats {
 }
 
 /**
- * The twelve buffered course-settings fields, exactly as the form holds them
+ * The eleven buffered course-settings fields, exactly as the form holds them
  * (all strings — the numeric inputs are `<Input type="number">` and stay
  * stringly typed until Save coerces them).
+ *
+ * `status` is deliberately absent: lifecycle is managed by the dedicated
+ * Publish/Archive buttons (`CourseSettingsLifecycle`), not the settings PATCH.
  */
 export interface CourseSettingsValues {
   title: string;
   slug: string;
   description: string;
   level: string;
-  status: string;
   estimatedMinutes: string;
   enrollmentCap: string;
   completionDays: string;

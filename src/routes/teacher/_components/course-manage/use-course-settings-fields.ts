@@ -7,11 +7,11 @@ import type {
 } from "./types";
 
 /**
- * The twelve buffered settings fields, plus the panel's open flag and the
+ * The eleven buffered settings fields, plus the panel's open flag and the
  * teacher account query that seeds the contact email.
  *
  * Extracted from the former 550-line `CourseSettingsPanel`. The `useState`
- * calls keep their original order — the eight course-meta fields, then
+ * calls keep their original order — the seven course-meta fields, then
  * `useMe()`, then the four contact fields — so the panel's hook slots are
  * unchanged.
  */
@@ -21,7 +21,6 @@ export function useCourseSettingsFields() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [level, setLevel] = useState("");
-  const [status, setStatus] = useState("");
   const [estimatedMinutes, setEstimatedMinutes] = useState("");
   const [enrollmentCap, setEnrollmentCap] = useState("");
   const [completionDays, setCompletionDays] = useState("");
@@ -40,7 +39,6 @@ export function useCourseSettingsFields() {
     slug,
     description,
     level,
-    status,
     estimatedMinutes,
     enrollmentCap,
     completionDays,
@@ -55,7 +53,6 @@ export function useCourseSettingsFields() {
     setSlug,
     setDescription,
     setLevel,
-    setStatus,
     setEstimatedMinutes,
     setEnrollmentCap,
     setCompletionDays,
@@ -70,7 +67,6 @@ export function useCourseSettingsFields() {
     setSlug(init.slug);
     setDescription(init.description);
     setLevel(init.level);
-    setStatus(init.status);
     setEstimatedMinutes(init.estimatedMinutes);
     setEnrollmentCap(init.enrollmentCap);
     setCompletionDays(init.completionDays);

@@ -24,7 +24,6 @@ export const COURSE_SETTINGS_FIELDS: readonly CourseSettingsField[] = [
   "slug",
   "description",
   "level",
-  "status",
   "estimatedMinutes",
   "enrollmentCap",
   "completionDays",
@@ -60,7 +59,6 @@ function savedCourseMeta(
     slug: course.slug ?? "",
     description: course.description ?? "",
     level: course.level ?? "",
-    status: course.status ?? "draft",
     estimatedMinutes: course.estimated_minutes?.toString() ?? "",
     enrollmentCap: course.enrollment_cap?.toString() ?? "",
     completionDays: course.expected_completion_days?.toString() ?? "",
@@ -176,8 +174,10 @@ function buildCourseMetaPayload(values: CourseSettingsValues): CourseUpdate {
 }
 
 /**
- * The manager-only half: identity, lifecycle and delivery policy. Sent from
- * the dept course page, which holds `course.delete`.
+ * The manager-only half: identity and delivery policy. Sent from the dept
+ * course page, which holds `course.delete`. Lifecycle (status) is NOT part
+ * of the PATCH — it is driven by the dedicated Publish/Archive endpoints
+ * (`CourseSettingsLifecycle`).
  */
 function buildManagerMetaPayload(values: CourseSettingsValues): CourseUpdate {
   return {
@@ -187,11 +187,6 @@ function buildManagerMetaPayload(values: CourseSettingsValues): CourseUpdate {
       | "beginner"
       | "intermediate"
       | "advanced"
-      | undefined,
-    status: (values.status || undefined) as
-      | "draft"
-      | "published"
-      | "archived"
       | undefined,
     enrollment_cap: values.enrollmentCap
       ? Number(values.enrollmentCap)

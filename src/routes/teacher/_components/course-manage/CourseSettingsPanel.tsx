@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { CourseSettingsContactFields } from "./CourseSettingsContactFields";
 import { CourseSettingsDeliveryFields } from "./CourseSettingsDeliveryFields";
+import { CourseSettingsLifecycle } from "./CourseSettingsLifecycle";
 import { CourseSettingsMetaFields } from "./CourseSettingsMetaFields";
 import { CourseSettingsSaveBar } from "./CourseSettingsSaveBar";
 import { CourseSettingsThumbnailField } from "./CourseSettingsThumbnailField";
@@ -109,6 +110,9 @@ export function CourseSettingsPanel({
                   t={t}
                 />
               )}
+              {managerScope && (
+                <CourseSettingsLifecycle courseId={courseId} course={course} />
+              )}
               <CourseSettingsMetaFields
                 values={values}
                 setters={setters}
@@ -116,7 +120,6 @@ export function CourseSettingsPanel({
                 scope={scope}
               />
               <CourseSettingsDeliveryFields
-                course={course}
                 values={values}
                 setters={setters}
                 t={t}
