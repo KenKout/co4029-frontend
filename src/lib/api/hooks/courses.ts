@@ -303,20 +303,25 @@ export function useUpdateCourseOutcome(courseId: string | undefined) {
   const invalidate = useOutcomeInvalidation(courseId);
   return useMutation({
     // parent_id is only sent when re-parenting (move within the tree); pass
-    // null to promote to top-level. Omit the key entirely to leave the
-    // parent unchanged — the backend distinguishes the two via fields_set.
+    // null to promote to top-level. position (1-based) reorders among the
+    // (possibly new) siblings — the outliner's "drop between rows". Omit the
+    // keys entirely to leave the parent / slot unchanged; the backend
+    // distinguishes "omitted" from "explicit null" via fields_set.
     mutationFn: ({
       outcomeId,
       outcome_text,
       parent_id,
+      position,
     }: {
       outcomeId: string;
       outcome_text?: string;
       parent_id?: string | null;
+      position?: number;
     }) => {
       const body: Record<string, unknown> = {};
       if (outcome_text !== undefined) body.outcome_text = outcome_text;
       if (parent_id !== undefined) body.parent_id = parent_id;
+      if (position !== undefined) body.position = position;
       return apiPatch<CourseLearningOutcomeAuthoring>(
         `/teacher/courses/${courseId}/outcomes/${outcomeId}`,
         body,
@@ -329,8 +334,33 @@ export function useUpdateCourseOutcome(courseId: string | undefined) {
 export function useDeleteCourseOutcome(courseId: string | undefined) {
   const invalidate = useOutcomeInvalidation(courseId);
   return useMutation({
+    // promote_children=true keeps the outcome's immediate children,
+    // re-parenting them onto the outcome's own parent, instead of cascading
+    // the soft-delete down the subtree.
+    mutationFn: ({
+      outcomeId,
+      promote_children,
+    }: {
+      outcomeId: string;
+      promote_children?: boolean;
+    }) => {
+      const qs = promote_children ? "?promote_children=true" : "";
+      return apiDelete(
+        `/teacher/courses/${courseId}/outcomes/${outcomeId}${qs}`,
+      );
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useDuplicateCourseOutcome(courseId: string | undefined) {
+  const invalidate = useOutcomeInvalidation(courseId);
+  return useMutation({
     mutationFn: (outcomeId: string) =>
-      apiDelete(`/teacher/courses/${courseId}/outcomes/${outcomeId}`),
+      apiPost<CourseLearningOutcomeAuthoring>(
+        `/teacher/courses/${courseId}/outcomes/${outcomeId}/duplicate`,
+        {},
+      ),
     onSuccess: invalidate,
   });
 }

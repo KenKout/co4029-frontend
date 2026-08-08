@@ -3098,7 +3098,25 @@
     "delete_description": "Các câu hỏi được gắn với nó sẽ trở về không có chuẩn đầu ra. Các chuẩn còn lại được đánh số lại tự động.",
     "child_added": "Đã thêm mục tiêu con",
     "add_child": "Thêm mục tiêu con",
-    "add_child_placeholder": "Nội dung mục tiêu con…"
+    "add_child_placeholder": "Nội dung mục tiêu con…",
+    "add_sibling": "Thêm mục tiêu ngang bên dưới",
+    "duplicate": "Nhân bản",
+    "indent": "Thụt vào (Tab)",
+    "outdent": "Lùi ra (Shift+Tab)",
+    "more": "Thao tác khác",
+    "drag": "Kéo để di chuyển",
+    "drag_hint": "Kéo: thả giữa hai dòng để đổi chỗ, thả lên một dòng để lồng vào",
+    "click_to_edit": "Bấm để sửa",
+    "row_placeholder": "Chuẩn đầu ra…",
+    "draft_badge": "mới",
+    "move_failed": "Không thể di chuyển chuẩn đầu ra",
+    "deleted_promote": "Đã xóa chuẩn đầu ra, giữ lại các mục tiêu con",
+    "delete_promote": "Giữ lại mục tiêu con",
+    "delete_cascade": "Xóa kèm {{count}} mục tiêu con",
+    "delete_kids": "{{count}} mục tiêu con",
+    "delete_questions": "{{count}} câu hỏi trắc nghiệm",
+    "delete_scope_tail": "sẽ bị ảnh hưởng.",
+    "delete_no_children": "{{code}} sẽ bị xóa. Không thể hoàn tác."
   },
   "quiz_generation": {
     "outcomes": {

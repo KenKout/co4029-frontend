@@ -3224,7 +3224,25 @@
     "delete_description": "Questions tagged with it revert to no outcome. Remaining outcomes renumber automatically.",
     "child_added": "Sub-outcome added",
     "add_child": "Add sub-outcome",
-    "add_child_placeholder": "Sub-outcome statement…"
+    "add_child_placeholder": "Sub-outcome statement…",
+    "add_sibling": "Add sibling below",
+    "duplicate": "Duplicate",
+    "indent": "Indent (Tab)",
+    "outdent": "Outdent (Shift+Tab)",
+    "more": "More actions",
+    "drag": "Drag to move",
+    "drag_hint": "Drag: between rows moves, onto a row nests",
+    "click_to_edit": "Click to edit",
+    "row_placeholder": "Learning outcome…",
+    "draft_badge": "new",
+    "move_failed": "Failed to move outcome",
+    "deleted_promote": "Outcome deleted, its sub-outcomes kept",
+    "delete_promote": "Keep sub-outcomes",
+    "delete_cascade": "Delete with {{count}} sub-outcomes",
+    "delete_kids": "{{count}} sub-outcomes",
+    "delete_questions": "{{count}} quiz questions",
+    "delete_scope_tail": "will be affected.",
+    "delete_no_children": "{{code}} will be removed. This cannot be undone."
   },
   "quiz_generation": {
     "outcomes": {

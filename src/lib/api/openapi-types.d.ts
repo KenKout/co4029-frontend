@@ -5411,6 +5411,8 @@ export interface components {
             code?: string | null;
             /** Depth */
             depth?: number;
+            /** Question Count */
+            question_count?: number;
         };
         /**
          * CourseLearningOutcomeCreate
