@@ -30,7 +30,10 @@ export function SideNavSecondary({
         const label = labelOf(item);
         const baseClasses = cn(
           "cursor-pointer flex items-center gap-3 py-2 rounded-md transition-colors duration-150",
-          collapsed ? "justify-center w-10 h-10 px-0 mx-auto" : "px-3",
+          // justify-start only matters for the Button (Log Out): the system
+          // Button's cva base bakes in justify-center, which silently centred
+          // the row while the Help link above it stayed left-aligned.
+          collapsed ? "justify-center w-10 h-10 px-0 mx-auto" : "px-3 justify-start",
           isLogoutItem(item)
             ? "text-text-subtle hover:text-danger hover:bg-danger/10"
             : "text-text-subtle hover:text-primary hover:bg-surface-muted",

@@ -43,7 +43,10 @@ export function IntegrityFilterTab({
       title={title ?? label}
       aria-label={title ? `${title} (${count})` : undefined}
       className={cn(
-        "group flex w-full items-center gap-3 rounded-xl border p-3 text-left h-auto whitespace-normal",
+        // justify-start: the system Button's cva base bakes in
+        // justify-center, which centred the icon+text pair after the
+        // native <button> -> <Button> conversion (regression sweep).
+        "group flex w-full items-center justify-start gap-3 rounded-xl border p-3 text-left h-auto whitespace-normal",
         // Hover/press feedback: lift + shadow on the way in, settle on click.
         // transform+shadow+colour only, so this stays off the layout path.
         "cursor-pointer transition-all duration-200",
