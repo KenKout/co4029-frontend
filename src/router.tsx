@@ -433,6 +433,12 @@ const deptCoursesRoute = createRoute({
 const deptCourseDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/dept/courses/$courseId",
+  // Optional ?tab= — the worklist's "Teachers" action deep-links here with
+  // tab=teachers so it lands on the teachers tab instead of duplicating the
+  // row click (which relies on the default tab).
+  validateSearch: (search: Record<string, unknown>): { tab?: string } => ({
+    tab: typeof search.tab === "string" ? search.tab : undefined,
+  }),
   component: lazyRouteComponent(() => import("@/routes/dept-course-detail")),
 });
 

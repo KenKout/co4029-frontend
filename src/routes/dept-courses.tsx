@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { CourseStatusBadge } from "@/components/ui/status-badges";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { SearchInput } from "@/components/ui/search-input";
+import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
 import {
   Avatar,
   AvatarFallback,
@@ -29,13 +29,26 @@ import type { CourseAuthoring } from "@/lib/api/types";
  *
  * One table, two row actions:
  *   * Enrol      → /management/courses/{id}/enrollments   (enrolment perms)
- *   * Teachers   → /dept/courses/{id} (teachers tab)      (assign_teacher)
+ *   * Teachers   → /dept/courses/{id}?tab=teachers        (assign_teacher)
  *
- * The backend now populates student_count / module_count / instructor on
+ * The backend populates student_count / module_count / instructor on
  * GET /dept/courses, so a row tells a manager at a glance that a course
  * with no teacher and no content cannot be published — the publish-gate
  * failure surfaced in the list instead of as a 409 at publish time.
+ * The worklist filter (All · Needs teacher · No content · Draft) answers
+ * "what needs me?" directly; search answers "where is course X".
+ *
+ * Client-side search/filter/pagination is deliberate: this is a full-fetch,
+ * org-scoped endpoint (one org's courses, bounded). The admin users/courses
+ * tables use useServerTable + manualPagination because those lists are
+ * global and already page server-side. Migrate this table the same way when
+ * the dept endpoint grows server-side pagination or an org routinely
+ * exceeds ~200 courses.
  */
+
+type TFn = (key: string, opts?: Record<string, unknown>) => string;
+
+type WorklistFilter = "all" | "needs_teacher" | "no_content" | "draft";
 
 function CourseTitleCell({ course }: { course: CourseAuthoring }) {
   return (
@@ -55,13 +68,7 @@ function CourseTitleCell({ course }: { course: CourseAuthoring }) {
   );
 }
 
-function InstructorCell({
-  course,
-  t,
-}: {
-  course: CourseAuthoring;
-  t: (key: string, opts?: Record<string, unknown>) => string;
-}) {
+function InstructorCell({ course, t }: { course: CourseAuthoring; t: TFn }) {
   const instructor = course.instructor;
   if (!instructor?.display_name) {
     return (
@@ -126,18 +133,20 @@ function StudentsCell({ course }: { course: CourseAuthoring }) {
   );
 }
 
-function ContentCell({
-  course,
-  t,
-}: {
-  course: CourseAuthoring;
-  t: (key: string, opts?: Record<string, unknown>) => string;
-}) {
+function ContentCell({ course, t }: { course: CourseAuthoring; t: TFn }) {
+  // Zero modules is a hard publish failure (stage_course_has_no_gradeable_units),
+  // so it gets the same amber treatment as the Unassigned instructor chip —
+  // "0 modules" must not read as a healthy number next to "8 modules".
+  if (course.module_count === 0) {
+    return (
+      <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
+        {t("dept_courses.modules", { count: 0 })}
+      </span>
+    );
+  }
   return (
     <span className="text-sm tabular-nums text-text-strong">
-      {t("dept_courses.modules", {
-        count: course.module_count,
-      })}
+      {t("dept_courses.modules", { count: course.module_count })}
     </span>
   );
 }
@@ -146,12 +155,13 @@ function RowActions({
   course,
   canEnrol,
   canStaff,
+  t,
 }: {
   course: CourseAuthoring;
   canEnrol: boolean;
   canStaff: boolean;
+  t: TFn;
 }) {
-  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-1.5">
       {canEnrol && (
@@ -166,9 +176,13 @@ function RowActions({
         </Link>
       )}
       {canStaff && (
+        // Explicit deep-link to the teachers tab (the row click lands on the
+        // same page at its default tab) — the search param keeps this action
+        // meaningful even if the detail page's default tab ever changes.
         <Link
           to="/dept/courses/$courseId"
           params={{ courseId: course.id }}
+          search={{ tab: "teachers" }}
           onClick={(e) => e.stopPropagation()}
           className="h-8 px-3 inline-flex items-center gap-1.5 rounded-full text-xs font-semibold text-m3-on-surface-variant bg-m3-surface-container hover:bg-m3-surface-container-high"
         >
@@ -180,9 +194,7 @@ function RowActions({
   );
 }
 
-function buildColumns(
-  t: (key: string, opts?: Record<string, unknown>) => string,
-): DataTableColumn<CourseAuthoring>[] {
+function buildColumns(t: TFn): DataTableColumn<CourseAuthoring>[] {
   return [
     {
       id: "title",
@@ -204,6 +216,8 @@ function buildColumns(
       sortable: true,
       sortValue: (c) => c.student_count,
       align: "left",
+      // Enrollment counts are deliberately visible even to staff without
+      // enrollment permissions — an aggregate, not the roster itself.
       cell: (c) => <StudentsCell course={c} />,
     },
     {
@@ -228,6 +242,7 @@ export default function DeptCoursesPage() {
   const navigate = useNavigate();
   const permissions = usePermissions();
   const [query, setQuery] = useState("");
+  const [worklist, setWorklist] = useState<WorklistFilter>("all");
 
   const canEnrol = permissions.hasAny(
     "course.enrollment.create",
@@ -250,15 +265,24 @@ export default function DeptCoursesPage() {
   const list = useDeptCourses();
 
   const courses = useMemo(() => {
-    const all = list.data ?? [];
+    let all = list.data ?? [];
     const q = query.trim().toLowerCase();
-    if (!q) return all;
-    return all.filter((c) =>
-      [c.title, c.slug, c.instructor?.display_name]
-        .filter(Boolean)
-        .some((s) => (s as string).toLowerCase().includes(q)),
-    );
-  }, [list.data, query]);
+    if (q) {
+      all = all.filter((c) =>
+        [c.title, c.slug, c.instructor?.display_name]
+          .filter(Boolean)
+          .some((s) => (s as string).toLowerCase().includes(q)),
+      );
+    }
+    if (worklist === "needs_teacher") {
+      all = all.filter((c) => !c.instructor?.display_name);
+    } else if (worklist === "no_content") {
+      all = all.filter((c) => c.module_count === 0);
+    } else if (worklist === "draft") {
+      all = all.filter((c) => c.status === "draft");
+    }
+    return all;
+  }, [list.data, query, worklist]);
 
   if (permissions.isLoading) {
     return (
@@ -282,6 +306,20 @@ export default function DeptCoursesPage() {
     });
 
   const columns = buildColumns(t);
+
+  const worklistFilter: FilterDef = {
+    id: "worklist",
+    label: t("dept_courses.filter_label"),
+    allLabel: t("dept_courses.filter_all"),
+    options: [
+      {
+        value: "needs_teacher",
+        label: t("dept_courses.filter_needs_teacher"),
+      },
+      { value: "no_content", label: t("dept_courses.filter_no_content") },
+      { value: "draft", label: t("dept_courses.filter_draft") },
+    ],
+  };
 
   return (
     <div className="space-y-6 pb-12">
@@ -313,37 +351,37 @@ export default function DeptCoursesPage() {
           getRowId={(c) => c.id}
           onRowClick={onRowClick}
           actions={(course) => (
-            <RowActions
-              course={course}
-              canEnrol={canEnrol}
-              canStaff={canStaff}
-            />
+            <RowActions course={course} canEnrol={canEnrol} canStaff={canStaff} t={t} />
           )}
           actionsHeader={t("dept_courses.col_actions")}
           pagination
           pageSize={10}
           pageSizeOptions={[10, 25, 50]}
           emptyState={
-            query
+            query || worklist !== "all"
               ? t("dept_courses.empty_search", {
                   defaultValue: "No matching courses",
                 })
               : t("dept_courses.empty_title")
           }
           toolbar={
-            <div className="flex flex-wrap items-center gap-3">
-              <SearchInput
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onClear={query ? () => setQuery("") : undefined}
-                placeholder={t("dept_courses.search_placeholder")}
-                wrapperClassName="w-full sm:w-72"
-                aria-label={t("dept_courses.search_placeholder")}
-              />
-              <p className="text-xs text-text-muted">
-                {t("dept_courses.count", { count: courses.length })}
-              </p>
-            </div>
+            <DataTableToolbar
+              search={query}
+              onSearchChange={setQuery}
+              searchPlaceholder={t("dept_courses.search_placeholder")}
+              filters={[worklistFilter]}
+              filterValues={{ worklist }}
+              onFilterChange={(_id, value) =>
+                setWorklist((value as WorklistFilter) ?? "all")
+              }
+              onResetAllFilters={() => setWorklist("all")}
+              clearLabel={t("dept_courses.filter_clear")}
+              trailing={
+                <p className="text-xs text-text-muted">
+                  {t("dept_courses.count", { count: courses.length })}
+                </p>
+              }
+            />
           }
         />
       )}
