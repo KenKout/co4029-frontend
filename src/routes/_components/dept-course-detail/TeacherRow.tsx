@@ -1,20 +1,60 @@
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { GraduationCap, Mail, Trash2 } from "lucide-react";
+import { Mail, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Avatar,
+  AvatarFallback,
+  avatarColor,
+  avatarInitials,
+} from "@/components/ui/avatar";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { useRemoveTeacher } from "@/lib/api/hooks/dept";
 import { ApiError } from "@/lib/api/client";
 import type { TeacherAssignmentRead } from "@/lib/api/types";
 
-export function TeacherRow({
+/**
+ * Cells for the teachers table. These used to be one hand-rolled
+ * `bg-surface-elev border rounded-lg` row; they are now DataTable cells so the
+ * tab matches the `/dept` worklist it is reached from.
+ *
+ * The avatar treatment is deliberately identical to `InstructorCell` on the
+ * worklist — the same person was previously drawn as a generic cap icon here
+ * and as an initialled avatar there.
+ */
+export function TeacherIdentityCell({
+  assignment,
+}: {
+  assignment: TeacherAssignmentRead;
+}) {
+  const { t } = useTranslation();
+  const name = assignment.display_name || t("dept_course_detail.no_name");
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <Avatar size="sm" className={avatarColor(assignment.user_id)}>
+        <AvatarFallback>
+          {avatarInitials(name, { uppercase: true })}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-text-strong truncate">
+          {name}
+        </p>
+        <p className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
+          <Mail className="h-3 w-3 shrink-0" />
+          <span className="truncate">{assignment.primary_email}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function TeacherRowActions({
   assignment,
   courseId,
-  canManage,
 }: {
   assignment: TeacherAssignmentRead;
   courseId: string;
-  canManage: boolean;
 }) {
   const { t } = useTranslation();
   const remove = useRemoveTeacher(courseId);
@@ -44,31 +84,21 @@ export function TeacherRow({
   };
 
   return (
-    <div className="flex items-center gap-4 bg-surface-elev border border-border rounded-lg p-4 mb-2">
-      <div className="w-9 h-9 rounded-full bg-m3-primary-fixed flex items-center justify-center shrink-0">
-        <GraduationCap className="h-4 w-4 text-m3-primary" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-text-strong truncate">
-          {assignment.display_name || t("dept_course_detail.no_name")}
-        </p>
-        <p className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
-          <Mail className="h-3 w-3" />
-          <span className="truncate">{assignment.primary_email}</span>
-        </p>
-      </div>
-      {canManage && (
-        <Button
-          type="button"
-          variant="destructive"
-          size="sm"
-          onClick={() => void handleRemove()}
-          disabled={remove.isPending}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          {t("dept_course_detail.remove")}
-        </Button>
-      )}
+    <div className="flex items-center gap-1.5">
+      <Button
+        type="button"
+        variant="destructive"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          void handleRemove();
+        }}
+        disabled={remove.isPending}
+        className="gap-1.5"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+        {t("dept_course_detail.remove")}
+      </Button>
       {confirmDialog}
     </div>
   );

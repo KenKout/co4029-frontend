@@ -600,17 +600,28 @@
     "assign_label": "Phân công giảng viên (user_id UUID)",
     "assign_button": "Thêm",
     "assign_help": "Chỉ hiện giảng viên thuộc cùng đơn vị với khóa học này.",
-    "enrolled_at": "Đăng ký: {{date}}",
     "load_failed_teachers": "Không thể tải danh sách giảng viên.",
     "load_failed_students": "Không thể tải danh sách sinh viên.",
     "empty_teachers_title": "Chưa có giảng viên nào được phân công.",
     "empty_teachers_body": "Sử dụng biểu mẫu phía trên để thêm giảng viên.",
     "empty_students_title": "Chưa có sinh viên nào đăng ký khóa học này.",
+    "empty_search_teachers": "Không có giảng viên phù hợp",
+    "empty_search_students": "Không có sinh viên phù hợp",
+    "search_teachers": "Tìm giảng viên…",
+    "search_students": "Tìm sinh viên…",
+    "col_teacher": "Giảng viên",
+    "col_student": "Sinh viên",
+    "col_status": "Trạng thái",
+    "col_enrolled": "Ngày đăng ký",
+    "teacher_count_one": "{{count}} giảng viên",
+    "teacher_count_other": "{{count}} giảng viên",
+    "student_count_one": "{{count}} sinh viên",
+    "student_count_other": "{{count}} sinh viên",
     "enrollment_status": {
       "active": "Đang học",
       "completed": "Hoàn thành",
       "dropped": "Đã bỏ",
-      "pending": "Chờ duyệt"
+      "waitlisted": "Danh sách chờ"
     },
     "errors": {
       "remove_failed": "Không thể gỡ giảng viên: {{detail}}",
@@ -626,17 +637,6 @@
       "body": "Thao tác này sẽ gỡ {{title}} và toàn bộ nội dung khỏi mọi danh sách. Có thể khôi phục bởi admin (Restore), nhưng hãy chắc chắn trước khi xóa.",
       "deleted": "Đã xóa khóa học",
       "failed": "Không thể xóa khóa học."
-    },
-    "edit": {
-      "button": "Chỉnh sửa",
-      "title_label": "Tên khóa học",
-      "slug_label": "Slug khóa học",
-      "save": "Lưu",
-      "cancel": "Hủy",
-      "saved": "Đã cập nhật khóa học",
-      "save_failed": "Không thể cập nhật khóa học.",
-      "title_required": "Vui lòng nhập tên khóa học.",
-      "slug_required": "Vui lòng nhập slug khóa học."
     },
     "assign_placeholder": "Chọn giảng viên…",
     "assign_none_available": "Đơn vị này chưa có giảng viên nào. Hãy cấp quyền giảng viên cho một người trước.",
@@ -1438,7 +1438,7 @@
     "courses_list": {
       "title": "Quản lý khóa học",
       "subtitle": "Danh sách tất cả khóa học (bao gồm bản nháp + đã xóa).",
-      "search_placeholder": "Tìm theo tiêu đề hoặc slug…",
+      "search_placeholder": "Tìm theo tên hoặc slug…",
       "filter_status": "Trạng thái",
       "clear_filters": "Xóa bộ lọc",
       "include_deleted": "Bao gồm đã xóa",
@@ -1446,8 +1446,6 @@
       "empty_title": "Chưa có khóa học nào",
       "empty_search": "Không có khóa học phù hợp",
       "empty_body": "Khi giảng viên tạo khóa học, danh sách sẽ xuất hiện tại đây.",
-      "empty_search": "Không có khóa học phù hợp",
-      "search_placeholder": "Tìm theo tên hoặc slug…",
       "back_to_admin": "Quay lại quản trị",
       "cols": {
         "course": "Khóa học",

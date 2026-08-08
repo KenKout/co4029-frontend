@@ -670,17 +670,28 @@
     "assign_label": "Assign instructor (user_id UUID)",
     "assign_button": "Add",
     "assign_help": "Only instructors in this course's organization are listed.",
-    "enrolled_at": "Enrolled: {{date}}",
     "load_failed_teachers": "Couldn't load instructors.",
     "load_failed_students": "Couldn't load students.",
     "empty_teachers_title": "No instructors assigned yet.",
     "empty_teachers_body": "Use the form above to add an instructor.",
     "empty_students_title": "No students enrolled in this course yet.",
+    "empty_search_teachers": "No matching instructors",
+    "empty_search_students": "No matching students",
+    "search_teachers": "Search instructors…",
+    "search_students": "Search students…",
+    "col_teacher": "Instructor",
+    "col_student": "Student",
+    "col_status": "Status",
+    "col_enrolled": "Enrolled",
+    "teacher_count_one": "{{count}} instructor",
+    "teacher_count_other": "{{count}} instructors",
+    "student_count_one": "{{count}} student",
+    "student_count_other": "{{count}} students",
     "enrollment_status": {
       "active": "Active",
       "completed": "Completed",
       "dropped": "Dropped",
-      "pending": "Pending"
+      "waitlisted": "Waitlisted"
     },
     "errors": {
       "remove_failed": "Couldn't remove instructor: {{detail}}",
@@ -696,17 +707,6 @@
       "body": "This removes {{title}} and all its content from every listing. It's reversible (an admin can restore it), but make sure before you do it.",
       "deleted": "Course deleted",
       "failed": "Couldn't delete the course."
-    },
-    "edit": {
-      "button": "Edit",
-      "title_label": "Course title",
-      "slug_label": "Course slug",
-      "save": "Save",
-      "cancel": "Cancel",
-      "saved": "Course updated",
-      "save_failed": "Couldn't update the course.",
-      "title_required": "Course title is required.",
-      "slug_required": "Course slug is required."
     },
     "assign_placeholder": "Choose an instructor…",
     "assign_none_available": "No instructors in this organization yet. Give a teacher the instructor role first.",
@@ -1536,8 +1536,6 @@
       "empty_title": "No courses yet",
       "empty_search": "No matching courses",
       "empty_body": "When instructors create courses, they will appear here.",
-      "empty_search": "No matching courses",
-      "search_placeholder": "Search by title or slug…",
       "back_to_admin": "Back to admin",
       "cols": {
         "course": "Course",

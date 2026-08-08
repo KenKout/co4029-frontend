@@ -1,12 +1,22 @@
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { SearchInput } from "@/components/ui/search-input";
+import { CourseEnrollmentStatusBadge } from "@/components/ui/status-badges";
+import { useFormatDate } from "@/lib/format/date";
 import type { RosterEntry } from "@/lib/api/types";
-import { StudentRow } from "./StudentRow";
+import { StudentIdentityCell } from "./StudentRow";
 import type { ListQueryState } from "./types";
 
+/**
+ * Roster tab — read-only view of who is enrolled; all mutation lives on
+ * `/management/courses/{id}/enrollments` (add / bulk import / invite codes),
+ * which the "Manage enrolments" button links to.
+ */
 function EmptyStudents({
   canAssign,
   courseId,
@@ -16,7 +26,7 @@ function EmptyStudents({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="bg-surface-elev border border-border rounded-lg p-10 text-center">
+    <div className="text-center py-10">
       <Users className="h-10 w-10 mx-auto mb-3 text-text-subtle" />
       <p className="text-sm font-medium text-text-strong">
         {t("dept_course_detail.empty_students_title")}
@@ -34,47 +44,6 @@ function EmptyStudents({
   );
 }
 
-function StudentsBody({
-  roster,
-  canAssign,
-  courseId,
-}: {
-  roster: ListQueryState<RosterEntry>;
-  canAssign: boolean;
-  courseId: string;
-}) {
-  const { t } = useTranslation();
-  if (roster.isLoading) {
-    return (
-      <PageSkeleton
-        rows={4}
-        rounded="rounded-lg"
-        bg="bg-surface-muted"
-        gap="space-y-2"
-      />
-    );
-  }
-  if (roster.isError) {
-    return (
-      <div className="bg-surface-elev border border-border rounded-lg p-5">
-        <p className="text-sm text-danger">
-          {t("dept_course_detail.load_failed_students")}
-        </p>
-      </div>
-    );
-  }
-  if ((roster.data ?? []).length === 0) {
-    return <EmptyStudents canAssign={canAssign} courseId={courseId} />;
-  }
-  return (
-    <div>
-      {(roster.data ?? []).map((entry) => (
-        <StudentRow key={entry.enrollment_id} entry={entry} />
-      ))}
-    </div>
-  );
-}
-
 export function DeptStudentsTab({
   active,
   roster,
@@ -87,7 +56,54 @@ export function DeptStudentsTab({
   courseId: string;
 }) {
   const { t } = useTranslation();
+  const formatDate = useFormatDate();
+  const [query, setQuery] = useState("");
+
+  const rows = useMemo(() => {
+    const all = roster.data ?? [];
+    const q = query.trim().toLowerCase();
+    if (!q) return all;
+    return all.filter((e) =>
+      [e.display_name, e.primary_email]
+        .filter(Boolean)
+        .some((s) => (s as string).toLowerCase().includes(q)),
+    );
+  }, [roster.data, query]);
+
+  const columns: DataTableColumn<RosterEntry>[] = useMemo(
+    () => [
+      {
+        id: "student",
+        header: t("dept_course_detail.col_student"),
+        sortable: true,
+        sortValue: (e) => (e.display_name || e.primary_email).toLowerCase(),
+        cell: (e) => <StudentIdentityCell entry={e} />,
+      },
+      {
+        id: "status",
+        header: t("dept_course_detail.col_status"),
+        sortable: true,
+        sortValue: (e) => e.status,
+        cell: (e) => <CourseEnrollmentStatusBadge status={e.status} />,
+      },
+      {
+        id: "enrolled_at",
+        header: t("dept_course_detail.col_enrolled"),
+        sortable: true,
+        align: "right",
+        sortValue: (e) => e.enrolled_at,
+        cell: (e) => (
+          <span className="text-xs text-text-muted whitespace-nowrap">
+            {formatDate(e.enrolled_at)}
+          </span>
+        ),
+      },
+    ],
+    [t, formatDate],
+  );
+
   if (!active) return null;
+
   return (
     <div className="space-y-4">
       {canAssign && (
@@ -103,7 +119,56 @@ export function DeptStudentsTab({
           </Link>
         </div>
       )}
-      <StudentsBody roster={roster} canAssign={canAssign} courseId={courseId} />
+
+      {roster.isLoading ? (
+        <PageSkeleton
+          rows={4}
+          rounded="rounded-lg"
+          bg="bg-surface-muted"
+          gap="space-y-2"
+        />
+      ) : roster.isError ? (
+        <div className="bg-surface-elev border border-border rounded-lg p-5">
+          <p className="text-sm text-danger">
+            {t("dept_course_detail.load_failed_students")}
+          </p>
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={rows}
+          getRowId={(e) => e.enrollment_id}
+          pagination
+          pageSize={10}
+          pageSizeOptions={[10, 25, 50]}
+          emptyState={
+            query ? (
+              t("dept_course_detail.empty_search_students")
+            ) : (
+              <EmptyStudents canAssign={canAssign} courseId={courseId} />
+            )
+          }
+          toolbar={
+            (roster.data ?? []).length > 0 ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <SearchInput
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onClear={query ? () => setQuery("") : undefined}
+                  placeholder={t("dept_course_detail.search_students")}
+                  wrapperClassName="w-full sm:w-72"
+                  aria-label={t("dept_course_detail.search_students")}
+                />
+                <p className="text-xs text-text-muted">
+                  {t("dept_course_detail.student_count", {
+                    count: rows.length,
+                  })}
+                </p>
+              </div>
+            ) : undefined
+          }
+        />
+      )}
     </div>
   );
 }

@@ -91,3 +91,16 @@ export const EnrollmentStatusBadge = makeStatusBadge(
   "me_career_paths.status",
   { size: "sm" },
 );
+
+/**
+ * COURSE enrollment status on the dept roster,
+ * `dept_course_detail.enrollment_status.*`.
+ *
+ * Same token map as `EnrollmentStatusBadge` but a different i18n namespace —
+ * which is exactly why it gets its own binding rather than reusing that one.
+ */
+export const CourseEnrollmentStatusBadge = makeStatusBadge(
+  ENROLLMENT_STATUS_TOKENS,
+  "dept_course_detail.enrollment_status",
+  { size: "sm" },
+);

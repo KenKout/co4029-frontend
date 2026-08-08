@@ -81,6 +81,7 @@ export const ENROLLMENT_STATUS_TOKENS: StatusTokenMap = {
   active: "bg-emerald-100 text-emerald-700",
   completed: "bg-m3-primary-fixed text-m3-primary",
   dropped: "bg-slate-100 text-slate-500",
+  waitlisted: "bg-amber-100 text-amber-700",
 };
 
 /** Look up a status colour with the shared slate fallback. */
