@@ -62,7 +62,6 @@ export default function ManagementCareerPathDetailPage() {
         id={id}
         initialName={data.name}
         initialDescription={data.description ?? ""}
-        initialOrgUnitId={data.org_unit_id ?? ""}
         initialOrganizationId={data.organization_id}
       />
 

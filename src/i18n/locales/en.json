@@ -2886,20 +2886,16 @@
     },
     "fields": {
       "name": "Name",
-      "org_unit": "Organization unit",
       "description": "Description",
       "course_uuid": "Course UUID *",
       "position": "Position",
       "required": "Required",
-      "student_uuid": "Student UUID *"
+      "student_uuid": "Student UUID *",
+      "organization": "Organization"
     },
     "placeholders": {
-      "org_unit_uuid_optional": "Organization unit UUID (optional)",
       "position_end": "End",
-      "select_org_unit": "— Select org unit —",
-      "select_org_first": "— Select an organization first —",
-      "organization_fixed": "Organization of this path",
-      "loading_units": "Loading org units…"
+      "organization_fixed": "Organization of this path"
     },
     "sections": {
       "add_course": "Add course",

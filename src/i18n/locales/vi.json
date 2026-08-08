@@ -2758,20 +2758,16 @@
     },
     "fields": {
       "name": "Tên",
-      "org_unit": "Đơn vị (org_unit_id)",
       "description": "Mô tả",
       "course_uuid": "UUID khóa học *",
       "position": "Vị trí",
       "required": "Bắt buộc",
-      "student_uuid": "UUID sinh viên *"
+      "student_uuid": "UUID sinh viên *",
+      "organization": "Tổ chức"
     },
     "placeholders": {
-      "org_unit_uuid_optional": "UUID đơn vị (tuỳ chọn)",
       "position_end": "Cuối",
-      "select_org_unit": "— Chọn đơn vị —",
-      "select_org_first": "— Chọn tổ chức trước —",
-      "organization_fixed": "Tổ chức của lộ trình này",
-      "loading_units": "Đang tải đơn vị…"
+      "organization_fixed": "Tổ chức của lộ trình này"
     },
     "sections": {
       "add_course": "Thêm khóa học",

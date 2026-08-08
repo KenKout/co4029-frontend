@@ -5092,8 +5092,6 @@ export interface components {
         };
         /** CareerPathUpdate */
         CareerPathUpdate: {
-            /** Org Unit Id */
-            org_unit_id?: string | null;
             /** Name */
             name?: string | null;
             /** Description */
