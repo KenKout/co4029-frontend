@@ -1,6 +1,7 @@
 import type { MonitorX } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /**
  * One filter tab in the integrity breakdown row.
@@ -35,7 +36,7 @@ export function IntegrityFilterTab({
 }) {
   const empty = count === 0;
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
@@ -92,6 +93,6 @@ export function IntegrityFilterTab({
           {label}
         </p>
       </div>
-    </button>
+    </Button>
   );
 }

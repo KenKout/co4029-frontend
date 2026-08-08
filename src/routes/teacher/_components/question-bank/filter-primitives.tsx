@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 
 import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 /**
  * Filter primitives for the Question Bank toolbar, extracted verbatim from the
@@ -49,7 +50,7 @@ export function FilterChip({
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary">
       {label}
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onClear}
         // Was a hardcoded English string, so this button announced in English
@@ -60,7 +61,7 @@ export function FilterChip({
         className="cursor-pointer rounded-full hover:bg-primary/20 p-0.5"
       >
         <X className="h-3 w-3" />
-      </button>
+      </Button>
     </span>
   );
 }

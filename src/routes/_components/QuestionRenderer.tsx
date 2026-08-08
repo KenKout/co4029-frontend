@@ -3,6 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RichContent } from "@/components/ui/rich-content";
 import type { QuizQuestionPublic } from "@/lib/api/types";
+import { Button } from "@/components/ui/button";
 
 /**
  * Per-type input UI for the student quiz attempt page.
@@ -75,7 +76,7 @@ function OptionInput({
       {sortedOptions.map((option) => {
         const isSelected = selectedOptionId === option.id;
         return (
-          <button
+          <Button variant="ghost"
             key={option.id}
             type="button"
             onClick={() => {
@@ -119,7 +120,7 @@ function OptionInput({
             {isSelected && (
               <CheckCircle2 className="h-5 w-5 text-m3-primary shrink-0 fill-m3-primary/10" />
             )}
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -280,7 +281,7 @@ function FillBlankInput({
           {wordBank.map((word) => {
             const used = slots.includes(word);
             return (
-              <button
+              <Button variant="ghost"
                 key={word}
                 type="button"
                 draggable={!disabled && !used}
@@ -309,7 +310,7 @@ function FillBlankInput({
                 )}
               >
                 {word}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -379,14 +380,14 @@ function DropSlot({
             {value}
           </span>
           {!disabled && (
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={onClear}
               aria-label="Clear blank"
               className="ml-1 text-m3-primary/60 hover:text-m3-primary text-xs leading-none"
             >
               ×
-            </button>
+            </Button>
           )}
         </>
       ) : (
@@ -433,7 +434,7 @@ function MultiSelectInput({
       {sortedOptions.map((option) => {
         const isSelected = chosen.includes(option.id);
         return (
-          <button
+          <Button variant="ghost"
             key={option.id}
             type="button"
             onClick={() => toggle(option.id)}
@@ -472,7 +473,7 @@ function MultiSelectInput({
                 inline
               />
             </span>
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -655,7 +656,7 @@ function OrderingInput({
             {item}
           </span>
           <div className="flex flex-col gap-0.5 shrink-0">
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={() => move(i, -1)}
               disabled={disabled || i === 0}
@@ -663,8 +664,8 @@ function OrderingInput({
               className="px-2 rounded bg-m3-surface-container-high text-m3-on-surface hover:bg-m3-primary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-tight"
             >
               ▲
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost"
               type="button"
               onClick={() => move(i, 1)}
               disabled={disabled || i === order.length - 1}
@@ -672,7 +673,7 @@ function OrderingInput({
               className="px-2 rounded bg-m3-surface-container-high text-m3-on-surface hover:bg-m3-primary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-tight"
             >
               ▼
-            </button>
+            </Button>
           </div>
         </div>
       ))}

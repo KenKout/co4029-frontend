@@ -4,6 +4,7 @@ import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import type { QuizAttemptRead, QuizPublic } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { IntroState } from "./helpers";
 
 /** The still-open attempt, rendered as a resume button at the top of history. */
@@ -20,7 +21,7 @@ function InProgressRow({
 }) {
   const { t } = useTranslation();
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={onResume}
       disabled={resuming || starting}
@@ -45,7 +46,7 @@ function InProgressRow({
           ? t("course_quiz.resume.resuming")
           : t("course_quiz.resume.resume")}
       </span>
-    </button>
+    </Button>
   );
 }
 

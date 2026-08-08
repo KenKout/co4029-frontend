@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { GlassCard } from "@/components/ui/glass-card";
 import type { QuizAttemptReviewQuestion } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { computeReviewStats } from "./helpers";
 
 type ReviewChipState = "correct" | "incorrect" | "skipped";
@@ -71,7 +72,7 @@ export function QuizReviewNavigator({
           {questions.map((q, idx) => {
             const state = chipStateFor(q);
             return (
-              <button
+              <Button variant="ghost"
                 key={q.question_id}
                 type="button"
                 onClick={() => onJump(idx)}
@@ -87,7 +88,7 @@ export function QuizReviewNavigator({
                 )}
               >
                 {idx + 1}
-              </button>
+              </Button>
             );
           })}
         </div>

@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { AiCostsDimension } from "@/lib/api/hooks/admin";
+import { Button } from "@/components/ui/button";
 import { DIMENSION_VALUES } from "./constants";
 
 /** Radiogroup picking which column the by-category breakdown groups on. */
@@ -20,7 +21,7 @@ export function DimensionSwitcher({
       {DIMENSION_VALUES.map((d) => {
         const active = d === value;
         return (
-          <button
+          <Button variant="ghost"
             key={d}
             type="button"
             role="radio"
@@ -33,7 +34,7 @@ export function DimensionSwitcher({
             }
           >
             {t(`admin.ai_costs.dimension_options.${d}`)}
-          </button>
+          </Button>
         );
       })}
     </div>

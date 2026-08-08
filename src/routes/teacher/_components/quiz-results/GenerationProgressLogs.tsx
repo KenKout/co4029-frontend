@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import { ChevronDown, ChevronRight, ScrollText } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import {
   formatClock,
@@ -29,7 +30,7 @@ export function GenerationProgressLogs({
   if (events.length === 0) return null;
   return (
     <div className="rounded-lg border border-m3-outline-variant/60 overflow-hidden">
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onToggleLogs}
         aria-expanded={logsOpen}
@@ -44,7 +45,7 @@ export function GenerationProgressLogs({
         {t("teacher_quiz_results.generation.logs_toggle", {
           count: events.length,
         })}
-      </button>
+      </Button>
       {logsOpen && (
         <div className="max-h-48 overflow-y-auto bg-m3-surface-container-lowest px-3 py-2 space-y-1 font-mono text-[11px]">
           {events.map((ev, i) => (

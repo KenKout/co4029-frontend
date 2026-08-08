@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronRight, CheckCircle2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type {
   QuizQuestionBreakdown,
   QuizOptionDistribution,
@@ -101,7 +102,7 @@ function QuestionRow({
 
   return (
     <div className="border-b border-m3-outline-variant last:border-b-0">
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => hasOptions && setExpanded((v) => !v)}
         className={cn(
@@ -140,7 +141,7 @@ function QuestionRow({
             )
           ) : null}
         </span>
-      </button>
+      </Button>
       {expanded && hasOptions && (
         <div className="space-y-1 bg-m3-surface-container-lowest px-3 py-2 pl-12">
           {question.option_distribution.map((option) => (

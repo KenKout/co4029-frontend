@@ -1,5 +1,6 @@
 import { Check, Pencil } from "lucide-react";
 import type { CourseContentModule } from "@/lib/api/types/common";
+import { Button } from "@/components/ui/button";
 import type { UpdateModuleMutation } from "./types";
 import type { ModuleTitleEditController } from "./use-module-title-edit";
 
@@ -55,7 +56,7 @@ export function ModuleTitleEditor({
             module.title)
           : module.title}
       </h1>
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={startEdit}
         className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary cursor-pointer"
@@ -65,7 +66,7 @@ export function ModuleTitleEditor({
         ) : (
           <Pencil className="h-3.5 w-3.5" />
         )}
-      </button>
+      </Button>
     </div>
   );
 }

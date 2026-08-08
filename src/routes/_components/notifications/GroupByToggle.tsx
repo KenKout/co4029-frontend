@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { NotificationGroupBy } from "./helpers";
 
 /**
@@ -30,7 +31,7 @@ export function GroupByToggle({
       className="inline-flex items-center gap-1 rounded-full bg-m3-surface-container p-1"
     >
       {options.map((opt) => (
-        <button
+        <Button variant="ghost"
           key={opt.key}
           type="button"
           onClick={() => onChange(opt.key)}
@@ -43,7 +44,7 @@ export function GroupByToggle({
           )}
         >
           {opt.label}
-        </button>
+        </Button>
       ))}
     </div>
   );

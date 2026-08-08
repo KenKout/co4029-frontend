@@ -23,6 +23,7 @@ import {
 import { Lock } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export function Section({
   title,
@@ -157,7 +158,7 @@ export function ToggleRow({
           {description}
         </p>
       </div>
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => onChange(!value)}
         aria-pressed={value}
@@ -178,7 +179,7 @@ export function ToggleRow({
               : "translate-x-0 bg-slate-400",
           )}
         />
-      </button>
+      </Button>
     </div>
   );
 }

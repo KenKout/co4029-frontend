@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { MessageSquareText, Mic } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { AnswerMode } from "./types";
 
 /** Voice / Type segmented control with the sliding indicator. */
@@ -32,7 +33,7 @@ export function AnswerModeToggle({
           mode === "type" && "translate-x-full",
         )}
       />
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => onModeChange("voice")}
         disabled={!micAvailable || disabled}
@@ -46,8 +47,8 @@ export function AnswerModeToggle({
       >
         <Mic className="h-3.5 w-3.5" />
         {t("course_interview.workspace.voice_mode")}
-      </button>
-      <button
+      </Button>
+      <Button variant="ghost"
         type="button"
         onClick={() => onModeChange("type")}
         disabled={disabled}
@@ -61,7 +62,7 @@ export function AnswerModeToggle({
       >
         <MessageSquareText className="h-3.5 w-3.5" />
         {t("course_interview.workspace.type_mode")}
-      </button>
+      </Button>
     </div>
   );
 }

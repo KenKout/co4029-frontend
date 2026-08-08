@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 export default function ToggleSwitch({
   checked,
   disabled,
@@ -10,7 +11,7 @@ export default function ToggleSwitch({
   ariaLabel: string;
 }) {
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       role="switch"
       aria-checked={checked}
@@ -26,6 +27,6 @@ export default function ToggleSwitch({
           checked ? "translate-x-5" : "translate-x-0.5"
         }`}
       />
-    </button>
+    </Button>
   );
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowDown, ArrowUp, Lock, Settings, Unlock } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 import type {
   CareerPathCourseAuthoring,
   CareerPathStageAuthoring,
@@ -46,7 +47,7 @@ export function StageCard({
     <div className="rounded-2xl bg-card ghost-border p-4">
       <div className="flex items-start gap-3">
         <div className="flex flex-col gap-0.5 shrink-0">
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => controller.move(index, -1)}
             disabled={isFirst}
@@ -54,8 +55,8 @@ export function StageCard({
             title={t(`${prefix}.move_up`)}
           >
             <ArrowUp className="h-3 w-3 text-m3-on-surface-variant" />
-          </button>
-          <button
+          </Button>
+          <Button variant="ghost"
             type="button"
             onClick={() => controller.move(index, 1)}
             disabled={index === total - 1}
@@ -63,7 +64,7 @@ export function StageCard({
             title={t(`${prefix}.move_down`)}
           >
             <ArrowDown className="h-3 w-3 text-m3-on-surface-variant" />
-          </button>
+          </Button>
         </div>
 
         <div className="flex flex-col items-center justify-center w-8 h-8 rounded-lg bg-m3-primary-fixed text-m3-primary shrink-0 font-headline font-bold text-xs">
@@ -102,7 +103,7 @@ export function StageCard({
 
         <div className="flex items-center gap-1 shrink-0">
           <Tooltip content={t(`${prefix}.settings`)}>
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={() =>
                 controller.setOpenSettingsFor(open ? null : stage.id)
@@ -111,7 +112,7 @@ export function StageCard({
               className="p-2 rounded-lg hover:bg-m3-surface-container cursor-pointer"
             >
               <Settings className="h-4 w-4 text-m3-on-surface-variant" />
-            </button>
+            </Button>
           </Tooltip>
           <RemoveRowButtons
             confirming={confirming}

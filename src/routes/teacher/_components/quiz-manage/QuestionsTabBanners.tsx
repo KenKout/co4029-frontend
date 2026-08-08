@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { AlertCircle, Loader2 } from "lucide-react";
 
 import { DEFAULT_EXPECTED_SECONDS } from "./helpers";
+import { Button } from "@/components/ui/button";
 
 /**
  * The three status banners above the question list. Extracted from QuestionsTab
@@ -45,7 +46,7 @@ export function QuestionsTabBanners({
               seconds: DEFAULT_EXPECTED_SECONDS,
             })}
           </span>
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={onSaveDefaultTimes}
             disabled={savingDefaults}
@@ -56,7 +57,7 @@ export function QuestionsTabBanners({
             ) : (
               t("teacher_quiz_manage.banners.save_default_time")
             )}
-          </button>
+          </Button>
         </div>
       )}
 

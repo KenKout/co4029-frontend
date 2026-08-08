@@ -44,7 +44,7 @@ export function LessonTabsSection({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-m3-outline-variant/20">
         <div className="flex gap-1 flex-wrap">
           {TABS.map((tab) => (
-            <button
+            <Button variant="ghost"
               key={tab}
               onClick={() => onTabChange(tab)}
               className={cn(
@@ -55,7 +55,7 @@ export function LessonTabsSection({
               )}
             >
               {tab}
-            </button>
+            </Button>
           ))}
         </div>
 

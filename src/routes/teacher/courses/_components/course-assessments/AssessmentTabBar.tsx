@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 import type { Tab } from "./types";
 import type { CourseAssessmentsController } from "./use-course-assessments-controller";
@@ -18,7 +19,7 @@ export function AssessmentTabBar({
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex gap-2">
         {(["quizzes", "interviews"] as Tab[]).map((key) => (
-          <button
+          <Button variant="ghost"
             key={key}
             type="button"
             onClick={() => {
@@ -34,7 +35,7 @@ export function AssessmentTabBar({
             }
           >
             {key === "quizzes" ? "Quizzes" : "Interviews"}
-          </button>
+          </Button>
         ))}
       </div>
       <Input

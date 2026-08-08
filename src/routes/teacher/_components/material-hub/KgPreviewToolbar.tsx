@@ -2,6 +2,7 @@ import { CheckCircle2, EyeOff, Loader2, Maximize2, Send } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 import type { CuratedPublishController } from "./use-curated-publish";
 
@@ -63,7 +64,7 @@ export function KgPreviewToolbar({
           </span>
         )}
         {canPublish && !isFullyPublished && (
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => setConfirmPublish(true)}
             disabled={publishBusy}
@@ -84,7 +85,7 @@ export function KgPreviewToolbar({
             {needsSaveBeforePublish
               ? t("teacher_lesson_materials.kg.save_and_publish")
               : t("teacher_lesson_materials.kg.publish")}
-          </button>
+          </Button>
         )}
         {isFullyPublished && (
           <span
@@ -105,7 +106,7 @@ export function KgPreviewToolbar({
             published by mistake could never be removed from the student view.
             Shows next to the Published marker; the draft stays intact. */}
         {isFullyPublished && (
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => void handleUnpublish()}
             disabled={unpublishBusy}
@@ -118,9 +119,9 @@ export function KgPreviewToolbar({
               <EyeOff className="h-3.5 w-3.5" />
             )}
             {t("teacher_lesson_materials.kg.unpublish")}
-          </button>
+          </Button>
         )}
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={onExpand}
           aria-label={t("teacher_lesson_materials.kg.expand")}
@@ -128,7 +129,7 @@ export function KgPreviewToolbar({
           className="rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer"
         >
           <Maximize2 className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );

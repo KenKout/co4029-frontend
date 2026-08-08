@@ -9,6 +9,7 @@ import {
 import { useModuleItems } from "@/lib/api/hooks/courses";
 import type { ModulePublic, MyCourseProgressSummary } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   lessonCount,
   moduleCompletion,
@@ -100,7 +101,7 @@ function ModuleRow({
         isOpen ? "border-m3-primary/30" : "border-m3-outline-variant/30",
       )}
     >
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onToggle}
         className="w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer transition-colors hover:bg-m3-primary/5"
@@ -146,7 +147,7 @@ function ModuleRow({
             <ChevronDown className="h-4 w-4 text-m3-outline shrink-0 transition-all duration-200 group-hover:text-m3-primary group-hover:translate-y-0.5" />
           )}
         </div>
-      </button>
+      </Button>
 
       {isOpen && <ModuleItemsPanel moduleId={mod.id} />}
     </div>

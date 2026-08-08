@@ -1,5 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
 
 export function ConfirmDisableDialog({
   onConfirm,
@@ -28,15 +29,15 @@ export function ConfirmDisableDialog({
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-5">
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={onCancel}
             disabled={isPending}
             className="px-3 py-1.5 text-sm font-medium rounded-md text-text-strong border border-border hover:bg-surface-muted disabled:opacity-50"
           >
             {t("common.cancel")}
-          </button>
-          <button
+          </Button>
+          <Button variant="ghost"
             type="button"
             onClick={onConfirm}
             disabled={isPending}
@@ -45,7 +46,7 @@ export function ConfirmDisableDialog({
             {isPending
               ? t("admin.users.actions.disabling")
               : t("admin.users.actions.disable")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

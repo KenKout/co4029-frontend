@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import { Check, Loader2, UserPlus } from "lucide-react";
 import { useAssignableTeachersForNewCourse } from "@/lib/api/hooks/dept";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { CourseFormController } from "./use-course-form";
 
 /**
@@ -70,7 +71,7 @@ export function TeacherPickerSection({
             const selected = form.teacherIds.includes(teacher.user_id);
             return (
               <li key={teacher.user_id}>
-                <button
+                <Button variant="ghost"
                   type="button"
                   onClick={() => toggle(teacher.user_id)}
                   aria-pressed={selected}
@@ -103,7 +104,7 @@ export function TeacherPickerSection({
                       </span>
                     )}
                   </span>
-                </button>
+                </Button>
               </li>
             );
           })}

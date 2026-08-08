@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { CourseSettingsContactFields } from "./CourseSettingsContactFields";
 import { CourseSettingsDeliveryFields } from "./CourseSettingsDeliveryFields";
 import { CourseSettingsMetaFields } from "./CourseSettingsMetaFields";
@@ -55,7 +56,7 @@ export function CourseSettingsPanel({
         open ? "border-l-m3-primary" : "border-l-m3-outline-variant",
       )}
     >
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
@@ -84,7 +85,7 @@ export function CourseSettingsPanel({
             open ? "rotate-0" : "-rotate-90",
           )}
         />
-      </button>
+      </Button>
 
       <div
         className={cn(

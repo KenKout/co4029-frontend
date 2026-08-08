@@ -13,6 +13,7 @@ import type { InterviewOutcomeAuthoring } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { Field } from "@/routes/teacher/_components/interview-config/form-primitives";
 import type { GenerationFieldsProps } from "@/routes/teacher/_components/interview-config/generation-form-fields";
+import { Button } from "@/components/ui/button";
 
 export function GenerationModulePicker({
   generationForm,
@@ -42,7 +43,7 @@ export function GenerationModulePicker({
               selected ||
               (generationForm.source_module_ids.length === 0 && isOwn);
             return (
-              <button
+              <Button variant="ghost"
                 key={m.id}
                 type="button"
                 aria-pressed={effectiveSelected}
@@ -69,7 +70,7 @@ export function GenerationModulePicker({
                     {t("teacher_interview_config.generate.modules_own")}
                   </span>
                 )}
-              </button>
+              </Button>
             );
           })
         )}
@@ -100,7 +101,7 @@ export function GenerationOutcomePicker({
       ) : (
         <div className="space-y-2">
           <div className="flex justify-end">
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={() =>
                 updateGeneration(
@@ -113,7 +114,7 @@ export function GenerationOutcomePicker({
               {allSelected
                 ? t("teacher_interview_config.generate.outcomes_clear")
                 : t("teacher_interview_config.generate.outcomes_select_all")}
-            </button>
+            </Button>
           </div>
           {outcomes.map((outcome, index) => (
             <GenerationOutcomeRow

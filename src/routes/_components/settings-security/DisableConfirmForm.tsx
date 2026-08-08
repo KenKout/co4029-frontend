@@ -23,7 +23,7 @@ function DisableModeTabs({
   const { t } = useTranslation();
   return (
     <div className="flex gap-2 text-xs font-semibold">
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => setState({ phase: "confirm", mode: "totp", code: "" })}
         className={`rounded-full px-3 py-1 ring-1 ring-inset transition ${
@@ -33,8 +33,8 @@ function DisableModeTabs({
         }`}
       >
         {t("settings_security.disable_mode_totp")}
-      </button>
-      <button
+      </Button>
+      <Button variant="ghost"
         type="button"
         onClick={() =>
           setState({ phase: "confirm", mode: "recovery", code: "" })
@@ -46,7 +46,7 @@ function DisableModeTabs({
         }`}
       >
         {t("settings_security.disable_mode_recovery")}
-      </button>
+      </Button>
     </div>
   );
 }

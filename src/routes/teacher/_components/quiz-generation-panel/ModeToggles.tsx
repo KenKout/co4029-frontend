@@ -1,6 +1,7 @@
 import { AlertCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 import type { GenerationMode } from "./types";
 
@@ -37,7 +38,7 @@ export function ModeToggle({
         {options.map((option) => {
           const active = mode === option.key;
           return (
-            <button
+            <Button variant="ghost"
               key={option.key}
               type="button"
               onClick={() => onChange(option.key)}
@@ -55,7 +56,7 @@ export function ModeToggle({
               <span className="text-[11px] text-m3-on-surface-variant">
                 {option.hint}
               </span>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -82,7 +83,7 @@ export function AppendToggle({
         Existing questions
       </label>
       <div className="grid grid-cols-2 gap-2">
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => onChange(false)}
           aria-pressed={!append}
@@ -99,8 +100,8 @@ export function AppendToggle({
           <span className="text-[11px] text-m3-on-surface-variant">
             Wipe current questions and start fresh
           </span>
-        </button>
-        <button
+        </Button>
+        <Button variant="ghost"
           type="button"
           onClick={() => onChange(true)}
           aria-pressed={append}
@@ -117,7 +118,7 @@ export function AppendToggle({
           <span className="text-[11px] text-m3-on-surface-variant">
             Add new questions next to existing ones
           </span>
-        </button>
+        </Button>
       </div>
       {hasExistingQuestions && !append && (
         <p className="text-[11px] text-amber-700 flex items-start gap-1.5 mt-1">

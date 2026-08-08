@@ -3,6 +3,7 @@ import { Info } from "lucide-react";
 
 import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { CourseDetailData } from "./types";
 import type { QuestionBankViewStateController } from "./use-question-bank-view-state";
 
@@ -31,7 +32,7 @@ export function QuestionBankHeader({
           : t("teacher_question_bank.subtitle")
       }
       action={
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => setHelpOpen((open) => !open)}
           aria-expanded={helpOpen}
@@ -45,7 +46,7 @@ export function QuestionBankHeader({
         >
           <Info className="h-3.5 w-3.5" />
           {t("teacher_question_bank.how_it_works")}
-        </button>
+        </Button>
       }
     />
   );

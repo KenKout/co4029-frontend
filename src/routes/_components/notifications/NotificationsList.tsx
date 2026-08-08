@@ -159,13 +159,13 @@ export function NotificationsList({ c }: { c: NotificationsPageController }) {
             title={t("notifications.empty_filtered_title")}
             description={t("notifications.empty_filtered_body")}
             cta={
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={c.resetFilters}
                 className="h-9 rounded-lg px-4 text-sm font-semibold text-m3-primary hover:bg-m3-primary-fixed transition-colors cursor-pointer"
               >
                 {t("notifications.clear_filters")}
-              </button>
+              </Button>
             }
           />
         )

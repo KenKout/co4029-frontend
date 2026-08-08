@@ -54,7 +54,7 @@ export function ResultsTabBar({
   return (
     <div className="bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 border border-m3-outline-variant/20">
       {RESULTS_TABS.map(({ id, icon: Icon, labelKey }) => (
-        <button
+        <Button variant="ghost"
           key={id}
           type="button"
           onClick={() => setTab(id)}
@@ -66,7 +66,7 @@ export function ResultsTabBar({
         >
           <Icon className="h-4 w-4" />
           {t(labelKey)}
-        </button>
+        </Button>
       ))}
 
       {(tab === "responses" || tab === "statistics") && (

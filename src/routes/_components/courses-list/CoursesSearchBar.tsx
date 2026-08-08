@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { LayoutGrid, List, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export type CourseScope = "all" | "enrolled" | "completed";
 export type CourseViewMode = "card" | "list";
@@ -68,7 +69,7 @@ export function CoursesSearchBar({
               className="inline-flex rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-lowest p-1 gap-1"
             >
               {SCOPES.map((s) => (
-                <button
+                <Button variant="ghost"
                   key={s}
                   type="button"
                   role="tab"
@@ -82,7 +83,7 @@ export function CoursesSearchBar({
                   )}
                 >
                   {t(`courses_list.scope_${s}`)}
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -92,7 +93,7 @@ export function CoursesSearchBar({
               aria-label={t("courses_list.view_label")}
               className="inline-flex rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-lowest p-1 gap-1"
             >
-              <button
+              <Button variant="ghost"
                 type="button"
                 aria-label={t("courses_list.view_cards")}
                 title={t("courses_list.view_cards")}
@@ -106,8 +107,8 @@ export function CoursesSearchBar({
                 )}
               >
                 <LayoutGrid className="h-4 w-4" />
-              </button>
-              <button
+              </Button>
+              <Button variant="ghost"
                 type="button"
                 aria-label={t("courses_list.view_list")}
                 title={t("courses_list.view_list")}
@@ -121,7 +122,7 @@ export function CoursesSearchBar({
                 )}
               >
                 <List className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -135,12 +136,12 @@ export function CoursesSearchBar({
                   total: totalCount,
                 })}
             {(query || scope !== "all") && (
-              <button
+              <Button variant="link"
                 onClick={clearFilters}
                 className="cursor-pointer ml-2 text-m3-secondary underline underline-offset-2 hover:no-underline"
               >
                 {t("courses_list.clear_all")}
-              </button>
+              </Button>
             )}
           </p>
         )}

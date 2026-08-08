@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { AlertTriangle, FilePlus, Layers, Plus, X } from "lucide-react";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { Button } from "@/components/ui/button";
 import { CourseInPathRow } from "./CourseInPathRow";
 import { CoursePickerDialog } from "./CoursePickerDialog";
 import { EmptyState } from "./EmptyState";
@@ -62,14 +63,14 @@ export function CoursesTab({ id }: { id: string }) {
                 ))}
               </ul>
             </div>
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={stages.dismissWarnings}
               aria-label={t("common.close")}
               className="p-1 rounded hover:bg-amber-100 cursor-pointer"
             >
               <X className="h-3.5 w-3.5 text-amber-700" />
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -80,21 +81,21 @@ export function CoursesTab({ id }: { id: string }) {
             {t(`${prefix}.save_order`)}
           </span>
           <div className="flex gap-2">
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={() => stages.setOrder(null)}
               className="h-8 px-3 rounded-full text-xs font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container-high cursor-pointer"
             >
               {t("common.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost"
               type="button"
               onClick={stages.handleSubmitReorder}
               disabled={stages.reorder.isPending}
               className="h-8 px-3 rounded-full bg-m3-primary text-m3-on-primary text-xs font-semibold disabled:opacity-50 cursor-pointer"
             >
               {t(`${prefix}.save_order`)}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -132,14 +133,14 @@ export function CoursesTab({ id }: { id: string }) {
                   ))}
                 </StageCard>
                 <div className="ml-4 flex items-center gap-1">
-                  <button
+                  <Button variant="ghost"
                     type="button"
                     onClick={() => controller.openPickerForStage(stage.id)}
                     className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold text-m3-primary hover:bg-m3-primary-fixed cursor-pointer"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     {t("management_career_path_detail.actions.add_courses")}
-                  </button>
+                  </Button>
                   {/* Create-and-attach in one step. The picker only offers
                       courses that already exist, so without this the manager
                       leaves the path, creates a course, and has to remember to

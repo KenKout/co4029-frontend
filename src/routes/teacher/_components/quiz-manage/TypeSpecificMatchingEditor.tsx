@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Plus, Trash2 } from "lucide-react";
 
 import type { TypeSpecificEditorProps } from "./type-specific-value";
+import { Button } from "@/components/ui/button";
 
 /**
  * ``matching`` → list of {left,right} pairs (add/remove rows). Extracted from
@@ -50,7 +51,7 @@ export function TypeSpecificMatchingEditor({
             }}
             className="flex-1 rounded-lg border-2 border-emerald-300 bg-emerald-50/60 px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:border-m3-primary"
           />
-          <button
+          <Button variant="ghost"
             type="button"
             disabled={disabled}
             onClick={() =>
@@ -60,10 +61,10 @@ export function TypeSpecificMatchingEditor({
             className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-40"
           >
             <Trash2 className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       ))}
-      <button
+      <Button variant="link"
         type="button"
         disabled={disabled}
         onClick={() =>
@@ -73,7 +74,7 @@ export function TypeSpecificMatchingEditor({
       >
         <Plus className="h-4 w-4" />
         {t("teacher_quiz_manage.type_editor.add_pair")}
-      </button>
+      </Button>
       <p className="text-[11px] text-m3-on-surface-variant">
         {t("teacher_quiz_manage.type_editor.matching_hint")}
       </p>
@@ -103,7 +104,7 @@ export function TypeSpecificMatchingEditor({
               }}
               className="flex-1 rounded-lg border-2 border-amber-300 bg-amber-50/50 px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:border-m3-primary"
             />
-            <button
+            <Button variant="ghost"
               type="button"
               disabled={disabled}
               onClick={() =>
@@ -115,10 +116,10 @@ export function TypeSpecificMatchingEditor({
               className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-40"
             >
               <Trash2 className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         ))}
-        <button
+        <Button variant="link"
           type="button"
           disabled={disabled}
           onClick={() => onChange({ match_distractors: [...distractors, ""] })}
@@ -126,7 +127,7 @@ export function TypeSpecificMatchingEditor({
         >
           <Plus className="h-4 w-4" />
           {t("teacher_quiz_manage.type_editor.add_distractor")}
-        </button>
+        </Button>
         <p className="text-[11px] text-m3-on-surface-variant">
           {t("teacher_quiz_manage.type_editor.distractors_hint")}
         </p>

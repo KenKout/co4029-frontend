@@ -118,7 +118,7 @@ export function RubricEditor({
                     className="rounded-lg py-2"
                   />
                 </div>
-                <button
+                <Button variant="ghost"
                   type="button"
                   onClick={() => removeAt(index)}
                   aria-label={t(
@@ -127,7 +127,7 @@ export function RubricEditor({
                   className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-m3-on-surface-variant hover:bg-m3-error/10 hover:text-m3-error cursor-pointer"
                 >
                   <Trash2 className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
             </div>
           ))}
@@ -163,7 +163,7 @@ export function VoicePersonaGuideSheet({
     <Sheet>
       <SheetTrigger
         render={
-          <button
+          <Button variant="link"
             type="button"
             className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-m3-primary hover:underline cursor-pointer"
           />

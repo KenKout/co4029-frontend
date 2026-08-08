@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { OrganizationDomainRead } from "@/lib/api/types/admin-organizations";
+import { Button } from "@/components/ui/button";
 
 /**
  * Verified-domain roster. Rendered only once the query has settled and the
@@ -30,14 +31,14 @@ export function DomainList({
               </p>
             )}
           </div>
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => onRemove(d.id)}
             className="p-2 text-red-600 hover:bg-red-50 rounded-md shrink-0"
             aria-label={t("admin.organizations.actions.delete")}
           >
             <Trash2 className="h-4 w-4" />
-          </button>
+          </Button>
         </li>
       ))}
     </ul>

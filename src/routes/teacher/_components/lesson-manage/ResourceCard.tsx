@@ -6,6 +6,7 @@ import { fetchTeacherResourceDownloadUrl } from "@/lib/api/hooks/teacher-courses
 import type { LessonResource } from "@/lib/api/types/common";
 import type { LearningMaterial } from "@/lib/api/types/teacher";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { resourceStyle } from "./constants";
 import { AiStatusBadge } from "./AiStatusBadge";
 import { ResourceAiActions } from "./ResourceAiActions";
@@ -72,7 +73,7 @@ export function ResourceCard({
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
         {twin && <ResourceAiActions twin={twin} onShown={onShown} />}
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={handleDownload}
           disabled={downloading || !resource.storage_object_id}
@@ -84,14 +85,14 @@ export function ResourceCard({
           ) : (
             <Download className="h-4 w-4" />
           )}
-        </button>
-        <button
+        </Button>
+        <Button variant="ghost"
           type="button"
           onClick={() => onDelete(resource.id)}
           className="p-2 rounded-lg text-m3-error hover:bg-m3-error-container/30 transition-colors cursor-pointer"
         >
           <Trash2 className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );

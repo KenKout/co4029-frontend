@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
+import { Button } from "@/components/ui/button";
 import type { SettingRowController } from "./use-setting-row";
 
 /** Control column — fixed 200px so every right edge lines up. */
@@ -33,7 +34,7 @@ export function SettingRowValueColumn({
         )}
         {control}
       </div>
-      <button
+      <Button variant="ghost"
         type="button"
         title={
           overrideAtThisScope
@@ -49,7 +50,7 @@ export function SettingRowValueColumn({
         }
       >
         <RotateCcw className="h-4 w-4" />
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { AdminUserSearchRow } from "@/lib/api/hooks/admin-organizations";
+import { Button } from "@/components/ui/button";
 
 /**
  * Chosen-user card the typeahead collapses into once a hit is picked; the X
@@ -24,14 +25,14 @@ export function SelectedUserCard({
           {value.primary_email}
         </p>
       </div>
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onClear}
         className="text-text-muted hover:text-text-strong shrink-0"
         aria-label={t("admin.organizations.actions.cancel")}
       >
         <X className="h-4 w-4" />
-      </button>
+      </Button>
     </div>
   );
 }

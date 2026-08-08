@@ -5,6 +5,7 @@ import { KgEditButton } from "./KgEditButton";
 import { KgLayoutToggle } from "./KgLayoutToggle";
 import { KgSourceToggle } from "./KgSourceToggle";
 import type { KgLayoutMode, KgSource } from "./types";
+import { Button } from "@/components/ui/button";
 
 /**
  * Explorer header: concept title + node count on the left, the source / layout
@@ -55,14 +56,14 @@ export function KgHeader({
           onLayoutModeChange={onLayoutModeChange}
         />
         {onEdit && <KgEditButton source={source} onEdit={onEdit} />}
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={onClose}
           aria-label={t("common.close")}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface"
         >
           <X className="h-5 w-5" />
-        </button>
+        </Button>
       </div>
     </div>
   );

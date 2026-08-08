@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { useStartCourse } from "@/lib/api/hooks/career-paths";
+import { Button } from "@/components/ui/button";
 import type {
   CareerPathCoursePublic,
   CourseProgressSummaryWithStage,
@@ -290,7 +291,7 @@ function StageCourseRow({
       ) : enrolled ? (
         <ArrowRight className="h-4 w-4 text-m3-on-surface-variant shrink-0" />
       ) : (
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={(e) => {
             e.preventDefault();
@@ -302,7 +303,7 @@ function StageCourseRow({
         >
           <Play className="h-3 w-3" />
           {start.isPending ? t(`${prefix}.starting`) : t(`${prefix}.start`)}
-        </button>
+        </Button>
       )}
     </div>
   );

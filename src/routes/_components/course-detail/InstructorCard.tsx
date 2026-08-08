@@ -10,6 +10,7 @@ import {
 import { GlassCard } from "@/components/ui/glass-card";
 import type { CoursePublic, InstructorRead } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { deriveContactLinks, prettyUrl } from "./helpers";
 
 const ICON_CLASS =
@@ -71,7 +72,7 @@ function CopyContactButton({
   };
 
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={copy}
       aria-label={ariaLabel}
@@ -83,7 +84,7 @@ function CopyContactButton({
       ) : (
         <Copy className="h-3.5 w-3.5" />
       )}
-    </button>
+    </Button>
   );
 }
 

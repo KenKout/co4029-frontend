@@ -4,6 +4,7 @@ import { Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { InterviewQuestionBankItemRead } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { difficultyChipClass } from "./helpers";
 import type { QuestionBankFiltersController } from "./use-question-bank-filters";
 
@@ -42,7 +43,7 @@ export function QuestionRowMeta({
         </span>
       )}
       {(item.tags ?? []).map((tag) => (
-        <button
+        <Button variant="ghost"
           key={tag}
           type="button"
           onClick={() => setTagFilter(tag)}
@@ -59,7 +60,7 @@ export function QuestionRowMeta({
         >
           <Tag className="h-2.5 w-2.5" />
           {tag}
-        </button>
+        </Button>
       ))}
     </div>
   );

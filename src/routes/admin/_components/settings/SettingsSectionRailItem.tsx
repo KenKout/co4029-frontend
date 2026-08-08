@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { groupLabel } from "./helpers";
 import type { TFn } from "./types";
 
@@ -16,7 +17,7 @@ export function SettingsSectionRailItem({
   onSelect: () => void;
 }) {
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={onSelect}
       className={cn(
@@ -39,6 +40,6 @@ export function SettingsSectionRailItem({
           {count}
         </span>
       )}
-    </button>
+    </Button>
   );
 }

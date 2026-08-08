@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import type { InterviewOutcomeAuthoring } from "@/lib/api/types";
+import { Button } from "@/components/ui/button";
 import { STATUS_ORDER } from "./constants";
 import { FilterChip, FilterSelect } from "./filter-primitives";
 import { statusMeta } from "./helpers";
@@ -251,13 +252,13 @@ function ActiveFilterChips({
           onClear={() => onSourceFilterChange("all")}
         />
       )}
-      <button
+      <Button variant="link"
         type="button"
         onClick={onClearFilters}
         className="text-[11px] font-bold text-m3-primary hover:underline cursor-pointer"
       >
         {t("teacher_interview_config.qbank.clear_all")}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -43,6 +43,7 @@ import { GenerationPanelFooter } from "./quiz-generation-panel/GenerationPanelFo
 import { GenerationSettingsColumn } from "./quiz-generation-panel/GenerationSettingsColumn";
 import { SourceLessonsPicker } from "./quiz-generation-panel/SourceLessonsPicker";
 import { TargetOutcomesPicker } from "./quiz-generation-panel/TargetOutcomesPicker";
+import { Button } from "@/components/ui/button";
 import {
   useQuizGenerationPanel,
   type QuizGenerationPanelProps,
@@ -152,7 +153,7 @@ export function QuizGenerationPanel(props: QuizGenerationPanelProps) {
         />
       )}
 
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => setShowAdvanced((current) => !current)}
         className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-m3-secondary hover:text-m3-primary cursor-pointer"
@@ -163,7 +164,7 @@ export function QuizGenerationPanel(props: QuizGenerationPanelProps) {
           <ChevronRight className="h-3.5 w-3.5" />
         )}
         Advanced personalisation
-      </button>
+      </Button>
 
       {showAdvanced && <AdvancedPersonalisation controller={controller} />}
 

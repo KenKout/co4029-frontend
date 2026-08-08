@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Copy } from "lucide-react";
 import type { InvitationCodeAuthoring } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { CodeRowActions } from "./CodeRowActions";
 import { formatDate } from "./helpers";
 import { useCodeRow } from "./use-code-row";
@@ -30,14 +31,14 @@ export function CodeRow({
         <span className="text-sm font-mono font-semibold text-m3-on-surface truncate">
           {item.code}
         </span>
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={controller.handleCopy}
           title={t("management_course_enrollments.codes.copy_tooltip")}
           className="text-m3-on-surface-variant hover:text-m3-primary transition-colors"
         >
           <Copy className="h-3.5 w-3.5" />
-        </button>
+        </Button>
       </div>
       <span
         className={cn(

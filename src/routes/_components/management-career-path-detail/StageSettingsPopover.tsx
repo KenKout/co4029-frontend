@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
 import { Select } from "@/components/ui/select";
 import { Tooltip } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 import type {
   CareerPathStageAuthoring,
   CareerPathStageEnforcement,
@@ -121,9 +122,9 @@ export function StageSettingsPopover({
         <span className="text-xs font-semibold text-m3-on-surface-variant flex items-center gap-1">
           {t(`${prefix}.fields.enforcement`)}
           <Tooltip content={t(`${prefix}.enforcement.hint`)}>
-            <button type="button" aria-label={t(`${prefix}.enforcement.hint`)}>
+            <Button variant="ghost" type="button" aria-label={t(`${prefix}.enforcement.hint`)}>
               <Info className="h-3 w-3 text-m3-on-surface-variant" />
-            </button>
+            </Button>
           </Tooltip>
         </span>
         <Select<CareerPathStageEnforcement>
@@ -139,21 +140,21 @@ export function StageSettingsPopover({
       </div>
 
       <div className="flex items-center gap-2 pt-1">
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={submit}
           disabled={controller.update.isPending}
           className="h-9 px-4 rounded-full bg-m3-primary text-m3-on-primary text-sm font-semibold disabled:opacity-50 cursor-pointer"
         >
           {t("common.save")}
-        </button>
-        <button
+        </Button>
+        <Button variant="ghost"
           type="button"
           onClick={() => controller.setOpenSettingsFor(null)}
           className="h-9 px-4 rounded-full text-sm font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container cursor-pointer"
         >
           {t("common.cancel")}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -202,9 +203,9 @@ function StageIdentityFields({
         <span className="text-xs font-semibold text-m3-on-surface-variant flex items-center gap-1">
           {t(`${prefix}.fields.min_optional`)}
           <Tooltip content={t(`${prefix}.fields.min_optional_hint`)}>
-            <button type="button" aria-label={t(`${prefix}.fields.min_optional_hint`)}>
+            <Button variant="ghost" type="button" aria-label={t(`${prefix}.fields.min_optional_hint`)}>
               <Info className="h-3 w-3 text-m3-on-surface-variant" />
-            </button>
+            </Button>
           </Tooltip>
         </span>
         <input

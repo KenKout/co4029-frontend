@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import type { TabKey } from "@/routes/teacher/_components/quiz-manage/types";
+import { Button } from "@/components/ui/button";
 
 import { TAB_ICONS, TAB_KEYS } from "./constants";
 
@@ -40,7 +41,7 @@ export function QuizTabSwitcher({
         const Icon = TAB_ICONS[key];
         const label = t(`teacher_quiz_manage.tabs.${key}`);
         return (
-          <button
+          <Button variant="ghost"
             key={key}
             type="button"
             onClick={() => onSelect(key)}
@@ -63,7 +64,7 @@ export function QuizTabSwitcher({
           >
             <Icon className="h-4 w-4 shrink-0" />
             {!actionsStuck && <span>{label}</span>}
-          </button>
+          </Button>
         );
       })}
     </div>

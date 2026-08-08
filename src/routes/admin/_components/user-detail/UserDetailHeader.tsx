@@ -1,6 +1,7 @@
 import { CheckCircle2, Mail, ShieldOff, UserCircle } from "lucide-react";
 
 import { UserStatusBadgeMd as StatusBadge } from "@/components/ui/status-badges";
+import { Button } from "@/components/ui/button";
 
 import type { AdminUserRecord } from "./types";
 import type { UserDetailController } from "./use-admin-user-detail";
@@ -47,7 +48,7 @@ export function UserDetailHeader({
 
         <div className="flex flex-col gap-2 shrink-0">
           {isDisabled ? (
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={handleEnable}
               disabled={enableIsPending}
@@ -57,9 +58,9 @@ export function UserDetailHeader({
               {enableIsPending
                 ? t("admin.users.actions.disabling")
                 : t("admin.users.actions.enable")}
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={() => setConfirmOpen(true)}
               disabled={disableIsPending}
@@ -67,7 +68,7 @@ export function UserDetailHeader({
             >
               <ShieldOff className="h-3.5 w-3.5" />
               {t("admin.users.actions.disable")}
-            </button>
+            </Button>
           )}
         </div>
       </div>

@@ -30,7 +30,7 @@ export function CourseSettingsThumbnailField({
         {t("teacher_course_settings.thumbnail.label")}
       </label>
       <div className="flex items-center gap-4">
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={isPending}
@@ -55,7 +55,7 @@ export function CourseSettingsThumbnailField({
               <Camera className="h-5 w-5 text-white" />
             )}
           </span>
-        </button>
+        </Button>
         <div className="min-w-0">
           <Button
             type="button"

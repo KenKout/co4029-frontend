@@ -62,13 +62,13 @@ export function BankModalFooter({
           {` · ${rows.length} shown${bank.hasNextPage ? "+" : ""}`}
         </span>
         {rows.length > 0 ? (
-          <button
+          <Button variant="link"
             type="button"
             onClick={allVisibleSelected ? clearSelection : selectAllVisible}
             className="text-xs font-medium text-m3-secondary hover:underline"
           >
             {allVisibleSelected ? "Clear selection" : "Select all visible"}
-          </button>
+          </Button>
         ) : null}
       </div>
       <div className="flex items-center gap-2">

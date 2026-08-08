@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { MfaController } from "./types";
+import { Button } from "@/components/ui/button";
 
 /** Authenticator-app vs recovery-code switch. Switching clears the input. */
 export default function MfaModeTabs({
@@ -15,7 +16,7 @@ export default function MfaModeTabs({
       className="grid grid-cols-2 gap-1 rounded-xl bg-m3-surface-container-low p-1"
       role="tablist"
     >
-      <button
+      <Button variant="ghost"
         type="button"
         role="tab"
         aria-selected={mode === "totp"}
@@ -30,8 +31,8 @@ export default function MfaModeTabs({
         }`}
       >
         {t("login_mfa.tab_totp")}
-      </button>
-      <button
+      </Button>
+      <Button variant="ghost"
         type="button"
         role="tab"
         aria-selected={mode === "recovery"}
@@ -46,7 +47,7 @@ export default function MfaModeTabs({
         }`}
       >
         {t("login_mfa.tab_recovery")}
-      </button>
+      </Button>
     </div>
   );
 }

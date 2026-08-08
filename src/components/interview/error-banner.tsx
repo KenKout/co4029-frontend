@@ -107,14 +107,14 @@ export function ErrorBanner({
       </div>
 
       {onDismiss && (
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={onDismiss}
           aria-label={t("common.dismiss")}
           className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-text-muted outline-none transition-colors hover:bg-white/60 hover:text-text-strong focus-visible:ring-2 focus-visible:ring-primary/60"
         >
           <X className="h-4 w-4" />
-        </button>
+        </Button>
       )}
     </div>
   );

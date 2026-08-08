@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { GripVertical } from "lucide-react";
 import { OutcomeInlineInput } from "./OutcomeInlineInput";
 import { OutcomeRowActions } from "./OutcomeRowActions";
@@ -48,7 +49,7 @@ export function OutcomeRow({
       style={{ marginLeft: `${depth * 1.5}rem` }}
     >
       {editable && (
-        <button
+        <Button variant="ghost"
           type="button"
           draggable
           onDragStart={() => setDraggingId(outcome.id)}
@@ -61,7 +62,7 @@ export function OutcomeRow({
           className="shrink-0 cursor-grab rounded p-0.5 text-m3-outline-variant opacity-0 transition-opacity group-hover:opacity-100 hover:text-m3-on-surface-variant active:cursor-grabbing"
         >
           <GripVertical className="h-4 w-4" />
-        </button>
+        </Button>
       )}
 
       <Badge className="shrink-0 bg-violet-100 text-violet-700 border-transparent">
@@ -71,14 +72,14 @@ export function OutcomeRow({
       {editable ? (
         <OutcomeInlineInput outcome={outcome} ctl={ctl} t={t} />
       ) : (
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => setEditingId(outcome.id)}
           className="flex-1 truncate text-left text-sm text-m3-on-surface leading-relaxed hover:text-m3-on-surface-variant"
           title={t("teacher_outcomes.click_to_edit", "Click to edit")}
         >
           {outcome.outcome_text}
-        </button>
+        </Button>
       )}
 
       {/* Drop target: the row's own body = reparent onto it. */}

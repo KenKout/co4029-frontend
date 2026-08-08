@@ -1,4 +1,5 @@
 import { Upload, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 /**
  * Row under the video surface: the estimated-duration hint (when set) and the
@@ -26,7 +27,7 @@ export function VideoUploadRow({
           min estimated
         </span>
       )}
-      <button
+      <Button variant="ghost"
         type="button"
         disabled={uploading}
         onClick={onPickFile}
@@ -42,7 +43,7 @@ export function VideoUploadRow({
           : streamUrl
             ? "Replace Video"
             : "Upload Video"}
-      </button>
+      </Button>
     </div>
   );
 }

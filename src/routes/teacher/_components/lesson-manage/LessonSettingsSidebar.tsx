@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { X, BookOpen } from "lucide-react";
 import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { LESSON_TYPE_OPTIONS } from "./constants";
 
 interface LessonOption {
@@ -131,13 +132,13 @@ export function LessonSettingsSidebar({
                 <TypeIcon className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">{l.title}</span>
               </div>
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={() => onTogglePrerequisite(id)}
                 className="shrink-0 p-0.5 rounded-md hover:bg-m3-primary/10 transition-colors cursor-pointer"
               >
                 <X className="h-3.5 w-3.5" />
-              </button>
+              </Button>
             </div>
           );
         })}

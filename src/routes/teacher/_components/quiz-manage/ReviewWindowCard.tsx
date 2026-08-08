@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Clock, Lock, Send } from "lucide-react";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { FLAG_KEYS, flags } from "./review-options-model";
 import type {
   FlagKey,
@@ -70,7 +71,7 @@ export function ReviewWindowCard({
               total: FLAG_KEYS.length,
             })}
           </span>
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => onSetWindow(flags(!allOn))}
             className="rounded-lg px-2 py-1 text-[11px] font-semibold text-m3-primary hover:bg-m3-primary/10"
@@ -78,7 +79,7 @@ export function ReviewWindowCard({
             {allOn
               ? t("teacher_quiz_manage.settings.review.hide_all")
               : t("teacher_quiz_manage.settings.review.show_all")}
-          </button>
+          </Button>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import { CircleDot, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { TranslateFn } from "./types";
 
 /**
@@ -27,7 +28,7 @@ export function ModuleItemStatusBadge({
     // Inline publish (T#2): a draft/archived item can be published right
     // here without opening it. Stops propagation so it doesn't trigger
     // the row's drag / link behaviour.
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={onPublish}
       disabled={publishing}
@@ -40,6 +41,6 @@ export function ModuleItemStatusBadge({
         <CircleDot className="h-2.5 w-2.5" />
       )}
       {t("teacher_common.publish_item")}
-    </button>
+    </Button>
   );
 }

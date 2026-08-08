@@ -2,6 +2,7 @@ import * as React from "react";
 import { Check } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /**
  * Presentational form primitives for the quiz-manage screen, extracted from
@@ -85,7 +86,7 @@ export function ToggleRow({
   disabled?: boolean;
 }) {
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       role="switch"
       aria-checked={value}
@@ -126,7 +127,7 @@ export function ToggleRow({
           {description}
         </span>
       </span>
-    </button>
+    </Button>
   );
 }
 

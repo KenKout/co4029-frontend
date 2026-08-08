@@ -2,6 +2,7 @@ import { Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 import type { KgSource } from "./types";
 
@@ -20,7 +21,7 @@ export function KgEditButton({
 }) {
   const { t } = useTranslation();
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={onEdit}
       disabled={source !== "curated"}
@@ -38,6 +39,6 @@ export function KgEditButton({
     >
       <Pencil className="h-3.5 w-3.5" />
       {t("teacher_lesson_materials.kg.edit")}
-    </button>
+    </Button>
   );
 }

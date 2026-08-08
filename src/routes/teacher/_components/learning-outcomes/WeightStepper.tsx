@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Loader2, Minus, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 /**
  * Compact −/+ stepper for an outcome's importance weight (1–5).
@@ -35,7 +36,7 @@ export function WeightStepper({
         {t("teacher_interview_config.outcomes.weight_label")}
       </span>
       <div className="inline-flex items-center rounded-lg border border-m3-outline-variant/30 bg-m3-surface">
-        <button
+        <Button variant="ghost"
           type="button"
           aria-label={t("teacher_interview_config.outcomes.weight_decrease")}
           title={t("teacher_interview_config.outcomes.weight_decrease")}
@@ -44,7 +45,7 @@ export function WeightStepper({
           className="grid h-7 w-7 place-items-center rounded-l-lg text-m3-on-surface-variant transition-colors hover:bg-m3-primary/10 hover:text-m3-primary disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
         >
           <Minus className="h-3.5 w-3.5" />
-        </button>
+        </Button>
         <span
           className="min-w-9 px-1 text-center text-xs font-extrabold tabular-nums text-m3-on-surface"
           aria-live="polite"
@@ -55,7 +56,7 @@ export function WeightStepper({
             `${weight}/${MAX}`
           )}
         </span>
-        <button
+        <Button variant="ghost"
           type="button"
           aria-label={t("teacher_interview_config.outcomes.weight_increase")}
           title={t("teacher_interview_config.outcomes.weight_increase")}
@@ -64,7 +65,7 @@ export function WeightStepper({
           className="grid h-7 w-7 place-items-center rounded-r-lg text-m3-on-surface-variant transition-colors hover:bg-m3-primary/10 hover:text-m3-primary disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
         >
           <Plus className="h-3.5 w-3.5" />
-        </button>
+        </Button>
       </div>
     </div>
   );

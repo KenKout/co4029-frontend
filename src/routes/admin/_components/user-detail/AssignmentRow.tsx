@@ -6,6 +6,7 @@ import {
   assignmentScopeTarget,
 } from "./helpers";
 import type { EnrichedAssignment, RoleAssignmentsController } from "./types";
+import { Button } from "@/components/ui/button";
 
 export function AssignmentRow({
   c,
@@ -38,7 +39,7 @@ export function AssignmentRow({
           ) : null}
         </p>
       </div>
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => {
           handleRevoke(assignmentId, roleName);
@@ -48,7 +49,7 @@ export function AssignmentRow({
       >
         <Trash2 className="h-3.5 w-3.5" />
         {t("admin.users.roles.revoke")}
-      </button>
+      </Button>
     </li>
   );
 }

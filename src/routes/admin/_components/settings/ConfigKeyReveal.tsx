@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check, Code2, Copy } from "lucide-react";
 import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
+import { Button } from "@/components/ui/button";
 
 /** Small </> button revealing the config key + env var, copy on click. */
 export function ConfigKeyReveal({
@@ -24,7 +25,7 @@ export function ConfigKeyReveal({
 
   if (forceShow) {
     return (
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={copy}
         title="Copy config key"
@@ -38,12 +39,12 @@ export function ConfigKeyReveal({
         ) : (
           <Copy className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
         )}
-      </button>
+      </Button>
     );
   }
 
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={copy}
       title={`${setting.key}${setting.env_var ? ` · ${setting.env_var}` : ""} — click to copy`}
@@ -54,6 +55,6 @@ export function ConfigKeyReveal({
       ) : (
         <Code2 className="h-3.5 w-3.5" />
       )}
-    </button>
+    </Button>
   );
 }

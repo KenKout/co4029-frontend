@@ -1,5 +1,6 @@
 import { RotateCcw } from "lucide-react";
 import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
+import { Button } from "@/components/ui/button";
 import type { SettingsTableController } from "./use-settings-table";
 
 export function SettingsTableResetButton({
@@ -12,7 +13,7 @@ export function SettingsTableResetButton({
   const { clearMutation, overrideAtScope } = controller;
   const canReset = overrideAtScope(s);
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       title={
         canReset ? "Remove this override" : "Nothing overridden at this scope"
@@ -22,6 +23,6 @@ export function SettingsTableResetButton({
       onClick={() => clearMutation.mutate(s.key)}
     >
       <RotateCcw className="h-3.5 w-3.5" />
-    </button>
+    </Button>
   );
 }

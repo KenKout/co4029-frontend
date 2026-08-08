@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { InfiniteList } from "@/components/ui/InfiniteList";
 import type { QuestionBankEntry } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 import type { QuestionBankModalController } from "./use-question-bank-modal";
 
@@ -94,13 +95,13 @@ export function BankResultList({
         <div className="p-8 text-center text-sm text-m3-on-surface-variant space-y-2">
           <p>No bank questions match these filters.</p>
           {activeFilterCount > 0 ? (
-            <button
+            <Button variant="link"
               type="button"
               onClick={resetFilters}
               className="text-xs font-medium text-m3-secondary hover:underline"
             >
               Clear filters
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : (

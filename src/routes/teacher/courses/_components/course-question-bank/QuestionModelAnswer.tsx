@@ -3,6 +3,7 @@ import { ChevronDown } from "lucide-react";
 
 import type { InterviewQuestionBankItemRead } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /**
  * A row's collapsible model answer, extracted verbatim from the former 843-line
@@ -20,7 +21,7 @@ export function QuestionModelAnswer({
   const { t } = useTranslation();
   return (
     <div className="mt-1.5">
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onToggle}
         aria-expanded={answerOpen}
@@ -39,7 +40,7 @@ export function QuestionModelAnswer({
           )}
         />
         {t("teacher_question_bank.model_answer")}
-      </button>
+      </Button>
       <div
         className={cn(
           "grid transition-all duration-300 ease-in-out",

@@ -3,6 +3,7 @@ import { CheckCheck, CircleDot } from "lucide-react";
 
 import { modulePublishProgress } from "./helpers";
 import type { CourseManageController } from "./use-course-manage-controller";
+import { Button } from "@/components/ui/button";
 
 /**
  * Horizontal quick-nav bar (T#3/#4): jump to any module + see its
@@ -28,7 +29,7 @@ export function ModuleQuickNav({
       {modules.map((module) => {
         const { items, pub, done } = modulePublishProgress(module);
         return (
-          <button
+          <Button variant="ghost"
             key={module.id}
             type="button"
             onClick={() => scrollToModule(module.id)}
@@ -47,7 +48,7 @@ export function ModuleQuickNav({
                 {pub}/{items.length}
               </span>
             )}
-          </button>
+          </Button>
         );
       })}
     </nav>

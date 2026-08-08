@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { ListChecks } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { CourseInterviewController } from "./use-course-interview";
 
 /**
@@ -31,7 +32,7 @@ export function LobbyModePicker({
         {(["assessment", "practice"] as const).map((mode) => {
           const selected = sessionMode === mode;
           return (
-            <button
+            <Button variant="ghost"
               key={mode}
               type="button"
               aria-pressed={selected}
@@ -53,7 +54,7 @@ export function LobbyModePicker({
                     })
                   : t("course_interview.mode.assessment_help")}
               </span>
-            </button>
+            </Button>
           );
         })}
       </div>

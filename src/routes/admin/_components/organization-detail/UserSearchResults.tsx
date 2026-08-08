@@ -1,6 +1,7 @@
 import { Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { AdminUserSearchRow } from "@/lib/api/hooks/admin-organizations";
+import { Button } from "@/components/ui/button";
 
 /**
  * Dropdown body of the user typeahead: the loading line, the empty line, or the
@@ -36,7 +37,7 @@ export function UserSearchResults({
     <ul className="py-1">
       {matches.map((u) => (
         <li key={u.user_id}>
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => onPick(u)}
             className="w-full text-left px-3 py-2 hover:bg-m3-primary-fixed/40 flex items-center gap-3"
@@ -52,7 +53,7 @@ export function UserSearchResults({
                 {u.primary_email}
               </p>
             </div>
-          </button>
+          </Button>
         </li>
       ))}
     </ul>

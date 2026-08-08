@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 /**
  * Shared markdown-textarea editing helpers used by the video- and reading-type
  * lesson content editors: a small toolbar button and a factory that wires
@@ -16,7 +17,7 @@ export function ToolbarBtn({
   onClick?: () => void;
 }) {
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       aria-label={label}
       title={label}
@@ -24,7 +25,7 @@ export function ToolbarBtn({
       className="p-2 rounded-lg transition-colors text-m3-on-surface-variant cursor-pointer hover:bg-m3-surface-container-high"
     >
       <Icon className="h-4 w-4" />
-    </button>
+    </Button>
   );
 }
 

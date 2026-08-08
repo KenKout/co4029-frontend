@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { useCourseSrOverview } from "@/lib/api/hooks/spaced-repetition";
 import type { Course } from "@/lib/api/types";
+import { Button } from "@/components/ui/button";
 import { SrLessonList } from "./SrLessonList";
 
 /**
@@ -22,7 +23,7 @@ export function CourseSrCard({ course }: { course: Course }) {
 
   return (
     <div className="bg-m3-surface-container-lowest rounded-xl ghost-border shadow-editorial overflow-hidden">
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center gap-4 p-5 text-left hover:bg-m3-surface-container-low transition-colors cursor-pointer"
@@ -54,7 +55,7 @@ export function CourseSrCard({ course }: { course: Course }) {
         ) : (
           <ChevronDown className="h-4 w-4 text-m3-on-surface-variant shrink-0" />
         )}
-      </button>
+      </Button>
 
       {expanded && <SrLessonList overview={overview} isLoading={isLoading} />}
     </div>

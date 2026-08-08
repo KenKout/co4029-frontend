@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import type { TFunction } from "i18next";
 import { ImagePlus, X } from "lucide-react";
 import { useObjectUrl } from "@/lib/use-object-url";
+import { Button } from "@/components/ui/button";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
@@ -70,24 +71,24 @@ export function ThumbnailField({
             alt=""
             className="w-full aspect-video object-cover rounded-lg border border-m3-outline-variant/20"
           />
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => handlePick(null)}
             aria-label={t("common.remove", { defaultValue: "Remove" })}
             className="absolute top-2 right-2 h-7 w-7 rounded-full bg-m3-surface/90 flex items-center justify-center cursor-pointer hover:bg-m3-surface"
           >
             <X className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         </div>
       ) : (
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => inputRef.current?.click()}
           className="w-full max-w-xs aspect-video rounded-lg border border-dashed border-m3-outline-variant/40 flex flex-col items-center justify-center gap-2 text-xs text-m3-on-surface-variant hover:bg-surface-muted cursor-pointer"
         >
           <ImagePlus className="h-5 w-5" />
           {t("teacher_course_new.thumbnail_pick")}
-        </button>
+        </Button>
       )}
 
       <input

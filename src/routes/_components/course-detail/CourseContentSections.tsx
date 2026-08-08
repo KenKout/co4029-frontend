@@ -7,6 +7,7 @@ import type {
   useCourseOutcomes,
 } from "@/lib/api/hooks/courses";
 import type { MyCourseProgressSummary } from "@/lib/api/types";
+import { Button } from "@/components/ui/button";
 import { SkeletonBlock } from "./CourseDetailAtoms";
 import { ModuleAccordion } from "./ModuleAccordion";
 
@@ -61,7 +62,7 @@ export function CourseOutcomesSection({
         ))}
       </div>
       {hasMore && (
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => setShowAll((v) => !v)}
           className="mt-4 flex items-center gap-1 text-xs font-bold text-m3-primary hover:text-m3-primary-dark transition-colors cursor-pointer"
@@ -70,7 +71,7 @@ export function CourseOutcomesSection({
           <ChevronDown
             className={`h-3.5 w-3.5 transition-transform duration-200 ${showAll ? "rotate-180" : ""}`}
           />
-        </button>
+        </Button>
       )}
     </GlassCard>
   );

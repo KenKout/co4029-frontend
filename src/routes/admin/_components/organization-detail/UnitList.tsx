@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { OrgUnitRead } from "@/lib/api/types/admin-organizations";
+import { Button } from "@/components/ui/button";
 
 /**
  * Org-unit roster. Rendered only once the query has settled and the list is
@@ -36,14 +37,14 @@ export function UnitList({
               })}
             </p>
           </div>
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => onRemove(u.id)}
             className="p-2 text-red-600 hover:bg-red-50 rounded-md shrink-0"
             aria-label={t("admin.organizations.actions.delete")}
           >
             <Trash2 className="h-4 w-4" />
-          </button>
+          </Button>
         </li>
       ))}
     </ul>

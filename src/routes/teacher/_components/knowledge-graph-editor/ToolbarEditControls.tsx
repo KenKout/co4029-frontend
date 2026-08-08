@@ -4,6 +4,7 @@ import { Plus, ArrowRight, Undo2, Redo2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
 import type { CuratedKGRelation } from "@/lib/api/types";
+import { Button } from "@/components/ui/button";
 
 import { RELATION_KINDS } from "./constants";
 import { relationLabel } from "./helpers";
@@ -26,17 +27,17 @@ export function ToolbarEditControls({
 
   return (
     <>
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={mutations.addNode}
         className="flex items-center gap-1.5 rounded-lg bg-m3-surface-container px-2.5 py-1.5 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-primary"
       >
         <Plus className="h-3.5 w-3.5" />
         {t("teacher_kg_editor.add_node")}
-      </button>
+      </Button>
       {/* Arrow mode: toggle on, then click two nodes to link them. The
           adjacent picker chooses which arrow kind gets created. */}
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => {
           sel.setArrowMode((on) => !on);
@@ -53,7 +54,7 @@ export function ToolbarEditControls({
       >
         <ArrowRight className="h-3.5 w-3.5" />
         {t("teacher_kg_editor.arrow_mode")}
-      </button>
+      </Button>
       {arrowMode && (
         <Select<CuratedKGRelation>
           size="sm"
@@ -67,7 +68,7 @@ export function ToolbarEditControls({
           className="w-auto bg-m3-surface-container-lowest font-semibold"
         />
       )}
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={undo}
         disabled={!canUndo}
@@ -75,8 +76,8 @@ export function ToolbarEditControls({
         className="flex h-8 w-8 items-center justify-center rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high disabled:opacity-30"
       >
         <Undo2 className="h-4 w-4" />
-      </button>
-      <button
+      </Button>
+      <Button variant="ghost"
         type="button"
         onClick={redo}
         disabled={!canRedo}
@@ -84,7 +85,7 @@ export function ToolbarEditControls({
         className="flex h-8 w-8 items-center justify-center rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high disabled:opacity-30"
       >
         <Redo2 className="h-4 w-4" />
-      </button>
+      </Button>
     </>
   );
 }

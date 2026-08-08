@@ -35,6 +35,7 @@ import { useLessonOutline } from "@/lib/api/hooks/teacher-courses";
 import type { LessonPublic } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 /**
  * Bloom's taxonomy levels accepted by the backend
@@ -116,7 +117,7 @@ export function TopicTagInput({
             className="inline-flex items-center gap-1 rounded-lg bg-m3-secondary-fixed/40 px-2 py-1 text-xs font-semibold text-m3-secondary"
           >
             {value}
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={() =>
                 onChange(values.filter((entry) => entry !== value))
@@ -125,7 +126,7 @@ export function TopicTagInput({
               aria-label={`Remove ${value}`}
             >
               <X className="h-3 w-3" />
-            </button>
+            </Button>
           </span>
         ))}
         <input
@@ -372,7 +373,7 @@ function LessonOutlineSection({
 
   return (
     <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface overflow-hidden">
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => setExpanded((current) => !current)}
         className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-m3-surface-container-low cursor-pointer"
@@ -392,7 +393,7 @@ function LessonOutlineSection({
         <span className="text-[10px] font-semibold text-m3-secondary">
           ~{outline.suggested_question_count} suggested
         </span>
-      </button>
+      </Button>
 
       {expanded && (
         <div className="border-t border-m3-outline-variant/20 p-2 space-y-1">
@@ -401,7 +402,7 @@ function LessonOutlineSection({
               Min for full coverage: {outline.min_for_full_coverage}
             </span>
             <div className="flex items-center gap-2">
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={() =>
                   onSuggestQuestionCount(outline.suggested_question_count)
@@ -409,15 +410,15 @@ function LessonOutlineSection({
                 className="text-[10px] font-semibold text-m3-secondary hover:text-m3-primary cursor-pointer"
               >
                 Apply suggested
-              </button>
-              <button
+              </Button>
+              <Button variant="ghost"
                 type="button"
                 onClick={() => onSectionsChange([])}
                 disabled={selectedSectionIds.length === 0}
                 className="text-[10px] font-semibold text-m3-on-surface-variant hover:text-m3-primary disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 Clear
-              </button>
+              </Button>
             </div>
           </div>
           {outline.sections.map((section) => {

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 import type { KgNodeById, KgNodeDatum } from "./types";
 
@@ -40,7 +41,7 @@ export function KgRelationGroup({
       ) : (
         <div className="mt-1 flex flex-wrap gap-1.5">
           {items.map((n) => (
-            <button
+            <Button variant="ghost"
               key={n.id}
               type="button"
               onClick={() => onJump(n.id)}
@@ -52,7 +53,7 @@ export function KgRelationGroup({
               )}
             >
               {n.label}
-            </button>
+            </Button>
           ))}
         </div>
       )}

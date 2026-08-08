@@ -2,6 +2,7 @@ import { Check, Loader2, X } from "lucide-react";
 import type { TFunction } from "i18next";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { CourseFormController } from "./use-course-form";
 
 export const DESCRIPTION_MAX = 500;
@@ -99,13 +100,13 @@ function SlugField({
       <div className="flex items-center justify-between gap-2">
         <SlugHint controller={controller} t={t} />
         {slugManuallyEdited && form.title.trim() && (
-          <button
+          <Button variant="link"
             type="button"
             onClick={resetSlugToAuto}
             className="shrink-0 text-[11px] font-medium text-m3-primary hover:underline"
           >
             {t("teacher_course_new.slug_reset")}
-          </button>
+          </Button>
         )}
       </div>
     </div>

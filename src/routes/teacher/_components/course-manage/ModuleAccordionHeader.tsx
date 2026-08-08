@@ -58,7 +58,7 @@ export function ModuleAccordionHeader({
     >
       {/* Drag handle — dragging armed only while grabbing this grip so the
           title / edit / publish controls in the header stay clickable. */}
-      <button
+      <Button variant="ghost"
         type="button"
         aria-label={t("teacher_common.drag_to_reorder")}
         onMouseDown={() => setModuleDragEnabled(true)}
@@ -67,7 +67,7 @@ export function ModuleAccordionHeader({
         className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 text-m3-outline-variant hover:text-m3-on-surface-variant"
       >
         <GripVertical className="h-4 w-4" />
-      </button>
+      </Button>
 
       {/* Title — editable inline */}
       {editingTitle ? (
@@ -146,14 +146,14 @@ export function ModuleAccordionHeader({
       />
 
       {/* Chevron expand */}
-      <button type="button" onClick={onToggle} className="shrink-0">
+      <Button variant="ghost" type="button" onClick={onToggle} className="shrink-0">
         <ChevronDown
           className={cn(
             "h-4 w-4 text-m3-on-surface-variant transition-transform duration-300",
             open ? "rotate-0" : "-rotate-90",
           )}
         />
-      </button>
+      </Button>
     </div>
   );
 }

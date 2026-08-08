@@ -15,6 +15,7 @@ import { Check, CheckCircle2, ShieldCheck, TriangleAlert } from "lucide-react";
 import type { SectionNavItem } from "@/components/ui/section-nav";
 import type { TabId } from "@/lib/interview/config-draft";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 // Tabbed navigation for the interview-config workspace. Replaces the old
 // scroll-spy SectionNav: clicking a tab swaps which panel is shown (panels
@@ -127,7 +128,7 @@ export function TabBar({
           const isActive = item.id === activeTab;
           const status = item.status ?? { kind: "none" as const };
           return (
-            <button
+            <Button variant="ghost"
               key={item.id}
               id={`tab-${item.id}`}
               ref={(el) => {
@@ -175,7 +176,7 @@ export function TabBar({
                   </span>
                 )}
               </span>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -261,7 +262,7 @@ export function PublishReadiness({
         <ul className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {items.map((item) => (
             <li key={item.key}>
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={() => onGoTo(item.tab)}
                 className={cn(
@@ -284,7 +285,7 @@ export function PublishReadiness({
                   <TriangleAlert className="h-3.5 w-3.5" aria-hidden="true" />
                 )}
                 {item.label}
-              </button>
+              </Button>
             </li>
           ))}
         </ul>

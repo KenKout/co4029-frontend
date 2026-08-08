@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /**
  * Selection row of the bulk action bar: one line, never wraps. Extracted from
@@ -60,14 +61,14 @@ export function BulkSetExpectedTimeRow({
           instead of one label floating in dead space. Idle shows the
           question count; active swaps in the clear-selection action. */}
       {hasSelection ? (
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={onClear}
           className="ml-auto shrink-0 flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface transition-colors"
         >
           <X className="h-3.5 w-3.5" />
           {t("teacher_quiz_manage.bulk_time.deselect")}
-        </button>
+        </Button>
       ) : (
         <span className="ml-auto shrink-0 text-xs font-semibold text-m3-on-surface-variant tabular-nums">
           {t("teacher_quiz_manage.bulk_time.question_count", {

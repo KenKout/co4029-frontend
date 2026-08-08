@@ -4,6 +4,7 @@ import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Tabs, type TabDef } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 import { STATUS_KEYS } from "./constants";
 import type { SortKey, StatusFilter } from "./types";
@@ -53,14 +54,14 @@ export function CoursesToolbar({
           className="pl-9 pr-9 h-10"
         />
         {search && (
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => setSearch("")}
             aria-label={t("teacher_courses_list.clear_search", "Clear search")}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-m3-on-surface-variant transition-colors hover:bg-m3-surface-container hover:text-m3-on-surface"
           >
             <X className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         )}
       </div>
 

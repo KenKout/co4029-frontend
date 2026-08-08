@@ -1,5 +1,6 @@
 import type { LessonAuthoring } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /**
  * Source-lesson picker: which lessons in the quiz's parent module the
@@ -22,14 +23,14 @@ export function SourceLessonsPicker({
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
           Source lessons
         </label>
-        <button
+        <Button variant="ghost"
           type="button"
           disabled={lessons.length === 0}
           onClick={onSelectAll}
           className="text-xs font-semibold text-m3-secondary hover:text-m3-primary disabled:text-m3-on-surface-variant/50 disabled:cursor-not-allowed cursor-pointer"
         >
           Select all
-        </button>
+        </Button>
       </div>
       <div className="space-y-2">
         {lessons.length === 0 ? (

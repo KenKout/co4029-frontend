@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { Select } from "@/components/ui/select";
 import { useRemoveCareerPathCourse } from "@/lib/api/hooks/career-paths";
+import { Button } from "@/components/ui/button";
 import type {
   CareerPathCourseAuthoring,
   CareerPathStageAuthoring,
@@ -64,7 +65,7 @@ export function CourseInPathRow({
   return (
     <div className="flex items-center gap-3 p-3 rounded-xl bg-m3-surface-container-low ghost-border">
       <div className="flex flex-col gap-0.5 shrink-0">
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => controller.moveInStage(row.stage_id, index, -1)}
           disabled={index === 0}
@@ -72,8 +73,8 @@ export function CourseInPathRow({
           title={t("management_career_path_detail.actions.move_up")}
         >
           <ArrowUp className="h-3 w-3 text-m3-on-surface-variant" />
-        </button>
-        <button
+        </Button>
+        <Button variant="ghost"
           type="button"
           onClick={() => controller.moveInStage(row.stage_id, index, 1)}
           disabled={index === stageTotal - 1}
@@ -81,7 +82,7 @@ export function CourseInPathRow({
           title={t("management_career_path_detail.actions.move_down")}
         >
           <ArrowDown className="h-3 w-3 text-m3-on-surface-variant" />
-        </button>
+        </Button>
       </div>
       <div className="flex flex-col items-center justify-center w-8 h-8 rounded-lg bg-m3-primary-fixed text-m3-primary shrink-0 font-headline font-bold text-xs">
         {row.position}

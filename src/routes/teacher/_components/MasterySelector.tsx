@@ -4,6 +4,7 @@ import { ChevronDown, GraduationCap } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 /**
  * Beginner-friendly replacement for the raw SM-2 "spacing" inputs
@@ -109,7 +110,7 @@ export function MasterySelector({ values, onPatch }: MasterySelectorProps) {
         {PRESET_ORDER.map((key) => {
           const active = selected === key;
           return (
-            <button
+            <Button variant="ghost"
               key={key}
               type="button"
               onClick={() => onPatch(MASTERY_PRESETS[key])}
@@ -137,7 +138,7 @@ export function MasterySelector({ values, onPatch }: MasterySelectorProps) {
               <p className="text-xs text-m3-on-surface-variant leading-relaxed">
                 {t(`teacher_quiz_manage.settings.spacing.presets.${key}.desc`)}
               </p>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -157,7 +158,7 @@ export function MasterySelector({ values, onPatch }: MasterySelectorProps) {
 
       {/* Advanced disclosure — raw SM-2 knobs */}
       <div className="rounded-xl border border-m3-outline-variant/20 overflow-hidden">
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => setAdvancedOpen((o) => !o)}
           aria-expanded={advancedOpen}
@@ -179,7 +180,7 @@ export function MasterySelector({ values, onPatch }: MasterySelectorProps) {
               advancedOpen && "rotate-180",
             )}
           />
-        </button>
+        </Button>
         {advancedOpen && (
           <div className="px-4 pb-4 pt-1 space-y-3">
             <p className="text-[11px] text-m3-on-surface-variant leading-relaxed">

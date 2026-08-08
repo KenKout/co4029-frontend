@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronDown, Loader2, Plus, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import {
   DropdownMenu,
@@ -70,7 +71,7 @@ export function QuestionsTabAddControls({
     <div className="flex items-stretch">
       {/* Primary: seed the current default type. Label names the type so the
           button is self-describing rather than a generic "Add question". */}
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => void onAddQuestion(defaultType)}
         disabled={addPending}
@@ -84,7 +85,7 @@ export function QuestionsTabAddControls({
         {t("teacher_quiz_manage.actions.add_typed", {
           type: labelFor(defaultType).toLocaleLowerCase(),
         })}
-      </button>
+      </Button>
 
       {/* Dropdown: pick a different type (which becomes the new default) or
           jump to AI generation. */}

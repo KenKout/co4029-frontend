@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 
 import type { CourseAssessmentsController } from "./use-course-assessments-controller";
+import { Button } from "@/components/ui/button";
 
 /**
  * Active-filter chips + Clear all — mirrors the courses page so the teacher can
@@ -23,7 +24,7 @@ export function ActiveFilterChips({
   return (
     <div className="flex flex-wrap items-center gap-2">
       {activeChips.map((chip) => (
-        <button
+        <Button variant="ghost"
           key={chip.key}
           type="button"
           onClick={chip.onRemove}
@@ -32,9 +33,9 @@ export function ActiveFilterChips({
           <span className="text-m3-on-surface-variant">{chip.prefix}</span>
           {chip.label}
           <X className="h-3 w-3" />
-        </button>
+        </Button>
       ))}
-      <button
+      <Button variant="link"
         type="button"
         onClick={() => {
           setTitleFilter("all");
@@ -45,7 +46,7 @@ export function ActiveFilterChips({
         className="text-xs font-medium text-m3-on-surface-variant underline underline-offset-2 hover:text-m3-on-surface"
       >
         Clear all
-      </button>
+      </Button>
     </div>
   );
 }

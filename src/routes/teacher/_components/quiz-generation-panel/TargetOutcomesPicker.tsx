@@ -1,5 +1,6 @@
 import type { CourseLearningOutcomeAuthoring } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 import type { TranslateFn } from "./types";
 
@@ -77,13 +78,13 @@ export function TargetOutcomesPicker({
           {t("quiz_generation.outcomes.label", "Target learning outcomes")}
         </label>
         {outcomes.length > 0 && (
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={onSelectAll}
             className="text-xs font-semibold text-m3-secondary hover:text-m3-primary cursor-pointer"
           >
             {t("quiz_generation.outcomes.select_all", "Select all")}
-          </button>
+          </Button>
         )}
       </div>
       <div className="space-y-2">

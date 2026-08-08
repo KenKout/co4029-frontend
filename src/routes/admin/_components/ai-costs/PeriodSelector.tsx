@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { AiCostsPeriod } from "@/lib/api/hooks/admin";
+import { Button } from "@/components/ui/button";
 import { PERIOD_VALUES } from "./constants";
 
 /** Radiogroup switching the dashboard-wide lookback window. */
@@ -20,7 +21,7 @@ export function PeriodSelector({
       {PERIOD_VALUES.map((p) => {
         const active = p === value;
         return (
-          <button
+          <Button variant="ghost"
             key={p}
             type="button"
             role="radio"
@@ -33,7 +34,7 @@ export function PeriodSelector({
             }
           >
             {t(`admin.ai_costs.period_options.${p}`)}
-          </button>
+          </Button>
         );
       })}
     </div>

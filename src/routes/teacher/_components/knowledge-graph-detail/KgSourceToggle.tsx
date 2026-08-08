@@ -2,6 +2,7 @@ import { Sparkles, Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 import type { KgSource } from "./types";
 
@@ -24,7 +25,7 @@ export function KgSourceToggle({
       aria-label={t("teacher_lesson_materials.kg.source_label")}
       className="flex items-center rounded-lg border border-m3-outline-variant/30 bg-m3-surface-container p-0.5"
     >
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => onSourceChange("ai")}
         aria-pressed={source === "ai"}
@@ -37,8 +38,8 @@ export function KgSourceToggle({
       >
         <Sparkles className="h-3.5 w-3.5" />
         {t("teacher_lesson_materials.kg.source_ai")}
-      </button>
-      <button
+      </Button>
+      <Button variant="ghost"
         type="button"
         onClick={() => onSourceChange("curated")}
         aria-pressed={source === "curated"}
@@ -51,7 +52,7 @@ export function KgSourceToggle({
       >
         <Pencil className="h-3.5 w-3.5" />
         {t("teacher_lesson_materials.kg.source_curated")}
-      </button>
+      </Button>
     </div>
   );
 }

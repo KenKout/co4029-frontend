@@ -19,6 +19,7 @@ import {
 import { STATUS_ORDER } from "./constants";
 import { statusMeta } from "./helpers";
 import type { OutcomeOption, ReviewStatus } from "./types";
+import { Button } from "@/components/ui/button";
 
 /**
  * Sticky contextual toolbar shown when one or more questions are selected.
@@ -122,7 +123,7 @@ export function BulkActionBar({
       )}
 
       {/* Add to bank */}
-      <button
+      <Button variant="ghost"
         type="button"
         disabled={busy}
         onClick={onAddToBank}
@@ -130,10 +131,10 @@ export function BulkActionBar({
       >
         <BookMarked className="h-3.5 w-3.5" />
         {t("teacher_interview_config.qbank.bulk.add_to_bank")}
-      </button>
+      </Button>
 
       {/* Delete */}
-      <button
+      <Button variant="ghost"
         type="button"
         disabled={busy}
         onClick={onDelete}
@@ -141,17 +142,17 @@ export function BulkActionBar({
       >
         <Trash2 className="h-3.5 w-3.5" />
         {t("common.delete")}
-      </button>
+      </Button>
 
       {/* Clear selection */}
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onClear}
         className="ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-on-surface cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <X className="h-3.5 w-3.5" />
         {t("teacher_interview_config.qbank.bulk.clear")}
-      </button>
+      </Button>
     </div>
   );
 }

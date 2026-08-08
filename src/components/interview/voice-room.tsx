@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { VoiceControls } from "./voice-controls";
 import { VoiceTranscript } from "./voice-transcript";
 import type { ConversationTurn } from "@/lib/interview/types";
+import { Button } from "@/components/ui/button";
 
 interface VoiceRoomProps {
   elapsed?: string;
@@ -133,7 +134,7 @@ function RoomContent({
                 joins ~10-13s after "Start", past the browser's transient user
                 activation, so the candidate must be able to grant audio. */}
             {!canPlayAudio && (
-              <button
+              <Button variant="ghost"
                 type="button"
                 {...startAudioProps}
                 // AFTER the spread on purpose: `mergedProps` sets
@@ -145,7 +146,7 @@ function RoomContent({
               >
                 <Volume2 className="h-4 w-4" aria-hidden="true" />
                 {t("course_interview.enable_audio")}
-              </button>
+              </Button>
             )}
           </div>
 

@@ -3,6 +3,7 @@ import { GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { CourseContentItem } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { resolveItemDisplay } from "./helpers";
 import { ModuleItemRowActions } from "./ModuleItemRowActions";
 import { ModuleItemRowTitle } from "./ModuleItemRowTitle";
@@ -72,7 +73,7 @@ export function ModuleItemRow({
           title link + action buttons stay clickable. Previously the whole row
           was draggable but the title <Link draggable={false}> covered most of
           it and swallowed drag-starts — the "item drag doesn't work" bug. */}
-      <button
+      <Button variant="ghost"
         type="button"
         aria-label={t("teacher_common.drag_to_reorder")}
         onMouseDown={() => setDragEnabled(true)}
@@ -80,7 +81,7 @@ export function ModuleItemRow({
         className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 text-m3-outline-variant hover:text-m3-on-surface-variant"
       >
         <GripVertical className="h-3.5 w-3.5" />
-      </button>
+      </Button>
       <div
         className={cn(
           "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",

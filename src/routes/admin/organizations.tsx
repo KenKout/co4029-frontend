@@ -57,14 +57,14 @@ function CreateOrgDialog({ onClose }: { onClose: () => void }) {
           <h2 className="font-headline text-xl font-bold text-text-strong">
             {t("admin.organizations.create_dialog_title")}
           </h2>
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={onClose}
             className="text-text-muted hover:text-text-strong"
             aria-label={t("admin.organizations.actions.cancel")}
           >
             <X className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
         <div className="space-y-4">
           <label className="block">

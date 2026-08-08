@@ -146,13 +146,13 @@ export function PreviousAnswerAcknowledgement({
       </span>
       <span>{t("course_interview.submission.previous_submitted")}</span>
       {onViewFullAnswer && (
-        <button
+        <Button variant="link"
           type="button"
           onClick={onViewFullAnswer}
           className="ml-1 inline-flex min-h-6 items-center text-xs font-semibold text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           {t("course_interview.submission.view_full_answer")}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -188,7 +188,7 @@ function AnswerPreview({
       </p>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={onToggleExpanded}
           aria-expanded={expanded}
@@ -205,15 +205,15 @@ function AnswerPreview({
           {expanded
             ? t("course_interview.submission.collapse")
             : t("course_interview.submission.expand")}
-        </button>
+        </Button>
         {onViewFullAnswer && (
-          <button
+          <Button variant="link"
             type="button"
             onClick={onViewFullAnswer}
             className="inline-flex min-h-6 items-center text-xs font-semibold text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             {t("course_interview.submission.view_full_answer")}
-          </button>
+          </Button>
         )}
       </div>
     </>

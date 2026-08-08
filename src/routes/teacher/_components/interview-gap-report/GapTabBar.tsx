@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { GapTabId } from "./types";
 
 /**
@@ -91,7 +92,7 @@ export function GapTabBar({
         {items.map((item) => {
           const isActive = item.id === activeTab;
           return (
-            <button
+            <Button variant="ghost"
               key={item.id}
               id={`tab-${item.id}`}
               ref={(el) => {
@@ -113,7 +114,7 @@ export function GapTabBar({
               )}
             >
               {item.label}
-            </button>
+            </Button>
           );
         })}
       </div>

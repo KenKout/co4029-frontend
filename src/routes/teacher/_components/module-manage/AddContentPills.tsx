@@ -3,6 +3,7 @@ import { HelpCircle, Mic, Plus } from "lucide-react";
 import { ADD_PILL_CLS, LESSON_TYPE_CONFIG } from "./constants";
 import { AddContentDialogs } from "./AddContentDialogs";
 import { useAddContent } from "./use-add-content";
+import { Button } from "@/components/ui/button";
 
 /**
  * The "Add Content" pill row under a module's curriculum list: one pill per
@@ -31,7 +32,7 @@ export function AddContentPills({
       {Object.entries(LESSON_TYPE_CONFIG).map(([type, cfg]) => {
         const Icon = cfg.icon;
         return (
-          <button
+          <Button variant="ghost"
             key={type}
             type="button"
             disabled={adding}
@@ -41,10 +42,10 @@ export function AddContentPills({
             <Icon className="h-3.5 w-3.5" />
             <Plus className="h-3 w-3 -ml-0.5" />
             {cfg.label}
-          </button>
+          </Button>
         );
       })}
-      <button
+      <Button variant="ghost"
         type="button"
         disabled={adding}
         onClick={handleAddQuiz}
@@ -53,8 +54,8 @@ export function AddContentPills({
         <HelpCircle className="h-3.5 w-3.5" />
         <Plus className="h-3 w-3 -ml-0.5" />
         Quiz
-      </button>
-      <button
+      </Button>
+      <Button variant="ghost"
         type="button"
         disabled={adding}
         onClick={handleAddInterview}
@@ -63,7 +64,7 @@ export function AddContentPills({
         <Mic className="h-3.5 w-3.5" />
         <Plus className="h-3 w-3 -ml-0.5" />
         Interview
-      </button>
+      </Button>
 
       <AddContentDialogs ctl={ctl} t={t} />
     </div>

@@ -3,6 +3,7 @@ import { CheckCircle2, Lightbulb, XCircle } from "lucide-react";
 import { RichContent } from "@/components/ui/rich-content";
 import type { ReviewSubmitResult } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /**
  * Hint — parity with the quiz-taking flow. Viewing it flags the answer
@@ -43,14 +44,14 @@ export function ReviewHintBlock({
           </div>
         </div>
       ) : (
-        <button
+        <Button variant="link"
           type="button"
           onClick={onShowHint}
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline cursor-pointer"
         >
           <Lightbulb className="h-4 w-4" />
           {t("study_review.show_hint", "Show hint")}
-        </button>
+        </Button>
       )}
     </div>
   );

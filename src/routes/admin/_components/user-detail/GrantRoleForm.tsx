@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 
 import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 import { GrantScopeTargetFields } from "./GrantScopeTargetFields";
 import type { RoleAssignmentsController } from "./types";
@@ -70,7 +71,7 @@ export function GrantRoleForm({ c }: { c: RoleAssignmentsController }) {
         </label>
         <GrantScopeTargetFields c={c} />
       </div>
-      <button
+      <Button variant="ghost"
         type="submit"
         disabled={grantIsPending || !isGrantValid}
         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:bg-m3-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -79,7 +80,7 @@ export function GrantRoleForm({ c }: { c: RoleAssignmentsController }) {
         {grantIsPending
           ? t("admin.users.roles.granting")
           : t("admin.users.roles.grant")}
-      </button>
+      </Button>
     </form>
   );
 }

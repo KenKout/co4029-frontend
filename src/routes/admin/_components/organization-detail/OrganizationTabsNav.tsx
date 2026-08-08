@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { TAB_KEYS } from "./constants";
 import type { TabKey } from "./types";
+import { Button } from "@/components/ui/button";
 
 /**
  * Underline tab bar for the four detail panes.
@@ -16,7 +17,7 @@ export function OrganizationTabsNav({
   return (
     <div className="border-b border-m3-outline-variant/40 flex gap-1 overflow-x-auto">
       {TAB_KEYS.map((key) => (
-        <button
+        <Button variant="ghost"
           key={key}
           type="button"
           onClick={() => onTabChange(key)}
@@ -27,7 +28,7 @@ export function OrganizationTabsNav({
           }`}
         >
           {t(`admin.organizations.tabs.${key}`)}
-        </button>
+        </Button>
       ))}
     </div>
   );

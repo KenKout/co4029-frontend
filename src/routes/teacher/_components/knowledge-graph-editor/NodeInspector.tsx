@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import type { CuratedKGNode } from "@/lib/api/types";
+import { Button } from "@/components/ui/button";
 
 import { NODE_TYPES } from "./constants";
 import type { KnowledgeGraphEditorController } from "./use-knowledge-graph-editor";
@@ -28,14 +29,14 @@ export function NodeInspector({
         <h3 className="font-headline font-bold text-m3-on-surface">
           {t("teacher_kg_editor.node_detail")}
         </h3>
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => sel.setSelectedId(null)}
           aria-label={t("common.close")}
           className="flex h-7 w-7 items-center justify-center rounded-md text-m3-on-surface-variant hover:bg-m3-surface-container-high"
         >
           <X className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-3">
@@ -109,7 +110,7 @@ export function NodeInspector({
         </div>
 
         <div className="flex flex-wrap gap-2 pt-1">
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => makePrimary(selectedNode.id)}
             disabled={selectedNode.is_primary}
@@ -124,15 +125,15 @@ export function NodeInspector({
             {selectedNode.is_primary
               ? t("teacher_kg_editor.is_primary")
               : t("teacher_kg_editor.make_primary")}
-          </button>
-          <button
+          </Button>
+          <Button variant="ghost"
             type="button"
             onClick={() => deleteNode(selectedNode.id)}
             className="flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
           >
             <Trash2 className="h-3.5 w-3.5" />
             {t("teacher_kg_editor.delete_node")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

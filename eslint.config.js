@@ -178,6 +178,21 @@ export default tseslint.config([
         },
       ],
 
+      // Native <button> bypasses the system Button (@/components/ui/button —
+      // base-ui focus ring, disabled styling, variants/sizes, consistent
+      // chrome). Screens and components must use <Button>. The ui/ layer
+      // itself (tabs, segmented controls, filter bars, table toggles) is the
+      // base Button builds on, so it legitimately keeps native <button> —
+      // exempted below.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXOpeningElement[name.name='button']",
+          message:
+            "Use <Button> from @/components/ui/button instead of the native <button> element.",
+        },
+      ],
+
       // --- react-hooks opt-outs (taste / aggressive-on-legacy) -------------
       // These are genuinely noisy or aggressive on code that predates the v7
       // compiler rules. Correctness (rules-of-hooks) does NOT need to agree
@@ -213,6 +228,19 @@ export default tseslint.config([
       "max-lines": "off",
       "max-lines-per-function": "off",
       complexity: "off",
+      // Test fixtures legitimately render bare <button> to query by role.
+      "no-restricted-syntax": "off",
+    },
+  },
+
+  // The design-system layer is the base <Button> itself builds on — base-ui
+  // triggers, tab strips, segmented controls, filter bars and table row
+  // toggles render their own native <button> as the foundation. Banning it
+  // here would forbid the primitives from existing.
+  {
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": "off",
     },
   },
 

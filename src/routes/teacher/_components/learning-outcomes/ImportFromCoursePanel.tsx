@@ -19,7 +19,7 @@ function ImportOutcomeRow({
   const { t } = useTranslation();
   return (
     <li>
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onToggle}
         aria-pressed={selected}
@@ -50,7 +50,7 @@ function ImportOutcomeRow({
             {outcome.outcome_text}
           </span>
         </span>
-      </button>
+      </Button>
     </li>
   );
 }

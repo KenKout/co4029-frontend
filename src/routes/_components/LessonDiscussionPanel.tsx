@@ -66,7 +66,7 @@ function CommentRow({
             {new Date(comment.created_at).toLocaleString()}
           </span>
           {comment.can_delete && (
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={handleDelete}
               disabled={del.isPending}
@@ -74,7 +74,7 @@ function CommentRow({
               className="ml-auto text-m3-on-surface-variant transition-colors hover:text-danger disabled:opacity-50"
             >
               <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           )}
         </div>
         <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-m3-on-surface-variant">
@@ -182,7 +182,7 @@ function TopicCard({
 
   return (
     <div className="rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-lowest">
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-start gap-3 p-4 text-left"
@@ -211,7 +211,7 @@ function TopicCard({
             {t("discussion.comment_count", { count: topic.comment_count })}
           </div>
         </div>
-      </button>
+      </Button>
 
       {open && (
         <div className="space-y-4 border-t border-m3-outline-variant/40 p-4">
@@ -334,14 +334,14 @@ function NewTopicComposer({ lessonId }: { lessonId: string }) {
         <h5 className="font-headline text-sm font-bold text-m3-on-surface">
           {t("discussion.new_topic_title")}
         </h5>
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => setOpen(false)}
           aria-label={t("discussion.actions.cancel")}
           className="text-m3-on-surface-variant hover:text-m3-on-surface"
         >
           <X className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
       <input
         value={title}

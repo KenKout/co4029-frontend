@@ -28,7 +28,7 @@ export default function AvatarUploadRow({
 
   return (
     <div className="flex items-center gap-4">
-      <button
+      <Button variant="ghost"
         type="button"
         {...dropProps}
         onClick={() => fileInputRef.current?.click()}
@@ -51,7 +51,7 @@ export default function AvatarUploadRow({
             <Camera className="h-5 w-5 text-white" />
           )}
         </span>
-      </button>
+      </Button>
       <div className="min-w-0">
         <Button
           type="button"

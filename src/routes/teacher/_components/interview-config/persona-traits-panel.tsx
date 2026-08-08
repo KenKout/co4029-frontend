@@ -20,6 +20,7 @@ import {
 import { isFieldFrozen } from "@/lib/interview/published-field-freeze";
 import { cn } from "@/lib/utils";
 import type { SettingsFieldsetProps } from "@/routes/teacher/_components/interview-config/settings-fieldset";
+import { Button } from "@/components/ui/button";
 
 type PersonaTraitsPanelProps = Pick<
   SettingsFieldsetProps,
@@ -130,14 +131,14 @@ export function PersonaTraitsPanel({
                 </div>
               ));
             })()}
-            <button
+            <Button variant="link"
               type="button"
               onClick={() => update("persona_profile", {})}
               disabled={isFieldFrozen("persona_profile", status)}
               className="text-xs font-medium text-m3-primary hover:underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60"
             >
               {t("teacher_interview_config.persona_traits.reset")}
-            </button>
+            </Button>
           </div>
         </div>
       </Collapsible.Panel>

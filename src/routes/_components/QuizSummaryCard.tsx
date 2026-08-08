@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { GlassCard } from "@/components/ui/glass-card";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export type QuestionState = "completed" | "active" | "flagged" | "pending";
 
@@ -87,7 +88,7 @@ export function QuizSummaryCard({
       <div className="max-h-[22rem] overflow-y-auto overflow-x-hidden">
         <div className="grid grid-cols-6 gap-2 p-1.5">
           {items.map((item) => (
-            <button
+            <Button variant="ghost"
               key={item.id}
               type="button"
               onClick={() => onJump(item.index)}
@@ -111,7 +112,7 @@ export function QuizSummaryCard({
               {item.state === "flagged" && !item.onCooldown && (
                 <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-m3-surface" />
               )}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

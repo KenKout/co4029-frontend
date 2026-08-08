@@ -64,22 +64,22 @@ export function MembershipRowActions({
         </>
       ) : (
         <>
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => setEditing(true)}
             className="cursor-pointer"
             aria-label={t("admin.organizations.actions.edit")}
           >
             <StatusBadge status={status} type="membership" />
-          </button>
-          <button
+          </Button>
+          <Button variant="ghost"
             type="button"
             onClick={handleRemove}
             className="p-1.5 text-red-600 hover:bg-red-50 rounded-md"
             aria-label={t("admin.organizations.actions.delete")}
           >
             <Trash2 className="h-4 w-4" />
-          </button>
+          </Button>
         </>
       )}
     </div>

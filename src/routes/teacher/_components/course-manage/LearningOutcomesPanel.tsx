@@ -103,7 +103,7 @@ function PanelHeader({
 }) {
   const { open, setOpen, outcomes } = ctl;
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={() => setOpen((o) => !o)}
       className={cn(
@@ -128,6 +128,6 @@ function PanelHeader({
           open ? "rotate-0" : "-rotate-90",
         )}
       />
-    </button>
+    </Button>
   );
 }

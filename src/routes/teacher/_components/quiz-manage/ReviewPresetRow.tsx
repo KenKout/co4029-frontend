@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import type { ReviewOptions } from "@/lib/api/hooks/quizzes";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { PRESETS, PRESET_KEYS } from "./review-options-model";
 import type { PresetKey } from "./review-options-model";
 
@@ -27,7 +28,7 @@ export function ReviewPresetRow({
         {PRESET_KEYS.map((key) => {
           const active = activePreset === key;
           return (
-            <button
+            <Button variant="ghost"
               key={key}
               type="button"
               aria-pressed={active}
@@ -40,7 +41,7 @@ export function ReviewPresetRow({
               )}
             >
               {t(`teacher_quiz_manage.settings.review.presets.${key}`)}
-            </button>
+            </Button>
           );
         })}
         {activePreset === null && (

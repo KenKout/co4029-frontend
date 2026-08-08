@@ -1,5 +1,6 @@
 import { Code2, Rows3, Search, Table2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { AdminSettingsPageController } from "./use-admin-settings-page";
 
 /** Toolbar — (not sticky: kept overlapping the section headers) */
@@ -66,7 +67,7 @@ export function SettingsToolbar({
           )}
         </label>
 
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => setShowKeys((v) => !v)}
           title="Show config keys and env vars"
@@ -79,9 +80,9 @@ export function SettingsToolbar({
         >
           <Code2 className="h-4 w-4" />
           Keys
-        </button>
+        </Button>
 
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => setDense((v) => !v)}
           title={dense ? "Card view" : "Table view"}
@@ -98,7 +99,7 @@ export function SettingsToolbar({
             <Table2 className="h-4 w-4" />
           )}
           {dense ? "Cards" : "Table"}
-        </button>
+        </Button>
       </div>
 
       {/* Autosave is explicit — runtime config that silently commits is

@@ -2,6 +2,7 @@ import { Circle, Workflow } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 import type { KgLayoutMode } from "./types";
 
@@ -20,7 +21,7 @@ export function KgLayoutToggle({
       aria-label={t("teacher_lesson_materials.kg.layout_label")}
       className="flex items-center rounded-lg border border-m3-outline-variant/30 bg-m3-surface-container p-0.5"
     >
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => onLayoutModeChange("circular")}
         aria-pressed={layoutMode === "circular"}
@@ -33,8 +34,8 @@ export function KgLayoutToggle({
       >
         <Circle className="h-3.5 w-3.5" />
         {t("teacher_lesson_materials.kg.layout_circular")}
-      </button>
-      <button
+      </Button>
+      <Button variant="ghost"
         type="button"
         onClick={() => onLayoutModeChange("tree")}
         aria-pressed={layoutMode === "tree"}
@@ -47,7 +48,7 @@ export function KgLayoutToggle({
       >
         <Workflow className="h-3.5 w-3.5" />
         {t("teacher_lesson_materials.kg.layout_tree")}
-      </button>
+      </Button>
     </div>
   );
 }

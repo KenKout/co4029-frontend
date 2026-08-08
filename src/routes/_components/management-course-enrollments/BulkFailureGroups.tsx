@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import type { BulkEnrollFailure } from "@/lib/api/types";
+import { Button } from "@/components/ui/button";
 
 /**
  * The collapsible breakdown of why individual identifiers were rejected, one
@@ -24,7 +25,7 @@ export function BulkFailureGroups({
 
   return (
     <div className="border border-m3-outline-variant/20 rounded-lg overflow-hidden">
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onToggle}
         className="w-full flex items-center justify-between px-4 py-2 bg-m3-surface-container text-sm font-medium hover:bg-m3-surface-container-high transition-colors"
@@ -40,7 +41,7 @@ export function BulkFailureGroups({
         ) : (
           <ChevronDown className="h-4 w-4 text-m3-on-surface-variant" />
         )}
-      </button>
+      </Button>
       {expanded && (
         <div className="divide-y divide-m3-outline-variant/10">
           {grouped.map(([reason, items]) => (

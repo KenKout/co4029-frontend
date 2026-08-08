@@ -3,6 +3,7 @@ import { AlertTriangle, Check, Pencil } from "lucide-react";
 
 import type { QuizQuestionAuthoring } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { buildNavStatusWords } from "./question-nav-status";
 import type { NavCellStatus } from "./question-nav-status";
 
@@ -28,7 +29,7 @@ export function QuestionNavigatorCell({
   const statusWords = buildNavStatusWords(status, t);
 
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={onSelect}
       aria-current={focused ? "location" : undefined}
@@ -84,6 +85,6 @@ export function QuestionNavigatorCell({
           <Check className="h-2 w-2" strokeWidth={4} />
         </span>
       )}
-    </button>
+    </Button>
   );
 }

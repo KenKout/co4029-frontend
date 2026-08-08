@@ -1,5 +1,6 @@
 import { CheckCheck, CircleDot, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { ModuleItemStats, TranslateFn } from "./types";
 
 /**
@@ -47,7 +48,7 @@ export function ModulePublishControls({
       )}
 
       {draftItems.length > 0 && (
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={onPublishAll}
           disabled={publishingAll}
@@ -62,7 +63,7 @@ export function ModulePublishControls({
             <CheckCheck className="h-2.5 w-2.5" />
           )}
           {t("teacher_common.publish_all", { count: draftItems.length })}
-        </button>
+        </Button>
       )}
     </>
   );

@@ -3,6 +3,7 @@ import { Trash2 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import type { FeedbackBandIn } from "@/lib/api/hooks/quizzes";
+import { Button } from "@/components/ui/button";
 
 /**
  * One grade band row: min / max score, the feedback body, and a remove action.
@@ -44,14 +45,14 @@ export function FeedbackBandRow({
         placeholder={t("teacher_quiz_manage.feedback_bands.text_placeholder")}
         className="w-full rounded-lg border border-m3-outline-variant/20 bg-m3-surface px-3 py-2 text-sm resize-none"
       />
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onRemove}
         className="p-2 text-m3-on-surface-variant hover:text-red-600"
         aria-label={t("teacher_quiz_manage.feedback_bands.remove")}
       >
         <Trash2 className="h-4 w-4" />
-      </button>
+      </Button>
     </div>
   );
 }

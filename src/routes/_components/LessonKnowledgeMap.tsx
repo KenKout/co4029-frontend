@@ -5,6 +5,7 @@ import { Brain, Maximize2 } from "lucide-react";
 import { usePublishedLessonKnowledgeGraph } from "@/lib/api/hooks/materials";
 import type { LessonKnowledgeGraph } from "@/lib/api/types/teacher";
 import { KnowledgeGraphDetail } from "@/routes/teacher/_components/knowledge-graph-detail";
+import { Button } from "@/components/ui/button";
 
 /**
  * Teacher-published knowledge map on the student reading view.
@@ -73,7 +74,7 @@ export function LessonKnowledgeMap({ lessonId }: { lessonId: string }) {
       className="glass ghost-border shadow-glass rounded-xl overflow-hidden"
       data-testid="course-learn-knowledge-map"
     >
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => setExpanded(true)}
         className="flex w-full items-center justify-between gap-2 px-6 py-4 sm:px-8 hover:bg-m3-surface-container/50 transition-colors"
@@ -93,7 +94,7 @@ export function LessonKnowledgeMap({ lessonId }: { lessonId: string }) {
           <Maximize2 className="h-4 w-4" />
           {t("teacher_lesson_materials.kg.expand")}
         </span>
-      </button>
+      </Button>
 
       {/* Same full-screen explorer as the teacher side, minus edit/publish. */}
       {expanded && (

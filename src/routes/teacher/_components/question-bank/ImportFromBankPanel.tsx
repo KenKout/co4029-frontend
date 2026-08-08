@@ -57,7 +57,7 @@ export function ImportFromBankPanel({
             const isSel = selected.has(b.id);
             return (
               <li key={b.id}>
-                <button
+                <Button variant="ghost"
                   type="button"
                   onClick={() => onToggle(b.id)}
                   aria-pressed={isSel}
@@ -102,7 +102,7 @@ export function ImportFromBankPanel({
                       )}
                     </span>
                   </span>
-                </button>
+                </Button>
               </li>
             );
           })}

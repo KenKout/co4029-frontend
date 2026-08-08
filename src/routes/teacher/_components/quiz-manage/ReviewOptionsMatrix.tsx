@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 
 import type { ReviewOptions } from "@/lib/api/hooks/quizzes";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { ReviewPresetRow } from "./ReviewPresetRow";
 import { ReviewWindowCard } from "./ReviewWindowCard";
 import { WINDOW_KEYS, matchPreset } from "./review-options-model";
@@ -54,7 +55,7 @@ export function ReviewOptionsMatrix({
 
       {/* Per-window detail. */}
       <div className="rounded-xl border border-m3-outline-variant/20">
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
@@ -70,7 +71,7 @@ export function ReviewOptionsMatrix({
             )}
             aria-hidden="true"
           />
-        </button>
+        </Button>
 
         {expanded && (
           <div className="space-y-3 border-t border-m3-outline-variant/20 p-4">

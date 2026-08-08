@@ -63,14 +63,14 @@ export function ToolbarSaveControls({
         )}
         {t("teacher_kg_editor.publish")}
       </Button>
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={requestClose}
         aria-label={t("common.close")}
         className="flex h-9 w-9 items-center justify-center rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface"
       >
         <X className="h-5 w-5" />
-      </button>
+      </Button>
     </>
   );
 }

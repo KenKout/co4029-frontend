@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { QUIZ_PAGE_SIZES } from "@/lib/quiz-timing";
+import { Button } from "@/components/ui/button";
 import type { QuizSession } from "./types";
 
 /**
@@ -30,7 +31,7 @@ export function QuizPerPageSelector({ session }: { session: QuizSession }) {
           className="flex items-center rounded-lg border border-m3-outline-variant/40 bg-m3-surface-container p-0.5"
         >
           {QUIZ_PAGE_SIZES.map((size) => (
-            <button
+            <Button variant="ghost"
               key={String(size)}
               type="button"
               onClick={() => changePageSize(size)}
@@ -43,7 +44,7 @@ export function QuizPerPageSelector({ session }: { session: QuizSession }) {
               )}
             >
               {size === "all" ? t("course_quiz.pagination.per_page_all") : size}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

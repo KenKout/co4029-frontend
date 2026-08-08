@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { KgRelationGroup } from "./KgRelationGroup";
+import { Button } from "@/components/ui/button";
 import type {
   KgNodeById,
   KgNodeDatum,
@@ -54,14 +55,14 @@ export function KgRelationPanel({
             {node.type}
           </p>
         </div>
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={onClose}
           aria-label={t("common.close")}
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-m3-on-surface-variant hover:bg-m3-surface-container-high"
         >
           <X className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
 
       {node.definition && (

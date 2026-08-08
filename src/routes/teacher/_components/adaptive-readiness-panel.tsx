@@ -18,6 +18,7 @@ import type {
   InterviewQuestionAuthoring,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /** Tabs the panel can deep-link to when a warning is actionable. */
 type ReadinessTab = "settings" | "generate" | "questions";
@@ -387,14 +388,14 @@ function ReadinessWarnings({
               })}
             </span>
             {tab && onGoTo && (
-              <button
+              <Button variant="link"
                 type="button"
                 onClick={() => onGoTo(tab)}
                 className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold underline-offset-2 hover:underline cursor-pointer"
               >
                 {t("teacher_interview_config.readiness.fix_action")}
                 <ArrowRight className="h-3 w-3" aria-hidden="true" />
-              </button>
+              </Button>
             )}
           </li>
         );

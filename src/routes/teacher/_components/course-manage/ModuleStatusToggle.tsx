@@ -1,5 +1,6 @@
 import type { CourseContentModule } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { ModuleAccordionController } from "./use-module-accordion";
 import type { TranslateFn } from "./types";
 
@@ -19,7 +20,7 @@ export function ModuleStatusToggle({
   t: TranslateFn;
 }) {
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       title={t("teacher_common.mark_module_as", {
         status: t(
@@ -40,6 +41,6 @@ export function ModuleStatusToggle({
         : module.status
           ? t(`teacher_dashboard.status.${module.status}`)
           : module.status}
-    </button>
+    </Button>
   );
 }

@@ -1,4 +1,5 @@
 import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 /**
  * Editable lesson header: the lesson-type eyebrow, the click-to-edit title
@@ -53,7 +54,7 @@ export function LessonHeaderSection({
               </span>
             )}
           </h1>
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={(e) => {
               e.stopPropagation();
@@ -62,7 +63,7 @@ export function LessonHeaderSection({
             className="opacity-0 group-hover:opacity-100 transition-opacity mt-2 p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant shrink-0 cursor-pointer"
           >
             <Pencil className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       )}
 

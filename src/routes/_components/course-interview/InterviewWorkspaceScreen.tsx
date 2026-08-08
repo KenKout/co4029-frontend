@@ -10,6 +10,7 @@ import { InterviewHeader } from "@/components/interview/stages";
 import { TranscriptPanel } from "@/components/interview/transcript";
 import { useInterviewChat } from "@/components/interview/use-interview-chat";
 import { questionTypeLabel } from "@/lib/interview/turn-factory";
+import { Button } from "@/components/ui/button";
 import {
   resolveAgentOwnsTheVoice,
   resolveAgentVoicePhase,
@@ -215,7 +216,7 @@ export function InterviewWorkspaceScreen({
           wanted, so a text-only session never sees it. */}
       {agentOwnsTheVoice && !canPlayAudio && (
         <div className="mx-auto w-full max-w-[840px] px-4 pt-3">
-          <button
+          <Button variant="ghost"
             type="button"
             {...startAudioProps}
             // AFTER the spread on purpose. `mergedProps` sets
@@ -227,7 +228,7 @@ export function InterviewWorkspaceScreen({
           >
             <Volume2 className="h-4 w-4" aria-hidden="true" />
             {t("course_interview.enable_audio")}
-          </button>
+          </Button>
         </div>
       )}
 

@@ -3,6 +3,7 @@ import { Filter, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 import {
   BLOOM_OPTIONS,
@@ -31,14 +32,14 @@ export function BankSearchBar({
         autoFocus
       />
       {searchInput ? (
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => setSearchInput("")}
           className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full hover:bg-m3-surface-container-low flex items-center justify-center"
           title="Clear search"
         >
           <X className="h-3.5 w-3.5 text-m3-on-surface-variant" />
-        </button>
+        </Button>
       ) : null}
     </div>
   );
@@ -182,13 +183,13 @@ export function BankFilterCard({
           ) : null}
         </div>
         {activeFilterCount > 0 ? (
-          <button
+          <Button variant="link"
             type="button"
             onClick={resetFilters}
             className="text-[10px] font-medium text-m3-secondary hover:underline"
           >
             Clear all
-          </button>
+          </Button>
         ) : null}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">

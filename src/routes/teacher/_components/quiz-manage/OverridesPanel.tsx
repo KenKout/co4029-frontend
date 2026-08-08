@@ -152,7 +152,7 @@ export function OverridesPanel({ quizId }: { quizId: string }) {
                   {Math.round(o.time_limit_seconds / 60)}m
                 </span>
               )}
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={() => void handleDelete(o.id)}
                 disabled={del.isPending}
@@ -160,7 +160,7 @@ export function OverridesPanel({ quizId }: { quizId: string }) {
                 aria-label={t("teacher_quiz_manage.overrides.delete_action")}
               >
                 <Trash2 className="h-4 w-4" />
-              </button>
+              </Button>
             </li>
           ))}
         </ul>

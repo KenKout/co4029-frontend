@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { TypeSpecificEditorProps } from "./type-specific-value";
 
 /**
@@ -17,7 +18,7 @@ export function TypeSpecificMultiSelectEditor({
 
   return (
     <div className="flex items-center gap-3">
-      <button
+      <Button variant="ghost"
         type="button"
         disabled={disabled}
         onClick={() => onChange({ single_answer: !value.single_answer })}
@@ -35,7 +36,7 @@ export function TypeSpecificMultiSelectEditor({
             !value.single_answer ? "left-6 bg-white" : "left-1 bg-slate-400",
           )}
         />
-      </button>
+      </Button>
       <div>
         <p className="text-sm font-bold text-m3-on-surface">
           {t("teacher_quiz_manage.type_editor.multi_select_label")}

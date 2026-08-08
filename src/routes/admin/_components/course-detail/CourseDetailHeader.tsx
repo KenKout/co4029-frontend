@@ -1,6 +1,7 @@
 import { RotateCcw } from "lucide-react";
 
 import type { CourseDetailController } from "./use-admin-course-detail";
+import { Button } from "@/components/ui/button";
 
 /** Title, course id and the restore action. */
 export function CourseDetailHeader({ c }: { c: CourseDetailController }) {
@@ -15,7 +16,7 @@ export function CourseDetailHeader({ c }: { c: CourseDetailController }) {
           {courseId}
         </p>
       </div>
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={handleRestore}
         disabled={restore.isPending}
@@ -25,7 +26,7 @@ export function CourseDetailHeader({ c }: { c: CourseDetailController }) {
         {restore.isPending
           ? t("admin.course_detail.restoring")
           : t("admin.course_detail.restore")}
-      </button>
+      </Button>
     </div>
   );
 }

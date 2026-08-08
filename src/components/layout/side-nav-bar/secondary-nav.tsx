@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Loader2, LogOut } from "lucide-react";
 import { type NavItem, secondaryNavItems } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const isLogoutItem = (item: NavItem) => item.label === "Log Out";
 
@@ -37,7 +38,7 @@ export function SideNavSecondary({
 
         if (isLogoutItem(item)) {
           return (
-            <button
+            <Button variant="ghost"
               key={item.label}
               type="button"
               title={collapsed ? label : undefined}
@@ -57,7 +58,7 @@ export function SideNavSecondary({
               {!collapsed && (
                 <span className="text-sm font-medium">{label}</span>
               )}
-            </button>
+            </Button>
           );
         }
 

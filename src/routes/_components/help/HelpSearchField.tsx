@@ -1,4 +1,5 @@
 import { HelpCircle, Search, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function HelpPageHeader() {
   return (
@@ -38,14 +39,14 @@ export function HelpSearchField({
         className="w-full rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-low py-2.5 pl-10 pr-10 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant focus:border-m3-primary focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
       />
       {query && (
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => setQuery("")}
           aria-label="Clear search"
           className="absolute right-3 top-1/2 -translate-y-1/2 text-m3-on-surface-variant hover:text-m3-on-surface"
         >
           <X className="h-4 w-4" />
-        </button>
+        </Button>
       )}
     </div>
   );

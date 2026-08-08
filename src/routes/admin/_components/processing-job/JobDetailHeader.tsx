@@ -1,6 +1,7 @@
 import { RefreshCw } from "lucide-react";
 
 import { JobStatusBadgeMd as JobStatusBadge } from "@/components/ui/status-badges";
+import { Button } from "@/components/ui/button";
 
 import type {
   ProcessingJobController,
@@ -31,7 +32,7 @@ export function JobDetailHeader({
           </p>
         </div>
         {isFailed ? (
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={handleRetry}
             disabled={retry.isPending}
@@ -41,7 +42,7 @@ export function JobDetailHeader({
             {retry.isPending
               ? t("admin.users.actions.disabling")
               : t("admin.processing.retry")}
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>

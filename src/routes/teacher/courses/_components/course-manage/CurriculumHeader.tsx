@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { GripVertical } from "lucide-react";
 
 import type { CourseManageController } from "./use-course-manage-controller";
+import { Button } from "@/components/ui/button";
 
 /**
  * Curriculum section heading plus the expand/collapse-all pair (T#1/#3): fast
@@ -25,21 +26,21 @@ export function CurriculumHeader({
       </div>
       {modules.length > 1 && (
         <div className="flex items-center gap-1.5">
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => setAllModules(true)}
             className="text-xs font-medium text-m3-on-surface-variant hover:text-m3-primary transition-colors cursor-pointer px-2 py-1"
           >
             {t("teacher_common.expand_all")}
-          </button>
+          </Button>
           <span className="text-m3-outline-variant">·</span>
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => setAllModules(false)}
             className="text-xs font-medium text-m3-on-surface-variant hover:text-m3-primary transition-colors cursor-pointer px-2 py-1"
           >
             {t("teacher_common.collapse_all")}
-          </button>
+          </Button>
         </div>
       )}
     </div>

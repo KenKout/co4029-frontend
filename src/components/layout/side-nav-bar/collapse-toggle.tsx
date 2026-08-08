@@ -1,6 +1,7 @@
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { TFunction } from "i18next";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export function SideNavCollapseToggle({
   collapsed,
@@ -18,7 +19,7 @@ export function SideNavCollapseToggle({
         collapsed && "flex justify-center",
       )}
     >
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onToggle}
         title={
@@ -46,7 +47,7 @@ export function SideNavCollapseToggle({
             {t("sidebar.collapse", { defaultValue: "Collapse" })}
           </span>
         )}
-      </button>
+      </Button>
     </div>
   );
 }

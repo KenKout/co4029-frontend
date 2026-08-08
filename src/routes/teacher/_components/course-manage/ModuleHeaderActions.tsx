@@ -1,6 +1,7 @@
 import { Check, Copy, Loader2, Pencil } from "lucide-react";
 import type { ModuleAccordionController } from "./use-module-accordion";
 import type { TranslateFn } from "./types";
+import { Button } from "@/components/ui/button";
 
 /**
  * Trailing header buttons: the pencil that starts inline title editing, and
@@ -22,7 +23,7 @@ export function ModuleHeaderActions({
 }) {
   return (
     <>
-      <button
+      <Button variant="ghost"
         type="button"
         title={t("teacher_common.rename_module")}
         onClick={onStartEditTitle}
@@ -33,9 +34,9 @@ export function ModuleHeaderActions({
         ) : (
           <Pencil className="h-3.5 w-3.5" />
         )}
-      </button>
+      </Button>
 
-      <button
+      <Button variant="ghost"
         type="button"
         title={t("teacher_common.duplicate_module", "Duplicate module")}
         onClick={onDuplicate}
@@ -47,7 +48,7 @@ export function ModuleHeaderActions({
         ) : (
           <Copy className="h-3.5 w-3.5" />
         )}
-      </button>
+      </Button>
     </>
   );
 }

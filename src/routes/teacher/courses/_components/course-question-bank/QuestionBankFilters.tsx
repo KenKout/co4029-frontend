@@ -4,6 +4,7 @@ import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type {
   InterviewDifficulty,
   InterviewQuestionType,
@@ -103,7 +104,7 @@ export function QuestionBankFilters({
           ]}
         />
         {anyFilterActive && (
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={clearFilters}
             className={cn(
@@ -115,7 +116,7 @@ export function QuestionBankFilters({
           >
             <X className="h-3 w-3" />
             {t("teacher_question_bank.clear_filters")}
-          </button>
+          </Button>
         )}
       </div>
 

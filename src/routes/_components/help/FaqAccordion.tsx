@@ -8,6 +8,7 @@ import {
   type FaqCategory,
 } from "@/lib/help-content";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface FaqAccordionProps {
   grouped: Map<FaqCategory, typeof FAQ_ENTRIES>;
@@ -27,7 +28,7 @@ function FaqEntryRow({
 }) {
   return (
     <div id={`q-${entry.id}`}>
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => toggle(entry.id)}
         aria-expanded={open}
@@ -43,7 +44,7 @@ function FaqEntryRow({
             open && "rotate-180",
           )}
         />
-      </button>
+      </Button>
       {open && (
         <div className="px-5 pb-5">
           <RichContent value={entry.answer} format="markdown" />

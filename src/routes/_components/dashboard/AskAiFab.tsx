@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Bot } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function AskAiFab({
   fabHovered,
@@ -23,7 +24,7 @@ export default function AskAiFab({
         </div>
       </div>
 
-      <button
+      <Button variant="ghost"
         onMouseEnter={() => setFabHovered(true)}
         onMouseLeave={() => setFabHovered(false)}
         onFocus={() => setFabHovered(true)}
@@ -32,7 +33,7 @@ export default function AskAiFab({
         aria-label={t("dashboard.ask_ai")}
       >
         <Bot className="h-6 w-6" />
-      </button>
+      </Button>
     </div>
   );
 }

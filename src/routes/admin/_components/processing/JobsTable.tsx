@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/data-table-toolbar";
 import type { ProcessingJobOut } from "@/lib/api/types";
 import { JobStatusBadge } from "@/components/ui/status-badges";
+import { Button } from "@/components/ui/button";
 
 import { formatDate } from "./helpers";
 
@@ -171,7 +172,7 @@ export function JobsTable({
       actionsHeader={t("admin.processing.cols.actions")}
       actions={(job) =>
         job.status === "failed" ? (
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={(e) => {
               e.stopPropagation();
@@ -182,11 +183,11 @@ export function JobsTable({
           >
             <RefreshCw className="h-3 w-3" />
             {retryingId === job.id ? "…" : t("admin.processing.retry")}
-          </button>
+          </Button>
         ) : (
           // Non-failed rows get a "view" affordance so the column is never
           // empty (product feedback 2026-08-04).
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={(e) => {
               e.stopPropagation();
@@ -200,7 +201,7 @@ export function JobsTable({
             className="p-1 rounded-md text-text-subtle hover:text-m3-primary hover:bg-m3-primary/8 transition-colors cursor-pointer"
           >
             <ChevronRight className="h-4 w-4" />
-          </button>
+          </Button>
         )
       }
     />

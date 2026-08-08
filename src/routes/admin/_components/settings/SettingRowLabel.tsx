@@ -1,6 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { ConfigKeyReveal } from "./ConfigKeyReveal";
 import { ResolutionPopover } from "./ResolutionPopover";
 import type { SettingRowController } from "./use-setting-row";
@@ -33,7 +34,7 @@ export function SettingRowLabel({
         <span className="font-medium text-slate-900">{label}</span>
         <ResolutionPopover setting={setting} />
         {rest && (
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => setExpanded((v) => !v)}
             className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
@@ -46,7 +47,7 @@ export function SettingRowLabel({
                 expanded && "rotate-180",
               )}
             />
-          </button>
+          </Button>
         )}
         <ConfigKeyReveal setting={setting} forceShow={showKeys} />
       </div>

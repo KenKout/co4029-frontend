@@ -19,6 +19,7 @@ import type {
   ModulePublic,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { moduleIsComplete } from "./helpers";
 import { interviewRowBadge } from "./interview-row-badge";
 import type { InterviewRowBadge } from "./interview-row-badge";
@@ -85,7 +86,7 @@ export function ModuleSection({
 
   return (
     <div className="space-y-1">
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-left transition-colors hover:bg-m3-primary/5 group cursor-pointer"
@@ -99,7 +100,7 @@ export function ModuleSection({
         <span className="text-[10px] font-bold text-m3-outline uppercase tracking-tight transition-colors group-hover:text-m3-primary">
           {mod.title}
         </span>
-      </button>
+      </Button>
       <div
         className={cn(
           "grid transition-[grid-template-rows] duration-300 ease-in-out",
@@ -249,13 +250,13 @@ function CurriculumItemRow({
   }
 
   return (
-    <button
+    <Button variant="ghost"
       onClick={() => idx >= 0 && onSelect(idx)}
       disabled={idx < 0 /* || state === "locked" */} // DEV: uncomment state check to re-enable lock
       className={className}
     >
       {inner}
-    </button>
+    </Button>
   );
 }
 

@@ -7,6 +7,7 @@ import {
 } from "@/lib/api/hooks/materials";
 import type { LearningMaterial } from "@/lib/api/types/teacher";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /**
  * AI-twin actions on a resource card. A downloadable resource uploaded with
@@ -68,7 +69,7 @@ export function ResourceAiActions({
   return (
     <>
       {failed && (
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={handleRetry}
           disabled={reprocess.isPending}
@@ -78,9 +79,9 @@ export function ResourceAiActions({
           <RefreshCw
             className={cn("h-4 w-4", reprocess.isPending && "animate-spin")}
           />
-        </button>
+        </Button>
       )}
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={toggleVisible}
         // Only a ready doc can actually preview for students; guard the toggle
@@ -101,7 +102,7 @@ export function ResourceAiActions({
         )}
       >
         {visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-      </button>
+      </Button>
     </>
   );
 }

@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import { AlertTriangle, RotateCcw, X } from "lucide-react";
 import type { CourseDraft } from "@/lib/course-draft";
+import { Button } from "@/components/ui/button";
 
 /**
  * Offers a recovered draft back to the manager.
@@ -60,7 +61,7 @@ export function DraftRestoreBanner({
       </div>
 
       <div className="flex items-center gap-2 pl-6">
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={onRestore}
           className="h-8 px-3 rounded-full bg-m3-primary text-m3-on-primary text-xs font-semibold cursor-pointer"
@@ -68,15 +69,15 @@ export function DraftRestoreBanner({
           {partiallyCreated
             ? t("teacher_course_new.draft_resume")
             : t("teacher_course_new.draft_restore")}
-        </button>
-        <button
+        </Button>
+        <Button variant="ghost"
           type="button"
           onClick={onDiscard}
           className="h-8 px-3 rounded-full text-xs font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container cursor-pointer inline-flex items-center gap-1.5"
         >
           <X className="h-3.5 w-3.5" />
           {t("teacher_course_new.draft_discard")}
-        </button>
+        </Button>
       </div>
     </div>
   );

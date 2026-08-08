@@ -5,6 +5,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { QuizPerStudentRow } from "@/lib/api/types";
+import { Button } from "@/components/ui/button";
 
 type HeadlineMetric = "best" | "latest";
 
@@ -134,7 +135,7 @@ export function PerStudentTable({
   return (
     <div className="space-y-3">
       <div className="inline-flex items-center gap-1 rounded-full bg-m3-surface-container-low p-1">
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => onHeadlineMetricChange("best")}
           className={cn(
@@ -145,8 +146,8 @@ export function PerStudentTable({
           )}
         >
           {t("teacher_quiz_results.per_student.toggle_best")}
-        </button>
-        <button
+        </Button>
+        <Button variant="ghost"
           type="button"
           onClick={() => onHeadlineMetricChange("latest")}
           className={cn(
@@ -157,7 +158,7 @@ export function PerStudentTable({
           )}
         >
           {t("teacher_quiz_results.per_student.toggle_latest")}
-        </button>
+        </Button>
       </div>
 
       <DataTable<QuizPerStudentRow>

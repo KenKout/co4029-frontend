@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 
 import type { MfaController } from "./types";
+import { Button } from "@/components/ui/button";
 
 /**
  * "Minting a challenge…" progress line, and — once a challenge attempt has
@@ -32,7 +33,7 @@ export default function MfaChallengeFooter({
       )}
 
       {!challengeId && !isLoadingChallenge && isAuthenticated && requiresMfa ? (
-        <button
+        <Button variant="link"
           type="button"
           onClick={() => {
             requestedRef.current = true;
@@ -41,7 +42,7 @@ export default function MfaChallengeFooter({
           className="mx-auto block text-xs font-medium text-m3-secondary hover:underline"
         >
           {t("login_mfa.resend_challenge")}
-        </button>
+        </Button>
       ) : null}
     </>
   );
