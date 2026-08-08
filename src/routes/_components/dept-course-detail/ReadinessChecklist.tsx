@@ -49,6 +49,17 @@ export function ReadinessChecklist({ courseId }: { courseId: string }) {
           : t("dept_course_detail.readiness.content_missing"),
     },
     {
+      key: "outcomes",
+      ok: data.learning_outcome_count > 0,
+      label: t("dept_course_detail.readiness.outcomes"),
+      detail:
+        data.learning_outcome_count > 0
+          ? t("dept_course_detail.readiness.outcomes_ok", {
+              count: data.learning_outcome_count,
+            })
+          : t("dept_course_detail.readiness.outcomes_missing"),
+    },
+    {
       key: "path",
       ok: data.career_paths.length > 0,
       label: t("dept_course_detail.readiness.path"),

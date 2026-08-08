@@ -29,6 +29,7 @@ export interface CourseReadiness {
   status: string;
   teacher_count: number;
   gradeable_unit_count: number;
+  learning_outcome_count: number;
   career_paths: CoursePathPlacement[];
   /** No gradeable unit AND required on a path: it is locking that stage and
    *  every stage behind it for every student. */
