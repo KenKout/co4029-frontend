@@ -272,6 +272,12 @@ function useOutcomeInvalidation(courseId: string | undefined) {
     void qc.invalidateQueries({
       queryKey: queryKeys.courses.outcomes(courseId ?? ""),
     });
+    // The dept readiness checklist counts learning_outcome_count — without
+    // this, adding/removing/reordering LOs left the checklist stale for its
+    // whole 30s staleTime (bug report 2026-08-08).
+    void qc.invalidateQueries({
+      queryKey: queryKeys.dept.readiness(courseId ?? ""),
+    });
   };
 }
 
