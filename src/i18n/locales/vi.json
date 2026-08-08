@@ -686,7 +686,13 @@
     "action_teachers": "Giảng viên",
     "instructor_unassigned": "Chưa phân công",
     "modules_other": "{{count}} mô-đun",
-    "col_actions": "Thao tác"
+    "col_actions": "Thao tác",
+    "filter_label": "Danh sách việc",
+    "filter_all": "Tất cả",
+    "filter_needs_teacher": "Thiếu giảng viên",
+    "filter_no_content": "Chưa có nội dung",
+    "filter_draft": "Bản nháp",
+    "filter_clear": "Xóa bộ lọc"
   },
   "management_enrolment": {
     "title": "Ghi danh",

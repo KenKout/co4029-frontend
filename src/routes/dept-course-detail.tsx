@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "@tanstack/react-router";
+import { useParams, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   useCourseRoster,
@@ -17,9 +17,15 @@ import { DeptTeachersTab } from "./_components/dept-course-detail/TeachersTab";
 import { Tabs } from "@/components/ui/tabs";
 import type { TabKey } from "./_components/dept-course-detail/types";
 
+const TAB_KEYS: TabKey[] = ["teachers", "students", "settings"];
+
 export default function DeptCourseDetailPage() {
   const { t } = useTranslation();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
+  // ?tab= deep-links (the worklist's Teachers action); anything unknown
+  // falls back to the default tab. settings is manager-only, so a deep-link
+  // must not force it for someone who cannot see the tab.
+  const { tab: tabParam } = useSearch({ strict: false });
 
   const permissions = usePermissions();
   const canAssign = permissions.hasAny(
@@ -43,7 +49,12 @@ export default function DeptCourseDetailPage() {
   const teachers = useCourseTeachers(enabled ? courseId : undefined);
   const roster = useCourseRoster(enabled ? courseId : undefined);
 
-  const [tab, setTab] = useState<TabKey>("teachers");
+  const initialTab: TabKey =
+    TAB_KEYS.includes(tabParam as TabKey) &&
+    (tabParam !== "settings" || canDelete)
+      ? (tabParam as TabKey)
+      : "teachers";
+  const [tab, setTab] = useState<TabKey>(initialTab);
 
   if (permissions.isLoading) {
     return (

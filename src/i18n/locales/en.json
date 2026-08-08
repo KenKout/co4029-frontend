@@ -755,6 +755,12 @@
     "action_enrol": "Enrol",
     "action_teachers": "Teachers",
     "instructor_unassigned": "Unassigned",
+    "filter_label": "Worklist",
+    "filter_all": "All",
+    "filter_needs_teacher": "Needs teacher",
+    "filter_no_content": "No content",
+    "filter_draft": "Draft",
+    "filter_clear": "Clear filters",
     "modules_one": "{{count}} module",
     "modules_other": "{{count}} modules",
     "status": {
