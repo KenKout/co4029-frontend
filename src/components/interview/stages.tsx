@@ -108,7 +108,6 @@ export function FocusedInterviewStage({
   speak,
   replaySpeak,
   agentSpeaks = false,
-  agentTranscriptions,
   onSpeakingChange,
   onTurnPresented,
   onClarifyQuestion,
@@ -200,7 +199,6 @@ export function FocusedInterviewStage({
                 markPresented={markPresented}
                 replayTurn={replayTurn}
                 agentSpeaks={agentSpeaks}
-                agentTranscriptions={agentTranscriptions}
               />
             ) : (
               <FocusedStageOnboardingTurn

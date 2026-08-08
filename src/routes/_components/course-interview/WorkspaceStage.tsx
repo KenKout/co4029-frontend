@@ -109,7 +109,6 @@ export function WorkspaceStage({
         speak={iv.speakIfOn}
         replaySpeak={iv.replayIfOn}
         agentSpeaks={agentSpeaks}
-        agentTranscriptions={agentTranscriptions}
         onSpeakingChange={(speaking) => {
           iv.setAiSpeaking(iv.voiceOn && speaking);
           iv.setAiPresenting(speaking);

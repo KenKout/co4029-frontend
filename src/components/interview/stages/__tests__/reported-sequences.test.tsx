@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { stageHistoryTurns } from "../helpers";
 import type { ConversationTurn } from "@/lib/interview/types";
@@ -120,5 +120,33 @@ describe("resuming after F5", () => {
     const history = stageHistoryTurns(transcript, cardTurn, null, { liveTurns: [], agentSpeaks: true });
 
     expect(history.map((t) => t.id)).toEqual(["q1", "a1", "q2", "a2"]);
+  });
+});
+
+describe("the card does not animate against the agent's voice", () => {
+  it("shows the whole question at once and unlocks straight away", async () => {
+    // The interviewer paraphrases every question — it opens in its own words and
+    // bridges from the previous answer — so the card's text is never the sentence
+    // being spoken. Animating it against that playout is what produced "it goes
+    // silent until the question is fully on screen, then reads it fast".
+    const { render, screen } = await import("@testing-library/react");
+    const { QuestionCardPrompt } = await import("../QuestionCardPrompt");
+    const onPresentationComplete = vi.fn();
+    const onSpeakingChange = vi.fn();
+
+    render(
+      <QuestionCardPrompt
+        turn={{ id: "q1", role: "ai", text: Q1, kind: "question", elapsedSeconds: 0 }}
+        animate
+        speak={(() => undefined)}
+        agentSpeaks
+        onSpeakingChange={onSpeakingChange}
+        onPresentationComplete={onPresentationComplete}
+      />,
+    );
+
+    expect(screen.getByText(Q1)).toBeTruthy();
+    expect(onPresentationComplete).toHaveBeenCalledTimes(1);
+    expect(onSpeakingChange).toHaveBeenLastCalledWith(false);
   });
 });

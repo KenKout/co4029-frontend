@@ -5,7 +5,6 @@ import type {
   ConversationTurn,
   InterviewAgentStatus,
 } from "@/lib/interview/types";
-import type { TranscriptionLike } from "./use-agent-spoken-text";
 
 /**
  * Shared prop contracts for the interview stage components, extracted verbatim
@@ -78,7 +77,6 @@ export type QuestionCardProps = {
    */
   agentSpeaks?: boolean;
   /** The agent's audio-synchronised transcript segments. */
-  agentTranscriptions?: readonly TranscriptionLike[];
 };
 
 export type FocusedInterviewStageProps = {
@@ -107,7 +105,6 @@ export type FocusedInterviewStageProps = {
    */
   agentSpeaks?: boolean;
   /** The agent's audio-synchronised transcript segments, read in the room. */
-  agentTranscriptions?: readonly TranscriptionLike[];
   onSpeakingChange: (speaking: boolean) => void;
   onTurnPresented?: (turn: ConversationTurn) => void;
   onClarifyQuestion?: () => void;

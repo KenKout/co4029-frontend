@@ -24,7 +24,6 @@ export function QuestionCard({
   clarificationDisabled = false,
   isReplaying = false,
   agentSpeaks = false,
-  agentTranscriptions,
 }: QuestionCardProps) {
   const [presentationComplete, setPresentationComplete] = useState(!animate);
 
@@ -49,7 +48,6 @@ export function QuestionCard({
         animate={animate}
         speak={speak}
         agentSpeaks={agentSpeaks}
-        agentTranscriptions={agentTranscriptions}
         onSpeakingChange={onSpeakingChange}
         onPresentationComplete={() => {
           setPresentationComplete(true);
