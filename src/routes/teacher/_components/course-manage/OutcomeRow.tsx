@@ -98,8 +98,10 @@ export function OutcomeRow({
 
       {editable && <OutcomeRowActions outcome={outcome} ctl={ctl} t={t} />}
 
-      {/* Drop zone between rows = reorder before this row. */}
-      {editable && !isDragging && (
+      {/* Drop zone between rows = reorder before this row. Only visible
+          while a row is actually being dragged — a static blue line on
+          hover alone reads as a glitch. */}
+      {editable && draggingId !== null && draggingId !== outcome.id && (
         <div
           onDragOver={(e) => {
             e.preventDefault();
@@ -109,7 +111,7 @@ export function OutcomeRow({
             e.preventDefault();
             if (draggingId) void dropOn(draggingId, outcome.id, "before");
           }}
-          className="absolute inset-x-0 -top-1.5 h-3 rounded-full hover:bg-m3-primary/30"
+          className="absolute inset-x-0 -top-1.5 h-3 rounded-full bg-m3-primary/30"
         />
       )}
     </li>
