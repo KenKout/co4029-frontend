@@ -2722,7 +2722,8 @@
       "enter_student_uuid": "Hãy nhập UUID sinh viên",
       "add_student_failed": "Thêm sinh viên thất bại",
       "unregister_student_failed": "Huỷ đăng ký thất bại",
-      "load_student_progress_failed": "Không thể tải tiến độ sinh viên"
+      "load_student_progress_failed": "Không thể tải tiến độ sinh viên",
+      "update_course_failed": "Không thể cập nhật khóa học."
     },
     "breadcrumbs": {
       "management": "Quản lý",
@@ -2738,7 +2739,8 @@
       "course_removed": "Đã xoá khóa học khỏi lộ trình",
       "student_added": "Đã thêm sinh viên",
       "students_added": "Đã đăng ký {{count}} sinh viên",
-      "student_unregistered": "Đã huỷ đăng ký"
+      "student_unregistered": "Đã huỷ đăng ký",
+      "course_updated": "Đã cập nhật khóa học"
     },
     "dialogs": {
       "confirm_publish": "Xác nhận xuất bản",
@@ -2832,7 +2834,8 @@
         "enforcement": "Nếu giai đoạn vẫn đang khoá",
         "max_concurrent": "Số khóa học cùng lúc",
         "max_concurrent_hint": "Giới hạn nhẹ về số khóa học của lộ trình này mà sinh viên nên mở cùng lúc. Để trống là không giới hạn. Chỉ hiện cảnh báo — không bao giờ chặn.",
-        "satisfied_by": "Được tính là xong khi"
+        "satisfied_by": "Được tính là xong khi",
+        "required_or_optional": "Bắt buộc hay tự chọn"
       },
       "unlock_policy": {
         "always": "Luôn mở",
@@ -2871,6 +2874,10 @@
         "deleted": "Đã xoá giai đoạn",
         "order_updated": "Đã lưu thứ tự giai đoạn",
         "course_moved": "Đã chuyển khóa học"
+      },
+      "required_or_optional": {
+        "required": "Bắt buộc",
+        "optional": "Tự chọn"
       }
     }
   },

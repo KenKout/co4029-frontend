@@ -472,6 +472,24 @@ export function useMoveCareerPathCourseToStage(id: string) {
 }
 
 /**
+ * Patch an attached course's policy flags (required / satisfied-by).
+ */
+export function useUpdateCareerPathCourse(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      courseId: string;
+      payload: { is_required?: boolean; satisfied_by?: "completion" | "pass" };
+    }) =>
+      apiPatch<CareerPathCourseAuthoring[]>(
+        `/management/career-paths/${id}/courses/${vars.courseId}`,
+        vars.payload,
+      ),
+    onSuccess: () => invalidateStageScopes(qc, id),
+  });
+}
+
+/**
  * Student-initiated lazy enrollment into ONE course of a path (Pattern B).
  *
  * NOT general self-enrollment: the backend 403s unless the course sits in an

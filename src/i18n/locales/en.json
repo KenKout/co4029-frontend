@@ -2850,7 +2850,8 @@
       "enter_student_uuid": "Enter student UUID",
       "add_student_failed": "Failed to add student",
       "unregister_student_failed": "Failed to unregister student",
-      "load_student_progress_failed": "Failed to load student progress"
+      "load_student_progress_failed": "Failed to load student progress",
+      "update_course_failed": "Couldn't update the course."
     },
     "breadcrumbs": {
       "management": "Management",
@@ -2866,7 +2867,8 @@
       "course_removed": "Removed course from path",
       "student_added": "Added student",
       "students_added": "Registered {{count}} student(s)",
-      "student_unregistered": "Unregistered"
+      "student_unregistered": "Unregistered",
+      "course_updated": "Course updated"
     },
     "dialogs": {
       "confirm_publish": "Confirm publish",
@@ -2960,7 +2962,8 @@
         "enforcement": "If the stage is still locked",
         "max_concurrent": "Courses at once",
         "max_concurrent_hint": "A gentle limit on how many courses of this path a student should have open at once. Leave empty for no limit. This only shows a warning — it never blocks anyone.",
-        "satisfied_by": "Counts as done when"
+        "satisfied_by": "Counts as done when",
+        "required_or_optional": "Required or optional"
       },
       "unlock_policy": {
         "always": "Always open",
@@ -2999,6 +3002,10 @@
         "deleted": "Stage deleted",
         "order_updated": "Stage order saved",
         "course_moved": "Course moved"
+      },
+      "required_or_optional": {
+        "required": "Required",
+        "optional": "Optional"
       }
     }
   },
