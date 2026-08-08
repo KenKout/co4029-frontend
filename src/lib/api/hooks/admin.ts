@@ -377,12 +377,13 @@ export function useProcessingQueue() {
  * moment one status was selected; a client-side derivation from an
  * unfiltered list would also be capped at the list limit.
  */
-export function useProcessingSummary(since: string) {
+export function useProcessingSummary(since: string, until?: string) {
   return useQuery({
-    queryKey: queryKeys.admin.processingSummary(since),
+    queryKey: queryKeys.admin.processingSummary(since, until),
     queryFn: () => {
       const params = new URLSearchParams();
       params.set("since", since);
+      if (until) params.set("until", until);
       return apiFetch<ProcessingQueueDepth>(
         `/admin/processing/summary?${params.toString()}`,
       );
@@ -403,16 +404,19 @@ export function useProcessingSummary(since: string) {
 export function useProcessingJobs(opts: {
   status?: string;
   since: string;
+  until?: string;
   limit?: number;
 }) {
   const status = opts?.status;
   const since = opts.since;
+  const until = opts?.until;
   const limit = opts?.limit ?? 500;
   return useQuery({
-    queryKey: queryKeys.admin.processingJobs(status, since),
+    queryKey: queryKeys.admin.processingJobs(status, since, until),
     queryFn: () => {
       const params = new URLSearchParams();
       params.set("since", since);
+      if (until) params.set("until", until);
       if (status) params.set("status", status);
       params.set("limit", String(limit));
       return apiFetch<ProcessingJobOut[]>(

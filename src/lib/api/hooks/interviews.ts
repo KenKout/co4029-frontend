@@ -38,6 +38,7 @@ import type {
   InterviewSubmitAnswerRequest,
   InterviewSubmitAnswerResponse,
   InterviewTranscriptRead,
+  RealtimeAgentDispatchResponse,
   RealtimeTokenResponse,
 } from "../types";
 
@@ -986,14 +987,45 @@ export function useInterviewRealtimeToken(
 ) {
   const { i18n } = useTranslation();
   return useMutation({
-    mutationFn: () =>
+    /**
+     * `warm: true` mints a token that opens the room WITHOUT dispatching the
+     * interviewer, and is accepted mid-onboarding. It exists so the room can be
+     * joined during setup: the LiveKit worker takes ~10-13s to start, and that
+     * used to be dead air in front of question one because minting a token was
+     * the same act as starting the agent. The agent is sent in afterwards by
+     * `useDispatchInterviewAgent`.
+     */
+    mutationFn: (opts?: { warm?: boolean }) =>
       apiPost<RealtimeTokenResponse>(
-        `/interview-sessions/${sessionId}/realtime-token`,
+        `/interview-sessions/${sessionId}/realtime-token${opts?.warm ? "?warm=true" : ""}`,
         undefined,
         // Send the in-app language so the voice agent's adaptive utterances
         // match the UI locale (parity with the /respond REST path). The backend
         // normalizes this Accept-Language header to "vi"/"en".
         { "Accept-Language": i18n.language || "en" },
+      ),
+  });
+}
+
+/**
+ * Send the interviewer into a room the candidate already warmed.
+ *
+ * The second half of the warm-room flow. The backend refuses this until
+ * `onboarding_stage === "completed"` — that gate did not disappear when warm
+ * tokens were allowed early, it moved here, because THIS is the call that
+ * starts the interview.
+ *
+ * Errors: 409 onboarding incomplete / no room open, 502 dispatch failed (the
+ * caller should fall back to a normal dispatching token rather than leave the
+ * candidate in a room with nobody in it).
+ */
+export function useDispatchInterviewAgent(
+  sessionId: string | null | undefined,
+) {
+  return useMutation({
+    mutationFn: () =>
+      apiPost<RealtimeAgentDispatchResponse>(
+        `/interview-sessions/${sessionId}/realtime-agent`,
       ),
   });
 }

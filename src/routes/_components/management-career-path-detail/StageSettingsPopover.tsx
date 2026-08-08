@@ -64,38 +64,16 @@ export function StageSettingsPopover({
 
   return (
     <div className="mt-3 p-4 rounded-xl bg-m3-surface-container-low ghost-border space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-m3-on-surface-variant">
-            {t(`${prefix}.fields.title`)}
-          </span>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder={t(`${prefix}.fields.title_placeholder`)}
-            maxLength={200}
-            className="h-10 rounded-xl px-3 text-sm bg-card ghost-border"
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-m3-on-surface-variant flex items-center gap-1">
-            {t(`${prefix}.fields.min_optional`)}
-            <Tooltip content={t(`${prefix}.fields.min_optional_hint`)}>
-              <button type="button" aria-label={t(`${prefix}.fields.min_optional_hint`)}>
-                <Info className="h-3 w-3 text-m3-on-surface-variant" />
-              </button>
-            </Tooltip>
-          </span>
-          <input
-            type="number"
-            min={0}
-            max={optionalCap || undefined}
-            value={minOptional}
-            onChange={(e) => setMinOptional(e.target.value)}
-            className="h-10 rounded-xl px-3 text-sm bg-card ghost-border"
-          />
-        </label>
-      </div>
+      <StageIdentityFields
+        stage={stage}
+        title={title}
+        onTitleChange={setTitle}
+        minOptional={minOptional}
+        onMinOptionalChange={setMinOptional}
+        optionalCap={optionalCap}
+        prefix={prefix}
+        t={t}
+      />
 
       <label className="flex flex-col gap-1">
         <span className="text-xs font-semibold text-m3-on-surface-variant">
@@ -177,6 +155,67 @@ export function StageSettingsPopover({
           {t("common.cancel")}
         </button>
       </div>
+    </div>
+  );
+}
+
+/** Stage name + optional-courses-to-finish fields (kept out of the popover
+ *  to hold it under the 150-line function cap). The name placeholder echoes
+ *  the stage's own position — "Leave empty to show 'Stage 2'" on stage 2,
+ *  not a hard-coded "Stage 1". */
+function StageIdentityFields({
+  stage,
+  title,
+  onTitleChange,
+  minOptional,
+  onMinOptionalChange,
+  optionalCap,
+  prefix,
+  t,
+}: {
+  stage: CareerPathStageAuthoring;
+  title: string;
+  onTitleChange: (v: string) => void;
+  minOptional: string;
+  onMinOptionalChange: (v: string) => void;
+  optionalCap: number;
+  prefix: string;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <label className="flex flex-col gap-1">
+        <span className="text-xs font-semibold text-m3-on-surface-variant">
+          {t(`${prefix}.fields.title`)}
+        </span>
+        <input
+          value={title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder={t(`${prefix}.fields.title_placeholder`, {
+            position: stage.position,
+          })}
+          maxLength={200}
+          className="h-10 rounded-xl px-3 text-sm bg-card ghost-border"
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-xs font-semibold text-m3-on-surface-variant flex items-center gap-1">
+          {t(`${prefix}.fields.min_optional`)}
+          <Tooltip content={t(`${prefix}.fields.min_optional_hint`)}>
+            <button type="button" aria-label={t(`${prefix}.fields.min_optional_hint`)}>
+              <Info className="h-3 w-3 text-m3-on-surface-variant" />
+            </button>
+          </Tooltip>
+        </span>
+        <input
+          type="number"
+          min={0}
+          max={optionalCap || undefined}
+          value={minOptional}
+          onChange={(e) => onMinOptionalChange(e.target.value)}
+          className="h-10 rounded-xl px-3 text-sm bg-card ghost-border"
+        />
+      </label>
     </div>
   );
 }

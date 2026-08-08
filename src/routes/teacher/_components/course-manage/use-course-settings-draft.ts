@@ -8,6 +8,7 @@ import {
 import { useFileDrop } from "@/lib/use-file-drop";
 import {
   buildCourseUpdatePayload,
+  buildManagerCourseUpdatePayload,
   initialCourseSettings,
   isCourseSettingsDirty,
   savedCourseSettings,
@@ -34,8 +35,14 @@ const THUMB_MAX_BYTES = 5 * 1024 * 1024;
 export function useCourseSettingsDraft(options: {
   courseId: string;
   t: TranslateFn;
+  /**
+   * Which surface is rendering. Decides what Save sends: the teacher payload
+   * carries only teacher-owned fields, because the backend 403s the WHOLE
+   * PATCH if a manager-only field appears — even unchanged.
+   */
+  scope?: "teacher" | "manager";
 }) {
-  const { courseId, t } = options;
+  const { courseId, t, scope = "teacher" } = options;
   const { data: course } = useTeacherCourseById(courseId);
   const updateCourse = useUpdateCourse(courseId);
   const fields = useCourseSettingsFields();
@@ -136,6 +143,7 @@ export function useCourseSettingsDraft(options: {
       draft: values,
       saved: savedCourseSettings(course),
       stagedThumbnail,
+      scope,
     });
   }, [
     course,
@@ -157,7 +165,11 @@ export function useCourseSettingsDraft(options: {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await updateCourse.mutateAsync(buildCourseUpdatePayload(values));
+      await updateCourse.mutateAsync(
+        scope === "manager"
+          ? buildManagerCourseUpdatePayload(values)
+          : buildCourseUpdatePayload(values),
+      );
       // Upload the staged thumbnail (if any) as part of the same Save action,
       // so the image change is persisted to the DB only on Save.
       if (stagedThumbnail) {

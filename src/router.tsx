@@ -439,6 +439,21 @@ const deptCourseDetailRoute = createRoute({
 const managementCourseNewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/courses/new",
+  // Optional career-path context. When a manager starts here from a stage's
+  // "New course" button, the created course is attached to that stage
+  // immediately and we return to the path — otherwise a brand-new course sits
+  // on no path at all, which is exactly the readiness gap this closes.
+  //
+  // The return type is spelled with optional keys rather than inferred: an
+  // inferred `{pathId: string | undefined}` makes `search` a REQUIRED prop on
+  // every <Link> to this route, which broke the two plain links on
+  // dept-courses.tsx that legitimately pass nothing.
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { pathId?: string; stageId?: string } => ({
+    pathId: typeof search.pathId === "string" ? search.pathId : undefined,
+    stageId: typeof search.stageId === "string" ? search.stageId : undefined,
+  }),
   component: lazyRouteComponent(() => import("@/routes/management-course-new")),
 });
 

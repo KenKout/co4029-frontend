@@ -2,8 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import type {
+  AssignableTeacher,
   AssignTeacherRequest,
   CourseAuthoring,
+  CourseReadiness,
   CourseUpdate,
   RosterEntry,
   TeacherAssignmentCreated,
@@ -28,6 +30,55 @@ export function useCourseTeachers(courseId: string | undefined) {
   });
 }
 
+/**
+ * Teachers available for a course that has not been created yet.
+ *
+ * The create wizard staffs the course in the same form that creates it, so
+ * there is no course id to scope by. The server derives the organization from
+ * the caller's token — the same org `create_course` stamps on the new row — so
+ * the picker cannot offer someone the follow-up assignment would reject.
+ */
+export function useAssignableTeachersForNewCourse(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.dept.assignableTeachersForNew(),
+    queryFn: () => apiFetch<AssignableTeacher[]>("/dept/assignable-teachers"),
+    enabled,
+    staleTime: 1000 * 60,
+  });
+}
+
+/**
+ * Is this course actually deliverable? Teacher, content, career-path placement
+ * and status — asked before publish rather than discovered as a 409 after.
+ */
+export function useCourseReadiness(courseId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.dept.readiness(courseId ?? ""),
+    queryFn: () =>
+      apiFetch<CourseReadiness>(`/dept/courses/${courseId}/readiness`),
+    enabled: Boolean(courseId),
+    staleTime: 1000 * 30,
+  });
+}
+
+/**
+ * Teachers this course may be staffed with: same organization, teacher role.
+ *
+ * The org filter is applied server-side from the course, so this hook passes
+ * no org parameter — there is nothing for the client to get wrong.
+ */
+export function useAssignableTeachers(courseId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.dept.assignableTeachers(courseId ?? ""),
+    queryFn: () =>
+      apiFetch<AssignableTeacher[]>(
+        `/dept/courses/${courseId}/assignable-teachers`,
+      ),
+    enabled: Boolean(courseId),
+    staleTime: 1000 * 60,
+  });
+}
+
 export function useAssignTeacher(courseId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -39,6 +90,15 @@ export function useAssignTeacher(courseId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: queryKeys.dept.teachers(courseId),
+      });
+      // The picker shows already_assigned, so it is stale the moment an
+      // assignment lands.
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.assignableTeachers(courseId),
+      });
+      // The checklist counts teachers, so it moved too.
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.readiness(courseId),
       });
     },
   });
@@ -52,6 +112,15 @@ export function useRemoveTeacher(courseId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: queryKeys.dept.teachers(courseId),
+      });
+      // Removing a teacher makes them selectable again, so the picker's
+      // already_assigned flags are stale too.
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.assignableTeachers(courseId),
+      });
+      // The checklist counts teachers, so it moved too.
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.readiness(courseId),
       });
     },
   });

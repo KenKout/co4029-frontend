@@ -51,8 +51,12 @@ export function QuestionCardPrompt({
   agentTranscriptions?: readonly TranscriptionLike[];
 }) {
   const spoken = useAgentSpokenText(turn.text, agentSpeaks, agentTranscriptions);
-  const className =
-    "text-[21px] font-semibold leading-[1.5] tracking-[-0.01em] text-text-strong sm:text-2xl";
+  // Matches the setup/onboarding turns (ConversationMessage's `isLatest` size)
+  // so a question does not read as a different kind of message from the rest of
+  // the conversation. It was `text-[21px] font-semibold`, which rendered every
+  // question in bold — heavier than anything else on screen and, at three lines,
+  // more tiring to read than the prose it replaced.
+  const className = "text-lg leading-8 text-text-strong sm:text-xl";
 
   return (
     <div className="flex gap-4">

@@ -9,18 +9,28 @@ import { CourseSettingsThumbnailField } from "./CourseSettingsThumbnailField";
 import { useCourseSettingsDraft } from "./use-course-settings-draft";
 
 /**
- * Collapsible "Course Settings" panel: title/slug/description/level/status,
- * duration + enrolment caps, teacher contact info, and a staged thumbnail
- * upload. All fields are buffered locally and persisted on Save (including the
- * thumbnail, which is only uploaded when the form is submitted).
+ * Collapsible "Course Settings" panel, rendered on two surfaces.
  *
- * Previously a single 550-line / complexity-48 function. The buffered state,
- * the dirty check and the Save action now live in `use-course-settings-draft.ts`
- * (over `course-settings-model.ts` for the pure field chains) and each fieldset
- * is its own component; every expression is carried over unchanged.
+ * `scope="teacher"` (course workspace) shows only what a teacher owns:
+ * description, the study-time estimate and their own contact details. The
+ * thumbnail, level, status and the caps are manager-owned — the backend 403s
+ * a teacher PATCH carrying any of them, so they are absent rather than
+ * disabled: a greyed-out publish control still reads as "yours, later".
+ *
+ * `scope="manager"` (dept course page) shows the full set.
+ *
+ * All fields are buffered locally and persisted on Save (including the
+ * thumbnail, which is only uploaded when the form is submitted).
  */
-export function CourseSettingsPanel({ courseId }: { courseId: string }) {
+export function CourseSettingsPanel({
+  courseId,
+  scope = "teacher",
+}: {
+  courseId: string;
+  scope?: "teacher" | "manager";
+}) {
   const { t, i18n } = useTranslation();
+  const managerScope = scope === "manager";
   const {
     course,
     updateCourse,
@@ -36,7 +46,7 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
     justSaved,
     lastSaved,
     handleSave,
-  } = useCourseSettingsDraft({ courseId, t });
+  } = useCourseSettingsDraft({ courseId, t, scope });
 
   return (
     <div
@@ -88,24 +98,28 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
             className="p-5 border-t border-m3-outline-variant/10 bg-m3-surface space-y-5"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <CourseSettingsThumbnailField
-                course={course}
-                stagedPreview={stagedPreview}
-                isPending={uploadThumbnail.isPending}
-                inputRef={thumbnailInputRef}
-                onFileChange={handleThumbnailFile}
-                t={t}
-              />
+              {managerScope && (
+                <CourseSettingsThumbnailField
+                  course={course}
+                  stagedPreview={stagedPreview}
+                  isPending={uploadThumbnail.isPending}
+                  inputRef={thumbnailInputRef}
+                  onFileChange={handleThumbnailFile}
+                  t={t}
+                />
+              )}
               <CourseSettingsMetaFields
                 values={values}
                 setters={setters}
                 t={t}
+                scope={scope}
               />
               <CourseSettingsDeliveryFields
                 course={course}
                 values={values}
                 setters={setters}
                 t={t}
+                scope={scope}
               />
               <CourseSettingsContactFields
                 values={values}

@@ -3,11 +3,13 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
-import type { TimeRange } from "@/components/ui/data-table-toolbar";
+import type {
+  CustomTimeRange,
+  TimeRange,
+} from "@/components/ui/data-table-toolbar";
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
-  useNotificationInboxSync,
   usePendingNotificationDeletes,
   useUnreadCount,
   useAllNotifications,
@@ -17,6 +19,7 @@ import type {
 } from "@/lib/api/types";
 
 import {
+  boundsFromCustomRange,
   filterNotifications,
   groupNotifications,
   type NotificationGroupBy,
@@ -42,7 +45,7 @@ export function useNotificationsPage() {
   const { data: unread } = useUnreadCount();
   const unreadCount = unread?.unread ?? 0;
   // Pull newly-arrived notifications into the open list without a reload.
-  useNotificationInboxSync();
+  // (The app-wide arrival toast lives in AppShell's sync instance.)
 
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
@@ -51,6 +54,9 @@ export function useNotificationsPage() {
   // ── Toolbar state ──
   const [search, setSearch] = useState("");
   const [timeRange, setTimeRange] = useState<TimeRange>("all");
+  const [customRange, setCustomRange] = useState<CustomTimeRange | undefined>(
+    undefined,
+  );
   const [statusFilter, setStatusFilter] =
     useState<NotificationStatusFilter>(undefined);
   const [categoryFilter, setCategoryFilter] = useState<
@@ -59,17 +65,26 @@ export function useNotificationsPage() {
   const [groupBy, setGroupBy] = useState<NotificationGroupBy>("date");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // A custom range resolves to explicit since/until ISO instants; presets go
+  // through the shared cutoff helper (until stays unset).
+  const customBounds = useMemo(
+    () => (timeRange === "custom" ? boundsFromCustomRange(customRange) : undefined),
+    [timeRange, customRange],
+  );
+
   // Filtered view = full inbox after the toolbar filters, minus rows staged
   // for deletion (they're hidden instantly, like the quiz question delete).
   const visible = useMemo(
     () =>
       filterNotifications(items, {
         search,
+        since: customBounds?.since,
         timeRange,
+        until: customBounds?.until,
         status: statusFilter,
         category: categoryFilter,
       }).filter((n) => !pendingDeletes.pendingIds.has(n.id)),
-    [items, search, timeRange, statusFilter, categoryFilter, pendingDeletes.pendingIds],
+    [items, search, timeRange, customBounds, statusFilter, categoryFilter, pendingDeletes.pendingIds],
   );
 
   const groups = useMemo(
@@ -111,6 +126,7 @@ export function useNotificationsPage() {
   function resetFilters() {
     setSearch("");
     setTimeRange("all");
+    setCustomRange(undefined);
     setStatusFilter(undefined);
     setCategoryFilter(undefined);
   }
@@ -138,6 +154,8 @@ export function useNotificationsPage() {
     setSearch,
     timeRange,
     setTimeRange,
+    customRange,
+    setCustomRange,
     statusFilter,
     setStatusFilter,
     categoryFilter,

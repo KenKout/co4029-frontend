@@ -1,12 +1,11 @@
-import { useMemo } from "react";
-import { useNavigate, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { useSearch, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { useCreateCourse } from "@/lib/api/hooks/teacher-courses";
 import { useMe } from "@/lib/api/hooks/auth";
+import { useObjectUrl } from "@/lib/use-object-url";
 import {
   usePermissions,
   useRequirePermission,
@@ -17,60 +16,51 @@ import {
   CourseDetailsSection,
   CourseFormActions,
 } from "./_components/management-course-new/DetailsSection";
+import { DraftRestoreBanner } from "./_components/management-course-new/DraftRestoreBanner";
+import { CourseSettingsFields } from "./_components/management-course-new/SettingsFields";
+import { TeacherPickerSection } from "./_components/management-course-new/TeacherPickerSection";
+import { ThumbnailField } from "./_components/management-course-new/ThumbnailField";
+import { useCourseForm } from "./_components/management-course-new/use-course-form";
 import {
-  slugify,
-  useCourseForm,
-} from "./_components/management-course-new/use-course-form";
+  useCourseDraftGate,
+  useCourseWizardState,
+} from "./_components/management-course-new/use-course-wizard-state";
 
+/**
+ * Create a course, configure it, staff it and place it on a career path — all
+ * on one screen.
+ *
+ * It used to take three: create here, open the course to fill in settings,
+ * then open the dept page to assign a teacher. Everything `CourseCreate`
+ * accepts (settings + contact) now ships in the same POST; teachers, the cover
+ * image and the career-path placement follow as separate calls because they
+ * are sub-resources of a course that cannot be addressed before it exists.
+ *
+ * That multi-request shape is why this screen persists a draft. Two distinct
+ * crashes are covered (see `lib/course-draft.ts`), and critically a failure
+ * AFTER the course row lands never causes a duplicate on retry: the created id
+ * is recorded and the retry resumes from the step that failed.
+ */
 export default function ManagementCourseNewPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { data: me } = useMe();
-  const createCourse = useCreateCourse();
+  const { pathId, stageId } = useSearch({ strict: false });
 
-  // Course creation is a manager capability (backend gates POST /teacher/courses
-  // on `course.create`, held by manager/admin only). Guard the screen so a user
-  // without the permission is bounced instead of hitting a 403 on submit.
   const permissions = usePermissions();
   const canCreate = permissions.has("course.create");
-
   useRequirePermission(canCreate, {
     messageKey: "dept_courses.no_permission",
     redirectTo: "/dept",
   });
 
-  const controller = useCourseForm(createCourse.isPending);
+  const gate = useCourseDraftGate();
+  const controller = useCourseForm(false, gate.restored?.form);
   const { form, canSubmit } = controller;
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!me || !canSubmit) return;
-
-    try {
-      const course = await createCourse.mutateAsync({
-        title: form.title,
-        slug: form.slug || slugify(form.title),
-        description: form.description || undefined,
-        level: (form.level || undefined) as
-          | "beginner"
-          | "intermediate"
-          | "advanced"
-          | undefined,
-        estimated_minutes: form.estimated_minutes
-          ? parseInt(form.estimated_minutes)
-          : undefined,
-      });
-      toast.success(t("teacher_course_new.created"));
-      navigate({
-        to: "/dept/courses/$courseId",
-        params: { courseId: course.id },
-      });
-    } catch (err: unknown) {
-      toast.error(
-        (err as Error).message || t("teacher_course_new.create_failed"),
-      );
-    }
-  }
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
+  // One blob URL for the picked file, shared by the picker and the card
+  // preview so they cannot disagree about what was chosen.
+  const thumbnailUrl = useObjectUrl(thumbnail);
+  const wizard = useCourseWizardState(t, form, gate, pathId, stageId);
 
   const levelOptions = useMemo(
     () =>
@@ -86,7 +76,7 @@ export default function ManagementCourseNewPage() {
   }
 
   return (
-    <div className="max-w-5xl space-y-6 pb-12">
+    <div className="space-y-6 pb-12">
       <Breadcrumbs
         items={[
           { label: t("dept_courses.title"), to: "/dept" },
@@ -105,31 +95,70 @@ export default function ManagementCourseNewPage() {
         </h1>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        {/* Form card */}
+      {gate.pendingDraft && (
+        <DraftRestoreBanner
+          draft={gate.pendingDraft}
+          t={t}
+          onRestore={gate.acceptDraft}
+          onDiscard={gate.dismissDraft}
+        />
+      )}
+
+      {/* Fluid two-column split rather than a fixed 320px rail on a capped
+          page: the sidebar already varies between 64px and 256px, so a hard
+          width left the form squeezed at some widths and stranded in
+          whitespace at others. Both columns now scale with what is actually
+          available. */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] items-start">
         <form
-          onSubmit={handleSubmit}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!me || !canSubmit || wizard.isRunning) return;
+            void wizard.submit(form, thumbnail);
+          }}
           className="bg-card ghost-border shadow-editorial rounded-xl p-6 space-y-6"
         >
-          {/* Section: Basics */}
           <CourseBasicsSection controller={controller} t={t} />
 
-          {/* Section: Details */}
           <CourseDetailsSection
             controller={controller}
             t={t}
             levelOptions={levelOptions}
           />
 
-          {/* Actions */}
+          <CourseSettingsFields controller={controller} t={t} />
+
+          <ThumbnailField
+            file={thumbnail}
+            previewUrl={thumbnailUrl}
+            onChange={setThumbnail}
+            t={t}
+          />
+
+          {wizard.isRunning && wizard.currentStep && (
+            <p className="flex items-center gap-2 text-xs text-m3-on-surface-variant">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              {t(`teacher_course_new.step_running.${wizard.currentStep}`)}
+            </p>
+          )}
+
           <CourseFormActions
-            canSubmit={canSubmit}
-            isPending={createCourse.isPending}
+            canSubmit={canSubmit && !wizard.isRunning}
+            isPending={wizard.isRunning}
             t={t}
           />
         </form>
 
-        <CourseCardPreview form={form} t={t} />
+        {/* Sticky right rail. `top-16` matches the ContentTopBar's h-16 (and
+            the convention the other sticky rails in the app already use), and
+            the max-height is viewport-relative so the rail scrolls internally
+            instead of growing past the fold — a long instructor list would
+            otherwise push its own bottom out of reach while the rail stays
+            pinned. */}
+        <div className="lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto space-y-6">
+          <CourseCardPreview form={form} thumbnailUrl={thumbnailUrl} t={t} />
+          <TeacherPickerSection controller={controller} t={t} />
+        </div>
       </div>
     </div>
   );

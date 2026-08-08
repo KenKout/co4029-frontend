@@ -1,17 +1,17 @@
 import { Badge } from "@/components/ui/badge";
-import { OutcomeChildInput } from "./OutcomeChildInput";
+import { GripVertical } from "lucide-react";
+import { OutcomeInlineInput } from "./OutcomeInlineInput";
 import { OutcomeRowActions } from "./OutcomeRowActions";
-import { OutcomeRowEditor } from "./OutcomeRowEditor";
 import type { CourseOutcome, TranslateFn } from "./types";
 import type { CourseOutcomesController } from "./use-course-outcomes-editor";
 
 /**
- * One outcome in the nestable list: its dotted hierarchy badge, the statement
- * (or its editor), the draft-only action cluster and the inline sub-outcome
- * input.
+ * One row of the LO outliner.
  *
- * Moved verbatim out of the former 171-line `.map()` arrow in
- * `LearningOutcomesPanel`; the caller still supplies `key={outcome.id}`.
+ * The statement is always an inline input while the course is an editable
+ * draft: click it and type (keyboard contract in OutcomeInlineInput). The
+ * left grip is the drag handle — drop between rows = reorder, drop onto a
+ * row's body = reparent.
  */
 export function OutcomeRow({
   outcome,
@@ -22,42 +22,97 @@ export function OutcomeRow({
   ctl: CourseOutcomesController;
   t: TranslateFn;
 }) {
-  const { editable, editingId, addChildParentId } = ctl;
-  // Dotted hierarchy code is derived server-side (e.g. "1.2.1"
-  // → "L.O.1.2.1"); depth drives left indentation so the tree
-  // reads as nested. Fallback to position if code is absent.
+  const {
+    editable,
+    editingId,
+    setEditingId,
+    draggingId,
+    setDraggingId,
+    dropOn,
+  } = ctl;
   const depth = outcome.depth ?? 0;
   const code = t("teacher_outcomes.code", "L.O.{{n}}", {
     n: outcome.code ?? outcome.position,
   });
   const isEditing = editingId === outcome.id;
-  const isAddingChild = addChildParentId === outcome.id;
+  const isDragging = draggingId === outcome.id;
 
   return (
     <li
-      className="flex flex-col gap-2 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5"
+      className={
+        "group relative flex items-center gap-1.5 rounded-lg border border-transparent " +
+        "px-1.5 py-1 hover:bg-m3-surface-container-lowest " +
+        (isEditing ? "bg-m3-surface-container-lowest border-m3-outline-variant/40" : "") +
+        (isDragging ? "opacity-50" : "")
+      }
       style={{ marginLeft: `${depth * 1.5}rem` }}
     >
-      <div className="flex items-start gap-3">
-        <Badge className="mt-0.5 shrink-0 bg-violet-100 text-violet-700 border-transparent">
-          {code}
-        </Badge>
-        {isEditing ? (
-          <OutcomeRowEditor outcomeId={outcome.id} ctl={ctl} t={t} />
-        ) : (
-          <>
-            <span className="flex-1 text-sm text-m3-on-surface leading-relaxed">
-              {outcome.outcome_text}
-            </span>
-            {editable && (
-              <OutcomeRowActions outcome={outcome} ctl={ctl} t={t} />
-            )}
-          </>
-        )}
-      </div>
+      {editable && (
+        <button
+          type="button"
+          draggable
+          onDragStart={() => setDraggingId(outcome.id)}
+          onDragEnd={() => setDraggingId(null)}
+          aria-label={t("teacher_outcomes.drag", "Drag to move")}
+          title={t(
+            "teacher_outcomes.drag_hint",
+            "Drag: between rows moves, onto a row nests",
+          )}
+          className="shrink-0 cursor-grab rounded p-0.5 text-m3-outline-variant opacity-0 transition-opacity group-hover:opacity-100 hover:text-m3-on-surface-variant active:cursor-grabbing"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      )}
 
-      {isAddingChild && (
-        <OutcomeChildInput parentId={outcome.id} ctl={ctl} t={t} />
+      <Badge className="shrink-0 bg-violet-100 text-violet-700 border-transparent">
+        {code}
+      </Badge>
+
+      {editable ? (
+        <OutcomeInlineInput outcome={outcome} ctl={ctl} t={t} />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setEditingId(outcome.id)}
+          className="flex-1 truncate text-left text-sm text-m3-on-surface leading-relaxed hover:text-m3-on-surface-variant"
+          title={t("teacher_outcomes.click_to_edit", "Click to edit")}
+        >
+          {outcome.outcome_text}
+        </button>
+      )}
+
+      {/* Drop target: the row's own body = reparent onto it. */}
+      {editable && (
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "link";
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            if (draggingId) void dropOn(draggingId, outcome.id, "onto");
+          }}
+          className="absolute inset-x-1 inset-y-0 -z-10 rounded-lg"
+        />
+      )}
+
+      {editable && <OutcomeRowActions outcome={outcome} ctl={ctl} t={t} />}
+
+      {/* Drop zone between rows = reorder before this row. Only visible
+          while a row is actually being dragged — a static blue line on
+          hover alone reads as a glitch. */}
+      {editable && draggingId !== null && draggingId !== outcome.id && (
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            if (draggingId) void dropOn(draggingId, outcome.id, "before");
+          }}
+          className="absolute inset-x-0 -top-1.5 h-3 rounded-full bg-m3-primary/30"
+        />
       )}
     </li>
   );

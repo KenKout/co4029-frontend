@@ -150,10 +150,20 @@ async function awaitTypingRelease(
 
 async function typeText(context: TurnContext): Promise<void> {
   const { options, presentation, wait, isCancelled } = context;
-  const startedAt = await awaitTypingRelease(context);
-  if (isCancelled()) return;
-
+  // Report "the AI has the floor" BEFORE the wait, not after it.
+  //
+  // `awaitTypingRelease` holds for the narration to start — on the agent path
+  // that includes the whole join (~10-13s measured). Flagging it only afterwards
+  // left `agentStatus` at "idle" for that entire stretch, so the workspace read
+  // "Waiting for your answer" while the interviewer was still getting to the
+  // question. Naming the state at the top makes it honest for both paths: the
+  // client typewriter starts a beat later either way.
   options.callbacks().onTypingChange?.(true);
+  const startedAt = await awaitTypingRelease(context);
+  if (isCancelled()) {
+    options.callbacks().onTypingChange?.(false);
+    return;
+  }
   if (!options.shouldType) {
     options.setShown(options.text);
     options.setPhase("complete");

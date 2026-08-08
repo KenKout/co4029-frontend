@@ -408,12 +408,20 @@ describe("StartInterviewDialog", () => {
       />,
     );
 
-    expect(screen.getByRole("alertdialog")).toHaveTextContent(
-      /tham gia bước chuẩn bị phỏng vấn/i,
-    );
+    const dialog = screen.getByRole("alertdialog");
+    expect(dialog).toHaveTextContent(/bạn chắc chắn muốn bắt đầu/i);
     expect(
       screen.getByRole("button", { name: /bắt đầu phỏng vấn/i }),
     ).toBeEnabled();
+    // Short on purpose: this is a confirmation, not a briefing. The old copy
+    // listed identity/audio/language/readiness plus the voice default and ran
+    // five lines on a phone. Keep the one fact worth knowing before committing —
+    // that the graded clock has not started — and nothing else.
+    expect(dialog).toHaveTextContent(/đồng hồ chấm điểm chỉ bắt đầu/i);
+    expect(dialog.textContent ?? "").not.toMatch(/danh tính|ngôn ngữ/i);
+    expect(
+      screen.getByRole("button", { name: /^quay lại$/i }),
+    ).toBeInTheDocument();
   });
 
   it("uses continuation copy for an active attempt", () => {

@@ -12,6 +12,8 @@ function JobsBody({ c }: { c: AdminProcessingController }) {
     handleRetry,
     timeRange,
     setTimeRange,
+    customRange,
+    setCustomRange,
     searchText,
     setSearchText,
   } = c;
@@ -45,6 +47,8 @@ function JobsBody({ c }: { c: AdminProcessingController }) {
       retryingId={retryingId}
       timeRange={timeRange}
       onTimeRangeChange={setTimeRange}
+      customRange={customRange}
+      onCustomRangeChange={setCustomRange}
       search={searchText}
       onSearchChange={setSearchText}
     />

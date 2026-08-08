@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useVoiceAssistant } from "@livekit/components-react";
-import { ListChecks } from "lucide-react";
+import { useStartAudio, useVoiceAssistant } from "@livekit/components-react";
+import { ListChecks, Volume2 } from "lucide-react";
 
 import { EndInterviewDialog } from "@/components/interview/dialogs";
 import { ConnectionLostBanner } from "@/components/interview/error-banner";
@@ -12,7 +12,11 @@ import { TranscriptPanel } from "@/components/interview/transcript";
 import { useInterviewChat } from "@/components/interview/use-interview-chat";
 import { livekitTextEnabled } from "@/lib/interview/text-transport";
 import { questionTypeLabel } from "@/lib/interview/turn-factory";
-import { resolveAgentVoicePhase } from "./agent-voice-presentation";
+import {
+  resolveAgentOwnsTheVoice,
+  resolveAgentVoicePhase,
+} from "./agent-voice-presentation";
+import { useAgentFailure } from "./use-agent-failure";
 import {
   FullscreenDialogs,
   LeaveBlockerDialog,
@@ -71,7 +75,26 @@ export function InterviewWorkspaceScreen({
   // "phát ok rồi giữa chừng đứng lại rồi phát lại từ đầu". `roomWanted` is
   // false during the transition beat, so the client-only transition line is
   // still allowed through.
-  const agentOwnsTheVoice = roomWanted || connecting || chat.connected;
+  // The room being connected is NOT the same as the agent owning the voice.
+  //
+  // A WARMED room (opened during setup so the worker startup overlaps
+  // onboarding) is connected with nobody in it: the client is still the only
+  // voice, and the setup ceremony lines are narrated client-side. Treating that
+  // connection as a handover cut the greeting off mid-sentence — reported as
+  // «đọc được "Hi Xà" xong dừng lại», session bd61e0f3: warm token at
+  // 16:51:46.397, greeting fetched at 16:51:46.409 (17.8s of audio), then the
+  // room finished connecting a beat later and cancelled it.
+  //
+  // `agentOwnsTheVoice` is therefore gated on onboarding being complete, which
+  // is exactly when the agent is dispatched. Before that the room may be up,
+  // but the client keeps the voice.
+  const agentOwnsTheVoice = resolveAgentOwnsTheVoice({
+    onboardingStage: iv.onboardingStage,
+    roomWanted,
+    connecting,
+    chatConnected: chat.connected,
+    pendingFirstQuestion: Boolean(iv.pendingFirstQuestion),
+  });
   iv.setRoomConnectedRef(agentOwnsTheVoice);
   // Same value, second consumer: it tells the pacing coordinator an agent is
   // COMING, which `lk.agent.state` cannot say until the agent has already
@@ -79,10 +102,48 @@ export function InterviewWorkspaceScreen({
   // phase, took the "nothing will ever speak" fallback, and typed itself out
   // before the agent said a word.
   iv.setAgentExpected(agentOwnsTheVoice);
+
+  // ── Agent failed to start ──────────────────────────────────────────────────
+  // Two ways the voice can be dead: `lk.agent.state === "failed"` (worker
+  // joined, then failed) or the join deadline passing with no participant at
+  // all (worker unavailable, never dispatched — publishes no state, so time is
+  // the only signal). Both surface the same toast, once.
+  const { joinTimedOut } = useAgentFailure({
+    expected: agentOwnsTheVoice,
+    agentPresent: Boolean(agent),
+    state: agentState,
+  });
+
+  // ── Autoplay unlock ────────────────────────────────────────────────────────
+  // Browsers block audio until a user gesture, and `RoomAudioRenderer` alone
+  // gives the candidate no way to grant it — they would simply hear nothing and
+  // have nothing to click. `useStartAudio` reports whether playback is allowed
+  // and hands back the opener; the starter template ships the same affordance.
+  //
+  // This is NOT covered by the existing `startAudioWarmup`: that unlocks the
+  // Web Audio context used by the REST narration path, not the agent's LiveKit
+  // audio track.
+  // `mergedProps` carries the onClick that performs the unlock AND a
+  // `display: none` style once playback is allowed — so the button hides itself
+  // and this does not need its own visibility logic. Spread it, as the starter
+  // template does, rather than reaching for a bare `startAudio` (there isn't
+  // one on this hook).
+  const { mergedProps: startAudioProps, canPlayAudio } = useStartAudio({
+    room,
+    props: {},
+  });
   // Same reason this is a render-phase write: a turn mounting in the handover
   // commit calls speak() from a child effect, and a phase delivered one effect
   // later would arrive after that turn already decided how to pace itself.
-  iv.setAgentVoicePhase(resolveAgentVoicePhase(Boolean(agent), agentState));
+  //
+  // `joinTimedOut` maps onto the same "failed" phase the coordinator already
+  // drains on, so a turn mounting after the deadline releases its text
+  // immediately instead of waiting out the 20s start timeout.
+  iv.setAgentVoicePhase(
+    joinTimedOut
+      ? "failed"
+      : resolveAgentVoicePhase(Boolean(agent), agentState),
+  );
   // Hand the hook to `handleRespond` through the controller's bridge setter
   // (the actions are built outside the provider, where the room is not
   // reachable). The setter, not a direct ref write, so the immutability rule
@@ -162,10 +223,33 @@ export function InterviewWorkspaceScreen({
         </div>
       )}
 
+      {/* Autoplay is blocked until the candidate gestures. Without this they
+          would simply hear nothing and have nothing to click — the browser
+          gives no affordance of its own. Only shown while a room is actually
+          wanted, so a text-only session never sees it. */}
+      {agentOwnsTheVoice && !canPlayAudio && (
+        <div className="mx-auto w-full max-w-[840px] px-4 pt-3">
+          <button
+            type="button"
+            {...startAudioProps}
+            // AFTER the spread on purpose. `mergedProps` sets
+            // `style.display = "block"`, which would override the flex layout
+            // and un-centre the icon; the guard above already handles
+            // visibility, so the hook's display value is not needed.
+            style={undefined}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-m3-primary/30 bg-m3-primary/5 px-4 py-3 text-sm font-bold text-m3-primary transition-colors hover:bg-m3-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
+          >
+            <Volume2 className="h-4 w-4" aria-hidden="true" />
+            {t("course_interview.enable_audio")}
+          </button>
+        </div>
+      )}
+
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="flex min-w-0 flex-1 flex-col">
           <WorkspaceStage iv={iv} submissionSlot={renderSubmissionSlot(iv)} />
-          <WorkspaceInputArea iv={iv} />
+          {/* chat.pending from here, not iv.chatBridge: that is a ref. */}
+          <WorkspaceInputArea iv={iv} chatPending={chat.pending} />
         </div>
 
         <TranscriptPanel

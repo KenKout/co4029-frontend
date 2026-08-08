@@ -49,6 +49,15 @@ export function InterviewVoiceScreen({
         initialTranscript={iv.voiceInitialTranscriptRef.current}
         onCompleted={iv.handleVoiceCompleted}
         onTranscriptChange={iv.setTranscript}
+        // Never-joined (worker unavailable, dispatch never happened) is not a
+        // "connection lost" — nothing ever connected. Resume in text with the
+        // accurate message; the session is NOT finalized (same resilience
+        // rule as a dropped room).
+        onAgentNeverJoined={() => {
+          void iv.handleVoiceDropped({
+            messageKey: "course_interview.agent_failed.body",
+          });
+        }}
       />
       <LeaveBlockerDialog iv={iv} />
       <FullscreenDialogs iv={iv} />

@@ -280,16 +280,25 @@ export function handleVoiceCompleted(
 }
 
 /**
- * Voice room dropped for a transient reason (network / server), NOT a natural
- * end (resilience A-Tier-1 #3). Do NOT finalize+grade the session. Tear down
- * the room, switch the live session to text, restore the transcript captured
- * so far, and resume questioning in place so the student keeps going instead
- * of losing a graded attempt to a blip.
+ * Voice room is unavailable for a transient reason — dropped (network/server)
+ * OR the agent never joined (worker unavailable, dispatch never happened).
+ * Both are NOT a natural end (resilience A-Tier-1 #3): do NOT finalize+grade
+ * the session. Tear down the room, switch the live session to text, restore
+ * the transcript captured so far, and resume questioning in place so the
+ * student keeps going instead of losing a graded attempt to a blip.
+ *
+ * The caller may override the toast with a more accurate message key: "voice
+ * connection lost" is wrong when nothing ever connected.
  */
-export async function handleVoiceDropped(ctx: InterviewActionsContext) {
+export async function handleVoiceDropped(
+  ctx: InterviewActionsContext,
+  opts?: { messageKey?: string },
+) {
   ctx.setVoiceActive(false);
   ctx.setInputMode("text");
-  toast.warning(ctx.t("course_interview.voice.dropped_fallback_text"));
+  toast.warning(
+    ctx.t(opts?.messageKey ?? "course_interview.voice.dropped_fallback_text"),
+  );
   // Re-enter via the idempotent start path in TEXT mode: it returns the SAME
   // in-progress session with full history + the current question, so the
   // student resumes exactly where the voice room dropped — no finalize, no

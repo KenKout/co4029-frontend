@@ -11,6 +11,7 @@ import {
   useRequirePermission,
 } from "@/lib/auth/use-permissions";
 import { DeptCourseHeader } from "./_components/dept-course-detail/DeptCourseHeader";
+import { DeptSettingsTab } from "./_components/dept-course-detail/SettingsTab";
 import { DeptStudentsTab } from "./_components/dept-course-detail/StudentsTab";
 import { DeptTeachersTab } from "./_components/dept-course-detail/TeachersTab";
 import { Tabs } from "@/components/ui/tabs";
@@ -77,6 +78,16 @@ export default function DeptCourseDetailPage() {
             label: t("dept_course_detail.tabs.students"),
             count: roster.data?.length,
           },
+          // Course settings + learning outcomes live behind course.delete /
+          // learning_outcome.manage, so the tab only appears for a manager.
+          ...(canDelete
+            ? [
+                {
+                  key: "settings" as TabKey,
+                  label: t("dept_course_detail.tabs.settings"),
+                },
+              ]
+            : []),
         ]}
       />
 
@@ -93,6 +104,10 @@ export default function DeptCourseDetailPage() {
         canAssign={canAssign}
         courseId={courseId}
       />
+
+      {canDelete && (
+        <DeptSettingsTab active={tab === "settings"} courseId={courseId} />
+      )}
     </div>
   );
 }

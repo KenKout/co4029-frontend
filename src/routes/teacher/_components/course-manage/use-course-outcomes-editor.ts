@@ -3,21 +3,26 @@ import { toast } from "sonner";
 import {
   useCreateCourseOutcome,
   useDeleteCourseOutcome,
+  useDuplicateCourseOutcome,
   useTeacherCourseOutcomes,
   useUpdateCourseOutcome,
 } from "@/lib/api/hooks/courses";
 import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
-import type { TranslateFn } from "./types";
+import { makeTreeActions } from "./use-outcome-tree-actions";
+import type { CourseOutcome, TranslateFn } from "./types";
 
 /**
- * The learning-outcomes list plus every piece of inline edit state: the panel
- * open flag, the new-outcome text, the row being edited, the row awaiting
- * delete confirmation and the parent whose sub-outcome input is open.
+ * The learning-outcomes outliner state machine.
  *
- * Extracted from the former 363-line `LearningOutcomesPanel`. The hook calls
- * keep their original order (the course query, the outcomes query, the three
- * mutations, then the seven `useState`s) so the panel's hook slots are
- * unchanged, and every expression is carried over character-for-character.
+ * One editing pass is the point: click a row's text and keep typing. Enter
+ * saves the row and opens a fresh sibling below it; Tab nests the row under
+ * the one above; Shift+Tab lifts it out; Backspace on an empty row deletes
+ * it; Alt+↑/↓ move it among siblings. A drag handle covers mouse users with
+ * the same two operations (drop between = reorder, drop onto = reparent).
+ *
+ * The tree-move payload math lives in `use-outcome-tree-actions.ts`; this
+ * hook owns state (which row is editing, the unsaved draft row, the delete
+ * confirmation, the drag) and the create/commit/save flows.
  */
 export function useCourseOutcomesEditor(options: {
   courseId: string;
@@ -29,81 +34,35 @@ export function useCourseOutcomesEditor(options: {
   const createOutcome = useCreateCourseOutcome(courseId);
   const updateOutcome = useUpdateCourseOutcome(courseId);
   const deleteOutcome = useDeleteCourseOutcome(courseId);
+  const duplicateOutcome = useDuplicateCourseOutcome(courseId);
 
-  // Learning outcomes are editable only while the course is an unpublished
-  // draft — once published they're frozen (they double as the graded
-  // assessment scale). The backend enforces this with 409; here we hide the
-  // add/edit/delete affordances so the read-only state is obvious.
   const editable = (course?.status ?? "draft") === "draft";
 
   const [open, setOpen] = useState(false);
-  const [newText, setNewText] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editText, setEditText] = useState("");
+  // The unsaved row Enter leaves behind; it renders below the row it follows.
+  const [draft, setDraft] = useState<{
+    parentId: string | null;
+    afterId: string;
+  } | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  // Inline "add child" state: the parent whose child-input is open + its text.
-  const [addChildParentId, setAddChildParentId] = useState<string | null>(null);
-  const [childText, setChildText] = useState("");
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    const text = newText.trim();
-    if (!text) return;
-    try {
-      await createOutcome.mutateAsync({ outcome_text: text });
-      setNewText("");
-      toast.success(t("teacher_outcomes.added", "Learning outcome added"));
-    } catch (err: unknown) {
-      toast.error(
-        (err as Error).message ||
-          t("teacher_outcomes.add_failed", "Failed to add outcome"),
-      );
-    }
-  }
+  const tree = makeTreeActions({
+    outcomes,
+    update: updateOutcome,
+    delete: deleteOutcome,
+    t,
+  });
 
-  function startAddChild(parentId: string) {
-    setAddChildParentId(parentId);
-    setChildText("");
-  }
-  function cancelAddChild() {
-    setAddChildParentId(null);
-    setChildText("");
-  }
-  async function handleAddChild(parentId: string) {
-    const text = childText.trim();
-    if (!text) return;
+  async function saveText(id: string, text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
     try {
-      await createOutcome.mutateAsync({
-        outcome_text: text,
-        parent_id: parentId,
+      await updateOutcome.mutateAsync({
+        outcomeId: id,
+        outcome_text: trimmed,
       });
-      cancelAddChild();
-      toast.success(t("teacher_outcomes.child_added", "Sub-outcome added"));
-    } catch (err: unknown) {
-      toast.error(
-        (err as Error).message ||
-          t("teacher_outcomes.add_failed", "Failed to add outcome"),
-      );
-    }
-  }
-
-  function startEdit(id: string, text: string) {
-    setEditingId(id);
-    setEditText(text);
-  }
-
-  function cancelEdit() {
-    setEditingId(null);
-    setEditText("");
-  }
-
-  async function handleSaveEdit(id: string) {
-    const text = editText.trim();
-    if (!text) return;
-    try {
-      await updateOutcome.mutateAsync({ outcomeId: id, outcome_text: text });
-      cancelEdit();
-      toast.success(t("teacher_outcomes.updated", "Learning outcome updated"));
     } catch (err: unknown) {
       toast.error(
         (err as Error).message ||
@@ -112,17 +71,41 @@ export function useCourseOutcomesEditor(options: {
     }
   }
 
-  async function handleDelete(id: string) {
+  /** Enter on a saved row: save it, then open a fresh sibling below. */
+  function createSiblingBelow(outcome: CourseOutcome, text: string) {
+    void saveText(outcome.id, text);
+    setDraft({ parentId: outcome.parent_id ?? null, afterId: outcome.id });
+  }
+
+  /** Enter on the draft row: persist it and open another sibling below. */
+  async function commitDraft(text: string) {
+    const trimmed = text.trim();
+    if (!draft) return;
+    if (!trimmed) {
+      setDraft(null);
+      return;
+    }
     try {
-      await deleteOutcome.mutateAsync(id);
-      setPendingDeleteId(null);
-      toast.success(t("teacher_outcomes.deleted", "Learning outcome deleted"));
+      const created = await createOutcome.mutateAsync({
+        outcome_text: trimmed,
+        parent_id: draft.parentId,
+      });
+      setDraft({ parentId: draft.parentId, afterId: created.id });
     } catch (err: unknown) {
       toast.error(
         (err as Error).message ||
-          t("teacher_outcomes.delete_failed", "Failed to delete outcome"),
+          t("teacher_outcomes.add_failed", "Failed to add outcome"),
       );
     }
+  }
+
+  function cancelEditing() {
+    setEditingId(null);
+    setDraft(null);
+  }
+
+  function handleDelete(id: string, promote: boolean) {
+    void tree.delete(id, promote).then(() => setPendingDeleteId(null));
   }
 
   return {
@@ -130,26 +113,28 @@ export function useCourseOutcomesEditor(options: {
     createOutcome,
     updateOutcome,
     deleteOutcome,
+    duplicateOutcome,
     editable,
     open,
     setOpen,
-    newText,
-    setNewText,
     editingId,
-    editText,
-    setEditText,
+    setEditingId,
+    draft,
+    setDraft,
     pendingDeleteId,
     setPendingDeleteId,
-    addChildParentId,
-    childText,
-    setChildText,
-    handleAdd,
-    startAddChild,
-    cancelAddChild,
-    handleAddChild,
-    startEdit,
-    cancelEdit,
-    handleSaveEdit,
+    draggingId,
+    setDraggingId,
+    saveText,
+    createSiblingBelow,
+    commitDraft,
+    cancelEditing,
+    moveUp: (o: CourseOutcome) => void tree.moveUp(o),
+    moveDown: (o: CourseOutcome) => void tree.moveDown(o),
+    indent: (o: CourseOutcome) => void tree.indent(o),
+    outdent: (o: CourseOutcome) => void tree.outdent(o),
+    dropOn: (d: string, tgt: string, pos: "before" | "after" | "onto") =>
+      void tree.dropOn(d, tgt, pos),
     handleDelete,
   };
 }

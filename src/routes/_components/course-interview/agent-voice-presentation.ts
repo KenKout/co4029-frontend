@@ -27,8 +27,16 @@
  */
 import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration";
 
-/** What the agent's voice is doing right now, as far as the client can tell. */
-export type AgentVoicePhase = "unknown" | "quiet" | "speaking";
+/**
+ * What the agent's voice is doing, as far as this client can tell.
+ *
+ * `failed` is distinct from `unknown` on purpose, and the distinction is
+ * load-bearing: `unknown` means "no usable signal yet, keep waiting" (the join
+ * window), whereas `failed` means "the agent is not coming, stop waiting". They
+ * used to be the same value, so a crashed worker made a turn sit out the full
+ * 20s start timeout in silence before releasing its text.
+ */
+export type AgentVoicePhase = "unknown" | "quiet" | "speaking" | "failed";
 
 /**
  * Cap on how long a turn's text waits for the agent to start speaking.
@@ -54,6 +62,22 @@ export const AGENT_VOICE_START_TIMEOUT_MS = 20_000;
  * the thing that pins the composer.
  */
 export const AGENT_VOICE_END_TIMEOUT_MS = 20_000;
+
+/**
+ * How long an expected agent may take to appear before it is treated as failed.
+ *
+ * `lk.agent.state === "failed"` only covers a worker that joined and then
+ * reported failure; it cannot describe an agent that was never dispatched,
+ * because there is no participant to publish the attribute. That case is real —
+ * the worker reports itself unavailable above `interview_voice_load_threshold`
+ * (~4100 times on a shared box) and LiveKit will not dispatch to it — and it
+ * left the candidate in an empty room with the phase stuck on "unknown", which
+ * means "keep waiting".
+ *
+ * 25s sits above both the measured join (10-13s) and the SDK's own 20s agent
+ * timeout, so a slow-but-successful join is never pre-empted.
+ */
+export const AGENT_JOIN_DEADLINE_MS = 25_000;
 
 /**
  * Words per minute assumed for the agent's TTS when estimating how long a turn
@@ -126,11 +150,132 @@ export interface AgentVoiceCoordinator {
   present: (text: string) => NarrationPresentation;
 }
 
+/**
+ * Does the LiveKit agent own the spoken voice right now?
+ *
+ * Exported and pure so the regression below is pinned against the REAL
+ * predicate. A test that re-implements this logic passes whatever the shipped
+ * code does — which is exactly how a copy of it stayed green while the bug it
+ * described was reintroduced.
+ *
+ * A connected room is NOT sufficient. A WARMED room (opened during setup so the
+ * ~10-13s worker startup overlaps onboarding) is connected with nobody in it:
+ * the client is still the only voice and narrates the ceremony lines itself.
+ * `use-interview-speech.ts` cancels in-flight narration on the handover edge, so
+ * treating a warm connection as a handover truncated the greeting — reported as
+ * «đọc được "Hi Xà" xong dừng lại». Session bd61e0f3: warm token 16:51:46.397,
+ * greeting fetched 16:51:46.409 (17.8s of audio), cancelled a beat later when
+ * the room finished connecting.
+ *
+ * Gating on completed onboarding is exactly the moment the agent is dispatched.
+ */
+export function resolveAgentOwnsTheVoice(args: {
+  onboardingStage: string | null | undefined;
+  roomWanted: boolean;
+  connecting: boolean;
+  chatConnected: boolean;
+  pendingFirstQuestion: boolean;
+}): boolean {
+  if (args.onboardingStage !== "completed") return false;
+  // The post-onboarding transition line ("Great—the introduction is complete.
+  // Let's begin. Here is your first question.") exists ONLY client-side — the
+  // agent never receives it, so only client narration can voice it.
+  //
+  // `roomActive` in course-interview.tsx holds the room back for exactly this
+  // beat via `!pendingFirstQuestion`. That guard stopped working when warm-room
+  // added `connect: active || warm`: the room is already UP from warming, so the
+  // hold no longer delays anything, and the moment onboarding completed this
+  // predicate muted the client for a line the agent does not have. Reported as
+  // the transition line AND question one both being silent.
+  //
+  // So mirror the same beat here: while a first question is pending, the client
+  // still owns the voice regardless of the room being live.
+  if (args.pendingFirstQuestion) return false;
+  return args.roomWanted || args.connecting || args.chatConnected;
+}
+
+/**
+ * Should the room be opened/kept open with a warm (non-dispatching) token?
+ *
+ * Two windows, not one:
+ *
+ * 1. During onboarding — the point of warm-room: the ~10-13s LiveKit worker
+ *    startup overlaps setup instead of preceding question one.
+ * 2. Through the transition beat that follows it. `roomActive` is deliberately
+ *    false while `pendingFirstQuestion` holds, so the client can voice the
+ *    transition line the agent never receives. If `warm` also went false there,
+ *    `connect` (`active || warm`) would drop and re-establish the WebRTC session
+ *    mid-utterance — the teardown re-idles the audio output route and clips the
+ *    opening syllables. Reported as «bị voice thiếu 2 3 chữ đầu (nhưng sau đó
+ *    đọc tiếp đúng nhịp)».
+ *
+ * Warming past onboarding costs nothing: the provider only mints a warm token
+ * while nothing else wants a real room, and by then the agent is dispatched.
+ */
+export function shouldWarmRoom(args: {
+  sessionId: string | null;
+  inputMode: string;
+  onboardingStage: string | null | undefined;
+  pendingFirstQuestion: boolean;
+}): boolean {
+  if (!args.sessionId) return false;
+  if (args.inputMode !== "hybrid" && args.inputMode !== "voice") return false;
+  return args.onboardingStage !== "completed" || args.pendingFirstQuestion;
+}
+
+/**
+ * Did the AGENT end the interview itself, rather than the candidate?
+ *
+ * Exported and pure so tests exercise the shipped rule instead of a copy.
+ *
+ * Only `"natural"` comes from the turn pipeline: `orchestration_bridge` runs
+ * `submit_session` and returns the closing as `speak_text`, so on a live room
+ * the agent is speaking that goodbye over LiveKit right then. Everything else —
+ * `"ended_early"` (End button, leaving) and `"timed_out"` (the client's own
+ * timer) — never reaches the agent at all: `POST /finish` writes the ceremony
+ * message and enqueues evaluation, and that is the whole of it.
+ *
+ * Which is why the two endings differ on screen: a natural end plays its
+ * goodbye and then shows the result, while the candidate-initiated endings go
+ * straight to the result rather than holding them ~10s for a farewell they did
+ * not ask for. The goodbye is still persisted server-side, so it stays in the
+ * transcript either way.
+ */
+export function agentEndedTheInterview(reason: string): boolean {
+  return reason === "natural";
+}
+
+/**
+ * Does the ending render a goodbye turn, or go straight to the result?
+ *
+ * Load-bearing beyond politeness: presenting the closing turn is what advances
+ * `phase` from "closing" to "results" (`handleTurnPresented` in
+ * use-interview-sequencing). So whenever this returns false the caller MUST
+ * enter the result directly — otherwise nothing fires the trigger and the screen
+ * hangs on the interview view forever.
+ *
+ * False when the candidate ended it themselves (no agent involved, and they
+ * should not be held for a farewell they opted out of) or when the server
+ * returned no closing text at all.
+ */
+export function shouldPresentGoodbye(args: {
+  reason: string;
+  closingText: string | null | undefined;
+}): boolean {
+  return agentEndedTheInterview(args.reason) && Boolean(args.closingText);
+}
+
 /** Map `useVoiceAssistant()` output onto a phase, without leaking SDK strings. */
 export function resolveAgentVoicePhase(
   agentPresent: boolean,
   state: string | undefined,
 ): AgentVoicePhase {
+  // `failed` is reported by the SDK when the worker could not start or crashed,
+  // and it arrives WITHOUT an agent participant — so this check has to come
+  // before the `agentPresent` guard or it would be swallowed as "unknown" and
+  // the turn would wait out the full start timeout for an agent that is never
+  // coming.
+  if (state === "failed") return "failed";
   if (!agentPresent) return "unknown";
   if (state === "speaking") return "speaking";
   if (
@@ -141,7 +286,8 @@ export function resolveAgentVoicePhase(
   ) {
     return "quiet";
   }
-  // "disconnected" / "connecting" / anything newer: no usable voice signal.
+  // "disconnected" / "connecting" / "pre-connect-buffering" / anything newer:
+  // no usable voice signal YET. Distinct from `failed` — these are transient.
   return "unknown";
 }
 
@@ -191,6 +337,12 @@ export function createAgentVoiceCoordinator(): AgentVoiceCoordinator {
       phase = next;
       if (next === "speaking") {
         drain(startWaiters);
+      } else if (next === "failed") {
+        // The agent is not coming. Release EVERY waiter immediately rather than
+        // letting each turn burn its 20s start timeout in silence: the text is
+        // all the candidate is going to get, so it should appear now.
+        drain(startWaiters);
+        drain(endWaiters);
       } else if (wasSpeaking) {
         drain(endWaiters);
       }
@@ -206,6 +358,10 @@ export function createAgentVoiceCoordinator(): AgentVoiceCoordinator {
       // observable state (`state === undefined`), which is why `agentExpected`
       // has to come from outside.
       if (!everReported && !agentExpected) return settledPresentation();
+      // The agent already failed: waiting is pointless, and `agentExpected` is
+      // still true (the room is still "wanted"), so without this a turn arriving
+      // after the failure would wait the full timeout all over again.
+      if (phase === "failed") return settledPresentation();
 
       // The agent never reports how LONG it will speak — `lk.agent.state` is a
       // start/stop signal only. Without a duration the runner falls back to the

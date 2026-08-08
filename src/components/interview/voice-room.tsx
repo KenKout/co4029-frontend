@@ -12,6 +12,7 @@ import "@livekit/components-styles";
 import { Bot } from "lucide-react";
 
 import { useInterviewRoomState } from "./interview-room-provider";
+import { useAgentJoinWatchdog } from "@/routes/_components/course-interview/use-agent-join-watchdog";
 import { cn } from "@/lib/utils";
 import { VoiceControls } from "./voice-controls";
 import { VoiceTranscript } from "./voice-transcript";
@@ -22,6 +23,12 @@ interface VoiceRoomProps {
   initialTranscript?: ConversationTurn[];
   onCompleted: (reason: "natural" | "ended_early") => void;
   onTranscriptChange?: (turns: ConversationTurn[]) => void;
+  /**
+   * The agent was expected but never appeared within the join deadline. The
+   * caller decides the fallback (voice→text resume); nothing here ends the
+   * session, because an interview with nobody in it is NOT a finished one.
+   */
+  onAgentNeverJoined?: () => void;
 }
 
 function RoomContent({
@@ -31,6 +38,8 @@ function RoomContent({
   elapsed,
   initialTranscript,
   onTranscriptChange,
+  agentExpected,
+  onAgentNeverJoined,
 }: {
   onEndInterview: () => void;
   isEnding: boolean;
@@ -38,6 +47,8 @@ function RoomContent({
   elapsed?: string;
   initialTranscript?: ConversationTurn[];
   onTranscriptChange?: (turns: ConversationTurn[]) => void;
+  agentExpected: boolean;
+  onAgentNeverJoined?: () => void;
 }) {
   const connectionState = useConnectionState();
   const { agent, state: agentState } = useVoiceAssistant();
@@ -50,6 +61,21 @@ function RoomContent({
       onCompleted("natural");
     }
   }, [agent, onCompleted]);
+
+  // The other dead-room case: room up, agent never dispatched (the worker
+  // reports itself unavailable above the load threshold and LiveKit withholds
+  // the job). Unlike `state === "failed"` there is no participant publishing
+  // anything, so elapsed time is the only signal. Tell the caller once.
+  const joinTimedOut = useAgentJoinWatchdog({
+    expected: agentExpected,
+    agentPresent: Boolean(agent),
+  });
+  const neverJoinedTold = useRef(false);
+  useEffect(() => {
+    if (!joinTimedOut || neverJoinedTold.current) return;
+    neverJoinedTold.current = true;
+    onAgentNeverJoined?.();
+  }, [joinTimedOut, onAgentNeverJoined]);
 
   const connecting =
     connectionState === ConnectionState.Connecting ||
@@ -124,6 +150,7 @@ export function VoiceRoom({
   initialTranscript,
   onCompleted,
   onTranscriptChange,
+  onAgentNeverJoined,
 }: VoiceRoomProps) {
   const [isEnding, setIsEnding] = useState(false);
   const { room, connecting } = useInterviewRoomState();
@@ -155,6 +182,8 @@ export function VoiceRoom({
         elapsed={elapsed}
         initialTranscript={initialTranscript}
         onTranscriptChange={onTranscriptChange}
+        agentExpected={!connecting && Boolean(room)}
+        onAgentNeverJoined={onAgentNeverJoined}
       />
     </div>
   );

@@ -882,6 +882,14 @@ export interface StageProgressRead {
   courses: CourseProgressSummaryWithStage[];
 }
 
+// Dept/manager course types live in their own module — this file hit the
+// 800-line eslint cap. Re-exported so importers need not know that.
+export type {
+  AssignableTeacher,
+  CoursePathPlacement,
+  CourseReadiness,
+} from "./types-dept";
+
 export interface StartCourseResult {
   course_id: string;
   stage_id: string;
@@ -889,6 +897,21 @@ export interface StartCourseResult {
   created: boolean;
   /** Advisory only; the attention cap never blocks. */
   over_concurrency_cap: boolean;
+  /**
+   * The stage is LOCKED but its enforcement is not 'hard', so the Start was
+   * allowed anyway. Only 'hard' blocks (403) — 'soft' warns and 'advisory' is
+   * display-only. Surface this or the student is never told they are working
+   * ahead of the path.
+   */
+  stage_locked_warning?: boolean;
+  /**
+   * Courses of this path the caller has active, counted AFTER this Start. The
+   * cap warning interpolates it — do NOT hardcode a count, that shipped once
+   * and rendered "you have 0 courses open in this path".
+   */
+  active_in_path?: number;
+  /** The path's attention cap, or null when unset. Advisory: never blocks. */
+  max_concurrent?: number | null;
 }
 
 export type CareerPathProgressRead = Schemas["CareerPathProgressRead"] & {
@@ -983,6 +1006,7 @@ export type Paths = paths;
 // Hand-written types for voice interview (endpoints not in generated openapi-types)
 export type {
   RealtimeTokenResponse,
+  RealtimeAgentDispatchResponse,
   IntegrityEventType,
   IntegrityEventSeverity,
   IntegrityEvent,

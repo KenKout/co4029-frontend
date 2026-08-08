@@ -38,29 +38,54 @@ export function sinceFromTimeRange(range: string): string {
       return new Date(now.getTime() - 180 * 86_400_000).toISOString();
     case "year":
       return new Date(now.getTime() - 365 * 86_400_000).toISOString();
+    case "custom":
     default:
       return "1970-01-01T00:00:00.000Z";
   }
 }
 
+/** Resolve a custom from/to pair (``YYYY-MM-DD``) into ISO instants for the
+ *  client-side filter. The ``to`` day is inclusive (``to + 1 day``). */
+export function boundsFromCustomRange(
+  range: { from?: string; to?: string } | undefined,
+): { since: string; until?: string } {
+  if (!range?.from) {
+    return { since: "1970-01-01T00:00:00.000Z" };
+  }
+  const since = new Date(`${range.from}T00:00:00.000Z`).toISOString();
+  if (!range.to) return { since };
+  const until = new Date(`${range.to}T00:00:00.000Z`);
+  until.setUTCDate(until.getUTCDate() + 1);
+  return { since, until: until.toISOString() };
+}
+
 export interface NotificationFilters {
   search?: string;
+  /** Preset name ("week", "month", …) resolved via ``sinceFromTimeRange``.
+   *  Ignored when ``since`` (an already-resolved ISO instant) is provided. */
   timeRange?: string;
+  /** Pre-resolved lower bound (custom range "from" date). */
+  since?: string;
+  /** Optional upper bound on ``created_at`` (custom range "to" date). */
+  until?: string;
   status?: NotificationStatusFilter;
   category?: NotificationCategory | "all" | undefined;
 }
 
 /**
  * Client-side filtering for the inbox: search matches title or body, the
- * time range is a `created_at` cutoff, status is read/unread, category is an
- * exact match. All filters are ANDed; undefined/empty means "no filter".
+ * time range is a ``created_at`` cutoff (plus optional ``until`` upper
+ * bound), status is read/unread, category is an exact match. All filters
+ * are ANDed; undefined/empty means "no filter".
  */
 export function filterNotifications(
   items: Notification[],
   filters: NotificationFilters,
 ): Notification[] {
   const q = filters.search?.trim().toLowerCase() ?? "";
-  const since = sinceFromTimeRange(filters.timeRange ?? "all");
+  const since =
+    filters.since ?? sinceFromTimeRange(filters.timeRange ?? "all");
+  const until = filters.until;
   const status = filters.status;
   const category = filters.category;
 
@@ -70,6 +95,7 @@ export function filterNotifications(
       if (!haystack.includes(q)) return false;
     }
     if (n.created_at < since) return false;
+    if (until && n.created_at > until) return false;
     if (status === "unread" && n.read_at !== null) return false;
     if (status === "read" && n.read_at === null) return false;
     if (category && category !== "all" && n.category !== category) return false;

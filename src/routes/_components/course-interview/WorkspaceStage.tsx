@@ -4,6 +4,7 @@ import { useVoiceAssistant } from "@livekit/components-react";
 
 import { SetupChecklist } from "@/components/interview/setup-checklist";
 import { FocusedInterviewStage } from "@/components/interview/stages";
+import { useMicrophoneAvailability } from "@/lib/hooks/use-microphone-availability";
 import { questionTypeLabel } from "@/lib/interview/turn-factory";
 import type { CourseInterviewController } from "./use-course-interview";
 import {
@@ -26,6 +27,9 @@ export function WorkspaceStage({
 }) {
   const { t, i18n } = useTranslation();
   const { dictation } = iv;
+  // NOT `dictation.supported` — Web Speech support is unrelated to whether a
+  // microphone exists, so that reported "Connected" to candidates who had none.
+  const microphone = useMicrophoneAvailability();
   const questioning = iv.phase === "questioning";
   const onboardingStage = resolveSetupStage(iv.phase, iv.onboardingStage);
   // When an agent is in the room it is the voice, and livekit-agents publishes
@@ -112,7 +116,7 @@ export function WorkspaceStage({
             stage={onboardingStage}
             candidateName={iv.candidateName}
             language={iv.interviewLanguage}
-            micConnected={dictation.supported}
+            micConnected={microphone.available}
             disabled={iv.onboarding.isPending || iv.aiSpeaking}
             pending={iv.onboarding.isPending}
             onLanguageChange={(language) => {

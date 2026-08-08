@@ -1,5 +1,6 @@
 import { InterviewRoomProvider } from "@/components/interview/interview-room-provider";
 import { livekitTextEnabled } from "@/lib/interview/text-transport";
+import { shouldWarmRoom } from "./_components/course-interview/agent-voice-presentation";
 import { InterviewLobbyScreen } from "./_components/course-interview/InterviewLobbyScreen";
 import { InterviewResultsScreen } from "./_components/course-interview/InterviewResultsScreen";
 import {
@@ -104,6 +105,34 @@ export default function CourseInterviewPage() {
         livekitTextEnabled() &&
         iv.inputMode === "hybrid" &&
         iv.onboardingStage === "completed"
+      }
+      // Open the room DURING setup, so the ~10-13s LiveKit worker startup
+      // overlaps the onboarding the candidate is doing anyway rather than
+      // sitting in front of question one as dead air. The warm token carries no
+      // agent dispatch, so nothing can start speaking early.
+      // Keep the room warm through the transition beat too, not just during
+      // onboarding. `roomActive` is deliberately false while
+      // `pendingFirstQuestion` holds (so the client can voice the transition
+      // line the agent never receives) — but if `warm` also went false there,
+      // `connect` would drop and re-establish the WebRTC session in the middle
+      // of that very utterance. The teardown re-idles the audio output route and
+      // clips its first syllables: reported as «bị voice thiếu 2 3 chữ đầu
+      // (nhưng sau đó đọc tiếp đúng nhịp)».
+      //
+      // Warming past onboarding is otherwise a no-op: the provider only mints a
+      // warm (non-dispatching) token while nothing else wants a real room, and
+      // by now `agentWanted` has already dispatched the interviewer.
+      warm={shouldWarmRoom({
+        sessionId,
+        inputMode: iv.inputMode,
+        onboardingStage: iv.onboardingStage,
+        pendingFirstQuestion: Boolean(iv.pendingFirstQuestion),
+      })}
+      // ...and send the interviewer in the moment setup is done. Only acts on a
+      // room that was actually warmed; a normally-minted token already carries
+      // its dispatch.
+      agentWanted={
+        Boolean(sessionId) && iv.onboardingStage === "completed"
       }
       // Publish the mic only on the voice screen. A hybrid candidate who is
       // typing holds the room open (so `lk.chat` has a connection) but must not

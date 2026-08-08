@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/data-table";
 import {
   DataTableToolbar,
+  type CustomTimeRange,
   type TimeRange,
   type TimeRangeOption,
 } from "@/components/ui/data-table-toolbar";
@@ -102,6 +103,8 @@ export function JobsTable({
   retryingId,
   timeRange,
   onTimeRangeChange,
+  customRange,
+  onCustomRangeChange,
   search,
   onSearchChange,
 }: {
@@ -110,6 +113,8 @@ export function JobsTable({
   retryingId: string | null;
   timeRange: TimeRange;
   onTimeRangeChange: (range: TimeRange) => void;
+  customRange?: CustomTimeRange;
+  onCustomRangeChange?: (range: CustomTimeRange | undefined) => void;
   search: string;
   onSearchChange: (value: string) => void;
 }) {
@@ -143,6 +148,16 @@ export function JobsTable({
           onTimeRangeChange={onTimeRangeChange}
           timeRangeOptions={timeRangeOptions}
           timeRangeAriaLabel={t("admin.processing.time_filter")}
+          customTimeRange={customRange}
+          onCustomTimeRangeChange={onCustomRangeChange}
+          timeRangeLabels={{
+            customOption: t("admin.processing.time.custom"),
+            dialogTitle: t("admin.processing.time.custom_title"),
+            from: t("admin.processing.time.from"),
+            to: t("admin.processing.time.to"),
+            apply: t("admin.processing.time.apply"),
+            clear: t("admin.processing.time.clear"),
+          }}
         />
       }
       emptyState={

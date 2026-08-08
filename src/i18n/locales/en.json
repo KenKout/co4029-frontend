@@ -275,7 +275,33 @@
     "create_failed": "Failed to create course",
     "preview_label": "Preview",
     "preview_title_placeholder": "Your course title",
-    "preview_desc_placeholder": "Your course description will appear here."
+    "preview_desc_placeholder": "Your course description will appear here.",
+    "attach_to_stage_failed": "The course was created but could not be added to the stage. Add it from the path page.",
+    "teachers_heading": "Instructors",
+    "teachers_help": "Assigned as soon as the course is created. Only instructors in your organization are listed.",
+    "thumbnail_heading": "Cover image",
+    "thumbnail_pick": "Choose an image",
+    "thumbnail_too_large": "That image is over 5 MB. Choose a smaller one.",
+    "draft_title": "Unsaved course recovered",
+    "draft_help": "You left this form part-way through. Your text was kept on this device — the cover image was not.",
+    "draft_restore": "Restore it",
+    "draft_partial_title": "This course was already created",
+    "draft_partial_help": "The course exists, but some follow-up steps did not finish. Continue to complete them. Starting over would create a second copy of the same course.",
+    "draft_resume": "Finish the remaining steps",
+    "draft_discard": "Start fresh",
+    "partial_success": "Course created, but these did not finish: {{steps}}. Press the button again to retry just those.",
+    "step": {
+      "create": "creating the course",
+      "thumbnail": "cover image",
+      "teachers": "assigning instructors",
+      "attachToStage": "adding to the career path"
+    },
+    "step_running": {
+      "create": "Creating the course…",
+      "thumbnail": "Uploading the cover image…",
+      "teachers": "Assigning instructors…",
+      "attachToStage": "Adding it to the career path…"
+    }
   },
   "teacher_course_settings": {
     "title": "Course Settings",
@@ -635,14 +661,15 @@
     "no_permission": "You do not have permission to access this page",
     "tabs": {
       "teachers": "Instructors",
-      "students": "Students"
+      "students": "Students",
+      "settings": "Settings"
     },
     "no_name": "(no name yet)",
     "remove": "Remove",
     "remove_confirm": "Remove instructor {{name}}?",
     "assign_label": "Assign instructor (user_id UUID)",
     "assign_button": "Add",
-    "assign_help": "Enter the instructor's user_id. Search by email/name will arrive in Wave 5.",
+    "assign_help": "Only instructors in this course's organization are listed.",
     "enrolled_at": "Enrolled: {{date}}",
     "load_failed_teachers": "Couldn't load instructors.",
     "load_failed_students": "Couldn't load students.",
@@ -656,7 +683,6 @@
       "pending": "Pending"
     },
     "errors": {
-      "invalid_uuid": "Please enter a valid UUID user_id",
       "remove_failed": "Couldn't remove instructor: {{detail}}",
       "assign_failed": "Couldn't assign: {{detail}}"
     },
@@ -681,6 +707,31 @@
       "save_failed": "Couldn't update the course.",
       "title_required": "Course title is required.",
       "slug_required": "Course slug is required."
+    },
+    "assign_placeholder": "Choose an instructor…",
+    "assign_none_available": "No instructors in this organization yet. Give a teacher the instructor role first.",
+    "assign_all_assigned": "Every instructor in this organization is already on this course.",
+    "readiness": {
+      "title": "Readiness",
+      "teacher": "Instructor assigned",
+      "teacher_ok_one": "{{count}} instructor",
+      "teacher_ok_other": "{{count}} instructors",
+      "teacher_missing": "Nobody is assigned to build or teach this course yet.",
+      "content": "Has something to grade",
+      "content_ok_one": "{{count}} published lesson, quiz or interview",
+      "content_ok_other": "{{count}} published lessons, quizzes or interviews",
+      "content_missing": "Needed before this course can be published — students cannot complete an empty course.",
+      "outcomes": "Says what students will be able to do",
+      "outcomes_ok_one": "{{count}} thing students will be able to do",
+      "outcomes_ok_other": "{{count}} things students will be able to do",
+      "outcomes_missing": "Needed before this course can be published — without it, students cannot tell what this course teaches.",
+      "path": "On a career path",
+      "path_missing": "Not on any career path, so students have no way to reach it.",
+      "published": "Published",
+      "status_draft": "Still a draft — not visible to students.",
+      "status_published": "Live and visible to students.",
+      "status_archived": "Archived.",
+      "blocks_stage": "This course is required on a career path but has nothing to grade, so no student can ever finish it — that stage and every stage after it stay locked. Add and publish a lesson, quiz or interview."
     }
   },
   "dept_courses": {
@@ -816,6 +867,7 @@
       },
       "locked_hard": "You cannot open these courses yet.",
       "locked_soft": "You can look at these courses, but finish the earlier stage first.",
+      "started_while_locked": "You started this ahead of schedule — the earlier stage is not finished yet.",
       "progress": "{{done}} of {{total}} done",
       "optional_quota": "Pick {{count}} of the optional courses",
       "start": "Start",
@@ -823,7 +875,8 @@
       "continue": "Continue path →",
       "already_started": "You already started this course",
       "start_failed": "Could not start this course",
-      "cap_warning": "You have {{count}} courses open in this path. Finishing some before starting more will help you keep up.",
+      "cap_warning_one": "You have {{count}} course open in this path. Finishing it before starting more will help you keep up.",
+      "cap_warning_other": "You have {{count}} courses open in this path. Finishing some before starting more will help you keep up.",
       "not_started_yet": "Not started",
       "units_done": "{{done}}/{{total}} done"
     }
@@ -996,9 +1049,18 @@
       "month": "Month",
       "six_months": "6 Months",
       "year": "Year",
-      "all": "All"
+      "all": "All",
+      "custom": "Custom range…",
+      "custom_title": "Custom time range",
+      "from": "From",
+      "to": "To",
+      "apply": "Apply",
+      "clear": "Clear"
     },
-    "showing_count": "{{count}} shown"
+    "showing_count": "{{count}} shown",
+    "realtime_title_one": "New notification",
+    "realtime_title_other": "{{count}} new notifications",
+    "realtime_view": "View"
   },
   "teacher_sr_student_detail": {
     "breadcrumb_detail": "Detail",
@@ -1402,7 +1464,13 @@
         "month": "Month",
         "six_months": "6 Months",
         "year": "Year",
-        "all": "All"
+        "all": "All",
+        "custom": "Custom range…",
+        "custom_title": "Custom time range",
+        "from": "From",
+        "to": "To",
+        "apply": "Apply",
+        "clear": "Clear"
       },
       "retry": "Retry",
       "stats": {
@@ -2354,6 +2422,11 @@
       "title": "You left the interview window",
       "body": "This is recorded for your teacher to review. Please stay on this tab until the interview ends."
     },
+    "agent_failed": {
+      "title": "Voice interviewer unavailable",
+      "body": "The AI voice could not start, so the interview continues in text. Your answers are still graded exactly the same way."
+    },
+    "enable_audio": "Enable interviewer audio",
     "fullscreen": {
       "prompt_title": "Switch to fullscreen mode",
       "prompt_description": "Your interview runs in fullscreen so nothing distracts you. The app menu is hidden until the interview ends.",
@@ -2390,6 +2463,7 @@
       "you": "You",
       "replay_message": "Play this AI message again",
       "replaying_message": "Playing this AI message again",
+      "agent_thinking": "Interviewer is thinking…",
       "user_typing": "User is typing…",
       "preparing_question": "AI interviewer is preparing the question…",
       "preparing_greeting": "AI interviewer is joining you…",
@@ -2522,9 +2596,9 @@
       "cancel": "Not now"
     },
     "start_dialog": {
-      "title": "Join the interview setup?",
-      "description": "The aBridgeAI virtual interviewer will first confirm your identity, audio, language, and readiness. Your assessed interview timer will start only after you confirm that you are ready. AI voice is on by default.",
-      "cancel": "Not yet"
+      "title": "Ready to start?",
+      "description": "Setup comes first — the graded timer starts only when you confirm you are ready.",
+      "cancel": "Back"
     },
     "steps": {
       "aria_label": "Interview progress",
@@ -2777,7 +2851,8 @@
       "save_order": "Save order",
       "register": "Register",
       "add_courses": "Add courses",
-      "register_students": "Add students"
+      "register_students": "Add students",
+      "new_course": "New course"
     },
     "fields": {
       "name": "Name",
@@ -2851,7 +2926,7 @@
       "move_to_stage": "Move to stage",
       "fields": {
         "title": "Stage name",
-        "title_placeholder": "Leave empty to show \"Stage 1\"",
+        "title_placeholder": "Leave empty to show \"Stage {{position}}\"",
         "description": "Description",
         "min_optional": "Optional courses needed to finish",
         "min_optional_hint": "How many of this stage's optional courses a student must finish. 0 means optional courses are extra.",
@@ -3172,7 +3247,25 @@
     "delete_description": "Questions tagged with it revert to no outcome. Remaining outcomes renumber automatically.",
     "child_added": "Sub-outcome added",
     "add_child": "Add sub-outcome",
-    "add_child_placeholder": "Sub-outcome statement…"
+    "add_child_placeholder": "Sub-outcome statement…",
+    "add_sibling": "Add sibling below",
+    "duplicate": "Duplicate",
+    "indent": "Indent (Tab)",
+    "outdent": "Outdent (Shift+Tab)",
+    "more": "More actions",
+    "drag": "Drag to move",
+    "drag_hint": "Drag: between rows moves, onto a row nests",
+    "click_to_edit": "Click to edit",
+    "row_placeholder": "Learning outcome…",
+    "draft_badge": "new",
+    "move_failed": "Failed to move outcome",
+    "deleted_promote": "Outcome deleted, its sub-outcomes kept",
+    "delete_promote": "Keep sub-outcomes",
+    "delete_cascade": "Delete with {{count}} sub-outcomes",
+    "delete_kids": "{{count}} sub-outcomes",
+    "delete_questions": "{{count}} quiz questions",
+    "delete_scope_tail": "will be affected.",
+    "delete_no_children": "{{code}} will be removed. This cannot be undone."
   },
   "quiz_generation": {
     "outcomes": {

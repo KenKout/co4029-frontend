@@ -12,6 +12,7 @@ import {
   type InterviewTurnAction,
 } from "@/lib/interview/turn-factory";
 import { clearQuestionPacing } from "@/lib/interview/use-question-pacing";
+import { shouldPresentGoodbye } from "./agent-voice-presentation";
 import { handleRespond } from "./interview-answer-actions";
 import {
   handleAssistance,
@@ -74,6 +75,18 @@ export function useInterviewActions(base: InterviewBase) {
       if (!sessionId || phase === "closing" || phase === "results") return;
       if (dictation.listening) dictation.stop();
       narration.cancel();
+      // Whether the goodbye is shown at all depends on WHO ended the interview.
+      //
+      // "natural" — the turn pipeline finished, so on a live room the agent is
+      // speaking that closing over LiveKit right now. Keep the two-turn ending:
+      // present the goodbye, then move to the result when it finishes.
+      //
+      // "ended_early" (End button / leaving) and "timed_out" — the candidate is
+      // done and wants out, and the agent is not involved on these paths at all
+      // (POST /finish only writes the ceremony message and enqueues the
+      // evaluation). Holding them ~10s for a farewell they did not ask for is
+      // pure friction, so go straight to the result. The goodbye is still
+      // persisted server-side, so it remains in the transcript.
       const closingElapsedSeconds = currentElapsedSeconds();
       setAnswerText("");
       setEndDialogOpen(false);
@@ -87,8 +100,12 @@ export function useInterviewActions(base: InterviewBase) {
         clearQuestionPacing(sessionId);
         setCurrentQuestion(null);
         setPendingFirstQuestion(null);
-        setPendingFinishResult(result);
-        if (result.closing_text) {
+        if (
+          shouldPresentGoodbye({ reason, closingText: result.closing_text })
+        ) {
+          // Presenting this turn is what advances closing -> results
+          // (see use-interview-sequencing's handleTurnPresented).
+          setPendingFinishResult(result);
           setTranscript((previous) => [
             ...previous.filter((turn) => turn.kind !== "closing"),
             makeCeremonyTurn(
@@ -99,9 +116,12 @@ export function useInterviewActions(base: InterviewBase) {
             ),
           ]);
         } else {
+          // No goodbye turn is rendered, so nothing would ever fire the
+          // presentation trigger — enter the result directly. Also covers a
+          // server that returned no closing_text at all.
+          setPendingFinishResult(null);
           setPhase("results");
           setFinishResult(result);
-          setPendingFinishResult(null);
         }
       } catch (error) {
         setPhase("questioning");
@@ -131,12 +151,9 @@ export function useInterviewActions(base: InterviewBase) {
    * controller method rather than a direct `iv.chatBridge.current = ...`
    * write so the screen never mutates a prop (hooks/immutability).
    */
-  const setChatBridge = useCallback(
-    (chat: UseInterviewChatResult | null) => {
-      chatBridge.current = chat;
-    },
-    [],
-  );
+  const setChatBridge = useCallback((chat: UseInterviewChatResult | null) => {
+    chatBridge.current = chat;
+  }, []);
 
   const ctx: InterviewActionsContext = {
     ...base,
@@ -195,7 +212,8 @@ export function useInterviewActions(base: InterviewBase) {
     handleEndCancel: () => handleEndCancel(ctx),
     handleVoiceCompleted: (reason: "natural" | "ended_early") =>
       handleVoiceCompleted(ctx, reason),
-    handleVoiceDropped: () => handleVoiceDropped(ctx),
+    handleVoiceDropped: (opts?: { messageKey?: string }) =>
+      handleVoiceDropped(ctx, opts),
     stayInInterview,
     leaveInterviewOpen,
   };
