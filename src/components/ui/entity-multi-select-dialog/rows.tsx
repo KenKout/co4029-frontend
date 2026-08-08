@@ -1,4 +1,6 @@
 import { Checkbox } from "@/components/ui/checkbox";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import { cn } from "@/lib/utils";
 import type { SelectableEntity } from "./types";
 
@@ -17,6 +19,20 @@ function EntityRowLabels({ item }: { item: SelectableEntity }) {
   );
 }
 
+/** Status chip, when the row carries one (e.g. course draft/published). */
+function EntityRowStatus({ item }: { item: SelectableEntity }) {
+  if (!item.status) return null;
+  return (
+    <StatusBadge
+      status={item.status}
+      tokens={COURSE_STATUS_TOKENS}
+      label={item.status}
+      size="sm"
+      className="shrink-0"
+    />
+  );
+}
+
 export function AttachedEntityRow({
   item,
   alreadyAddedLabel,
@@ -28,6 +44,7 @@ export function AttachedEntityRow({
     <div className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg opacity-60">
       <Checkbox checked disabled />
       <EntityRowLabels item={item} />
+      <EntityRowStatus item={item} />
       <span className="text-[10px] font-bold uppercase tracking-wider text-m3-primary shrink-0">
         {alreadyAddedLabel}
       </span>
@@ -66,6 +83,7 @@ export function SelectableEntityRow<T extends SelectableEntity>({
         className="pointer-events-none"
       />
       <EntityRowLabels item={item} />
+      <EntityRowStatus item={item} />
     </button>
   );
 }

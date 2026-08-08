@@ -186,6 +186,35 @@ export function useCareerPathCourses(id: string | undefined) {
   });
 }
 
+/**
+ * Full org course catalogue (ANY status) for the attach-to-path picker.
+ *
+ * The learner `/courses` endpoint only returns published courses, but a
+ * draft path may hold draft/archived courses (the publish gate re-checks
+ * every link), so the picker must offer the whole organization.
+ */
+export interface CareerPathCourseCandidate {
+  id: string;
+  title: string;
+  slug: string;
+  status: string;
+}
+
+export function useCareerPathCourseCandidates(
+  id: string | undefined,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: queryKeys.careerPaths.courseCandidates(id ?? ""),
+    queryFn: () =>
+      apiFetch<CareerPathCourseCandidate[]>(
+        `/management/career-paths/${id}/course-candidates`,
+      ),
+    enabled: !!id && enabled,
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
 export function useAddCareerPathCourse(id: string) {
   const qc = useQueryClient();
   return useMutation({

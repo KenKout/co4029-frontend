@@ -1,6 +1,7 @@
 import type { SelectableEntity } from "@/components/ui/entity-multi-select-dialog";
 import type { AdminUserSearchRow } from "@/lib/api/hooks/admin-organizations";
-import type { CareerPathCourseAuthoring, Course } from "@/lib/api/types";
+import type { CareerPathCourseCandidate } from "@/lib/api/hooks/career-paths";
+import type { CareerPathCourseAuthoring } from "@/lib/api/types";
 
 /**
  * Pure data shaping for the career-path detail screen. Everything here is a
@@ -24,11 +25,11 @@ export function courseOrderChanged(
 }
 
 /**
- * Map the catalogue to the dialog shape and filter client-side by title/slug
- * (the /courses endpoint has no q= param).
+ * Map the org course catalogue to the dialog shape and filter client-side by
+ * title/slug. `status` rides along so the picker rows can show a badge.
  */
 export function toCourseCandidates(
-  items: Course[] | undefined,
+  items: CareerPathCourseCandidate[] | undefined,
   query: string,
 ): SelectableEntity[] {
   const q = query.trim().toLowerCase();
@@ -43,6 +44,7 @@ export function toCourseCandidates(
       id: c.id,
       primaryLabel: c.title,
       secondaryLabel: c.slug,
+      status: c.status,
     }));
 }
 

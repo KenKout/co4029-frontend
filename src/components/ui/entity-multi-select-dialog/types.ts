@@ -9,4 +9,6 @@ export interface SelectableEntity {
   primaryLabel: string;
   /** Secondary muted line (slug, email) — optional. */
   secondaryLabel?: string | null;
+  /** Optional lifecycle status rendered as a small badge on the row. */
+  status?: string | null;
 }

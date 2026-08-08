@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { TFunction } from "i18next";
 import type { SelectableEntity } from "@/components/ui/entity-multi-select-dialog";
-import { useCourseCatalogue } from "@/lib/api/hooks/courses";
 import {
   useAddCareerPathCourse,
+  useCareerPathCourseCandidates,
   useCareerPathCourses,
   useReorderCareerPathCourses,
 } from "@/lib/api/hooks/career-paths";
@@ -41,7 +41,7 @@ export function useCoursesTab(id: string, t: TFunction) {
    */
   const [targetStageId, setTargetStageId] = useState<string | null>(null);
 
-  const catalogue = useCourseCatalogue(pickerOpen);
+  const catalogue = useCareerPathCourseCandidates(id, pickerOpen);
 
   const baseRows = useMemo(() => sortCoursesByPosition(list.data), [list.data]);
   const rows = order ?? baseRows;
@@ -64,15 +64,16 @@ export function useCoursesTab(id: string, t: TFunction) {
     return grouped;
   }, [rows]);
 
-  // Map the catalogue to the dialog shape and filter client-side by
-  // title/slug (the /courses endpoint has no q= param). Already-attached
-  // courses are passed separately so the dialog shows them checked+disabled.
+  // Map the org catalogue to the dialog shape and filter client-side by
+  // title/slug. The candidates endpoint returns the full org catalogue
+  // (ANY status — a draft path may hold draft courses), so rows carry a
+  // status badge letting the manager tell draft from published at a glance.
   const alreadyAddedCourseIds = useMemo(
     () => new Set(baseRows.map((r) => r.course_id)),
     [baseRows],
   );
   const courseCandidates: SelectableEntity[] = useMemo(
-    () => toCourseCandidates(catalogue.data?.items, courseQuery),
+    () => toCourseCandidates(catalogue.data, courseQuery),
     [catalogue.data, courseQuery],
   );
 
