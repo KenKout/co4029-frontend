@@ -78,7 +78,7 @@ export function ModuleItemRow({
         aria-label={t("teacher_common.drag_to_reorder")}
         onMouseDown={() => setDragEnabled(true)}
         onMouseUp={() => setDragEnabled(false)}
-        className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 text-m3-outline-variant hover:text-m3-on-surface-variant"
+        className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 text-m3-outline-variant hover:text-m3-on-surface-variant h-auto whitespace-normal"
       >
         <GripVertical className="h-3.5 w-3.5" />
       </Button>

@@ -58,7 +58,7 @@ export function GenerationModulePicker({
                   )
                 }
                 className={cn(
-                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors",
+                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors h-auto whitespace-normal",
                   effectiveSelected
                     ? "border-m3-secondary bg-m3-secondary/10 text-m3-secondary font-semibold"
                     : "border-m3-outline-variant/40 bg-m3-surface text-m3-on-surface-variant hover:bg-m3-surface-container-low",

@@ -28,7 +28,7 @@ export function BulkFailureGroups({
       <Button variant="ghost"
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-2 bg-m3-surface-container text-sm font-medium hover:bg-m3-surface-container-high transition-colors"
+        className="w-full flex items-center justify-between px-4 py-2 bg-m3-surface-container text-sm font-medium hover:bg-m3-surface-container-high transition-colors h-auto whitespace-normal"
       >
         <span className="flex items-center gap-2 text-m3-on-surface">
           <AlertCircle className="h-4 w-4 text-amber-700" />

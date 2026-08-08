@@ -116,7 +116,7 @@ export function MasterySelector({ values, onPatch }: MasterySelectorProps) {
               onClick={() => onPatch(MASTERY_PRESETS[key])}
               aria-pressed={active}
               className={cn(
-                "text-left rounded-xl border p-4 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/50 cursor-pointer",
+                "text-left rounded-xl border p-4 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/50 cursor-pointer h-auto whitespace-normal",
                 active
                   ? "border-m3-primary bg-m3-primary-fixed/30 shadow-ai-glow"
                   : "border-m3-outline-variant/30 bg-m3-surface hover:border-m3-primary/40 hover:bg-m3-surface-container-low",
@@ -162,7 +162,7 @@ export function MasterySelector({ values, onPatch }: MasterySelectorProps) {
           type="button"
           onClick={() => setAdvancedOpen((o) => !o)}
           aria-expanded={advancedOpen}
-          className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left hover:bg-m3-surface-container-low transition-colors cursor-pointer"
+          className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left hover:bg-m3-surface-container-low transition-colors cursor-pointer h-auto whitespace-normal"
         >
           <span className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
             {t("teacher_quiz_manage.settings.spacing.advanced.toggle")}

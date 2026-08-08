@@ -59,7 +59,7 @@ export function ReviewOptionsMatrix({
           type="button"
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
-          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left h-auto whitespace-normal"
         >
           <span className="text-sm font-semibold text-m3-on-surface">
             {t("teacher_quiz_manage.settings.review.customize")}

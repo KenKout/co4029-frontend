@@ -30,8 +30,8 @@ export function AssessmentTabBar({
             }}
             className={
               tab === key
-                ? "px-4 py-1.5 rounded-full text-sm font-medium bg-m3-primary text-white transition-colors"
-                : "px-4 py-1.5 rounded-full text-sm font-medium bg-m3-surface-container text-m3-on-surface-variant hover:bg-m3-surface-container-high transition-colors"
+                ? "px-4 py-1.5 rounded-full text-sm font-medium bg-m3-primary text-white transition-colors h-auto whitespace-normal"
+                : "px-4 py-1.5 rounded-full text-sm font-medium bg-m3-surface-container text-m3-on-surface-variant hover:bg-m3-surface-container-high transition-colors h-auto whitespace-normal"
             }
           >
             {key === "quizzes" ? "Quizzes" : "Interviews"}

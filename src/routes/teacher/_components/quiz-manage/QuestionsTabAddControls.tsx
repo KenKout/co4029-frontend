@@ -75,7 +75,7 @@ export function QuestionsTabAddControls({
         type="button"
         onClick={() => void onAddQuestion(defaultType)}
         disabled={addPending}
-        className="flex-1 min-w-[12rem] flex items-center justify-center gap-2 border-2 border-dashed border-m3-outline-variant/40 rounded-l-xl border-r-0 px-6 py-4 text-sm font-bold text-m3-on-surface-variant hover:border-m3-primary hover:text-m3-primary hover:bg-m3-primary/5 transition-all disabled:opacity-60 cursor-pointer"
+        className="flex-1 min-w-[12rem] flex items-center justify-center gap-2 border-2 border-dashed border-m3-outline-variant/40 rounded-l-xl border-r-0 px-6 py-4 text-sm font-bold text-m3-on-surface-variant hover:border-m3-primary hover:text-m3-primary hover:bg-m3-primary/5 transition-all disabled:opacity-60 cursor-pointer h-auto whitespace-normal"
       >
         {addPending ? (
           <Loader2 className="h-4 w-4 animate-spin" />

@@ -27,7 +27,7 @@ export function ModuleHeaderActions({
         type="button"
         title={t("teacher_common.rename_module")}
         onClick={onStartEditTitle}
-        className="shrink-0 p-1 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors"
+        className="shrink-0 p-1 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors h-auto whitespace-normal"
       >
         {editingTitle ? (
           <Check className="h-3.5 w-3.5" />
@@ -41,7 +41,7 @@ export function ModuleHeaderActions({
         title={t("teacher_common.duplicate_module", "Duplicate module")}
         onClick={onDuplicate}
         disabled={duplicateModule.isPending}
-        className="shrink-0 p-1 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors disabled:opacity-50"
+        className="shrink-0 p-1 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors disabled:opacity-50 h-auto whitespace-normal"
       >
         {duplicateModule.isPending ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />

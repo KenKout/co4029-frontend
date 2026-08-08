@@ -34,7 +34,7 @@ export function GenerationProgressLogs({
         type="button"
         onClick={onToggleLogs}
         aria-expanded={logsOpen}
-        className="flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container-low transition-colors cursor-pointer"
+        className="flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container-low transition-colors cursor-pointer h-auto whitespace-normal"
       >
         {logsOpen ? (
           <ChevronDown className="h-3.5 w-3.5" />

@@ -44,7 +44,7 @@ export function ModeToggle({
               onClick={() => onChange(option.key)}
               aria-pressed={active}
               className={cn(
-                "flex flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-all cursor-pointer",
+                "flex flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-all cursor-pointer h-auto whitespace-normal",
                 active
                   ? "border-m3-secondary bg-m3-secondary-fixed/30 shadow-sm"
                   : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
@@ -88,7 +88,7 @@ export function AppendToggle({
           onClick={() => onChange(false)}
           aria-pressed={!append}
           className={cn(
-            "flex flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-all cursor-pointer",
+            "flex flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-all cursor-pointer h-auto whitespace-normal",
             !append
               ? "border-m3-secondary bg-m3-secondary-fixed/30 shadow-sm"
               : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
@@ -106,7 +106,7 @@ export function AppendToggle({
           onClick={() => onChange(true)}
           aria-pressed={append}
           className={cn(
-            "flex flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-all cursor-pointer",
+            "flex flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-all cursor-pointer h-auto whitespace-normal",
             append
               ? "border-m3-secondary bg-m3-secondary-fixed/30 shadow-sm"
               : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",

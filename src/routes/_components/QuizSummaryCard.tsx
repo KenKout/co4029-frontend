@@ -94,7 +94,7 @@ export function QuizSummaryCard({
               onClick={() => onJump(item.index)}
               aria-current={item.state === "active"}
               className={cn(
-                "aspect-square w-full flex items-center justify-center rounded-xl font-bold text-sm transition-all duration-150 hover:scale-110 relative cursor-pointer",
+                "aspect-square w-full flex items-center justify-center rounded-xl font-bold text-sm transition-all duration-150 hover:scale-110 relative cursor-pointer h-auto p-0 whitespace-normal",
                 item.state === "completed" &&
                   "bg-m3-primary text-white shadow-md",
                 item.state === "active" &&

@@ -141,7 +141,7 @@ export function TabBar({
               aria-controls={item.id}
               onClick={() => onSelect(item.id as TabId)}
               className={cn(
-                "group relative z-10 min-w-fit flex-1 rounded-md px-3 py-2 text-center transition-colors duration-300",
+                "group relative z-10 min-w-fit flex-1 rounded-md px-3 py-2 text-center transition-colors duration-300 h-auto whitespace-normal",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
                 "whitespace-nowrap cursor-pointer",
                 // Text color switches with the sliding pill; the pill itself
@@ -266,7 +266,7 @@ export function PublishReadiness({
                 type="button"
                 onClick={() => onGoTo(item.tab)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors cursor-pointer",
+                  "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors cursor-pointer h-auto whitespace-normal",
                   item.done
                     ? "text-emerald-700 hover:bg-emerald-100"
                     : "text-amber-800 hover:bg-amber-100",

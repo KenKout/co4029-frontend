@@ -84,7 +84,7 @@ function OptionInput({
               onSelectOption(option.id);
             }}
             className={cn(
-              "w-full text-left p-5 sm:p-6 rounded-xl flex items-center gap-5 transition-all duration-200 border-2 group/opt cursor-pointer",
+              "w-full text-left p-5 sm:p-6 rounded-xl flex items-center gap-5 transition-all duration-200 border-2 group/opt cursor-pointer h-auto whitespace-normal",
               isSelected
                 ? "bg-m3-primary-fixed/20 border-m3-primary shadow-lg shadow-m3-primary/10 ring-2 ring-m3-primary"
                 : "bg-m3-surface-container-low border-transparent hover:bg-m3-surface-container-high hover:border-m3-outline-variant/30",
@@ -303,7 +303,7 @@ function FillBlankInput({
                 }}
                 disabled={used || disabled}
                 className={cn(
-                  "px-4 py-2 rounded-xl text-sm font-medium transition-all border-2 cursor-grab active:cursor-grabbing",
+                  "px-4 py-2 rounded-xl text-sm font-medium transition-all border-2 cursor-grab active:cursor-grabbing h-auto whitespace-normal",
                   used
                     ? "bg-m3-surface-container-low text-m3-on-surface-variant border-transparent line-through opacity-50 cursor-not-allowed"
                     : "bg-m3-secondary-fixed/40 text-m3-on-surface border-m3-secondary/30 hover:bg-m3-secondary-fixed/60 hover:border-m3-secondary",
@@ -440,7 +440,7 @@ function MultiSelectInput({
             onClick={() => toggle(option.id)}
             aria-pressed={isSelected}
             className={cn(
-              "w-full text-left p-5 sm:p-6 rounded-xl flex items-center gap-5 transition-all duration-200 border-2 group/opt cursor-pointer",
+              "w-full text-left p-5 sm:p-6 rounded-xl flex items-center gap-5 transition-all duration-200 border-2 group/opt cursor-pointer h-auto whitespace-normal",
               isSelected
                 ? "bg-m3-primary-fixed/20 border-m3-primary shadow-lg shadow-m3-primary/10 ring-2 ring-m3-primary"
                 : "bg-m3-surface-container-low border-transparent hover:bg-m3-surface-container-high hover:border-m3-outline-variant/30",
@@ -661,7 +661,7 @@ function OrderingInput({
               onClick={() => move(i, -1)}
               disabled={disabled || i === 0}
               aria-label="Move up"
-              className="px-2 rounded bg-m3-surface-container-high text-m3-on-surface hover:bg-m3-primary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-tight"
+              className="px-2 rounded bg-m3-surface-container-high text-m3-on-surface hover:bg-m3-primary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-tight h-auto whitespace-normal"
             >
               ▲
             </Button>
@@ -670,7 +670,7 @@ function OrderingInput({
               onClick={() => move(i, 1)}
               disabled={disabled || i === order.length - 1}
               aria-label="Move down"
-              className="px-2 rounded bg-m3-surface-container-high text-m3-on-surface hover:bg-m3-primary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-tight"
+              className="px-2 rounded bg-m3-surface-container-high text-m3-on-surface hover:bg-m3-primary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-tight h-auto whitespace-normal"
             >
               ▼
             </Button>

@@ -89,7 +89,7 @@ export function ModuleSection({
       <Button variant="ghost"
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-left transition-colors hover:bg-m3-primary/5 group cursor-pointer"
+        className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-left transition-colors hover:bg-m3-primary/5 group cursor-pointer h-auto whitespace-normal"
       >
         <ChevronDown
           className={cn(

@@ -26,7 +26,7 @@ export function CourseSrCard({ course }: { course: Course }) {
       <Button variant="ghost"
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center gap-4 p-5 text-left hover:bg-m3-surface-container-low transition-colors cursor-pointer"
+        className="w-full flex items-center gap-4 p-5 text-left hover:bg-m3-surface-container-low transition-colors cursor-pointer h-auto whitespace-normal"
         aria-expanded={expanded}
       >
         <div className="w-11 h-11 rounded-xl bg-m3-primary-fixed flex items-center justify-center shrink-0">

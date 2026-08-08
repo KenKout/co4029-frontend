@@ -60,7 +60,7 @@ export function LessonHeaderSection({
               e.stopPropagation();
               setTitleEditing(true);
             }}
-            className="opacity-0 group-hover:opacity-100 transition-opacity mt-2 p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant shrink-0 cursor-pointer"
+            className="opacity-0 group-hover:opacity-100 transition-opacity mt-2 p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant shrink-0 cursor-pointer h-auto whitespace-normal"
           >
             <Pencil className="h-4 w-4" />
           </Button>

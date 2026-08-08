@@ -37,7 +37,7 @@ export function QuestionBankHeader({
           onClick={() => setHelpOpen((open) => !open)}
           aria-expanded={helpOpen}
           className={cn(
-            "inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold",
+            "inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold h-auto whitespace-normal",
             "transition-all duration-200 active:scale-[0.97]",
             helpOpen
               ? "bg-m3-primary-fixed text-m3-primary"

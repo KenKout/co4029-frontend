@@ -108,7 +108,7 @@ export function QuestionBankFilters({
             type="button"
             onClick={clearFilters}
             className={cn(
-              "inline-flex cursor-pointer items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold",
+              "inline-flex cursor-pointer items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold h-auto whitespace-normal",
               "text-m3-on-surface-variant transition-all duration-200",
               "hover:bg-m3-surface-container hover:text-m3-primary active:scale-[0.97]",
               "animate-[fade-in-up_0.2s_ease-out_both]",

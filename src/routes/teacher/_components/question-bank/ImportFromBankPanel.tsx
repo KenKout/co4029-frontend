@@ -62,7 +62,7 @@ export function ImportFromBankPanel({
                   onClick={() => onToggle(b.id)}
                   aria-pressed={isSel}
                   className={cn(
-                    "flex w-full items-start gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors",
+                    "flex w-full items-start gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors h-auto whitespace-normal",
                     isSel
                       ? "border-primary bg-primary/10"
                       : "border-m3-outline-variant/30 bg-m3-surface hover:bg-m3-surface-container-low",

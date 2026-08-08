@@ -106,7 +106,7 @@ function QuestionRow({
         type="button"
         onClick={() => hasOptions && setExpanded((v) => !v)}
         className={cn(
-          "flex w-full items-center gap-3 px-3 py-3 text-left transition-colors",
+          "flex w-full items-center gap-3 px-3 py-3 text-left transition-colors h-auto whitespace-normal",
           hasOptions
             ? "cursor-pointer hover:bg-m3-surface-container-low"
             : "cursor-default",

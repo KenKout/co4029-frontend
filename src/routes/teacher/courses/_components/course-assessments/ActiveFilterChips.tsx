@@ -28,7 +28,7 @@ export function ActiveFilterChips({
           key={chip.key}
           type="button"
           onClick={chip.onRemove}
-          className="inline-flex items-center gap-1.5 rounded-full bg-m3-primary-fixed px-2.5 py-1 text-xs font-medium text-m3-primary transition-colors hover:bg-m3-primary/15"
+          className="inline-flex items-center gap-1.5 rounded-full bg-m3-primary-fixed px-2.5 py-1 text-xs font-medium text-m3-primary transition-colors hover:bg-m3-primary/15 h-auto whitespace-normal"
         >
           <span className="text-m3-on-surface-variant">{chip.prefix}</span>
           {chip.label}

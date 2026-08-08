@@ -20,7 +20,7 @@ export function CourseDetailHeader({ c }: { c: CourseDetailController }) {
         type="button"
         onClick={handleRestore}
         disabled={restore.isPending}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:opacity-90 disabled:opacity-50 transition-opacity h-auto whitespace-normal"
       >
         <RotateCcw className="h-3.5 w-3.5" />
         {restore.isPending

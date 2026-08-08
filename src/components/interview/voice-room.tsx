@@ -142,7 +142,7 @@ function RoomContent({
                 // column; the `!canPlayAudio` guard above already handles
                 // visibility, so the hook's display value is not needed.
                 style={undefined}
-                className="mt-4 flex w-full max-w-[420px] items-center justify-center gap-2 rounded-lg border border-m3-primary/30 bg-m3-primary/5 px-4 py-3 text-sm font-bold text-m3-primary transition-colors hover:bg-m3-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
+                className="mt-4 flex w-full max-w-[420px] items-center justify-center gap-2 rounded-lg border border-m3-primary/30 bg-m3-primary/5 px-4 py-3 text-sm font-bold text-m3-primary transition-colors hover:bg-m3-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60 h-auto whitespace-normal"
               >
                 <Volume2 className="h-4 w-4" aria-hidden="true" />
                 {t("course_interview.enable_audio")}

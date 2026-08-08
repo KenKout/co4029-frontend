@@ -7,9 +7,7 @@ import { ConnectionLostBanner } from "@/components/interview/error-banner";
 import { useInterviewRoomState } from "@/components/interview/interview-room-provider";
 import { InterviewProgressSteps } from "@/components/interview/interview-progress-steps";
 import { InterviewHeader } from "@/components/interview/stages";
-import { TranscriptPanel } from "@/components/interview/transcript";
 import { useInterviewChat } from "@/components/interview/use-interview-chat";
-import { questionTypeLabel } from "@/lib/interview/turn-factory";
 import { Button } from "@/components/ui/button";
 import {
   resolveAgentOwnsTheVoice,
@@ -224,7 +222,7 @@ export function InterviewWorkspaceScreen({
             // and un-centre the icon; the guard above already handles
             // visibility, so the hook's display value is not needed.
             style={undefined}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-m3-primary/30 bg-m3-primary/5 px-4 py-3 text-sm font-bold text-m3-primary transition-colors hover:bg-m3-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-m3-primary/30 bg-m3-primary/5 px-4 py-3 text-sm font-bold text-m3-primary transition-colors hover:bg-m3-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60 h-auto whitespace-normal"
           >
             <Volume2 className="h-4 w-4" aria-hidden="true" />
             {t("course_interview.enable_audio")}
@@ -232,28 +230,16 @@ export function InterviewWorkspaceScreen({
         </div>
       )}
 
+      {/* One conversation surface. The stage below renders the question card and
+          the full running transcript inline, so the docked side panel that used
+          to sit here only duplicated what was already on screen — and duplicated
+          it incompletely, since it never received the agent's live utterances. */}
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="flex min-w-0 flex-1 flex-col">
           <WorkspaceStage iv={iv} submissionSlot={renderSubmissionSlot(iv)} />
           {/* chat.pending from here, not iv.chatBridge: that is a ref. */}
           <WorkspaceInputArea iv={iv} chatPending={chat.pending} />
         </div>
-
-        <TranscriptPanel
-          open={iv.transcriptOpen}
-          onClose={() => iv.setTranscriptOpen(false)}
-          transcript={iv.transcript}
-          presentedAiTurnIds={iv.presentedAiTurnIds}
-          questionTypeLabel={(type) => questionTypeLabel(type, t)}
-          speak={iv.speakIfOn}
-          onSpeakingChange={(speaking) => {
-            iv.setAiSpeaking(iv.voiceOn && speaking);
-            iv.setAiPresenting(speaking);
-          }}
-          onReplay={(turn) => void iv.replayIfOn(turn.text)}
-          replayDisabled={!iv.voiceOn}
-          replayingTurnId={null}
-        />
       </div>
 
       <EndInterviewDialog

@@ -107,7 +107,7 @@ function PanelHeader({
       type="button"
       onClick={() => setOpen((o) => !o)}
       className={cn(
-        "group w-full flex items-center gap-3 px-5 py-4 text-left cursor-pointer transition-colors",
+        "group w-full flex items-center gap-3 px-5 py-4 text-left cursor-pointer transition-colors h-auto whitespace-normal",
         open
           ? "bg-m3-surface-container-low hover:bg-m3-surface-container"
           : "hover:bg-m3-primary/5",

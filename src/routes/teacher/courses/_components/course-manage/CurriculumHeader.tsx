@@ -29,7 +29,7 @@ export function CurriculumHeader({
           <Button variant="ghost"
             type="button"
             onClick={() => setAllModules(true)}
-            className="text-xs font-medium text-m3-on-surface-variant hover:text-m3-primary transition-colors cursor-pointer px-2 py-1"
+            className="text-xs font-medium text-m3-on-surface-variant hover:text-m3-primary transition-colors cursor-pointer px-2 py-1 h-auto whitespace-normal"
           >
             {t("teacher_common.expand_all")}
           </Button>
@@ -37,7 +37,7 @@ export function CurriculumHeader({
           <Button variant="ghost"
             type="button"
             onClick={() => setAllModules(false)}
-            className="text-xs font-medium text-m3-on-surface-variant hover:text-m3-primary transition-colors cursor-pointer px-2 py-1"
+            className="text-xs font-medium text-m3-on-surface-variant hover:text-m3-primary transition-colors cursor-pointer px-2 py-1 h-auto whitespace-normal"
           >
             {t("teacher_common.collapse_all")}
           </Button>

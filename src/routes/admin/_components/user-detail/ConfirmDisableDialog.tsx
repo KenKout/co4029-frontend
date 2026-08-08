@@ -33,7 +33,7 @@ export function ConfirmDisableDialog({
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="px-3 py-1.5 text-sm font-medium rounded-md text-text-strong border border-border hover:bg-surface-muted disabled:opacity-50"
+            className="px-3 py-1.5 text-sm font-medium rounded-md text-text-strong border border-border hover:bg-surface-muted disabled:opacity-50 h-auto whitespace-normal"
           >
             {t("common.cancel")}
           </Button>
@@ -41,7 +41,7 @@ export function ConfirmDisableDialog({
             type="button"
             onClick={onConfirm}
             disabled={isPending}
-            className="px-3 py-1.5 text-sm font-semibold rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+            className="px-3 py-1.5 text-sm font-semibold rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 h-auto whitespace-normal"
           >
             {isPending
               ? t("admin.users.actions.disabling")

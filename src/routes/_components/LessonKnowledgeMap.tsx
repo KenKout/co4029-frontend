@@ -77,7 +77,7 @@ export function LessonKnowledgeMap({ lessonId }: { lessonId: string }) {
       <Button variant="ghost"
         type="button"
         onClick={() => setExpanded(true)}
-        className="flex w-full items-center justify-between gap-2 px-6 py-4 sm:px-8 hover:bg-m3-surface-container/50 transition-colors"
+        className="flex w-full items-center justify-between gap-2 px-6 py-4 sm:px-8 hover:bg-m3-surface-container/50 transition-colors h-auto whitespace-normal"
       >
         <span className="flex items-center gap-2">
           <Brain className="h-4 w-4 text-m3-secondary" />

@@ -31,7 +31,7 @@ export function VideoUploadRow({
         type="button"
         disabled={uploading}
         onClick={onPickFile}
-        className="ml-auto flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border border-m3-outline-variant/30 bg-m3-surface hover:bg-m3-surface-container transition-colors cursor-pointer disabled:opacity-50"
+        className="ml-auto flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border border-m3-outline-variant/30 bg-m3-surface hover:bg-m3-surface-container transition-colors cursor-pointer disabled:opacity-50 h-auto whitespace-normal"
       >
         {uploading ? (
           <Loader2 className="h-4 w-4 animate-spin" />

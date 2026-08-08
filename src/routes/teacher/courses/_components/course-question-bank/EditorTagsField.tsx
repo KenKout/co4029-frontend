@@ -44,7 +44,7 @@ export function EditorTagsField({
               type="button"
               onClick={() => onRemoveTag(tag)}
               aria-label={t("teacher_question_bank.remove_tag", { tag })}
-              className="cursor-pointer rounded-full p-0.5 transition-colors hover:bg-red-100 hover:text-red-600"
+              className="cursor-pointer rounded-full p-0.5 transition-colors hover:bg-red-100 hover:text-red-600 h-auto whitespace-normal"
             >
               <X className="h-3 w-3" />
             </Button>

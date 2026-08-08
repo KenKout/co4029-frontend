@@ -37,7 +37,7 @@ export function QuizPerPageSelector({ session }: { session: QuizSession }) {
               onClick={() => changePageSize(size)}
               aria-pressed={pageSize === size}
               className={cn(
-                "rounded-md px-2.5 py-1 text-xs font-bold transition-colors",
+                "rounded-md px-2.5 py-1 text-xs font-bold transition-colors h-auto whitespace-normal",
                 pageSize === size
                   ? "bg-m3-primary text-white"
                   : "text-m3-on-surface-variant hover:text-m3-primary",

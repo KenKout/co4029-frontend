@@ -391,7 +391,7 @@ function ReadinessWarnings({
               <Button variant="link"
                 type="button"
                 onClick={() => onGoTo(tab)}
-                className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold underline-offset-2 hover:underline cursor-pointer"
+                className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold underline-offset-2 hover:underline cursor-pointer h-auto whitespace-normal"
               >
                 {t("teacher_interview_config.readiness.fix_action")}
                 <ArrowRight className="h-3 w-3" aria-hidden="true" />

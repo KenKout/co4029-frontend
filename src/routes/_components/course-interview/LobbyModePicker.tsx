@@ -38,7 +38,7 @@ export function LobbyModePicker({
               aria-pressed={selected}
               onClick={() => setSessionMode(mode)}
               className={cn(
-                "rounded-xl border p-3 text-left transition-colors motion-safe:duration-150",
+                "rounded-xl border p-3 text-left transition-colors motion-safe:duration-150 h-auto whitespace-normal",
                 selected
                   ? "border-m3-primary bg-m3-primary-fixed"
                   : "border-m3-outline-variant/50 hover:border-m3-outline-variant",

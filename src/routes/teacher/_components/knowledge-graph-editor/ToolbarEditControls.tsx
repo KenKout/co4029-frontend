@@ -30,7 +30,7 @@ export function ToolbarEditControls({
       <Button variant="ghost"
         type="button"
         onClick={mutations.addNode}
-        className="flex items-center gap-1.5 rounded-lg bg-m3-surface-container px-2.5 py-1.5 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-primary"
+        className="flex items-center gap-1.5 rounded-lg bg-m3-surface-container px-2.5 py-1.5 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-primary h-auto whitespace-normal"
       >
         <Plus className="h-3.5 w-3.5" />
         {t("teacher_kg_editor.add_node")}
@@ -46,7 +46,7 @@ export function ToolbarEditControls({
         aria-pressed={arrowMode}
         title={t("teacher_kg_editor.arrow_mode")}
         className={cn(
-          "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
+          "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors h-auto whitespace-normal",
           arrowMode
             ? "bg-m3-primary text-white"
             : "bg-m3-surface-container text-m3-on-surface-variant hover:text-m3-primary",

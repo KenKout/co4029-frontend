@@ -135,7 +135,7 @@ export function LessonSettingsSidebar({
               <Button variant="ghost"
                 type="button"
                 onClick={() => onTogglePrerequisite(id)}
-                className="shrink-0 p-0.5 rounded-md hover:bg-m3-primary/10 transition-colors cursor-pointer"
+                className="shrink-0 p-0.5 rounded-md hover:bg-m3-primary/10 transition-colors cursor-pointer h-auto whitespace-normal"
               >
                 <X className="h-3.5 w-3.5" />
               </Button>

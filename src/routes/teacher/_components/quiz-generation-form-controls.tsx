@@ -376,7 +376,7 @@ function LessonOutlineSection({
       <Button variant="ghost"
         type="button"
         onClick={() => setExpanded((current) => !current)}
-        className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-m3-surface-container-low cursor-pointer"
+        className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-m3-surface-container-low cursor-pointer h-auto whitespace-normal"
       >
         {expanded ? (
           <ChevronDown className="h-3.5 w-3.5 text-m3-on-surface-variant" />

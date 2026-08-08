@@ -34,7 +34,7 @@ export function DomainList({
           <Button variant="ghost"
             type="button"
             onClick={() => onRemove(d.id)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-md shrink-0"
+            className="p-2 text-red-600 hover:bg-red-50 rounded-md shrink-0 h-auto whitespace-normal"
             aria-label={t("admin.organizations.actions.delete")}
           >
             <Trash2 className="h-4 w-4" />

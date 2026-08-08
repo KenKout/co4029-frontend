@@ -64,7 +64,7 @@ export function BulkSetExpectedTimeRow({
         <Button variant="ghost"
           type="button"
           onClick={onClear}
-          className="ml-auto shrink-0 flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface transition-colors"
+          className="ml-auto shrink-0 flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface transition-colors h-auto whitespace-normal"
         >
           <X className="h-3.5 w-3.5" />
           {t("teacher_quiz_manage.bulk_time.deselect")}

@@ -34,7 +34,7 @@ export function ReviewPresetRow({
               aria-pressed={active}
               onClick={() => onChange(PRESETS[key]())}
               className={cn(
-                "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors h-auto whitespace-normal",
                 active
                   ? "border-m3-primary bg-m3-primary/10 text-m3-primary"
                   : "border-m3-outline-variant/40 text-m3-on-surface-variant hover:bg-m3-surface-container-high",

@@ -33,7 +33,7 @@ export function ModuleQuickNav({
             key={module.id}
             type="button"
             onClick={() => scrollToModule(module.id)}
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-m3-outline-variant/60 px-3 py-1 text-left text-xs text-m3-on-surface hover:border-m3-primary hover:bg-m3-surface-container transition-colors cursor-pointer group"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-m3-outline-variant/60 px-3 py-1 text-left text-xs text-m3-on-surface hover:border-m3-primary hover:bg-m3-surface-container transition-colors cursor-pointer group h-auto whitespace-normal"
           >
             {done ? (
               <CheckCheck className="h-3 w-3 shrink-0 text-emerald-600" />

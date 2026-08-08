@@ -33,7 +33,7 @@ export function ModuleItemStatusBadge({
       onClick={onPublish}
       disabled={publishing}
       title={t("teacher_common.publish_item")}
-      className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 hover:bg-emerald-100 hover:text-emerald-700 transition-colors cursor-pointer disabled:opacity-50"
+      className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 hover:bg-emerald-100 hover:text-emerald-700 transition-colors cursor-pointer disabled:opacity-50 h-auto whitespace-normal"
     >
       {publishing ? (
         <Loader2 className="h-2.5 w-2.5 animate-spin" />

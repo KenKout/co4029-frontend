@@ -30,7 +30,7 @@ export function ModuleStatusToggle({
       onClick={onToggleStatus}
       disabled={updateModule.isPending}
       className={cn(
-        "text-[10px] font-bold px-2 py-0.5 rounded-full border-0 transition-colors cursor-pointer",
+        "text-[10px] font-bold px-2 py-0.5 rounded-full border-0 transition-colors cursor-pointer h-auto whitespace-normal",
         module.status === "published"
           ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
           : "bg-amber-50 text-amber-700 hover:bg-amber-100",

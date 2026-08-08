@@ -21,7 +21,7 @@ export function SettingsSectionRailItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+        "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors h-auto whitespace-normal",
         active
           ? "bg-m3-primary/10 font-semibold text-m3-primary"
           : "text-slate-600 hover:bg-slate-100",

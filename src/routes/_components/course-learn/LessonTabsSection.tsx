@@ -48,7 +48,7 @@ export function LessonTabsSection({
               key={tab}
               onClick={() => onTabChange(tab)}
               className={cn(
-                "px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200",
+                "px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 h-auto whitespace-normal",
                 activeTab === tab
                   ? "bg-m3-secondary text-white shadow-ai-glow"
                   : "text-m3-on-surface-variant hover:text-m3-primary hover:bg-m3-surface-container",

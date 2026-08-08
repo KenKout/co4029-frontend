@@ -139,7 +139,7 @@ export function PerStudentTable({
           type="button"
           onClick={() => onHeadlineMetricChange("best")}
           className={cn(
-            "rounded-full px-3 py-1 text-sm font-medium transition-colors cursor-pointer",
+            "rounded-full px-3 py-1 text-sm font-medium transition-colors cursor-pointer h-auto whitespace-normal",
             headlineMetric === "best"
               ? "bg-m3-primary text-m3-on-primary"
               : "text-m3-on-surface-variant hover:bg-m3-surface-container",
@@ -151,7 +151,7 @@ export function PerStudentTable({
           type="button"
           onClick={() => onHeadlineMetricChange("latest")}
           className={cn(
-            "rounded-full px-3 py-1 text-sm font-medium transition-colors cursor-pointer",
+            "rounded-full px-3 py-1 text-sm font-medium transition-colors cursor-pointer h-auto whitespace-normal",
             headlineMetric === "latest"
               ? "bg-m3-primary text-m3-on-primary"
               : "text-m3-on-surface-variant hover:bg-m3-surface-container",

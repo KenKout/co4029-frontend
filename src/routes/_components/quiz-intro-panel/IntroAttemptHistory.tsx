@@ -25,7 +25,7 @@ function InProgressRow({
       type="button"
       onClick={onResume}
       disabled={resuming || starting}
-      className="w-full flex items-center gap-4 p-3 rounded-xl bg-m3-primary-fixed/20 hover:bg-m3-primary-fixed/40 transition-colors group text-left disabled:opacity-60"
+      className="w-full flex items-center gap-4 p-3 rounded-xl bg-m3-primary-fixed/20 hover:bg-m3-primary-fixed/40 transition-colors group text-left disabled:opacity-60 h-auto whitespace-normal"
     >
       <span className="text-xs font-headline font-black text-m3-primary tabular-nums shrink-0 w-8">
         #{inProgressAttempt.attempt_number}

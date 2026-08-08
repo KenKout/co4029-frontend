@@ -58,7 +58,7 @@ export function TypeSpecificMatchingEditor({
               onChange({ match_pairs: pairs.filter((_, i) => i !== idx) })
             }
             aria-label={t("teacher_quiz_manage.type_editor.remove_pair")}
-            className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-40"
+            className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-40 h-auto whitespace-normal"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -113,7 +113,7 @@ export function TypeSpecificMatchingEditor({
                 })
               }
               aria-label={t("teacher_quiz_manage.type_editor.remove_distractor")}
-              className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-40"
+              className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-40 h-auto whitespace-normal"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

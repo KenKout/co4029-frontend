@@ -59,7 +59,7 @@ export function OutcomeRow({
             "teacher_outcomes.drag_hint",
             "Drag: between rows moves, onto a row nests",
           )}
-          className="shrink-0 cursor-grab rounded p-0.5 text-m3-outline-variant opacity-0 transition-opacity group-hover:opacity-100 hover:text-m3-on-surface-variant active:cursor-grabbing"
+          className="shrink-0 cursor-grab rounded p-0.5 text-m3-outline-variant opacity-0 transition-opacity group-hover:opacity-100 hover:text-m3-on-surface-variant active:cursor-grabbing h-auto whitespace-normal"
         >
           <GripVertical className="h-4 w-4" />
         </Button>

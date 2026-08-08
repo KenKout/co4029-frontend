@@ -45,7 +45,7 @@ export function AssignmentRow({
           handleRevoke(assignmentId, roleName);
         }}
         disabled={revokeIsPending}
-        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md text-red-700 hover:bg-red-50 disabled:opacity-50"
+        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md text-red-700 hover:bg-red-50 disabled:opacity-50 h-auto whitespace-normal"
       >
         <Trash2 className="h-3.5 w-3.5" />
         {t("admin.users.roles.revoke")}

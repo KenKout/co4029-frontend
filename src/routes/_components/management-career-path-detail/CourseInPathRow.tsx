@@ -69,7 +69,7 @@ export function CourseInPathRow({
           type="button"
           onClick={() => controller.moveInStage(row.stage_id, index, -1)}
           disabled={index === 0}
-          className="p-1 rounded hover:bg-m3-surface-container disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+          className="p-1 rounded hover:bg-m3-surface-container disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer h-auto whitespace-normal"
           title={t("management_career_path_detail.actions.move_up")}
         >
           <ArrowUp className="h-3 w-3 text-m3-on-surface-variant" />
@@ -78,7 +78,7 @@ export function CourseInPathRow({
           type="button"
           onClick={() => controller.moveInStage(row.stage_id, index, 1)}
           disabled={index === stageTotal - 1}
-          className="p-1 rounded hover:bg-m3-surface-container disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+          className="p-1 rounded hover:bg-m3-surface-container disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer h-auto whitespace-normal"
           title={t("management_career_path_detail.actions.move_down")}
         >
           <ArrowDown className="h-3 w-3 text-m3-on-surface-variant" />

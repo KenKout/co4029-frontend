@@ -31,7 +31,7 @@ export function KgEditButton({
           : t("teacher_lesson_materials.kg.edit_ai_disabled")
       }
       className={cn(
-        "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
+        "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors h-auto whitespace-normal",
         source === "curated"
           ? "bg-m3-surface-container text-m3-on-surface-variant hover:text-m3-primary"
           : "bg-m3-surface-container/50 text-m3-on-surface-variant/40 cursor-not-allowed",

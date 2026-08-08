@@ -185,7 +185,7 @@ function TopicCard({
       <Button variant="ghost"
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-start gap-3 p-4 text-left"
+        className="flex w-full items-start gap-3 p-4 text-left h-auto whitespace-normal"
       >
         <div className="mt-0.5 shrink-0 text-m3-primary">
           {open ? (

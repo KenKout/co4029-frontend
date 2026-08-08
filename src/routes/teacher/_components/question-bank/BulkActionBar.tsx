@@ -127,7 +127,7 @@ export function BulkActionBar({
         type="button"
         disabled={busy}
         onClick={onAddToBank}
-        className="inline-flex items-center gap-1 rounded-md bg-white/70 px-2 py-1 text-xs font-semibold text-m3-on-surface hover:bg-white cursor-pointer disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="inline-flex items-center gap-1 rounded-md bg-white/70 px-2 py-1 text-xs font-semibold text-m3-on-surface hover:bg-white cursor-pointer disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary h-auto whitespace-normal"
       >
         <BookMarked className="h-3.5 w-3.5" />
         {t("teacher_interview_config.qbank.bulk.add_to_bank")}
@@ -138,7 +138,7 @@ export function BulkActionBar({
         type="button"
         disabled={busy}
         onClick={onDelete}
-        className="inline-flex items-center gap-1 rounded-md bg-white/70 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-50 cursor-pointer disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+        className="inline-flex items-center gap-1 rounded-md bg-white/70 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-50 cursor-pointer disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 h-auto whitespace-normal"
       >
         <Trash2 className="h-3.5 w-3.5" />
         {t("common.delete")}
@@ -148,7 +148,7 @@ export function BulkActionBar({
       <Button variant="ghost"
         type="button"
         onClick={onClear}
-        className="ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-on-surface cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-on-surface cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary h-auto whitespace-normal"
       >
         <X className="h-3.5 w-3.5" />
         {t("teacher_interview_config.qbank.bulk.clear")}

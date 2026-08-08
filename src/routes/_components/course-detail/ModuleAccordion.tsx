@@ -104,7 +104,7 @@ function ModuleRow({
       <Button variant="ghost"
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer transition-colors hover:bg-m3-primary/5"
+        className="w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer transition-colors hover:bg-m3-primary/5 h-auto whitespace-normal"
       >
         <div className="flex items-start gap-3 min-w-0">
           <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110">

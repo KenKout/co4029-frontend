@@ -46,7 +46,7 @@ export function KgRelationGroup({
               type="button"
               onClick={() => onJump(n.id)}
               className={cn(
-                "rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors",
+                "rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors h-auto whitespace-normal",
                 tone === "amber"
                   ? "border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
                   : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100",

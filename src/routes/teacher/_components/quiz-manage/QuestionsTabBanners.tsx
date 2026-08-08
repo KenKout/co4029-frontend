@@ -50,7 +50,7 @@ export function QuestionsTabBanners({
             type="button"
             onClick={onSaveDefaultTimes}
             disabled={savingDefaults}
-            className="shrink-0 rounded-lg bg-amber-600 px-2.5 py-1 font-bold text-white hover:bg-amber-700 disabled:opacity-60"
+            className="shrink-0 rounded-lg bg-amber-600 px-2.5 py-1 font-bold text-white hover:bg-amber-700 disabled:opacity-60 h-auto whitespace-normal"
           >
             {savingDefaults ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />

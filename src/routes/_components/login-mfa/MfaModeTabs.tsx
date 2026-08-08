@@ -24,7 +24,7 @@ export default function MfaModeTabs({
           setMode("totp");
           setCode("");
         }}
-        className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+        className={`h-auto whitespace-normal rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
           mode === "totp"
             ? "bg-surface-elev text-m3-primary shadow-sm"
             : "text-m3-on-surface-variant hover:text-m3-on-surface"
@@ -40,7 +40,7 @@ export default function MfaModeTabs({
           setMode("recovery");
           setCode("");
         }}
-        className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+        className={`h-auto whitespace-normal rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
           mode === "recovery"
             ? "bg-surface-elev text-m3-primary shadow-sm"
             : "text-m3-on-surface-variant hover:text-m3-on-surface"

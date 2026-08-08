@@ -52,7 +52,7 @@ export function TypeSpecificOrderingEditor({
               disabled={disabled || idx === 0}
               onClick={() => move(idx, -1)}
               aria-label={t("teacher_quiz_manage.type_editor.move_up")}
-              className="px-1.5 rounded bg-m3-surface-container-high hover:bg-m3-primary hover:text-white disabled:opacity-30 text-xs leading-tight"
+              className="px-1.5 rounded bg-m3-surface-container-high hover:bg-m3-primary hover:text-white disabled:opacity-30 text-xs leading-tight h-auto whitespace-normal"
             >
               ▲
             </Button>
@@ -61,7 +61,7 @@ export function TypeSpecificOrderingEditor({
               disabled={disabled || idx === items.length - 1}
               onClick={() => move(idx, 1)}
               aria-label={t("teacher_quiz_manage.type_editor.move_down")}
-              className="px-1.5 rounded bg-m3-surface-container-high hover:bg-m3-primary hover:text-white disabled:opacity-30 text-xs leading-tight"
+              className="px-1.5 rounded bg-m3-surface-container-high hover:bg-m3-primary hover:text-white disabled:opacity-30 text-xs leading-tight h-auto whitespace-normal"
             >
               ▼
             </Button>
@@ -75,7 +75,7 @@ export function TypeSpecificOrderingEditor({
               })
             }
             aria-label={t("teacher_quiz_manage.type_editor.remove_item")}
-            className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-40"
+            className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-40 h-auto whitespace-normal"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

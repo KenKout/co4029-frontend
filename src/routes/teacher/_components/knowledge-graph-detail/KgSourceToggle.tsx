@@ -30,7 +30,7 @@ export function KgSourceToggle({
         onClick={() => onSourceChange("ai")}
         aria-pressed={source === "ai"}
         className={cn(
-          "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
+          "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors h-auto whitespace-normal",
           source === "ai"
             ? "bg-m3-primary text-white"
             : "text-m3-on-surface-variant hover:text-m3-primary",
@@ -44,7 +44,7 @@ export function KgSourceToggle({
         onClick={() => onSourceChange("curated")}
         aria-pressed={source === "curated"}
         className={cn(
-          "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
+          "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors h-auto whitespace-normal",
           source === "curated"
             ? "bg-m3-primary text-white"
             : "text-m3-on-surface-variant hover:text-m3-primary",

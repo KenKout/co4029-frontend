@@ -74,7 +74,7 @@ export function ReviewWindowCard({
           <Button variant="ghost"
             type="button"
             onClick={() => onSetWindow(flags(!allOn))}
-            className="rounded-lg px-2 py-1 text-[11px] font-semibold text-m3-primary hover:bg-m3-primary/10"
+            className="rounded-lg px-2 py-1 text-[11px] font-semibold text-m3-primary hover:bg-m3-primary/10 h-auto whitespace-normal"
           >
             {allOn
               ? t("teacher_quiz_manage.settings.review.hide_all")

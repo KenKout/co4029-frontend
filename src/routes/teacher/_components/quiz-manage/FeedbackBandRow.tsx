@@ -48,7 +48,7 @@ export function FeedbackBandRow({
       <Button variant="ghost"
         type="button"
         onClick={onRemove}
-        className="p-2 text-m3-on-surface-variant hover:text-red-600"
+        className="p-2 text-m3-on-surface-variant hover:text-red-600 h-auto whitespace-normal"
         aria-label={t("teacher_quiz_manage.feedback_bands.remove")}
       >
         <Trash2 className="h-4 w-4" />

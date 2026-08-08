@@ -67,7 +67,7 @@ export function CoursesTab({ id }: { id: string }) {
               type="button"
               onClick={stages.dismissWarnings}
               aria-label={t("common.close")}
-              className="p-1 rounded hover:bg-amber-100 cursor-pointer"
+              className="p-1 rounded hover:bg-amber-100 cursor-pointer h-auto whitespace-normal"
             >
               <X className="h-3.5 w-3.5 text-amber-700" />
             </Button>

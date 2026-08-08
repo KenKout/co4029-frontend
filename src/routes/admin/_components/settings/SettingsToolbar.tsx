@@ -72,7 +72,7 @@ export function SettingsToolbar({
           onClick={() => setShowKeys((v) => !v)}
           title="Show config keys and env vars"
           className={cn(
-            "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm",
+            "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm h-auto whitespace-normal",
             showKeys
               ? "border-m3-primary/40 bg-m3-primary/10 text-m3-primary"
               : "border-slate-300 text-slate-600 hover:bg-slate-50",
@@ -87,7 +87,7 @@ export function SettingsToolbar({
           onClick={() => setDense((v) => !v)}
           title={dense ? "Card view" : "Table view"}
           className={cn(
-            "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm",
+            "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm h-auto whitespace-normal",
             dense
               ? "border-m3-primary/40 bg-m3-primary/10 text-m3-primary"
               : "border-slate-300 text-slate-600 hover:bg-slate-50",

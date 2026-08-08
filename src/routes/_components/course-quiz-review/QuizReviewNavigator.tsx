@@ -78,7 +78,7 @@ export function QuizReviewNavigator({
                 onClick={() => onJump(idx)}
                 aria-label={`${t("course_quiz_review.nav_title")} ${idx + 1}`}
                 className={cn(
-                  "aspect-square w-full flex items-center justify-center rounded-xl font-bold text-sm transition-all duration-150 hover:scale-110 relative cursor-pointer",
+                  "aspect-square w-full flex items-center justify-center rounded-xl font-bold text-sm transition-all duration-150 hover:scale-110 relative cursor-pointer h-auto p-0 whitespace-normal",
                   state === "correct" &&
                     "bg-emerald-500 text-white shadow-md",
                   state === "incorrect" &&

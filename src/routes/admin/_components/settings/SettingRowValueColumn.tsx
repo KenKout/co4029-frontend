@@ -41,7 +41,7 @@ export function SettingRowValueColumn({
             ? "Remove this override and fall back to the level below"
             : "Nothing is overridden at this scope"
         }
-        className="mt-0.5 shrink-0 rounded-md p-1.5 text-slate-400 enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30"
+        className="mt-0.5 shrink-0 rounded-md p-1.5 text-slate-400 enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 h-auto whitespace-normal"
         disabled={!overrideAtThisScope || clearMutation.isPending}
         onClick={() =>
           clearMutation.mutate(setting.key, {

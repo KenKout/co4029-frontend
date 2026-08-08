@@ -64,7 +64,7 @@ export function ModuleAccordionHeader({
         onMouseDown={() => setModuleDragEnabled(true)}
         onMouseUp={() => setModuleDragEnabled(false)}
         onClick={(e) => e.stopPropagation()}
-        className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 text-m3-outline-variant hover:text-m3-on-surface-variant"
+        className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 text-m3-outline-variant hover:text-m3-on-surface-variant h-auto whitespace-normal"
       >
         <GripVertical className="h-4 w-4" />
       </Button>

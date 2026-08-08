@@ -58,7 +58,7 @@ export function FilterChip({
         aria-label={t("teacher_interview_config.qbank.remove_filter", {
           label,
         })}
-        className="cursor-pointer rounded-full hover:bg-primary/20 p-0.5"
+        className="cursor-pointer rounded-full hover:bg-primary/20 p-0.5 h-auto whitespace-normal"
       >
         <X className="h-3 w-3" />
       </Button>

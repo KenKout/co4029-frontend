@@ -76,7 +76,7 @@ export function TeacherPickerSection({
                   onClick={() => toggle(teacher.user_id)}
                   aria-pressed={selected}
                   className={cn(
-                    "w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left cursor-pointer transition-colors",
+                    "w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left cursor-pointer transition-colors h-auto whitespace-normal",
                     selected
                       ? "bg-m3-primary-fixed text-m3-on-surface"
                       : "hover:bg-surface-muted",

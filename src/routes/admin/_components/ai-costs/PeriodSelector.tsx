@@ -29,8 +29,8 @@ export function PeriodSelector({
             onClick={() => onChange(p)}
             className={
               active
-                ? "px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white cursor-pointer"
-                : "px-3 py-1.5 text-xs font-semibold rounded-md text-text-strong hover:bg-surface-muted cursor-pointer transition-colors duration-200"
+                ? "px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white cursor-pointer h-auto whitespace-normal"
+                : "px-3 py-1.5 text-xs font-semibold rounded-md text-text-strong hover:bg-surface-muted cursor-pointer transition-colors duration-200 h-auto whitespace-normal"
             }
           >
             {t(`admin.ai_costs.period_options.${p}`)}

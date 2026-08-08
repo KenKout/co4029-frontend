@@ -74,7 +74,7 @@ export function GrantRoleForm({ c }: { c: RoleAssignmentsController }) {
       <Button variant="ghost"
         type="submit"
         disabled={grantIsPending || !isGrantValid}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:bg-m3-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:bg-m3-primary/90 disabled:opacity-50 disabled:cursor-not-allowed h-auto whitespace-normal"
       >
         <Plus className="h-3.5 w-3.5" />
         {grantIsPending

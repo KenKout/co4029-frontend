@@ -48,7 +48,7 @@ export function ConfigKeyReveal({
       type="button"
       onClick={copy}
       title={`${setting.key}${setting.env_var ? ` · ${setting.env_var}` : ""} — click to copy`}
-      className="inline-flex items-center rounded p-1 text-slate-300 hover:bg-slate-100 hover:text-slate-600"
+      className="inline-flex items-center rounded p-1 text-slate-300 hover:bg-slate-100 hover:text-slate-600 h-auto whitespace-normal"
     >
       {copied ? (
         <Check className="h-3.5 w-3.5 text-emerald-600" />

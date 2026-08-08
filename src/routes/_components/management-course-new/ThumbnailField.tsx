@@ -84,7 +84,7 @@ export function ThumbnailField({
         <Button variant="ghost"
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="w-full max-w-xs aspect-video rounded-lg border border-dashed border-m3-outline-variant/40 flex flex-col items-center justify-center gap-2 text-xs text-m3-on-surface-variant hover:bg-surface-muted cursor-pointer"
+          className="w-full max-w-xs aspect-video rounded-lg border border-dashed border-m3-outline-variant/40 flex flex-col items-center justify-center gap-2 text-xs text-m3-on-surface-variant hover:bg-surface-muted cursor-pointer h-auto p-0 whitespace-normal"
         >
           <ImagePlus className="h-5 w-5" />
           {t("teacher_course_new.thumbnail_pick")}

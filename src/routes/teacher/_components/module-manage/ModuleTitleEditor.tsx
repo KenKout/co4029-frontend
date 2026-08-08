@@ -59,7 +59,7 @@ export function ModuleTitleEditor({
       <Button variant="ghost"
         type="button"
         onClick={startEdit}
-        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary cursor-pointer"
+        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary cursor-pointer h-auto whitespace-normal"
       >
         {editingTitle ? (
           <Check className="h-3.5 w-3.5" />

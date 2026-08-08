@@ -179,7 +179,7 @@ export function JobsTable({
               onRetry(job.id);
             }}
             disabled={retryingId === job.id}
-            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md bg-m3-primary text-white hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md bg-m3-primary text-white hover:opacity-90 disabled:opacity-50 cursor-pointer h-auto whitespace-normal"
           >
             <RefreshCw className="h-3 w-3" />
             {retryingId === job.id ? "…" : t("admin.processing.retry")}
@@ -198,7 +198,7 @@ export function JobsTable({
             }}
             aria-label={t("admin.processing.view_job")}
             title={t("admin.processing.view_job")}
-            className="p-1 rounded-md text-text-subtle hover:text-m3-primary hover:bg-m3-primary/8 transition-colors cursor-pointer"
+            className="p-1 rounded-md text-text-subtle hover:text-m3-primary hover:bg-m3-primary/8 transition-colors cursor-pointer h-auto whitespace-normal"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

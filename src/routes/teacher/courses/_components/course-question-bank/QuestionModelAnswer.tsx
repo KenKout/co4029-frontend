@@ -29,7 +29,7 @@ export function QuestionModelAnswer({
           // Deliberately lighter than the prompt above it —
           // a disclosure control must not outweigh the
           // content it belongs to.
-          "-ml-1.5 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-1.5 py-1 text-[11px]",
+          "-ml-1.5 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-1.5 py-1 text-[11px] h-auto whitespace-normal",
           "text-m3-on-surface-variant transition-colors hover:text-m3-primary",
         )}
       >

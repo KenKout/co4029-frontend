@@ -40,7 +40,7 @@ export function UserSearchResults({
           <Button variant="ghost"
             type="button"
             onClick={() => onPick(u)}
-            className="w-full text-left px-3 py-2 hover:bg-m3-primary-fixed/40 flex items-center gap-3"
+            className="w-full text-left px-3 py-2 hover:bg-m3-primary-fixed/40 flex items-center gap-3 h-auto whitespace-normal"
           >
             <div className="w-8 h-8 rounded-full bg-m3-primary-fixed flex items-center justify-center shrink-0">
               <Users className="h-4 w-4 text-m3-primary" />

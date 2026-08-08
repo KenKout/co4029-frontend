@@ -58,7 +58,7 @@ export function CoursesToolbar({
             type="button"
             onClick={() => setSearch("")}
             aria-label={t("teacher_courses_list.clear_search", "Clear search")}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-m3-on-surface-variant transition-colors hover:bg-m3-surface-container hover:text-m3-on-surface"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-m3-on-surface-variant transition-colors hover:bg-m3-surface-container hover:text-m3-on-surface h-auto whitespace-normal"
           >
             <X className="h-3.5 w-3.5" />
           </Button>

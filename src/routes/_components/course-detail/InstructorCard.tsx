@@ -77,7 +77,7 @@ function CopyContactButton({
       onClick={copy}
       aria-label={ariaLabel}
       title={ariaLabel}
-      className="shrink-0 p-1.5 rounded-lg text-m3-outline transition-colors hover:text-m3-primary hover:bg-m3-primary/8 cursor-pointer"
+      className="shrink-0 p-1.5 rounded-lg text-m3-outline transition-colors hover:text-m3-primary hover:bg-m3-primary/8 cursor-pointer h-auto whitespace-normal"
     >
       {copied ? (
         <Check className="h-3.5 w-3.5 text-emerald-600" />

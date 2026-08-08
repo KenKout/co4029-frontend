@@ -50,7 +50,7 @@ export function QuizTabSwitcher({
             title={actionsStuck ? label : undefined}
             className={cn(
               "rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center border",
-              actionsStuck ? "h-10 w-10" : "px-4 py-2 text-sm gap-2",
+              actionsStuck ? "h-10 w-10" : "px-4 py-2 text-sm gap-2 h-auto whitespace-normal",
               // Active tab: in the stuck rail it needs a solid blue fill
               // with a WHITE icon + gray border so it doesn't blend into
               // the content showing through behind the rail. In the

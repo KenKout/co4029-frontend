@@ -36,7 +36,7 @@ export function JobDetailHeader({
             type="button"
             onClick={handleRetry}
             disabled={retry.isPending}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:opacity-90 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white hover:opacity-90 disabled:opacity-50 h-auto whitespace-normal"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             {retry.isPending

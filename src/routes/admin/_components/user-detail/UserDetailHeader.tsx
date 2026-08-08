@@ -52,7 +52,7 @@ export function UserDetailHeader({
               type="button"
               onClick={handleEnable}
               disabled={enableIsPending}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 h-auto whitespace-normal"
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
               {enableIsPending
@@ -64,7 +64,7 @@ export function UserDetailHeader({
               type="button"
               onClick={() => setConfirmOpen(true)}
               disabled={disableIsPending}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 h-auto whitespace-normal"
             >
               <ShieldOff className="h-3.5 w-3.5" />
               {t("admin.users.actions.disable")}

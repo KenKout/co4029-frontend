@@ -75,7 +75,7 @@ export function MembershipRowActions({
           <Button variant="ghost"
             type="button"
             onClick={handleRemove}
-            className="p-1.5 text-red-600 hover:bg-red-50 rounded-md"
+            className="p-1.5 text-red-600 hover:bg-red-50 rounded-md h-auto whitespace-normal"
             aria-label={t("admin.organizations.actions.delete")}
           >
             <Trash2 className="h-4 w-4" />

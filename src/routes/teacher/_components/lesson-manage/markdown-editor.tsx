@@ -22,7 +22,7 @@ export function ToolbarBtn({
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="p-2 rounded-lg transition-colors text-m3-on-surface-variant cursor-pointer hover:bg-m3-surface-container-high"
+      className="p-2 rounded-lg transition-colors text-m3-on-surface-variant cursor-pointer hover:bg-m3-surface-container-high h-auto whitespace-normal"
     >
       <Icon className="h-4 w-4" />
     </Button>

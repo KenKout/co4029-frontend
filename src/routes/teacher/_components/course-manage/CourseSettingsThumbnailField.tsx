@@ -35,7 +35,7 @@ export function CourseSettingsThumbnailField({
           onClick={() => inputRef.current?.click()}
           disabled={isPending}
           aria-label={t("teacher_course_settings.thumbnail.change")}
-          className="group relative aspect-video w-40 shrink-0 cursor-pointer overflow-hidden rounded-lg ghost-border transition-transform hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed"
+          className="group relative aspect-video w-40 shrink-0 cursor-pointer overflow-hidden rounded-lg ghost-border transition-transform hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed h-auto p-0 whitespace-normal"
         >
           {(stagedPreview ?? course?.thumbnail_url) ? (
             <img

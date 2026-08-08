@@ -32,7 +32,7 @@ function FaqEntryRow({
         type="button"
         onClick={() => toggle(entry.id)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-m3-surface-container-low"
+        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-m3-surface-container-low h-auto whitespace-normal"
       >
         <span className="text-sm font-medium text-m3-on-surface">
           {entry.question}

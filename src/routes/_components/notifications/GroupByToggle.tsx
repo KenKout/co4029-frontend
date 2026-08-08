@@ -37,7 +37,7 @@ export function GroupByToggle({
           onClick={() => onChange(opt.key)}
           aria-pressed={value === opt.key}
           className={cn(
-            "px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer",
+            "px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer h-auto whitespace-normal",
             value === opt.key
               ? "bg-m3-primary text-white shadow-sm"
               : "text-m3-on-surface-variant hover:text-m3-on-surface",

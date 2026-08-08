@@ -70,7 +70,7 @@ export function KgPreviewToolbar({
             disabled={publishBusy}
             title={t("teacher_lesson_materials.kg.publish_title")}
             className={cn(
-              "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
+              "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors h-auto whitespace-normal",
               needsSaveBeforePublish
                 ? "bg-m3-primary text-white hover:bg-m3-primary/90"
                 : "bg-m3-surface-container text-m3-on-surface-variant hover:text-m3-primary",
@@ -111,7 +111,7 @@ export function KgPreviewToolbar({
             onClick={() => void handleUnpublish()}
             disabled={unpublishBusy}
             title={t("teacher_lesson_materials.kg.unpublish_title")}
-            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-error transition-colors cursor-pointer disabled:opacity-60"
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-error transition-colors cursor-pointer disabled:opacity-60 h-auto whitespace-normal"
           >
             {unpublishBusy ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -126,7 +126,7 @@ export function KgPreviewToolbar({
           onClick={onExpand}
           aria-label={t("teacher_lesson_materials.kg.expand")}
           title={t("teacher_lesson_materials.kg.expand")}
-          className="rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer"
+          className="rounded-lg p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary transition-colors cursor-pointer h-auto whitespace-normal"
         >
           <Maximize2 className="h-4 w-4" />
         </Button>

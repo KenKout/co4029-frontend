@@ -38,7 +38,7 @@ export function QuestionNavigatorCell({
         question.prompt_text ? `\n${question.prompt_text}` : ""
       }`}
       className={cn(
-        "aspect-square w-full flex items-center justify-center rounded-lg font-bold text-sm relative cursor-pointer",
+        "aspect-square w-full flex items-center justify-center rounded-lg font-bold text-sm relative cursor-pointer h-auto p-0 whitespace-normal",
         "transition-all duration-150",
         fill,
         ring,

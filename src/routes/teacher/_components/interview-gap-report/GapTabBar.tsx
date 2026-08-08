@@ -105,7 +105,7 @@ export function GapTabBar({
               aria-controls={item.id}
               onClick={() => onSelect(item.id)}
               className={cn(
-                "group relative z-10 min-w-fit flex-1 rounded-md px-3 py-2 text-center transition-colors duration-300",
+                "group relative z-10 min-w-fit flex-1 rounded-md px-3 py-2 text-center transition-colors duration-300 h-auto whitespace-normal",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
                 "whitespace-nowrap cursor-pointer text-[13px] font-bold",
                 isActive

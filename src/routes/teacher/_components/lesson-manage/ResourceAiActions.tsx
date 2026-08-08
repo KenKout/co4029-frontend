@@ -74,7 +74,7 @@ export function ResourceAiActions({
           onClick={handleRetry}
           disabled={reprocess.isPending}
           title={t("teacher_lesson_manage.resource_ai.retry")}
-          className="p-2 rounded-lg text-amber-600 hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-40"
+          className="p-2 rounded-lg text-amber-600 hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-40 h-auto whitespace-normal"
         >
           <RefreshCw
             className={cn("h-4 w-4", reprocess.isPending && "animate-spin")}
@@ -95,7 +95,7 @@ export function ResourceAiActions({
               : t("teacher_lesson_manage.resource_ai.show")
         }
         className={cn(
-          "p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-40",
+          "p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-40 h-auto whitespace-normal",
           visible
             ? "text-emerald-600 hover:bg-emerald-100"
             : "text-m3-on-surface-variant hover:bg-m3-surface-container-highest",

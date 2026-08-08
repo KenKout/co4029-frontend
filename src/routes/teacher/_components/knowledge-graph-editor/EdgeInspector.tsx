@@ -75,7 +75,7 @@ export function EdgeInspector({
           <Button variant="ghost"
             type="button"
             onClick={() => reverseEdge(activeEdge.source, activeEdge.target)}
-            className="flex items-center gap-1.5 rounded-lg bg-m3-surface-container px-2.5 py-1.5 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-primary"
+            className="flex items-center gap-1.5 rounded-lg bg-m3-surface-container px-2.5 py-1.5 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-primary h-auto whitespace-normal"
           >
             <ArrowLeftRight className="h-3.5 w-3.5" />
             {t("teacher_kg_editor.reverse_arrow")}
@@ -83,7 +83,7 @@ export function EdgeInspector({
           <Button variant="ghost"
             type="button"
             onClick={() => deleteEdge(activeEdge.source, activeEdge.target)}
-            className="flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+            className="flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 h-auto whitespace-normal"
           >
             <Trash2 className="h-3.5 w-3.5" />
             {t("teacher_kg_editor.delete_arrow")}

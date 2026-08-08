@@ -26,7 +26,7 @@ function DisableModeTabs({
       <Button variant="ghost"
         type="button"
         onClick={() => setState({ phase: "confirm", mode: "totp", code: "" })}
-        className={`rounded-full px-3 py-1 ring-1 ring-inset transition ${
+        className={`h-auto whitespace-normal rounded-full px-3 py-1 ring-1 ring-inset transition ${
           state.mode === "totp"
             ? "bg-m3-primary text-white ring-m3-primary"
             : "bg-white text-m3-on-surface ring-m3-outline-variant/40 hover:bg-muted"
@@ -39,7 +39,7 @@ function DisableModeTabs({
         onClick={() =>
           setState({ phase: "confirm", mode: "recovery", code: "" })
         }
-        className={`rounded-full px-3 py-1 ring-1 ring-inset transition ${
+        className={`h-auto whitespace-normal rounded-full px-3 py-1 ring-1 ring-inset transition ${
           state.mode === "recovery"
             ? "bg-m3-primary text-white ring-m3-primary"
             : "bg-white text-m3-on-surface ring-m3-outline-variant/40 hover:bg-muted"

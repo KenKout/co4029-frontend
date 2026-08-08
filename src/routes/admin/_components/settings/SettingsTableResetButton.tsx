@@ -18,7 +18,7 @@ export function SettingsTableResetButton({
       title={
         canReset ? "Remove this override" : "Nothing overridden at this scope"
       }
-      className="rounded-md p-1 text-slate-400 enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30"
+      className="rounded-md p-1 text-slate-400 enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 h-auto whitespace-normal"
       disabled={!canReset || clearMutation.isPending}
       onClick={() => clearMutation.mutate(s.key)}
     >

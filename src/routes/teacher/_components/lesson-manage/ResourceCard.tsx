@@ -78,7 +78,7 @@ export function ResourceCard({
           onClick={handleDownload}
           disabled={downloading || !resource.storage_object_id}
           title={resource.storage_object_id ? "Download" : "No file attached"}
-          className="p-2 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-highest transition-colors cursor-pointer disabled:opacity-40"
+          className="p-2 rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-highest transition-colors cursor-pointer disabled:opacity-40 h-auto whitespace-normal"
         >
           {downloading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -89,7 +89,7 @@ export function ResourceCard({
         <Button variant="ghost"
           type="button"
           onClick={() => onDelete(resource.id)}
-          className="p-2 rounded-lg text-m3-error hover:bg-m3-error-container/30 transition-colors cursor-pointer"
+          className="p-2 rounded-lg text-m3-error hover:bg-m3-error-container/30 transition-colors cursor-pointer h-auto whitespace-normal"
         >
           <Trash2 className="h-4 w-4" />
         </Button>

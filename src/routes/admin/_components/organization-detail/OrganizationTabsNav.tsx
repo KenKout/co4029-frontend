@@ -21,7 +21,7 @@ export function OrganizationTabsNav({
           key={key}
           type="button"
           onClick={() => onTabChange(key)}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+          className={`h-auto whitespace-normal px-4 py-2 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
             tab === key
               ? "border-m3-primary text-m3-primary"
               : "border-transparent text-text-muted hover:text-text-strong"
