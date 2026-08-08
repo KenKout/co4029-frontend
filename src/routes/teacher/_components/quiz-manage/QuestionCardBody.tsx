@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { Dispatch, SetStateAction } from "react";
 
 import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import type { CourseLearningOutcomeAuthoring } from "@/lib/api/types";
 import type { QuestionDraft } from "./types";
 
@@ -27,13 +28,13 @@ export function QuestionCardBody({
         <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
           {t("teacher_quiz_manage.editor.prompt_label")}
         </label>
-        <textarea
+        <Textarea
           value={draft.prompt_text}
           onChange={(e) =>
             setDraft((current) => ({ ...current, prompt_text: e.target.value }))
           }
           rows={3}
-          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+          variant="lowest"
         />
       </div>
 
@@ -75,17 +76,17 @@ export function QuestionCardBody({
             "Hint (shown to learner on request)",
           )}
         </label>
-        <textarea
+        <Textarea
           value={draft.hint_text}
           onChange={(e) =>
             setDraft((current) => ({ ...current, hint_text: e.target.value }))
           }
           rows={2}
+          variant="lowest"
           placeholder={t(
             "teacher_quiz_manage.editor.hint_placeholder",
             "e.g. Think about which property distinguishes analytical storage from transactional storage.",
           )}
-          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
         />
         <p className="text-[11px] text-m3-on-surface-variant">
           {t(

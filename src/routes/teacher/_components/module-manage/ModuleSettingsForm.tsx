@@ -1,6 +1,7 @@
 import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import type { ModuleSettingsController } from "./use-module-settings";
 
 /**
@@ -30,12 +31,12 @@ export function ModuleSettingsForm({ ctl }: { ctl: ModuleSettingsController }) {
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
           Description
         </label>
-        <textarea
+        <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
           placeholder="Brief description of this module…"
-          className="w-full px-4 py-3 text-sm bg-m3-surface border border-m3-outline-variant/20 rounded-xl text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all placeholder:text-m3-on-surface-variant/40"
+          className="px-4 py-3"
         />
       </div>
 

@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useEditForm, type EditFormInitialValues } from "./use-edit-form";
 
 /**
@@ -67,11 +68,10 @@ export function EditForm(props: EditFormInitialValues) {
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
           {t("management_career_path_detail.fields.description")}
         </label>
-        <textarea
+        <Textarea
           value={form.description}
           onChange={(e) => form.setDescription(e.target.value)}
           rows={3}
-          className="w-full px-3 py-2 text-sm bg-m3-surface-container-low border border-m3-outline-variant/30 rounded-xl text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-primary/30"
         />
       </div>
       <div className="flex justify-end">

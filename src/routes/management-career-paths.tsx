@@ -6,6 +6,7 @@ import { ArrowRight, GraduationCap, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
+import { Textarea } from "@/components/ui/textarea";
 import { CareerPathStatusBadge } from "@/components/ui/status-badges";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import {
@@ -164,14 +165,13 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
           <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
             {t("management_career_paths.create_dialog.description")}
           </label>
-          <textarea
+          <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             placeholder={t(
               "management_career_paths.create_dialog.description_placeholder",
             )}
-            className="w-full px-3 py-2 text-sm bg-m3-surface-container-low border border-m3-outline-variant/30 rounded-xl text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-primary/30 placeholder:text-m3-on-surface-variant/40"
           />
         </div>
 

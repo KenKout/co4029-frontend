@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
+import { Textarea } from "@/components/ui/textarea";
 import { useSaveGapReportNotes } from "@/lib/api/hooks/interviews";
 import type { StudyPlanItem } from "@/lib/api/types";
 import { StudyPlanSection } from "./StudyPlanSection";
@@ -73,7 +74,7 @@ export function NotesCard({
         >
           <div className="overflow-hidden">
             <div className="space-y-2.5">
-              <textarea
+              <Textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 rows={4}
@@ -81,7 +82,7 @@ export function NotesCard({
                 placeholder={t(
                   "teacher_interview_gap_report.labels.notes_placeholder",
                 )}
-                className="w-full resize-y rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-m3-primary/30"
+                resize="y"
               />
               <div className="flex items-center justify-end gap-2">
                 <Button

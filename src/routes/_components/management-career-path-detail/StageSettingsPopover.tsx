@@ -4,6 +4,7 @@ import { Info } from "lucide-react";
 import { Select } from "@/components/ui/select";
 import { InfoTooltip } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import type {
   CareerPathStageAuthoring,
   CareerPathStageEnforcement,
@@ -80,11 +81,11 @@ export function StageSettingsPopover({
         <span className="text-xs font-semibold text-m3-on-surface-variant">
           {t(`${prefix}.fields.description`)}
         </span>
-        <textarea
+        <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={2}
-          className="rounded-xl px-3 py-2 text-sm bg-card ghost-border"
+          className="bg-card ghost-border"
         />
       </label>
 

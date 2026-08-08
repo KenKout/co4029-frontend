@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { RichContent } from "@/components/ui/rich-content";
 import type { QuizQuestionPublic } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 /**
  * Per-type input UI for the student quiz attempt page.
@@ -134,13 +135,13 @@ function ShortAnswerInput({
 }: QuestionRendererProps) {
   return (
     <div className="space-y-2">
-      <textarea
+      <Textarea
         value={answerText ?? ""}
         onChange={(e) => onAnswerTextChange(e.target.value || null)}
         disabled={disabled}
         rows={3}
         placeholder="Type your answer..."
-        className="w-full rounded-xl border-2 border-m3-outline-variant/30 bg-m3-surface-container-lowest px-4 py-3 text-base text-m3-on-surface focus:outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+        variant="lowest" className="border-2 px-4 py-3 text-base"
         aria-label="Short answer input"
       />
     </div>

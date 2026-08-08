@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 /**
  * Add-manual inline form. Extracted verbatim from the former 2.4k-line
@@ -30,21 +31,21 @@ export function AddQuestionForm({
   const { t } = useTranslation();
   return (
     <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low p-3 space-y-2">
-      <textarea
+      <Textarea
         value={newText}
         onChange={(e) => onChangeText(e.target.value)}
         rows={3}
         placeholder={t("teacher_interview_config.questions.add_placeholder")}
-        className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+        className="border-m3-outline-variant/20"
       />
-      <textarea
+      <Textarea
         value={newAnswer}
         onChange={(e) => onChangeAnswer(e.target.value)}
         rows={3}
         placeholder={t(
           "teacher_interview_config.questions.add_answer_placeholder",
         )}
-        className="w-full rounded-xl border border-dashed border-m3-secondary/30 bg-m3-secondary/[0.03] px-3 py-2.5 text-sm placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+        className="border-dashed border-m3-secondary/30 bg-m3-secondary/[0.03]"
       />
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onCancel}>

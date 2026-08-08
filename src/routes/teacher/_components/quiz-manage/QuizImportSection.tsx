@@ -3,6 +3,7 @@ import { FileUp, Loader2, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import type { ImportResult } from "@/lib/api/hooks/quizzes";
 
 /**
@@ -64,12 +65,12 @@ export function QuizImportSection({
           />
         </label>
       </div>
-      <textarea
+      <Textarea
         value={content}
         onChange={(e) => onContentChange(e.target.value)}
         rows={8}
         placeholder={t("teacher_quiz_manage.import_export.content_placeholder")}
-        className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface px-3 py-2 text-sm font-mono"
+        mono
       />
 
       {result && (

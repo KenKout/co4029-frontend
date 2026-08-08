@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { FeedbackBandIn } from "@/lib/api/hooks/quizzes";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 /**
  * One grade band row: min / max score, the feedback body, and a remove action.
@@ -38,12 +39,12 @@ export function FeedbackBandRow({
         onChange={(e) => onUpdate({ max_grade: Number(e.target.value) })}
         aria-label={t("teacher_quiz_manage.feedback_bands.max")}
       />
-      <textarea
+      <Textarea
         value={band.feedback_text}
         onChange={(e) => onUpdate({ feedback_text: e.target.value })}
         rows={2}
         placeholder={t("teacher_quiz_manage.feedback_bands.text_placeholder")}
-        className="w-full rounded-lg border border-m3-outline-variant/20 bg-m3-surface px-3 py-2 text-sm resize-none"
+        
       />
       <Button variant="ghost"
         type="button"

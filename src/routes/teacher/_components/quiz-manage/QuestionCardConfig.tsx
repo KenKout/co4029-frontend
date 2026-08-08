@@ -4,6 +4,7 @@ import { Sparkles } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import type { QuizQuestionAuthoring } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import type { QuestionDraft } from "./types";
@@ -35,13 +36,13 @@ export function QuestionCardConfig({
         <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
           {t("teacher_quiz_manage.editor.explanation_label")}
         </label>
-        <textarea
+        <Textarea
           value={draft.explanation}
           onChange={(e) =>
             setDraft((current) => ({ ...current, explanation: e.target.value }))
           }
           rows={2}
-          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+          variant="lowest"
         />
       </div>
 

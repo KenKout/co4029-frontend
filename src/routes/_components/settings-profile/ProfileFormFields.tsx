@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { FieldErrors } from "./types";
 import type { User } from "@/lib/api/types";
@@ -65,7 +66,7 @@ export default function ProfileFormFields({
         label={t("settings_profile.fields.bio")}
         error={errors.bio}
         renderControl={(p) => (
-          <textarea
+          <Textarea
             {...p}
             name="bio"
             maxLength={1000}

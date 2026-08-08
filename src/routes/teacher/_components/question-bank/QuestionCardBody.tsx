@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Loader2, Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { QuestionCardProps } from "./types";
 
@@ -55,25 +56,25 @@ export function QuestionCardBody({
                 <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
                   {t("teacher_interview_config.qbank.edit_question")}
                 </label>
-                <textarea
+                <Textarea
                   value={editingText}
                   onChange={(e) => onChangeEditingText(e.target.value)}
                   rows={3}
-                  className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+                  variant="low"
                 />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-m3-secondary/80">
                   {t("teacher_interview_config.questions.model_answer_label")}
                 </label>
-                <textarea
+                <Textarea
                   value={editingAnswer}
                   onChange={(e) => onChangeEditingAnswer(e.target.value)}
                   rows={4}
                   placeholder={t(
                     "teacher_interview_config.questions.add_answer_placeholder",
                   )}
-                  className="w-full rounded-xl border border-dashed border-m3-secondary/30 bg-m3-secondary/[0.03] px-3 py-2 text-sm placeholder:text-m3-on-surface-variant/40 resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+                  className="border-dashed border-m3-secondary/30 bg-m3-secondary/[0.03]"
                 />
               </div>
               <div className="flex items-center justify-end gap-2">

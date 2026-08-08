@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import type { BulkTabController } from "./use-bulk-tab";
 
 /**
@@ -29,14 +30,14 @@ export function BulkPasteForm({
           {t("management_course_enrollments.bulk.hint")}
         </p>
       </div>
-      <textarea
+      <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={8}
+        mono
         placeholder={
           "user@example.com\n550e8400-e29b-41d4-a716-446655440000\nanother@example.com"
         }
-        className="w-full px-4 py-3 text-sm font-mono bg-m3-surface-container-low border border-m3-outline-variant/30 rounded-xl text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-primary/30 placeholder:text-m3-on-surface-variant/40"
       />
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-m3-on-surface-variant">
         <div className="flex gap-3">

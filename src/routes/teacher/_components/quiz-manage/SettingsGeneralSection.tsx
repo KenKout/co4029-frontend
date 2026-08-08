@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Field, SettingsSection } from "./form-primitives";
 import type { SettingsDraft, SettingsUpdate } from "./types";
 
@@ -32,14 +33,14 @@ export function SettingsGeneralSection({
         />
       </Field>
       <Field label={t("teacher_quiz_manage.settings.general.desc_label")}>
-        <textarea
+        <Textarea
           value={draft.description}
           onChange={(e) => update("description", e.target.value)}
           rows={3}
           placeholder={t(
             "teacher_quiz_manage.settings.general.desc_placeholder",
           )}
-          className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-sm text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+          
         />
       </Field>
     </SettingsSection>

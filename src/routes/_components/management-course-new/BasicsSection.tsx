@@ -3,6 +3,7 @@ import type { TFunction } from "i18next";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import type { CourseFormController } from "./use-course-form";
 
 export const DESCRIPTION_MAX = 500;
@@ -146,8 +147,8 @@ export function CourseBasicsSection({
         <label className="text-sm font-medium text-m3-on-surface">
           {t("teacher_course_new.field_description")}
         </label>
-        <textarea
-          className="w-full min-h-[90px] rounded-xl border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+        <Textarea
+          className="min-h-[90px]"
           placeholder={t("teacher_course_new.description_placeholder")}
           maxLength={DESCRIPTION_MAX}
           value={form.description}

@@ -18,6 +18,7 @@ import {
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, avatarInitials } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
 import {
   useCreateComment,
   useCreateDiscussionTopic,
@@ -124,13 +125,13 @@ function CommentComposer({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-      <textarea
+      <Textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={2}
         maxLength={5000}
         placeholder={t("discussion.comment_placeholder")}
-        className="w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+        resize="y"
       />
       <div className="flex justify-end">
         <Button
@@ -350,13 +351,13 @@ function NewTopicComposer({ lessonId }: { lessonId: string }) {
         placeholder={t("discussion.topic_title_placeholder")}
         className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
       />
-      <textarea
+      <Textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={3}
         maxLength={20000}
         placeholder={t("discussion.topic_body_placeholder")}
-        className="w-full resize-y rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+        resize="y" className="bg-white"
       />
       <div className="flex justify-end gap-2">
         <Button

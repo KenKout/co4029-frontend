@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { BulkAddResultsPanel } from "./BulkAddResultsPanel";
 import { BULK_USER_IDS_PLACEHOLDER } from "./constants";
 import type { MembershipsTabController } from "./use-memberships-tab";
@@ -40,12 +41,13 @@ export function MembershipBulkForm({
           })}
         </p>
       </div>
-      <textarea
+      <Textarea
         value={bulkText}
         onChange={(e) => setBulkText(e.target.value)}
         rows={8}
+        mono
+        className="bg-white border-m3-outline-variant/40"
         placeholder={BULK_USER_IDS_PLACEHOLDER}
-        className="w-full px-4 py-3 text-sm font-mono bg-white border border-m3-outline-variant/40 rounded-xl text-text-strong focus:outline-none focus:ring-2 focus:ring-m3-primary/30 placeholder:text-text-muted/40"
       />
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-text-muted">
         <div className="flex gap-3">

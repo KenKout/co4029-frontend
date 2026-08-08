@@ -1,4 +1,5 @@
 import { MessageSquare, Tag, X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 import {
   BloomDistributionInput,
@@ -19,7 +20,7 @@ function ExtraInstructionsField({
         <MessageSquare className="h-3.5 w-3.5" />
         Extra instructions
       </label>
-      <textarea
+      <Textarea
         value={form.extra_instructions}
         onChange={(e) =>
           setForm((current) => ({
@@ -30,7 +31,7 @@ function ExtraInstructionsField({
         rows={3}
         maxLength={1000}
         placeholder="Any extra constraints for the generator (style, audience, prior knowledge…)."
-        className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-m3-secondary/30"
+        variant="lowest"
       />
       <p className="text-[10px] text-m3-on-surface-variant text-right">
         {form.extra_instructions.length}/1000

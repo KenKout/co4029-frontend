@@ -6,6 +6,7 @@ import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import type { CuratedKGNode } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 import { NODE_TYPES } from "./constants";
 import type { KnowledgeGraphEditorController } from "./use-knowledge-graph-editor";
@@ -80,7 +81,7 @@ export function NodeInspector({
           <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
             {t("teacher_kg_editor.field_definition")}
           </label>
-          <textarea
+          <Textarea
             value={selectedNode.definition ?? ""}
             onChange={(e) =>
               updateNode(selectedNode.id, {
@@ -88,7 +89,7 @@ export function NodeInspector({
               })
             }
             rows={3}
-            className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20"
+            variant="lowest"
           />
         </div>
         <div className="space-y-1.5">
