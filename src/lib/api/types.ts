@@ -80,6 +80,9 @@ export interface CuratedKGDraft {
   lesson_id: string;
   exists: boolean;
   seeded: boolean;
+  // True when the first-open seed was the fallback one-node "Main concept"
+  // draft (AI graph off/empty). Such a draft is NOT publishable.
+  seeded_placeholder: boolean;
   nodes: CuratedKGNode[];
   edges: CuratedKGEdge[];
   primary_node_id: string | null;

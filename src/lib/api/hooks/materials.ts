@@ -84,6 +84,19 @@ export function useChunksPreview(
   });
 }
 
+const MATERIAL_BUSY_STATUSES = [
+  "pending",
+  "extracting",
+  "chunking",
+  "embedding",
+  "enriching",
+  "building_kg",
+] as const;
+
+function isMaterialBusy(status: string | null | undefined): boolean {
+  return status != null && (MATERIAL_BUSY_STATUSES as readonly string[]).includes(status);
+}
+
 export function useTeacherLessonMaterials(lessonId: string | undefined) {
   return useQuery({
     queryKey: ["teacher", "lessons", lessonId, "materials"],
@@ -91,6 +104,18 @@ export function useTeacherLessonMaterials(lessonId: string | undefined) {
       apiFetch<LearningMaterial[]>(`/teacher/lessons/${lessonId}/materials`),
     enabled: !!lessonId,
     staleTime: 1000 * 30,
+    // Poll while any material is still processing so the per-resource AI
+    // status badges on "Downloadable Resources" flip to ready the moment the
+    // pipeline finishes — without this the list is fetched once and the badge
+    // stays "processing" forever while the history summary (separate query)
+    // already reports ready, contradicting itself on the same page.
+    refetchInterval: (query) => {
+      const materials = query.state.data;
+      if (materials?.some((m) => isMaterialBusy(m.latest_version?.processing_status))) {
+        return 3000;
+      }
+      return false;
+    },
   });
 }
 
@@ -264,6 +289,22 @@ export function usePublishCuratedKnowledgeGraph(lessonId: string | undefined) {
     mutationFn: () =>
       apiPost<CuratedKGDraft>(
         `/teacher/lessons/${lessonId}/curated-knowledge-graph/publish`,
+      ),
+    onSuccess: (data) => {
+      qc.setQueryData(curatedKgKey(lessonId), data);
+    },
+  });
+}
+
+/** Roll back a publish: students lose the KG panel, the draft stays intact. */
+export function useUnpublishCuratedKnowledgeGraph(
+  lessonId: string | undefined,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiPost<CuratedKGDraft>(
+        `/teacher/lessons/${lessonId}/curated-knowledge-graph/unpublish`,
       ),
     onSuccess: (data) => {
       qc.setQueryData(curatedKgKey(lessonId), data);

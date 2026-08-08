@@ -4409,7 +4409,11 @@
       "save_and_publish": "Lưu và xuất bản",
       "save_publish_confirm_title": "Lưu và xuất bản sơ đồ kiến thức?",
       "published_badge": "Đã xuất bản",
-      "published_at": "Đã xuất bản {{date}}"
+      "published_at": "Đã xuất bản {{date}}",
+      "placeholder_hint": "Chưa có đồ thị để xuất bản",
+      "placeholder_hint_title": "Hãy tải tài liệu lên và xử lý trước — bản nháp hiện tại chỉ là chỗ chờ (\"Main concept\") chưa có nội dung thật để hiển thị cho học viên.",
+      "unpublish": "Gỡ xuất bản",
+      "unpublish_title": "Gỡ đồ thị tri thức khỏi giao diện học viên (bản nháp vẫn giữ)"
     },
     "history": {
       "title": "Lịch sử tài liệu",
@@ -4639,7 +4643,8 @@
     "rel_related": "Liên quan đến",
     "edge_detail": "Quan hệ",
     "reverse_arrow": "Đảo chiều",
-    "delete_arrow": "Xóa mũi tên"
+    "delete_arrow": "Xóa mũi tên",
+    "unpublished": "Đã gỡ xuất bản — học viên không còn thấy đồ thị này"
   },
   "admin_settings": {
     "group": {

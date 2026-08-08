@@ -171,6 +171,35 @@ export function useNotificationInboxSync(options?: {
     }
   }, [qc]);
 
+  // Learn the CURRENT inbox ids once at mount, silently. Without this the
+  // first unread-count bump after a fresh page load is treated as "first
+  // observation" and only LEARNS ids without toasting — so the first
+  // notification in every session (and after every refresh) silently bumped
+  // the bell while no toast appeared. Probing at mount moves the baseline
+  // forward, so the next bump is always a real arrival and always toasts.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const items = await apiFetch<Notification[]>(
+          "/me/notifications?limit=8",
+        );
+        if (cancelled) return;
+        const list = Array.isArray(items) ? items : [];
+        const known = seenIds.current;
+        if (known === null) seenIds.current = new Set(list.map((n) => n.id));
+        else for (const n of list) known.add(n.id);
+      } catch {
+        // Best-effort baseline; a failure just means the first bump falls
+        // back to the learn-silently path.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only baseline
+  }, [qc]);
+
   useEffect(() => {
     if (unread === undefined) return;
     // Skip the first observation: the list has just mounted and fetched.

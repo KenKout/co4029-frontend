@@ -4540,7 +4540,11 @@
       "save_and_publish": "Save and publish",
       "save_publish_confirm_title": "Save and publish knowledge graph?",
       "published_badge": "Published",
-      "published_at": "Published {{date}}"
+      "published_at": "Published {{date}}",
+      "placeholder_hint": "No publishable graph yet",
+      "placeholder_hint_title": "Upload and process material first — the current draft is only a placeholder (\"Main concept\") with no real content to show students.",
+      "unpublish": "Unpublish",
+      "unpublish_title": "Remove the knowledge graph from the student view (draft is kept)"
     },
     "history": {
       "title": "Material history",
@@ -4653,6 +4657,7 @@
     "unsaved": "Unsaved changes",
     "publish": "Publish",
     "published": "Published",
+    "unpublished": "Unpublished — students no longer see this graph",
     "published_state": "Published to students",
     "publish_failed": "Publish failed",
     "err_no_nodes": "Add at least one node before saving.",

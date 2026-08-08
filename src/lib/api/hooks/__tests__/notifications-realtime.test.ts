@@ -135,11 +135,18 @@ describe("useNotificationInboxSync", () => {
       category: "system",
     });
     // URL-aware mock: the count endpoint returns the polled count, the inbox
-    // probe returns the current item list.
+    // probe returns the current item list. The mount-time baseline probe is
+    // the FIRST /me/notifications call and sees the pre-arrival state ([n1]);
+    // later probes see the arrivals, so only genuinely-new ids reach onNew.
+    let probeCalls = 0;
     apiFetchMock.mockImplementation((url: unknown) => {
       const u = String(url);
       if (u.includes("unread-count")) return Promise.resolve({ unread: count });
-      if (u.includes("/me/notifications")) return Promise.resolve([makeItem("n1", "One"), makeItem("n2", "Two")]);
+      if (u.includes("/me/notifications")) {
+        probeCalls += 1;
+        if (probeCalls === 1) return Promise.resolve([makeItem("n1", "One")]);
+        return Promise.resolve([makeItem("n1", "One"), makeItem("n2", "Two")]);
+      }
       return Promise.resolve([]);
     });
 
@@ -174,7 +181,12 @@ describe("useNotificationInboxSync", () => {
     apiFetchMock.mockImplementation((url: unknown) => {
       const u = String(url);
       if (u.includes("unread-count")) return Promise.resolve({ unread: count });
-      if (u.includes("/me/notifications")) return Promise.resolve([makeItem("n1", "One"), makeItem("n2", "Two"), makeItem("n3", "Three")]);
+      if (u.includes("/me/notifications"))
+        return Promise.resolve([
+          makeItem("n1", "One"),
+          makeItem("n2", "Two"),
+          makeItem("n3", "Three"),
+        ]);
       return Promise.resolve([]);
     });
     count = 2;
