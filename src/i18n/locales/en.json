@@ -4826,6 +4826,18 @@
   },
   "management_users": {
     "title": "Users",
-    "subtitle": "Accounts in your organization. You can disable or re-enable teachers and students — peer manager/HOD/admin accounts are protected."
+    "subtitle": "Accounts in your organization. You can disable or re-enable teachers and students — peer manager/HOD/admin accounts are protected.",
+    "make_manager": "Make manager",
+    "remove_manager": "Remove manager",
+    "grant_dialog_title": "Make manager?",
+    "grant_dialog_body": "{{name}} will gain the manager role in your organization and be able to manage teachers, students and courses.",
+    "revoke_dialog_title": "Remove manager?",
+    "revoke_dialog_body": "{{name}} will lose the manager role in your organization. Their account stays active.",
+    "grant_toast": "{{name}} is now a manager",
+    "revoke_toast": "Manager role removed from {{name}}",
+    "errors": {
+      "role_catalog": "Role catalog not loaded",
+      "no_manager_assignment": "No manager assignment found"
+    }
   }
 }

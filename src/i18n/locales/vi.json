@@ -4799,6 +4799,18 @@
   },
   "management_users": {
     "title": "Người dùng",
-    "subtitle": "Tài khoản trong tổ chức của bạn. Bạn có thể vô hiệu hóa hoặc kích hoạt lại giáo viên và sinh viên — tài khoản đồng cấp (manager/HOD/admin) được bảo vệ."
+    "subtitle": "Tài khoản trong tổ chức của bạn. Bạn có thể vô hiệu hóa hoặc kích hoạt lại giáo viên và sinh viên — tài khoản đồng cấp (manager/HOD/admin) được bảo vệ.",
+    "make_manager": "Gán quyền quản lý",
+    "remove_manager": "Gỡ quyền quản lý",
+    "grant_dialog_title": "Gán quyền quản lý?",
+    "grant_dialog_body": "{{name}} sẽ được gán vai trò quản lý trong tổ chức của bạn và có thể quản lý giảng viên, học viên và khóa học.",
+    "revoke_dialog_title": "Gỡ quyền quản lý?",
+    "revoke_dialog_body": "{{name}} sẽ mất vai trò quản lý trong tổ chức của bạn. Tài khoản vẫn hoạt động bình thường.",
+    "grant_toast": "{{name}} đã là quản lý",
+    "revoke_toast": "Đã gỡ vai trò quản lý của {{name}}",
+    "errors": {
+      "role_catalog": "Danh mục vai trò chưa được tải",
+      "no_manager_assignment": "Không tìm thấy phân quyền quản lý"
+    }
   }
 }

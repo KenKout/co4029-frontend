@@ -8,8 +8,9 @@ import {
   usePermissions,
   useRequirePermission,
 } from "@/lib/auth/use-permissions";
-import { apiPost } from "@/lib/api/client";
+import { apiDelete, apiFetch, apiPost } from "@/lib/api/client";
 import { useListRoles } from "@/lib/api/hooks/admin";
+import type { RoleAssignmentRead } from "@/lib/api/types";
 
 import type { UserWithRoles } from "@/routes/admin/_components/users/types";
 import { buildUserColumns } from "@/routes/admin/_components/users/users-columns";
@@ -87,17 +88,73 @@ export function useManagedUsers() {
     onSuccess: invalidate,
   });
 
+  // HOD (user.role_assign.hod) or admin may promote/revoke managers inside
+  // their org. The backend re-asserts both the HOD gate and the org scope.
+  const canAssignManager =
+    permissions.has("user.role_assign.hod") ||
+    permissions.has("system.administer");
+
+  const managerRoleId = useMemo(
+    () =>
+      roleOptions.find((r) => r.code === "manager")?.id ?? null,
+    [roleOptions],
+  );
+
+  const grantManager = useMutation({
+    mutationFn: ({ userId, orgId }: { userId: string; orgId: string }) =>
+      apiPost<RoleAssignmentRead>(`/admin/users/${userId}/assignments`, {
+        role_code: "manager",
+        scope_kind: "organization",
+        organization_id: orgId,
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["manager", "users"] });
+      void qc.invalidateQueries({ queryKey: ["admin", "users"] });
+    },
+  });
+
+  const revokeManager = useMutation({
+    mutationFn: async ({ userId, orgId }: { userId: string; orgId: string }) => {
+      // The table row only carries role codes; resolve the manager
+      // assignment id for THIS org before deleting.
+      if (!managerRoleId) {
+        throw new Error(t("management_users.errors.role_catalog", { defaultValue: "Role catalog not loaded" }));
+      }
+      const assignments = await apiFetch<RoleAssignmentRead[]>(
+        `/admin/users/${userId}/assignments`,
+      );
+      const target = assignments.find(
+        (a) => a.role_id === managerRoleId && a.organization_id === orgId,
+      );
+      if (!target) {
+        throw new Error(t("management_users.errors.no_manager_assignment", { defaultValue: "No manager assignment found" }));
+      }
+      return apiDelete(`/admin/users/${userId}/assignments/${target.id}`);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["manager", "users"] });
+      void qc.invalidateQueries({ queryKey: ["admin", "users"] });
+    },
+  });
+
   return {
     t,
     formatDate,
     permissionsLoading: permissions.isLoading,
     canManage,
+    canAssignManager,
     labelFor,
     roleOptions,
     table,
     columns,
     disable: (userId: string) => disable.mutate(userId),
     enable: (userId: string) => enable.mutate(userId),
+    grantManager: (userId: string, orgId: string) =>
+      grantManager.mutate({ userId, orgId }),
+    revokeManager: (userId: string, orgId: string) =>
+      revokeManager.mutate({ userId, orgId }),
+    grantPending: grantManager.isPending,
+    revokePending: revokeManager.isPending,
     pendingUserId: disable.isPending
       ? disable.variables ?? null
       : enable.isPending
