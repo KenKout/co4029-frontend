@@ -15,8 +15,8 @@ import type {
  * Save can only fail.
  *
  * Status is NOT rendered here at all (either scope) — lifecycle is driven by
- * the dedicated Publish/Archive buttons in `CourseSettingsLifecycle`, which
- * the manager surface renders above this fieldset. Status no longer travels
+ * the dedicated Publish/Archive buttons the dept course header renders
+ * (`DeptCourseLifecycleActions`, manager surface). Status no longer travels
  * through the settings PATCH.
  *
  * `scope="manager"` renders the full set on the dept course page.

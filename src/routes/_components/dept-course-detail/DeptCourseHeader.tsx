@@ -3,10 +3,16 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import type { CourseAuthoring } from "@/lib/api/types";
 import { DeleteCourseButton } from "./DeleteCourseButton";
+import { DeptCourseLifecycleActions } from "./DeptCourseLifecycleActions";
 
 /**
  * Dept course header: back link, course identity (read-only) and the
- * manager-only delete button.
+ * manager-only actions — Publish / Archive / Delete at the top of the page.
+ *
+ * The lifecycle buttons live here (not inside the collapsible Course
+ * Settings panel) so a manager sees the publish decision without opening
+ * anything; they render under the same `canDelete` (`course.delete`) gate
+ * as the Settings tab.
  *
  * The inline title/slug editor that used to live here was removed: the
  * Settings tab's `CourseSettingsPanel scope="manager"` already renders the
@@ -49,6 +55,7 @@ export function DeptCourseHeader({
         </div>
         {canDelete && course && (
           <div className="flex items-center gap-2 shrink-0">
+            <DeptCourseLifecycleActions courseId={courseId} course={course} />
             <DeleteCourseButton courseId={courseId} courseTitle={course.title} />
           </div>
         )}

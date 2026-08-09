@@ -177,7 +177,7 @@ function buildCourseMetaPayload(values: CourseSettingsValues): CourseUpdate {
  * The manager-only half: identity and delivery policy. Sent from the dept
  * course page, which holds `course.delete`. Lifecycle (status) is NOT part
  * of the PATCH — it is driven by the dedicated Publish/Archive endpoints
- * (`CourseSettingsLifecycle`).
+ * (`DeptCourseLifecycleActions` on the dept course header).
  */
 function buildManagerMetaPayload(values: CourseSettingsValues): CourseUpdate {
   return {

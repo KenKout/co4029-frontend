@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { CourseSettingsContactFields } from "./CourseSettingsContactFields";
 import { CourseSettingsDeliveryFields } from "./CourseSettingsDeliveryFields";
-import { CourseSettingsLifecycle } from "./CourseSettingsLifecycle";
 import { CourseSettingsMetaFields } from "./CourseSettingsMetaFields";
 import { CourseSettingsSaveBar } from "./CourseSettingsSaveBar";
 import { CourseSettingsThumbnailField } from "./CourseSettingsThumbnailField";
@@ -109,9 +108,6 @@ export function CourseSettingsPanel({
                   onFileChange={handleThumbnailFile}
                   t={t}
                 />
-              )}
-              {managerScope && (
-                <CourseSettingsLifecycle courseId={courseId} course={course} />
               )}
               <CourseSettingsMetaFields
                 values={values}

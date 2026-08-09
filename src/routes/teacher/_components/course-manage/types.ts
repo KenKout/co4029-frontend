@@ -59,7 +59,8 @@ export interface ModuleItemStats {
  * stringly typed until Save coerces them).
  *
  * `status` is deliberately absent: lifecycle is managed by the dedicated
- * Publish/Archive buttons (`CourseSettingsLifecycle`), not the settings PATCH.
+ * Publish/Archive buttons on the dept course header
+ * (`DeptCourseLifecycleActions`), not the settings PATCH.
  */
 export interface CourseSettingsValues {
   title: string;
