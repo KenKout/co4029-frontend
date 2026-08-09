@@ -312,6 +312,12 @@ export const queryKeys = {
     enrollment: (courseId: string) => ["me", "enrollments", courseId] as const,
   },
 
+  manager: {
+    users: () => ["manager", "users"] as const,
+    userOverview: (userId: string) =>
+      ["manager", "users", "overview", userId] as const,
+  },
+
   careerPaths: {
     list: () => ["career-paths", "list"] as const,
     bySlug: (slug: string) => ["career-paths", "by-slug", slug] as const,

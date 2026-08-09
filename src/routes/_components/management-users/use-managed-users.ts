@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -33,6 +34,7 @@ import { buildUserColumns } from "@/routes/admin/_components/users/users-columns
 
 export function useManagedUsers() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const formatDate = useFormatDate();
   const permissions = usePermissions();
   const canManage = permissions.has("user.disable");
@@ -139,6 +141,7 @@ export function useManagedUsers() {
 
   return {
     t,
+    navigate,
     formatDate,
     permissionsLoading: permissions.isLoading,
     canManage,

@@ -529,6 +529,14 @@ const managementUsersRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/management-users")),
 });
 
+const managementUserDetailRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/management/users/$userId",
+  component: lazyRouteComponent(
+    () => import("@/routes/management-user-detail"),
+  ),
+});
+
 const srDashboardRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/dashboard/sr",
@@ -677,6 +685,7 @@ const routeTree = rootRoute.addChildren([
     managementCareerPathsRoute,
     managementCareerPathDetailRoute,
     managementUsersRoute,
+    managementUserDetailRoute,
     srDashboardRoute,
     studyCardsDueRoute,
     studyReviewRoute,

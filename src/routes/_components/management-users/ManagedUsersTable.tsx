@@ -271,7 +271,7 @@ function RoleActionDialog({
  * demoted — but hod/admin rows stay admin-protected (backend 403).
  */
 export function ManagedUsersTable({ c }: { c: ManagedUsersController }) {
-  const { t } = useTranslation();
+  const { t, navigate } = c;
   const { table, columns } = c;
   const [confirmTarget, setConfirmTarget] = useState<string | null>(null);
   const [roleAction, setRoleAction] = useState<RoleAction | null>(null);
@@ -320,6 +320,12 @@ export function ManagedUsersTable({ c }: { c: ManagedUsersController }) {
         data={table.rows}
         getRowId={(u) => u.id}
         loading={table.isLoading}
+        onRowClick={(u) =>
+          void navigate({
+            to: "/management/users/$userId",
+            params: { userId: u.id },
+          })
+        }
         pagination
         manualPagination
         manualSorting
