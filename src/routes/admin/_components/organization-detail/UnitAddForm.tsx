@@ -32,7 +32,7 @@ export function UnitAddForm({
       className="rounded-xl bg-white border border-m3-outline-variant/40 p-4 grid grid-cols-1 md:grid-cols-12 gap-3"
     >
       <label className="md:col-span-3">
-        <span className="text-sm font-semibold text-text-strong">
+        <span className="text-sm font-semibold text-text-strong inline-flex items-center gap-1">
           {t("admin.organizations.fields.unit_type")}
           <InfoTooltip
             content={t("admin.organizations.tooltips.unit_type")}

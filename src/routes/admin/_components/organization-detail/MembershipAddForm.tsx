@@ -56,7 +56,7 @@ export function MembershipAddForm({
       </label>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <label>
-          <span className="text-sm font-semibold text-text-strong">
+          <span className="text-sm font-semibold text-text-strong inline-flex items-center gap-1">
             {t("admin.organizations.fields.status")}
             <InfoTooltip
               content={t("admin.organizations.tooltips.membership_status")}
