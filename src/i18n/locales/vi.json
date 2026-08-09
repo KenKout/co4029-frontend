@@ -1899,13 +1899,15 @@
         "delete": "Xóa",
         "add": "Thêm",
         "adding": "Đang thêm...",
-        "edit": "Chỉnh sửa"
+        "edit": "Chỉnh sửa",
+        "remove_member": "Xóa thành viên"
       },
       "confirm": {
         "delete_domain": "Xóa tên miền này?",
         "delete_unit": "Xóa đơn vị này?",
         "delete_membership": "Xóa thành viên này khỏi tổ chức?",
-        "delete_organization": "Xóa tổ chức này? Hành động này sẽ xóa mềm tất cả dữ liệu liên quan."
+        "delete_organization": "Xóa tổ chức này? Hành động này sẽ xóa mềm tất cả dữ liệu liên quan.",
+        "remove_membership": "Xóa thành viên này khỏi tổ chức? Tài khoản vẫn giữ nguyên nhưng mất toàn bộ quyền truy cập tổ chức này."
       },
       "toasts": {
         "create_success": "Tạo tổ chức thành công",
@@ -1917,7 +1919,8 @@
         "domain_added": "Đã thêm tên miền",
         "unit_added": "Đã thêm đơn vị",
         "member_added": "Đã thêm thành viên",
-        "member_updated": "Đã cập nhật thành viên"
+        "member_updated": "Đã cập nhật thành viên",
+        "member_removed": "Đã xóa thành viên khỏi tổ chức"
       },
       "empty": {
         "domains": "Chưa có tên miền nào.",

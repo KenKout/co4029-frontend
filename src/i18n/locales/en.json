@@ -1989,13 +1989,15 @@
         "delete": "Delete",
         "add": "Add",
         "adding": "Adding...",
-        "edit": "Edit"
+        "edit": "Edit",
+        "remove_member": "Remove member"
       },
       "confirm": {
         "delete_domain": "Remove this domain?",
         "delete_unit": "Remove this unit?",
         "delete_membership": "Remove this member from the organization?",
-        "delete_organization": "Delete this organization? This will soft-delete all related data."
+        "delete_organization": "Delete this organization? This will soft-delete all related data.",
+        "remove_membership": "Remove this member from the organization? They will keep their account but lose all access to this organization."
       },
       "toasts": {
         "create_success": "Organization created",
@@ -2007,7 +2009,8 @@
         "domain_added": "Domain added",
         "unit_added": "Unit added",
         "member_added": "Member added",
-        "member_updated": "Member updated"
+        "member_updated": "Member updated",
+        "member_removed": "Member removed from organization"
       },
       "empty": {
         "domains": "No domains yet.",

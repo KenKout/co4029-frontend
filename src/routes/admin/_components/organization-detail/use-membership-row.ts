@@ -28,8 +28,8 @@ export function useMembershipRow(m: MembershipRead, orgId: string) {
     m.status as MembershipStatus,
   );
   const { confirm: confirmDelete, dialog: confirmDialog } = useConfirm({
-    title: t("admin.organizations.actions.delete"),
-    confirmLabel: t("admin.organizations.actions.delete"),
+    title: t("admin.organizations.actions.remove_member"),
+    confirmLabel: t("admin.organizations.actions.remove_member"),
     cancelLabel: t("common.cancel"),
   });
 
@@ -51,13 +51,13 @@ export function useMembershipRow(m: MembershipRead, orgId: string) {
   async function handleRemove() {
     if (
       !(await confirmDelete({
-        description: t("admin.organizations.confirm.delete_membership"),
+        description: t("admin.organizations.confirm.remove_membership"),
       }))
     )
       return;
     try {
       await remove.mutateAsync(m.id);
-      toast.success(t("admin.organizations.toasts.delete_success"));
+      toast.success(t("admin.organizations.toasts.member_removed"));
     } catch (err) {
       toast.error(
         errorMessage(err, t("admin.organizations.toasts.delete_failed")),

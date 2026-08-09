@@ -30,10 +30,8 @@ export const UNIT_TYPE_VALUES: UnitType[] = [
 
 export const MEMBERSHIP_STATUS_VALUES: MembershipStatus[] = [
   "active",
-  "invited",
   "inactive",
   "suspended",
-  "left",
 ];
 
 /**
