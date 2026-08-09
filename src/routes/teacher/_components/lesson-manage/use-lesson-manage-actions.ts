@@ -93,6 +93,29 @@ export function useLessonManageActions({
     }
   }
 
+  /**
+   * Publish / unpublish the lesson immediately — a single direct API call
+   * that does NOT wait for the Save bar. The editor's local status is synced
+   * to the server's answer so a later Save can never silently flip it back.
+   */
+  async function handlePublish(next: "draft" | "published") {
+    try {
+      const updated = await updateLesson.mutateAsync({ status: next });
+      editor.setStatus(updated.status === "published" ? "published" : "draft");
+      toast.success(
+        next === "published"
+          ? t("teacher_lesson_manage.toasts.lesson_published")
+          : t("teacher_lesson_manage.toasts.lesson_unpublished"),
+      );
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_lesson_manage.toasts.publish_failed"),
+      );
+      throw err;
+    }
+  }
+
   async function handleDelete() {
     if (!editor.deleteConfirm) {
       editor.setDeleteConfirm(true);
@@ -123,6 +146,7 @@ export function useLessonManageActions({
     goBack,
     handleSave,
     handleArchive,
+    handlePublish,
     handleDelete,
     togglePrerequisite,
   };

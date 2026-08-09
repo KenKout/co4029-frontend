@@ -58,16 +58,19 @@ export function FilterBar({
   const set = (key: keyof AiCostsFilters, value: string) =>
     onChange({ ...filters, [key]: value.trim() || null });
 
-  const anyLabel = t("admin.ai_costs.filters.any");
+  const anyModel = t("admin.ai_costs.filters.any_model");
+  const anyRole = t("admin.ai_costs.filters.any_role");
+  const anyOperation = t("admin.ai_costs.filters.any_operation");
+  const anyStatus = t("admin.ai_costs.filters.any_status");
   const modelOptions = [
-    { value: "", label: anyLabel },
+    { value: "", label: anyModel },
     ...(models.data ?? []).map((m) => ({
       value: m.model_name,
       label: m.model_name,
     })),
   ];
   const roleOptions = [
-    { value: "", label: anyLabel },
+    { value: "", label: anyRole },
     ...(roles.data ?? []).map((r) => ({
       value: r.dimension_value,
       label: r.dimension_value,
@@ -112,7 +115,7 @@ export function FilterBar({
             value={filters.operation ?? ""}
             onValueChange={(next) => set("operation", next)}
             options={[
-              { value: "", label: anyLabel },
+              { value: "", label: anyOperation },
               { value: "chat_completion", label: "chat_completion" },
               { value: "embedding", label: "embedding" },
             ]}
@@ -129,7 +132,7 @@ export function FilterBar({
             value={filters.status ?? ""}
             onValueChange={(next) => set("status", next)}
             options={[
-              { value: "", label: anyLabel },
+              { value: "", label: anyStatus },
               { value: "success", label: "success" },
               { value: "failed", label: "failed" },
             ]}

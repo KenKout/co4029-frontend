@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Archive, CheckCircle2, Loader2, Upload } from "lucide-react";
+import { Archive, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -71,7 +71,6 @@ export function DeptCourseLifecycleActions({
   return (
     <>
       <div className="flex items-center gap-2 shrink-0 flex-wrap">
-        <StatusPill status={status} t={t} />
         {status === "draft" && (
           <Button
             type="button"
@@ -124,28 +123,5 @@ export function DeptCourseLifecycleActions({
         isPending={archive.isPending}
       />
     </>
-  );
-}
-
-function StatusPill({
-  status,
-  t,
-}: {
-  status: string;
-  t: (key: string, opts?: Record<string, unknown>) => string;
-}) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-        status === "published"
-          ? "bg-emerald-50 text-emerald-700"
-          : status === "archived"
-            ? "bg-amber-50 text-amber-700"
-            : "bg-m3-surface-container text-m3-on-surface-variant"
-      }`}
-    >
-      {status === "published" && <CheckCircle2 className="h-3.5 w-3.5" />}
-      {t(`teacher_course_settings.status_${status}`)}
-    </span>
   );
 }

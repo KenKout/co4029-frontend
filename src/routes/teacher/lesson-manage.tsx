@@ -90,9 +90,7 @@ export default function LessonManagePage() {
         onDelete={actions.handleDelete}
         onDeleteBlur={() => editor.setDeleteConfirm(false)}
         status={editor.status}
-        onToggleStatus={() =>
-          editor.setStatus((s) => (s === "published" ? "draft" : "published"))
-        }
+        onPublish={actions.handlePublish}
         saving={editor.saving}
         saved={editor.saved}
         onSave={actions.handleSave}

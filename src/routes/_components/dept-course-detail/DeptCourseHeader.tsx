@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import type { CourseAuthoring } from "@/lib/api/types";
 import { DeleteCourseButton } from "./DeleteCourseButton";
 import { DeptCourseLifecycleActions } from "./DeptCourseLifecycleActions";
@@ -44,9 +44,12 @@ export function DeptCourseHeader({
 
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="min-w-0 flex-1 text-2xl font-headline font-bold text-text-strong truncate">
-            {course?.title ?? t("dept_course_detail.course_fallback")}
-          </h1>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <h1 className="min-w-0 flex-1 text-2xl font-headline font-bold text-text-strong truncate">
+              {course?.title ?? t("dept_course_detail.course_fallback")}
+            </h1>
+            {course && <DeptCourseStatusBadge status={course.status} />}
+          </div>
           {course?.slug && (
             <p className="text-sm text-text-muted font-mono mt-0.5 truncate">
               {course.slug}
@@ -61,5 +64,24 @@ export function DeptCourseHeader({
         )}
       </div>
     </div>
+  );
+}
+
+/** Status pill rendered next to the course name in the header. */
+function DeptCourseStatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
+  const pillClass =
+    status === "published"
+      ? "bg-emerald-50 text-emerald-700"
+      : status === "archived"
+        ? "bg-amber-50 text-amber-700"
+        : "bg-m3-surface-container text-m3-on-surface-variant";
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${pillClass}`}
+    >
+      {status === "published" && <CheckCircle2 className="h-3.5 w-3.5" />}
+      {t(`teacher_course_settings.status_${status}`)}
+    </span>
   );
 }

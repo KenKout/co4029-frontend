@@ -18,6 +18,9 @@ export function ManagedUsersToolbar({ c }: { c: ManagedUsersController }) {
     {
       id: ROLE_FILTER_ID,
       label: t("admin.users.filter_role", { defaultValue: "Filter by role" }),
+      allLabel: t("admin.users.filter_role_all", {
+        defaultValue: "All roles",
+      }),
       options: roleOptions.map((r) => ({ value: r.code, label: r.name })),
     },
   ];

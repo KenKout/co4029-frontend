@@ -60,7 +60,7 @@ const DEFAULT_TIME_OPTIONS: TimeRangeOption[] = [
   { value: "month", label: "Month" },
   { value: "6months", label: "6 Months" },
   { value: "year", label: "Year" },
-  { value: "all", label: "All" },
+  { value: "all", label: "All time" },
 ];
 
 const DEFAULT_TIME_LABELS: TimeRangeLabels = {

@@ -1,14 +1,15 @@
 import { LessonBackLink } from "./LessonBackLink";
 import { LessonArchiveButton } from "./LessonArchiveButton";
 import { LessonDeleteButton } from "./LessonDeleteButton";
-import { LessonStatusToggleButton } from "./LessonStatusToggleButton";
+import { LessonPublishButton } from "./LessonPublishButton";
 import { LessonSaveButton } from "./LessonSaveButton";
 
 /**
  * Sticky top action bar for the lesson editor: Back · Archive · Delete ·
  * Publish/Unpublish · Save. Archive and Delete use a two-click confirm (first
- * click arms the button, second executes). The Back link is intercepted while
- * the lesson is dirty so the caller's unsaved-changes guard can prompt.
+ * click arms the button, second executes); Publish uses a dialog confirm and
+ * calls the API immediately (no Save needed). The Back link is intercepted
+ * while the lesson is dirty so the caller's unsaved-changes guard can prompt.
  */
 export function LessonActionBar({
   courseId,
@@ -22,7 +23,7 @@ export function LessonActionBar({
   onDelete,
   onDeleteBlur,
   status,
-  onToggleStatus,
+  onPublish,
   saving,
   saved,
   onSave,
@@ -39,7 +40,7 @@ export function LessonActionBar({
   onDelete: () => void;
   onDeleteBlur: () => void;
   status: "draft" | "published";
-  onToggleStatus: () => void;
+  onPublish: (next: "draft" | "published") => Promise<void>;
   saving: boolean;
   saved: boolean;
   onSave: () => void;
@@ -64,10 +65,7 @@ export function LessonActionBar({
           onDeleteBlur={onDeleteBlur}
         />
         <span className="mx-0.5 h-5 w-px bg-m3-outline-variant/30" />
-        <LessonStatusToggleButton
-          status={status}
-          onToggleStatus={onToggleStatus}
-        />
+        <LessonPublishButton status={status} onPublish={onPublish} />
         <LessonSaveButton saving={saving} saved={saved} onSave={onSave} />
       </div>
     </div>

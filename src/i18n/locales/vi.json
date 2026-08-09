@@ -699,7 +699,7 @@
     "modules_other": "{{count}} mô-đun",
     "col_actions": "Thao tác",
     "filter_label": "Danh sách việc",
-    "filter_all": "Tất cả",
+    "filter_all": "Tất cả danh sách",
     "filter_needs_teacher": "Thiếu giảng viên",
     "filter_no_content": "Chưa có nội dung",
     "filter_draft": "Bản nháp",
@@ -980,7 +980,7 @@
     },
     "search_placeholder": "Tìm thông báo…",
     "filter_status": "Trạng thái",
-    "filter_status_all": "Tất cả",
+    "filter_status_all": "Tất cả trạng thái",
     "filter_unread": "Chưa đọc",
     "filter_read": "Đã đọc",
     "filter_category": "Loại",
@@ -1005,7 +1005,7 @@
       "month": "Tháng",
       "six_months": "6 tháng",
       "year": "Năm",
-      "all": "Tất cả",
+      "all": "Tất cả thời gian",
       "custom": "Khoảng tùy chỉnh…",
       "custom_title": "Khoảng thời gian tùy chỉnh",
       "from": "Từ",
@@ -1406,7 +1406,7 @@
         "month": "Tháng",
         "six_months": "6 tháng",
         "year": "Năm",
-        "all": "Tất cả",
+        "all": "Tất cả thời gian",
         "custom": "Khoảng tùy chỉnh…",
         "custom_title": "Khoảng thời gian tùy chỉnh",
         "from": "Từ",
@@ -1468,7 +1468,8 @@
         "published": "Đã xuất bản",
         "archived": "Đã lưu trữ",
         "deleted": "Đã xóa"
-      }
+      },
+      "filter_status_all": "Tất cả trạng thái"
     },
     "course_detail": {
       "title": "Audit AI khoá học",
@@ -1611,7 +1612,11 @@
         "status": "Trạng thái",
         "any": "Tất cả",
         "clear": "Xoá bộ lọc",
-        "partial_note": "Bộ lọc áp dụng cho tổng quan, phân tích và mô hình. Người dùng, pipeline và lệnh gọi gần đây luôn hiển thị toàn bộ dữ liệu."
+        "partial_note": "Bộ lọc áp dụng cho tổng quan, phân tích và mô hình. Người dùng, pipeline và lệnh gọi gần đây luôn hiển thị toàn bộ dữ liệu.",
+        "any_model": "Tất cả mô hình",
+        "any_role": "Tất cả vai trò",
+        "any_operation": "Tất cả thao tác",
+        "any_status": "Tất cả trạng thái"
       },
       "drilldown": {
         "title": "Chi tiết pipeline",
@@ -1814,7 +1819,9 @@
       "confirm_disable": {
         "title": "Vô hiệu hoá người dùng?",
         "body": "Tất cả phiên đăng nhập sẽ bị huỷ. Người dùng không thể đăng nhập cho đến khi được kích hoạt lại."
-      }
+      },
+      "filter_role_all": "Tất cả vai trò",
+      "filter_organization_all": "Tất cả tổ chức"
     },
     "organizations": {
       "title": "Tổ chức",
@@ -4125,7 +4132,12 @@
         "source": "Nguồn",
         "all": "Tất cả",
         "all_count": "Tất cả ({{count}})",
-        "no_outcome": "Chưa gán"
+        "no_outcome": "Chưa gán",
+        "all_outcome": "Tất cả mục tiêu",
+        "all_difficulty": "Tất cả độ khó",
+        "all_type": "Tất cả loại",
+        "all_source": "Tất cả nguồn",
+        "all_status": "Tất cả trạng thái"
       },
       "source": {
         "ai": "Do AI tạo",
@@ -4256,7 +4268,9 @@
       "published": "Đã xuất bản",
       "draft": "Bản nháp",
       "publish_title": "Xuất bản bài học",
-      "unpublish_title": "Hủy xuất bản (chuyển về nháp)"
+      "unpublish_title": "Hủy xuất bản (chuyển về nháp)",
+      "publish": "Xuất bản",
+      "unpublish": "Bỏ xuất bản"
     },
     "settings": {
       "title": "Cài đặt bài học",
@@ -4281,7 +4295,16 @@
       "lesson_deleted": "Đã xóa bài học",
       "delete_failed": "Xóa thất bại",
       "attach_failed": "Đính kèm thất bại",
-      "attach_sync_failed": "Đã đính kèm tài nguyên, nhưng không thể đồng bộ với AI"
+      "attach_sync_failed": "Đã đính kèm tài nguyên, nhưng không thể đồng bộ với AI",
+      "lesson_published": "Đã xuất bản bài học",
+      "lesson_unpublished": "Đã bỏ xuất bản bài học",
+      "publish_failed": "Xuất bản thất bại"
+    },
+    "publish_dialog": {
+      "publish_title": "Xuất bản bài học?",
+      "publish_body": "Bài học sẽ được xuất bản và hiển thị cho học viên.",
+      "unpublish_title": "Bỏ xuất bản bài học?",
+      "unpublish_body": "Bài học sẽ trở về trạng thái nháp và ẩn khỏi học viên."
     }
   },
   "teacher_lesson_materials": {

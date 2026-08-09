@@ -21,6 +21,9 @@ export function CoursesToolbar({ c }: { c: AdminCoursesController }) {
   const statusFilterDef: FilterDef = {
     id: STATUS_FILTER_ID,
     label: t("admin.courses_list.filter_status", { defaultValue: "Status" }),
+    allLabel: t("admin.courses_list.filter_status_all", {
+      defaultValue: "All statuses",
+    }),
     options: COURSE_STATUSES.map((s) => ({
       value: s,
       label: t(`admin.courses_list.row_status.${s}`),

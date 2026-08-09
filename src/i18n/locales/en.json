@@ -767,7 +767,7 @@
     "action_teachers": "Teachers",
     "instructor_unassigned": "Unassigned",
     "filter_label": "Worklist",
-    "filter_all": "All",
+    "filter_all": "All worklist",
     "filter_needs_teacher": "Needs teacher",
     "filter_no_content": "No content",
     "filter_draft": "Draft",
@@ -1056,11 +1056,11 @@
     },
     "search_placeholder": "Search notifications…",
     "filter_status": "Status",
-    "filter_status_all": "All",
+    "filter_status_all": "All statuses",
     "filter_unread": "Unread",
     "filter_read": "Read",
     "filter_category": "Category",
-    "filter_category_all": "All categories",
+    "filter_category_all": "All types",
     "delete_read": "Delete read ({{count}})",
     "group_by": "Group by",
     "group_date": "Date",
@@ -1081,7 +1081,7 @@
       "month": "Month",
       "six_months": "6 Months",
       "year": "Year",
-      "all": "All",
+      "all": "All time",
       "custom": "Custom range…",
       "custom_title": "Custom time range",
       "from": "From",
@@ -1496,7 +1496,7 @@
         "month": "Month",
         "six_months": "6 Months",
         "year": "Year",
-        "all": "All",
+        "all": "All time",
         "custom": "Custom range…",
         "custom_title": "Custom time range",
         "from": "From",
@@ -1558,7 +1558,8 @@
         "published": "Published",
         "archived": "Archived",
         "deleted": "Deleted"
-      }
+      },
+      "filter_status_all": "All statuses"
     },
     "course_detail": {
       "title": "Course AI audit",
@@ -1701,7 +1702,11 @@
         "status": "Status",
         "any": "Any",
         "clear": "Clear filters",
-        "partial_note": "Filters apply to totals, breakdown and models. Top users, pipelines and recent calls always show all data."
+        "partial_note": "Filters apply to totals, breakdown and models. Top users, pipelines and recent calls always show all data.",
+        "any_model": "All models",
+        "any_role": "All roles",
+        "any_operation": "All operations",
+        "any_status": "All statuses"
       },
       "drilldown": {
         "title": "Pipeline detail",
@@ -1904,7 +1909,9 @@
       "confirm_disable": {
         "title": "Disable user?",
         "body": "All login sessions will be revoked. The user will not be able to sign in until they are reactivated."
-      }
+      },
+      "filter_role_all": "All roles",
+      "filter_organization_all": "All organizations"
     },
     "organizations": {
       "title": "Organizations",
@@ -4256,7 +4263,12 @@
         "source": "Source",
         "all": "All",
         "all_count": "All ({{count}})",
-        "no_outcome": "No outcome"
+        "no_outcome": "No outcome",
+        "all_outcome": "All outcomes",
+        "all_difficulty": "All difficulties",
+        "all_type": "All types",
+        "all_source": "All sources",
+        "all_status": "All statuses"
       },
       "source": {
         "ai": "AI-generated",
@@ -4387,7 +4399,9 @@
       "published": "Published",
       "draft": "Draft",
       "publish_title": "Publish lesson",
-      "unpublish_title": "Unpublish (set to draft)"
+      "unpublish_title": "Unpublish (set to draft)",
+      "publish": "Publish",
+      "unpublish": "Unpublish"
     },
     "settings": {
       "title": "Lesson Settings",
@@ -4412,7 +4426,16 @@
       "lesson_deleted": "Lesson deleted",
       "delete_failed": "Delete failed",
       "attach_failed": "Attach failed",
-      "attach_sync_failed": "Resource attached, but couldn't sync to AI"
+      "attach_sync_failed": "Resource attached, but couldn't sync to AI",
+      "lesson_published": "Lesson published",
+      "lesson_unpublished": "Lesson unpublished",
+      "publish_failed": "Publish failed"
+    },
+    "publish_dialog": {
+      "publish_title": "Publish lesson?",
+      "publish_body": "The lesson will be published and visible to students.",
+      "unpublish_title": "Unpublish lesson?",
+      "unpublish_body": "The lesson will be set back to draft and hidden from students."
     }
   },
   "teacher_lesson_materials": {

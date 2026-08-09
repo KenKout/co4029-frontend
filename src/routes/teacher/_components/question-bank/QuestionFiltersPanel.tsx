@@ -70,7 +70,7 @@ export function QuestionFiltersPanel(props: QuestionFiltersPanelProps) {
             options={[
               {
                 value: "all",
-                label: t("teacher_interview_config.qbank.filter.all"),
+                label: t("teacher_interview_config.qbank.filter.all_outcome"),
               },
               {
                 value: "none",
@@ -94,7 +94,7 @@ export function QuestionFiltersPanel(props: QuestionFiltersPanelProps) {
             options={[
               {
                 value: "all",
-                label: t("teacher_interview_config.qbank.filter.all"),
+                label: t("teacher_interview_config.qbank.filter.all_difficulty"),
               },
               ...presentDifficulties.map((d) => ({
                 value: d,
@@ -111,7 +111,7 @@ export function QuestionFiltersPanel(props: QuestionFiltersPanelProps) {
             options={[
               {
                 value: "all",
-                label: t("teacher_interview_config.qbank.filter.all"),
+                label: t("teacher_interview_config.qbank.filter.all_type"),
               },
               ...presentTypes.map((qt) => ({
                 value: qt,
@@ -127,7 +127,7 @@ export function QuestionFiltersPanel(props: QuestionFiltersPanelProps) {
           options={[
             {
               value: "all",
-              label: t("teacher_interview_config.qbank.filter.all"),
+              label: t("teacher_interview_config.qbank.filter.all_source"),
             },
             {
               value: "ai",
@@ -165,7 +165,7 @@ export function QuestionFiltersPanel(props: QuestionFiltersPanelProps) {
           options={[
             {
               key: "all" as const,
-              label: t("teacher_interview_config.qbank.filter.all"),
+              label: t("teacher_interview_config.qbank.filter.all_status"),
               count: props.totalCount,
             },
             ...STATUS_ORDER.filter((s) => (props.statusCounts[s] ?? 0) > 0).map(

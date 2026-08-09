@@ -20,12 +20,18 @@ export function UsersToolbar({ c }: { c: AdminUsersController }) {
     {
       id: ROLE_FILTER_ID,
       label: t("admin.users.filter_role", { defaultValue: "Filter by role" }),
+      allLabel: t("admin.users.filter_role_all", {
+        defaultValue: "All roles",
+      }),
       options: roleOptions.map((r) => ({ value: r.code, label: r.name })),
     },
     {
       id: ORG_FILTER_ID,
       label: t("admin.users.filter_organization", {
         defaultValue: "Filter by organization",
+      }),
+      allLabel: t("admin.users.filter_organization_all", {
+        defaultValue: "All organizations",
       }),
       options: orgOptions.map((o) => ({ value: o.id, label: o.name })),
     },
