@@ -1821,7 +1821,19 @@
         "body": "Tất cả phiên đăng nhập sẽ bị huỷ. Người dùng không thể đăng nhập cho đến khi được kích hoạt lại."
       },
       "filter_role_all": "Tất cả vai trò",
-      "filter_organization_all": "Tất cả tổ chức"
+      "filter_organization_all": "Tất cả tổ chức",
+      "add_user": "Thêm người dùng",
+      "create_title": "Thêm người dùng",
+      "create_subtitle": "Tạo tài khoản và gắn vào tổ chức trong một bước. Email được mời có thể đăng nhập bằng Google ngay lập tức.",
+      "create_email": "Email",
+      "create_display_name": "Tên hiển thị",
+      "create_organization": "Tổ chức",
+      "create_org_placeholder": "Chọn tổ chức",
+      "create_role": "Vai trò",
+      "create_hint": "Tổ chức: {{org}}",
+      "create_submit": "Tạo người dùng",
+      "create_success": "Đã tạo người dùng — họ có thể đăng nhập bằng Google ngay",
+      "create_error": "Không tạo được người dùng. Email có thể đã được đăng ký."
     },
     "organizations": {
       "title": "Tổ chức",

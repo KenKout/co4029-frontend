@@ -1911,7 +1911,19 @@
         "body": "All login sessions will be revoked. The user will not be able to sign in until they are reactivated."
       },
       "filter_role_all": "All roles",
-      "filter_organization_all": "All organizations"
+      "filter_organization_all": "All organizations",
+      "add_user": "Add user",
+      "create_title": "Add user",
+      "create_subtitle": "Create the account and attach it to an organization in one step. The invited email can sign in with Google immediately.",
+      "create_email": "Email",
+      "create_display_name": "Display name",
+      "create_organization": "Organization",
+      "create_org_placeholder": "Select an organization",
+      "create_role": "Role",
+      "create_hint": "Organization: {{org}}",
+      "create_submit": "Create user",
+      "create_success": "User created — they can now sign in with Google",
+      "create_error": "Could not create the user. The email may already be registered."
     },
     "organizations": {
       "title": "Organizations",

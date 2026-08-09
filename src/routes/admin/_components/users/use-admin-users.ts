@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { apiPost } from "@/lib/api/client";
 import { useFormatDate } from "@/lib/format/date";
 import { useServerTable } from "@/lib/api/use-server-table";
 import {
@@ -10,6 +12,7 @@ import {
 } from "@/lib/auth/use-permissions";
 import { useListRoles } from "@/lib/api/hooks/admin";
 import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
+import type { User } from "@/lib/api/types";
 
 import type { UserWithRoles } from "./types";
 import { buildUserColumns } from "./users-columns";
@@ -63,6 +66,24 @@ export function useAdminUsers() {
     [t, labelFor, formatDate],
   );
 
+  const qc = useQueryClient();
+  const createUser = useMutation({
+    mutationFn: (payload: {
+      primary_email: string;
+      display_name?: string;
+      given_name?: string;
+      family_name?: string;
+      organization_id: string;
+      role_code?: string;
+      student_code?: string;
+      employee_code?: string;
+    }) => apiPost<User>("/users", payload),
+    onSuccess: () => {
+      // Prefix match: kills every page/filter variant of the admin table.
+      void qc.invalidateQueries({ queryKey: ["admin", "users"] });
+    },
+  });
+
   return {
     navigate,
     t,
@@ -72,6 +93,8 @@ export function useAdminUsers() {
     orgOptions,
     table,
     columns,
+    createUser: createUser.mutateAsync,
+    createUserPending: createUser.isPending,
   };
 }
 
