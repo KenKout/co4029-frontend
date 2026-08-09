@@ -1,28 +1,34 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+
+import { apiFetch } from "@/lib/api/client";
+import { queryKeys } from "@/lib/api/query-keys";
 import {
   useCreateMembership,
   useOrganizationMemberships,
   type AdminUserSearchRow,
 } from "@/lib/api/hooks/admin-organizations";
 import type { MembershipStatus } from "@/lib/api/types/admin-organizations";
+import type { User } from "@/lib/api/types";
 import { errorMessage, parseBulkUserIds } from "./helpers";
 import type { BulkAddResults, MembershipsMode } from "./types";
 
 /**
- * Stateful half of the memberships tab: the roster query, the create mutation,
- * the pane mode, the single-add form fields, the bulk-add buffer/outcome, and
+ * Stateful half of the memberships tab: the roster query, the org's user
+ * catalog (drives avatars / names in the table), the create mutation, the
+ * pane mode, the single-add form fields, the bulk-add buffer/outcome, and
  * the two submit handlers.
  *
  * Hook order is identical to the original inline `MembershipsTab` —
  * translation, roster query, create mutation, mode, selected user, student
- * code, employee code, status, bulk text, bulk results, bulk pending, then the
- * `[bulkText]` memo. The UUID guard moved to module scope in constants.ts; it
- * was never a hook.
+ * code, employee code, status, bulk text, bulk results, bulk pending, then
+ * the `[bulkText]` memo. The UUID guard moved to module scope in constants.ts;
+ * it was never a hook.
  */
 export function useMembershipsTab(orgId: string) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: members, isLoading } = useOrganizationMemberships(orgId);
   const create = useCreateMembership(orgId);
   const [mode, setMode] = useState<MembershipsMode>("list");
@@ -39,6 +45,39 @@ export function useMembershipsTab(orgId: string) {
   const [bulkPending, setBulkPending] = useState(false);
 
   const parsedBulk = useMemo(() => parseBulkUserIds(bulkText), [bulkText]);
+
+  // The org's user catalog — one round-trip maps every membership user_id to
+  // a display name + presigned avatar URL (admin user search). Memberships
+  // carry only user_id, so without this the roster would be a list of UUIDs.
+  const usersQuery = useQuery({
+    queryKey: [...queryKeys.admin.organizationMemberships(orgId), "users"] as const,
+    queryFn: () =>
+      apiFetch<{ items: User[] }>(
+        `/users/search?organization=${orgId}&page_size=200`,
+      ).then((page) => page.items),
+    enabled: Boolean(orgId),
+  });
+  const userById = useMemo(() => {
+    const map = new Map<string, User>();
+    for (const u of usersQuery.data ?? []) map.set(u.id, u);
+    return map;
+  }, [usersQuery.data]);
+
+  // Client-side search: filters the roster by the user's display name or
+  // email (resolved through the catalog) so the toolbar works like the other
+  // admin tables without a dedicated backend query.
+  const [search, setSearch] = useState("");
+  const filteredMembers = useMemo(() => {
+    const rows = members ?? [];
+    const q = search.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((m) => {
+      const u = userById.get(m.user_id);
+      const haystack =
+        `${u?.profile?.display_name ?? ""} ${u?.primary_email ?? ""} ${m.user_id}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [members, search, userById]);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -100,7 +139,10 @@ export function useMembershipsTab(orgId: string) {
 
   return {
     t,
+    i18n,
+    orgId,
     members,
+    filteredMembers,
     isLoading,
     create,
     mode,
@@ -121,6 +163,9 @@ export function useMembershipsTab(orgId: string) {
     parsedBulk,
     handleAdd,
     handleBulkAdd,
+    userById,
+    search,
+    setSearch,
   };
 }
 

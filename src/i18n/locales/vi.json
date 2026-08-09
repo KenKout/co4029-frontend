@@ -1932,7 +1932,15 @@
         "user_search_placeholder": "Tìm theo email hoặc tên...",
         "user_search_hint": "Chọn người dùng đã có trong hệ thống.",
         "user_search_loading": "Đang tải danh sách...",
-        "user_search_empty": "Không tìm thấy người dùng nào khớp."
+        "user_search_empty": "Không tìm thấy người dùng nào khớp.",
+        "cols": {
+          "user": "Người dùng",
+          "codes": "Mã số",
+          "status": "Trạng thái",
+          "actions": "Hành động"
+        },
+        "search_placeholder": "Tìm theo tên hoặc email…",
+        "empty_search": "Không có thành viên phù hợp"
       }
     },
     "dashboard": {

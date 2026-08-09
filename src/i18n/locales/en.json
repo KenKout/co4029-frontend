@@ -2022,7 +2022,15 @@
         "user_search_placeholder": "Search by email or name...",
         "user_search_hint": "Pick a user that already exists in the system.",
         "user_search_loading": "Loading users...",
-        "user_search_empty": "No matching users found."
+        "user_search_empty": "No matching users found.",
+        "cols": {
+          "user": "User",
+          "codes": "Codes",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "search_placeholder": "Search by name or email…",
+        "empty_search": "No matching members"
       }
     },
     "dashboard": {

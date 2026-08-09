@@ -27,7 +27,7 @@ export function MembershipsTab({ orgId }: { orgId: string }) {
           message={t("admin.organizations.empty.memberships")}
         />
       ) : (
-        <MembershipList members={members ?? []} orgId={orgId} />
+        <MembershipList c={controller} />
       )}
     </div>
   );

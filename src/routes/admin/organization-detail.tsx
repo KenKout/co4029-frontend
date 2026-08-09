@@ -3,6 +3,7 @@ import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs } from "@/components/ui/tabs";
 import { useOrganization } from "@/lib/api/hooks/admin-organizations";
 import {
   usePermissions,
@@ -12,8 +13,8 @@ import { DomainsTab } from "./_components/organization-detail/DomainsTab";
 import { InfoTab } from "./_components/organization-detail/InfoTab";
 import { MembershipsTab } from "./_components/organization-detail/MembershipsTab";
 import { OrganizationDetailHeader } from "./_components/organization-detail/OrganizationDetailHeader";
-import { OrganizationTabsNav } from "./_components/organization-detail/OrganizationTabsNav";
 import { UnitsTab } from "./_components/organization-detail/UnitsTab";
+import { TAB_KEYS } from "./_components/organization-detail/constants";
 import type { TabKey } from "./_components/organization-detail/types";
 
 // ---------------------------------------------------------------------------
@@ -64,7 +65,17 @@ export default function AdminOrganizationDetailPage() {
 
       <OrganizationDetailHeader org={org} />
 
-      <OrganizationTabsNav tab={tab} onTabChange={setTab} />
+      <Tabs
+        ariaLabel={t("admin.organizations.tabs.aria_label", {
+          defaultValue: "Organization sections",
+        })}
+        tabs={TAB_KEYS.map((key) => ({
+          key,
+          label: t(`admin.organizations.tabs.${key}`),
+        }))}
+        value={tab}
+        onChange={setTab}
+      />
 
       {tab === "info" && <InfoTab orgId={orgId} />}
       {tab === "domains" && <DomainsTab orgId={orgId} />}
@@ -73,3 +84,4 @@ export default function AdminOrganizationDetailPage() {
     </div>
   );
 }
+
