@@ -13,7 +13,7 @@ import {
 import { getAuthUserInitials, type AuthUser } from "@/lib/auth";
 
 const MENU_ITEM_CLASS =
-  "rounded-lg px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-m3-primary-fixed focus:bg-m3-primary-fixed focus:text-m3-primary";
+  "flex items-center rounded-lg px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-m3-primary-fixed focus:bg-m3-primary-fixed focus:text-m3-primary";
 
 export interface TopNavUserMenuProps {
   user: AuthUser | null;
@@ -63,25 +63,28 @@ export function TopNavUserMenu({
         <DropdownMenuSeparator className="bg-m3-outline-variant/15" />
 
         <DropdownMenuGroup>
-          <DropdownMenuItem className={MENU_ITEM_CLASS}>
-            <Link to="/dashboard" className="flex items-center gap-3 w-full">
-              <LayoutDashboard className="h-4 w-4 text-m3-on-surface-variant" />
-              <span className="text-sm font-medium">{t("nav.dashboard")}</span>
-            </Link>
+          <DropdownMenuItem
+            className={MENU_ITEM_CLASS}
+            render={<Link to="/dashboard" />}
+          >
+            <LayoutDashboard className="h-4 w-4 text-m3-on-surface-variant" />
+            <span className="text-sm font-medium">{t("nav.dashboard")}</span>
           </DropdownMenuItem>
 
-          <DropdownMenuItem className={MENU_ITEM_CLASS}>
-            <Link to="/settings" className="flex items-center gap-3 w-full">
-              <Settings className="h-4 w-4 text-m3-on-surface-variant" />
-              <span className="text-sm font-medium">{t("nav.settings")}</span>
-            </Link>
+          <DropdownMenuItem
+            className={MENU_ITEM_CLASS}
+            render={<Link to="/settings" />}
+          >
+            <Settings className="h-4 w-4 text-m3-on-surface-variant" />
+            <span className="text-sm font-medium">{t("nav.settings")}</span>
           </DropdownMenuItem>
 
-          <DropdownMenuItem className={MENU_ITEM_CLASS}>
-            <Link to="/profile" className="flex items-center gap-3 w-full">
-              <User className="h-4 w-4 text-m3-on-surface-variant" />
-              <span className="text-sm font-medium">{t("nav.profile")}</span>
-            </Link>
+          <DropdownMenuItem
+            className={MENU_ITEM_CLASS}
+            render={<Link to="/profile" />}
+          >
+            <User className="h-4 w-4 text-m3-on-surface-variant" />
+            <span className="text-sm font-medium">{t("nav.profile")}</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
 
