@@ -672,8 +672,14 @@ export function useGrantUserAssignment(userId: string) {
         payload,
       ),
     onSuccess: () => {
+      // The user-detail page renders role_assignments from the aggregate
+      // userDetail query, NOT from userAssignments — invalidate both so
+      // the list refreshes in place after a grant.
       void qc.invalidateQueries({
         queryKey: queryKeys.admin.userAssignments(userId),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.admin.userDetail(userId),
       });
     },
   });
@@ -687,6 +693,9 @@ export function useRevokeUserAssignment(userId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: queryKeys.admin.userAssignments(userId),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.admin.userDetail(userId),
       });
     },
   });
