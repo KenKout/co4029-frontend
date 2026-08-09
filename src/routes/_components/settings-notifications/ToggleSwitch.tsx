@@ -1,4 +1,15 @@
-import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+
+/**
+ * Notification preference toggle.
+ *
+ * Thin adapter over the shared base-ui Switch so the two preference matrix
+ * views keep their (checked / disabled / onChange / ariaLabel) call-site
+ * contract while rendering the platform's standard switch — previously this
+ * was a hand-rolled ghost Button whose white thumb + shadowed track bled
+ * into the light background (high-brightness, low-contrast switch) and
+ * carried none of the switch keyboard/ARIA semantics.
+ */
 export default function ToggleSwitch({
   checked,
   disabled,
@@ -11,22 +22,11 @@ export default function ToggleSwitch({
   ariaLabel: string;
 }) {
   return (
-    <Button variant="ghost"
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={ariaLabel}
+    <Switch
+      checked={checked}
       disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/40 disabled:cursor-not-allowed disabled:opacity-50 ${
-        checked ? "bg-m3-primary" : "bg-m3-surface-container-high"
-      }`}
-    >
-      <span
-        className={`inline-block h-5 w-5 transform rounded-full bg-surface-elev shadow-editorial transition-transform ${
-          checked ? "translate-x-5" : "translate-x-0.5"
-        }`}
-      />
-    </Button>
+      onCheckedChange={onChange}
+      aria-label={ariaLabel}
+    />
   );
 }
