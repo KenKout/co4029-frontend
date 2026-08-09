@@ -34,7 +34,7 @@ function MembershipActionsCell({
   const controller = useMembershipRow(m, orgId);
   return (
     <>
-      <MembershipRowActions controller={controller} status={m.status} />
+      <MembershipRowActions controller={controller} />
       {controller.confirmDialog}
     </>
   );

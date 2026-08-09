@@ -73,6 +73,7 @@ export function useMembershipRow(m: MembershipRead, orgId: string) {
     setEditing,
     draftStatus,
     setDraftStatus,
+    originalStatus: m.status as MembershipStatus,
     confirmDialog,
     handleSave,
     handleRemove,
