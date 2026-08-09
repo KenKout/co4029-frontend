@@ -1422,7 +1422,10 @@
         "latency": "Latency",
         "ip": "IP",
         "field": "Field",
-        "value": "Value"
+        "value": "Value",
+        "entity": "Entity",
+        "updated_at": "Updated",
+        "updated_by": "Updated by"
       },
       "system": "system",
       "active": "Active",
@@ -1462,7 +1465,11 @@
           "scope_kind": "Scope",
           "subject_user_id": "Subject user"
         }
-      }
+      },
+      "all_methods": "All methods",
+      "copy_id": "Copy ID",
+      "copied": "Copied",
+      "copy_failed": "Could not copy"
     },
     "health": {
       "title": "System status",

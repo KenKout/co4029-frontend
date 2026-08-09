@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
@@ -798,5 +799,39 @@ export function useAuditDataChanges(table: string, entityId: string) {
     enabled: Boolean(table) && Boolean(entityId),
     retry: false,
     staleTime: 1000 * 30,
+  });
+}
+
+/** FR-6.7 — every row in `table` changed since `since`, newest first. */
+export function useAuditDataChangesList(table: string, sinceIso: string) {
+  return useQuery({
+    queryKey: queryKeys.admin.auditDataChangesList(table, sinceIso),
+    queryFn: () => {
+      const params = new URLSearchParams({
+        table,
+        since: sinceIso,
+        limit: "200",
+      });
+      return apiFetch<DataChangeRow[]>(
+        `/admin/audit/data-changes/list?${params.toString()}`,
+      );
+    },
+    enabled: Boolean(table) && Boolean(sinceIso),
+    staleTime: 1000 * 30,
+  });
+}
+
+/** Batch-resolve user UUIDs → displayable users (audit screens). */
+export function useUsersByIds(userIds: string[]) {
+  const unique = useMemo(
+    () => Array.from(new Set(userIds.filter(Boolean))).slice(0, 100),
+    [userIds],
+  );
+  const idsKey = unique.join(",");
+  return useQuery({
+    queryKey: queryKeys.admin.usersByIds(idsKey),
+    queryFn: () => apiFetch<User[]>(`/users/by-ids?ids=${encodeURIComponent(idsKey)}`),
+    enabled: unique.length > 0,
+    staleTime: 60 * 1000,
   });
 }

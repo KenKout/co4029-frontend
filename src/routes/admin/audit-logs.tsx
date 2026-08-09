@@ -1,20 +1,36 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollText, ShieldCheck, Search } from "lucide-react";
+import {
+  Copy,
+  Mail,
+  ScrollText,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { Tabs } from "@/components/ui/tabs";
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  avatarColor,
+  avatarInitials,
+} from "@/components/ui/avatar";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
+import { Tabs } from "@/components/ui/tabs";
+import { Tooltip } from "@/components/ui/tooltip";
+import {
+  useAuditDataChangesList,
   useAuditHttp,
   useAuditRoleChanges,
-  useAuditDataChanges,
+  useUsersByIds,
 } from "@/lib/api/hooks/admin";
-import { ApiError } from "@/lib/api/client";
 import { DATA_CHANGE_TABLES, type DataChangeTable } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { ROLE_BADGE_COLOR } from "./_components/users/constants";
 
 type TabKey = "role_changes" | "http" | "data_changes";
 
@@ -26,6 +42,12 @@ type RoleChangeRow = NonNullable<
 >[number];
 type HttpAuditRow = NonNullable<
   ReturnType<typeof useAuditHttp>["data"]
+>[number];
+type DataChangeRow = NonNullable<
+  ReturnType<typeof useAuditDataChangesList>["data"]
+>[number];
+type AuditUser = NonNullable<
+  ReturnType<typeof useUsersByIds>["data"]
 >[number];
 
 const UUID_RE =
@@ -88,8 +110,78 @@ export default function AdminAuditLogsPage() {
       ) : tab === "http" ? (
         <HttpAuditTable sinceIso={sinceIso} />
       ) : (
-        <DataChangesPanel />
+        <DataChangesPanel sinceIso={sinceIso} />
       )}
+    </div>
+  );
+}
+
+/** Shared user-identity cell: avatar + display name + email + copy UUID. */
+function UserIdentityCell({
+  userId,
+  users,
+  systemLabel,
+}: {
+  userId: string | null | undefined;
+  users: AuditUser[] | undefined;
+  systemLabel: string;
+}) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  if (!userId) {
+    return <span className="text-m3-on-surface-variant italic">{systemLabel}</span>;
+  }
+
+  const user = users?.find((u) => u.id === userId);
+  const displayName = user?.profile?.display_name?.trim() || userId;
+
+  const copyId = () => {
+    void navigator.clipboard.writeText(userId).then(
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1200);
+      },
+      () => toast.error(t("admin.audit.copy_failed")),
+    );
+  };
+
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <Avatar size="sm" className={avatarColor(userId)}>
+        {user?.profile?.avatar_url && (
+          <AvatarImage src={user.profile.avatar_url} alt={displayName} />
+        )}
+        <AvatarFallback>
+          {avatarInitials(displayName, { uppercase: true })}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-text-strong truncate">
+          {displayName}
+        </p>
+        {user ? (
+          <p className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
+            <Mail className="h-3 w-3 shrink-0" />
+            <span className="truncate">{user.primary_email}</span>
+          </p>
+        ) : (
+          <p className="text-xs font-mono text-text-muted flex items-center gap-1 mt-0.5">
+            <span className="truncate">{userId}</span>
+            <Tooltip content={copied ? t("admin.audit.copied") : t("admin.audit.copy_id")}>
+              <Button
+                type="button"
+                variant="ghost"
+                aria-label={t("admin.audit.copy_id")}
+                onClick={copyId}
+                className="h-4 w-4 shrink-0 rounded p-0 hover:bg-transparent text-m3-on-surface-variant"
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+            </Tooltip>
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -97,6 +189,14 @@ export default function AdminAuditLogsPage() {
 function RoleChangesTable({ sinceIso }: { sinceIso: string }) {
   const { t } = useTranslation();
   const { data: rows, isLoading, isError } = useAuditRoleChanges(sinceIso);
+  const userIds = useMemo(
+    () =>
+      (rows ?? []).flatMap((r) =>
+        [r.user_id, r.granted_by].filter((v): v is string => Boolean(v)),
+      ),
+    [rows],
+  );
+  const { data: users } = useUsersByIds(userIds);
 
   if (isError) return <ErrorPanel text={t("admin.audit.load_failed")} />;
 
@@ -104,6 +204,8 @@ function RoleChangesTable({ sinceIso }: { sinceIso: string }) {
     {
       id: "when",
       header: t("admin.audit.cols.when"),
+      sortable: true,
+      sortValue: (r) => new Date(r.created_at),
       cell: (r) => (
         <span className="whitespace-nowrap text-m3-on-surface-variant">
           {new Date(r.created_at).toLocaleString()}
@@ -113,11 +215,18 @@ function RoleChangesTable({ sinceIso }: { sinceIso: string }) {
     {
       id: "role",
       header: t("admin.audit.cols.role"),
+      sortable: true,
+      sortValue: (r) => r.role_code,
       cell: (r) => (
-        <Badge className="text-[10px] border-0 bg-m3-primary/10 text-m3-primary flex items-center gap-1 w-fit">
+        <span
+          className={cn(
+            "inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md flex items-center gap-1 w-fit",
+            ROLE_BADGE_COLOR[r.role_code] ?? "bg-slate-100 text-slate-700",
+          )}
+        >
           <ShieldCheck className="h-3 w-3" />
           {r.role_code}
-        </Badge>
+        </span>
       ),
     },
     {
@@ -130,15 +239,23 @@ function RoleChangesTable({ sinceIso }: { sinceIso: string }) {
     {
       id: "user",
       header: t("admin.audit.cols.user"),
-      cell: (r) => <span className="font-mono text-xs">{r.user_id}</span>,
+      cell: (r) => (
+        <UserIdentityCell
+          userId={r.user_id}
+          users={users}
+          systemLabel={t("admin.audit.system")}
+        />
+      ),
     },
     {
       id: "granted_by",
       header: t("admin.audit.cols.granted_by"),
       cell: (r) => (
-        <span className="font-mono text-xs">
-          {r.granted_by ?? t("admin.audit.system")}
-        </span>
+        <UserIdentityCell
+          userId={r.granted_by}
+          users={users}
+          systemLabel={t("admin.audit.system")}
+        />
       ),
     },
     {
@@ -177,6 +294,7 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
   // Debounce: each request is itself written to the http audit table, so
   // per-keystroke fetching would amplify the very log being inspected.
   const [debouncedPath, setDebouncedPath] = useState("");
+  const [methodFilter, setMethodFilter] = useState<string | undefined>();
   useEffect(() => {
     const handle = setTimeout(() => setDebouncedPath(pathFilter), 400);
     return () => clearTimeout(handle);
@@ -187,10 +305,35 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
     isError,
   } = useAuditHttp(sinceIso, debouncedPath ? `${debouncedPath}%` : undefined);
 
+  const filtered = useMemo(() => {
+    const base = rows ?? [];
+    if (!methodFilter) return base;
+    return base.filter((r) => r.method === methodFilter);
+  }, [rows, methodFilter]);
+
+  const userIds = useMemo(
+    () =>
+      (filtered ?? []).flatMap((r) => (r.user_id ? [r.user_id] : [])),
+    [filtered],
+  );
+  const { data: users } = useUsersByIds(userIds);
+
+  const methodFilterDef: FilterDef = {
+    id: "method",
+    label: t("admin.audit.cols.method"),
+    allLabel: t("admin.audit.all_methods"),
+    options: ["GET", "POST", "PATCH", "PUT", "DELETE"].map((m) => ({
+      value: m,
+      label: m,
+    })),
+  };
+
   const columns: DataTableColumn<HttpAuditRow>[] = [
     {
       id: "when",
       header: t("admin.audit.cols.when"),
+      sortable: true,
+      sortValue: (r) => new Date(r.created_at),
       cell: (r) => (
         <span className="whitespace-nowrap text-m3-on-surface-variant">
           {new Date(r.created_at).toLocaleString()}
@@ -200,6 +343,8 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
     {
       id: "method",
       header: t("admin.audit.cols.method"),
+      sortable: true,
+      sortValue: (r) => r.method,
       cell: (r) => (
         <span className="font-mono text-xs font-bold">{r.method}</span>
       ),
@@ -216,6 +361,8 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
     {
       id: "code",
       header: t("admin.audit.cols.code"),
+      sortable: true,
+      sortValue: (r) => r.status_code,
       cell: (r) => (
         <span
           className={cn(
@@ -234,6 +381,8 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
     {
       id: "latency",
       header: t("admin.audit.cols.latency"),
+      sortable: true,
+      sortValue: (r) => r.latency_ms ?? 0,
       cell: (r) => (
         <span className="text-m3-on-surface-variant">
           {r.latency_ms != null ? `${r.latency_ms} ms` : "—"}
@@ -244,7 +393,11 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
       id: "user",
       header: t("admin.audit.cols.user"),
       cell: (r) => (
-        <span className="font-mono text-xs">{r.user_id ?? "—"}</span>
+        <UserIdentityCell
+          userId={r.user_id}
+          users={users}
+          systemLabel={t("admin.audit.system")}
+        />
       ),
     },
     {
@@ -258,18 +411,22 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
 
   return (
     <div className="space-y-3">
-      <Input
-        value={pathFilter}
-        onChange={(e) => setPathFilter(e.target.value)}
-        placeholder={t("admin.audit.path_filter_placeholder")}
-        className="max-w-md h-9 font-mono text-xs"
+      <DataTableToolbar
+        search={pathFilter}
+        onSearchChange={setPathFilter}
+        searchPlaceholder={t("admin.audit.path_filter_placeholder")}
+        filters={[methodFilterDef]}
+        filterValues={{ method: methodFilter }}
+        onFilterChange={(filterId, value) => {
+          if (filterId === "method") setMethodFilter(value);
+        }}
       />
       {isError ? (
         <ErrorPanel text={t("admin.audit.load_failed")} />
       ) : (
         <DataTable
           columns={columns}
-          data={rows ?? []}
+          data={filtered}
           getRowId={(r) => r.id}
           loading={isLoading}
           pagination
@@ -282,128 +439,218 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
   );
 }
 
-/** FR-6.7 — on-demand lookup: pick an entity type, paste its UUID, see
- * who created / updated / deleted it. Fires only once the ID looks like
- * a well-formed UUID, so the query doesn't hammer the endpoint per
- * keystroke.
- */
-function DataChangesPanel() {
+/** FR-6.7 — recent data changes per entity kind, with drill-down detail. */
+function DataChangesPanel({ sinceIso }: { sinceIso: string }) {
   const { t } = useTranslation();
   const [table, setTable] = useState<DataChangeTable>("courses");
+  const [selectedId, setSelectedId] = useState<string | undefined>();
   const [entityIdInput, setEntityIdInput] = useState("");
-  const [submittedId, setSubmittedId] = useState("");
+  const {
+    data: rows,
+    isLoading,
+    isError,
+  } = useAuditDataChangesList(table, sinceIso);
 
   const trimmed = entityIdInput.trim();
   const isValidUuid = trimmed.length === 0 || UUID_RE.test(trimmed);
 
-  const {
-    data: row,
-    isFetching,
-    isError,
-    error,
-  } = useAuditDataChanges(table, submittedId);
+  const actorIds = useMemo(
+    () =>
+      (rows ?? []).flatMap((r) =>
+        [r.created_by, r.updated_by, r.deleted_by].filter(
+          (v): v is string => Boolean(v),
+        ),
+      ),
+    [rows],
+  );
+  const { data: users } = useUsersByIds(actorIds);
 
-  const submit = () => {
-    if (UUID_RE.test(trimmed)) setSubmittedId(trimmed);
-  };
+  const detail = selectedId
+    ? (rows ?? []).find((r) => r.entity_id === selectedId)
+    : undefined;
 
-  const fields: Array<keyof NonNullable<typeof row>> = [
-    "entity_id",
-    "title",
-    "status",
-    "organization_id",
-    "created_by",
-    "created_at",
-    "updated_by",
-    "updated_at",
-    "deleted_by",
-    "deleted_at",
-    "slug",
-    "material_type",
-    "lesson_id",
-    "primary_email",
-    "scope_kind",
-    "subject_user_id",
+  const columns: DataTableColumn<DataChangeRow>[] = [
+    {
+      id: "entity",
+      header: t("admin.audit.cols.entity"),
+      sortable: true,
+      sortValue: (r) => r.title,
+      cell: (r) => (
+        <span className="text-sm font-medium text-text-strong truncate max-w-[16rem] block">
+          {r.title}
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      header: t("admin.audit.cols.status"),
+      cell: (r) =>
+        r.deleted_at ? (
+          <Badge className="text-[10px] border-0 bg-m3-error-container text-m3-on-error-container">
+            {t("admin.audit.revoked")}
+          </Badge>
+        ) : (
+          <Badge className="text-[10px] border-0 bg-emerald-100 text-emerald-700">
+            {t("admin.audit.active")}
+          </Badge>
+        ),
+    },
+    {
+      id: "updated_at",
+      header: t("admin.audit.cols.updated_at"),
+      sortable: true,
+      sortValue: (r) => new Date(r.updated_at),
+      cell: (r) => (
+        <span className="whitespace-nowrap text-m3-on-surface-variant">
+          {new Date(r.updated_at).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      id: "updated_by",
+      header: t("admin.audit.cols.updated_by"),
+      cell: (r) => (
+        <UserIdentityCell
+          userId={r.updated_by ?? r.created_by}
+          users={users}
+          systemLabel={t("admin.audit.system")}
+        />
+      ),
+    },
   ];
 
-  const isNotFound =
-    isError && error instanceof ApiError && error.status === 404;
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant flex flex-col gap-1">
-          {t("admin.audit.data_changes.table_label")}
-          <Select<DataChangeTable>
-            value={table}
-            onValueChange={(next) => {
-              setTable(next);
-              setSubmittedId("");
-            }}
-            options={DATA_CHANGE_TABLES.map((tbl) => ({
+    <div className="space-y-3">
+      <DataTableToolbar
+        filters={[
+          {
+            id: "table",
+            label: t("admin.audit.data_changes.table_label"),
+            allLabel: undefined,
+            options: DATA_CHANGE_TABLES.map((tbl) => ({
               value: tbl,
               label: t(`admin.audit.data_changes.tables.${tbl}`),
-            }))}
-            // Match the Input + Button on this row (both h-9). `size="sm"` (h-7)
-            // left the shorter Select's label floating above the taller Input's
-            // in the `items-end` row. Height is overridden per the Select's own
-            // token contract (explicit h-* survives tailwind-merge); radius and
-            // text size follow the row's controls rather than the sm chip token.
-            className="h-9 w-48 rounded-xl px-3 text-sm font-normal normal-case"
-          />
-        </label>
-        <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant flex flex-col gap-1 flex-1 min-w-[280px]">
-          {t("admin.audit.data_changes.entity_id_label")}
-          <Input
-            value={entityIdInput}
-            onChange={(e) => setEntityIdInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") submit();
-            }}
-            placeholder={t("admin.audit.data_changes.entity_id_placeholder")}
-            className="h-9 font-mono text-xs normal-case"
-          />
-        </label>
-        <Button
-          onClick={submit}
-          disabled={!trimmed || !isValidUuid}
-          className="h-9 gap-2"
-        >
-          <Search className="h-4 w-4" />
-          {t("admin.audit.data_changes.lookup")}
-        </Button>
-      </div>
+            })),
+          },
+        ]}
+        filterValues={{ table }}
+        onFilterChange={(filterId, value) => {
+          if (filterId === "table" && value) {
+            setTable(value as DataChangeTable);
+            setSelectedId(undefined);
+          }
+        }}
+        trailing={
+          <div className="flex items-center gap-2">
+            <Input
+              value={entityIdInput}
+              onChange={(e) => setEntityIdInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && UUID_RE.test(trimmed)) {
+                  setSelectedId(trimmed);
+                }
+              }}
+              placeholder={t("admin.audit.data_changes.entity_id_placeholder")}
+              className="h-9 w-64 font-mono text-xs normal-case"
+            />
+            <Button
+              type="button"
+              onClick={() => {
+                if (UUID_RE.test(trimmed)) setSelectedId(trimmed);
+              }}
+              disabled={!trimmed || !isValidUuid}
+              className="h-9 gap-2"
+            >
+              <UserRound className="h-4 w-4" />
+              {t("admin.audit.data_changes.lookup")}
+            </Button>
+          </div>
+        }
+      />
 
-      {!isValidUuid ? (
+      {!isValidUuid && trimmed ? (
         <p className="text-sm text-m3-error">
           {t("admin.audit.data_changes.invalid_id")}
         </p>
-      ) : !submittedId ? (
-        <p className="text-sm text-m3-on-surface-variant">
-          {t("admin.audit.data_changes.hint")}
-        </p>
-      ) : isFetching ? (
-        <p className="text-sm text-m3-on-surface-variant">…</p>
-      ) : isNotFound ? (
-        <ErrorPanel text={t("admin.audit.data_changes.not_found")} />
-      ) : isError ? (
-        <ErrorPanel text={t("admin.audit.load_failed")} />
-      ) : row ? (
-        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl bg-m3-surface-container-lowest ghost-border p-4">
-          {fields
-            .filter((f) => row[f] !== undefined && row[f] !== null)
-            .map((f) => (
-              <div key={f} className="flex flex-col gap-0.5">
-                <dt className="text-[11px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                  {t(`admin.audit.data_changes.fields.${f}`)}
-                </dt>
-                <dd className="text-sm font-mono break-all">
-                  {String(row[f])}
-                </dd>
-              </div>
-            ))}
-        </dl>
       ) : null}
+
+      {isError ? (
+        <ErrorPanel text={t("admin.audit.load_failed")} />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={rows ?? []}
+          getRowId={(r) => r.entity_id}
+          loading={isLoading}
+          pagination
+          pageSize={15}
+          pageSizeOptions={[15, 30, 50]}
+          emptyState={t("admin.audit.empty")}
+          onRowClick={(r) =>
+            setSelectedId((prev) => (prev === r.entity_id ? undefined : r.entity_id))
+          }
+        />
+      )}
+
+      {detail && <DataChangeDetail row={detail} onClose={() => setSelectedId(undefined)} />}
+    </div>
+  );
+}
+
+const DETAIL_FIELDS: Array<keyof DataChangeRow> = [
+  "entity_id",
+  "title",
+  "status",
+  "organization_id",
+  "created_by",
+  "created_at",
+  "updated_by",
+  "updated_at",
+  "deleted_by",
+  "deleted_at",
+  "slug",
+  "material_type",
+  "lesson_id",
+  "primary_email",
+  "scope_kind",
+  "subject_user_id",
+];
+
+function DataChangeDetail({
+  row,
+  onClose,
+}: {
+  row: DataChangeRow;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="rounded-xl bg-m3-surface-container-lowest ghost-border p-4 space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-bold text-text-strong truncate">
+          {row.title}
+        </h3>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onClose}
+          className="h-8 px-2 text-xs"
+        >
+          {t("common.close")}
+        </Button>
+      </div>
+      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {DETAIL_FIELDS.filter((f) => row[f] !== undefined && row[f] !== null).map(
+          (f) => (
+            <div key={f} className="flex flex-col gap-0.5">
+              <dt className="text-[11px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                {t(`admin.audit.data_changes.fields.${f}`)}
+              </dt>
+              <dd className="text-sm font-mono break-all">{String(row[f])}</dd>
+            </div>
+          ),
+        )}
+      </dl>
     </div>
   );
 }
