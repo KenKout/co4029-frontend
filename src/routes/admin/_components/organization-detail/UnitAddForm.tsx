@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { InfoTooltip } from "@/components/ui/tooltip";
 import type { UnitType } from "@/lib/api/types/admin-organizations";
 import { UNIT_TYPE_VALUES } from "./constants";
 import type { UnitsTabController } from "./use-units-tab";
@@ -33,6 +34,10 @@ export function UnitAddForm({
       <label className="md:col-span-3">
         <span className="text-sm font-semibold text-text-strong">
           {t("admin.organizations.fields.unit_type")}
+          <InfoTooltip
+            content={t("admin.organizations.tooltips.unit_type")}
+            label={t("admin.organizations.fields.unit_type")}
+          />
         </span>
         <Select<UnitType>
           value={unitType}
@@ -73,7 +78,7 @@ export function UnitAddForm({
         <Button
           type="submit"
           disabled={create.isPending}
-          className="w-full gap-1"
+          className="gap-1 w-full md:w-auto"
         >
           <Plus className="h-4 w-4" />
           {create.isPending

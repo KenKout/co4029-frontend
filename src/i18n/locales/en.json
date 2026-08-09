@@ -2034,6 +2034,11 @@
         },
         "search_placeholder": "Search by name or email…",
         "empty_search": "No matching members"
+      },
+      "tooltips": {
+        "auto_provision": "When a Google account with this email domain signs in for the first time, they are automatically added to this organization as a student.",
+        "membership_status": "active: full access to the organization. inactive: account kept, org access paused. suspended: access revoked, can be restored by an admin.",
+        "unit_type": "What kind of organizational unit this is — affects how the unit is displayed in management screens."
       }
     },
     "dashboard": {

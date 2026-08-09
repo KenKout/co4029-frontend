@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { InfoTooltip } from "@/components/ui/tooltip";
 import type { MembershipStatus } from "@/lib/api/types/admin-organizations";
 import { MEMBERSHIP_STATUS_VALUES } from "./constants";
 import type { MembershipsTabController } from "./use-memberships-tab";
@@ -57,6 +58,10 @@ export function MembershipAddForm({
         <label>
           <span className="text-sm font-semibold text-text-strong">
             {t("admin.organizations.fields.status")}
+            <InfoTooltip
+              content={t("admin.organizations.tooltips.membership_status")}
+              label={t("admin.organizations.fields.status")}
+            />
           </span>
           <Select<MembershipStatus>
             value={memStatus}

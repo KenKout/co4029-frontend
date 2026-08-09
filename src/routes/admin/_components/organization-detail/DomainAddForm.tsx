@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InfoTooltip } from "@/components/ui/tooltip";
 import type { DomainsTabController } from "./use-domains-tab";
 
 /**
@@ -46,6 +47,10 @@ export function DomainAddForm({
           className="rounded"
         />
         {t("admin.organizations.fields.auto_provision")}
+        <InfoTooltip
+          content={t("admin.organizations.tooltips.auto_provision")}
+          label={t("admin.organizations.fields.auto_provision")}
+        />
       </label>
       <Button type="submit" disabled={create.isPending} className="gap-1">
         <Plus className="h-4 w-4" />

@@ -1944,6 +1944,11 @@
         },
         "search_placeholder": "Tìm theo tên hoặc email…",
         "empty_search": "Không có thành viên phù hợp"
+      },
+      "tooltips": {
+        "auto_provision": "Khi tài khoản Google có email thuộc domain này đăng nhập lần đầu, hệ thống tự thêm họ vào tổ chức với vai trò student.",
+        "membership_status": "active: truy cập đầy đủ. inactive: giữ tài khoản, tạm dừng truy cập tổ chức. suspended: bị thu hồi truy cập, admin có thể khôi phục.",
+        "unit_type": "Loại đơn vị của tổ chức — ảnh hưởng cách hiển thị trong màn hình quản lý."
       }
     },
     "dashboard": {
