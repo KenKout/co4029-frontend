@@ -1,16 +1,23 @@
+import { useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
-  BookOpen,
   Briefcase,
   Clock,
-  GraduationCap,
   Mail,
   Map as MapIcon,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, avatarColor, avatarInitials } from "@/components/ui/avatar";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
+import { GradientProgress } from "@/components/ui/gradient-progress";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { UserStatusBadge as StatusBadge } from "@/components/ui/status-badges";
+import {
+  CourseEnrollmentStatusBadge,
+  CourseStatusBadge,
+  UserStatusBadge as StatusBadge,
+} from "@/components/ui/status-badges";
 import { useFormatDate } from "@/lib/format/date";
 import type {
   UserCareerPathProgressRead,
@@ -119,7 +126,7 @@ function IdentityCard({ data }: { data: UserOverview }) {
   );
 }
 
-/** Student sections: enrolled courses + career paths + last active time. */
+/** Last-active banner + the two student tables (courses, career paths). */
 function StudentSections({ data }: { data: UserOverview }) {
   const { t } = useTranslation();
   const formatDate = useFormatDate();
@@ -139,146 +146,280 @@ function StudentSections({ data }: { data: UserOverview }) {
         </div>
       )}
 
-      {data.courses.length > 0 && (
-        <section className="bg-surface-elev border border-border rounded-xl p-5">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-m3-on-surface-variant flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            {t("management_users.detail.courses_title", {
-              defaultValue: "Courses",
-            })}
-          </h2>
-          <div className="mt-3 space-y-2">
-            {data.courses.map((course) => (
-              <CourseRow key={course.course_id} course={course} />
-            ))}
-          </div>
-        </section>
-      )}
+      {data.courses.length > 0 && <CoursesTable courses={data.courses} />}
 
       {data.career_paths.length > 0 && (
-        <section className="bg-surface-elev border border-border rounded-xl p-5">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-m3-on-surface-variant flex items-center gap-2">
-            <GraduationCap className="h-4 w-4" />
-            {t("management_users.detail.career_paths_title", {
-              defaultValue: "Career paths",
-            })}
-          </h2>
-          <div className="mt-3 space-y-2">
-            {data.career_paths.map((path) => (
-              <CareerPathRow key={path.career_path_id} path={path} />
-            ))}
-          </div>
-        </section>
+        <CareerPathsTable paths={data.career_paths} />
       )}
     </>
   );
 }
 
-/** One enrolled course: title, enrolment status, completion bar. */
-function CourseRow({ course }: { course: UserCourseProgressRead }) {
+/** Student's enrolled courses: DataTable + toolbar, row click opens /dept/courses/:id. */
+function CoursesTable({ courses }: { courses: UserCourseProgressRead[] }) {
   const { t } = useTranslation();
-  const percent = Math.min(100, Math.max(0, course.completion_percent));
-  const statusLabel = t(`management_users.detail.enrollment_status.${course.enrollment_status}`, {
-    defaultValue: course.enrollment_status,
-  });
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
 
-  return (
-    <div className="rounded-xl bg-m3-surface-container-low ghost-border p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-m3-on-surface truncate">{course.title}</p>
-          <p className="text-[11px] font-mono text-m3-on-surface-variant truncate mt-0.5">
-            {course.slug}
-          </p>
-        </div>
-        <span className="text-[11px] font-semibold text-m3-on-surface-variant shrink-0">
-          {statusLabel}
-        </span>
-      </div>
-      <div className="mt-3 flex items-center gap-3">
-        <div className="h-1.5 flex-1 bg-m3-surface-container rounded-full overflow-hidden">
-          <div className="h-full bg-m3-primary transition-all" style={{ width: `${percent}%` }} />
-        </div>
-        <span className="text-xs font-semibold text-m3-on-surface shrink-0">
-          {course.completed_lessons}/{course.total_lessons}
-        </span>
-        <span className="text-[11px] text-m3-on-surface-variant shrink-0 w-11 text-right">
-          {Math.round(percent)}%
-        </span>
-      </div>
-    </div>
+  const rows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return courses;
+    return courses.filter(
+      (c) =>
+        c.title.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q),
+    );
+  }, [courses, search]);
+
+  const columns: DataTableColumn<UserCourseProgressRead>[] = useMemo(
+    () => [
+      {
+        id: "title",
+        header: t("management_users.detail.cols.course", {
+          defaultValue: "Course",
+        }),
+        cell: (course) => (
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-text-strong truncate">
+              {course.title}
+            </p>
+            <p className="text-[11px] font-mono text-text-muted truncate mt-0.5">
+              {course.slug}
+            </p>
+          </div>
+        ),
+      },
+      {
+        id: "course_status",
+        header: t("management_users.detail.cols.course_status", {
+          defaultValue: "Course status",
+        }),
+        cell: (course) => <CourseStatusBadge status={course.status} />,
+      },
+      {
+        id: "enrollment_status",
+        header: t("management_users.detail.cols.enrollment_status", {
+          defaultValue: "Enrollment",
+        }),
+        cell: (course) => (
+          <CourseEnrollmentStatusBadge status={course.enrollment_status} />
+        ),
+      },
+      {
+        id: "progress",
+        header: t("management_users.detail.cols.progress", {
+          defaultValue: "Progress",
+        }),
+        cell: (course) => (
+          <div className="flex items-center gap-3 min-w-[180px]">
+            <GradientProgress
+              value={course.completion_percent}
+              size="sm"
+              className="flex-1"
+            />
+            <span className="text-xs font-semibold text-text-strong whitespace-nowrap">
+              {course.completed_lessons}/{course.total_lessons}
+            </span>
+            <span className="text-[11px] text-text-muted whitespace-nowrap w-10 text-right">
+              {Math.round(course.completion_percent)}%
+            </span>
+          </div>
+        ),
+      },
+    ],
+    [t],
   );
-}
-
-/** One career path: name, status, completed-courses counter. */
-function CareerPathRow({ path }: { path: UserCareerPathProgressRead }) {
-  const { t } = useTranslation();
-  const percent = Math.min(100, Math.max(0, path.completion_percent));
-  const statusLabel = t(`management_users.detail.path_status.${path.status}`, {
-    defaultValue: path.status,
-  });
 
   return (
-    <div className="rounded-xl bg-m3-surface-container-low ghost-border p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-m3-on-surface truncate">{path.name}</p>
-          <p className="text-[11px] font-mono text-m3-on-surface-variant truncate mt-0.5">
-            {path.slug}
-          </p>
-        </div>
-        <span className="text-[11px] font-semibold text-m3-on-surface-variant shrink-0">
-          {statusLabel}
-        </span>
-      </div>
-      <div className="mt-3 flex items-center gap-3">
-        <div className="h-1.5 flex-1 bg-m3-surface-container rounded-full overflow-hidden">
-          <div className="h-full bg-m3-primary transition-all" style={{ width: `${percent}%` }} />
-        </div>
-        <span className="text-xs font-semibold text-m3-on-surface shrink-0">
-          {t("management_users.detail.completed_courses", {
-            defaultValue: "{{done}}/{{total}} courses",
-            done: path.completed_courses,
-            total: path.course_count,
-          })}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/** Teacher section: courses assigned to teach. */
-function TeacherSections({ data }: { data: UserOverview }) {
-  const { t } = useTranslation();
-
-  return (
-    <section className="bg-surface-elev border border-border rounded-xl p-5">
-      <h2 className="text-sm font-bold uppercase tracking-widest text-m3-on-surface-variant flex items-center gap-2">
-        <BookOpen className="h-4 w-4" />
-        {t("management_users.detail.assigned_courses_title", {
-          defaultValue: "Assigned courses",
+    <section>
+      <DataTable
+        columns={columns}
+        data={rows}
+        getRowId={(c) => c.course_id}
+        onRowClick={(course) =>
+          void navigate({
+            to: "/dept/courses/$courseId",
+            params: { courseId: course.course_id },
+          })
+        }
+        emptyState={t("management_users.detail.no_courses_match", {
+          defaultValue: "No matching courses",
         })}
-      </h2>
-      <div className="mt-3 space-y-2">
-        {data.assigned_courses.map((course) => (
-          <div
-            key={course.course_id}
-            className="rounded-xl bg-m3-surface-container-low ghost-border p-4 flex items-center justify-between gap-3"
-          >
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-m3-on-surface truncate">{course.title}</p>
-              <p className="text-[11px] font-mono text-m3-on-surface-variant truncate mt-0.5">
-                {course.slug}
-              </p>
-            </div>
-            <span className="text-[11px] font-semibold text-m3-on-surface-variant shrink-0">
-              {t(`management_users.detail.course_status.${course.status}`, {
-                defaultValue: course.status,
+        toolbar={
+          <DataTableToolbar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder={t("management_users.detail.search_courses", {
+              defaultValue: "Search courses…",
+            })}
+          />
+        }
+      />
+    </section>
+  );
+}
+
+/** Student's career paths: DataTable + toolbar, row click opens the path detail. */
+function CareerPathsTable({ paths }: { paths: UserCareerPathProgressRead[] }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+
+  const rows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return paths;
+    return paths.filter(
+      (p) => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q),
+    );
+  }, [paths, search]);
+
+  const columns: DataTableColumn<UserCareerPathProgressRead>[] = useMemo(
+    () => [
+      {
+        id: "name",
+        header: t("management_users.detail.cols.path", {
+          defaultValue: "Career path",
+        }),
+        cell: (path) => (
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-text-strong truncate">
+              {path.name}
+            </p>
+            <p className="text-[11px] font-mono text-text-muted truncate mt-0.5">
+              {path.slug}
+            </p>
+          </div>
+        ),
+      },
+      {
+        id: "status",
+        header: t("management_users.detail.cols.path_status", {
+          defaultValue: "Status",
+        }),
+        cell: (path) => <CourseEnrollmentStatusBadge status={path.status} />,
+      },
+      {
+        id: "progress",
+        header: t("management_users.detail.cols.progress", {
+          defaultValue: "Progress",
+        }),
+        cell: (path) => (
+          <div className="flex items-center gap-3 min-w-[180px]">
+            <GradientProgress
+              value={path.completion_percent}
+              size="sm"
+              className="flex-1"
+            />
+            <span className="text-xs font-semibold text-text-strong whitespace-nowrap">
+              {t("management_users.detail.completed_courses", {
+                defaultValue: "{{done}}/{{total}}",
+                done: path.completed_courses,
+                total: path.course_count,
               })}
             </span>
           </div>
-        ))}
-      </div>
+        ),
+      },
+    ],
+    [t],
+  );
+
+  return (
+    <section>
+      <DataTable
+        columns={columns}
+        data={rows}
+        getRowId={(p) => p.career_path_id}
+        onRowClick={(path) =>
+          void navigate({
+            to: "/management/career-paths/$id",
+            params: { id: path.career_path_id },
+          })
+        }
+        emptyState={t("management_users.detail.no_paths_match", {
+          defaultValue: "No matching career paths",
+        })}
+        toolbar={
+          <DataTableToolbar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder={t("management_users.detail.search_paths", {
+              defaultValue: "Search career paths…",
+            })}
+          />
+        }
+      />
+    </section>
+  );
+}
+
+/** Teacher section: courses assigned to teach (row click → course detail). */
+function TeacherSections({ data }: { data: UserOverview }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+
+  const rows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return data.assigned_courses;
+    return data.assigned_courses.filter(
+      (c) => c.title.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q),
+    );
+  }, [data.assigned_courses, search]);
+
+  const columns = useMemo(
+    () => [
+      {
+        id: "title",
+        header: t("management_users.detail.cols.course", {
+          defaultValue: "Course",
+        }),
+        cell: (course: { course_id: string; title: string; slug: string; status: string }) => (
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-text-strong truncate">
+              {course.title}
+            </p>
+            <p className="text-[11px] font-mono text-text-muted truncate mt-0.5">
+              {course.slug}
+            </p>
+          </div>
+        ),
+      },
+      {
+        id: "status",
+        header: t("management_users.detail.cols.course_status", {
+          defaultValue: "Course status",
+        }),
+        cell: (course: { status: string }) => <CourseStatusBadge status={course.status} />,
+      },
+    ],
+    [t],
+  );
+
+  return (
+    <section>
+      <DataTable
+        columns={columns}
+        data={rows}
+        getRowId={(c) => c.course_id}
+        onRowClick={(course) =>
+          void navigate({
+            to: "/dept/courses/$courseId",
+            params: { courseId: course.course_id },
+          })
+        }
+        emptyState={t("management_users.detail.no_courses_match", {
+          defaultValue: "No matching courses",
+        })}
+        toolbar={
+          <DataTableToolbar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder={t("management_users.detail.search_courses", {
+              defaultValue: "Search courses…",
+            })}
+          />
+        }
+      />
     </section>
   );
 }
