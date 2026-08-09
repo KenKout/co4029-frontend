@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -164,13 +164,24 @@ export function useRequirePermission(
   const { isLoading } = usePermissions();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  // Guard against double-toasting. `t` changes identity when i18n swaps
+  // language (AuthProvider hydrates the saved profile locale right after
+  // mount), and `t` is a dependency below — so a disallowed page would fire
+  // two toasts (one per locale) on first paint. The ref keeps the toast to
+  // one per disallowed state; it resets when the user becomes allowed again.
+  const hasNotifiedRef = useRef(false);
 
   useEffect(() => {
     if (isLoading) return;
     if (!allowed) {
-      toast.error(t(messageKey));
+      if (!hasNotifiedRef.current) {
+        hasNotifiedRef.current = true;
+        toast.error(t(messageKey));
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       void navigate({ to: redirectTo as any, replace: true });
+    } else {
+      hasNotifiedRef.current = false;
     }
   }, [isLoading, allowed, navigate, t, messageKey, redirectTo]);
 

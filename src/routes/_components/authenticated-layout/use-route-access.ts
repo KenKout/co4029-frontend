@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { DESKTOP_FIRST_PREFIXES } from "./constants";
 import {
@@ -46,7 +45,12 @@ export function useRouteAccess(): RouteAccess {
     if (!permsReady) return;
     if (isAllowed) return;
 
-    toast.error("Bạn không có quyền truy cập trang này.");
+    // No toast here: every gated page ALSO runs useRequirePermission, which
+    // owns the (i18n'd, page-specific) toast — a toast in this layout guard
+    // fired a SECOND toast on top of the page's, and because this string is
+    // hardcoded Vietnamese it surfaced as an en+vi double-toast whenever the
+    // profile locale differs from the browser default. Redirect + spinner is
+    // this hook's job; messaging belongs to the page-level guard.
     void navigate({ to: "/dashboard", replace: true });
   }, [needsCheck, permsReady, isAllowed, navigate]);
 

@@ -19,8 +19,11 @@ vi.mock("@/lib/api/hooks/auth", () => ({
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigateMock,
 }));
+const { useTranslationMock } = vi.hoisted(() => ({
+  useTranslationMock: vi.fn(() => ({ t: (k: string) => k })),
+}));
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (k: string) => k }),
+  useTranslation: useTranslationMock,
 }));
 vi.mock("sonner", () => ({
   toast: { error: (...a: unknown[]) => toastErrorMock(...a) },
@@ -85,5 +88,30 @@ describe("useRequirePermission", () => {
     expect(toastErrorMock).not.toHaveBeenCalledWith(
       "admin.users.roles.errors.no_permission",
     );
+  });
+
+  it("toasts once even when the i18n t function changes identity (language hydrate)", () => {
+    // AuthProvider calls i18n.changeLanguage() right after mount to hydrate
+    // the saved profile locale; `t` then gets a new identity and the guard
+    // effect re-runs. Without a ref guard that would fire a second toast in
+    // the other language — the en+vi double-toast bug. The toast must stay
+    // at exactly one while the user remains disallowed.
+    let tFn: (k: string) => string = (k) => k;
+    useTranslationMock.mockReturnValue({
+      t: tFn,
+    });
+    const { rerender } = renderHook(() =>
+      useRequirePermission(false, { messageKey: "x.no_permission" }),
+    );
+    expect(toastErrorMock).toHaveBeenCalledTimes(1);
+
+    // Simulate i18n.changeLanguage(): new t identity, same disallowed state.
+    tFn = (k: string) => `vi:${k}`;
+    useTranslationMock.mockReturnValue({
+      t: tFn,
+    });
+    rerender();
+    expect(toastErrorMock).toHaveBeenCalledTimes(1);
+    expect(toastErrorMock).toHaveBeenCalledWith("x.no_permission");
   });
 });
