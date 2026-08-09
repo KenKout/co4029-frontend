@@ -37,6 +37,11 @@ export function UnitAddForm({
           <InfoTooltip
             content={t("admin.organizations.tooltips.unit_type")}
             label={t("admin.organizations.fields.unit_type")}
+            // The Type field sits flush against the left edge of the content
+            // area (first grid column next to the fixed sidebar). Opening
+            // upward centers the popup over the sidebar boundary; opening to
+            // the right keeps it fully inside the content column.
+            side="right"
           />
         </span>
         <Select<UnitType>

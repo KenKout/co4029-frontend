@@ -37,7 +37,18 @@ export function Tooltip({
     <TooltipPrimitive.Root>
       <TooltipPrimitive.Trigger render={children} />
       <TooltipPrimitive.Portal>
-        <TooltipPrimitive.Positioner side={side} sideOffset={sideOffset} align="center">
+        <TooltipPrimitive.Positioner
+          side={side}
+          sideOffset={sideOffset}
+          align="center"
+          // z-index must live on the Positioner, not the Popup: the
+          // Positioner positions with `transform`, which creates its own
+          // stacking context, so a z-index on the child Popup is confined to
+          // that context and loses to page-level layers (e.g. the fixed
+          // sidebar at z-40). Placing it here keeps tooltips on top of the
+          // whole app.
+          className="z-50"
+        >
           <TooltipPrimitive.Popup
             className={cn(
               // M3 inverse surface: dark chip on every theme, readable over any
