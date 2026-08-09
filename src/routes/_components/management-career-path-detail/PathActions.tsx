@@ -13,13 +13,17 @@ export function PathActions({
   id,
   status,
   organizationId: _organizationId,
+  canManage,
 }: {
   id: string;
   status: string;
   organizationId: string;
+  canManage: boolean;
 }) {
   const { t } = useTranslation();
   const actions = usePathActions(id, t);
+
+  if (!canManage) return null;
 
   if (actions.confirming === "publish") {
     return (

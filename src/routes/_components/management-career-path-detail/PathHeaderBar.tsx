@@ -15,9 +15,11 @@ import { PathActions } from "./PathActions";
 export function PathHeaderBar({
   id,
   data,
+  canManage,
 }: {
   id: string;
   data: CareerPathAuthoring;
+  canManage: boolean;
 }) {
   const { t } = useTranslation();
   const statusCls = statusToken(COURSE_STATUS_TOKENS, data.status);
@@ -70,6 +72,7 @@ export function PathHeaderBar({
           id={id}
           status={data.status}
           organizationId={data.organization_id}
+          canManage={canManage}
         />
       </div>
     </>

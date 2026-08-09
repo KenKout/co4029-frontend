@@ -22,18 +22,21 @@ export default function ManagementCareerPathDetailPage() {
   const permissions = usePermissions();
   // Backend gates career-path authoring on course lifecycle codes (manager
   // holds them); there is no `career_path.manage` code. See the sibling
-  // management-career-paths.tsx for the rationale.
+  // management-career-paths.tsx for the rationale. Viewing (course.read) is
+  // open to HODs; mutations stay manager-only, so the page gates on read and
+  // the edit affordances render only when the caller can manage.
+  const canRead = permissions.hasAny("course.read", "system.administer");
   const canManage = permissions.hasAny(
     "course.create",
     "course.update",
     "system.administer",
   );
 
-  useRequirePermission(canManage, {
+  useRequirePermission(canRead, {
     messageKey: "common.no_permission",
   });
 
-  const enabled = !permissions.isLoading && canManage;
+  const enabled = !permissions.isLoading && canRead;
   const path = useManagedCareerPath(enabled ? id : undefined);
 
   const [tab, setTab] = useState<TabKey>("courses");
@@ -56,19 +59,21 @@ export default function ManagementCareerPathDetailPage() {
 
   return (
     <div className="max-w-[1200px] mx-auto pb-16 space-y-6 px-4 sm:px-6 lg:px-8">
-      <PathHeaderBar id={id} data={data} />
+      <PathHeaderBar id={id} data={data} canManage={canManage} />
 
-      <EditForm
-        id={id}
-        initialName={data.name}
-        initialDescription={data.description ?? ""}
-        initialOrganizationId={data.organization_id}
-      />
+      {canManage && (
+        <EditForm
+          id={id}
+          initialName={data.name}
+          initialDescription={data.description ?? ""}
+          initialOrganizationId={data.organization_id}
+        />
+      )}
 
       <TabBar tab={tab} onSelect={setTab} />
 
-      {tab === "courses" && <CoursesTab id={id} />}
-      {tab === "students" && <StudentsTab id={id} />}
+      {tab === "courses" && <CoursesTab id={id} canManage={canManage} />}
+      {tab === "students" && <StudentsTab id={id} canManage={canManage} />}
       {tab === "progress" && <ProgressTab id={id} />}
     </div>
   );

@@ -9,23 +9,35 @@ import { StudentRow } from "./StudentRow";
 import { useStudentsTab } from "./use-students-tab";
 
 /** Students tab: enrol students onto the path and review their roster. */
-export function StudentsTab({ id }: { id: string }) {
+export function StudentsTab({
+  id,
+  canManage,
+}: {
+  id: string;
+  canManage: boolean;
+}) {
   const { t } = useTranslation();
   const controller = useStudentsTab(id, t);
 
   return (
     <div className="space-y-6">
-      <SectionActionCard
-        title={t("management_career_path_detail.sections.register_student")}
-        hint={t("management_career_path_detail.sections.register_student_hint")}
-        icon={UserPlus}
-        actionLabel={t(
-          "management_career_path_detail.actions.register_students",
-        )}
-        onAction={() => controller.setPickerOpen(true)}
-      />
+      {canManage && (
+        <SectionActionCard
+          title={t("management_career_path_detail.sections.register_student")}
+          hint={t(
+            "management_career_path_detail.sections.register_student_hint",
+          )}
+          icon={UserPlus}
+          actionLabel={t(
+            "management_career_path_detail.actions.register_students",
+          )}
+          onAction={() => controller.setPickerOpen(true)}
+        />
+      )}
 
-      {controller.pickerOpen && <StudentPickerDialog controller={controller} />}
+      {canManage && controller.pickerOpen && (
+        <StudentPickerDialog controller={controller} />
+      )}
 
       {controller.readiness.data &&
         controller.readiness.data.student_count > 0 && (
@@ -47,7 +59,12 @@ export function StudentsTab({ id }: { id: string }) {
       ) : (
         <div className="space-y-2">
           {controller.rows.map((row) => (
-            <StudentRow key={row.student_id} pathId={id} row={row} />
+            <StudentRow
+              key={row.student_id}
+              pathId={id}
+              row={row}
+              canManage={canManage}
+            />
           ))}
         </div>
       )}

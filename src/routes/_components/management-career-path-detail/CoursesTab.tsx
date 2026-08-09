@@ -18,7 +18,13 @@ import { useStagesTab } from "./use-stages-tab";
  * Courses live inside stages now (backend migration 0070), so adding a course
  * always names a target stage and reordering is scoped to one stage.
  */
-export function CoursesTab({ id }: { id: string }) {
+export function CoursesTab({
+  id,
+  canManage,
+}: {
+  id: string;
+  canManage: boolean;
+}) {
   const { t } = useTranslation();
   const controller = useCoursesTab(id, t);
   const stages = useStagesTab(id, t);
@@ -37,13 +43,15 @@ export function CoursesTab({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
-      <SectionActionCard
-        title={t(`${prefix}.title`)}
-        hint={t(`${prefix}.hint`)}
-        icon={Plus}
-        actionLabel={t(`${prefix}.add`)}
-        onAction={stages.handleCreate}
-      />
+      {canManage && (
+        <SectionActionCard
+          title={t(`${prefix}.title`)}
+          hint={t(`${prefix}.hint`)}
+          icon={Plus}
+          actionLabel={t(`${prefix}.add`)}
+          onAction={stages.handleCreate}
+        />
+      )}
 
       {/* Reorder warnings: the backend deliberately does NOT rewrite a
           manager's unlock policy, so what changed has to be said out loud. */}
@@ -75,7 +83,7 @@ export function CoursesTab({ id }: { id: string }) {
         </div>
       )}
 
-      {stages.hasReorderChanges && (
+      {canManage && stages.hasReorderChanges && (
         <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-m3-surface-container">
           <span className="text-xs text-m3-on-surface-variant">
             {t(`${prefix}.save_order`)}
@@ -100,64 +108,102 @@ export function CoursesTab({ id }: { id: string }) {
         </div>
       )}
 
-      {controller.hasReorderChanges && <ReorderBanner controller={controller} />}
+      {canManage && controller.hasReorderChanges && (
+        <ReorderBanner controller={controller} />
+      )}
 
-      {controller.pickerOpen && <CoursePickerDialog controller={controller} />}
+      {canManage && controller.pickerOpen && (
+        <CoursePickerDialog controller={controller} />
+      )}
 
       {stages.rows.length === 0 ? (
         <EmptyState icon={Layers} text={t(`${prefix}.empty`)} />
       ) : (
         <div className="space-y-4">
-          {stages.rows.map((stage, stageIdx) => {
-            const courses = controller.rowsByStage.get(stage.id) ?? [];
-            return (
-              <div key={stage.id} className="space-y-2">
-                <StageCard
-                  stage={stage}
-                  index={stageIdx}
-                  total={stages.rows.length}
-                  courses={courses}
-                  controller={stages}
-                >
-                  {courses.map((row, idx) => (
-                    <CourseInPathRow
-                      key={row.course_id}
-                      row={row}
-                      index={idx}
-                      stageTotal={courses.length}
-                      pathId={id}
-                      controller={controller}
-                      stages={stages.rows}
-                      stagesController={stages}
-                    />
-                  ))}
-                </StageCard>
-                <div className="ml-4 flex items-center gap-1">
-                  <Button variant="ghost"
-                    type="button"
-                    onClick={() => controller.openPickerForStage(stage.id)}
-                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold text-m3-primary hover:bg-m3-primary-fixed cursor-pointer"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    {t("management_career_path_detail.actions.add_courses")}
-                  </Button>
-                  {/* Create-and-attach in one step. The picker only offers
-                      courses that already exist, so without this the manager
-                      leaves the path, creates a course, and has to remember to
-                      come back and attach it — the omission the readiness
-                      checklist reports as "not on any career path". */}
-                  <Link
-                    to="/management/courses/new"
-                    search={{ pathId: id, stageId: stage.id }}
-                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container cursor-pointer"
-                  >
-                    <FilePlus className="h-3.5 w-3.5" />
-                    {t("management_career_path_detail.actions.new_course")}
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
+          {stages.rows.map((stage, stageIdx) => (
+            <StageBlock
+              key={stage.id}
+              stage={stage}
+              stageIdx={stageIdx}
+              stages={stages}
+              controller={controller}
+              pathId={id}
+              canManage={canManage}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** One stage plus its course rows and the manager-only attach controls. */
+function StageBlock({
+  stage,
+  stageIdx,
+  stages,
+  controller,
+  pathId,
+  canManage,
+}: {
+  stage: ReturnType<typeof useStagesTab>["rows"][number];
+  stageIdx: number;
+  stages: ReturnType<typeof useStagesTab>;
+  controller: ReturnType<typeof useCoursesTab>;
+  pathId: string;
+  canManage: boolean;
+}) {
+  const { t } = useTranslation();
+  const courses = controller.rowsByStage.get(stage.id) ?? [];
+
+  return (
+    <div className="space-y-2">
+      <StageCard
+        stage={stage}
+        index={stageIdx}
+        total={stages.rows.length}
+        courses={courses}
+        controller={stages}
+        canManage={canManage}
+      >
+        {courses.map((row, idx) => (
+          <CourseInPathRow
+            key={row.course_id}
+            row={row}
+            index={idx}
+            stageTotal={courses.length}
+            pathId={pathId}
+            controller={controller}
+            stages={stages.rows}
+            stagesController={stages}
+            canManage={canManage}
+          />
+        ))}
+      </StageCard>
+      {canManage && (
+        <div className="ml-4 flex items-center gap-1">
+          <Button
+            variant="ghost"
+            type="button"
+            onClick={() => controller.openPickerForStage(stage.id)}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold text-m3-primary hover:bg-m3-primary-fixed cursor-pointer"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {t("management_career_path_detail.actions.add_courses")}
+          </Button>
+          {/* Create-and-attach in one step. The picker only offers
+              courses that already exist, so without this the manager
+              leaves the path, creates a course, and has to remember to
+              come back and attach it — the omission the readiness
+              checklist reports as "not on any career path". */}
+          <Link
+            to="/management/courses/new"
+            search={{ pathId: pathId, stageId: stage.id }}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold text-m3-on-surface-variant hover:bg-m3-surface-container cursor-pointer"
+          >
+            <FilePlus className="h-3.5 w-3.5" />
+            {t("management_career_path_detail.actions.new_course")}
+          </Link>
         </div>
       )}
     </div>

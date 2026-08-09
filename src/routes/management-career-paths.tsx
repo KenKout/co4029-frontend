@@ -209,20 +209,27 @@ export default function ManagementCareerPathsPage() {
   // manager role holds. There is no `career_path.manage` code in the catalog —
   // checking it here locked everyone but admins out of a surface the backend
   // already allows managers to use.
+  //
+  // Reading the catalogue is cheaper: HODs (course.read) may VIEW career
+  // paths; only managers may create/edit them. The backend mirrors this
+  // (list/detail/stages use _PATH_READ_CODES; mutations stay on the manage
+  // set), so the UI gates the page on read and hides the create button when
+  // the caller cannot manage.
+  const canRead = permissions.hasAny("course.read", "system.administer");
   const canManage = permissions.hasAny(
     "course.create",
     "course.update",
     "system.administer",
   );
 
-  useRequirePermission(canManage, {
+  useRequirePermission(canRead, {
     messageKey: "management_career_paths.no_permission",
   });
 
   const [includeArchived, setIncludeArchived] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  const enabled = !permissions.isLoading && canManage;
+  const enabled = !permissions.isLoading && canRead;
   const list = useListManagedCareerPaths({
     includeArchived,
     enabled,
@@ -241,14 +248,16 @@ export default function ManagementCareerPathsPage() {
         subtitle={t("management_career_paths.subtitle")}
         backTo="/dashboard"
         action={
-          <Button
-            size="sm"
-            onClick={() => setCreating(true)}
-            className="gap-2 shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            {t("management_career_paths.create_button")}
-          </Button>
+          canManage ? (
+            <Button
+              size="sm"
+              onClick={() => setCreating(true)}
+              className="gap-2 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              {t("management_career_paths.create_button")}
+            </Button>
+          ) : undefined
         }
       />
 

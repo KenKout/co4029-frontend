@@ -25,6 +25,7 @@ export function StageCard({
   courses,
   controller,
   children,
+  canManage,
 }: {
   stage: CareerPathStageAuthoring;
   index: number;
@@ -32,6 +33,7 @@ export function StageCard({
   courses: CareerPathCourseAuthoring[];
   controller: StagesTabController;
   children?: React.ReactNode;
+  canManage: boolean;
 }) {
   const { t } = useTranslation();
   const [confirming, setConfirming] = useState(false);
@@ -46,26 +48,28 @@ export function StageCard({
   return (
     <div className="rounded-2xl bg-card ghost-border p-4">
       <div className="flex items-start gap-3">
-        <div className="flex flex-col gap-0.5 shrink-0">
-          <Button variant="ghost"
-            type="button"
-            onClick={() => controller.move(index, -1)}
-            disabled={isFirst}
-            className="p-1 rounded hover:bg-m3-surface-container disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer h-auto whitespace-normal"
-            title={t(`${prefix}.move_up`)}
-          >
-            <ArrowUp className="h-3 w-3 text-m3-on-surface-variant" />
-          </Button>
-          <Button variant="ghost"
-            type="button"
-            onClick={() => controller.move(index, 1)}
-            disabled={index === total - 1}
-            className="p-1 rounded hover:bg-m3-surface-container disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer h-auto whitespace-normal"
-            title={t(`${prefix}.move_down`)}
-          >
-            <ArrowDown className="h-3 w-3 text-m3-on-surface-variant" />
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex flex-col gap-0.5 shrink-0">
+            <Button variant="ghost"
+              type="button"
+              onClick={() => controller.move(index, -1)}
+              disabled={isFirst}
+              className="p-1 rounded hover:bg-m3-surface-container disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer h-auto whitespace-normal"
+              title={t(`${prefix}.move_up`)}
+            >
+              <ArrowUp className="h-3 w-3 text-m3-on-surface-variant" />
+            </Button>
+            <Button variant="ghost"
+              type="button"
+              onClick={() => controller.move(index, 1)}
+              disabled={index === total - 1}
+              className="p-1 rounded hover:bg-m3-surface-container disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer h-auto whitespace-normal"
+              title={t(`${prefix}.move_down`)}
+            >
+              <ArrowDown className="h-3 w-3 text-m3-on-surface-variant" />
+            </Button>
+          </div>
+        )}
 
         <div className="flex flex-col items-center justify-center w-8 h-8 rounded-lg bg-m3-primary-fixed text-m3-primary shrink-0 font-headline font-bold text-xs">
           {stage.position}
@@ -101,34 +105,36 @@ export function StageCard({
           )}
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
-          <Tooltip content={t(`${prefix}.settings`)}>
-            <Button variant="ghost"
-              type="button"
-              onClick={() =>
-                controller.setOpenSettingsFor(open ? null : stage.id)
-              }
-              aria-label={t(`${prefix}.settings`)}
-              className="p-2 rounded-lg hover:bg-m3-surface-container cursor-pointer h-auto whitespace-normal"
-            >
-              <Settings className="h-4 w-4 text-m3-on-surface-variant" />
-            </Button>
-          </Tooltip>
-          <RemoveRowButtons
-            confirming={confirming}
-            isPending={controller.remove.isPending}
-            confirmLabel={t("common.confirm")}
-            cancelLabel={t("common.cancel")}
-            onStartConfirm={() => setConfirming(true)}
-            onCancel={() => setConfirming(false)}
-            onRemove={() => {
-              controller.handleDelete(stage.id);
-              setConfirming(false);
-            }}
-            wrapperClassName="flex gap-1"
-            triggerClassName="text-red-600 hover:text-red-700"
-          />
-        </div>
+        {canManage && (
+          <div className="flex items-center gap-1 shrink-0">
+            <Tooltip content={t(`${prefix}.settings`)}>
+              <Button variant="ghost"
+                type="button"
+                onClick={() =>
+                  controller.setOpenSettingsFor(open ? null : stage.id)
+                }
+                aria-label={t(`${prefix}.settings`)}
+                className="p-2 rounded-lg hover:bg-m3-surface-container cursor-pointer h-auto whitespace-normal"
+              >
+                <Settings className="h-4 w-4 text-m3-on-surface-variant" />
+              </Button>
+            </Tooltip>
+            <RemoveRowButtons
+              confirming={confirming}
+              isPending={controller.remove.isPending}
+              confirmLabel={t("common.confirm")}
+              cancelLabel={t("common.cancel")}
+              onStartConfirm={() => setConfirming(true)}
+              onCancel={() => setConfirming(false)}
+              onRemove={() => {
+                controller.handleDelete(stage.id);
+                setConfirming(false);
+              }}
+              wrapperClassName="flex gap-1"
+              triggerClassName="text-red-600 hover:text-red-700"
+            />
+          </div>
+        )}
       </div>
 
       {open && (

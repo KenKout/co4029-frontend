@@ -9,9 +9,11 @@ import { RemoveRowButtons } from "./RemoveRowButtons";
 export function StudentRow({
   pathId,
   row,
+  canManage,
 }: {
   pathId: string;
   row: StudentPathProgressAuthoring;
+  canManage: boolean;
 }) {
   const { t } = useTranslation();
   const remove = useRemoveCareerPathStudent(pathId, row.student_id);
@@ -59,17 +61,19 @@ export function StudentRow({
           />
         </div>
       </div>
-      <RemoveRowButtons
-        confirming={confirming}
-        isPending={remove.isPending}
-        confirmLabel={t("common.confirm")}
-        cancelLabel={t("common.cancel")}
-        onStartConfirm={() => setConfirming(true)}
-        onCancel={() => setConfirming(false)}
-        onRemove={handleRemove}
-        wrapperClassName="flex gap-1 shrink-0"
-        triggerClassName="text-red-600 hover:text-red-700 shrink-0"
-      />
+      {canManage && (
+        <RemoveRowButtons
+          confirming={confirming}
+          isPending={remove.isPending}
+          confirmLabel={t("common.confirm")}
+          cancelLabel={t("common.cancel")}
+          onStartConfirm={() => setConfirming(true)}
+          onCancel={() => setConfirming(false)}
+          onRemove={handleRemove}
+          wrapperClassName="flex gap-1 shrink-0"
+          triggerClassName="text-red-600 hover:text-red-700 shrink-0"
+        />
+      )}
     </div>
   );
 }
