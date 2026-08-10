@@ -126,7 +126,7 @@ export function FocusedInterviewStage({
     activeTurn,
     assistanceTurn,
     historyTurns,
-    hintUsed,
+    hintsUsed,
     replayBlocked,
     replayTurn,
     markPresented,
@@ -192,7 +192,7 @@ export function FocusedInterviewStage({
                 presentedAiTurnIds={presentedAiTurnIds}
                 replayBlocked={replayBlocked}
                 replayingTurnId={replayingTurnId}
-                hintUsed={hintUsed}
+                hintsUsed={hintsUsed}
                 markPresented={markPresented}
                 replayTurn={replayTurn}
                 agentSpeaks={agentSpeaks}

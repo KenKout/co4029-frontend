@@ -17,7 +17,7 @@ export function InterviewerAssistance({
   onPresentationComplete,
   actionsVisible,
   disabled,
-  hintUsed,
+  hintsUsed,
   onReplayQuestion,
   onRequestHint,
   onExplainTerm,
@@ -28,7 +28,7 @@ export function InterviewerAssistance({
   onPresentationComplete: () => void;
   actionsVisible: boolean;
   disabled: boolean;
-  hintUsed: boolean;
+  hintsUsed: number;
   onReplayQuestion: () => void;
   onRequestHint?: () => void;
   onExplainTerm?: (term: string) => void;
@@ -78,7 +78,7 @@ export function InterviewerAssistance({
       <MessageTurnActions visible={actionsVisible}>
         <InterviewerAssistanceActions
           disabled={disabled}
-          hintUsed={hintUsed}
+          hintsUsed={hintsUsed}
           termOpen={termOpen}
           onReplayQuestion={onReplayQuestion}
           onToggleTerm={() => setTermOpen((open) => !open)}

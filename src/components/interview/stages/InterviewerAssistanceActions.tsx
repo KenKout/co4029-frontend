@@ -2,12 +2,16 @@ import { useTranslation } from "react-i18next";
 import { MessageSquareText, Sparkles, Volume2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  hintLadderExhausted,
+  hintsRemaining,
+} from "@/lib/interview/hint-ladder";
 
 /** Button rail under an assistance turn: replay the question, open the
- * explain-a-term input, or spend the one available hint. */
+ * explain-a-term input, or spend a rung of the question's hint ladder. */
 export function InterviewerAssistanceActions({
   disabled,
-  hintUsed,
+  hintsUsed,
   termOpen,
   onReplayQuestion,
   onToggleTerm,
@@ -15,7 +19,8 @@ export function InterviewerAssistanceActions({
   onExplainTerm,
 }: {
   disabled: boolean;
-  hintUsed: boolean;
+  /** Hints already given on the current question; the ladder resets per question. */
+  hintsUsed: number;
   termOpen: boolean;
   onReplayQuestion: () => void;
   onToggleTerm: () => void;
@@ -56,14 +61,24 @@ export function InterviewerAssistanceActions({
           type="button"
           variant="ghost"
           size="sm"
-          disabled={disabled || hintUsed}
+          disabled={disabled || hintLadderExhausted(hintsUsed)}
           onClick={onRequestHint}
           className="min-h-10 rounded-lg text-text-muted hover:text-primary"
         >
           <Sparkles className="h-4 w-4" aria-hidden="true" />
-          {hintUsed
+          {hintLadderExhausted(hintsUsed)
             ? t("course_interview.workspace.hint_provided")
             : t("course_interview.workspace.give_small_hint")}
+          {/* Each rung is a harder hint, so "how many are left" is information the
+              candidate needs to decide whether to spend one. Hidden on the first
+              rung, where the count would just be noise. */}
+          {hintsUsed > 0 && !hintLadderExhausted(hintsUsed) && (
+            <span className="text-[11px] font-semibold tabular-nums text-text-subtle">
+              {t("course_interview.workspace.hints_left", {
+                count: hintsRemaining(hintsUsed),
+              })}
+            </span>
+          )}
         </Button>
       )}
     </div>

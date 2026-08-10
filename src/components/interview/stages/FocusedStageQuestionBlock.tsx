@@ -24,7 +24,7 @@ export function FocusedStageQuestionBlock({
   presentedAiTurnIds,
   replayBlocked,
   replayingTurnId,
-  hintUsed,
+  hintsUsed,
   markPresented,
   replayTurn,
   agentSpeaks = false,
@@ -44,7 +44,7 @@ export function FocusedStageQuestionBlock({
   presentedAiTurnIds: ReadonlySet<string>;
   replayBlocked: boolean;
   replayingTurnId: string | null;
-  hintUsed: boolean;
+  hintsUsed: number;
   markPresented: (turn: ConversationTurn) => void;
   replayTurn: (turn: ConversationTurn) => Promise<void>;
   /** The LiveKit agent voices this turn — mirror its synced transcript. */
@@ -90,7 +90,7 @@ export function FocusedStageQuestionBlock({
           onPresentationComplete={() => markPresented(assistanceTurn)}
           actionsVisible={presentedAiTurnIds.has(assistanceTurn.id)}
           disabled={replayBlocked || replayingTurnId !== null}
-          hintUsed={hintUsed}
+          hintsUsed={hintsUsed}
           onReplayQuestion={() => void replayTurn(activeTurn)}
           onRequestHint={onRequestHint}
           onExplainTerm={onExplainTerm}

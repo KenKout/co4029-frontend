@@ -87,7 +87,7 @@ export function useFocusedStageTurns({
     }
     return null;
   }, [activeTurnIndex, assessmentActive, transcript]);
-  const hintUsed = useHintUsed(transcript, activeTurnIndex, assessmentActive);
+  const hintsUsed = useHintsUsed(transcript, activeTurnIndex, assessmentActive);
   const historyTurns = useStageHistory({
     transcript,
     activeTurn,
@@ -168,7 +168,7 @@ export function useFocusedStageTurns({
     activeTurn,
     assistanceTurn,
     historyTurns,
-    hintUsed,
+    hintsUsed,
     replayBlocked,
     replayTurn,
     markPresented,
@@ -197,18 +197,26 @@ function useStageHistory(args: {
 }
 
 
-function useHintUsed(
+/**
+ * How many hints the interviewer has already given on the CURRENT question.
+ *
+ * Counts, not a boolean. The server runs an escalating hint ladder capped at
+ * MAX_HINTS_PER_QUESTION rungs and resets it per question, so a boolean
+ * "hintUsed" locked the control after the first rung and made every rung past
+ * it unreachable through the UI.
+ *
+ * Only turns AFTER the active question count, which is what scopes this to the
+ * question in play — the ladder resets server-side on advance.
+ */
+function useHintsUsed(
   transcript: ConversationTurn[],
   activeTurnIndex: number,
   assessmentActive: boolean,
-): boolean {
-  return useMemo(
-    () =>
-      assessmentActive &&
-      activeTurnIndex >= 0 &&
-      transcript
-        .slice(activeTurnIndex + 1)
-        .some((turn) => turn.role === "ai" && turn.kind === "hint"),
-    [activeTurnIndex, assessmentActive, transcript],
-  );
+): number {
+  return useMemo(() => {
+    if (!assessmentActive || activeTurnIndex < 0) return 0;
+    return transcript
+      .slice(activeTurnIndex + 1)
+      .filter((turn) => turn.role === "ai" && turn.kind === "hint").length;
+  }, [activeTurnIndex, assessmentActive, transcript]);
 }

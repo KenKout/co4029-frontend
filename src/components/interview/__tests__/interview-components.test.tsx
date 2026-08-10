@@ -595,6 +595,95 @@ describe("P0 focused interview room", () => {
     vi.useRealTimers();
   });
 
+  it("keeps the hint control live across the ladder and closes it at the cap", async () => {
+    // The server grants MAX_HINTS_PER_QUESTION escalating hints per question and
+    // resets the ladder on advance. A boolean "hintUsed" used to disable this
+    // control after the FIRST hint, so the harder rungs were unreachable through
+    // the UI. Drive it with real hint turns and assert the control tracks them.
+    vi.useFakeTimers();
+    const onHint = vi.fn();
+    const question = {
+      id: "question",
+      role: "ai" as const,
+      text: "Compare fact tables and factless fact tables.",
+      kind: "question" as const,
+      questionType: "technical",
+    };
+    const hintTurn = (n: number) => ({
+      id: `hint-${n}`,
+      role: "ai" as const,
+      text: `Hint number ${n}.`,
+      kind: "hint" as const,
+    });
+    const props = {
+      status: "idle" as const,
+      assessmentActive: true,
+      currentQuestionNumber: 1,
+      totalQuestions: null,
+      currentQuestionType: "technical",
+      isUserTyping: false,
+      questionTypeLabel: () => "Technical",
+      speak: () => undefined,
+      onSpeakingChange: () => undefined,
+      onRequestHint: onHint,
+    };
+
+    const settle = async () => {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(20_000);
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(50);
+      });
+    };
+
+    const hintButton = () =>
+      screen.getByRole("button", {
+        name: new RegExp(
+          i18n.t("course_interview.workspace.give_small_hint"),
+          "i",
+        ),
+      });
+
+    // The rail lives on the assistance card, so it only exists once at least one
+    // assistance turn (here: the first hint) is on screen.
+    const { rerender, unmount } = render(
+      <FocusedInterviewStage {...props} transcript={[question]} />,
+    );
+    await settle();
+
+    // Rungs 1 and 2 spent: still more ladder left, so the control stays usable.
+    for (const spent of [1, 2]) {
+      rerender(
+        <FocusedInterviewStage
+          {...props}
+          transcript={[
+            question,
+            ...Array.from({ length: spent }, (_, i) => hintTurn(i + 1)),
+          ]}
+        />,
+      );
+      await settle();
+      expect(hintButton()).toBeEnabled();
+    }
+
+    // Cap reached: the control reports the ladder is spent and goes disabled.
+    rerender(
+      <FocusedInterviewStage
+        {...props}
+        transcript={[question, hintTurn(1), hintTurn(2), hintTurn(3)]}
+      />,
+    );
+    await settle();
+    const spentButton = screen.getByRole("button", {
+      name: new RegExp(i18n.t("course_interview.workspace.hint_provided"), "i"),
+    });
+    expect(spentButton).toBeDisabled();
+
+    unmount();
+    vi.useRealTimers();
+  });
+
   it("renders the active prompt as a prominent question card", async () => {
     vi.useFakeTimers();
     const onPresented = vi.fn();
