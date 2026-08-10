@@ -7,10 +7,7 @@ import {
   useCourseProcessingJobs,
   useRestoreCourse,
 } from "@/lib/api/hooks/admin";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 
 import { useFormatters } from "./use-formatters";
 
@@ -29,10 +26,6 @@ export function useAdminCourseDetail() {
 
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
-
-  useRequirePermission(canAdmin, {
-    messageKey: "common.no_permission",
-  });
 
   const enabled = !permissions.isLoading && canAdmin && Boolean(courseId);
   const audit = useCourseAudit(enabled ? courseId : "");

@@ -1,3 +1,4 @@
+import { PermissionDenied } from "@/components/ui/permission-denied";
 import { ProcessingJobsSection } from "./_components/processing/ProcessingJobsSection";
 import { JobsTabs } from "./_components/processing/JobsTabs";
 import { useAdminProcessing } from "./_components/processing/use-admin-processing";
@@ -6,13 +7,17 @@ export default function AdminProcessingPage() {
   const c = useAdminProcessing();
   const { t } = c;
 
-  if (c.permissionsLoading || !c.canAdmin) {
+  if (c.permissionsLoading) {
     return (
       <div className="space-y-3 pb-12">
         <div className="h-6 w-40 bg-surface-muted animate-pulse rounded" />
         <div className="h-32 bg-surface-muted animate-pulse rounded-lg" />
       </div>
     );
+  }
+
+  if (!c.canAdmin) {
+    return <PermissionDenied />;
   }
 
   return (

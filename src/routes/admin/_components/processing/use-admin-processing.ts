@@ -4,10 +4,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 import { useProcessingJobs, useProcessingSummary, useRetryProcessingJob } from "@/lib/api/hooks/admin";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
 import type { ProcessingJobOut } from "@/lib/api/types";
 import type {
@@ -102,10 +99,6 @@ export function useAdminProcessing() {
   );
   const [searchText, setSearchText] = useState("");
   const [retryingId, setRetryingId] = useState<string | null>(null);
-
-  useRequirePermission(canAdmin, {
-    messageKey: "common.no_permission",
-  });
 
   // CRITICAL: `since` MUST be stable between renders. It feeds the react-query
   // key, and sinceFromRange() returns a fresh ISO string every call — an

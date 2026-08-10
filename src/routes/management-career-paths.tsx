@@ -9,11 +9,9 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Textarea } from "@/components/ui/textarea";
 import { CareerPathStatusBadge } from "@/components/ui/status-badges";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import {
   useCreateCareerPath,
   useListManagedCareerPaths,
@@ -223,10 +221,6 @@ export default function ManagementCareerPathsPage() {
     "system.administer",
   );
 
-  useRequirePermission(canRead, {
-    messageKey: "management_career_paths.no_permission",
-  });
-
   const [includeArchived, setIncludeArchived] = useState(false);
   const [creating, setCreating] = useState(false);
 
@@ -236,8 +230,12 @@ export default function ManagementCareerPathsPage() {
     enabled,
   });
 
-  if (permissions.isLoading || !enabled) {
+  if (permissions.isLoading) {
     return <PageSkeleton rows={3} rounded="rounded-lg" className="pb-12" />;
+  }
+
+  if (!canRead) {
+    return <PermissionDenied />;
   }
 
   const paths = list.data ?? [];

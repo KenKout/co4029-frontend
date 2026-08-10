@@ -3,12 +3,10 @@ import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 import { Tabs } from "@/components/ui/tabs";
 import { useOrganization } from "@/lib/api/hooks/admin-organizations";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { DomainsTab } from "./_components/organization-detail/DomainsTab";
 import { InfoTab } from "./_components/organization-detail/InfoTab";
 import { MembershipsTab } from "./_components/organization-detail/MembershipsTab";
@@ -34,10 +32,6 @@ export default function AdminOrganizationDetailPage() {
     "user.bulk_import",
   );
 
-  useRequirePermission(canManage, {
-    messageKey: "common.no_permission",
-  });
-
   if (!orgId) return null;
   if (permissions.isLoading || isLoading) {
     return (
@@ -48,7 +42,7 @@ export default function AdminOrganizationDetailPage() {
       </div>
     );
   }
-  if (!canManage) return null;
+  if (!canManage) return <PermissionDenied />;
 
   return (
     <div className="space-y-6 pb-12">

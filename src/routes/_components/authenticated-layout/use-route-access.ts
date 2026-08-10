@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useLocation } from "@tanstack/react-router";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { DESKTOP_FIRST_PREFIXES } from "./constants";
 import {
@@ -23,7 +22,6 @@ import type { RouteAccess } from "./types";
  */
 export function useRouteAccess(): RouteAccess {
   const location = useLocation();
-  const navigate = useNavigate();
   const permissions = usePermissions();
   const perms = permissions.permissions;
 
@@ -40,20 +38,6 @@ export function useRouteAccess(): RouteAccess {
     onTeacherPath,
   });
 
-  useEffect(() => {
-    if (!needsCheck) return;
-    if (!permsReady) return;
-    if (isAllowed) return;
-
-    // No toast here: every gated page ALSO runs useRequirePermission, which
-    // owns the (i18n'd, page-specific) toast — a toast in this layout guard
-    // fired a SECOND toast on top of the page's, and because this string is
-    // hardcoded Vietnamese it surfaced as an en+vi double-toast whenever the
-    // profile locale differs from the browser default. Redirect + spinner is
-    // this hook's job; messaging belongs to the page-level guard.
-    void navigate({ to: "/dashboard", replace: true });
-  }, [needsCheck, permsReady, isAllowed, navigate]);
-
   const section = { isAllowed, onAdminPath, onManagerPath, onTeacherPath };
   const navGroups = resolveNavGroups(section);
   const role = resolveRole(section);
@@ -63,7 +47,11 @@ export function useRouteAccess(): RouteAccess {
     DESKTOP_FIRST_PREFIXES,
   );
 
-  const showGuardedSpinner = needsCheck && !isAllowed;
+  // Spinner only while the permission lookup is still in flight. Once it has
+  // settled, a denied section URL renders <PermissionDenied /> in place — no
+  // redirect, so the browser stays on the address the user actually hit.
+  const showGuardedSpinner = needsCheck && !permsReady;
+  const denied = needsCheck && permsReady && !isAllowed;
 
-  return { navGroups, role, showDesktopBanner, showGuardedSpinner, permsReady };
+  return { navGroups, role, showDesktopBanner, showGuardedSpinner, denied, permsReady };
 }

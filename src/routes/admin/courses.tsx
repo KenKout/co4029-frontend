@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 
 import { CoursesTable } from "./_components/courses/CoursesTable";
 import { useAdminCourses } from "./_components/courses/use-admin-courses";
@@ -18,7 +19,7 @@ export default function AdminCoursesPage() {
   }
 
   if (!c.canAdmin) {
-    return null;
+    return <PermissionDenied />;
   }
 
   return (

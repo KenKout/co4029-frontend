@@ -4,12 +4,10 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 import { useMe } from "@/lib/api/hooks/auth";
 import { useObjectUrl } from "@/lib/use-object-url";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { CourseBasicsSection } from "./_components/management-course-new/BasicsSection";
 import { CourseCardPreview } from "./_components/management-course-new/CardPreview";
 import {
@@ -48,11 +46,6 @@ export default function ManagementCourseNewPage() {
 
   const permissions = usePermissions();
   const canCreate = permissions.has("course.create");
-  useRequirePermission(canCreate, {
-    messageKey: "dept_courses.no_permission",
-    redirectTo: "/dept",
-  });
-
   const gate = useCourseDraftGate();
   const controller = useCourseForm(false, gate.restored?.form);
   const { form, canSubmit } = controller;
@@ -71,8 +64,12 @@ export default function ManagementCourseNewPage() {
     [t],
   );
 
-  if (permissions.isLoading || !canCreate) {
+  if (permissions.isLoading) {
     return null;
+  }
+
+  if (!canCreate) {
+    return <PermissionDenied />;
   }
 
   return (

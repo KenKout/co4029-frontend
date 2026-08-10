@@ -2,7 +2,7 @@ import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
-import { usePermissions, useRequirePermission } from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { apiFetch } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import type { UserOverview } from "@/lib/api/types/user-overview";
@@ -22,10 +22,6 @@ export function useManagerUserDetail() {
   const userId = params.userId ?? "";
 
   const permissions = usePermissions();
-  useRequirePermission(permissions.has("user.read"), {
-    messageKey: "common.no_permission",
-  });
-
   const enabled = !permissions.isLoading && permissions.has("user.read") && Boolean(userId);
   const query = useQuery({
     queryKey: queryKeys.manager.userOverview(userId),
@@ -36,6 +32,8 @@ export function useManagerUserDetail() {
   return {
     t,
     userId,
+    permissionsLoading: permissions.isLoading,
+    canRead: permissions.has("user.read"),
     isLoading: permissions.isLoading || query.isLoading,
     isError: query.isError,
     data: query.data,

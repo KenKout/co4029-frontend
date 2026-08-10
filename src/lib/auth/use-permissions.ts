@@ -1,7 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+import { useMemo } from "react";
 import { useMyPermissions } from "@/lib/api/hooks/auth";
 
 /**
@@ -116,7 +113,7 @@ export interface UseRequirePermissionResult {
 }
 
 /**
- * Route guard: redirect away (with a toast) when the current user lacks access.
+ * Route guard: report whether the current user may view the page.
  *
  * Replaces the block that was copy-pasted across ~15 gated pages:
  *
@@ -124,66 +121,34 @@ export interface UseRequirePermissionResult {
  * useEffect(() => {
  *   if (permissions.isLoading) return;
  *   if (!canAdmin) {
- *     toast.error(t("…no_permission"));
- *     void navigate({ to: "/dashboard", replace: true });
+ *     return <PermissionDenied />;
  *   }
- * }, [permissions.isLoading, canAdmin, navigate, t]);
+ * }, [permissions.isLoading, canAdmin]);
  * if (permissions.isLoading) return <Skeleton/>;
  * if (!canAdmin) return null;
  * ```
  *
  * Takes the ALREADY-COMPUTED `allowed` boolean (not a permission string) so
- * composed checks — `hasAny(...) || has(...)` — work unchanged. `messageKey`
- * is REQUIRED and lives at the call site, so each page owns its own i18n key
- * and it can't silently drift to another page's namespace (the copy-paste bug
- * this replaces: admin/courses was toasting the admin.users key).
+ * composed checks — `hasAny(...) || has(...)` — work unchanged.
+ *
+ * This hook NO LONGER redirects or toasts. Permission-violation URLs render
+ * <PermissionDenied /> in place (the layout guard does the same for section
+ * prefixes), so the browser stays on the offending URL instead of jumping to
+ * /dashboard — the old toast + redirect made every dead link bounce the user.
  *
  * Returns `{ isLoading, allowed }`; the caller renders its own loading
- * placeholder and returns null when not allowed — those skeletons vary too much
- * to own here.
+ * placeholder, then <PermissionDenied /> when `allowed` is false.
  *
  * ```tsx
  * const canAdmin = permissions.has("system.administer");
- * const guard = useRequirePermission(canAdmin, {
- *   messageKey: "admin.courses_list.errors.no_permission",
- * });
+ * const guard = useRequirePermission(canAdmin);
  * if (guard.isLoading) return <PageSkeleton rows={3} />;
- * if (!guard.allowed) return null;
+ * if (!guard.allowed) return <PermissionDenied />;
  * ```
  */
 export function useRequirePermission(
   allowed: boolean,
-  options: {
-    /** i18n key for the "no permission" toast. Required — keeps it explicit. */
-    messageKey: string;
-    /** Where to send a disallowed user. Defaults to "/dashboard". */
-    redirectTo?: string;
-  },
 ): UseRequirePermissionResult {
-  const { messageKey, redirectTo = "/dashboard" } = options;
   const { isLoading } = usePermissions();
-  const navigate = useNavigate();
-  const { t } = useTranslation();
-  // Guard against double-toasting. `t` changes identity when i18n swaps
-  // language (AuthProvider hydrates the saved profile locale right after
-  // mount), and `t` is a dependency below — so a disallowed page would fire
-  // two toasts (one per locale) on first paint. The ref keeps the toast to
-  // one per disallowed state; it resets when the user becomes allowed again.
-  const hasNotifiedRef = useRef(false);
-
-  useEffect(() => {
-    if (isLoading) return;
-    if (!allowed) {
-      if (!hasNotifiedRef.current) {
-        hasNotifiedRef.current = true;
-        toast.error(t(messageKey));
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      void navigate({ to: redirectTo as any, replace: true });
-    } else {
-      hasNotifiedRef.current = false;
-    }
-  }, [isLoading, allowed, navigate, t, messageKey, redirectTo]);
-
   return { isLoading, allowed: !isLoading && allowed };
 }

@@ -6,15 +6,13 @@ import {
   useCourseTeachers,
   useDeptCourses,
 } from "@/lib/api/hooks/dept";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { DeptCourseHeader } from "./_components/dept-course-detail/DeptCourseHeader";
 import { DeptSettingsTab } from "./_components/dept-course-detail/SettingsTab";
 import { DeptStudentsTab } from "./_components/dept-course-detail/StudentsTab";
 import { DeptTeachersTab } from "./_components/dept-course-detail/TeachersTab";
 import { Tabs } from "@/components/ui/tabs";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 import type { TabKey } from "./_components/dept-course-detail/types";
 
 const TAB_KEYS: TabKey[] = ["teachers", "students", "settings"];
@@ -44,10 +42,6 @@ export default function DeptCourseDetailPage() {
     "system.administer",
   );
 
-  useRequirePermission(canRead, {
-    messageKey: "dept_course_detail.no_permission",
-  });
-
   const enabled = !permissions.isLoading && canRead;
 
   const courses = useDeptCourses();
@@ -73,7 +67,7 @@ export default function DeptCourseDetailPage() {
   }
 
   if (!canRead) {
-    return null;
+    return <PermissionDenied />;
   }
 
   return (

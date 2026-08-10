@@ -5,10 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { useFormatDate } from "@/lib/format/date";
 import { useServerTable } from "@/lib/api/use-server-table";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { apiDelete, apiFetch, apiPost } from "@/lib/api/client";
 import { useListRoles } from "@/lib/api/hooks/admin";
 import type { RoleAssignmentRead } from "@/lib/api/types";
@@ -38,11 +35,6 @@ export function useManagedUsers() {
   const formatDate = useFormatDate();
   const permissions = usePermissions();
   const canManage = permissions.has("user.disable");
-
-  // Viewing the org's users needs user.read; acting needs user.disable.
-  useRequirePermission(permissions.has("user.read"), {
-    messageKey: "common.no_permission",
-  });
 
   const roles = useListRoles();
   const roleOptions = useMemo(
@@ -144,6 +136,7 @@ export function useManagedUsers() {
     navigate,
     formatDate,
     permissionsLoading: permissions.isLoading,
+    canRead: permissions.has("user.read"),
     canManage,
     canAssignManager,
     labelFor,

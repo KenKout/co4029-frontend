@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 
 import { ManagedUsersTable } from "@/routes/_components/management-users/ManagedUsersTable";
 import { useManagedUsers } from "@/routes/_components/management-users/use-managed-users";
@@ -27,6 +28,10 @@ export default function ManagementUsersPage() {
         ))}
       </div>
     );
+  }
+
+  if (!c.canRead) {
+    return <PermissionDenied />;
   }
 
   return (

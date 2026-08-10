@@ -3,10 +3,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 import { useProcessingJob, useRetryProcessingJob } from "@/lib/api/hooks/admin";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
 import { useFormatDateTimeMedium } from "@/lib/format/date";
 
@@ -30,10 +27,6 @@ export function useAdminProcessingJob() {
 
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
-
-  useRequirePermission(canAdmin, {
-    messageKey: "common.no_permission",
-  });
 
   const enabled = !permissions.isLoading && canAdmin && Boolean(jobId);
   const job = useProcessingJob(enabled ? jobId : "");

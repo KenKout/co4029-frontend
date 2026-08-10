@@ -32,6 +32,11 @@
   },
   "no_permission": "Không có quyền truy cập"
  },
+ "permission_denied": {
+  "title": "Bạn không có quyền truy cập trang này",
+  "description": "Liên kết có thể đã lỗi thời, hoặc bạn không có quyền cần thiết để xem trang này.",
+  "back": "Quay lại"
+ },
  "entity_select": {
   "selected_count": "Đã chọn {{count}}",
   "add_selected": "Thêm {{count}}"

@@ -12,10 +12,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { OrgStatusBadge as StatusBadge } from "@/components/ui/status-badges";
 import { useServerTable } from "@/lib/api/use-server-table";
 import { useCreateOrganization } from "@/lib/api/hooks/admin-organizations";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 import type {
   OrganizationRead,
   OrganizationStatus,
@@ -154,10 +152,6 @@ export default function AdminOrganizationsPage() {
     pageSize: 25,
   });
 
-  useRequirePermission(canManage, {
-    messageKey: "common.no_permission",
-  });
-
   const columns: DataTableColumn<OrganizationRead>[] = [
     {
       id: "name",
@@ -210,7 +204,7 @@ export default function AdminOrganizationsPage() {
     );
   }
 
-  if (!canManage) return null;
+  if (!canManage) return <PermissionDenied />;
 
   return (
     <div className="space-y-6 pb-12">

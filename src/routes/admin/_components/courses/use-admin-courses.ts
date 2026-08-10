@@ -3,10 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { useServerTable } from "@/lib/api/use-server-table";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { useFormatDateTime } from "@/lib/format/date";
 import type { CourseAuthoring } from "@/lib/api/types";
 
@@ -30,10 +27,6 @@ export function useAdminCourses() {
   // Undefined = all statuses; draft | published | archived narrows the list.
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const formatDate = useFormatDateTime();
-
-  useRequirePermission(canAdmin, {
-    messageKey: "common.no_permission",
-  });
 
   // Server-side search + sort + page across every course (the old
   // InfiniteList had no search). `include_deleted` and `status` are server

@@ -3,14 +3,12 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { BookOpen, Plus, UserPlus, Users } from "lucide-react";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { CourseStatusBadge } from "@/components/ui/status-badges";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
 import {
@@ -272,10 +270,6 @@ export default function DeptCoursesPage() {
   const canRead = canStaff || canEnrol || canSeeRoster;
   const canCreate = permissions.hasAny("course.create", "system.administer");
 
-  useRequirePermission(canRead, {
-    messageKey: "dept_courses.no_permission",
-  });
-
   const enabled = !permissions.isLoading && canRead;
   const list = useDeptCourses();
 
@@ -308,6 +302,10 @@ export default function DeptCoursesPage() {
         className="pb-12"
       />
     );
+  }
+
+  if (!canRead) {
+    return <PermissionDenied />;
   }
 
   if (!canRead) {

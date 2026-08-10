@@ -12,10 +12,8 @@ import {
   type AiCostsFilters,
   type AiCostsPeriod,
 } from "@/lib/api/hooks/admin";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 import type { AiCostsByPipeline as AiCostsByPipelineRow } from "@/lib/api/types";
 import {
   RoleSection,
@@ -54,10 +52,6 @@ export default function AdminAiCostsPage() {
   });
   const [drilldown, setDrilldown] = useState<AiCostsByPipelineRow | null>(null);
 
-  useRequirePermission(canAdmin, {
-    messageKey: "common.no_permission",
-  });
-
   const summary = useAiCostsSummary(period, filters);
   const byCategory = useAiCostsByCategory({ period, dimension, filters });
   const byModel = useAiCostsByModel({ period, filters });
@@ -65,13 +59,17 @@ export default function AdminAiCostsPage() {
   const byPipeline = useAiCostsByPipeline({ period });
   const recent = useRecentAiCalls({ limit: 50 });
 
-  if (permissions.isLoading || !canAdmin) {
+  if (permissions.isLoading) {
     return (
       <div className="space-y-3 pb-12">
         <div className="h-6 w-40 bg-surface-muted animate-pulse rounded" />
         <div className="h-32 bg-surface-muted animate-pulse rounded-lg" />
       </div>
     );
+  }
+
+  if (!canAdmin) {
+    return <PermissionDenied />;
   }
 
   return (

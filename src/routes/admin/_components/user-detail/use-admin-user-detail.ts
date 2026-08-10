@@ -8,10 +8,7 @@ import {
   useDisableUser,
   useEnableUser,
 } from "@/lib/api/hooks/admin";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 
 import { activeLanguage, isUserDisabled, userDisplayName } from "./helpers";
 
@@ -34,10 +31,6 @@ export function useAdminUserDetail() {
   const canAdmin = permissions.has("system.administer");
 
   const [confirmOpen, setConfirmOpen] = useState(false);
-
-  useRequirePermission(canAdmin, {
-    messageKey: "common.no_permission",
-  });
 
   const enabled = !permissions.isLoading && canAdmin && Boolean(userId);
   const detail = useAdminUser(enabled ? userId : "");

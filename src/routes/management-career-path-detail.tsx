@@ -2,11 +2,9 @@ import { useState } from "react";
 import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { useManagedCareerPath } from "@/lib/api/hooks/career-paths";
 import { CoursesTab } from "@/routes/_components/management-career-path-detail/CoursesTab";
 import { EditForm } from "@/routes/_components/management-career-path-detail/EditForm";
@@ -33,14 +31,14 @@ export default function ManagementCareerPathDetailPage() {
     "system.administer",
   );
 
-  useRequirePermission(canRead, {
-    messageKey: "common.no_permission",
-  });
-
   const enabled = !permissions.isLoading && canRead;
   const path = useManagedCareerPath(enabled ? id : undefined);
 
   const [tab, setTab] = useState<TabKey>("courses");
+
+  if (!permissions.isLoading && !canRead) {
+    return <PermissionDenied />;
+  }
 
   if (!enabled || path.isLoading) {
     return <PageSkeleton rows={3} rounded="rounded-lg" className="pb-12" />;

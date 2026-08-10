@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 
 import { UserOverviewBody } from "./_components/management-user-detail/UserOverviewBody";
 import { useManagerUserDetail } from "./_components/management-user-detail/use-manager-user-detail";
@@ -22,6 +23,19 @@ export default function ManagementUserDetailPage() {
     c.data?.user.profile?.display_name?.trim() ||
     c.data?.user.primary_email ||
     t("management_users.detail.unknown", { defaultValue: "User" });
+
+  if (c.permissionsLoading) {
+    return (
+      <div className="space-y-3 pb-12">
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-32 rounded-lg" />
+      </div>
+    );
+  }
+
+  if (!c.canRead) {
+    return <PermissionDenied />;
+  }
 
   if (c.isLoading) {
     return (

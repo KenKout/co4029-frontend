@@ -6,10 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiPost } from "@/lib/api/client";
 import { useFormatDate } from "@/lib/format/date";
 import { useServerTable } from "@/lib/api/use-server-table";
-import {
-  usePermissions,
-  useRequirePermission,
-} from "@/lib/auth/use-permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 import { useListRoles } from "@/lib/api/hooks/admin";
 import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 import type { User } from "@/lib/api/types";
@@ -32,10 +29,6 @@ export function useAdminUsers() {
   const formatDate = useFormatDate();
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
-
-  useRequirePermission(canAdmin, {
-    messageKey: "common.no_permission",
-  });
 
   // Role list drives both the filter dropdown and the code→name label map for
   // the Role column, so the labels stay in sync with the seeded catalog.

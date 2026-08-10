@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+import { useState } from "react";
+import { useParams } from "@tanstack/react-router";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
 import { BulkTab } from "@/routes/_components/management-course-enrollments/BulkTab";
@@ -19,8 +18,6 @@ import type { TabKey } from "@/routes/_components/management-course-enrollments/
  * `_components/management-course-enrollments/`.
  */
 export default function ManagementCourseEnrollmentsPage() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
 
   const permissions = usePermissions();
@@ -29,20 +26,12 @@ export default function ManagementCourseEnrollmentsPage() {
     "system.administer",
   );
 
-  useEffect(() => {
-    if (permissions.isLoading) return;
-    if (!canManage) {
-      toast.error(t("management_course_enrollments.errors.no_access"));
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [permissions.isLoading, canManage, navigate, t]);
-
   const enabled = !permissions.isLoading && canManage;
   const { data: course } = useTeacherCourseById(enabled ? courseId : "");
 
   const [tab, setTab] = useState<TabKey>("roster");
 
-  if (permissions.isLoading || !enabled) {
+  if (permissions.isLoading) {
     return (
       <PageSkeleton
         rows={3}
@@ -51,6 +40,10 @@ export default function ManagementCourseEnrollmentsPage() {
         className="pb-12"
       />
     );
+  }
+
+  if (!canManage) {
+    return <PermissionDenied />;
   }
 
   return (

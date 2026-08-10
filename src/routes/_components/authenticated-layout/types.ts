@@ -35,6 +35,9 @@ export interface RouteAccess {
   navGroups: NavGroups;
   role: LayoutRole;
   showDesktopBanner: boolean;
+  /** True while the permission lookup for a privileged route is in flight. */
   showGuardedSpinner: boolean;
+  /** True when the section URL is reachable only by other roles — render <PermissionDenied />. */
+  denied: boolean;
   permsReady: boolean;
 }

@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 
 import { CourseAuditSection } from "./_components/course-detail/CourseAuditSection";
 import { CourseDetailHeader } from "./_components/course-detail/CourseDetailHeader";
@@ -12,13 +13,17 @@ export default function AdminCourseDetailPage() {
   const c = useAdminCourseDetail();
   const { t } = c;
 
-  if (c.permissionsLoading || !c.canAdmin) {
+  if (c.permissionsLoading) {
     return (
       <div className="space-y-3 pb-12">
         <div className="h-6 w-40 bg-surface-muted animate-pulse rounded" />
         <div className="h-24 bg-surface-muted animate-pulse rounded-lg" />
       </div>
     );
+  }
+
+  if (!c.canAdmin) {
+    return <PermissionDenied />;
   }
 
   return (
