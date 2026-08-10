@@ -106,14 +106,14 @@ function moveSidebarFocus(dir: 1 | -1): void {
   next.scrollIntoView({ block: "nearest" });
 }
 
-/** Alt+ArrowUp / Alt+ArrowDown, but not while a Select trigger is focused
- * (Alt+ArrowDown there opens the dropdown — the widget owns that combo). */
+/** Alt+ArrowUp / Alt+ArrowDown — top-priority sidebar navigation. These are
+ * deliberately exempt from the editable guard AND from the combobox check:
+ * the user asked for them to ALWAYS move the sidebar, no matter what has
+ * focus (typing in an input, a Select trigger, a popup). Nothing else may
+ * claim this combo. */
 function altArrowKey(dir: "ArrowUp" | "ArrowDown") {
-  return (e: KeyboardEvent) => {
-    if (!(e.altKey && !e.ctrlKey && !e.metaKey && e.key === dir)) return false;
-    const target = e.target as HTMLElement | null;
-    return !target?.closest?.("[role='combobox']");
-  };
+  return (e: KeyboardEvent) =>
+    e.altKey && !e.ctrlKey && !e.metaKey && e.key === dir;
 }
 
 function clickFirst(selector: string): boolean {
@@ -254,6 +254,7 @@ export function buildRegistry(opts: {
       combo: "Alt+↑",
       labelKey: "shortcuts.sidebar_up",
       category: "general",
+      allowInEditable: true,
       match: altArrowKey("ArrowUp"),
       run: () => moveSidebarFocus(-1),
     },
@@ -262,6 +263,7 @@ export function buildRegistry(opts: {
       combo: "Alt+↓",
       labelKey: "shortcuts.sidebar_down",
       category: "general",
+      allowInEditable: true,
       match: altArrowKey("ArrowDown"),
       run: () => moveSidebarFocus(1),
     },

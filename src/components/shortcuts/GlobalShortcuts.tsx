@@ -30,6 +30,7 @@ export function GlobalShortcuts() {
       // The palette combo always works, even mid-typing.
       if (registry.paletteCombo(e)) {
         e.preventDefault();
+        e.stopImmediatePropagation();
         togglePalette();
         return;
       }
@@ -44,7 +45,13 @@ export function GlobalShortcuts() {
         if (def.id === "open-palette") continue; // handled above
         if (inEditable && !def.allowInEditable) continue;
         if (def.match(e)) {
+          // stopImmediatePropagation, not just preventDefault: this listener
+          // runs in the capture phase, and widgets (base-ui Select, editors)
+          // may act on the keydown without consulting defaultPrevented. A
+          // claimed combo belongs to the app, not to whatever has focus —
+          // Alt+↓ must move the sidebar even when a combobox is focused.
           e.preventDefault();
+          e.stopImmediatePropagation();
           def.run(e);
           return;
         }
@@ -54,10 +61,13 @@ export function GlobalShortcuts() {
     // Non-keyboard entry point: the avatar-dropdown "Shortcuts" item.
     const onOpenRequest = () => setPaletteOpen(true);
 
-    window.addEventListener("keydown", onKeyDown);
+    // Capture phase: this must run BEFORE any widget (Select popups, inputs,
+    // editors) can claim a combo. Alt+↑/↓ is top-priority sidebar navigation
+    // and must win even when a combobox would otherwise open on ArrowDown.
+    window.addEventListener("keydown", onKeyDown, true);
     window.addEventListener(PALETTE_OPEN_EVENT, onOpenRequest);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener(PALETTE_OPEN_EVENT, onOpenRequest);
     };
   }, [registry, togglePalette]);
