@@ -373,7 +373,9 @@
    "phone_placeholder": "+1 555 000 0000",
    "website": "Website",
    "social": "Social media"
-  }
+  },
+  "publish_confirm_title": "Publish course?",
+  "publish_confirm_body": "This will make \"{{title}}\" visible to students and start accepting enrollments. You can still edit content after publishing."
  },
  "teacher_quiz_attempt": {
   "load_failed": "Couldn't load this attempt.",

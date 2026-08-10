@@ -37,6 +37,7 @@ export function DeptCourseLifecycleActions({
   const archive = useArchiveCourse(courseId);
   const readiness = useCourseReadiness(courseId);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
 
   const status = course?.status ?? "draft";
   const publishBlocked =
@@ -48,10 +49,12 @@ export function DeptCourseLifecycleActions({
     try {
       await publish.mutateAsync();
       toast.success(t("teacher_course_settings.publish_success"));
+      setPublishConfirmOpen(false);
     } catch (err: unknown) {
       toast.error(
         (err as Error).message || t("teacher_course_settings.publish_failed"),
       );
+      setPublishConfirmOpen(false);
     }
   }
 
@@ -74,7 +77,7 @@ export function DeptCourseLifecycleActions({
         {status === "draft" && (
           <Button
             type="button"
-            onClick={runPublish}
+            onClick={() => setPublishConfirmOpen(true)}
             disabled={publish.isPending || publishBlocked}
             title={
               publishBlocked
@@ -121,6 +124,19 @@ export function DeptCourseLifecycleActions({
         cancelLabel={t("common.cancel", "Cancel")}
         onConfirm={runArchive}
         isPending={archive.isPending}
+      />
+
+      <ConfirmDialog
+        open={publishConfirmOpen}
+        onOpenChange={setPublishConfirmOpen}
+        title={t("teacher_course_settings.publish_confirm_title")}
+        description={t("teacher_course_settings.publish_confirm_body", {
+          title: course?.title ?? "",
+        })}
+        confirmLabel={t("teacher_course_settings.publish")}
+        cancelLabel={t("common.cancel", "Cancel")}
+        onConfirm={runPublish}
+        isPending={publish.isPending}
       />
     </>
   );

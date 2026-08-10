@@ -322,7 +322,9 @@
    "phone_placeholder": "+84 555 000 000",
    "website": "Trang web",
    "social": "Mạng xã hội"
-  }
+  },
+  "publish_confirm_title": "Xuất bản khóa học?",
+  "publish_confirm_body": "Khóa học \"{{title}}\" sẽ hiển thị với học viên và bắt đầu nhận đăng ký. Bạn vẫn có thể chỉnh sửa nội dung sau khi xuất bản."
  },
  "teacher_quiz_attempt": {
   "load_failed": "Không tải được lượt làm này.",
