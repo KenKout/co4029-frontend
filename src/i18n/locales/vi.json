@@ -29,8 +29,7 @@
    "title": "Bạn có chắc muốn thoát?",
    "description": "Bạn có thay đổi chưa lưu. Nếu thoát bây giờ, các thay đổi sẽ bị mất.",
    "quit": "Thoát"
-  },
-  "no_permission": "Không có quyền truy cập"
+  }
  },
  "permission_denied": {
   "title": "Bạn không có quyền truy cập trang này",
@@ -598,7 +597,6 @@
   "course_fallback": "Khóa học",
   "title": "Phân công khóa học",
   "manage_enrollments": "Quản lý ghi danh",
-  "no_permission": "Không có quyền truy cập",
   "tabs": {
    "teachers": "Giảng viên",
    "students": "Sinh viên",
@@ -674,7 +672,6 @@
  "dept_courses": {
   "title": "Khóa học",
   "subtitle": "Ghi danh học viên và phân công giảng viên cho các khóa học.",
-  "no_permission": "Không có quyền truy cập",
   "new_course": "Khóa học mới",
   "load_failed": "Không thể tải danh sách khóa học.",
   "empty_title": "Bạn chưa được phân công khóa học nào để quản lý.",
@@ -707,7 +704,6 @@
  "management_enrolment": {
   "title": "Ghi danh",
   "subtitle": "Quản lý ai được ghi danh vào từng khóa học — thêm học viên, nhập hàng loạt và mã mời.",
-  "no_permission": "Không có quyền truy cập",
   "empty_title": "Chưa có khóa học nào để quản lý ghi danh.",
   "empty_body": "Khi khóa học được gán cho tổ chức của bạn, chúng sẽ xuất hiện tại đây."
  },
@@ -1184,7 +1180,6 @@
   "list_load_failed": "Không thể tải danh sách lộ trình",
   "empty_title": "Chưa có lộ trình nào.",
   "empty_body": "Bấm <strong>Tạo lộ trình mới</strong> để bắt đầu.",
-  "no_permission": "Không có quyền truy cập",
   "status": {
    "draft": "Bản nháp",
    "published": "Đã xuất bản",
@@ -1806,7 +1801,6 @@
      "need_org_id": "Phạm vi 'organization' cần ID tổ chức",
      "need_unit_id": "Phạm vi 'org_unit' cần ID đơn vị",
      "need_course_id": "Phạm vi 'course' cần ID khoá học",
-     "no_permission": "Không có quyền truy cập",
      "load_failed": "Không thể tải thông tin người dùng.",
      "grant_failed": "Không thể gán vai trò",
      "revoke_failed": "Không thể thu hồi",
@@ -2938,7 +2932,6 @@
    "not_student": "Không phải tài khoản học viên"
   },
   "errors": {
-   "no_access": "Không có quyền truy cập",
    "roster_load_failed": "Không thể tải danh sách sinh viên.",
    "bulk_input_required": "Hãy nhập ít nhất một UUID hoặc email",
    "code_required": "Hãy nhập mã",
