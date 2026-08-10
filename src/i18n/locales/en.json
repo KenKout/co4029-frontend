@@ -4890,6 +4890,8 @@
   "category_filters": "Filters",
   "category_tabs": "Tabs",
   "category_pagination": "Pagination",
-  "menu_entry": "Shortcuts"
+  "menu_entry": "Shortcuts",
+  "sidebar_up": "Sidebar: previous item",
+  "sidebar_down": "Sidebar: next item"
  }
 }

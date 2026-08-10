@@ -80,6 +80,42 @@ function ctrlShiftArrow(dir: "ArrowLeft" | "ArrowRight") {
     e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey && e.key === dir;
 }
 
+/**
+ * Move keyboard focus up/down through the sidebar nav items (Alt+↑/↓).
+ * Wraps around the ends. When focus isn't already on a nav item, starts from
+ * the currently-active item (or the first one). The target item is a real
+ * link/button, so Enter activates it.
+ */
+function moveSidebarFocus(dir: 1 | -1): void {
+  const items = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-nav-item]"),
+  );
+  if (items.length === 0) return;
+  const current = document.activeElement;
+  const idx =
+    current instanceof HTMLElement ? items.indexOf(current) : -1;
+  let next: HTMLElement;
+  if (idx === -1) {
+    const active =
+      items.find((el) => el.dataset.active === "true") ?? items[0];
+    next = active;
+  } else {
+    next = items[(idx + dir + items.length) % items.length];
+  }
+  next.focus({ preventScroll: false });
+  next.scrollIntoView({ block: "nearest" });
+}
+
+/** Alt+ArrowUp / Alt+ArrowDown, but not while a Select trigger is focused
+ * (Alt+ArrowDown there opens the dropdown — the widget owns that combo). */
+function altArrowKey(dir: "ArrowUp" | "ArrowDown") {
+  return (e: KeyboardEvent) => {
+    if (!(e.altKey && !e.ctrlKey && !e.metaKey && e.key === dir)) return false;
+    const target = e.target as HTMLElement | null;
+    return !target?.closest?.("[role='combobox']");
+  };
+}
+
 function clickFirst(selector: string): boolean {
   const el = document.querySelector<HTMLElement>(selector);
   if (!el) return false;
@@ -212,6 +248,22 @@ export function buildRegistry(opts: {
       category: "pagination",
       match: ctrlShiftArrow("ArrowRight"),
       run: () => void clickFirst('[data-shortcut="pagination-next"]'),
+    },
+    {
+      id: "sidebar-up",
+      combo: "Alt+↑",
+      labelKey: "shortcuts.sidebar_up",
+      category: "general",
+      match: altArrowKey("ArrowUp"),
+      run: () => moveSidebarFocus(-1),
+    },
+    {
+      id: "sidebar-down",
+      combo: "Alt+↓",
+      labelKey: "shortcuts.sidebar_down",
+      category: "general",
+      match: altArrowKey("ArrowDown"),
+      run: () => moveSidebarFocus(1),
     },
   ];
 

@@ -45,6 +45,7 @@ export function SideNavSecondary({
               key={item.label}
               type="button"
               title={collapsed ? label : undefined}
+              data-nav-item
               onClick={onLogoutClick}
               disabled={isLoggingOut}
               className={cn(
@@ -70,6 +71,7 @@ export function SideNavSecondary({
             key={item.label}
             to={item.href}
             title={collapsed ? label : undefined}
+            data-nav-item
             className={baseClasses}
           >
             <item.icon className="h-4 w-4 flex-shrink-0" />

@@ -33,11 +33,11 @@ export function GlobalShortcuts() {
         togglePalette();
         return;
       }
-      if (!(e.ctrlKey && e.shiftKey)) return;
 
       // While typing in an editable element, only combos that can't collide
       // with native text-editing (see ShortcutDef.allowInEditable) may run —
       // e.g. Ctrl+Shift+←/→ must keep meaning "select word" in an input.
+      // Each def matches its own modifier combo (Ctrl+Shift+… or Alt+…).
       const inEditable = registry.isEditableTarget(e);
 
       for (const def of registry.shortcuts) {

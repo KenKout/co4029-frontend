@@ -4863,6 +4863,8 @@
   "category_filters": "Bộ lọc",
   "category_tabs": "Tab",
   "category_pagination": "Phân trang",
-  "menu_entry": "Phím tắt"
+  "menu_entry": "Phím tắt",
+  "sidebar_up": "Thanh bên: mục trước",
+  "sidebar_down": "Thanh bên: mục sau"
  }
 }

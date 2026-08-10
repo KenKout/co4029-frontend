@@ -17,6 +17,8 @@ export function SideNavItem({
     <Link
       to={item.href}
       title={collapsed ? label : undefined}
+      data-nav-item
+      data-active={isActive ? "true" : undefined}
       className={cn(
         "cursor-pointer flex items-center gap-3 py-2 rounded-md transition-all duration-150",
         collapsed ? "justify-center px-0 mx-auto w-10 h-10" : "px-3",
