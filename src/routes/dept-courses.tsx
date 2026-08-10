@@ -28,8 +28,11 @@ import type { CourseAuthoring } from "@/lib/api/types";
  * which were the same list rendered twice with different row links.
  *
  * One table, two row actions:
- *   * Enrol      → /management/courses/{id}/enrollments   (enrolment perms)
+ *   * Enrol      → /management/courses/{id}/enrollments   (enrollment.create)
  *   * Teachers   → /dept/courses/{id}?tab=teachers        (assign_teacher)
+ *
+ * An HOD reaches this page on ``course.enrollment.read`` + ``assign_teacher``
+ * but sees only the Teachers action — enrolment is manager-owned.
  *
  * The backend populates student_count / module_count / instructor on
  * GET /dept/courses, so a row tells a manager at a glance that a course
@@ -244,8 +247,20 @@ export default function DeptCoursesPage() {
   const [query, setQuery] = useState("");
   const [worklist, setWorklist] = useState<WorklistFilter>("all");
 
+  // Two different questions, deliberately separate codes:
+  //
+  //  * canEnrol   — may the caller USE the enrolments page? That page (and the
+  //    backend behind it) enforces ``course.enrollment.create``, so the row
+  //    action must gate on exactly that. An HOD holds only ``.read``; folding
+  //    ``.read`` in here handed them an Enrol button that redirected straight
+  //    back to the dashboard with an error toast.
+  //  * canSeeRoster — may the caller see this worklist at all? Roster reading
+  //    is enough, so ``.read`` still opens the page (just without the button).
   const canEnrol = permissions.hasAny(
     "course.enrollment.create",
+    "system.administer",
+  );
+  const canSeeRoster = permissions.hasAny(
     "course.enrollment.read",
     "system.administer",
   );
@@ -254,7 +269,7 @@ export default function DeptCoursesPage() {
     "system.administer",
   );
   // Merged gate: anyone who could see either of the two old pages.
-  const canRead = canStaff || canEnrol;
+  const canRead = canStaff || canEnrol || canSeeRoster;
   const canCreate = permissions.hasAny("course.create", "system.administer");
 
   useRequirePermission(canRead, {
