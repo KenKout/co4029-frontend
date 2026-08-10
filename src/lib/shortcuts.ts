@@ -82,9 +82,9 @@ function ctrlShiftArrow(dir: "ArrowLeft" | "ArrowRight") {
 
 /**
  * Move keyboard focus up/down through the sidebar nav items (Alt+↑/↓).
- * Wraps around the ends. When focus isn't already on a nav item, starts from
- * the currently-active item (or the first one). The target item is a real
- * link/button, so Enter activates it.
+ * Wraps around the ends. When focus isn't already on a nav item, the first
+ * press already MOVES one step (from the active item), so the user never
+ * needs a wasted press just to land focus before moving.
  */
 function moveSidebarFocus(dir: 1 | -1): void {
   const items = Array.from(
@@ -96,9 +96,11 @@ function moveSidebarFocus(dir: 1 | -1): void {
     current instanceof HTMLElement ? items.indexOf(current) : -1;
   let next: HTMLElement;
   if (idx === -1) {
-    const active =
-      items.find((el) => el.dataset.active === "true") ?? items[0];
-    next = active;
+    // No nav focus yet: start one step away from the active item so the
+    // very first press moves. Fall back to an end when nothing is active.
+    const activeIdx = items.findIndex((el) => el.dataset.active === "true");
+    const base = activeIdx === -1 ? (dir === 1 ? -1 : items.length) : activeIdx;
+    next = items[(base + dir + items.length) % items.length];
   } else {
     next = items[(idx + dir + items.length) % items.length];
   }
