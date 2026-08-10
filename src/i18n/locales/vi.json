@@ -4847,5 +4847,22 @@
    "role_catalog": "Danh mục vai trò chưa được tải",
    "no_manager_assignment": "Không tìm thấy phân quyền quản lý"
   }
+ },
+ "shortcuts": {
+  "palette_title": "Phím tắt nhanh",
+  "palette_placeholder": "Gõ để lọc phím tắt…",
+  "no_results": "Không có phím tắt nào khớp.",
+  "open_palette": "Mở bảng phím tắt",
+  "focus_search": "Tập trung thanh tìm kiếm",
+  "focus_filters": "Tập trung bộ lọc đầu tiên",
+  "tab_switch": "Chuyển sang tab (1–9)",
+  "pagination_prev": "Trang trước",
+  "pagination_next": "Trang sau",
+  "user_menu": "Mở menu người dùng",
+  "category_general": "Chung",
+  "category_search": "Tìm kiếm",
+  "category_filters": "Bộ lọc",
+  "category_tabs": "Tab",
+  "category_pagination": "Phân trang"
  }
 }

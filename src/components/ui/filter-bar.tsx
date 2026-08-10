@@ -64,7 +64,10 @@ export function FilterBar({
   });
 
   return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+    <div
+      data-shortcut="filters"
+      className={cn("flex flex-wrap items-center gap-2", className)}
+    >
       {filters.map((f) => (
         <Select
           key={f.id}

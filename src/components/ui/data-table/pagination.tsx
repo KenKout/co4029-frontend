@@ -79,6 +79,7 @@ export function DataTablePagination({
           disabled={page === 0}
           onClick={() => onPageChange(page - 1)}
           aria-label="Previous page"
+          data-shortcut="pagination-prev"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -88,6 +89,7 @@ export function DataTablePagination({
           disabled={page >= pageCount - 1}
           onClick={() => onPageChange(page + 1)}
           aria-label="Next page"
+          data-shortcut="pagination-next"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>

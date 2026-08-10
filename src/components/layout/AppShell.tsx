@@ -10,6 +10,7 @@ import { useNotificationInboxSync } from "@/lib/api/hooks/notifications";
 import type { Notification } from "@/lib/api/types";
 import SideNavBar from "./SideNavBar";
 import ContentTopBar from "./ContentTopBar";
+import { GlobalShortcuts } from "@/components/shortcuts/GlobalShortcuts";
 import { type NavGroup } from "@/lib/navigation";
 
 type SidebarRole = "student" | "teacher" | "manager" | "admin";
@@ -157,6 +158,7 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-m3-surface">
+      <GlobalShortcuts />
       {/* During a live interview the nav sidebar is unmounted entirely so the
           candidate has no chrome to click away into (and no left gutter). */}
       {!immersive && (

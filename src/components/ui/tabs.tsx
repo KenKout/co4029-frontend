@@ -116,6 +116,7 @@ export function Tabs<T extends string>(props: TabsProps<T>) {
     <div
       role={isLink ? undefined : "tablist"}
       aria-label={ariaLabel}
+      data-shortcut="tabs"
       className={cn(
         "flex flex-wrap items-center",
         variant === "contained"
@@ -124,7 +125,7 @@ export function Tabs<T extends string>(props: TabsProps<T>) {
         className,
       )}
     >
-      {tabs.map((tab) => {
+      {tabs.map((tab, index) => {
         const Icon = tab.icon;
         const active = tab.key === value;
         const cls = tabClasses(variant, active, Boolean(sticky && stuck));
@@ -147,6 +148,7 @@ export function Tabs<T extends string>(props: TabsProps<T>) {
               key={tab.key}
               to={target.to}
               params={target.params}
+              data-tab-index={index + 1}
               aria-current={active ? "page" : undefined}
               className={cls}
             >
@@ -160,6 +162,7 @@ export function Tabs<T extends string>(props: TabsProps<T>) {
             key={tab.key}
             type="button"
             role="tab"
+            data-tab-index={index + 1}
             aria-selected={active}
             tabIndex={active ? 0 : -1}
             onClick={() => props.onChange?.(tab.key)}

@@ -4874,5 +4874,22 @@
    "role_catalog": "Role catalog not loaded",
    "no_manager_assignment": "No manager assignment found"
   }
+ },
+ "shortcuts": {
+  "palette_title": "Quick shortcuts",
+  "palette_placeholder": "Type to filter shortcuts…",
+  "no_results": "No shortcuts match your search.",
+  "open_palette": "Open shortcut palette",
+  "focus_search": "Focus search bar",
+  "focus_filters": "Focus first filter",
+  "tab_switch": "Switch to tab (1–9)",
+  "pagination_prev": "Previous page",
+  "pagination_next": "Next page",
+  "user_menu": "Open user menu",
+  "category_general": "General",
+  "category_search": "Search",
+  "category_filters": "Filters",
+  "category_tabs": "Tabs",
+  "category_pagination": "Pagination"
  }
 }

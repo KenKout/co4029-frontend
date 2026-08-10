@@ -41,6 +41,7 @@ export function SearchInput({
       />
       <Input
         type="text"
+        data-shortcut="search"
         className={cn("pl-9", onClear && "pr-9", className)}
         {...inputProps}
       />
