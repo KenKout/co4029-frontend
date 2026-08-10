@@ -312,12 +312,6 @@ const teacherInterviewGapReportRoute = createRoute({
   ),
 });
 
-const teacherStudentsHubRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
-  path: "/teacher/students",
-  component: lazyRouteComponent(() => import("@/routes/teacher/students-hub")),
-});
-
 const teacherCourseStudentDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/students/$studentId",
@@ -654,7 +648,6 @@ const routeTree = rootRoute.addChildren([
     teacherQuizResultsRoute,
     teacherInterviewConfigRoute,
     teacherInterviewGapReportRoute,
-    teacherStudentsHubRoute,
     teacherCourseStudentDetailRoute,
     adminHealthRoute,
     adminSettingsRoute,

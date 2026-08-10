@@ -44,7 +44,6 @@
   "my_interviews": "My Interviews",
   "overview": "Overview",
   "my_courses": "My Courses",
-  "students": "Students",
   "department_courses": "Department Courses",
   "manager_courses": "Courses",
   "enrolment": "Enrolment",
@@ -419,13 +418,6 @@
    "skipped": "Skipped",
    "their_answer": "Their answer"
   }
- },
- "teacher_students_hub": {
-  "eyebrow": "Student Management",
-  "title": "Students",
-  "subtitle": "Pick a course to view its roster, add students, or manage enrollments.",
-  "manage_cta": "View roster & manage enrollments",
-  "empty": "You don't have any courses yet."
  },
  "teacher_course_students": {
   "manage_enrollments": "Manage enrollments"

@@ -8,7 +8,6 @@ import {
   Cpu,
   DollarSign,
   FileText,
-  GraduationCap,
   HelpCircle,
   LayoutDashboard,
   LogOut,
@@ -120,12 +119,6 @@ export const teacherNavItems: NavItem[] = [
     href: "/teacher/courses",
     icon: BookOpen,
   },
-  {
-    label: "Students",
-    i18nKey: "nav.students",
-    href: "/teacher/students",
-    icon: GraduationCap,
-  },
 ];
 
 export const teacherNavGroups: NavGroup[] = [
@@ -151,12 +144,6 @@ export const teacherNavGroups: NavGroup[] = [
         i18nKey: "nav.my_courses",
         href: "/teacher/courses",
         icon: BookOpen,
-      },
-      {
-        label: "Students",
-        i18nKey: "nav.students",
-        href: "/teacher/students",
-        icon: GraduationCap,
       },
     ],
   },

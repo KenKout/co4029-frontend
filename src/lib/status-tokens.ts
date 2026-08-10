@@ -32,7 +32,7 @@ export const ADMIN_COURSE_STATUS_TOKENS: StatusTokenMap = {
   archived: "bg-slate-200 text-slate-700",
 };
 
-/** Teacher students-hub — draft is the lighter amber-50. */
+/** Teacher course cards — draft is the lighter amber-50. */
 export const TEACHER_COURSE_STATUS_TOKENS: StatusTokenMap = {
   published: "bg-emerald-100 text-emerald-700",
   draft: "bg-amber-50 text-amber-700",
