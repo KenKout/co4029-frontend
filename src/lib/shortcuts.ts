@@ -41,6 +41,14 @@ export interface ShortcutDef {
   /** i18n key for the label. */
   labelKey: string;
   category: ShortcutCategory;
+  /**
+   * Whether the shortcut may fire while the user is typing in an editable
+   * element. Default false: combos that collide with native text-editing
+   * (Ctrl+Shift+←/→ = select word) must yield while typing. Pure navigation
+   * combos (Ctrl+Shift+digit tabs, Ctrl+Shift+F/L focus moves) are harmless
+   * to the caret and should keep working — VS Code behaviour.
+   */
+  allowInEditable?: boolean;
   /** Whether this keydown event triggers the shortcut. */
   match: (e: KeyboardEvent) => boolean;
   /** The action. Runs with the matching event (already preventDefaulted). */
@@ -135,6 +143,7 @@ export function buildRegistry(opts: {
       combo: "Ctrl+Shift+F",
       labelKey: "shortcuts.focus_search",
       category: "search",
+      allowInEditable: true,
       match: ctrlShiftKey("f"),
       run: () => void focusFirst('[data-shortcut="search"]'),
     },
@@ -143,6 +152,7 @@ export function buildRegistry(opts: {
       combo: "Ctrl+Shift+L",
       labelKey: "shortcuts.focus_filters",
       category: "filters",
+      allowInEditable: true,
       match: ctrlShiftKey("l"),
       run: () => {
         // Focus the first filter control (a Select trigger) inside the first
@@ -164,6 +174,7 @@ export function buildRegistry(opts: {
       combo: "Ctrl+Shift+1…9",
       labelKey: "shortcuts.tab_switch",
       category: "tabs",
+      allowInEditable: true,
       match: (e) => digitOf(e) !== null,
       run: (e) => {
         const n = digitOf(e);

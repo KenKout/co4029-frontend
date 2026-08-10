@@ -1,11 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Search, X } from "lucide-react";
 
-import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Tabs, type TabDef } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-
+import { SearchInput } from "@/components/ui/search-input";
 import { STATUS_KEYS } from "./constants";
 import type { SortKey, StatusFilter } from "./types";
 import type { TeacherCoursesController } from "./use-courses-controller";
@@ -42,28 +39,18 @@ export function CoursesToolbar({
 
   return (
     <div className="space-y-3">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-m3-on-surface-variant" />
-        <Input
-          placeholder={t("teacher_common.search_courses")}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setSearch("");
-          }}
-          className="pl-9 pr-9 h-10"
-        />
-        {search && (
-          <Button variant="ghost"
-            type="button"
-            onClick={() => setSearch("")}
-            aria-label={t("teacher_courses_list.clear_search", "Clear search")}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-m3-on-surface-variant transition-colors hover:bg-m3-surface-container hover:text-m3-on-surface h-auto whitespace-normal"
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        )}
-      </div>
+      <SearchInput
+        placeholder={t("teacher_common.search_courses")}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") setSearch("");
+        }}
+        onClear={search ? () => setSearch("") : undefined}
+        clearLabel={t("teacher_courses_list.clear_search", "Clear search")}
+        wrapperClassName="relative"
+        className="h-10"
+      />
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         {/* Status tabs — shared strip, per-status counts as badges. */}

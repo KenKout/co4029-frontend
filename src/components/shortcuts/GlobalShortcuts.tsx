@@ -33,12 +33,16 @@ export function GlobalShortcuts() {
         togglePalette();
         return;
       }
-      // Everything else yields to text editing.
-      if (registry.isEditableTarget(e)) return;
       if (!(e.ctrlKey && e.shiftKey)) return;
+
+      // While typing in an editable element, only combos that can't collide
+      // with native text-editing (see ShortcutDef.allowInEditable) may run —
+      // e.g. Ctrl+Shift+←/→ must keep meaning "select word" in an input.
+      const inEditable = registry.isEditableTarget(e);
 
       for (const def of registry.shortcuts) {
         if (def.id === "open-palette") continue; // handled above
+        if (inEditable && !def.allowInEditable) continue;
         if (def.match(e)) {
           e.preventDefault();
           def.run(e);
