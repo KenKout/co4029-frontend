@@ -2935,7 +2935,8 @@
    "user_not_found": "Không tìm thấy người dùng",
    "already_enrolled": "Đã đăng ký rồi",
    "invalid_identifier": "Định danh không hợp lệ",
-   "forbidden": "Không có quyền"
+   "forbidden": "Không có quyền",
+   "not_student": "Không phải tài khoản học viên"
   },
   "errors": {
    "no_access": "Không có quyền truy cập",

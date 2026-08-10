@@ -3063,7 +3063,8 @@
    "user_not_found": "User not found",
    "already_enrolled": "Already enrolled",
    "invalid_identifier": "Invalid identifier",
-   "forbidden": "No permission"
+   "forbidden": "No permission",
+   "not_student": "Not a student account"
   },
   "errors": {
    "no_access": "Access denied",

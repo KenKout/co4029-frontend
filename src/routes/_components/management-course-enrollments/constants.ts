@@ -37,4 +37,5 @@ export const FAILURE_KEY: Record<string, string> = {
   invalid_identifier:
     "management_course_enrollments.failure.invalid_identifier",
   forbidden: "management_course_enrollments.failure.forbidden",
+  not_student: "management_course_enrollments.failure.not_student",
 };
