@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import {
   usePermissions,
   useRequirePermission,
@@ -75,6 +76,10 @@ export default function ManagementCareerPathDetailPage() {
       {tab === "courses" && <CoursesTab id={id} canManage={canManage} />}
       {tab === "students" && <StudentsTab id={id} canManage={canManage} />}
       {tab === "progress" && <ProgressTab id={id} />}
+
+      {/* Header + edit form + a long tab body (course list / roster / progress
+          table) — jump back to the tab bar without dragging. */}
+      <ScrollToTop />
     </div>
   );
 }
