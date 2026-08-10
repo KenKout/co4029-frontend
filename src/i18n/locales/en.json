@@ -4885,11 +4885,11 @@
   "tab_switch": "Switch to tab (1–9)",
   "pagination_prev": "Previous page",
   "pagination_next": "Next page",
-  "user_menu": "Open user menu",
   "category_general": "General",
   "category_search": "Search",
   "category_filters": "Filters",
   "category_tabs": "Tabs",
-  "category_pagination": "Pagination"
+  "category_pagination": "Pagination",
+  "menu_entry": "Shortcuts"
  }
 }

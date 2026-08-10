@@ -4858,11 +4858,11 @@
   "tab_switch": "Chuyển sang tab (1–9)",
   "pagination_prev": "Trang trước",
   "pagination_next": "Trang sau",
-  "user_menu": "Mở menu người dùng",
   "category_general": "Chung",
   "category_search": "Tìm kiếm",
   "category_filters": "Bộ lọc",
   "category_tabs": "Tab",
-  "category_pagination": "Phân trang"
+  "category_pagination": "Phân trang",
+  "menu_entry": "Phím tắt"
  }
 }

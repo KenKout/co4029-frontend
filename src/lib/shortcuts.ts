@@ -21,6 +21,19 @@ export type ShortcutCategory =
   | "tabs"
   | "pagination";
 
+/**
+ * Window event used to open the shortcut palette from outside the
+ * GlobalShortcuts component (e.g. the avatar-dropdown menu item). The
+ * palette state lives inside GlobalShortcuts, so other components dispatch
+ * this event instead of reaching into it.
+ */
+export const PALETTE_OPEN_EVENT = "abridge:open-shortcut-palette";
+
+/** Dispatch the palette-open event (call from any component, e.g. a menu item). */
+export function openShortcutPalette() {
+  window.dispatchEvent(new Event(PALETTE_OPEN_EVENT));
+}
+
 export interface ShortcutDef {
   id: string;
   /** Human-readable combo, shown in the palette. */
@@ -172,15 +185,6 @@ export function buildRegistry(opts: {
       category: "pagination",
       match: ctrlShiftArrow("ArrowRight"),
       run: () => void clickFirst('[data-shortcut="pagination-next"]'),
-    },
-    {
-      id: "user-menu",
-      combo: "",
-      labelKey: "shortcuts.user_menu",
-      category: "general",
-      // No keyboard combo — reachable from the palette only.
-      match: () => false,
-      run: () => void clickFirst('[aria-label="User menu"]'),
     },
   ];
 

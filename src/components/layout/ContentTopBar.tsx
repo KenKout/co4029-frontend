@@ -7,6 +7,7 @@ import {
   Settings,
   LogOut,
   User,
+  Command,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -22,8 +23,26 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useUnreadCount } from "@/lib/api/hooks/notifications";
 import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
+import { openShortcutPalette } from "@/lib/shortcuts";
 import LanguageSwitcher from "./LanguageSwitcher";
 import SectionSwitcher from "./SectionSwitcher";
+
+/** Avatar-dropdown entry that opens the global shortcut palette. */
+function ShortcutPaletteMenuItem() {
+  const { t } = useTranslation();
+  return (
+    <DropdownMenuItem
+      className="flex items-center rounded-md px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-primary-soft focus:bg-primary-soft focus:text-primary"
+      onClick={openShortcutPalette}
+    >
+      <Command className="h-4 w-4 text-m3-on-surface-variant" />
+      <span className="text-sm font-medium">{t("shortcuts.menu_entry")}</span>
+      <kbd className="ml-auto rounded-md border border-m3-outline-variant/50 bg-m3-surface px-1.5 py-0.5 text-[11px] font-medium text-m3-on-surface-variant tabular-nums">
+        Ctrl+Shift+P
+      </kbd>
+    </DropdownMenuItem>
+  );
+}
 
 export default function ContentTopBar() {
   const { logout, user } = useAuth();
@@ -132,6 +151,8 @@ export default function ContentTopBar() {
                   {t("nav.profile")}
                 </span>
               </DropdownMenuItem>
+
+              <ShortcutPaletteMenuItem />
             </DropdownMenuGroup>
 
             <DropdownMenuSeparator className="bg-border" />

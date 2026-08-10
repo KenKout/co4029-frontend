@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { buildRegistry } from "@/lib/shortcuts";
+import { buildRegistry, PALETTE_OPEN_EVENT } from "@/lib/shortcuts";
 import { CommandPalette } from "./CommandPalette";
 
 /**
@@ -47,8 +47,15 @@ export function GlobalShortcuts() {
       }
     };
 
+    // Non-keyboard entry point: the avatar-dropdown "Shortcuts" item.
+    const onOpenRequest = () => setPaletteOpen(true);
+
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener(PALETTE_OPEN_EVENT, onOpenRequest);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener(PALETTE_OPEN_EVENT, onOpenRequest);
+    };
   }, [registry, togglePalette]);
 
   return (
