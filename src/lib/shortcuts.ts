@@ -119,8 +119,24 @@ export interface ShortcutRegistry {
 /** Extract the digit from a Ctrl+Shift+1..9 event (null when not a digit). */
 function digitOf(e: KeyboardEvent): number | null {
   if (!(e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey)) return null;
-  if (e.key.length !== 1 || e.key < "1" || e.key > "9") return null;
-  return Number(e.key);
+  // Match on the physical key position (e.code), NOT e.key: with Shift held,
+  // Ctrl+Shift+2 reports e.key === "@" on a US layout (other symbols on other
+  // layouts), which a string comparison would reject. e.code stays "Digit2"
+  // regardless of Shift or layout, so the combo works on every keyboard.
+  // Numpad is included; e.code is layout-independent there too.
+  const code = e.code;
+  if (code.startsWith("Digit")) {
+    const n = Number(code.slice(5));
+    if (n >= 1 && n <= 9) return n;
+  }
+  if (code.startsWith("Numpad")) {
+    const n = Number(code.slice(6));
+    if (n >= 1 && n <= 9) return n;
+  }
+  // Fallback for exotic environments that still report the unshifted digit
+  // in e.key (some IMEs / browser quirks).
+  if (e.key.length === 1 && e.key >= "1" && e.key <= "9") return Number(e.key);
+  return null;
 }
 
 export function buildRegistry(opts: {
