@@ -261,6 +261,11 @@ export function usePublishCourse(courseId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
       qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
       qc.invalidateQueries({ queryKey: ["teacher", "courses", courseId] });
+      // The /dept/courses/{id} page reads its course from the dept list and
+      // shows readiness in the header — without these it keeps showing the
+      // old status pill and the Publish/Archive buttons after the mutation.
+      qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
+      qc.invalidateQueries({ queryKey: queryKeys.dept.readiness(courseId) });
     },
   });
 }
@@ -276,6 +281,9 @@ export function useArchiveCourse(courseId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
       qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
       qc.invalidateQueries({ queryKey: ["teacher", "courses", courseId] });
+      // Same dept-surface refresh as publish.
+      qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
+      qc.invalidateQueries({ queryKey: queryKeys.dept.readiness(courseId) });
     },
   });
 }
