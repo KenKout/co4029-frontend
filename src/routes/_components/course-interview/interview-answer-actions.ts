@@ -2,6 +2,7 @@ import { toast } from "sonner";
 
 import type { TurnRejection } from "@/lib/interview/control-protocol";
 import { makeUserTurn, newTurnKey } from "@/lib/interview/turn-factory";
+import { isHintRequestText } from "./helpers";
 import type { InterviewActionsContext } from "./types";
 
 /**
@@ -173,6 +174,19 @@ export async function handleRespond(
   const chat = ctx.chatBridge.current;
   if (!chat) {
     toast.error(ctx.t("course_interview.errors.send_failed_livekit"));
+    return;
+  }
+
+  // A TYPED hint request must go out as a `hint` turn, not an answer. The hint
+  // button already sends `turn_action="hint"`, but free text ("Can you give me
+  // more hints") arrives here as an answer — on the native agent that answer
+  // turn is graded AND charged a follow-up, so the follow-up budget (2)
+  // exhausts before the hint ladder (3) and the question advances with no
+  // transition (production session fb204f73). Placed after the room check so
+  // an unconnected room still surfaces the same toast as a normal answer.
+  if (isHintRequestText(trimmed)) {
+    const { handleAssistance } = await import("./interview-assistance-actions");
+    await handleAssistance(ctx, trimmed, "hint", trimmed);
     return;
   }
 
