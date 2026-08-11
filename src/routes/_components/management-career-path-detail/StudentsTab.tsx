@@ -8,20 +8,29 @@ import { StudentPickerDialog } from "./StudentPickerDialog";
 import { StudentRow } from "./StudentRow";
 import { useStudentsTab } from "./use-students-tab";
 
-/** Students tab: enrol students onto the path and review their roster. */
+/**
+ * Students tab: review the roster and — for callers with the enrollment
+ * codes — enrol / unenrol students. Roster visibility itself is open to
+ * everyone who can read the page (backend roster read allows
+ * course.enrollment.read OR progress.read.cohort); only the mutation
+ * affordances are gated, on the exact codes the backend enforces
+ * (course.enrollment.create / course.enrollment.remove).
+ */
 export function StudentsTab({
   id,
-  canManage,
+  canEnroll,
+  canUnenroll,
 }: {
   id: string;
-  canManage: boolean;
+  canEnroll: boolean;
+  canUnenroll: boolean;
 }) {
   const { t } = useTranslation();
   const controller = useStudentsTab(id, t);
 
   return (
     <div className="space-y-6">
-      {canManage && (
+      {canEnroll && (
         <SectionActionCard
           title={t("management_career_path_detail.sections.register_student")}
           hint={t(
@@ -35,7 +44,7 @@ export function StudentsTab({
         />
       )}
 
-      {canManage && controller.pickerOpen && (
+      {canEnroll && controller.pickerOpen && (
         <StudentPickerDialog controller={controller} />
       )}
 
@@ -63,7 +72,7 @@ export function StudentsTab({
               key={row.student_id}
               pathId={id}
               row={row}
-              canManage={canManage}
+              canUnenroll={canUnenroll}
             />
           ))}
         </div>

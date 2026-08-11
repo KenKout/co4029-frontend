@@ -9,11 +9,11 @@ import { RemoveRowButtons } from "./RemoveRowButtons";
 export function StudentRow({
   pathId,
   row,
-  canManage,
+  canUnenroll,
 }: {
   pathId: string;
   row: StudentPathProgressAuthoring;
-  canManage: boolean;
+  canUnenroll: boolean;
 }) {
   const { t } = useTranslation();
   const remove = useRemoveCareerPathStudent(pathId, row.student_id);
@@ -61,7 +61,7 @@ export function StudentRow({
           />
         </div>
       </div>
-      {canManage && (
+      {canUnenroll && (
         <RemoveRowButtons
           confirming={confirming}
           isPending={remove.isPending}
