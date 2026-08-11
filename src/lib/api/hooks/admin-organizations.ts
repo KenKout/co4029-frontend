@@ -48,31 +48,58 @@ export interface AdminUserSearchRow {
 }
 
 /**
- * Server-side admin-users search for the membership combobox.
+ * Server-side admin-users search for pickers and the membership combobox.
  *
- * Backend `/admin/users?q=` does case-insensitive substring match against
- * primary_email and user_profiles.display_name. Empty query returns the
- * first 20 active users so the dropdown has something to render on focus.
+ * Hits the page-numbered `/admin/users/search` endpoint, which actually
+ * implements server-side filtering (`search` against email/display name,
+ * `status`, optional `role`) — the cursor `/admin/users` endpoint declares
+ * only cursor/limit, so the old `?q=&status=` params were silently dropped
+ * and the "search" showed the first 20 users of ANY role. Non-admin callers
+ * are scoped to their own primary organization by the backend.
  *
- * Endpoint is cursor-paginated (Reconciliation §A10/§D2): the response is
- * `{ items: AdminUserSearchRow[], next_cursor: string | null }`. The
- * combobox only shows the first page so we just return `items` to keep
- * call sites unchanged.
+ * Empty query returns the first 20 active users so the dropdown has
+ * something to render on focus. Pass `role` (e.g. "student") to restrict
+ * results to holders of that role — the career-path student picker uses it
+ * so only student accounts are enrollable.
  */
-export function useAdminUsersSearch(query: string, enabled = true) {
+export function useAdminUsersSearch(
+  query: string,
+  enabled = true,
+  role?: string,
+) {
   const trimmed = query.trim();
   return useQuery({
-    queryKey: ["admin", "users", "search", trimmed] as const,
+    queryKey: ["admin", "users", "search", trimmed, role ?? "any"] as const,
     queryFn: async () => {
       const qs = new URLSearchParams();
       qs.set("status", "active");
-      qs.set("limit", "20");
-      if (trimmed.length > 0) qs.set("q", trimmed);
+      qs.set("page_size", "20");
+      if (trimmed.length > 0) qs.set("search", trimmed);
+      if (role) qs.set("role", role);
       const page = await apiFetch<{
-        items: AdminUserSearchRow[];
-        next_cursor: string | null;
-      }>(`/admin/users?${qs.toString()}`);
-      return page.items;
+        items: Array<{
+          id: string;
+          primary_email: string;
+          status: string;
+          last_login_at: string | null;
+          created_at: string;
+          updated_at: string;
+          profile: { display_name: string | null } | null;
+        }>;
+        total: number;
+        total_pages: number;
+      }>(`/admin/users/search?${qs.toString()}`);
+      // /users/search returns identity UserRead (nested profile, `id` field);
+      // flatten to the AdminUserSearchRow shape the comboboxes already use.
+      return page.items.map((u) => ({
+        user_id: u.id,
+        primary_email: u.primary_email,
+        status: u.status,
+        display_name: u.profile?.display_name ?? null,
+        last_login_at: u.last_login_at,
+        created_at: u.created_at,
+        updated_at: u.updated_at,
+      }));
     },
     staleTime: 1000 * 15,
     enabled,

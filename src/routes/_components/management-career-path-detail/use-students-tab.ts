@@ -35,7 +35,7 @@ export function useStudentsTab(id: string, t: TFunction) {
     return () => clearTimeout(timer);
   }, [studentQuery]);
 
-  const search = useAdminUsersSearch(debouncedQuery, pickerOpen);
+  const search = useAdminUsersSearch(debouncedQuery, pickerOpen, "student");
 
   const rows = progress.data ?? [];
 
