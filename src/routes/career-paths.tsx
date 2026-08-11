@@ -8,7 +8,6 @@ import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import {
   useCareerPaths,
   useMyCareerEnrollments,
@@ -207,9 +206,6 @@ export default function CareerPathsPage() {
         </section>
       </div>
 
-      {/* Infinite scroll — the grid has no upper bound, so the jump-to-top is
-          the only cheap way back to the header. */}
-      <ScrollToTop />
     </div>
   );
 }

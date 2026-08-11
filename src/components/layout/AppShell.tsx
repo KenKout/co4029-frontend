@@ -8,6 +8,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { clearAuthSession } from "@/lib/auth";
 import { useNotificationInboxSync } from "@/lib/api/hooks/notifications";
 import type { Notification } from "@/lib/api/types";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import SideNavBar from "./SideNavBar";
 import ContentTopBar from "./ContentTopBar";
 import { GlobalShortcuts } from "@/components/shortcuts/GlobalShortcuts";
@@ -200,6 +201,7 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
           {children}
         </div>
       </main>
+      {!immersive && <ScrollToTop />}
     </div>
   );
 }

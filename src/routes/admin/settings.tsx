@@ -1,4 +1,3 @@
-import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { cn } from "@/lib/utils";
 import { SettingsPageBody } from "./_components/settings/SettingsPageBody";
 import { SettingsSectionRail } from "./_components/settings/SettingsSectionRail";
@@ -37,8 +36,6 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      {/* Long scrolling page — floating jump back to top. */}
-      <ScrollToTop />
     </div>
   );
 }

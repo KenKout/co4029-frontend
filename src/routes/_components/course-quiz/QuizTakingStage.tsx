@@ -1,4 +1,3 @@
-import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { QuizHintDialog } from "@/routes/_components/QuizHintDialog";
 import { QuizSummaryCard } from "@/routes/_components/QuizSummaryCard";
 import { buildSummaryItems, deriveTakingView } from "./helpers";
@@ -106,9 +105,6 @@ export function QuizTakingStage({
           </div>
         </div>
       </div>
-      {/* Long page in the 5/10/All layouts — the student can be many screens
-          below the timer and the submit controls. */}
-      <ScrollToTop />
     </div>
   );
 }

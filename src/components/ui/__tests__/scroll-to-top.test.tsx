@@ -3,7 +3,10 @@ import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
 
-import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import {
+  ScrollToTop,
+  setScrollToTopBump,
+} from "@/components/ui/scroll-to-top";
 import { cn } from "@/lib/utils";
 
 /**
@@ -27,6 +30,7 @@ function setScrollY(y: number) {
 }
 
 beforeEach(() => {
+  setScrollToTopBump("");
   setScrollY(0);
   // jsdom has no rAF throttling guarantees; run callbacks immediately so the
   // scroll handler's requestAnimationFrame resolves within the test tick.
@@ -98,5 +102,20 @@ describe("ScrollToTop", () => {
     const btn = container.querySelector("button")!;
     expect(btn.className).toContain("bottom-24");
     expect(btn.className).not.toContain("bottom-6");
+  });
+
+  it("lifts via the global bump store (shell-level instance, no per-page copy)", () => {
+    // Pages with fixed bottom overlays (quiz-manage's combo-undo banner)
+    // nudge the ONE shell-level button instead of mounting their own.
+    const { container } = render(<ScrollToTop />);
+    const btn = container.querySelector("button")!;
+
+    act(() => setScrollToTopBump("bottom-24"));
+    expect(btn.className).toContain("bottom-24");
+    expect(btn.className).not.toContain("bottom-6");
+
+    act(() => setScrollToTopBump(""));
+    expect(btn.className).not.toContain("bottom-24");
+    expect(btn.className).toContain("bottom-6");
   });
 });

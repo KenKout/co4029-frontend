@@ -3,7 +3,6 @@ import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { PermissionDenied } from "@/components/ui/permission-denied";
-import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { useManagedCareerPath } from "@/lib/api/hooks/career-paths";
 import { CoursesTab } from "@/routes/_components/management-career-path-detail/CoursesTab";
@@ -94,9 +93,6 @@ export default function ManagementCareerPathDetailPage() {
       )}
       {tab === "progress" && <ProgressTab id={id} />}
 
-      {/* Header + edit form + a long tab body (course list / roster / progress
-          table) — jump back to the tab bar without dragging. */}
-      <ScrollToTop />
     </div>
   );
 }

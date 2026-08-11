@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { CareerPathStatusBadge } from "@/components/ui/status-badges";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { PermissionDenied } from "@/components/ui/permission-denied";
-import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import {
   useCreateCareerPath,
@@ -308,8 +307,6 @@ export default function ManagementCareerPathsPage() {
 
       {creating && <CreateDialog onClose={() => setCreating(false)} />}
 
-      {/* The list is unpaginated, so an org with many pathways scrolls far. */}
-      <ScrollToTop />
     </div>
   );
 }

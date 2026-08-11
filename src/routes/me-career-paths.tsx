@@ -11,7 +11,6 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { useMyCareerEnrollments } from "@/lib/api/hooks/career-paths";
 import { useFormatDate } from "@/lib/format/date";
 import { ENROLLMENT_STATUS_TOKENS, statusToken } from "@/lib/status-tokens";
@@ -159,7 +158,6 @@ export default function MyCareerPathsPage() {
         )}
       </section>
 
-      <ScrollToTop />
     </div>
   );
 }

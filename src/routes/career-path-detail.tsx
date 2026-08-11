@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { useParams } from "@tanstack/react-router";
-import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import {
   useCareerPath,
   useCareerPathProgress,
@@ -90,9 +89,6 @@ export default function CareerPathDetailPage() {
         />
       )}
 
-      {/* Header + progress panels + one card per course in every stage: the
-          page runs long on multi-stage paths. */}
-      <ScrollToTop />
     </div>
   );
 }

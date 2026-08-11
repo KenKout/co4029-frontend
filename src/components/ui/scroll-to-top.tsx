@@ -1,25 +1,58 @@
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore, useState } from "react";
 import { ArrowUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
+// ── Global "bump" store ─────────────────────────────────────────────────
+// The button lives ONCE at the shell level (AppShell), so a page that shows
+// a fixed bottom overlay at the same corner can no longer pass className to
+// its own instance. It nudges the global one through this tiny external
+// store instead (useSyncExternalStore) — e.g. quiz-manage lifts the button
+// above the combo-undo banner while deletes are pending.
+let bumpClass = "";
+const bumpListeners = new Set<() => void>();
+
+function notifyBumpListeners() {
+  bumpListeners.forEach((listener) => listener());
+}
+
+/** Lift the shell-level button above a page-level bottom overlay. */
+export function setScrollToTopBump(className: string) {
+  if (bumpClass === className) return;
+  bumpClass = className;
+  notifyBumpListeners();
+}
+
+function subscribeScrollToTopBump(listener: () => void) {
+  bumpListeners.add(listener);
+  return () => {
+    bumpListeners.delete(listener);
+  };
+}
+
+function getScrollToTopBump(): string {
+  return bumpClass;
+}
+
 /**
  * Floating "back to top" button for long scrolling pages.
  *
+ * Mounted ONCE in AppShell (every authenticated screen gets it — pages used
+ * to each import it, and most forgot, so the affordance was inconsistent).
  * Appears fixed in the bottom-right corner once the window has scrolled past
  * `showAfter` px, and smooth-scrolls to the top on click (honouring
  * prefers-reduced-motion). Hidden entirely near the top so it never covers
- * content on short pages.
+ * content on short pages. Skipped entirely during immersive routes (live
+ * interview workspaces have no chrome).
  *
  * Sits at z-30 — above page content (which AGENTS.md caps at z-20) but below
  * the sidebar (z-40), so it never floats over navigation. Anchored bottom-right
  * clear of the sidebar's left gutter.
  *
  * `className` is appended last so a page can move the anchor when something
- * else already occupies the bottom-right — e.g. quiz-manage lifts it above the
- * pending-delete undo snackbar, which is bottom-centre but wide enough to reach
- * under this button.
+ * else occupies the bottom-right; the `bump` store feeds the same channel
+ * from pages that render fixed bottom overlays (see setScrollToTopBump).
  */
 export function ScrollToTop({
   showAfter = 400,
@@ -30,6 +63,10 @@ export function ScrollToTop({
 }) {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
+  const bump = useSyncExternalStore(
+    subscribeScrollToTopBump,
+    getScrollToTopBump,
+  );
 
   useEffect(() => {
     let frame = 0;
@@ -73,6 +110,7 @@ export function ScrollToTop({
         visible
           ? "opacity-100 translate-y-0"
           : "pointer-events-none translate-y-2 opacity-0",
+        bump,
         className,
       )}
     >

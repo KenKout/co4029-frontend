@@ -1,7 +1,8 @@
+import { useEffect } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { setScrollToTopBump } from "@/components/ui/scroll-to-top";
 
 import { createQuizManageActions } from "./_components/quiz-manage/actions";
 import { PendingDeletesBanner } from "./_components/quiz-manage/PendingDeletesBanner";
@@ -36,6 +37,13 @@ export default function QuizManagePage() {
   const { quiz, questions, courseModule, pendingDeletes } = data;
   const state = useQuizManageState({ quizId, quiz, questions });
   const sticky = useStickyActions();
+
+  // The shell-level ScrollToTop and the combo-undo banner both sit at
+  // bottom z-30; while deletes are pending the banner is wide enough to
+  // reach under the button, so lift the button above it.
+  useEffect(() => {
+    setScrollToTopBump(pendingDeletes.comboCount > 0 ? "bottom-24" : "");
+  }, [pendingDeletes.comboCount]);
 
   if (data.authoringLoading || data.contentLoading) {
     return <QuizManageLoading />;
@@ -114,14 +122,6 @@ export default function QuizManagePage() {
         actions={actions}
       />
 
-      {/* Long page — the Questions tab stacks every question card, so a
-          20-question quiz scrolls a long way from the tab strip and actions.
-          Lifted above the pending-delete undo snackbar while that's showing:
-          the snackbar is bottom-centre but wide enough to reach under a
-          bottom-right button, and both sit at z-30. */}
-      <ScrollToTop
-        className={pendingDeletes.comboCount > 0 ? "bottom-24" : undefined}
-      />
       {state.leaveGuard.dialog}
     </div>
   );

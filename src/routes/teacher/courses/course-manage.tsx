@@ -1,4 +1,3 @@
-import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { CourseSettingsPanel } from "@/routes/teacher/_components/course-manage/CourseSettingsPanel";
 
 import { CurriculumSection } from "./_components/course-manage/CurriculumSection";
@@ -31,9 +30,6 @@ export default function CourseManagePage() {
       {/* Curriculum */}
       <CurriculumSection controller={controller} />
 
-      {/* Long page (settings + every module) — floating jump back to the
-          top once scrolled down. */}
-      <ScrollToTop />
     </div>
   );
 }
