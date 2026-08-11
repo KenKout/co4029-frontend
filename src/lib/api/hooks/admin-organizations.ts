@@ -50,12 +50,14 @@ export interface AdminUserSearchRow {
 /**
  * Server-side admin-users search for pickers and the membership combobox.
  *
- * Hits the page-numbered `/admin/users/search` endpoint, which actually
- * implements server-side filtering (`search` against email/display name,
- * `status`, optional `role`) — the cursor `/admin/users` endpoint declares
- * only cursor/limit, so the old `?q=&status=` params were silently dropped
- * and the "search" showed the first 20 users of ANY role. Non-admin callers
- * are scoped to their own primary organization by the backend.
+ * Hits the page-numbered `/users/search` endpoint (identity router — the
+ * same one the admin users table uses), which actually implements
+ * server-side filtering (`search` against email/display name, `status`,
+ * optional `role`). The cursor `/admin/users` endpoint declares only
+ * cursor/limit, and `/admin/users/search` does NOT exist — that prefix is a
+ * separate admin router whose `/{user_id}` route would capture "search" as
+ * a UUID (422). Non-admin callers are scoped to their own primary
+ * organization by the backend.
  *
  * Empty query returns the first 20 active users so the dropdown has
  * something to render on focus. Pass `role` (e.g. "student") to restrict
@@ -88,7 +90,7 @@ export function useAdminUsersSearch(
         }>;
         total: number;
         total_pages: number;
-      }>(`/admin/users/search?${qs.toString()}`);
+      }>(`/users/search?${qs.toString()}`);
       // /users/search returns identity UserRead (nested profile, `id` field);
       // flatten to the AdminUserSearchRow shape the comboboxes already use.
       return page.items.map((u) => ({
