@@ -68,6 +68,7 @@ export function KgCanvas({
       onPointerDown={onPointerDownBackground}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
       onPointerLeave={onPointerUp}
       role="application"
       aria-label={title}

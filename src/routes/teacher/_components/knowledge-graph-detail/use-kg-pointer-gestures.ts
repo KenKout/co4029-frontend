@@ -51,6 +51,25 @@ function pinchMetrics(points: Map<number, PointerPoint>): {
   };
 }
 
+/** Convert a screen-space midpoint to SVG-local anchor coordinates. The
+ *  canvas sits below the explorer header / panels; anchoring in client space
+ *  would pivot each zoom step around an offset point and make the graph
+ *  drift (appearing to pan opposite the fingers) while pinching. */
+function pinchAnchor(
+  e: React.PointerEvent,
+  mid: { mx: number; my: number },
+): { sx: number; sy: number } {
+  const svg =
+    e.currentTarget instanceof SVGSVGElement
+      ? e.currentTarget
+      : (e.currentTarget.closest?.("svg") ?? null);
+  const rect = svg?.getBoundingClientRect();
+  return {
+    sx: rect ? mid.mx - rect.left : mid.mx,
+    sy: rect ? mid.my - rect.top : mid.my,
+  };
+}
+
 export function useKgPointerGestures(options: {
   transform: Transform;
   setTransform: Dispatch<SetStateAction<Transform>>;
@@ -113,6 +132,12 @@ export function useKgPointerGestures(options: {
       if (pointers.current.size >= 2) {
         const { dist, mx, my } = pinchMetrics(pointers.current);
         const factor = dist / pinch.current.dist;
+        // Zoom anchored at the PREVIOUS midpoint (SVG-local), then translate
+        // 1:1 with the midpoint's movement.
+        const { sx, sy } = pinchAnchor(e, {
+          mx: pinch.current.mx,
+          my: pinch.current.my,
+        });
         // Google-Maps style: zoom anchored at the PREVIOUS midpoint, then
         // translate 1:1 with the midpoint's movement — so two-finger pan
         // tracks the fingers exactly (factor ≈ 1 still pans) and zooming
@@ -120,11 +145,7 @@ export function useKgPointerGestures(options: {
         setTransform((prev) => {
           const zoomed =
             factor > 0 && Math.abs(factor - 1) > 0.001
-              ? zoomToward(prev, {
-                  sx: pinch.current.mx,
-                  sy: pinch.current.my,
-                  factor,
-                })
+              ? zoomToward(prev, { sx, sy, factor })
               : prev;
           return {
             ...zoomed,
