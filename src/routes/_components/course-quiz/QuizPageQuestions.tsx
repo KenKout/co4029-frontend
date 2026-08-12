@@ -4,8 +4,7 @@ import type { QuizStageProps } from "./types";
 /** Question cards for the current page. */
 export function QuizPageQuestions({
   session,
-  quiz,
-}: Pick<QuizStageProps, "session" | "quiz">) {
+}: Pick<QuizStageProps, "session">) {
   const {
     pageQuestions,
     pageStart,
@@ -18,7 +17,6 @@ export function QuizPageQuestions({
     submitAttempt,
     perQuestionCooldown,
     focusTime,
-    setHintDialogOpen,
   } = session;
 
   return (
@@ -36,8 +34,6 @@ export function QuizPageQuestions({
             status={status}
             isActive={index === activeIdx}
             disabled={submitAnswer.isPending || submitAttempt.isPending}
-            showHints={quiz.show_hints}
-            hintText={question.hint_text ?? null}
             cooldownRetryAt={perQuestionCooldown[question.id] ?? null}
             registerRef={focusTime.register(question.id)}
             peekFocusMs={() => focusTime.peekFocusMs(question.id)}
@@ -63,22 +59,6 @@ export function QuizPageQuestions({
                     : s,
                 ),
               );
-            }}
-            onToggleFlag={() => {
-              setStatuses((current) =>
-                current.map((s, i) =>
-                  i === index ? { ...s, flagged: !s.flagged } : s,
-                ),
-              );
-            }}
-            onShowHint={() => {
-              setActiveIdx(index);
-              setStatuses((current) =>
-                current.map((s, i) =>
-                  i === index ? { ...s, hintViewed: true } : s,
-                ),
-              );
-              setHintDialogOpen(true);
             }}
           />
         );

@@ -5,65 +5,43 @@ import { CardCooldownBadge } from "@/components/ui/card-cooldown-badge";
 import { useCardCooldown } from "@/lib/api/cooldown";
 
 /**
- * The Save / Continue / Submit control cluster shown under the active question.
- * Owns the cooldown gating so the taking page doesn't have to: while a card
- * cooldown is live, the primary action is disabled and a countdown badge shows.
+ * The Next / Submit control for the quiz footer.
+ *
+ * Answers auto-save (see use-auto-save-answer), so the old explicit Save
+ * button is gone and Continue is just "Next" — the primary action persists
+ * the current answer (a no-op when it's already saved) and advances, or
+ * final-submits on the last question.
  */
 export function QuizSubmitButton({
   isLastQuestion,
   hasSelection,
-  isSaved,
   isSavingAnswer,
   isFinalSubmitting,
   cooldownRetryAt: cooldownAt,
-  onSave,
-  onSaveNext,
+  onNext,
   onFinalSubmit,
 }: {
   isLastQuestion: boolean;
   hasSelection: boolean;
-  isSaved: boolean;
   isSavingAnswer: boolean;
   isFinalSubmitting: boolean;
   cooldownRetryAt: string | null;
-  onSave: () => void;
-  onSaveNext: () => void;
+  onNext: () => void;
   onFinalSubmit: () => void;
 }) {
   const { t } = useTranslation();
   const cooldown = useCardCooldown(cooldownAt);
   const cooldownActive = !!cooldownAt && !cooldown.isExpired;
   const busy = isSavingAnswer || isFinalSubmitting;
-  const primaryDisabled = !hasSelection || busy || cooldownActive;
-  // Save (secondary) is additionally suppressed once the current answer is
-  // already persisted — there's nothing new to write. Continue/Submit stay
-  // enabled so the student can still advance without a redundant save.
-  const saveDisabled = primaryDisabled || isSaved;
-
-  // Secondary "Save" — persists the current answer in place, no navigation.
-  const saveButton = (
-    <Button
-      variant="outline"
-      onClick={onSave}
-      disabled={saveDisabled}
-      className="font-bold rounded-xl gap-2 px-5 py-3 h-auto border-m3-primary/40 text-m3-primary hover:bg-m3-primary-fixed/30 active:scale-95 transition-all disabled:opacity-50"
-    >
-      {isSavingAnswer
-        ? t("course_quiz.actions.saving")
-        : isSaved
-          ? t("course_quiz.actions.saved")
-          : t("course_quiz.actions.save")}
-    </Button>
-  );
+  const primaryDisabled = busy || cooldownActive;
 
   return (
     <div className="flex items-center gap-3 flex-wrap justify-end">
       {cooldownActive && <CardCooldownBadge retryAt={cooldownAt} />}
-      {saveButton}
       {isLastQuestion ? (
         <Button
           onClick={onFinalSubmit}
-          disabled={primaryDisabled}
+          disabled={primaryDisabled || !hasSelection}
           className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-6 py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
         >
           {isFinalSubmitting
@@ -75,13 +53,13 @@ export function QuizSubmitButton({
         </Button>
       ) : (
         <Button
-          onClick={onSaveNext}
+          onClick={onNext}
           disabled={primaryDisabled}
           className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-6 py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
         >
           {isSavingAnswer
             ? t("course_quiz.actions.saving")
-            : t("course_quiz.actions.continue")}
+            : t("course_quiz.actions.next")}
           <ArrowRight className="h-4 w-4" />
         </Button>
       )}

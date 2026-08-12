@@ -2396,7 +2396,8 @@
    "question_overview": "Question overview"
   },
   "summary": {
-   "title": "Quiz summary"
+   "title": "Quiz summary",
+   "open_aria": "Question list"
   },
   "labels": {
    "hint": "Hint",
@@ -2423,7 +2424,9 @@
    "disallowed": "Not allowed",
    "no_limit": "No limit",
    "retake_max_attempts": "Up to {{count}} tries",
-   "cooldown_hours": "{{hours}} hours"
+   "cooldown_hours": "{{hours}} hours",
+   "attempts_previous": "{{count}} previous attempt(s)",
+   "attempts_first": "First attempt"
   },
   "messages": {
    "no_retakes": "This quiz does not allow retakes.",
@@ -2456,7 +2459,10 @@
    "flag": "Flag",
    "show_hint": "View hint",
    "view_hint_again": "View hint again",
-   "close_hint": "Close"
+   "close_hint": "Close",
+   "close_config": "Close settings",
+   "close_integrity": "Close monitoring info",
+   "close_summary": "Close question list"
   },
   "errors": {
    "rate_limited": "Too many requests, please try again later",

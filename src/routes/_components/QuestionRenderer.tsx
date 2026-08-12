@@ -73,7 +73,7 @@ function OptionInput({
     [question.options],
   );
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {sortedOptions.map((option) => {
         const isSelected = selectedOptionId === option.id;
         return (
@@ -85,7 +85,7 @@ function OptionInput({
               onSelectOption(option.id);
             }}
             className={cn(
-              "w-full text-left p-5 sm:p-6 rounded-xl flex items-center gap-5 transition-all duration-200 border-2 group/opt cursor-pointer h-auto whitespace-normal",
+              "w-full text-left p-3 sm:p-4 rounded-xl flex items-start gap-3 transition-all duration-200 border-2 group/opt cursor-pointer h-auto whitespace-normal",
               isSelected
                 ? "bg-m3-primary-fixed/20 border-m3-primary shadow-lg shadow-m3-primary/10 ring-2 ring-m3-primary"
                 : "bg-m3-surface-container-low border-transparent hover:bg-m3-surface-container-high hover:border-m3-outline-variant/30",
@@ -93,7 +93,7 @@ function OptionInput({
           >
             <span
               className={cn(
-                "w-10 h-10 shrink-0 flex items-center justify-center rounded-xl font-bold text-sm transition-colors shadow-sm",
+                "w-8 h-8 shrink-0 flex items-center justify-center rounded-lg font-bold text-xs transition-colors shadow-sm mt-0.5",
                 isSelected
                   ? "bg-m3-primary text-white"
                   : "bg-m3-surface-container-lowest text-m3-primary group-hover/opt:bg-m3-primary group-hover/opt:text-white",
@@ -431,7 +431,7 @@ function MultiSelectInput({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {sortedOptions.map((option) => {
         const isSelected = chosen.includes(option.id);
         return (
@@ -441,7 +441,7 @@ function MultiSelectInput({
             onClick={() => toggle(option.id)}
             aria-pressed={isSelected}
             className={cn(
-              "w-full text-left p-5 sm:p-6 rounded-xl flex items-center gap-5 transition-all duration-200 border-2 group/opt cursor-pointer h-auto whitespace-normal",
+              "w-full text-left p-3 sm:p-4 rounded-xl flex items-start gap-3 transition-all duration-200 border-2 group/opt cursor-pointer h-auto whitespace-normal",
               isSelected
                 ? "bg-m3-primary-fixed/20 border-m3-primary shadow-lg shadow-m3-primary/10 ring-2 ring-m3-primary"
                 : "bg-m3-surface-container-low border-transparent hover:bg-m3-surface-container-high hover:border-m3-outline-variant/30",
@@ -449,7 +449,7 @@ function MultiSelectInput({
           >
             <span
               className={cn(
-                "w-6 h-6 shrink-0 flex items-center justify-center rounded-md border-2 transition-colors",
+                "w-5 h-5 shrink-0 flex items-center justify-center rounded-md border-2 transition-colors mt-0.5",
                 isSelected
                   ? "bg-m3-primary border-m3-primary text-white"
                   : "bg-m3-surface-container-lowest border-m3-outline-variant",
@@ -553,7 +553,7 @@ function MatchingInput({
           onAnswerTextChange,
           selectedOptionId: null,
           onSelectOption: () => {},
-        } as QuestionRendererProps)}
+        })}
       />
     );
   }
@@ -638,7 +638,7 @@ function OrderingInput({
           onAnswerTextChange,
           selectedOptionId: null,
           onSelectOption: () => {},
-        } as QuestionRendererProps)}
+        })}
       />
     );
   }

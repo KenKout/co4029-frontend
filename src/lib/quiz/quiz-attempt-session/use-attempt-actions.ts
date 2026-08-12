@@ -22,6 +22,7 @@ import type {
   SubmitAttemptMutation,
 } from "./types";
 import type { AttemptSessionState } from "./use-attempt-session-state";
+import { useAutoSaveAnswer } from "./use-auto-save-answer";
 import { useAutoSubmitOnTimeout } from "./use-auto-submit-on-timeout";
 import type { PasswordGate } from "./use-password-gate";
 
@@ -141,6 +142,14 @@ export function useAttemptActions(args: {
       );
     }
   }, [persistAnswer, activeIdx, displayQuestions.length]);
+
+  // Auto-save answers as the student works (the Save button is gone).
+  useAutoSaveAnswer({
+    state,
+    sessionReady,
+    activeAttemptId,
+    persistAnswer,
+  });
 
   const handleFinalSubmit = useCallback(
     async (trigger: "manual" | "timeout") => {

@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Flag, Sparkles, Timer } from "lucide-react";
+import { Sparkles, Timer } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RichContent } from "@/components/ui/rich-content";
 import type { QuizQuestionPublic } from "@/lib/api/types";
@@ -46,16 +45,12 @@ export function QuizQuestionCard({
   status,
   isActive,
   disabled,
-  showHints,
-  hintText,
   cooldownRetryAt,
   registerRef,
   peekFocusMs,
   onFocusQuestion,
   onSelectOption,
   onAnswerTextChange,
-  onToggleFlag,
-  onShowHint,
 }: {
   question: QuizQuestionPublic;
   index: number;
@@ -64,16 +59,12 @@ export function QuizQuestionCard({
   /** Highlighted as the question the student is currently on. */
   isActive: boolean;
   disabled: boolean;
-  showHints: boolean;
-  hintText: string | null;
   cooldownRetryAt: string | null;
   registerRef: (node: HTMLElement | null) => void;
   peekFocusMs: () => number;
   onFocusQuestion: () => void;
   onSelectOption: (optionId: string) => void;
   onAnswerTextChange: (value: string | null) => void;
-  onToggleFlag: () => void;
-  onShowHint: () => void;
 }) {
   const { t } = useTranslation();
   const [elapsed, setElapsed] = useState(0);
@@ -94,12 +85,12 @@ export function QuizQuestionCard({
       onFocusCapture={onFocusQuestion}
       onPointerDown={onFocusQuestion}
       className={cn(
-        "bg-m3-surface-container-lowest rounded-xl p-6 sm:p-10 relative overflow-hidden shadow-editorial scroll-mt-32",
+        "bg-m3-surface-container-lowest rounded-xl p-4 sm:p-6 relative overflow-hidden shadow-editorial scroll-mt-32",
         "transition-shadow",
         isActive && total > 1 && "ring-2 ring-m3-secondary/40",
       )}
     >
-      <div className="absolute top-0 right-0 m-5 flex items-center gap-2">
+      <div className="absolute top-0 right-0 m-3 flex items-center gap-2">
         <Badge
           variant="outline"
           className="text-m3-outline border-m3-outline-variant font-mono text-[10px] bg-white"
@@ -120,13 +111,13 @@ export function QuizQuestionCard({
         )}
       </div>
 
-      <div className="mb-8 pt-2">
-        <span className="text-m3-secondary font-headline font-bold text-xs tracking-widest uppercase mb-3 block">
+      <div className="mb-4 pt-1">
+        <span className="text-m3-secondary font-headline font-bold text-[11px] tracking-widest uppercase mb-2 block">
           {t("course_quiz.labels.question_label_short", {
             index: String(index + 1).padStart(2, "0"),
           })}
         </span>
-        <h2 className="text-xl sm:text-2xl font-headline font-bold text-m3-on-surface leading-snug">
+        <h2 className="text-lg sm:text-xl font-headline font-bold text-m3-on-surface leading-snug">
           <RichContent
             value={question.prompt_text}
             format={question.prompt_format ?? "plain"}
@@ -144,45 +135,10 @@ export function QuizQuestionCard({
       />
 
       {cooldownRetryAt && (
-        <p className="mt-4 text-xs font-semibold text-amber-700">
+        <p className="mt-3 text-xs font-semibold text-amber-700">
           {t("course_quiz.errors.cooldown_active")}
         </p>
       )}
-
-      {/* Per-question actions. In multi-question layouts these must live on the
-          card, not in a single page-level bar, or they'd act on the wrong
-          question. */}
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <Button
-          variant="ghost"
-          onClick={onToggleFlag}
-          disabled={disabled}
-          className={cn(
-            "font-bold rounded-xl gap-2 text-sm",
-            status.flagged
-              ? "text-amber-600 bg-amber-50 hover:bg-amber-100"
-              : "text-m3-outline hover:text-m3-on-surface",
-          )}
-        >
-          <Flag className="h-4 w-4" />
-          {status.flagged
-            ? t("course_quiz.actions.unflag")
-            : t("course_quiz.actions.flag")}
-        </Button>
-
-        {showHints && hintText && (
-          <Button
-            variant="ghost"
-            onClick={onShowHint}
-            disabled={disabled}
-            className="font-bold rounded-xl gap-2 text-sm text-m3-primary hover:bg-m3-primary-fixed/30"
-          >
-            {status.hintViewed
-              ? t("course_quiz.actions.view_hint_again")
-              : t("course_quiz.actions.show_hint")}
-          </Button>
-        )}
-      </div>
     </div>
   );
 }

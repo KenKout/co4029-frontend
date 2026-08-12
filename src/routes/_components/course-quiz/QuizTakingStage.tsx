@@ -1,45 +1,43 @@
+import { useState } from "react";
 import { QuizHintDialog } from "@/routes/_components/QuizHintDialog";
 import { QuizSummaryCard } from "@/routes/_components/QuizSummaryCard";
 import { buildSummaryItems, deriveTakingView } from "./helpers";
 import { QuizPageQuestions } from "./QuizPageQuestions";
-import { QuizPerPageSelector } from "./QuizPerPageSelector";
-import { QuizPageNav, QuizTakingActions } from "./QuizTakingActions";
-import { QuizTakingHeader } from "./QuizTakingHeader";
+import { QuizTakingFooter } from "./QuizTakingFooter";
+import { QuizSummaryDialog } from "./QuizSummaryDialog";
 import { QuizTakingTopBar } from "./QuizTakingTopBar";
 import type { QuizStageProps } from "./types";
 
 /**
- * The live take screen: sticky bar, title/progress, the current page of
- * question cards, pagination + submit controls, and the summary rail.
+ * The live take screen: compact sticky bar (title / Q counter / progress /
+ * config), the current page of question cards, and the sticky question
+ * footer (flag / question list / hint / prev / next).
  *
- * Layout, class names and the `lg:sticky lg:top-32` rail offset are unchanged
- * from course-quiz.tsx.
+ * The summary rail is desktop-only now — on phones the question-list icon
+ * in the footer opens the same layout as a dialog.
  */
-export function QuizTakingStage({
-  session,
-  quiz,
-  slug,
-  courseTitle,
-}: QuizStageProps & { courseTitle: string }) {
+export function QuizTakingStage({ session, quiz, slug }: QuizStageProps) {
   const { hintDialogOpen, setHintDialogOpen, displayQuestions } = session;
   const view = deriveTakingView(session, quiz);
   const summaryItems = buildSummaryItems(session);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   /**
-   * Jump to a question from the summary rail.
+   * Jump to a question from the summary rail/dialog.
    *
    * Setting the active index is not enough on the 5 / 10 / All layouts: the
    * target card is already on screen (or one page-switch away), so nothing
    * moves and the click feels dead. So we also scroll the card into view.
    *
-   * The card may live on a different page — `setActiveIdx` makes the pagination
-   * effect switch pages on a LATER commit, so the node isn't in the DOM yet on
-   * this tick. Retry across a few animation frames until it mounts, then scroll
-   * (honouring reduced-motion, matching the teacher navigator's behaviour).
+   * The card may live on a different page — `setActiveIdx` makes the
+   * pagination effect switch pages on a LATER commit, so the node isn't in
+   * the DOM yet on this tick. Retry across a few animation frames until it
+   * mounts, then scroll (honouring reduced-motion).
    */
   const jumpToQuestion = (index: number) => {
     const question = displayQuestions[index];
     session.setActiveIdx(index);
+    setSummaryOpen(false);
     if (!question) return;
     let attempts = 0;
     const tryScroll = () => {
@@ -61,39 +59,29 @@ export function QuizTakingStage({
   };
 
   return (
-    <div className="min-h-[70vh] pb-20">
+    <div className="min-h-[70vh] pb-24">
       <QuizTakingTopBar
         session={session}
         quiz={quiz}
         slug={slug}
-        courseTitle={courseTitle}
+        progressPct={view.progressPct}
       />
 
       <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
-        <QuizTakingHeader
-          session={session}
-          quiz={quiz}
-          progressPct={view.progressPct}
-        />
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-8 xl:col-span-9">
-            <QuizPerPageSelector session={session} />
+            <QuizPageQuestions session={session} />
 
-            <QuizPageQuestions session={session} quiz={quiz} />
-
-            <QuizPageNav session={session} />
-
-            <QuizTakingActions session={session} view={view} />
+            <QuizTakingFooter
+              session={session}
+              view={view}
+              onOpenSummary={() => setSummaryOpen(true)}
+            />
           </div>
 
-          <div className="lg:col-span-4 xl:col-span-3 space-y-5 lg:sticky lg:top-32 lg:self-start">
-            <QuizHintDialog
-              open={hintDialogOpen}
-              onOpenChange={setHintDialogOpen}
-              hintText={view.activeQuestion.hint_text ?? ""}
-            />
-
+          {/* Summary rail — desktop only; phones use the footer's
+              question-list dialog. */}
+          <div className="lg:col-span-4 xl:col-span-3 hidden lg:block space-y-5 lg:sticky lg:top-32 lg:self-start">
             <QuizSummaryCard
               items={summaryItems}
               answeredCount={view.completedCount}
@@ -105,6 +93,23 @@ export function QuizTakingStage({
           </div>
         </div>
       </div>
+
+      <QuizHintDialog
+        open={hintDialogOpen}
+        onOpenChange={setHintDialogOpen}
+        hintText={view.activeQuestion.hint_text ?? ""}
+      />
+
+      <QuizSummaryDialog
+        open={summaryOpen}
+        onOpenChange={setSummaryOpen}
+        items={summaryItems}
+        answeredCount={view.completedCount}
+        flaggedCount={view.flaggedCount}
+        total={displayQuestions.length}
+        passingScore={view.passingScore}
+        onJump={jumpToQuestion}
+      />
     </div>
   );
 }

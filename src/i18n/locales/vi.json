@@ -2262,7 +2262,8 @@
    "question_overview": "Tổng quan câu hỏi"
   },
   "summary": {
-   "title": "Tổng kết bài quiz"
+   "title": "Tổng kết bài quiz",
+   "open_aria": "Danh sách câu hỏi"
   },
   "labels": {
    "hint": "Gợi ý",
@@ -2289,7 +2290,9 @@
    "disallowed": "Không cho phép",
    "no_limit": "Không giới hạn",
    "retake_max_attempts": "Tối đa {{count}} lần",
-   "cooldown_hours": "{{hours}} giờ"
+   "cooldown_hours": "{{hours}} giờ",
+   "attempts_previous": "{{count}} lần làm trước",
+   "attempts_first": "Lần làm đầu tiên"
   },
   "messages": {
    "no_retakes": "Bài quiz này không cho phép làm lại.",
@@ -2322,7 +2325,10 @@
    "flag": "Đánh dấu",
    "show_hint": "Xem gợi ý",
    "view_hint_again": "Xem lại gợi ý",
-   "close_hint": "Đóng"
+   "close_hint": "Đóng",
+   "close_config": "Đóng cài đặt",
+   "close_integrity": "Đóng thông tin giám sát",
+   "close_summary": "Đóng danh sách câu hỏi"
   },
   "errors": {
    "rate_limited": "Quá nhiều yêu cầu, vui lòng thử lại sau",

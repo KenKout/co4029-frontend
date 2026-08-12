@@ -70,7 +70,6 @@ export default function CourseQuizPage() {
       session={session}
       quiz={quiz}
       slug={slug}
-      courseTitle={course.title}
     />
   );
 }
