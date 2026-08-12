@@ -1173,7 +1173,7 @@
   "student_count_one": "{{count}} sinh viên"
  },
  "management_career_paths": {
-  "title": "Quản lý lộ trình",
+  "title": "Lộ trình",
   "subtitle": "Tạo, xuất bản và lưu trữ lộ trình nghề nghiệp.",
   "create_button": "Tạo lộ trình mới",
   "list_load_failed": "Không thể tải danh sách lộ trình",

@@ -1263,7 +1263,7 @@
   "student_count_one": "{{count}} student"
  },
  "management_career_paths": {
-  "title": "Manage career paths",
+  "title": "Career Paths",
   "subtitle": "Create, publish, and archive career paths.",
   "create_button": "New career path",
   "list_load_failed": "Couldn't load career paths",

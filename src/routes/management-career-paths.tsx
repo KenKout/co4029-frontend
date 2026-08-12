@@ -417,7 +417,6 @@ export default function ManagementCareerPathsPage() {
       <PageHeader
         title={t("management_career_paths.title")}
         subtitle={t("management_career_paths.subtitle")}
-        backTo="/dashboard"
       />
 
       {list.isError ? (
