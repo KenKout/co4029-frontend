@@ -2302,9 +2302,6 @@
   "passing_score": "Passing score",
   "nav_title": "Question navigation",
   "questions_title": "Question breakdown",
-  "correct": "Correct",
-  "incorrect": "Incorrect",
-  "skipped": "Skipped",
   "your_answer": "Your answer",
   "explanation": "Explanation",
   "points": "{{n}} pts",
@@ -2315,11 +2312,7 @@
    "skipped": "Skipped",
    "time": "Time"
   },
-  "option": {
-   "your_correct": "Your answer · Correct",
-   "your_incorrect": "Your answer",
-   "correct": "Correct answer"
-  },
+  "option": {},
   "overall_feedback": "Overall feedback"
  },
  "discussion": {

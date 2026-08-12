@@ -7,9 +7,14 @@ import type {
   QuizAttemptReviewQuestion,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
-import { optionVerdict, questionBadge } from "./helpers";
 
-/** One answer option with its correct / chosen styling. */
+/**
+ * One answer option in the review. Signals, without text labels:
+ * - the student's pick is CIRCLEd (ring) around the letter — green when
+ *   they chose the correct answer, red when they chose a wrong one;
+ * - the correct answer always gets a green background;
+ * - a wrong pick gets a red background.
+ */
 function ReviewOptionRow({
   option,
   selected,
@@ -17,37 +22,47 @@ function ReviewOptionRow({
   option: QuizAttemptReviewOption;
   selected: boolean;
 }) {
-  const { t } = useTranslation();
   const isCorrect = option.is_correct;
-  const { cls, labelKey, LabelIcon } = optionVerdict(isCorrect, selected);
+
+  // Defaults: plain option. Correct answers always get a green background;
+  // the student's pick is additionally circled (ring) around the letter —
+  // green when right, red when wrong, with a red background on the wrong row.
+  let rowCls = "bg-m3-surface-container-low border-m3-outline-variant/20";
+  let letterCls = "text-m3-on-surface-variant";
+  if (selected && isCorrect) {
+    rowCls = "bg-emerald-500/15 border-emerald-500";
+    letterCls = "bg-emerald-100 text-emerald-700 ring-emerald-500 ring-2";
+  } else if (selected && !isCorrect) {
+    rowCls = "bg-red-500/10 border-red-400";
+    letterCls = "bg-red-100 text-red-700 ring-red-500 ring-2";
+  } else if (isCorrect) {
+    rowCls = "bg-emerald-500/10 border-emerald-400/70";
+    letterCls = "text-emerald-700";
+  }
 
   return (
     <div
       className={cn(
-        "rounded-xl border p-3 flex items-center gap-3 text-sm",
-        cls,
+        "rounded-xl border px-3 py-2.5 flex items-center gap-3 text-sm",
+        rowCls,
       )}
     >
-      <span className="font-bold text-xs uppercase tracking-wider w-6 shrink-0 text-m3-on-surface-variant">
+      <span
+        className={cn(
+          "w-7 h-7 shrink-0 flex items-center justify-center rounded-full font-bold text-xs",
+          letterCls,
+        )}
+      >
         {option.option_key}
       </span>
-      <span className="flex-1 text-m3-on-surface">{option.option_text}</span>
-      {LabelIcon && labelKey && (
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest shrink-0",
-            isCorrect ? "text-emerald-700" : "text-red-700",
-          )}
-        >
-          <LabelIcon className="h-3 w-3" />
-          {t(labelKey)}
-        </span>
-      )}
+      <span className="flex-1 text-m3-on-surface leading-snug">
+        {option.option_text}
+      </span>
     </div>
   );
 }
 
-/** Prompt + verdict badge header. */
+/** Prompt header — no verdict badge (the card outline carries it). */
 function QuestionHeader({
   question,
   index,
@@ -55,15 +70,11 @@ function QuestionHeader({
   question: QuizAttemptReviewQuestion;
   index: number;
 }) {
-  const { t } = useTranslation();
-  const badge = questionBadge(question, t);
-  const BadgeIcon = badge.icon;
-
   return (
-    <div className="flex items-start justify-between gap-3 flex-wrap">
+    <div className="flex items-start justify-between gap-3">
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <span className="text-xs font-headline font-black text-m3-secondary tabular-nums shrink-0">
-          {String(index + 1).padStart(2, "0")}
+          Q{index + 1}
         </span>
         <div className="text-sm font-semibold text-m3-on-surface flex-1 min-w-0">
           <RichContent
@@ -76,15 +87,6 @@ function QuestionHeader({
           />
         </div>
       </div>
-      <span
-        className={cn(
-          "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border shrink-0",
-          badge.cls,
-        )}
-      >
-        <BadgeIcon className="h-3 w-3" />
-        {badge.label}
-      </span>
     </div>
   );
 }
@@ -120,7 +122,11 @@ function QuestionMetaRow({
   );
 }
 
-/** One question in the per-question breakdown. */
+/**
+ * One question in the per-question breakdown: green outline when answered
+ * correctly, red otherwise; options colour-coded (green = correct answer,
+ * red = the student's wrong pick, circled letter = their selection).
+ */
 export function ReviewQuestionCard({
   question,
   index,
@@ -133,7 +139,12 @@ export function ReviewQuestionCard({
   return (
     <GlassCard
       id={`review-question-${question.question_id}`}
-      className="p-6 space-y-5 scroll-mt-24"
+      className={cn(
+        "p-6 space-y-5 scroll-mt-24",
+        question.is_correct
+          ? "ring-2 ring-emerald-400/70"
+          : "ring-2 ring-red-400/70",
+      )}
     >
       <QuestionHeader question={question} index={index} />
 

@@ -2212,9 +2212,6 @@
   "passing_score": "Điểm đạt",
   "nav_title": "Điều hướng câu hỏi",
   "questions_title": "Chi tiết từng câu hỏi",
-  "correct": "Đúng",
-  "incorrect": "Sai",
-  "skipped": "Bỏ qua",
   "your_answer": "Câu trả lời của bạn",
   "explanation": "Giải thích",
   "points": "{{n}} điểm",
@@ -2225,11 +2222,7 @@
    "skipped": "Bỏ qua",
    "time": "Thời gian"
   },
-  "option": {
-   "your_correct": "Bạn chọn · Đúng",
-   "your_incorrect": "Bạn chọn",
-   "correct": "Đáp án đúng"
-  },
+  "option": {},
   "overall_feedback": "Nhận xét tổng thể"
  },
  "course_quiz": {
