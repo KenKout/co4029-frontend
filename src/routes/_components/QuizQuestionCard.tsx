@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, Timer } from "lucide-react";
+import { Timer } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -98,24 +98,11 @@ export function QuizQuestionCard({
           <Timer className="h-3 w-3 mr-1" />
           {formatTime(elapsed)}
         </Badge>
-        {isActive && (
-          <Badge className="bg-m3-secondary-fixed text-m3-on-surface border-0 font-bold text-[10px] px-3 py-1.5 gap-1.5 rounded-full">
-            <Sparkles className="h-3 w-3" />
-            {t("course_quiz.status.currently_doing")}
-          </Badge>
-        )}
-        {status.savedToServer && (
-          <Badge className="bg-emerald-50 text-emerald-700 border-0 font-bold text-[10px] px-2.5 py-1.5 rounded-full">
-            {t("course_quiz.status.saved")}
-          </Badge>
-        )}
       </div>
 
       <div className="mb-4 pt-1">
         <span className="text-m3-secondary font-headline font-bold text-[11px] tracking-widest uppercase mb-2 block">
-          {t("course_quiz.labels.question_label_short", {
-            index: String(index + 1).padStart(2, "0"),
-          })}
+          Q{index + 1}
         </span>
         <h2 className="text-lg sm:text-xl font-headline font-bold text-m3-on-surface leading-snug">
           <RichContent

@@ -2279,7 +2279,6 @@
    "flagged": "Đánh dấu",
    "no_time_limit": "Không giới hạn thời gian",
    "attempt_summary": "Lượt {{attempt}} • {{correct}}/{{total}} câu đúng",
-   "question_label_short": "Câu hỏi {{index}}",
    "started_at": "Bắt đầu lúc",
    "elapsed": "Đã trôi qua"
   },
@@ -2362,8 +2361,7 @@
    "failed_summary": "Bạn đạt {{score}}% và cần {{passing}}% để qua."
   },
   "status": {
-   "currently_doing": "ĐANG LÀM",
-   "saved": "Đã lưu"
+   "currently_doing": "ĐANG LÀM"
   },
   "instructions": {
    "choose_best": "Chọn đáp án phù hợp nhất; có thể đánh dấu để xem lại sau."

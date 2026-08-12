@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { QuizHintDialog } from "@/routes/_components/QuizHintDialog";
 import { QuizSummaryCard } from "@/routes/_components/QuizSummaryCard";
+import { setScrollToTopBump } from "@/components/ui/scroll-to-top";
 import { buildSummaryItems, deriveTakingView } from "./helpers";
 import { QuizPageQuestions } from "./QuizPageQuestions";
 import { QuizTakingFooter } from "./QuizTakingFooter";
@@ -21,6 +23,13 @@ export function QuizTakingStage({ session, quiz, slug }: QuizStageProps) {
   const view = deriveTakingView(session, quiz);
   const summaryItems = buildSummaryItems(session);
   const [summaryOpen, setSummaryOpen] = useState(false);
+
+  // The sticky question footer occupies the bottom edge; lift the shell's
+  // ScrollToTop button above it so the two never overlap.
+  useEffect(() => {
+    setScrollToTopBump("bottom-24");
+    return () => setScrollToTopBump("");
+  }, []);
 
   /**
    * Jump to a question from the summary rail/dialog.
@@ -59,7 +68,7 @@ export function QuizTakingStage({ session, quiz, slug }: QuizStageProps) {
   };
 
   return (
-    <div className="min-h-[70vh] pb-24">
+    <div className="pb-4">
       <QuizTakingTopBar
         session={session}
         quiz={quiz}

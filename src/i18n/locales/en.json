@@ -2413,7 +2413,6 @@
    "flagged": "Flagged",
    "no_time_limit": "No time limit",
    "attempt_summary": "Attempt {{attempt}} • {{correct}}/{{total}} correct",
-   "question_label_short": "Question {{index}}",
    "started_at": "Started at",
    "elapsed": "Elapsed"
   },
@@ -2496,8 +2495,7 @@
    "failed_summary": "You scored {{score}}% and need {{passing}}% to pass."
   },
   "status": {
-   "currently_doing": "In progress",
-   "saved": "Saved"
+   "currently_doing": "In progress"
   },
   "instructions": {
    "choose_best": "Choose the best answer; you can flag it for review later."
