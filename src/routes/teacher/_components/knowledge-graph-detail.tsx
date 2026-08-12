@@ -84,6 +84,7 @@ export function KnowledgeGraphDetail({
     onPointerDownNode,
     onPointerMove,
     onPointerUp,
+    onPointerLeave,
     onNodeTap,
     onNodeHoverEnter,
     onNodeHoverLeave,
@@ -150,6 +151,7 @@ export function KnowledgeGraphDetail({
           onPointerDownBackground={onPointerDownBackground}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
+          onPointerLeave={onPointerLeave}
           onPointerDownNode={onPointerDownNode}
           onNodeTap={onNodeTap}
           onNodeHoverEnter={onNodeHoverEnter}

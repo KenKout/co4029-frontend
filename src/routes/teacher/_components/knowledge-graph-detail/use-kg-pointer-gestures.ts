@@ -29,6 +29,7 @@ export interface KgPointerGestures {
   onPointerDownNode: (e: React.PointerEvent, nodeId: string) => void;
   onPointerMove: (e: React.PointerEvent) => void;
   onPointerUp: (e: React.PointerEvent) => void;
+  onPointerLeave: (e: React.PointerEvent) => void;
 }
 
 interface PointerPoint {
@@ -110,8 +111,13 @@ export function useKgPointerGestures(options: {
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     // A second finger anywhere starts the pinch, even over a node.
     if (pointers.current.size >= 2) {
-      pinch.current.active = true;
-      pinch.current.dist = pinchMetrics(pointers.current).dist;
+      // Full state — mx/my must be set here too, otherwise the pinch anchor
+      // stays at the initial (0,0) and every zoom step pivots around the
+      // svg's top-left corner: the graph then slides OPPOSITE the fingers
+      // (the "inverted" pinch report — fingers on a dense graph usually land
+      // on nodes, so this path is the common one on phones).
+      const { dist, mx, my } = pinchMetrics(pointers.current);
+      pinch.current = { active: true, dist, mx, my };
       drag.current.kind = null;
       return;
     }
@@ -132,12 +138,15 @@ export function useKgPointerGestures(options: {
       if (pointers.current.size >= 2) {
         const { dist, mx, my } = pinchMetrics(pointers.current);
         const factor = dist / pinch.current.dist;
+        // Snapshot the baseline NOW. React batches pointermove updates, so
+        // the updater below can run AFTER the next event has already
+        // overwritten pinch.current — reading it inside the updater corrupts
+        // the pan/zoom math (the graph then drifts or moves OPPOSITE the
+        // fingers — the reported "inverted pinch").
+        const from = { ...pinch.current };
         // Zoom anchored at the PREVIOUS midpoint (SVG-local), then translate
         // 1:1 with the midpoint's movement.
-        const { sx, sy } = pinchAnchor(e, {
-          mx: pinch.current.mx,
-          my: pinch.current.my,
-        });
+        const { sx, sy } = pinchAnchor(e, from);
         // Google-Maps style: zoom anchored at the PREVIOUS midpoint, then
         // translate 1:1 with the midpoint's movement — so two-finger pan
         // tracks the fingers exactly (factor ≈ 1 still pans) and zooming
@@ -149,8 +158,8 @@ export function useKgPointerGestures(options: {
               : prev;
           return {
             ...zoomed,
-            tx: zoomed.tx + (mx - pinch.current.mx),
-            ty: zoomed.ty + (my - pinch.current.my),
+            tx: zoomed.tx + (mx - from.mx),
+            ty: zoomed.ty + (my - from.my),
           };
         });
         pinch.current = { active: true, dist, mx, my };
@@ -194,11 +203,20 @@ export function useKgPointerGestures(options: {
     drag.current.kind = null;
   };
 
+  const onPointerLeave = (e: React.PointerEvent) => {
+    // A finger sliding out of the svg mid-multi-touch (edge fingers, iOS
+    // quirks) must not end the gesture while other fingers are still down —
+    // that would drop to one-pointer pan with stale state. Mouse hover-out
+    // (single pointer) still cancels the drag as before.
+    if (pointers.current.size <= 1) onPointerUp(e);
+  };
+
   return {
     drag,
     onPointerDownBackground,
     onPointerDownNode,
     onPointerMove,
     onPointerUp,
+    onPointerLeave,
   };
 }

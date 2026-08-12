@@ -31,6 +31,7 @@ export function KgCanvas({
   onPointerDownBackground,
   onPointerMove,
   onPointerUp,
+  onPointerLeave,
   onPointerDownNode,
   onNodeTap,
   onNodeHoverEnter,
@@ -53,6 +54,7 @@ export function KgCanvas({
   onPointerDownBackground: (e: React.PointerEvent) => void;
   onPointerMove: (e: React.PointerEvent) => void;
   onPointerUp: (e: React.PointerEvent) => void;
+  onPointerLeave: (e: React.PointerEvent) => void;
   onPointerDownNode: (e: React.PointerEvent, nodeId: string) => void;
   onNodeTap: (nodeId: string) => void;
   onNodeHoverEnter: (nodeId: string) => void;
@@ -69,7 +71,7 @@ export function KgCanvas({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
-      onPointerLeave={onPointerUp}
+      onPointerLeave={onPointerLeave}
       role="application"
       aria-label={title}
     >
