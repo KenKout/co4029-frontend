@@ -1,8 +1,16 @@
-import { FileText, Maximize2 } from "lucide-react";
+import { ExternalLink, FileText, Maximize2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import type { LessonPublic } from "@/lib/api/types";
 import type { Translate } from "./types";
+
+// iOS Safari does not render PDFs inside iframes at all (long-standing
+// WebKit behaviour — desktop Chrome/Firefox/Edge and Android Chrome do), so
+// the inline preview shows blank there. iPadOS 13+ reports as Mac, hence the
+// maxTouchPoints check.
+const IS_IOS =
+  /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
 /**
  * Contents of the reading-lesson card: header, summary, the material iframe (or
@@ -68,14 +76,31 @@ export function ReadingLessonBody({
         (isLoading ? (
           <div className="h-[600px] rounded-xl bg-m3-surface-container-low animate-pulse" />
         ) : streamUrl ? (
-          <div className="mt-2 rounded-xl overflow-hidden border border-m3-outline-variant/30">
-            <iframe
-              src={streamUrl}
-              title={lesson.title}
-              className="w-full h-[600px] bg-white"
-              data-testid="course-learn-reading-iframe"
-            />
-          </div>
+          IS_IOS ? (
+            <div className="mt-2 rounded-xl border border-dashed border-m3-outline-variant/40 p-6 text-center space-y-3">
+              <p className="text-sm text-m3-on-surface-variant leading-relaxed">
+                {t("course_learn.reading_preview_unavailable")}
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={openFullscreen}
+                className="gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                {t("course_learn.reading_open_fullscreen")}
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-2 rounded-xl overflow-hidden border border-m3-outline-variant/30">
+              <iframe
+                src={streamUrl}
+                title={lesson.title}
+                className="w-full h-[600px] bg-white"
+                data-testid="course-learn-reading-iframe"
+              />
+            </div>
+          )
         ) : (
           <div className="rounded-xl border border-dashed border-m3-outline-variant/40 p-6 text-sm text-m3-on-surface-variant">
             {t("course_learn.reading_material_unavailable")}

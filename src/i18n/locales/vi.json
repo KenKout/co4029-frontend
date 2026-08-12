@@ -446,7 +446,8 @@
   "knowledge_map": "Sơ đồ kiến thức",
   "km_zoom_in": "Phóng to",
   "km_zoom_out": "Thu nhỏ",
-  "km_fit": "Vừa khung nhìn"
+  "km_fit": "Vừa khung nhìn",
+  "reading_preview_unavailable": "Xem trước nội tuyến không hỗ trợ trên thiết bị này — hãy mở tài liệu trong tab mới."
  },
  "placeholder": {
   "body": "Trang này sắp có. Quay lại sau khi quá trình chuyển API hoàn tất.",

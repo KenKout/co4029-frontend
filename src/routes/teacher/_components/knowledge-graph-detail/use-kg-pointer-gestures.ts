@@ -65,15 +65,15 @@ export function useKgPointerGestures(options: {
     moved: false,
   });
   const pointers = useRef(new Map<number, PointerPoint>());
-  const pinch = useRef({ active: false, dist: 0 });
+  const pinch = useRef({ active: false, dist: 0, mx: 0, my: 0 });
 
   const onPointerDownBackground = (e: React.PointerEvent) => {
     (e.target as Element).setPointerCapture?.(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     // Second finger down → pinch; the first finger's pan is cancelled.
     if (pointers.current.size >= 2) {
-      pinch.current.active = true;
-      pinch.current.dist = pinchMetrics(pointers.current).dist;
+      const { dist, mx, my } = pinchMetrics(pointers.current);
+      pinch.current = { active: true, dist, mx, my };
       drag.current.kind = null;
       return;
     }
@@ -113,12 +113,26 @@ export function useKgPointerGestures(options: {
       if (pointers.current.size >= 2) {
         const { dist, mx, my } = pinchMetrics(pointers.current);
         const factor = dist / pinch.current.dist;
-        if (factor > 0 && Math.abs(factor - 1) > 0.001) {
-          // Anchor the fingers' CURRENT midpoint: scaling keeps the world
-          // point under it fixed, so midpoint movement pans along with it.
-          setTransform((prev) => zoomToward(prev, { sx: mx, sy: my, factor }));
-        }
-        pinch.current.dist = dist;
+        // Google-Maps style: zoom anchored at the PREVIOUS midpoint, then
+        // translate 1:1 with the midpoint's movement — so two-finger pan
+        // tracks the fingers exactly (factor ≈ 1 still pans) and zooming
+        // while panning keeps both gestures natural.
+        setTransform((prev) => {
+          const zoomed =
+            factor > 0 && Math.abs(factor - 1) > 0.001
+              ? zoomToward(prev, {
+                  sx: pinch.current.mx,
+                  sy: pinch.current.my,
+                  factor,
+                })
+              : prev;
+          return {
+            ...zoomed,
+            tx: zoomed.tx + (mx - pinch.current.mx),
+            ty: zoomed.ty + (my - pinch.current.my),
+          };
+        });
+        pinch.current = { active: true, dist, mx, my };
       } else {
         // One finger lifted mid-pinch — end the gesture, don't resume pan.
         pinch.current.active = false;

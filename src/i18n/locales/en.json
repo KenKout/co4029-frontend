@@ -497,7 +497,8 @@
   "knowledge_map": "Knowledge map",
   "km_zoom_in": "Zoom in",
   "km_zoom_out": "Zoom out",
-  "km_fit": "Fit to view"
+  "km_fit": "Fit to view",
+  "reading_preview_unavailable": "Inline preview isn't supported on this device — open the document in a new tab."
  },
  "placeholder": {
   "body": "This page is coming soon. Check back after the API migration is complete.",
