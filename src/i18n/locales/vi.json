@@ -1602,7 +1602,9 @@
    "content": {
     "courses_by_status": "Khoá học theo trạng thái",
     "materials_by_type": "Tài liệu theo loại",
-    "processing_jobs_by_status": "Tác vụ xử lý theo trạng thái"
+    "processing_jobs_by_status": "Tác vụ xử lý theo trạng thái",
+    "total": "Tổng",
+    "ring_tooltip": "{{n}} · {{pct}}%"
    }
   },
   "ai_costs": {

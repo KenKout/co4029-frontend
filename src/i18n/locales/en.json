@@ -1692,7 +1692,9 @@
    "content": {
     "courses_by_status": "Courses by status",
     "materials_by_type": "Materials by type",
-    "processing_jobs_by_status": "Processing jobs by status"
+    "processing_jobs_by_status": "Processing jobs by status",
+    "total": "Total",
+    "ring_tooltip": "{{n}} · {{pct}}%"
    }
   },
   "ai_costs": {

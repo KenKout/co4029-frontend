@@ -6,6 +6,7 @@ import {
   MaterialTypeIcon,
   materialTypeVisual,
 } from "@/components/ui/material-type-icon";
+import { readBucket } from "@/routes/admin/_components/stats/breakdown";
 
 /**
  * The admin content-analytics `materials_by_type` breakdown rendered every label
@@ -15,31 +16,9 @@ import {
  * `name`, but the API returns `material_type`. `"type" !== "material_type"`, so
  * the lookup fell through to the placeholder.
  *
- * `readBucket` is module-private to the route, so the logic is mirrored here
- * exactly (importing the route pulls in the router + query client + i18n).
+ * `readBucket` now lives in `_components/stats/breakdown.ts` (a pure module,
+ * importable without pulling in the router / query client / i18n).
  */
-
-const COUNT_KEYS = ["count", "total", "n"];
-
-function readBucket(bucket: Record<string, unknown>): {
-  label: string;
-  count: unknown;
-} {
-  const countKey = COUNT_KEYS.find(
-    (k) => k in bucket && typeof bucket[k] === "number",
-  );
-  const labelKey =
-    ["status", "type", "material_type", "kind", "name"].find(
-      (k) => k in bucket && typeof bucket[k] === "string",
-    ) ??
-    Object.keys(bucket).find(
-      (k) => !COUNT_KEYS.includes(k) && typeof bucket[k] === "string",
-    );
-  return {
-    label: labelKey ? String(bucket[labelKey]) : "—",
-    count: countKey ? bucket[countKey] : "—",
-  };
-}
 
 /** The exact payload the admin endpoint returned in the bug report. */
 const MATERIALS_BY_TYPE = [
