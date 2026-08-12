@@ -47,6 +47,22 @@ function ShortcutPaletteMenuItem() {
   );
 }
 
+/** Brand wordmark — mobile only (desktop has the sidebar logo); taps back
+ *  to the dashboard. */
+function BrandWordmark() {
+  return (
+    <Link
+      to="/dashboard"
+      className="md:hidden flex items-center shrink-0"
+      aria-label="aBridgeAI"
+    >
+      <span className="font-headline font-bold text-lg text-m3-primary tracking-tight">
+        aBridge<span className="text-m3-secondary">AI</span>
+      </span>
+    </Link>
+  );
+}
+
 async function performLogout(logout: () => Promise<void>) {
   try {
     await logout();
@@ -109,7 +125,8 @@ export default function ContentTopBar({
   }
 
   return (
-    <header className="w-full sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-border flex items-center justify-between gap-4 px-8 h-16">
+    <header className="w-full sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-border flex items-center justify-between gap-4 px-4 sm:px-8 h-16">
+      <BrandWordmark />
       <SectionSwitcher />
 
       <div className="flex items-center gap-2 ml-auto">

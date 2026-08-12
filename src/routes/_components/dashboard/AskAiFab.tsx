@@ -10,8 +10,10 @@ export default function AskAiFab({
   setFabHovered: (next: boolean) => void;
 }) {
   const { t } = useTranslation();
+  // bottom-24 keeps the FAB clear of the shell-level ScrollToTop
+  // (bottom-6 right-6) which would otherwise sit underneath it.
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+    <div className="fixed bottom-24 right-6 z-50 flex flex-col items-end gap-2">
       <div
         className={`transition-all duration-200 origin-bottom-right ${
           fabHovered

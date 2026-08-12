@@ -156,7 +156,8 @@
   "enroll_required": "Enrollment required",
   "enroll_required_body": "You're not enrolled in this course yet. Contact your manager to get enrolled before you can access the content.",
   "enroll_required_hint": "Contact your manager to get enrolled",
-  "back_to_course": "Back to course"
+  "back_to_course": "Back to course",
+  "show_more": "Show more"
  },
  "settings_security": {
   "title": "Account security",

@@ -52,7 +52,7 @@ export function KgCanvas({
   dragKind: KgDragKind;
   onPointerDownBackground: (e: React.PointerEvent) => void;
   onPointerMove: (e: React.PointerEvent) => void;
-  onPointerUp: () => void;
+  onPointerUp: (e: React.PointerEvent) => void;
   onPointerDownNode: (e: React.PointerEvent, nodeId: string) => void;
   onNodeTap: (nodeId: string) => void;
   onNodeHoverEnter: (nodeId: string) => void;

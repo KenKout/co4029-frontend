@@ -1,8 +1,53 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Bot, Sparkles } from "lucide-react";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { CoursePublic, TagPublic } from "@/lib/api/types";
+
+/**
+ * Long descriptions clamp to 3 lines on phones with a "Show more" toggle;
+ * on sm+ the full text renders and the toggle never appears.
+ */
+function CourseDescription({ description }: { description: string }) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+  const [clamped, setClamped] = useState(false);
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (el) setClamped(el.scrollHeight > el.clientHeight + 4);
+  }, [description]);
+
+  return (
+    <div>
+      <p
+        ref={ref}
+        className={cn(
+          "text-m3-on-surface-variant text-base sm:text-lg leading-relaxed w-full break-words",
+          !expanded && "line-clamp-3 lg:line-clamp-none",
+        )}
+      >
+        {description}
+      </p>
+      {clamped && (
+        <Button
+          type="button"
+          variant="link"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-1.5 h-auto p-0 text-xs font-semibold text-m3-primary underline underline-offset-2"
+        >
+          {expanded
+            ? t("course_detail.show_less")
+            : t("course_detail.show_more")}
+        </Button>
+      )}
+    </div>
+  );
+}
 
 /**
  * The page header: breadcrumb, AI chip, title, full-width description, the
@@ -47,9 +92,7 @@ export function CourseDetailHero({
           {/* Full-width description; long words/URLs wrap instead of
               overflowing the column. */}
           {course.description && (
-            <p className="text-m3-on-surface-variant text-base sm:text-lg leading-relaxed w-full break-words">
-              {course.description}
-            </p>
+            <CourseDescription description={course.description} />
           )}
 
           {/* AI mock-interview teaser, one tight line (was a full card at

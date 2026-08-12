@@ -85,7 +85,7 @@ export default function CourseDetailPage() {
           the layout breathes with the viewport like the quiz review page. */}
       <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-8 min-w-0 space-y-8">
+          <div className="lg:col-span-8 min-w-0 space-y-8 order-2 lg:order-1">
             <CourseDetailHero course={course} tags={tags} />
 
             <CourseOutcomesSection
@@ -110,7 +110,10 @@ export default function CourseDetailPage() {
 
           {/* Sticky CTA rail — stays put next to the content on wide
               screens, stacks below everything on mobile. */}
-          <div className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start w-full">
+          {/* On mobile the CTA (Continue learning) renders FIRST so the
+              most important action is at the top; on lg it goes back to
+              the sticky right rail. */}
+          <div className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start w-full order-1 lg:order-2">
             <CtaCard
               course={course}
               gradientClass={gradientClass}
