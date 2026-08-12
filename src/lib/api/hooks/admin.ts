@@ -5,6 +5,7 @@ import { queryKeys } from "../query-keys";
 import { useInfinitePage } from "../use-infinite-page";
 import type {
   ActiveUsersOut,
+  ActiveUsersTrendOut,
   AdminCoursePage,
   AiCostsByPipeline,
   AiCostsByCategory,
@@ -184,6 +185,17 @@ export function useActiveUsersStats() {
   return useQuery({
     queryKey: queryKeys.admin.activeUsers(),
     queryFn: () => apiFetch<ActiveUsersOut>("/admin/stats/active-users"),
+    staleTime: 1000 * 60,
+  });
+}
+
+export function useActiveUsersTrend(days: number) {
+  return useQuery({
+    queryKey: queryKeys.admin.activeUsersTrend(days),
+    queryFn: () =>
+      apiFetch<ActiveUsersTrendOut>(
+        `/admin/stats/active-users/trend?days=${days}`,
+      ),
     staleTime: 1000 * 60,
   });
 }

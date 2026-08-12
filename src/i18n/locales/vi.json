@@ -1570,7 +1570,17 @@
     "wau_label": "Người dùng hoạt động hằng tuần (WAU)",
     "wau_desc": "Số người dùng có hoạt động trong 7 ngày qua",
     "mau_label": "Người dùng hoạt động hằng tháng (MAU)",
-    "mau_desc": "Số người dùng có hoạt động trong 30 ngày qua"
+    "mau_desc": "Số người dùng có hoạt động trong 30 ngày qua",
+    "trend_title": "Xu hướng người dùng hoạt động",
+    "trend_desc": "Số người dùng riêng biệt đăng nhập mỗi ngày.",
+    "trend_period_aria": "Khoảng thời gian xem xu hướng",
+    "trend_tooltip": "{{n}} người dùng hoạt động",
+    "trend_empty": "Không có hoạt động đăng nhập trong khoảng thời gian này.",
+    "period": {
+     "7": "7 ngày",
+     "30": "30 ngày",
+     "90": "90 ngày"
+    }
    },
    "health": {
     "subtitle": "Snapshot job nền và lệnh gọi AI thất bại trong khoảng thời gian được chọn.",

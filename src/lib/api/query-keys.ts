@@ -83,6 +83,8 @@ export const queryKeys = {
     statsOverview: () => ["admin", "stats", "overview"] as const,
     dashboard: () => ["admin", "stats", "dashboard"] as const,
     activeUsers: () => ["admin", "stats", "active-users"] as const,
+    activeUsersTrend: (days: number) =>
+      ["admin", "stats", "active-users", "trend", days] as const,
     content: () => ["admin", "stats", "content"] as const,
     statsHealth: (since: string) =>
       ["admin", "stats", "health", since] as const,

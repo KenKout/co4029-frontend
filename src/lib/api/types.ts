@@ -727,6 +727,13 @@ export type MfaVerifyRequest = Schemas["MfaVerifyRequest"];
 
 export type OverviewOut = Schemas["OverviewOut"];
 export type ActiveUsersOut = Schemas["ActiveUsersOut"];
+export interface ActiveUsersTrendPoint {
+  date: string;
+  count: number;
+}
+export interface ActiveUsersTrendOut {
+  points: ActiveUsersTrendPoint[];
+}
 export type ContentOut = Schemas["ContentOut"];
 export type HealthOut = Schemas["HealthOut"];
 

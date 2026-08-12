@@ -10,6 +10,7 @@ import { useActiveUsersStats } from "@/lib/api/hooks/admin";
 import { useFormatCount } from "@/lib/format/number";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { ActiveUsersTrendSection } from "./_components/stats/ActiveUsersTrendSection";
 
 type MetricRow = {
   key: string;
@@ -91,6 +92,8 @@ export default function AdminStatsActivePage() {
           {t("admin.stats.subtitle_active_users")}
         </p>
       </div>
+
+      <ActiveUsersTrendSection />
 
       {isError ? (
         <div className="bg-surface-elev border border-border rounded-lg p-5">
