@@ -4,10 +4,12 @@ import {
   Bell,
   Loader2,
   LayoutDashboard,
+  Menu,
   Settings,
   LogOut,
   User,
   Command,
+  X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -23,6 +25,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useUnreadCount } from "@/lib/api/hooks/notifications";
 import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
 import { openShortcutPalette } from "@/lib/shortcuts";
 import LanguageSwitcher from "./LanguageSwitcher";
 import SectionSwitcher from "./SectionSwitcher";
@@ -44,7 +47,53 @@ function ShortcutPaletteMenuItem() {
   );
 }
 
-export default function ContentTopBar() {
+async function performLogout(logout: () => Promise<void>) {
+  try {
+    await logout();
+  } finally {
+    window.location.replace("/login");
+  }
+}
+
+interface ContentTopBarProps {
+  /** Mobile only: opens/closes the sidebar drawer. */
+  onMenuToggle?: () => void;
+  mobileNavOpen?: boolean;
+}
+
+/** Mobile nav drawer toggle — top-right corner. The sidebar rail is hidden
+ *  on phones (content gets the full width); this opens it as an overlay. */
+function MobileNavToggle({
+  t,
+  open,
+  onToggle,
+}: {
+  t: (key: string, opts?: { defaultValue?: string }) => string;
+  open?: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="md:hidden shrink-0 h-10 w-10 text-m3-on-surface-variant hover:bg-m3-surface-container"
+      onClick={onToggle}
+      aria-label={
+        open
+          ? t("nav.close_menu", { defaultValue: "Close menu" })
+          : t("nav.open_menu", { defaultValue: "Open menu" })
+      }
+      aria-expanded={open}
+    >
+      {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+    </Button>
+  );
+}
+
+export default function ContentTopBar({
+  onMenuToggle,
+  mobileNavOpen,
+}: ContentTopBarProps) {
   const { logout, user } = useAuth();
   const { t } = useTranslation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -56,11 +105,7 @@ export default function ContentTopBar() {
   async function handleConfirmLogout() {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
-    try {
-      await logout();
-    } finally {
-      window.location.replace("/login");
-    }
+    await performLogout(logout);
   }
 
   return (
@@ -172,6 +217,15 @@ export default function ContentTopBar() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Mobile nav drawer toggle — top-right corner. */}
+        {onMenuToggle && (
+          <MobileNavToggle
+            t={t}
+            open={mobileNavOpen}
+            onToggle={onMenuToggle}
+          />
+        )}
       </div>
 
       <ConfirmDialog

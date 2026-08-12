@@ -18,6 +18,8 @@ interface SideNavBarProps {
   className?: string;
   collapsed?: boolean;
   onToggle?: () => void;
+  /** Mobile drawer: when true the (otherwise hidden) sidebar slides in. */
+  mobileOpen?: boolean;
 }
 
 export default function SideNavBar({
@@ -26,6 +28,7 @@ export default function SideNavBar({
   className,
   collapsed = false,
   onToggle,
+  mobileOpen = false,
 }: SideNavBarProps) {
   const location = useLocation();
   const { t } = useTranslation();
@@ -53,22 +56,29 @@ export default function SideNavBar({
           location.pathname.startsWith(item.href + "/");
   }
 
+  // Inside the mobile drawer the nav always renders expanded (w-64), even if
+  // the desktop rail is collapsed; outside it the desktop `collapsed` state
+  // applies.
+  const displayCollapsed = !(!collapsed || mobileOpen);
+
   return (
     <>
       <aside
         className={cn(
-          "flex flex-col h-screen bg-white border-r border-border fixed left-0 top-0 z-40 transition-all duration-300 shadow-sm",
-          collapsed ? "w-16" : "w-64",
+          "flex flex-col h-screen bg-white border-r border-border fixed left-0 top-0 z-40 transition-all duration-300 shadow-sm w-64",
+          collapsed ? "md:w-16" : "md:w-64",
+          "-translate-x-full md:translate-x-0",
+          mobileOpen && "translate-x-0",
           className,
         )}
       >
         {/* Logo */}
-        <SideNavLogo collapsed={collapsed} />
+        <SideNavLogo collapsed={displayCollapsed} />
 
         {/* Nav groups */}
         <SideNavGroups
           navGroups={navGroups}
-          collapsed={collapsed}
+          collapsed={displayCollapsed}
           t={t}
           isItemActive={isItemActive}
           labelOf={labelOf}
@@ -76,7 +86,7 @@ export default function SideNavBar({
 
         {/* Secondary (help + logout) */}
         <SideNavSecondary
-          collapsed={collapsed}
+          collapsed={displayCollapsed}
           isLoggingOut={isLoggingOut}
           onLogoutClick={() => setConfirmOpen(true)}
           labelOf={labelOf}
@@ -84,11 +94,13 @@ export default function SideNavBar({
 
         {/* Collapse toggle — bottom row */}
         {onToggle && (
-          <SideNavCollapseToggle
-            collapsed={collapsed}
-            onToggle={onToggle}
-            t={t}
-          />
+          <div className="hidden md:block">
+            <SideNavCollapseToggle
+              collapsed={displayCollapsed}
+              onToggle={onToggle}
+              t={t}
+            />
+          </div>
         )}
       </aside>
 

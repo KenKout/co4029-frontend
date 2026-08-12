@@ -30,7 +30,7 @@ export default function ProgressPage() {
         </p>
       </div>
 
-      <div className="rounded-xl bg-card ghost-border p-5 flex flex-wrap items-center gap-6">
+      <div className="rounded-xl bg-card ghost-border p-5 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4 sm:gap-6">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-m3-primary-fixed flex items-center justify-center">
             <Brain className="h-5 w-5 text-m3-primary" />
@@ -44,20 +44,21 @@ export default function ProgressPage() {
             </p>
           </div>
         </div>
-        <div className="ml-auto flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:ml-auto">
           <Link
             to="/study/cards-due"
             search={{ lesson: undefined, course: undefined }}
+            className="flex-1 sm:flex-none"
           >
             <Button
               size="sm"
-              className="gradient-primary text-white border-0 gap-2"
+              className="gradient-primary text-white border-0 gap-2 w-full"
             >
               {t("progress_page.review_now")} <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
-          <Link to="/dashboard/sr">
-            <Button size="sm" variant="outline">
+          <Link to="/dashboard/sr" className="flex-1 sm:flex-none">
+            <Button size="sm" variant="outline" className="w-full">
               {t("progress_page.sr_dashboard")}
             </Button>
           </Link>

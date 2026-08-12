@@ -30,19 +30,19 @@ export function AnimatedBentoRow({
 
   return (
     <div
-      className="flex flex-col sm:flex-row gap-4 h-auto sm:h-[260px] w-full"
+      className="flex flex-col sm:flex-row gap-4 w-full h-auto sm:h-[260px]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className="transition-[flex] duration-[800ms] ease-out min-h-[260px] sm:min-h-0 flex"
-        style={{ flex: flexValues[0] }}
+        className="flex h-[260px] sm:h-auto sm:basis-0 min-h-0 transition-[flex-grow] duration-[800ms] ease-out"
+        style={{ flexGrow: flexValues[0] }}
       >
         <div className="w-full h-full hover-entity">{children[0]}</div>
       </div>
       <div
-        className="transition-[flex] duration-[800ms] ease-out min-h-[260px] sm:min-h-0 flex"
-        style={{ flex: flexValues[1] }}
+        className="flex h-[260px] sm:h-auto sm:basis-0 min-h-0 transition-[flex-grow] duration-[800ms] ease-out"
+        style={{ flexGrow: flexValues[1] }}
       >
         <div className="w-full h-full hover-entity">{children[1]}</div>
       </div>

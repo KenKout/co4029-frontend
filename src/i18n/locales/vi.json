@@ -65,7 +65,9 @@
   "admin": "Quản trị",
   "system_config": "Cấu hình hệ thống",
   "job_health": "Sức khoẻ tác vụ",
-  "help": "Trợ giúp"
+  "help": "Trợ giúp",
+  "open_menu": "Mở menu",
+  "close_menu": "Đóng menu"
  },
  "auth": {
   "sign_in": "Đăng nhập",

@@ -64,7 +64,9 @@
   "admin": "Admin",
   "system_config": "System Config",
   "job_health": "Job Health",
-  "help": "Help"
+  "help": "Help",
+  "open_menu": "Open menu",
+  "close_menu": "Close menu"
  },
  "auth": {
   "sign_in": "Sign in",

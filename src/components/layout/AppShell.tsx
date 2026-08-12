@@ -5,10 +5,11 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { clearAuthSession } from "@/lib/auth";
 import { useNotificationInboxSync } from "@/lib/api/hooks/notifications";
 import type { Notification } from "@/lib/api/types";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { useMobileNav } from "./use-mobile-nav";
+import { useSessionGuard } from "./use-session-guard";
 import SideNavBar from "./SideNavBar";
 import ContentTopBar from "./ContentTopBar";
 import { GlobalShortcuts } from "@/components/shortcuts/GlobalShortcuts";
@@ -22,30 +23,21 @@ interface AppShellProps {
   role: SidebarRole;
 }
 
-// If the auth check stalls (backend unreachable, network drop, etc.) we
-// give up after this many ms and force the user back to /login instead of
-// leaving them on the "Checking your session..." spinner forever.
-const SESSION_CHECK_TIMEOUT_MS = 8_000;
-
 export default function AppShell({ children, navGroups, role }: AppShellProps) {
   const { status, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 768);
-  const [stalled, setStalled] = useState(false);
-  // Immersive mode: an interview session is actually running, so the app nav
-  // sidebar is removed entirely (not merely collapsed) and the workspace takes
-  // the full viewport width. Driven by events from the interview page rather
-  // than the route alone — the pre-start lobby keeps normal navigation.
+  const { mobileNavOpen, setMobileNavOpen } = useMobileNav();
+  const { stalled } = useSessionGuard(status, logout);
+  // Immersive = live interview: nav sidebar removed, full-viewport workspace.
   const [immersive, setImmersive] = useState(false);
   const navigate = useNavigate();
   const { t } = useTranslation();
   const routerLocation = useRouterState({ select: (s) => s.location });
-  const isInterviewWorkspace = /^\/courses\/[^/]+\/interview\/[^/]+/.test(
-    routerLocation.pathname,
-  );
+  const isInterviewWorkspace =
+    /^\/courses\/[^/]+\/interview\/[^/]+/.test(routerLocation.pathname);
 
-  // Realtime arrival toast: the inbox-sync hook watches the polled unread
-  // count and hands us the notifications that actually arrived; we surface
-  // them as a tappable toast that deep-links into the inbox.
+  // Realtime arrival toast: inbox-sync hands us newly polled notifications;
+  // surface them as a tappable toast that deep-links into the inbox.
   const handleNewNotifications = useCallback(
     (items: Notification[]) => {
       const first = items[0];
@@ -76,6 +68,7 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
   useEffect(() => {
     const enterImmersive = () => {
       setCollapsed(true);
+      setMobileNavOpen(false);
       setImmersive(true);
     };
     const exitImmersive = () => setImmersive(false);
@@ -87,60 +80,9 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
     };
   }, []);
 
-  // Leaving the interview route always restores the normal shell, even if the
-  // page unmounted without dispatching its end event (hard navigation, crash).
   useEffect(() => {
     if (!isInterviewWorkspace) setImmersive(false);
   }, [isInterviewWorkspace]);
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      const search = routerLocation.search as { next?: string | null };
-      const next = routerLocation.pathname.startsWith("/login")
-        ? (search.next ?? undefined)
-        : routerLocation.href;
-
-      void navigate({
-        to: "/login",
-        search: { next },
-        replace: true,
-      });
-    }
-  }, [status, navigate, routerLocation]);
-
-  // Safety net: if we stay in "loading" for too long, treat the session as
-  // dead, wipe local credentials, and route to /login. This handles the case
-  // where the backend never responds.
-  useEffect(() => {
-    if (status !== "loading") {
-      setStalled(false);
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      setStalled(true);
-    }, SESSION_CHECK_TIMEOUT_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [status]);
-
-  useEffect(() => {
-    if (!stalled) return;
-
-    clearAuthSession();
-    void logout().catch(() => {});
-
-    const search = routerLocation.search as { next?: string | null };
-    const next = routerLocation.pathname.startsWith("/login")
-      ? (search.next ?? undefined)
-      : routerLocation.href;
-
-    void navigate({
-      to: "/login",
-      search: { next },
-      replace: true,
-    });
-  }, [stalled, logout, navigate, routerLocation]);
 
   if (status !== "authenticated") {
     return (
@@ -160,36 +102,40 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
   return (
     <div className="min-h-screen bg-m3-surface">
       <GlobalShortcuts />
-      {/* During a live interview the nav sidebar is unmounted entirely so the
-          candidate has no chrome to click away into (and no left gutter). */}
+      {/* During a live interview the nav sidebar is unmounted entirely. */}
       {!immersive && (
         <SideNavBar
           navGroups={navGroups}
           role={role}
           collapsed={collapsed}
           onToggle={() => setCollapsed((c) => !c)}
+          mobileOpen={mobileNavOpen}
         />
       )}
 
-      {/* Backdrop — mobile only, when sidebar expanded */}
-      {!immersive && !collapsed && (
+      {!immersive && mobileNavOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/20 md:hidden"
-          onClick={() => setCollapsed(true)}
+          onClick={() => setMobileNavOpen(false)}
         />
       )}
 
       <main
         className={cn(
           "relative min-h-screen transition-all duration-300 bg-white",
-          immersive ? "ml-0" : "ml-16",
+          immersive ? "ml-0" : "ml-0 md:ml-16",
           !immersive && !collapsed && "md:ml-64",
         )}
       >
         {!isInterviewWorkspace && (
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgb(0_0_0/0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgb(0_0_0/0.03)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
         )}
-        {!isInterviewWorkspace && <ContentTopBar />}
+        {!isInterviewWorkspace && (
+          <ContentTopBar
+            onMenuToggle={() => setMobileNavOpen((o) => !o)}
+            mobileNavOpen={mobileNavOpen}
+          />
+        )}
         <div
           className={cn(
             "relative",

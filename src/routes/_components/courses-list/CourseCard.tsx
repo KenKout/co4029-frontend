@@ -80,15 +80,17 @@ export function CourseCard({
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           {/* Enrollment badge — top-left so it never collides with the AI
-              Boost badge at bottom-right. */}
+              Boost badge at bottom-right. z-[5]: above the thumbnail content
+              but below the sticky search bar (z-10), so badges never paint
+              over it while scrolling. */}
           {status && (
-            <div className="absolute top-3 left-3 z-10">
+            <div className="absolute top-3 left-3 z-[5]">
               <EnrollmentStatusBadge status={status} />
             </div>
           )}
           {/* AI Boost badge moved bottom-right so an uploaded image's top area
               stays clear (matches the teacher card). */}
-          <Badge className="absolute bottom-3 right-3 z-10 bg-black/40 text-white border border-white/20 backdrop-blur-sm text-[10px] font-semibold tracking-wide">
+          <Badge className="absolute bottom-3 right-3 z-[5] bg-black/40 text-white border border-white/20 backdrop-blur-sm text-[10px] font-semibold tracking-wide">
             <Sparkles className="h-2.5 w-2.5 mr-1" />
             {t("courses_list.ai_boost")}
           </Badge>
