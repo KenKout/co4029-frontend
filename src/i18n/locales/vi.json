@@ -1176,7 +1176,6 @@
   "title": "Quản lý lộ trình",
   "subtitle": "Tạo, xuất bản và lưu trữ lộ trình nghề nghiệp.",
   "create_button": "Tạo lộ trình mới",
-  "include_archived": "Hiện đã lưu trữ",
   "list_load_failed": "Không thể tải danh sách lộ trình",
   "empty_title": "Chưa có lộ trình nào.",
   "empty_body": "Bấm <strong>Tạo lộ trình mới</strong> để bắt đầu.",
@@ -1206,7 +1205,17 @@
    "success": {
     "created": "Đã tạo lộ trình mới"
    }
-  }
+  },
+  "search_placeholder": "Tìm theo tên hoặc slug…",
+  "filter_status": "Lọc theo trạng thái",
+  "filter_status_all": "Tất cả trạng thái",
+  "clear_filters": "Xoá bộ lọc",
+  "col_name": "Tên",
+  "col_status": "Trạng thái",
+  "col_stages": "Giai đoạn",
+  "col_courses": "Khóa học",
+  "col_updated": "Cập nhật",
+  "empty_search": "Không có lộ trình phù hợp"
  },
  "career_paths_page": {
   "chip": "LỘ TRÌNH NGHỀ NGHIỆP",

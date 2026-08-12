@@ -1266,7 +1266,6 @@
   "title": "Manage career paths",
   "subtitle": "Create, publish, and archive career paths.",
   "create_button": "New career path",
-  "include_archived": "Show archived",
   "list_load_failed": "Couldn't load career paths",
   "empty_title": "No career paths yet.",
   "empty_body": "Click <strong>New career path</strong> to start.",
@@ -1296,7 +1295,17 @@
    "success": {
     "created": "Career path created"
    }
-  }
+  },
+  "search_placeholder": "Search by name or slug…",
+  "filter_status": "Filter by status",
+  "filter_status_all": "All statuses",
+  "clear_filters": "Clear filters",
+  "col_name": "Name",
+  "col_status": "Status",
+  "col_stages": "Stages",
+  "col_courses": "Courses",
+  "col_updated": "Updated",
+  "empty_search": "No matching career paths"
  },
  "career_paths_page": {
   "chip": "CAREER PATHS",

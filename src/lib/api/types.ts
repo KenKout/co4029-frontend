@@ -759,6 +759,10 @@ export type CareerPathCoursePublic = Schemas["CareerPathCoursePublic"];
 export type CareerPathAuthoring = Schemas["CareerPathAuthoring"] & {
   /** Path-level attention cap (backend migration 0070). NULL = unlimited. */
   max_concurrent?: number | null;
+  /** Stage count for the management list table (backend-enriched). */
+  stage_count?: number;
+  /** Attached-course count for the management list table (backend-enriched). */
+  course_count?: number;
 };
 export type CareerPathCreate = Schemas["CareerPathCreate"];
 export type CareerPathUpdate = Schemas["CareerPathUpdate"] & {
