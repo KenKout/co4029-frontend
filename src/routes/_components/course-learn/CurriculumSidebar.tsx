@@ -41,6 +41,7 @@ export function CurriculumSidebar({
               inProgressByConfigId={inProgressByConfigId}
               interviewProgressMap={interviewProgressMap}
               nextItemId={nextItemId}
+              variant="home"
             />
           ))}
         </div>
