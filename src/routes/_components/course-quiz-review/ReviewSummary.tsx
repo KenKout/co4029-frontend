@@ -193,8 +193,12 @@ export function ReviewActionsBar({
   onRetry: () => void;
 }) {
   const { t } = useTranslation();
+  // Sticky bottom-0 only pins elements that sit BELOW the scrollable
+  // content (the bar precedes the questions, so it scrolled away). On
+  // mobile it's a fixed bottom bar instead — always visible while the
+  // questions scroll — and a plain inline section on larger screens.
   return (
-    <div className="sticky bottom-0 z-10 -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 py-2.5 bg-white/95 backdrop-blur-md border-t border-border flex items-center gap-2 lg:static lg:bg-transparent lg:border-0 lg:px-0 lg:py-0">
+    <div className="fixed bottom-0 inset-x-0 z-10 bg-white/95 backdrop-blur-md border-t border-border px-4 sm:px-6 py-2.5 lg:static lg:bg-transparent lg:border-0 lg:px-0 lg:py-0">
       <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-elev p-3 w-full">
         <Button
           variant="outline"
