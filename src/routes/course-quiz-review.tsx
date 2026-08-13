@@ -92,7 +92,7 @@ export default function CourseQuizReviewPage() {
     (quiz.max_attempts == null || attempt.attempt_number < quiz.max_attempts);
 
   return (
-    <div className="min-h-[70vh] pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-10">
+    <div className="min-h-[70vh] pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-10">
       <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
         <div className="space-y-6 min-w-0">
           <ReviewScoreSummary
