@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { useReviewQueue } from "@/lib/api/hooks/spaced-repetition";
 import { queryKeys } from "@/lib/api/query-keys";
-import { SectionHeader } from "@/components/ui/section-header";
 import { deriveQueueStats } from "@/routes/_components/study-review/helpers";
 import { ReviewCardView } from "@/routes/_components/study-review/ReviewCardView";
 import {
@@ -14,7 +13,6 @@ import {
   ReviewErrorState,
   ReviewLoadingState,
 } from "@/routes/_components/study-review/ReviewScreens";
-import { ReviewSessionRail } from "@/routes/_components/study-review/ReviewSessionRail";
 
 /**
  * Flashcard-style review session — the surface that *resolves* due cards.
@@ -98,56 +96,70 @@ export default function StudyReviewPage() {
   }
 
   const card = cards[index];
+  const pct = total > 0 ? Math.round((index / total) * 100) : 0;
 
   return (
     <div className="min-h-screen pb-12">
       <div className="max-w-6xl mx-auto space-y-5">
-        <div className="flex items-center gap-3">
-          <Link
-            to="/study/cards-due"
-            search={{ lesson, course }}
-            className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
-            aria-label={t("study_review.back", "Back")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <SectionHeader
-            title={t("study_review.title", "Review session")}
-            subtitle={t("study_review.progress", {
-              current: index + 1,
-              total,
-              defaultValue: "Card {{current}} of {{total}}",
-            })}
-          />
+        {/* Top bar: back + title with today's reviews on the right, then the
+            session progress bar with the position + running correct count. */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <Link
+                to="/study/cards-due"
+                search={{ lesson, course }}
+                className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
+                aria-label={t("study_review.back", "Back")}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+              <h1 className="text-lg font-headline font-bold text-m3-on-surface">
+                {t("study_review.title", "Review session")}
+              </h1>
+            </div>
+            {stats.dailyCap > 0 && (
+              <span className="text-xs font-semibold text-m3-on-surface-variant">
+                {t("study_review.today_progress", {
+                  done: stats.reviewedToday + answeredCount,
+                  cap: stats.dailyCap,
+                  defaultValue: "{{done}} of {{cap}} reviews today",
+                })}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-2 rounded-full bg-m3-surface-container-high overflow-hidden">
+              <div
+                className="h-full bg-m3-primary transition-all duration-300"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <span className="text-xs font-semibold text-m3-on-surface tabular-nums">
+              {index}/{total}
+            </span>
+            <span className="text-xs font-semibold text-emerald-700 tabular-nums whitespace-nowrap">
+              {correctCount} {t("study_review.stat_correct", "correct")}
+            </span>
+          </div>
         </div>
 
-        {/* Wide two-column layout: the card fills the main column, the session
-            rail uses the right-hand space for progress + running stats. */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_18rem] gap-6 items-start">
-          <ReviewCardView
-            key={card.question_id}
-            card={card}
-            index={index}
-            onResolved={(result) => {
-              setAnsweredCount((c) => c + 1);
-              if (result.correct) setCorrectCount((c) => c + 1);
-              // The card was just rescheduled server-side — clear the stale
-              // cards-due / dashboard / queue caches so other surfaces reflect
-              // it immediately (fixes the card lingering in cards-due).
-              invalidateSrCaches();
-            }}
-            onNext={() => setIndex((i) => i + 1)}
-            isLast={index === total - 1}
-          />
-
-          <ReviewSessionRail
-            stats={stats}
-            index={index}
-            total={total}
-            answeredCount={answeredCount}
-            correctCount={correctCount}
-          />
-        </div>
+        <ReviewCardView
+          key={card.question_id}
+          card={card}
+          index={index}
+          onResolved={(result) => {
+            setAnsweredCount((c) => c + 1);
+            if (result.correct) setCorrectCount((c) => c + 1);
+            // The card was just rescheduled server-side — clear the stale
+            // cards-due / dashboard / queue caches so other surfaces reflect
+            // it immediately (fixes the card lingering in cards-due).
+            invalidateSrCaches();
+          }}
+          onNext={() => setIndex((i) => i + 1)}
+          isLast={index === total - 1}
+        />
       </div>
     </div>
   );
