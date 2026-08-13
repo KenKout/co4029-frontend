@@ -74,9 +74,11 @@ function ReviewOptionRow({
 function QuestionHeader({
   question,
   index,
+  hidePrompt = false,
 }: {
   question: QuizAttemptReviewQuestion;
   index: number;
+  hidePrompt?: boolean;
 }) {
   return (
     <div className="flex items-start justify-between gap-3">
@@ -84,16 +86,18 @@ function QuestionHeader({
         <span className="text-xs font-headline font-black text-m3-secondary tabular-nums shrink-0">
           Q{index + 1}
         </span>
-        <div className="text-sm font-semibold text-m3-on-surface flex-1 min-w-0">
-          <RichContent
-            value={question.prompt_text}
-            format={
-              (question as { prompt_format?: string | null }).prompt_format ??
-              "plain"
-            }
-            inline
-          />
-        </div>
+        {!hidePrompt && (
+          <div className="text-sm font-semibold text-m3-on-surface flex-1 min-w-0">
+            <RichContent
+              value={question.prompt_text}
+              format={
+                (question as { prompt_format?: string | null }).prompt_format ??
+                "plain"
+              }
+              inline
+            />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -492,6 +496,36 @@ function shouldShowAnswerBox(question: QuizAttemptReviewQuestion): boolean {
   return true;
 }
 
+/** Which option rows to render + how many stay collapsed. Option rows are only
+ *  meaningful for mcq / true_false; fill_blank carries its word bank as
+ *  ``options`` but renders inline via FillBlankReview, so it gets none. */
+function computeVisibleOptions(
+  question: QuizAttemptReviewQuestion,
+  showAll: boolean,
+): { visible: QuizAttemptReviewOption[]; hiddenCount: number } {
+  const isOptionType =
+    question.question_type === "multiple_choice" ||
+    question.question_type === "true_false";
+  if (!isOptionType) return { visible: [], hiddenCount: 0 };
+  const correctOption = question.options.find((o) => o.is_correct);
+  const pickedOption = question.options.find(
+    (o) => o.id === question.selected_option_id,
+  );
+  let visible: QuizAttemptReviewOption[] = question.is_correct
+    ? correctOption
+      ? [correctOption]
+      : []
+    : [pickedOption, correctOption].filter(
+        (o): o is QuizAttemptReviewOption =>
+          o !== undefined && question.options.some((x) => x.id === o.id),
+      );
+  if (!question.is_correct && showAll) visible = question.options;
+  return {
+    visible,
+    hiddenCount: Math.max(0, question.options.length - visible.length),
+  };
+}
+
 /**
  * One question in the per-question breakdown: green outline when answered
  * correctly, red otherwise. Options are collapsed — a correct question shows
@@ -509,30 +543,9 @@ export function ReviewQuestionCard({
   const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
 
-  const correctOption = question.options.find((o) => o.is_correct);
-  const pickedOption = question.options.find(
-    (o) => o.id === question.selected_option_id,
-  );
   const cardTone = computeCardTone(question);
   const showAnswerBox = shouldShowAnswerBox(question);
-
-  // Visible rows: correct question → just the right answer. Wrong question →
-  // the pick + the right answer, everything else revealed on demand.
-  let visible = question.is_correct
-    ? correctOption
-      ? [correctOption]
-      : []
-    : [pickedOption, correctOption].filter(
-        (o): o is QuizAttemptReviewOption =>
-          o !== undefined &&
-          question.options.some((x) => x.id === o.id),
-      );
-  if (!question.is_correct && showAll) visible = question.options;
-
-  const hiddenCount = Math.max(
-    0,
-    question.options.length - visible.length,
-  );
+  const { visible, hiddenCount } = computeVisibleOptions(question, showAll);
 
   return (
     <GlassCard
@@ -546,7 +559,11 @@ export function ReviewQuestionCard({
             : "ring-2 ring-red-400/70",
       )}
     >
-      <QuestionHeader question={question} index={index} />
+      <QuestionHeader
+        question={question}
+        index={index}
+        hidePrompt={question.question_type === "fill_blank"}
+      />
 
       {visible.length > 0 && (
         <div className="space-y-2">
