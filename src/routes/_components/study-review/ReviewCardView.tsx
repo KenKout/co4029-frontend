@@ -48,11 +48,13 @@ function ReviewCardAction({
  */
 export function ReviewCardView({
   card,
+  index,
   onResolved,
   onNext,
   isLast,
 }: {
   card: ReviewCard;
+  index: number;
   onResolved: (result: ReviewSubmitResult) => void;
   onNext: () => void;
   isLast: boolean;
@@ -83,14 +85,21 @@ export function ReviewCardView({
         <span className="text-m3-on-surface-variant">{card.lesson_title}</span>
       </div>
 
-      {/* Prompt */}
-      <RichContent
-        value={card.question.prompt_text}
-        format={
-          (card.question as { prompt_format?: string }).prompt_format ?? "plain"
-        }
-        className="text-base font-medium text-m3-on-surface"
-      />
+      {/* Prompt — Q number + heading, matching the quiz-taking card. */}
+      <div className="pt-1">
+        <span className="text-m3-secondary font-headline font-bold text-[11px] tracking-widest uppercase mb-2 block">
+          Q{index + 1}
+        </span>
+        <h2 className="text-lg sm:text-xl font-headline font-bold text-m3-on-surface leading-snug">
+          <RichContent
+            value={card.question.prompt_text}
+            format={
+              (card.question as { prompt_format?: string }).prompt_format ??
+              "plain"
+            }
+          />
+        </h2>
+      </div>
 
       {/* Answer input (reuses the quiz-taking renderer for every type) */}
       <QuestionRenderer

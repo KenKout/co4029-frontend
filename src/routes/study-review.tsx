@@ -127,6 +127,7 @@ export default function StudyReviewPage() {
           <ReviewCardView
             key={card.question_id}
             card={card}
+            index={index}
             onResolved={(result) => {
               setAnsweredCount((c) => c + 1);
               if (result.correct) setCorrectCount((c) => c + 1);
