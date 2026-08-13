@@ -2238,7 +2238,8 @@
   "questions_title": "Danh sách câu hỏi",
   "retry_confirm_title": "Làm lại bài kiểm tra?",
   "retry_confirm_body": "Bắt đầu lượt làm mới ngay? Kết quả lần trước vẫn được lưu trong lịch sử.",
-  "retry_confirm_confirm": "Bắt đầu lượt mới"
+  "retry_confirm_confirm": "Bắt đầu lượt mới",
+  "not_answered": "Chưa trả lời"
  },
  "course_quiz": {
   "empty": {

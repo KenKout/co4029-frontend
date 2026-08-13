@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Award, Lightbulb, Target } from "lucide-react";
+import { ArrowRight, Award, Check, Lightbulb, Target, X } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { RichContent } from "@/components/ui/rich-content";
@@ -122,6 +122,111 @@ function QuestionMetaRow({
   );
 }
 
+/** One matching pair in the review: student answer + correct answer. */
+function MatchingPairRow({
+  left,
+  studentRight,
+  correctRight,
+}: {
+  left: string;
+  studentRight: string | null;
+  correctRight: string;
+}) {
+  const { t } = useTranslation();
+  const answered = studentRight != null;
+  const isRight =
+    answered &&
+    studentRight.trim().toLowerCase() === correctRight.trim().toLowerCase();
+
+  return (
+    <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-low px-3 py-2.5">
+      <p className="text-sm font-semibold text-m3-on-surface">{left}</p>
+      <div className="mt-1.5 flex items-center gap-2 text-sm flex-wrap">
+        {answered ? (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 font-medium",
+              isRight ? "text-emerald-600" : "text-red-600",
+            )}
+          >
+            {isRight ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <X className="h-4 w-4" />
+            )}
+            {studentRight}
+          </span>
+        ) : (
+          <span className="text-xs italic text-m3-on-surface-variant">
+            {t("course_quiz_review.not_answered")}
+          </span>
+        )}
+        {!isRight && (
+          <>
+            <ArrowRight className="h-4 w-4 text-m3-outline shrink-0" />
+            <span className="font-semibold text-emerald-600">
+              {correctRight}
+            </span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Parse the student's matching submission ({left: chosen_right}). */
+function parseMatchingAnswer(
+  answerText: string | null | undefined,
+): Record<string, string> {
+  if (!answerText) return {};
+  try {
+    const data = JSON.parse(answerText);
+    if (data && typeof data === "object" && !Array.isArray(data)) {
+      return Object.fromEntries(
+        Object.entries(data as Record<string, unknown>).map(([k, v]) => [
+          k,
+          toStr(v),
+        ]),
+      );
+    }
+  } catch {
+    // fall through
+  }
+  return {};
+}
+
+/** Stringify a JSON scalar safely (never "[object Object]"). */
+function toStr(value: unknown): string {
+  return typeof value === "string" || typeof value === "number"
+    ? String(value)
+    : "";
+}
+
+/** The per-pair matching review block (student answer vs correct answer). */
+function MatchingReview({ question }: { question: QuizAttemptReviewQuestion }) {
+  if (question.question_type !== "matching") return null;
+  const pairs = (
+    (question as { matching_correct?: { [key: string]: unknown }[] | null })
+      .matching_correct ?? []
+  )
+    .map((p) => ({ left: toStr(p.left), right: toStr(p.right) }))
+    .filter((p) => p.left);
+  if (pairs.length === 0) return null;
+  const answer = parseMatchingAnswer(question.answer_text);
+  return (
+    <div className="space-y-2">
+      {pairs.map((pair) => (
+        <MatchingPairRow
+          key={pair.left}
+          left={pair.left}
+          studentRight={answer[pair.left] ?? null}
+          correctRight={pair.right}
+        />
+      ))}
+    </div>
+  );
+}
+
 /**
  * One question in the per-question breakdown: green outline when answered
  * correctly, red otherwise. Options are collapsed — a correct question shows
@@ -193,6 +298,8 @@ export function ReviewQuestionCard({
         </div>
       )}
 
+      <MatchingReview question={question} />
+
       {!question.is_correct && hiddenCount > 0 && (
         <Button
           type="button"
@@ -208,7 +315,9 @@ export function ReviewQuestionCard({
         </Button>
       )}
 
-      {question.question_type !== "mcq" && question.answer_text && (
+      {question.question_type !== "mcq" &&
+        question.question_type !== "matching" &&
+        question.answer_text && (
         <div className="rounded-xl bg-m3-surface-container-low p-4 border border-m3-outline-variant/20">
           <p className="text-[10px] uppercase tracking-widest font-bold text-m3-on-surface-variant mb-1">
             {t("course_quiz_review.your_answer")}

@@ -9573,6 +9573,22 @@ export interface components {
             hint_used: boolean;
             /** T Actual Ms */
             t_actual_ms?: number | null;
+            /**
+             * Matching Correct
+             * @description Correct [{left, right}] pairs for matching questions
+             * (only when review visibility allows correct answers).
+             */
+            matching_correct?:
+                | {
+                      [key: string]: unknown;
+                  }[]
+                | null;
+            /**
+             * Ordering Correct
+             * @description Correct sequence for ordering questions (only when
+             * review visibility allows correct answers).
+             */
+            ordering_correct?: string[] | null;
         };
         /**
          * QuizAttemptReviewRead

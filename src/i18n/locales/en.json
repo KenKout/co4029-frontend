@@ -2328,7 +2328,8 @@
   "questions_title": "Question breakdown",
   "retry_confirm_title": "Retry quiz?",
   "retry_confirm_body": "Start a new attempt now? Your previous result stays in the attempt history.",
-  "retry_confirm_confirm": "Start new attempt"
+  "retry_confirm_confirm": "Start new attempt",
+  "not_answered": "Not answered"
  },
  "discussion": {
   "title": "Discussion",
