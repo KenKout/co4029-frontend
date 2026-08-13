@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RichContent } from "@/components/ui/rich-content";
 import type { QuizQuestionPublic } from "@/lib/api/types";
@@ -614,9 +614,35 @@ function OrderingInput({
     }
     return initial;
   }, [answerText, initial]);
+  const dragIndexRef = useRef<number | null>(null);
 
   function commit(next: string[]) {
     onAnswerTextChange(JSON.stringify(next));
+  }
+
+  /** HTML5 drag-and-drop reorder (desktop). The ▲/▼ buttons stay for
+   *  touch and keyboard. */
+  function onDragStart(i: number, e: React.DragEvent) {
+    if (disabled) return;
+    dragIndexRef.current = i;
+    e.dataTransfer.effectAllowed = "move";
+  }
+
+  function onDragOver(e: React.DragEvent) {
+    if (disabled || dragIndexRef.current == null) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }
+
+  function onDrop(i: number, e: React.DragEvent) {
+    e.preventDefault();
+    const from = dragIndexRef.current;
+    dragIndexRef.current = null;
+    if (disabled || from == null || from === i) return;
+    const next = [...order];
+    const [moved] = next.splice(from, 1);
+    next.splice(i, 0, moved);
+    commit(next);
   }
 
   function move(index: number, dir: -1 | 1) {
@@ -648,8 +674,13 @@ function OrderingInput({
       {order.map((item, i) => (
         <div
           key={`${item}-${i}`}
-          className="flex items-center gap-3 rounded-xl border-2 border-m3-outline-variant/20 bg-m3-surface-container-lowest p-3"
+          draggable={!disabled}
+          onDragStart={(e) => onDragStart(i, e)}
+          onDragOver={onDragOver}
+          onDrop={(e) => onDrop(i, e)}
+          className="flex items-center gap-3 rounded-xl border-2 border-m3-outline-variant/20 bg-m3-surface-container-lowest p-3 cursor-grab active:cursor-grabbing select-none"
         >
+          <GripVertical className="h-4 w-4 shrink-0 text-m3-outline" />
           <span className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg bg-m3-primary/10 text-m3-primary font-bold text-sm tabular-nums">
             {i + 1}
           </span>
