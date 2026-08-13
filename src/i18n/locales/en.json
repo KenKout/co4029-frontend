@@ -3449,7 +3449,8 @@
    "option_a": "Option A",
    "option_b": "Option B",
    "option_c": "Option C",
-   "option_d": "Option D"
+   "option_d": "Option D",
+   "fill_blank_prompt": "The Earth revolves around the ___, and the Sun rises in the ___."
   },
   "actions": {
    "back_to_module": "Back to module",

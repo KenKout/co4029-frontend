@@ -32,7 +32,12 @@ const QUESTION_SEEDS: Record<
     ],
   }),
   short_answer: (base) => ({ ...base }),
-  fill_blank: (base) => ({ ...base }),
+  // Seed a prompt that already contains ___ markers so the card's per-blank
+  // answer inputs are visible right after creation (blank count = markers).
+  fill_blank: (base, t) => ({
+    ...base,
+    prompt_text: t("teacher_quiz_manage.new_question.fill_blank_prompt"),
+  }),
   numerical: (base) => ({ ...base, numeric_answer: 0, numeric_tolerance: 0 }),
   matching: (base) => ({
     ...base,

@@ -3321,7 +3321,8 @@
    "option_a": "Lựa chọn A",
    "option_b": "Lựa chọn B",
    "option_c": "Lựa chọn C",
-   "option_d": "Lựa chọn D"
+   "option_d": "Lựa chọn D",
+   "fill_blank_prompt": "Trái Đất quay quanh ___, và Mặt Trời mọc ở hướng ___."
   },
   "actions": {
    "back_to_module": "Quay lại module",
