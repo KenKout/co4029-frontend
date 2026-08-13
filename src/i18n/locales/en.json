@@ -482,7 +482,9 @@
    "start": "Start course",
    "review": "Review course",
    "next_up": "Next up",
-   "curriculum": "Curriculum"
+   "curriculum": "Curriculum",
+   "show_more": "Show more",
+   "show_less": "Show less"
   },
   "interview_in_progress": {
    "badge": "In progress",

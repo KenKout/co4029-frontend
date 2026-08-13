@@ -1,9 +1,11 @@
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Play, CheckCircle2, PlayCircle, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import type { useCourseBySlug } from "@/lib/api/hooks/courses";
 import { ModuleSection } from "./ModuleSection";
+import { cn } from "@/lib/utils";
 import type { CurriculumProps } from "./types";
 
 export interface CourseHomeProps extends CurriculumProps {
@@ -13,6 +15,46 @@ export interface CourseHomeProps extends CurriculumProps {
   resumeIdx: number;
   resumeLabel?: string;
   resumeStarted: boolean;
+}
+
+/** Course description clamped to 3 lines with a Show more/less toggle. */
+function ClampedDescription({ text }: { text: string }) {
+  const { t } = useTranslation();
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [clamped, setClamped] = useState(true);
+  const [overflowing, setOverflowing] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (el) {
+      setOverflowing(el.scrollHeight > el.clientHeight + 4);
+    }
+  }, [text]);
+
+  return (
+    <div className="max-w-2xl">
+      <p
+        ref={ref}
+        className={cn(
+          "text-sm text-m3-on-surface-variant leading-relaxed",
+          clamped && "line-clamp-3",
+        )}
+      >
+        {text}
+      </p>
+      {overflowing && (
+        <button
+          type="button"
+          onClick={() => setClamped((v) => !v)}
+          className="mt-1 text-xs font-bold text-m3-primary underline underline-offset-2 cursor-pointer"
+        >
+          {clamped
+            ? t("course_learn.home.show_more")
+            : t("course_learn.home.show_less")}
+        </button>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -55,9 +97,7 @@ export function CourseHome({
             {course.title}
           </h1>
           {course.description && (
-            <p className="text-sm text-m3-on-surface-variant leading-relaxed max-w-2xl">
-              {course.description}
-            </p>
+            <ClampedDescription text={course.description} />
           )}
         </div>
 
@@ -121,6 +161,12 @@ export function CourseHome({
           <h2 className="font-headline font-bold text-m3-on-surface text-sm">
             {t("course_learn.home.curriculum")}
           </h2>
+          <span className="ml-auto text-xs font-semibold text-m3-on-surface-variant tabular-nums">
+            {t("course_learn.home.progress_label", {
+              completed: completedCount,
+              total: totalLessons,
+            })}
+          </span>
         </div>
         <div className="space-y-4">
           {sortedModules.map((mod) => (
@@ -136,6 +182,7 @@ export function CourseHome({
               inProgressByConfigId={inProgressByConfigId}
               interviewProgressMap={interviewProgressMap}
               nextItemId={nextItemId}
+              variant="home"
             />
           ))}
         </div>

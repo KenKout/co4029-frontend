@@ -8,6 +8,7 @@ import {
   PlayCircle,
   BookOpen,
   ChevronDown,
+  ArrowRight,
   Mic,
   Sparkles,
   HelpCircle,
@@ -41,6 +42,7 @@ export function ModuleSection({
   inProgressByConfigId,
   interviewProgressMap,
   nextItemId,
+  variant = "sidebar",
 }: {
   mod: ModulePublic;
   flatItems: FlatItem[];
@@ -52,6 +54,8 @@ export function ModuleSection({
   inProgressByConfigId: Map<string, InterviewSessionPublic>;
   interviewProgressMap?: Map<string, InterviewProgressRead>;
   nextItemId?: string;
+  /** "sidebar" = compact rail, "home" = the course-home curriculum. */
+  variant?: "sidebar" | "home";
 }) {
   const { t } = useTranslation();
   const modItems = flatItems
@@ -67,6 +71,13 @@ export function ModuleSection({
   // module holding the active lesson always opens, and a manual toggle
   // persists until the completion state actually changes.
   const moduleComplete = moduleIsComplete(mod, flatItems, itemState);
+  const completedCount = modItems.filter(
+    ({ fi }) => itemState(fi) === "completed",
+  ).length;
+  const modulePct =
+    modItems.length > 0
+      ? Math.round((completedCount / modItems.length) * 100)
+      : 0;
   const derivedOpen = isActiveModule || !moduleComplete;
   const [open, setOpen] = useState(derivedOpen);
   const [lastDerived, setLastDerived] = useState(derivedOpen);
@@ -89,7 +100,12 @@ export function ModuleSection({
       <Button variant="ghost"
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-left transition-colors hover:bg-m3-primary/5 group cursor-pointer h-auto whitespace-normal"
+        className={cn(
+          "w-full flex items-center gap-1.5 rounded-md text-left transition-colors hover:bg-m3-primary/5 group cursor-pointer h-auto whitespace-normal",
+          variant === "home"
+            ? "px-2 py-2"
+            : "px-2 py-1.5",
+        )}
       >
         <ChevronDown
           className={cn(
@@ -97,9 +113,29 @@ export function ModuleSection({
             open ? "rotate-0" : "-rotate-90",
           )}
         />
-        <span className="text-[10px] font-bold text-m3-outline uppercase tracking-tight transition-colors group-hover:text-m3-primary">
-          {mod.title}
-        </span>
+        {variant === "home" ? (
+          <>
+            <span className="flex-1 min-w-0 truncate text-sm sm:text-base font-bold text-m3-on-surface transition-colors group-hover:text-m3-primary">
+              {mod.title}
+            </span>
+            <span
+              className={cn(
+                "text-xs font-bold tabular-nums shrink-0",
+                modulePct >= 100
+                  ? "text-emerald-600"
+                  : modulePct > 0
+                    ? "text-m3-secondary"
+                    : "text-m3-outline",
+              )}
+            >
+              {modulePct}%
+            </span>
+          </>
+        ) : (
+          <span className="text-[10px] font-bold text-m3-outline uppercase tracking-tight transition-colors group-hover:text-m3-primary">
+            {mod.title}
+          </span>
+        )}
       </Button>
       <div
         className={cn(
@@ -119,6 +155,7 @@ export function ModuleSection({
               inProgressByConfigId={inProgressByConfigId}
               interviewProgressMap={interviewProgressMap}
               isNextUp={fi.item.id === nextItemId}
+              variant={variant}
               t={t}
             />
           ))}
@@ -160,6 +197,7 @@ function CurriculumItemRow({
   inProgressByConfigId,
   interviewProgressMap,
   isNextUp,
+  variant,
   t,
 }: {
   fi: FlatItem;
@@ -170,6 +208,7 @@ function CurriculumItemRow({
   inProgressByConfigId: Map<string, InterviewSessionPublic>;
   interviewProgressMap?: Map<string, InterviewProgressRead>;
   isNextUp: boolean;
+  variant: "sidebar" | "home";
   t: Translate;
 }) {
   const isQuiz = fi.item.item_type === "quiz";
@@ -179,22 +218,33 @@ function CurriculumItemRow({
   // "never opened", all three of which are otherwise the same pending row.
   const badge = badgeForRow(fi, interviewProgressMap);
 
-  const className = cn(
-    "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
-    state === "active" && "bg-m3-primary text-white shadow-md font-bold",
-    state === "completed" &&
-      "bg-m3-surface-container-lowest text-m3-primary shadow-sm font-medium hover:bg-m3-surface-container",
-    state === "pending" &&
-      "text-m3-on-surface-variant hover:bg-white/50 font-medium",
-    // The earliest item still to do gets a soft inner glow + emphasis so
-    // the student's eye lands on the exact next step without hunting
-    // through the list. Inner (inset) rather than outer shadow because the
-    // curriculum rows sit inside an overflow-hidden collapse container —
-    // an outer glow would be clipped. No border/ring per feedback.
-    isNextUp &&
-      "bg-m3-secondary/10 font-bold text-m3-on-surface shadow-[inset_0_0_14px_2px_rgba(59,130,246,0.16)] hover:bg-m3-secondary/15",
-    // state === "locked" && "opacity-40 cursor-not-allowed text-m3-outline", // DEV: comment out to disable lock
-  );
+  // Visual hierarchy on the home surface: NEXT > ACTIVE(IN PROGRESS) >
+  // FUTURE > COMPLETED. Completed rows are deliberately muted; only the
+  // next-up item gets the boxed "Continue learning" treatment.
+  const className =
+    variant === "home"
+      ? cn(
+          "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
+          state === "completed" &&
+            "text-m3-outline font-normal hover:text-m3-on-surface-variant",
+          state === "active" &&
+            "bg-m3-secondary/10 text-m3-on-surface font-bold",
+          state === "pending" &&
+            !isNextUp &&
+            "text-m3-on-surface-variant font-medium hover:bg-m3-primary/5",
+          isNextUp &&
+            "border border-m3-primary/40 bg-m3-primary/5 shadow-sm font-bold text-m3-on-surface hover:bg-m3-primary/10",
+        )
+      : cn(
+          "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
+          state === "active" && "bg-m3-primary text-white shadow-md font-bold",
+          state === "completed" &&
+            "bg-m3-surface-container-lowest text-m3-primary shadow-sm font-medium hover:bg-m3-surface-container",
+          state === "pending" &&
+            "text-m3-on-surface-variant hover:bg-white/50 font-medium",
+          isNextUp &&
+            "bg-m3-secondary/10 font-bold text-m3-on-surface shadow-[inset_0_0_14px_2px_rgba(59,130,246,0.16)] hover:bg-m3-secondary/15",
+        );
 
   const inner = (
     <CurriculumItemInner
@@ -203,6 +253,8 @@ function CurriculumItemRow({
       isInterview={isInterview}
       label={fi.label}
       badge={badge}
+      isNextUp={isNextUp}
+      variant={variant}
       t={t}
     />
   );
@@ -311,6 +363,8 @@ function CurriculumItemInner({
   isInterview,
   label,
   badge,
+  isNextUp,
+  variant,
   t,
 }: {
   state: LessonState;
@@ -318,18 +372,31 @@ function CurriculumItemInner({
   isInterview: boolean;
   label: string;
   badge?: InterviewRowBadge;
+  isNextUp: boolean;
+  variant: "sidebar" | "home";
   t: Translate;
 }) {
   const LessonIcon = PlayCircle;
 
   return (
     <>
-      {state === "completed" && (
+      {state === "completed" && variant === "home" && (
+        <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-m3-outline" />
+      )}
+      {state === "completed" && variant !== "home" && (
         <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500 fill-emerald-100" />
       )}
       {/* {state === "locked" && <Lock className="h-4 w-4 flex-shrink-0" />} */}
       {/* DEV: comment out to disable lock */}
-      {state === "active" && <LessonIcon className="h-4 w-4 flex-shrink-0" />}
+      {state === "active" &&
+        (variant === "home" ? (
+          <PlayCircle className="h-4 w-4 flex-shrink-0 text-m3-secondary" />
+        ) : (
+          <LessonIcon className="h-4 w-4 flex-shrink-0" />
+        ))}
+      {isNextUp && variant === "home" && (
+        <ArrowRight className="h-4 w-4 flex-shrink-0 text-m3-primary" />
+      )}
       {state === "pending" && !isQuiz && !isInterview && (
         <LessonIcon className="h-4 w-4 flex-shrink-0 opacity-40" />
       )}
@@ -341,7 +408,16 @@ function CurriculumItemInner({
         <Sparkles className="h-3 w-3 ml-auto text-m3-secondary" />
       )}
 
-      <span className="truncate leading-snug flex-1">{label}</span>
+      {variant === "home" && isNextUp ? (
+        <span className="flex flex-col min-w-0 flex-1 text-left">
+          <span className="truncate leading-snug">{label}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wide text-m3-primary mt-0.5">
+            {t("course_learn.home.continue")} →
+          </span>
+        </span>
+      ) : (
+        <span className="truncate leading-snug flex-1">{label}</span>
+      )}
       {badge && <InterviewStateBadge badge={badge} t={t} />}
       <BookOpen className="h-3 w-3 opacity-0" />
     </>

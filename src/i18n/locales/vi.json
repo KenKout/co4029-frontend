@@ -431,7 +431,9 @@
    "start": "Bắt đầu khóa học",
    "review": "Xem lại khóa học",
    "next_up": "Tiếp theo",
-   "curriculum": "Nội dung khóa học"
+   "curriculum": "Nội dung khóa học",
+   "show_more": "Xem thêm",
+   "show_less": "Thu gọn"
   },
   "interview_in_progress": {
    "badge": "Đang diễn ra",
