@@ -153,6 +153,18 @@ export function buildQuestionPatch({
             .filter((s) => s.length > 0),
         }
       : {}),
+    // short_answer / fill_blank keep their answer inside
+    // original_generated_payload.correct_answer (the same slot the AI
+    // generator writes), merged over whatever the generator already stored.
+    ...(question.question_type === "short_answer" ||
+    question.question_type === "fill_blank"
+      ? {
+          original_generated_payload: {
+            ...(question.original_generated_payload ?? {}),
+            correct_answer: draft.correct_answer,
+          },
+        }
+      : {}),
   };
 }
 

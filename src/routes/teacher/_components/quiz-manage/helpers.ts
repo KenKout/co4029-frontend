@@ -192,6 +192,7 @@ export function buildQuestionDraft(
     ordering_sequence: Array.isArray(question.ordering_sequence)
       ? question.ordering_sequence.map((s) => String(s))
       : [],
+    correct_answer: readCorrectAnswer(question),
   };
 }
 

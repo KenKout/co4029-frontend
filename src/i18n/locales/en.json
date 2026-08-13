@@ -3549,7 +3549,12 @@
    "duplicate_success": "Question duplicated (added as a pending copy).",
    "duplicate_error": "Could not duplicate the question.",
    "explanation_inline": "Explanation:",
-   "mark_correct": "Mark option {{key}} as correct"
+   "mark_correct": "Mark option {{key}} as correct",
+   "fill_blank_label": "Blanks (in stem order)",
+   "fill_blank_hint": "Each blank is graded positionally — all must match, case-insensitive.",
+   "fill_blank_no_blanks": "Add ___ markers in the question text to define the blanks.",
+   "fill_blank_placeholder": "Blank answer…",
+   "correct_answer_placeholder": "Type the exact answer…"
   },
   "generate_modal": {
    "title": "Generate questions with AI",
@@ -3808,7 +3813,8 @@
    "type_short_answer": "Short answer",
    "type_numerical": "Numerical",
    "type_matching": "Matching",
-   "type_ordering": "Ordering"
+   "type_ordering": "Ordering",
+   "type_fill_blank": "Fill in the blank"
   },
   "published_readonly_banner": "This quiz is published. Questions and any settings that affect scoring, timing, or presentation are frozen so students mid-attempt aren't disrupted. You can still edit the title, description, schedule, and reminders. Archive the quiz first to change anything else.",
   "confirm_bulk_delete": {

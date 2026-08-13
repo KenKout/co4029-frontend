@@ -11,6 +11,10 @@ export interface TypeSpecificValue {
   /** Matching distractors: extra unpaired right-side choices. */
   match_distractors: string[];
   ordering_sequence: string[];
+  /** Correct answer for short_answer (string) / fill_blank (per-blank list).
+   *  Persisted inside original_generated_payload.correct_answer, mirroring
+   *  what the AI generator writes. */
+  correct_answer: string | string[] | null;
 }
 
 export interface TypeSpecificEditorProps {

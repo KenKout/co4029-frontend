@@ -3421,7 +3421,12 @@
    "duplicate_success": "Đã nhân bản câu hỏi (thêm bản sao ở trạng thái chờ duyệt).",
    "duplicate_error": "Không thể nhân bản câu hỏi.",
    "explanation_inline": "Giải thích:",
-   "mark_correct": "Đánh dấu đáp án {{key}} là đúng"
+   "mark_correct": "Đánh dấu đáp án {{key}} là đúng",
+   "fill_blank_label": "Các chỗ trống (theo thứ tự thân câu)",
+   "fill_blank_hint": "Mỗi chỗ trống được chấm theo vị trí — tất cả phải khớp, không phân biệt hoa thường.",
+   "fill_blank_no_blanks": "Thêm dấu ___ vào nội dung câu hỏi để tạo chỗ trống.",
+   "fill_blank_placeholder": "Đáp án chỗ trống…",
+   "correct_answer_placeholder": "Nhập đáp án chính xác…"
   },
   "generate_modal": {
    "title": "Tạo câu hỏi bằng AI",
@@ -3680,7 +3685,8 @@
    "type_short_answer": "Trả lời ngắn",
    "type_numerical": "Dạng số",
    "type_matching": "Ghép cặp",
-   "type_ordering": "Sắp xếp"
+   "type_ordering": "Sắp xếp",
+   "type_fill_blank": "Điền vào chỗ trống"
   },
   "published_readonly_banner": "Bài kiểm tra này đã được xuất bản. Câu hỏi và các cài đặt ảnh hưởng đến chấm điểm, thời gian hoặc cách hiển thị bị đóng băng để không làm gián đoạn học viên đang làm bài. Bạn vẫn có thể sửa tiêu đề, mô tả, lịch trình và nhắc nhở. Hãy lưu trữ (archive) bài kiểm tra trước nếu muốn thay đổi những mục khác.",
   "confirm_bulk_delete": {

@@ -65,7 +65,6 @@ export function QuestionCard({
     setConfirmDelete,
     hasOptions,
     allowMultiCorrect,
-    correctAnswer,
     blankCount,
     expectedSeconds,
     draftTimeInvalid,
@@ -124,8 +123,11 @@ export function QuestionCard({
 
       <QuestionCardCorrectAnswer
         question={question}
-        correctAnswer={correctAnswer}
+        value={draft.correct_answer}
         blankCount={blankCount}
+        onChange={(next) =>
+          setDraft((current) => ({ ...current, correct_answer: next }))
+        }
       />
 
       <TypeSpecificAnswerEditor
@@ -137,6 +139,7 @@ export function QuestionCard({
           match_pairs: draft.match_pairs,
           match_distractors: draft.match_distractors,
           ordering_sequence: draft.ordering_sequence,
+          correct_answer: draft.correct_answer,
         }}
         onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
       />

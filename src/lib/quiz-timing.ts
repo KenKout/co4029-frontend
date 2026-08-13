@@ -160,7 +160,8 @@ export type AddQuestionType =
   | "short_answer"
   | "numerical"
   | "matching"
-  | "ordering";
+  | "ordering"
+  | "fill_blank";
 
 const ADD_QUESTION_TYPES: readonly AddQuestionType[] = [
   "multiple_choice",
@@ -169,6 +170,7 @@ const ADD_QUESTION_TYPES: readonly AddQuestionType[] = [
   "numerical",
   "matching",
   "ordering",
+  "fill_blank",
 ];
 
 const ADD_QUESTION_TYPE_KEY = "abridgeai.addquestiontype";

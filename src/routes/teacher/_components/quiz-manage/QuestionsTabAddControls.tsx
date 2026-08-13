@@ -27,6 +27,7 @@ const ADD_TYPES: readonly { value: AddQuestionType; labelKey: string }[] = [
   { value: "numerical", labelKey: "type_numerical" },
   { value: "matching", labelKey: "type_matching" },
   { value: "ordering", labelKey: "type_ordering" },
+  { value: "fill_blank", labelKey: "type_fill_blank" },
 ];
 
 /**

@@ -72,6 +72,8 @@ export interface QuestionDraft {
   // Matching distractors: extra unpaired right-side choices. Empty = classic
   // 1:1 matching.
   match_distractors: string[];
+  /** Correct answer for short_answer (string) / fill_blank (per-blank list). */
+  correct_answer: string | string[] | null;
   ordering_sequence: string[];
 }
 
