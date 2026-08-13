@@ -147,7 +147,7 @@ export function TabBar({
                 // Text color switches with the sliding pill; the pill itself
                 // provides the colored background.
                 isActive
-                  ? "text-white"
+                  ? "text-white hover:bg-transparent hover:text-white"
                   : "text-m3-on-surface hover:bg-surface-muted",
               )}
             >
