@@ -702,7 +702,6 @@ describe("P0 focused interview room", () => {
         speak={() => undefined}
         onSpeakingChange={() => undefined}
         onPresentationComplete={onPresented}
-        onReplay={() => undefined}
       />,
     );
 

@@ -1,6 +1,3 @@
-import { useState } from "react";
-
-import { QuestionCardActions } from "./QuestionCardActions";
 import { QuestionCardHeader } from "./QuestionCardHeader";
 import { QuestionCardPrompt } from "./QuestionCardPrompt";
 import type { QuestionCardProps } from "./types";
@@ -17,16 +14,9 @@ export function QuestionCard({
   speak,
   onSpeakingChange,
   onPresentationComplete,
-  onReplay,
-  onClarify,
   animate = true,
-  replayDisabled = false,
-  clarificationDisabled = false,
-  isReplaying = false,
   agentSpeaks = false,
 }: QuestionCardProps) {
-  const [presentationComplete, setPresentationComplete] = useState(!animate);
-
   return (
     <article
       // 200ms / 8px, matching MessageTurnActions and UserTypingIndicator — the
@@ -49,19 +39,7 @@ export function QuestionCard({
         speak={speak}
         agentSpeaks={agentSpeaks}
         onSpeakingChange={onSpeakingChange}
-        onPresentationComplete={() => {
-          setPresentationComplete(true);
-          onPresentationComplete();
-        }}
-      />
-
-      <QuestionCardActions
-        presentationComplete={presentationComplete}
-        replayDisabled={replayDisabled}
-        clarificationDisabled={clarificationDisabled}
-        isReplaying={isReplaying}
-        onReplay={onReplay}
-        onClarify={onClarify}
+        onPresentationComplete={onPresentationComplete}
       />
     </article>
   );

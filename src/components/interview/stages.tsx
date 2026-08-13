@@ -108,7 +108,6 @@ export function FocusedInterviewStage({
   agentSpeaks = false,
   onSpeakingChange,
   onTurnPresented,
-  onClarifyQuestion,
   onRequestHint,
   onExplainTerm,
   onRetry,
@@ -179,14 +178,12 @@ export function FocusedInterviewStage({
               <FocusedStageQuestionBlock
                 activeTurn={activeTurn}
                 assistanceTurn={assistanceTurn}
-                status={status}
                 currentQuestionNumber={currentQuestionNumber}
                 totalQuestions={totalQuestions}
                 currentQuestionType={currentQuestionType}
                 questionTypeLabel={questionTypeLabel}
                 speak={speak}
                 onSpeakingChange={onSpeakingChange}
-                onClarifyQuestion={onClarifyQuestion}
                 onRequestHint={onRequestHint}
                 onExplainTerm={onExplainTerm}
                 presentedAiTurnIds={presentedAiTurnIds}

@@ -1,7 +1,4 @@
-import type {
-  ConversationTurn,
-  InterviewAgentStatus,
-} from "@/lib/interview/types";
+import type { ConversationTurn } from "@/lib/interview/types";
 import { InterviewerAssistance } from "./InterviewerAssistance";
 import { QuestionCard } from "./QuestionCard";
 import type { QuestionTypeLabel, StageSpeak } from "./types";
@@ -11,14 +8,12 @@ import type { QuestionTypeLabel, StageSpeak } from "./types";
 export function FocusedStageQuestionBlock({
   activeTurn,
   assistanceTurn,
-  status,
   currentQuestionNumber,
   totalQuestions,
   currentQuestionType,
   questionTypeLabel,
   speak,
   onSpeakingChange,
-  onClarifyQuestion,
   onRequestHint,
   onExplainTerm,
   presentedAiTurnIds,
@@ -31,14 +26,12 @@ export function FocusedStageQuestionBlock({
 }: {
   activeTurn: ConversationTurn;
   assistanceTurn: ConversationTurn | null;
-  status: InterviewAgentStatus;
   currentQuestionNumber: number;
   totalQuestions: number | null | undefined;
   currentQuestionType: string | null | undefined;
   questionTypeLabel: QuestionTypeLabel;
   speak: StageSpeak;
   onSpeakingChange: (speaking: boolean) => void;
-  onClarifyQuestion: (() => void) | undefined;
   onRequestHint: (() => void) | undefined;
   onExplainTerm: ((term: string) => void) | undefined;
   presentedAiTurnIds: ReadonlySet<string>;
@@ -65,21 +58,7 @@ export function FocusedStageQuestionBlock({
         agentSpeaks={agentSpeaks}
         onSpeakingChange={onSpeakingChange}
         onPresentationComplete={() => markPresented(activeTurn)}
-        onReplay={() => void replayTurn(activeTurn)}
-        onClarify={onClarifyQuestion}
         animate={!assistanceTurn}
-        replayDisabled={
-          replayBlocked ||
-          !presentedAiTurnIds.has(activeTurn.id) ||
-          replayingTurnId !== null
-        }
-        clarificationDisabled={
-          status === "thinking" ||
-          status === "speaking" ||
-          status === "listening" ||
-          status === "disconnected"
-        }
-        isReplaying={replayingTurnId === activeTurn.id}
       />
       {assistanceTurn && (
         <InterviewerAssistance

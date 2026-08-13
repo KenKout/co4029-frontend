@@ -90,7 +90,6 @@ describe("QuestionCard (smoke)", () => {
         speak={() => undefined}
         onSpeakingChange={() => undefined}
         onPresentationComplete={() => undefined}
-        onReplay={() => undefined}
         animate={false}
       />,
     );

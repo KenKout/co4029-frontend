@@ -111,16 +111,6 @@ export function WorkspaceStage({
           iv.setAiPresenting(speaking);
         }}
         onTurnPresented={iv.handleTurnPresented}
-        onClarifyQuestion={
-          questioning
-            ? () =>
-                void iv.handleAssistance(
-                  t("course_interview.workspace.clarification_request"),
-                  "clarify",
-                  t("course_interview.workspace.clarification_request"),
-                )
-            : undefined
-        }
         onRequestHint={
           questioning
             ? () =>

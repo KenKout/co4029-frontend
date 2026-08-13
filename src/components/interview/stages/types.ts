@@ -64,12 +64,7 @@ export type QuestionCardProps = {
   speak: StageSpeak;
   onSpeakingChange: (speaking: boolean) => void;
   onPresentationComplete: () => void;
-  onReplay: () => void;
-  onClarify?: () => void;
   animate?: boolean;
-  replayDisabled?: boolean;
-  clarificationDisabled?: boolean;
-  isReplaying?: boolean;
   /**
    * True when the LiveKit agent voices this turn, so the card mirrors the
    * agent's audio-synchronised transcript instead of running its own
@@ -105,7 +100,6 @@ export type FocusedInterviewStageProps = {
   /** The agent's audio-synchronised transcript segments, read in the room. */
   onSpeakingChange: (speaking: boolean) => void;
   onTurnPresented?: (turn: ConversationTurn) => void;
-  onClarifyQuestion?: () => void;
   onRequestHint?: () => void;
   onExplainTerm?: (term: string) => void;
   onRetry?: () => void;
