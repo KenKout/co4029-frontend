@@ -2218,7 +2218,6 @@
   "failed": "Chưa đạt",
   "passing_score": "Điểm đạt",
   "nav_title": "Điều hướng câu hỏi",
-  "questions_title": "Chi tiết từng câu hỏi",
   "your_answer": "Câu trả lời của bạn",
   "explanation": "Giải thích",
   "points": "{{n}} điểm",
@@ -2235,7 +2234,11 @@
   "hide_options": "Ẩn bớt lựa chọn",
   "question_breakdown": "Danh sách câu hỏi",
   "retry_quiz": "Làm lại bài kiểm tra",
-  "close_nav": "Đóng danh sách câu hỏi"
+  "close_nav": "Đóng danh sách câu hỏi",
+  "questions_title": "Danh sách câu hỏi",
+  "retry_confirm_title": "Làm lại bài kiểm tra?",
+  "retry_confirm_body": "Bắt đầu lượt làm mới ngay? Kết quả lần trước vẫn được lưu trong lịch sử.",
+  "retry_confirm_confirm": "Bắt đầu lượt mới"
  },
  "course_quiz": {
   "empty": {

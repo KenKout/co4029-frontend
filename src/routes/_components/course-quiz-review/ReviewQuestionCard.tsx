@@ -222,7 +222,7 @@ export function ReviewQuestionCard({
       )}
 
       {question.explanation && (
-        <div className="rounded-xl bg-m3-primary-fixed/30 p-4 border border-m3-primary/15 flex gap-3 -mt-2">
+        <div className="rounded-xl bg-m3-primary-fixed/30 p-4 border border-m3-primary/15 flex gap-3">
           <Lightbulb className="h-4 w-4 text-m3-primary shrink-0 mt-0.5" />
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-widest font-bold text-m3-primary mb-1">

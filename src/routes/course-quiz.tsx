@@ -1,4 +1,6 @@
+import { useEffect, useRef } from "react";
 import { useParams } from "@tanstack/react-router";
+import { useSearch } from "@tanstack/react-router";
 import { useCourseBySlug } from "@/lib/api/hooks/courses";
 import { QuizResultScreen } from "@/routes/_components/QuizResultScreen";
 import { QuizIntroStage } from "@/routes/_components/course-quiz/QuizIntroStage";
@@ -21,10 +23,29 @@ export default function CourseQuizPage() {
     slug: string;
     quizId: string;
   };
+  const search = useSearch({
+    from: "/_authenticated/courses/$slug/quiz/$quizId",
+  });
 
   const { data: course, isLoading: courseLoading } = useCourseBySlug(slug);
   const session = useQuizAttemptSession(quizId);
   const { quiz, taking, submittedSummary, displayQuestions } = session;
+  const autoStarted = useRef(false);
+
+  // `?start=1` (from the review screen's Retry button) jumps straight into
+  // the taking screen: start a fresh attempt as soon as the intro is ready.
+  // Guarded so re-renders / StrictMode can't fire a second attempt.
+  useEffect(() => {
+    if (
+      search.start &&
+      !taking &&
+      !submittedSummary &&
+      !autoStarted.current
+    ) {
+      autoStarted.current = true;
+      void session.handleStartAttempt();
+    }
+  }, [search.start, taking, submittedSummary, session]);
 
   if (
     courseLoading ||

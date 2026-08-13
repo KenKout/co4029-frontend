@@ -212,6 +212,7 @@ function CurriculumItemRow({
       <Link
         to="/courses/$slug/quiz/$quizId"
         params={{ slug, quizId }}
+        search={{ start: false }}
         className={className}
       >
         {inner}

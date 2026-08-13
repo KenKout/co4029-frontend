@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useQuizAttemptReview, useStudentQuiz } from "@/lib/api/hooks/quizzes";
 import { setScrollToTopBump } from "@/components/ui/scroll-to-top";
+import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { ReviewNavDialog } from "@/routes/_components/course-quiz-review/ReviewNavDialog";
 import { ReviewQuestionCard } from "@/routes/_components/course-quiz-review/ReviewQuestionCard";
 import {
@@ -20,6 +22,8 @@ import {
  * quiz allows further attempts.
  */
 export default function CourseQuizReviewPage() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const { slug, quizId, attemptId } = useParams({ strict: false }) as {
     slug: string;
     quizId: string;
@@ -29,6 +33,7 @@ export default function CourseQuizReviewPage() {
   const { data: quiz } = useStudentQuiz(quizId);
   const { data: review, isLoading, isError } = useQuizAttemptReview(attemptId);
   const [navOpen, setNavOpen] = useState(false);
+  const [retryOpen, setRetryOpen] = useState(false);
 
 
   // The sticky actions bar owns the bottom edge on mobile; lift the shell's
@@ -103,7 +108,7 @@ export default function CourseQuizReviewPage() {
           <ReviewActionsBar
             onOpenNavigation={() => setNavOpen(true)}
             canRetry={canRetry}
-            retryTo={{ slug, quizId }}
+            onRetry={() => setRetryOpen(true)}
           />
 
           <ReviewOverallFeedback
@@ -131,6 +136,25 @@ export default function CourseQuizReviewPage() {
         onOpenChange={setNavOpen}
         questions={review.questions}
         onJump={jumpToQuestion}
+      />
+
+      {/* Retry confirmation — starts a fresh attempt straight into the
+          taking screen (the quiz route auto-starts on ?start=1). */}
+      <PromptDialog
+        open={retryOpen}
+        onOpenChange={setRetryOpen}
+        title={t("course_quiz_review.retry_confirm_title")}
+        description={t("course_quiz_review.retry_confirm_body")}
+        confirmLabel={t("course_quiz_review.retry_confirm_confirm")}
+        cancelLabel={t("common.cancel", "Cancel")}
+        onConfirm={() => {
+          setRetryOpen(false);
+          void navigate({
+            to: "/courses/$slug/quiz/$quizId",
+            params: { slug, quizId },
+            search: { start: true },
+          });
+        }}
       />
     </div>
   );

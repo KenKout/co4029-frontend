@@ -38,7 +38,11 @@ export function QuizReviewNotFound({
         <p className="text-sm text-m3-on-surface-variant mb-5">
           {t("course_quiz_review.not_found_body")}
         </p>
-        <Link to="/courses/$slug/quiz/$quizId" params={{ slug, quizId }}>
+        <Link
+          to="/courses/$slug/quiz/$quizId"
+          params={{ slug, quizId }}
+          search={{ start: false }}
+        >
           <Button className="rounded-xl gap-2">
             <ArrowLeft className="h-4 w-4" />
             {t("course_quiz_review.back_to_quiz")}
@@ -95,7 +99,11 @@ export function ReviewScoreSummary({
     <GlassCard className="p-5 sm:p-6">
       {/* Header: back · quiz name · attempt # */}
       <div className="flex items-center gap-2">
-        <Link to="/courses/$slug/quiz/$quizId" params={{ slug, quizId }}>
+        <Link
+          to="/courses/$slug/quiz/$quizId"
+          params={{ slug, quizId }}
+          search={{ start: false }}
+        >
           <Button
             variant="ghost"
             size="icon-sm"
@@ -171,41 +179,41 @@ export function ReviewScoreSummary({
 }
 
 /**
- * Question-breakdown + retry actions. Sticky at the bottom edge on mobile
- * (like the quiz taking footer), a plain inline row on larger screens.
+ * Question-breakdown + retry actions, wrapped in a box with the buttons
+ * spread apart. The box is sticky at the bottom edge on mobile (like the
+ * quiz taking footer) and a plain inline section on larger screens.
  */
 export function ReviewActionsBar({
   onOpenNavigation,
   canRetry,
-  retryTo,
+  onRetry,
 }: {
   onOpenNavigation: () => void;
   canRetry: boolean;
-  retryTo: { slug: string; quizId: string };
+  onRetry: () => void;
 }) {
   const { t } = useTranslation();
   return (
-    <div className="sticky bottom-0 z-10 -mx-4 sm:-mx-6 lg:mx-0 lg:px-0 px-4 sm:px-6 py-2.5 bg-white/95 backdrop-blur-md border-t border-border flex items-center gap-2 lg:static lg:bg-transparent lg:border-0 lg:px-0 lg:py-0">
-      <Button
-        variant="outline"
-        onClick={onOpenNavigation}
-        className="font-bold rounded-xl gap-2 flex-1 lg:flex-none border-m3-primary/40 text-m3-primary hover:bg-m3-primary-fixed/30"
-      >
-        <LayoutGrid className="h-4 w-4" />
-        {t("course_quiz_review.question_breakdown")}
-      </Button>
-      {canRetry && (
-        <Link
-          to="/courses/$slug/quiz/$quizId"
-          params={{ slug: retryTo.slug, quizId: retryTo.quizId }}
-          className="flex-1 lg:flex-none"
+    <div className="sticky bottom-0 z-10 -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 py-2.5 bg-white/95 backdrop-blur-md border-t border-border flex items-center gap-2 lg:static lg:bg-transparent lg:border-0 lg:px-0 lg:py-0">
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-elev p-3 w-full">
+        <Button
+          variant="outline"
+          onClick={onOpenNavigation}
+          className="flex-1 font-bold rounded-xl gap-2 border-m3-primary/40 text-m3-primary hover:bg-m3-primary-fixed/30"
         >
-          <Button className="w-full gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow hover:opacity-90 active:scale-95 transition-all">
+          <LayoutGrid className="h-4 w-4" />
+          {t("course_quiz_review.question_breakdown")}
+        </Button>
+        {canRetry && (
+          <Button
+            onClick={onRetry}
+            className="flex-1 gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow hover:opacity-90 active:scale-95 transition-all"
+          >
             <RotateCcw className="h-4 w-4" />
             {t("course_quiz_review.retry_quiz")}
           </Button>
-        </Link>
-      )}
+        )}
+      </div>
     </div>
   );
 }

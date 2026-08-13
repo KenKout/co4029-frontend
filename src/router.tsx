@@ -127,6 +127,11 @@ const courseLearnRoute = createRoute({
 const courseQuizRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/courses/$slug/quiz/$quizId",
+  // `?start=1` auto-starts a fresh attempt (used by the review screen's
+  // Retry button to jump straight into the taking screen).
+  validateSearch: (search: Record<string, unknown>) => ({
+    start: search.start === "1" || search.start === 1,
+  }),
   component: CourseQuizPage,
 });
 
