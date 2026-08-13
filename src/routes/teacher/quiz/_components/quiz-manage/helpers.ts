@@ -32,6 +32,7 @@ const QUESTION_SEEDS: Record<
     ],
   }),
   short_answer: (base) => ({ ...base }),
+  fill_blank: (base) => ({ ...base }),
   numerical: (base) => ({ ...base, numeric_answer: 0, numeric_tolerance: 0 }),
   matching: (base) => ({
     ...base,
