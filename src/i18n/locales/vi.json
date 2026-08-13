@@ -2239,7 +2239,9 @@
   "retry_confirm_title": "Làm lại bài kiểm tra?",
   "retry_confirm_body": "Bắt đầu lượt làm mới ngay? Kết quả lần trước vẫn được lưu trong lịch sử.",
   "retry_confirm_confirm": "Bắt đầu lượt mới",
-  "not_answered": "Chưa trả lời"
+  "not_answered": "Chưa trả lời",
+  "sort_to_correct": "Sắp theo thứ tự đúng",
+  "back_to_my_order": "Về thứ tự của tôi"
  },
  "course_quiz": {
   "empty": {

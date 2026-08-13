@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Award, Check, Lightbulb, Target, X } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpDown,
+  Award,
+  Check,
+  Lightbulb,
+  Target,
+  X,
+} from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { RichContent } from "@/components/ui/rich-content";
@@ -202,15 +210,22 @@ function toStr(value: unknown): string {
     : "";
 }
 
-/** The per-pair matching review block (student answer vs correct answer). */
-function MatchingReview({ question }: { question: QuizAttemptReviewQuestion }) {
-  if (question.question_type !== "matching") return null;
-  const pairs = (
+/** The authored [{left, right}] pairs for a matching question. */
+function getMatchingPairs(
+  question: QuizAttemptReviewQuestion,
+): { left: string; right: string }[] {
+  return (
     (question as { matching_correct?: { [key: string]: unknown }[] | null })
       .matching_correct ?? []
   )
     .map((p) => ({ left: toStr(p.left), right: toStr(p.right) }))
     .filter((p) => p.left);
+}
+
+/** The per-pair matching review block (student answer vs correct answer). */
+function MatchingReview({ question }: { question: QuizAttemptReviewQuestion }) {
+  if (question.question_type !== "matching") return null;
+  const pairs = getMatchingPairs(question);
   if (pairs.length === 0) return null;
   const answer = parseMatchingAnswer(question.answer_text);
   return (
@@ -225,6 +240,128 @@ function MatchingReview({ question }: { question: QuizAttemptReviewQuestion }) {
       ))}
     </div>
   );
+}
+
+/** Parse the student's ordering submission (JSON array of items). */
+function parseOrderingAnswer(answerText: string | null | undefined): string[] {
+  if (!answerText) return [];
+  try {
+    const data = JSON.parse(answerText);
+    if (Array.isArray(data)) {
+      return data.map((v) => toStr(v)).filter((v) => v);
+    }
+  } catch {
+    // fall through
+  }
+  return [];
+}
+
+/**
+ * The ordering review block: each element shows its CORRECT position on the
+ * left — green when the student placed it there, red otherwise. A small sort
+ * button flips the list to the correct order and back (hidden when the
+ * student's order is already correct). Ordering grading stays all-or-nothing.
+ */
+function OrderingReview({ question }: { question: QuizAttemptReviewQuestion }) {
+  const { t } = useTranslation();
+  const [showCorrect, setShowCorrect] = useState(false);
+  if (question.question_type !== "ordering") return null;
+  const correct = (
+    (question as { ordering_correct?: string[] | null }).ordering_correct ?? []
+  ).map((v) => toStr(v));
+  if (correct.length === 0) return null;
+
+  const student = parseOrderingAnswer(question.answer_text);
+  const fullyCorrect =
+    student.length === correct.length &&
+    student.every((s, i) => s === correct[i]);
+  const display = showCorrect ? correct : student;
+  const posOf = new Map(correct.map((item, i) => [item, i]));
+
+  return (
+    <div className="space-y-2">
+      {display.map((item, i) => {
+        const correctIdx = posOf.get(item) ?? -1;
+        const atRightPlace = correctIdx === i;
+        return (
+          <div
+            key={`${item}-${i}`}
+            className="flex items-center gap-3 rounded-xl border-2 border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5"
+          >
+            <span
+              className={cn(
+                "w-7 h-7 shrink-0 flex items-center justify-center rounded-lg font-bold text-sm tabular-nums",
+                atRightPlace
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-red-100 text-red-700",
+              )}
+            >
+              {correctIdx >= 0 ? correctIdx + 1 : "?"}
+            </span>
+            <span className="flex-1 min-w-0 text-sm sm:text-base text-m3-on-surface font-medium">
+              {item}
+            </span>
+          </div>
+        );
+      })}
+      {!fullyCorrect && (
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
+          onClick={() => setShowCorrect((v) => !v)}
+          className="text-xs font-semibold text-m3-primary gap-1.5 rounded-lg"
+        >
+          <ArrowUpDown className="h-3.5 w-3.5" />
+          {showCorrect
+            ? t("course_quiz_review.back_to_my_order")
+            : t("course_quiz_review.sort_to_correct")}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/** Matching is graded all-or-nothing, but a PARTIALLY-correct answer gets a
+ *  yellow outline (some pairs right, not all). Arranging stays green/red. */
+function computeCardTone(
+  question: QuizAttemptReviewQuestion,
+): "green" | "yellow" | "red" {
+  if (question.is_correct) return "green";
+  if (question.question_type === "matching") {
+    const pairs = getMatchingPairs(question);
+    if (pairs.length > 0) {
+      const answer = parseMatchingAnswer(question.answer_text);
+      const correctCount = pairs.filter(
+        (p) =>
+          answer[p.left] != null &&
+          answer[p.left].trim().toLowerCase() === p.right.trim().toLowerCase(),
+      ).length;
+      if (correctCount > 0 && correctCount < pairs.length) return "yellow";
+    }
+  }
+  return "red";
+}
+
+/** Whether the raw "Your answer" box should render under the question. */
+function shouldShowAnswerBox(question: QuizAttemptReviewQuestion): boolean {
+  if (question.question_type === "mcq" || question.answer_text == null) {
+    return false;
+  }
+  if (
+    question.question_type === "matching" &&
+    getMatchingPairs(question).length > 0
+  ) {
+    return false;
+  }
+  if (
+    question.question_type === "ordering" &&
+    ((question as { ordering_correct?: string[] | null }).ordering_correct ??
+      []).length > 0
+  ) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -248,6 +385,8 @@ export function ReviewQuestionCard({
   const pickedOption = question.options.find(
     (o) => o.id === question.selected_option_id,
   );
+  const cardTone = computeCardTone(question);
+  const showAnswerBox = shouldShowAnswerBox(question);
 
   // Visible rows: correct question → just the right answer. Wrong question →
   // the pick + the right answer, everything else revealed on demand.
@@ -272,9 +411,11 @@ export function ReviewQuestionCard({
       id={`review-question-${question.question_id}`}
       className={cn(
         "p-4 space-y-4 scroll-mt-24",
-        question.is_correct
+        cardTone === "green"
           ? "ring-2 ring-emerald-400/70"
-          : "ring-2 ring-red-400/70",
+          : cardTone === "yellow"
+            ? "ring-2 ring-amber-400/70"
+            : "ring-2 ring-red-400/70",
       )}
     >
       <QuestionHeader question={question} index={index} />
@@ -299,6 +440,7 @@ export function ReviewQuestionCard({
       )}
 
       <MatchingReview question={question} />
+      <OrderingReview question={question} />
 
       {!question.is_correct && hiddenCount > 0 && (
         <Button
@@ -315,9 +457,7 @@ export function ReviewQuestionCard({
         </Button>
       )}
 
-      {question.question_type !== "mcq" &&
-        question.question_type !== "matching" &&
-        question.answer_text && (
+      {showAnswerBox && (
         <div className="rounded-xl bg-m3-surface-container-low p-4 border border-m3-outline-variant/20">
           <p className="text-[10px] uppercase tracking-widest font-bold text-m3-on-surface-variant mb-1">
             {t("course_quiz_review.your_answer")}

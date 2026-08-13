@@ -2329,7 +2329,9 @@
   "retry_confirm_title": "Retry quiz?",
   "retry_confirm_body": "Start a new attempt now? Your previous result stays in the attempt history.",
   "retry_confirm_confirm": "Start new attempt",
-  "not_answered": "Not answered"
+  "not_answered": "Not answered",
+  "sort_to_correct": "Sort to correct order",
+  "back_to_my_order": "Back to my order"
  },
  "discussion": {
   "title": "Discussion",
