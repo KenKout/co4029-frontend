@@ -199,7 +199,7 @@ export function ReviewActionsBar({
         <Button
           variant="outline"
           onClick={onOpenNavigation}
-          className="flex-1 font-bold rounded-xl gap-2 border-m3-primary/40 text-m3-primary hover:bg-m3-primary-fixed/30"
+          className="font-bold rounded-xl gap-2 border-m3-primary/40 text-m3-primary hover:bg-m3-primary-fixed/30"
         >
           <LayoutGrid className="h-4 w-4" />
           {t("course_quiz_review.question_breakdown")}
@@ -207,7 +207,7 @@ export function ReviewActionsBar({
         {canRetry && (
           <Button
             onClick={onRetry}
-            className="flex-1 gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow hover:opacity-90 active:scale-95 transition-all"
+            className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow hover:opacity-90 active:scale-95 transition-all"
           >
             <RotateCcw className="h-4 w-4" />
             {t("course_quiz_review.retry_quiz")}
