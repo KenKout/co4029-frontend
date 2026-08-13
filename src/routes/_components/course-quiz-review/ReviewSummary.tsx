@@ -123,19 +123,15 @@ export function ReviewScoreSummary({
         </span>
       </div>
 
-      {/* Score vs passing labels, anchored over the bar markers */}
+      {/* Student score label anchored over their position on the bar.
+          (No passing-score text — it collided with the score label when the
+          two were close; the marker line on the bar still shows it.) */}
       <div className="relative h-6 mt-3">
         <span
           className="absolute -translate-x-1/2 text-sm font-headline font-black text-m3-on-surface tabular-nums"
           style={{ left: `${clampedScore}%` }}
         >
           {clampedScore.toFixed(0)}%
-        </span>
-        <span
-          className="absolute -translate-x-1/2 text-[10px] font-bold text-m3-on-surface-variant tabular-nums"
-          style={{ left: `${clampedPassing}%` }}
-        >
-          {t("course_quiz_review.passing_score")} {passingScore}%
         </span>
       </div>
 
@@ -194,11 +190,12 @@ export function ReviewActionsBar({
 }) {
   const { t } = useTranslation();
   // Sticky bottom-0 only pins elements that sit BELOW the scrollable
-  // content (the bar precedes the questions, so it scrolled away). On
-  // mobile it's a fixed bottom bar instead — always visible while the
-  // questions scroll — and a plain inline section on larger screens.
+  // content (the bar precedes the questions, so it scrolled away). It's a
+  // fixed bottom bar on every viewport — always visible while the questions
+  // scroll — with the page padding sized to the bar's height so nothing
+  // hides behind it at full scroll.
   return (
-    <div className="fixed bottom-0 inset-x-0 z-10 bg-white/95 backdrop-blur-md border-t border-border px-4 sm:px-6 py-2.5 lg:static lg:bg-transparent lg:border-0 lg:px-0 lg:py-0">
+    <div className="fixed bottom-0 inset-x-0 z-10 bg-white/95 backdrop-blur-md border-t border-border px-4 sm:px-6 lg:px-8 py-2.5">
       <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-elev p-3 w-full">
         <Button
           variant="outline"
