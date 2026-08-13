@@ -60,7 +60,7 @@ export function QuizTakingFooter({
   };
 
   return (
-    <div className="sticky bottom-0 z-10 -mx-4 sm:-mx-6 lg:mx-0 lg:px-0 px-4 sm:px-6 py-2 mt-4 bg-white/95 backdrop-blur-md border-t border-border flex items-center gap-1.5 sm:gap-2">
+    <div className="mt-4 flex items-center gap-1.5 sm:gap-2">
       <FooterIconButton
         label={
           status?.flagged

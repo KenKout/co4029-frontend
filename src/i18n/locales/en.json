@@ -2433,7 +2433,10 @@
    "retake_max_attempts": "Up to {{count}} tries",
    "cooldown_hours": "{{hours}} hours",
    "attempts_previous": "{{count}} previous attempt(s)",
-   "attempts_first": "First attempt"
+   "attempts_first": "First attempt",
+   "time_limit_mins": "{{count}} min",
+   "time_limit_hours": "{{hours}} h",
+   "time_limit_hours_mins": "{{hours}} h {{minutes}} min"
   },
   "messages": {
    "no_retakes": "This quiz does not allow retakes.",
@@ -2517,6 +2520,9 @@
    "showing": "Showing {{from}}–{{to}} of {{total}}",
    "save_page": "Save answers on this page",
    "unanswered_warning": "{{count}} questions on this page have no answer yet."
+  },
+  "timer": {
+   "low_time_warning": "⏰ Time is almost up — submit your quiz quickly!"
   }
  },
  "course_interview": {

@@ -5,6 +5,27 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { QUIZ_PAGE_SIZES, type QuizPageSize } from "@/lib/quiz-timing";
 
+/** "12 min" / "1 h 30 min" for the time-limit row. */
+function formatTimeLimit(
+  seconds: number | null | undefined,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string | null {
+  if (seconds == null || seconds <= 0) return null;
+  const totalMin = Math.round(seconds / 60);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h > 0 && m > 0) {
+    return t("course_quiz.values.time_limit_hours_mins", {
+      hours: h,
+      minutes: m,
+    });
+  }
+  if (h > 0) {
+    return t("course_quiz.values.time_limit_hours", { hours: h });
+  }
+  return t("course_quiz.values.time_limit_mins", { count: totalMin });
+}
+
 /**
  * Quiz settings dialog (tap the icon in the taking bar). Surfaced on tap
  * rather than hover so it works on phones: the static config (hints /
@@ -19,6 +40,7 @@ export function QuizConfigPopover({
   attemptsBefore = 0,
   pageSize,
   onPageSizeChange,
+  timeLimitSeconds = null,
 }: {
   allowRetakes: boolean;
   maxAttempts: number | null | undefined;
@@ -28,6 +50,8 @@ export function QuizConfigPopover({
   attemptsBefore?: number;
   pageSize?: QuizPageSize;
   onPageSizeChange?: (size: QuizPageSize) => void;
+  /** Quiz time limit in seconds (null = untimed). */
+  timeLimitSeconds?: number | null | undefined;
 }) {
   const { t } = useTranslation();
 
@@ -40,17 +64,20 @@ export function QuizConfigPopover({
     </div>
   );
 
+  const timeLimitValue = formatTimeLimit(timeLimitSeconds, t);
+
   return (
     <DialogPrimitive.Root>
       <DialogPrimitive.Trigger
         className={cn(
           "inline-flex items-center justify-center rounded-xl bg-m3-surface-container w-9 h-9",
-          "text-sm font-bold text-m3-primary cursor-pointer outline-none",
+          "text-sm font-bold text-m3-primary cursor-pointer outline-none gap-1.5 px-3 w-auto",
           "hover:bg-m3-surface-container-high focus-visible:ring-2 focus-visible:ring-m3-primary/40",
         )}
         aria-label={t("course_quiz.sections.config")}
       >
         <Info className="h-4 w-4" />
+        <span className="hidden sm:inline">{t("course_quiz.sections.config")}</span>
       </DialogPrimitive.Trigger>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop
@@ -87,6 +114,12 @@ export function QuizConfigPopover({
           </div>
 
           <div className="space-y-2.5 text-sm">
+            {timeLimitValue !== null
+              ? row(t("course_quiz.labels.time"), timeLimitValue)
+              : row(
+                  t("course_quiz.labels.time"),
+                  t("course_quiz.values.no_time_limit"),
+                )}
             {row(
               t("course_quiz.labels.hint"),
               showHints

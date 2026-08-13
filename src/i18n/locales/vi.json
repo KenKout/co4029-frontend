@@ -2299,7 +2299,10 @@
    "retake_max_attempts": "Tối đa {{count}} lần",
    "cooldown_hours": "{{hours}} giờ",
    "attempts_previous": "{{count}} lần làm trước",
-   "attempts_first": "Lần làm đầu tiên"
+   "attempts_first": "Lần làm đầu tiên",
+   "time_limit_mins": "{{count}} phút",
+   "time_limit_hours": "{{hours}} giờ",
+   "time_limit_hours_mins": "{{hours}} giờ {{minutes}} phút"
   },
   "messages": {
    "no_retakes": "Bài quiz này không cho phép làm lại.",
@@ -2390,6 +2393,9 @@
    "showing": "Hiển thị {{from}}–{{to}} trong {{total}}",
    "save_page": "Lưu câu trả lời ở trang này",
    "unanswered_warning": "{{count}} câu ở trang này chưa có câu trả lời."
+  },
+  "timer": {
+   "low_time_warning": "⏰ Sắp hết giờ — hãy nộp bài nhanh!"
   }
  },
  "course_interview": {

@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { QuizHintDialog } from "@/routes/_components/QuizHintDialog";
 import { QuizSummaryCard } from "@/routes/_components/QuizSummaryCard";
-import { setScrollToTopBump } from "@/components/ui/scroll-to-top";
 import { buildSummaryItems, deriveTakingView } from "./helpers";
 import { QuizPageQuestions } from "./QuizPageQuestions";
 import { QuizTakingFooter } from "./QuizTakingFooter";
@@ -18,18 +18,33 @@ import type { QuizStageProps } from "./types";
  * The summary rail is desktop-only now — on phones the question-list icon
  * in the footer opens the same layout as a dialog.
  */
-export function QuizTakingStage({ session, quiz, slug }: QuizStageProps) {
+export function QuizTakingStage({
+  session,
+  quiz,
+  slug,
+  courseTitle,
+}: QuizStageProps & { courseTitle: string }) {
+  const { t } = useTranslation();
   const { hintDialogOpen, setHintDialogOpen, displayQuestions } = session;
   const view = deriveTakingView(session, quiz);
   const summaryItems = buildSummaryItems(session);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const lowTimeWarnedRef = useRef(false);
 
-  // The sticky question footer occupies the bottom edge; lift the shell's
-  // ScrollToTop button above it so the two never overlap.
+  // One-shot toast when the countdown crosses the 10s milestone.
   useEffect(() => {
-    setScrollToTopBump("bottom-24");
-    return () => setScrollToTopBump("");
-  }, []);
+    const left = session.sessionReady ? session.timeLeft : null;
+    if (
+      quiz.time_limit_seconds &&
+      left != null &&
+      left <= 10 &&
+      !lowTimeWarnedRef.current
+    ) {
+      lowTimeWarnedRef.current = true;
+      toast.warning(t("course_quiz.timer.low_time_warning"));
+    }
+  }, [session.sessionReady, session.timeLeft, quiz.time_limit_seconds, t]);
+
 
   /**
    * Jump to a question from the summary rail/dialog.
@@ -73,6 +88,7 @@ export function QuizTakingStage({ session, quiz, slug }: QuizStageProps) {
         session={session}
         quiz={quiz}
         slug={slug}
+        courseTitle={courseTitle}
         progressPct={view.progressPct}
       />
 

@@ -21,12 +21,15 @@ export function QuizIntegrityNotice() {
       <DialogPrimitive.Trigger
         className={cn(
           "inline-flex items-center justify-center rounded-xl bg-amber-50 w-9 h-9",
-          "text-amber-700 cursor-pointer outline-none",
+          "text-amber-700 cursor-pointer outline-none gap-1.5 px-3 w-auto",
           "hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-amber-400/50",
         )}
         aria-label={t("course_quiz.integrity.badge")}
       >
         <ShieldCheck className="h-4 w-4" />
+        <span className="hidden sm:inline font-bold text-sm">
+          {t("course_quiz.integrity.badge")}
+        </span>
       </DialogPrimitive.Trigger>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop
