@@ -53,6 +53,7 @@ export type GenerationMode = "topic" | "coverage";
 export interface FormState {
   question_count: number;
   difficulty: Difficulty;
+  expected_response_seconds: number;
   question_types: QuestionType[];
   generation_mode: GenerationMode;
   focus_topics: string[];

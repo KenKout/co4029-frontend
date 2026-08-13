@@ -122,6 +122,30 @@ export function GenerationSettingsColumn({
   return (
     <div className="space-y-4">
       <CountAndDifficulty controller={controller} />
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+          Expected time per question (s)
+        </label>
+        <Input
+          type="number"
+          min={1}
+          value={form.expected_response_seconds}
+          onChange={(e) =>
+            setForm((current) => ({
+              ...current,
+              expected_response_seconds: Math.max(
+                1,
+                Number(e.target.value) || 60,
+              ),
+            }))
+          }
+        />
+        <p className="text-[10px] text-m3-on-surface-variant">
+          Hard-set on every generated question — no "save time" pass needed.
+        </p>
+      </div>
+
       <QuestionTypesPicker controller={controller} />
 
       <ModeToggle

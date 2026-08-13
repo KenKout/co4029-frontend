@@ -14,6 +14,7 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
 export const INITIAL_FORM: FormState = {
   question_count: 5,
   difficulty: "medium",
+  expected_response_seconds: 60,
   question_types: ["multiple_choice"],
   generation_mode: "topic",
   focus_topics: [],

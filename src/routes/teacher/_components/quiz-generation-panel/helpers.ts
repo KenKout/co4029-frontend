@@ -90,6 +90,7 @@ export function buildGeneratePayload(
     question_count: form.question_count,
     question_types: form.question_types,
     difficulty: form.difficulty,
+    expected_response_time_ms: form.expected_response_seconds * 1000,
     source_lesson_ids: selectedLessonIds,
     generation_mode: form.generation_mode,
     focus_topics: form.focus_topics,
