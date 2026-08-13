@@ -13,8 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
  * - ``multiple_choice`` / ``true_false`` → option buttons (caller-supplied
  *   ``onSelectOption`` updates ``selectedOptionId``).
  * - ``short_answer`` → single-line text input bound to ``answerText``.
- * - ``fill_blank`` → drag-and-drop word bank with N drop slots; the
- *   stem's ``___`` placeholders are split out and rendered inline,
+ * - ``fill_blank`` → tap-to-fill word bank with N fill slots (drag optional);
+ *   the stem's ``___`` placeholders are split out and rendered inline,
  *   and the parent receives a JSON-stringified array via
  *   ``onAnswerTextChange`` (matches the grader's contract).
  */
@@ -149,23 +149,19 @@ function ShortAnswerInput({
 }
 
 /**
- * Drag-and-drop word bank for fill_blank.
+ * Tap-to-fill word bank for fill_blank (drag-and-drop is an optional shortcut).
  *
- * Strategy:
- * 1. Split the stem on three-or-more underscores. Render the static
- *    fragments inline with drop slots between them.
- * 2. The word bank lists distinct candidate strings. To avoid leaking
- *    the answer key (which the public schema deliberately omits), the
- *    bank is built from synthesized hash distractors PLUS the slot
- *    values the student has already placed. We seed the bank from
- *    ``question.options`` if the backend ever decides to expose
- *    distractors there; otherwise we fall back to "Word 1..N".
- * 3. Slots are mutated via dragstart/dragover/drop on plain HTML5 DnD
- *    so we don't pull in @dnd-kit just for this.
+ * Interaction model — the blank is the target, the word is the value:
+ *   1. Tap a blank to focus it (renders "Choose answer").
+ *   2. Tap a word to fill the focused blank, then focus auto-advances to the
+ *      next empty blank. With no blank focused, a word tap fills the first empty.
+ *   3. Tap a filled blank to focus it, then tap another word to replace/swap.
+ *   4. × clears a filled blank; dragging a word onto a blank still works.
  *
- * The stem must contain at least one ``___`` placeholder. If none are
- * found we degrade to a comma-separated list of N text inputs (where N
- * is inferred from the option count or defaults to 1).
+ * The word bank comes from ``question.fill_blank_choices`` — a no-leak
+ * projection the backend derives from the answer words (or the AI-generated
+ * option bank with distractors), shuffled so the positional answer key never
+ * reaches the learner. Falls back to ``question.options`` then "Word 1..N".
  */
 function FillBlankInput({
   question,
@@ -178,37 +174,15 @@ function FillBlankInput({
     [question.prompt_text],
   );
   const blankCount = Math.max(0, segments.length - 1);
-  const slots: Array<string | null> = useMemo(() => {
-    if (blankCount === 0) return [];
-    let parsed: Array<string | null> = Array(blankCount).fill(null);
-    if (answerText) {
-      try {
-        const data = JSON.parse(answerText);
-        if (Array.isArray(data)) {
-          parsed = Array.from({ length: blankCount }, (_, i) => {
-            const value = data[i];
-            return typeof value === "string" && value ? value : null;
-          });
-        }
-      } catch {
-        // Not JSON — leave slots empty.
-      }
-    }
-    return parsed;
-  }, [answerText, blankCount]);
-
-  const wordBank: string[] = useMemo(() => {
-    const fromOptions = question.options
-      .map((opt) => opt.option_text)
-      .filter((text) => typeof text === "string" && text.length > 0);
-    if (fromOptions.length >= blankCount && fromOptions.length > 0) {
-      return fromOptions;
-    }
-    return Array.from({ length: blankCount }, (_, i) => `Word ${i + 1}`);
-  }, [question.options, blankCount]);
-
-  const draggingFromSlotRef = useRef<number | null>(null);
-  const draggingWordRef = useRef<string | null>(null);
+  const slots = useMemo(
+    () => parseFillBlankSlots(answerText, blankCount),
+    [answerText, blankCount],
+  );
+  const wordBank = useMemo(
+    () => buildFillBlankWordBank(question, blankCount),
+    [question, blankCount],
+  );
+  const [focusedBlank, setFocusedBlank] = useState<number | null>(null);
 
   function commitSlots(next: Array<string | null>) {
     onAnswerTextChange(JSON.stringify(next.map((value) => value ?? "")));
@@ -217,13 +191,18 @@ function FillBlankInput({
   function placeAt(index: number, word: string) {
     if (disabled) return;
     const next = [...slots];
-    // If the word was already in another slot, swap; otherwise just place.
     const fromSlot = next.indexOf(word);
-    if (fromSlot >= 0 && fromSlot !== index) {
+    const bankCount = wordBank.filter((w) => w === word).length;
+    const placedCount = next.filter((s) => s === word).length;
+    // Move (swap) an existing occurrence only when no spare copy remains —
+    // otherwise a duplicate answer would be stolen from its slot.
+    if (fromSlot >= 0 && fromSlot !== index && placedCount >= bankCount) {
       next[fromSlot] = next[index];
     }
     next[index] = word;
     commitSlots(next);
+    const nextEmpty = next.findIndex((s) => s === null);
+    setFocusedBlank(nextEmpty >= 0 ? nextEmpty : null);
   }
 
   function clearSlot(index: number) {
@@ -231,6 +210,7 @@ function FillBlankInput({
     const next = [...slots];
     next[index] = null;
     commitSlots(next);
+    setFocusedBlank(index);
   }
 
   if (blankCount === 0) {
@@ -254,92 +234,183 @@ function FillBlankInput({
           <span key={i}>
             {segment}
             {i < blankCount && (
-              <DropSlot
-                index={i}
+              <FillBlankSlot
                 value={slots[i]}
+                focused={focusedBlank === i}
                 disabled={disabled}
-                onDrop={(word) => {
-                  draggingFromSlotRef.current = null;
-                  draggingWordRef.current = null;
-                  placeAt(i, word);
+                onTap={() => {
+                  if (disabled) return;
+                  setFocusedBlank((cur) => (cur === i ? null : i));
                 }}
                 onClear={() => clearSlot(i)}
-                onDragStartFromSlot={() => {
-                  draggingFromSlotRef.current = i;
-                  draggingWordRef.current = slots[i];
-                }}
+                onDrop={(word) => placeAt(i, word)}
               />
             )}
           </span>
         ))}
       </div>
+      <FillBlankWordBank
+        wordBank={wordBank}
+        slots={slots}
+        focusedBlank={focusedBlank}
+        disabled={disabled}
+        onWordTap={(word) => {
+          if (disabled) return;
+          const target =
+            focusedBlank != null
+              ? focusedBlank
+              : slots.findIndex((s) => s === null);
+          if (target < 0 || slots[target] === word) return;
+          placeAt(target, word);
+        }}
+      />
+    </div>
+  );
+}
 
-      <div className="space-y-2">
-        <div className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          Word bank
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {wordBank.map((word) => {
-            const used = slots.includes(word);
-            return (
-              <Button variant="ghost"
-                key={word}
-                type="button"
-                draggable={!disabled && !used}
-                onDragStart={(e) => {
-                  if (used || disabled) {
-                    e.preventDefault();
-                    return;
-                  }
-                  draggingFromSlotRef.current = null;
-                  draggingWordRef.current = word;
-                  e.dataTransfer.setData("text/plain", word);
-                  e.dataTransfer.effectAllowed = "move";
-                }}
-                onClick={() => {
-                  if (used || disabled) return;
-                  // Click-to-place: drop into the first empty slot.
-                  const firstEmpty = slots.findIndex((s) => s === null);
-                  if (firstEmpty >= 0) placeAt(firstEmpty, word);
-                }}
-                disabled={used || disabled}
-                className={cn(
-                  "px-4 py-2 rounded-xl text-sm font-medium transition-all border-2 cursor-grab active:cursor-grabbing h-auto whitespace-normal",
-                  used
-                    ? "bg-m3-surface-container-low text-m3-on-surface-variant border-transparent line-through opacity-50 cursor-not-allowed"
-                    : "bg-m3-secondary-fixed/40 text-m3-on-surface border-m3-secondary/30 hover:bg-m3-secondary-fixed/60 hover:border-m3-secondary",
-                )}
-              >
-                {word}
-              </Button>
-            );
-          })}
-        </div>
+/** Decode a fill_blank ``answerText`` (JSON array of slot values) into a
+ * ``slots`` array of length ``blankCount``. Non-JSON / short arrays degrade to
+ * empty slots. */
+function parseFillBlankSlots(
+  answerText: string | null,
+  blankCount: number,
+): Array<string | null> {
+  const parsed: Array<string | null> = Array(blankCount).fill(null);
+  if (blankCount === 0 || !answerText) return parsed;
+  try {
+    const data = JSON.parse(answerText);
+    if (Array.isArray(data)) {
+      return Array.from({ length: blankCount }, (_, i) => {
+        const value = data[i];
+        return typeof value === "string" && value ? value : null;
+      });
+    }
+  } catch {
+    // Not JSON — leave slots empty.
+  }
+  return parsed;
+}
+
+/** Build the fill_blank word bank: ``fill_blank_choices`` (backend no-leak
+ * projection) when present, else ``options``, else "Word 1..N" placeholders. */
+function buildFillBlankWordBank(
+  question: QuizQuestionPublic,
+  blankCount: number,
+): string[] {
+  const fillChoices = (
+    question as unknown as { fill_blank_choices?: string[] | null }
+  ).fill_blank_choices;
+  if (Array.isArray(fillChoices)) {
+    const cleaned = fillChoices.filter(
+      (w) => typeof w === "string" && w.trim().length > 0,
+    );
+    if (cleaned.length > 0) return cleaned;
+  }
+  const fromOptions = question.options
+    .map((opt) => opt.option_text)
+    .filter((text) => typeof text === "string" && text.length > 0);
+  if (fromOptions.length > 0) return fromOptions;
+  return Array.from({ length: blankCount }, (_, i) => `Word ${i + 1}`);
+}
+
+function FillBlankWordBank({
+  wordBank,
+  slots,
+  focusedBlank,
+  disabled,
+  onWordTap,
+}: {
+  wordBank: string[];
+  slots: Array<string | null>;
+  focusedBlank: number | null;
+  disabled: boolean;
+  onWordTap: (word: string) => void;
+}) {
+  function isUnavailable(word: string): boolean {
+    if (disabled) return true;
+    const placed = slots.filter((s) => s === word).length;
+    const available = wordBank.filter((w) => w === word).length;
+    if (available - placed > 0) {
+      // Spare copy — enabled unless it would be a no-op on the focused blank.
+      return focusedBlank != null && slots[focusedBlank] === word;
+    }
+    // Fully placed — enabled only to swap into a focused, filled, different blank.
+    const swappable =
+      focusedBlank != null &&
+      slots[focusedBlank] != null &&
+      slots[focusedBlank] !== word;
+    return !swappable;
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+        Word bank
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {wordBank.map((word, wordIndex) => {
+          const unavailable = isUnavailable(word);
+          return (
+            <Button variant="ghost"
+              key={`${word}-${wordIndex}`}
+              type="button"
+              draggable={!disabled && !unavailable}
+              onDragStart={(e) => {
+                if (unavailable || disabled) {
+                  e.preventDefault();
+                  return;
+                }
+                e.dataTransfer.setData("text/plain", word);
+                e.dataTransfer.effectAllowed = "move";
+              }}
+              onClick={() => onWordTap(word)}
+              disabled={unavailable}
+              className={cn(
+                "px-4 py-2 rounded-xl text-sm font-medium transition-all border-2 cursor-grab active:cursor-grabbing h-auto whitespace-normal",
+                unavailable
+                  ? "bg-m3-surface-container-low text-m3-on-surface-variant border-transparent line-through opacity-50 cursor-not-allowed"
+                  : "bg-m3-secondary-fixed/40 text-m3-on-surface border-m3-secondary/30 hover:bg-m3-secondary-fixed/60 hover:border-m3-secondary",
+              )}
+            >
+              {word}
+            </Button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-interface DropSlotProps {
-  index: number;
+interface FillBlankSlotProps {
   value: string | null;
+  focused: boolean;
   disabled: boolean;
-  onDrop: (word: string) => void;
+  onTap: () => void;
   onClear: () => void;
-  onDragStartFromSlot: () => void;
+  onDrop: (word: string) => void;
 }
 
-function DropSlot({
-  index: _index,
+function FillBlankSlot({
   value,
+  focused,
   disabled,
-  onDrop,
+  onTap,
   onClear,
-  onDragStartFromSlot,
-}: DropSlotProps) {
+  onDrop,
+}: FillBlankSlotProps) {
   const [hovered, setHovered] = useState(false);
+  const filled = value != null && value.length > 0;
+  const label = filled
+    ? `Blank filled with ${value}`
+    : focused
+      ? "Blank: choose answer"
+      : "Blank: empty";
   return (
-    <span
+    <Button
+      variant="ghost"
+      type="button"
+      onClick={onTap}
+      disabled={disabled}
       onDragOver={(e) => {
         if (disabled) return;
         e.preventDefault();
@@ -354,49 +425,53 @@ function DropSlot({
         const word = e.dataTransfer.getData("text/plain");
         if (word) onDrop(word);
       }}
+      aria-label={label}
       className={cn(
-        "inline-flex items-center align-middle gap-1 mx-1 px-3 min-w-[6rem] min-h-[2rem] rounded-lg border-2 border-dashed transition-all",
-        value
-          ? "bg-m3-primary-fixed/30 border-m3-primary border-solid text-m3-primary font-semibold"
-          : hovered
-            ? "bg-m3-secondary-fixed/30 border-m3-secondary"
-            : "bg-m3-surface-container-low border-m3-outline-variant/40",
+        "inline-flex items-center align-middle gap-1 mx-1 px-3 min-w-[6rem] min-h-[2rem] rounded-lg border-2 transition-all h-auto whitespace-normal disabled:opacity-100",
+        filled
+          ? "border-m3-primary border-solid bg-m3-primary-fixed/30 text-m3-primary font-semibold hover:bg-m3-primary-fixed/30 hover:text-m3-primary"
+          : focused || hovered
+            ? "border-m3-primary border-solid bg-m3-secondary-fixed/30 hover:bg-m3-secondary-fixed/30"
+            : "border-dashed bg-m3-surface-container-low border-m3-outline-variant/40 hover:bg-m3-secondary-fixed/30",
+        focused && "ring-2 ring-m3-primary/20",
       )}
     >
-      {value ? (
+      {filled ? (
         <>
-          <span
-            draggable={!disabled}
-            onDragStart={(e) => {
-              if (disabled) {
-                e.preventDefault();
-                return;
-              }
-              onDragStartFromSlot();
-              e.dataTransfer.setData("text/plain", value);
-              e.dataTransfer.effectAllowed = "move";
-            }}
-            className="cursor-grab active:cursor-grabbing"
-          >
-            {value}
-          </span>
+          <span className="cursor-grab active:cursor-grabbing">{value}</span>
           {!disabled && (
-            <Button variant="ghost"
-              type="button"
-              onClick={onClear}
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClear();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClear();
+                }
+              }}
               aria-label="Clear blank"
               className="ml-1 text-m3-primary/60 hover:text-m3-primary text-xs leading-none"
             >
               ×
-            </Button>
+            </span>
           )}
         </>
       ) : (
-        <span className="text-m3-on-surface-variant text-xs italic select-none">
-          drop here
+        <span
+          className={cn(
+            "text-xs italic select-none",
+            focused ? "text-m3-primary font-medium" : "text-m3-on-surface-variant",
+          )}
+        >
+          {focused ? "Choose answer" : "+ Answer"}
         </span>
       )}
-    </span>
+    </Button>
   );
 }
 
