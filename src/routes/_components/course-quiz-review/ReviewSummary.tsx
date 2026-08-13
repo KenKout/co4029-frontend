@@ -189,32 +189,28 @@ export function ReviewActionsBar({
   onRetry: () => void;
 }) {
   const { t } = useTranslation();
-  // The bar precedes the questions, so sticky bottom-0 would scroll away,
-  // and a fixed bottom bar can never clear the Android Chrome toolbar
-  // (browser chrome outside the layout viewport). One behaviour everywhere:
-  // a sticky bar pinned under the shell header (top-16), like the desktop
-  // layout.
+  // Single wrapper: the box itself is the sticky section (pinned under the
+  // shell header on every viewport). No outer bar — the buttons get the full
+  // content width, spread justify-between.
   return (
-    <div className="sticky top-16 z-10 bg-white/95 backdrop-blur-md border-b border-x border-border px-4 sm:px-6 lg:px-8 py-2.5">
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-elev p-3 w-full">
+    <div className="sticky top-16 z-10 flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-elev p-3 backdrop-blur-md">
+      <Button
+        variant="outline"
+        onClick={onOpenNavigation}
+        className="font-bold rounded-xl gap-2 border-m3-primary/40 text-m3-primary hover:bg-m3-primary-fixed/30"
+      >
+        <LayoutGrid className="h-4 w-4" />
+        {t("course_quiz_review.question_breakdown")}
+      </Button>
+      {canRetry && (
         <Button
-          variant="outline"
-          onClick={onOpenNavigation}
-          className="font-bold rounded-xl gap-2 border-m3-primary/40 text-m3-primary hover:bg-m3-primary-fixed/30"
+          onClick={onRetry}
+          className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow hover:opacity-90 active:scale-95 transition-all"
         >
-          <LayoutGrid className="h-4 w-4" />
-          {t("course_quiz_review.question_breakdown")}
+          <RotateCcw className="h-4 w-4" />
+          {t("course_quiz_review.retry_quiz")}
         </Button>
-        {canRetry && (
-          <Button
-            onClick={onRetry}
-            className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow hover:opacity-90 active:scale-95 transition-all"
-          >
-            <RotateCcw className="h-4 w-4" />
-            {t("course_quiz_review.retry_quiz")}
-          </Button>
-        )}
-      </div>
+      )}
     </div>
   );
 }
