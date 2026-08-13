@@ -26,6 +26,51 @@ function formatTimeLimit(
   return t("course_quiz.values.time_limit_mins", { count: totalMin });
 }
 
+/** The items-per-page segmented control inside the config dialog. */
+function PerPageSelector({
+  pageSize,
+  onPageSizeChange,
+}: {
+  pageSize?: QuizPageSize;
+  onPageSizeChange?: (size: QuizPageSize) => void;
+}) {
+  const { t } = useTranslation();
+  if (pageSize === undefined || !onPageSizeChange) return null;
+  return (
+    <div className="mt-4 pt-3 border-t border-m3-outline-variant/20">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+          {t("course_quiz.pagination.per_page_label")}
+        </span>
+        <div
+          role="group"
+          aria-label={t("course_quiz.pagination.per_page_label")}
+          className="flex items-center rounded-lg border border-m3-outline-variant/40 bg-m3-surface-container p-0.5"
+        >
+          {QUIZ_PAGE_SIZES.map((size) => (
+            <Button variant="ghost"
+              key={String(size)}
+              type="button"
+              onClick={() => onPageSizeChange(size)}
+              aria-pressed={pageSize === size}
+              className={cn(
+                "rounded-md px-2.5 py-1 text-xs font-bold transition-colors h-auto whitespace-normal",
+                pageSize === size
+                  ? "bg-m3-primary text-white"
+                  : "text-m3-on-surface-variant hover:text-m3-primary",
+              )}
+            >
+              {size === "all"
+                ? t("course_quiz.pagination.per_page_all")
+                : size}
+            </Button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Quiz settings dialog (tap the icon in the taking bar). Surfaced on tap
  * rather than hover so it works on phones: the static config (hints /
@@ -156,39 +201,7 @@ export function QuizConfigPopover({
             )}
           </div>
 
-          {pageSize !== undefined && onPageSizeChange && (
-            <div className="mt-4 pt-3 border-t border-m3-outline-variant/20">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                  {t("course_quiz.pagination.per_page_label")}
-                </span>
-                <div
-                  role="group"
-                  aria-label={t("course_quiz.pagination.per_page_label")}
-                  className="flex items-center rounded-lg border border-m3-outline-variant/40 bg-m3-surface-container p-0.5"
-                >
-                  {QUIZ_PAGE_SIZES.map((size) => (
-                    <Button variant="ghost"
-                      key={String(size)}
-                      type="button"
-                      onClick={() => onPageSizeChange(size)}
-                      aria-pressed={pageSize === size}
-                      className={cn(
-                        "rounded-md px-2.5 py-1 text-xs font-bold transition-colors h-auto whitespace-normal",
-                        pageSize === size
-                          ? "bg-m3-primary text-white"
-                          : "text-m3-on-surface-variant hover:text-m3-primary",
-                      )}
-                    >
-                      {size === "all"
-                        ? t("course_quiz.pagination.per_page_all")
-                        : size}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          <PerPageSelector pageSize={pageSize} onPageSizeChange={onPageSizeChange} />
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
