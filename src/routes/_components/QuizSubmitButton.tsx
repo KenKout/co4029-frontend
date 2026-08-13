@@ -32,8 +32,9 @@ export function QuizSubmitButton({
   const { t } = useTranslation();
   const cooldown = useCardCooldown(cooldownAt);
   const cooldownActive = !!cooldownAt && !cooldown.isExpired;
-  const busy = isSavingAnswer || isFinalSubmitting;
-  const primaryDisabled = busy || cooldownActive;
+  // Only the final submit (and cooldown) disables — a debounced auto-save
+  // in flight keeps the button live so the student can keep moving.
+  const primaryDisabled = isFinalSubmitting || cooldownActive;
 
   return (
     <div className="flex items-center gap-3 flex-wrap justify-end">

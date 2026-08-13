@@ -1,9 +1,9 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import type { TFunction } from "i18next";
 import { toast } from "sonner";
 import type { QuizQuestionPublic } from "@/lib/api/types";
 import { clearSeenAt } from "@/lib/quiz-timing";
-import { hasAnswer } from "@/lib/quiz/quiz-session-helpers";
+import { hasAnswer, type QuestionStatus } from "@/lib/quiz/quiz-session-helpers";
 import {
   markAnswerSaved,
   reportPersistFailure,
@@ -25,6 +25,88 @@ import type { AttemptSessionState } from "./use-attempt-session-state";
 import { useAutoSaveAnswer } from "./use-auto-save-answer";
 import { useAutoSubmitOnTimeout } from "./use-auto-submit-on-timeout";
 import type { PasswordGate } from "./use-password-gate";
+
+interface AnswerSnapshot {
+  selectedOptionId: string | null;
+  answerText: string | null;
+  hintViewed: boolean;
+}
+
+/** True when the status still matches what the save request sent. */
+function statusMatchesSnapshot(
+  status:
+    | {
+        selectedOptionId: string | null;
+        answerText: string | null;
+        hintViewed: boolean;
+      }
+    | undefined,
+  snapshot: AnswerSnapshot,
+): boolean {
+  return (
+    !!status &&
+    status.selectedOptionId === snapshot.selectedOptionId &&
+    status.answerText === snapshot.answerText &&
+    status.hintViewed === snapshot.hintViewed
+  );
+}
+
+/** Persist one answer to the server (see `useAttemptActions.persistAnswer`). */
+async function persistAnswerToServer(args: {
+  questionIdx: number;
+  displayQuestions: QuizQuestionPublic[];
+  statuses: QuestionStatus[];
+  statusesRef: React.MutableRefObject<QuestionStatus[]>;
+  activeAttemptId: string | null;
+  focusTime: QuestionFocusTime;
+  submitAnswer: SubmitAnswerMutation;
+  state: AttemptSessionState;
+  t: TFunction;
+}): Promise<boolean> {
+  const {
+    questionIdx,
+    displayQuestions,
+    statuses,
+    statusesRef,
+    activeAttemptId,
+    focusTime,
+    submitAnswer,
+    state,
+    t,
+  } = args;
+  const question = displayQuestions[questionIdx];
+  const status = statuses[questionIdx];
+  if (!question || !status || !activeAttemptId) return false;
+  if (!hasAnswer(status)) return false;
+  if (status.savedToServer) return true;
+  // Accumulated ATTENTION time (see use-question-focus-time.ts). `null`
+  // when the question was never observed. NOT capped here — the cap needs
+  // expected_response_time_ms, which the student payload omits. The backend
+  // clamps instead (review.py `_clamp_t_actual`).
+  const tActualMs = focusTime.getFocusMs(question.id);
+  // Mark saved only if the student hasn't edited since this request left.
+  const snapshot: AnswerSnapshot = {
+    selectedOptionId: status.selectedOptionId,
+    answerText: status.answerText,
+    hintViewed: status.hintViewed,
+  };
+  try {
+    await submitAnswer.mutateAsync({
+      question_id: question.id,
+      selected_option_id: snapshot.selectedOptionId,
+      answer_text: snapshot.answerText,
+      hint_used: snapshot.hintViewed,
+      t_actual_ms: tActualMs,
+    });
+    if (statusMatchesSnapshot(statusesRef.current[questionIdx], snapshot)) {
+      markAnswerSaved(state, questionIdx, question.id);
+    }
+    return true;
+  } catch (err) {
+    reportPersistFailure({ t, state, questionId: question.id, err });
+    return false;
+  }
+}
 
 /**
  * The attempt's write actions — start, per-answer save, final submit — plus the
@@ -60,6 +142,9 @@ export function useAttemptActions(args: {
   } = args;
   const { activeIdx, activeAttemptId, statuses } = state;
   const { passwordInput } = passwordGate;
+  // Latest statuses for the post-await snapshot check in `persistAnswer`.
+  const statusesRef = useRef(statuses);
+  statusesRef.current = statuses;
   const ctx: AttemptActionsContext = {
     t,
     state,
@@ -92,44 +177,21 @@ export function useAttemptActions(args: {
   }, [passwordInput, handleStartAttempt, t]);
 
   const persistAnswer = useCallback(
-    async (questionIdx: number): Promise<boolean> => {
-      const question = displayQuestions[questionIdx];
-      const status = statuses[questionIdx];
-      if (!question || !status || !activeAttemptId) return false;
-      if (!hasAnswer(status)) return false;
-      if (status.savedToServer) return true;
-      // Accumulated ATTENTION time (see use-question-focus-time.ts). `null`
-      // when the question was never observed, which the backend treats as a
-      // neutral rho=1.0 rather than recording an implausible instant answer.
-      //
-      // NOT capped here: the cap needs `expected_response_time_ms`, which the
-      // student payload deliberately omits (telling students how long a
-      // question "should" take would leak teacher intent). The backend clamps
-      // instead — see `_clamp_t_actual` in spaced_repetition/services/review.py.
-      const tActualMs = focusTime.getFocusMs(question.id);
-
-      try {
-        await submitAnswer.mutateAsync({
-          question_id: question.id,
-          selected_option_id: status.selectedOptionId,
-          answer_text: status.answerText,
-          hint_used: status.hintViewed,
-          t_actual_ms: tActualMs,
-        });
-        markAnswerSaved(state, questionIdx, question.id);
-        return true;
-      } catch (err) {
-        reportPersistFailure({ t, state, questionId: question.id, err });
-        return false;
-      }
-    },
+    (questionIdx: number) =>
+      persistAnswerToServer({
+        questionIdx,
+        displayQuestions,
+        statuses,
+        statusesRef,
+        activeAttemptId,
+        focusTime,
+        submitAnswer,
+        state,
+        t,
+      }),
     [displayQuestions, statuses, activeAttemptId, focusTime, submitAnswer, t],
   );
 
-  // Save the current answer WITHOUT navigating. Distinct from Continue so a
-  // student can checkpoint their answer and keep thinking on the same question.
-  // `persistAnswer` is idempotent (returns true and no-ops when the answer is
-  // already saved), so a redundant Save is harmless.
   const handleSaveOnly = useCallback(async () => {
     await persistAnswer(activeIdx);
   }, [persistAnswer, activeIdx]);

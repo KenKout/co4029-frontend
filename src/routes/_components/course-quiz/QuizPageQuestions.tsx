@@ -13,7 +13,6 @@ export function QuizPageQuestions({
     displayQuestions,
     activeIdx,
     setActiveIdx,
-    submitAnswer,
     submitAttempt,
     perQuestionCooldown,
     focusTime,
@@ -33,7 +32,7 @@ export function QuizPageQuestions({
             total={displayQuestions.length}
             status={status}
             isActive={index === activeIdx}
-            disabled={submitAnswer.isPending || submitAttempt.isPending}
+            disabled={submitAttempt.isPending}
             cooldownRetryAt={perQuestionCooldown[question.id] ?? null}
             registerRef={focusTime.register(question.id)}
             peekFocusMs={() => focusTime.peekFocusMs(question.id)}

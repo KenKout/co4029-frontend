@@ -38,7 +38,9 @@ export function QuizTakingFooter({
   } = session;
 
   const status = statuses[activeIdx];
-  const busy = submitAnswer.isPending || submitAttempt.isPending;
+  // Only the final submit locks the controls — a quiet auto-save in flight
+  // must never grey out the buttons or swallow a tap.
+  const busy = submitAttempt.isPending;
 
   const showHintButton = view.activeQuestion.hint_text != null;
 
