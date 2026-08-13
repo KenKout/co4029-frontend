@@ -115,10 +115,11 @@ export function QuizTakingFooter({
         variant="ghost"
         onClick={() => setActiveIdx((current) => Math.max(0, current - 1))}
         disabled={activeIdx === 0 || busy}
-        className="font-bold text-m3-primary hover:bg-m3-primary-fixed/30 rounded-xl gap-1.5 shrink-0"
+        className="font-bold text-m3-primary hover:bg-m3-primary-fixed/30 rounded-xl gap-1.5 shrink-0 px-2.5 sm:px-3"
+        aria-label={t("course_quiz.actions.previous")}
       >
         <ArrowLeft className="h-4 w-4" />
-        {t("course_quiz.actions.previous")}
+        <span className="hidden sm:inline">{t("course_quiz.actions.previous")}</span>
       </Button>
 
       <QuizSubmitButton

@@ -42,25 +42,31 @@ export function QuizSubmitButton({
         <Button
           onClick={onFinalSubmit}
           disabled={primaryDisabled || !hasSelection}
-          className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-6 py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
+          className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-3 sm:px-6 py-2.5 sm:py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
+          aria-label={t("course_quiz.actions.submit")}
         >
-          {isFinalSubmitting
-            ? t("course_quiz.actions.submitting")
-            : isSavingAnswer
-              ? t("course_quiz.actions.saving")
-              : t("course_quiz.actions.submit")}
-          <ArrowRight className="h-4 w-4" />
+          <span className="hidden sm:inline">
+            {isFinalSubmitting
+              ? t("course_quiz.actions.submitting")
+              : isSavingAnswer
+                ? t("course_quiz.actions.saving")
+                : t("course_quiz.actions.submit")}
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0" />
         </Button>
       ) : (
         <Button
           onClick={onNext}
           disabled={primaryDisabled}
-          className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-6 py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
+          className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-3 sm:px-6 py-2.5 sm:py-3 h-auto hover:opacity-90 active:scale-95 transition-all"
+          aria-label={t("course_quiz.actions.next")}
         >
-          {isSavingAnswer
-            ? t("course_quiz.actions.saving")
-            : t("course_quiz.actions.next")}
-          <ArrowRight className="h-4 w-4" />
+          <span className="hidden sm:inline">
+            {isSavingAnswer
+              ? t("course_quiz.actions.saving")
+              : t("course_quiz.actions.next")}
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0" />
         </Button>
       )}
     </div>
