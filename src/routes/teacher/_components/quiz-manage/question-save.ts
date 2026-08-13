@@ -86,6 +86,43 @@ export interface QuestionPatchInput extends QuestionDraftContext {
   expectedSeconds: number;
 }
 
+/** Rebuild the fill_blank word bank from the blanks + the distractor list:
+ *  correct entries (deduped case-insensitively, is_correct=true) first, then
+ *  distractors (is_correct=false). Mirrors the AI generator's
+ *  `_normalize_fill_blank_options`. */
+function buildFillBlankOptions(
+  correct: string | string[] | null,
+  distractors: string[],
+): Array<{ option_key: string; option_text: string; is_correct: boolean }> {
+  const blanks = (Array.isArray(correct) ? correct : [])
+    .map((b) => b.trim())
+    .filter((b) => b.length > 0);
+  const options: Array<{
+    option_key: string;
+    option_text: string;
+    is_correct: boolean;
+  }> = [];
+  const seen = new Set<string>();
+  let n = 0;
+  const push = (text: string, isCorrect: boolean) => {
+    const key = text.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    n += 1;
+    options.push({
+      option_key: `O${String(n).padStart(2, "0")}`,
+      option_text: text,
+      is_correct: isCorrect,
+    });
+  };
+  blanks.forEach((b) => push(b, true));
+  distractors.forEach((d) => {
+    const text = d.trim();
+    if (text) push(text, false);
+  });
+  return options;
+}
+
 export function buildQuestionPatch({
   draft,
   question,
@@ -153,16 +190,29 @@ export function buildQuestionPatch({
             .filter((s) => s.length > 0),
         }
       : {}),
-    // short_answer / fill_blank keep their answer inside
-    // original_generated_payload.correct_answer (the same slot the AI
-    // generator writes), merged over whatever the generator already stored.
-    ...(question.question_type === "short_answer" ||
-    question.question_type === "fill_blank"
+    // short_answer keeps its answer inside original_generated_payload.correct_answer
+    // (the same slot the AI generator writes), merged over whatever was stored.
+    ...(question.question_type === "short_answer"
       ? {
           original_generated_payload: {
             ...(question.original_generated_payload ?? {}),
             correct_answer: draft.correct_answer,
           },
+        }
+      : {}),
+    // fill_blank keeps its answer the same way AND sends the reconstructed word
+    // bank (correct answers + teacher-edited distractors) as options, so the
+    // teacher can declare/remove distractors like matching.
+    ...(question.question_type === "fill_blank"
+      ? {
+          original_generated_payload: {
+            ...(question.original_generated_payload ?? {}),
+            correct_answer: draft.correct_answer,
+          },
+          options: buildFillBlankOptions(
+            draft.correct_answer,
+            draft.fill_blank_distractors,
+          ),
         }
       : {}),
   };

@@ -72,6 +72,9 @@ export interface QuestionDraft {
   // Matching distractors: extra unpaired right-side choices. Empty = classic
   // 1:1 matching.
   match_distractors: string[];
+  /** fill_blank distractors: the non-correct word-bank entries, editable like
+   *  matching distractors. Persisted as the word bank's is_correct=false rows. */
+  fill_blank_distractors: string[];
   /** Correct answer for short_answer (string) / fill_blank (per-blank list). */
   correct_answer: string | string[] | null;
   ordering_sequence: string[];

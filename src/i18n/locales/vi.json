@@ -3428,6 +3428,9 @@
    "mark_correct": "Đánh dấu đáp án {{key}} là đúng",
    "fill_blank_label": "Các chỗ trống (theo thứ tự thân câu)",
    "fill_blank_hint": "Mỗi chỗ trống được chấm theo vị trí — tất cả phải khớp, không phân biệt hoa thường.",
+   "fill_blank_distractors_label": "Từ gây nhiễu (tuỳ chọn)",
+   "fill_blank_distractor_placeholder": "Từ sai cho ngân hàng từ…",
+   "fill_blank_distractors_hint": "Các từ thêm vào ngân hàng từ của học viên nhưng không bao giờ là đáp án.",
    "fill_blank_no_blanks": "Thêm dấu ___ vào nội dung câu hỏi để tạo chỗ trống.",
    "fill_blank_placeholder": "Đáp án chỗ trống…",
    "correct_answer_placeholder": "Nhập đáp án chính xác…"

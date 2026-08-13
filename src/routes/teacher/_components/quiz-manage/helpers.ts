@@ -148,6 +148,15 @@ export function hasInvalidExpectedTime(
  * publishing and must never be masked by an approved fill.
  */
 
+export function readFillBlankDistractors(
+  question: QuizQuestionAuthoring,
+): string[] {
+  if (question.question_type !== "fill_blank") return [];
+  return (question.options ?? [])
+    .filter((o) => !o.is_correct)
+    .map((o) => o.option_text);
+}
+
 export function buildQuestionDraft(
   question: QuizQuestionAuthoring,
 ): QuestionDraft {
@@ -189,6 +198,7 @@ export function buildQuestionDraft(
     match_distractors: Array.isArray(question.match_distractors)
       ? question.match_distractors.map((d) => String(d))
       : [],
+    fill_blank_distractors: readFillBlankDistractors(question),
     ordering_sequence: Array.isArray(question.ordering_sequence)
       ? question.ordering_sequence.map((s) => String(s))
       : [],

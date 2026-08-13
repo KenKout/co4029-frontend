@@ -10,6 +10,7 @@ import { QuestionCardActions } from "./QuestionCardActions";
 import { QuestionCardBody } from "./QuestionCardBody";
 import { QuestionCardConfig } from "./QuestionCardConfig";
 import { QuestionCardCorrectAnswer } from "./QuestionCardCorrectAnswer";
+import { QuestionCardFillBlankDistractors } from "./QuestionCardFillBlankDistractors";
 import { QuestionCardMetaRow } from "./QuestionCardMetaRow";
 import { QuestionCardOptionsEditor } from "./QuestionCardOptionsEditor";
 import { QuestionDeleteDialog } from "./QuestionDeleteDialog";
@@ -129,6 +130,18 @@ export function QuestionCard({
           setDraft((current) => ({ ...current, correct_answer: next }))
         }
       />
+
+      {question.question_type === "fill_blank" && (
+        <QuestionCardFillBlankDistractors
+          distractors={draft.fill_blank_distractors}
+          onChange={(next) =>
+            setDraft((current) => ({
+              ...current,
+              fill_blank_distractors: next,
+            }))
+          }
+        />
+      )}
 
       <TypeSpecificAnswerEditor
         questionType={question.question_type}
