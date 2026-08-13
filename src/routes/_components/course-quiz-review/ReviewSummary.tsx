@@ -82,14 +82,17 @@ export function ReviewScoreSummary({
   const clampedPassing = Math.min(100, Math.max(1, passingScore || 100));
 
   // Single solid colour for the whole fill, decided by closeness to passing:
-  // < 60% of the passing score → red, < 85% → amber, close or passed → green.
+  // < 60% of the passing score → red, < 85% → amber, 85-99% → lime (almost
+  // there), and PURE green only once actually passed.
   const ratio = clampedScore / clampedPassing;
   const fillColor =
-    passed || ratio >= 0.85
+    passed || ratio >= 1
       ? "#059669"
-      : ratio >= 0.6
-        ? "#f59e0b"
-        : "#dc2626";
+      : ratio >= 0.85
+        ? "#c6ff36"
+        : ratio >= 0.6
+          ? "#f59e0b"
+          : "#dc2626";
   const fillStyle = {
     width: `${clampedScore}%`,
     background: fillColor,
