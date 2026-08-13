@@ -85,9 +85,12 @@ export function useQuestionDraft(
   const allowMultiCorrect =
     question.question_type === "multiple_choice" && !draft.single_answer;
   const correctAnswer = readCorrectAnswer(question);
+  // Blank count follows the DRAFT prompt, not the saved row — typing ___ in
+  // the prompt adds the matching answer input immediately, no intermediate
+  // save needed. (The draft prompt is what the teacher sees and edits.)
   const blankCount =
     question.question_type === "fill_blank"
-      ? countBlanks(question.prompt_text ?? "")
+      ? countBlanks(draft.prompt_text ?? "")
       : 0;
   const expectedSeconds =
     question.expected_response_time_ms == null
