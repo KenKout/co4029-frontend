@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Award, Check, Lightbulb, Target, X } from "lucide-react";
+import { Award, Lightbulb, Target } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { RichContent } from "@/components/ui/rich-content";
@@ -12,27 +12,32 @@ import { cn } from "@/lib/utils";
 
 /**
  * One answer option in the review. Only the meaningful options get visual
- * weight: the student's wrong pick (red, ✕) and the correct answer (green,
- * ✓); the rest render as plain neutral rows when revealed.
+ * weight: the student's pick is CIRCLEd around the letter (red ring when
+ * wrong, green when right) and the correct answer always gets a green
+ * background; the rest render as plain neutral rows when revealed.
  */
 function ReviewOptionRow({
   option,
   mark,
+  selected,
 }: {
   option: QuizAttemptReviewOption;
   /** "wrong" = the student's incorrect pick, "correct" = the right answer. */
   mark: "correct" | "wrong" | null;
+  /** Whether this is the option the student picked (drives the ring). */
+  selected: boolean;
 }) {
   let rowCls = "bg-m3-surface-container-low border-m3-outline-variant/20";
   let letterCls = "text-m3-on-surface-variant";
-  const MarkIcon = mark === "wrong" ? X : mark === "correct" ? Check : null;
 
   if (mark === "wrong") {
     rowCls = "bg-red-500/10 border-red-400";
-    letterCls = "bg-red-100 text-red-700";
+    letterCls = "bg-red-100 text-red-700 ring-2 ring-red-500";
   } else if (mark === "correct") {
     rowCls = "bg-emerald-500/10 border-emerald-400/70";
-    letterCls = "bg-emerald-100 text-emerald-700";
+    letterCls = selected
+      ? "bg-emerald-100 text-emerald-700 ring-2 ring-emerald-500"
+      : "text-emerald-700";
   }
 
   return (
@@ -50,14 +55,6 @@ function ReviewOptionRow({
       >
         {option.option_key}
       </span>
-      {MarkIcon && (
-        <MarkIcon
-          className={cn(
-            "h-4 w-4 shrink-0",
-            mark === "wrong" ? "text-red-600" : "text-emerald-600",
-          )}
-        />
-      )}
       <span className="flex-1 text-m3-on-surface leading-snug">
         {option.option_text}
       </span>
@@ -190,6 +187,7 @@ export function ReviewQuestionCard({
                     ? "correct"
                     : null
               }
+              selected={opt.id === question.selected_option_id}
             />
           ))}
         </div>
