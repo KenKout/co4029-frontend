@@ -1608,7 +1608,14 @@
     "materials_by_type": "Tài liệu theo loại",
     "processing_jobs_by_status": "Tác vụ xử lý theo trạng thái",
     "total": "Tổng",
-    "ring_tooltip": "{{n}} · {{pct}}%"
+    "ring_tooltip": "{{n}} · {{pct}}%",
+    "stat_courses": "Khóa học",
+    "stat_materials": "Tài liệu",
+    "stat_jobs": "Công việc xử lý",
+    "stat_failed": "Công việc thất bại",
+    "delta_week": "+{{n}} trong tuần này",
+    "delta_today": "+{{n}} hôm nay",
+    "failed_rate": "{{pct}}% thất bại"
    }
   },
   "ai_costs": {

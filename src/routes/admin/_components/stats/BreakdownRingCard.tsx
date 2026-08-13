@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { type LucideIcon } from "lucide-react";
 import { MaterialTypeIcon } from "@/components/ui/material-type-icon";
+import { cn } from "@/lib/utils";
 import { useFormatCount } from "@/lib/format/number";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { RING_PALETTE, readBucket, type BreakdownBucket } from "./breakdown";
@@ -53,12 +54,16 @@ export function BreakdownRingCard({
   icon: Icon,
   buckets,
   showTypeIcons = false,
+  stacked = false,
 }: {
   title: string;
   icon: LucideIcon;
   buckets: BreakdownBucket[] | undefined;
   /** Render a per-row material-type icon chip (materials breakdown only). */
   showTypeIcons?: boolean;
+  /** Stack the ring above the legend (narrow grid columns) instead of
+   *  side-by-side. */
+  stacked?: boolean;
 }) {
   const { t } = useTranslation();
   const formatCount = useFormatCount();
@@ -105,7 +110,12 @@ export function BreakdownRingCard({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row items-center gap-6 px-5 py-5">
+        <div
+          className={cn(
+            "flex items-center gap-6 px-5 py-5",
+            stacked ? "flex-col" : "flex-col sm:flex-row",
+          )}
+        >
           {/* Ring + centred total */}
           <div className="relative h-44 w-44 shrink-0">
             <ResponsiveContainer width="100%" height="100%">
@@ -140,8 +150,13 @@ export function BreakdownRingCard({
             </div>
           </div>
 
-          {/* Legend: label · share · count */}
-          <ul className="flex-1 w-full min-w-0 space-y-2">
+          {/* Legend: label · count · share */}
+          <ul
+            className={cn(
+              "flex-1 w-full min-w-0 space-y-2",
+              stacked && "text-center sm:text-left",
+            )}
+          >
             {rows.map((r, i) => (
               <li
                 key={r.id}
@@ -159,11 +174,11 @@ export function BreakdownRingCard({
                 <span className="flex-1 min-w-0 truncate font-medium text-text-strong">
                   {r.label}
                 </span>
-                <span className="text-xs tabular-nums text-text-muted">
-                  {total > 0 ? Math.round((r.count / total) * 100) : 0}%
-                </span>
-                <span className="w-14 text-right font-semibold text-text-strong tabular-nums">
+                <span className="w-10 text-right font-semibold text-text-strong tabular-nums">
                   {formatCount(r.count)}
+                </span>
+                <span className="w-11 text-right text-xs tabular-nums text-text-muted">
+                  {total > 0 ? Math.round((r.count / total) * 100) : 0}%
                 </span>
               </li>
             ))}

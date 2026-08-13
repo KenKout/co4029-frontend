@@ -5174,6 +5174,12 @@ export interface components {
             processing_jobs_by_status: {
                 [key: string]: unknown;
             }[];
+            /** Courses Created 7d */
+            courses_created_7d?: number;
+            /** Materials Created 7d */
+            materials_created_7d?: number;
+            /** Processing Jobs Created Today */
+            processing_jobs_created_today?: number;
         };
         /** CostTotals */
         CostTotals: {

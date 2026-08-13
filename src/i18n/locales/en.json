@@ -1698,7 +1698,14 @@
     "materials_by_type": "Materials by type",
     "processing_jobs_by_status": "Processing jobs by status",
     "total": "Total",
-    "ring_tooltip": "{{n}} · {{pct}}%"
+    "ring_tooltip": "{{n}} · {{pct}}%",
+    "stat_courses": "Courses",
+    "stat_materials": "Materials",
+    "stat_jobs": "Jobs",
+    "stat_failed": "Failed jobs",
+    "delta_week": "+{{n}} this week",
+    "delta_today": "+{{n}} today",
+    "failed_rate": "{{pct}}% failed"
    }
   },
   "ai_costs": {
