@@ -2320,7 +2320,12 @@
    "time": "Time"
   },
   "option": {},
-  "overall_feedback": "Overall feedback"
+  "overall_feedback": "Overall feedback",
+  "show_all_options": "Show all options ({{count}} more)",
+  "hide_options": "Hide options",
+  "question_breakdown": "Question breakdown",
+  "retry_quiz": "Retry quiz",
+  "close_nav": "Close question list"
  },
  "discussion": {
   "title": "Discussion",

@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Award, Lightbulb, Target } from "lucide-react";
+import { Award, Check, Lightbulb, Target, X } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
+import { Button } from "@/components/ui/button";
 import { RichContent } from "@/components/ui/rich-content";
 import type {
   QuizAttemptReviewOption,
@@ -9,41 +11,34 @@ import type {
 import { cn } from "@/lib/utils";
 
 /**
- * One answer option in the review. Signals, without text labels:
- * - the student's pick is CIRCLEd (ring) around the letter — green when
- *   they chose the correct answer, red when they chose a wrong one;
- * - the correct answer always gets a green background;
- * - a wrong pick gets a red background.
+ * One answer option in the review. Only the meaningful options get visual
+ * weight: the student's wrong pick (red, ✕) and the correct answer (green,
+ * ✓); the rest render as plain neutral rows when revealed.
  */
 function ReviewOptionRow({
   option,
-  selected,
+  mark,
 }: {
   option: QuizAttemptReviewOption;
-  selected: boolean;
+  /** "wrong" = the student's incorrect pick, "correct" = the right answer. */
+  mark: "correct" | "wrong" | null;
 }) {
-  const isCorrect = option.is_correct;
-
-  // Defaults: plain option. Correct answers always get a green background;
-  // the student's pick is additionally circled (ring) around the letter —
-  // green when right, red when wrong, with a red background on the wrong row.
   let rowCls = "bg-m3-surface-container-low border-m3-outline-variant/20";
   let letterCls = "text-m3-on-surface-variant";
-  if (selected && isCorrect) {
-    rowCls = "bg-emerald-500/15 border-emerald-500";
-    letterCls = "bg-emerald-100 text-emerald-700 ring-emerald-500 ring-2";
-  } else if (selected && !isCorrect) {
+  const MarkIcon = mark === "wrong" ? X : mark === "correct" ? Check : null;
+
+  if (mark === "wrong") {
     rowCls = "bg-red-500/10 border-red-400";
-    letterCls = "bg-red-100 text-red-700 ring-red-500 ring-2";
-  } else if (isCorrect) {
+    letterCls = "bg-red-100 text-red-700";
+  } else if (mark === "correct") {
     rowCls = "bg-emerald-500/10 border-emerald-400/70";
-    letterCls = "text-emerald-700";
+    letterCls = "bg-emerald-100 text-emerald-700";
   }
 
   return (
     <div
       className={cn(
-        "rounded-xl border px-3 py-2.5 flex items-center gap-3 text-sm",
+        "rounded-xl border px-3 py-2.5 flex items-center gap-2.5 text-sm",
         rowCls,
       )}
     >
@@ -55,6 +50,14 @@ function ReviewOptionRow({
       >
         {option.option_key}
       </span>
+      {MarkIcon && (
+        <MarkIcon
+          className={cn(
+            "h-4 w-4 shrink-0",
+            mark === "wrong" ? "text-red-600" : "text-emerald-600",
+          )}
+        />
+      )}
       <span className="flex-1 text-m3-on-surface leading-snug">
         {option.option_text}
       </span>
@@ -124,8 +127,10 @@ function QuestionMetaRow({
 
 /**
  * One question in the per-question breakdown: green outline when answered
- * correctly, red otherwise; options colour-coded (green = correct answer,
- * red = the student's wrong pick, circled letter = their selection).
+ * correctly, red otherwise. Options are collapsed — a correct question shows
+ * only the correct answer; a wrong one shows the student's pick (red ✕) and
+ * the correct answer (green ✓), with the remaining options behind a
+ * "show all" toggle. Explanation + meta row stay at the bottom.
  */
 export function ReviewQuestionCard({
   question,
@@ -135,12 +140,36 @@ export function ReviewQuestionCard({
   index: number;
 }) {
   const { t } = useTranslation();
+  const [showAll, setShowAll] = useState(false);
+
+  const correctOption = question.options.find((o) => o.is_correct);
+  const pickedOption = question.options.find(
+    (o) => o.id === question.selected_option_id,
+  );
+
+  // Visible rows: correct question → just the right answer. Wrong question →
+  // the pick + the right answer, everything else revealed on demand.
+  let visible = question.is_correct
+    ? correctOption
+      ? [correctOption]
+      : []
+    : [pickedOption, correctOption].filter(
+        (o): o is QuizAttemptReviewOption =>
+          o !== undefined &&
+          question.options.some((x) => x.id === o.id),
+      );
+  if (!question.is_correct && showAll) visible = question.options;
+
+  const hiddenCount = Math.max(
+    0,
+    question.options.length - visible.length,
+  );
 
   return (
     <GlassCard
       id={`review-question-${question.question_id}`}
       className={cn(
-        "p-6 space-y-5 scroll-mt-24",
+        "p-6 space-y-4 scroll-mt-24",
         question.is_correct
           ? "ring-2 ring-emerald-400/70"
           : "ring-2 ring-red-400/70",
@@ -148,20 +177,41 @@ export function ReviewQuestionCard({
     >
       <QuestionHeader question={question} index={index} />
 
-      {question.options.length > 0 && (
-        <div className="space-y-2 mt-2">
-          {question.options.map((opt) => (
+      {visible.length > 0 && (
+        <div className="space-y-2">
+          {visible.map((opt) => (
             <ReviewOptionRow
               key={opt.id}
               option={opt}
-              selected={question.selected_option_id === opt.id}
+              mark={
+                opt.id === question.selected_option_id && !opt.is_correct
+                  ? "wrong"
+                  : opt.is_correct
+                    ? "correct"
+                    : null
+              }
             />
           ))}
         </div>
       )}
 
+      {!question.is_correct && hiddenCount > 0 && (
+        <Button
+          type="button"
+          variant="link"
+          onClick={() => setShowAll((v) => !v)}
+          className="h-auto p-0 text-xs font-semibold text-m3-primary underline underline-offset-2"
+        >
+          {showAll
+            ? t("course_quiz_review.hide_options")
+            : t("course_quiz_review.show_all_options", {
+                count: hiddenCount,
+              })}
+        </Button>
+      )}
+
       {question.question_type !== "mcq" && question.answer_text && (
-        <div className="mt-3 rounded-xl bg-m3-surface-container-low p-4 border border-m3-outline-variant/20">
+        <div className="rounded-xl bg-m3-surface-container-low p-4 border border-m3-outline-variant/20">
           <p className="text-[10px] uppercase tracking-widest font-bold text-m3-on-surface-variant mb-1">
             {t("course_quiz_review.your_answer")}
           </p>
@@ -172,7 +222,7 @@ export function ReviewQuestionCard({
       )}
 
       {question.explanation && (
-        <div className="mt-5 rounded-xl bg-m3-primary-fixed/30 p-4 border border-m3-primary/15 flex gap-3">
+        <div className="rounded-xl bg-m3-primary-fixed/30 p-4 border border-m3-primary/15 flex gap-3">
           <Lightbulb className="h-4 w-4 text-m3-primary shrink-0 mt-0.5" />
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-widest font-bold text-m3-primary mb-1">

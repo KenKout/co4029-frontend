@@ -2230,7 +2230,12 @@
    "time": "Thời gian"
   },
   "option": {},
-  "overall_feedback": "Nhận xét tổng thể"
+  "overall_feedback": "Nhận xét tổng thể",
+  "show_all_options": "Hiện tất cả lựa chọn ({{count}} còn lại)",
+  "hide_options": "Ẩn bớt lựa chọn",
+  "question_breakdown": "Danh sách câu hỏi",
+  "retry_quiz": "Làm lại bài kiểm tra",
+  "close_nav": "Đóng danh sách câu hỏi"
  },
  "course_quiz": {
   "empty": {
