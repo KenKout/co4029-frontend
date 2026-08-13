@@ -5,7 +5,11 @@ import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useFormatCount } from "@/lib/format/number";
 import { BreakdownRingCard } from "./_components/stats/BreakdownRingCard";
 import { MiniStat } from "./_components/stats/MiniStat";
-import { readBucket, type BreakdownBucket } from "./_components/stats/breakdown";
+import {
+  MATERIAL_RING_PALETTE,
+  readBucket,
+  type BreakdownBucket,
+} from "./_components/stats/breakdown";
 
 function bucketSum(buckets: BreakdownBucket[] | undefined): number {
   let sum = 0;
@@ -125,6 +129,7 @@ function ContentStatsView({
           buckets={data.materials_by_type}
           showTypeIcons
           stacked
+          palette={MATERIAL_RING_PALETTE}
         />
         <BreakdownRingCard
           title={t("admin.stats.content.processing_jobs_by_status")}

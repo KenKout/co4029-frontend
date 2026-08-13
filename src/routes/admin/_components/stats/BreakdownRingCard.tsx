@@ -12,7 +12,11 @@ import { MaterialTypeIcon } from "@/components/ui/material-type-icon";
 import { cn } from "@/lib/utils";
 import { useFormatCount } from "@/lib/format/number";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
-import { RING_PALETTE, readBucket, type BreakdownBucket } from "./breakdown";
+import {
+  RING_PALETTE,
+  readBucket,
+  type BreakdownBucket,
+} from "./breakdown";
 
 type RingRow = { id: string; label: string; count: number };
 
@@ -82,6 +86,7 @@ export function BreakdownRingCard({
   buckets,
   showTypeIcons = false,
   stacked = false,
+  palette = RING_PALETTE,
 }: {
   title: string;
   icon: LucideIcon;
@@ -91,6 +96,10 @@ export function BreakdownRingCard({
   /** Stack the ring above the legend (narrow grid columns) instead of
    *  side-by-side. */
   stacked?: boolean;
+  /** Segment colours, cycled modulo length. Defaults to the shared
+   *  M3 palette; charts with many buckets (materials) pass a
+   *  more-distinguishable set. */
+  palette?: string[];
 }) {
   const { t } = useTranslation();
   const formatCount = useFormatCount();
@@ -160,7 +169,7 @@ export function BreakdownRingCard({
                   {chartData.map((_, i) => (
                     <Cell
                       key={i}
-                      fill={RING_PALETTE[i % RING_PALETTE.length]}
+                      fill={palette[i % palette.length]}
                     />
                   ))}
                 </Pie>
@@ -192,7 +201,7 @@ export function BreakdownRingCard({
                 <span
                   className="h-2.5 w-2.5 rounded-full shrink-0"
                   style={{
-                    background: RING_PALETTE[i % RING_PALETTE.length],
+                    background: palette[i % palette.length],
                   }}
                 />
                 {showTypeIcons && (

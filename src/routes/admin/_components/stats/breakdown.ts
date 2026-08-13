@@ -55,3 +55,22 @@ export const RING_PALETTE = [
   "var(--color-m3-tertiary-fixed-dim)",
   "var(--color-m3-outline)",
 ];
+
+/**
+ * Palette for the materials-by-type breakdown. The app's M3 CSS variables
+ * are blue-dominant (primary = blue-800, secondary = blue-500, both
+ * fixed-dim = blue-200), so with up to eight material types the shared
+ * palette produced visibly duplicate segments. This set keeps the M3 anchor
+ * hues (blue primary, red error) but spaces the rest across clearly
+ * separated mid-tone hues that read on light and dark surfaces.
+ */
+export const MATERIAL_RING_PALETTE = [
+  "#1e40af", // blue-800 (m3 primary anchor)
+  "#059669", // emerald-600
+  "#d97706", // amber-600
+  "#dc2626", // red-600 (m3 error anchor)
+  "#7c3aed", // violet-600
+  "#0891b2", // cyan-600
+  "#db2777", // pink-600
+  "#475569", // slate-600
+];
