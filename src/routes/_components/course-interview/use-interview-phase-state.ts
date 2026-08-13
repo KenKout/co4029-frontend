@@ -2,12 +2,10 @@ import { useCallback, useRef, useState } from "react";
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import { type InterviewStep } from "@/components/interview/interview-progress-steps";
-import { useInterviewPracticeFeedback } from "@/lib/api/hooks/interviews";
 import type {
   InterviewLanguage,
   InterviewOnboardingStage,
   InterviewSessionFinishResponse,
-  InterviewSessionMode,
 } from "@/lib/api/types";
 import { getAuthDisplayName } from "@/lib/auth";
 import type {
@@ -26,10 +24,9 @@ import type { useInterviewTurnState } from "./use-interview-turn-state";
  */
 export function useInterviewPhaseState(
   route: ReturnType<typeof useInterviewRouteData>,
-  turn: ReturnType<typeof useInterviewTurnState>,
+  _turn: ReturnType<typeof useInterviewTurnState>,
 ) {
   const { i18n } = route;
-  const { sessionId } = turn;
 
   const [finishResult, setFinishResult] =
     useState<InterviewSessionFinishResponse | null>(null);
@@ -41,10 +38,6 @@ export function useInterviewPhaseState(
   const [inputMode, setInputMode] = useState<"voice" | "text" | "hybrid">(
     "text",
   );
-  // Practice vs graded. Defaults to graded: an unset picker must never produce
-  // an ungraded run, and the server defaults the same way.
-  const [sessionMode, setSessionMode] =
-    useState<InterviewSessionMode>("assessment");
   // true = voice session started and LiveKitRoom is active
   const [voiceActive, setVoiceActive] = useState(false);
   // polling active when voice session is completing
@@ -72,13 +65,6 @@ export function useInterviewPhaseState(
   const [startDialogOpen, setStartDialogOpen] = useState(false);
   const [phase, setPhase] = useState<InterviewPhase>("prestart");
 
-  // Only for a finished rehearsal. A graded session 404s on this route by
-  // design — per-criterion verdicts are the raw material of a pass/fail
-  // decision, and students get the binary verdict plus prose, never the
-  // breakdown (thesis §4.3).
-  const { data: practiceFeedback } = useInterviewPracticeFeedback(sessionId, {
-    enabled: sessionMode === "practice" && phase === "results",
-  });
   const [onboardingStage, setOnboardingStage] =
     useState<InterviewOnboardingStage>("identity_check");
   const [interviewLanguage, setInterviewLanguage] = useState<InterviewLanguage>(
@@ -146,8 +132,6 @@ export function useInterviewPhaseState(
     setClosingCeremonyActive,
     inputMode,
     setInputMode,
-    sessionMode,
-    setSessionMode,
     voiceActive,
     setVoiceActive,
     pollingCompletion,
@@ -168,7 +152,6 @@ export function useInterviewPhaseState(
     setStartDialogOpen,
     phase,
     setPhase,
-    practiceFeedback,
     onboardingStage,
     setOnboardingStage,
     interviewLanguage,

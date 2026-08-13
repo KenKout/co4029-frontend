@@ -127,7 +127,6 @@ export interface SettingsDraft {
   cooldown_hours: string;
   min_outcomes_to_pass: string;
   lock_quiz_ef_until_pass: boolean;
-  practice_mode_enabled: boolean;
   // The single `supplementary_instructions` column is split for editing into
   // free prose (`notes`, fed to the generation prompt) and the structured
   // scoring rubric (`rubric_criteria`). They are re-joined on save by

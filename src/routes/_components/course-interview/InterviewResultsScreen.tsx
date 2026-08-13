@@ -1,4 +1,3 @@
-import { PracticeCriteriaCard } from "./PracticeCriteriaCard";
 import { ResultsVerdictHero } from "./ResultsVerdictHero";
 import { resolveResultFacts, resolveResultPhase } from "./results-helpers";
 import { StudyPlanCard, StudyPlanPendingCard } from "./StudyPlanCard";
@@ -17,7 +16,6 @@ export function InterviewResultsScreen({
   finishResult: NonNullable<CourseInterviewController["finishResult"]>;
 }) {
   const resultPhase = resolveResultPhase({
-    sessionMode: iv.sessionMode,
     evaluationFailed: iv.evaluationFailed,
     evaluationUnavailable: iv.evaluationUnavailable,
     verdictPending: iv.verdictPending,
@@ -49,14 +47,9 @@ export function InterviewResultsScreen({
           onRetry={() => void iv.handleRetry()}
         />
 
-        {resultPhase === "practice" && (
-          <PracticeCriteriaCard practiceFeedback={iv.practiceFeedback} />
-        )}
-
         {/* ── Study plan pending skeleton (#6) ── */}
         {!iv.gapReport &&
           iv.gapReportPending &&
-          resultPhase !== "practice" &&
           resultPhase !== "eval_failed" &&
           resultPhase !== "abandoned" && <StudyPlanPendingCard />}
 

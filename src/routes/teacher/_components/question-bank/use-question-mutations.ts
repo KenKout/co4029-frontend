@@ -56,8 +56,6 @@ export function useQuestionMutations(options: QuestionMutationsOptions) {
     setDeletingIds,
     savingId,
     setSavingId,
-    setPracticeOnly: (q: InterviewQuestionAuthoring, next: boolean) =>
-      setPracticeOnly(ctx, q, next),
     setStatus: (q: InterviewQuestionAuthoring, next: ReviewStatus) =>
       setStatus(ctx, q, next),
     setOutcome: (q: InterviewQuestionAuthoring, next: string | null) =>
@@ -65,40 +63,6 @@ export function useQuestionMutations(options: QuestionMutationsOptions) {
     handleApproveAll: () => handleApproveAll(ctx),
     handleDelete: (q: InterviewQuestionAuthoring) => handleDelete(ctx, q),
   };
-}
-
-/**
- * Move a question between the graded and practice partitions.
- *
- * The two sets are disjoint: a practice question is never asked in a graded
- * run and vice versa. That is what stops a rehearsal pre-revealing the exam,
- * so moving a question here removes it from the assessment.
- */
-async function setPracticeOnly(
-  ctx: MutationCtx,
-  q: InterviewQuestionAuthoring,
-  next: boolean,
-) {
-  const { updateQuestion, announce, t, setSavingId } = ctx;
-  if ((q.practice_only ?? false) === next) return;
-  setSavingId(q.id);
-  try {
-    await updateQuestion.mutateAsync({
-      questionId: q.id,
-      patch: { practice_only: next },
-    });
-    const msg = t(
-      next
-        ? "teacher_interview_config.qbank.practice.moved_to_practice"
-        : "teacher_interview_config.qbank.practice.moved_to_graded",
-    );
-    announce(msg);
-    toast.success(msg);
-  } catch (err: unknown) {
-    toast.error((err as Error).message);
-  } finally {
-    setSavingId(null);
-  }
 }
 
 async function setStatus(

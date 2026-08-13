@@ -163,7 +163,6 @@ export function QuestionCard(props: QuestionCardProps) {
           onMoveToTop={props.onMoveToTop}
           onMoveToBottom={props.onMoveToBottom}
           onAddToBank={props.onAddToBank}
-          onTogglePracticeOnly={props.onTogglePracticeOnly}
         />
       </div>
 

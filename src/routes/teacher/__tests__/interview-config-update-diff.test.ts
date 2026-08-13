@@ -33,7 +33,6 @@ function savedConfig(overrides: Partial<InterviewConfigAuthoring> = {}): Intervi
     cooldown_hours: 24,
     min_outcomes_to_pass: 2,
     lock_quiz_ef_until_pass: false,
-    practice_mode_enabled: false,
     supplementary_instructions: null,
     security_response_policy: "warn_and_continue",
     security_max_consecutive_attempts: 3,

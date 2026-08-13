@@ -106,7 +106,6 @@ export interface QuestionCardProps {
   onMoveToTop: () => void;
   onMoveToBottom: () => void;
   onAddToBank: () => void;
-  onTogglePracticeOnly: () => void;
   banking: boolean;
   alreadyInBank: boolean;
   selected: boolean;

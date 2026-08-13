@@ -859,8 +859,7 @@
    "evaluating": "Evaluating…",
    "in_progress": "In progress",
    "evaluation_failed": "Evaluation failed",
-   "not_graded": "Not graded",
-   "practice": "Practice"
+   "not_graded": "Not graded"
   },
   "n_sessions_other": "{{count}} attempts",
   "n_sessions_one": "{{count}} attempt"
@@ -2885,28 +2884,6 @@
   },
   "status": {
    "compiling_results": "Compiling interview results..."
-  },
-  "mode": {
-   "legend": "Interview mode",
-   "assessment_title": "Graded interview",
-   "assessment_help": "Counts towards your result and uses one attempt.",
-   "practice_title": "Practice run",
-   "practice_help_one": "Not graded, uses no attempt. {{count}} practice run left.",
-   "practice_help_other": "Not graded, uses no attempt. {{count}} practice runs left.",
-   "criteria_title": "What you'll be assessed on",
-   "banner": "Practice run — not graded, and no attempt used.",
-   "chip": "Practice",
-   "errors": {
-    "practice_limit": "You've used your practice run for this interview.",
-    "practice_unavailable": "Practice isn't available for this interview yet."
-   },
-   "results_title": "Practice run complete",
-   "results_summary": "Nothing was graded and no attempt was used. Here's what your rehearsal covered.",
-   "results_criteria_title": "What your practice run covered",
-   "results_pending": "Reviewing your practice run…",
-   "criterion_met": "Demonstrated",
-   "criterion_not_met": "Not demonstrated yet",
-   "results_unavailable": "We couldn't review this practice run. Nothing was graded, and your attempts are unaffected."
   }
  },
  "management_career_path_detail": {
@@ -4100,11 +4077,7 @@
    "rubric_remove": "Remove criterion",
    "rubric_at_cap": "Maximum {{max}} criteria",
    "interviewer_role": "Interviewer",
-   "interviewer_role_hint": "Who the interviewer presents as. Affects wording only — never difficulty, question choice, or scoring.",
-   "practice_label": "Allow practice runs",
-   "practice_hint": "Students may take one ungraded rehearsal. It uses no attempt, starts no cooldown, and is never scored.",
-   "practice_rubric_notice": "Students will also see the text of your learning outcomes before a practice run. Weights and the pass threshold stay hidden.",
-   "practice_empty_warning": "No question is marked for practice yet, so practice cannot start. Move at least one approved question to the practice set from its row menu."
+   "interviewer_role_hint": "Who the interviewer presents as. Affects wording only — never difficulty, question choice, or scoring."
   },
   "units": {
    "minutes": "min",
@@ -4375,13 +4348,6 @@
    "remove_filter": "Remove filter {{label}}",
    "reorder_off_filtered": "Drag-to-reorder is off while filters are active. Use each question's menu to move it to the top or bottom, or clear the filters.",
    "reorder_off_grouped": "Drag-to-reorder is off while questions are grouped by module. Use each question's menu to move it to the top or bottom.",
-   "practice": {
-    "move_to_practice": "Use for practice runs",
-    "move_to_graded": "Use for the graded interview",
-    "moved_to_practice": "Moved to the practice question set.",
-    "moved_to_graded": "Moved back to the graded question set.",
-    "badge": "Practice"
-   },
    "source_count_other": "{{count}} sources",
    "source_count_one": "{{count}} source"
   },

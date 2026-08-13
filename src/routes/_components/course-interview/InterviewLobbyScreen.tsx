@@ -6,7 +6,6 @@ import {
   LobbyInputModeToggle,
 } from "./LobbyAttemptHistory";
 import { LobbyHeader } from "./LobbyHeader";
-import { LobbyModePicker } from "./LobbyModePicker";
 import { LobbyResumeNotice } from "./LobbyResumeNotice";
 import { LobbyStartActions, LobbyStartDialog } from "./LobbyStartActions";
 import { LobbyStatTiles } from "./LobbyStatTiles";
@@ -47,14 +46,6 @@ export function InterviewLobbyScreen({
             config={config}
             takingPayload={iv.takingPayload}
           />
-
-          {iv.canPractise && !resumableSession && (
-            <LobbyModePicker
-              sessionMode={iv.sessionMode}
-              setSessionMode={iv.setSessionMode}
-              practiceInfo={iv.practiceInfo}
-            />
-          )}
 
           {resumableSession && (
             <LobbyResumeNotice

@@ -28,7 +28,6 @@ const DRAFT = {
   cooldown_hours: "24",
   min_outcomes_to_pass: "2",
   lock_quiz_ef_until_pass: false,
-  practice_mode_enabled: false,
   notes: "",
   rubric_criteria: [],
   security_response_policy: "warn" as const,
@@ -49,7 +48,6 @@ function renderForm(status: string) {
       dirty={false}
       justSaved={false}
       updatedAt={null}
-      practiceQuestionCount={0}
       status={status}
     />,
   );
@@ -166,20 +164,6 @@ describe("SettingsForm published freeze", () => {
   it("leaves attempt limits editable on a draft", () => {
     renderForm("draft");
     expect(controlFor(/^Số lần thử$|^Attempts$/i)).not.toBeDisabled();
-  });
-
-  it("disables the practice-mode checkbox when published", () => {
-    const { container } = renderForm("published");
-    const checkbox = container.querySelector('input[type="checkbox"]');
-    expect(checkbox).not.toBeNull();
-    expect(checkbox).toBeDisabled();
-  });
-
-  it("leaves the practice-mode checkbox usable on a draft", () => {
-    const { container } = renderForm("draft");
-    expect(
-      container.querySelector('input[type="checkbox"]'),
-    ).not.toBeDisabled();
   });
 
   it("explains the freeze instead of leaving fields mysteriously grey", () => {

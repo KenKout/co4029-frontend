@@ -55,7 +55,6 @@ export interface ConfigPanelsProps {
   savingSettings: boolean;
   settingsDirty: boolean;
   justSaved: boolean;
-  practiceQuestionCount: number;
   onSubmitSettings: (event: FormEvent) => void;
   onViewOutcomeQuestions: (outcomeId: OutcomeFilterId) => void;
   generationForm: GenerationFormState;
@@ -82,7 +81,6 @@ export function ConfigPanels({
   savingSettings,
   settingsDirty,
   justSaved,
-  practiceQuestionCount,
   onSubmitSettings,
   onViewOutcomeQuestions,
   generationForm,
@@ -108,7 +106,6 @@ export function ConfigPanels({
                 dirty={settingsDirty}
                 justSaved={justSaved}
                 updatedAt={config.updated_at ?? null}
-                practiceQuestionCount={practiceQuestionCount}
                 status={config.status}
                 outcomesSlot={
                   <LearningOutcomes

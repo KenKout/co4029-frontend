@@ -164,7 +164,6 @@ export function ConfigWorkspace({
         savingSettings={settings.saving}
         settingsDirty={settings.dirty}
         justSaved={settings.justSaved}
-        practiceQuestionCount={page.practiceQuestionCount}
         onSubmitSettings={actions.handleSaveSettings}
         onViewOutcomeQuestions={onViewOutcomeQuestions}
         generationForm={generation.form}

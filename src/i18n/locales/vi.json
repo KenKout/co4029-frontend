@@ -784,8 +784,7 @@
    "evaluating": "Đang chấm…",
    "in_progress": "Đang diễn ra",
    "evaluation_failed": "Chấm điểm thất bại",
-   "not_graded": "Không chấm điểm",
-   "practice": "Thi thử"
+   "not_graded": "Không chấm điểm"
   },
   "n_sessions_other": "{{count}} lần",
   "n_sessions_one": "{{count}} lần"
@@ -2758,27 +2757,6 @@
   },
   "voice": {
    "dropped_fallback_text": "Mất kết nối thoại — đang tiếp tục bằng văn bản. Tiến trình của bạn đã được lưu."
-  },
-  "mode": {
-   "legend": "Chế độ phỏng vấn",
-   "assessment_title": "Phỏng vấn tính điểm",
-   "assessment_help": "Được tính vào kết quả và dùng một lượt thi.",
-   "practice_title": "Thi thử",
-   "practice_help_other": "Không chấm điểm, không tốn lượt thi. Còn {{count}} lần thi thử.",
-   "criteria_title": "Bạn sẽ được đánh giá theo",
-   "banner": "Đang thi thử — không chấm điểm, không tốn lượt thi.",
-   "chip": "Thi thử",
-   "errors": {
-    "practice_limit": "Bạn đã dùng hết lượt thi thử của bài phỏng vấn này.",
-    "practice_unavailable": "Bài phỏng vấn này chưa mở thi thử."
-   },
-   "results_title": "Đã xong buổi thi thử",
-   "results_summary": "Không có gì bị chấm điểm và không tốn lượt thi. Đây là những gì buổi thi thử đã bao được.",
-   "results_criteria_title": "Buổi thi thử của bạn đã bao được gì",
-   "results_pending": "Đang xem lại buổi thi thử của bạn…",
-   "criterion_met": "Đã thể hiện được",
-   "criterion_not_met": "Chưa thể hiện được",
-   "results_unavailable": "Không xem lại được buổi thi thử này. Không có gì bị chấm điểm và số lượt thi của bạn không bị ảnh hưởng."
   }
  },
  "management_career_path_detail": {
@@ -3969,11 +3947,7 @@
    "rubric_remove": "Xóa tiêu chí",
    "rubric_at_cap": "Tối đa {{max}} tiêu chí",
    "interviewer_role": "Người phỏng vấn",
-   "interviewer_role_hint": "Người phỏng vấn xuất hiện với vai nào. Chỉ đổi cách diễn đạt — không đổi độ khó, câu hỏi hay điểm.",
-   "practice_label": "Cho phép thi thử",
-   "practice_hint": "Sinh viên được thi thử một lần, không chấm điểm. Không tốn lượt thi, không kích hoạt thời gian chờ.",
-   "practice_rubric_notice": "Sinh viên cũng sẽ thấy nội dung các chuẩn đầu ra trước buổi thi thử. Trọng số và ngưỡng đạt vẫn được giấu.",
-   "practice_empty_warning": "Chưa có câu hỏi nào được đánh dấu thi thử nên chức năng chưa chạy được. Hãy chuyển ít nhất một câu đã duyệt sang bộ thi thử từ menu của câu đó."
+   "interviewer_role_hint": "Người phỏng vấn xuất hiện với vai nào. Chỉ đổi cách diễn đạt — không đổi độ khó, câu hỏi hay điểm."
   },
   "units": {
    "minutes": "phút",
@@ -4244,13 +4218,6 @@
    "remove_filter": "Bỏ bộ lọc {{label}}",
    "reorder_off_filtered": "Kéo để sắp xếp đang tắt vì có bộ lọc. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối, hoặc xoá bộ lọc.",
    "reorder_off_grouped": "Kéo để sắp xếp đang tắt vì câu hỏi đang nhóm theo module. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối.",
-   "practice": {
-    "move_to_practice": "Dùng cho thi thử",
-    "move_to_graded": "Dùng cho bài chấm điểm",
-    "moved_to_practice": "Đã chuyển sang bộ câu hỏi thi thử.",
-    "moved_to_graded": "Đã chuyển lại bộ câu hỏi chấm điểm.",
-    "badge": "Thi thử"
-   },
    "source_count_other": "{{count}} nguồn",
    "source_count_one": "{{count}} nguồn"
   },

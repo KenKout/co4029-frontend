@@ -258,9 +258,6 @@ export const queryKeys = {
   interviews: {
     list: (cursor?: string) => ["interviews", "list", cursor] as const,
     detail: (id: string) => ["interviews", "detail", id] as const,
-    practice: (id: string) => ["interviews", "practice", id] as const,
-    practiceFeedback: (sessionId: string) =>
-      ["interviews", "practice-feedback", sessionId] as const,
     session: (sessionId: string) =>
       ["interviews", "session", sessionId] as const,
     mySessions: () => ["interviews", "my-sessions"] as const,

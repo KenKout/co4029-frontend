@@ -57,7 +57,6 @@ export function draftFromConfig(
         ? ""
         : String(config.min_outcomes_to_pass),
     lock_quiz_ef_until_pass: config.lock_quiz_ef_until_pass,
-    practice_mode_enabled: config.practice_mode_enabled ?? false,
     ...(() => {
       const parsed = parseSupplementaryInstructions(
         config.supplementary_instructions,
@@ -196,7 +195,6 @@ function buildFullConfigUpdatePayload(
     cooldown_hours: integerOrNull(draft.cooldown_hours),
     min_outcomes_to_pass: integerOrNull(draft.min_outcomes_to_pass),
     lock_quiz_ef_until_pass: draft.lock_quiz_ef_until_pass,
-    practice_mode_enabled: draft.practice_mode_enabled,
     supplementary_instructions: serializeSupplementaryInstructions({
       notes: draft.notes,
       criteria: draft.rubric_criteria,

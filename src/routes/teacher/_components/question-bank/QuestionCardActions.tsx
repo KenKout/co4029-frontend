@@ -5,7 +5,6 @@ import {
   BookMarked,
   Check,
   ChevronDown,
-  Dumbbell,
   Loader2,
   MoreVertical,
   Pencil,
@@ -47,7 +46,6 @@ export function QuestionCardActions({
   onMoveToTop,
   onMoveToBottom,
   onAddToBank,
-  onTogglePracticeOnly,
 }: Pick<
   QuestionCardProps,
   | "q"
@@ -66,7 +64,6 @@ export function QuestionCardActions({
   | "onMoveToTop"
   | "onMoveToBottom"
   | "onAddToBank"
-  | "onTogglePracticeOnly"
 >) {
   const { t } = useTranslation();
   return (
@@ -140,17 +137,6 @@ export function QuestionCardActions({
                 {alreadyInBank
                   ? t("teacher_interview_config.qbank.already_in_bank")
                   : t("teacher_interview_config.qbank.add_to_bank")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={onTogglePracticeOnly}
-                className="gap-2"
-              >
-                <Dumbbell className="h-4 w-4" />
-                {t(
-                  q.practice_only
-                    ? "teacher_interview_config.qbank.practice.move_to_graded"
-                    : "teacher_interview_config.qbank.practice.move_to_practice",
-                )}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

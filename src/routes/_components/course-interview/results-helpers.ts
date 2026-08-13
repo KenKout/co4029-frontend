@@ -1,4 +1,3 @@
-import type { InterviewSessionMode } from "@/lib/api/types";
 import type { ResultPhase } from "./constants";
 
 /**
@@ -7,34 +6,26 @@ import type { ResultPhase } from "./constants";
  */
 
 export function resolveResultPhase(args: {
-  sessionMode: InterviewSessionMode;
   evaluationFailed: boolean;
   evaluationUnavailable: boolean;
   verdictPending: boolean;
   liveVerdict: boolean | null;
 }): ResultPhase {
   const {
-    sessionMode,
     evaluationFailed,
     evaluationUnavailable,
     verdictPending,
     liveVerdict,
   } = args;
-  // Ahead of every verdict branch, for the same reason as the chip in
-  // me-interviews: a practice run has no verdict by design, so without this
-  // `verdictPending` stays true and the screen shows "evaluating" forever,
-  // waiting for a grade that is never coming.
-  return sessionMode === "practice"
-    ? "practice"
-    : evaluationFailed
-      ? "eval_failed"
-      : evaluationUnavailable
-        ? "abandoned"
-        : verdictPending
-          ? "evaluating"
-          : liveVerdict
-            ? "pass"
-            : "retry";
+  return evaluationFailed
+    ? "eval_failed"
+    : evaluationUnavailable
+      ? "abandoned"
+      : verdictPending
+        ? "evaluating"
+        : liveVerdict
+          ? "pass"
+          : "retry";
 }
 
 export interface ResultFacts {

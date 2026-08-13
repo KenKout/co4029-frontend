@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Bot, Dumbbell, FileText, Layers, User } from "lucide-react";
+import { Bot, FileText, Layers, User } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { difficultyChipClass } from "./helpers";
@@ -33,18 +33,6 @@ export function QuestionCardMeta({
       <span>
         {t(`teacher_interview_config.question_type.${q.question_type}`)}
       </span>
-      {/* Partition chip. Only rendered for practice questions: graded is
-          the default and the overwhelming majority, so labelling both
-          would add noise to every row to mark the exception. */}
-      {q.practice_only && (
-        <>
-          <Sep />
-          <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-1.5 py-0.5 font-semibold text-sky-700">
-            <Dumbbell className="h-3 w-3" aria-hidden="true" />
-            {t("teacher_interview_config.qbank.practice.badge")}
-          </span>
-        </>
-      )}
       {/* Module attribution: one chip per source module. A question
           sourced from 2+ modules therefore shows a separate chip for
           each, making cross-module questions visible at a glance. */}

@@ -2,7 +2,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   History,
-  ListChecks,
   Loader2,
   XCircle,
   type LucideIcon,
@@ -34,11 +33,9 @@ export type ResultPhase =
   | "retry"
   | "evaluating"
   | "eval_failed"
-  | "abandoned"
-  | "practice";
+  | "abandoned";
 
 export const RESULT_HERO_TONE_CLASS: Record<ResultPhase, string> = {
-  practice: "bg-gradient-to-br from-sky-400 to-blue-500 text-white",
   pass: "bg-gradient-to-br from-emerald-400 to-teal-500 text-white",
   eval_failed: "bg-gradient-to-br from-danger to-red-600 text-white",
   abandoned: "bg-m3-surface-container text-m3-on-surface-variant",
@@ -48,7 +45,6 @@ export const RESULT_HERO_TONE_CLASS: Record<ResultPhase, string> = {
 };
 
 export const RESULT_HERO_ICON: Record<ResultPhase, LucideIcon> = {
-  practice: ListChecks,
   pass: CheckCircle2,
   eval_failed: AlertTriangle,
   evaluating: Loader2,
@@ -57,7 +53,6 @@ export const RESULT_HERO_ICON: Record<ResultPhase, LucideIcon> = {
 };
 
 export const RESULT_HERO_TITLE_KEY: Record<ResultPhase, string> = {
-  practice: "course_interview.mode.results_title",
   eval_failed: "course_interview.results.evaluation_failed",
   abandoned: "course_interview.results.abandoned",
   evaluating: "course_interview.results.evaluating",
@@ -66,7 +61,6 @@ export const RESULT_HERO_TITLE_KEY: Record<ResultPhase, string> = {
 };
 
 export const RESULT_HERO_SUMMARY_KEY: Record<ResultPhase, string> = {
-  practice: "course_interview.mode.results_summary",
   eval_failed: "course_interview.results.evaluation_failed_summary",
   abandoned: "course_interview.results.abandoned_summary",
   evaluating: "course_interview.results.evaluating_summary",
@@ -83,7 +77,6 @@ export const RESULT_HERO_SUMMARY_KEY: Record<ResultPhase, string> = {
  * headline colour as the verdict.
  */
 export const RESULT_HERO_TITLE_CLASS: Record<ResultPhase, string> = {
-  practice: "text-m3-primary",
   pass: "text-emerald-600",
   eval_failed: "text-danger",
   abandoned: "text-m3-on-surface-variant",

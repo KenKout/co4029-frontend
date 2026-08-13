@@ -92,9 +92,6 @@ export function createQuestionCardRenderer(
           void reorder.handleMoveTo(displayIndex, sorted.length - 1)
         }
         onAddToBank={() => void bankIo.handleAddToBank(q)}
-        onTogglePracticeOnly={() =>
-          void mutations.setPracticeOnly(q, !(q.practice_only ?? false))
-        }
         banking={bankIo.bankingId === q.id}
         alreadyInBank={bankIo.bankedPrompts.has(
           q.prompt_text.trim().toLowerCase(),

@@ -119,10 +119,6 @@ export function handleStartSuccess(
   ctx.setConnected(true);
   ctx.setSessionId(payload.session_id);
   ctx.setPendingFirstQuestion(null);
-  // The server is authoritative here, not the picker. Start is idempotent, so
-  // resuming a live session returns the mode it was created with — trusting
-  // local state would mislabel a resumed practice run as graded, or worse.
-  if (payload.session_mode) ctx.setSessionMode(payload.session_mode);
 
   if (stage === "completed" && payload.first_question) {
     beginQuestioning(ctx, {
@@ -151,14 +147,6 @@ async function checkMicPermission(): Promise<boolean> {
 
 /**
  * The only place a start body is constructed.
- *
- * There are four call sites that begin or re-enter a session, and dropping
- * `session_mode` from any one of them fails in the worst direction: the
- * student picks "practice" and is silently graded. Routing every one of them
- * through here makes that omission impossible rather than merely unlikely.
- *
- * `mode` is passed explicitly by the two callers that mean something other
- * than "whatever the picker says" — see handleRetry.
  */
 function buildStartBody(
   ctx: InterviewActionsContext,
@@ -166,29 +154,11 @@ function buildStartBody(
 ): InterviewSessionStartRequest {
   return {
     input_mode: ctx.inputMode,
-    session_mode: ctx.sessionMode,
     ...overrides,
   };
 }
 
-/**
- * Start errors, with the practice conflicts named.
- *
- * A 409 from a practice request is not "you are out of attempts" — no graded
- * attempt was consumed. Collapsing them into the generic failure toast would
- * tell the student something false about their remaining tries.
- */
 function reportStartError(ctx: InterviewActionsContext, err: unknown) {
-  if (err instanceof ApiError && err.status === 409) {
-    if (err.code === "practice_limit_reached") {
-      toast.error(ctx.t("course_interview.mode.errors.practice_limit"));
-      return;
-    }
-    if (err.code === "practice_unavailable") {
-      toast.error(ctx.t("course_interview.mode.errors.practice_unavailable"));
-      return;
-    }
-  }
   toast.error(
     err instanceof ApiError && err.status === 429
       ? ctx.t("course_interview.errors.rate_limited")
@@ -253,10 +223,8 @@ export async function handleRetry(ctx: InterviewActionsContext) {
   ctx.setSessionDeadlineAt(null);
   ctx.timeoutTriggeredRef.current = false;
   try {
-    // Explicitly graded. "Retry" on the results screen means another real
-    // attempt; a rehearsal is chosen from the lobby, not reached by retrying.
     const payload = await ctx.startSession.mutateAsync(
-      buildStartBody(ctx, { input_mode: "text", session_mode: "assessment" }),
+      buildStartBody(ctx, { input_mode: "text" }),
     );
     handleStartSuccess(ctx, payload);
   } catch (err) {

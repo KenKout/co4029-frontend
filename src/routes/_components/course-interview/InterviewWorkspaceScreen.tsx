@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useStartAudio, useVoiceAssistant } from "@livekit/components-react";
-import { ListChecks, Volume2 } from "lucide-react";
+import { Volume2 } from "lucide-react";
 
 import { EndInterviewDialog } from "@/components/interview/dialogs";
 import { ConnectionLostBanner } from "@/components/interview/error-banner";
@@ -177,21 +177,6 @@ export function InterviewWorkspaceScreen({
         onEndInterview={iv.openEndDialog}
         endInterviewDisabled={iv.endInterviewDisabled}
       />
-
-      {/* Persistent, not dismissible. The stakes of the run are the one thing a
-          student must never be uncertain about mid-interview, and a toast at
-          start would be long gone by the time it mattered. */}
-      {iv.sessionMode === "practice" && (
-        <div
-          className="shrink-0 border-b border-m3-outline-variant/40 bg-m3-primary-fixed"
-          role="status"
-        >
-          <div className="mx-auto flex max-w-[1120px] items-center justify-center gap-2 px-3 py-1.5 text-xs font-semibold text-m3-primary sm:px-6">
-            <ListChecks className="h-3.5 w-3.5" aria-hidden="true" />
-            {t("course_interview.mode.banner")}
-          </div>
-        </div>
-      )}
 
       {/* Coarse step indicator: Setup → Interview → Completed (spec §4). */}
       <div className="shrink-0 border-b border-border bg-white/95">

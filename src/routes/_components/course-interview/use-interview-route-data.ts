@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { useCourseBySlug } from "@/lib/api/hooks/courses";
 import {
   useInterviewForTaking,
-  useInterviewPracticeInfo,
   useMyInterviewSessions,
   useStartInterviewSession,
 } from "@/lib/api/hooks/interviews";
@@ -30,12 +29,6 @@ export function useInterviewRouteData() {
   const { data: takingPayload, isLoading: configLoading } =
     useInterviewForTaking(configId);
   const config = takingPayload?.config;
-  // Only fetched when the interview advertises practice, so the majority that
-  // do not offer it pay no extra round trip.
-  const { data: practiceInfo } = useInterviewPracticeInfo(configId, {
-    enabled: config?.practice_mode_enabled === true,
-  });
-  const canPractise = practiceInfo?.available === true;
 
   const startSession = useStartInterviewSession(configId);
   const { data: previousSessions, isLoading: previousSessionsLoading } =
@@ -96,8 +89,6 @@ export function useInterviewRouteData() {
     takingPayload,
     configLoading,
     config,
-    practiceInfo,
-    canPractise,
     startSession,
     previousSessionsLoading,
     resumableSession,

@@ -37,16 +37,6 @@ export function useConfigPageData(courseId: string, configId: string) {
       (questions ?? []).filter((q) => q.review_status === "approved").length,
     [questions],
   );
-  // Approved questions in the practice partition. Mirrors the server's own
-  // gate, so the form can warn before a student hits the 409.
-  const practiceQuestionCount = useMemo(
-    () =>
-      (questions ?? []).filter(
-        (q) => q.review_status === "approved" && q.practice_only,
-      ).length,
-    [questions],
-  );
-
   return {
     configLoading,
     config,
@@ -57,7 +47,6 @@ export function useConfigPageData(courseId: string, configId: string) {
     moduleTitle: courseModule ? courseModule.title : null,
     draftCount,
     approvedCount,
-    practiceQuestionCount,
     outcomeCount: outcomes?.length ?? 0,
   };
 }

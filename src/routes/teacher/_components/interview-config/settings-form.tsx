@@ -38,7 +38,6 @@ export function SettingsForm({
   dirty,
   justSaved,
   updatedAt,
-  practiceQuestionCount,
   status,
   outcomesSlot,
 }: {
@@ -49,10 +48,6 @@ export function SettingsForm({
   dirty: boolean;
   justSaved: boolean;
   updatedAt: string | null;
-  /** Approved questions in the practice partition. Zero means enabling practice
-      changes nothing, which the form says out loud rather than leaving the
-      teacher to find out from a student. */
-  practiceQuestionCount: number;
   /** Config status. On "published", settings that change how the interview is
       conducted or graded are frozen (the backend PATCH returns 409 for them),
       so the form dims them rather than inviting an edit that cannot save. */
@@ -103,7 +98,6 @@ export function SettingsForm({
         lock={lock}
         status={status}
         frozenReason={frozenReason}
-        practiceQuestionCount={practiceQuestionCount}
       />
 
       <SettingsGuidanceCard
