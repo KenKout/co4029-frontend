@@ -169,7 +169,7 @@ export function ReviewQuestionCard({
     <GlassCard
       id={`review-question-${question.question_id}`}
       className={cn(
-        "p-6 space-y-4 scroll-mt-24",
+        "p-4 space-y-4 scroll-mt-24",
         question.is_correct
           ? "ring-2 ring-emerald-400/70"
           : "ring-2 ring-red-400/70",
@@ -222,7 +222,7 @@ export function ReviewQuestionCard({
       )}
 
       {question.explanation && (
-        <div className="rounded-xl bg-m3-primary-fixed/30 p-4 border border-m3-primary/15 flex gap-3">
+        <div className="rounded-xl bg-m3-primary-fixed/30 p-4 border border-m3-primary/15 flex gap-3 -mt-2">
           <Lightbulb className="h-4 w-4 text-m3-primary shrink-0 mt-0.5" />
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-widest font-bold text-m3-primary mb-1">

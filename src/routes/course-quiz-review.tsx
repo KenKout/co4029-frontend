@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
 import { useQuizAttemptReview, useStudentQuiz } from "@/lib/api/hooks/quizzes";
-import { useAuth } from "@/components/auth/AuthProvider";
 import { setScrollToTopBump } from "@/components/ui/scroll-to-top";
-import { getAuthUserInitials } from "@/lib/auth";
 import { ReviewNavDialog } from "@/routes/_components/course-quiz-review/ReviewNavDialog";
 import { ReviewQuestionCard } from "@/routes/_components/course-quiz-review/ReviewQuestionCard";
 import {
@@ -23,7 +20,6 @@ import {
  * quiz allows further attempts.
  */
 export default function CourseQuizReviewPage() {
-  const { t } = useTranslation();
   const { slug, quizId, attemptId } = useParams({ strict: false }) as {
     slug: string;
     quizId: string;
@@ -32,7 +28,6 @@ export default function CourseQuizReviewPage() {
 
   const { data: quiz } = useStudentQuiz(quizId);
   const { data: review, isLoading, isError } = useQuizAttemptReview(attemptId);
-  const { user } = useAuth();
   const [navOpen, setNavOpen] = useState(false);
 
 
@@ -103,8 +98,6 @@ export default function CourseQuizReviewPage() {
             passingScore={passingScore}
             scorePercent={scorePercent}
             passed={passed}
-            avatarUrl={user?.profile?.avatar_url}
-            avatarFallback={getAuthUserInitials(user)}
           />
 
           <ReviewActionsBar
@@ -122,9 +115,6 @@ export default function CourseQuizReviewPage() {
 
           {/* Per-question breakdown */}
           <div className="space-y-4">
-            <h2 className="font-headline font-bold text-lg text-m3-on-surface">
-              {t("course_quiz_review.questions_title")}
-            </h2>
             {review.questions.map((q, idx) => (
               <ReviewQuestionCard
                 key={q.question_id}

@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, CheckCircle2, Clock, HelpCircle, LayoutGrid, RotateCcw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { QuizAttemptReviewRead } from "@/lib/api/types";
 import { formatTime } from "./helpers";
 
@@ -51,11 +50,11 @@ export function QuizReviewNotFound({
 }
 
 /**
- * Compact result card: back + quiz name + attempt number + avatar on top,
- * then a 0-100% score bar whose fill runs red → green (green at the passing
- * score) with the passing-score marker and the attempt time, and a compact
- * passed/failed verdict. The per-answer tallies moved out — the breakdown
- * button in {@link ReviewActionsBar} shows them via the question dialog.
+ * Compact result card: back + quiz name + attempt number on top, then a
+ * 0-100% score bar whose SOLID fill colour expresses how close the result
+ * is to passing — red when far, amber midway, green when close or passed
+ * (always green once passed) — with the passing-score marker and the
+ * attempt time, plus a compact passed/failed verdict.
  */
 export function ReviewScoreSummary({
   attempt,
@@ -65,8 +64,6 @@ export function ReviewScoreSummary({
   passingScore,
   scorePercent,
   passed,
-  avatarUrl,
-  avatarFallback,
 }: {
   attempt: QuizAttemptReviewRead["attempt"];
   quizTitle: string;
@@ -75,24 +72,28 @@ export function ReviewScoreSummary({
   passingScore: number;
   scorePercent: number;
   passed: boolean;
-  avatarUrl?: string | null;
-  avatarFallback: string;
 }) {
   const { t } = useTranslation();
   const clampedScore = Math.min(100, Math.max(0, scorePercent));
   const clampedPassing = Math.min(100, Math.max(1, passingScore || 100));
 
-  // Fill gradient mapped to the BAR (0-100): red at 0, amber halfway to
-  // passing, green AT the passing score — so a score far below passing shows
-  // red, and near/above passing shows green. Clipped to the student's score.
+  // Single solid colour for the whole fill, decided by closeness to passing:
+  // < 60% of the passing score → red, < 85% → amber, close or passed → green.
+  const ratio = clampedScore / clampedPassing;
+  const fillColor =
+    passed || ratio >= 0.85
+      ? "#059669"
+      : ratio >= 0.6
+        ? "#f59e0b"
+        : "#dc2626";
   const fillStyle = {
     width: `${clampedScore}%`,
-    background: `linear-gradient(90deg, #dc2626 0%, #f59e0b ${clampedPassing / 2}%, #059669 ${clampedPassing}%)`,
+    background: fillColor,
   };
 
   return (
     <GlassCard className="p-5 sm:p-6">
-      {/* Header: back · quiz name · attempt # · avatar */}
+      {/* Header: back · quiz name · attempt # */}
       <div className="flex items-center gap-2">
         <Link to="/courses/$slug/quiz/$quizId" params={{ slug, quizId }}>
           <Button
@@ -112,12 +113,6 @@ export function ReviewScoreSummary({
             n: attempt.attempt_number,
           })}
         </span>
-        <Avatar className="h-8 w-8 shrink-0 ring-2 ring-surface-elev shadow-sm">
-          {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
-          <AvatarFallback className="bg-primary text-white text-[10px] font-bold">
-            {avatarFallback}
-          </AvatarFallback>
-        </Avatar>
       </div>
 
       {/* Score vs passing labels, anchored over the bar markers */}
@@ -205,7 +200,7 @@ export function ReviewActionsBar({
           params={{ slug: retryTo.slug, quizId: retryTo.quizId }}
           className="flex-1 lg:flex-none"
         >
-          <Button className="w-full gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow px-6 h-auto hover:opacity-90 active:scale-95 transition-all">
+          <Button className="w-full gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow hover:opacity-90 active:scale-95 transition-all">
             <RotateCcw className="h-4 w-4" />
             {t("course_quiz_review.retry_quiz")}
           </Button>
