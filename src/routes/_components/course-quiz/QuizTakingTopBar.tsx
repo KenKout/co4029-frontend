@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { GradientProgress } from "@/components/ui/gradient-progress";
 import { QuizConfigPopover } from "@/routes/_components/QuizConfigPopover";
 import { QuizIntegrityNotice } from "@/routes/_components/QuizIntegrityNotice";
-import { formatDuration } from "@/lib/quiz/quiz-session-helpers";
+import { formatTime } from "@/lib/quiz/quiz-session-helpers";
 import { QuizTimerChip } from "./QuizTimerChip";
 import type { QuizStageProps } from "./types";
 
@@ -87,7 +87,7 @@ function MobileTakeBar({
         ) : (
           <span className="flex items-center gap-1.5 font-mono font-bold text-sm tabular-nums text-m3-on-surface-variant">
             <Clock className="h-3.5 w-3.5" />
-            {formatDuration(quizElapsed)}
+            {formatTime(quizElapsed)}
           </span>
         )}
       </div>
@@ -152,7 +152,7 @@ function DesktopTakeBar({
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-m3-surface-container text-m3-on-surface-variant font-mono font-bold text-sm">
             <Timer className="h-4 w-4 text-m3-secondary" />
             <span className="tabular-nums text-m3-on-surface">
-              {formatDuration(quizElapsed)}
+              {formatTime(quizElapsed)}
             </span>
           </div>
           <QuizTimerChip session={session} timeLimitSeconds={quiz.time_limit_seconds} />

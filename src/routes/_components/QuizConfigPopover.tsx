@@ -118,7 +118,7 @@ export function QuizConfigPopover({
               ? row(t("course_quiz.labels.time"), timeLimitValue)
               : row(
                   t("course_quiz.labels.time"),
-                  t("course_quiz.values.no_time_limit"),
+                  t("course_quiz.labels.no_time_limit"),
                 )}
             {row(
               t("course_quiz.labels.hint"),
