@@ -197,18 +197,18 @@ export function ReviewActionsBar({
       <Button
         variant="outline"
         onClick={onOpenNavigation}
-        className="font-bold rounded-xl gap-2 border-m3-primary/40 text-m3-primary hover:bg-m3-primary-fixed/30"
+        className="font-bold rounded-xl gap-2 border-m3-primary/40 text-m3-primary hover:bg-m3-primary-fixed/30 min-w-0"
       >
-        <LayoutGrid className="h-4 w-4" />
-        {t("course_quiz_review.question_breakdown")}
+        <LayoutGrid className="h-4 w-4 shrink-0" />
+        <span className="truncate">{t("course_quiz_review.question_breakdown")}</span>
       </Button>
       {canRetry && (
         <Button
           onClick={onRetry}
-          className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow hover:opacity-90 active:scale-95 transition-all"
+          className="gradient-primary text-white font-bold rounded-xl gap-2 shadow-ai-glow hover:opacity-90 active:scale-95 transition-all min-w-0"
         >
-          <RotateCcw className="h-4 w-4" />
-          {t("course_quiz_review.retry_quiz")}
+          <RotateCcw className="h-4 w-4 shrink-0" />
+          <span className="truncate">{t("course_quiz_review.retry_quiz")}</span>
         </Button>
       )}
     </div>
