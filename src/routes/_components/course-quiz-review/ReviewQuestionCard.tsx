@@ -322,6 +322,122 @@ function OrderingReview({ question }: { question: QuizAttemptReviewQuestion }) {
   );
 }
 
+/** Parse a fill_blank submission (JSON array of slot values). */
+function parseFillBlankAnswer(
+  answerText: string | null | undefined,
+): (string | null)[] {
+  if (!answerText) return [];
+  try {
+    const data = JSON.parse(answerText);
+    if (Array.isArray(data)) {
+      return data.map((v) => (typeof v === "string" && v ? v : null));
+    }
+  } catch {
+    // fall through
+  }
+  return [];
+}
+
+/** The positional correct answers for a fill_blank question. */
+function getFillBlankCorrect(question: QuizAttemptReviewQuestion): string[] {
+  return (
+    (question as { fill_blank_correct?: string[] | null }).fill_blank_correct ??
+    []
+  ).map((v) => toStr(v));
+}
+
+/** One fill_blank slot in review: green ✓ when right, red ✕ + → correct when wrong. */
+function FillBlankSlotReview({
+  student,
+  correct,
+}: {
+  student: string | null;
+  correct: string;
+}) {
+  const right =
+    student != null &&
+    student.trim().toLowerCase() === correct.trim().toLowerCase();
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 mx-1 px-2 py-0.5 align-middle rounded-lg border-2 text-sm font-semibold",
+        right
+          ? "border-emerald-400 bg-emerald-500/10 text-emerald-700"
+          : "border-red-400 bg-red-500/10",
+      )}
+    >
+      {right ? (
+        <>
+          <span>{student}</span>
+          <Check className="h-3.5 w-3.5 shrink-0" />
+        </>
+      ) : (
+        <>
+          <span className="text-red-700 line-through">{student ?? "—"}</span>
+          <X className="h-3.5 w-3.5 text-red-700 shrink-0" />
+          <ArrowRight className="h-3.5 w-3.5 text-m3-outline shrink-0" />
+          <span className="text-emerald-700">{correct}</span>
+        </>
+      )}
+    </span>
+  );
+}
+
+/** The fill_blank review block: correct answer shown only beside wrong blanks. */
+function FillBlankReview({ question }: { question: QuizAttemptReviewQuestion }) {
+  if (question.question_type !== "fill_blank") return null;
+  const correct = getFillBlankCorrect(question);
+  if (correct.length === 0) return null;
+  const student = parseFillBlankAnswer(question.answer_text);
+  const segments = question.prompt_text.split(/_{3,}/g);
+  return (
+    <div className="rounded-xl bg-m3-surface-container-low p-4 border border-m3-outline-variant/20 text-sm sm:text-base leading-loose text-m3-on-surface">
+      {segments.map((seg, i) => (
+        <span key={i}>
+          {seg}
+          {i < correct.length && (
+            <FillBlankSlotReview
+              student={student[i] ?? null}
+              correct={correct[i]}
+            />
+          )}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** The short_answer review block: green ✓ when right, red ✕ + correct when wrong. */
+function ShortAnswerReview({ question }: { question: QuizAttemptReviewQuestion }) {
+  if (question.question_type !== "short_answer") return null;
+  const correct = (question as { short_answer_correct?: string | null })
+    .short_answer_correct;
+  if (!correct) return null;
+  const student = question.answer_text ?? "";
+  const right = question.is_correct;
+  return (
+    <div className="rounded-xl bg-m3-surface-container-low p-4 border border-m3-outline-variant/20">
+      <div className="flex items-center gap-2 flex-wrap text-sm">
+        {right ? (
+          <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-700">
+            <Check className="h-4 w-4 shrink-0" />
+            {student}
+          </span>
+        ) : (
+          <>
+            <span className="inline-flex items-center gap-1.5 font-semibold text-red-700">
+              <X className="h-4 w-4 shrink-0" />
+              {student || <span className="italic font-normal text-m3-on-surface-variant">—</span>}
+            </span>
+            <ArrowRight className="h-4 w-4 text-m3-outline shrink-0" />
+            <span className="font-semibold text-emerald-700">{correct}</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Matching is graded all-or-nothing, but a PARTIALLY-correct answer gets a
  *  yellow outline (some pairs right, not all). Arranging stays green/red. */
 function computeCardTone(
@@ -358,6 +474,18 @@ function shouldShowAnswerBox(question: QuizAttemptReviewQuestion): boolean {
     question.question_type === "ordering" &&
     ((question as { ordering_correct?: string[] | null }).ordering_correct ??
       []).length > 0
+  ) {
+    return false;
+  }
+  if (
+    question.question_type === "fill_blank" &&
+    getFillBlankCorrect(question).length > 0
+  ) {
+    return false;
+  }
+  if (
+    question.question_type === "short_answer" &&
+    (question as { short_answer_correct?: string | null }).short_answer_correct
   ) {
     return false;
   }
@@ -441,6 +569,8 @@ export function ReviewQuestionCard({
 
       <MatchingReview question={question} />
       <OrderingReview question={question} />
+      <FillBlankReview question={question} />
+      <ShortAnswerReview question={question} />
 
       {!question.is_correct && hiddenCount > 0 && (
         <Button

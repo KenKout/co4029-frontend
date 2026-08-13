@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import type { QuizAttemptRead, QuizPublic } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { reviewAllowed } from "@/lib/quiz/review-visibility";
 import { QuizStudyModeCard } from "./QuizStudyModeCard";
 
 /**
@@ -66,6 +67,17 @@ export function QuizResultScreen({
           </p>
 
           <div className="flex gap-3 justify-center flex-wrap">
+            {reviewAllowed(quiz, summary.submitted_at) && (
+              <Link
+                to="/courses/$slug/quiz/$quizId/attempts/$attemptId"
+                params={{ slug, quizId: quiz.id, attemptId: summary.id }}
+              >
+                <Button className="rounded-xl font-bold text-sm gap-2">
+                  <ListChecks className="h-4 w-4" />
+                  {t("course_quiz.actions.review_answers")}
+                </Button>
+              </Link>
+            )}
             <Link to="/courses/$slug/learn" params={{ slug }}>
               <Button
                 variant="outline"
