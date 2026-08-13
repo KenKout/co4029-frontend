@@ -98,10 +98,10 @@ export function QuestionCard({
       // scroll-margin keeps the card clear of the sticky header when the
       // question navigator scrolls it into view.
       className={cn(
-        "rounded-xl border bg-m3-surface p-4 space-y-3 scroll-mt-[9.5rem]",
+        "rounded-xl border-2 bg-m3-surface p-4 space-y-3 scroll-mt-[9.5rem]",
         selected
           ? "border-m3-primary shadow-sm"
-          : "border-m3-outline-variant/20",
+          : "border-m3-outline-variant/50",
       )}
     >
       <QuestionCardMetaRow
