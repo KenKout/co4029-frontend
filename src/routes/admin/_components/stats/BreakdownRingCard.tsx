@@ -20,19 +20,46 @@ type RingRow = { id: string; label: string; count: number };
 function RingTooltip({
   active,
   payload,
+  coordinate,
 }: {
   active?: boolean;
   payload?: Array<{
     payload?: { label?: string; count?: number; pct?: number };
   }>;
+  coordinate?: { x?: number; y?: number };
 }) {
   const { t } = useTranslation();
   const formatCount = useFormatCount();
   if (!active || !payload?.length) return null;
   const point = payload[0]?.payload;
   if (!point || point.count === undefined) return null;
+
+  // Dodge the centre: the ring is a fixed 176×176 box, so its centre is at
+  // (88, 88). recharts anchors pie tooltips at/near the chart centre (the
+  // hovered cell doesn't move them), which parks them right on top of the
+  // centre total — push the tooltip radially outward from the centre, and
+  // when the anchor IS the centre (no meaningful direction), park it just
+  // below the number instead.
+  let tx = 0;
+  let ty = 0;
+  if (coordinate && typeof coordinate.x === "number" && typeof coordinate.y === "number") {
+    const dx = coordinate.x - 88;
+    const dy = coordinate.y - 88;
+    const len = Math.hypot(dx, dy);
+    if (len < 24) {
+      ty = 36;
+    } else {
+      const push = Math.min(40, len * 0.55);
+      tx = (dx / len) * push;
+      ty = (dy / len) * push;
+    }
+  }
+
   return (
-    <div className="rounded-lg border border-border bg-popover px-3 py-2 text-xs shadow-lg">
+    <div
+      className="rounded-lg border border-border bg-popover px-3 py-2 text-xs shadow-lg"
+      style={{ transform: `translate(${tx}px, ${ty}px)` }}
+    >
       <p className="font-semibold text-text-strong">{point.label}</p>
       <p className="text-text-muted mt-0.5">
         {t("admin.stats.content.ring_tooltip", {
