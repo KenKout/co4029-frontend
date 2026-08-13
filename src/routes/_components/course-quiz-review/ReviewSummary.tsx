@@ -189,13 +189,13 @@ export function ReviewActionsBar({
   onRetry: () => void;
 }) {
   const { t } = useTranslation();
-  // The bar precedes the questions, so sticky bottom-0 would scroll away.
-  // Mobile: fixed bottom bar (safe-area aware — iOS Safari keeps the home
-  // indicator area inside the layout viewport with viewport-fit=cover, so
-  // the bar extends under it and pads its content above it). Desktop: a
-  // sticky bar pinned under the shell header instead.
+  // The bar precedes the questions, so sticky bottom-0 would scroll away,
+  // and a fixed bottom bar can never clear the Android Chrome toolbar
+  // (browser chrome outside the layout viewport). One behaviour everywhere:
+  // a sticky bar pinned under the shell header (top-16), like the desktop
+  // layout.
   return (
-    <div className="fixed bottom-0 inset-x-0 z-10 bg-white/95 backdrop-blur-md border-t border-x border-border px-4 sm:px-6 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] lg:sticky lg:top-16 lg:bottom-auto lg:inset-x-auto lg:border-t-0 lg:border-b lg:px-8">
+    <div className="sticky top-16 z-10 bg-white/95 backdrop-blur-md border-b border-x border-border px-4 sm:px-6 lg:px-8 py-2.5">
       <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-elev p-3 w-full">
         <Button
           variant="outline"

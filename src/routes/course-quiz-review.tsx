@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuizAttemptReview, useStudentQuiz } from "@/lib/api/hooks/quizzes";
-import { setScrollToTopBump } from "@/components/ui/scroll-to-top";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { ReviewNavDialog } from "@/routes/_components/course-quiz-review/ReviewNavDialog";
 import { ReviewQuestionCard } from "@/routes/_components/course-quiz-review/ReviewQuestionCard";
@@ -36,12 +35,6 @@ export default function CourseQuizReviewPage() {
   const [retryOpen, setRetryOpen] = useState(false);
 
 
-  // The sticky actions bar owns the bottom edge on mobile; lift the shell's
-  // ScrollToTop button above it.
-  useEffect(() => {
-    setScrollToTopBump("bottom-24");
-    return () => setScrollToTopBump("");
-  }, []);
 
   /**
    * Jump to a question from the navigator dialog — retry-until-mounted scroll
@@ -92,7 +85,7 @@ export default function CourseQuizReviewPage() {
     (quiz.max_attempts == null || attempt.attempt_number < quiz.max_attempts);
 
   return (
-    <div className="min-h-[70vh] pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-10">
+    <div className="min-h-[70vh] pb-10">
       <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
         <div className="space-y-6 min-w-0">
           <ReviewScoreSummary
