@@ -41,7 +41,7 @@ export function CourseOutcomesSection({
   const visible = showAll ? outcomes : outcomes.slice(0, OUTCOMES_PREVIEW_COUNT);
 
   return (
-    <GlassCard className="p-6 sm:p-8">
+    <GlassCard className="p-6">
       <div className="flex items-center gap-2 mb-5">
         <GraduationCap className="h-5 w-5 text-m3-secondary" />
         <h2 className="font-headline font-bold text-xl text-m3-on-surface">

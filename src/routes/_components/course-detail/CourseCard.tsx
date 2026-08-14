@@ -89,8 +89,9 @@ function CourseCardImage({
           </div>
         )}
       </div>
-      {/* Ease blend at the left side of the image into the card surface. */}
-      <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-m3-surface-container-lowest via-m3-surface-container-lowest/30 to-transparent pointer-events-none" />
+      {/* Ease blend at the left side of the image into the card surface.
+          Desktop only — removed on mobile (product feedback). */}
+      <div className="hidden md:block absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-m3-surface-container-lowest via-m3-surface-container-lowest/30 to-transparent pointer-events-none" />
     </div>
   );
 }
@@ -162,7 +163,7 @@ function CourseMeta({
   if (!duration && !level && moduleCount <= 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-m3-on-surface-variant">
+    <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-5 text-sm text-m3-on-surface-variant">
       {duration && (
         <span className="flex items-center gap-1.5" title={duration}>
           <Clock className="h-4 w-4 text-m3-outline" />
@@ -273,8 +274,8 @@ export function CourseCard({
   return (
     <div className="rounded-xl overflow-hidden shadow-editorial ghost-border bg-m3-surface-container-lowest">
       <div className="grid grid-cols-1 md:grid-cols-2">
-        {/* Left half: p-4 (16px). */}
-        <div className="p-4 flex flex-col justify-center gap-4 min-w-0">
+        {/* Left half: p-6 (24px). */}
+        <div className="p-6 flex flex-col justify-center gap-4 min-w-0">
           {/* Top-left badge — AI-enhanced, single icon (Sparkles). */}
           <div>
             <AIInsightChip className="bg-m3-primary/10 text-m3-primary border-0">

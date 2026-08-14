@@ -1,4 +1,5 @@
 import { useParams } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { ApiError } from "@/lib/api/client";
 import {
   useCourseBySlug,
@@ -7,6 +8,7 @@ import {
 } from "@/lib/api/hooks/courses";
 import { useMyCourseProgress } from "@/lib/api/hooks/progress";
 import { useMyEnrollment } from "@/lib/api/hooks/me";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
   CourseContentSection,
   CourseOutcomesSection,
@@ -15,7 +17,6 @@ import {
   CourseDetailSkeleton,
   CourseUnavailablePanel,
 } from "@/routes/_components/course-detail/CourseDetailAtoms";
-import { CourseBreadcrumb } from "@/routes/_components/course-detail/CourseBreadcrumb";
 import { CourseCard } from "@/routes/_components/course-detail/CourseCard";
 import { InstructorCard } from "@/routes/_components/course-detail/InstructorCard";
 import { slugGradient } from "@/routes/_components/course-detail/helpers";
@@ -23,11 +24,11 @@ import { slugGradient } from "@/routes/_components/course-detail/helpers";
 /**
  * Public course landing page:
  *
- * - Full-width breadcrumb (kept as-is).
- * - Full-width CourseCard split 50/50: left = AI badge, title, summary
- *   (show more/less), hours/difficulty/modules meta, Start/Continue button
- *   and overall progress; right = course image with an ease blend at its
- *   left edge.
+ * - Full-width shared Breadcrumbs (ui/breadcrumbs).
+ * - Full-width CourseCard split 50/50: left (p-6) = AI badge, title,
+ *   summary (show more/less), hours/difficulty/modules meta
+ *   (justify-between), Start/Continue button and overall progress; right =
+ *   course image with an ease blend at its left edge (desktop only).
  * - Below, a 60/40 split: "What you'll learn" + the course-content
  *   curriculum on the left (60%), the "About the instructor" card with the
  *   four contact infos on the right (40%). The curriculum is
@@ -38,6 +39,7 @@ import { slugGradient } from "@/routes/_components/course-detail/helpers";
  * queries and the loading / unavailable branches.
  */
 export default function CourseDetailPage() {
+  const { t } = useTranslation();
   const { slug } = useParams({ strict: false }) as { slug: string };
 
   const courseQuery = useCourseBySlug(slug);
@@ -84,7 +86,12 @@ export default function CourseDetailPage() {
       {/* Fluid width — no hard max-width (product feedback 2026-08-04):
           the layout breathes with the viewport like the quiz review page. */}
       <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
-        <CourseBreadcrumb course={course} />
+        <Breadcrumbs
+          items={[
+            { label: t("course_detail.breadcrumb_courses"), to: "/courses" },
+            { label: course.title },
+          ]}
+        />
 
         <CourseCard
           course={course}
