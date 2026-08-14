@@ -239,13 +239,14 @@ export function DataTableToolbar({
 // keeps the toolbar compact once there is a custom option. The dialog is
 // plain base-ui Dialog — same family the filter dialog uses.
 
-function TimeRangeSelect({
+export function TimeRangeSelect({
   value,
   onChange,
   options,
   customRange,
   onCustomRangeChange,
   labels,
+  className,
 }: {
   value: TimeRange;
   onChange: (range: TimeRange) => void;
@@ -253,6 +254,8 @@ function TimeRangeSelect({
   customRange?: CustomTimeRange;
   onCustomRangeChange?: (range: CustomTimeRange | undefined) => void;
   labels: TimeRangeLabels;
+  /** Width override (e.g. full-width inside a sheet); defaults to w-44. */
+  className?: string;
 }) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const merged = { ...DEFAULT_TIME_LABELS, ...labels };
@@ -292,7 +295,7 @@ function TimeRangeSelect({
         // Same density + width dialect as the FilterBar selects it sits next
         // to (h-10, w-44) — the shared Select trigger is `w-full` by default,
         // so a bare min-width would stretch this into its own full-width row.
-        className="w-44"
+        className={className ?? "w-44"}
       />
       {hasCustom && (
         <CustomRangeDialog
@@ -308,7 +311,7 @@ function TimeRangeSelect({
   );
 }
 
-function CustomRangeDialog({
+export function CustomRangeDialog({
   open,
   onOpenChange,
   range,

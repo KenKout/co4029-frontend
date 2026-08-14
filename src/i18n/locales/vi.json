@@ -951,7 +951,6 @@
  },
  "notifications": {
   "title": "Thông báo",
-  "subtitle": "Cập nhật khóa học, nhắc bài kiểm tra, kết quả phỏng vấn.",
   "bell_aria": "Thông báo",
   "bell_aria_unread": "Thông báo, {{count}} chưa đọc",
   "mark_all_read": "Đánh dấu tất cả đã đọc",
@@ -980,6 +979,10 @@
    "all_marked": "Đã đánh dấu tất cả đã đọc"
   },
   "search_placeholder": "Tìm thông báo…",
+  "filters": "Bộ lọc",
+  "done": "Xong",
+  "time_range_label": "Khoảng thời gian",
+  "more_actions": "Thao tác khác",
   "filter_status": "Trạng thái",
   "filter_status_all": "Tất cả trạng thái",
   "filter_unread": "Chưa đọc",

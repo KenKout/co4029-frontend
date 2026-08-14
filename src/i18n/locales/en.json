@@ -1027,7 +1027,6 @@
  },
  "notifications": {
   "title": "Notifications",
-  "subtitle": "Course updates, quiz reminders, and interview results.",
   "bell_aria": "Notifications",
   "bell_aria_unread": "Notifications, {{count}} unread",
   "mark_all_read": "Mark all read",
@@ -1056,6 +1055,10 @@
    "all_marked": "All marked as read"
   },
   "search_placeholder": "Search notifications…",
+  "filters": "Filters",
+  "done": "Done",
+  "time_range_label": "Time range",
+  "more_actions": "More actions",
   "filter_status": "Status",
   "filter_status_all": "All statuses",
   "filter_unread": "Unread",

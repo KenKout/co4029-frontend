@@ -2,6 +2,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { UndoCountdownBanner } from "@/components/ui/undo-countdown-banner";
 
 import { GroupByToggle } from "./_components/notifications/GroupByToggle";
+import { NotificationsFeed } from "./_components/notifications/NotificationsFeed";
 import { NotificationsList } from "./_components/notifications/NotificationsList";
 import { NotificationsToolbar } from "./_components/notifications/NotificationsToolbar";
 import { useNotificationsPage } from "./_components/notifications/use-notifications-page";
@@ -22,17 +23,15 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen pb-16">
       <div className="w-full space-y-6">
-        <SectionHeader
-          title={t("notifications.title")}
-          subtitle={t("notifications.subtitle")}
-        />
+        <SectionHeader title={t("notifications.title")} />
 
-        {/* Toolbar: search + time range + status/category filters + bulk
-            actions (mark all read, delete read). */}
+        {/* Toolbar: desktop = DataTableToolbar (search + filters + bulk
+            actions); mobile = search + Filters bottom sheet. */}
         <NotificationsToolbar c={c} />
 
         {/* Grouping toggle — parent rows of the hierarchical table group by
-            date (time buckets) or by type (category). */}
+            date (time buckets) or by type (category); the mobile feed uses
+            the same groups. */}
         <div className="flex items-center justify-between gap-3">
           <GroupByToggle
             value={c.groupBy}
@@ -46,10 +45,13 @@ export default function NotificationsPage() {
           </p>
         </div>
 
-        {/* Hierarchical table: time/category group rows expand to their
-            notification children; sticky icon column holds the actions.
-            DataTable carries its own bordered card. */}
-        <NotificationsList c={c} />
+        {/* Rule: desktop = table, mobile = stacked card feed. */}
+        <div className="hidden md:block">
+          <NotificationsList c={c} />
+        </div>
+        <div className="md:hidden">
+          <NotificationsFeed c={c} />
+        </div>
       </div>
 
       {/* 5s undo on delete (same countdown banner as the quiz question
