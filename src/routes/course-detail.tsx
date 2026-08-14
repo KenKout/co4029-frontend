@@ -4,7 +4,6 @@ import {
   useCourseBySlug,
   useCourseContent,
   useCourseOutcomes,
-  useCourseTags,
 } from "@/lib/api/hooks/courses";
 import { useMyCourseProgress } from "@/lib/api/hooks/progress";
 import { useMyEnrollment } from "@/lib/api/hooks/me";
@@ -16,25 +15,27 @@ import {
   CourseDetailSkeleton,
   CourseUnavailablePanel,
 } from "@/routes/_components/course-detail/CourseDetailAtoms";
-import { CourseDetailHero } from "@/routes/_components/course-detail/CourseDetailHero";
-import { CtaCard } from "@/routes/_components/course-detail/CtaCard";
+import { CourseBreadcrumb } from "@/routes/_components/course-detail/CourseBreadcrumb";
+import { CourseCard } from "@/routes/_components/course-detail/CourseCard";
 import { InstructorCard } from "@/routes/_components/course-detail/InstructorCard";
 import { slugGradient } from "@/routes/_components/course-detail/helpers";
 
 /**
- * Public course landing page, two-column layout:
+ * Public course landing page:
  *
- * - Left (8/12): hero (breadcrumb, title, description, one-line meta, AI
- *   teaser, tags), "What you'll learn", instructor card. The course-content
- *   curriculum is enrollment-gated (BR): an unenrolled student sees the
- *   landing page as pure advertisement — no item list, no Start button.
- * - Right (4/12): sticky CTA rail — cover, Continue/Start button for
- *   enrolled students, a locked "enrollment required" state otherwise;
- *   progress bar for enrolled students, duration/level meta, instructor row.
+ * - Full-width breadcrumb (kept as-is).
+ * - Full-width CourseCard split 50/50: left = AI badge, title, summary
+ *   (show more/less), hours/difficulty/modules meta, Start/Continue button
+ *   and overall progress; right = course image with an ease blend at its
+ *   left edge.
+ * - Below, a 60/40 split: "What you'll learn" + the course-content
+ *   curriculum on the left (60%), the "About the instructor" card with the
+ *   four contact infos on the right (40%). The curriculum is
+ *   enrollment-gated (BR): an unenrolled student sees the landing page as
+ *   pure advertisement — no item list, no Start button.
  *
- * The hero, curriculum, instructor card and CTA card live in
- * `_components/course-detail/`; this file owns the queries and the loading /
- * unavailable branches.
+ * The sections live in `_components/course-detail/`; this file owns the
+ * queries and the loading / unavailable branches.
  */
 export default function CourseDetailPage() {
   const { slug } = useParams({ strict: false }) as { slug: string };
@@ -55,10 +56,9 @@ export default function CourseDetailPage() {
   const { data: content, isLoading: contentLoading } = useCourseContent(
     enrolled ? courseId : undefined,
   );
-  const { data: tags } = useCourseTags(courseId);
   // Enrolled-student progress (404 for anonymous/unenrolled → undefined):
-  // drives "Continue" + the progress bar on the CTA rail and the per-module
-  // ✓ marks in the curriculum.
+  // drives "Continue" + the progress bar on the CourseCard and the
+  // per-module ✓ marks in the curriculum.
   const { data: progress, isLoading: progressLoading } =
     useMyCourseProgress(courseId);
 
@@ -84,10 +84,21 @@ export default function CourseDetailPage() {
       {/* Fluid width — no hard max-width (product feedback 2026-08-04):
           the layout breathes with the viewport like the quiz review page. */}
       <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-8 min-w-0 space-y-8 order-2 lg:order-1">
-            <CourseDetailHero course={course} tags={tags} />
+        <CourseBreadcrumb course={course} />
 
+        <CourseCard
+          course={course}
+          gradientClass={gradientClass}
+          moduleCount={moduleCount}
+          progress={progress}
+          progressLoading={progressLoading}
+          enrolled={enrolled}
+          enrollmentLoading={enrollmentLoading}
+        />
+
+        {/* 60% / 40% split: What you'll learn + curriculum | About. */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mt-8">
+          <div className="lg:col-span-3 min-w-0 space-y-8">
             <CourseOutcomesSection
               outcomes={outcomes}
               isLoading={outcomesLoading}
@@ -102,27 +113,12 @@ export default function CourseDetailPage() {
                 progress={progress}
               />
             )}
-
-            {/* Bio + contact details in one section (self-hides when the
-                course has neither). */}
-            <InstructorCard course={course} />
           </div>
 
-          {/* Sticky CTA rail — stays put next to the content on wide
-              screens, stacks below everything on mobile. */}
-          {/* On mobile the CTA (Continue learning) renders FIRST so the
-              most important action is at the top; on lg it goes back to
-              the sticky right rail. */}
-          <div className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start w-full order-1 lg:order-2">
-            <CtaCard
-              course={course}
-              gradientClass={gradientClass}
-              moduleCount={moduleCount}
-              progress={progress}
-              progressLoading={progressLoading}
-              enrolled={enrolled}
-              enrollmentLoading={enrollmentLoading}
-            />
+          {/* About the instructor — stays put next to the curriculum on
+              wide screens, stacks below on mobile. */}
+          <div className="lg:col-span-2 lg:sticky lg:top-24 lg:self-start w-full">
+            <InstructorCard course={course} />
           </div>
         </div>
       </div>

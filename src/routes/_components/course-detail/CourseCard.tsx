@@ -1,0 +1,319 @@
+import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import {
+  ArrowRight,
+  BookOpen,
+  Clock,
+  GraduationCap,
+  Lock,
+  SignalHigh,
+} from "lucide-react";
+import { AIInsightChip } from "@/components/ui/ai-insight-chip";
+import { Button } from "@/components/ui/button";
+import type { CoursePublic, MyCourseProgressSummary } from "@/lib/api/types";
+import { cn } from "@/lib/utils";
+import { formatEstimatedDuration } from "./helpers";
+
+/**
+ * Long descriptions clamp to 3 lines with a "Show more / Show less" toggle
+ * (the card reads tidy; the toggle reveals the rest on demand).
+ */
+function CourseSummary({ description }: { description: string }) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+  const [clamped, setClamped] = useState(false);
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (el) setClamped(el.scrollHeight > el.clientHeight + 4);
+  }, [description]);
+
+  return (
+    <div>
+      <p
+        ref={ref}
+        className={cn(
+          "text-m3-on-surface-variant text-sm sm:text-base leading-relaxed w-full break-words",
+          !expanded && "line-clamp-3",
+        )}
+      >
+        {description}
+      </p>
+      {clamped && (
+        <Button
+          type="button"
+          variant="link"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-1.5 h-auto p-0 text-xs font-semibold text-m3-primary underline underline-offset-2"
+        >
+          {expanded
+            ? t("course_detail.show_less")
+            : t("course_detail.show_more")}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Right half of the CourseCard: the course image (or gradient placeholder),
+ * padding 0. An ease blend (card-surface → transparent) fades the left edge
+ * of the image into the card so the two halves melt together.
+ */
+function CourseCardImage({
+  course,
+  gradientClass,
+}: {
+  course: CoursePublic;
+  gradientClass: string;
+}) {
+  return (
+    <div className="relative min-h-[220px]">
+      <div className={cn("absolute inset-0 bg-gradient-to-br", gradientClass)}>
+        {course.thumbnail_url && (
+          <img
+            src={course.thumbnail_url}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
+        {/* GraduationCap motif only on the gradient placeholder — a real
+            thumbnail shouldn't have an icon overlaid on it. */}
+        {!course.thumbnail_url && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <GraduationCap className="h-8 w-8 text-white" />
+            </div>
+          </div>
+        )}
+      </div>
+      {/* Ease blend at the left side of the image into the card surface. */}
+      <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-m3-surface-container-lowest via-m3-surface-container-lowest/30 to-transparent pointer-events-none" />
+    </div>
+  );
+}
+
+/**
+ * The CTA button: enrolled students get Start/Continue (a link into the
+ * learn page); unenrolled students get a locked, non-clickable state —
+ * per BR they must not be able to start learning.
+ */
+function CourseCtaButton({
+  slug,
+  started,
+  enrolled,
+  enrollmentLoading,
+}: {
+  slug: string;
+  started: boolean;
+  enrolled: boolean;
+  enrollmentLoading?: boolean;
+}) {
+  const { t } = useTranslation();
+
+  if (enrolled) {
+    return (
+      <Link to="/courses/$slug/learn" params={{ slug }} className="block">
+        <Button className="w-full gradient-primary text-white font-bold rounded-xl py-5 h-auto text-base gap-2 shadow-ai-glow hover:opacity-90 transition-opacity">
+          {started
+            ? t("course_detail.continue_learning")
+            : t("course_detail.start_learning")}
+          <ArrowRight className="h-5 w-5" />
+        </Button>
+      </Link>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <Button
+        disabled
+        className="w-full rounded-xl py-5 h-auto text-base gap-2 opacity-70 cursor-not-allowed bg-m3-surface-container-high text-m3-on-surface-variant"
+        title={t("course_detail.enroll_required_body")}
+      >
+        <Lock className="h-5 w-5" />
+        {t("course_detail.enroll_required")}
+      </Button>
+      {!enrollmentLoading && (
+        <p className="text-[11px] text-m3-on-surface-variant leading-snug text-center px-2">
+          {t("course_detail.enroll_required_hint")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Meta line: expected learning hours · difficulty · number of modules.
+ * Segments hide themselves when the course lacks the data.
+ */
+function CourseMeta({
+  duration,
+  level,
+  moduleCount,
+}: {
+  duration: string | null;
+  level: string | null;
+  moduleCount: number;
+}) {
+  const { t } = useTranslation();
+  if (!duration && !level && moduleCount <= 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-m3-on-surface-variant">
+      {duration && (
+        <span className="flex items-center gap-1.5" title={duration}>
+          <Clock className="h-4 w-4 text-m3-outline" />
+          <span className="font-semibold text-m3-on-surface">{duration}</span>
+        </span>
+      )}
+      {level && (
+        <span className="flex items-center gap-1.5">
+          <SignalHigh className="h-4 w-4 text-m3-outline" />
+          <span className="font-semibold text-m3-on-surface">{level}</span>
+        </span>
+      )}
+      {moduleCount > 0 && (
+        <span className="flex items-center gap-1.5" title={t("course_detail.modules")}>
+          <BookOpen className="h-4 w-4 text-m3-outline" />
+          <span className="font-semibold text-m3-on-surface">{moduleCount}</span>
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Overall progress — label, bar, percentage (enrolled students only). */
+function CourseProgress({
+  enrolled,
+  started,
+  percent,
+  loading,
+}: {
+  enrolled: boolean;
+  started: boolean;
+  percent: number;
+  loading?: boolean;
+}) {
+  const { t } = useTranslation();
+
+  if (enrolled && started) {
+    return (
+      <div className="space-y-1.5">
+        <div className="h-2 rounded-full bg-m3-surface-container-high overflow-hidden">
+          <div
+            className="h-full gradient-primary rounded-full transition-all duration-500"
+            style={{ width: `${Math.min(100, percent)}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-m3-on-surface-variant">
+            {t("course_detail.progress_label")}
+          </span>
+          <span className="font-bold text-m3-primary">{percent}%</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (enrolled && loading) {
+    return (
+      <div className="h-2 rounded-full bg-m3-surface-container-high animate-pulse" />
+    );
+  }
+
+  return null;
+}
+
+/**
+ * Full-width landing card, split 50/50:
+ *
+ * - Left (p-4): AI-enhanced badge (one icon), course name, summary with
+ *   Show more/Show less, expected-hours / difficulty / module-count meta,
+ *   the Start/Continue button and the overall progress bar + percentage.
+ * - Right: the course image with padding 0 and an ease blend at its left
+ *   edge into the card.
+ *
+ * ``progress`` is the enrolled student's course summary; absent for
+ * anonymous / unenrolled visitors. Per BR, an unenrolled student must not
+ * be able to start learning: the CTA becomes a locked, non-clickable
+ * "enrollment required" state instead of a link into the learn page.
+ */
+export function CourseCard({
+  course,
+  gradientClass,
+  moduleCount,
+  progress,
+  progressLoading,
+  enrolled,
+  enrollmentLoading,
+}: {
+  course: CoursePublic;
+  gradientClass: string;
+  moduleCount: number;
+  progress?: MyCourseProgressSummary;
+  progressLoading?: boolean;
+  enrolled: boolean;
+  enrollmentLoading?: boolean;
+}) {
+  const { t } = useTranslation();
+
+  const started = Boolean(
+    progress &&
+      progress.lessons.some((l) => l.status !== "not_started"),
+  );
+  const percent = progress
+    ? Math.round(Number(progress.completion_percent))
+    : 0;
+  const duration = formatEstimatedDuration(course.estimated_minutes);
+  const level = course.level ? t(`course_detail.level_${course.level}`) : null;
+
+  return (
+    <div className="rounded-xl overflow-hidden shadow-editorial ghost-border bg-m3-surface-container-lowest">
+      <div className="grid grid-cols-1 md:grid-cols-2">
+        {/* Left half: p-4 (16px). */}
+        <div className="p-4 flex flex-col justify-center gap-4 min-w-0">
+          {/* Top-left badge — AI-enhanced, single icon (Sparkles). */}
+          <div>
+            <AIInsightChip className="bg-m3-primary/10 text-m3-primary border-0">
+              {t("course_detail.ai_enhanced")}
+            </AIInsightChip>
+          </div>
+
+          <h1 className="font-headline font-extrabold text-2xl sm:text-3xl lg:text-4xl text-m3-on-surface leading-tight tracking-tight">
+            {course.title}
+          </h1>
+
+          {course.description && (
+            <CourseSummary description={course.description} />
+          )}
+
+          <CourseMeta
+            duration={duration}
+            level={level}
+            moduleCount={moduleCount}
+          />
+
+          <CourseCtaButton
+            slug={course.slug}
+            started={started}
+            enrolled={enrolled}
+            enrollmentLoading={enrollmentLoading}
+          />
+
+          <CourseProgress
+            enrolled={enrolled}
+            started={started}
+            percent={percent}
+            loading={progressLoading}
+          />
+        </div>
+
+        {/* Right half: image, padding 0. */}
+        <CourseCardImage course={course} gradientClass={gradientClass} />
+      </div>
+    </div>
+  );
+}

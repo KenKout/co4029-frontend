@@ -32,10 +32,18 @@ export function SkeletonBlock({ className }: { className?: string }) {
 export function CourseDetailSkeleton() {
   return (
     <div className="min-h-screen pb-28">
-      <div className="h-72 bg-m3-surface-container animate-pulse" />
-      <div className="max-w-6xl mx-auto space-y-6">
-        <SkeletonBlock className="h-48" />
+      <div className="w-full px-4 sm:px-6 lg:px-8 pt-2 space-y-6">
+        <SkeletonBlock className="h-5 w-40" />
         <SkeletonBlock className="h-72" />
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-3 space-y-6">
+            <SkeletonBlock className="h-48" />
+            <SkeletonBlock className="h-72" />
+          </div>
+          <div className="lg:col-span-2">
+            <SkeletonBlock className="h-80" />
+          </div>
+        </div>
       </div>
     </div>
   );
