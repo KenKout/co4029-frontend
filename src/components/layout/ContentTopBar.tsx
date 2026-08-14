@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Bell,
+  Bot,
   Loader2,
   LayoutDashboard,
   Menu,
@@ -44,6 +45,45 @@ function ShortcutPaletteMenuItem() {
         Ctrl+Shift+P
       </kbd>
     </DropdownMenuItem>
+  );
+}
+
+/** The avatar dropdown's navigation group (dashboard/settings/profile +
+ *  the AI-assistant entry) — extracted to keep ContentTopBar under the
+ *  line cap. */
+function ProfileMenuNavItems() {
+  const { t } = useTranslation();
+  const itemClass =
+    "flex items-center rounded-md px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-primary-soft focus:bg-primary-soft focus:text-primary";
+  return (
+    <DropdownMenuGroup>
+      <DropdownMenuItem
+        className={itemClass}
+        render={<Link to="/dashboard" />}
+      >
+        <LayoutDashboard className="h-4 w-4 text-m3-on-surface-variant" />
+        <span className="text-sm font-medium">{t("nav.dashboard")}</span>
+      </DropdownMenuItem>
+
+      <DropdownMenuItem className={itemClass} render={<Link to="/settings" />}>
+        <Settings className="h-4 w-4 text-m3-on-surface-variant" />
+        <span className="text-sm font-medium">{t("nav.settings")}</span>
+      </DropdownMenuItem>
+
+      <DropdownMenuItem className={itemClass} render={<Link to="/profile" />}>
+        <User className="h-4 w-4 text-m3-on-surface-variant" />
+        <span className="text-sm font-medium">{t("nav.profile")}</span>
+      </DropdownMenuItem>
+
+      {/* The dashboard AI-assistant FAB moved here (product feedback).
+          Placeholder like the FAB it replaces — no destination yet. */}
+      <DropdownMenuItem className={itemClass}>
+        <Bot className="h-4 w-4 text-m3-on-surface-variant" />
+        <span className="text-sm font-medium">{t("dashboard.ask_ai")}</span>
+      </DropdownMenuItem>
+
+      <ShortcutPaletteMenuItem />
+    </DropdownMenuGroup>
   );
 }
 
@@ -183,39 +223,7 @@ export default function ContentTopBar({
 
             <DropdownMenuSeparator className="bg-border" />
 
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                className="flex items-center rounded-md px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-primary-soft focus:bg-primary-soft focus:text-primary"
-                render={<Link to="/dashboard" />}
-              >
-                <LayoutDashboard className="h-4 w-4 text-m3-on-surface-variant" />
-                <span className="text-sm font-medium">
-                  {t("nav.dashboard")}
-                </span>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                className="flex items-center rounded-md px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-primary-soft focus:bg-primary-soft focus:text-primary"
-                render={<Link to="/settings" />}
-              >
-                <Settings className="h-4 w-4 text-m3-on-surface-variant" />
-                <span className="text-sm font-medium">
-                  {t("nav.settings")}
-                </span>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                className="flex items-center rounded-md px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-primary-soft focus:bg-primary-soft focus:text-primary"
-                render={<Link to="/profile" />}
-              >
-                <User className="h-4 w-4 text-m3-on-surface-variant" />
-                <span className="text-sm font-medium">
-                  {t("nav.profile")}
-                </span>
-              </DropdownMenuItem>
-
-              <ShortcutPaletteMenuItem />
-            </DropdownMenuGroup>
+            <ProfileMenuNavItems />
 
             <DropdownMenuSeparator className="bg-border" />
 

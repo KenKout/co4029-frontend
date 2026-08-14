@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useMyCourses } from "@/lib/api/hooks/courses";
@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { useSrDashboardSummary } from "@/lib/api/hooks/spaced-repetition";
 import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
-import AskAiFab from "./_components/dashboard/AskAiFab";
 import DashboardStatsSection from "./_components/dashboard/DashboardStatsSection";
 import MyCoursesSection from "./_components/dashboard/MyCoursesSection";
 import NotificationsSection from "./_components/dashboard/NotificationsSection";
@@ -16,7 +15,6 @@ import ReadyCtaSection from "./_components/dashboard/ReadyCtaSection";
 export default function DashboardPage() {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const [fabHovered, setFabHovered] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   const { items: myCourses, isLoading: coursesLoading } = useMyCourses(8);
@@ -95,8 +93,6 @@ export default function DashboardPage() {
 
         <ReadyCtaSection />
       </div>
-
-      <AskAiFab fabHovered={fabHovered} setFabHovered={setFabHovered} />
     </div>
   );
 }
