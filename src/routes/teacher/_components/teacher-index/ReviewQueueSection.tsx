@@ -3,6 +3,8 @@ import { CheckCircle } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { ReviewQueueRow } from "@/routes/teacher/_components/ReviewQueueRow";
 
+import { ExpandableReviewRow } from "./ExpandableReviewRow";
+
 import type { ReviewCandidate, TranslateFn } from "./types";
 
 /**
@@ -25,17 +27,29 @@ export function ReviewQueueSection({
       />
       {reviewItems.length > 0 ? (
         <div className="mt-4 divide-y divide-m3-outline-variant/20 overflow-hidden rounded-xl bg-card shadow-editorial ghost-border">
-          {reviewItems.map((item) => (
-            <ReviewQueueRow
-              key={item.key}
-              label={item.label}
-              count={item.count}
-              hint={item.hint}
-              icon={item.icon}
-              to={item.to}
-              tone={item.tone}
-            />
-          ))}
+          {reviewItems.map((item) =>
+            item.kind ? (
+              <ExpandableReviewRow
+                key={item.key}
+                label={item.label}
+                count={item.count}
+                hint={item.hint}
+                icon={item.icon}
+                kind={item.kind}
+                tone={item.tone}
+              />
+            ) : (
+              <ReviewQueueRow
+                key={item.key}
+                label={item.label}
+                count={item.count}
+                hint={item.hint}
+                icon={item.icon}
+                to={item.to}
+                tone={item.tone}
+              />
+            ),
+          )}
         </div>
       ) : (
         <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-card px-5 py-4 shadow-editorial ghost-border">

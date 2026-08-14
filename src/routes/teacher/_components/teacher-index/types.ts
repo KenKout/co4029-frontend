@@ -1,5 +1,8 @@
 import type { useTranslation } from "react-i18next";
 import type { ClipboardCheck } from "lucide-react";
+import type { LinkProps } from "@tanstack/react-router";
+
+import type { ReviewQueueKind } from "@/lib/api/hooks/teacher-courses";
 
 /**
  * Shared types for the teacher dashboard, extracted from the former 239-line
@@ -17,6 +20,8 @@ export interface ReviewCandidate {
   count: number;
   hint?: string;
   icon: typeof ClipboardCheck;
-  to: string;
+  /** A real route from the registered tree, so a renamed route fails to compile. */
+  to: LinkProps["to"];
   tone: "amber" | "violet" | "sky";
+  kind?: ReviewQueueKind;
 }

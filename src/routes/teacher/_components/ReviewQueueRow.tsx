@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, type LinkProps } from "@tanstack/react-router";
 import { ChevronRight, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -17,8 +17,6 @@ export function ReviewQueueRow({
   hint,
   icon: Icon,
   to,
-  params,
-  search,
   tone = "amber",
 }: {
   label: string;
@@ -26,9 +24,13 @@ export function ReviewQueueRow({
   /** Optional secondary line, e.g. which courses the items sit in. */
   hint?: string;
   icon?: LucideIcon;
-  to: string;
-  params?: Record<string, string>;
-  search?: Record<string, string>;
+  /**
+   * A real route from the registered tree — NOT a bare `string`. The router
+   * is registered (`declare module … Register` in router.tsx), so typing this
+   * as `LinkProps["to"]` makes a typo or a renamed route a compile error
+   * instead of a dead link, and removes the `as any` cast this used to need.
+   */
+  to: LinkProps["to"];
   tone?: "amber" | "violet" | "sky";
 }) {
   const TONE = {
@@ -39,10 +41,7 @@ export function ReviewQueueRow({
 
   return (
     <Link
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      to={to as any}
-      params={params as never}
-      search={search as never}
+      to={to}
       className="group flex items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-m3-surface-container-low"
     >
       <span className="flex min-w-0 items-center gap-3">

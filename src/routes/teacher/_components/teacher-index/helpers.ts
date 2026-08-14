@@ -39,6 +39,7 @@ export function buildReviewCandidates(
   return [
     {
       key: "quiz_cards",
+      kind: "quiz-cards" as const,
       label: t("teacher_dashboard.review.quiz_cards"),
       count: stats?.quiz_cards_pending_review ?? 0,
       hint: t("teacher_dashboard.review.quiz_cards_hint"),
@@ -48,6 +49,7 @@ export function buildReviewCandidates(
     },
     {
       key: "interview_questions",
+      kind: "interview-questions" as const,
       label: t("teacher_dashboard.review.interview_questions"),
       count: stats?.interview_questions_pending_review ?? 0,
       hint: t("teacher_dashboard.review.interview_questions_hint"),
@@ -66,6 +68,7 @@ export function buildReviewCandidates(
     },
     {
       key: "materials_ready",
+      kind: "materials" as const,
       label: t("teacher_dashboard.review.materials_ready"),
       count: stats?.materials_ready_for_quiz_gen ?? 0,
       hint: t("teacher_dashboard.review.materials_ready_hint"),

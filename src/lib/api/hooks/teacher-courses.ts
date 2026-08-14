@@ -69,6 +69,35 @@ export function useTeacherDashboardStats() {
   });
 }
 
+/** Which "Needs your review" category to drill into. */
+export type ReviewQueueKind =
+  | "quiz-cards"
+  | "interview-questions"
+  | "materials";
+
+export interface ReviewQueueItem {
+  course_id: string;
+  course_title: string;
+  module_id: string | null;
+  module_title: string | null;
+  target_id: string;
+  target_title: string;
+  count: number;
+}
+
+export function useReviewQueueItems(
+  kind: ReviewQueueKind,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: ["teacher", "dashboard", "review-queue", kind],
+    queryFn: () =>
+      apiFetch<ReviewQueueItem[]>(`/teacher/dashboard/review-queue/${kind}`),
+    enabled,
+    staleTime: 1000 * 60,
+  });
+}
+
 export function useTeacherCourseById(courseId: string | undefined) {
   return useQuery({
     queryKey: ["teacher", "courses", courseId],
