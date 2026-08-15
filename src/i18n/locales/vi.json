@@ -795,6 +795,7 @@
   },
   "me_interview_result": {
     "back_to_list": "Quay lại danh sách phỏng vấn",
+    "back_to_interview": "Quay lại buổi phỏng vấn",
     "load_failed_title": "Không thể tải kết quả này",
     "load_failed_body": "Kết quả phỏng vấn này hiện chưa khả dụng. Vui lòng thử lại."
   },

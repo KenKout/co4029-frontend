@@ -1,4 +1,4 @@
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useParams, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { useGapReport, useInterviewSession } from "@/lib/api/hooks/interviews";
@@ -38,6 +38,18 @@ export default function MyInterviewResultPage() {
   const { sessionId } = useParams({ strict: false }) as {
     sessionId: string;
   };
+  // Deep-link origin: when the student opened this result from the interview
+  // lobby (attempt history), the lobby passes the course slug + module id so
+  // "Back" returns to that lobby instead of the generic /me/interviews list.
+  const search = useSearch({ strict: false }) as {
+    from?: string;
+    course?: string;
+    module?: string;
+  };
+  const backToInterview =
+    search.from === "course" && search.course && search.module
+      ? { slug: search.course, module: search.module }
+      : null;
   const session = useInterviewSession(sessionId);
   const { data: gapReport, isPending: gapReportPending } =
     useGapReport(sessionId);
@@ -59,13 +71,27 @@ export default function MyInterviewResultPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 pb-16 sm:p-6">
-      <Link
-        to="/me/interviews"
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-m3-on-surface-variant transition-colors hover:text-m3-primary"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("me_interview_result.back_to_list")}
-      </Link>
+      {backToInterview ? (
+        <Link
+          to="/courses/$slug/interview/$moduleId"
+          params={{
+            slug: backToInterview.slug,
+            moduleId: backToInterview.module,
+          }}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-m3-on-surface-variant transition-colors hover:text-m3-primary"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t("me_interview_result.back_to_interview")}
+        </Link>
+      ) : (
+        <Link
+          to="/me/interviews"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-m3-on-surface-variant transition-colors hover:text-m3-primary"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t("me_interview_result.back_to_list")}
+        </Link>
+      )}
 
       <VerdictHero
         hero={{

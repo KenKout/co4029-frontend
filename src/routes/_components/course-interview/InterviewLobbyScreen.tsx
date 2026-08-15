@@ -57,7 +57,11 @@ export function InterviewLobbyScreen({
           <LobbyStatTiles config={config} />
 
           {!resumableSession && iv.pastAttempts.length > 0 && (
-            <LobbyAttemptHistory pastAttempts={iv.pastAttempts} />
+            <LobbyAttemptHistory
+              pastAttempts={iv.pastAttempts}
+              slug={iv.slug}
+              configId={iv.configId}
+            />
           )}
 
           {!resumableSession && iv.isHybrid && (

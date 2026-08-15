@@ -503,6 +503,14 @@ const myInterviewsRoute = createRoute({
 const myInterviewResultRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/me/interviews/$sessionId",
+  // Optional deep-link origin: when a student opens an old attempt from the
+  // interview lobby, we carry the course slug + module id so "Back" returns to
+  // that lobby instead of the generic /me/interviews list.
+  validateSearch: (search: Record<string, unknown>) => ({
+    from: typeof search.from === "string" ? search.from : undefined,
+    course: typeof search.course === "string" ? search.course : undefined,
+    module: typeof search.module === "string" ? search.module : undefined,
+  }),
   component: lazyRouteComponent(() => import("@/routes/me-interview-result")),
 });
 

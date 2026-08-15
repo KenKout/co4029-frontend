@@ -870,6 +870,7 @@
   },
   "me_interview_result": {
     "back_to_list": "Back to my interviews",
+    "back_to_interview": "Back to interview",
     "load_failed_title": "Couldn't load this result",
     "load_failed_body": "This interview result isn't available right now. Please try again."
   },

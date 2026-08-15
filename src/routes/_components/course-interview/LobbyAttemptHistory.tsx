@@ -19,8 +19,12 @@ import type { CourseInterviewController } from "./use-course-interview";
  */
 export function LobbyAttemptHistory({
   pastAttempts,
+  slug,
+  configId,
 }: {
   pastAttempts: CourseInterviewController["pastAttempts"];
+  slug: string;
+  configId: string;
 }) {
   const { t, i18n } = useTranslation();
   return (
@@ -37,6 +41,7 @@ export function LobbyAttemptHistory({
               <Link
                 to="/me/interviews/$sessionId"
                 params={{ sessionId: s.session_id }}
+                search={{ from: "course", course: slug, module: configId }}
                 className="group flex items-center justify-between gap-2 rounded-lg px-1.5 py-1 text-xs outline-none transition-colors hover:bg-m3-surface-container focus-visible:ring-2 focus-visible:ring-m3-primary/40"
               >
                 <span className="flex items-center gap-1.5 text-m3-on-surface-variant transition-colors group-hover:text-m3-primary">

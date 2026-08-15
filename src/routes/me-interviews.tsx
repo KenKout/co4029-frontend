@@ -57,6 +57,7 @@ function SessionRow({ item }: { item: InterviewSessionPublic }) {
     <Link
       to="/me/interviews/$sessionId"
       params={{ sessionId: item.session_id }}
+      search={{ from: undefined, course: undefined, module: undefined }}
       className="group flex items-center gap-4 p-4 rounded-xl bg-card ghost-border transition-all duration-200 outline-none hover:bg-m3-surface-container hover:ghost-border hover:shadow-sm focus-visible:ring-2 focus-visible:ring-m3-primary/40 cursor-pointer"
     >
       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-m3-primary to-m3-secondary flex items-center justify-center shrink-0">
