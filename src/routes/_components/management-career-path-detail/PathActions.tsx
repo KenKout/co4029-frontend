@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmActionBar } from "./ConfirmActionBar";
+import { PublishDraftCoursesDialog } from "./PublishDraftCoursesDialog";
 import { usePathActions } from "./use-path-actions";
 
 /**
@@ -23,19 +24,32 @@ export function PathActions({
   const { t } = useTranslation();
   const actions = usePathActions(id, t);
 
-  if (!canManage) return null;
+  const dialog = actions.publishDecision.draftCourses && (
+    <PublishDraftCoursesDialog
+      draftCourses={actions.publishDecision.draftCourses}
+      action={actions.publishDecision.dialogAction}
+      onPublishCourses={actions.publishDecision.onPublishCourses}
+      onRemoveCourses={actions.publishDecision.onRemoveCourses}
+      onClose={actions.publishDecision.onClose}
+    />
+  );
+
+  if (!canManage) return <>{dialog}</>;
 
   if (actions.confirming === "publish") {
     return (
-      <ConfirmActionBar
-        confirmLabel={t(
-          "management_career_path_detail.dialogs.confirm_publish",
-        )}
-        cancelLabel={t("common.cancel")}
-        onConfirm={actions.handlePublish}
-        onCancel={() => actions.setConfirming(null)}
-        isPending={actions.publish.isPending}
-      />
+      <>
+        {dialog}
+        <ConfirmActionBar
+          confirmLabel={t(
+            "management_career_path_detail.dialogs.confirm_publish",
+          )}
+          cancelLabel={t("common.cancel")}
+          onConfirm={actions.handlePublish}
+          onCancel={() => actions.setConfirming(null)}
+          isPending={actions.publish.isPending}
+        />
+      </>
     );
   }
 
@@ -55,7 +69,9 @@ export function PathActions({
   }
 
   return (
-    <div className="flex items-center gap-1.5 shrink-0">
+    <>
+      {dialog}
+      <div className="flex items-center gap-1.5 shrink-0">
       {status !== "published" && status !== "archived" && (
         <Button size="sm" onClick={() => actions.setConfirming("publish")}>
           {t("management_career_path_detail.actions.publish")}
@@ -72,6 +88,7 @@ export function PathActions({
           {t("management_career_path_detail.actions.archive")}
         </Button>
       )}
-    </div>
+      </div>
+    </>
   );
 }

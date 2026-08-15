@@ -2821,6 +2821,14 @@
         "published": "đã publish"
       }
     },
+    "publish_dialog": {
+      "title": "Publish lộ trình với course đang ở bản nháp?",
+      "body": "Lộ trình đã publish chỉ chứa được course đã publish. Các course sau vẫn đang là bản nháp:",
+      "publish_all": "Publish course, rồi publish lộ trình",
+      "remove_all": "Gỡ khỏi lộ trình, rồi publish",
+      "publish_course_failed": "Không thể publish {{course}}: {{reason}}",
+      "remove_course_failed": "Không thể gỡ {{course}}: {{reason}}"
+    },
     "breadcrumbs": {
       "management": "Quản lý",
       "career_paths": "Lộ trình nghề nghiệp"

@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { Select } from "@/components/ui/select";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { COURSE_STATUS_TOKENS } from "@/lib/status-tokens";
 import {
   useRemoveCareerPathCourse,
   useUpdateCareerPathCourse,
@@ -92,8 +94,20 @@ export function CourseInPathRow({
         {row.position}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-m3-on-surface truncate">
-          {row.course_title}
+        <p className="text-sm font-semibold text-m3-on-surface truncate flex items-center gap-2">
+          <span className="truncate">{row.course_title}</span>
+          {row.course_status && (
+            <StatusBadge
+              status={row.course_status}
+              tokens={COURSE_STATUS_TOKENS}
+              label={t(
+                `management_career_path_detail.status.${row.course_status}`,
+                { defaultValue: row.course_status },
+              )}
+              size="sm"
+              className="shrink-0"
+            />
+          )}
         </p>
         <div className="flex flex-wrap items-center gap-2 mt-0.5">
           <span className="text-[11px] font-mono text-m3-on-surface-variant truncate">

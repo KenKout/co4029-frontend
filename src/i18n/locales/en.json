@@ -2948,6 +2948,14 @@
         "published": "published"
       }
     },
+    "publish_dialog": {
+      "title": "Publish path with draft course(s)?",
+      "body": "A published path can only contain published courses. These are still drafts:",
+      "publish_all": "Publish course(s), then publish path",
+      "remove_all": "Remove from path, then publish",
+      "publish_course_failed": "Couldn't publish {{course}}: {{reason}}",
+      "remove_course_failed": "Couldn't remove {{course}}: {{reason}}"
+    },
     "breadcrumbs": {
       "management": "Management",
       "career_paths": "Career paths"
