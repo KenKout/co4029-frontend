@@ -91,9 +91,17 @@ export function WorkspaceStage({
     });
   }, [onboardingStage, questioning]);
 
-  // The best-known permission state for the checklist row: our own request's
-  // outcome when we have one, the Permissions API otherwise.
-  const micPermission = micPromptResult ?? microphone.permission;
+  // Granted if EITHER source says so: our probe OR the persisted Permissions
+  // state. On an F5 (no user gesture) the browser can silently reject the
+  // getUserMedia probe even when permission IS persistently granted — letting
+  // the probe's "denied" override the Permissions API left the mic off for the
+  // whole reloaded session (auto-on dead, manual toggle required).
+  const micGranted =
+    micPromptResult === "granted" || microphone.permission === "granted";
+  const micDenied =
+    !micGranted &&
+    micPromptResult === "denied" &&
+    microphone.permission !== "granted";
 
   // With permission granted during setup, publish the mic when questioning
   // begins — a voice interview where the candidate must ALSO find and click
@@ -103,10 +111,10 @@ export function WorkspaceStage({
   const micAutoOnRef = useRef(false);
   useEffect(() => {
     if (!questioning || micAutoOnRef.current) return;
-    if (micPermission !== "granted") return;
+    if (!micGranted) return;
     micAutoOnRef.current = true;
     iv.setMicOn(true);
-  }, [questioning, micPermission, iv.setMicOn]);
+  }, [questioning, micGranted, iv.setMicOn]);
   // When an agent is in the room it is the voice, and livekit-agents publishes
   // a transcript already paced to its real TTS playout (sync_transcription is
   // set in realtime/agent.py). The question card mirrors that instead of
@@ -255,7 +263,9 @@ export function WorkspaceStage({
           candidateName={iv.candidateName}
           language={iv.interviewLanguage}
           micConnected={microphone.available}
-          micPermission={micPermission}
+          micPermission={
+            micGranted ? "granted" : micDenied ? "denied" : microphone.permission
+          }
           // The modal is only mounted between turns, so there is nothing to guard
           // against here beyond a request already in flight.
           disabled={iv.onboarding.isPending}
