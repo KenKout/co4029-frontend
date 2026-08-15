@@ -2804,6 +2804,17 @@
       "stage_line": "Giai đoạn {{position}}: {{count}} học viên vẫn còn giai đoạn này phía trước ({{inStage}} đang ở giai đoạn này).",
       "stage_unnamed": "Giai đoạn {{position}}"
     },
+    "versions": {
+      "fork": "Bản mới",
+      "empty": "Chưa có phiên bản — publish để tạo v1.",
+      "editing_draft": "Đang chỉnh sửa v{{version}} (bản nháp) — publish để đóng băng; học viên vẫn đi đúng phiên bản họ đã bắt đầu.",
+      "frozen_hint": "Phiên bản đã publish bị đóng băng — tạo bản mới để chỉnh sửa.",
+      "fork_failed": "Không thể tạo phiên bản mới.",
+      "status": {
+        "draft": "nháp",
+        "published": "đã publish"
+      }
+    },
     "breadcrumbs": {
       "management": "Quản lý",
       "career_paths": "Lộ trình nghề nghiệp"

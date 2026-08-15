@@ -740,6 +740,15 @@ export interface CareerPathImpactRead {
   active_enrollments: number;
   stages: CareerPathImpactStage[];
 }
+export interface CareerPathVersionRead {
+  id: string;
+  career_path_id: string;
+  version_no: number;
+  status: "draft" | "published";
+  published_at?: string | null;
+  created_at: string;
+  created_by?: string | null;
+}
 
 // Career-path STAGES (backend migration 0070). Hand-defined here for the same
 // reason as the curated-KG + contact shapes above: the committed

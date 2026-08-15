@@ -2931,6 +2931,17 @@
       "stage_line": "Stage {{position}}: {{count}} student(s) still have this stage ahead ({{inStage}} on it now).",
       "stage_unnamed": "Stage {{position}}"
     },
+    "versions": {
+      "fork": "New version",
+      "empty": "No versions yet — publish to create v1.",
+      "editing_draft": "Editing v{{version}} (draft) — publish to freeze it; students stay on the version they started.",
+      "frozen_hint": "Published versions are frozen — create a new version to edit.",
+      "fork_failed": "Couldn't create a new version.",
+      "status": {
+        "draft": "draft",
+        "published": "published"
+      }
+    },
     "breadcrumbs": {
       "management": "Management",
       "career_paths": "Career paths"

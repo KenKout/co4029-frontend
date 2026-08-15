@@ -341,5 +341,6 @@ export const queryKeys = {
       ["career-paths", "teacher-progress", id] as const,
     readiness: (id: string) => ["career-paths", "readiness", id] as const,
     impact: (id: string) => ["career-paths", "mgmt-impact", id] as const,
+    versions: (id: string) => ["career-paths", "mgmt-versions", id] as const,
   },
 } as const;

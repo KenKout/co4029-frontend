@@ -10,6 +10,7 @@ import { EditForm } from "@/routes/_components/management-career-path-detail/Edi
 import { LoadErrorBox } from "@/routes/_components/management-career-path-detail/LoadErrorBox";
 import { PathHeaderBar } from "@/routes/_components/management-career-path-detail/PathHeaderBar";
 import { PathImpactBanner } from "@/routes/_components/management-career-path-detail/PathImpactBanner";
+import { VersionPanel } from "@/routes/_components/management-career-path-detail/VersionPanel";
 import { ProgressTab } from "@/routes/_components/management-career-path-detail/ProgressTab";
 import { StudentsTab } from "@/routes/_components/management-career-path-detail/StudentsTab";
 import { TabBar } from "@/routes/_components/management-career-path-detail/TabBar";
@@ -72,6 +73,14 @@ export default function ManagementCareerPathDetailPage() {
   return (
     <div className="max-w-[1200px] mx-auto pb-16 space-y-6 px-4 sm:px-6 lg:px-8">
       <PathHeaderBar id={id} data={data} canManage={canManage} />
+
+      {canManage && (
+        <VersionPanel
+          id={id}
+          canManage={canManage}
+          pathPublished={data.status === "published"}
+        />
+      )}
 
       <ImpactSection id={id} status={data.status} canManage={canManage} />
 

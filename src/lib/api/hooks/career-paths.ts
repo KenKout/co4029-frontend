@@ -23,6 +23,7 @@ import type {
   CareerPathStageReorderResult,
   CareerPathStageUpdate,
   CareerPathUpdate,
+  CareerPathVersionRead,
   MyCareerEnrollmentRead,
   PathReadinessOverview,
   StartCourseResult,
@@ -164,6 +165,36 @@ export function usePathImpact(id: string | undefined, enabled = true) {
     queryFn: () =>
       apiFetch<CareerPathImpactRead>(`/management/career-paths/${id}/impact`),
     enabled: !!id && enabled,
+  });
+}
+
+/**
+ * Gap 3: all versions of a path, newest first (manager surface). A
+ * published version is frozen; the draft (at most one) is what edits land
+ * on until it is published.
+ */
+export function usePathVersions(id: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.careerPaths.versions(id ?? ""),
+    queryFn: () =>
+      apiFetch<CareerPathVersionRead[]>(`/management/career-paths/${id}/versions`),
+    enabled: !!id && enabled,
+  });
+}
+
+/** Gap 3 D2(a) explicit fork: copy the latest published version into a draft. */
+export function useCreatePathVersion(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiPost<CareerPathVersionRead>(`/management/career-paths/${id}/versions`),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: queryKeys.careerPaths.versions(id),
+      });
+      qc.invalidateQueries({ queryKey: queryKeys.careerPaths.managementStages(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.careerPaths.managementCourses(id) });
+    },
   });
 }
 
