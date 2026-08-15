@@ -72,16 +72,30 @@ export function mergeTranscriptionSegments(
     ...allStreams
       .filter(
         (stream) =>
-          stream.participantInfo.identity !== agentIdentity &&
+          // Drop the agent's data-topic echo of its own track-observer utterance
+          // (identical text), but keep a stream the track observer never saw:
+          // a genuine student answer, or the agent's direct `say()` transcript
+          // (the re-read after a rejoin), which has no track-observer copy. The
+          // old `identity !== agentIdentity` check dropped the echo but also
+          // dropped `say()` transcripts, so the re-read never reached the chat.
           !agentTexts.has(stream.text.trim()),
       )
-      .map((stream) => ({
-        key: `student-${stream.streamInfo.id}`,
-        role: "student" as const,
-        text: stream.text,
-        sortTime: stream.streamInfo.timestamp,
-        isFinal: true,
-      })),
+      .map((stream): MergedSegment => {
+        // The agent's direct `say()` transcript (the re-read after a rejoin)
+        // reaches this list with the agent's own identity but no track-observer
+        // copy. Map it as an AGENT item so `liveAgentConversationTurns` surfaces
+        // it; everything else is a genuine student stream.
+        const isAgent = stream.participantInfo.identity === agentIdentity;
+        return {
+          key: isAgent
+            ? `agent-${stream.streamInfo.id}`
+            : `student-${stream.streamInfo.id}`,
+          role: isAgent ? "agent" : "student",
+          text: stream.text,
+          sortTime: stream.streamInfo.timestamp,
+          isFinal: true,
+        };
+      }),
   ].sort((first, second) => first.sortTime - second.sortTime);
 }
 

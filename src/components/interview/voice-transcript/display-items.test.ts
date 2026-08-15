@@ -90,6 +90,30 @@ describe("mergeTranscriptionSegments — agent speech single source", () => {
     const studentItems = merged.filter((item) => item.role === "student");
     expect(studentItems).toHaveLength(0);
   });
+
+  it("keeps the agent's direct say() transcript (re-read) that has no track copy", () => {
+    // The re-read after a rejoin is a `session.say()`, which arrives only on the
+    // data topic with the agent's identity and no track-observer segment. It must
+    // surface as an AGENT item so it reaches the chat, not get dropped or misread
+    // as a student bubble.
+    const reReadStream = {
+      participantInfo: { identity: "interview-agent-xyz" },
+      streamInfo: { id: "stream-reread", timestamp: 300_000 },
+      text: "Let me repeat the question: What is the primary difference?",
+    };
+    const merged = mergeTranscriptionSegments(
+      [agentSegment],
+      [agentStream, reReadStream, studentStream],
+      "interview-agent-xyz",
+    );
+    const agentItems = merged.filter((item) => item.role === "agent");
+    expect(agentItems.map((item) => item.text)).toEqual([
+      agentSegment.text,
+      "Let me repeat the question: What is the primary difference?",
+    ]);
+    const studentItems = merged.filter((item) => item.role === "student");
+    expect(studentItems.map((item) => item.text)).toEqual(["My answer."]);
+  });
 });
 
 describe("liveAgentConversationTurns — the agent's reply becomes visible", () => {
