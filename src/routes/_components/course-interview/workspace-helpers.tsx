@@ -34,7 +34,7 @@ export function resolveIsUserTyping(iv: CourseInterviewController): boolean {
   return (
     !iv.turnPending &&
     !iv.onboarding.isPending &&
-    (iv.answerText.trim().length > 0 || iv.dictation.interim.trim().length > 0)
+    iv.answerText.trim().length > 0
   );
 }
 
@@ -43,9 +43,7 @@ export function resolveStageStatusMessage(
   t: Translate,
 ): string | undefined {
   return iv.agentStatus === "error"
-    ? iv.dictationHasError && iv.dictation.error
-      ? t(`course_interview.workspace.microphone_errors.${iv.dictation.error}`)
-      : t("course_interview.workspace.answer_recovery_error")
+    ? t("course_interview.workspace.answer_recovery_error")
     : undefined;
 }
 

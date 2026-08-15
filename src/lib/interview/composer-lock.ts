@@ -28,15 +28,21 @@
 export function isComposerLocked(args: {
   /** `answer.state.status` from the submission state machine. */
   answerStatus: string;
-  /** The active transport's in-flight flag (chat.pending or respond.isPending). */
+  /** The active transport's in-flight flag (chat.pending). */
   requestPending: boolean;
   /** `agentStatus` — covers the AI thinking/speaking and a dropped connection. */
   agentStatus: string;
+  /**
+   * The room is not connected. The room is the only transport, so a locked
+   * composer is the honest UI for a drop — better than an enabled Send whose
+   * turn silently goes nowhere.
+   */
+  roomDown?: boolean;
 }): boolean {
   if (args.answerStatus === "submitting" || args.answerStatus === "submitted") {
     return true;
   }
-  if (args.requestPending) return true;
+  if (args.requestPending || args.roomDown) return true;
   return (
     args.agentStatus === "thinking" ||
     args.agentStatus === "speaking" ||

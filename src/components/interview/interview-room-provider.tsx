@@ -65,6 +65,13 @@ interface InterviewRoomState {
   roomWanted: boolean;
   /** Set when the token request failed; the room cannot be joined. */
   tokenError: string | null;
+  /**
+   * Drop the failed token and mint a new one. The manual Rejoin affordance:
+   * clearing `tokenData` alone does NOT re-run the mint effect (its deps are
+   * `wantToken`/`sessionId`/mode flags, none of which changed), so the retry is
+   * what drives the re-mint through the `tokenAttempt` counter in those deps.
+   */
+  retryToken: () => void;
 }
 
 const InterviewRoomStateContext = createContext<InterviewRoomState>({
@@ -72,6 +79,7 @@ const InterviewRoomStateContext = createContext<InterviewRoomState>({
   connecting: false,
   roomWanted: false,
   tokenError: null,
+  retryToken: () => undefined,
 });
 
 /** Token/connection status for screens that render their own loading state. */
@@ -134,8 +142,10 @@ export function InterviewRoomProvider({
    * CLIENT_INITIATED filtering cannot drift between call sites.
    *
    * Returning undefined from the caller (e.g. while the candidate is typing
-   * rather than speaking) means "ignore drops" — the text transport falls back
-   * to REST on its own and the interview continues.
+   * rather than speaking) means "the workspace's rejoin banner owns recovery":
+   * the SDK reconnects the room on its own, and if it cannot, the room-state
+   * banner surfaces a manual Rejoin. It must NOT degrade a typing session to
+   * text-mode — there is no second transport to fall back to.
    */
   onUnexpectedDisconnect?: () => void;
   children: React.ReactNode;
@@ -143,8 +153,19 @@ export function InterviewRoomProvider({
   const [tokenData, setTokenData] = useState<RealtimeTokenResponse | null>(null);
   const [isFetchingToken, setIsFetchingToken] = useState(false);
   const [tokenError, setTokenError] = useState<string | null>(null);
+  // Manual-retry counter. The mint effect's deps do not include `tokenData`
+  // (it is only a guard), so clearing a failed token re-renders but does not
+  // re-mint — this counter is what makes `retryToken` and the dispatch-failure
+  // fallback actually re-run the effect.
+  const [tokenAttempt, setTokenAttempt] = useState(0);
   const fetchToken = useInterviewRealtimeToken(sessionId);
   const dispatchAgent = useDispatchInterviewAgent(sessionId);
+
+  const retryToken = useCallback(() => {
+    setTokenData(null);
+    setTokenError(null);
+    setTokenAttempt((n) => n + 1);
+  }, []);
 
   // Fetch once per session, the first time a room is wanted OR prefetched OR
   // warmed. Deliberately not keyed on `active` alone: a voice→text→voice switch
@@ -188,7 +209,7 @@ export function InterviewRoomProvider({
       cancelled = true;
     };
     // fetchToken is a fresh mutation object each render; including it would loop.
-  }, [wantToken, sessionId, warm, active, prefetch]);
+  }, [wantToken, sessionId, warm, active, prefetch, tokenAttempt]);
 
   // Send the interviewer into a warmed room, once and only once.
   //
@@ -206,10 +227,11 @@ export function InterviewRoomProvider({
         await dispatchAgent.mutateAsync();
       } catch {
         // Fall back to the embedded-dispatch path rather than leaving an empty
-        // room: clearing the token re-runs the mint, this time without `warm`.
+        // room: clearing the token and bumping the attempt re-runs the mint,
+        // this time without `warm`.
         dispatchedRef.current = false;
         mintedWarmRef.current = false;
-        setTokenData(null);
+        retryToken();
       }
     })();
     // dispatchAgent is a fresh mutation object each render; including it loops.
@@ -279,6 +301,7 @@ export function InterviewRoomProvider({
     // token is already in hand but the agent has not arrived yet.
     roomWanted: active,
     tokenError,
+    retryToken,
   };
 
   return (

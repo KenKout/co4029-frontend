@@ -19,7 +19,6 @@ export function useTurnPresentedHandler(
   },
 ) {
   const {
-    inputMode,
     phase,
     pendingFirstQuestion,
     pendingNextQuestion,
@@ -33,7 +32,6 @@ export function useTurnPresentedHandler(
     setPendingFinishResult,
     setFinishResult,
     setTranscript,
-    setVoiceActive,
     setPhase,
   } = base;
   const { currentElapsedSeconds, beginClosing } = helpers;
@@ -54,14 +52,10 @@ export function useTurnPresentedHandler(
           setCurrentQuestion(question);
           setPendingFirstQuestion(null);
           setPhase("questioning");
-          if (inputMode === "voice") {
-            setVoiceActive(true);
-          } else {
-            setTranscript((previous) => [
-              ...previous,
-              makeAiTurn(question, false, currentElapsedSeconds()),
-            ]);
-          }
+          setTranscript((previous) => [
+            ...previous,
+            makeAiTurn(question, false, currentElapsedSeconds()),
+          ]);
           return;
         }
         // Mid-interview advance: the transition finished presenting/narrating, so
@@ -72,12 +66,10 @@ export function useTurnPresentedHandler(
           setPendingNextQuestion(null);
           setCurrentQuestion(question);
           setPhase("questioning");
-          if (inputMode !== "voice") {
-            setTranscript((previous) => [
-              ...previous,
-              makeAiTurn(question, false, currentElapsedSeconds()),
-            ]);
-          }
+          setTranscript((previous) => [
+            ...previous,
+            makeAiTurn(question, false, currentElapsedSeconds()),
+          ]);
           return;
         }
         // Final-question transition finished: now run the existing finish flow so
@@ -99,7 +91,6 @@ export function useTurnPresentedHandler(
       }
     },
     [
-      inputMode,
       pendingFinishResult,
       pendingFirstQuestion,
       pendingNextQuestion,
@@ -114,13 +105,7 @@ export function useInterviewTimeout(
   base: InterviewBase,
   beginClosing: (reason: FinishReason) => Promise<void>,
 ) {
-  const {
-    sessionId,
-    phase,
-    sessionDeadlineAt,
-    timeoutTriggeredRef,
-    setVoiceActive,
-  } = base;
+  const { sessionId, phase, sessionDeadlineAt, timeoutTriggeredRef } = base;
 
   // `sessionDeadlineAt` is in the deps, which is the whole point: a snapshot can
   // reconcile the deadline without any phase change, and the pending timer must
@@ -140,7 +125,6 @@ export function useInterviewTimeout(
     const trigger = () => {
       if (timeoutTriggeredRef.current) return;
       timeoutTriggeredRef.current = true;
-      setVoiceActive(false);
       void beginClosing("timed_out");
     };
     const remaining = deadline - Date.now();

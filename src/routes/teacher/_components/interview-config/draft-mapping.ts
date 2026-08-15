@@ -41,9 +41,6 @@ export function draftFromConfig(
     persona: (config.persona ?? "neutral") as Persona,
     // "" = deployment default voice; only meaningful for English sessions.
     tts_voice: config.tts_voice ?? "",
-    // All interviews are hybrid (type-or-voice). The mode selector was removed;
-    // any legacy text/voice config is normalized to hybrid on load.
-    supported_modes: "hybrid",
     time_limit_minutes:
       config.time_limit_minutes == null
         ? ""
@@ -191,7 +188,6 @@ function buildFullConfigUpdatePayload(
     ),
     // Empty selection → null (deployment default voice).
     tts_voice: (draft.tts_voice || null) as TtsVoice | null,
-    supported_modes: draft.supported_modes,
     time_limit_minutes: integerOrNull(draft.time_limit_minutes),
     max_attempts: integerOrNull(draft.max_attempts),
     cooldown_hours: integerOrNull(draft.cooldown_hours),

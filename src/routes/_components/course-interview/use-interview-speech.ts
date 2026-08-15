@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useInterviewNarration } from "@/lib/hooks/use-interview-narration";
 import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration";
-import { useSpeechDictation } from "@/lib/hooks/use-speech-dictation";
 import { type SpeechPersona } from "@/lib/hooks/use-speech-synthesis";
 import { resolvePersonaTraits } from "@/lib/interview/persona-traits";
 import {
@@ -14,9 +13,10 @@ import type { useInterviewRouteData } from "./use-interview-route-data";
 import type { useInterviewTurnState } from "./use-interview-turn-state";
 
 /**
- * Transport modes, browser dictation and AI narration. Sixth hook group in the
- * page's hook order (see use-course-interview.ts) — moved verbatim from
- * course-interview.tsx.
+ * AI narration. Sixth hook group in the page's hook order (see
+ * use-course-interview.ts). Speech input is the room's mic track now, not
+ * browser dictation, so what remains here is the client-side voice for
+ * ceremony/replay text the agent does not voice itself.
  */
 export function useInterviewSpeech(
   route: ReturnType<typeof useInterviewRouteData>,
@@ -24,43 +24,8 @@ export function useInterviewSpeech(
   phaseState: ReturnType<typeof useInterviewPhaseState>,
 ) {
   const { config, i18n } = route;
-  const { sessionId, currentQuestion, setAnswerText } = turn;
-  const { setInputMode, onboardingStage, interviewLanguage } = phaseState;
-
-  const supportedModes = useMemo(() => {
-    if (!config) return ["text" as const];
-    const mode = config.supported_modes;
-    return mode === "hybrid" ? (["text", "voice"] as const) : ([mode] as const);
-  }, [config]);
-
-  useEffect(() => {
-    if (!config) return;
-    if (config.supported_modes === "voice") setInputMode("voice");
-    else if (config.supported_modes === "text") setInputMode("text");
-    else setInputMode("hybrid");
-  }, [config]);
-
-  // A hybrid config runs a single text-driven session where each answer can be
-  // TYPED or SPOKEN (browser speech-to-text fills the answer, submitted via the
-  // same REST /respond path). This is distinct from the server-side LiveKit
-  // voice agent, which is only used when the student explicitly picks "voice".
-  const isHybrid = config?.supported_modes === "hybrid";
-
-  // Speech-to-text dictation for hybrid answers. Finalized chunks are appended
-  // to the current answer draft (with a separating space) so the student can
-  // dictate, then edit before sending.
-  const dictationLang = i18n.language?.startsWith("vi") ? "vi-VN" : "en-US";
-  const dictation = useSpeechDictation({
-    lang: dictationLang,
-    onResult: (finalText) =>
-      setAnswerText((prev) =>
-        prev.trim().length > 0 ? `${prev.trim()} ${finalText}` : finalText,
-      ),
-  });
-  // Stop dictation whenever the question changes or the answer is sent.
-  useEffect(() => {
-    if (dictation.listening) dictation.stop();
-  }, [currentQuestion?.id, onboardingStage]);
+  const { sessionId } = turn;
+  const { interviewLanguage } = phaseState;
 
   // The AI "speaks" each question aloud while it types out on screen (see
   // AiTypingMessage). Server-side TTS (same voice as the LiveKit agent) with a
@@ -179,9 +144,6 @@ export function useInterviewSpeech(
   }, [roomConnected, narration]);
 
   return {
-    supportedModes,
-    isHybrid,
-    dictation,
     voiceOn,
     setVoiceOn,
     roomConnected,

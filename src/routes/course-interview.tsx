@@ -5,9 +5,7 @@ import { InterviewResultsScreen } from "./_components/course-interview/Interview
 import {
   InterviewLoadingScreen,
   InterviewMissingConfigScreen,
-  InterviewPollingScreen,
 } from "./_components/course-interview/InterviewStatusScreens";
-import { InterviewVoiceScreen } from "./_components/course-interview/InterviewVoiceScreen";
 import { InterviewWorkspaceScreen } from "./_components/course-interview/InterviewWorkspaceScreen";
 import { useCourseInterview } from "./_components/course-interview/use-course-interview";
 
@@ -30,32 +28,19 @@ export default function CourseInterviewPage() {
   const iv = useCourseInterview();
   const { course, config, finishResult, sessionId } = iv;
 
-  // Whether this session should hold a live room right now.
-  //
-  // `voiceActive` covers the voice screen, which is where the room used to live
-  // exclusively. The hybrid clause is what gives a typing candidate a room at
-  // all: typed turns ride `lk.chat` on it, so without it there is no transport.
+  // Whether this session should hold a live room right now. Every interview
+  // is one native-agent room: typed turns ride `lk.chat`, speech rides the mic
+  // toggle, so the room is wanted whenever a session exists and onboarding has
+  // handed over to questioning.
   //
   // `pendingFirstQuestion` holds the room back for ONE beat. When onboarding
-  // completes the server sends a transition line ("Great — the introduction is
-  // complete. Let's begin. Here is your first question."). That line exists
-  // ONLY on the REST/client side: the agent never receives it, so only the
-  // client narration can voice it. Bringing the room up immediately silenced
-  // it (the narration gate mutes the client the moment the room is live), and
-  // the candidate then heard nothing until the agent joined and read its intro
-  // plus question one back to back — the reported "doesn't read it, then
-  // delays and reads it together with question 1".
-  //
-  // The flag is cleared by handleTurnPresented the instant the transition has
-  // finished presenting, so the room comes up one beat later and the agent
-  // still owns question one. The token prefetch is unaffected (the provider
-  // fetches on `active`), so this costs the handover nothing but the beat.
+  // completes the client narrates the server-authored transition line the
+  // agent never receives (see use-interview-speech for the narration gate).
+  // The flag is cleared by handleTurnPresented the instant that beat ends.
   const roomActive =
     Boolean(sessionId) &&
-    (iv.voiceActive ||
-      (iv.inputMode === "hybrid" &&
-        iv.onboardingStage === "completed" &&
-        !iv.pendingFirstQuestion));
+    iv.onboardingStage === "completed" &&
+    !iv.pendingFirstQuestion;
 
   const screen = (() => {
     // ── Loading state ────────────────────────────────────────────────────────
@@ -72,17 +57,7 @@ export default function CourseInterviewPage() {
       return <InterviewResultsScreen iv={iv} finishResult={finishResult} />;
     }
 
-    // ── Polling / waiting for voice session to complete ──────────────────────
-    if (iv.pollingCompletion) {
-      return <InterviewPollingScreen />;
-    }
-
-    // ── Voice session active (LiveKit room) ──────────────────────────────────
-    if (iv.voiceActive && sessionId) {
-      return <InterviewVoiceScreen iv={iv} course={course} config={config} />;
-    }
-
-    // ── Pre-start screen (mode selection) ───────────────────────────────────
+    // ── Pre-start screen ──────────────────────────────────────────────────────
     if (!sessionId) {
       return <InterviewLobbyScreen iv={iv} course={course} config={config} />;
     }
@@ -98,11 +73,7 @@ export default function CourseInterviewPage() {
       // Mint the token during the transition beat so the room can connect the
       // instant the beat ends — the hold above must not cost dead air before
       // question one.
-      prefetch={
-        Boolean(sessionId) &&
-        iv.inputMode === "hybrid" &&
-        iv.onboardingStage === "completed"
-      }
+      prefetch={Boolean(sessionId) && iv.onboardingStage === "completed"}
       // Open the room DURING setup, so the ~10-13s LiveKit worker startup
       // overlaps the onboarding the candidate is doing anyway rather than
       // sitting in front of question one as dead air. The warm token carries no
@@ -121,7 +92,6 @@ export default function CourseInterviewPage() {
       // by now `agentWanted` has already dispatched the interviewer.
       warm={shouldWarmRoom({
         sessionId,
-        inputMode: iv.inputMode,
         onboardingStage: iv.onboardingStage,
         pendingFirstQuestion: Boolean(iv.pendingFirstQuestion),
       })}
@@ -131,22 +101,10 @@ export default function CourseInterviewPage() {
       agentWanted={
         Boolean(sessionId) && iv.onboardingStage === "completed"
       }
-      // Publish the mic only on the voice screen. A hybrid candidate who is
-      // typing holds the room open (so `lk.chat` has a connection) but must not
-      // have their microphone captured.
-      audio={iv.voiceActive}
-      // Only treat a drop as a voice failure while the candidate is actually in
-      // the voice room. `handleVoiceDropped` degrades the session to text mode,
-      // which for a typing candidate is both meaningless and wrong — their
-      // recovery is rejoining the SAME room, which the SDK drives itself.
-      // Surfacing that as a rejoin affordance is migration step 4, not built here.
-      onUnexpectedDisconnect={
-        iv.voiceActive
-          ? () => {
-              void iv.handleVoiceDropped();
-            }
-          : undefined
-      }
+      // Publish the mic only while the candidate has toggled it on. OFF for a
+      // typing candidate: the room stays open (so `lk.chat` has a connection)
+      // but nothing is captured until they ask to speak.
+      audio={iv.micOn}
     >
       {screen}
     </InterviewRoomProvider>

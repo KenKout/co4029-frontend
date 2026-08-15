@@ -24,18 +24,10 @@ export function useInterviewServerSync(
 ) {
   const { configId, resumableSession, previousSessionsLoading } = route;
   const { sessionId } = turn;
-  const {
-    phase,
-    setPhase,
-    finishResult,
-    setFinishResult,
-    setInputMode,
-    pollingCompletion,
-    setPollingCompletion,
-  } = phaseState;
+  const { phase, finishResult, setFinishResult } = phaseState;
 
-  // No `useInterviewRespond` here. Typed turns go over `lk.chat`; onboarding is
-  // the only REST turn surface left, and it has its own endpoint.
+  // Typed turns go over `lk.chat` — there is no `/respond` hook any more.
+  // Onboarding is the only REST turn surface left, and it has its own endpoint.
   const onboarding = useInterviewOnboarding(sessionId);
   const finish = useFinishInterview(sessionId);
   // Poll-gating rationale for both queries below lives in interview-verdict.ts.
@@ -44,12 +36,6 @@ export function useInterviewServerSync(
   const { data: gapReport, isPending: gapReportPending } = useGapReport(
     flags.gapReportEnabled ? sessionId : null,
   );
-
-  useEffect(() => {
-    if (!sessionId && resumableSession) {
-      setInputMode(resumableSession.input_mode);
-    }
-  }, [resumableSession, sessionId]);
 
   // Auto-resume on reload (resilience A-Tier-1 #1). A mid-interview refresh
   // otherwise dumps the student back to the lobby with a manual "Resume" button.
@@ -125,34 +111,6 @@ export function useInterviewServerSync(
       );
     }
   }, [verdictPoll]);
-
-  // Poll session status (every 2s) when voice completes to detect the
-  // server-side finish. TanStack Query does not poll by default, so the
-  // refetchInterval is required — without it the status is fetched once and
-  // the user can hang forever if the commit lands a moment later.
-  const { data: sessionStatus } = useInterviewSession(
-    pollingCompletion ? sessionId : null,
-    { refetchInterval: 2000 },
-  );
-
-  // Stop polling on ANY terminal status (completed/timed_out/abandoned/failed)
-  // and surface the result. Scores/verdict are produced by the async
-  // evaluation and appear via the gap report (same as text mode).
-  useEffect(() => {
-    if (!pollingCompletion || !sessionStatus) return;
-    const terminal = ["completed", "timed_out", "abandoned", "failed"];
-    if (terminal.includes(sessionStatus.status)) {
-      setPollingCompletion(false);
-      setPhase("results");
-      setFinishResult({
-        session_id: sessionStatus.session_id,
-        status: sessionStatus.status,
-        pass_verdict: sessionStatus.pass_verdict ?? null,
-        total_score: null,
-        rubric_scores: [],
-      });
-    }
-  }, [pollingCompletion, sessionStatus]);
 
   return {
     onboarding,

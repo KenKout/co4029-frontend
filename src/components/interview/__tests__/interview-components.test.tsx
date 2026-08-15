@@ -15,11 +15,7 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 
-import {
-  AnswerComposer,
-  AnswerControls,
-  FocusedAnswerComposer,
-} from "../composer";
+import { FocusedAnswerComposer } from "../composer/FocusedAnswerComposer";
 import { OnboardingActions } from "../onboarding-actions";
 import {
   ConversationMessage,
@@ -205,17 +201,12 @@ describe("UserTypingIndicator", () => {
 
 function renderComposer(value: string, onSubmit = vi.fn()) {
   render(
-    <AnswerComposer
+    <FocusedAnswerComposer
       value={value}
       draftLength={value.length}
       onChange={() => undefined}
       onSubmit={onSubmit}
       sending={false}
-      micAvailable={false}
-      micActive={false}
-      onMicToggle={() => undefined}
-      transcriptOpen
-      onTranscriptToggle={() => undefined}
       elapsed="00:12"
       status="idle"
       onEndInterview={() => undefined}
@@ -224,7 +215,7 @@ function renderComposer(value: string, onSubmit = vi.fn()) {
   return onSubmit;
 }
 
-describe("AnswerComposer", () => {
+describe("FocusedAnswerComposer", () => {
   it("sends a non-empty answer with Enter", () => {
     const onSubmit = renderComposer("A complete answer");
     fireEvent.keyDown(screen.getByRole("textbox"), {
@@ -831,99 +822,6 @@ describe("P0 focused interview room", () => {
     );
   });
 
-  it("supports start, pause, resume, and finish recording controls", () => {
-    const onStart = vi.fn();
-    const onPause = vi.fn();
-    const onResume = vi.fn();
-    const onFinish = vi.fn();
-    const common = {
-      mode: "voice" as const,
-      onModeChange: () => undefined,
-      micAvailable: true,
-      micError: null,
-      disabled: false,
-      canFinish: true,
-      onStart,
-      onPause,
-      onResume,
-      onFinish,
-      onCancel: () => undefined,
-    };
-    const { rerender } = render(
-      <AnswerControls {...common} micActive={false} micPaused={false} />,
-    );
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: i18n.t("course_interview.workspace.start_answering"),
-      }),
-    );
-    expect(onStart).toHaveBeenCalledTimes(1);
-
-    rerender(<AnswerControls {...common} micActive micPaused={false} />);
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: i18n.t("course_interview.workspace.pause_recording"),
-      }),
-    );
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: i18n.t("course_interview.workspace.finish_answer"),
-      }),
-    );
-    expect(onPause).toHaveBeenCalledTimes(1);
-    expect(onFinish).toHaveBeenCalledTimes(1);
-
-    rerender(<AnswerControls {...common} micActive={false} micPaused />);
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: i18n.t("course_interview.workspace.resume_recording"),
-      }),
-    );
-    expect(onResume).toHaveBeenCalledTimes(1);
-  });
-
-  it("preserves the answer while switching between Type and Voice modes", () => {
-    function ComposerHarness() {
-      const [value, setValue] = useState("");
-      return (
-        <FocusedAnswerComposer
-          value={value}
-          draftLength={value.length}
-          onChange={setValue}
-          onSubmit={() => undefined}
-          onFinishRecording={() => undefined}
-          sending={false}
-          micAvailable
-          micActive={false}
-          onMicStart={() => undefined}
-          onMicPause={() => undefined}
-          onMicResume={() => undefined}
-          onMicCancel={() => undefined}
-          elapsed="00:10"
-          status="idle"
-          onEndInterview={() => undefined}
-        />
-      );
-    }
-
-    render(<ComposerHarness />);
-    fireEvent.change(screen.getByRole("textbox"), {
-      target: { value: "My preserved answer" },
-    });
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: i18n.t("course_interview.workspace.voice_mode"),
-      }),
-    );
-    expect(screen.getByRole("textbox")).toHaveValue("My preserved answer");
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: i18n.t("course_interview.workspace.type_mode"),
-      }),
-    );
-    expect(screen.getByRole("textbox")).toHaveValue("My preserved answer");
-  });
-
   it("prevents duplicate submission while an answer is being analyzed", () => {
     const onSubmit = vi.fn();
     render(
@@ -932,14 +830,7 @@ describe("P0 focused interview room", () => {
         draftLength={17}
         onChange={() => undefined}
         onSubmit={onSubmit}
-        onFinishRecording={onSubmit}
         sending
-        micAvailable={false}
-        micActive={false}
-        onMicStart={() => undefined}
-        onMicPause={() => undefined}
-        onMicResume={() => undefined}
-        onMicCancel={() => undefined}
         elapsed="00:10"
         status="thinking"
         onEndInterview={() => undefined}
@@ -953,35 +844,6 @@ describe("P0 focused interview room", () => {
         name: i18n.t("course_interview.actions.sending"),
       }),
     ).toBeDisabled();
-  });
-
-  it("shows an actionable microphone permission recovery", () => {
-    const onRetry = vi.fn();
-    render(
-      <AnswerControls
-        mode="voice"
-        onModeChange={() => undefined}
-        micAvailable
-        micActive={false}
-        micPaused={false}
-        micError="permission-denied"
-        canFinish={false}
-        onStart={() => undefined}
-        onPause={() => undefined}
-        onResume={() => undefined}
-        onFinish={() => undefined}
-        onCancel={() => undefined}
-        onRetry={onRetry}
-      />,
-    );
-
-    expect(screen.getByRole("alert")).toHaveTextContent(/micrô/i);
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: i18n.t("course_interview.workspace.retry_microphone"),
-      }),
-    );
-    expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
   it("presents response choices after each consecutive onboarding question", async () => {

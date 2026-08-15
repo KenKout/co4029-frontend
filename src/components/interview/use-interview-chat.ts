@@ -267,6 +267,8 @@ export function useInterviewChat(
           stateVersion: null,
           rejection: null,
           state: null,
+          actionKind: null,
+          actionText: null,
           errorClass: "RoomDisconnected",
           snapshot: null,
         },

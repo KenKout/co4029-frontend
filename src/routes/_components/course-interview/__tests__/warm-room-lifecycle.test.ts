@@ -17,20 +17,16 @@ import { shouldWarmRoom } from "../agent-voice-presentation";
  * them are visible from the types.
  */
 
-type Mode = "voice" | "text" | "hybrid";
-
 /** `warm` prop, as computed by the page shell. */
 // The REAL predicate, imported. A local re-implementation once stayed green
 // after the fix under test was reverted — never again.
 function shouldWarm(args: {
   sessionId: string | null;
-  inputMode: Mode;
   onboardingStage: string | null;
   pendingFirstQuestion?: boolean;
 }): boolean {
   return shouldWarmRoom({
     sessionId: args.sessionId,
-    inputMode: args.inputMode,
     onboardingStage: args.onboardingStage,
     pendingFirstQuestion: Boolean(args.pendingFirstQuestion),
   });
@@ -66,18 +62,8 @@ const SETUP = { sessionId: "s-1", onboardingStage: "identity_check" };
 const DONE = { sessionId: "s-1", onboardingStage: "completed" };
 
 describe("warming the room during setup", () => {
-  it("warms a hybrid session while onboarding is still running", () => {
-    expect(shouldWarm({ ...SETUP, inputMode: "hybrid" })).toBe(true);
-  });
-
-  it("warms a voice session too", () => {
-    expect(shouldWarm({ ...SETUP, inputMode: "voice" })).toBe(true);
-  });
-
-  it("never warms a text-only session", () => {
-    // No room is ever wanted, so opening one would be pure waste — and would
-    // put a candidate who chose text into a LiveKit room they never asked for.
-    expect(shouldWarm({ ...SETUP, inputMode: "text" })).toBe(false);
+  it("warms the session while onboarding is still running", () => {
+    expect(shouldWarm({ ...SETUP })).toBe(true);
   });
 
   it("keeps warming through the transition beat", () => {
@@ -85,29 +71,18 @@ describe("warming the room during setup", () => {
     // voice the transition line the agent never receives. If `warm` dropped too,
     // `connect` would tear down and re-establish the WebRTC session mid-
     // utterance and clip its opening syllables.
-    expect(
-      shouldWarm({ ...DONE, inputMode: "hybrid", pendingFirstQuestion: true }),
-    ).toBe(true);
+    expect(shouldWarm({ ...DONE, pendingFirstQuestion: true })).toBe(true);
   });
 
   it("stops warming once the transition has been presented", () => {
     // From here the normal dispatching token is both allowed and simpler.
-    expect(
-      shouldWarm({ ...DONE, inputMode: "hybrid", pendingFirstQuestion: false }),
-    ).toBe(false);
-  });
-
-  it("never warms a text-only session even mid-transition", () => {
-    expect(
-      shouldWarm({ ...DONE, inputMode: "text", pendingFirstQuestion: true }),
-    ).toBe(false);
+    expect(shouldWarm({ ...DONE, pendingFirstQuestion: false })).toBe(false);
   });
 
   it("does not warm before a session exists", () => {
     expect(
       shouldWarm({
         sessionId: null,
-        inputMode: "hybrid",
         onboardingStage: "identity_check",
       }),
     ).toBe(false);
@@ -189,7 +164,7 @@ describe("dispatching the interviewer", () => {
     for (const stage of ["identity_check", "audio_check", "briefing", "completed"]) {
       const args = { sessionId: "s-1", onboardingStage: stage };
       expect(
-        shouldWarm({ ...args, inputMode: "hybrid" }) && shouldDispatch(args),
+        shouldWarm(args) && shouldDispatch(args),
       ).toBe(false);
     }
   });

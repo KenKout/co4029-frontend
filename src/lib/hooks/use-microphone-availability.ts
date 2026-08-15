@@ -11,11 +11,10 @@ import { useCallback, useEffect, useState } from "react";
  * fail-unsafe direction for a checklist whose whole job is catching this before
  * the interview starts.
  *
- * Deliberately does NOT call `getUserMedia`: that would fire a permission
- * prompt during setup, and the prompt already belongs to `handleStart`
- * (interview-start-actions.ts), which hard-falls-back to a text session when
- * the candidate denies it. This hook only reads state that is observable
- * without prompting.
+ * Deliberately does NOT call `getUserMedia` itself: the prompt belongs to the
+ * audio_check step of the setup flow (see `requestMicPermission`), which fires
+ * it at the moment the checklist shows the microphone row. This hook only reads
+ * state that is observable without prompting.
  */
 
 export type MicrophoneAvailability =
@@ -38,6 +37,13 @@ interface MicrophoneState {
    * union cannot silently become "connected".
    */
   available: boolean;
+  /**
+   * The raw permission state, distinct from `status`: `"prompt"` means the
+   * browser has NOT asked yet (the optimistic `ready` above), `"granted"` means
+   * it has been allowed, `null` means the Permissions API cannot read it
+   * (Firefox/Safari) — only a `getUserMedia` attempt can tell.
+   */
+  permission: "granted" | "prompt" | "denied" | null;
 }
 
 const UNSUPPORTED: MicrophoneState = {
@@ -83,28 +89,50 @@ async function hasAudioInput(): Promise<boolean | null> {
 }
 
 async function resolveMicrophoneState(): Promise<MicrophoneState> {
-  if (!navigator.mediaDevices) return UNSUPPORTED;
+  if (!navigator.mediaDevices) return { ...UNSUPPORTED, permission: null };
 
   const permission = await queryMicPermission();
-  if (permission === "denied") return { status: "denied", available: false };
+  if (permission === "denied") {
+    return { status: "denied", available: false, permission };
+  }
 
   const audioInput = await hasAudioInput();
 
   if (permission === "granted" && audioInput === false) {
-    return { status: "no-device", available: false };
+    return { status: "no-device", available: false, permission };
   }
 
   // `audioInput === null` means enumeration is unavailable or threw; `false`
   // while permission is not yet granted means the browser is withholding the
   // list. Neither is evidence of absence, so both stay optimistic and let the
-  // getUserMedia call at start be the real gate.
-  return { status: "ready", available: true };
+  // getUserMedia call at the audio_check step be the real gate.
+  return { status: "ready", available: true, permission };
+}
+
+/**
+ * Fire the browser's microphone permission prompt and report the outcome.
+ *
+ * Called by the setup flow when the checklist reaches the microphone row, so
+ * the prompt lands BEFORE the interview starts instead of mid-questioning when
+ * the candidate first toggles the mic. The stream is released immediately —
+ * nothing is captured; the room publishes its own track later.
+ */
+export async function requestMicPermission(): Promise<boolean> {
+  if (!navigator.mediaDevices?.getUserMedia) return false;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach((track) => track.stop());
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function useMicrophoneAvailability(): MicrophoneState {
   const [state, setState] = useState<MicrophoneState>({
     status: "checking",
     available: false,
+    permission: null,
   });
 
   const refresh = useCallback((onResolved: (next: MicrophoneState) => void) => {

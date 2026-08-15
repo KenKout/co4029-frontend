@@ -217,7 +217,10 @@ describe("handleRespond over lk.chat", () => {
     await handleRespond(ctx);
 
     expect(ctx.submitFailed).toHaveBeenCalledWith(
-      "course_interview.errors.send_failed_livekit",
+      // A RoomDisconnected turn was cut off BEFORE reaching the agent, so it
+      // was definitely not graded — the message says so, or the candidate
+      // fears a double-submit and stops retrying.
+      "course_interview.errors.room_disconnected",
     );
     expect(ctx.setAnswerText).toHaveBeenCalledWith("my answer");
     expect(ctx.setTranscript).not.toHaveBeenCalled();

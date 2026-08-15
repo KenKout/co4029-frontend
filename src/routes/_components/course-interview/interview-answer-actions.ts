@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 
-import type { TurnRejection } from "@/lib/interview/control-protocol";
+import type { ControlEvent } from "@/lib/interview/control-protocol";
 import { makeUserTurn, newTurnKey } from "@/lib/interview/turn-factory";
 import { isHintRequestText } from "./helpers";
 import type { InterviewActionsContext } from "./types";
@@ -64,19 +64,30 @@ function commitAnswerTurn(
  * can act on (wait for the previous turn), others they cannot (the interview is
  * closing). There is no HTTP status on this path, so the rejection code and the
  * error class are the only signals.
+ *
+ * A `RoomDisconnected` failure is categorically different from a generic send
+ * failure: the turn was cut off before it reached the agent, so it was
+ * definitely not graded — the message must say that, or a candidate resends the
+ * same answer after a reconnect and double-submits.
  */
 function turnFailureMessage(
   ctx: InterviewActionsContext,
-  rejection: TurnRejection | null,
+  event: ControlEvent,
 ): string {
-  switch (rejection) {
-    case "turn_in_flight":
-      return ctx.t("course_interview.errors.turn_in_flight");
-    case "session_closing":
-      return ctx.t("course_interview.errors.session_closing");
-    default:
-      return ctx.t("course_interview.errors.send_failed_livekit");
+  if (event.rejection) {
+    switch (event.rejection) {
+      case "turn_in_flight":
+        return ctx.t("course_interview.errors.turn_in_flight");
+      case "session_closing":
+        return ctx.t("course_interview.errors.session_closing");
+      default:
+        break;
+    }
   }
+  if (event.errorClass === "RoomDisconnected") {
+    return ctx.t("course_interview.errors.room_disconnected");
+  }
+  return ctx.t("course_interview.errors.send_failed_livekit");
 }
 
 /**
@@ -112,7 +123,7 @@ async function sendTurnViaLiveKit(
   });
   if (outcome.preserveDraft) {
     reportAnswerFailure(ctx, {
-      message: turnFailureMessage(ctx, outcome.event.rejection),
+      message: turnFailureMessage(ctx, outcome.event),
       trimmed: args.text,
     });
     return;
@@ -157,12 +168,8 @@ export async function handleRespond(
 ) {
   if (!ctx.currentQuestion || !ctx.sessionId) return;
   if (isSubmitBlocked(ctx)) return;
-  const pendingInterim = ctx.dictation.listening ? ctx.dictation.stop() : "";
   const sourceText = answerOverride ?? ctx.answerText;
-  const trimmed = [sourceText.trim(), pendingInterim]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  const trimmed = sourceText.trim();
   if (!trimmed) {
     toast.error(ctx.t("course_interview.errors.answer_required"));
     return;

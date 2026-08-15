@@ -35,9 +35,7 @@ export function LobbyStartActions({ iv }: { iv: CourseInterviewController }) {
           ? t("course_interview.actions.starting")
           : resumableSession
             ? t("course_interview.resume_dialog.continue")
-            : iv.inputMode === "voice"
-              ? t("course_interview.actions.start_voice")
-              : t("course_interview.actions.start")}
+            : t("course_interview.actions.start")}
         {resumableSession ? (
           <History className="h-4 w-4" />
         ) : (

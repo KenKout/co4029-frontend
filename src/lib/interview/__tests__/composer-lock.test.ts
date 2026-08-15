@@ -59,6 +59,17 @@ describe("isComposerLocked", () => {
     );
   });
 
+  it("locks while the room is down — there is no second transport", () => {
+    // agentStatus can stay "idle"/"listening" through a room drop (it tracks
+    // the agent's voice phase, not the socket), so the room state is its own
+    // lock input. An enabled Send whose turn goes nowhere is worse than a
+    // locked composer next to the rejoin banner.
+    expect(isComposerLocked({ ...OPEN, roomDown: true })).toBe(true);
+    expect(
+      isComposerLocked({ ...OPEN, roomDown: true, agentStatus: "listening" }),
+    ).toBe(true);
+  });
+
   it("reopens once a new question resets the answer state", () => {
     // resetForQuestion runs from an effect on currentQuestion.id, so this is
     // the state the candidate lands in for question two.

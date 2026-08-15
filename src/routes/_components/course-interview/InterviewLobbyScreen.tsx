@@ -1,10 +1,7 @@
 import { GlassCard } from "@/components/ui/glass-card";
 import { useTranslation } from "react-i18next";
 
-import {
-  LobbyAttemptHistory,
-  LobbyInputModeToggle,
-} from "./LobbyAttemptHistory";
+import { LobbyAttemptHistory } from "./LobbyAttemptHistory";
 import { LobbyHeader } from "./LobbyHeader";
 import { LobbyResumeNotice } from "./LobbyResumeNotice";
 import { LobbyStartActions, LobbyStartDialog } from "./LobbyStartActions";
@@ -63,22 +60,6 @@ export function InterviewLobbyScreen({
               configId={iv.configId}
             />
           )}
-
-          {!resumableSession && iv.isHybrid && (
-            <div className="flex items-center justify-center gap-2 mb-6 text-xs text-m3-on-surface-variant">
-              {t("course_interview.hybrid.prestart_hint")}
-            </div>
-          )}
-
-          {!resumableSession &&
-            !iv.isHybrid &&
-            iv.supportedModes.length > 1 && (
-              <LobbyInputModeToggle
-                supportedModes={iv.supportedModes}
-                inputMode={iv.inputMode}
-                setInputMode={iv.setInputMode}
-              />
-            )}
 
           <LobbyStartActions iv={iv} />
         </GlassCard>

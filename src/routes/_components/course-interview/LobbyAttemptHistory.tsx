@@ -1,14 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, Loader2, Mic, MicOff, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { CourseInterviewController } from "./use-course-interview";
 
 /**
- * Attempt history and the text/voice input-mode toggle from the interview lobby,
- * moved verbatim out of course-interview.tsx.
+ * Attempt history from the interview lobby, moved verbatim out of
+ * course-interview.tsx.
  */
 
 /**
@@ -87,42 +86,6 @@ export function LobbyAttemptHistory({
           );
         })}
       </ul>
-    </div>
-  );
-}
-
-export function LobbyInputModeToggle({
-  supportedModes,
-  inputMode,
-  setInputMode,
-}: {
-  supportedModes: CourseInterviewController["supportedModes"];
-  inputMode: CourseInterviewController["inputMode"];
-  setInputMode: CourseInterviewController["setInputMode"];
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="flex items-center justify-center gap-2 mb-6">
-      {supportedModes.map((mode) => (
-        <Button
-          key={mode}
-          variant={inputMode === mode ? "default" : "outline"}
-          onClick={() => setInputMode(mode)}
-          className={cn(
-            "rounded-xl font-bold text-xs gap-2",
-            inputMode === mode && "gradient-primary text-white",
-          )}
-        >
-          {mode === "voice" ? (
-            <Mic className="h-3 w-3" />
-          ) : (
-            <MicOff className="h-3 w-3" />
-          )}
-          {mode === "voice"
-            ? t("course_interview.values.mode.voice")
-            : t("course_interview.values.mode.text")}
-        </Button>
-      ))}
     </div>
   );
 }

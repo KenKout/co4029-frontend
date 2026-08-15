@@ -25223,15 +25223,6 @@
             ],
             "title": "Tts Voice"
           },
-          "supported_modes": {
-            "type": "string",
-            "enum": [
-              "voice",
-              "text",
-              "hybrid"
-            ],
-            "title": "Supported Modes"
-          },
           "time_limit_minutes": {
             "anyOf": [
               {
@@ -25465,7 +25456,6 @@
           "module_id",
           "title",
           "status",
-          "supported_modes",
           "lock_quiz_ef_until_pass",
           "created_at",
           "updated_at"
@@ -25515,16 +25505,6 @@
                 "type": "null"
               }
             ]
-          },
-          "supported_modes": {
-            "type": "string",
-            "enum": [
-              "voice",
-              "text",
-              "hybrid"
-            ],
-            "title": "Supported Modes",
-            "default": "hybrid"
           },
           "tts_voice": {
             "anyOf": [
@@ -25731,15 +25711,6 @@
             ],
             "title": "Tts Voice"
           },
-          "supported_modes": {
-            "type": "string",
-            "enum": [
-              "voice",
-              "text",
-              "hybrid"
-            ],
-            "title": "Supported Modes"
-          },
           "time_limit_minutes": {
             "anyOf": [
               {
@@ -25807,7 +25778,6 @@
           "module_id",
           "title",
           "status",
-          "supported_modes",
           "lock_quiz_ef_until_pass"
         ],
         "title": "InterviewConfigPublic",
@@ -25852,22 +25822,6 @@
                 "type": "null"
               }
             ]
-          },
-          "supported_modes": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "voice",
-                  "text",
-                  "hybrid"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supported Modes"
           },
           "tts_voice": {
             "anyOf": [
@@ -27769,11 +27723,18 @@
       "InterviewSessionStartRequest": {
         "properties": {
           "input_mode": {
-            "type": "string",
-            "enum": [
-              "voice",
-              "text",
-              "hybrid"
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "voice",
+                  "text",
+                  "hybrid"
+                ]
+              },
+              {
+                "type": "null"
+              }
             ],
             "title": "Input Mode"
           },
@@ -27792,9 +27753,6 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "input_mode"
-        ],
         "title": "InterviewSessionStartRequest",
         "description": "Body for ``POST /interviews/{id}/sessions``.\n\nThe idempotency key is opaque to the schema layer; the service\nlayer (T6.12) enforces uniqueness at the DB level (mirrors the\n``QuizAttempt.idempotency_key`` UNIQUE pattern from T5.2)."
       },

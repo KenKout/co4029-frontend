@@ -35,13 +35,11 @@ export function useInterviewPhaseState(
   // so the composer offers a Skip-and-finish control that ends the interview
   // and goes straight to the Evaluation screen (grading is unaffected).
   const [closingCeremonyActive, setClosingCeremonyActive] = useState(false);
-  const [inputMode, setInputMode] = useState<"voice" | "text" | "hybrid">(
-    "text",
-  );
-  // true = voice session started and LiveKitRoom is active
-  const [voiceActive, setVoiceActive] = useState(false);
-  // polling active when voice session is completing
-  const [pollingCompletion, setPollingCompletion] = useState(false);
+  // Whether the candidate's microphone is published to the room. OFF by
+  // default: a typing candidate must not be captured, and the only way audio
+  // starts is an explicit toggle. Drives the room provider's `audio` prop, so
+  // the provider's own reconnect-sync effect restores the mic after a drop.
+  const [micOn, setMicOn] = useState(false);
   const [endDialogOpen, setEndDialogOpen] = useState(false);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [aiSpeaking, setAiSpeaking] = useState(false);
@@ -105,7 +103,6 @@ export function useInterviewPhaseState(
   const [pendingFinishResult, setPendingFinishResult] =
     useState<InterviewSessionFinishResponse | null>(null);
   const sessionStartedAtRef = useRef<number | null>(null);
-  const voiceInitialTranscriptRef = useRef<ConversationTurn[]>([]);
   const [assessmentStartedAtMs, setAssessmentStartedAtMs] = useState<
     number | null
   >(null);
@@ -130,12 +127,8 @@ export function useInterviewPhaseState(
     setFinishResult,
     closingCeremonyActive,
     setClosingCeremonyActive,
-    inputMode,
-    setInputMode,
-    voiceActive,
-    setVoiceActive,
-    pollingCompletion,
-    setPollingCompletion,
+    micOn,
+    setMicOn,
     endDialogOpen,
     setEndDialogOpen,
     transcriptOpen,
@@ -169,7 +162,6 @@ export function useInterviewPhaseState(
     pendingFinishResult,
     setPendingFinishResult,
     sessionStartedAtRef,
-    voiceInitialTranscriptRef,
     assessmentStartedAtMs,
     setAssessmentStartedAtMs,
     sessionDeadlineAt,

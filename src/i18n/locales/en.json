@@ -2653,6 +2653,9 @@
       "live_transcript": "Live transcript",
       "latest_answer": "Latest candidate answer",
       "answer_recovery_error": "Your answer was not sent. It is still here so you can retry.",
+      "mic_toggle_on": "Turn on microphone",
+      "mic_toggle_off": "Turn off microphone",
+      "end_call": "End interview",
       "microphone_errors": {
         "permission-denied": "Microphone access is blocked. Allow it in browser settings, then try again.",
         "no-microphone": "No microphone was detected. Connect one or switch to Type mode.",
@@ -2736,7 +2739,10 @@
       "mic_connected": "Connected",
       "mic_unavailable": "Not detected",
       "language": "Interview language",
-      "eyebrow": "AI interview setup"
+      "eyebrow": "AI interview setup",
+      "mic_blocked": "Blocked — allow microphone access in your browser",
+      "mic_enable": "Enable microphone",
+      "mic_prompt": "Ready to enable"
     },
     "recovery": {
       "connection_lost_title": "Connection lost",

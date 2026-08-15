@@ -4,7 +4,6 @@ import { Loader2, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { InterviewAgentStatus } from "@/lib/interview/types";
-import type { AnswerMode } from "./types";
 
 /**
  * The focused composer's text field: label, textarea and send button. The
@@ -12,7 +11,6 @@ import type { AnswerMode } from "./types";
  * change) and passed straight through so the element identity is unchanged.
  */
 export function FocusedComposerTextarea({
-  mode,
   value,
   draftLength,
   sending,
@@ -25,7 +23,6 @@ export function FocusedComposerTextarea({
   onSubmit,
   onKeyDown,
 }: {
-  mode: AnswerMode;
   value: string;
   draftLength: number;
   sending: boolean;
@@ -46,9 +43,7 @@ export function FocusedComposerTextarea({
         htmlFor="focused-answer"
         className="mb-1.5 block text-xs font-semibold text-text-muted"
       >
-        {mode === "voice"
-          ? t("course_interview.workspace.live_transcript")
-          : t("course_interview.labels.answer")}
+        {t("course_interview.labels.answer")}
       </label>
       <textarea
         ref={textareaRef}

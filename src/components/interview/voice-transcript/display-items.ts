@@ -100,7 +100,8 @@ export function mergeTranscriptionSegments(
 }
 
 /**
- * The agent's live utterances, as conversation turns on the interview clock.
+ * Live conversation turns from transcription: the agent's utterances AND the
+ * candidate's spoken answers.
  *
  * Nothing commits agent text to `transcript`: the answer path appends the
  * candidate's turn and reads no agent text, and the snapshot path renders its own
@@ -114,6 +115,12 @@ export function mergeTranscriptionSegments(
  * that pairing — `transcriptMatchesTurn` needs one string to prefix the other —
  * so no filtering is attempted here. The caller drops the committed AI turns
  * instead, which is the side that CAN be identified.
+ *
+ * Student segments are the candidate's SPOKEN answers (the agent's STT
+ * publishes them on the student's identity). They are not committed to
+ * `transcript` by anything — `commitAnswerTurn` only runs for TYPED turns —
+ * so dropping them here left a spoken interview with no trace of what the
+ * candidate said (the voice room that used to render them is gone).
  *
  * `elapsedSeconds` is rebased onto the assessment clock so these interleave with
  * committed turns by time. Without it they pile up at the end and a follow-up
@@ -129,13 +136,11 @@ export function liveAgentConversationTurns(
   merged: readonly MergedSegment[],
   assessmentStartedAtMs: number | null,
 ): ConversationTurn[] {
-  return merged
-    .filter(
-      (segment) => segment.role === "agent" && segment.text.trim().length > 0,
-    )
-    .map((segment) => ({
+  return coalesceSpokenAnswers(
+    merged.filter((segment) => segment.text.trim().length > 0),
+  ).map((segment) => ({
       id: segment.key,
-      role: "ai" as const,
+      role: (segment.role === "agent" ? "ai" : "user") as ConversationTurn["role"],
       text: segment.text,
       live: true,
       elapsedSeconds:
@@ -143,6 +148,41 @@ export function liveAgentConversationTurns(
           ? undefined
           : Math.max(0, Math.round((segment.sortTime - assessmentStartedAtMs) / 1000)),
     }));
+}
+
+/**
+ * Collapse consecutive student segments into one spoken answer.
+ *
+ * One spoken answer arrives as MANY transcription streams — the recognizer
+ * emits a final per pause, so a hesitant candidate ("I think" / "uh, it's
+ * about…" / "…everyday transactions. Right?") rendered as three separate
+ * "You" bubbles (production session 1d629118: twelve bubbles for two answers).
+ * Consecutive student segments with no agent turn between them are one turn of
+ * speech by construction — a genuinely separate answer always has the
+ * interviewer's reply in between — so they are joined here. The bubble keeps
+ * the FIRST segment's timestamp, matching where the answer began.
+ *
+ * Agent segments are NOT coalesced: each utterance is its own beat (a reply, a
+ * re-read), and merging them would break the per-segment suppression and
+ * action-badging in the stage.
+ */
+function coalesceSpokenAnswers(
+  merged: readonly MergedSegment[],
+): MergedSegment[] {
+  const out: MergedSegment[] = [];
+  for (const segment of merged) {
+    const previous = out[out.length - 1];
+    if (
+      segment.role === "student" &&
+      previous?.role === "student" &&
+      previous.isFinal !== false
+    ) {
+      previous.text = `${previous.text} ${segment.text}`.replace(/\s+/g, " ").trim();
+      continue;
+    }
+    out.push({ ...segment });
+  }
+  return out;
 }
 
 /**

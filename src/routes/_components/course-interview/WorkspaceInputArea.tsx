@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
-import { FocusedAnswerComposer } from "@/components/interview/composer";
+import { FocusedAnswerComposer } from "@/components/interview/composer/FocusedAnswerComposer";
+import { RoomControlBar } from "@/components/interview/composer/RoomControlBar";
 import { Button } from "@/components/ui/button";
 import { isComposerLocked } from "@/lib/interview/composer-lock";
 import type { CourseInterviewController } from "./use-course-interview";
@@ -8,18 +9,21 @@ import { WorkspaceWindDown } from "./WorkspaceWindDown";
 
 /**
  * Everything below the interview stage: the wrap-up skip bar, and the bottom
- * input surface. Moved verbatim out of course-interview.tsx.
+ * input surface (room control bar + answer composer). Moved verbatim out of
+ * course-interview.tsx.
  */
 export function WorkspaceInputArea({
   iv,
   chatPending = false,
+  roomDown = false,
 }: {
   iv: CourseInterviewController;
   /** In-flight flag of the LiveKit turn transport, read directly from the hook. */
   chatPending?: boolean;
+  /** The room is down (not connected) — there is no second transport. */
+  roomDown?: boolean;
 }) {
   const { t } = useTranslation();
-  const { dictation } = iv;
   const questioning = iv.phase === "questioning";
   const sending = chatPending || iv.onboarding.isPending;
   // Wider than `sending` on purpose — see isComposerLocked. Keeps the composer
@@ -29,6 +33,7 @@ export function WorkspaceInputArea({
     answerStatus: iv.answer.state.status,
     requestPending: sending,
     agentStatus: iv.agentStatus,
+    roomDown,
   });
 
   return (
@@ -53,36 +58,32 @@ export function WorkspaceInputArea({
         </div>
       )}
 
-      {/* The bottom composer (Voice/Type bar) is only the answer surface
-          during the assessed questioning phase. Throughout onboarding
-          (opening/readiness) the SetupChecklist above is the sole input —
-          name field, language, readiness — so the composer is hidden to
-          avoid a redundant/confusing second input, then reappears once
-          setup completes and the first question is asked. */}
+      {/* The bottom surface is only the answer surface during the assessed
+          questioning phase. Throughout onboarding (opening/readiness) the
+          SetupChecklist above is the sole input — name field, language,
+          readiness — so the composer is hidden to avoid a redundant/confusing
+          second input, then reappears once setup completes and the first
+          question is asked. */}
       {iv.currentQuestion && questioning ? (
         <FocusedAnswerComposer
-          value={
-            dictation.listening && dictation.interim
-              ? `${iv.answerText}${iv.answerText.trim().length > 0 ? " " : ""}${dictation.interim}`
-              : iv.answerText
-          }
+          value={iv.answerText}
           draftLength={iv.answerText.length}
           onChange={iv.setAnswerText}
           onSubmit={() => void iv.handleRespond()}
-          onFinishRecording={() => void iv.handleRespond()}
           sending={sending}
           submitLocked={submitLocked}
-          micAvailable={Boolean(iv.isHybrid && dictation.supported)}
-          micActive={dictation.listening}
-          micPaused={dictation.paused}
-          micError={
-            dictation.error === "unsupported" ? undefined : dictation.error
+          controlBar={
+            <RoomControlBar
+              // Mirror the real track state up to the controller so the room
+              // provider's `audio` prop (and its reconnect-sync effect) agree
+              // with what useTrackToggle actually published — otherwise a
+              // reconnect would mute a candidate who had toggled the mic on.
+              onMicEnabledChange={iv.setMicOn}
+              disabled={submitLocked || roomDown}
+              endDisabled={iv.endInterviewDisabled}
+              onEndInterview={iv.openEndDialog}
+            />
           }
-          onMicStart={dictation.start}
-          onMicPause={dictation.pause}
-          onMicResume={dictation.resume}
-          onMicCancel={dictation.cancel}
-          onMicRetry={dictation.retry}
           elapsed={iv.elapsed}
           status={iv.agentStatus}
           onEndInterview={iv.openEndDialog}

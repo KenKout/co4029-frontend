@@ -25,8 +25,6 @@ import { applyStateSnapshot } from "./interview-snapshot-actions";
 import {
   handleRetry,
   handleStart,
-  handleVoiceCompleted,
-  handleVoiceDropped,
 } from "./interview-start-actions";
 import type { InterviewActionsContext, InterviewBase } from "./types";
 import {
@@ -45,7 +43,6 @@ export function useInterviewActions(base: InterviewBase) {
   const {
     sessionId,
     phase,
-    dictation,
     narration,
     finish,
     t,
@@ -75,7 +72,6 @@ export function useInterviewActions(base: InterviewBase) {
   const beginClosing = useCallback(
     async (reason: FinishReason) => {
       if (!sessionId || phase === "closing" || phase === "results") return;
-      if (dictation.listening) dictation.stop();
       narration.cancel();
       // Whether the goodbye is shown at all depends on WHO ended the interview.
       //
@@ -133,8 +129,8 @@ export function useInterviewActions(base: InterviewBase) {
         );
       }
     },
-    // The dictation/narration methods are stable and are intentionally read at
-    // call time; including their wrapper objects would restart timeout effects.
+    // The narration methods are stable and are intentionally read at call
+    // time; including their wrapper object would restart timeout effects.
 
     [sessionId, phase, finish, t],
   );
@@ -187,7 +183,6 @@ export function useInterviewActions(base: InterviewBase) {
 
   function leaveInterviewOpen() {
     if (leaveBlocker.status !== "blocked") return;
-    if (dictation.listening) dictation.stop();
     narration.cancel();
     leaveBlocker.proceed();
   }
@@ -223,10 +218,6 @@ export function useInterviewActions(base: InterviewBase) {
     ) => handleAssistance(ctx, requestText, turnAction, displayText),
     handleEndConfirm: () => handleEndConfirm(ctx),
     handleEndCancel: () => handleEndCancel(ctx),
-    handleVoiceCompleted: (reason: "natural" | "ended_early") =>
-      handleVoiceCompleted(ctx, reason),
-    handleVoiceDropped: (opts?: { messageKey?: string }) =>
-      handleVoiceDropped(ctx, opts),
     stayInInterview,
     leaveInterviewOpen,
   };

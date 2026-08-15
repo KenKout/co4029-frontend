@@ -33,8 +33,6 @@ import type {
   InterviewSessionStartResponse,
   InterviewSessionSummary,
   InterviewSessionTeacherRead,
-  InterviewSubmitAnswerRequest,
-  InterviewSubmitAnswerResponse,
   InterviewTranscriptRead,
   RealtimeAgentDispatchResponse,
   RealtimeTokenResponse,
@@ -81,28 +79,6 @@ export function useInterviewSession(
     // Used by the voice-completion flow to poll until the server marks the
     // session terminal (TanStack Query does NOT poll by default).
     refetchInterval: options?.refetchInterval,
-  });
-}
-
-export function useInterviewRespond(sessionId: string | null | undefined) {
-  const { i18n } = useTranslation();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (body: InterviewSubmitAnswerRequest) =>
-      apiPost<InterviewSubmitAnswerResponse>(
-        `/interview-sessions/${sessionId}/respond`,
-        body,
-        {
-          "Accept-Language": i18n.resolvedLanguage ?? i18n.language ?? "en",
-        },
-      ),
-    onSuccess: () => {
-      if (sessionId) {
-        void qc.invalidateQueries({
-          queryKey: queryKeys.interviews.session(sessionId),
-        });
-      }
-    },
   });
 }
 
@@ -268,7 +244,7 @@ export function useInterviewConfig(configId: string | null | undefined) {
 
 /**
  * PATCH /teacher/interview-configs/{config_id} — partial update (title, persona,
- * supported_modes, max_attempts, lock_quiz_ef_until_pass, etc.).
+ * max_attempts, lock_quiz_ef_until_pass, etc.).
  */
 export function useUpdateInterviewConfig(configId: string | null | undefined) {
   const qc = useQueryClient();

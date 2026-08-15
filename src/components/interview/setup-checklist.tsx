@@ -30,16 +30,19 @@ export function SetupChecklist({
   candidateName,
   language,
   micConnected = true,
+  micPermission,
   disabled = false,
   pending = false,
   onLanguageChange,
   onAction,
+  onRequestMic,
 }: {
   stage: SetupStage;
   candidateName: string;
   language: SetupLanguage;
   /** Whether a capture device is available (drives the mic row copy). */
   micConnected?: boolean;
+  micPermission?: "granted" | "prompt" | "denied" | null;
   disabled?: boolean;
   /** True while an onboarding request is in flight (drives the spinner). */
   pending?: boolean;
@@ -48,6 +51,8 @@ export function SetupChecklist({
     action: SetupAction,
     payload?: { language?: SetupLanguage; name?: string },
   ) => void;
+  /** Fire the browser mic permission prompt (the audio row's enable button). */
+  onRequestMic?: () => void;
 }) {
   // The identity step is a single name field: it prefills the profile name so
   // the common case is a one-tap confirm, but the candidate can edit it to any
@@ -75,8 +80,10 @@ export function SetupChecklist({
         <AudioRow
           state={itemState("audio_check", stage)}
           micConnected={micConnected}
+          micPermission={micPermission}
           disabled={disabled}
           onAction={onAction}
+          onRequestMic={onRequestMic}
         />
 
         <LanguageRow

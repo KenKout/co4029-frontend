@@ -26,7 +26,6 @@ function savedConfig(overrides: Partial<InterviewConfigAuthoring> = {}): Intervi
     title: "Voice demo",
     status: "published",
     persona: "neutral",
-    supported_modes: "hybrid",
     tts_voice: null,
     time_limit_minutes: 10,
     max_attempts: 2,
@@ -47,10 +46,7 @@ function savedConfig(overrides: Partial<InterviewConfigAuthoring> = {}): Intervi
 describe("buildConfigUpdatePayload diffing", () => {
   it("sends ONLY the title when a published config's title is edited", () => {
     const saved = savedConfig();
-    const baseline = {
-      ...draftFromConfig(saved),
-      supported_modes: saved.supported_modes,
-    };
+    const baseline = draftFromConfig(saved);
     const draft: SettingsDraft = {
       ...baseline,
       title: "Voice demo (renamed)",
@@ -60,43 +56,12 @@ describe("buildConfigUpdatePayload diffing", () => {
   });
 
   it("sends an empty PATCH when nothing changed", () => {
-    const saved = savedConfig();
-    const baseline = {
-      ...draftFromConfig(saved),
-      supported_modes: saved.supported_modes,
-    };
+    const baseline = draftFromConfig(savedConfig());
     expect(buildConfigUpdatePayload(baseline, baseline)).toEqual({});
   });
 
-  it("still re-normalizes a legacy text config to hybrid on save", () => {
-    // `draftFromConfig` hardcodes hybrid (the mode selector was removed), so
-    // the caller supplies the config's REAL supported_modes as the baseline
-    // — otherwise a legacy text/voice config would never be re-normalized.
-    const saved = savedConfig({ supported_modes: "text" });
-    // Real page flow: the form draft normalizes to hybrid (mode selector was
-    // removed), while the baseline carries the DB's actual "text".
-    const baseline = {
-      ...draftFromConfig(saved),
-      supported_modes: saved.supported_modes, // "text" — what the DB holds
-    };
-    const draft = {
-      ...draftFromConfig(saved), // "hybrid" — what the form holds
-      title: "Voice demo (renamed)",
-    };
-    const payload = buildConfigUpdatePayload(draft, baseline);
-    // hybrid because the draft normalizes to it; title because it changed.
-    expect(payload).toEqual({
-      title: "Voice demo (renamed)",
-      supported_modes: "hybrid",
-    });
-  });
-
   it("includes a frozen field ONLY when it actually changed", () => {
-    const saved = savedConfig();
-    const baseline = {
-      ...draftFromConfig(saved),
-      supported_modes: saved.supported_modes,
-    };
+    const baseline = draftFromConfig(savedConfig());
     const draft: SettingsDraft = {
       ...baseline,
       time_limit_minutes: "15",

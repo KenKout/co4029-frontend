@@ -1,4 +1,4 @@
-import { useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useTranscriptions,
@@ -11,7 +11,10 @@ import {
   liveAgentConversationTurns,
   mergeTranscriptionSegments,
 } from "@/components/interview/voice-transcript/display-items";
-import { useMicrophoneAvailability } from "@/lib/hooks/use-microphone-availability";
+import {
+  requestMicPermission,
+  useMicrophoneAvailability,
+} from "@/lib/hooks/use-microphone-availability";
 import type { ConversationTurn } from "@/lib/interview/types";
 import { questionTypeLabel } from "@/lib/interview/turn-factory";
 import type { CourseInterviewController } from "./use-course-interview";
@@ -48,12 +51,55 @@ export function WorkspaceStage({
   agentActions?: readonly { kind: string; seq: number; text?: string }[];
 }) {
   const { t, i18n } = useTranslation();
-  const { dictation } = iv;
-  // NOT `dictation.supported` — Web Speech support is unrelated to whether a
-  // microphone exists, so that reported "Connected" to candidates who had none.
   const microphone = useMicrophoneAvailability();
   const questioning = iv.phase === "questioning";
   const onboardingStage = resolveSetupStage(iv.phase, iv.onboardingStage);
+
+  // ── Microphone permission belongs to SETUP, not the interview ──────────────
+  // The moment the checklist reaches the audio row, fire the browser's
+  // permission prompt. Before this existed the only ask was the mic toggle in
+  // the control bar — mid-interview, after the first question, or never (the
+  // candidate typed everything and the agent could not hear them).
+  //
+  // NOT gated on `microphone.permission === "prompt"`: the Permissions API
+  // cannot read the microphone state on Firefox/Safari (stays null forever),
+  // and the initial value is null everywhere — the gate simply never opened
+  // there. An unconditional call is safe: already-granted resolves silently
+  // with no prompt, denied rejects into the catch, and once per page session.
+  const micAskedRef = useRef(false);
+  // The outcome of OUR permission request — authoritative over
+  // `microphone.permission`, which the Permissions API cannot read on
+  // Firefox/Safari (stays null even after a grant).
+  const [micPromptResult, setMicPromptResult] = useState<
+    "granted" | "denied" | null
+  >(null);
+  useEffect(() => {
+    if (micAskedRef.current) return;
+    if (onboardingStage === null || onboardingStage === "identity_check") {
+      return;
+    }
+    micAskedRef.current = true;
+    void requestMicPermission().then((granted) => {
+      setMicPromptResult(granted ? "granted" : "denied");
+    });
+  }, [onboardingStage]);
+
+  // The best-known permission state for the checklist row: our own request's
+  // outcome when we have one, the Permissions API otherwise.
+  const micPermission = micPromptResult ?? microphone.permission;
+
+  // With permission granted during setup, publish the mic when questioning
+  // begins — a voice interview where the candidate must ALSO find and click
+  // the mic button before their first answer is a text interview with extra
+  // steps. Latched once: a deliberate mute later in the session is never
+  // overridden by this effect.
+  const micAutoOnRef = useRef(false);
+  useEffect(() => {
+    if (!questioning || micAutoOnRef.current) return;
+    if (micPermission !== "granted") return;
+    micAutoOnRef.current = true;
+    iv.setMicOn(true);
+  }, [questioning, micPermission, iv.setMicOn]);
   // When an agent is in the room it is the voice, and livekit-agents publishes
   // a transcript already paced to its real TTS playout (sync_transcription is
   // set in realtime/agent.py). The question card mirrors that instead of
@@ -199,8 +245,6 @@ export function WorkspaceStage({
         onRetry={() => {
           if (!iv.connected) {
             iv.setConnected(navigator.onLine);
-          } else if (iv.dictationHasError) {
-            dictation.retry();
           } else {
             void (iv.phase === "opening" || iv.phase === "readiness"
               ? iv.handleOnboarding()
@@ -216,6 +260,7 @@ export function WorkspaceStage({
           candidateName={iv.candidateName}
           language={iv.interviewLanguage}
           micConnected={microphone.available}
+          micPermission={micPermission}
           // The modal is only mounted between turns, so there is nothing to guard
           // against here beyond a request already in flight.
           disabled={iv.onboarding.isPending}

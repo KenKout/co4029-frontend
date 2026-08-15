@@ -101,9 +101,6 @@ function revealFirstQuestion(
 ): void {
   ctx.setCurrentQuestion(question);
   ctx.setPhase("questioning");
-  if (ctx.inputMode === "voice") {
-    ctx.setVoiceActive(true);
-  }
   ctx.setTranscript((previous) => {
     const turn = makeAiTurn(question, false, 0);
     return previous.some((existing) => existing.id === turn.id)
@@ -119,11 +116,7 @@ export async function handleOnboarding(
   nameOverride?: string,
 ) {
   if (!ctx.sessionId || ctx.onboardingStage === "completed") return;
-  const pendingInterim = ctx.dictation.listening ? ctx.dictation.stop() : "";
-  const naturalText = [ctx.answerText.trim(), pendingInterim]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  const naturalText = ctx.answerText.trim();
   const submittedText = resolveSubmittedText(ctx, {
     action,
     languageOverride,

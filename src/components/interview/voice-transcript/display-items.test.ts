@@ -183,7 +183,78 @@ describe("liveAgentConversationTurns — the agent's reply becomes visible", () 
     expect(liveAgentConversationTurns(merged, startedAt)[0].elapsedSeconds).toBe(8);
   });
 
-  it("drops the candidate's own dictated speech, already committed as an answer", () => {
+  it("coalesces the fragments of one spoken answer into a single bubble", () => {
+    // The recognizer emits a final per pause, so one hesitant answer arrives
+    // as several streams. Without coalescing, twelve bubbles rendered for two
+    // answers (session 1d629118) and the transcript read as machine gun fire.
+    const merged = mergeTranscriptionSegments(
+      [
+        { id: "a1", text: "That's right.", firstReceivedTime: 1, final: true },
+      ],
+      [
+        {
+          participantInfo: { identity: "student-1" },
+          streamInfo: { id: "st1", timestamp: 2000 },
+          text: "I think",
+        },
+        {
+          participantInfo: { identity: "student-1" },
+          streamInfo: { id: "st2", timestamp: 4000 },
+          text: "uh, operational processing is mostly about handling",
+        },
+        {
+          participantInfo: { identity: "student-1" },
+          streamInfo: { id: "st3", timestamp: 9000 },
+          text: "the company's everyday transactions. Right?",
+        },
+      ],
+      "agent-1",
+    );
+
+    const turns = liveAgentConversationTurns(merged, 0);
+    expect(turns.filter((turn) => turn.role === "user")).toHaveLength(1);
+    expect(turns.find((turn) => turn.role === "user")).toMatchObject({
+      text: "I think uh, operational processing is mostly about handling the company's everyday transactions. Right?",
+      elapsedSeconds: 2,
+    });
+  });
+
+  it("keeps two spoken answers apart when the interviewer replied between them", () => {
+    const merged = mergeTranscriptionSegments(
+      [
+        { id: "a1", text: "First reply.", firstReceivedTime: 1, final: true },
+        { id: "a2", text: "Second reply.", firstReceivedTime: 21, final: true },
+      ],
+      [
+        {
+          participantInfo: { identity: "student-1" },
+          streamInfo: { id: "st1", timestamp: 2 },
+          text: "first answer",
+        },
+        {
+          participantInfo: { identity: "student-1" },
+          streamInfo: { id: "st2", timestamp: 22 },
+          text: "second answer",
+        },
+      ],
+      "agent-1",
+    );
+
+    const userTurns = liveAgentConversationTurns(merged, 0).filter(
+      (turn) => turn.role === "user",
+    );
+    expect(userTurns.map((turn) => turn.text)).toEqual([
+      "first answer",
+      "second answer",
+    ]);
+  });
+
+  it("renders the candidate's spoken answer — nothing else commits it", () => {
+    // The dictation STT that used to copy speech into the composer (and from
+    // there into a committed answer turn) is gone. The agent's STT transcript
+    // is now the ONLY live record of what the candidate said, so it must
+    // surface as a user turn — a spoken interview with no trace of the
+    // candidate's words is not a transcript.
     const merged = mergeTranscriptionSegments(
       [],
       [
@@ -196,6 +267,12 @@ describe("liveAgentConversationTurns — the agent's reply becomes visible", () 
       "agent-1",
     );
 
-    expect(liveAgentConversationTurns(merged, null)).toEqual([]);
+    const turns = liveAgentConversationTurns(merged, null);
+    expect(turns).toHaveLength(1);
+    expect(turns[0]).toMatchObject({
+      role: "user",
+      text: "An index speeds up lookups",
+      live: true,
+    });
   });
 });

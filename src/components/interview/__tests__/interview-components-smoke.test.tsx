@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import * as React from "react";
 
-import { AnswerControls } from "../composer";
+import { FocusedAnswerComposer } from "../composer/FocusedAnswerComposer";
 import {
   FullscreenExitWarningDialog,
   FullscreenPromptDialog,
@@ -140,29 +140,39 @@ describe("fullscreen dialogs (smoke)", () => {
   });
 });
 
-describe("AnswerControls (smoke)", () => {
-  const CONTROL_PROPS = {
-    mode: "type" as const,
-    onModeChange: () => undefined,
-    micAvailable: true,
-    micActive: false,
-    micPaused: false,
-    canFinish: false,
-    onStart: () => undefined,
-    onPause: () => undefined,
-    onResume: () => undefined,
-    onFinish: () => undefined,
-    onCancel: () => undefined,
-  };
-
-  it("renders the voice/type mode switch", () => {
-    render(<AnswerControls {...CONTROL_PROPS} />);
-    expect(screen.getByRole("group")).toBeInTheDocument();
+describe("FocusedAnswerComposer (smoke)", () => {
+  it("renders the answer surface without a control bar", () => {
+    render(
+      <FocusedAnswerComposer
+        value=""
+        draftLength={0}
+        onChange={() => undefined}
+        onSubmit={() => undefined}
+        sending={false}
+        elapsed="00:10"
+        status="idle"
+        onEndInterview={() => undefined}
+      />,
+    );
+    expect(screen.getByRole("textbox")).toBeInTheDocument();
   });
 
-  it("still renders when the microphone is unavailable", () => {
-    // Voice-less browsers are a supported path; this must not throw.
-    render(<AnswerControls {...CONTROL_PROPS} micAvailable={false} />);
-    expect(screen.getByRole("group")).toBeInTheDocument();
+  it("mounts an arbitrary control bar through the slot", () => {
+    // The room control bar itself needs a live LiveKit room; the slot contract
+    // (any node renders above the textarea) is what this file protects.
+    render(
+      <FocusedAnswerComposer
+        value=""
+        draftLength={0}
+        onChange={() => undefined}
+        onSubmit={() => undefined}
+        sending={false}
+        controlBar={<div data-testid="control-bar" />}
+        elapsed="00:10"
+        status="idle"
+        onEndInterview={() => undefined}
+      />,
+    );
+    expect(screen.getByTestId("control-bar")).toBeInTheDocument();
   });
 });

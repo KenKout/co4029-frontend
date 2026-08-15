@@ -42,10 +42,9 @@ function beginQuestioning(
     payload: InterviewSessionStartResponse;
     firstQuestion: InterviewQuestionPublic;
     restoredTranscript: ConversationTurn[];
-    voiceSession: boolean;
   },
 ) {
-  const { payload, firstQuestion, restoredTranscript, voiceSession } = args;
+  const { payload, firstQuestion, restoredTranscript } = args;
   const assessmentStart = payload.assessment_started_at
     ? new Date(payload.assessment_started_at).getTime()
     : Date.now();
@@ -61,11 +60,8 @@ function beginQuestioning(
   ctx.setTranscript(
     restoredTranscript.length > 0
       ? restoredTranscript
-      : voiceSession
-        ? []
-        : [makeAiTurn(firstQuestion, false, 0)],
+      : [makeAiTurn(firstQuestion, false, 0)],
   );
-  if (voiceSession) ctx.setVoiceActive(true);
 }
 
 function beginOnboarding(
@@ -100,11 +96,9 @@ function beginOnboarding(
 export function handleStartSuccess(
   ctx: InterviewActionsContext,
   payload: InterviewSessionStartResponse,
-  voiceSession = false,
 ) {
   const stage = payload.onboarding_stage ?? "completed";
   const restoredTranscript = (payload.history ?? []).map(restoreHistoryTurn);
-  ctx.voiceInitialTranscriptRef.current = restoredTranscript;
   if (stage === "completed" && !payload.first_question) {
     abandonStartWithoutQuestion(ctx);
     return;
@@ -125,7 +119,6 @@ export function handleStartSuccess(
       payload,
       firstQuestion: payload.first_question,
       restoredTranscript,
-      voiceSession,
     });
   } else {
     beginOnboarding(ctx, { payload, restoredTranscript, stage });
@@ -133,29 +126,12 @@ export function handleStartSuccess(
   window.dispatchEvent(new CustomEvent("abridge:interview-started"));
 }
 
-/** Request mic permission; returns true if granted, false otherwise */
-async function checkMicPermission(): Promise<boolean> {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    // Release the test stream immediately — LiveKit will re-acquire
-    stream.getTracks().forEach((t) => t.stop());
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 /**
- * The only place a start body is constructed.
+ * The only place a start body is constructed. No mode field any more: the
+ * backend ignores it and every session runs the unified room.
  */
-function buildStartBody(
-  ctx: InterviewActionsContext,
-  overrides: Partial<InterviewSessionStartRequest> = {},
-): InterviewSessionStartRequest {
-  return {
-    input_mode: ctx.inputMode,
-    ...overrides,
-  };
+function buildStartBody(): InterviewSessionStartRequest {
+  return {};
 }
 
 function reportStartError(ctx: InterviewActionsContext, err: unknown) {
@@ -167,34 +143,9 @@ function reportStartError(ctx: InterviewActionsContext, err: unknown) {
 }
 
 export async function handleStart(ctx: InterviewActionsContext) {
-  const isVoice = ctx.inputMode === "voice";
-
-  if (isVoice) {
-    const granted = await checkMicPermission();
-    if (!granted) {
-      toast.error("Microphone access denied. Falling back to text interview.");
-      ctx.setInputMode("text");
-      // Fall through to start a text session
-      try {
-        const payload = await ctx.startSession.mutateAsync(
-          buildStartBody(ctx, { input_mode: "text" }),
-        );
-        handleStartSuccess(ctx, payload);
-      } catch (err) {
-        reportStartError(ctx, err);
-      }
-      return;
-    }
-  }
-
   try {
-    const payload = await ctx.startSession.mutateAsync(buildStartBody(ctx));
-    handleStartSuccess(ctx, payload, isVoice);
-    // Only enter voice mode when handleStartSuccess actually committed to a
-    // session — i.e. the backend returned a first question. When it didn't
-    // (e.g. config published with only pending questions), the toast in
-    // handleStartSuccess already informed the user; staying on the
-    // mode-selection screen lets them retry without joining an empty room.
+    const payload = await ctx.startSession.mutateAsync(buildStartBody());
+    handleStartSuccess(ctx, payload);
   } catch (err) {
     reportStartError(ctx, err);
   }
@@ -223,64 +174,9 @@ export async function handleRetry(ctx: InterviewActionsContext) {
   ctx.setSessionDeadlineAt(null);
   ctx.timeoutTriggeredRef.current = false;
   try {
-    const payload = await ctx.startSession.mutateAsync(
-      buildStartBody(ctx, { input_mode: "text" }),
-    );
+    const payload = await ctx.startSession.mutateAsync(buildStartBody());
     handleStartSuccess(ctx, payload);
   } catch (err) {
     reportStartError(ctx, err);
-  }
-}
-
-/** Agent departure is natural completion; the call button is an early end. */
-export function handleVoiceCompleted(
-  ctx: InterviewActionsContext,
-  reason: "natural" | "ended_early",
-) {
-  ctx.setVoiceActive(false);
-  if (reason === "ended_early") {
-    void ctx.beginClosing("ended_early");
-    return;
-  }
-  if (ctx.sessionId) {
-    ctx.finish.mutate({ reason: "natural" }, { onError: () => undefined });
-  }
-  ctx.setPollingCompletion(true);
-}
-
-/**
- * Voice room is unavailable for a transient reason — dropped (network/server)
- * OR the agent never joined (worker unavailable, dispatch never happened).
- * Both are NOT a natural end (resilience A-Tier-1 #3): do NOT finalize+grade
- * the session. Tear down the room, switch the live session to text, restore
- * the transcript captured so far, and resume questioning in place so the
- * student keeps going instead of losing a graded attempt to a blip.
- *
- * The caller may override the toast with a more accurate message key: "voice
- * connection lost" is wrong when nothing ever connected.
- */
-export async function handleVoiceDropped(
-  ctx: InterviewActionsContext,
-  opts?: { messageKey?: string },
-) {
-  ctx.setVoiceActive(false);
-  ctx.setInputMode("text");
-  toast.warning(
-    ctx.t(opts?.messageKey ?? "course_interview.voice.dropped_fallback_text"),
-  );
-  // Re-enter via the idempotent start path in TEXT mode: it returns the SAME
-  // in-progress session with full history + the current question, so the
-  // student resumes exactly where the voice room dropped — no finalize, no
-  // lost turns. (start_session is idempotent for a live session.) We call the
-  // mutation directly with input_mode:"text" rather than handleStart() because
-  // the setInputMode above hasn't flushed yet — handleStart's closure would
-  // still read the stale "voice" mode and re-enter the room.
-  try {
-    const payload = await ctx.startSession.mutateAsync(
-      buildStartBody(ctx, { input_mode: "text" }),
-    );
-    handleStartSuccess(ctx, payload);
-  } catch {
-    toast.error(ctx.t("course_interview.errors.start_failed"));
   }
 }

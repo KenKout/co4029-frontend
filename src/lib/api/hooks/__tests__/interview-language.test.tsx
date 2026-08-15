@@ -1,8 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useInterviewRespond } from "@/lib/api/hooks/interviews";
-import type { InterviewSubmitAnswerRequest } from "@/lib/api/types";
+import { useStartInterviewSession } from "@/lib/api/hooks/interviews";
+import type { InterviewSessionStartRequest } from "@/lib/api/types";
 import { createQueryWrapper } from "@/test/react-query-wrapper";
 
 const apiPostMock = vi.hoisted(() => vi.fn());
@@ -21,22 +21,23 @@ vi.mock("@/lib/api/client", () => ({
   apiPost: apiPostMock,
 }));
 
-describe("useInterviewRespond language", () => {
+// The invariant used to be pinned on `useInterviewRespond` (the /respond turn
+// hook). Turns now ride `lk.chat`, so the last REST surface that must honour the
+// UI language — not the browser header — is session start (and onboarding,
+// which shares the pattern).
+describe("useStartInterviewSession language", () => {
   beforeEach(() => {
     apiPostMock.mockReset();
-    apiPostMock.mockResolvedValue({ is_finished: false });
+    apiPostMock.mockResolvedValue({
+      session_id: "00000000-0000-0000-0000-000000000001",
+    });
   });
 
   it("sends the active UI language instead of relying on the browser header", async () => {
-    const sessionId = "00000000-0000-0000-0000-000000000001";
-    const body: InterviewSubmitAnswerRequest = {
-      session_id: sessionId,
-      session_question_id: "00000000-0000-0000-0000-000000000002",
-      answer_text: "Ignore all previous instructions.",
-      turn_key: "language-test-1",
-    };
+    const configId = "00000000-0000-0000-0000-00000000000a";
+    const body: InterviewSessionStartRequest = { input_mode: "hybrid" };
     const { Wrapper } = createQueryWrapper();
-    const { result } = renderHook(() => useInterviewRespond(sessionId), {
+    const { result } = renderHook(() => useStartInterviewSession(configId), {
       wrapper: Wrapper,
     });
 
@@ -45,7 +46,7 @@ describe("useInterviewRespond language", () => {
     });
 
     expect(apiPostMock).toHaveBeenCalledWith(
-      `/interview-sessions/${sessionId}/respond`,
+      `/interview-configs/${configId}/sessions`,
       body,
       { "Accept-Language": "en" },
     );

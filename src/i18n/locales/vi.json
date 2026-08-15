@@ -2522,6 +2522,9 @@
       "live_transcript": "Bản ghi trực tiếp",
       "latest_answer": "Câu trả lời gần nhất của ứng viên",
       "answer_recovery_error": "Câu trả lời chưa được gửi và vẫn được giữ lại để bạn thử lại.",
+      "mic_toggle_on": "Bật micrô",
+      "mic_toggle_off": "Tắt micrô",
+      "end_call": "Kết thúc",
       "microphone_errors": {
         "permission-denied": "Quyền truy cập micrô đang bị chặn. Hãy cấp quyền trong trình duyệt rồi thử lại.",
         "no-microphone": "Không tìm thấy micrô. Hãy kết nối micrô hoặc chuyển sang chế độ Gõ.",
@@ -2606,7 +2609,10 @@
       "mic_connected": "Đã kết nối",
       "mic_unavailable": "Không phát hiện",
       "language": "Ngôn ngữ phỏng vấn",
-      "eyebrow": "Chuẩn bị phỏng vấn AI"
+      "eyebrow": "Chuẩn bị phỏng vấn AI",
+      "mic_blocked": "Bị chặn — hãy cho phép micrô trong trình duyệt",
+      "mic_enable": "Bật micrô",
+      "mic_prompt": "Sẵn sàng bật"
     },
     "recovery": {
       "connection_lost_title": "Mất kết nối",

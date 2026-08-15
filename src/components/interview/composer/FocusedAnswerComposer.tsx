@@ -1,30 +1,19 @@
-import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import { useEffect, useRef } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { InterviewAgentStatus } from "@/lib/interview/types";
-import { AnswerControls } from "./AnswerControls";
 import { FocusedComposerFooter } from "./FocusedComposerFooter";
 import { FocusedComposerTextarea } from "./FocusedComposerTextarea";
-import type { AnswerMode } from "./types";
 
 export function FocusedAnswerComposer({
   value,
   draftLength,
   onChange,
   onSubmit,
-  onFinishRecording,
   sending,
   submitLocked,
-  micAvailable,
-  micActive,
-  micPaused = false,
-  micError,
-  onMicStart,
-  onMicPause,
-  onMicResume,
-  onMicCancel,
-  onMicRetry,
+  controlBar,
   elapsed,
   status,
   onEndInterview,
@@ -34,22 +23,18 @@ export function FocusedAnswerComposer({
   draftLength: number;
   onChange: (value: string) => void;
   onSubmit: () => void;
-  onFinishRecording: () => void;
   sending: boolean;
   /**
    * Wider than `sending`: also true while the answer is accepted but the AI has
    * not replied yet. Omit to keep the previous `sending`-derived behaviour.
    */
   submitLocked?: boolean;
-  micAvailable: boolean;
-  micActive: boolean;
-  micPaused?: boolean;
-  micError?: string | null;
-  onMicStart: () => void;
-  onMicPause: () => void;
-  onMicResume: () => void;
-  onMicCancel: () => void;
-  onMicRetry?: () => void;
+  /**
+   * The room control bar (mic toggle + end), rendered above the textarea where
+   * the old Voice/Type mode toggle sat. A slot rather than an import so this
+   * component stays transport-free and testable without a LiveKit room.
+   */
+  controlBar?: ReactNode;
   elapsed: string;
   status: InterviewAgentStatus;
   onEndInterview: () => void;
@@ -57,10 +42,6 @@ export function FocusedAnswerComposer({
 }) {
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const recordingStartValueRef = useRef(value);
-  const [mode, setMode] = useState<AnswerMode>(
-    micActive || micPaused ? "voice" : "type",
-  );
   // `locked` (can't submit) is deliberately wider than `sending` (a request is
   // in flight). `sending` drives the spinner and the "sending…" label, so it must
   // stay true only while something is actually being sent; `locked` also covers
@@ -75,14 +56,9 @@ export function FocusedAnswerComposer({
       status === "speaking" ||
       status === "disconnected");
   const canSubmit = value.trim().length > 0 && !locked;
-  const voiceDisabled = locked;
   // While the AI is thinking or speaking (or the turn is submitting), lock the
   // text field so the candidate can't type over the interviewer's message.
   const inputDisabled = locked;
-
-  useEffect(() => {
-    if (!micAvailable && mode === "voice") setMode("type");
-  }, [micAvailable, mode]);
 
   useEffect(() => {
     const element = textareaRef.current;
@@ -90,13 +66,6 @@ export function FocusedAnswerComposer({
     element.style.height = "auto";
     element.style.height = `${Math.min(Math.max(element.scrollHeight, 80), 176)}px`;
   }, [value]);
-
-  const changeMode = (nextMode: AnswerMode) => {
-    if (nextMode === mode) return;
-    if (nextMode === "type" && micActive) onMicPause();
-    setMode(nextMode);
-    window.requestAnimationFrame(() => textareaRef.current?.focus());
-  };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (
@@ -115,32 +84,9 @@ export function FocusedAnswerComposer({
         className="mx-auto w-full max-w-[960px] rounded-2xl border border-border bg-white p-3 shadow-editorial sm:p-4"
         aria-label={t("course_interview.workspace.answer_composer")}
       >
-        <AnswerControls
-          mode={mode}
-          onModeChange={changeMode}
-          speechDetected={value.trim().length > 0}
-          micAvailable={micAvailable}
-          micActive={micActive}
-          micPaused={micPaused}
-          micError={micError}
-          disabled={voiceDisabled}
-          canFinish={canSubmit}
-          onStart={() => {
-            recordingStartValueRef.current = value;
-            onMicStart();
-          }}
-          onPause={onMicPause}
-          onResume={onMicResume}
-          onFinish={onFinishRecording}
-          onCancel={() => {
-            onMicCancel();
-            onChange(recordingStartValueRef.current);
-          }}
-          onRetry={onMicRetry}
-        />
+        {controlBar}
 
         <FocusedComposerTextarea
-          mode={mode}
           value={value}
           draftLength={draftLength}
           sending={sending}

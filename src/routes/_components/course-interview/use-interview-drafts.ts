@@ -23,13 +23,8 @@ export function useInterviewDrafts(
     resetAnswerForQuestion,
     restoreDraft,
   } = turn;
-  const {
-    phase,
-    pollingCompletion,
-    setConnected,
-    setSessionDeadlineAt,
-    timeoutTriggeredRef,
-  } = phaseState;
+  const { phase, setConnected, setSessionDeadlineAt, timeoutTriggeredRef } =
+    phaseState;
 
   // A genuinely new question resets the answer machine to a clean draft keyed
   // by the new id (spec §7). The reducer no-ops when the id is unchanged, so an
@@ -84,7 +79,6 @@ export function useInterviewDrafts(
 
   const shouldBlockInterviewExit = Boolean(
     sessionId &&
-      !pollingCompletion &&
       (phase === "opening" ||
         phase === "readiness" ||
         phase === "transition" ||

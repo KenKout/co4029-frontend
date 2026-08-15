@@ -1,11 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useStartAudio, useVoiceAssistant } from "@livekit/components-react";
+import { ConnectionState, DisconnectReason, RoomEvent } from "livekit-client";
 import { toast } from "sonner";
 
 import { EndInterviewDialog } from "@/components/interview/dialogs";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { ConnectionLostBanner } from "@/components/interview/error-banner";
+import {
+  ConnectionLostBanner,
+  ErrorBanner,
+} from "@/components/interview/error-banner";
 import { useInterviewRoomState } from "@/components/interview/interview-room-provider";
 import { InterviewProgressSteps } from "@/components/interview/interview-progress-steps";
 import { InterviewHeader } from "@/components/interview/stages";
@@ -70,7 +74,8 @@ export function InterviewWorkspaceScreen({
   // countdown, progress, and whether it has finished. It is a callback rather
   // than an effect on `chat.snapshot` because two consecutive snapshots can carry
   // identical content and must each be applied in order.
-  const { room, connecting, roomWanted } = useInterviewRoomState();
+  const { room, connecting, roomWanted, tokenError, retryToken } =
+    useInterviewRoomState();
   const chat = useInterviewChat(room, { onSnapshot: iv.handleStateSnapshot });
   // The agent's own voice phase (`lk.agent.state`), published as a participant
   // attribute and surfaced here. This is the ONLY thing that knows when the
@@ -130,6 +135,34 @@ export function InterviewWorkspaceScreen({
     agentPresent: Boolean(agent),
     state: agentState,
   });
+
+  // ── Room rejoin UX (migration step 4) ──────────────────────────────────────
+  // The room is the only transport, so a drop while typing is a hard stop until
+  // it recovers. Three distinct surfaces, because the recovery differs:
+  //   token mint failed  → manual Rejoin re-mints the token
+  //   signal reconnecting → the SDK owns recovery; reassure, do nothing
+  //   room dropped        → manual Rejoin re-mints the token (a fresh join)
+  // Event-driven rather than derived from `room.state` so the FIRST join can
+  // never flash a "connection lost" banner while it is still connecting: the
+  // `Disconnected` event only fires after a connection existed (or failed).
+  const [roomDropped, setRoomDropped] = useState(false);
+  useEffect(() => {
+    if (!room) return;
+    const onDisconnected = (reason?: DisconnectReason) => {
+      if (reason !== DisconnectReason.CLIENT_INITIATED) setRoomDropped(true);
+    };
+    const onRecovered = () => setRoomDropped(false);
+    room.on(RoomEvent.Disconnected, onDisconnected);
+    room.on(RoomEvent.Connected, onRecovered);
+    return () => {
+      room.off(RoomEvent.Disconnected, onDisconnected);
+      room.off(RoomEvent.Connected, onRecovered);
+    };
+  }, [room]);
+  const roomState = room?.state;
+  const signalReconnecting =
+    roomState === ConnectionState.Reconnecting ||
+    roomState === ConnectionState.SignalReconnecting;
 
   // ── Autoplay unlock ────────────────────────────────────────────────────────
   // Browsers block audio until a user gesture, and `RoomAudioRenderer` alone
@@ -227,6 +260,36 @@ export function InterviewWorkspaceScreen({
         </div>
       )}
 
+      {roomWanted && tokenError && (
+        <div className="mx-auto w-full max-w-[840px] px-4 pt-3">
+          <ErrorBanner
+            severity="error"
+            title={t("course_interview.recovery.room_error_title")}
+            description={t("course_interview.recovery.room_error_body")}
+            reassurance={t("course_interview.recovery.progress_safe")}
+            actions={[
+              {
+                label: t("course_interview.recovery.rejoin"),
+                onClick: retryToken,
+                primary: true,
+              },
+            ]}
+          />
+        </div>
+      )}
+
+      {!tokenError && roomDropped && (
+        <div className="mx-auto w-full max-w-[840px] px-4 pt-3">
+          <ConnectionLostBanner onRetry={retryToken} />
+        </div>
+      )}
+
+      {!tokenError && !roomDropped && signalReconnecting && (
+        <div className="mx-auto w-full max-w-[840px] px-4 pt-3">
+          <ConnectionLostBanner reconnecting />
+        </div>
+      )}
+
       {/* Autoplay is blocked until the candidate gestures. A modal (not a
           passive banner) so a rejoined session cannot be mistaken for a silent
           one: the interviewer is already speaking — a re-read is playing —
@@ -234,6 +297,9 @@ export function InterviewWorkspaceScreen({
           unlocks on any first gesture; this is the visible affordance. */}
       <ConfirmDialog
         open={agentOwnsTheVoice && !canPlayAudio}
+        // Not dismissable: without playback unlocked the candidate hears
+        // nothing, and the once-listener only fires on a gesture anyway.
+        onOpenChange={() => undefined}
         title={t("course_interview.enable_audio")}
         description={t("course_interview.enable_audio_body")}
         confirmLabel={t("course_interview.enable_audio")}
@@ -252,7 +318,11 @@ export function InterviewWorkspaceScreen({
             agentActions={chat.agentActions}
           />
           {/* chat.pending from here, not iv.chatBridge: that is a ref. */}
-          <WorkspaceInputArea iv={iv} chatPending={chat.pending} />
+          <WorkspaceInputArea
+            iv={iv}
+            chatPending={chat.pending}
+            roomDown={roomWanted && !chat.connected}
+          />
         </div>
       </div>
 

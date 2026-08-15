@@ -90,7 +90,7 @@ export function SettingsRulesCard({
           <Input
             type="number"
             min={0}
-            max={10}
+            max={50}
             value={draft.max_follow_ups_per_question}
             onChange={(e) =>
               update("max_follow_ups_per_question", e.target.value)

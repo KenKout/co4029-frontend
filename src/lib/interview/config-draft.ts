@@ -21,9 +21,6 @@ import {
   type PersonaKey,
 } from "@/lib/interview/persona-traits";
 
-export type SupportedMode = NonNullable<
-  InterviewConfigUpdate["supported_modes"]
->;
 export type Persona = NonNullable<InterviewConfigUpdate["persona"]>;
 export type TtsVoice = NonNullable<InterviewConfigUpdate["tts_voice"]>;
 export type GenerationMode = InterviewGenerationRequest["mode"];
@@ -121,7 +118,6 @@ export interface SettingsDraft {
   title: string;
   persona: Persona;
   tts_voice: string;
-  supported_modes: SupportedMode;
   time_limit_minutes: string;
   max_attempts: string;
   cooldown_hours: string;

@@ -219,12 +219,10 @@ export function resolveAgentOwnsTheVoice(args: {
  */
 export function shouldWarmRoom(args: {
   sessionId: string | null;
-  inputMode: string;
   onboardingStage: string | null | undefined;
   pendingFirstQuestion: boolean;
 }): boolean {
   if (!args.sessionId) return false;
-  if (args.inputMode !== "hybrid" && args.inputMode !== "voice") return false;
   return args.onboardingStage !== "completed" || args.pendingFirstQuestion;
 }
 

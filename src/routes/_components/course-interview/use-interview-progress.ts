@@ -85,7 +85,7 @@ export function useInterviewProgress(
     sessionProgress,
   } = phaseState;
   const { onboarding } = serverSync;
-  const { dictation } = speech;
+  const { micOn } = phaseState;
 
   // Id of the most recently-added AI turn — only this one animates (types) and
   // speaks. Earlier AI turns render their full text immediately and silently.
@@ -167,19 +167,13 @@ export function useInterviewProgress(
     window.dispatchEvent(new CustomEvent("abridge:interview-ended"));
   }, [interviewActive]);
 
-  const dictationHasError = Boolean(
-    dictation.error && dictation.error !== "unsupported",
-  );
   const agentStatus: InterviewAgentStatus = resolveInterviewState({
     connected,
-    hasError:
-      answer.state.status === "failed" ||
-      onboarding.isError ||
-      dictationHasError,
+    hasError: answer.state.status === "failed" || onboarding.isError,
     thinking: turnPending || onboarding.isPending,
     speaking: aiSpeaking || aiPresenting,
-    listening: dictation.listening,
-    paused: dictation.paused,
+    // A published mic IS the candidate holding the floor.
+    listening: micOn,
   });
 
   return {
@@ -189,7 +183,6 @@ export function useInterviewProgress(
     outcomeProgress,
     questionPacing,
     fullscreenDeterrent,
-    dictationHasError,
     agentStatus,
   };
 }
