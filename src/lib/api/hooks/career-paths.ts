@@ -367,6 +367,12 @@ export function usePublishCareerPath(id: string) {
         ),
       });
       qc.invalidateQueries({ queryKey: queryKeys.careerPaths.list() });
+      // Publish freezes the authoring version (draft -> published): the
+      // version pills/panel must refetch, or they keep showing the stale
+      // draft state.
+      qc.invalidateQueries({
+        queryKey: queryKeys.careerPaths.versions(id),
+      });
     },
   });
 }
