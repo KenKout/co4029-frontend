@@ -25,9 +25,10 @@ import {
 } from "./workspace-helpers";
 
 /**
- * The transcript kind an announced agent beat renders as. `repeat` is absent:
- * a repeat (the rejoin re-read) restates the pinned card and is suppressed
- * from the transcript by its announced text instead of badged.
+ * The transcript kind an announced agent beat renders as. `repeat` is absent
+ * ON PURPOSE: a repeat is conversation, not assistance — it renders as an
+ * ordinary agent line (kept fully visible; nothing is ever suppressed from
+ * the transcript) and needs no badge.
  */
 const AGENT_ACTION_TURN_KIND: Partial<Record<string, ConversationTurn["kind"]>> = {
   hint: "hint",
@@ -129,7 +130,6 @@ export function WorkspaceStage({
   // derived kind, and re-renders never re-badge a turn that was already tagged.
   const taggedKindsRef = useRef<Map<string, ConversationTurn["kind"]>>(new Map());
   const seenSegmentIdsRef = useRef<Set<string>>(new Set());
-  const suppressedTextsRef = useRef<Set<string>>(new Set());
   const consumedActionSeqRef = useRef(0);
   const liveAgentTurns = useMemo(() => {
     const queue = agentActions
@@ -137,13 +137,7 @@ export function WorkspaceStage({
       .map((action) => ({
         seq: action.seq,
         kind: AGENT_ACTION_TURN_KIND[action.kind],
-        suppress: action.kind === "repeat" ? action.text : undefined,
       }));
-    for (const action of agentActions) {
-      if (action.kind === "repeat" && action.text) {
-        suppressedTextsRef.current.add(action.text.trim().toLowerCase());
-      }
-    }
     return liveAgentConversationTurns(
       mergeTranscriptionSegments(
         agentTranscriptions,
@@ -152,23 +146,6 @@ export function WorkspaceStage({
       ),
       iv.assessmentStartedAtMs,
     ).map((turn) => {
-      if (turn.role === "ai" && suppressedTextsRef.current.size > 0) {
-        const text = turn.text.trim().toLowerCase();
-        // Exact match, or a PREFIX of a suppressed text: the re-read streams
-        // in as growing interim segments, and suppressing only the completed
-        // utterance let it type itself out and then VANISH when the final
-        // matched (the F5 re-read flicker). A diverging interim stops matching
-        // and renders normally.
-        if (
-          text.length > 0 &&
-          [...suppressedTextsRef.current].some(
-            (suppressed) =>
-              text === suppressed || suppressed.startsWith(text),
-          )
-        ) {
-          return null;
-        }
-      }
       if (turn.role !== "ai") return turn;
       const known = taggedKindsRef.current.get(turn.id);
       if (known) {
