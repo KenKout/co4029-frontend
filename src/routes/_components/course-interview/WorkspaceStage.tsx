@@ -21,12 +21,15 @@ import {
   resolveStageStatusMessage,
 } from "./workspace-helpers";
 
-/** The transcript kind an announced agent beat renders as. */
+/**
+ * The transcript kind an announced agent beat renders as. `repeat` is absent:
+ * a repeat (the rejoin re-read) restates the pinned card and is suppressed
+ * from the transcript by its announced text instead of badged.
+ */
 const AGENT_ACTION_TURN_KIND: Partial<Record<string, ConversationTurn["kind"]>> = {
   hint: "hint",
   clarify: "clarification",
   explain_term: "clarification",
-  repeat: "clarification",
   question: "question",
 };
 
@@ -42,7 +45,7 @@ export function WorkspaceStage({
 }: {
   iv: CourseInterviewController;
   submissionSlot: ReactNode;
-  agentActions?: readonly { kind: string; seq: number }[];
+  agentActions?: readonly { kind: string; seq: number; text?: string }[];
 }) {
   const { t, i18n } = useTranslation();
   const { dictation } = iv;
@@ -74,6 +77,7 @@ export function WorkspaceStage({
   // derived kind, and re-renders never re-badge a turn that was already tagged.
   const taggedKindsRef = useRef<Map<string, ConversationTurn["kind"]>>(new Map());
   const seenSegmentIdsRef = useRef<Set<string>>(new Set());
+  const suppressedTextsRef = useRef<Set<string>>(new Set());
   const consumedActionSeqRef = useRef(0);
   const liveAgentTurns = useMemo(() => {
     const queue = agentActions
@@ -81,7 +85,13 @@ export function WorkspaceStage({
       .map((action) => ({
         seq: action.seq,
         kind: AGENT_ACTION_TURN_KIND[action.kind],
+        suppress: action.kind === "repeat" ? action.text : undefined,
       }));
+    for (const action of agentActions) {
+      if (action.kind === "repeat" && action.text) {
+        suppressedTextsRef.current.add(action.text.trim().toLowerCase());
+      }
+    }
     return liveAgentConversationTurns(
       mergeTranscriptionSegments(
         agentTranscriptions,
@@ -90,6 +100,11 @@ export function WorkspaceStage({
       ),
       iv.assessmentStartedAtMs,
     ).map((turn) => {
+      if (turn.role === "ai" && suppressedTextsRef.current.size > 0) {
+        if (suppressedTextsRef.current.has(turn.text.trim().toLowerCase())) {
+          return null;
+        }
+      }
       if (turn.role !== "ai") return turn;
       const known = taggedKindsRef.current.get(turn.id);
       if (known) {

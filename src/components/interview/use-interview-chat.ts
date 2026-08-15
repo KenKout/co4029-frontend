@@ -86,7 +86,7 @@ export interface UseInterviewChatResult {
    * "question"). Each entry applies to the agent's NEXT live utterance; the
    * stage consumes them as those utterances appear.
    */
-  agentActions: readonly { kind: string; seq: number }[];
+  agentActions: readonly { kind: string; seq: number; text?: string }[];
 }
 
 export interface UseInterviewChatOptions {
@@ -159,7 +159,7 @@ export function useInterviewChat(
   const [lastEvent, setLastEvent] = useState<ControlEvent | null>(null);
   const [snapshot, setSnapshot] = useState<StateSnapshot | null>(null);
   const [agentActions, setAgentActions] = useState<
-    readonly { kind: string; seq: number }[]
+    readonly { kind: string; seq: number; text?: string }[]
   >([]);
 
   const onSnapshotRef = useRef(options?.onSnapshot);
@@ -211,7 +211,7 @@ export function useInterviewChat(
           const kind = event.actionKind ?? event.turnAction;
           if (kind !== DEFAULT_TURN_ACTION) {
             setAgentActions((current) =>
-              [...current, { kind, seq: event.seq }].slice(-8),
+              [...current, { kind, seq: event.seq, text: event.actionText ?? undefined }].slice(-8),
             );
           }
           return;

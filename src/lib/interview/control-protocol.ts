@@ -173,6 +173,12 @@ export interface ControlEvent {
    */
   actionKind: string | null;
   /**
+   * The exact text the agent is about to speak for an `agent_action` beat
+   * (the rejoin re-read). Lets the stage dedupe that utterance by payload
+   * rather than pattern-matching the server's lead-in wording.
+   */
+  actionText: string | null;
+  /**
    * The interview brain's own per-session version, present only on COMPLETED.
    * This is what persisted history is reconciled against; `seq` only orders
    * the control stream.
@@ -358,6 +364,8 @@ export function parseControlEvent(raw: string): ControlEvent | null {
     turnAction,
     actionKind:
       status === "agent_action" ? asNullableString(payload.turn_action) : null,
+    actionText:
+      status === "agent_action" ? asNullableString(payload.action_text) : null,
     stateVersion: asNullableNumber(payload.state_version),
     rejection,
     state: parseState(payload.state),
