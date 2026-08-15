@@ -278,8 +278,10 @@ export function InterviewRoomProvider({
   useEffect(() => {
     if (!room) return;
     const sync = () => {
-      void room.localParticipant.setMicrophoneEnabled(audio).catch(() => {
-        /* mic permission handled by the caller's own checks */
+      void room.localParticipant.setMicrophoneEnabled(audio).catch((error) => {
+        // Never silent: an auto-on publish that fails here is exactly how
+        // "mic worked for a moment then died" went unnoticed.
+        console.warn("[interview-room] mic sync failed", error);
       });
     };
     if (room.state === ConnectionState.Connected) sync();
