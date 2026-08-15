@@ -49,6 +49,7 @@ interface MicrophoneState {
 const UNSUPPORTED: MicrophoneState = {
   status: "unsupported",
   available: false,
+  permission: null,
 };
 
 /**
