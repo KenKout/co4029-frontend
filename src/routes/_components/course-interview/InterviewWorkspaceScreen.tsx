@@ -1,17 +1,16 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useStartAudio, useVoiceAssistant } from "@livekit/components-react";
-import { Volume2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { EndInterviewDialog } from "@/components/interview/dialogs";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ConnectionLostBanner } from "@/components/interview/error-banner";
 import { useInterviewRoomState } from "@/components/interview/interview-room-provider";
 import { InterviewProgressSteps } from "@/components/interview/interview-progress-steps";
 import { InterviewHeader } from "@/components/interview/stages";
 import { isResumedSessionTranscript } from "@/components/interview/stages/helpers";
 import { useInterviewChat } from "@/components/interview/use-interview-chat";
-import { Button } from "@/components/ui/button";
 import {
   resolveAgentOwnsTheVoice,
   resolveAgentVoicePhase,
@@ -150,6 +149,24 @@ export function InterviewWorkspaceScreen({
     room,
     props: {},
   });
+  // Auto-unlock on the candidate's FIRST gesture anywhere on the page. A
+  // rejoined session already has context — a re-read is playing while the
+  // "Enable audio" button waits for a click nobody remembers needing the first
+  // time. The browser still requires a gesture, so the opener fires on the
+  // first pointerdown/keydown (the button itself remains as the visible
+  // fallback for a candidate who gestures nowhere near it).
+  const audioUnlockRef = useRef<() => void>(() => undefined);
+  audioUnlockRef.current = () => startAudioProps.onClick?.();
+  useEffect(() => {
+    if (!agentOwnsTheVoice || canPlayAudio) return;
+    const unlock = () => audioUnlockRef.current();
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, [agentOwnsTheVoice, canPlayAudio]);
   // Same reason this is a render-phase write: a turn mounting in the handover
   // commit calls speak() from a child effect, and a phase delivered one effect
   // later would arrive after that turn already decided how to pace itself.
@@ -210,27 +227,18 @@ export function InterviewWorkspaceScreen({
         </div>
       )}
 
-      {/* Autoplay is blocked until the candidate gestures. Without this they
-          would simply hear nothing and have nothing to click — the browser
-          gives no affordance of its own. Only shown while a room is actually
-          wanted, so a text-only session never sees it. */}
-      {agentOwnsTheVoice && !canPlayAudio && (
-        <div className="mx-auto w-full max-w-[840px] px-4 pt-3">
-          <Button variant="ghost"
-            type="button"
-            {...startAudioProps}
-            // AFTER the spread on purpose. `mergedProps` sets
-            // `style.display = "block"`, which would override the flex layout
-            // and un-centre the icon; the guard above already handles
-            // visibility, so the hook's display value is not needed.
-            style={undefined}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-m3-primary/30 bg-m3-primary/5 px-4 py-3 text-sm font-bold text-m3-primary transition-colors hover:bg-m3-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60 h-auto whitespace-normal"
-          >
-            <Volume2 className="h-4 w-4" aria-hidden="true" />
-            {t("course_interview.enable_audio")}
-          </Button>
-        </div>
-      )}
+      {/* Autoplay is blocked until the candidate gestures. A modal (not a
+          passive banner) so a rejoined session cannot be mistaken for a silent
+          one: the interviewer is already speaking — a re-read is playing —
+          while the browser still waits for one click. The once-listener above
+          unlocks on any first gesture; this is the visible affordance. */}
+      <ConfirmDialog
+        open={agentOwnsTheVoice && !canPlayAudio}
+        title={t("course_interview.enable_audio")}
+        description={t("course_interview.enable_audio_body")}
+        confirmLabel={t("course_interview.enable_audio")}
+        onConfirm={() => startAudioProps.onClick?.()}
+      />
 
       {/* One conversation surface. The stage below renders the question card and
           the full running transcript inline, so the docked side panel that used

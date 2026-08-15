@@ -2422,6 +2422,7 @@
       "body": "Giọng nói AI không khởi động được, buổi phỏng vấn tiếp tục bằng chữ. Câu trả lời của bạn vẫn được chấm như bình thường."
     },
     "enable_audio": "Bật tiếng người phỏng vấn",
+    "enable_audio_body": "Người phỏng vấn đang trực tiếp nói chuyện. Trình duyệt chặn âm thanh cho đến khi bạn bấm một lần — hãy bật để nghe câu hỏi.",
     "fullscreen": {
       "prompt_title": "Chuyển sang chế độ toàn màn hình",
       "prompt_description": "Buổi phỏng vấn sẽ chạy toàn màn hình để bạn không bị phân tán. Menu của ứng dụng được ẩn cho đến khi phỏng vấn kết thúc.",

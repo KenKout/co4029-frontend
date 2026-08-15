@@ -69,6 +69,11 @@ export function useFocusedStageTurns({
       index -= 1
     ) {
       const turn = transcript[index];
+      // LIVE assistance only. A restored hint/clarification is history: it
+      // rendered in the assistance panel right under the pinned card after a
+      // reload, reading as a stray "Small hint" block instead of a transcript
+      // line in its chronological place.
+      if (turn.restored) continue;
       if (
         turn.role === "ai" &&
         (turn.kind === "clarification" || turn.kind === "hint")

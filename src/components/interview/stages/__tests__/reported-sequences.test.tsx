@@ -211,3 +211,55 @@ describe("the interviewer reading a NEW question", () => {
     expect(history.find((t) => t.id === "s-p")?.kind).toBe("followup");
   });
 });
+
+describe("rejoining mid-question", () => {
+  it("does not duplicate the pinned question with the re-read utterance", () => {
+    // The agent re-states the question after a rejoin ("Let me repeat the
+    // question: …"). The card already shows it; keeping both put the same
+    // question on screen twice (reported: transcript ended with a repeat of
+    // the pinned card).
+    const cardTurn = card(Q2, 65, "q2");
+    const transcript = [
+      card(Q1, 0, "q1"),
+      answer("No idea", 42, "a1"),
+      cardTurn,
+    ];
+    const reRead = said(`Let me repeat the question: ${Q2}`, 70, "s-rr");
+
+    const history = stageHistoryTurns(transcript, cardTurn, null, {
+      liveTurns: [reRead],
+      agentSpeaks: true,
+    });
+
+    expect(history.find((t) => t.id === "s-rr")).toBeUndefined();
+  });
+
+  it("keeps a restored hint as a history line, not an assistance panel block", () => {
+    // Reported: after a reload the persisted hint rendered as a stray
+    // "Small hint" panel under the pinned card instead of its chronological
+    // place in the transcript.
+    const cardTurn = card(Q2, 65, "q2");
+    const hint: ConversationTurn = {
+      id: "message:h1",
+      role: "ai",
+      text: "Think about common identifiers you use when you interact with a company online.",
+      kind: "hint",
+      elapsedSeconds: 125,
+      restored: true,
+    };
+    const transcript = [
+      card(Q1, 0, "q1"),
+      answer("No idea", 42, "a1"),
+      cardTurn,
+      answer("Can you give me a hint?", 110, "a2"),
+      hint,
+    ];
+
+    const history = stageHistoryTurns(transcript, cardTurn, null, {
+      liveTurns: [],
+      agentSpeaks: true,
+    });
+
+    expect(history.map((t) => t.id)).toContain("message:h1");
+  });
+});

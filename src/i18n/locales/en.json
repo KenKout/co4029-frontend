@@ -2549,6 +2549,7 @@
       "body": "The AI voice could not start, so the interview continues in text. Your answers are still graded exactly the same way."
     },
     "enable_audio": "Enable interviewer audio",
+    "enable_audio_body": "The interviewer is live and speaking. Your browser blocks audio until you click once — enable it to hear the questions.",
     "fullscreen": {
       "prompt_title": "Switch to fullscreen mode",
       "prompt_description": "Your interview runs in fullscreen so nothing distracts you. The app menu is hidden until the interview ends.",

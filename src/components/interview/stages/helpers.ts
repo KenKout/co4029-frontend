@@ -130,16 +130,28 @@ function normalizeSpoken(text: string): string {
 /**
  * Lead-ins the native agent prepends when it re-reads the current question
  * after a mid-session rejoin (`_rejoin_question_text`), in the normalized
- * spoken form. A lead-in turns the utterance into a re-STATEMENT, which must
- * not be deduplicated against the pinned question as a verbatim read-back.
+ * spoken form. The utterance is the pinned question restated: it must be
+ * deduplicated against the card like any verbatim reading — kept in the
+ * transcript it duplicated the question the candidate was already looking at.
  */
 const RE_READ_LEAD_INS = [
   "let me repeat the question",
   "để tôi nhắc lại câu hỏi",
 ];
 
-function isReReadUtterance(normalizedText: string): boolean {
-  return RE_READ_LEAD_INS.some((leadIn) => normalizedText.startsWith(leadIn));
+/**
+ * A re-read utterance is the pinned question restated with a lead-in. Its
+ * containment check must run against the QUESTION text only — matching on the
+ * whole utterance would fail (the lead-in words are not in the stored text)
+ * and the re-read would duplicate the card in the transcript.
+ */
+function stripsReReadLeadIn(normalizedText: string): string {
+  for (const leadIn of RE_READ_LEAD_INS) {
+    if (normalizedText.startsWith(leadIn)) {
+      return normalizedText.slice(leadIn.length).trim();
+    }
+  }
+  return normalizedText;
 }
 
 /**
@@ -163,8 +175,9 @@ function pairSpokenWithCommitted(
     const stored = normalizeSpoken(committed.text);
     if (!stored) continue;
     for (const said of spoken) {
-      if (isReReadUtterance(said.text)) continue;
-      if (said.text.includes(stored) || stored.includes(said.text)) {
+      const question = stripsReReadLeadIn(said.text);
+      if (!question) continue;
+      if (question.includes(stored) || stored.includes(question)) {
         readBack.add(committed.id);
         spokenAgain.add(said.id);
       }
