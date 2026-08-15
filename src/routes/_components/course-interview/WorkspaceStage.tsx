@@ -66,6 +66,12 @@ export function WorkspaceStage({
   // and the initial value is null everywhere — the gate simply never opened
   // there. An unconditional call is safe: already-granted resolves silently
   // with no prompt, denied rejects into the catch, and once per page session.
+  //
+  // ALSO fires when questioning begins: "Skip the setup" jumps onboarding
+  // straight to completed, so the checklist never renders a post-identity step
+  // and the setup branch above never runs — without this arm a skipping
+  // candidate was never asked at all and the mic stayed off for the whole
+  // interview. Late by one beat at worst; silent forever was the alternative.
   const micAskedRef = useRef(false);
   // The outcome of OUR permission request — authoritative over
   // `microphone.permission`, which the Permissions API cannot read on
@@ -75,14 +81,14 @@ export function WorkspaceStage({
   >(null);
   useEffect(() => {
     if (micAskedRef.current) return;
-    if (onboardingStage === null || onboardingStage === "identity_check") {
-      return;
-    }
+    const duringSetup =
+      onboardingStage !== null && onboardingStage !== "identity_check";
+    if (!duringSetup && !questioning) return;
     micAskedRef.current = true;
     void requestMicPermission().then((granted) => {
       setMicPromptResult(granted ? "granted" : "denied");
     });
-  }, [onboardingStage]);
+  }, [onboardingStage, questioning]);
 
   // The best-known permission state for the checklist row: our own request's
   // outcome when we have one, the Permissions API otherwise.
@@ -147,7 +153,19 @@ export function WorkspaceStage({
       iv.assessmentStartedAtMs,
     ).map((turn) => {
       if (turn.role === "ai" && suppressedTextsRef.current.size > 0) {
-        if (suppressedTextsRef.current.has(turn.text.trim().toLowerCase())) {
+        const text = turn.text.trim().toLowerCase();
+        // Exact match, or a PREFIX of a suppressed text: the re-read streams
+        // in as growing interim segments, and suppressing only the completed
+        // utterance let it type itself out and then VANISH when the final
+        // matched (the F5 re-read flicker). A diverging interim stops matching
+        // and renders normally.
+        if (
+          text.length > 0 &&
+          [...suppressedTextsRef.current].some(
+            (suppressed) =>
+              text === suppressed || suppressed.startsWith(text),
+          )
+        ) {
           return null;
         }
       }
