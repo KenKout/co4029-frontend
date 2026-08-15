@@ -2838,7 +2838,7 @@
     },
     "actions": {
       "starting": "Starting...",
-      "start": "Start interview",
+      "start": "Start",
       "start_voice": "Start voice interview",
       "course": "Course",
       "next": "Next",
