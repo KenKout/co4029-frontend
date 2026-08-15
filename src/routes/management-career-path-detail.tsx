@@ -9,6 +9,7 @@ import { CoursesTab } from "@/routes/_components/management-career-path-detail/C
 import { EditForm } from "@/routes/_components/management-career-path-detail/EditForm";
 import { LoadErrorBox } from "@/routes/_components/management-career-path-detail/LoadErrorBox";
 import { PathHeaderBar } from "@/routes/_components/management-career-path-detail/PathHeaderBar";
+import { PathImpactBanner } from "@/routes/_components/management-career-path-detail/PathImpactBanner";
 import { ProgressTab } from "@/routes/_components/management-career-path-detail/ProgressTab";
 import { StudentsTab } from "@/routes/_components/management-career-path-detail/StudentsTab";
 import { TabBar } from "@/routes/_components/management-career-path-detail/TabBar";
@@ -72,6 +73,8 @@ export default function ManagementCareerPathDetailPage() {
     <div className="max-w-[1200px] mx-auto pb-16 space-y-6 px-4 sm:px-6 lg:px-8">
       <PathHeaderBar id={id} data={data} canManage={canManage} />
 
+      <ImpactSection id={id} status={data.status} canManage={canManage} />
+
       {canManage && (
         <EditForm
           id={id}
@@ -95,4 +98,24 @@ export default function ManagementCareerPathDetailPage() {
 
     </div>
   );
+}
+
+/**
+ * Gap 3 §2.1 — warn at the point of edit: only managers editing a PUBLISHED
+ * path with students on it see the blast-radius banner. Hoisted out of the
+ * page to keep its complexity under the lint cap.
+ */
+function ImpactSection({
+  id,
+  status,
+  canManage,
+}: {
+  id: string;
+  status: string;
+  canManage: boolean;
+}) {
+  if (!canManage || status !== "published") {
+    return null;
+  }
+  return <PathImpactBanner id={id} />;
 }

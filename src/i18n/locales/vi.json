@@ -2613,7 +2613,9 @@
       "reconnecting_title": "Đang kết nối lại…",
       "reconnecting_body": "Vui lòng chờ — chúng tôi đang khôi phục kết nối.",
       "progress_safe": "Tiến trình và câu trả lời hiện tại của bạn được giữ an toàn.",
-      "reconnect": "Kết nối lại"
+      "reconnect": "Kết nối lại",
+      "resumed_title": "Chào mừng bạn trở lại",
+      "resumed_body": "Buổi phỏng vấn đã được khôi phục sau gián đoạn."
     },
     "onboarding": {
       "language_label": "Ngôn ngữ phỏng vấn",
@@ -2794,6 +2796,12 @@
       "unregister_student_failed": "Huỷ đăng ký thất bại",
       "load_student_progress_failed": "Không thể tải tiến độ sinh viên",
       "update_course_failed": "Không thể cập nhật khóa học."
+    },
+    "impact": {
+      "title": "{{count}} học viên đang đi trên lộ trình này",
+      "body": "Mọi chỉnh sửa áp dụng ngay cho tất cả học viên — thêm khóa học bắt buộc vào giai đoạn chưa hoàn thành, tăng chỉ tiêu hoặc siết khóa sẽ thay đổi lộ trình của họ giữa chừng.",
+      "stage_line": "Giai đoạn {{position}}: {{count}} học viên vẫn còn giai đoạn này phía trước ({{inStage}} đang ở giai đoạn này).",
+      "stage_unnamed": "Giai đoạn {{position}}"
     },
     "breadcrumbs": {
       "management": "Quản lý",

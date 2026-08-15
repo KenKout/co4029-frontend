@@ -2743,7 +2743,9 @@
       "reconnecting_title": "Reconnecting…",
       "reconnecting_body": "Hold on — we're restoring your connection.",
       "progress_safe": "Your progress and current answer are safe.",
-      "reconnect": "Reconnect"
+      "reconnect": "Reconnect",
+      "resumed_title": "Welcome back",
+      "resumed_body": "Your session was restored after the interruption."
     },
     "onboarding": {
       "language_label": "Interview language",
@@ -2921,6 +2923,12 @@
       "unregister_student_failed": "Failed to unregister student",
       "load_student_progress_failed": "Failed to load student progress",
       "update_course_failed": "Couldn't update the course."
+    },
+    "impact": {
+      "title": "{{count}} student(s) are walking this path",
+      "body": "Edits apply to everyone on it immediately — adding work to an unfinished stage, raising a quota, or tightening a lock changes their route mid-walk.",
+      "stage_line": "Stage {{position}}: {{count}} student(s) still have this stage ahead ({{inStage}} on it now).",
+      "stage_unnamed": "Stage {{position}}"
     },
     "breadcrumbs": {
       "management": "Management",

@@ -725,6 +725,22 @@ export type CareerPathUpdate = Schemas["CareerPathUpdate"] & {
 export type CareerPathCourseReorder = Schemas["CareerPathCourseReorder"];
 export type CareerPathStudentEnroll = Schemas["CareerPathStudentEnroll"];
 
+// Gap 3 §2.1 — blast radius of editing a published path (GET
+// /management/career-paths/{id}/impact). Hand-defined: the committed
+// openapi snapshot predates this endpoint.
+export interface CareerPathImpactStage {
+  stage_id: string;
+  position: number;
+  title?: string | null;
+  students_in_stage: number;
+  students_not_completed: number;
+}
+export interface CareerPathImpactRead {
+  career_path_id: string;
+  active_enrollments: number;
+  stages: CareerPathImpactStage[];
+}
+
 // Career-path STAGES (backend migration 0070). Hand-defined here for the same
 // reason as the curated-KG + contact shapes above: the committed
 // openapi-snapshot.json can't be regenerated in isolation right now without

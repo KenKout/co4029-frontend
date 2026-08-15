@@ -260,7 +260,12 @@ export const queryKeys = {
     detail: (id: string) => ["interviews", "detail", id] as const,
     session: (sessionId: string) =>
       ["interviews", "session", sessionId] as const,
-    mySessions: () => ["interviews", "my-sessions"] as const,
+    // The shared prefix of every my-sessions scope — the invalidation target,
+    // so a start/finish refreshes BOTH the unscoped history and any
+    // config-scoped lobby list.
+    mySessionsAnyScope: () => ["interviews", "my-sessions"] as const,
+    mySessions: (configId?: string) =>
+      ["interviews", "my-sessions", configId ?? "all"] as const,
     progress: (courseId: string) =>
       ["interviews", "progress", courseId] as const,
     gapReport: (sessionId: string) =>
@@ -335,5 +340,6 @@ export const queryKeys = {
     teacherProgress: (id: string) =>
       ["career-paths", "teacher-progress", id] as const,
     readiness: (id: string) => ["career-paths", "readiness", id] as const,
+    impact: (id: string) => ["career-paths", "mgmt-impact", id] as const,
   },
 } as const;

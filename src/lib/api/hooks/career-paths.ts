@@ -15,6 +15,7 @@ import type {
   CareerPathCourseAuthoring,
   CareerPathCourseMove,
   CareerPathCreate,
+  CareerPathImpactRead,
   CareerPathProgressRead,
   CareerPathPublic,
   CareerPathStageAuthoring,
@@ -149,6 +150,20 @@ export function useManagedCareerPath(id: string | undefined) {
       if (error instanceof ApiError && error.status === 404) return false;
       return failureCount < 3;
     },
+  });
+}
+
+/**
+ * Gap 3 §2.1: blast radius of editing this path — who is walking it right
+ * now. Fetch BEFORE a mutation on a published path so the edit is informed,
+ * not silent.
+ */
+export function usePathImpact(id: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.careerPaths.impact(id ?? ""),
+    queryFn: () =>
+      apiFetch<CareerPathImpactRead>(`/management/career-paths/${id}/impact`),
+    enabled: !!id && enabled,
   });
 }
 
