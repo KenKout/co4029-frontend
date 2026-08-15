@@ -127,7 +127,7 @@ export function WorkspaceStage({
         return { ...turn, kind: action.kind };
       }
       return turn;
-    });
+    }).filter((turn): turn is ConversationTurn => turn !== null);
   }, [
     agent?.identity,
     agentActions,
