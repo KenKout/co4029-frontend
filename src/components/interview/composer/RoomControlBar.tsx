@@ -4,15 +4,16 @@
  * right. Must be rendered inside a RoomContext.Provider with the room
  * already connected.
  */
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   BarVisualizer,
   useLocalParticipant,
+  useRoomContext,
   useTrackToggle,
   type TrackReferenceOrPlaceholder,
 } from "@livekit/components-react";
-import { Track } from "livekit-client";
+import { ConnectionState, Track } from "livekit-client";
 import { Loader2, Mic, MicOff, PhoneOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export function RoomControlBar({
   onMicEnabledChange?: (enabled: boolean) => void;
 }) {
   const { t } = useTranslation();
+  const room = useRoomContext();
   const {
     toggle,
     enabled: micEnabled,
@@ -44,9 +46,38 @@ export function RoomControlBar({
   } = useTrackToggle({ source: Track.Source.Microphone });
   const { localParticipant, microphoneTrack } = useLocalParticipant();
 
+  // Mirror the REAL track state, read live from the participant at effect
+  // time — never the toggle hook's `enabled`, which stays `false` (its
+  // initial default) until the observable's first emission lands one render
+  // AFTER mount. And report TRANSITIONS only, never the initial observation:
+  // the bar mounts in the same commit as the setup→questioning flip, when the
+  // auto-on's `setMicOn(true)` has not yet reached the provider (the mic is
+  // published only on the NEXT render, once `audio` turns true) — reporting
+  // that not-yet-published `false` overwrote the auto-on in the same batch
+  // and, the auto-on being latched, the mic stayed off for the whole session.
+  // A transition-only mirror still catches the one thing it exists for: the
+  // candidate toggling the mic, which is a real track change.
+  const prevMicEnabledRef = useRef<boolean | null>(null);
   useEffect(() => {
-    onMicEnabledChange?.(micEnabled);
-  }, [micEnabled, onMicEnabledChange]);
+    if (room.state !== ConnectionState.Connected) {
+      // Forget the last observation on a drop: after the reconnect the first
+      // reading must not be mistaken for "no change" (the mic is re-published
+      // by the provider's own reconnect sync, not by this mirror).
+      prevMicEnabledRef.current = null;
+      return;
+    }
+    const current = localParticipant.isMicrophoneEnabled;
+    const previous = prevMicEnabledRef.current;
+    prevMicEnabledRef.current = current;
+    if (previous === null || previous === current) return;
+    onMicEnabledChange?.(current);
+  }, [
+    room,
+    room.state,
+    localParticipant,
+    microphoneTrack,
+    onMicEnabledChange,
+  ]);
 
   // Placeholder-safe reference to the local mic publication: the visualizer
   // reads levels off it and falls back to idle-height bars while the mic
