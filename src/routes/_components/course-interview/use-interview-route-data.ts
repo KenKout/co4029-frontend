@@ -31,15 +31,15 @@ export function useInterviewRouteData() {
   const config = takingPayload?.config;
 
   const startSession = useStartInterviewSession(configId);
+  // Server-scoped to THIS config: the unscoped list is capped at 20 rows
+  // across every config, so a student with a fuller history could lose the
+  // in-progress session this page is trying to resume.
   const { data: previousSessions, isLoading: previousSessionsLoading } =
-    useMyInterviewSessions();
+    useMyInterviewSessions(configId);
   const resumableSession = useMemo(
     () =>
       previousSessions?.find((session) => {
-        if (
-          session.interview_config_id !== configId ||
-          session.status !== "in_progress"
-        ) {
+        if (session.status !== "in_progress") {
           return false;
         }
         if (
@@ -59,23 +59,19 @@ export function useInterviewRouteData() {
     [configId, previousSessions],
   );
 
-  // Completed (graded/terminal) past attempts for THIS config, newest first —
-  // powers the lobby's attempt-history block. The learner session contract
-  // exposes pass_verdict + ended_at (no score %), so we show verdict + date.
+  // Completed (graded/terminal) past attempts, newest first — powers the
+  // lobby's attempt-history block. The learner session contract exposes
+  // pass_verdict + ended_at (no score %), so we show verdict + date.
   const pastAttempts = useMemo(
     () =>
       (previousSessions ?? [])
-        .filter(
-          (s) =>
-            s.interview_config_id === configId &&
-            (s.status === "completed" || s.status === "timed_out"),
-        )
+        .filter((s) => s.status === "completed" || s.status === "timed_out")
         .sort((a, b) => {
           const at = new Date(a.ended_at ?? a.started_at).getTime();
           const bt = new Date(b.ended_at ?? b.started_at).getTime();
           return bt - at;
         }),
-    [configId, previousSessions],
+    [previousSessions],
   );
   const lastAttempt = pastAttempts[0] ?? null;
 

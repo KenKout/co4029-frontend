@@ -1,12 +1,15 @@
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useStartAudio, useVoiceAssistant } from "@livekit/components-react";
 import { Volume2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { EndInterviewDialog } from "@/components/interview/dialogs";
 import { ConnectionLostBanner } from "@/components/interview/error-banner";
 import { useInterviewRoomState } from "@/components/interview/interview-room-provider";
 import { InterviewProgressSteps } from "@/components/interview/interview-progress-steps";
 import { InterviewHeader } from "@/components/interview/stages";
+import { isResumedSessionTranscript } from "@/components/interview/stages/helpers";
 import { useInterviewChat } from "@/components/interview/use-interview-chat";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,6 +47,20 @@ export function InterviewWorkspaceScreen({
 }) {
   const { t } = useTranslation();
   const questioning = iv.phase === "questioning";
+  // A restored transcript WITH real progress means this page load resumed an
+  // in-progress session (refresh / voice-drop fallback). A brand-new session
+  // also restores ceremony turns, so progress is the discriminator. Fired as a
+  // toast once per page session; any turn appended after the restore makes the
+  // condition false again, so it cannot repeat mid-conversation.
+  const resumedToastShownRef = useRef(false);
+  const sessionResumed = isResumedSessionTranscript(iv.transcript);
+  useEffect(() => {
+    if (resumedToastShownRef.current || !sessionResumed) return;
+    resumedToastShownRef.current = true;
+    toast(t("course_interview.recovery.resumed_title"), {
+      description: t("course_interview.recovery.resumed_body"),
+    });
+  }, [sessionResumed, t]);
 
   // The LiveKit chat transport for typed turns. This screen is the only one
   // rendered INSIDE the room provider, so it is the only place the room is
@@ -221,7 +238,11 @@ export function InterviewWorkspaceScreen({
           it incompletely, since it never received the agent's live utterances. */}
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="flex min-w-0 flex-1 flex-col">
-          <WorkspaceStage iv={iv} submissionSlot={renderSubmissionSlot(iv)} />
+          <WorkspaceStage
+            iv={iv}
+            submissionSlot={renderSubmissionSlot(iv)}
+            agentActions={chat.agentActions}
+          />
           {/* chat.pending from here, not iv.chatBridge: that is a ref. */}
           <WorkspaceInputArea iv={iv} chatPending={chat.pending} />
         </div>

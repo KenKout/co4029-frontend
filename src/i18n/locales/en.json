@@ -4076,6 +4076,10 @@
       "criteria_label": "Minimum to pass",
       "criteria_hint": "Minimum number of learning outcomes a student must meet to pass",
       "criteria_placeholder": "e.g. 2",
+      "followups_label": "Follow-ups per question",
+      "followups_hint": "How many times the interviewer may probe one question before moving on (0-10)",
+      "hints_label": "Hints per question",
+      "hints_hint": "Escalating hint rungs offered on one question before it is dropped (0-10)",
       "lock_ef_label": "Lock quiz EF growth until pass",
       "lock_ef_desc": "Students must pass the interview before spaced repetition expands review intervals.",
       "supplementary_label": "Supplementary instructions",
@@ -4097,7 +4101,9 @@
     "units": {
       "minutes": "min",
       "attempts": "times",
-      "outcomes": "LO"
+      "outcomes": "LO",
+      "turns": "turns",
+      "hints": "hints"
     },
     "security": {
       "title": "Security & Integrity",

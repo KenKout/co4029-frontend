@@ -126,6 +126,8 @@ export interface SettingsDraft {
   max_attempts: string;
   cooldown_hours: string;
   min_outcomes_to_pass: string;
+  max_follow_ups_per_question: string;
+  max_hints_per_question: string;
   lock_quiz_ef_until_pass: boolean;
   // The single `supplementary_instructions` column is split for editing into
   // free prose (`notes`, fed to the generation prompt) and the structured

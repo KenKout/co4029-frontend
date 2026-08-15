@@ -56,6 +56,8 @@ export function draftFromConfig(
       config.min_outcomes_to_pass == null
         ? ""
         : String(config.min_outcomes_to_pass),
+    max_follow_ups_per_question: String(config.max_follow_ups_per_question ?? 2),
+    max_hints_per_question: String(config.max_hints_per_question ?? 3),
     lock_quiz_ef_until_pass: config.lock_quiz_ef_until_pass,
     ...(() => {
       const parsed = parseSupplementaryInstructions(
@@ -194,6 +196,11 @@ function buildFullConfigUpdatePayload(
     max_attempts: integerOrNull(draft.max_attempts),
     cooldown_hours: integerOrNull(draft.cooldown_hours),
     min_outcomes_to_pass: integerOrNull(draft.min_outcomes_to_pass),
+    // NOT NULL columns: an empty field falls back to the shipped default
+    // rather than null, which the DB would reject.
+    max_follow_ups_per_question:
+      integerOrNull(draft.max_follow_ups_per_question) ?? 2,
+    max_hints_per_question: integerOrNull(draft.max_hints_per_question) ?? 3,
     lock_quiz_ef_until_pass: draft.lock_quiz_ef_until_pass,
     supplementary_instructions: serializeSupplementaryInstructions({
       notes: draft.notes,

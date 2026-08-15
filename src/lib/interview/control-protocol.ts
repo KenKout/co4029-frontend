@@ -83,7 +83,8 @@ export type ControlStatus =
   | "completed"
   | "rejected"
   | "failed"
-  | "snapshot";
+  | "snapshot"
+  | "agent_action";
 
 const CONTROL_STATUSES: readonly ControlStatus[] = [
   "accepted",
@@ -91,6 +92,7 @@ const CONTROL_STATUSES: readonly ControlStatus[] = [
   "rejected",
   "failed",
   "snapshot",
+  "agent_action",
 ];
 
 export type TurnRejection =
@@ -162,6 +164,14 @@ export interface ControlEvent {
    */
   seq: number;
   turnAction: TurnAction;
+  /**
+   * The beat kind an `agent_action` event announces ("hint", "clarify",
+   * "question"). Unvalidated on purpose: the agent_action stream is
+   * server→client only, and restricting it to TURN_ACTIONS would rename the
+   * server's "question" marker to "answer" — the mislabel it exists to
+   * prevent. Null on every turn-scoped status.
+   */
+  actionKind: string | null;
   /**
    * The interview brain's own per-session version, present only on COMPLETED.
    * This is what persisted history is reconciled against; `seq` only orders
@@ -346,6 +356,8 @@ export function parseControlEvent(raw: string): ControlEvent | null {
     turnKey: asNullableString(payload.turn_key),
     seq,
     turnAction,
+    actionKind:
+      status === "agent_action" ? asNullableString(payload.turn_action) : null,
     stateVersion: asNullableNumber(payload.state_version),
     rejection,
     state: parseState(payload.state),

@@ -63,7 +63,7 @@ export function useStartInterviewSession(configId: string | null | undefined) {
       ),
     onSuccess: () => {
       void qc.invalidateQueries({
-        queryKey: queryKeys.interviews.mySessions(),
+        queryKey: queryKeys.interviews.mySessionsAnyScope(),
       });
     },
   });
@@ -146,7 +146,7 @@ export function useFinishInterview(sessionId: string | null | undefined) {
         });
       }
       void qc.invalidateQueries({
-        queryKey: queryKeys.interviews.mySessions(),
+        queryKey: queryKeys.interviews.mySessionsAnyScope(),
       });
     },
   });
@@ -168,10 +168,13 @@ export function useGapReport(sessionId: string | null | undefined) {
   });
 }
 
-export function useMyInterviewSessions() {
+export function useMyInterviewSessions(configId?: string) {
   return useQuery({
-    queryKey: queryKeys.interviews.mySessions(),
-    queryFn: () => apiFetch<InterviewSessionPublic[]>(`/me/interview-sessions`),
+    queryKey: queryKeys.interviews.mySessions(configId),
+    queryFn: () =>
+      apiFetch<InterviewSessionPublic[]>(
+        `/me/interview-sessions${configId ? `?config_id=${configId}` : ""}`,
+      ),
     refetchInterval: (query) =>
       hasPendingInterviewEvaluation(query.state.data) ? 3000 : false,
   });

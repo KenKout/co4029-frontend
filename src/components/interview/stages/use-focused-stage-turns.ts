@@ -5,7 +5,7 @@ import type {
   ConversationTurn,
   InterviewAgentStatus,
 } from "@/lib/interview/types";
-import { stageHistoryTurns } from "./helpers";
+import { stageHistoryTurns, selectActiveTurnIndex } from "./helpers";
 import type { StageSpeak } from "./types";
 import { useStageAnnouncement } from "./use-stage-announcement";
 
@@ -56,19 +56,10 @@ export function useFocusedStageTurns({
   const [replayingTurnId, setReplayingTurnId] = useState<string | null>(null);
   const replayLockRef = useRef(false);
 
-  const activeTurnIndex = useMemo(() => {
-    for (let index = transcript.length - 1; index >= 0; index -= 1) {
-      const turn = transcript[index];
-      if (turn.role !== "ai") continue;
-      if (
-        !assessmentActive ||
-        (turn.kind !== "clarification" && turn.kind !== "hint")
-      ) {
-        return index;
-      }
-    }
-    return -1;
-  }, [assessmentActive, transcript]);
+  const activeTurnIndex = useMemo(
+    () => selectActiveTurnIndex(transcript, assessmentActive),
+    [assessmentActive, transcript],
+  );
   const activeTurn = activeTurnIndex >= 0 ? transcript[activeTurnIndex] : null;
   const assistanceTurn = useMemo(() => {
     if (!assessmentActive || activeTurnIndex < 0) return null;

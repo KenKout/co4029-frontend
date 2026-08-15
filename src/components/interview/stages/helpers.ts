@@ -11,6 +11,54 @@ const AGENT_VOICED_KINDS: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * AI kinds that are conversation lines rather than the thing the pinned card
+ * should render. During assessment the card is the QUESTION in play; probing
+ * and assistance render in the conversation/assistance panel. On the live path
+ * this holds by construction (follow-ups arrive as live transcription and are
+ * never committed), but after a reload they are restored into the transcript
+ * as ordinary turns — without this exclusion the newest restored follow-up was
+ * promoted to the card and vanished from the conversation.
+ */
+const CARD_EXCLUDED_KINDS: ReadonlySet<string> = new Set([
+  "clarification",
+  "hint",
+  "followup",
+]);
+
+/** Index of the turn the pinned card renders, or -1 when there is none. */
+export function selectActiveTurnIndex(
+  transcript: readonly ConversationTurn[],
+  assessmentActive: boolean,
+): number {
+  for (let index = transcript.length - 1; index >= 0; index -= 1) {
+    const turn = transcript[index];
+    if (turn.role !== "ai") continue;
+    if (!assessmentActive || !CARD_EXCLUDED_KINDS.has(turn.kind ?? "")) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Whether this transcript is a RESUMED session rather than a fresh one.
+ *
+ * "All turns restored" is not enough: a brand-new session's history already
+ * carries the ceremony greeting the backend just persisted, so it would look
+ * identical to a resume. Real progress — an answer or an asked question — is
+ * what only an interrupted session can have.
+ */
+export function isResumedSessionTranscript(
+  transcript: readonly ConversationTurn[],
+): boolean {
+  if (transcript.length === 0) return false;
+  if (!transcript.every((turn) => turn.restored)) return false;
+  return transcript.some(
+    (turn) => turn.role === "user" || turn.kind === "question",
+  );
+}
+
+/**
  * The conversation beats the stage shows above the active card, in time order.
  *
  * `liveTurns` is what the interviewer actually SAID (transcription), and that is
@@ -177,6 +225,20 @@ function labelLiveAgentTurns(
 ): ConversationTurn[] {
   return ordered.map((turn, index) => {
     if (!turn.live || turn.role !== "ai") return turn;
+    // An explicitly assigned kind (an `agent_action` marker matched to this
+    // segment: HINT, CLARIFICATION, or the QUESTION the server just advanced
+    // to) is authoritative — no heuristic may re-badge it. Timing-based
+    // classification is only the fallback for unannounced speech, because the
+    // committed question turn is stamped when the client APPLIES the snapshot
+    // while the spoken paraphrase began earlier — that race is what used to
+    // stamp a violet FOLLOW-UP badge on the question being asked.
+    if (
+      turn.kind === "hint" ||
+      turn.kind === "clarification" ||
+      turn.kind === "question"
+    ) {
+      return turn;
+    }
     const anchor = anchorFor(anchors, turn.elapsedSeconds ?? 0);
     return { ...turn, kind: kindFromPrecedingTurn(ordered, index, anchor) };
   });

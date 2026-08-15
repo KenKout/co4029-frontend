@@ -35,6 +35,7 @@ import { ConnectionState, RoomEvent, type Room } from "livekit-client";
 
 import {
   chatAttributes,
+  DEFAULT_TURN_ACTION,
   parseControlEvent,
   settlesTurn,
   shouldPreserveDraft,
@@ -80,6 +81,12 @@ export interface UseInterviewChatResult {
   lastEvent: ControlEvent | null;
   /** Most recent session snapshot, or null before the first one lands. */
   snapshot: StateSnapshot | null;
+  /**
+   * Beats the server has announced, in arrival order ("hint", "clarify",
+   * "question"). Each entry applies to the agent's NEXT live utterance; the
+   * stage consumes them as those utterances appear.
+   */
+  agentActions: readonly { kind: string; seq: number }[];
 }
 
 export interface UseInterviewChatOptions {
@@ -151,6 +158,9 @@ export function useInterviewChat(
   const connected = useRoomConnected(room);
   const [lastEvent, setLastEvent] = useState<ControlEvent | null>(null);
   const [snapshot, setSnapshot] = useState<StateSnapshot | null>(null);
+  const [agentActions, setAgentActions] = useState<
+    readonly { kind: string; seq: number }[]
+  >([]);
 
   const onSnapshotRef = useRef(options?.onSnapshot);
   onSnapshotRef.current = options?.onSnapshot;
@@ -196,6 +206,16 @@ export function useInterviewChat(
         lastSeqRef.current = event.seq;
 
         setLastEvent(event);
+
+        if (event.status === "agent_action") {
+          const kind = event.actionKind ?? event.turnAction;
+          if (kind !== DEFAULT_TURN_ACTION) {
+            setAgentActions((current) =>
+              [...current, { kind, seq: event.seq }].slice(-8),
+            );
+          }
+          return;
+        }
 
         if (!settlesTurn(event.status)) {
           const next = event.snapshot;
@@ -310,5 +330,6 @@ export function useInterviewChat(
     connected,
     lastEvent,
     snapshot,
+    agentActions,
   };
 }

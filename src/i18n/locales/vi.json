@@ -3946,6 +3946,10 @@
       "criteria_label": "Tối thiểu để đạt",
       "criteria_hint": "Số learning outcome tối thiểu học viên phải đạt để vượt qua",
       "criteria_placeholder": "vd. 2",
+      "followups_label": "Follow-up mỗi câu hỏi",
+      "followups_hint": "Số lần interviewer được hỏi sâu thêm một câu hỏi trước khi chuyển câu (0-10)",
+      "hints_label": "Hint mỗi câu hỏi",
+      "hints_hint": "Số bậc gợi ý leo thang cho một câu hỏi trước khi bỏ câu (0-10)",
       "lock_ef_label": "Khoá nâng EF của quiz đến khi đạt",
       "lock_ef_desc": "Học viên phải vượt phỏng vấn trước khi spaced repetition tăng khoảng cách ôn tập.",
       "supplementary_label": "Hướng dẫn bổ sung",
@@ -3967,7 +3971,9 @@
     "units": {
       "minutes": "phút",
       "attempts": "lần",
-      "outcomes": "LO"
+      "outcomes": "LO",
+      "turns": "lượt",
+      "hints": "gợi ý"
     },
     "security": {
       "title": "Bảo mật & Tính toàn vẹn",

@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useTranscriptions,
@@ -12,6 +12,7 @@ import {
   mergeTranscriptionSegments,
 } from "@/components/interview/voice-transcript/display-items";
 import { useMicrophoneAvailability } from "@/lib/hooks/use-microphone-availability";
+import type { ConversationTurn } from "@/lib/interview/types";
 import { questionTypeLabel } from "@/lib/interview/turn-factory";
 import type { CourseInterviewController } from "./use-course-interview";
 import {
@@ -19,6 +20,15 @@ import {
   resolveSetupStage,
   resolveStageStatusMessage,
 } from "./workspace-helpers";
+
+/** The transcript kind an announced agent beat renders as. */
+const AGENT_ACTION_TURN_KIND: Partial<Record<string, ConversationTurn["kind"]>> = {
+  hint: "hint",
+  clarify: "clarification",
+  explain_term: "clarification",
+  repeat: "clarification",
+  question: "question",
+};
 
 /**
  * The focused interview stage — the transcript, the active question card, the
@@ -28,9 +38,11 @@ import {
 export function WorkspaceStage({
   iv,
   submissionSlot,
+  agentActions = [],
 }: {
   iv: CourseInterviewController;
   submissionSlot: ReactNode;
+  agentActions?: readonly { kind: string; seq: number }[];
 }) {
   const { t, i18n } = useTranslation();
   const { dictation } = iv;
@@ -54,23 +66,60 @@ export function WorkspaceStage({
   // the server commits no turn for them — so without this they were dropped and
   // the candidate saw their own answer followed by silence.
   const allStreams = useTranscriptions();
-  const liveAgentTurns = useMemo(
-    () =>
-      liveAgentConversationTurns(
-        mergeTranscriptionSegments(
-          agentTranscriptions,
-          allStreams,
-          agent?.identity,
-        ),
-        iv.assessmentStartedAtMs,
+  // Assistance the server announced (a granted hint, a typed clarify request)
+  // applies to the agent's NEXT live utterance. LiveKit gives no cross-stream
+  // ordering, so the match is made by ARRIVAL: the first live AI segment whose
+  // id has not been seen consumes the oldest unconsumed action. Assignments are
+  // memoized by segment id — a segment that arrives before its action keeps its
+  // derived kind, and re-renders never re-badge a turn that was already tagged.
+  const taggedKindsRef = useRef<Map<string, ConversationTurn["kind"]>>(new Map());
+  const seenSegmentIdsRef = useRef<Set<string>>(new Set());
+  const consumedActionSeqRef = useRef(0);
+  const liveAgentTurns = useMemo(() => {
+    const queue = agentActions
+      .filter((action) => action.seq > consumedActionSeqRef.current)
+      .map((action) => ({
+        seq: action.seq,
+        kind: AGENT_ACTION_TURN_KIND[action.kind],
+      }));
+    return liveAgentConversationTurns(
+      mergeTranscriptionSegments(
+        agentTranscriptions,
+        allStreams,
+        agent?.identity,
       ),
-    [
-      agent?.identity,
-      agentTranscriptions,
-      allStreams,
       iv.assessmentStartedAtMs,
-    ],
-  );
+    ).map((turn) => {
+      if (turn.role !== "ai") return turn;
+      const known = taggedKindsRef.current.get(turn.id);
+      if (known) {
+        seenSegmentIdsRef.current.add(turn.id);
+        return { ...turn, kind: known };
+      }
+      // Only a segment appearing for the FIRST time may consume an action.
+      // A segment that predates the action (the opening paraphrase, an old
+      // probe) already rendered with its derived kind — re-badging it later
+      // made the first question read "Small hint" after the candidate asked
+      // for a hint minutes later.
+      if (seenSegmentIdsRef.current.has(turn.id)) return turn;
+      seenSegmentIdsRef.current.add(turn.id);
+      while (queue.length > 0) {
+        const action = queue.shift();
+        if (action === undefined) break;
+        consumedActionSeqRef.current = action.seq;
+        if (action.kind === undefined) continue;
+        taggedKindsRef.current.set(turn.id, action.kind);
+        return { ...turn, kind: action.kind };
+      }
+      return turn;
+    });
+  }, [
+    agent?.identity,
+    agentActions,
+    agentTranscriptions,
+    allStreams,
+    iv.assessmentStartedAtMs,
+  ]);
 
   // The modal is shown ONLY between the interviewer's turns: it hides while a
   // request is in flight and while the new turn is being spoken, then returns with

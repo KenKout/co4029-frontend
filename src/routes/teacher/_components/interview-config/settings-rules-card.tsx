@@ -81,6 +81,38 @@ export function SettingsRulesCard({
           />
         </Field>
       </div>
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Field
+          label={t("teacher_interview_config.fields.followups_label")}
+          hint={t("teacher_interview_config.fields.followups_hint")}
+          {...lock("max_follow_ups_per_question")}
+        >
+          <Input
+            type="number"
+            min={0}
+            max={10}
+            value={draft.max_follow_ups_per_question}
+            onChange={(e) =>
+              update("max_follow_ups_per_question", e.target.value)
+            }
+            endAdornment={t("teacher_interview_config.units.turns")}
+          />
+        </Field>
+        <Field
+          label={t("teacher_interview_config.fields.hints_label")}
+          hint={t("teacher_interview_config.fields.hints_hint")}
+          {...lock("max_hints_per_question")}
+        >
+          <Input
+            type="number"
+            min={0}
+            max={10}
+            value={draft.max_hints_per_question}
+            onChange={(e) => update("max_hints_per_question", e.target.value)}
+            endAdornment={t("teacher_interview_config.units.hints")}
+          />
+        </Field>
+      </div>
     </SettingsCard>
   );
 }

@@ -24,10 +24,12 @@ describe("what the interviewer said reaches the transcript", () => {
   it("shows the agent's paraphrase of the CURRENT question immediately", () => {
     // Reported: "lúc đầu khi ai nói câu hỏi -> thì history không có hiện câu đó",
     // and it only appeared after advancing. A paraphrase is a different sentence
-    // from the card, so it belongs on screen the moment it is spoken.
+    // from the card, so it belongs on screen the moment it is spoken. The kind
+    // comes from the server's `agent_action: question` marker (assigned in
+    // WorkspaceStage before this function sees it).
     const cardTurn = card(Q2, 60, "q2");
     const transcript = [card(Q1, 0, "q1"), answer("The two sides are...", 55, "a1"), cardTurn];
-    const paraphrase = said("Thanks for breaking that down. Now, imagine a company that stores customer data in a CRM, and they're really struggling. How would implementing a data warehouse solve that?", 63, "s2");
+    const paraphrase = { ...said("Thanks for breaking that down. Now, imagine a company that stores customer data in a CRM, and they're really struggling. How would implementing a data warehouse solve that?", 63, "s2"), kind: "question" as const };
 
     const history = stageHistoryTurns(transcript, cardTurn, null, {
       liveTurns: [paraphrase],
@@ -35,7 +37,8 @@ describe("what the interviewer said reaches the transcript", () => {
     });
 
     expect(history.find((t) => t.id === "s2")).toBeDefined();
-    expect(history.find((t) => t.id === "s2")?.kind).toBeUndefined();
+    // The server's question marker is authoritative — never re-badged.
+    expect(history.find((t) => t.id === "s2")?.kind).toBe("question");
   });
 
   it("drops a verbatim re-reading and keeps the stored wording instead", () => {
@@ -104,22 +107,27 @@ describe("follow-up badges stay put as the interview advances", () => {
 });
 
 describe("resuming after F5", () => {
-  it("keeps the interviewer's restored turns — they have no live transcription", () => {
-    const restored = (id: string, text: string, kind: ConversationTurn["kind"], elapsedSeconds: number): ConversationTurn => ({
-      id, role: "ai", text, kind, elapsedSeconds, restored: true,
-    });
-    const cardTurn = restored("m4", "Building on that, how does a warehouse help?", "followup", 225);
-    const transcript: ConversationTurn[] = [
-      restored("q1", Q1, "question", 0),
-      { ...answer("The two sides are...", 155, "a1"), restored: true },
-      restored("q2", Q2, "question", 160),
-      { ...answer("A data warehouse would...", 213, "a2"), restored: true },
-      cardTurn,
-    ];
+  const restored = (id: string, text: string, kind: ConversationTurn["kind"], elapsedSeconds: number): ConversationTurn => ({
+    id, role: "ai", text, kind, elapsedSeconds, restored: true,
+  });
+  const followUp = restored("m4", "Building on that, how does a warehouse help?", "followup", 225);
+  const q2Turn = restored("q2", Q2, "question", 160);
+  const transcript: ConversationTurn[] = [
+    restored("q1", Q1, "question", 0),
+    { ...answer("The two sides are...", 155, "a1"), restored: true },
+    q2Turn,
+    { ...answer("A data warehouse would...", 213, "a2"), restored: true },
+    followUp,
+  ];
 
-    const history = stageHistoryTurns(transcript, cardTurn, null, { liveTurns: [], agentSpeaks: true });
+  it("keeps the restored follow-up in the conversation — the card is the question", () => {
+    // Reported: after a reload the newest restored follow-up was promoted to
+    // the pinned card, so it vanished from the conversation and read as a
+    // numbered question. The card must be the live QUESTION; the follow-up is
+    // a conversation line beneath it.
+    const history = stageHistoryTurns(transcript, q2Turn, null, { liveTurns: [], agentSpeaks: true });
 
-    expect(history.map((t) => t.id)).toEqual(["q1", "a1", "q2", "a2"]);
+    expect(history.map((t) => t.id)).toEqual(["q1", "a1", "a2", "m4"]);
   });
 });
 
@@ -148,5 +156,58 @@ describe("the card does not animate against the agent's voice", () => {
     expect(screen.getByText(Q1)).toBeTruthy();
     expect(onPresentationComplete).toHaveBeenCalledTimes(1);
     expect(onSpeakingChange).toHaveBeenLastCalledWith(false);
+  });
+});
+
+describe("the interviewer reading a NEW question", () => {
+  it("keeps the server's question marker through the labeler", () => {
+    // Reported: advancing to question three stamped the spoken question with a
+    // violet FOLLOW-UP badge. The committed question turn is timestamped when
+    // the client applied the snapshot, so the paraphrase that began earlier
+    // used to anchor one question back. The server now announces the beat
+    // (`agent_action: question`) and the stage pre-tags the segment; the
+    // labeler must not second-guess it.
+    const cardTurn = card(Q2, 65, "q2");
+    const transcript = [
+      card(Q1, 0, "q1"),
+      answer("I'm not quite understand ?", 19, "a-ask"),
+      answer("Still stuck", 43, "a2"),
+      cardTurn,
+    ];
+    // A loose paraphrase: shares no exact substring with the bank text, so the
+    // verbatim-dedup path cannot absorb it — only the kind marker can place it.
+    const paraphrase = {
+      ...said(
+        "Thanks for breaking that down. Now picture one company: CRM data here, ERP data there, logs in a bucket — and no unified view of the customer. Walk me through how a warehouse fixes that.",
+        64,
+        "s-q2",
+      ),
+      kind: "question" as const,
+    };
+
+    const history = stageHistoryTurns(transcript, cardTurn, null, {
+      liveTurns: [paraphrase],
+      agentSpeaks: true,
+    });
+
+    expect(history.find((t) => t.id === "s-q2")?.kind).toBe("question");
+  });
+
+  it("still labels an unannounced probe that follows an answer", () => {
+    const cardTurn = card(Q2, 65, "q2");
+    const transcript = [
+      card(Q1, 0, "q1"),
+      answer("No idea", 42, "a1"),
+      cardTurn,
+      answer("A warehouse stores history", 80, "a2"),
+    ];
+    const probe = said("Right — and what does storing history give you?", 85, "s-p");
+
+    const history = stageHistoryTurns(transcript, cardTurn, null, {
+      liveTurns: [probe],
+      agentSpeaks: true,
+    });
+
+    expect(history.find((t) => t.id === "s-p")?.kind).toBe("followup");
   });
 });
