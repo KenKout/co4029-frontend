@@ -80,6 +80,21 @@ function normalizeSpoken(text: string): string {
 }
 
 /**
+ * Lead-ins the native agent prepends when it re-reads the current question
+ * after a mid-session rejoin (`_rejoin_question_text`), in the normalized
+ * spoken form. A lead-in turns the utterance into a re-STATEMENT, which must
+ * not be deduplicated against the pinned question as a verbatim read-back.
+ */
+const RE_READ_LEAD_INS = [
+  "let me repeat the question",
+  "để tôi nhắc lại câu hỏi",
+];
+
+function isReReadUtterance(normalizedText: string): boolean {
+  return RE_READ_LEAD_INS.some((leadIn) => normalizedText.startsWith(leadIn));
+}
+
+/**
  * Match each committed interviewer turn against the live transcription.
  *
  * Containment either way, not equality: a verbatim reading may carry a short
@@ -100,6 +115,7 @@ function pairSpokenWithCommitted(
     const stored = normalizeSpoken(committed.text);
     if (!stored) continue;
     for (const said of spoken) {
+      if (isReReadUtterance(said.text)) continue;
       if (said.text.includes(stored) || stored.includes(said.text)) {
         readBack.add(committed.id);
         spokenAgain.add(said.id);

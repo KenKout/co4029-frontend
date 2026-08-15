@@ -66,6 +66,41 @@ describe("stageHistoryTurns", () => {
     expect(history).toEqual([]);
   });
 
+  it("keeps the agent re-reading the question after a rejoin", () => {
+    // A re-read ("Let me repeat the question: …") is a deliberate second
+    // utterance, not the first reading, so it must stay visible instead of
+    // being deduplicated against the pinned question the moment it finishes.
+    const history = stageHistoryTurns([question], question, null, {
+      liveTurns: [
+        ai(
+          "agent-sr",
+          "Let me repeat the question: What is the primary difference?",
+          15,
+          { live: true },
+        ),
+      ],
+      agentSpeaks: true,
+    });
+
+    expect(history.map((turn) => turn.id)).toEqual(["agent-sr"]);
+  });
+
+  it("keeps the Vietnamese re-read lead-in too", () => {
+    const history = stageHistoryTurns([question], question, null, {
+      liveTurns: [
+        ai(
+          "agent-sr-vi",
+          "Để tôi nhắc lại câu hỏi: What is the primary difference?",
+          15,
+          { live: true },
+        ),
+      ],
+      agentSpeaks: true,
+    });
+
+    expect(history.map((turn) => turn.id)).toEqual(["agent-sr-vi"]);
+  });
+
   it("keeps a follow-up once the candidate has answered that question", () => {
     const history = stageHistoryTurns(
       [question, user("a1", "I'm not sure", 42)],
