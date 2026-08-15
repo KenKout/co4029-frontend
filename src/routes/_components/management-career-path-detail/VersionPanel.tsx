@@ -6,6 +6,7 @@ import {
   useCreatePathVersion,
   usePathVersions,
 } from "@/lib/api/hooks/career-paths";
+import { ConfirmActionBar } from "./ConfirmActionBar";
 
 /**
  * Gap 3 (D1b pinned + D2a explicit fork) manager surface.
@@ -26,6 +27,7 @@ export function VersionPanel({
 }) {
   const { t } = useTranslation();
   const [forkError, setForkError] = useState<string | null>(null);
+  const [confirmingFork, setConfirmingFork] = useState(false);
   const versions = usePathVersions(id, canManage);
   const createVersion = useCreatePathVersion(id);
 
@@ -40,13 +42,17 @@ export function VersionPanel({
   const draft = list.find((v) => v.status === "draft");
   const publishedExists = list.some((v) => v.status === "published");
   const canFork = canManage && pathPublished && publishedExists && !draft;
+  const latestPublished =
+    list.find((v) => v.status === "published") ?? null;
 
   const handleFork = async () => {
     setForkError(null);
     try {
       await createVersion.mutateAsync();
+      setConfirmingFork(false);
     } catch {
       setForkError(t("management_career_path_detail.versions.fork_failed"));
+      setConfirmingFork(false);
     }
   };
 
@@ -80,22 +86,16 @@ export function VersionPanel({
           )}
         </div>
 
-        {canFork && (
-          <Button
-            data-testid="version-fork-button"
-            variant="outline"
-            size="sm"
-            onClick={handleFork}
-            disabled={createVersion.isPending}
-          >
-            {createVersion.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <GitBranch className="h-3.5 w-3.5" />
-            )}
-            {t("management_career_path_detail.versions.fork")}
-          </Button>
-        )}
+        {canFork && <ForkControl
+          confirming={confirmingFork}
+          latestPublished={latestPublished}
+          isPending={createVersion.isPending}
+          onArm={() => setConfirmingFork(true)}
+          onConfirm={() => {
+            void handleFork();
+          }}
+          onCancel={() => setConfirmingFork(false)}
+        />}
       </div>
 
       {draft && (
@@ -116,6 +116,68 @@ export function VersionPanel({
       {forkError && (
         <p className="mt-2 text-xs text-red-600">{forkError}</p>
       )}
+    </div>
+  );
+}
+
+/**
+ * The D2(a) fork control: "New version" button, replaced by the inline
+ * confirmation (hint + confirm/cancel) once armed. Split out so the panel
+ * stays under the complexity cap.
+ */
+function ForkControl({
+  confirming,
+  latestPublished,
+  isPending,
+  onArm,
+  onConfirm,
+  onCancel,
+}: {
+  confirming: boolean;
+  latestPublished: { version_no: number } | null;
+  isPending: boolean;
+  onArm: () => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+
+  if (!confirming) {
+    return (
+      <Button
+        data-testid="version-fork-button"
+        variant="outline"
+        size="sm"
+        onClick={onArm}
+        disabled={isPending}
+      >
+        {isPending ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <GitBranch className="h-3.5 w-3.5" />
+        )}
+        {t("management_career_path_detail.versions.fork")}
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1.5">
+      <p
+        data-testid="version-fork-confirm-hint"
+        className="text-xs text-m3-on-surface-variant"
+      >
+        {t("management_career_path_detail.versions.confirm_hint", {
+          version: latestPublished?.version_no ?? 1,
+        })}
+      </p>
+      <ConfirmActionBar
+        confirmLabel={t("management_career_path_detail.versions.fork_confirm")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={onConfirm}
+        onCancel={onCancel}
+        isPending={isPending}
+      />
     </div>
   );
 }

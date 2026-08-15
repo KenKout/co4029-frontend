@@ -49,7 +49,7 @@ describe("VersionPanel", () => {
     expect(screen.queryByTestId("version-fork-button")).toBeNull();
   });
 
-  it("shows the fork button when a published version exists and no draft", () => {
+  it("forks only after confirmation", () => {
     versionsData = [
       {
         id: "v1",
@@ -62,8 +62,32 @@ describe("VersionPanel", () => {
     render(<VersionPanel id="p" canManage pathPublished />);
     const fork = screen.getByTestId("version-fork-button");
     expect(fork).toBeTruthy();
+    // First click arms the confirmation — nothing is sent yet.
     fireEvent.click(fork);
+    expect(forkFn).not.toHaveBeenCalled();
+    expect(screen.getByTestId("version-fork-confirm-hint")).toBeTruthy();
+    // Confirming actually forks (the confirm bar's first button is confirm).
+    const buttons = screen.getAllByRole("button");
+    fireEvent.click(buttons[0]);
     expect(forkFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("cancelling the confirmation does not fork", () => {
+    versionsData = [
+      {
+        id: "v1",
+        career_path_id: "p",
+        version_no: 1,
+        status: "published",
+        created_at: "2026-01-01T00:00:00Z",
+      },
+    ];
+    render(<VersionPanel id="p" canManage pathPublished />);
+    fireEvent.click(screen.getByTestId("version-fork-button"));
+    const buttons = screen.getAllByRole("button");
+    fireEvent.click(buttons[buttons.length - 1]); // Cancel
+    expect(forkFn).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("version-fork-button")).toBeTruthy();
   });
 
   it("hides the fork button for non-managers", () => {

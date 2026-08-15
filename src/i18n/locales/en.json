@@ -2746,7 +2746,10 @@
       "progress_safe": "Your progress and current answer are safe.",
       "reconnect": "Reconnect",
       "resumed_title": "Welcome back",
-      "resumed_body": "Your session was restored after the interruption."
+      "resumed_body": "Your session was restored after the interruption.",
+      "room_error_title": "Couldn't join the interview room",
+      "room_error_body": "We failed to connect you to your interviewer. Rejoin to pick up where you left off.",
+      "rejoin": "Rejoin"
     },
     "onboarding": {
       "language_label": "Interview language",
@@ -2860,7 +2863,8 @@
       "turn_in_flight": "Your previous answer is still being processed — please wait.",
       "session_closing": "The interview is closing — your answer was not recorded.",
       "finish_failed": "Failed to finish interview",
-      "no_question_available": "This interview has no approved questions yet. Please contact your teacher."
+      "no_question_available": "This interview has no approved questions yet. Please contact your teacher.",
+      "room_disconnected": "The connection dropped before your answer was sent, so it was not graded. Your draft is back in the editor — try sending again."
     },
     "empty_states": {
       "no_interview_found": "Interview not found",
@@ -2933,6 +2937,8 @@
     },
     "versions": {
       "fork": "New version",
+      "fork_confirm": "Create version",
+      "confirm_hint": "Copies v{{version}} (published) into a new draft — edits land on the draft; students stay on the version they started.",
       "empty": "No versions yet — publish to create v1.",
       "editing_draft": "Editing v{{version}} (draft) — publish to freeze it; students stay on the version they started.",
       "frozen_hint": "Published versions are frozen — create a new version to edit.",

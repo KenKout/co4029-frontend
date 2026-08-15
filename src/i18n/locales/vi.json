@@ -2616,7 +2616,10 @@
       "progress_safe": "Tiến trình và câu trả lời hiện tại của bạn được giữ an toàn.",
       "reconnect": "Kết nối lại",
       "resumed_title": "Chào mừng bạn trở lại",
-      "resumed_body": "Buổi phỏng vấn đã được khôi phục sau gián đoạn."
+      "resumed_body": "Buổi phỏng vấn đã được khôi phục sau gián đoạn.",
+      "room_error_title": "Không thể tham gia phòng phỏng vấn",
+      "room_error_body": "Không kết nối được với người phỏng vấn. Vào lại để tiếp tục từ nơi bạn dừng.",
+      "rejoin": "Vào lại"
     },
     "onboarding": {
       "language_label": "Ngôn ngữ phỏng vấn",
@@ -2725,7 +2728,8 @@
       "turn_in_flight": "Câu trả lời trước của bạn vẫn đang được xử lý — vui lòng chờ.",
       "session_closing": "Buổi phỏng vấn đang kết thúc — câu trả lời của bạn chưa được ghi nhận.",
       "finish_failed": "Không thể kết thúc phỏng vấn",
-      "no_question_available": "Phỏng vấn này chưa có câu hỏi nào được duyệt. Vui lòng liên hệ giáo viên."
+      "no_question_available": "Phỏng vấn này chưa có câu hỏi nào được duyệt. Vui lòng liên hệ giáo viên.",
+      "room_disconnected": "Kết nối bị ngắt trước khi câu trả lời được gửi nên chưa được chấm. Nội dung đã trở lại ô soạn — bạn thử gửi lại nhé."
     },
     "empty_states": {
       "no_interview_found": "Không tìm thấy phỏng vấn",
@@ -2806,6 +2810,8 @@
     },
     "versions": {
       "fork": "Bản mới",
+      "fork_confirm": "Tạo bản mới",
+      "confirm_hint": "Sao chép v{{version}} (đã publish) thành bản nháp mới — chỉnh sửa sẽ nằm trên bản nháp; học viên hiện tại vẫn đi bản cũ.",
       "empty": "Chưa có phiên bản — publish để tạo v1.",
       "editing_draft": "Đang chỉnh sửa v{{version}} (bản nháp) — publish để đóng băng; học viên vẫn đi đúng phiên bản họ đã bắt đầu.",
       "frozen_hint": "Phiên bản đã publish bị đóng băng — tạo bản mới để chỉnh sửa.",
