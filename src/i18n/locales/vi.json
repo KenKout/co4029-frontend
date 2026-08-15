@@ -615,7 +615,7 @@
     "no_name": "(Chưa đặt tên)",
     "remove": "Gỡ",
     "remove_confirm": "Gỡ giảng viên {{name}}?",
-    "assign_label": "Phân công giảng viên (user_id UUID)",
+    "assign_label": "Phân công giảng viên",
     "assign_button": "Thêm",
     "assign_help": "Chỉ hiện giảng viên thuộc cùng đơn vị với khóa học này.",
     "load_failed_teachers": "Không thể tải danh sách giảng viên.",

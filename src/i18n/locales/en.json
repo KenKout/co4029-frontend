@@ -685,7 +685,7 @@
     "no_name": "(no name yet)",
     "remove": "Remove",
     "remove_confirm": "Remove instructor {{name}}?",
-    "assign_label": "Assign instructor (user_id UUID)",
+    "assign_label": "Assign instructor",
     "assign_button": "Add",
     "assign_help": "Only instructors in this course's organization are listed.",
     "load_failed_teachers": "Couldn't load instructors.",

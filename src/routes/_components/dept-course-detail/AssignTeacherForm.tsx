@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { Check, UserPlus } from "lucide-react";
@@ -125,6 +125,18 @@ function TeacherSearchCombobox({
   const [query, setQuery] = useState("");
   const selected = options.find((o) => o.value === value);
 
+  // Escape closes the popover from anywhere (the input, the chip, or a
+  // blurred state); click-outside is handled by the invisible backdrop
+  // rendered under the list.
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
   const q = query.trim().toLowerCase();
   const filtered = q
     ? options.filter((o) => o.label.toLowerCase().includes(q))
@@ -167,33 +179,45 @@ function TeacherSearchCombobox({
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
+        // Click must reopen even when the input already holds focus after
+        // an Escape close — focus() on a focused input fires no onFocus.
+        onClick={() => setOpen(true)}
         placeholder={placeholder}
         disabled={disabled}
         wrapperClassName="flex-1 min-w-0"
       />
       {open && (
-        <div className="absolute z-10 mt-1 w-full rounded-md border border-border bg-white shadow-lg max-h-64 overflow-auto">
-          {filtered.length === 0 ? (
-            <p className="px-3 py-2 text-xs text-text-muted">{emptyLabel}</p>
-          ) : (
-            <ul role="listbox" aria-label={placeholder}>
-              {filtered.map((opt) => (
-                <li key={opt.value}>
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    role="option"
-                    aria-selected={opt.value === value}
-                    onClick={() => pick(opt.value)}
-                    className="w-full justify-start rounded-none px-3 py-2 text-sm cursor-pointer"
-                  >
-                    {opt.label}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <>
+          {/* Invisible backdrop: a click anywhere outside the list closes it.
+              z-9 keeps it under the z-10 list but above the page content. */}
+          <div
+            className="fixed inset-0 z-[9]"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="absolute z-10 mt-1 w-full rounded-md border border-border bg-white shadow-lg max-h-64 overflow-auto">
+            {filtered.length === 0 ? (
+              <p className="px-3 py-2 text-xs text-text-muted">{emptyLabel}</p>
+            ) : (
+              <ul role="listbox" aria-label={placeholder}>
+                {filtered.map((opt) => (
+                  <li key={opt.value}>
+                    <Button
+                      variant="ghost"
+                      type="button"
+                      role="option"
+                      aria-selected={opt.value === value}
+                      onClick={() => pick(opt.value)}
+                      className="w-full justify-start rounded-none px-3 py-2 text-sm cursor-pointer"
+                    >
+                      {opt.label}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
