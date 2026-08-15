@@ -111,8 +111,9 @@ export function CourseInPathRow({
           >
             {row.is_required ? requiredLabel : optionalLabel}
           </span>
-          {/* Satisfied-by stays display-only: the CHECK accepts 'pass' for a
-              future graded variant, but only 'completion' has an evaluator. */}
+          {/* Satisfied-by stays display-only: only 'completion' exists —
+              'pass' was dropped from the schema (migration 0073) because
+              it had no evaluator. */}
           <span className="text-[10px] text-m3-on-surface-variant">
             {t(`${prefix}.fields.satisfied_by`)}:{" "}
             {t(`${prefix}.satisfied_by.${row.satisfied_by}`)}

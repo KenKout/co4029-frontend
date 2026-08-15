@@ -59,6 +59,7 @@ export function buildReviewCandidates(
     },
     {
       key: "missing_texp",
+      kind: "missing-texp" as const,
       label: t("teacher_dashboard.review.missing_texp"),
       count: stats?.published_quizzes_missing_texp ?? 0,
       hint: t("teacher_dashboard.review.missing_texp_hint"),

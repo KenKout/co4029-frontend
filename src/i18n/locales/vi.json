@@ -657,6 +657,7 @@
       "failed": "Không thể xóa khóa học."
     },
     "assign_placeholder": "Chọn giảng viên…",
+    "assign_no_match": "Không tìm thấy giảng viên phù hợp.",
     "assign_none_available": "Đơn vị này chưa có giảng viên nào. Hãy cấp quyền giảng viên cho một người trước.",
     "assign_all_assigned": "Mọi giảng viên của đơn vị này đã được phân công vào khóa học.",
     "readiness": {
@@ -2919,9 +2920,7 @@
         "hint": "Chỉ áp dụng cho giai đoạn đang khoá. Không ảnh hưởng tới giới hạn \"số khóa học cùng lúc\", vì giới hạn đó không bao giờ chặn."
       },
       "satisfied_by": {
-        "completion": "Khóa học đã hoàn thành",
-        "pass": "Khóa học đã đạt",
-        "locked_note": "Hiện chỉ dùng \"đã hoàn thành\"."
+        "completion": "Khóa học đã hoàn thành"
       },
       "warnings": {
         "title": "Hãy kiểm tra trước khi tiếp tục",

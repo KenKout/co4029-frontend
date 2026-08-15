@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronRight, type LucideIcon } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   useReviewQueueItems,
@@ -21,6 +22,7 @@ import {
  *   interview-questions → the interview config page
  *   materials           → the LESSON page (quiz generation is keyed on the
  *                         lesson, and no quiz exists yet to link to)
+ *   missing-texp        → the quiz page (bulk-set expected response times)
  *
  * The list is fetched lazily on first expand, so a dashboard load costs
  * nothing for categories nobody opens.
@@ -83,6 +85,18 @@ function ReviewItemLink({
           {children}
         </Link>
       );
+    case "missing-texp":
+      // Same destination as quiz-cards: the quiz page, where the teacher
+      // bulk-sets expected response times on the questions tab.
+      return (
+        <Link
+          to="/teacher/courses/$courseId/quizzes/$quizId"
+          params={{ courseId: item.course_id, quizId: item.target_id }}
+          className={ITEM_LINK_CLASS}
+        >
+          {children}
+        </Link>
+      );
   }
 }
 
@@ -108,11 +122,12 @@ export function ExpandableReviewRow({
 
   return (
     <div>
-      <button
+      <Button
+        variant="ghost"
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition-colors hover:bg-m3-surface-container-low cursor-pointer"
+        className="group flex h-auto w-full items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer"
       >
         <span className="flex min-w-0 items-center gap-3">
           {Icon && (
@@ -150,7 +165,7 @@ export function ExpandableReviewRow({
             />
           )}
         </span>
-      </button>
+      </Button>
 
       {open && (
         <div className="border-t border-m3-outline-variant/20 bg-m3-surface-container-lowest">

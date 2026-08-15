@@ -73,7 +73,8 @@ export function useTeacherDashboardStats() {
 export type ReviewQueueKind =
   | "quiz-cards"
   | "interview-questions"
-  | "materials";
+  | "materials"
+  | "missing-texp";
 
 export interface ReviewQueueItem {
   course_id: string;

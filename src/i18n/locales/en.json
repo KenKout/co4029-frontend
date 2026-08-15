@@ -727,6 +727,7 @@
       "failed": "Couldn't delete the course."
     },
     "assign_placeholder": "Choose an instructor…",
+    "assign_no_match": "No instructor matches that search.",
     "assign_none_available": "No instructors in this organization yet. Give a teacher the instructor role first.",
     "assign_all_assigned": "Every instructor in this organization is already on this course.",
     "readiness": {
@@ -3046,9 +3047,7 @@
         "hint": "This applies to locked stages only. It has no effect on the \"courses at once\" limit, which never blocks."
       },
       "satisfied_by": {
-        "completion": "The course is completed",
-        "pass": "The course is passed",
-        "locked_note": "Only \"completed\" is available for now."
+        "completion": "The course is completed"
       },
       "warnings": {
         "title": "Check these before you continue",

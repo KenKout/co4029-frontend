@@ -738,7 +738,7 @@ export type CareerPathUnlockPolicy =
   | "after_previous"
   | "after_previous_required";
 export type CareerPathStageEnforcement = "hard" | "soft" | "advisory";
-export type CareerPathSatisfiedBy = "completion" | "pass";
+export type CareerPathSatisfiedBy = "completion";
 
 export interface CareerPathStageAuthoring {
   id: string;

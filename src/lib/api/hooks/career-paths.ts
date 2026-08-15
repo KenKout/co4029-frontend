@@ -479,7 +479,7 @@ export function useUpdateCareerPathCourse(id: string) {
   return useMutation({
     mutationFn: (vars: {
       courseId: string;
-      payload: { is_required?: boolean; satisfied_by?: "completion" | "pass" };
+      payload: { is_required?: boolean; satisfied_by?: "completion" };
     }) =>
       apiPatch<CareerPathCourseAuthoring[]>(
         `/management/career-paths/${id}/courses/${vars.courseId}`,
