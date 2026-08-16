@@ -1,5 +1,4 @@
 import {
-  Link,
   Outlet,
   useLocation,
   useParams,
@@ -7,21 +6,19 @@ import {
 import { useTranslation } from "react-i18next";
 import {
   Activity,
-  ArrowLeft,
-  ArrowRight,
   Brain,
   ClipboardList,
   GripVertical,
   Library,
   Users,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Tabs, useStickyTabs } from "@/components/ui/tabs";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Tabs } from "@/components/ui/tabs";
 import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
 
 /**
  * Course-scoped layout for the teacher workspace. Renders a persistent header
- * (back link, course title) plus a tab bar that stays put across the
+ * (standard breadcrumb, course title) plus a tab bar that stays put across the
  * per-course tabs (Curriculum / Students / Progress / Assessments / Question
  * bank / Retention) and highlights the active one. Tab pages render into the
  * <Outlet/> below it, so switching tabs no longer bounces back to Curriculum.
@@ -99,7 +96,6 @@ export default function CourseShell() {
   const location = useLocation();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
   const { data: course } = useTeacherCourseById(courseId);
-  const { stuck, sentinelRef } = useStickyTabs();
 
   const base = `/teacher/courses/${courseId}`;
   // Determine active tab from the path segment right after the courseId.
@@ -111,23 +107,20 @@ export default function CourseShell() {
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
+      <div className="pt-4">
+        <Breadcrumbs
+          items={[
+            {
+              label: t("teacher_common.breadcrumb_teaching"),
+              to: "/teacher/courses",
+            },
+            { label: course?.title ?? t("teacher_common.breadcrumb_course") },
+          ]}
+        />
+      </div>
+
       <div className="flex items-start gap-3">
-        <Link to="/teacher/courses">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-xs text-m3-on-surface-variant mb-0.5">
-            <Link
-              to="/teacher/courses"
-              className="hover:text-m3-primary transition-colors"
-            >
-              {t("teacher_courses_list.title")}
-            </Link>
-            <ArrowRight className="h-3 w-3" />
-            <span className="truncate">{course?.title ?? "…"}</span>
-          </div>
           <div className="flex items-center justify-between gap-3">
             <h1 className="min-w-0 flex-1 text-xl font-headline font-bold text-m3-on-surface truncate">
               {course?.title ?? t("teacher_common.curriculum_fallback_title")}
@@ -138,21 +131,11 @@ export default function CourseShell() {
 
       {/* Persistent tab bar — stays across every course tab and highlights the
           active one. Link mode: each tab is a real route, so the items must stay
-          anchors (right-click / middle-click / deep links).
-
-          Lifted OUT of the header's flex row to be a direct flow child: a
-          `position: sticky` element inside a flex item pins to that item's box,
-          not the page, so it would never actually stick there. Sticky pinning is
-          the same behaviour as the quiz-edit screen — long course tabs (roster,
-          question bank) scroll well past the header, and losing the tab strip
-          means scrolling back up just to switch. */}
-      <div ref={sentinelRef} aria-hidden className="h-px w-full" />
+          anchors (right-click / middle-click / deep links). */}
       <Tabs
         variant="outlined"
         value={activeSegment}
         ariaLabel={t("teacher_common.section_curriculum")}
-        sticky
-        stuck={stuck}
         linkTo={(segment) => ({
           to: TABS.find((tab) => tab.segment === segment)!.to,
           params: { courseId },
