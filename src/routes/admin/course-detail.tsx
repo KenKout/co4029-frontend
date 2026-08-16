@@ -1,6 +1,3 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { PermissionDenied } from "@/components/ui/permission-denied";
 
@@ -30,18 +27,10 @@ export default function AdminCourseDetailPage() {
     <div className="space-y-6 pb-12">
       <Breadcrumbs
         items={[
-          { label: t("sections.admin"), to: "/admin/stats" },
           { label: t("nav.courses"), to: "/admin/courses" },
           { label: t("admin.course_detail.title") },
         ]}
       />
-      <Link
-        to="/admin/courses"
-        className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-strong"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("admin.course_detail.back_to_list")}
-      </Link>
 
       <CourseDetailHeader c={c} />
 

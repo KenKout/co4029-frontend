@@ -48,7 +48,6 @@ export default function AdminOrganizationDetailPage() {
     <div className="space-y-6 pb-12">
       <Breadcrumbs
         items={[
-          { label: t("nav.admin"), to: "/admin/stats" },
           {
             label: t("admin.organizations.title"),
             to: "/admin/organizations",

@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import { useSearch, Link } from "@tanstack/react-router";
+import { useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { PermissionDenied } from "@/components/ui/permission-denied";
 import { useMe } from "@/lib/api/hooks/auth";
@@ -82,11 +81,6 @@ export default function ManagementCourseNewPage() {
       />
 
       <div className="flex items-center gap-3">
-        <Link to="/dept">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
         <h1 className="text-2xl font-headline font-bold text-m3-primary">
           {t("teacher_course_new.title")}
         </h1>

@@ -1,7 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 /**
@@ -38,11 +35,6 @@ export function PageHeader({
       </div>
 
       <div className="flex items-center gap-3">
-        <Link to="/teacher/courses/$courseId" params={{ courseId }}>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-headline font-bold text-m3-on-surface truncate">
             {t("management_course_enrollments.header.title")}

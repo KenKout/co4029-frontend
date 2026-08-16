@@ -1,6 +1,3 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { PermissionDenied } from "@/components/ui/permission-denied";
 
@@ -28,19 +25,10 @@ export default function AdminProcessingJobPage() {
     <div className="space-y-6 pb-12">
       <Breadcrumbs
         items={[
-          { label: t("sections.admin"), to: "/admin/stats" },
           { label: t("admin.processing.title"), to: "/admin/processing" },
           { label: data?.job_type ?? t("admin.processing_job.title") },
         ]}
       />
-      <Link
-        to="/admin/processing"
-        className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-strong"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("admin.processing_job.back_to_queue")}
-      </Link>
-
       <JobDetailBody c={c} />
     </div>
   );

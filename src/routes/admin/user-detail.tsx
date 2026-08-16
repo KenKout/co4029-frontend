@@ -1,6 +1,3 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionDenied } from "@/components/ui/permission-denied";
@@ -30,18 +27,10 @@ export default function AdminUserDetailPage() {
     <div className="space-y-6 pb-12">
       <Breadcrumbs
         items={[
-          { label: t("sections.admin"), to: "/admin/stats" },
           { label: t("admin.users.title"), to: "/admin/users" },
           { label: displayName },
         ]}
       />
-      <Link
-        to="/admin/users"
-        className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-strong"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("admin.users.back_to_list")}
-      </Link>
 
       <UserDetailBody c={c} />
 

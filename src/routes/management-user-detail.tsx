@@ -1,5 +1,3 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -54,13 +52,6 @@ export default function ManagementUserDetailPage() {
           { label: displayName },
         ]}
       />
-      <Link
-        to="/management/users"
-        className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-strong"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("management_users.back_to_list", { defaultValue: "Back to users" })}
-      </Link>
 
       <UserOverviewBody c={c} />
     </div>

@@ -1,7 +1,4 @@
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import type { CareerPathAuthoring } from "@/lib/api/types";
 import { COURSE_STATUS_TOKENS, statusToken } from "@/lib/status-tokens";
@@ -44,11 +41,6 @@ export function PathHeaderBar({
       </div>
 
       <div className="flex items-center gap-3">
-        <Link to="/management/career-paths">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-headline font-bold text-m3-on-surface truncate">
