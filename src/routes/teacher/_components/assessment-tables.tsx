@@ -5,26 +5,7 @@ import type {
   InterviewSessionTeacherRead,
   QuizAttemptTeacherRead,
 } from "@/lib/api/types";
-
-/**
- * Shared teacher-facing tables for quiz attempts + interview sessions.
- * Used by both the per-student profile (course-student-detail.tsx) and the
- * course-wide Assessments tab (course-assessments.tsx) so the row shape and
- * status badges stay consistent between the two views.
- */
-
-function fmtDateTime(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { isoToLocalInput } from "./quiz-manage/helpers";
 
 function QuizStatusBadge({ attempt }: { attempt: QuizAttemptTeacherRead }) {
   if (attempt.status === "in_progress") {
@@ -134,7 +115,7 @@ export function QuizAttemptsTable({
       header: "Submitted",
       cell: (a) => (
         <span className="text-xs text-m3-on-surface-variant whitespace-nowrap">
-          {fmtDateTime(a.submitted_at ?? a.started_at)}
+          {isoToLocalInput(a.submitted_at ?? a.started_at)}
         </span>
       ),
     },
@@ -277,7 +258,7 @@ export function InterviewSessionsTable({
       header: "Started",
       cell: (s) => (
         <span className="text-xs text-m3-on-surface-variant whitespace-nowrap">
-          {fmtDateTime(s.started_at)}
+          {isoToLocalInput(s.started_at)}
         </span>
       ),
     },
