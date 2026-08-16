@@ -19,7 +19,7 @@ import { notificationDeepLink } from "@/lib/notifications/deep-link";
 import type { Notification } from "@/lib/api/types";
 
 import { NotificationBody } from "./NotificationBody";
-import type { NotificationGroup } from "./helpers";
+import { isCategoryKey, type NotificationGroup } from "./helpers";
 import type { NotificationsPageController } from "./use-notifications-page";
 
 /**
@@ -46,7 +46,9 @@ function buildRows(
   return groups.map((g) => ({
     kind: "group",
     key: g.key,
-    label: t(`notifications.group_${g.key}`, { defaultValue: g.key }),
+    label: isCategoryKey(g.key)
+      ? t(`notifications.category.${g.key}`, { defaultValue: g.key })
+      : t(`notifications.group_${g.key}`, { defaultValue: g.key }),
     count: g.items.length,
     children: g.items,
   }));

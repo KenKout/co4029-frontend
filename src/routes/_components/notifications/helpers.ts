@@ -115,6 +115,13 @@ export const CATEGORY_ORDER: NotificationCategory[] = [
   "interview_generation",
 ];
 
+/** True when a group key is a category (type grouping) rather than a date
+ *  bucket. Those labels live under `notifications.category.*`; date-bucket
+ *  keys under `notifications.group_*`. */
+export function isCategoryKey(key: string): key is NotificationCategory {
+  return (CATEGORY_ORDER as readonly string[]).includes(key);
+}
+
 /**
  * Bucket a notification into a date group (local calendar days). `now` is
  * injectable for tests.

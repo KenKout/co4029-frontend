@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { notificationDeepLink } from "@/lib/notifications/deep-link";
 import type { Notification } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { isCategoryKey } from "./helpers";
 
 import { NotificationBody } from "./NotificationBody";
 import type { NotificationsPageController } from "./use-notifications-page";
@@ -230,9 +231,12 @@ export function NotificationsFeed({
       {c.groups.map((group) => (
         <section key={group.key}>
           <h2 className="flex items-center gap-2 font-headline font-bold text-sm text-m3-on-surface-variant">
-            {t(`notifications.group_${group.key}`, {
-              defaultValue: group.key,
-            })}
+            {t(
+              isCategoryKey(group.key)
+                ? `notifications.category.${group.key}`
+                : `notifications.group_${group.key}`,
+              { defaultValue: group.key },
+            )}
             <span className="text-xs font-bold tabular-nums text-m3-outline">
               · {group.items.length}
             </span>

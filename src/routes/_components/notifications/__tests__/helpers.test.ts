@@ -7,6 +7,7 @@ import {
   dateBucketFor,
   filterNotifications,
   groupNotifications,
+  isCategoryKey,
   sinceFromTimeRange,
 } from "../helpers";
 
@@ -210,5 +211,13 @@ describe("groupNotifications", () => {
     for (const lit of literals) {
       expect(CATEGORY_ORDER).toContain(lit);
     }
+  });
+
+  it("isCategoryKey tells category groups apart from date buckets", () => {
+    expect(isCategoryKey("spaced_repetition")).toBe(true);
+    expect(isCategoryKey("quiz_generation")).toBe(true);
+    expect(isCategoryKey("today")).toBe(false);
+    expect(isCategoryKey("this_week")).toBe(false);
+    expect(isCategoryKey("nonsense_key")).toBe(false);
   });
 });
