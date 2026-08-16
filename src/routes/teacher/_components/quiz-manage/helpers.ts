@@ -1,4 +1,5 @@
 import type { QuizAuthoring, QuizQuestionAuthoring } from "@/lib/api/types";
+import type { ReviewOptions } from "@/lib/api/hooks/quizzes/settings";
 import { defaultReviewOptions } from "./ReviewOptionsMatrix";
 import type { QuestionDraft, SettingsDraft } from "./types";
 
@@ -85,7 +86,8 @@ export function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
     available_from: isoToLocalInput(quiz.available_from),
     available_until: isoToLocalInput(quiz.available_until),
     due_at: isoToLocalInput(quiz.due_at),
-    review_options: quiz.review_options ?? defaultReviewOptions(),
+    review_options: (quiz.review_options as unknown as ReviewOptions | null) ??
+      defaultReviewOptions(),
     require_password: quiz.require_password ?? "",
     require_subnet: quiz.require_subnet ?? "",
     browser_security: quiz.browser_security ?? false,

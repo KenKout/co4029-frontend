@@ -153,15 +153,17 @@ function PreviewMatchingAnswer({ question }: PreviewAnswerProps) {
         </div>
         {Array.isArray(question.match_pairs) &&
         question.match_pairs.length > 0 ? (
-          question.match_pairs.map((pair, i) => (
-            <div key={i} className="flex items-start gap-2">
-              <span className="font-medium">{pair.left}</span>
-              <span aria-hidden className="text-m3-on-surface-variant shrink-0">
-                →
-              </span>
-              <span className="flex-1">{pair.right}</span>
-            </div>
-          ))
+          question.match_pairs.map(
+            (pair: Record<string, unknown>, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="font-medium">{String(pair.left ?? "")}</span>
+                <span aria-hidden className="text-m3-on-surface-variant shrink-0">
+                  →
+                </span>
+                <span className="flex-1">{String(pair.right ?? "")}</span>
+              </div>
+            ),
+          )
         ) : (
           <span className="italic text-m3-on-surface-variant">
             {t("teacher_quiz_manage.preview.no_content")}
@@ -204,12 +206,12 @@ function PreviewOrderingAnswer({ question }: PreviewAnswerProps) {
         </div>
         {Array.isArray(question.ordering_sequence) &&
         question.ordering_sequence.length > 0 ? (
-          question.ordering_sequence.map((item, i) => (
+          question.ordering_sequence.map((item: unknown, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="font-bold text-m3-on-surface-variant text-xs w-6 tabular-nums">
                 {i + 1}.
               </span>
-              <span>{item}</span>
+              <span>{String(item)}</span>
             </div>
           ))
         ) : (

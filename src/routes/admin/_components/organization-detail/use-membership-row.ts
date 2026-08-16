@@ -37,7 +37,9 @@ export function useMembershipRow(m: MembershipRead, orgId: string) {
     try {
       await patch.mutateAsync({
         membershipId: m.id,
-        body: { status: draftStatus },
+        body: {
+          status: draftStatus as "active" | "inactive" | "suspended",
+        },
       });
       setEditing(false);
       toast.success(t("admin.organizations.toasts.member_updated"));

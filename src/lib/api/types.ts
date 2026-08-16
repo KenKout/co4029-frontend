@@ -169,11 +169,7 @@ export interface QuizScheduleWindow {
   available_from?: string | null;
   available_until?: string | null;
   due_at?: string | null;
-  // Review-visibility matrix (backend Phase 2, migration 0046). Post-dates the
-  // OpenAPI snapshot; optional so it stays compatible with the generated shape.
-  review_options?: import("./hooks/quizzes").ReviewOptions | null;
-  // Access rules (backend Phase 12) + timing enforcement (Phase 6). Post-date
-  // the OpenAPI snapshot; optional for forward-compatibility.
+  review_options?: Record<string, unknown> | null;
   require_password?: string | null;
   require_subnet?: string | null;
   browser_security?: boolean | null;
@@ -242,19 +238,25 @@ export type QuizAttemptAnswerRead = Schemas["QuizAttemptAnswerRead"];
  */
 export type RichFormat = "plain" | "markdown" | "html";
 export interface QuizQuestionRichFields {
-  prompt_format?: RichFormat | null;
-  hint_format?: RichFormat | null;
-  explanation_format?: RichFormat | null;
+  // The format fields are typed as plain string: attempt/question payloads
+  // carry them as strings throughout the FE, and the backend validates the
+  // literal values at runtime (RichFormat above documents the allowed set).
+  prompt_format?: string | null;
+  hint_format?: string | null;
+  explanation_format?: string | null;
   // Phase 7 expanded types.
   single_answer?: boolean | null;
   numeric_answer?: number | string | null;
   numeric_tolerance?: number | string | null;
-  match_pairs?: Array<{ left: string; right: string }> | null;
+  // The generated OpenAPI shape carries match_pairs as loose dicts; readers
+  // cast to { left, right } where they render (PreviewAnswer, helpers).
+  match_pairs?: Array<Record<string, unknown>> | null;
   // Matching distractors: extra right-side choices with no left partner. The
   // backend folds these into the shuffled match_choices pool served to
   // students; teacher-only as a raw list.
   match_distractors?: string[] | null;
-  ordering_sequence?: string[] | null;
+  // Generated shape carries unknown[] (backend list of scalars); readers cast.
+  ordering_sequence?: unknown[] | null;
   // No-leak derived projections served to students (backend Phase 7). The raw
   // answer keys above are teacher-only; these shuffled lists are what a learner
   // renders/answers against. match_prompts = left column (in order),

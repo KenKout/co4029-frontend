@@ -62,7 +62,12 @@ export function useAttemptHydration(args: {
 
     state.setTaking(progress.take);
     state.setActiveAttemptId(progress.attempt_id);
-    state.setStatuses(statusesFromProgress(sortedQuestions, answersByQuestion));
+    state.setStatuses(
+      statusesFromProgress(
+        sortedQuestions as QuizQuestionPublic[],
+        answersByQuestion,
+      ),
+    );
     const firstUnanswered = sortedQuestions.findIndex(
       (q) => !answersByQuestion.get(q.id),
     );

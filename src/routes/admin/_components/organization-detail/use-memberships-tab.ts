@@ -86,7 +86,7 @@ export function useMembershipsTab(orgId: string) {
       await create.mutateAsync({
         user_id: selectedUser.user_id,
         org_unit_id: null,
-        status: memStatus,
+        status: memStatus as "active" | "inactive" | "suspended",
         student_code: studentCode || null,
         employee_code: employeeCode || null,
       });

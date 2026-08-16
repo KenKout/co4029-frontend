@@ -95,7 +95,9 @@ export function useQuizAttemptSession(quizId: string) {
   const displayQuestions: QuizQuestionPublic[] = useMemo(
     () =>
       taking
-        ? [...taking.questions].sort((a, b) => a.position - b.position)
+        ? ([...taking.questions] as QuizQuestionPublic[]).sort(
+            (a, b) => a.position - b.position,
+          )
         : [],
     [taking],
   );

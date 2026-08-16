@@ -6947,7 +6947,7 @@ export interface components {
              * @default completion
              * @constant
              */
-            satisfied_by: "completion";
+            satisfied_by?: "completion" | null;
         };
         /** CareerPathCourseAuthoring */
         CareerPathCourseAuthoring: {
@@ -9110,12 +9110,12 @@ export interface components {
              * Max Follow Ups Per Question
              * @default 2
              */
-            max_follow_ups_per_question: number;
+            max_follow_ups_per_question?: number;
             /**
              * Max Hints Per Question
              * @default 3
              */
-            max_hints_per_question: number;
+            max_hints_per_question?: number;
             /** Lock Quiz Ef Until Pass */
             lock_quiz_ef_until_pass: boolean;
             /** Published At */
@@ -9202,12 +9202,12 @@ export interface components {
              * Max Follow Ups Per Question
              * @default 2
              */
-            max_follow_ups_per_question: number;
+            max_follow_ups_per_question?: number;
             /**
              * Max Hints Per Question
              * @default 3
              */
-            max_hints_per_question: number;
+            max_hints_per_question?: number;
             /**
              * Lock Quiz Ef Until Pass
              * @default false
@@ -9290,12 +9290,12 @@ export interface components {
              * Max Follow Ups Per Question
              * @default 2
              */
-            max_follow_ups_per_question: number;
+            max_follow_ups_per_question?: number;
             /**
              * Max Hints Per Question
              * @default 3
              */
-            max_hints_per_question: number;
+            max_hints_per_question?: number;
             /** Lock Quiz Ef Until Pass */
             lock_quiz_ef_until_pass: boolean;
             /** Published At */
@@ -13238,14 +13238,14 @@ export interface components {
              * Review Options
              * @default {}
              */
-            review_options: {
+            review_options?: {
                 [key: string]: unknown;
             };
             /**
              * Question Count
              * @default 0
              */
-            question_count: number;
+            question_count?: number;
             /**
              * Course Id
              * Format: uuid
@@ -13744,14 +13744,14 @@ export interface components {
              * Review Options
              * @default {}
              */
-            review_options: {
+            review_options?: {
                 [key: string]: unknown;
             };
             /**
              * Question Count
              * @default 0
              */
-            question_count: number;
+            question_count?: number;
         };
         /**
          * QuizQuestionAuthoring
@@ -13787,17 +13787,17 @@ export interface components {
              * Prompt Format
              * @default plain
              */
-            prompt_format: string;
+            prompt_format?: string;
             /**
              * Hint Format
              * @default plain
              */
-            hint_format: string;
+            hint_format?: string;
             /**
              * Single Answer
              * @default true
              */
-            single_answer: boolean;
+            single_answer?: boolean;
             /**
              * Options
              * @default []
@@ -13813,29 +13813,29 @@ export interface components {
              * Match Prompts
              * @default []
              */
-            match_prompts: string[];
+            match_prompts?: string[];
             /**
              * Match Choices
              * @default []
              */
-            match_choices: string[];
+            match_choices?: string[];
             /**
              * Ordering Items
              * @default []
              */
-            ordering_items: string[];
+            ordering_items?: string[];
             /**
              * Fill Blank Choices
              * @default []
              */
-            fill_blank_choices: string[];
+            fill_blank_choices?: string[];
             /** Explanation */
             explanation?: string | null;
             /**
              * Explanation Format
              * @default plain
              */
-            explanation_format: string;
+            explanation_format?: string;
             /** Numeric Answer */
             numeric_answer?: string | null;
             /** Numeric Tolerance */
@@ -14036,17 +14036,17 @@ export interface components {
              * Prompt Format
              * @default plain
              */
-            prompt_format: string;
+            prompt_format?: string;
             /**
              * Hint Format
              * @default plain
              */
-            hint_format: string;
+            hint_format?: string;
             /**
              * Single Answer
              * @default true
              */
-            single_answer: boolean;
+            single_answer?: boolean;
             /**
              * Options
              * @default []
@@ -14062,22 +14062,22 @@ export interface components {
              * Match Prompts
              * @default []
              */
-            match_prompts: string[];
+            match_prompts?: string[];
             /**
              * Match Choices
              * @default []
              */
-            match_choices: string[];
+            match_choices?: string[];
             /**
              * Ordering Items
              * @default []
              */
-            ordering_items: string[];
+            ordering_items?: string[];
             /**
              * Fill Blank Choices
              * @default []
              */
-            fill_blank_choices: string[];
+            fill_blank_choices?: string[];
         };
         /**
          * QuizResultsRead
@@ -15819,6 +15819,10 @@ export interface components {
             /** Next Cursor */
             next_cursor?: string | null;
         };
+        /** CareerPathProgressRead (short-key alias: the FE references the
+         *  un-namespaced name via `Schemas["CareerPathProgressRead"]`; the
+         *  regenerated snapshot only emits the namespaced form). */
+        CareerPathProgressRead: components["schemas"]["abridgeai__features__career_paths__schemas__public__CareerPathProgressRead"];
         /** CareerPathProgressRead */
         abridgeai__features__career_paths__schemas__public__CareerPathProgressRead: {
             /**
