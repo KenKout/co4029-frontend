@@ -16,7 +16,9 @@ export function useDeptCourses() {
   return useQuery({
     queryKey: queryKeys.dept.courses(),
     queryFn: () => apiFetch<CourseAuthoring[]>("/dept/courses"),
-    staleTime: 1000 * 60 * 2,
+    // No staleTime: the dept course DETAIL header reads this list (there is
+    // no /dept/courses/{id} endpoint) and must never show a renamed or
+    // republished course under its old title/status.
   });
 }
 

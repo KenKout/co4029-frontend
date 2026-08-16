@@ -50,7 +50,6 @@ export default function ManagementUserDetailPage() {
     <div className="space-y-6 pb-12">
       <Breadcrumbs
         items={[
-          { label: t("sections.manager", { defaultValue: "Manager" }), to: "/dept" },
           { label: t("management_users.title", { defaultValue: "Users" }), to: "/management/users" },
           { label: displayName },
         ]}

@@ -33,10 +33,6 @@ export function PathHeaderBar({
         <Breadcrumbs
           items={[
             {
-              label: t("management_career_path_detail.breadcrumbs.management"),
-              to: "/management/career-paths",
-            },
-            {
               label: t(
                 "management_career_path_detail.breadcrumbs.career_paths",
               ),
