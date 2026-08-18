@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiDelete, apiFetch, apiPatch, apiPost } from "../client";
+import { apiDelete, apiFetch, apiPatch, apiPost, apiPut } from "../client";
 import { queryKeys } from "../query-keys";
 import type {
   AssignableTeacher,
@@ -7,6 +7,7 @@ import type {
   CourseAuthoring,
   CourseCloneDepth,
   CourseReadiness,
+  CourseTeacherRole,
   CourseUpdate,
   RosterEntry,
   TeacherAssignmentCreated,
@@ -100,6 +101,39 @@ export function useAssignTeacher(courseId: string) {
         queryKey: queryKeys.dept.assignableTeachers(courseId),
       });
       // The checklist counts teachers, so it moved too.
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.readiness(courseId),
+      });
+    },
+  });
+}
+
+/**
+ * Switch an assigned teacher's course-scoped title (CI ⇄ TA) via
+ * PUT /dept/courses/{id}/teachers/{userId}/role. Server enforces "exactly one
+ * Course Instructor": promoting a second, or demoting the sole instructor
+ * when no TA exists, returns 409 — surface that to the manager.
+ */
+export function useSetTeacherRole(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      courseRole,
+    }: {
+      userId: string;
+      courseRole: CourseTeacherRole;
+    }) =>
+      apiPut<TeacherAssignmentRead>(
+        `/dept/courses/${courseId}/teachers/${userId}/role`,
+        { course_role: courseRole },
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.teachers(courseId),
+      });
+      // The checklist counts instructors & staffs within [min, max], so it
+      // moved too.
       void qc.invalidateQueries({
         queryKey: queryKeys.dept.readiness(courseId),
       });

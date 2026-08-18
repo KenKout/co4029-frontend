@@ -713,11 +713,14 @@
     },
     "errors": {
       "remove_failed": "Couldn't remove instructor: {{detail}}",
-      "assign_failed": "Couldn't assign: {{detail}}"
+      "assign_failed": "Couldn't assign: {{detail}}",
+      "role_failed": "Couldn't change the title: {{detail}}"
     },
     "success": {
       "assigned": "Instructor assigned",
-      "removed": "Assignment removed"
+      "removed": "Assignment removed",
+      "promoted": "Promoted to Course Instructor",
+      "demoted": "Demoted to Teacher Assistant"
     },
     "delete": {
       "button": "Delete course",
@@ -765,7 +768,19 @@
       "status_published": "Live and visible to students.",
       "status_archived": "Archived.",
       "blocks_stage": "This course is required on a career path but has nothing to grade, so no student can ever finish it — that stage and every stage after it stay locked. Add and publish a lesson, quiz or interview."
-    }
+    },
+    "teacher_role_course_instructor": "Course Instructor",
+    "teacher_role_teacher_assistant": "Teacher Assistant",
+    "ci_already_exists": "A Course Instructor is already assigned",
+    "assign_at_max": "This course is at its maximum of {{max}} teachers — no more can be added.",
+    "staffing_minmax": "{{count}} teacher(s) — min {{min}}, max {{max}}",
+    "staffing_at_max": "At the teacher maximum — assignments are blocked.",
+    "staffing_under_min": "Below the minimum of {{min}} — add more teachers before publishing.",
+    "promote": "Make instructor",
+    "promote_title": "Promote to Course Instructor (exactly one allowed)",
+    "demote": "Make TA",
+    "demote_title": "Demote to Teacher Assistant",
+    "staffing_title": "Staffing"
   },
   "dept_courses": {
     "title": "Courses",

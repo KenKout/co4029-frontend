@@ -1,6 +1,11 @@
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { Mail, Trash2 } from "lucide-react";
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Mail,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Avatar,
@@ -10,9 +15,36 @@ import {
   avatarInitials,
 } from "@/components/ui/avatar";
 import { useConfirm } from "@/components/ui/use-confirm";
-import { useRemoveTeacher } from "@/lib/api/hooks/dept";
+import { useRemoveTeacher, useSetTeacherRole } from "@/lib/api/hooks/dept";
 import { ApiError } from "@/lib/api/client";
-import type { TeacherAssignmentRead } from "@/lib/api/types";
+import type { CourseTeacherRole, TeacherAssignmentRead } from "@/lib/api/types";
+import { cn } from "@/lib/utils";
+
+/** Small pill drawn beside a teacher's name: Course Instructor vs Assistant. */
+export function TeacherRoleBadge({
+  role,
+}: {
+  role: CourseTeacherRole | null | undefined;
+}) {
+  const { t } = useTranslation();
+  const isInstructor = role === "course_instructor";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap",
+        isInstructor
+          ? "bg-m3-primary/10 text-m3-primary"
+          : "bg-surface-muted text-text-muted",
+      )}
+    >
+      {t(
+        isInstructor
+          ? "dept_course_detail.teacher_role_course_instructor"
+          : "dept_course_detail.teacher_role_teacher_assistant",
+      )}
+    </span>
+  );
+}
 
 /**
  * Cells for the teachers table. These used to be one hand-rolled
@@ -44,9 +76,12 @@ export function TeacherIdentityCell({
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-text-strong truncate">
-          {name}
-        </p>
+        <div className="flex items-center gap-2 min-w-0">
+          <p className="text-sm font-semibold text-text-strong truncate">
+            {name}
+          </p>
+          <TeacherRoleBadge role={assignment.course_role} />
+        </div>
         <p className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
           <Mail className="h-3 w-3 shrink-0" />
           <span className="truncate">{assignment.primary_email}</span>
@@ -59,17 +94,53 @@ export function TeacherIdentityCell({
 export function TeacherRowActions({
   assignment,
   courseId,
+  hasAnotherInstructor,
+  isSoleTeacher,
 }: {
   assignment: TeacherAssignmentRead;
   courseId: string;
+  /** True when a DIFFERENT teacher on this course is already Course Instructor. */
+  hasAnotherInstructor: boolean;
+  /** True when this teacher is the only one assigned to the course. */
+  isSoleTeacher: boolean;
 }) {
   const { t } = useTranslation();
   const remove = useRemoveTeacher(courseId);
+  const setRole = useSetTeacherRole(courseId);
   const { confirm: confirmRemove, dialog: confirmDialog } = useConfirm({
     title: t("dept_course_detail.remove"),
     confirmLabel: t("dept_course_detail.remove"),
     cancelLabel: t("common.cancel"),
   });
+
+  const isInstructor = assignment.course_role === "course_instructor";
+  // A TA (or pre-backfill null) can be promoted to Course Instructor only
+  // while no Course Instructor exists yet — the backend enforces exactly one.
+  const showPromote = !isInstructor && !hasAnotherInstructor;
+  // A Course Instructor can be demoted to TA only when another teacher would
+  // remain — demoting the sole instructor with no TA is a server 409.
+  const showDemote = isInstructor && !isSoleTeacher;
+
+  const handleSetRole = (courseRole: CourseTeacherRole) => {
+    setRole.mutate(
+      { userId: assignment.user_id, courseRole },
+      {
+        onSuccess: () =>
+          toast.success(
+            courseRole === "course_instructor"
+              ? t("dept_course_detail.success.promoted")
+              : t("dept_course_detail.success.demoted"),
+          ),
+        onError: (err) => {
+          const detail =
+            err instanceof ApiError ? err.body || err.message : String(err);
+          toast.error(
+            t("dept_course_detail.errors.role_failed", { detail }),
+          );
+        },
+      },
+    );
+  };
 
   const handleRemove = async () => {
     const name = assignment.display_name || assignment.primary_email;
@@ -92,6 +163,40 @@ export function TeacherRowActions({
 
   return (
     <div className="flex items-center gap-1.5">
+      {showPromote && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSetRole("course_instructor");
+          }}
+          disabled={setRole.isPending}
+          className="gap-1.5"
+          title={t("dept_course_detail.promote_title")}
+        >
+          <ArrowUpCircle className="h-3.5 w-3.5" />
+          {t("dept_course_detail.promote")}
+        </Button>
+      )}
+      {showDemote && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSetRole("teacher_assistant");
+          }}
+          disabled={setRole.isPending}
+          className="gap-1.5"
+          title={t("dept_course_detail.demote_title")}
+        >
+          <ArrowDownCircle className="h-3.5 w-3.5" />
+          {t("dept_course_detail.demote")}
+        </Button>
+      )}
       <Button
         type="button"
         variant="destructive"

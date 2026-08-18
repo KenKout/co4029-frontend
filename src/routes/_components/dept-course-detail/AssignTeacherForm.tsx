@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { useAssignableTeachers, useAssignTeacher } from "@/lib/api/hooks/dept";
 import { ApiError } from "@/lib/api/client";
+import type { CourseTeacherRole } from "@/lib/api/types";
+import { cn } from "@/lib/utils";
 
 /**
  * Pick a teacher to staff onto this course.
@@ -19,10 +21,27 @@ import { ApiError } from "@/lib/api/client";
  *
  * Teachers already on the course are shown as such and cannot be re-picked,
  * since assigning them again is a no-op.
+ *
+ * A small title toggle lets the manager pick a Course Instructor vs a Teacher
+ * Assistant for the new teacher. Exactly one Course Instructor is allowed, so
+ * the CI option is disabled once one exists. The first teacher on a course is
+ * always the Course Instructor server-side regardless of what is sent.
  */
-export function AssignTeacherForm({ courseId }: { courseId: string }) {
+export function AssignTeacherForm({
+  courseId,
+  currentCount,
+  maxCount,
+  hasInstructor,
+}: {
+  courseId: string;
+  currentCount: number;
+  /** Undefined until readiness loads — until then we cannot bound the count. */
+  maxCount: number | undefined;
+  hasInstructor: boolean;
+}) {
   const { t } = useTranslation();
   const [userId, setUserId] = useState("");
+  const [role, setRole] = useState<CourseTeacherRole>("course_instructor");
   const assign = useAssignTeacher(courseId);
   const { data: candidates, isLoading } = useAssignableTeachers(courseId);
 
@@ -33,6 +52,16 @@ export function AssignTeacherForm({ courseId }: { courseId: string }) {
   // form.
   const available = (candidates ?? []).filter((c) => !c.already_assigned);
   const assignedCount = (candidates ?? []).length - available.length;
+
+  const atMax = maxCount !== undefined && currentCount >= maxCount;
+
+  // Once a Course Instructor exists, a fresh assignment can only be a TA.
+  // Snap on change so the disabled CI option never stays "selected".
+  useEffect(() => {
+    if (hasInstructor && role === "course_instructor") {
+      setRole("teacher_assistant");
+    }
+  }, [hasInstructor, role]);
 
   const options = available.map((teacher) => ({
     value: teacher.user_id,
@@ -45,7 +74,7 @@ export function AssignTeacherForm({ courseId }: { courseId: string }) {
     e.preventDefault();
     if (!userId) return;
     assign.mutate(
-      { user_id: userId },
+      { user_id: userId, course_role: role },
       {
         onSuccess: () => {
           toast.success(t("dept_course_detail.success.assigned"));
@@ -61,6 +90,7 @@ export function AssignTeacherForm({ courseId }: { courseId: string }) {
   };
 
   const noCandidates = !isLoading && available.length === 0;
+  const canAssign = !atMax && !noCandidates;
 
   return (
     <form
@@ -75,25 +105,86 @@ export function AssignTeacherForm({ courseId }: { courseId: string }) {
           options={options}
           value={userId}
           onValueChange={setUserId}
-          disabled={assign.isPending || isLoading || noCandidates}
+          disabled={assign.isPending || isLoading || !canAssign}
           placeholder={t("dept_course_detail.assign_placeholder")}
           emptyLabel={t("dept_course_detail.assign_no_match")}
         />
-        <Button type="submit" disabled={assign.isPending || !userId}>
+        <Button type="submit" disabled={assign.isPending || !userId || !canAssign}>
           <UserPlus className="h-3.5 w-3.5" />
           {t("dept_course_detail.assign_button")}
         </Button>
       </div>
+
+      {/* Title toggle: CI vs TA for the new teacher (manager only). */}
+      <div className="mt-3 flex items-center gap-1.5">
+        <RoleOption
+          label={t("dept_course_detail.teacher_role_course_instructor")}
+          active={role === "course_instructor"}
+          disabled={hasInstructor}
+          title={
+            hasInstructor
+              ? t("dept_course_detail.ci_already_exists")
+              : undefined
+          }
+          onClick={() => setRole("course_instructor")}
+        />
+        <RoleOption
+          label={t("dept_course_detail.teacher_role_teacher_assistant")}
+          active={role === "teacher_assistant"}
+          onClick={() => setRole("teacher_assistant")}
+        />
+      </div>
+
       <p className="text-[11px] text-text-muted mt-2">
-        {noCandidates
-          ? // Distinguish "everyone is already on it" from "this org has no
-            // teachers" — they need different actions from the manager.
-            assignedCount > 0
-            ? t("dept_course_detail.assign_all_assigned")
-            : t("dept_course_detail.assign_none_available")
-          : t("dept_course_detail.assign_help")}
+        {atMax
+          ? t("dept_course_detail.assign_at_max", { max: maxCount })
+          : noCandidates
+            ? // Distinguish "everyone is already on it" from "this org has no
+              // teachers" — they need different actions from the manager.
+              assignedCount > 0
+              ? t("dept_course_detail.assign_all_assigned")
+              : t("dept_course_detail.assign_none_available")
+            : t("dept_course_detail.assign_help")}
       </p>
     </form>
+  );
+}
+
+/** One half of the CI/TA segmented toggle in the assign form. */
+function RoleOption({
+  label,
+  active,
+  disabled,
+  title,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  disabled?: boolean;
+  title?: string;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={disabled}
+      title={title}
+      onClick={onClick}
+      className={cn(
+        "gap-1.5 rounded-full px-3 text-xs",
+        active && "border-m3-primary text-m3-primary bg-m3-primary/10",
+      )}
+    >
+      <span
+        className={cn(
+          "h-2 w-2 rounded-full",
+          active ? "bg-m3-primary" : "bg-m3-outline-variant",
+        )}
+      />
+      {label}
+    </Button>
   );
 }
 

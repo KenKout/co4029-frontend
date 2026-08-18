@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Users } from "lucide-react";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/ui/search-input";
+import { useCourseReadiness } from "@/lib/api/hooks/dept";
 import type { TeacherAssignmentRead } from "@/lib/api/types";
 import { AssignTeacherForm } from "./AssignTeacherForm";
 import { TeacherIdentityCell, TeacherRowActions } from "./TeacherRow";
@@ -32,6 +33,71 @@ function EmptyTeachers({ canAssign }: { canAssign: boolean }) {
   );
 }
 
+/**
+ * Staffing projections for the teachers tab, derived from the readiness query
+ * (which mirrors the publish gate) + the already-fetched teacher list.
+ */
+function useTeacherStaffing(
+  courseId: string,
+  teachers: TeacherAssignmentRead[] | null | undefined,
+) {
+  const readiness = useCourseReadiness(courseId);
+  const allTeachers = teachers ?? [];
+  return {
+    readiness,
+    allTeachers,
+    hasInstructor: allTeachers.some(
+      (a) => a.course_role === "course_instructor",
+    ),
+    currentCount: readiness.data?.teacher_count ?? allTeachers.length,
+    minTeachers: readiness.data?.min_teachers_per_course ?? 0,
+    maxTeachers: readiness.data?.max_teachers_per_course ?? 0,
+    hasStaffingData: Boolean(readiness.data),
+  };
+}
+
+/**
+ * Staffing summary line: how many teachers are on the course now, against the
+ * runtime [min, max] window, with a warning when the course is at/over the
+ * ceiling (assigning would exceed it) or under the floor (cannot publish).
+ */
+function StaffingSummary({
+  current,
+  min,
+  max,
+}: {
+  current: number;
+  min: number;
+  max: number;
+}) {
+  const { t } = useTranslation();
+  const overMax = max > 0 && current >= max;
+  const underMin = min > 0 && current < min;
+  return (
+    <div className="rounded-lg border border-border bg-surface-elev px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+      <span className="flex items-center gap-2 text-sm text-text-strong">
+        <Users className="h-4 w-4 text-text-subtle" />
+        {t("dept_course_detail.staffing_minmax", {
+          current,
+          min,
+          max,
+          count: current,
+        })}
+      </span>
+      {overMax && (
+        <span className="text-xs text-danger">
+          {t("dept_course_detail.staffing_at_max")}
+        </span>
+      )}
+      {underMin && (
+        <span className="text-xs text-warning">
+          {t("dept_course_detail.staffing_under_min", { min })}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export function DeptTeachersTab({
   active,
   teachers,
@@ -45,6 +111,14 @@ export function DeptTeachersTab({
 }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
+  const {
+    allTeachers,
+    hasInstructor,
+    currentCount,
+    minTeachers,
+    maxTeachers,
+    hasStaffingData,
+  } = useTeacherStaffing(courseId, teachers.data);
 
   const rows = useMemo(() => {
     const all = teachers.data ?? [];
@@ -75,7 +149,20 @@ export function DeptTeachersTab({
 
   return (
     <div className="space-y-4">
-      {canAssign && <AssignTeacherForm courseId={courseId} />}
+      <StaffingSummary
+        current={currentCount}
+        min={minTeachers}
+        max={maxTeachers}
+      />
+
+      {canAssign && (
+        <AssignTeacherForm
+          courseId={courseId}
+          currentCount={currentCount}
+          maxCount={hasStaffingData ? maxTeachers : undefined}
+          hasInstructor={hasInstructor}
+        />
+      )}
 
       {teachers.isLoading ? (
         <PageSkeleton
@@ -97,7 +184,14 @@ export function DeptTeachersTab({
           getRowId={(a) => a.user_id}
           actions={
             canAssign
-              ? (a) => <TeacherRowActions assignment={a} courseId={courseId} />
+              ? (a) => (
+                  <TeacherRowActions
+                    assignment={a}
+                    courseId={courseId}
+                    hasAnotherInstructor={hasInstructor && a.course_role !== "course_instructor"}
+                    isSoleTeacher={allTeachers.length === 1}
+                  />
+                )
               : undefined
           }
           actionsHeader={canAssign ? t("dept_courses.col_actions") : undefined}

@@ -12,7 +12,7 @@ import { useCourseBySlug, useCourseContent } from "@/lib/api/hooks/courses";
 import { useStreamUrl } from "@/lib/api/hooks/materials";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
 import { LessonKnowledgeMap } from "@/routes/_components/LessonKnowledgeMap";
-import type { LessonPublic, ModulePublic } from "@/lib/api/types";
+import type { InstructorRead, LessonPublic, ModulePublic } from "@/lib/api/types";
 import { CourseHome } from "./_components/course-learn/CourseHome";
 import type { CourseHomeProps } from "./_components/course-learn/CourseHome";
 import { CurriculumSidebar } from "./_components/course-learn/CurriculumSidebar";
@@ -98,6 +98,20 @@ export default function CourseLearnPage() {
       sortedModules={sortedModules}
     />
   );
+}
+
+/**
+ * The teaching team shown on the learner page — Course Instructor first, then
+ * Teacher Assistants. Newer payloads carry the full `instructors` list; fall
+ * back to the single `course.instructor` (treated as the Course Instructor)
+ * so nothing breaks on older responses.
+ */
+function resolveInstructors(
+  course: NonNullable<ReturnType<typeof useCourseBySlug>["data"]>,
+): InstructorRead[] {
+  if (course.instructors?.length) return course.instructors;
+  if (!course.instructor) return [];
+  return [{ ...course.instructor, course_role: "course_instructor" }];
 }
 
 function CourseLearnView({
@@ -193,6 +207,7 @@ function CourseLearnLoaded({
 }) {
   const { t } = useTranslation();
   const itemsByModule = useModuleItemsMap(sortedModules);
+  const instructors = resolveInstructors(course);
   const { flatItems, lessonItems } = useCurriculumItems(
     sortedModules,
     itemsByModule,
@@ -413,8 +428,8 @@ function CourseLearnLoaded({
               />
             )}
 
-            {!showHome && course.instructor && (
-              <InstructorBlock instructor={course.instructor} />
+            {!showHome && instructors.length > 0 && (
+              <InstructorBlock instructors={instructors} />
             )}
 
             {!showHome && (

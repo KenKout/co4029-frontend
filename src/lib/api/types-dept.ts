@@ -8,6 +8,41 @@
  * file a type lives in.
  */
 
+/**
+ * Course-scoped teacher title (user decision 2026-08-18, "no catalog logic
+ * for titles"): exactly one Course Instructor, everyone else a Teacher
+ * Assistant.
+ */
+export type CourseTeacherRole = "course_instructor" | "teacher_assistant";
+
+/**
+ * A teacher assigned to a course, with their course-scoped title.
+ *
+ * Hand-authored (same layering as `CourseContactFields` in `types.ts`): the
+ * committed openapi snapshot predates `course_role`. Kept in sync with the
+ * backend `TeacherAssignmentRead` schema until a coordinated snapshot refresh.
+ */
+export interface TeacherAssignmentRead {
+  user_id: string;
+  display_name: string;
+  primary_email: string;
+  assignment_id?: string | null;
+  active_from?: string | null;
+  active_until?: string | null;
+  avatar_url?: string | null;
+  course_role?: CourseTeacherRole | null;
+}
+
+/**
+ * Assign a teacher to a course. `course_role` is optional: the service forces
+ * the first teacher on a course to `course_instructor` regardless, and a
+ * second `course_instructor` is rejected server-side with 409.
+ */
+export interface AssignTeacherRequest {
+  user_id: string;
+  course_role?: CourseTeacherRole | null;
+}
+
 /** Where a course sits on one career path. */
 export interface CoursePathPlacement {
   career_path_id: string;
@@ -28,6 +63,13 @@ export interface CourseReadiness {
   course_id: string;
   status: string;
   teacher_count: number;
+  course_instructor_count: number;
+  min_teachers_per_course: number;
+  max_teachers_per_course: number;
+  /** True when `teacher_count` sits inside [min, max] and any required title
+   *  exists (a course must be staffed within its bounds before it can publish
+   *  — the manager's checklist mirrors the publish gate's condition exactly). */
+  staffing_ok: boolean;
   gradeable_unit_count: number;
   learning_outcome_count: number;
   career_paths: CoursePathPlacement[];

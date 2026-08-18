@@ -6,7 +6,7 @@ import { apiPost } from "@/lib/api/client";
 import { authenticatedFetch } from "@/lib/auth";
 import { queryKeys } from "@/lib/api/query-keys";
 import { useCreateCourse } from "@/lib/api/hooks/teacher-courses";
-import type { CourseAuthoring } from "@/lib/api/types";
+import type { CourseAuthoring, CourseTeacherRole } from "@/lib/api/types";
 import {
   clearCourseDraft,
   saveCourseDraft,
@@ -108,13 +108,16 @@ async function uploadThumbnail(courseId: string, file: File): Promise<void> {
 /**
  * Assign each teacher separately, recording every success on its own.
  *
- * An attempt that assigns three of five and then dies must not re-assign those
- * three when it resumes, so the marker is per user id rather than one flag for
- * the whole group.
+ * Each assignment carries the manager-chosen course-scoped title (CI vs TA);
+ * the first teacher is forced to Course Instructor server-side regardless, so
+ * the client just forwards the pick. An attempt that assigns three of five and
+ * then dies must not re-assign those three when it resumes, so the marker is
+ * per user id rather than one flag for the whole group.
  */
 async function assignTeachers(
   courseId: string,
   teacherIds: string[],
+  roles: Record<string, CourseTeacherRole | undefined>,
   done: Set<DoneStep>,
   persist: (courseId: string) => void,
 ): Promise<boolean> {
@@ -123,7 +126,10 @@ async function assignTeachers(
     const stepKey: TeacherStep = `teacher:${userId}`;
     if (done.has(stepKey)) continue;
     try {
-      await apiPost(`/dept/courses/${courseId}/teachers`, { user_id: userId });
+      await apiPost(`/dept/courses/${courseId}/teachers`, {
+        user_id: userId,
+        course_role: roles[userId],
+      });
       done.add(stepKey);
       persist(courseId);
     } catch {
@@ -172,6 +178,11 @@ export function useCourseWizardRunner(t: TFunction): CourseWizardRunner {
   const qc = useQueryClient();
 
   const run = useCallback(
+    // This is the multi-step course-creation state machine (create -> thumb ->
+    // teachers -> enroll), each step its own try/catch resumable unit. Its
+    // branch count is inherent to the orchestration; keep the per-step logic
+    // in helpers rather than flattening it.
+    // eslint-disable-next-line complexity
     async (input: WizardRunInput): Promise<WizardRunResult | null> => {
       const { form, thumbnail, pathId, stageId } = input;
       const done = new Set<DoneStep>(input.done);
@@ -232,6 +243,7 @@ export function useCourseWizardRunner(t: TFunction): CourseWizardRunner {
           const allAssigned = await assignTeachers(
             courseId,
             form.teacherIds,
+            form.teacherRoles ?? {},
             done,
             persist,
           );

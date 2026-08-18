@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSlugAvailability } from "@/lib/api/hooks/teacher-courses";
+import type { CourseTeacherRole } from "@/lib/api/types";
 
 export type Level = "" | "beginner" | "intermediate" | "advanced";
 
@@ -34,6 +35,9 @@ export interface CourseFormValues {
   enrollment_cap: string;
   /** Chosen in the teacher picker; assigned after the course row exists. */
   teacherIds: string[];
+  /** Course-scoped title per selected teacher id (CI vs TA). Persisted in the
+   *  draft so a resumed submission re-assigns with the same titles. */
+  teacherRoles?: Record<string, CourseTeacherRole>;
 }
 
 export const EMPTY_COURSE_FORM: CourseFormValues = {
@@ -45,6 +49,7 @@ export const EMPTY_COURSE_FORM: CourseFormValues = {
   expected_completion_days: "",
   enrollment_cap: "",
   teacherIds: [],
+  teacherRoles: {},
 };
 
 export function slugify(title: string) {

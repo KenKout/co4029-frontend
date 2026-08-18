@@ -3,6 +3,7 @@
  * Generated source: ./openapi-types.d.ts — regenerate via `npm run codegen:api`.
  */
 import type { components, paths } from "./openapi-types";
+import type { CourseTeacherRole } from "./types-dept";
 
 type Schemas = components["schemas"];
 
@@ -19,6 +20,26 @@ export interface CourseContactFields {
   contact_social_url?: string | null;
 }
 
+// Course-scoped teacher title (user decision 2026-08-18): exactly one Course
+// Instructor, everyone else a Teacher Assistant (defined in types-dept.ts and
+// re-exported at the bottom of this file). The learner-facing `instructors`
+// list carries it so the student page can label CI vs TA. Layered by hand here
+// rather than via the generated openapi types for the same reason as
+// CourseContactFields — the committed openapi snapshot predates
+// `course_role`/`instructors`. Keep in sync with backend public.InstructorRead.
+/** Hand-authored addition to the generated public `InstructorRead`. */
+export interface InstructorReadFields {
+  course_role?: CourseTeacherRole | null;
+}
+
+export type InstructorReadLocal = Schemas["InstructorRead"] & InstructorReadFields;
+
+/** Hand-authored `instructors` list on the learner course payload. */
+export interface CoursePublicFields {
+  /** Every teacher on the course, Course Instructor first then TAs. */
+  instructors?: InstructorReadLocal[];
+}
+
 // Difficulty / effort for the landing-page meta line, exposed on the public
 // payload by backend CoursePublic (same hand-layered pattern as the contact
 // fields above — the committed openapi snapshot predates them). The SPA shows
@@ -28,10 +49,13 @@ export interface CoursePublicMeta {
   estimated_minutes?: number | null;
 }
 
-export type Course = Schemas["CoursePublic"] & CourseContactFields;
+export type Course = Schemas["CoursePublic"] &
+  CourseContactFields &
+  CoursePublicFields;
 export type CoursePublic = Schemas["CoursePublic"] &
   CourseContactFields &
-  CoursePublicMeta;
+  CoursePublicMeta &
+  CoursePublicFields;
 export type CourseAuthoring = Schemas["CourseAuthoring"] & CourseContactFields;
 export type CourseCreate = Schemas["CourseCreate"] & CourseContactFields;
 export type CourseUpdate = Schemas["CourseUpdate"] & CourseContactFields;
@@ -118,7 +142,7 @@ export type ModuleItemReorder = Schemas["ModuleItemReorder"];
 export type Tag = Schemas["TagPublic"];
 export type TagPublic = Schemas["TagPublic"];
 
-export type InstructorRead = Schemas["InstructorRead"];
+export type InstructorRead = Schemas["InstructorRead"] & InstructorReadFields;
 
 export type Lesson = Schemas["LessonPublic"];
 export type LessonPublic = Schemas["LessonPublic"];
@@ -615,9 +639,10 @@ export type Enrollment = Schemas["EnrollmentRead"];
 export type EnrollmentRead = Schemas["EnrollmentRead"];
 export type EnrollmentAuthoring = Schemas["EnrollmentAuthoring"];
 
-export type TeacherAssignmentRead = Schemas["TeacherAssignmentRead"];
+// TeacherAssignmentRead / AssignTeacherRequest are hand-augmented in
+// types-dept.ts (the generated snapshot predates course_role) and re-exported
+// from here.
 export type TeacherAssignmentCreated = Schemas["TeacherAssignmentCreated"];
-export type AssignTeacherRequest = Schemas["AssignTeacherRequest"];
 export type RosterEntry = Schemas["RosterEntry"];
 export type BulkEnrollResult = Schemas["BulkEnrollResult"];
 export type BulkEnrollFailure = Schemas["BulkEnrollFailure"];
@@ -876,8 +901,11 @@ export interface StageProgressRead {
 // 800-line eslint cap. Re-exported so importers need not know that.
 export type {
   AssignableTeacher,
+  AssignTeacherRequest,
   CoursePathPlacement,
   CourseReadiness,
+  CourseTeacherRole,
+  TeacherAssignmentRead,
 } from "./types-dept";
 
 export interface StartCourseResult {
