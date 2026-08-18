@@ -726,6 +726,20 @@
       "deleted": "Course deleted",
       "failed": "Couldn't delete the course."
     },
+    "clone": {
+      "button": "Clone course",
+      "title": "Clone course",
+      "body": "Create a copy of {{title}} as a new draft course. How much of the content should the copy include?",
+      "depth_shell": "Shell only",
+      "depth_shell_desc": "Course details and learning outcomes. No modules — a reusable scaffold.",
+      "depth_structure": "Module structure",
+      "depth_structure_desc": "Course details, learning outcomes and the module skeleton with its prerequisites.",
+      "depth_full": "Everything",
+      "depth_full_desc": "Complete copy: modules, lessons, quizzes, interviews and resources. All content lands as drafts.",
+      "confirm": "Clone",
+      "cloned": "Course cloned — {{title}} (Copy) created",
+      "failed": "Couldn't clone the course."
+    },
     "assign_placeholder": "Choose an instructor…",
     "assign_no_match": "No instructor matches that search.",
     "assign_none_available": "No instructors in this organization yet. Give a teacher the instructor role first.",
@@ -2655,6 +2669,7 @@
       "answer_recovery_error": "Your answer was not sent. It is still here so you can retry.",
       "mic_toggle_on": "Turn on microphone",
       "mic_toggle_off": "Turn off microphone",
+      "jump_to_latest": "Jump to latest",
       "end_call": "End interview",
       "microphone_errors": {
         "permission-denied": "Microphone access is blocked. Allow it in browser settings, then try again.",

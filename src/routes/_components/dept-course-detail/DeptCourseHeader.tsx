@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import type { CourseAuthoring } from "@/lib/api/types";
+import { CloneCourseButton } from "./CloneCourseButton";
 import { DeleteCourseButton } from "./DeleteCourseButton";
 import { DeptCourseLifecycleActions } from "./DeptCourseLifecycleActions";
 
@@ -59,6 +60,7 @@ export function DeptCourseHeader({
         {canDelete && course && (
           <div className="flex items-center gap-2 shrink-0">
             <DeptCourseLifecycleActions courseId={courseId} course={course} />
+            <CloneCourseButton courseId={courseId} courseTitle={course.title} />
             <DeleteCourseButton courseId={courseId} courseTitle={course.title} />
           </div>
         )}

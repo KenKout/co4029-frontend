@@ -33,6 +33,8 @@ export interface ConfirmDialogProps {
   confirmVariant?: "default" | "destructive";
   /** Disables the confirm button (e.g. while a mutation runs). */
   isPending?: boolean;
+  /** Disables the confirm button until a required choice is made. */
+  confirmDisabled?: boolean;
   /** Optional content rendered above the action row (e.g. a spinner row). */
   extraContent?: React.ReactNode;
   /**
@@ -61,6 +63,7 @@ export function ConfirmDialog({
   onCancel,
   confirmVariant = "destructive",
   isPending = false,
+  confirmDisabled = false,
   extraContent,
   dismissOnBackdrop = false,
 }: ConfirmDialogProps) {
@@ -118,7 +121,7 @@ export function ConfirmDialog({
               type="button"
               variant={confirmVariant}
               onClick={onConfirm}
-              disabled={isPending}
+              disabled={isPending || confirmDisabled}
               className={
                 confirmVariant === "destructive"
                   ? "bg-destructive text-white hover:bg-destructive/90"

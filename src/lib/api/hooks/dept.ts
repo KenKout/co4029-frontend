@@ -5,6 +5,7 @@ import type {
   AssignableTeacher,
   AssignTeacherRequest,
   CourseAuthoring,
+  CourseCloneDepth,
   CourseReadiness,
   CourseUpdate,
   RosterEntry,
@@ -147,10 +148,31 @@ export function useOrgUnitCourses(orgUnitId: string | undefined) {
   });
 }
 
+/** Manager-owned course delete (``course.delete``) on the dept surface. */
 export function useDeleteDeptCourse() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (courseId: string) => apiDelete(`/dept/courses/${courseId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
+    },
+  });
+}
+
+/**
+ * Manager-only course clone with selectable depth (``course.delete`` gate).
+ * Creates a fresh draft course owned by the manager; returns the new course.
+ */
+export function useCloneDeptCourse() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      courseId,
+      depth,
+    }: {
+      courseId: string;
+      depth: CourseCloneDepth;
+    }) => apiPost<CourseAuthoring>(`/dept/courses/${courseId}/clone`, { depth }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
     },

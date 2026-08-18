@@ -678,6 +678,20 @@
       "status_published": "Đã đăng, sinh viên thấy được.",
       "status_archived": "Đã lưu trữ.",
       "blocks_stage": "Khóa này là bắt buộc trong một lộ trình nhưng chưa có gì để tính điểm, nên không sinh viên nào hoàn thành được — chặng đó và mọi chặng sau bị khóa vĩnh viễn. Hãy thêm và đăng một bài học, quiz hoặc phỏng vấn."
+    },
+    "clone": {
+      "button": "Nhân bản khóa học",
+      "title": "Nhân bản khóa học",
+      "body": "Tạo bản sao của {{title}} thành một khóa học nháp mới. Bản sao nên bao gồm bao nhiêu nội dung?",
+      "depth_shell": "Chỉ phần khung",
+      "depth_shell_desc": "Thông tin khóa học và chuẩn đầu ra. Không có học phần — một khung tái sử dụng.",
+      "depth_structure": "Cấu trúc học phần",
+      "depth_structure_desc": "Thông tin khóa học, chuẩn đầu ra và khung học phần kèm điều kiện tiên quyết.",
+      "depth_full": "Toàn bộ",
+      "depth_full_desc": "Bản sao đầy đủ: học phần, bài học, bài kiểm tra, phỏng vấn và tài nguyên. Toàn bộ nội dung ở trạng thái nháp.",
+      "confirm": "Nhân bản",
+      "cloned": "Đã nhân bản — tạo {{title}} (Bản sao)",
+      "failed": "Không thể nhân bản khóa học."
     }
   },
   "dept_courses": {
@@ -2524,6 +2538,7 @@
       "answer_recovery_error": "Câu trả lời chưa được gửi và vẫn được giữ lại để bạn thử lại.",
       "mic_toggle_on": "Bật micrô",
       "mic_toggle_off": "Tắt micrô",
+      "jump_to_latest": "Xem nội dung mới nhất",
       "end_call": "Kết thúc",
       "microphone_errors": {
         "permission-denied": "Quyền truy cập micrô đang bị chặn. Hãy cấp quyền trong trình duyệt rồi thử lại.",

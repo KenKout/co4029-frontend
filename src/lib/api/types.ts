@@ -35,6 +35,9 @@ export type CoursePublic = Schemas["CoursePublic"] &
 export type CourseAuthoring = Schemas["CourseAuthoring"] & CourseContactFields;
 export type CourseCreate = Schemas["CourseCreate"] & CourseContactFields;
 export type CourseUpdate = Schemas["CourseUpdate"] & CourseContactFields;
+/** Manager-only course clone depth (user request 2026-08-18). Hand-authored
+ * like ContactFields: the committed openapi snapshot predates the endpoint. */
+export type CourseCloneDepth = "shell" | "structure" | "full";
 export type CourseContent = Schemas["CourseContentPublic"];
 export type CourseContentPublic = Schemas["CourseContentPublic"];
 export type CourseProgressSummary = Schemas["CourseProgressSummary"];
