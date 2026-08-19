@@ -17,6 +17,7 @@ import type {
   QuizAttemptReviewQuestion,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/lib/use-media-query";
 
 /**
  * One answer option in the review. Only the meaningful options get visual
@@ -519,7 +520,9 @@ function computeVisibleOptions(
         (o): o is QuizAttemptReviewOption =>
           o !== undefined && question.options.some((x) => x.id === o.id),
       );
-  if (!question.is_correct && showAll) visible = question.options;
+  // "Show all" (mobile toggle, or always on desktop) reveals every option —
+  // both the incorrect case and the correct one.
+  if (showAll) visible = question.options;
   return {
     visible,
     hiddenCount: Math.max(0, question.options.length - visible.length),
@@ -542,10 +545,14 @@ export function ReviewQuestionCard({
 }) {
   const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
+  // The compact \"show/hide other options\" behaviour is MOBILE-only: on
+  // desktop every option renders directly, no collapse toggle.
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const expanded = showAll || isDesktop;
 
   const cardTone = computeCardTone(question);
   const showAnswerBox = shouldShowAnswerBox(question);
-  const { visible, hiddenCount } = computeVisibleOptions(question, showAll);
+  const { visible, hiddenCount } = computeVisibleOptions(question, expanded);
 
   return (
     <GlassCard
