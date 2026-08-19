@@ -17,6 +17,11 @@ import { Button } from "@/components/ui/button";
 import { useMyInterviewSessions } from "@/lib/api/hooks/interviews";
 import { useFormatDate } from "@/lib/format/date";
 import type { InterviewSessionPublic } from "@/lib/api/types";
+import { DataTablePagination } from "@/components/ui/data-table/pagination";
+import { useDataTablePagination } from "@/components/ui/data-table/use-data-table-pagination";
+
+const PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 type VerdictState =
   | "passed"
@@ -99,6 +104,16 @@ export default function MyInterviewsPage() {
   const search = useSearch({ strict: false }) as { config?: string };
   const list = useMyInterviewSessions(search.config);
   const items = list.data ?? [];
+  const pagination = useDataTablePagination({
+    sortedData: items,
+    pagination: items.length > PAGE_SIZE,
+    manualPagination: false,
+    pageSize: PAGE_SIZE,
+    rowCount: undefined,
+    controlledPage: undefined,
+    onPageChange: undefined,
+    onPageSizeChange: undefined,
+  });
 
   return (
     <div className="max-w-4xl mx-auto pb-16 space-y-8">
@@ -159,11 +174,24 @@ export default function MyInterviewsPage() {
         )}
 
         {!list.isLoading && !list.isError && items.length > 0 && (
-          <div className="space-y-2">
-            {items.map((s) => (
-              <SessionRow key={s.session_id} item={s} />
-            ))}
-          </div>
+          <>
+            <div className="space-y-2">
+              {pagination.pageRows.map((s) => (
+                <SessionRow key={s.session_id} item={s} />
+              ))}
+            </div>
+            {items.length > PAGE_SIZE && (
+              <DataTablePagination
+                page={pagination.page}
+                pageCount={pagination.pageCount}
+                size={pagination.size}
+                total={pagination.total}
+                pageSizeOptions={PAGE_SIZE_OPTIONS}
+                onPageChange={pagination.setPage}
+                onSizeChange={pagination.setSize}
+              />
+            )}
+          </>
         )}
       </section>
     </div>
