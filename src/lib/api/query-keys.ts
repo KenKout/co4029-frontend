@@ -272,8 +272,6 @@ export const queryKeys = {
       ["interviews", "gap-report", sessionId] as const,
     configAuthoring: (configId: string) =>
       ["interviews", "config-authoring", configId] as const,
-    adaptiveReadiness: (configId: string) =>
-      ["interviews", "adaptive-readiness", configId] as const,
     teacherGapReport: (sessionId: string) =>
       ["interviews", "teacher-gap-report", sessionId] as const,
     questionBank: (courseId: string) =>

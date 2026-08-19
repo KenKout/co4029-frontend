@@ -569,28 +569,6 @@ export interface PersonaAdherenceRead {
   available?: boolean;
 }
 
-// Adaptive readiness (Slice 5) — advisory authoring analysis. Manually typed
-// until the OpenAPI snapshot is regenerated; the backend returns these from
-// GET /teacher/interview-configs/{id}/adaptive-readiness.
-export type AdaptiveReadinessLevel = "info" | "warning";
-export interface AdaptiveReadinessWarning {
-  code: string;
-  level: AdaptiveReadinessLevel;
-  affected_ids: string[];
-  count: number;
-}
-export interface AdaptiveModeRolloutStatus {
-  text: boolean;
-  hybrid: boolean;
-  voice: boolean;
-}
-export interface AdaptiveReadinessRead {
-  config_id: string;
-  warnings: AdaptiveReadinessWarning[];
-  rollout: AdaptiveModeRolloutStatus;
-  blocks_publish: boolean;
-}
-
 export interface InterviewForAuthoringPublic {
   config: InterviewConfigAuthoring;
   questions: InterviewQuestionAuthoring[];

@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { ApiError, apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import type {
-  AdaptiveReadinessRead,
   GapReportAuthoringRead,
   GapReportRead,
   IntegrityEventsRequest,
@@ -181,22 +180,6 @@ export function useInterviewForAuthoring(configId: string | null | undefined) {
     queryFn: () =>
       apiFetch<InterviewForAuthoringPublic>(
         `/teacher/interview-configs/${configId}`,
-      ),
-    enabled: !!configId,
-  });
-}
-
-/**
- * GET /teacher/interview-configs/{config_id}/adaptive-readiness — advisory
- * adaptive-readiness report (Slice 5). Never blocks publishing; the panel shows
- * warnings + per-mode rollout status.
- */
-export function useAdaptiveReadiness(configId: string | null | undefined) {
-  return useQuery({
-    queryKey: queryKeys.interviews.adaptiveReadiness(configId ?? ""),
-    queryFn: () =>
-      apiFetch<AdaptiveReadinessRead>(
-        `/teacher/interview-configs/${configId}/adaptive-readiness`,
       ),
     enabled: !!configId,
   });

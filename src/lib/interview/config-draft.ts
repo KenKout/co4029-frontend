@@ -29,11 +29,7 @@ export type SecurityResponsePolicy =
   | "warn_and_continue"
   | "end_and_flag";
 
-export type TabId =
-  | "settings"
-  | "generate"
-  | "questions"
-  | "adaptive-readiness";
+export type TabId = "settings" | "generate" | "questions";
 
 /** Professional identity presets. MUST stay in sync with the backend
  *  `InterviewerRoleLiteral` (schemas/authoring.py) and the preset table in

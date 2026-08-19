@@ -24,7 +24,6 @@ import type {
 } from "@/lib/interview/config-draft";
 import { QuestionBank } from "@/routes/teacher/_components/question-bank";
 import { LearningOutcomes } from "@/routes/teacher/_components/learning-outcomes";
-import { AdaptiveReadinessPanel } from "@/routes/teacher/_components/adaptive-readiness-panel";
 import { GenerationSection } from "@/routes/teacher/_components/interview-config/generation-section";
 import { SettingsForm } from "@/routes/teacher/_components/interview-config/settings-form";
 
@@ -64,7 +63,6 @@ export interface ConfigPanelsProps {
   activeRunId: string | null;
   activeRun: InterviewGenerationRunPublic | undefined;
   outcomeFilterSignal: OutcomeFilterSignal | null;
-  onGoTo: (id: TabId) => void;
 }
 
 export function ConfigPanels({
@@ -90,7 +88,6 @@ export function ConfigPanels({
   activeRunId,
   activeRun,
   outcomeFilterSignal,
-  onGoTo,
 }: ConfigPanelsProps) {
   return (
     <div className="grid grid-cols-12 gap-6">
@@ -142,15 +139,6 @@ export function ConfigPanels({
                 questions={questions ?? []}
                 outcomes={outcomes ?? []}
                 outcomeFilterSignal={outcomeFilterSignal}
-              />
-            </TabPanel>
-            <TabPanel id="adaptive-readiness" activeTab={activeTab}>
-              <AdaptiveReadinessPanel
-                configId={configId}
-                questions={questions ?? []}
-                outcomes={outcomes ?? []}
-                timeLimitMinutes={config.time_limit_minutes ?? null}
-                onGoTo={onGoTo}
               />
             </TabPanel>
           </>

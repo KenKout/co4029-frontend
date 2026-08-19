@@ -97,14 +97,6 @@ export function useNavItems({
         shortLabel: t("teacher_interview_config.section_nav.questions_short"),
         status: questionsStatus,
       },
-      {
-        id: "adaptive-readiness",
-        label: t("teacher_interview_config.section_nav.adaptive_readiness"),
-        shortLabel: t(
-          "teacher_interview_config.section_nav.adaptive_readiness_short",
-        ),
-        status: { kind: "none" },
-      },
     ];
   }, [t, settingsComplete, outcomeCount, draftCount, approvedCount]);
 }

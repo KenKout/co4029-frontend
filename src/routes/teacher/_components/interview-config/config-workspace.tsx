@@ -173,7 +173,6 @@ export function ConfigWorkspace({
         activeRunId={generation.activeRunId}
         activeRun={generation.run}
         outcomeFilterSignal={outcomeFilterSignal}
-        onGoTo={tabs.requestTabChange}
       />
 
       <ConfigDialogs
