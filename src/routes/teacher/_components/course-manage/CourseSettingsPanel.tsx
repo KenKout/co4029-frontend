@@ -73,11 +73,7 @@ export function CourseSettingsPanel({
         <span className="text-xs text-m3-on-surface-variant mr-2 hidden sm:block">
           {course?.status === "published"
             ? t("teacher_course_settings.status_summary_published")
-            : t("teacher_course_settings.status_summary_draft")}{" "}
-          ·{" "}
-          {course?.level
-            ? t(`teacher_course_settings.level_${course.level}`)
-            : t("teacher_course_settings.no_level")}
+            : t("teacher_course_settings.status_summary_draft")}
         </span>
         <ChevronDown
           className={cn(

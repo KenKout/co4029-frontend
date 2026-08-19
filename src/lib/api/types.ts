@@ -56,7 +56,6 @@ export interface CourseCareerPlacementPublic {
 // fields above — the committed openapi snapshot predates them). The SPA shows
 // them only when the backend fills them in.
 export interface CoursePublicMeta {
-  level?: "beginner" | "intermediate" | "advanced" | null;
   estimated_minutes?: number | null;
 }
 

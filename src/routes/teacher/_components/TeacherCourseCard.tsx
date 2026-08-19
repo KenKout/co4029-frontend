@@ -157,15 +157,9 @@ export function TeacherCourseCard({
             </span>
           </div>
 
-          {/* Meta footer: level + duration. */}
+          {/* Meta footer: duration. The level is derived from career-path
+              placement, not stored, so it is not shown here. */}
           <div className="flex items-center gap-2 text-[11px] text-m3-on-surface-variant">
-            {course.level && (
-              <span className="px-1.5 py-0.5 bg-m3-surface-container rounded-md font-medium">
-                {t(`teacher_dashboard.level.${course.level}`, {
-                  defaultValue: course.level,
-                })}
-              </span>
-            )}
             {course.estimated_minutes && (
               <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
