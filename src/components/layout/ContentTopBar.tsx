@@ -1,5 +1,5 @@
-import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { Link, useLocation } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   Bell,
   Bot,
@@ -26,10 +26,12 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useUnreadCount } from "@/lib/api/hooks/notifications";
 import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
 import { openShortcutPalette } from "@/lib/shortcuts";
 import LanguageSwitcher from "./LanguageSwitcher";
 import SectionSwitcher from "./SectionSwitcher";
+import { SideNavGroups } from "./side-nav-bar/nav-groups";
+import type { NavGroup, NavItem } from "@/lib/navigation";
+import type { TFunction } from "i18next";
 
 /** Avatar-dropdown entry that opens the global shortcut palette. */
 function ShortcutPaletteMenuItem() {
@@ -112,43 +114,60 @@ async function performLogout(logout: () => Promise<void>) {
 }
 
 interface ContentTopBarProps {
-  /** Mobile only: opens/closes the sidebar drawer. */
-  onMenuToggle?: () => void;
-  mobileNavOpen?: boolean;
+  /** Nav groups for the mobile hamburger dropdown (rail is desktop-only). */
+  navGroups?: NavGroup[];
 }
 
-/** Mobile nav drawer toggle — top-right corner. The sidebar rail is hidden
- *  on phones (content gets the full width); this opens it as an overlay. */
-function MobileNavToggle({
-  t,
-  open,
-  onToggle,
-}: {
-  t: (key: string, opts?: { defaultValue?: string }) => string;
-  open?: boolean;
-  onToggle: () => void;
-}) {
+/** Mobile nav popover anchored to the hamburger, mirroring the avatar
+ *  dropdown. Just the nav items (icons + labels, active highlight) — no
+ *  logout, no collapse toggle. Desktop uses the sidebar rail, so this
+ *  trigger is hidden at md+. */
+function MobileNavMenu({ t, navGroups }: { t: TFunction; navGroups: NavGroup[] }) {
+  const location = useLocation();
+  const [open, setOpen] = useState(false);
+  const pathname = location.pathname;
+
+  // Close when the route changes (mirrors the old drawer behaviour).
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  const labelOf = (item: NavItem) =>
+    item.i18nKey ? t(item.i18nKey, { defaultValue: item.label }) : item.label;
+  const isItemActive = (item: NavItem) =>
+    item.exact
+      ? pathname === item.href
+      : pathname === item.href || pathname.startsWith(item.href + "/");
+
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="md:hidden shrink-0 h-10 w-10 text-m3-on-surface-variant hover:bg-m3-surface-container"
-      onClick={onToggle}
-      aria-label={
-        open
-          ? t("nav.close_menu", { defaultValue: "Close menu" })
-          : t("nav.open_menu", { defaultValue: "Open menu" })
-      }
-      aria-expanded={open}
-    >
-      {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-    </Button>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger
+        className="md:hidden shrink-0 flex h-10 w-10 items-center justify-center rounded-md text-m3-on-surface-variant hover:bg-m3-surface-container outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+        aria-label={t(open ? "nav.close_menu" : "nav.open_menu", {
+          defaultValue: open ? "Close menu" : "Open menu",
+        })}
+      >
+        {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        sideOffset={8}
+        className="w-64 max-h-[75vh] overflow-y-auto rounded-lg bg-card shadow-editorial border border-border p-1.5"
+      >
+        <SideNavGroups
+          navGroups={navGroups}
+          collapsed={false}
+          t={t}
+          isItemActive={isItemActive}
+          labelOf={labelOf}
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
 export default function ContentTopBar({
-  onMenuToggle,
-  mobileNavOpen,
+  navGroups = [],
 }: ContentTopBarProps) {
   const { logout, user } = useAuth();
   const { t } = useTranslation();
@@ -243,14 +262,8 @@ export default function ContentTopBar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Mobile nav drawer toggle — top-right corner. */}
-        {onMenuToggle && (
-          <MobileNavToggle
-            t={t}
-            open={mobileNavOpen}
-            onToggle={onMenuToggle}
-          />
-        )}
+        {/* Mobile nav popover anchored to the hamburger (rail is desktop-only). */}
+        <MobileNavMenu t={t} navGroups={navGroups} />
       </div>
 
       <ConfirmDialog

@@ -8,7 +8,6 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { useNotificationInboxSync } from "@/lib/api/hooks/notifications";
 import type { Notification } from "@/lib/api/types";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
-import { useMobileNav } from "./use-mobile-nav";
 import { useSessionGuard } from "./use-session-guard";
 import SideNavBar from "./SideNavBar";
 import ContentTopBar from "./ContentTopBar";
@@ -26,7 +25,6 @@ interface AppShellProps {
 export default function AppShell({ children, navGroups, role }: AppShellProps) {
   const { status, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 768);
-  const { mobileNavOpen, setMobileNavOpen } = useMobileNav();
   const { stalled } = useSessionGuard(status, logout);
   // Immersive = live interview: nav sidebar removed, full-viewport workspace.
   const [immersive, setImmersive] = useState(false);
@@ -68,7 +66,6 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
   useEffect(() => {
     const enterImmersive = () => {
       setCollapsed(true);
-      setMobileNavOpen(false);
       setImmersive(true);
     };
     const exitImmersive = () => setImmersive(false);
@@ -109,14 +106,6 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
           role={role}
           collapsed={collapsed}
           onToggle={() => setCollapsed((c) => !c)}
-          mobileOpen={mobileNavOpen}
-        />
-      )}
-
-      {!immersive && mobileNavOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/20 md:hidden"
-          onClick={() => setMobileNavOpen(false)}
         />
       )}
 
@@ -130,12 +119,7 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
         {!isInterviewWorkspace && (
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgb(0_0_0/0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgb(0_0_0/0.03)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
         )}
-        {!isInterviewWorkspace && (
-          <ContentTopBar
-            onMenuToggle={() => setMobileNavOpen((o) => !o)}
-            mobileNavOpen={mobileNavOpen}
-          />
-        )}
+        {!isInterviewWorkspace && <ContentTopBar navGroups={navGroups} />}
         <div
           className={cn(
             "relative",
