@@ -256,11 +256,12 @@ function courseStageLabel(
 ): string | null {
   const primary = (careerPaths ?? [])[0];
   if (!primary) return null;
-  const base = primary.stage_title
-    ? t("course_detail.stage_label", {
-        n: primary.stage_position,
-        title: primary.stage_title,
-      })
+  // The stage title is the natural label; fall back to the career-path name
+  // (e.g. "IT Senior") when the stage itself has no title, and to a bare
+  // "Stage N" only when both are absent.
+  const title = primary.stage_title || primary.career_path_name;
+  const base = title
+    ? t("course_detail.stage_label", { n: primary.stage_position, title })
     : t("course_detail.stage_label_short", { n: primary.stage_position });
   const extra = (careerPaths?.length ?? 0) > 1 ? ` ${t("course_detail.more_paths", { count: (careerPaths?.length ?? 0) - 1 })}` : "";
   return base + extra;
