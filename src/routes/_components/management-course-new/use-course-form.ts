@@ -2,15 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useSlugAvailability } from "@/lib/api/hooks/teacher-courses";
 import type { CourseTeacherRole } from "@/lib/api/types";
 
-export type Level = "" | "beginner" | "intermediate" | "advanced";
-
-export type CourseLevel = Exclude<Level, "">;
-
-export interface CourseLevelOption {
-  key: CourseLevel;
-  label: string;
-}
-
 /**
  * Every field the wizard collects.
  *
@@ -29,9 +20,7 @@ export interface CourseFormValues {
   title: string;
   slug: string;
   description: string;
-  level: Level;
   estimated_minutes: string;
-  expected_completion_days: string;
   enrollment_cap: string;
   /** Chosen in the teacher picker; assigned after the course row exists. */
   teacherIds: string[];
@@ -44,9 +33,7 @@ export const EMPTY_COURSE_FORM: CourseFormValues = {
   title: "",
   slug: "",
   description: "",
-  level: "beginner",
   estimated_minutes: "",
-  expected_completion_days: "",
   enrollment_cap: "",
   teacherIds: [],
   teacherRoles: {},

@@ -38,6 +38,17 @@ export type InstructorReadLocal = Schemas["InstructorRead"] & InstructorReadFiel
 export interface CoursePublicFields {
   /** Every teacher on the course, Course Instructor first then TAs. */
   instructors?: InstructorReadLocal[];
+  /** Where the course sits on career paths — the DERIVED "level" (shown as
+   *  "Stage N — <title>"). Empty when the course is on no path. */
+  career_paths?: CourseCareerPlacementPublic[];
+}
+
+export interface CourseCareerPlacementPublic {
+  career_path_id: string;
+  career_path_name: string;
+  stage_id: string;
+  stage_title?: string | null;
+  stage_position: number;
 }
 
 // Difficulty / effort for the landing-page meta line, exposed on the public

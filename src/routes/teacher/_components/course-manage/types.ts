@@ -54,7 +54,7 @@ export interface ModuleItemStats {
 }
 
 /**
- * The eleven buffered course-settings fields, exactly as the form holds them
+ * The ten buffered course-settings fields, exactly as the form holds them
  * (all strings — the numeric inputs are `<Input type="number">` and stay
  * stringly typed until Save coerces them).
  *
@@ -66,10 +66,8 @@ export interface CourseSettingsValues {
   title: string;
   slug: string;
   description: string;
-  level: string;
   estimatedMinutes: string;
   enrollmentCap: string;
-  completionDays: string;
   contactEmail: string;
   contactPhone: string;
   contactWebsiteUrl: string;

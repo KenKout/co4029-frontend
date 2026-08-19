@@ -159,7 +159,10 @@
     "enroll_required_body": "Bạn chưa được ghi danh vào khóa học này. Hãy liên hệ quản lý để được ghi danh trước khi truy cập nội dung.",
     "enroll_required_hint": "Liên hệ quản lý để được ghi danh",
     "back_to_course": "Quay lại khóa học",
-    "show_more": "Xem thêm"
+    "show_more": "Xem thêm",
+    "stage_label": "Giai đoạn {{n}} — {{title}}",
+    "stage_label_short": "Giai đoạn {{n}}",
+    "more_paths": "+ {{count}} pathway nữa"
   },
   "settings_security": {
     "title": "Bảo mật tài khoản",
@@ -4927,5 +4930,12 @@
     "menu_entry": "Phím tắt",
     "sidebar_up": "Thanh bên: mục trước",
     "sidebar_down": "Thanh bên: mục sau"
+  },
+  "duration": {
+    "label": "Đơn vị thời lượng",
+    "unit_seconds": "giây",
+    "unit_minutes": "phút",
+    "unit_hours": "giờ",
+    "unit_days": "ngày"
   }
 }

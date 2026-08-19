@@ -158,7 +158,10 @@
     "enroll_required_body": "You're not enrolled in this course yet. Contact your manager to get enrolled before you can access the content.",
     "enroll_required_hint": "Contact your manager to get enrolled",
     "back_to_course": "Back to course",
-    "show_more": "Show more"
+    "show_more": "Show more",
+    "stage_label": "Stage {{n}} — {{title}}",
+    "stage_label_short": "Stage {{n}}",
+    "more_paths": "+ {{count}} more path(s)"
   },
   "settings_security": {
     "title": "Account security",
@@ -4950,5 +4953,12 @@
     "menu_entry": "Shortcuts",
     "sidebar_up": "Sidebar: previous item",
     "sidebar_down": "Sidebar: next item"
+  },
+  "duration": {
+    "label": "Duration unit",
+    "unit_seconds": "sec",
+    "unit_minutes": "min",
+    "unit_hours": "hour",
+    "unit_days": "day"
   }
 }

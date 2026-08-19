@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { Button } from "@/components/ui/button";
-import type { CoursePublic, MyCourseProgressSummary } from "@/lib/api/types";
+import type { CourseCareerPlacementPublic, CoursePublic, MyCourseProgressSummary } from "@/lib/api/types";
+import type { TFunction } from "i18next";
 import { cn } from "@/lib/utils";
 import { formatEstimatedDuration } from "./helpers";
 
@@ -242,6 +243,29 @@ function CourseProgress({
  * be able to start learning: the CTA becomes a locked, non-clickable
  * "enrollment required" state instead of a link into the learn page.
  */
+
+/**
+ * Derived course level from career-path placement (user decision 2026-08-18):
+ * the level is no longer user-set — it's the course's stage on its path,
+ * shown as "Stage N — <title>". Uses the FIRST placement; "+ n more" when the
+ * course also sits on other paths. Null when the course is on no path.
+ */
+function courseStageLabel(
+  careerPaths: CourseCareerPlacementPublic[] | undefined,
+  t: TFunction,
+): string | null {
+  const primary = (careerPaths ?? [])[0];
+  if (!primary) return null;
+  const base = primary.stage_title
+    ? t("course_detail.stage_label", {
+        n: primary.stage_position,
+        title: primary.stage_title,
+      })
+    : t("course_detail.stage_label_short", { n: primary.stage_position });
+  const extra = (careerPaths?.length ?? 0) > 1 ? ` ${t("course_detail.more_paths", { count: (careerPaths?.length ?? 0) - 1 })}` : "";
+  return base + extra;
+}
+
 export function CourseCard({
   course,
   gradientClass,
@@ -269,7 +293,7 @@ export function CourseCard({
     ? Math.round(Number(progress.completion_percent))
     : 0;
   const duration = formatEstimatedDuration(course.estimated_minutes);
-  const level = course.level ? t(`course_detail.level_${course.level}`) : null;
+  const level = courseStageLabel(course.career_paths, t);
 
   return (
     <div className="rounded-xl overflow-hidden shadow-editorial ghost-border bg-m3-surface-container-lowest">

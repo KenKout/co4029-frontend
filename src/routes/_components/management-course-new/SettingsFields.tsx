@@ -34,21 +34,6 @@ export function CourseSettingsFields({
     <div className="grid gap-4 sm:grid-cols-2">
       <label className="space-y-1.5">
         <span className="text-xs font-medium text-m3-on-surface-variant">
-          {t("teacher_course_settings.expected_completion")}
-        </span>
-        <Input
-          type="number"
-          min={1}
-          value={form.expected_completion_days}
-          onChange={(e) => setField("expected_completion_days", e.target.value)}
-          placeholder={t(
-            "teacher_course_settings.expected_completion_placeholder",
-          )}
-        />
-      </label>
-
-      <label className="space-y-1.5">
-        <span className="text-xs font-medium text-m3-on-surface-variant">
           {t("teacher_course_settings.enrollment_cap")}
         </span>
         <Input

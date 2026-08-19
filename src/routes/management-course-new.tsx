@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
@@ -54,15 +54,6 @@ export default function ManagementCourseNewPage() {
   const thumbnailUrl = useObjectUrl(thumbnail);
   const wizard = useCourseWizardState(t, form, gate, pathId, stageId);
 
-  const levelOptions = useMemo(
-    () =>
-      (["beginner", "intermediate", "advanced"] as const).map((lvl) => ({
-        key: lvl,
-        label: t(`teacher_dashboard.level.${lvl}`, { defaultValue: lvl }),
-      })),
-    [t],
-  );
-
   if (permissions.isLoading) {
     return null;
   }
@@ -111,11 +102,7 @@ export default function ManagementCourseNewPage() {
         >
           <CourseBasicsSection controller={controller} t={t} />
 
-          <CourseDetailsSection
-            controller={controller}
-            t={t}
-            levelOptions={levelOptions}
-          />
+          <CourseDetailsSection controller={controller} t={t} />
 
           <CourseSettingsFields controller={controller} t={t} />
 

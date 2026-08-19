@@ -7,11 +7,11 @@ import type {
 } from "./types";
 
 /**
- * The eleven buffered settings fields, plus the panel's open flag and the
+ * The ten buffered settings fields, plus the panel's open flag and the
  * teacher account query that seeds the contact email.
  *
  * Extracted from the former 550-line `CourseSettingsPanel`. The `useState`
- * calls keep their original order — the seven course-meta fields, then
+ * calls keep their original order — the five course-meta fields, then
  * `useMe()`, then the four contact fields — so the panel's hook slots are
  * unchanged.
  */
@@ -20,10 +20,8 @@ export function useCourseSettingsFields() {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
-  const [level, setLevel] = useState("");
   const [estimatedMinutes, setEstimatedMinutes] = useState("");
   const [enrollmentCap, setEnrollmentCap] = useState("");
-  const [completionDays, setCompletionDays] = useState("");
   // Teacher contact info shown on the student landing page. contactEmail is
   // pre-filled from the teacher's account email (useMe) on first load when the
   // course has none saved yet — but stays fully editable (a teacher may want a
@@ -38,10 +36,8 @@ export function useCourseSettingsFields() {
     title,
     slug,
     description,
-    level,
     estimatedMinutes,
     enrollmentCap,
-    completionDays,
     contactEmail,
     contactPhone,
     contactWebsiteUrl,
@@ -52,10 +48,8 @@ export function useCourseSettingsFields() {
     setTitle,
     setSlug,
     setDescription,
-    setLevel,
     setEstimatedMinutes,
     setEnrollmentCap,
-    setCompletionDays,
     setContactEmail,
     setContactPhone,
     setContactWebsiteUrl,
@@ -66,10 +60,8 @@ export function useCourseSettingsFields() {
     setTitle(init.title);
     setSlug(init.slug);
     setDescription(init.description);
-    setLevel(init.level);
     setEstimatedMinutes(init.estimatedMinutes);
     setEnrollmentCap(init.enrollmentCap);
-    setCompletionDays(init.completionDays);
     setContactEmail(init.contactEmail);
     setContactPhone(init.contactPhone);
     setContactWebsiteUrl(init.contactWebsiteUrl);

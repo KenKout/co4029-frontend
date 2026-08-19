@@ -67,13 +67,6 @@ export function CourseCardPreview({
               </p>
             </div>
             <div className="flex items-center gap-2 text-[11px] text-m3-on-surface-variant">
-              {form.level && (
-                <span className="px-1.5 py-0.5 bg-m3-surface-container rounded-md font-medium">
-                  {t(`teacher_dashboard.level.${form.level}`, {
-                    defaultValue: form.level,
-                  })}
-                </span>
-              )}
               {form.estimated_minutes && (
                 <span className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />

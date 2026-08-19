@@ -12,9 +12,7 @@ const emptyForm: CourseDraftForm = {
   title: "",
   slug: "",
   description: "",
-  level: "beginner",
   estimated_minutes: "",
-  expected_completion_days: "",
   enrollment_cap: "",
   teacherIds: [],
 };

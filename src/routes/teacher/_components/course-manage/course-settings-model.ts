@@ -23,10 +23,8 @@ export const COURSE_SETTINGS_FIELDS: readonly CourseSettingsField[] = [
   "title",
   "slug",
   "description",
-  "level",
   "estimatedMinutes",
   "enrollmentCap",
-  "completionDays",
   "contactEmail",
   "contactPhone",
   "contactWebsiteUrl",
@@ -58,10 +56,8 @@ function savedCourseMeta(
     title: course.title ?? "",
     slug: course.slug ?? "",
     description: course.description ?? "",
-    level: course.level ?? "",
     estimatedMinutes: course.estimated_minutes?.toString() ?? "",
     enrollmentCap: course.enrollment_cap?.toString() ?? "",
-    completionDays: course.expected_completion_days?.toString() ?? "",
   };
 }
 
@@ -160,8 +156,8 @@ export function isCourseSettingsDirty(args: {
 /**
  * Course meta a TEACHER may patch. `course.update` is the CONTENT permission:
  * description and the study-time estimate. Title/slug (identity), status
- * (lifecycle) and level / caps / thumbnail (delivery policy) are manager-owned
- * and the backend 403s the whole PATCH if any of them appear, so they must not
+ * (lifecycle) and caps / thumbnail (delivery policy) are manager-owned and
+ * the backend 403s the whole PATCH if any of them appear, so they must not
  * be in a teacher payload even unchanged.
  */
 function buildCourseMetaPayload(values: CourseSettingsValues): CourseUpdate {
@@ -183,16 +179,8 @@ function buildManagerMetaPayload(values: CourseSettingsValues): CourseUpdate {
   return {
     title: values.title.trim() || undefined,
     slug: values.slug.trim() || undefined,
-    level: (values.level || undefined) as
-      | "beginner"
-      | "intermediate"
-      | "advanced"
-      | undefined,
     enrollment_cap: values.enrollmentCap
       ? Number(values.enrollmentCap)
-      : undefined,
-    expected_completion_days: values.completionDays
-      ? Number(values.completionDays)
       : undefined,
   };
 }

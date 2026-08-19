@@ -79,13 +79,7 @@ function buildCreatePayload(form: CourseDraftForm) {
     title: form.title.trim(),
     slug: form.slug.trim(),
     description: trimmedOrUndefined(form.description),
-    // `Level` already narrows to the union plus "", so the empty case is the
-    // only thing to strip — no cast needed.
-    level: form.level || undefined,
     estimated_minutes: toNumberOrUndefined(form.estimated_minutes),
-    expected_completion_days: toNumberOrUndefined(
-      form.expected_completion_days,
-    ),
     enrollment_cap: toNumberOrUndefined(form.enrollment_cap),
     // No contact_* here: those are the teacher's own details, filled in from
     // the course settings panel once assigned.
