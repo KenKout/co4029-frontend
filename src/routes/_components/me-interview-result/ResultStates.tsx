@@ -28,7 +28,11 @@ export function ResultLoadFailed() {
         <p className="mt-1 text-sm text-m3-on-surface-variant">
           {t("me_interview_result.load_failed_body")}
         </p>
-        <Link to="/me/interviews" className="mt-4 inline-block">
+        <Link
+          to="/me/interviews"
+          search={{ config: undefined }}
+          className="mt-4 inline-block"
+        >
           <Button variant="outline" className="rounded-xl">
             <ArrowLeft className="h-4 w-4" />
             {t("me_interview_result.back_to_list")}

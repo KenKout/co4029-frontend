@@ -86,6 +86,7 @@ export default function MyInterviewResultPage() {
       ) : (
         <Link
           to="/me/interviews"
+          search={{ config: undefined }}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-m3-on-surface-variant transition-colors hover:text-m3-primary"
         >
           <ArrowLeft className="h-4 w-4" />

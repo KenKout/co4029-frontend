@@ -497,6 +497,11 @@ const myCareerPathsRoute = createRoute({
 const myInterviewsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/me/interviews",
+  // Optional filter: when a student opens the list from an interview lobby,
+  // we carry the config id so the list shows only that interview's attempts.
+  validateSearch: (search: Record<string, unknown>) => ({
+    config: typeof search.config === "string" ? search.config : undefined,
+  }),
   component: lazyRouteComponent(() => import("@/routes/me-interviews")),
 });
 

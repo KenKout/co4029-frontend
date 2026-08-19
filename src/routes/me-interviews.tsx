@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
@@ -95,7 +95,9 @@ function SessionRow({ item }: { item: InterviewSessionPublic }) {
 
 export default function MyInterviewsPage() {
   const { t } = useTranslation();
-  const list = useMyInterviewSessions();
+  // Optional filter carried from an interview lobby's "view all" button.
+  const search = useSearch({ strict: false }) as { config?: string };
+  const list = useMyInterviewSessions(search.config);
   const items = list.data ?? [];
 
   return (

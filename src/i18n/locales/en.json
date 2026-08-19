@@ -2871,7 +2871,8 @@
       "passed": "Passed",
       "not_passed": "Not passed",
       "in_review": "In review",
-      "none": "No attempts yet — this will be your first."
+      "none": "No attempts yet — this will be your first.",
+      "view_all": "View all gap reports"
     },
     "criteria": {
       "assessed_on": "Assessed on {{count}} criterion",

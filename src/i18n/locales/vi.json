@@ -2741,7 +2741,8 @@
       "passed": "Đạt",
       "not_passed": "Chưa đạt",
       "in_review": "Đang chấm",
-      "none": "Chưa có lượt nào — đây sẽ là lượt đầu tiên của bạn."
+      "none": "Chưa có lượt nào — đây sẽ là lượt đầu tiên của bạn.",
+      "view_all": "Xem tất cả báo cáo"
     },
     "actions": {
       "starting": "Đang khởi tạo...",
