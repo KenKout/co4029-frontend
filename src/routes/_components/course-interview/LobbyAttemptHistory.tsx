@@ -89,7 +89,7 @@ export function LobbyAttemptHistory({
       <Link
         to="/me/interviews"
         search={{ config: configId }}
-        className="group mt-1.5 flex items-center justify-center gap-1 rounded-lg border border-m3-outline-variant/30 px-2 py-1.5 text-xs font-semibold text-m3-primary outline-none transition-colors hover:bg-m3-surface-container focus-visible:ring-2 focus-visible:ring-m3-primary/40"
+        className="group mt-1.5 flex items-center justify-center gap-1 rounded-lg border border-m3-outline-variant/30 px-2 py-1.5 text-xs font-semibold text-m3-primary outline-none transition-colors hover:border-m3-primary/40 hover:bg-m3-primary/10 focus-visible:ring-2 focus-visible:ring-m3-primary/40"
       >
         {t("course_interview.attempts.view_all")}
         <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
