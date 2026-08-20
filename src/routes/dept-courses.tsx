@@ -100,37 +100,11 @@ function InstructorCell({ course, t }: { course: CourseAuthoring; t: TFn }) {
 }
 
 function StudentsCell({ course }: { course: CourseAuthoring }) {
-  const cap = course.enrollment_cap;
-  if (!cap || cap <= 0) {
-    return (
-      <span className="text-sm tabular-nums text-text-strong">
-        {course.student_count}
-      </span>
-    );
-  }
-  const pct = Math.min(100, Math.round((course.student_count / cap) * 100));
+  // Enrollment is always unlimited — no cap to show, just the current count.
   return (
-    <div className="flex flex-col gap-1 min-w-[7rem]">
-      <span className="text-sm tabular-nums text-text-strong">
-        {course.student_count} / {cap}
-      </span>
-      <div
-        role="progressbar"
-        aria-valuenow={course.student_count}
-        aria-valuemin={0}
-        aria-valuemax={cap}
-        className="h-1.5 w-full max-w-[7rem] rounded-full bg-m3-surface-container"
-      >
-        <div
-          className={`h-full rounded-full ${
-            course.student_count >= cap
-              ? "bg-amber-500"
-              : "bg-m3-primary"
-          }`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
+    <span className="text-sm tabular-nums text-text-strong">
+      {course.student_count}
+    </span>
   );
 }
 

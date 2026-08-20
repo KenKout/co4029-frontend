@@ -21,7 +21,6 @@ export function useCourseSettingsFields() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [estimatedMinutes, setEstimatedMinutes] = useState("");
-  const [enrollmentCap, setEnrollmentCap] = useState("");
   // Teacher contact info shown on the student landing page. contactEmail is
   // pre-filled from the teacher's account email (useMe) on first load when the
   // course has none saved yet — but stays fully editable (a teacher may want a
@@ -37,7 +36,6 @@ export function useCourseSettingsFields() {
     slug,
     description,
     estimatedMinutes,
-    enrollmentCap,
     contactEmail,
     contactPhone,
     contactWebsiteUrl,
@@ -49,7 +47,6 @@ export function useCourseSettingsFields() {
     setSlug,
     setDescription,
     setEstimatedMinutes,
-    setEnrollmentCap,
     setContactEmail,
     setContactPhone,
     setContactWebsiteUrl,
@@ -61,7 +58,6 @@ export function useCourseSettingsFields() {
     setSlug(init.slug);
     setDescription(init.description);
     setEstimatedMinutes(init.estimatedMinutes);
-    setEnrollmentCap(init.enrollmentCap);
     setContactEmail(init.contactEmail);
     setContactPhone(init.contactPhone);
     setContactWebsiteUrl(init.contactWebsiteUrl);

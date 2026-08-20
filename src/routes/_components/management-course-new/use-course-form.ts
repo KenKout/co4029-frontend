@@ -21,7 +21,6 @@ export interface CourseFormValues {
   slug: string;
   description: string;
   estimated_minutes: string;
-  enrollment_cap: string;
   /** Chosen in the teacher picker; assigned after the course row exists. */
   teacherIds: string[];
   /** Course-scoped title per selected teacher id (CI vs TA). Persisted in the
@@ -34,7 +33,6 @@ export const EMPTY_COURSE_FORM: CourseFormValues = {
   slug: "",
   description: "",
   estimated_minutes: "",
-  enrollment_cap: "",
   teacherIds: [],
   teacherRoles: {},
 };

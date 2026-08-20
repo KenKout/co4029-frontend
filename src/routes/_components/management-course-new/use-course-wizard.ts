@@ -80,7 +80,6 @@ function buildCreatePayload(form: CourseDraftForm) {
     slug: form.slug.trim(),
     description: trimmedOrUndefined(form.description),
     estimated_minutes: toNumberOrUndefined(form.estimated_minutes),
-    enrollment_cap: toNumberOrUndefined(form.enrollment_cap),
     // No contact_* here: those are the teacher's own details, filled in from
     // the course settings panel once assigned.
   };

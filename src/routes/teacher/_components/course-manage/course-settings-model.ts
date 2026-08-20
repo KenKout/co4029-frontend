@@ -24,7 +24,6 @@ export const COURSE_SETTINGS_FIELDS: readonly CourseSettingsField[] = [
   "slug",
   "description",
   "estimatedMinutes",
-  "enrollmentCap",
   "contactEmail",
   "contactPhone",
   "contactWebsiteUrl",
@@ -57,7 +56,6 @@ function savedCourseMeta(
     slug: course.slug ?? "",
     description: course.description ?? "",
     estimatedMinutes: course.estimated_minutes?.toString() ?? "",
-    enrollmentCap: course.enrollment_cap?.toString() ?? "",
   };
 }
 
@@ -179,9 +177,6 @@ function buildManagerMetaPayload(values: CourseSettingsValues): CourseUpdate {
   return {
     title: values.title.trim() || undefined,
     slug: values.slug.trim() || undefined,
-    enrollment_cap: values.enrollmentCap
-      ? Number(values.enrollmentCap)
-      : undefined,
   };
 }
 

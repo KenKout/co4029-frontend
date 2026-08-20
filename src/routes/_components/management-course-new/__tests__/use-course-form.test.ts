@@ -17,7 +17,6 @@ const restored: CourseFormValues = {
   title: "Restored Course",
   slug: "restored-course",
   description: "from the draft",
-  enrollment_cap: "40",
 };
 
 describe("useCourseForm restore", () => {
@@ -40,7 +39,6 @@ describe("useCourseForm restore", () => {
     expect(result.current.form.title).toBe("Restored Course");
     expect(result.current.form.slug).toBe("restored-course");
     expect(result.current.form.description).toBe("from the draft");
-    expect(result.current.form.enrollment_cap).toBe("40");
   });
 
   it("does not clobber edits made after the restore", () => {

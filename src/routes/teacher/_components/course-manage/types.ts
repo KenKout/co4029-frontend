@@ -67,7 +67,6 @@ export interface CourseSettingsValues {
   slug: string;
   description: string;
   estimatedMinutes: string;
-  enrollmentCap: string;
   contactEmail: string;
   contactPhone: string;
   contactWebsiteUrl: string;

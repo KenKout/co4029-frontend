@@ -14,7 +14,6 @@ import {
   CourseFormActions,
 } from "./_components/management-course-new/DetailsSection";
 import { DraftRestoreBanner } from "./_components/management-course-new/DraftRestoreBanner";
-import { CourseSettingsFields } from "./_components/management-course-new/SettingsFields";
 import { TeacherPickerSection } from "./_components/management-course-new/TeacherPickerSection";
 import { ThumbnailField } from "./_components/management-course-new/ThumbnailField";
 import { useCourseForm } from "./_components/management-course-new/use-course-form";
@@ -103,8 +102,6 @@ export default function ManagementCourseNewPage() {
           <CourseBasicsSection controller={controller} t={t} />
 
           <CourseDetailsSection controller={controller} t={t} />
-
-          <CourseSettingsFields controller={controller} t={t} />
 
           <ThumbnailField
             file={thumbnail}

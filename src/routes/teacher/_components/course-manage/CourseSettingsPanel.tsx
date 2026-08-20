@@ -115,7 +115,6 @@ export function CourseSettingsPanel({
                 values={values}
                 setters={setters}
                 t={t}
-                scope={scope}
               />
               <CourseSettingsContactFields
                 values={values}
