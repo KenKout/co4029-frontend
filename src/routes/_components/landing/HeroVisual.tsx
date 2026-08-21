@@ -81,7 +81,7 @@ export default function HeroVisual() {
             94%
           </p>
           <p className="text-xs text-m3-on-surface-variant mt-0.5">
-            Completion Rate
+            Accuracy
           </p>
         </div>
       </div>

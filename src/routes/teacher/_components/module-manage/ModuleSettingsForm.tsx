@@ -42,7 +42,7 @@ export function ModuleSettingsForm({ ctl }: { ctl: ModuleSettingsController }) {
 
       <div className="space-y-1.5">
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          Estimated Duration (min)
+          Required Duration (min)
         </label>
         <Input
           type="number"

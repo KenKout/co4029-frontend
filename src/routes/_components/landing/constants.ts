@@ -1,7 +1,7 @@
 export const stats = [
   { value: "500k+", label: "Active Learners" },
   { value: "12k+", label: "AI-Enhanced Courses" },
-  { value: "94%", label: "Completion Rate" },
+  { value: "94%", label: "Accuracy" },
   { value: "1.2M", label: "Skill Assessments" },
 ];
 
