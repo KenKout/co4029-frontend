@@ -76,7 +76,7 @@ describe("variant_strategy form field", () => {
     }
   });
 
-  it("relabels the count to per-role and shows the N x 4 expansion note", () => {
+  it("relabels the count to per-role and bolds the N x 4 expansion total", () => {
     render(
       <GenerationModeFields
         generationForm={form({ variant_strategy: "all_angles", question_count: 5 })}
@@ -84,8 +84,10 @@ describe("variant_strategy form field", () => {
       />,
     );
     expect(screen.getByText(t("count_label_per_role"))).toBeInTheDocument();
-    expect(
-      screen.getByText(t("variant_expansion_note", { count: 5, effective: 20 })),
-    ).toBeInTheDocument();
+    // The computed total renders inside a <strong> so the teacher's eye lands
+    // on "20" — the actual size of the bank they are about to create.
+    const strong = screen.getByText("20").closest("strong");
+    expect(strong).not.toBeNull();
+    expect(strong).toHaveTextContent("20");
   });
 });

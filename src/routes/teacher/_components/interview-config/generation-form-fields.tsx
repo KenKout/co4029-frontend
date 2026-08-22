@@ -6,7 +6,7 @@
  * decomposition).
  */
 
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -91,10 +91,16 @@ export function GenerationModeFields({
           />
           {isAllAngles && effectiveCount > 0 && (
             <p className="text-[11px] text-m3-on-surface-variant">
-              {t("teacher_interview_config.generate.variant_expansion_note", {
-                count: generationForm.question_count,
-                effective: effectiveCount,
-              })}
+              {/* i18n string carries <strong>{{effective}}</strong>; Trans
+                  renders that markup instead of printing the tag. */}
+              <Trans
+                i18nKey="teacher_interview_config.generate.variant_expansion_note"
+                values={{
+                  count: generationForm.question_count,
+                  effective: effectiveCount,
+                }}
+                components={{ strong: <strong className="font-bold text-m3-on-surface" /> }}
+              />
             </p>
           )}
         </Field>

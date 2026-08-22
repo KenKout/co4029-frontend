@@ -4344,7 +4344,7 @@
       "variant_all_angles": "Đa góc theo vai trò (mỗi câu có biến thể cho từng role)",
       "variant_role_only": "Theo đúng vai trò interviewer đã chọn",
       "count_label_per_role": "Số câu hỏi mỗi role",
-      "variant_expansion_note": "Sẽ sinh {{count}} × 4 góc hỏi = {{effective}} câu thực tế (mỗi role một bộ)."
+      "variant_expansion_note": "Sẽ sinh {{count}} × 4 góc hỏi = <strong>{{effective}}</strong> câu thực tế (mỗi role một bộ)."
     },
     "interviewer_role": {
       "generic_assistant": "Trợ lý ảo (mặc định)",
