@@ -4343,7 +4343,8 @@
       "variant_mixed": "Truyền thống (trộn nhiều loại)",
       "variant_all_angles": "Đa góc theo vai trò (mỗi câu có biến thể cho từng role)",
       "variant_role_only": "Theo đúng vai trò interviewer đã chọn",
-      "variant_all_angles_note": "Với chế độ này, mỗi câu hỏi logic sẽ sinh thành 4 biến thể (kĩ thuật / system design / tình huống / hành vi) — tổng số câu trong ngân hàng sẽ lớn hơn số câu bạn nhập."
+      "count_label_per_role": "Số câu hỏi mỗi role",
+      "variant_expansion_note": "Sẽ sinh {{count}} × 4 góc hỏi = {{effective}} câu thực tế (mỗi role một bộ)."
     },
     "interviewer_role": {
       "generic_assistant": "Trợ lý ảo (mặc định)",

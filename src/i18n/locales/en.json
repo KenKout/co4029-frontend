@@ -4470,7 +4470,8 @@
       "variant_mixed": "Classic (mixed types)",
       "variant_all_angles": "Multi-angle per role (each question gets one variant per role)",
       "variant_role_only": "Match the selected interviewer role",
-      "variant_all_angles_note": "In this mode every logical question is expanded into 4 variants (technical / system design / situational / behavioral) — the bank will hold more rows than the count you entered."
+      "count_label_per_role": "Questions per role",
+      "variant_expansion_note": "Will generate {{count}} × 4 angles = {{effective}} questions total (one set per role)."
     },
     "interviewer_role": {
       "generic_assistant": "Virtual assistant (default)",

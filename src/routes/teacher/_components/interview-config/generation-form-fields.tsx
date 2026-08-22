@@ -17,6 +17,10 @@ import type {
 } from "@/lib/interview/config-draft";
 import { Field } from "@/routes/teacher/_components/interview-config/form-primitives";
 
+/** Angles per interviewer role — must match the backend's VARIANT_ANGLES
+ *  (ai/stages/generation/resolve.py). */
+const VARIANT_ANGLES_COUNT = 4;
+
 /** Shared shape for every piece of the generation form. */
 export interface GenerationFieldsProps {
   generationForm: GenerationFormState;
@@ -31,47 +35,69 @@ export function GenerationModeFields({
   updateGeneration,
 }: GenerationFieldsProps) {
   const { t } = useTranslation();
+  const isAllAngles = generationForm.variant_strategy === "all_angles";
+  // The backend multiplies the logical count by the angle count in
+  // all_angles mode; mirror that here so the note shows the real total.
+  const effectiveCount = generationForm.question_count * VARIANT_ANGLES_COUNT;
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <Field label={t("teacher_interview_config.generate.mode_label")}>
-        <Select<GenerationMode>
-          value={generationForm.mode}
-          onValueChange={(next) => updateGeneration("mode", next)}
-          options={[
-            {
-              value: "outcome-based",
-              label: t("teacher_interview_config.generate.mode_outcome"),
-            },
-            {
-              value: "topic",
-              label: t("teacher_interview_config.generate.mode_topic"),
-            },
-            {
-              value: "coverage",
-              label: t("teacher_interview_config.generate.mode_coverage"),
-            },
-          ]}
-        />
-      </Field>
-      <Field label={t("teacher_interview_config.generate.count_label")}>
-        <Input
-          type="number"
-          min={1}
-          max={50}
-          value={generationForm.question_count}
-          onChange={(e) =>
-            updateGeneration(
-              "question_count",
-              Math.floor(Number(e.target.value)) || 0,
-            )
+    <div className="space-y-4">
+      {/* Role-based question mode leads: it decides HOW the bank is shaped,
+          so the teacher picks it before sizing the run. */}
+      <VariantStrategyFields
+        generationForm={generationForm}
+        updateGeneration={updateGeneration}
+      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Field label={t("teacher_interview_config.generate.mode_label")}>
+          <Select<GenerationMode>
+            value={generationForm.mode}
+            onValueChange={(next) => updateGeneration("mode", next)}
+            options={[
+              {
+                value: "outcome-based",
+                label: t("teacher_interview_config.generate.mode_outcome"),
+              },
+              {
+                value: "topic",
+                label: t("teacher_interview_config.generate.mode_topic"),
+              },
+              {
+                value: "coverage",
+                label: t("teacher_interview_config.generate.mode_coverage"),
+              },
+            ]}
+          />
+        </Field>
+        <Field
+          label={
+            isAllAngles
+              ? t(
+                  "teacher_interview_config.generate.count_label_per_role",
+                )
+              : t("teacher_interview_config.generate.count_label")
           }
-        />
-      </Field>
-      <div className="sm:col-span-2">
-        <VariantStrategyFields
-          generationForm={generationForm}
-          updateGeneration={updateGeneration}
-        />
+        >
+          <Input
+            type="number"
+            min={1}
+            max={50}
+            value={generationForm.question_count}
+            onChange={(e) =>
+              updateGeneration(
+                "question_count",
+                Math.floor(Number(e.target.value)) || 0,
+              )
+            }
+          />
+          {isAllAngles && effectiveCount > 0 && (
+            <p className="text-[11px] text-m3-on-surface-variant">
+              {t("teacher_interview_config.generate.variant_expansion_note", {
+                count: generationForm.question_count,
+                effective: effectiveCount,
+              })}
+            </p>
+          )}
+        </Field>
       </div>
     </div>
   );
@@ -89,7 +115,6 @@ function VariantStrategyFields({
   updateGeneration,
 }: GenerationFieldsProps) {
   const { t } = useTranslation();
-  const isAllAngles = generationForm.variant_strategy === "all_angles";
   return (
     <div className="space-y-1">
       <Field
@@ -117,11 +142,6 @@ function VariantStrategyFields({
           ]}
         />
       </Field>
-      {isAllAngles && (
-        <p className="text-[11px] text-m3-on-surface-variant">
-          {t("teacher_interview_config.generate.variant_all_angles_note")}
-        </p>
-      )}
     </div>
   );
 }

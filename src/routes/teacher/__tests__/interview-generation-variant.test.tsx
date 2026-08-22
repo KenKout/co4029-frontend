@@ -6,7 +6,9 @@
  * - the Select trigger resolves the translated label for every strategy
  *   (options live in a portalled popup, so the closed trigger is what the
  *   teacher sees per selection);
- * - the 4× expansion note renders only for all_angles.
+ * - in all_angles mode the count field relabels to "per role" and shows the
+ *   live expansion math (N × 4 angles = total), matching the backend's
+ *   multiplication in pipelines/variant.py.
  */
 
 import { describe, expect, it } from "vitest";
@@ -36,7 +38,8 @@ function noopUpdate() {
 }
 
 /** The component renders translated labels — resolve the same keys. */
-const t = (key: string) => i18n.t(`teacher_interview_config.generate.${key}`);
+const t = (key: string, opts?: Record<string, unknown>) =>
+  i18n.t(`teacher_interview_config.generate.${key}`, opts);
 
 describe("variant_strategy form field", () => {
   it("resolves a distinct trigger label for every strategy", () => {
@@ -57,27 +60,32 @@ describe("variant_strategy form field", () => {
     }
   });
 
-  it("hides the 4x expansion note on legacy / role_only", () => {
-    render(<GenerationModeFields generationForm={form()} updateGeneration={noopUpdate} />);
-    expect(screen.queryByText(t("variant_all_angles_note"))).not.toBeInTheDocument();
-
-    const { unmount } = render(
-      <GenerationModeFields
-        generationForm={form({ variant_strategy: "role_only" })}
-        updateGeneration={noopUpdate}
-      />,
-    );
-    expect(screen.queryByText(t("variant_all_angles_note"))).not.toBeInTheDocument();
-    unmount();
+  it("keeps the plain count label and hides the expansion note outside all_angles", () => {
+    for (const variant_strategy of ["", "role_only"] as const) {
+      const { unmount } = render(
+        <GenerationModeFields
+          generationForm={form({ variant_strategy })}
+          updateGeneration={noopUpdate}
+        />,
+      );
+      expect(screen.getByText(t("count_label"))).toBeInTheDocument();
+      expect(
+        screen.queryByText(t("variant_expansion_note", { count: 5, effective: 20 })),
+      ).not.toBeInTheDocument();
+      unmount();
+    }
   });
 
-  it("shows the 4x expansion note only for all_angles", () => {
+  it("relabels the count to per-role and shows the N x 4 expansion note", () => {
     render(
       <GenerationModeFields
-        generationForm={form({ variant_strategy: "all_angles" })}
+        generationForm={form({ variant_strategy: "all_angles", question_count: 5 })}
         updateGeneration={noopUpdate}
       />,
     );
-    expect(screen.getByText(t("variant_all_angles_note"))).toBeInTheDocument();
+    expect(screen.getByText(t("count_label_per_role"))).toBeInTheDocument();
+    expect(
+      screen.getByText(t("variant_expansion_note", { count: 5, effective: 20 })),
+    ).toBeInTheDocument();
   });
 });
