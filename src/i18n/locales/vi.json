@@ -4337,7 +4337,14 @@
       "outcomes_empty": "Chưa có chuẩn đầu ra nào cho bài phỏng vấn này. Thêm ở tab Chuẩn đầu ra — việc tạo sẽ bao quát tất cả.",
       "outcomes_select_all": "Chọn tất cả",
       "outcomes_clear": "Bỏ chọn",
-      "outcomes_badge": "CĐR {{n}}"
+      "outcomes_badge": "CĐR {{n}}",
+      "variant_label": "Chế độ câu hỏi theo vai trò",
+      "variant_hint": "Sinh bộ câu hỏi xoay quanh từng phần theo góc hỏi của interviewer. Để mặc định để dùng tỷ lệ loại câu hỏi truyền thống.",
+      "variant_mixed": "Truyền thống (trộn nhiều loại)",
+      "variant_all_angles": "Đa góc theo vai trò (mỗi câu có biến thể cho từng role)",
+      "variant_role_only": "Theo đúng vai trò interviewer đã chọn",
+      "count_label_per_role": "Số câu hỏi mỗi role",
+      "variant_expansion_note": "Sẽ sinh {{count}} × 4 góc hỏi = <strong>{{effective}}</strong> câu thực tế (mỗi role một bộ)."
     },
     "interviewer_role": {
       "generic_assistant": "Trợ lý ảo (mặc định)",

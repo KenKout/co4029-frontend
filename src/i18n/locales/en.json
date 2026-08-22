@@ -4464,7 +4464,14 @@
       "success_body": "New questions were added to the draft set. Close to view them.",
       "processing": "Processing…",
       "start_button": "Start generation",
-      "elapsed": "Elapsed time"
+      "elapsed": "Elapsed time",
+      "variant_label": "Role-based question mode",
+      "variant_hint": "Generate question variants around each part matching the interviewer's angle. Leave default to use the classic type mix.",
+      "variant_mixed": "Classic (mixed types)",
+      "variant_all_angles": "Multi-angle per role (each question gets one variant per role)",
+      "variant_role_only": "Match the selected interviewer role",
+      "count_label_per_role": "Questions per role",
+      "variant_expansion_note": "Will generate {{count}} × 4 angles = <strong>{{effective}}</strong> questions total (one set per role)."
     },
     "interviewer_role": {
       "generic_assistant": "Virtual assistant (default)",

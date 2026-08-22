@@ -169,6 +169,12 @@ export function createConfigActions(deps: ConfigActionsDeps): ConfigActions {
         course_id: deps.courseId,
         module_id: config.module_id,
         question_count: generationForm.question_count,
+        // "" = the teacher did not pick a variant mode → null keeps the
+        // backend on the legacy mixed type-mix.
+        variant_strategy:
+          generationForm.variant_strategy === ""
+            ? null
+            : generationForm.variant_strategy,
         focus_topics: splitTopics(generationForm.focus_topics),
         avoid_topics: splitTopics(generationForm.avoid_topics),
         source_module_ids: generationForm.source_module_ids,
