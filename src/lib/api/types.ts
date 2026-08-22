@@ -490,6 +490,9 @@ export type InterviewGenerationRequest =
     // Interview rubric-outcome ids to target (empty = all). Manually typed
     // until the OpenAPI snapshot is regenerated.
     target_outcome_ids?: string[];
+    // Role-conditioned variant generation (Slice 21). Manually typed until
+    // the OpenAPI snapshot is regenerated. null / undefined = legacy mix.
+    variant_strategy?: "all_angles" | "role_only" | null;
   };
 export type InterviewGenerationRunPublic =
   Schemas["InterviewGenerationRunPublic"];

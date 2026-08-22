@@ -96,9 +96,14 @@ export interface PersonaProfileOverride {
   interviewer_role?: InterviewerRole;
 }
 
+/** Role-conditioned variant generation. "" = legacy mixed (backend default). */
+export type VariantStrategy = "" | "all_angles" | "role_only";
+
 export interface GenerationFormState {
   mode: GenerationMode;
   question_count: number;
+  /** How the question bank is shaped per interviewer role (Slice 21). */
+  variant_strategy: VariantStrategy;
   focus_topics: string;
   avoid_topics: string;
   // Modules the generation should draw from. Empty = the interview's own

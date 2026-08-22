@@ -74,6 +74,7 @@ export default function InterviewConfigPage() {
   const [generationForm, setGenerationForm] = useState<GenerationFormState>({
     mode: "outcome-based" as GenerationMode,
     question_count: 5,
+    variant_strategy: "",
     focus_topics: "",
     avoid_topics: "",
     source_module_ids: [],

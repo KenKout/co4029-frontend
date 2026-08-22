@@ -13,6 +13,7 @@ import { Select } from "@/components/ui/select";
 import type {
   GenerationFormState,
   GenerationMode,
+  VariantStrategy,
 } from "@/lib/interview/config-draft";
 import { Field } from "@/routes/teacher/_components/interview-config/form-primitives";
 
@@ -66,6 +67,61 @@ export function GenerationModeFields({
           }
         />
       </Field>
+      <div className="sm:col-span-2">
+        <VariantStrategyFields
+          generationForm={generationForm}
+          updateGeneration={updateGeneration}
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Role-conditioned variant generation (Slice 21). Empty string = legacy
+ * mixed type-mix (the backend default, sent as null). ``all_angles`` asks
+ * for one variant of every logical question per interviewer angle — so the
+ * bank holds count × angles rows; ``role_only`` pins all questions to this
+ * interview's interviewer-role preferred type.
+ */
+function VariantStrategyFields({
+  generationForm,
+  updateGeneration,
+}: GenerationFieldsProps) {
+  const { t } = useTranslation();
+  const isAllAngles = generationForm.variant_strategy === "all_angles";
+  return (
+    <div className="space-y-1">
+      <Field
+        label={t("teacher_interview_config.generate.variant_label")}
+        hint={t("teacher_interview_config.generate.variant_hint")}
+      >
+        <Select<VariantStrategy>
+          value={generationForm.variant_strategy}
+          onValueChange={(next) => updateGeneration("variant_strategy", next)}
+          options={[
+            {
+              value: "",
+              label: t(
+                "teacher_interview_config.generate.variant_mixed",
+              ),
+            },
+            {
+              value: "all_angles",
+              label: t("teacher_interview_config.generate.variant_all_angles"),
+            },
+            {
+              value: "role_only",
+              label: t("teacher_interview_config.generate.variant_role_only"),
+            },
+          ]}
+        />
+      </Field>
+      {isAllAngles && (
+        <p className="text-[11px] text-m3-on-surface-variant">
+          {t("teacher_interview_config.generate.variant_all_angles_note")}
+        </p>
+      )}
     </div>
   );
 }
