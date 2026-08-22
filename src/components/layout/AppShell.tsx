@@ -33,6 +33,14 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
   const routerLocation = useRouterState({ select: (s) => s.location });
   const isInterviewWorkspace =
     /^\/courses\/[^/]+\/interview\/[^/]+/.test(routerLocation.pathname);
+  const isAuthoringWorkspace =
+    /^\/management\/(career-paths|learning-programs)\/(new|[^/]+)$/.test(
+      routerLocation.pathname,
+    );
+
+  useEffect(() => {
+    if (isAuthoringWorkspace) setCollapsed(true);
+  }, [isAuthoringWorkspace, routerLocation.pathname]);
 
   // Realtime arrival toast: inbox-sync hands us newly polled notifications;
   // surface them as a tappable toast that deep-links into the inbox.

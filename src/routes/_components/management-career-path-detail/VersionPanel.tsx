@@ -1,183 +1,90 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { GitBranch, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  useCreatePathVersion,
-  usePathVersions,
-} from "@/lib/api/hooks/career-paths";
-import { ConfirmActionBar } from "./ConfirmActionBar";
+import { useConfirm } from "@/components/ui/use-confirm";
+import { useCreatePathVersion, usePathVersions } from "@/lib/api/hooks/career-paths";
+import { useFormatDate } from "@/lib/format/date";
 
-/**
- * Gap 3 (D1b pinned + D2a explicit fork) manager surface.
- *
- * Shows the path's versions (v1 published, v2 draft, ...) with their
- * status, and the "New version" fork button. A published version is FROZEN
- * — edits land on the draft; the panel says so explicitly so a 409 from
- * the backend is never a surprise.
- */
 export function VersionPanel({
   id,
   canManage,
   pathPublished,
+  selectedVersionId = null,
+  onSelect = () => undefined,
 }: {
   id: string;
   canManage: boolean;
   pathPublished: boolean;
+  selectedVersionId?: string | null;
+  onSelect?: (versionId: string | null) => void;
 }) {
-  const { t } = useTranslation();
-  const [forkError, setForkError] = useState<string | null>(null);
-  const [confirmingFork, setConfirmingFork] = useState(false);
-  const versions = usePathVersions(id, canManage);
+  const versions = usePathVersions(id, true);
   const createVersion = useCreatePathVersion(id);
+  const formatDate = useFormatDate();
+  const { confirm, dialog } = useConfirm();
+  const list = versions.data ?? [];
+  const draft = list.find((version) => version.status === "draft");
+  const canFork = canManage && pathPublished && !draft && list.some((v) => v.status === "published");
 
-  if (versions.isLoading) {
-    return null;
-  }
-  if (versions.isError || !versions.data) {
-    return null;
-  }
-
-  const list = versions.data;
-  const draft = list.find((v) => v.status === "draft");
-  const publishedExists = list.some((v) => v.status === "published");
-  const canFork = canManage && pathPublished && publishedExists && !draft;
-  const latestPublished =
-    list.find((v) => v.status === "published") ?? null;
-
-  const handleFork = async () => {
-    setForkError(null);
+  async function forkVersion() {
+    const accepted = await confirm({
+      title: "Create a new version?",
+      description: "The latest published version will be copied into a new editable draft.",
+      confirmLabel: "Create version",
+      cancelLabel: "Cancel",
+      confirmVariant: "default",
+    });
+    if (!accepted) return;
     try {
       await createVersion.mutateAsync();
-      setConfirmingFork(false);
-    } catch {
-      setForkError(t("management_career_path_detail.versions.fork_failed"));
-      setConfirmingFork(false);
+      onSelect(null);
+      toast.success("New draft version created");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create a version");
     }
-  };
-
-  return (
-    <div className="rounded-lg border border-m3-outline-variant bg-m3-surface px-4 py-3">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap min-w-0">
-          <GitBranch className="h-4 w-4 shrink-0 text-m3-on-surface-variant" />
-          {list.map((v) => (
-            <span
-              key={v.id}
-              title={`v${v.version_no} (${v.status})`}
-              className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-md ${
-                v.status === "published"
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-amber-50 text-amber-700"
-              }`}
-            >
-              v{v.version_no}
-              <span className="font-normal">
-                {t(
-                  `management_career_path_detail.versions.status.${v.status}`,
-                )}
-              </span>
-            </span>
-          ))}
-          {list.length === 0 && (
-            <span className="text-xs text-m3-on-surface-variant">
-              {t("management_career_path_detail.versions.empty")}
-            </span>
-          )}
-        </div>
-
-        {canFork && <ForkControl
-          confirming={confirmingFork}
-          latestPublished={latestPublished}
-          isPending={createVersion.isPending}
-          onArm={() => setConfirmingFork(true)}
-          onConfirm={() => {
-            void handleFork();
-          }}
-          onCancel={() => setConfirmingFork(false)}
-        />}
-      </div>
-
-      {draft && (
-        <p
-          data-testid="version-draft-hint"
-          className="mt-2 text-xs text-amber-700"
-        >
-          {t("management_career_path_detail.versions.editing_draft", {
-            version: draft.version_no,
-          })}
-        </p>
-      )}
-      {publishedExists && !draft && pathPublished && (
-        <p className="mt-2 text-xs text-m3-on-surface-variant">
-          {t("management_career_path_detail.versions.frozen_hint")}
-        </p>
-      )}
-      {forkError && (
-        <p className="mt-2 text-xs text-red-600">{forkError}</p>
-      )}
-    </div>
-  );
-}
-
-/**
- * The D2(a) fork control: "New version" button, replaced by the inline
- * confirmation (hint + confirm/cancel) once armed. Split out so the panel
- * stays under the complexity cap.
- */
-function ForkControl({
-  confirming,
-  latestPublished,
-  isPending,
-  onArm,
-  onConfirm,
-  onCancel,
-}: {
-  confirming: boolean;
-  latestPublished: { version_no: number } | null;
-  isPending: boolean;
-  onArm: () => void;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  const { t } = useTranslation();
-
-  if (!confirming) {
-    return (
-      <Button
-        data-testid="version-fork-button"
-        variant="outline"
-        size="sm"
-        onClick={onArm}
-        disabled={isPending}
-      >
-        {isPending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <GitBranch className="h-3.5 w-3.5" />
-        )}
-        {t("management_career_path_detail.versions.fork")}
-      </Button>
-    );
   }
 
   return (
-    <div className="flex flex-col items-end gap-1.5">
-      <p
-        data-testid="version-fork-confirm-hint"
-        className="text-xs text-m3-on-surface-variant"
-      >
-        {t("management_career_path_detail.versions.confirm_hint", {
-          version: latestPublished?.version_no ?? 1,
+    <aside className="space-y-4 rounded-xl border border-m3-outline-variant/40 bg-card p-4">
+      {dialog}
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="font-headline font-bold text-m3-on-surface">Versions</p>
+          <p className="text-xs text-m3-on-surface-variant">Select a published version to inspect it read-only.</p>
+        </div>
+        <GitBranch className="h-5 w-5 text-m3-primary" />
+      </div>
+      <div className="space-y-2">
+        {versions.isLoading && <Loader2 className="h-4 w-4 animate-spin text-m3-primary" />}
+        {list.map((version) => {
+          const editing = version.status === "draft" && selectedVersionId === null;
+          const currentPublished = !draft && selectedVersionId === null && version.id === list[0]?.id;
+          const selected = selectedVersionId === version.id || editing || currentPublished;
+          return (
+            <button
+              key={version.id}
+              type="button"
+              aria-label={`Version v${version.version_no} ${version.status}`}
+              aria-pressed={selected}
+              onClick={() => onSelect(version.status === "draft" ? null : version.id)}
+              className={`w-full cursor-pointer rounded-lg border p-3 text-left transition-colors ${selected ? "border-m3-primary bg-m3-primary-fixed/50" : "border-m3-outline-variant/40 hover:bg-m3-surface-container"}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-semibold text-m3-on-surface">v{version.version_no}</span>
+                <span className="text-[11px] font-semibold uppercase text-m3-on-surface-variant">{version.status}</span>
+              </div>
+              <p className="mt-1 text-xs text-m3-on-surface-variant">{version.published_at ? formatDate(version.published_at) : "Not published"}</p>
+              {version.published_by_name && <p className="mt-0.5 truncate text-xs text-m3-on-surface-variant">by {version.published_by_name}</p>}
+            </button>
+          );
         })}
-      </p>
-      <ConfirmActionBar
-        confirmLabel={t("management_career_path_detail.versions.fork_confirm")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={onConfirm}
-        onCancel={onCancel}
-        isPending={isPending}
-      />
-    </div>
+      </div>
+      {canFork && (
+        <Button data-testid="version-fork-button" type="button" variant="outline" className="w-full gap-2" disabled={createVersion.isPending} onClick={() => void forkVersion()}>
+          {createVersion.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitBranch className="h-4 w-4" />}
+          New version
+        </Button>
+      )}
+    </aside>
   );
 }

@@ -196,7 +196,8 @@ function CareerPathsTable({
   );
 }
 
-function CreateDialog({ onClose }: { onClose: () => void }) {
+/** @deprecated Creation now happens on the dedicated workspace route. */
+export function CreateDialog({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const create = useCreateCareerPath();
@@ -376,7 +377,6 @@ export default function ManagementCareerPathsPage() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
-  const [creating, setCreating] = useState(false);
 
   // The status filter doubles as the archived toggle: picking "Archived"
   // asks the backend to include archived rows, then filters to them.
@@ -441,11 +441,9 @@ export default function ManagementCareerPathsPage() {
               params: { id: p.id },
             })
           }
-          onCreate={() => setCreating(true)}
+          onCreate={() => void navigate({ to: "/management/career-paths/$id", params: { id: "new" } })}
         />
       )}
-
-      {creating && <CreateDialog onClose={() => setCreating(false)} />}
     </div>
   );
 }

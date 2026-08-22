@@ -739,6 +739,7 @@ export type CareerPathCreate = Schemas["CareerPathCreate"];
 export type CareerPathUpdate = Schemas["CareerPathUpdate"] & {
   /** Path-level attention cap (backend migration 0070). */
   max_concurrent?: number | null;
+  slug?: string;
 };
 export type CareerPathCourseReorder = Schemas["CareerPathCourseReorder"];
 export type CareerPathStudentEnroll = Schemas["CareerPathStudentEnroll"];
@@ -766,6 +767,8 @@ export interface CareerPathVersionRead {
   published_at?: string | null;
   created_at: string;
   created_by?: string | null;
+  published_by?: string | null;
+  published_by_name?: string | null;
 }
 
 // Career-path STAGES (backend migration 0070). Hand-defined here for the same
@@ -1014,6 +1017,7 @@ export type Paths = paths;
 export interface LearningProgramPath {
   career_path_id: string;
   career_path_version_id: string;
+  career_path_version_no: number;
   name: string;
   slug: string;
   description: string | null;
@@ -1027,6 +1031,8 @@ export interface LearningProgramVersion {
   status: "draft" | "published";
   max_path_switches: number;
   published_at: string | null;
+  published_by: string | null;
+  published_by_name: string | null;
 }
 
 export interface LearningProgram {
@@ -1077,14 +1083,25 @@ export interface LearningProgramEnrollment {
 }
 
 export interface LearningProgramCreate {
-  organization_id: string;
   faculty_id: string;
-  owner_faculty_dean_id: string;
   slug: string;
   name: string;
   description?: string | null;
   max_path_switches?: number;
   career_path_ids: string[];
+}
+
+export interface LearningProgramOption {
+  id: string;
+  name: string;
+  slug: string | null;
+  description: string | null;
+}
+
+export interface LearningProgramAuthoringOptions {
+  faculties: LearningProgramOption[];
+  career_paths: LearningProgramOption[];
+  default_faculty_id: string | null;
 }
 
 export interface PathChangeRequest {

@@ -329,12 +329,12 @@ export const queryKeys = {
       ["career-paths", "mgmt-list", orgId, includeArchived ?? false] as const,
     managementDetail: (id: string) =>
       ["career-paths", "mgmt-detail", id] as const,
-    managementCourses: (id: string) =>
-      ["career-paths", "mgmt-courses", id] as const,
+      managementCourses: (id: string, versionId = "") =>
+        ["career-paths", "mgmt-courses", id, versionId] as const,
     courseCandidates: (id: string) =>
       ["career-paths", "mgmt-course-candidates", id] as const,
-    managementStages: (id: string) =>
-      ["career-paths", "mgmt-stages", id] as const,
+      managementStages: (id: string, versionId = "") =>
+        ["career-paths", "mgmt-stages", id, versionId] as const,
     teacherProgress: (id: string) =>
       ["career-paths", "teacher-progress", id] as const,
     readiness: (id: string) => ["career-paths", "readiness", id] as const,
@@ -343,7 +343,10 @@ export const queryKeys = {
   },
   learningPrograms: {
     managementList: (orgId = "") => ["learning-programs", "management", orgId] as const,
-    detail: (id: string) => ["learning-programs", "detail", id] as const,
+      detail: (id: string) => ["learning-programs", "detail", id] as const,
+      version: (id: string, versionId: string) => ["learning-programs", "detail", id, versionId] as const,
+      versions: (id: string) => ["learning-programs", "versions", id] as const,
+      options: () => ["learning-programs", "options"] as const,
     roster: (id: string) => ["learning-programs", "roster", id] as const,
     requests: (id: string) => ["learning-programs", "requests", id] as const,
     mine: () => ["learning-programs", "mine"] as const,

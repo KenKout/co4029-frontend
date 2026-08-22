@@ -21,13 +21,15 @@ import { useStagesTab } from "./use-stages-tab";
 export function CoursesTab({
   id,
   canManage,
+  versionId,
 }: {
   id: string;
   canManage: boolean;
+  versionId?: string;
 }) {
   const { t } = useTranslation();
-  const controller = useCoursesTab(id, t);
-  const stages = useStagesTab(id, t);
+  const controller = useCoursesTab(id, t, versionId);
+  const stages = useStagesTab(id, t, versionId);
   const prefix = "management_career_path_detail.stages";
 
   if (controller.list.isLoading || stages.list.isLoading) {

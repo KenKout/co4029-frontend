@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { VersionPanel } from "../VersionPanel";
 
 const forkFn = vi.fn();
@@ -42,14 +42,12 @@ describe("VersionPanel", () => {
       },
     ];
     render(<VersionPanel id="p" canManage pathPublished />);
-    expect(screen.getByTitle("v1 (published)")).toBeTruthy();
-    expect(screen.getByTitle("v2 (draft)")).toBeTruthy();
-    // Draft affordance: editing hint shown, fork button hidden (draft exists).
-    expect(screen.getByTestId("version-draft-hint").textContent).toContain("v2");
+    expect(screen.getByRole("button", { name: "Version v1 published" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Version v2 draft" }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.queryByTestId("version-fork-button")).toBeNull();
   });
 
-  it("forks only after confirmation", () => {
+  it("forks only after confirmation", async () => {
     versionsData = [
       {
         id: "v1",
@@ -65,11 +63,9 @@ describe("VersionPanel", () => {
     // First click arms the confirmation — nothing is sent yet.
     fireEvent.click(fork);
     expect(forkFn).not.toHaveBeenCalled();
-    expect(screen.getByTestId("version-fork-confirm-hint")).toBeTruthy();
-    // Confirming actually forks (the confirm bar's first button is confirm).
-    const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[0]);
-    expect(forkFn).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("alertdialog")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Create version" }));
+    await waitFor(() => expect(forkFn).toHaveBeenCalledTimes(1));
   });
 
   it("cancelling the confirmation does not fork", () => {
@@ -84,8 +80,7 @@ describe("VersionPanel", () => {
     ];
     render(<VersionPanel id="p" canManage pathPublished />);
     fireEvent.click(screen.getByTestId("version-fork-button"));
-    const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[buttons.length - 1]); // Cancel
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(forkFn).not.toHaveBeenCalled();
     expect(screen.queryByTestId("version-fork-button")).toBeTruthy();
   });
@@ -118,8 +113,8 @@ describe("VersionPanel", () => {
       <VersionPanel id="p" canManage pathPublished={false} />,
     );
     // Still renders the pill, but no fork button (nothing published to fork).
-    expect(screen.getByTitle("v1 (draft)")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Version v1 draft" })).toBeTruthy();
     expect(screen.queryByTestId("version-fork-button")).toBeNull();
-    expect(container.querySelector("button")).toBeNull();
+    expect(container.querySelectorAll("button")).toHaveLength(1);
   });
 });

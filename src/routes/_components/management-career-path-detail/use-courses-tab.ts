@@ -25,8 +25,8 @@ import {
  * (list -> add -> reorder -> local state -> catalogue -> derived memos), and
  * `t` is injected so no extra `useTranslation` is introduced.
  */
-export function useCoursesTab(id: string, t: TFunction) {
-  const list = useCareerPathCourses(id);
+export function useCoursesTab(id: string, t: TFunction, versionId?: string) {
+  const list = useCareerPathCourses(id, versionId);
   const add = useAddCareerPathCourse(id);
   const reorder = useReorderCareerPathCourses(id);
 

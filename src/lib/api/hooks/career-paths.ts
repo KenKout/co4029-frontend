@@ -221,12 +221,12 @@ export function usePatchCareerPath(id: string) {
   });
 }
 
-export function useCareerPathCourses(id: string | undefined) {
+export function useCareerPathCourses(id: string | undefined, versionId?: string) {
   return useQuery({
-    queryKey: queryKeys.careerPaths.managementCourses(id ?? ""),
+    queryKey: queryKeys.careerPaths.managementCourses(id ?? "", versionId),
     queryFn: () =>
       apiFetch<CareerPathCourseAuthoring[]>(
-        `/management/career-paths/${id}/courses`,
+        `/management/career-paths/${id}/courses${versionId ? `?version_id=${versionId}` : ""}`,
       ),
     enabled: !!id,
   });
@@ -429,12 +429,12 @@ export function usePathReadinessOverview(careerPathId: string | undefined) {
 
 /* ── Stages (backend migration 0070) ────────────────────────────────── */
 
-export function useCareerPathStages(id: string | undefined) {
+export function useCareerPathStages(id: string | undefined, versionId?: string) {
   return useQuery({
-    queryKey: queryKeys.careerPaths.managementStages(id ?? ""),
+    queryKey: queryKeys.careerPaths.managementStages(id ?? "", versionId),
     queryFn: () =>
       apiFetch<CareerPathStageAuthoring[]>(
-        `/management/career-paths/${id}/stages`,
+        `/management/career-paths/${id}/stages${versionId ? `?version_id=${versionId}` : ""}`,
       ),
     enabled: !!id,
   });

@@ -1,15 +1,14 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import type { TFunction } from "i18next";
-import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 import { usePatchCareerPath } from "@/lib/api/hooks/career-paths";
 import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
 
 export interface EditFormInitialValues {
   id: string;
   initialName: string;
+  initialSlug: string;
   initialDescription: string;
-  initialOrganizationId?: string;
 }
 
 /**
@@ -24,31 +23,23 @@ export function useEditForm(
   {
     id,
     initialName,
+    initialSlug,
     initialDescription,
-    initialOrganizationId,
   }: EditFormInitialValues,
   t: TFunction,
 ) {
   const patch = usePatchCareerPath(id);
   const [name, setName] = useState(initialName);
+  const [slug, setSlug] = useState(initialSlug);
   const [description, setDescription] = useState(initialDescription);
-  // The path's organization is fixed at creation (server-derived from the
-  // actor's primary org) — it is NOT editable. The org lookup exists only to
-  // resolve the locked org id to its display name.
-  const [organizationId, setOrganizationId] = useState(
-    initialOrganizationId ?? "",
-  );
-
-  const orgs = useOrganizations({ limit: 200 });
-  const orgOptions = orgs.items ?? [];
 
   useEffect(() => {
     setName(initialName);
+    setSlug(initialSlug);
     setDescription(initialDescription);
-    setOrganizationId(initialOrganizationId ?? "");
-  }, [initialName, initialDescription, initialOrganizationId]);
+  }, [initialName, initialSlug, initialDescription]);
 
-  const dirty = name !== initialName || description !== initialDescription;
+  const dirty = name !== initialName || slug !== initialSlug || description !== initialDescription;
 
   useUnsavedChangesWarning(dirty);
 
@@ -57,6 +48,7 @@ export function useEditForm(
     patch.mutate(
       {
         name: name.trim() !== initialName ? name.trim() : undefined,
+        slug: slug.trim() !== initialSlug ? slug.trim() : undefined,
         description:
           description.trim() !== initialDescription
             ? description.trim() || null
@@ -80,11 +72,10 @@ export function useEditForm(
     patch,
     name,
     setName,
+    slug,
+    setSlug,
     description,
     setDescription,
-    organizationId,
-    setOrganizationId,
-    orgOptions,
     dirty,
     handleSubmit,
   };

@@ -1,115 +1,111 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Check, UserPlus, X } from "lucide-react";
+import { Archive, ArrowLeft, Check, GitBranch, Plus, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { EntityMultiSelectDialog, type SelectableEntity } from "@/components/ui/entity-multi-select-dialog";
 import { Input } from "@/components/ui/input";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { useConfirm } from "@/components/ui/use-confirm";
+import { useAdminUsersSearch } from "@/lib/api/hooks/admin-organizations";
 import {
   useArchiveLearningProgram,
   useDecidePathChange,
   useEnrollProgramStudents,
+  useLearningProgramOptions,
+  useLearningProgramVersion,
+  useLearningProgramVersions,
   useManagedLearningProgram,
   useProgramChangeRequests,
   useProgramRoster,
   usePublishLearningProgram,
+  useUpdateLearningProgram,
 } from "@/lib/api/hooks/learning-programs";
+import { useFormatDate } from "@/lib/format/date";
 
 export default function ManagementLearningProgramDetailPage() {
   const { id } = useParams({ strict: false }) as { id: string };
-  const program = useManagedLearningProgram(id);
+  const current = useManagedLearningProgram(id);
+  const versions = useLearningProgramVersions(id);
+  const options = useLearningProgramOptions();
   const roster = useProgramRoster(id);
   const requests = useProgramChangeRequests(id);
+  const update = useUpdateLearningProgram(id);
   const publish = usePublishLearningProgram(id);
   const archive = useArchiveLearningProgram(id);
   const enroll = useEnrollProgramStudents(id);
   const decide = useDecidePathChange(id);
-  const [studentIds, setStudentIds] = useState("");
+  const { confirm, dialog } = useConfirm();
+  const formatDate = useFormatDate();
+  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
+  const historical = useLearningProgramVersion(id, selectedVersionId ?? undefined);
+  const data = selectedVersionId ? historical.data : current.data;
+  const readOnly = selectedVersionId !== null;
+  const [pathPickerOpen, setPathPickerOpen] = useState(false);
+  const [pathQuery, setPathQuery] = useState("");
+  const [studentPickerOpen, setStudentPickerOpen] = useState(false);
+  const [studentQuery, setStudentQuery] = useState("");
+  const users = useAdminUsersSearch(studentQuery, studentPickerOpen, "student");
 
-  if (program.isLoading) return <PageSkeleton rows={4} />;
-  if (!program.data) return <p>Learning Program not found.</p>;
-  const data = program.data;
+  const pathCandidates: SelectableEntity[] = useMemo(() => {
+    const needle = pathQuery.trim().toLowerCase();
+    return (options.data?.career_paths ?? []).filter((path) => !needle || path.name.toLowerCase().includes(needle) || path.slug?.toLowerCase().includes(needle)).map((path) => ({ id: path.id, primaryLabel: path.name, secondaryLabel: path.slug }));
+  }, [options.data?.career_paths, pathQuery]);
+  const studentCandidates: SelectableEntity[] = (users.data ?? []).map((user) => ({ id: user.user_id, primaryLabel: user.display_name?.trim() || user.primary_email, secondaryLabel: user.primary_email }));
 
-  async function mutateAction(action: () => Promise<unknown>, message: string) {
-    try {
-      await action();
-      toast.success(message);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Action failed");
-    }
+  if (current.isLoading || (selectedVersionId && historical.isLoading)) return <PageSkeleton rows={4} />;
+  if (!data) return <p>Learning Program not found.</p>;
+
+  async function confirmedAction(title: string, description: string, label: string, action: () => Promise<unknown>, success: string) {
+    if (!(await confirm({ title, description, confirmLabel: label, cancelLabel: "Cancel", confirmVariant: label === "Archive" ? "destructive" : "default" }))) return;
+    try { await action(); toast.success(success); setSelectedVersionId(null); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Action failed"); }
   }
 
+  const isDraft = data.current_version.status === "draft" && !readOnly;
   return (
     <div className="space-y-6 pb-16">
-      <Link to="/management/learning-programs" className="inline-flex items-center gap-2 text-sm font-semibold text-m3-primary">
-        <ArrowLeft className="h-4 w-4" /> Learning Programs
-      </Link>
+      {dialog}
+      <Link to="/management/learning-programs" className="inline-flex items-center gap-2 text-sm font-semibold text-m3-primary"><ArrowLeft className="h-4 w-4" /> Learning Programs</Link>
       <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-headline text-3xl font-black">{data.name}</h1>
-            <span className="rounded-full bg-m3-surface-container px-3 py-1 text-xs font-semibold">{data.status}</span>
-          </div>
-          <p className="mt-2 text-m3-on-surface-variant">Version {data.current_version.version_no} · switch limit {data.current_version.max_path_switches}</p>
-        </div>
-        <div className="flex gap-2">
-          {data.current_version.status === "draft" && (
-            <Button onClick={() => void mutateAction(() => publish.mutateAsync(), "Program published")}>Publish</Button>
-          )}
-          {data.status !== "archived" && (
-            <Button variant="outline" onClick={() => void mutateAction(() => archive.mutateAsync(), "Program archived")}>Archive</Button>
-          )}
-        </div>
+        <div><div className="flex flex-wrap items-center gap-2"><h1 className="font-headline text-3xl font-black">{data.name}</h1><span className="rounded-full bg-m3-surface-container px-3 py-1 text-xs font-semibold">{data.status}</span></div><p className="mt-1 font-mono text-xs text-m3-on-surface-variant">{data.slug}</p></div>
+        {!readOnly && <div className="flex gap-2">{isDraft && <Button onClick={() => void confirmedAction("Publish this program version?", "Publishing freezes this version for new enrollments.", "Publish", () => publish.mutateAsync(), "Program published")}>Publish</Button>}{data.status !== "archived" && <Button variant="outline" className="gap-2" onClick={() => void confirmedAction("Archive this Learning Program?", "Existing enrollments continue, but new enrollments will be blocked.", "Archive", () => archive.mutateAsync(), "Program archived")}><Archive className="h-4 w-4" /> Archive</Button>}</div>}
       </header>
+      {readOnly && <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">Viewing frozen program v{data.current_version.version_no}. Select the draft/current version to edit.</div>}
 
-      <section className="rounded-2xl bg-card ghost-border p-5">
-        <h2 className="font-headline font-bold text-lg">Pinned Career Paths</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {data.paths.map((path) => (
-            <div key={path.career_path_id} className="rounded-xl bg-m3-surface-container p-4">
-              <p className="font-semibold">{path.position}. {path.name}</p>
-              <p className="mt-1 text-xs text-m3-on-surface-variant">{path.status} · version {path.career_path_version_id}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <div className="grid items-start gap-6 lg:grid-cols-10">
+        <main className="space-y-6 lg:col-span-7">
+          <ProgramGeneral key={data.current_version.id} data={data} readOnly={readOnly || !isDraft} onSave={(payload) => update.mutateAsync(payload)} />
+          <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
+            <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-headline text-lg font-bold">Career Paths</h2><p className="text-sm text-m3-on-surface-variant">Published path versions pinned in program v{data.current_version.version_no}.</p></div>{isDraft && <Button variant="outline" className="gap-2" onClick={() => setPathPickerOpen(true)}><Plus className="h-4 w-4" /> Add Career Path</Button>}</div>
+            <div className="space-y-2">{data.paths.map((path) => <Link key={path.career_path_id} to="/management/career-paths/$id" params={{ id: path.career_path_id }} className="flex cursor-pointer items-center justify-between rounded-xl bg-m3-surface-container p-4 transition-colors hover:bg-m3-surface-container-high"><div><p className="font-semibold">{path.position}. {path.name}</p><p className="mt-1 text-xs text-m3-on-surface-variant">Career Path v{path.career_path_version_no} · {path.status}</p></div><ArrowLeft className="h-4 w-4 rotate-180 text-m3-primary" /></Link>)}</div>
+          </section>
 
-      <section className="rounded-2xl bg-card ghost-border p-5 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div><h2 className="font-headline font-bold text-lg">Roster</h2><p className="text-sm text-m3-on-surface-variant">Students choose a path after enrollment.</p></div>
-          <div className="flex gap-2">
-            <Input className="w-80" placeholder="Student UUIDs, comma-separated" value={studentIds} onChange={(event) => setStudentIds(event.target.value)} />
-            <Button
-              className="gap-2"
-              disabled={!studentIds.trim() || enroll.isPending || data.status !== "published"}
-              onClick={() => void mutateAction(
-                () => enroll.mutateAsync(studentIds.split(",").map((value) => value.trim()).filter(Boolean)),
-                "Students enrolled",
-              )}
-            ><UserPlus className="h-4 w-4" /> Enroll</Button>
-          </div>
-        </div>
-        <div className="divide-y divide-m3-outline-variant">
-          {(roster.data ?? []).map((item) => {
-            const current = item.attempts.find((attempt) => attempt.status === "active");
-            const path = item.paths.find((candidate) => candidate.career_path_id === current?.career_path_id);
-            return <div key={item.id} className="flex justify-between py-3 text-sm"><span className="font-mono">{item.student_id}</span><span>{item.status} · {path?.name ?? "No path selected"} · {item.current_progress_percent}%</span></div>;
-          })}
-        </div>
-      </section>
+          <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
+            <div className="flex items-center justify-between gap-3"><div><h2 className="font-headline text-lg font-bold">Roster</h2><p className="text-sm text-m3-on-surface-variant">Students choose their path after enrollment.</p></div>{!readOnly && data.status === "published" && <Button className="gap-2" onClick={() => setStudentPickerOpen(true)}><UserPlus className="h-4 w-4" /> Enroll students</Button>}</div>
+            <div className="divide-y divide-m3-outline-variant">{(roster.data ?? []).map((item) => { const attempt = item.attempts.find((row) => row.status === "active"); const path = item.paths.find((row) => row.career_path_id === attempt?.career_path_id); return <div key={item.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm"><span className="font-mono">{item.student_id}</span><span>{item.status} · {path?.name ?? "No path selected"} · {item.current_progress_percent}%</span></div>; })}</div>
+          </section>
 
-      <section className="rounded-2xl bg-card ghost-border p-5 space-y-4">
-        <h2 className="font-headline font-bold text-lg">Path change requests</h2>
-        {(requests.data ?? []).filter((request) => request.status === "pending").map((request) => (
-          <div key={request.id} className="rounded-xl bg-m3-surface-container p-4 flex flex-wrap items-center justify-between gap-3">
-            <div><p className="font-mono text-xs">{request.program_enrollment_id}</p><p className="mt-1 text-sm">{request.reason}</p></div>
-            <div className="flex gap-2">
-              <Button size="sm" className="gap-1" onClick={() => void mutateAction(() => decide.mutateAsync({ requestId: request.id, approve: true }), "Path change approved")}><Check className="h-4 w-4" /> Approve</Button>
-              <Button size="sm" variant="outline" className="gap-1" onClick={() => void mutateAction(() => decide.mutateAsync({ requestId: request.id, approve: false }), "Path change rejected")}><X className="h-4 w-4" /> Reject</Button>
-            </div>
-          </div>
-        ))}
-      </section>
+          <section className="space-y-4 rounded-xl bg-card p-5 ghost-border"><h2 className="font-headline text-lg font-bold">Path change requests</h2>{(requests.data ?? []).filter((request) => request.status === "pending").map((request) => <div key={request.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-m3-surface-container p-4"><div><p className="font-mono text-xs">{request.program_enrollment_id}</p><p className="mt-1 text-sm">{request.reason}</p></div><div className="flex gap-2"><Button size="sm" className="gap-1" onClick={() => void confirmedAction("Approve path change?", "The current path is snapshotted and the student moves to the target path.", "Approve", () => decide.mutateAsync({ requestId: request.id, approve: true }), "Path change approved")}><Check className="h-4 w-4" /> Approve</Button><Button size="sm" variant="outline" className="gap-1" onClick={() => void confirmedAction("Reject path change?", "The student remains on the current path.", "Reject", () => decide.mutateAsync({ requestId: request.id, approve: false }), "Path change rejected")}><X className="h-4 w-4" /> Reject</Button></div></div>)}</section>
+        </main>
+
+        <aside className="space-y-4 rounded-xl border border-m3-outline-variant/40 bg-card p-4 lg:col-span-3 lg:sticky lg:top-24">
+          <div className="flex items-center justify-between"><div><h2 className="font-headline font-bold">Versions</h2><p className="text-xs text-m3-on-surface-variant">Published history is read-only.</p></div><GitBranch className="h-5 w-5 text-m3-primary" /></div>
+          <div className="space-y-2">{(versions.data ?? []).map((version) => { const editing = version.status === "draft" && !selectedVersionId; const selected = selectedVersionId === version.id || editing; return <button key={version.id} type="button" onClick={() => setSelectedVersionId(version.status === "draft" ? null : version.id)} className={`w-full cursor-pointer rounded-lg border p-3 text-left ${selected ? "border-m3-primary bg-m3-primary-fixed/50" : "border-m3-outline-variant/40 hover:bg-m3-surface-container"}`}><div className="flex justify-between"><span className="font-semibold">v{version.version_no}</span><span className="text-[11px] uppercase text-m3-on-surface-variant">{version.status}</span></div><p className="mt-1 text-xs text-m3-on-surface-variant">{version.published_at ? formatDate(version.published_at) : "Not published"}</p>{version.published_by_name && <p className="mt-0.5 truncate text-xs text-m3-on-surface-variant">by {version.published_by_name}</p>}</button>; })}</div>
+          {!readOnly && data.status === "published" && !(versions.data ?? []).some((version) => version.status === "draft") && <Button variant="outline" className="w-full gap-2" onClick={() => void confirmedAction("Create a new program version?", "The latest published paths and settings will be copied into an editable draft.", "Create version", () => update.mutateAsync({}), "Draft version created")}><GitBranch className="h-4 w-4" /> New version</Button>}
+        </aside>
+      </div>
+
+      {pathPickerOpen && <EntityMultiSelectDialog title="Add Career Paths" searchPlaceholder="Search by name or slug" items={pathCandidates} alreadySelectedIds={new Set(data.paths.map((path) => path.career_path_id))} isLoading={options.isLoading} query={pathQuery} onQueryChange={setPathQuery} onConfirm={(rows) => { void update.mutateAsync({ career_path_ids: [...data.paths.map((path) => path.career_path_id), ...rows.map((row) => row.id)] }).then(() => toast.success("Career Paths added")).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Could not add paths")); setPathPickerOpen(false); }} onClose={() => setPathPickerOpen(false)} emptyText="No published Career Path found" alreadyAddedLabel="Added" />}
+      {studentPickerOpen && <EntityMultiSelectDialog title="Enroll students" searchPlaceholder="Search students by name or email" items={studentCandidates} alreadySelectedIds={new Set((roster.data ?? []).map((row) => row.student_id))} isLoading={users.isLoading} query={studentQuery} onQueryChange={setStudentQuery} onConfirm={(rows) => { void enroll.mutateAsync(rows.map((row) => row.id)).then(() => toast.success("Students enrolled")).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Could not enroll students")); setStudentPickerOpen(false); }} onClose={() => setStudentPickerOpen(false)} emptyText="No student found" alreadyAddedLabel="Enrolled" />}
     </div>
   );
+}
+
+function ProgramGeneral({ data, readOnly, onSave }: { data: NonNullable<ReturnType<typeof useManagedLearningProgram>["data"]>; readOnly: boolean; onSave: (payload: { name?: string; slug?: string; description?: string | null }) => Promise<unknown> }) {
+  const [name, setName] = useState(data.name);
+  const [slug, setSlug] = useState(data.slug);
+  const [description, setDescription] = useState(data.description ?? "");
+  return <section className="space-y-4 rounded-xl bg-card p-5 ghost-border"><h2 className="font-headline text-lg font-bold">General</h2><div className="grid gap-4 sm:grid-cols-2"><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Program name <span className="text-red-600">*</span><Input disabled={readOnly} value={name} onChange={(event) => setName(event.target.value)} /></label><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Slug <span className="text-red-600">*</span><Input disabled={readOnly} className="font-mono" value={slug} onChange={(event) => setSlug(event.target.value)} /></label></div><label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea disabled={readOnly} rows={3} value={description} onChange={(event) => setDescription(event.target.value)} /></label>{!readOnly && <div className="flex justify-end"><Button disabled={!name.trim() || !slug.trim()} onClick={() => void onSave({ name: name.trim(), slug: slug.trim(), description: description.trim() || null }).then(() => toast.success("Program details saved")).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Could not save"))}>Save changes</Button></div>}</section>;
 }

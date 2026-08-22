@@ -19,7 +19,9 @@ export function TabBar({
 
   const tabs: TabDef<TabKey>[] = TAB_DEFS.map((tabDef) => ({
     key: tabDef.key,
-    label: t(`management_career_path_detail.tabs.${tabDef.key}`),
+    label: t(`management_career_path_detail.tabs.${tabDef.key}`, {
+      defaultValue: tabDef.key === "programs" ? "Program" : `${tabDef.key[0]?.toUpperCase()}${tabDef.key.slice(1)}`,
+    }),
     icon: tabDef.icon,
   }));
 

@@ -4,6 +4,8 @@ import { queryKeys } from "../query-keys";
 import type {
   LearningProgram,
   LearningProgramCreate,
+  LearningProgramAuthoringOptions,
+  LearningProgramVersion,
   LearningProgramEnrollment,
   PathChangeRequest,
 } from "../types";
@@ -24,6 +26,29 @@ export function useManagedLearningProgram(id?: string) {
   });
 }
 
+export function useLearningProgramOptions() {
+  return useQuery({
+    queryKey: queryKeys.learningPrograms.options(),
+    queryFn: () => apiFetch<LearningProgramAuthoringOptions>("/management/learning-programs/options"),
+  });
+}
+
+export function useLearningProgramVersions(id?: string) {
+  return useQuery({
+    queryKey: queryKeys.learningPrograms.versions(id ?? ""),
+    queryFn: () => apiFetch<LearningProgramVersion[]>(`/management/learning-programs/${id}/versions`),
+    enabled: Boolean(id),
+  });
+}
+
+export function useLearningProgramVersion(id?: string, versionId?: string) {
+  return useQuery({
+    queryKey: queryKeys.learningPrograms.version(id ?? "", versionId ?? ""),
+    queryFn: () => apiFetch<LearningProgram>(`/management/learning-programs/${id}/versions/${versionId}`),
+    enabled: Boolean(id && versionId),
+  });
+}
+
 export function useCreateLearningProgram() {
   const qc = useQueryClient();
   return useMutation({
@@ -40,6 +65,7 @@ export function useUpdateLearningProgram(id: string) {
       apiPatch<LearningProgram>(`/management/learning-programs/${id}`, payload),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.learningPrograms.detail(id) });
+      void qc.invalidateQueries({ queryKey: queryKeys.learningPrograms.versions(id) });
       void qc.invalidateQueries({ queryKey: ["learning-programs", "management"] });
     },
   });

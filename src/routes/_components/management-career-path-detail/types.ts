@@ -5,4 +5,4 @@
  * loosely-typed props around.
  */
 
-export type TabKey = "courses" | "students" | "progress";
+export type TabKey = "general" | "programs" | "courses" | "students";

@@ -13,10 +13,12 @@ export function PathHeaderBar({
   id,
   data,
   canManage,
+  hasDraft,
 }: {
   id: string;
   data: CareerPathAuthoring;
   canManage: boolean;
+  hasDraft?: boolean;
 }) {
   const { t } = useTranslation();
   const statusCls = statusToken(COURSE_STATUS_TOKENS, data.status);
@@ -61,6 +63,7 @@ export function PathHeaderBar({
           status={data.status}
           organizationId={data.organization_id}
           canManage={canManage}
+          hasDraft={hasDraft}
         />
       </div>
     </>

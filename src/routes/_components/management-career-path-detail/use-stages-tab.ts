@@ -21,8 +21,8 @@ import { swapRows } from "./helpers";
  * mutations, the local reorder buffer and the reorder warnings the backend
  * returns instead of rewriting a manager's unlock policy.
  */
-export function useStagesTab(id: string, t: TFunction) {
-  const list = useCareerPathStages(id);
+export function useStagesTab(id: string, t: TFunction, versionId?: string) {
+  const list = useCareerPathStages(id, versionId);
   const create = useCreateCareerPathStage(id);
   const update = useUpdateCareerPathStage(id);
   const remove = useDeleteCareerPathStage(id);
