@@ -4962,6 +4962,35 @@
     "errors": {
       "role_catalog": "Role catalog not loaded",
       "no_manager_assignment": "No manager assignment found"
+    },
+    "detail": {
+      "unknown": "User",
+      "load_failed": "Failed to load user details.",
+      "no_roles": "No roles",
+      "joined": "Joined",
+      "last_active": "Last active",
+      "no_learning_data": "This account has no learning activity to show — managers, HODs and admins only expose identity here.",
+      "no_courses_match": "No matching courses",
+      "no_paths_match": "No matching career paths",
+      "no_programs_match": "No matching programs",
+      "search_courses": "Search courses…",
+      "search_paths": "Search career paths…",
+      "search_programs": "Search programs…",
+      "completed_courses": "{{done}}/{{total}}",
+      "version_no": "v{{no}}",
+      "unknown_path": "Career path",
+      "cols": {
+        "course": "Course",
+        "course_status": "Course status",
+        "enrollment_status": "Enrollment",
+        "progress": "Progress",
+        "path": "Career path",
+        "path_status": "Status",
+        "program": "Program",
+        "switches": "Path switches",
+        "timeline": "Timeline",
+        "enrolled": "Enrolled"
+      }
     }
   },
   "shortcuts": {
