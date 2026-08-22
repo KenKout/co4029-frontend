@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  Network,
   ScrollText,
   Settings,
   Shield,
@@ -176,6 +177,12 @@ export const managerNavItems: NavItem[] = [
     href: "/management/users",
     icon: Users,
   },
+  {
+    label: "Organization",
+    i18nKey: "nav.org_units",
+    href: "/management/org-units",
+    icon: Network,
+  },
 ];
 
 export const managerNavGroups: NavGroup[] = [
@@ -212,6 +219,18 @@ export const managerNavGroups: NavGroup[] = [
         i18nKey: "nav.users",
         href: "/management/users",
         icon: Users,
+      },
+    ],
+  },
+  {
+    label: "Organization",
+    i18nKey: "nav_groups.organization",
+    items: [
+      {
+        label: "Organization",
+        i18nKey: "nav.org_units",
+        href: "/management/org-units",
+        icon: Network,
       },
     ],
   },

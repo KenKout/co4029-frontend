@@ -7,7 +7,8 @@ import { useUnitsTab } from "./use-units-tab";
 
 export function UnitsTab({ orgId }: { orgId: string }) {
   const controller = useUnitsTab(orgId);
-  const { t, units, isLoading, confirmDialog, handleRemove } = controller;
+  const { t, units, isLoading, treeNodes, confirmDialog, handleRemove } =
+    controller;
 
   return (
     <div className="space-y-4">
@@ -21,7 +22,7 @@ export function UnitsTab({ orgId }: { orgId: string }) {
           message={t("admin.organizations.empty.units")}
         />
       ) : (
-        <UnitList units={units ?? []} onRemove={handleRemove} />
+        <UnitList nodes={treeNodes} onRemove={handleRemove} />
       )}
       {confirmDialog}
     </div>

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -32,6 +32,9 @@ import { buildUserColumns } from "@/routes/admin/_components/users/users-columns
 export function useManagedUsers() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // ?unit= comes from the org tree's "view users" shortcut. In the URL rather
+  // than local state so a scoped list is shareable and survives a reload.
+  const { unit: unitId } = useSearch({ strict: false }) as { unit?: string };
   const formatDate = useFormatDate();
   const permissions = usePermissions();
   const canManage = permissions.has("user.disable");
@@ -48,10 +51,16 @@ export function useManagedUsers() {
 
   // Same server table as the admin users page: search + role filter + sort +
   // page. No org filter — the backend forces the caller's org.
+  //
+  // `?unit=` (set by the org tree) rides along as the `org_unit` param, which
+  // narrows to that unit AND every unit beneath it. It is a filter on top of
+  // the forced org scope, never a replacement: a unit id from another org
+  // intersects to nobody rather than widening the list.
   const table = useServerTable<UserWithRoles>({
     queryKey: ["manager", "users", "search"],
     path: "/users/search",
     pageSize: 25,
+    filters: { org_unit: unitId },
     enabled: !permissions.isLoading && permissions.has("user.read"),
   });
 
@@ -135,6 +144,9 @@ export function useManagedUsers() {
     t,
     navigate,
     formatDate,
+    // Surfaced so the page can show (and clear) the active scope — a filtered
+    // list with no visible reason reads as missing data.
+    unitId,
     permissionsLoading: permissions.isLoading,
     canRead: permissions.has("user.read"),
     canManage,

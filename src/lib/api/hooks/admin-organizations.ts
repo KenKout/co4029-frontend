@@ -290,6 +290,44 @@ export function useOrgUnits(
   });
 }
 
+/**
+ * One node of the nested org tree.
+ *
+ * Declared here rather than pulled from `openapi-types.d.ts` so the tree UI
+ * does not depend on the generated types being regenerated first; the shape
+ * mirrors the backend `OrgUnitNode` schema.
+ */
+export interface OrgUnitNode {
+  id: string;
+  organization_id: string;
+  parent_unit_id: string | null;
+  unit_type: string;
+  name: string;
+  code: string | null;
+  created_at: string;
+  updated_at: string;
+  children: OrgUnitNode[];
+  /** Units below this one. Drives the delete confirmation's blast radius. */
+  descendant_count: number;
+}
+
+/**
+ * The whole org tree in one request.
+ *
+ * Deliberately NOT a per-level fetch off `useOrgUnits({parentUnitId})`: the
+ * tree renders expand/collapse over an already-known structure, and lazy
+ * per-node loading would cost a round-trip per expand and make "how many
+ * units am I about to delete" unanswerable without walking the server.
+ */
+export function useOrgUnitTree(orgId: string | undefined) {
+  return useQuery({
+    queryKey: ["admin", "organizations", orgId ?? "", "units", "tree"] as const,
+    queryFn: () =>
+      apiFetch<OrgUnitNode[]>(`/admin/organizations/${orgId}/units/tree`),
+    enabled: Boolean(orgId),
+  });
+}
+
 export function useOrgUnit(unitId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.admin.orgUnitDetail(unitId ?? ""),

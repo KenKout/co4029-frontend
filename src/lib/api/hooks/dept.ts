@@ -14,10 +14,25 @@ import type {
   TeacherAssignmentRead,
 } from "../types";
 
-export function useDeptCourses() {
+/**
+ * Courses in the caller's staffing scope, optionally narrowed to one org unit.
+ *
+ * With `orgUnitId` the request goes to the per-unit endpoint, which returns
+ * the unit **and every unit below it** — a faculty includes its departments,
+ * matching how the permission engine already reads the tree. Without it the
+ * backend derives the scope from the caller's own role assignment.
+ */
+export function useDeptCourses(orgUnitId?: string | null) {
   return useQuery({
-    queryKey: queryKeys.dept.courses(),
-    queryFn: () => apiFetch<CourseAuthoring[]>("/dept/courses"),
+    queryKey: orgUnitId
+      ? ([...queryKeys.dept.courses(), "unit", orgUnitId] as const)
+      : queryKeys.dept.courses(),
+    queryFn: () =>
+      apiFetch<CourseAuthoring[]>(
+        orgUnitId
+          ? `/dept/org-units/${orgUnitId}/courses`
+          : "/dept/courses",
+      ),
     // No staleTime: the dept course DETAIL header reads this list (there is
     // no /dept/courses/{id} endpoint) and must never show a renamed or
     // republished course under its old title/status.

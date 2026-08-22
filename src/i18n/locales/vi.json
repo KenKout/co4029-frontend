@@ -67,7 +67,8 @@
     "job_health": "Sức khoẻ tác vụ",
     "help": "Trợ giúp",
     "open_menu": "Mở menu",
-    "close_menu": "Đóng menu"
+    "close_menu": "Đóng menu",
+    "org_units": "Tổ chức"
   },
   "auth": {
     "sign_in": "Đăng nhập",
@@ -764,7 +765,10 @@
       "warnings_title_one": "1 mục cần kiểm tra",
       "warnings_title_other": "{{count}} mục cần kiểm tra",
       "open_course": "Mở khoá học"
-    }
+    },
+    "scope_label": "Phạm vi đơn vị:",
+    "scope_unknown": "Đơn vị đã chọn",
+    "scope_clear": "Bỏ lọc"
   },
   "management_enrolment": {
     "title": "Ghi danh",
@@ -1958,7 +1962,9 @@
         "student_code": "MSSV",
         "employee_code": "MSNV",
         "parent_unit": "Đơn vị cha",
-        "user_email": "Email người dùng"
+        "user_email": "Email người dùng",
+        "parent": "Đơn vị cha",
+        "no_parent": "— Không có đơn vị cha (cấp cao nhất) —"
       },
       "status_label": {
         "active": "Đang hoạt động",
@@ -4660,7 +4666,8 @@
     "analytics": "Phân tích",
     "management": "Quản lý",
     "system": "Hệ thống",
-    "users": "Người dùng"
+    "users": "Người dùng",
+    "organization": "Tổ chức"
   },
   "teacher_course_new": {
     "title": "Khóa học mới",
@@ -4959,5 +4966,43 @@
     "unit_minutes": "phút",
     "unit_hours": "giờ",
     "unit_days": "ngày"
+  },
+  "management_org_units": {
+    "title": "Cơ cấu tổ chức",
+    "subtitle": "Khoa, bộ môn và chương trình. Khoá học và người dùng được phân phạm vi theo vị trí trong cây này.",
+    "new_root_unit": "Đơn vị cấp cao mới",
+    "add_child": "Thêm đơn vị con",
+    "load_failed": "Không tải được cơ cấu tổ chức.",
+    "empty_title": "Chưa có đơn vị nào. Hãy bắt đầu bằng một khoa hoặc bộ môn.",
+    "select_hint": "Chọn một đơn vị để xem phạm vi.",
+    "subunit_count_one": "Có 1 đơn vị con bên dưới",
+    "subunit_count_other": "Có {{count}} đơn vị con bên dưới",
+    "subunit_count_zero": "Không có đơn vị con bên dưới",
+    "view_courses": "Xem khoá học trong đơn vị này",
+    "view_users": "Xem người dùng trong đơn vị này",
+    "scoped_unit": "Đơn vị đã chọn",
+    "create_title": "Đơn vị mới",
+    "edit_title": "Sửa đơn vị",
+    "field_name": "Tên",
+    "field_type": "Loại",
+    "field_code": "Mã",
+    "field_code_hint": "Mã ngắn tuỳ chọn, ví dụ CSE",
+    "field_parent": "Đơn vị cha",
+    "field_parent_hint": "Để trống để tạo đơn vị cấp cao nhất.",
+    "field_parent_hint_edit": "Thay đổi mục này sẽ di chuyển đơn vị cùng toàn bộ đơn vị con.",
+    "no_parent": "— Không có đơn vị cha (cấp cao nhất) —",
+    "move_warning": "Di chuyển một đơn vị sẽ kéo theo các đơn vị con, và thay đổi phạm vi truy cập của những người được phân công tại các đơn vị đó.",
+    "delete_title": "Xoá “{{name}}”?",
+    "delete_warning": "Đơn vị này sẽ bị xoá. Khoá học và người dùng thuộc đơn vị vẫn được giữ nhưng sẽ mất liên kết với đơn vị này.",
+    "delete_warning_subtree_one": "Thao tác này cũng xoá 1 đơn vị con bên dưới.",
+    "delete_warning_subtree_other": "Thao tác này cũng xoá {{count}} đơn vị con bên dưới.",
+    "unit_types": {
+      "faculty": "Khoa",
+      "department": "Bộ môn",
+      "office": "Phòng ban",
+      "program": "Chương trình",
+      "campus": "Cơ sở",
+      "other": "Khác"
+    }
   }
 }

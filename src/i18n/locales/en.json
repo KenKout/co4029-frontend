@@ -66,7 +66,8 @@
     "job_health": "Job Health",
     "help": "Help",
     "open_menu": "Open menu",
-    "close_menu": "Close menu"
+    "close_menu": "Close menu",
+    "org_units": "Organization"
   },
   "auth": {
     "sign_in": "Sign in",
@@ -839,7 +840,10 @@
       "warnings_title_one": "1 thing to check",
       "warnings_title_other": "{{count}} things to check",
       "open_course": "Open course"
-    }
+    },
+    "scope_label": "Scoped to unit:",
+    "scope_unknown": "Selected unit",
+    "scope_clear": "Clear"
   },
   "management_enrolment": {
     "title": "Enrolment",
@@ -2048,7 +2052,9 @@
         "student_code": "Student ID",
         "employee_code": "Employee ID",
         "parent_unit": "Parent unit",
-        "user_email": "User email"
+        "user_email": "User email",
+        "parent": "Parent unit",
+        "no_parent": "— No parent (top level) —"
       },
       "status_label": {
         "active": "Active",
@@ -4787,7 +4793,8 @@
     "enrolment": "Enrolment",
     "analytics": "Analytics",
     "management": "Management",
-    "system": "System"
+    "system": "System",
+    "organization": "Organization"
   },
   "teacher_kg_editor": {
     "title": "Knowledge graph editor",
@@ -4982,5 +4989,43 @@
     "unit_minutes": "min",
     "unit_hours": "hour",
     "unit_days": "day"
+  },
+  "management_org_units": {
+    "title": "Organization structure",
+    "subtitle": "Faculties, departments and programs. Courses and people are scoped by where they sit in this tree.",
+    "new_root_unit": "New top-level unit",
+    "add_child": "Add sub-unit",
+    "load_failed": "Failed to load the organization structure.",
+    "empty_title": "No units yet. Start with a faculty or a department.",
+    "select_hint": "Select a unit to see its scope.",
+    "subunit_count_one": "1 sub-unit below this one",
+    "subunit_count_other": "{{count}} sub-units below this one",
+    "subunit_count_zero": "No sub-units below this one",
+    "view_courses": "View courses in this unit",
+    "view_users": "View people in this unit",
+    "scoped_unit": "Selected unit",
+    "create_title": "New org unit",
+    "edit_title": "Edit org unit",
+    "field_name": "Name",
+    "field_type": "Type",
+    "field_code": "Code",
+    "field_code_hint": "Optional short code, e.g. CSE",
+    "field_parent": "Parent unit",
+    "field_parent_hint": "Leave empty to create a top-level unit.",
+    "field_parent_hint_edit": "Changing this moves the unit and everything under it.",
+    "no_parent": "— No parent (top level) —",
+    "move_warning": "Moving a unit also moves its sub-units, and changes what the people assigned to those units can reach.",
+    "delete_title": "Delete “{{name}}”?",
+    "delete_warning": "This unit will be removed. Courses and people attached to it keep their records but lose this unit.",
+    "delete_warning_subtree_one": "This also deletes 1 sub-unit beneath it.",
+    "delete_warning_subtree_other": "This also deletes {{count}} sub-units beneath it.",
+    "unit_types": {
+      "faculty": "Faculty",
+      "department": "Department",
+      "office": "Office",
+      "program": "Program",
+      "campus": "Campus",
+      "other": "Other"
+    }
   }
 }

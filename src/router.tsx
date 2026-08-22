@@ -426,6 +426,11 @@ const adminAuditLogsRoute = createRoute({
 const deptCoursesRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/dept",
+  // Optional ?unit= — the org tree links here to scope the list to one
+  // org unit and everything below it.
+  validateSearch: (search: Record<string, unknown>): { unit?: string } => ({
+    unit: typeof search.unit === "string" ? search.unit : undefined,
+  }),
   component: lazyRouteComponent(() => import("@/routes/dept-courses")),
 });
 
@@ -535,9 +540,20 @@ const managementCareerPathDetailRoute = createRoute({
   ),
 });
 
+const managementOrgUnitsRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/management/org-units",
+  component: lazyRouteComponent(() => import("@/routes/management-org-units")),
+});
+
 const managementUsersRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/users",
+  // Optional ?unit= — the org tree links here to scope the list to one
+  // org unit and everything below it.
+  validateSearch: (search: Record<string, unknown>): { unit?: string } => ({
+    unit: typeof search.unit === "string" ? search.unit : undefined,
+  }),
   component: lazyRouteComponent(() => import("@/routes/management-users")),
 });
 
@@ -694,6 +710,7 @@ const routeTree = rootRoute.addChildren([
     myInterviewsRoute,
     myInterviewResultRoute,
     managementCareerPathsRoute,
+    managementOrgUnitsRoute,
     managementCareerPathDetailRoute,
     managementUsersRoute,
     managementUserDetailRoute,

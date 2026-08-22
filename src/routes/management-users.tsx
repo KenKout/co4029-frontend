@@ -1,4 +1,6 @@
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { PermissionDenied } from "@/components/ui/permission-denied";
@@ -43,6 +45,29 @@ export default function ManagementUsersPage() {
             "Accounts in your organization. You can disable or re-enable teachers and students — peer manager/HOD/admin accounts are protected.",
         })}
       />
+
+      {/* Active org-unit scope, mirroring the courses worklist. */}
+      {c.unitId ? (
+        <div className="flex items-center gap-2 rounded-lg border border-m3-primary/30 bg-m3-primary-fixed/40 px-3 py-2">
+          <span className="text-xs text-m3-on-surface-variant">
+            {t("dept_courses.scope_label")}
+          </span>
+          <span className="text-sm font-semibold text-m3-primary">
+            {t("management_org_units.scoped_unit")}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto h-7 gap-1 text-xs"
+            onClick={() =>
+              void c.navigate({ to: "/management/users", search: {} })
+            }
+          >
+            <X className="h-3.5 w-3.5" />
+            {t("dept_courses.scope_clear")}
+          </Button>
+        </div>
+      ) : null}
 
       {c.table.isError ? (
         <div className="bg-surface-elev border border-border rounded-lg p-5">

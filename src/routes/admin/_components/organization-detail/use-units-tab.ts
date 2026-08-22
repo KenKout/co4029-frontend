@@ -6,6 +6,7 @@ import {
   useCreateOrgUnit,
   useDeleteOrgUnit,
   useOrgUnits,
+  useOrgUnitTree,
 } from "@/lib/api/hooks/admin-organizations";
 import type { UnitType } from "@/lib/api/types/admin-organizations";
 import { errorMessage } from "./helpers";
@@ -21,11 +22,18 @@ import { errorMessage } from "./helpers";
 export function useUnitsTab(orgId: string) {
   const { t } = useTranslation();
   const { data: units, isLoading } = useOrgUnits(orgId);
+  // The nested view backing the tree. The flat `units` list is kept because
+  // the empty-state branch and the create form still key off it.
+  const tree = useOrgUnitTree(orgId);
   const create = useCreateOrgUnit(orgId);
   const remove = useDeleteOrgUnit(orgId);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [unitType, setUnitType] = useState<UnitType>("department");
+  // Was hardcoded to null at the call site, which meant every unit created
+  // here landed at the top level and the hierarchy the backend has always
+  // supported could not be expressed from the admin UI at all.
+  const [parentUnitId, setParentUnitId] = useState<string | null>(null);
   const { confirm: confirmDelete, dialog: confirmDialog } = useConfirm({
     title: t("admin.organizations.actions.delete"),
     confirmLabel: t("admin.organizations.actions.delete"),
@@ -39,10 +47,11 @@ export function useUnitsTab(orgId: string) {
         unit_type: unitType,
         name,
         code: code || null,
-        parent_unit_id: null,
+        parent_unit_id: parentUnitId,
       });
       setName("");
       setCode("");
+      setParentUnitId(null);
       toast.success(t("admin.organizations.toasts.unit_added"));
     } catch (err) {
       toast.error(
@@ -79,6 +88,9 @@ export function useUnitsTab(orgId: string) {
     setCode,
     unitType,
     setUnitType,
+    parentUnitId,
+    setParentUnitId,
+    treeNodes: tree.data ?? [],
     confirmDialog,
     handleAdd,
     handleRemove,

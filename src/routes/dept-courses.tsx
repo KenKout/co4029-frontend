@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { BookOpen, Plus, Upload, UserPlus, Users } from "lucide-react";
+import { BookOpen, Plus, Upload, UserPlus, Users, X } from "lucide-react";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,9 @@ import {
 } from "@/components/ui/avatar";
 import type { CourseAuthoring } from "@/lib/api/types";
 import { ImportSyllabusDialog } from "./_components/dept-courses/ImportSyllabusDialog";
+import { useOrgUnitTree, type OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
+import { findNode } from "@/components/ui/org-unit-tree";
+import { useMe } from "@/lib/api/hooks/auth";
 
 /**
  * Manager/HOD course worklist — the merged view that replaced the old
@@ -220,6 +223,10 @@ export default function DeptCoursesPage() {
   const [query, setQuery] = useState("");
   const [worklist, setWorklist] = useState<WorklistFilter>("all");
   const [importOpen, setImportOpen] = useState(false);
+  // ?unit= scopes the list to one org unit and its subtree. It lives in the
+  // URL rather than component state so the org tree can link straight into a
+  // scoped list, and the scoped view stays shareable and back-button safe.
+  const { unit: unitId } = useSearch({ strict: false }) as { unit?: string };
 
   // Two different questions, deliberately separate codes:
   //
@@ -254,7 +261,15 @@ export default function DeptCoursesPage() {
     permissions.hasAny("learning_outcome.manage", "system.administer");
 
   const enabled = !permissions.isLoading && canRead;
-  const list = useDeptCourses();
+  const me = useMe();
+  const list = useDeptCourses(unitId);
+  // Only to name the active scope chip; the filtering itself is server-side.
+  const unitTree = useOrgUnitTree(
+    unitId ? (me.data?.organization_id ?? undefined) : undefined,
+  );
+  const scopedUnit: OrgUnitNode | null = unitId
+    ? findNode(unitTree.data ?? [], unitId)
+    : null;
 
   const courses = useMemo(() => {
     let all = list.data ?? [];
@@ -349,6 +364,30 @@ export default function DeptCoursesPage() {
 
       {canImport ? (
         <ImportSyllabusDialog open={importOpen} onOpenChange={setImportOpen} />
+      ) : null}
+
+      {/* Active org-unit scope. Shown whenever ?unit= is set so the list is
+          never silently filtered — a short list with no explanation reads as
+          missing data. Clearing it drops the param, restoring the caller's
+          own derived scope. */}
+      {unitId ? (
+        <div className="flex items-center gap-2 rounded-lg border border-m3-primary/30 bg-m3-primary-fixed/40 px-3 py-2">
+          <span className="text-xs text-m3-on-surface-variant">
+            {t("dept_courses.scope_label")}
+          </span>
+          <span className="text-sm font-semibold text-m3-primary">
+            {scopedUnit?.name ?? t("dept_courses.scope_unknown")}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto h-7 gap-1 text-xs"
+            onClick={() => void navigate({ to: "/dept", search: {} })}
+          >
+            <X className="h-3.5 w-3.5" />
+            {t("dept_courses.scope_clear")}
+          </Button>
+        </div>
       ) : null}
 
       {!enabled || list.isLoading ? (

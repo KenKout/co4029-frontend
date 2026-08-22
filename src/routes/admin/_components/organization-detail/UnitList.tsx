@@ -1,52 +1,44 @@
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { OrgUnitRead } from "@/lib/api/types/admin-organizations";
 import { Button } from "@/components/ui/button";
+import { OrgUnitTree } from "@/components/ui/org-unit-tree";
+import type { OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
 
 /**
- * Org-unit roster. Rendered only once the query has settled and the list is
- * non-empty — the loading and empty branches stay in `UnitsTab`.
+ * Org-unit hierarchy for the admin organization detail page.
+ *
+ * Was a flat roster, which could not show the parent/child structure the
+ * data model has always had — every unit looked top-level regardless of its
+ * `parent_unit_id`. Now renders the same `OrgUnitTree` as the manager
+ * screen so both surfaces agree on what the organization looks like.
+ *
+ * Rendered only once the query has settled and the list is non-empty — the
+ * loading and empty branches stay in `UnitsTab`.
  */
 export function UnitList({
-  units,
+  nodes,
   onRemove,
 }: {
-  units: OrgUnitRead[];
+  nodes: OrgUnitNode[];
   onRemove: (id: string) => void;
 }) {
   const { t } = useTranslation();
   return (
-    <ul className="rounded-xl bg-white border border-m3-outline-variant/40 divide-y divide-m3-outline-variant/40">
-      {units.map((u) => (
-        <li
-          key={u.id}
-          className="px-4 py-3 flex items-center justify-between gap-3"
-        >
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-text-strong">
-              {u.name}
-              {u.code && (
-                <span className="ml-2 text-xs text-text-muted font-mono font-normal">
-                  [{u.code}]
-                </span>
-              )}
-            </p>
-            <p className="text-xs text-text-muted mt-0.5">
-              {t(`admin.organizations.unit_type_label.${u.unit_type}`, {
-                defaultValue: u.unit_type,
-              })}
-            </p>
-          </div>
-          <Button variant="ghost"
+    <div className="rounded-xl border border-m3-outline-variant/40 bg-white p-3">
+      <OrgUnitTree
+        nodes={nodes}
+        renderActions={(node) => (
+          <Button
+            variant="ghost"
             type="button"
-            onClick={() => onRemove(u.id)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-md shrink-0 h-auto whitespace-normal"
+            onClick={() => onRemove(node.id)}
+            className="h-auto whitespace-normal rounded-md p-1.5 text-red-600 hover:bg-red-50"
             aria-label={t("admin.organizations.actions.delete")}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
-        </li>
-      ))}
-    </ul>
+        )}
+      />
+    </div>
   );
 }
