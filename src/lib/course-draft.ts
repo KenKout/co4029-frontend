@@ -26,7 +26,7 @@
  * wrapped, mirroring `lib/quiz-draft.ts` and `lib/interview/use-draft-autosave.ts`.
  */
 
-import type { CourseFormValues } from "@/routes/_components/management-course-new/use-course-form";
+import type { CourseFormValues } from "@/routes/management/_components/course-new/use-course-form";
 
 const KEY = "abridgeai.coursedraft.v1";
 

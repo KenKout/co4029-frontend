@@ -15,7 +15,7 @@ import { resolve } from "node:path";
  * AFTER the reading card's closing tag, not between its open and close.
  */
 
-const SRC = readFileSync(resolve(__dirname, "../course-learn.tsx"), "utf8");
+const SRC = readFileSync(resolve(__dirname, "../courses/course-learn.tsx"), "utf8");
 
 describe("knowledge map placement on the reading lesson page", () => {
   it("renders outside the Reading card, not nested within it", () => {
@@ -49,7 +49,7 @@ describe("knowledge map placement on the reading lesson page", () => {
 
 describe("knowledge map card styling", () => {
   const MAP_SRC = readFileSync(
-    resolve(__dirname, "../_components/LessonKnowledgeMap.tsx"),
+    resolve(__dirname, "../courses/_components/LessonKnowledgeMap.tsx"),
     "utf8",
   );
 

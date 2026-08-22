@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import CourseDetailPageExports from "@/routes/course-detail";
+import CourseDetailPageExports from "@/routes/courses/course-detail";
 
 /**
  * "About the instructor" and "Contact the instructor" used to be two adjacent
