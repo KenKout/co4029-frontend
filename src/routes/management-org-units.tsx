@@ -10,6 +10,7 @@ import { OrgUnitTree } from "@/components/ui/org-unit-tree";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { useOrgUnitsPage } from "./_components/management-org-units/use-org-units-page";
 import { UnitFormDialog } from "./_components/management-org-units/UnitFormDialog";
+import { UnitContentsPanel } from "./_components/management-org-units/UnitContentsPanel";
 
 /**
  * Manager-facing organization structure: the faculty → department → program
@@ -131,9 +132,16 @@ export default function ManagementOrgUnitsPage() {
                     count: c.selected.descendant_count,
                   })}
                 </p>
-                {/* Scope shortcuts — both lists include the whole subtree,
-                    the same way the permission engine reads it. */}
-                <div className="space-y-2">
+                {/* Assignment lives here because this is where someone
+                    looking at an empty unit actually is. The underlying
+                    fields (courses.org_unit_id, memberships.org_unit_id)
+                    were always writable; nothing surfaced them. */}
+                <UnitContentsPanel orgId={c.orgId} unit={c.selected} />
+
+                {/* Scope shortcuts — unlike the panel above these include the
+                    whole subtree, the same way the permission engine reads
+                    it. */}
+                <div className="space-y-2 border-t border-border pt-4">
                   <Link
                     to="/dept"
                     search={{ unit: c.selected.id }}

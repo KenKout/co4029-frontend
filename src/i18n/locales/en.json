@@ -5026,6 +5026,16 @@
       "program": "Program",
       "campus": "Campus",
       "other": "Other"
-    }
+    },
+    "courses_in_unit": "Courses ({{count}})",
+    "people_in_unit": "People ({{count}})",
+    "assign_course": "Add course",
+    "assign_person": "Add person",
+    "assign": "Add",
+    "remove_from_unit": "Remove from this unit",
+    "no_courses_in_unit": "No courses assigned to this unit yet.",
+    "no_people_in_unit": "Nobody assigned to this unit yet.",
+    "no_assignable_courses": "No other courses available.",
+    "no_assignable_people": "No other members available."
   }
 }

@@ -5003,6 +5003,16 @@
       "program": "Chương trình",
       "campus": "Cơ sở",
       "other": "Khác"
-    }
+    },
+    "courses_in_unit": "Khoá học ({{count}})",
+    "people_in_unit": "Nhân sự ({{count}})",
+    "assign_course": "Thêm khoá học",
+    "assign_person": "Thêm người",
+    "assign": "Thêm",
+    "remove_from_unit": "Gỡ khỏi đơn vị này",
+    "no_courses_in_unit": "Chưa có khoá học nào thuộc đơn vị này.",
+    "no_people_in_unit": "Chưa có ai thuộc đơn vị này.",
+    "no_assignable_courses": "Không còn khoá học nào khác.",
+    "no_assignable_people": "Không còn thành viên nào khác."
   }
 }
