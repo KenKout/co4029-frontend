@@ -31,20 +31,6 @@ export default function ManagementCareerPathDetailPage() {
     "course.update",
     "system.administer",
   );
-  // Enrol/unenrol are NOT part of the manage set: the backend gates them on
-  // the enrollment codes (authoring.py _PATH_ENROLL_CODES / _PATH_UNENROLL_CODES),
-  // so the UI must mirror those exactly — course.create/update would show a
-  // dead register dialog to any role holding them (e.g. teacher) without
-  // course.enrollment.create.
-  const canEnrollStudents = permissions.hasAny(
-    "course.enrollment.create",
-    "system.administer",
-  );
-  const canUnenrollStudents = permissions.hasAny(
-    "course.enrollment.remove",
-    "system.administer",
-  );
-
   const enabled = !permissions.isLoading && canRead;
   const path = useManagedCareerPath(enabled ? id : undefined);
 
@@ -99,8 +85,8 @@ export default function ManagementCareerPathDetailPage() {
       {tab === "students" && (
         <StudentsTab
           id={id}
-          canEnroll={canEnrollStudents}
-          canUnenroll={canUnenrollStudents}
+          canEnroll={false}
+          canUnenroll={false}
         />
       )}
       {tab === "progress" && <ProgressTab id={id} />}

@@ -341,4 +341,11 @@ export const queryKeys = {
     impact: (id: string) => ["career-paths", "mgmt-impact", id] as const,
     versions: (id: string) => ["career-paths", "mgmt-versions", id] as const,
   },
+  learningPrograms: {
+    managementList: (orgId = "") => ["learning-programs", "management", orgId] as const,
+    detail: (id: string) => ["learning-programs", "detail", id] as const,
+    roster: (id: string) => ["learning-programs", "roster", id] as const,
+    requests: (id: string) => ["learning-programs", "requests", id] as const,
+    mine: () => ["learning-programs", "mine"] as const,
+  },
 } as const;

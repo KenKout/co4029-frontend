@@ -499,6 +499,12 @@ const myCareerPathsRoute = createRoute({
   component: MyCareerPathsPage,
 });
 
+const learningProgramsRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/learning-programs",
+  component: lazyRouteComponent(() => import("@/routes/learning-programs")),
+});
+
 const myInterviewsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/me/interviews",
@@ -529,6 +535,22 @@ const managementCareerPathsRoute = createRoute({
   path: "/management/career-paths",
   component: lazyRouteComponent(
     () => import("@/routes/management-career-paths"),
+  ),
+});
+
+const managementLearningProgramsRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/management/learning-programs",
+  component: lazyRouteComponent(
+    () => import("@/routes/management-learning-programs"),
+  ),
+});
+
+const managementLearningProgramDetailRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/management/learning-programs/$id",
+  component: lazyRouteComponent(
+    () => import("@/routes/management-learning-program-detail"),
   ),
 });
 
@@ -707,9 +729,12 @@ const routeTree = rootRoute.addChildren([
     careerPathsRoute,
     careerPathDetailRoute,
     myCareerPathsRoute,
+    learningProgramsRoute,
     myInterviewsRoute,
     myInterviewResultRoute,
     managementCareerPathsRoute,
+    managementLearningProgramsRoute,
+    managementLearningProgramDetailRoute,
     managementOrgUnitsRoute,
     managementCareerPathDetailRoute,
     managementUsersRoute,

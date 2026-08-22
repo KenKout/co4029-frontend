@@ -8,6 +8,7 @@ import {
   Cpu,
   DollarSign,
   FileText,
+  GraduationCap,
   HelpCircle,
   LayoutDashboard,
   LogOut,
@@ -58,9 +59,8 @@ export const studentNavItems: NavItem[] = [
     icon: BarChart3,
   },
   {
-    label: "Career Paths",
-    i18nKey: "nav.career_paths",
-    href: "/career-paths",
+    label: "Learning Programs",
+    href: "/learning-programs",
     icon: Briefcase,
   },
 ];
@@ -95,9 +95,8 @@ export const studentNavGroups: NavGroup[] = [
         icon: BarChart3,
       },
       {
-        label: "Career Paths",
-        i18nKey: "nav.career_paths",
-        href: "/career-paths",
+        label: "Learning Programs",
+        href: "/learning-programs",
         icon: Briefcase,
       },
     ],
@@ -166,6 +165,11 @@ export const managerNavItems: NavItem[] = [
     icon: BookOpen,
   },
   {
+    label: "Learning Programs",
+    href: "/management/learning-programs",
+    icon: GraduationCap,
+  },
+  {
     label: "Career Pathways",
     i18nKey: "nav.career_paths",
     href: "/management/career-paths",
@@ -190,6 +194,11 @@ export const managerNavGroups: NavGroup[] = [
     label: "Courses",
     i18nKey: "nav_groups.manager_courses",
     items: [
+      {
+        label: "Learning Programs",
+        href: "/management/learning-programs",
+        icon: GraduationCap,
+      },
       {
         label: "Courses",
         i18nKey: "nav.manager_courses",

@@ -1009,6 +1009,99 @@ export type StudentSrDetailReview = Schemas["StudentSrDetailReviewRead"];
 export type Page<T> = { items: T[]; next_cursor: string | null };
 export type Paths = paths;
 
+// Learning Programs are hand-written until the committed OpenAPI snapshot is
+// regenerated as part of the next API release.
+export interface LearningProgramPath {
+  career_path_id: string;
+  career_path_version_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  status: "draft" | "published" | "archived";
+  position: number;
+}
+
+export interface LearningProgramVersion {
+  id: string;
+  version_no: number;
+  status: "draft" | "published";
+  max_path_switches: number;
+  published_at: string | null;
+}
+
+export interface LearningProgram {
+  id: string;
+  organization_id: string;
+  faculty_id: string;
+  owner_faculty_dean_id: string | null;
+  slug: string;
+  name: string;
+  description: string | null;
+  status: "draft" | "published" | "archived";
+  current_version: LearningProgramVersion;
+  paths: LearningProgramPath[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProgramPathAttempt {
+  id: string;
+  career_path_id: string;
+  career_path_version_id: string;
+  previous_attempt_id: string | null;
+  status: "active" | "completed" | "switched_out" | "cancelled";
+  selected_at: string;
+  ended_at: string | null;
+  exit_snapshot: Record<string, unknown> | null;
+}
+
+export interface LearningProgramEnrollment {
+  id: string;
+  learning_program_id: string;
+  program_version_id: string;
+  student_id: string;
+  status: "awaiting_path" | "active" | "completed" | "withdrawn" | "cancelled";
+  enrolled_at: string;
+  completed_at: string | null;
+  withdrawn_at: string | null;
+  program_name: string;
+  program_version_no: number;
+  max_path_switches: number;
+  approved_switch_count: number;
+  current_progress_percent: number;
+  current_completed_courses: number;
+  current_total_courses: number;
+  paths: LearningProgramPath[];
+  attempts: ProgramPathAttempt[];
+  pending_change_request: PathChangeRequest | null;
+}
+
+export interface LearningProgramCreate {
+  organization_id: string;
+  faculty_id: string;
+  owner_faculty_dean_id: string;
+  slug: string;
+  name: string;
+  description?: string | null;
+  max_path_switches?: number;
+  career_path_ids: string[];
+}
+
+export interface PathChangeRequest {
+  id: string;
+  program_enrollment_id: string;
+  from_attempt_id: string;
+  target_career_path_id: string;
+  target_career_path_version_id: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected" | "cancelled" | "invalidated";
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  decision_reason: string | null;
+  new_attempt_id: string | null;
+  created_at: string;
+}
+
 // Hand-written types for voice interview (endpoints not in generated openapi-types)
 export type {
   RealtimeTokenResponse,
