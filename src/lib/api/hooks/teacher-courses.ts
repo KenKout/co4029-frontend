@@ -222,6 +222,114 @@ export function useCreateCourse() {
   });
 }
 
+export type SyllabusLanguage = "vi" | "en";
+
+/** Successful `POST /teacher/courses/import-syllabus`. */
+export interface SyllabusImportResult {
+  import_id: string;
+  course_id: string;
+  course_slug: string;
+  title: string;
+  language: SyllabusLanguage;
+  description: string | null;
+  estimated_minutes: number | null;
+  outcome_count: number;
+  /**
+   * Non-fatal parser notes, e.g. outcomes renumbered because the source
+   * syllabus skipped an L.O. code. Empty on a clean import.
+   */
+  warnings: string[];
+}
+
+/** One past attempt, including failures (which have no `course_id`). */
+export interface SyllabusImportRow {
+  id: string;
+  course_id: string | null;
+  status: "succeeded" | "failed";
+  language: SyllabusLanguage;
+  original_filename: string | null;
+  error_message: string | null;
+  warnings: string[];
+  outcome_count: number;
+  created_at: string;
+}
+
+/**
+ * Import a course from a syllabus PDF.
+ *
+ * Sends the raw PDF bytes as the POST body (same shape as the thumbnail
+ * upload — the backend reads `request.body()` and this repo ships no
+ * multipart parser), with `language` and `filename` as query params since
+ * a raw body carries neither.
+ */
+export function useImportCourseFromSyllabus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: {
+      file: File;
+      language: SyllabusLanguage;
+    }): Promise<SyllabusImportResult> => {
+      const params = new URLSearchParams({
+        language: vars.language,
+        filename: vars.file.name,
+      });
+      const response = await authenticatedFetch(
+        `/teacher/courses/import-syllabus?${params.toString()}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/pdf" },
+          body: vars.file,
+        },
+      );
+      if (!response.ok) {
+        throw new Error(await readImportError(response));
+      }
+      return (await response.json()) as SyllabusImportResult;
+    },
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
+      qc.invalidateQueries({ queryKey: queryKeys.courses.detail(result.course_id) });
+      qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
+      qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
+      qc.invalidateQueries({ queryKey: ["teacher", "syllabus-imports"] });
+    },
+  });
+}
+
+/**
+ * Pull the backend's own failure reason out of the response.
+ *
+ * The import endpoint answers `{detail: {error, message}}` where `message`
+ * is the parser's `code: sentence` explanation — the same string stored on
+ * the attempt row and sent in the failure notification. Surfacing it
+ * verbatim is the point: "missing_course_title: …" tells a manager what to
+ * fix, "Unprocessable Entity" does not.
+ */
+async function readImportError(response: Response): Promise<string> {
+  try {
+    const payload: unknown = await response.json();
+    const detail = (payload as { detail?: unknown } | null)?.detail;
+    if (typeof detail === "string") return detail;
+    if (detail && typeof detail === "object") {
+      const message = (detail as { message?: unknown }).message;
+      if (typeof message === "string") return message;
+    }
+  } catch {
+    // fall through to the status text
+  }
+  return response.statusText;
+}
+
+export function useSyllabusImports(enabled = true) {
+  return useQuery({
+    queryKey: ["teacher", "syllabus-imports"],
+    queryFn: () =>
+      apiFetch<SyllabusImportRow[]>("/teacher/courses/syllabus-imports"),
+    enabled,
+    staleTime: 1000 * 30,
+  });
+}
+
 export function useUpdateCourse(courseId: string) {
   const qc = useQueryClient();
   return useMutation({

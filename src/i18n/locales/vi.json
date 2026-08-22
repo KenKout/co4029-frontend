@@ -742,7 +742,29 @@
     "filter_needs_teacher": "Thiếu giảng viên",
     "filter_no_content": "Chưa có nội dung",
     "filter_draft": "Bản nháp",
-    "filter_clear": "Xóa bộ lọc"
+    "filter_clear": "Xóa bộ lọc",
+    "import_syllabus": {
+      "action": "Nhập đề cương",
+      "title": "Nhập học phần từ đề cương",
+      "subtitle": "Tải lên tệp PDF đề cương học phần. Tên, mô tả, số giờ và chuẩn đầu ra sẽ được đọc từ tệp và lưu thành bản nháp.",
+      "dropzone_title": "Kéo thả tệp PDF đề cương vào đây",
+      "dropzone_hint": "Chỉ hỗ trợ PDF, tối đa 20 MB",
+      "language_label": "Ngôn ngữ đề cương",
+      "language_hint": "Đề cương có cả hai ngôn ngữ. Chọn ngôn ngữ dùng cho khoá học.",
+      "language_vi": "Tiếng Việt",
+      "language_en": "Tiếng Anh",
+      "submit": "Nhập",
+      "importing": "Đang nhập…",
+      "failed": "Nhập thất bại",
+      "result_title": "Đã nhập học phần",
+      "result_subtitle": "Khoá học đã được tạo ở trạng thái nháp. Hãy kiểm tra và bổ sung nội dung trước khi xuất bản.",
+      "summary_outcomes": "Chuẩn đầu ra",
+      "summary_hours": "Số giờ yêu cầu",
+      "hours_value": "{{hours}} giờ",
+      "warnings_title_one": "1 mục cần kiểm tra",
+      "warnings_title_other": "{{count}} mục cần kiểm tra",
+      "open_course": "Mở khoá học"
+    }
   },
   "management_enrolment": {
     "title": "Ghi danh",
