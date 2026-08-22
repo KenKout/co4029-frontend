@@ -25,6 +25,7 @@ import type {
   UserOverview,
 } from "@/lib/api/types/user-overview";
 
+import { ProgramsTable } from "./ProgramsTable";
 import type { ManagerUserDetailController } from "./use-manager-user-detail";
 
 /** Error / loading / loaded switch for the manager user-detail body. */
@@ -51,7 +52,10 @@ export function UserOverviewBody({ c }: { c: ManagerUserDetailController }) {
     );
   }
 
-  const hasStudentSections = data.courses.length > 0 || data.career_paths.length > 0;
+  const hasStudentSections =
+    data.courses.length > 0 ||
+    data.career_paths.length > 0 ||
+    (data.programs?.length ?? 0) > 0;
   const hasTeacherSections = data.assigned_courses.length > 0;
 
   return (
@@ -148,6 +152,10 @@ function StudentSections({ data }: { data: UserOverview }) {
 
       {data.courses.length > 0 && <CoursesTable courses={data.courses} />}
 
+      {(data.programs?.length ?? 0) > 0 && (
+        <ProgramsTable programs={data.programs} />
+      )}
+
       {data.career_paths.length > 0 && (
         <CareerPathsTable paths={data.career_paths} />
       )}
@@ -159,6 +167,7 @@ function StudentSections({ data }: { data: UserOverview }) {
 function CoursesTable({ courses }: { courses: UserCourseProgressRead[] }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const formatDate = useFormatDate();
   const [search, setSearch] = useState("");
 
   const rows = useMemo(() => {
@@ -225,8 +234,23 @@ function CoursesTable({ courses }: { courses: UserCourseProgressRead[] }) {
           </div>
         ),
       },
+      {
+        // `enrolled_at` was always on the wire and never rendered — half the
+        // "enrolment history" ask was already paid for.
+        id: "enrolled",
+        header: t("management_users.detail.cols.enrolled", {
+          defaultValue: "Enrolled",
+        }),
+        sortable: true,
+        sortValue: (course) => course.enrolled_at,
+        cell: (course) => (
+          <span className="whitespace-nowrap text-xs text-text-muted">
+            {formatDate(course.enrolled_at)}
+          </span>
+        ),
+      },
     ],
-    [t],
+    [t, formatDate],
   );
 
   return (
@@ -262,6 +286,7 @@ function CoursesTable({ courses }: { courses: UserCourseProgressRead[] }) {
 function CareerPathsTable({ paths }: { paths: UserCareerPathProgressRead[] }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const formatDate = useFormatDate();
   const [search, setSearch] = useState("");
 
   const rows = useMemo(() => {
@@ -319,8 +344,22 @@ function CareerPathsTable({ paths }: { paths: UserCareerPathProgressRead[] }) {
           </div>
         ),
       },
+      {
+        id: "timeline",
+        header: t("management_users.detail.cols.timeline", {
+          defaultValue: "Timeline",
+        }),
+        sortable: true,
+        sortValue: (path) => path.started_at,
+        cell: (path) => (
+          <span className="whitespace-nowrap text-xs text-text-muted">
+            {formatDate(path.started_at)}
+            {path.completed_at ? ` → ${formatDate(path.completed_at)}` : ""}
+          </span>
+        ),
+      },
     ],
-    [t],
+    [t, formatDate],
   );
 
   return (

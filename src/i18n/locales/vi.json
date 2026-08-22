@@ -4946,6 +4946,35 @@
     "errors": {
       "role_catalog": "Danh mục vai trò chưa được tải",
       "no_manager_assignment": "Không tìm thấy phân quyền quản lý"
+    },
+    "detail": {
+      "unknown": "Người dùng",
+      "load_failed": "Không tải được thông tin người dùng.",
+      "no_roles": "Chưa có vai trò",
+      "joined": "Tham gia",
+      "last_active": "Hoạt động gần nhất",
+      "no_learning_data": "Tài khoản này chưa có hoạt động học tập — quản lý, trưởng khoa và quản trị viên chỉ hiển thị thông tin định danh.",
+      "no_courses_match": "Không có khoá học nào khớp",
+      "no_paths_match": "Không có lộ trình nào khớp",
+      "no_programs_match": "Không có chương trình nào khớp",
+      "search_courses": "Tìm khoá học…",
+      "search_paths": "Tìm lộ trình…",
+      "search_programs": "Tìm chương trình…",
+      "completed_courses": "{{done}}/{{total}}",
+      "version_no": "phiên bản {{no}}",
+      "unknown_path": "Lộ trình",
+      "cols": {
+        "course": "Khoá học",
+        "course_status": "Trạng thái khoá học",
+        "enrollment_status": "Ghi danh",
+        "progress": "Tiến độ",
+        "path": "Lộ trình",
+        "path_status": "Trạng thái",
+        "program": "Chương trình",
+        "switches": "Lần đổi lộ trình",
+        "timeline": "Thời gian",
+        "enrolled": "Ngày ghi danh"
+      }
     }
   },
   "shortcuts": {
