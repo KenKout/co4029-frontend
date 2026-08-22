@@ -4,7 +4,7 @@ import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { flattenOrgUnits } from "@/components/ui/org-unit-tree";
+import { flattenOrgUnits } from "@/lib/org-unit-tree-helpers";
 import {
   UNIT_TYPES,
   type UnitType,

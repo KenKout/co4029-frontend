@@ -7,6 +7,39 @@ import { useUsersByIds } from "@/lib/api/hooks/admin";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
 import { useUpdateCourse } from "@/lib/api/hooks/teacher-courses";
 
+/**
+ * `{unitId: count}` for every unit, from data the page already loads.
+ *
+ * Counts are DIRECT members, matching the assignment panel rather than the
+ * subtree-based scope links — the columns exist to answer "is this unit
+ * itself still empty", and rolling descendants up would hide an empty
+ * faculty whose departments are full.
+ */
+export function useUnitCounts(orgId: string | undefined) {
+  const memberships = useOrganizationMemberships(orgId);
+  const courses = useDeptCourses();
+
+  const peopleCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const row of memberships.data ?? []) {
+      if (row.status !== "active" || !row.org_unit_id) continue;
+      m.set(row.org_unit_id, (m.get(row.org_unit_id) ?? 0) + 1);
+    }
+    return m;
+  }, [memberships.data]);
+
+  const courseCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const c of courses.data ?? []) {
+      if (!c.org_unit_id) continue;
+      m.set(c.org_unit_id, (m.get(c.org_unit_id) ?? 0) + 1);
+    }
+    return m;
+  }, [courses.data]);
+
+  return { peopleCounts, courseCounts };
+}
+
 export interface UnitPerson {
   membershipId: string;
   userId: string;

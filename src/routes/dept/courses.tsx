@@ -21,7 +21,7 @@ import {
 import type { CourseAuthoring } from "@/lib/api/types";
 import { ImportSyllabusDialog } from "./_components/courses/ImportSyllabusDialog";
 import { useOrgUnitTree, type OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
-import { findNode } from "@/components/ui/org-unit-tree";
+import { findNode } from "@/lib/org-unit-tree-helpers";
 import { useMe } from "@/lib/api/hooks/auth";
 
 /**

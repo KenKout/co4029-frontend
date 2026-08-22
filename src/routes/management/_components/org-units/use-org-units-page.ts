@@ -7,7 +7,7 @@ import {
   usePatchOrgUnit,
   type OrgUnitNode,
 } from "@/lib/api/hooks/admin-organizations";
-import { findNode, subtreeIds } from "@/components/ui/org-unit-tree";
+import { findNode, subtreeIds } from "@/lib/org-unit-tree-helpers";
 import type {
   OrgUnitCreate,
   OrgUnitPatch,

@@ -5013,6 +5013,14 @@
     "no_courses_in_unit": "Chưa có khoá học nào thuộc đơn vị này.",
     "no_people_in_unit": "Chưa có ai thuộc đơn vị này.",
     "no_assignable_courses": "Không còn khoá học nào khác.",
-    "no_assignable_people": "Không còn thành viên nào khác."
+    "no_assignable_people": "Không còn thành viên nào khác.",
+    "col_unit": "Đơn vị",
+    "col_type": "Loại",
+    "col_subunits": "Đơn vị con",
+    "col_courses": "Khoá học",
+    "col_people": "Nhân sự",
+    "col_actions": "Thao tác",
+    "search_placeholder": "Tìm đơn vị…",
+    "empty_search": "Không có đơn vị nào khớp"
   }
 }
