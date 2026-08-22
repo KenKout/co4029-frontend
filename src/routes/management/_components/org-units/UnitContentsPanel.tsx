@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BookOpen, Plus, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import type { OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
 import type { CourseAuthoring } from "@/lib/api/types";
 import {
@@ -10,6 +9,8 @@ import {
   useUnitAssignment,
   type UnitPerson,
 } from "./use-unit-assignment";
+import { AddPeopleDialog } from "./AddPeopleDialog";
+import { AddCoursesDialog } from "./AddCoursesDialog";
 
 /**
  * What lives in the selected unit, and the controls to put things there.
@@ -27,9 +28,12 @@ import {
 export function UnitContentsPanel({
   orgId,
   unit,
+  unitsById,
 }: {
   orgId: string | undefined;
   unit: OrgUnitNode;
+  /** Unit id → name, so a picker row can say where someone is moving FROM. */
+  unitsById: Map<string, string>;
 }) {
   const { t } = useTranslation();
   const a = useUnitAssignment(orgId, unit.id);
@@ -51,27 +55,9 @@ export function UnitContentsPanel({
           label={t(`${prefix}.courses_in_unit`, {
             count: a.coursesInUnit.length,
           })}
-          onAdd={() => setAddingCourses((v) => !v)}
+          onAdd={() => setAddingCourses(true)}
           addLabel={t(`${prefix}.assign_course`)}
-          open={addingCourses}
         />
-        {addingCourses ? (
-          <PickerList
-            items={a.assignableCourses.map((c) => ({
-              id: c.id,
-              label: c.title,
-              hint: c.slug,
-            }))}
-            emptyLabel={t(`${prefix}.no_assignable_courses`)}
-            renderAction={(id) => (
-              <AssignCourseButton
-                courseId={id}
-                unitId={unit.id}
-                onError={a.setError}
-              />
-            )}
-          />
-        ) : null}
         <ul className="mt-2 space-y-1">
           {a.coursesInUnit.map((course) => (
             <AssignedCourseRow
@@ -80,7 +66,7 @@ export function UnitContentsPanel({
               onError={a.setError}
             />
           ))}
-          {a.coursesInUnit.length === 0 && !addingCourses ? (
+          {a.coursesInUnit.length === 0 ? (
             <li className="py-2 text-xs text-text-muted">
               {t(`${prefix}.no_courses_in_unit`)}
             </li>
@@ -94,31 +80,9 @@ export function UnitContentsPanel({
           label={t(`${prefix}.people_in_unit`, {
             count: a.peopleInUnit.length,
           })}
-          onAdd={() => setAddingPeople((v) => !v)}
+          onAdd={() => setAddingPeople(true)}
           addLabel={t(`${prefix}.assign_person`)}
-          open={addingPeople}
         />
-        {addingPeople ? (
-          <PickerList
-            items={a.assignablePeople.map((p) => ({
-              id: p.membershipId,
-              label: p.displayName,
-              hint: p.email,
-            }))}
-            emptyLabel={t(`${prefix}.no_assignable_people`)}
-            renderAction={(membershipId) => (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 px-2 text-xs"
-                disabled={a.isAssigningPerson}
-                onClick={() => a.assignPerson(membershipId, unit.id)}
-              >
-                {t(`${prefix}.assign`)}
-              </Button>
-            )}
-          />
-        ) : null}
         <ul className="mt-2 space-y-1">
           {a.peopleInUnit.map((person) => (
             <PersonRow
@@ -128,13 +92,30 @@ export function UnitContentsPanel({
               disabled={a.isAssigningPerson}
             />
           ))}
-          {a.peopleInUnit.length === 0 && !addingPeople ? (
+          {a.peopleInUnit.length === 0 ? (
             <li className="py-2 text-xs text-text-muted">
               {t(`${prefix}.no_people_in_unit`)}
             </li>
           ) : null}
         </ul>
       </section>
+
+      {addingPeople ? (
+        <AddPeopleDialog
+          unit={unit}
+          unitsById={unitsById}
+          controller={a}
+          onClose={() => setAddingPeople(false)}
+        />
+      ) : null}
+      {addingCourses ? (
+        <AddCoursesDialog
+          unit={unit}
+          unitsById={unitsById}
+          controller={a}
+          onClose={() => setAddingCourses(false)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -144,13 +125,11 @@ function SectionHeader({
   label,
   onAdd,
   addLabel,
-  open,
 }: {
   icon: React.ReactNode;
   label: string;
   onAdd: () => void;
   addLabel: string;
-  open: boolean;
 }) {
   return (
     <div className="flex items-center gap-2 border-b border-border pb-1.5">
@@ -164,65 +143,9 @@ function SectionHeader({
         className="h-7 gap-1 px-2 text-xs"
         onClick={onAdd}
       >
-        {open ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+        <Plus className="h-3.5 w-3.5" />
         {addLabel}
       </Button>
-    </div>
-  );
-}
-
-/** Searchable candidate list shared by the people and course pickers. */
-function PickerList({
-  items,
-  emptyLabel,
-  renderAction,
-}: {
-  items: { id: string; label: string; hint?: string }[];
-  emptyLabel: string;
-  renderAction: (id: string) => React.ReactNode;
-}) {
-  const { t } = useTranslation();
-  const [query, setQuery] = useState("");
-  const needle = query.trim().toLowerCase();
-  const filtered = needle
-    ? items.filter(
-        (i) =>
-          i.label.toLowerCase().includes(needle) ||
-          (i.hint ?? "").toLowerCase().includes(needle),
-      )
-    : items;
-
-  return (
-    <div className="mt-2 rounded-lg border border-border bg-m3-surface-container-low p-2">
-      <Input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={t("common.search")}
-        className="h-8 text-xs"
-      />
-      {/* Capped height: an org can have hundreds of members, and the panel
-          is a sidebar, not a page. */}
-      <ul className="mt-2 max-h-56 space-y-0.5 overflow-y-auto">
-        {filtered.slice(0, 100).map((item) => (
-          <li
-            key={item.id}
-            className="flex items-center gap-2 rounded px-2 py-1 hover:bg-m3-surface-container"
-          >
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs text-text-strong">{item.label}</p>
-              {item.hint ? (
-                <p className="truncate text-[10px] text-text-muted">
-                  {item.hint}
-                </p>
-              ) : null}
-            </div>
-            {renderAction(item.id)}
-          </li>
-        ))}
-        {filtered.length === 0 ? (
-          <li className="px-2 py-2 text-xs text-text-muted">{emptyLabel}</li>
-        ) : null}
-      </ul>
     </div>
   );
 }

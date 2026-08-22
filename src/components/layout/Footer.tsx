@@ -33,8 +33,7 @@ export default function Footer() {
       </div>
 
       <FooterBottomBar>
-        {/* These three were dead `href="#"` anchors. They now resolve to the
-            public policy pages. */}
+        {/* Public, platform-wide policy documents. */}
         <Link
           className="hover:text-white transition-colors"
           to="/policy/$slug"
@@ -55,6 +54,20 @@ export default function Footer() {
           params={{ slug: "cookies" }}
         >
           Cookie Policy
+        </Link>
+        <Link
+          className="hover:text-white transition-colors"
+          to="/policy/$slug"
+          params={{ slug: "learning-program" }}
+        >
+          Learning Program Policy
+        </Link>
+        <Link
+          className="hover:text-white transition-colors"
+          to="/policy/$slug"
+          params={{ slug: "career-path" }}
+        >
+          Career Path Policy
         </Link>
         <Link className="hover:text-white transition-colors" to="/help">
           Help

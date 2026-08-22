@@ -108,8 +108,14 @@ describe("policy content", () => {
     }
   });
 
-  it("covers exactly the three links the footer advertises", () => {
-    expect([...POLICY_ORDER].sort()).toEqual(["cookies", "privacy", "terms"]);
+  it("covers every platform-wide policy advertised by the footer", () => {
+    expect([...POLICY_ORDER].sort()).toEqual([
+      "career-path",
+      "cookies",
+      "learning-program",
+      "privacy",
+      "terms",
+    ]);
   });
 
   it("keeps the draft notice in the page", () => {
@@ -123,7 +129,7 @@ describe("policy content", () => {
 
 describe("previously-dead links are now wired", () => {
   it("footer policy links resolve to real routes", () => {
-    // All three were href="#" before.
+    // Policy links must use the public route rather than dead anchors.
     expect(FOOTER_SRC).not.toMatch(/Privacy Policy\s*<\/a>/);
     for (const slug of POLICY_ORDER) {
       expect(FOOTER_SRC).toContain(`slug: "${slug}"`);
