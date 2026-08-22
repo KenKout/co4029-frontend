@@ -13,28 +13,28 @@ import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { MfaGate } from "@/components/auth/MfaGate";
 import { Toaster } from "sonner";
 
-import LandingPage from "@/routes/landing";
-import LoginPage from "@/routes/login";
+import LandingPage from "@/routes/landing/landing";
+import LoginPage from "@/routes/login/login";
 import AuthenticatedLayout from "@/routes/authenticated-layout";
-import DashboardPage from "@/routes/dashboard";
-import GoogleCallbackPage from "@/routes/google-callback";
-import CoursesListPage from "@/routes/courses-list";
-import CourseDetailPage from "@/routes/course-detail";
-import CourseLearnPage from "@/routes/course-learn";
-import CourseQuizPage from "@/routes/course-quiz";
-import NotificationsPage from "@/routes/notifications";
-import SettingsNotificationsPage from "@/routes/settings-notifications";
-import LoginMfaPage from "@/routes/login-mfa";
-import SettingsProfilePage from "@/routes/settings-profile";
-import SettingsSecurityPage from "@/routes/settings-security";
-import SettingsHubPage from "@/routes/settings";
-import ProfilePage from "@/routes/profile";
-import ProgressPage from "@/routes/progress";
-import CareerPathsPage from "@/routes/career-paths";
-import CareerPathDetailPage from "@/routes/career-path-detail";
-import MyCareerPathsPage from "@/routes/me-career-paths";
-import SrDashboardPage from "@/routes/sr-dashboard";
-import StudyCardsDuePage from "@/routes/study-cards-due";
+import DashboardPage from "@/routes/dashboard/dashboard";
+import GoogleCallbackPage from "@/routes/auth/google-callback";
+import CoursesListPage from "@/routes/courses/courses-list";
+import CourseDetailPage from "@/routes/courses/course-detail";
+import CourseLearnPage from "@/routes/courses/course-learn";
+import CourseQuizPage from "@/routes/courses/course-quiz";
+import NotificationsPage from "@/routes/notifications/notifications";
+import SettingsNotificationsPage from "@/routes/settings/notifications";
+import LoginMfaPage from "@/routes/login/mfa";
+import SettingsProfilePage from "@/routes/settings/profile";
+import SettingsSecurityPage from "@/routes/settings/security";
+import SettingsHubPage from "@/routes/settings/settings";
+import ProfilePage from "@/routes/profile/profile";
+import ProgressPage from "@/routes/progress/progress";
+import CareerPathsPage from "@/routes/career-paths/career-paths";
+import CareerPathDetailPage from "@/routes/career-paths/career-path-detail";
+import MyCareerPathsPage from "@/routes/me/career-paths";
+import SrDashboardPage from "@/routes/dashboard/sr-dashboard";
+import StudyCardsDuePage from "@/routes/study/cards-due";
 
 /* ── Root layout ── */
 function Root() {
@@ -138,13 +138,13 @@ const courseQuizRoute = createRoute({
 const courseQuizReviewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/courses/$slug/quiz/$quizId/attempts/$attemptId",
-  component: lazyRouteComponent(() => import("@/routes/course-quiz-review")),
+  component: lazyRouteComponent(() => import("@/routes/courses/course-quiz-review")),
 });
 
 const courseInterviewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/courses/$slug/interview/$moduleId",
-  component: lazyRouteComponent(() => import("@/routes/course-interview")),
+  component: lazyRouteComponent(() => import("@/routes/courses/course-interview")),
 });
 
 const progressRoute = createRoute({
@@ -431,7 +431,7 @@ const deptCoursesRoute = createRoute({
   validateSearch: (search: Record<string, unknown>): { unit?: string } => ({
     unit: typeof search.unit === "string" ? search.unit : undefined,
   }),
-  component: lazyRouteComponent(() => import("@/routes/dept-courses")),
+  component: lazyRouteComponent(() => import("@/routes/dept/courses")),
 });
 
 const deptCourseDetailRoute = createRoute({
@@ -443,7 +443,7 @@ const deptCourseDetailRoute = createRoute({
   validateSearch: (search: Record<string, unknown>): { tab?: string } => ({
     tab: typeof search.tab === "string" ? search.tab : undefined,
   }),
-  component: lazyRouteComponent(() => import("@/routes/dept-course-detail")),
+  component: lazyRouteComponent(() => import("@/routes/dept/course-detail")),
 });
 
 const managementCourseNewRoute = createRoute({
@@ -464,21 +464,21 @@ const managementCourseNewRoute = createRoute({
     pathId: typeof search.pathId === "string" ? search.pathId : undefined,
     stageId: typeof search.stageId === "string" ? search.stageId : undefined,
   }),
-  component: lazyRouteComponent(() => import("@/routes/management-course-new")),
+  component: lazyRouteComponent(() => import("@/routes/management/course-new")),
 });
 
 const managementCourseEnrollmentsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/courses/$courseId/enrollments",
   component: lazyRouteComponent(
-    () => import("@/routes/management-course-enrollments"),
+    () => import("@/routes/management/course-enrollments"),
   ),
 });
 
 const managementEnrolmentRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/enrolment",
-  component: lazyRouteComponent(() => import("@/routes/management-enrolment")),
+  component: lazyRouteComponent(() => import("@/routes/management/enrolment")),
 });
 
 const careerPathsRoute = createRoute({
@@ -502,7 +502,7 @@ const myCareerPathsRoute = createRoute({
 const learningProgramsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/learning-programs",
-  component: lazyRouteComponent(() => import("@/routes/learning-programs")),
+  component: lazyRouteComponent(() => import("@/routes/learning-programs/learning-programs")),
 });
 
 const myInterviewsRoute = createRoute({
@@ -513,7 +513,7 @@ const myInterviewsRoute = createRoute({
   validateSearch: (search: Record<string, unknown>) => ({
     config: typeof search.config === "string" ? search.config : undefined,
   }),
-  component: lazyRouteComponent(() => import("@/routes/me-interviews")),
+  component: lazyRouteComponent(() => import("@/routes/me/interviews")),
 });
 
 const myInterviewResultRoute = createRoute({
@@ -527,14 +527,14 @@ const myInterviewResultRoute = createRoute({
     course: typeof search.course === "string" ? search.course : undefined,
     module: typeof search.module === "string" ? search.module : undefined,
   }),
-  component: lazyRouteComponent(() => import("@/routes/me-interview-result")),
+  component: lazyRouteComponent(() => import("@/routes/me/interview-result")),
 });
 
 const managementCareerPathsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/career-paths",
   component: lazyRouteComponent(
-    () => import("@/routes/management-career-paths"),
+    () => import("@/routes/management/career-paths"),
   ),
 });
 
@@ -542,7 +542,7 @@ const managementLearningProgramsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/learning-programs",
   component: lazyRouteComponent(
-    () => import("@/routes/management-learning-programs"),
+    () => import("@/routes/management/learning-programs"),
   ),
 });
 
@@ -550,7 +550,7 @@ const managementLearningProgramDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/learning-programs/$id",
   component: lazyRouteComponent(
-    () => import("@/routes/management-learning-program-detail"),
+    () => import("@/routes/management/learning-program-detail"),
   ),
 });
 
@@ -558,7 +558,7 @@ const managementLearningProgramNewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/learning-programs/new",
   component: lazyRouteComponent(
-    () => import("@/routes/management-learning-program-new"),
+    () => import("@/routes/management/learning-program-new"),
   ),
 });
 
@@ -566,14 +566,14 @@ const managementCareerPathDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/career-paths/$id",
   component: lazyRouteComponent(
-    () => import("@/routes/management-career-path-detail"),
+    () => import("@/routes/management/career-path-detail"),
   ),
 });
 
 const managementOrgUnitsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/org-units",
-  component: lazyRouteComponent(() => import("@/routes/management-org-units")),
+  component: lazyRouteComponent(() => import("@/routes/management/org-units")),
 });
 
 const managementUsersRoute = createRoute({
@@ -584,14 +584,14 @@ const managementUsersRoute = createRoute({
   validateSearch: (search: Record<string, unknown>): { unit?: string } => ({
     unit: typeof search.unit === "string" ? search.unit : undefined,
   }),
-  component: lazyRouteComponent(() => import("@/routes/management-users")),
+  component: lazyRouteComponent(() => import("@/routes/management/users")),
 });
 
 const managementUserDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/users/$userId",
   component: lazyRouteComponent(
-    () => import("@/routes/management-user-detail"),
+    () => import("@/routes/management/user-detail"),
   ),
 });
 
@@ -622,7 +622,7 @@ const studyReviewRoute = createRoute({
     lesson: typeof search.lesson === "string" ? search.lesson : undefined,
     course: typeof search.course === "string" ? search.course : undefined,
   }),
-  component: lazyRouteComponent(() => import("@/routes/study-review")),
+  component: lazyRouteComponent(() => import("@/routes/study/review")),
 });
 
 const teacherSrAtRiskRoute = createRoute({
@@ -664,13 +664,13 @@ const callbackRoute = createRoute({
 const helpRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/help",
-  component: lazyRouteComponent(() => import("@/routes/help")),
+  component: lazyRouteComponent(() => import("@/routes/support/help")),
 });
 
 const policyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/policy/$slug",
-  component: lazyRouteComponent(() => import("@/routes/policy")),
+  component: lazyRouteComponent(() => import("@/routes/support/policy")),
 });
 
 /* ── Route tree ── */

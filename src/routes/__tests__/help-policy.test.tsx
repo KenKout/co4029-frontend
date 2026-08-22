@@ -115,7 +115,7 @@ describe("policy content", () => {
   it("keeps the draft notice in the page", () => {
     // These bodies have not had legal review and there is no acceptance
     // tracking; removing the notice would misrepresent them as binding.
-    const PAGE = readFileSync(resolve(__dirname, "../policy.tsx"), "utf8");
+    const PAGE = readFileSync(resolve(__dirname, "../support/policy.tsx"), "utf8");
     expect(PAGE).toMatch(/Draft/);
     expect(PAGE).toMatch(/not a binding agreement/);
   });
@@ -153,7 +153,7 @@ describe("pages actually render their content", () => {
       createRoute,
       createMemoryHistory,
     } = await import("@tanstack/react-router");
-    const HelpPage = (await import("../help")).default;
+    const HelpPage = (await import("../support/help")).default;
     // The page renders TopNavBar, which needs BOTH an AuthProvider (useAuth) and
     // a QueryClient (useUnreadCount). The real app supplies both above the router
     // — see Root() in router.tsx and main.tsx — so the harness must too.

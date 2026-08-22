@@ -24,7 +24,7 @@ import { resolve } from "node:path";
  * Fix: push instead of replace, and derive `showHome` from the URL.
  */
 
-const SRC = readFileSync(resolve(__dirname, "../course-learn.tsx"), "utf8");
+const SRC = readFileSync(resolve(__dirname, "../courses/course-learn.tsx"), "utf8");
 
 /** The view model the page now uses: home-vs-lesson is a function of the URL. */
 function showHomeFor(search: {

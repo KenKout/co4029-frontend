@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
 
-import { LessonKnowledgeMap } from "@/routes/_components/LessonKnowledgeMap";
+import { LessonKnowledgeMap } from "@/routes/courses/_components/LessonKnowledgeMap";
 
 /**
  * The student knowledge map now reuses the teacher's `KnowledgeGraphDetail`
