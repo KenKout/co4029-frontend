@@ -817,6 +817,28 @@
       "draft": "Draft",
       "published": "Published",
       "archived": "Archived"
+    },
+    "import_syllabus": {
+      "action": "Import syllabus",
+      "title": "Import a course from a syllabus",
+      "subtitle": "Upload the course syllabus PDF. The title, description, required hours and learning outcomes are read from it and saved as a draft course.",
+      "dropzone_title": "Drop the syllabus PDF here",
+      "dropzone_hint": "PDF only, up to 20 MB",
+      "language_label": "Syllabus language",
+      "language_hint": "These syllabi carry both languages. Pick the one the course should be authored in.",
+      "language_vi": "Vietnamese",
+      "language_en": "English",
+      "submit": "Import",
+      "importing": "Importing…",
+      "failed": "Import failed",
+      "result_title": "Course imported",
+      "result_subtitle": "The course was created as a draft. Review it and add content before publishing.",
+      "summary_outcomes": "Learning outcomes",
+      "summary_hours": "Required hours",
+      "hours_value": "{{hours}} h",
+      "warnings_title_one": "1 thing to check",
+      "warnings_title_other": "{{count}} things to check",
+      "open_course": "Open course"
     }
   },
   "management_enrolment": {

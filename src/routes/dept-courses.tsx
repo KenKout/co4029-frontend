@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { BookOpen, Plus, UserPlus, Users } from "lucide-react";
+import { BookOpen, Plus, Upload, UserPlus, Users } from "lucide-react";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import {
   avatarInitials,
 } from "@/components/ui/avatar";
 import type { CourseAuthoring } from "@/lib/api/types";
+import { ImportSyllabusDialog } from "./_components/dept-courses/ImportSyllabusDialog";
 
 /**
  * Manager/HOD course worklist — the merged view that replaced the old
@@ -218,6 +219,7 @@ export default function DeptCoursesPage() {
   const permissions = usePermissions();
   const [query, setQuery] = useState("");
   const [worklist, setWorklist] = useState<WorklistFilter>("all");
+  const [importOpen, setImportOpen] = useState(false);
 
   // Two different questions, deliberately separate codes:
   //
@@ -243,6 +245,13 @@ export default function DeptCoursesPage() {
   // Merged gate: anyone who could see either of the two old pages.
   const canRead = canStaff || canEnrol || canSeeRoster;
   const canCreate = permissions.hasAny("course.create", "system.administer");
+  // The importer WRITES learning outcomes, which the backend gates on
+  // `learning_outcome.manage` on top of `course.create` — a teacher holding
+  // only `course.create` would get a 403. Mirror both here so the button is
+  // absent rather than broken.
+  const canImport =
+    canCreate &&
+    permissions.hasAny("learning_outcome.manage", "system.administer");
 
   const enabled = !permissions.isLoading && canRead;
   const list = useDeptCourses();
@@ -315,15 +324,32 @@ export default function DeptCoursesPage() {
         subtitle={t("dept_courses.subtitle")}
         action={
           canCreate ? (
-            <Link to="/management/courses/new" className="shrink-0">
-              <Button size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
-                {t("dept_courses.new_course", { defaultValue: "New course" })}
-              </Button>
-            </Link>
+            <div className="flex shrink-0 items-center gap-2">
+              {canImport ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => setImportOpen(true)}
+                >
+                  <Upload className="h-4 w-4" />
+                  {t("dept_courses.import_syllabus.action")}
+                </Button>
+              ) : null}
+              <Link to="/management/courses/new">
+                <Button size="sm" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  {t("dept_courses.new_course", { defaultValue: "New course" })}
+                </Button>
+              </Link>
+            </div>
           ) : undefined
         }
       />
+
+      {canImport ? (
+        <ImportSyllabusDialog open={importOpen} onOpenChange={setImportOpen} />
+      ) : null}
 
       {!enabled || list.isLoading ? (
         <PageSkeleton rows={5} rounded="rounded-lg" bg="bg-surface-muted" />
