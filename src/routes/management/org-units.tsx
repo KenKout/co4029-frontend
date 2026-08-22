@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { BookOpen, Pencil, Plus, Trash2, Users } from "lucide-react";
@@ -12,6 +13,7 @@ import { useOrgUnitsPage } from "./_components/org-units/use-org-units-page";
 import { UnitFormDialog } from "./_components/org-units/UnitFormDialog";
 import { UnitContentsPanel } from "./_components/org-units/UnitContentsPanel";
 import { useUnitCounts } from "./_components/org-units/use-unit-assignment";
+import { flattenOrgUnits } from "@/lib/org-unit-tree-helpers";
 
 /**
  * Manager-facing organization structure: the faculty → department → program
@@ -30,6 +32,12 @@ export default function ManagementOrgUnitsPage() {
   const permissions = usePermissions();
   const c = useOrgUnitsPage();
   const { courseCounts, peopleCounts } = useUnitCounts(c.orgId);
+  // Flat id → name map so a picker row can say which unit someone is
+  // currently in, and therefore which one they are being moved out of.
+  const unitsById = useMemo(
+    () => new Map(flattenOrgUnits(c.nodes).map((u) => [u.id, u.name])),
+    [c.nodes],
+  );
   const prefix = "management_org_units";
 
   const canManage = permissions.hasAny("org_unit.manage", "system.administer");
@@ -134,7 +142,11 @@ export default function ManagementOrgUnitsPage() {
                     looking at an empty unit actually is. The underlying
                     fields (courses.org_unit_id, memberships.org_unit_id)
                     were always writable; nothing surfaced them. */}
-                <UnitContentsPanel orgId={c.orgId} unit={c.selected} />
+                <UnitContentsPanel
+                  orgId={c.orgId}
+                  unit={c.selected}
+                  unitsById={unitsById}
+                />
 
                 {/* Scope shortcuts — unlike the panel above these include the
                     whole subtree, the same way the permission engine reads

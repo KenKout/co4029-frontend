@@ -5057,6 +5057,20 @@
     "col_people": "Nhân sự",
     "col_actions": "Thao tác",
     "search_placeholder": "Tìm đơn vị…",
-    "empty_search": "Không có đơn vị nào khớp"
+    "empty_search": "Không có đơn vị nào khớp",
+    "people_picker": {
+      "title": "Thêm người vào {{unit}}",
+      "search_placeholder": "Tìm theo tên hoặc email…",
+      "empty": "Không tìm thấy thành viên nào trong tổ chức.",
+      "added": "Đã thuộc đơn vị này",
+      "currently_in": "hiện thuộc {{unit}}"
+    },
+    "courses_picker": {
+      "title": "Thêm khoá học vào {{unit}}",
+      "search_placeholder": "Tìm khoá học…",
+      "empty": "Không tìm thấy khoá học nào trong tổ chức.",
+      "added": "Đã thuộc đơn vị này",
+      "currently_in": "hiện thuộc {{unit}}"
+    }
   }
 }

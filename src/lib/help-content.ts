@@ -210,7 +210,12 @@ export const FAQ_ENTRIES: FaqEntry[] = [
 
 // ─── Policies ────────────────────────────────────────────────────────────────
 
-export type PolicySlug = "privacy" | "terms" | "cookies";
+export type PolicySlug =
+  | "privacy"
+  | "terms"
+  | "cookies"
+  | "learning-program"
+  | "career-path";
 
 export interface PolicyDocument {
   slug: PolicySlug;
@@ -229,6 +234,7 @@ export interface PolicyDocument {
  * visible draft notice so nobody mistakes them for binding terms.
  */
 const DRAFT_DATE = "27 July 2026";
+const ACADEMIC_POLICY_DRAFT_DATE = "22 August 2026";
 
 export const POLICY_DOCUMENTS: Record<PolicySlug, PolicyDocument> = {
   privacy: {
@@ -322,6 +328,209 @@ No advertising cookies, no cross-site tracking, and no third-party analytics tha
 You can clear browser storage at any time through your browser settings. Doing so signs you out, because the authentication token is removed.
 `,
   },
+  "learning-program": {
+    slug: "learning-program",
+    title: "Learning Program Policy",
+    lastUpdated: ACADEMIC_POLICY_DRAFT_DATE,
+    body: `
+## I. Purpose and scope
+
+This policy explains how Learning Programs are created, published, assigned, completed, changed, and reported on the platform. It applies uniformly to every organisation, faculty, department, administrator, Faculty Dean, manager, and student using Learning Programs.
+
+A Learning Program is an academic container made up of one or more Career Paths. A Career Path may be included in more than one Learning Program.
+
+## II. Roles and responsibilities
+
+- **Platform and organisation administrators** configure system, organisation, account, and participation limits. They do not directly manage a student's academic enrolment or approve academic path changes.
+- **Faculty Deans** manage Learning Programs within their faculty scope, enrol students, and review Career Path change requests.
+- **Managers** may create, edit, and publish Learning Programs and enrol students when their assigned scope permits it. They cannot choose a student's first Career Path.
+- **Students** review the available paths in their pinned Program version and choose their own initial Career Path.
+
+All actions are subject to active account, role, organisation, and faculty assignments.
+
+## III. Program creation and publication
+
+A Learning Program must have a name, a unique slug within its applicable scope, a faculty, and at least one published Career Path before it can be published.
+
+A draft may be edited freely. Publishing creates a frozen version. A published version cannot be changed or have a Career Path removed. Further changes require a new draft version. Existing students remain attached to the Program version used when they enrolled; a later version applies only to later enrolments unless an explicit migration is introduced.
+
+Publishing, archiving, withdrawing a student, and other one-way operations require explicit confirmation in the user interface.
+
+## IV. Student enrolment
+
+Students are enrolled into a Learning Program, not directly into a Career Path. A Program must be published and not archived before accepting new enrolments.
+
+The maximum number of concurrent Learning Program enrolments is configured at organisation level. The platform default is one. Enrolments awaiting path selection and active enrolments count toward this limit; completed enrolments do not.
+
+A student may participate in more than one Program at the same time only when the organisation's configured limit allows it. Course progress and completion awards are shared across Programs, while each Program Enrollment keeps its own status and completion history.
+
+## V. Initial Career Path selection
+
+After enrolment, the student must select one Career Path from the exact Program version assigned to them. There can be only one active Career Path for each Program Enrollment.
+
+The first selection belongs to the student. Managers, Faculty Deans, and administrators cannot select it on the student's behalf. An archived Career Path cannot be selected by a new student.
+
+## VI. Career Path change requests
+
+An active student may request a change from the current Career Path to another Career Path contained in the same pinned Program version, subject to all of the following:
+
+- the target differs from the current Career Path;
+- the target is not archived;
+- the Program Enrollment and current path are not completed;
+- there is no other pending request for that Program Enrollment;
+- the number of previously approved changes is below the Program version's limit, which defaults to three.
+
+The request must include a reason. Submitting a request does not change the active path.
+
+## VII. Review and decision
+
+Only an active Faculty Dean within the Program's faculty scope may approve or reject a pending request. A reviewer cannot approve their own request.
+
+Before approval, the platform rechecks the student's status, current path, change limit, and target path. If the target is archived while the request is pending, the request is invalidated with that reason. Rejection leaves the current path unchanged.
+
+On approval, the old path attempt is closed with a progress snapshot and a new path attempt begins. The Program report retains the current path and the full transition history.
+
+## VIII. Progress preservation and course access
+
+A course completed by a student remains completed across Learning Programs and Career Paths. If the completed course also appears in the new path, it is counted immediately toward that path.
+
+When a path changes, access to shared in-progress courses continues through the new path. Access to an old-only incomplete course may end when no other active Program or Career Path grants access to it. A completed course record is not removed by a path change or withdrawal.
+
+## IX. Completion
+
+Completing the active Career Path completes that Program Enrollment. Completion is evaluated against the exact Career Path version pinned to the active attempt.
+
+Completing one Program Enrollment does not automatically complete another Program Enrollment, even when the two Programs contain the same Career Path. Each Program retains its own version, status, and history.
+
+A completed Program Enrollment cannot change Career Path and cannot be withdrawn through the ordinary withdrawal process. Any exceptional correction must use a separately authorised and audited administrative procedure.
+
+## X. Archiving and continuity
+
+Archiving a Learning Program blocks new enrolments but does not interrupt students already enrolled. Archiving a Career Path blocks new selections and new switch approvals to that path, while students already active on it may continue under their pinned version.
+
+## XI. Records, reporting, and transparency
+
+Program reports may include enrolment status, pinned Program version, current Career Path, current progress, approved change count, pending requests, and transition history.
+
+Historical path attempts retain the snapshot recorded when the student left that path. Later course completions do not rewrite the historical snapshot, although they may count toward the current path through shared completion awards.
+
+Access to individual student records is restricted by role, organisation, and faculty scope and remains subject to the [Privacy Policy](/policy/privacy).
+
+## XII. Requests, corrections, and complaints
+
+Students should first contact the Faculty Dean or authorised academic manager responsible for their Learning Program regarding enrolment, path selection, path change, completion, or reporting concerns. Account, privacy, or platform operation concerns should be directed to the organisation administrator or the platform's official support channel.
+
+The requester may be asked to provide the Program, relevant dates, and supporting information so the issue can be verified. Decisions and corrections that alter academic records must be authorised and auditable.
+
+## XIII. Changes to this policy
+
+This policy may be updated when platform functionality, academic procedures, or applicable requirements change. The current version and its last-updated date will be published on this page. Material changes should be communicated through the platform before they take effect.
+`,
+  },
+  "career-path": {
+    slug: "career-path",
+    title: "Career Path Policy",
+    lastUpdated: ACADEMIC_POLICY_DRAFT_DATE,
+    body: `
+## I. Purpose and scope
+
+This policy explains how Career Paths are authored, published, included in Learning Programs, selected, followed, completed, changed, and reported on the platform. It applies uniformly across all organisations, faculties, and departments.
+
+A Career Path is a versioned sequence of stages and courses designed to guide a student toward a defined learning or career outcome.
+
+## II. Authoring responsibility
+
+Only authorised managers and Faculty Deans may create or edit Career Paths within their assigned organisation and faculty scope. Administrators configure the platform and accounts but do not directly assign students to Career Paths or make academic decisions for them.
+
+A Career Path must have a name and slug. Its stages, courses, required-course flags, ordering, and unlock rules must be reviewable before publication.
+
+## III. Drafts, publication, and versions
+
+A draft Career Path may be edited before publication. Publishing freezes the version, including its course membership, stage ordering, required-course rules, and progression settings.
+
+A published version cannot be deleted or changed in place. Further changes require a new draft version. A new version does not retroactively change a Learning Program version, Program Enrollment, or Path Attempt that already points to an earlier version.
+
+Where a draft contains unpublished course dependencies, the author must explicitly resolve them before completing publication.
+
+## IV. Use in Learning Programs
+
+A Career Path may appear in multiple Learning Programs. Each Program version stores the exact published Career Path version selected by the author; it does not automatically follow later Career Path versions.
+
+Students are not directly enrolled into a Career Path by a manager. They receive access through a Learning Program Enrollment and select one of the paths included in their pinned Program version.
+
+## V. Path selection and active status
+
+A student may have one active Career Path for each Program Enrollment. Participation in another Program may create another active path without replacing the first, subject to the organisation's concurrent Program limit.
+
+The student chooses the initial path. A later change requires the formal request and Faculty Dean review described in the [Learning Program Policy](/policy/learning-program).
+
+## VI. Stages and progression
+
+The first stage is always available. Later stages follow the unlock rule stored in the published Career Path version, such as always available, available after progress in the previous stage, or available after the previous stage's required work is satisfied.
+
+Unknown or invalid progression rules fail closed: the platform must not silently unlock restricted learning content.
+
+Reordering stages in a draft does not silently rewrite their configured unlock rules. Authors are responsible for reviewing warnings caused by a changed stage position before publication.
+
+## VII. Required courses and completion
+
+Career Path completion is based on the required courses in the student's pinned path version. A non-empty path is completed when all required courses are satisfied under the published rules.
+
+Optional courses may support learning and remain visible where access permits, but they do not block completion unless the published version explicitly marks them as required.
+
+Completing the active Career Path completes the corresponding Learning Program Enrollment.
+
+## VIII. Shared course completion
+
+Course completion belongs to the student and course, not only to one Career Path. Once awarded, completion may satisfy the same course in another Career Path or Learning Program.
+
+Changing paths does not erase completed courses. A later reduction in mutable progress does not automatically remove an awarded completion record. Any exceptional reversal must be separately authorised and audited.
+
+Path progress is always calculated against the exact published Career Path version pinned to the student's Path Attempt.
+
+## IX. Path changes
+
+Students cannot directly replace their active path. They may request a change only within the same pinned Learning Program version and only while the current Program Enrollment remains active and incomplete.
+
+When a change is approved:
+
+- the old Path Attempt stops at a frozen exit snapshot;
+- the new Path Attempt starts a separate timeline;
+- shared completed courses count toward the new path;
+- shared in-progress course access is preserved;
+- old-only incomplete course access may end when no other active entitlement grants it.
+
+The old and new attempts remain available in authorised academic reporting.
+
+## X. Archiving
+
+A published Career Path is archived rather than deleted. Archiving prevents new Program drafts from adding it, prevents new students from selecting it, and invalidates pending changes targeting it.
+
+Students already active on the archived path may continue under their pinned version. Archiving does not rewrite their progress, completion awards, or history.
+
+## XI. Reporting and readiness
+
+Current progress and readiness are calculated from the current active Path Attempt and its pinned version. A switched-out, cancelled, or completed attempt is reported using its exit snapshot rather than recalculating its old percentage from later activity.
+
+Individual student records are visible only to authorised roles within the relevant organisation and faculty scope and remain subject to the [Privacy Policy](/policy/privacy).
+
+## XII. Requests, corrections, and complaints
+
+Students should contact the responsible Faculty Dean or authorised academic manager if they believe a path, course requirement, progress result, archive status, or transition history is incorrect. The requester may be asked to identify the Learning Program, Career Path, affected course, and relevant dates.
+
+Changes to published academic history require an authorised, recorded correction process. Support personnel must not silently edit frozen versions or historical snapshots.
+
+## XIII. Changes to this policy
+
+This policy may be revised when Career Path functionality, academic procedures, or applicable requirements change. The current text and last-updated date will be published on this page. Material changes should be communicated through the platform before taking effect.
+`,
+  },
 };
 
-export const POLICY_ORDER: PolicySlug[] = ["privacy", "terms", "cookies"];
+export const POLICY_ORDER: PolicySlug[] = [
+  "privacy",
+  "terms",
+  "cookies",
+  "learning-program",
+  "career-path",
+];

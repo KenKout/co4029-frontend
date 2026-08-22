@@ -1,5 +1,9 @@
 import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { apiPatch } from "@/lib/api/client";
+import { queryKeys } from "@/lib/api/query-keys";
 import {
+  useBulkAssignMembershipsToUnit,
   useOrganizationMemberships,
   usePatchMembership,
 } from "@/lib/api/hooks/admin-organizations";
@@ -18,6 +22,7 @@ import { useUpdateCourse } from "@/lib/api/hooks/teacher-courses";
 export function useUnitCounts(orgId: string | undefined) {
   const memberships = useOrganizationMemberships(orgId);
   const courses = useDeptCourses();
+  const qc = useQueryClient();
 
   const peopleCounts = useMemo(() => {
     const m = new Map<string, number>();
@@ -67,9 +72,12 @@ export interface UnitPerson {
 export function useUnitAssignment(orgId: string | undefined, unitId: string | null) {
   const memberships = useOrganizationMemberships(orgId);
   const patchMembership = usePatchMembership(orgId ?? "");
+  const bulkAssign = useBulkAssignMembershipsToUnit(orgId ?? "");
   const courses = useDeptCourses();
+  const qc = useQueryClient();
 
   const [error, setError] = useState<string | null>(null);
+  const [isBulkAssigning, setBulkAssigning] = useState(false);
 
   // `MembershipRead` carries only `user_id`, so names come from a batch
   // lookup. Without it this panel would list raw UUIDs.
@@ -111,17 +119,21 @@ export function useUnitAssignment(orgId: string | undefined, unitId: string | nu
     [activeMemberships, unitId, usersById],
   );
 
-  /** Everyone in the org not already in this unit — the "add" candidates. */
-  const assignablePeople = useMemo(
+  /**
+   * Every active member, tagged with the unit they are in right now.
+   *
+   * A membership has ONE `org_unit_id`, so adding someone to a unit MOVES
+   * them out of their current one. The picker has to be able to say so —
+   * silently reassigning a person out of another department is the kind of
+   * thing nobody notices until a scope filter goes wrong.
+   */
+  const allPeople = useMemo(
     () =>
-      unitId
-        ? activeMemberships
-            .filter((m) => m.org_unit_id !== unitId)
-            .map(toPerson)
-            .sort((a, b) => a.displayName.localeCompare(b.displayName))
-        : [],
+      activeMemberships
+        .map((m) => ({ ...toPerson(m), currentUnitId: m.org_unit_id ?? null }))
+        .sort((a, b) => a.displayName.localeCompare(b.displayName)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeMemberships, unitId, usersById],
+    [activeMemberships, usersById],
   );
 
   const coursesInUnit = useMemo(
@@ -148,14 +160,72 @@ export function useUnitAssignment(orgId: string | undefined, unitId: string | nu
     );
   }
 
+  /**
+   * Move a whole selection into the unit in one request.
+   *
+   * Backed by the bulk endpoint rather than a loop of PATCHes: a cohort can
+   * be dozens of people, and issuing dozens of writes from the browser meant
+   * dozens of chances to half-finish with no record of how far it got.
+   *
+   * `skipped` names ids the server could not find — a selection that went
+   * stale between opening the picker and confirming. Surfaced rather than
+   * swallowed, so "I picked 30, it says 28" has an explanation.
+   */
+  async function assignPeople(membershipIds: string[], targetUnitId: string | null) {
+    setError(null);
+    try {
+      const result = await bulkAssign.mutateAsync({
+        membership_ids: membershipIds,
+        org_unit_id: targetUnitId,
+      });
+      if (result.skipped.length > 0) {
+        setError(
+          `${result.assigned} assigned, ${result.skipped.length} no longer available`,
+        );
+      }
+    } catch (e) {
+      setError(messageOf(e));
+    }
+  }
+
+  /**
+   * Move a selection of courses into the unit.
+   *
+   * `useUpdateCourse` is per-course and so cannot be called in a loop, and
+   * the write is a single field — so this issues the PATCH directly and
+   * invalidates the same keys that hook does. Sequential for the same reason
+   * as `assignPeople`.
+   */
+  async function assignCourses(courseIds: string[], targetUnitId: string | null) {
+    setError(null);
+    setBulkAssigning(true);
+    try {
+      for (const courseId of courseIds) {
+        await apiPatch(`/teacher/courses/${courseId}`, {
+          org_unit_id: targetUnitId,
+        });
+      }
+    } catch (e) {
+      setError(messageOf(e));
+    } finally {
+      setBulkAssigning(false);
+      await qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
+      await qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
+    }
+  }
+
   return {
+    assignCourses,
     isLoading: memberships.isLoading || courses.isLoading,
+    membershipsLoading: memberships.isLoading || users.isLoading,
     peopleInUnit,
-    assignablePeople,
+    allPeople,
     coursesInUnit,
     assignableCourses,
     assignPerson,
+    assignPeople,
     isAssigningPerson: patchMembership.isPending,
+    isBulkAssigning: isBulkAssigning || bulkAssign.isPending,
     error,
     setError,
   };

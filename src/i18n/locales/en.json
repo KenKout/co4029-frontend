@@ -5080,6 +5080,20 @@
     "col_people": "People",
     "col_actions": "Actions",
     "search_placeholder": "Search units…",
-    "empty_search": "No units match your search"
+    "empty_search": "No units match your search",
+    "people_picker": {
+      "title": "Add people to {{unit}}",
+      "search_placeholder": "Search by name or email…",
+      "empty": "No members found in this organization.",
+      "added": "In this unit",
+      "currently_in": "currently in {{unit}}"
+    },
+    "courses_picker": {
+      "title": "Add courses to {{unit}}",
+      "search_placeholder": "Search courses…",
+      "empty": "No courses found in this organization.",
+      "added": "In this unit",
+      "currently_in": "currently in {{unit}}"
+    }
   }
 }

@@ -406,6 +406,40 @@ export function useCreateMembership(orgId: string) {
   });
 }
 
+export interface BulkAssignUnitResult {
+  assigned: number;
+  skipped: string[];
+}
+
+/**
+ * Move many memberships into one org unit in a single request.
+ *
+ * Replaces a loop of `usePatchMembership` calls — staffing a department is a
+ * cohort operation, and N sequential PATCHes meant N round-trips and N
+ * chances to half-finish. `org_unit_id: null` detaches.
+ */
+export function useBulkAssignMembershipsToUnit(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: {
+      membership_ids: string[];
+      org_unit_id: string | null;
+    }) =>
+      apiPost<BulkAssignUnitResult>(
+        `/admin/organizations/${orgId}/memberships/assign-unit`,
+        body,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.admin.organizationMemberships(orgId),
+      });
+      void qc.invalidateQueries({
+        queryKey: ["admin", "organizations", orgId, "units"] as const,
+      });
+    },
+  });
+}
+
 export function usePatchMembership(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
