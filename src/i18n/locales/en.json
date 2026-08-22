@@ -5043,6 +5043,14 @@
     "no_courses_in_unit": "No courses assigned to this unit yet.",
     "no_people_in_unit": "Nobody assigned to this unit yet.",
     "no_assignable_courses": "No other courses available.",
-    "no_assignable_people": "No other members available."
+    "no_assignable_people": "No other members available.",
+    "col_unit": "Unit",
+    "col_type": "Type",
+    "col_subunits": "Sub-units",
+    "col_courses": "Courses",
+    "col_people": "People",
+    "col_actions": "Actions",
+    "search_placeholder": "Search units…",
+    "empty_search": "No units match your search"
   }
 }

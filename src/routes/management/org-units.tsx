@@ -6,11 +6,12 @@ import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { PermissionDenied } from "@/components/ui/permission-denied";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { OrgUnitTree } from "@/components/ui/org-unit-tree";
+import { OrgUnitTable } from "@/components/ui/org-unit-table";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { useOrgUnitsPage } from "./_components/org-units/use-org-units-page";
 import { UnitFormDialog } from "./_components/org-units/UnitFormDialog";
 import { UnitContentsPanel } from "./_components/org-units/UnitContentsPanel";
+import { useUnitCounts } from "./_components/org-units/use-unit-assignment";
 
 /**
  * Manager-facing organization structure: the faculty → department → program
@@ -28,6 +29,7 @@ export default function ManagementOrgUnitsPage() {
   const { t } = useTranslation();
   const permissions = usePermissions();
   const c = useOrgUnitsPage();
+  const { courseCounts, peopleCounts } = useUnitCounts(c.orgId);
   const prefix = "management_org_units";
 
   const canManage = permissions.hasAny("org_unit.manage", "system.administer");
@@ -58,35 +60,25 @@ export default function ManagementOrgUnitsPage() {
         </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-          <div className="rounded-xl border border-border bg-surface-elev p-4">
-            <OrgUnitTree
+          <div>
+            <OrgUnitTable
               nodes={c.nodes}
               selectedId={c.selectedId}
               onSelect={(node) => c.setSelectedId(node.id)}
-              emptyState={
-                <div className="py-10 text-center">
-                  <p className="text-sm text-text-muted">
-                    {t(`${prefix}.empty_title`)}
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-3 gap-2"
-                    onClick={() => c.openCreate(null)}
-                  >
-                    <Plus className="h-4 w-4" />
-                    {t(`${prefix}.new_root_unit`)}
-                  </Button>
-                </div>
-              }
-              renderActions={(node) => (
+              courseCounts={courseCounts}
+              peopleCounts={peopleCounts}
+              emptyState={t(`${prefix}.empty_title`)}
+              actions={(node) => (
                 <div className="flex items-center gap-0.5">
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-7 w-7 p-0"
                     title={t(`${prefix}.add_child`)}
-                    onClick={() => c.openCreate(node.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      c.openCreate(node.id);
+                    }}
                   >
                     <Plus className="h-3.5 w-3.5" />
                   </Button>
@@ -95,7 +87,10 @@ export default function ManagementOrgUnitsPage() {
                     size="sm"
                     className="h-7 w-7 p-0"
                     title={t("common.edit")}
-                    onClick={() => c.openEdit(node)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      c.openEdit(node);
+                    }}
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
@@ -104,7 +99,10 @@ export default function ManagementOrgUnitsPage() {
                     size="sm"
                     className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
                     title={t("common.delete")}
-                    onClick={() => c.setPendingDelete(node)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      c.setPendingDelete(node);
+                    }}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>

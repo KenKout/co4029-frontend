@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { InfoTooltip } from "@/components/ui/tooltip";
 import type { UnitType } from "@/lib/api/types/admin-organizations";
-import { flattenOrgUnits } from "@/components/ui/org-unit-tree";
+import { flattenOrgUnits } from "@/lib/org-unit-tree-helpers";
 import { UNIT_TYPE_VALUES } from "./constants";
 import type { UnitsTabController } from "./use-units-tab";
 
