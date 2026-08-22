@@ -1,11 +1,14 @@
 import type { ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ArrowDown } from "lucide-react";
 
 // Conversation building blocks the stages compose.
 import {
   AgentThinkingIndicator,
   UserTypingIndicator,
 } from "@/components/interview/conversation";
+import { isNearBottom } from "@/lib/interview/stick-to-bottom";
 
 import { FocusedStageConversation } from "./stages/FocusedStageConversation";
 import { FocusedStageIntroBadge } from "./stages/FocusedStageIntroBadge";
@@ -145,11 +148,46 @@ export function FocusedInterviewStage({
     t,
   });
 
+  // Follow new content only while the candidate is at (or near) the bottom:
+  // scrolling back to re-read a question must never be yanked away mid-read.
+  // `pinned` is sampled from the LAST scroll position, not re-measured here —
+  // by effect time the new content has already grown scrollHeight, so a fresh
+  // isNearBottom() would un-pin exactly when it should follow. The same sample
+  // drives the jump button: it is offered exactly while auto-follow is off.
+  const scrollRef = useRef<HTMLElement | null>(null);
+  const pinnedRef = useRef(true);
+  const [jumpVisible, setJumpVisible] = useState(false);
+  const lastTurn =
+    historyTurns.length > 0
+      ? historyTurns[historyTurns.length - 1]
+      : undefined;
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !pinnedRef.current) return;
+    el.scrollTop = el.scrollHeight;
+  }, [historyTurns.length, lastTurn?.id, lastTurn?.text.length]);
+
+  const jumpToLatest = () => {
+    pinnedRef.current = true;
+    setJumpVisible(false);
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  };
+
   return (
-    <main
-      className="min-h-0 flex-1 overflow-y-auto bg-surface"
-      aria-label={t("course_interview.workspace.interview_room")}
-    >
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <main
+        ref={scrollRef}
+        onScroll={(event) => {
+          const near = isNearBottom(event.currentTarget);
+          pinnedRef.current = near;
+          setJumpVisible(!near);
+        }}
+        className="min-h-0 flex-1 overflow-y-auto bg-surface"
+        aria-label={t("course_interview.workspace.interview_room")}
+      >
       {/* Polite SR announcement of the newest interviewer turn (#9). */}
       <p
         className="sr-only"
@@ -232,8 +270,21 @@ export function FocusedInterviewStage({
         />
 
         <UserTypingIndicator visible={isUserTyping} />
-      </div>
-    </main>
+        </div>
+      </main>
+
+      {jumpVisible && (
+        <button
+          type="button"
+          onClick={jumpToLatest}
+          aria-label={t("course_interview.workspace.jump_to_latest")}
+          title={t("course_interview.workspace.jump_to_latest")}
+          className="absolute bottom-4 left-1/2 z-10 flex size-10 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-white text-text-body shadow-editorial motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-200 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        >
+          <ArrowDown className="h-4 w-4" aria-hidden="true" />
+        </button>
+      )}
+    </div>
   );
 }
 
