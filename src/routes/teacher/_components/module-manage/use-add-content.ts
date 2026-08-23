@@ -99,7 +99,6 @@ export function useAddContent(options: {
         course_id: courseId,
         module_id: moduleId,
         title: interviewTitle.trim(),
-        lock_quiz_ef_until_pass: false,
         security_response_policy: "warn_and_continue",
         security_max_consecutive_attempts: 3,
         security_incident_summary_enabled: true,

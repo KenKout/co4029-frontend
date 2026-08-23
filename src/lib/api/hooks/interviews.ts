@@ -227,7 +227,6 @@ export function useInterviewConfig(configId: string | null | undefined) {
 
 /**
  * PATCH /teacher/interview-configs/{config_id} — partial update (title, persona,
- * max_attempts, lock_quiz_ef_until_pass, etc.).
  */
 export function useUpdateInterviewConfig(configId: string | null | undefined) {
   const qc = useQueryClient();

@@ -30,7 +30,6 @@ const FROZEN = [
 const EDITABLE = [
   "title",
   "security_incident_summary_enabled",
-  "lock_quiz_ef_until_pass",
 ];
 
 describe("isFieldFrozen", () => {

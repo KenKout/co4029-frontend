@@ -30,7 +30,6 @@
 const PUBLISHED_EDITABLE_FIELDS = new Set<string>([
   "title",
   "security_incident_summary_enabled",
-  "lock_quiz_ef_until_pass",
 ]);
 
 /**

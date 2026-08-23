@@ -9117,7 +9117,6 @@ export interface components {
              */
             max_hints_per_question?: number;
             /** Lock Quiz Ef Until Pass */
-            lock_quiz_ef_until_pass: boolean;
             /** Published At */
             published_at?: string | null;
             /** Supplementary Instructions */
@@ -9212,7 +9211,6 @@ export interface components {
              * Lock Quiz Ef Until Pass
              * @default false
              */
-            lock_quiz_ef_until_pass: boolean;
             /** Supplementary Instructions */
             supplementary_instructions?: string | null;
             /**
@@ -9297,7 +9295,6 @@ export interface components {
              */
             max_hints_per_question?: number;
             /** Lock Quiz Ef Until Pass */
-            lock_quiz_ef_until_pass: boolean;
             /** Published At */
             published_at?: string | null;
         };
@@ -9331,7 +9328,6 @@ export interface components {
             /** Max Hints Per Question */
             max_hints_per_question?: number | null;
             /** Lock Quiz Ef Until Pass */
-            lock_quiz_ef_until_pass?: boolean | null;
             /** Supplementary Instructions */
             supplementary_instructions?: string | null;
             /** Security Response Policy */

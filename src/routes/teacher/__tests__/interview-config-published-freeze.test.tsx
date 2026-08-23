@@ -27,7 +27,6 @@ const DRAFT = {
   max_attempts: "2",
   cooldown_hours: "24",
   min_outcomes_to_pass: "2",
-  lock_quiz_ef_until_pass: false,
   notes: "",
   rubric_criteria: [],
   security_response_policy: "warn" as const,

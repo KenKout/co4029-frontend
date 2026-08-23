@@ -55,7 +55,6 @@ export function draftFromConfig(
         : String(config.min_outcomes_to_pass),
     max_follow_ups_per_question: String(config.max_follow_ups_per_question ?? 2),
     max_hints_per_question: String(config.max_hints_per_question ?? 3),
-    lock_quiz_ef_until_pass: config.lock_quiz_ef_until_pass,
     ...(() => {
       const parsed = parseSupplementaryInstructions(
         config.supplementary_instructions,
@@ -197,7 +196,6 @@ function buildFullConfigUpdatePayload(
     max_follow_ups_per_question:
       integerOrNull(draft.max_follow_ups_per_question) ?? 2,
     max_hints_per_question: integerOrNull(draft.max_hints_per_question) ?? 3,
-    lock_quiz_ef_until_pass: draft.lock_quiz_ef_until_pass,
     supplementary_instructions: serializeSupplementaryInstructions({
       notes: draft.notes,
       criteria: draft.rubric_criteria,
