@@ -25266,10 +25266,6 @@
             "title": "Max Hints Per Question",
             "default": 3
           },
-          "lock_quiz_ef_until_pass": {
-            "type": "boolean",
-            "title": "Lock Quiz Ef Until Pass"
-          },
           "published_at": {
             "anyOf": [
               {
@@ -25456,7 +25452,6 @@
           "module_id",
           "title",
           "status",
-          "lock_quiz_ef_until_pass",
           "created_at",
           "updated_at"
         ],
@@ -25584,11 +25579,6 @@
             "minimum": 0.0,
             "title": "Max Hints Per Question",
             "default": 3
-          },
-          "lock_quiz_ef_until_pass": {
-            "type": "boolean",
-            "title": "Lock Quiz Ef Until Pass",
-            "default": false
           },
           "supplementary_instructions": {
             "anyOf": [
@@ -25754,10 +25744,6 @@
             "title": "Max Hints Per Question",
             "default": 3
           },
-          "lock_quiz_ef_until_pass": {
-            "type": "boolean",
-            "title": "Lock Quiz Ef Until Pass"
-          },
           "published_at": {
             "anyOf": [
               {
@@ -25777,8 +25763,7 @@
           "course_id",
           "module_id",
           "title",
-          "status",
-          "lock_quiz_ef_until_pass"
+          "status"
         ],
         "title": "InterviewConfigPublic",
         "description": "Student-facing interview-config summary.\n\n``status`` narrows to ``Literal[\"published\"]`` — the public catalog\nonly ever surfaces published configs. The authoring counterpart\n:class:`~abridgeai.features.interviews.schemas.authoring.InterviewConfigAuthoring`\nwidens to the full enum so teachers can see drafts.\n\nAuthoring-only fields hidden here:\n\n* ``supplementary_instructions`` — author-only notes.\n* ``generation_run_id`` — pipeline linkage.\n* ``min_outcomes_to_pass`` — exposing the pass threshold lets a\n  student stop trying once they've cleared it; it remains teacher-only.\n* Audit + soft-delete columns."
@@ -25925,17 +25910,6 @@
               }
             ],
             "title": "Max Hints Per Question"
-          },
-          "lock_quiz_ef_until_pass": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lock Quiz Ef Until Pass"
           },
           "supplementary_instructions": {
             "anyOf": [
