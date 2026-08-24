@@ -75,10 +75,23 @@ export default function ManagementLearningProgramDetailPage() {
       .filter((path) => !needle || path.name.toLowerCase().includes(needle) || path.slug?.toLowerCase().includes(needle))
       .map((path) => ({ id: path.id, primaryLabel: path.name, secondaryLabel: path.slug, selectable: path.selectable, notSelectableReason: path.not_selectable_reason }));
   }, [options.data?.career_paths, pathQuery]);
+  // Attachable lookup for ALREADY-ATTACHED paths too: legacy drafts pinned
+  // before the gate was tightened must not be re-sent in career_path_ids
+  // (the backend rejects the whole PATCH). Declared AFTER `data` is narrowed
+  // (below) because composePathIds reads it.
   const studentCandidates: SelectableEntity[] = (users.data ?? []).map((user) => ({ id: user.user_id, primaryLabel: user.display_name?.trim() || user.primary_email, secondaryLabel: user.primary_email }));
 
   if (current.isLoading || (selectedVersionId && historical.isLoading)) return <PageSkeleton rows={4} />;
   if (!data) return <p>Learning Program not found.</p>;
+
+  const attachableById = new Map<string, boolean>(
+    (options.data?.career_paths ?? []).map((path) => [path.id, path.selectable !== false]),
+  );
+  const isAttachable = (pathId: string) => attachableById.get(pathId) ?? true;
+  const composePathIds = (extraIds: string[]) => [
+    ...data.paths.filter((path) => isAttachable(path.career_path_id)).map((path) => path.career_path_id),
+    ...extraIds,
+  ];
 
   async function confirmedAction(title: string, description: string, label: string, action: () => Promise<unknown>, success: string) {
     if (!(await confirm({ title, description, confirmLabel: label, cancelLabel: "Cancel", confirmVariant: label === "Archive" ? "destructive" : "default" }))) return;
@@ -143,7 +156,7 @@ export default function ManagementLearningProgramDetailPage() {
         </aside>
       </div>
 
-      {pathPickerOpen && <EntityMultiSelectDialog title="Add Career Paths" searchPlaceholder="Search by name or slug" items={pathCandidates} alreadySelectedIds={new Set(data.paths.map((path) => path.career_path_id))} isLoading={options.isLoading} query={pathQuery} onQueryChange={setPathQuery} onConfirm={(rows) => { void update.mutateAsync({ career_path_ids: [...data.paths.map((path) => path.career_path_id), ...rows.map((row) => row.id)] }).then(() => toast.success("Career Paths added")).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Could not add paths")); setPathPickerOpen(false); }} onClose={() => setPathPickerOpen(false)} emptyText="No published Career Path found" alreadyAddedLabel="Added" />}
+      {pathPickerOpen && <EntityMultiSelectDialog title="Add Career Paths" searchPlaceholder="Search by name or slug" items={pathCandidates} alreadySelectedIds={new Set(data.paths.map((path) => path.career_path_id))} isLoading={options.isLoading} query={pathQuery} onQueryChange={setPathQuery} onConfirm={(rows) => { void update.mutateAsync({ career_path_ids: composePathIds(rows.map((row) => row.id)) }).then(() => toast.success("Career Paths added")).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Could not add paths")); setPathPickerOpen(false); }} onClose={() => setPathPickerOpen(false)} emptyText="No published Career Path found" alreadyAddedLabel="Added" />}
       {importOpen && <ImportStudentsDialog programId={id} onClose={() => setImportOpen(false)} />}
       {studentPickerOpen && <EntityMultiSelectDialog title="Enroll students" searchPlaceholder="Search students by name or email" items={studentCandidates} alreadySelectedIds={new Set((roster.data ?? []).map((row) => row.student_id))} isLoading={users.isLoading} query={studentQuery} onQueryChange={setStudentQuery} onConfirm={(rows) => { void enroll.mutateAsync(rows.map((row) => row.id)).then(() => toast.success("Students enrolled")).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Could not enroll students")); setStudentPickerOpen(false); }} onClose={() => setStudentPickerOpen(false)} emptyText="No student found" alreadyAddedLabel="Enrolled" />}
     </div>
