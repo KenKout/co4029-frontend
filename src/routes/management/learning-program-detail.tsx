@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
-import { Archive, ArrowLeft, Check, GitBranch, Plus, Route, Users, X } from "lucide-react";
+import { Archive, ArrowLeft, Check, GitBranch, Plus, Route, Trash2, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EntityMultiSelectDialog, type SelectableEntity } from "@/components/ui/entity-multi-select-dialog";
@@ -75,21 +75,13 @@ export default function ManagementLearningProgramDetailPage() {
       .filter((path) => !needle || path.name.toLowerCase().includes(needle) || path.slug?.toLowerCase().includes(needle))
       .map((path) => ({ id: path.id, primaryLabel: path.name, secondaryLabel: path.slug, selectable: path.selectable, notSelectableReason: path.not_selectable_reason }));
   }, [options.data?.career_paths, pathQuery]);
-  // Attachable lookup for ALREADY-ATTACHED paths too: legacy drafts pinned
-  // before the gate was tightened must not be re-sent in career_path_ids
-  // (the backend rejects the whole PATCH). Declared AFTER `data` is narrowed
-  // (below) because composePathIds reads it.
   const studentCandidates: SelectableEntity[] = (users.data ?? []).map((user) => ({ id: user.user_id, primaryLabel: user.display_name?.trim() || user.primary_email, secondaryLabel: user.primary_email }));
 
   if (current.isLoading || (selectedVersionId && historical.isLoading)) return <PageSkeleton rows={4} />;
   if (!data) return <p>Learning Program not found.</p>;
 
-  const attachableById = new Map<string, boolean>(
-    (options.data?.career_paths ?? []).map((path) => [path.id, path.selectable !== false]),
-  );
-  const isAttachable = (pathId: string) => attachableById.get(pathId) ?? true;
   const composePathIds = (extraIds: string[]) => [
-    ...data.paths.filter((path) => isAttachable(path.career_path_id)).map((path) => path.career_path_id),
+    ...data.paths.map((path) => path.career_path_id),
     ...extraIds,
   ];
 
@@ -102,6 +94,31 @@ export default function ManagementLearningProgramDetailPage() {
   const isDraft = data.current_version.status === "draft" && !readOnly;
   const pendingRequests = (requests.data ?? []).filter((request) => request.status === "pending");
   const pendingCount = pendingRequests.length;
+  const currentPaths = data.paths;
+
+  async function removePath(pathId: string, pathName: string) {
+    const accepted = await confirm({
+      title: `Remove ${pathName} from this draft?`,
+      description:
+        "Only the current Program draft will change. Published versions and existing student enrollments keep their pinned Career Path.",
+      confirmLabel: "Remove path",
+      cancelLabel: "Cancel",
+      confirmVariant: "destructive",
+    });
+    if (!accepted) return;
+
+    try {
+      await update.mutateAsync({
+        career_path_ids: currentPaths
+          .filter((path) => path.career_path_id !== pathId)
+          .map((path) => path.career_path_id),
+      });
+      toast.success("Career Path removed from the draft");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not remove the Career Path");
+    }
+  }
+
   return (
     <div className="space-y-6 pb-16">
       {dialog}
@@ -126,7 +143,42 @@ export default function ManagementLearningProgramDetailPage() {
               <ProgramGeneral key={data.current_version.id} data={data} readOnly={readOnly || !isDraft} onSave={(payload) => update.mutateAsync(payload)} />
               <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
                 <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-headline text-lg font-bold">Career Paths</h2><p className="text-sm text-m3-on-surface-variant">Published path versions pinned in program v{data.current_version.version_no}.</p></div>{isDraft && <Button variant="outline" className="gap-2" onClick={() => setPathPickerOpen(true)}><Plus className="h-4 w-4" /> Add Career Path</Button>}</div>
-                <div className="space-y-2">{data.paths.map((path) => <Link key={path.career_path_id} to="/management/career-paths/$id" params={{ id: path.career_path_id }} className="flex cursor-pointer items-center justify-between rounded-xl bg-m3-surface-container p-4 transition-colors hover:bg-m3-surface-container-high"><div><p className="font-semibold">{path.position}. {path.name}</p><p className="mt-1 text-xs text-m3-on-surface-variant">Career Path v{path.career_path_version_no} · {path.status}</p></div><ArrowLeft className="h-4 w-4 rotate-180 text-m3-primary" /></Link>)}</div>
+                <div className="space-y-2">
+                  {data.paths.map((path) => (
+                    <div
+                      key={path.career_path_id}
+                      className="flex items-center gap-2 rounded-xl bg-m3-surface-container p-2 transition-colors hover:bg-m3-surface-container-high"
+                    >
+                      <Link
+                        to="/management/career-paths/$id"
+                        params={{ id: path.career_path_id }}
+                        className="flex min-w-0 flex-1 cursor-pointer items-center justify-between rounded-lg p-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold">
+                            {path.position}. {path.name}
+                          </p>
+                          <p className="mt-1 text-xs text-m3-on-surface-variant">
+                            Career Path v{path.career_path_version_no} · {path.status}
+                          </p>
+                        </div>
+                        <ArrowLeft className="h-4 w-4 shrink-0 rotate-180 text-m3-primary" />
+                      </Link>
+                      {isDraft && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Remove ${path.name}`}
+                          disabled={update.isPending}
+                          onClick={() => void removePath(path.career_path_id, path.name)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </section>
             </>
           )}
