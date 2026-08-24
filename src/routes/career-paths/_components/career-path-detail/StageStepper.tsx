@@ -299,7 +299,7 @@ function StageCourseRow({
             handleStart();
           }}
           disabled={blocked || start.isPending}
-          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-m3-primary text-m3-on-primary text-xs font-semibold shrink-0 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-m3-primary text-m3-on-primary text-xs font-semibold shrink-0 hover:bg-m3-primary/90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           <Play className="h-3 w-3" />
           {start.isPending ? t(`${prefix}.starting`) : t(`${prefix}.start`)}

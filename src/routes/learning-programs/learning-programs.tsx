@@ -1,46 +1,25 @@
-import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen, CheckCircle2, GraduationCap, History } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { Textarea } from "@/components/ui/textarea";
 import {
   useCancelProgramPathChange,
   useMyLearningPrograms,
-  useRequestProgramPathChange,
 } from "@/lib/api/hooks/learning-programs";
 import type { LearningProgramEnrollment } from "@/lib/api/types";
+import { useFormatDate } from "@/lib/format/date";
 import { PathCard } from "./_components/PathCard";
 
 function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) {
-  const requestChange = useRequestProgramPathChange();
   const cancelChange = useCancelProgramPathChange();
+  const formatDate = useFormatDate();
   const active = enrollment.attempts.find((attempt) => attempt.status === "active");
   const currentPath = enrollment.paths.find((path) => path.career_path_id === active?.career_path_id);
-  const [targetPath, setTargetPath] = useState("");
-  const [reason, setReason] = useState("");
   const available = enrollment.paths.filter(
     (path) => path.status !== "archived" && path.career_path_id !== active?.career_path_id,
   );
-
-  async function submitChange() {
-    if (!targetPath || !reason.trim()) return;
-    try {
-      await requestChange.mutateAsync({
-        enrollmentId: enrollment.id,
-        pathId: targetPath,
-        reason: reason.trim(),
-      });
-      toast.success("Your request was sent to the Faculty Dean");
-      setTargetPath("");
-      setReason("");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not request the change");
-    }
-  }
 
   return (
     <article className="rounded-2xl bg-card ghost-border p-5 space-y-5">
@@ -143,36 +122,21 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
             </Button>
           </div>
         ) : (
-        <details className="rounded-xl border border-m3-outline-variant p-4">
-          <summary className="cursor-pointer text-sm font-semibold text-m3-on-surface">
-            Request a path change
-          </summary>
-          <div className="mt-4 space-y-3">
-            <select
-              value={targetPath}
-              onChange={(event) => setTargetPath(event.target.value)}
-              className="w-full rounded-lg border border-m3-outline-variant bg-card px-3 py-2 text-sm"
-            >
-              <option value="">Target path…</option>
-              {available.map((path) => (
-                <option key={path.career_path_id} value={path.career_path_id}>
-                  {path.name}
-                </option>
-              ))}
-            </select>
-            <Textarea
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              placeholder="Why do you want to change paths?"
-            />
-            <Button
-              onClick={() => void submitChange()}
-              disabled={!targetPath || !reason.trim() || requestChange.isPending}
-            >
-              Send to Faculty Dean
-            </Button>
-          </div>
-        </details>
+          /* Switching is a considered decision, not an inline form: send the
+             student to browse the path cards; the commit lives on each path
+             detail behind its roadmap and a confirmation dialog. */
+          <Link
+            to="/career-paths"
+            className="flex items-center justify-between rounded-xl border border-m3-outline-variant p-4 hover:bg-m3-surface-container"
+          >
+            <div>
+              <p className="text-sm font-semibold text-m3-on-surface">Explore other paths</p>
+              <p className="mt-0.5 text-xs text-m3-on-surface-variant">
+                Browse all career paths — switching later needs approval from your Faculty Dean.
+              </p>
+            </div>
+            <ArrowRight className="h-5 w-5 text-m3-primary" />
+          </Link>
         )
       )}
 
@@ -190,7 +154,8 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
                 <div key={attempt.id} className="flex justify-between rounded-lg bg-m3-surface-container px-3 py-2 text-sm">
                   <span>{path?.name ?? attempt.career_path_id}</span>
                   <span className="text-m3-on-surface-variant">
-                    {attempt.status}{typeof percent === "number" ? ` · ${percent}%` : ""}
+                    Switched away{typeof percent === "number" ? ` · ${Math.round(percent)}% done` : ""}
+                    {attempt.ended_at ? ` · ${formatDate(attempt.ended_at)}` : ""}
                   </span>
                 </div>
               );
