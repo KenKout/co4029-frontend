@@ -106,6 +106,35 @@ export function useEnrollProgramStudents(id: string) {
   });
 }
 
+export interface ProgramCsvImportResult {
+  enrolled: string[];
+  created_users: string[];
+  already_enrolled: string[];
+  failures: { row_number: number; identifier: string | null; reason: string }[];
+}
+
+/**
+ * Import a roster file into the program.
+ *
+ * Unlike `useEnrollProgramStudents`, one bad line does not abort the batch —
+ * the response is per-row, so the UI can say which lines failed and why.
+ */
+export function useImportProgramStudentsCsv(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { csv_text: string }) =>
+      apiPost<ProgramCsvImportResult>(
+        `/management/learning-programs/${id}/students/import-csv`,
+        body,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.learningPrograms.roster(id),
+      });
+    },
+  });
+}
+
 export function useProgramChangeRequests(id: string) {
   return useQuery({
     queryKey: queryKeys.learningPrograms.requests(id),

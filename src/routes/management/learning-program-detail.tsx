@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
-import { Archive, ArrowLeft, Check, GitBranch, Plus, UserPlus, X } from "lucide-react";
+import { Archive, ArrowLeft, Check, GitBranch, Plus, Route, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EntityMultiSelectDialog, type SelectableEntity } from "@/components/ui/entity-multi-select-dialog";
@@ -23,6 +23,25 @@ import {
   useUpdateLearningProgram,
 } from "@/lib/api/hooks/learning-programs";
 import { useFormatDate } from "@/lib/format/date";
+import { Tabs, type TabDef } from "@/components/ui/tabs";
+import { RosterTab } from "./_components/learning-program-detail/RosterTab";
+import { ImportStudentsDialog } from "./_components/learning-program-detail/ImportStudentsDialog";
+
+type TabKey = "general" | "roster" | "requests";
+
+/**
+ * Three concerns that used to be stacked on one scroll: authoring the
+ * program, staffing it, and reviewing switch requests. Different people do
+ * them at different times, so they get tabs rather than one long column.
+ *
+ * The count badges make the tabs self-announcing — a dean lands here and
+ * sees "Path changes 3" without opening anything.
+ */
+const TABS = (pending: number, enrolled: number): TabDef<TabKey>[] => [
+  { key: "general", label: "General & paths", icon: Route },
+  { key: "roster", label: "Students", icon: Users, count: enrolled || undefined },
+  { key: "requests", label: "Path changes", icon: GitBranch, count: pending || undefined },
+];
 
 export default function ManagementLearningProgramDetailPage() {
   const { id } = useParams({ strict: false }) as { id: string };
@@ -45,6 +64,8 @@ export default function ManagementLearningProgramDetailPage() {
   const [pathPickerOpen, setPathPickerOpen] = useState(false);
   const [pathQuery, setPathQuery] = useState("");
   const [studentPickerOpen, setStudentPickerOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [tab, setTab] = useState<TabKey>("general");
   const [studentQuery, setStudentQuery] = useState("");
   const users = useAdminUsersSearch(studentQuery, studentPickerOpen, "student");
 
@@ -64,6 +85,8 @@ export default function ManagementLearningProgramDetailPage() {
   }
 
   const isDraft = data.current_version.status === "draft" && !readOnly;
+  const pendingRequests = (requests.data ?? []).filter((request) => request.status === "pending");
+  const pendingCount = pendingRequests.length;
   return (
     <div className="space-y-6 pb-16">
       {dialog}
@@ -76,18 +99,39 @@ export default function ManagementLearningProgramDetailPage() {
 
       <div className="grid items-start gap-6 lg:grid-cols-10">
         <main className="space-y-6 lg:col-span-7">
-          <ProgramGeneral key={data.current_version.id} data={data} readOnly={readOnly || !isDraft} onSave={(payload) => update.mutateAsync(payload)} />
-          <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
-            <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-headline text-lg font-bold">Career Paths</h2><p className="text-sm text-m3-on-surface-variant">Published path versions pinned in program v{data.current_version.version_no}.</p></div>{isDraft && <Button variant="outline" className="gap-2" onClick={() => setPathPickerOpen(true)}><Plus className="h-4 w-4" /> Add Career Path</Button>}</div>
-            <div className="space-y-2">{data.paths.map((path) => <Link key={path.career_path_id} to="/management/career-paths/$id" params={{ id: path.career_path_id }} className="flex cursor-pointer items-center justify-between rounded-xl bg-m3-surface-container p-4 transition-colors hover:bg-m3-surface-container-high"><div><p className="font-semibold">{path.position}. {path.name}</p><p className="mt-1 text-xs text-m3-on-surface-variant">Career Path v{path.career_path_version_no} · {path.status}</p></div><ArrowLeft className="h-4 w-4 rotate-180 text-m3-primary" /></Link>)}</div>
-          </section>
+          <Tabs<TabKey>
+            tabs={TABS(pendingCount, (roster.data ?? []).length)}
+            value={tab}
+            onChange={setTab}
+            ariaLabel="Learning program sections"
+          />
 
-          <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
-            <div className="flex items-center justify-between gap-3"><div><h2 className="font-headline text-lg font-bold">Roster</h2><p className="text-sm text-m3-on-surface-variant">Students choose their path after enrollment.</p></div>{!readOnly && data.status === "published" && <Button className="gap-2" onClick={() => setStudentPickerOpen(true)}><UserPlus className="h-4 w-4" /> Enroll students</Button>}</div>
-            <div className="divide-y divide-m3-outline-variant">{(roster.data ?? []).map((item) => { const attempt = item.attempts.find((row) => row.status === "active"); const path = item.paths.find((row) => row.career_path_id === attempt?.career_path_id); return <div key={item.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm"><span className="font-mono">{item.student_id}</span><span>{item.status} · {path?.name ?? "No path selected"} · {item.current_progress_percent}%</span></div>; })}</div>
-          </section>
+          {tab === "general" && (
+            <>
+              <ProgramGeneral key={data.current_version.id} data={data} readOnly={readOnly || !isDraft} onSave={(payload) => update.mutateAsync(payload)} />
+              <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
+                <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-headline text-lg font-bold">Career Paths</h2><p className="text-sm text-m3-on-surface-variant">Published path versions pinned in program v{data.current_version.version_no}.</p></div>{isDraft && <Button variant="outline" className="gap-2" onClick={() => setPathPickerOpen(true)}><Plus className="h-4 w-4" /> Add Career Path</Button>}</div>
+                <div className="space-y-2">{data.paths.map((path) => <Link key={path.career_path_id} to="/management/career-paths/$id" params={{ id: path.career_path_id }} className="flex cursor-pointer items-center justify-between rounded-xl bg-m3-surface-container p-4 transition-colors hover:bg-m3-surface-container-high"><div><p className="font-semibold">{path.position}. {path.name}</p><p className="mt-1 text-xs text-m3-on-surface-variant">Career Path v{path.career_path_version_no} · {path.status}</p></div><ArrowLeft className="h-4 w-4 rotate-180 text-m3-primary" /></Link>)}</div>
+              </section>
+            </>
+          )}
 
-          <section className="space-y-4 rounded-xl bg-card p-5 ghost-border"><h2 className="font-headline text-lg font-bold">Path change requests</h2>{(requests.data ?? []).filter((request) => request.status === "pending").map((request) => <div key={request.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-m3-surface-container p-4"><div><p className="font-mono text-xs">{request.program_enrollment_id}</p><p className="mt-1 text-sm">{request.reason}</p></div><div className="flex gap-2"><Button size="sm" className="gap-1" onClick={() => void confirmedAction("Approve path change?", "The current path is snapshotted and the student moves to the target path.", "Approve", () => decide.mutateAsync({ requestId: request.id, approve: true }), "Path change approved")}><Check className="h-4 w-4" /> Approve</Button><Button size="sm" variant="outline" className="gap-1" onClick={() => void confirmedAction("Reject path change?", "The student remains on the current path.", "Reject", () => decide.mutateAsync({ requestId: request.id, approve: false }), "Path change rejected")}><X className="h-4 w-4" /> Reject</Button></div></div>)}</section>
+          {tab === "roster" && (
+            <RosterTab
+              roster={roster.data ?? []}
+              canEnroll={!readOnly && data.status === "published"}
+              onOpenPicker={() => setStudentPickerOpen(true)}
+              onOpenImport={() => setImportOpen(true)}
+            />
+          )}
+
+          {tab === "requests" && (
+            <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
+              <h2 className="font-headline text-lg font-bold">Path change requests</h2>
+              {pendingRequests.length === 0 && <p className="py-6 text-center text-sm text-m3-on-surface-variant">No pending requests.</p>}
+              {pendingRequests.map((request) => <div key={request.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-m3-surface-container p-4"><div><p className="font-mono text-xs">{request.program_enrollment_id}</p><p className="mt-1 text-sm">{request.reason}</p></div><div className="flex gap-2"><Button size="sm" className="gap-1" onClick={() => void confirmedAction("Approve path change?", "The current path is snapshotted and the student moves to the target path.", "Approve", () => decide.mutateAsync({ requestId: request.id, approve: true }), "Path change approved")}><Check className="h-4 w-4" /> Approve</Button><Button size="sm" variant="outline" className="gap-1" onClick={() => void confirmedAction("Reject path change?", "The student remains on the current path.", "Reject", () => decide.mutateAsync({ requestId: request.id, approve: false }), "Path change rejected")}><X className="h-4 w-4" /> Reject</Button></div></div>)}
+            </section>
+          )}
         </main>
 
         <aside className="space-y-4 rounded-xl border border-m3-outline-variant/40 bg-card p-4 lg:col-span-3 lg:sticky lg:top-24">
@@ -98,6 +142,7 @@ export default function ManagementLearningProgramDetailPage() {
       </div>
 
       {pathPickerOpen && <EntityMultiSelectDialog title="Add Career Paths" searchPlaceholder="Search by name or slug" items={pathCandidates} alreadySelectedIds={new Set(data.paths.map((path) => path.career_path_id))} isLoading={options.isLoading} query={pathQuery} onQueryChange={setPathQuery} onConfirm={(rows) => { void update.mutateAsync({ career_path_ids: [...data.paths.map((path) => path.career_path_id), ...rows.map((row) => row.id)] }).then(() => toast.success("Career Paths added")).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Could not add paths")); setPathPickerOpen(false); }} onClose={() => setPathPickerOpen(false)} emptyText="No published Career Path found" alreadyAddedLabel="Added" />}
+      {importOpen && <ImportStudentsDialog programId={id} onClose={() => setImportOpen(false)} />}
       {studentPickerOpen && <EntityMultiSelectDialog title="Enroll students" searchPlaceholder="Search students by name or email" items={studentCandidates} alreadySelectedIds={new Set((roster.data ?? []).map((row) => row.student_id))} isLoading={users.isLoading} query={studentQuery} onQueryChange={setStudentQuery} onConfirm={(rows) => { void enroll.mutateAsync(rows.map((row) => row.id)).then(() => toast.success("Students enrolled")).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Could not enroll students")); setStudentPickerOpen(false); }} onClose={() => setStudentPickerOpen(false)} emptyText="No student found" alreadyAddedLabel="Enrolled" />}
     </div>
   );
