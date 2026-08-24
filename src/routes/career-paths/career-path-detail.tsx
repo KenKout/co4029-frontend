@@ -8,7 +8,6 @@ import {
 import { CareerPathCourseList } from "./_components/career-path-detail/CourseList";
 import { CareerPathHeader } from "./_components/career-path-detail/PathHeader";
 import {
-  CareerPathEnrollmentNotice,
   CareerPathPreparedNotice,
   CareerPathProgressCard,
 } from "./_components/career-path-detail/ProgressPanels";
@@ -82,8 +81,6 @@ export default function CareerPathDetailPage() {
       />
 
       <CareerPathPreparedNotice enrolled={enrolled} progress={progress.data} />
-
-      <CareerPathEnrollmentNotice enrolled={enrolled} />
 
       {/* Only renders when a program enrolment is awaiting a choice that
           includes this path — invisible for ordinary catalog browsing. */}

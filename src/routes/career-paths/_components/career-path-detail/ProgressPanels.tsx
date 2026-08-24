@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, CheckCircle2, Lock } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
   CareerPathCoursePublic,
@@ -68,28 +68,6 @@ export function CareerPathPreparedNotice({
         </p>
         <p className="text-xs text-emerald-800 mt-1 leading-relaxed">
           {t("career_path_detail.prepared_body")}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-export function CareerPathEnrollmentNotice({
-  enrolled,
-}: {
-  enrolled: boolean;
-}) {
-  const { t } = useTranslation();
-  if (enrolled) return null;
-  return (
-    <div className="rounded-xl bg-amber-50 border border-amber-200 p-5 flex items-start gap-3">
-      <Lock className="h-5 w-5 text-amber-700 shrink-0 mt-0.5" />
-      <div className="flex-1">
-        <p className="text-sm font-semibold text-amber-900">
-          {t("career_path_detail.managed_enrollment_title")}
-        </p>
-        <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-          {t("career_path_detail.managed_enrollment_body")}
         </p>
       </div>
     </div>

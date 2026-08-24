@@ -940,8 +940,6 @@
     "completed_courses": "Completed {{completed}}/{{total}} courses",
     "overall_progress": "Overall progress",
     "continue_learning": "Continue learning",
-    "managed_enrollment_title": "Enrollment is managed",
-    "managed_enrollment_body": "Contact your manager to be enrolled in this path.",
     "section_title": "Courses in this path",
     "section_subtitle": "In recommended order",
     "empty": "This path has no courses yet.",

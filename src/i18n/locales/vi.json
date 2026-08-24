@@ -865,8 +865,6 @@
     "completed_courses": "Đã hoàn thành {{completed}}/{{total}} khóa học",
     "overall_progress": "Tổng tiến độ",
     "continue_learning": "Tiếp tục học",
-    "managed_enrollment_title": "Đăng ký bởi quản lý",
-    "managed_enrollment_body": "Liên hệ quản lý để được đăng ký vào lộ trình này.",
     "section_title": "Khóa học trong lộ trình",
     "section_subtitle": "Theo thứ tự đề xuất",
     "empty": "Lộ trình này chưa có khóa học nào.",
