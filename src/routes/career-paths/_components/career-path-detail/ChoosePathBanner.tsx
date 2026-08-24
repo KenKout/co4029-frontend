@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CheckCircle2, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import {
   useMyLearningPrograms,
@@ -122,7 +123,7 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
 
   // ── Case 1: first-time choice ──────────────────────────────────────────
   if (awaiting) {
-    return <AwaitingChoiceBanner enrollment={awaiting} isPending={selectPath.isPending} onChoose={() => void choose()} />;
+    return <AwaitingChoiceBanner enrollment={awaiting} isPending={selectPath.isPending} onRequestChoose={() => setDialogOpen(true)} onChoose={() => void choose()} />;
   }
 
   return (
@@ -141,14 +142,19 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
 function AwaitingChoiceBanner({
   enrollment,
   isPending,
+  onRequestChoose,
   onChoose,
 }: {
   enrollment: LearningProgramEnrollment;
   isPending: boolean;
+  /** Ask to open the confirm dialog — the commit itself happens after it. */
+  onRequestChoose: () => void;
   onChoose: () => void;
 }) {
   const remaining = enrollment.max_path_switches - enrollment.approved_switch_count;
+  const [confirmOpen, setConfirmOpen] = useState(false);
   return (
+    <>
       <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-m3-primary/30 bg-m3-primary-fixed/40 p-5">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl gradient-primary">
           <GraduationCap className="h-5 w-5 text-white" />
@@ -164,11 +170,33 @@ function AwaitingChoiceBanner({
             {remaining === 1 ? "" : "s"}, with approval from your Faculty Dean.
           </p>
         </div>
-        <Button className="gap-2" disabled={isPending} onClick={onChoose}>
+        <Button className="gap-2" disabled={isPending} onClick={onRequestChoose}>
           <CheckCircle2 className="h-4 w-4" />
           {isPending ? "Selecting…" : "Choose this path"}
         </Button>
       </section>
+
+      {/* Accidental-click guard: committing a path is a big, hard-to-reverse
+          decision, so the button only opens this confirmation. The actual
+          commit fires from the dialog's confirm button. */}
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Commit to ${enrollment.program_name}?`}
+        description={
+          `This selects "${enrollment.program_name}" as your learning path. ` +
+          "You can still switch later " +
+          `${remaining} more time${remaining === 1 ? "" : "s"}, but only with ` +
+          "approval from your Faculty Dean — and each approved switch is " +
+          "irreversible."
+        }
+        confirmLabel="Yes, choose this path"
+        cancelLabel="Not yet"
+        confirmVariant="default"
+        isPending={isPending}
+        onConfirm={onChoose}
+      />
+    </>
   );
 }
 
