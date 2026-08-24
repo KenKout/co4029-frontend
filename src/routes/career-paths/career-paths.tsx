@@ -99,8 +99,12 @@ export default function CareerPathsPage() {
   const list = useCareerPaths();
   const myEnrollments = useMyCareerEnrollments();
 
+  // Only ACTIVE program enrollments mark a path as "enrolled": after a
+  // switch the old attempt is switched_out and must not keep the badge.
   const enrolledIds = new Set(
-    (myEnrollments.data ?? []).map((e) => e.career_path_id),
+    (myEnrollments.data ?? [])
+      .filter((e) => e.status === "active")
+      .map((e) => e.career_path_id),
   );
   const items = list.items;
 

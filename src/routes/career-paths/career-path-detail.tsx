@@ -27,7 +27,11 @@ export default function CareerPathDetailPage() {
   const enrolled = useMemo(
     () =>
       (enrollments.data ?? []).some(
-        (e) => path.data && e.career_path_id === path.data.id,
+        (e) =>
+          // Only an ACTIVE enrollment counts as "enrolled here": a switched-
+          // away attempt leaves a dropped row behind, which must fall back to
+          // the prospective-student view.
+          e.status === "active" && path.data && e.career_path_id === path.data.id,
       ),
     [enrollments.data, path.data],
   );
