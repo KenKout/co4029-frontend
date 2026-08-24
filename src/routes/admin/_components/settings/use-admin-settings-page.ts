@@ -9,6 +9,10 @@ import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 import { GROUP_ORDER, HEADER_OFFSET, SPY_TOLERANCE } from "./constants";
 import { matchesSearchQuery } from "./helpers";
 
+// View-mode toggles survive reload/navigation — same pattern as the course
+// catalogue's `courses:viewMode`.
+const DENSE_KEY = "admin-settings:viewMode";
+
 /**
  * Stateful half of the admin runtime-settings page: scope + filter state, the
  * org and settings queries, the grouped/counted derivations and the section
@@ -26,7 +30,22 @@ export function useAdminSettingsPage() {
   const [search, setSearch] = useState("");
   const [overriddenOnly, setOverriddenOnly] = useState(false);
   const [showKeys, setShowKeys] = useState(false);
-  const [dense, setDense] = useState(false);
+  // Table (dense=true) vs card view, persisted so the choice survives
+  // switching pages or closing the tab.
+  const [dense, setDense] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(DENSE_KEY) === "table";
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(DENSE_KEY, dense ? "table" : "card");
+    } catch {
+      /* storage unavailable — persistence is best-effort */
+    }
+  }, [dense]);
   const [activeSection, setActiveSection] = useState<string>("");
 
   const orgs = useOrganizations({ limit: 200 });
