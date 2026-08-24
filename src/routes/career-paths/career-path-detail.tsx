@@ -35,6 +35,17 @@ export default function CareerPathDetailPage() {
   const progress = useCareerPathProgress(
     enrolled && path.data ? path.data.id : undefined,
   );
+  // Structure-only stages, available WITHOUT an enrollment. This is what
+  // lets a prospective student see the roadmap; the progress endpoint
+  // above only answers for someone already enrolled.
+  //
+  // ⚠️ MUST stay above the early returns below — calling a hook after a
+  // conditional return changes the hook count between renders and crashes
+  // with React error #310 (same trap as useNavItems in interview-config).
+  // The enabled flag keeps it idle until the path query settles.
+  const detail = useCareerPathDetail(
+    !enrolled && path.data ? path.data.slug : undefined,
+  );
 
   if (path.isLoading) {
     return <CareerPathLoadingState />;
@@ -50,10 +61,6 @@ export default function CareerPathDetailPage() {
   );
   const courseMeta = new Map(data.courses.map((c) => [c.course_id, c]));
   const stages = progress.data?.stages ?? [];
-  // Structure-only stages, available WITHOUT an enrollment. This is what
-  // lets a prospective student see the roadmap; the progress endpoint
-  // above only answers for someone already enrolled.
-  const detail = useCareerPathDetail(enrolled ? undefined : data.slug);
   const roadmapStages = detail.data?.stages ?? [];
   const firstIncomplete = data.courses.find((c) => {
     const p = progressByCourseId.get(c.course_id);
