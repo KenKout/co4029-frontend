@@ -71,7 +71,9 @@ export default function ManagementLearningProgramDetailPage() {
 
   const pathCandidates: SelectableEntity[] = useMemo(() => {
     const needle = pathQuery.trim().toLowerCase();
-    return (options.data?.career_paths ?? []).filter((path) => !needle || path.name.toLowerCase().includes(needle) || path.slug?.toLowerCase().includes(needle)).map((path) => ({ id: path.id, primaryLabel: path.name, secondaryLabel: path.slug }));
+    return (options.data?.career_paths ?? [])
+      .filter((path) => !needle || path.name.toLowerCase().includes(needle) || path.slug?.toLowerCase().includes(needle))
+      .map((path) => ({ id: path.id, primaryLabel: path.name, secondaryLabel: path.slug, selectable: path.selectable, notSelectableReason: path.not_selectable_reason }));
   }, [options.data?.career_paths, pathQuery]);
   const studentCandidates: SelectableEntity[] = (users.data ?? []).map((user) => ({ id: user.user_id, primaryLabel: user.display_name?.trim() || user.primary_email, secondaryLabel: user.primary_email }));
 

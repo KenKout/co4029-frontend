@@ -87,3 +87,25 @@ export function SelectableEntityRow<T extends SelectableEntity>({
     </button>
   );
 }
+
+/**
+ * Exists but cannot be picked (e.g. a draft career path). Disabled rather
+ * than hidden so the manager sees the path AND why it is greyed out — a
+ * silent filter would just move the confusion to "where did it go?".
+ */
+export function NotSelectableEntityRow({ item }: { item: SelectableEntity }) {
+  const reason = item.notSelectableReason ?? "not_available";
+  return (
+    <div
+      aria-disabled="true"
+      title={reason}
+      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg opacity-50 cursor-not-allowed"
+    >
+      <Checkbox disabled checked={false} tabIndex={-1} />
+      <EntityRowLabels item={item} />
+      <span className="text-[10px] font-bold uppercase tracking-wider text-m3-on-surface-variant shrink-0">
+        {reason === "path_not_published" ? "Draft — publish first" : reason}
+      </span>
+    </div>
+  );
+}

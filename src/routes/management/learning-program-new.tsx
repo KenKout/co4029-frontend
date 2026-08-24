@@ -38,7 +38,7 @@ export default function ManagementLearningProgramNewPage() {
     const needle = query.trim().toLowerCase();
     return (options.data?.career_paths ?? [])
       .filter((path) => !needle || path.name.toLowerCase().includes(needle) || path.slug?.toLowerCase().includes(needle))
-      .map((path) => ({ id: path.id, primaryLabel: path.name, secondaryLabel: path.slug }));
+      .map((path) => ({ id: path.id, primaryLabel: path.name, secondaryLabel: path.slug, selectable: path.selectable, notSelectableReason: path.not_selectable_reason }));
   }, [options.data?.career_paths, query]);
   const selectedPaths = (options.data?.career_paths ?? []).filter((path) => selectedPathIds.includes(path.id));
 

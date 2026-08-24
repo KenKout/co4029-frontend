@@ -11,4 +11,12 @@ export interface SelectableEntity {
   secondaryLabel?: string | null;
   /** Optional lifecycle status rendered as a small badge on the row. */
   status?: string | null;
+  /**
+   * False = visible but not pickable (e.g. a draft career path). The row
+   * renders disabled with `notSelectableReason` instead of being filtered
+   * out, so managers see WHY rather than wondering where it went.
+   */
+  selectable?: boolean;
+  /** Machine reason code behind `selectable: false` (e.g. path_not_published). */
+  notSelectableReason?: string | null;
 }

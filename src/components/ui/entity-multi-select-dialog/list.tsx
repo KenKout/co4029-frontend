@@ -1,4 +1,8 @@
-import { AttachedEntityRow, SelectableEntityRow } from "./rows";
+import {
+  AttachedEntityRow,
+  NotSelectableEntityRow,
+  SelectableEntityRow,
+} from "./rows";
 import type { SelectableEntity } from "./types";
 
 export interface EntityListProps<T extends SelectableEntity> {
@@ -66,6 +70,17 @@ export function EntityList<T extends SelectableEntity>({
           />
         </li>
       ))}
+      {/* Not-selectable rows: visible but disabled, with the reason. */}
+      {items
+        .filter(
+          (it) =>
+            !alreadySelectedIds.has(it.id) && it.selectable === false,
+        )
+        .map((it) => (
+          <li key={it.id}>
+            <NotSelectableEntityRow item={it} />
+          </li>
+        ))}
     </ul>
   );
 }

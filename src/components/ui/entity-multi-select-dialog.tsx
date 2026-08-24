@@ -76,11 +76,15 @@ export function EntityMultiSelectDialog<T extends SelectableEntity>({
   }, [onClose, isSubmitting]);
 
   const selectableItems = useMemo(
-    () => items.filter((it) => !alreadySelectedIds.has(it.id)),
+    () =>
+      items.filter(
+        (it) => !alreadySelectedIds.has(it.id) && it.selectable !== false,
+      ),
     [items, alreadySelectedIds],
   );
 
   function toggle(item: T) {
+    if (item.selectable === false) return; // defensive; rows render disabled
     setPicked((prev) => {
       const next = new Map(prev);
       if (next.has(item.id)) {

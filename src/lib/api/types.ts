@@ -1099,6 +1099,9 @@ export interface LearningProgramOption {
   name: string;
   slug: string | null;
   description: string | null;
+  /** False for draft/archived paths — shown disabled in the picker. */
+  selectable?: boolean;
+  not_selectable_reason?: string | null;
 }
 
 export interface LearningProgramAuthoringOptions {
