@@ -17,6 +17,9 @@ import {
   CareerPathLoadingState,
 } from "./_components/career-path-detail/States";
 import { StageStepper } from "./_components/career-path-detail/StageStepper";
+import { StageRoadmap } from "./_components/career-path-detail/StageRoadmap";
+import { ChoosePathBanner } from "./_components/career-path-detail/ChoosePathBanner";
+import { useCareerPathDetail } from "@/lib/api/hooks/career-paths";
 
 export default function CareerPathDetailPage() {
   const { slug } = useParams({ strict: false }) as { slug: string };
@@ -47,6 +50,11 @@ export default function CareerPathDetailPage() {
   );
   const courseMeta = new Map(data.courses.map((c) => [c.course_id, c]));
   const stages = progress.data?.stages ?? [];
+  // Structure-only stages, available WITHOUT an enrollment. This is what
+  // lets a prospective student see the roadmap; the progress endpoint
+  // above only answers for someone already enrolled.
+  const detail = useCareerPathDetail(enrolled ? undefined : data.slug);
+  const roadmapStages = detail.data?.stages ?? [];
   const firstIncomplete = data.courses.find((c) => {
     const p = progressByCourseId.get(c.course_id);
     return !p || p.completion_percent < 100;
@@ -70,6 +78,10 @@ export default function CareerPathDetailPage() {
 
       <CareerPathEnrollmentNotice enrolled={enrolled} />
 
+      {/* Only renders when a program enrolment is awaiting a choice that
+          includes this path — invisible for ordinary catalog browsing. */}
+      <ChoosePathBanner careerPathId={data.id} />
+
       {/* Enrolled students see the stage stepper (locked stages greyed, not
           hidden, with a Start button per course). Anyone browsing the
           published path without an enrollment still gets the flat course
@@ -82,7 +94,14 @@ export default function CareerPathDetailPage() {
           overConcurrencyCap={progress.data?.over_concurrency_cap}
           activeInPath={progress.data?.active_in_path}
         />
+      ) : roadmapStages.length > 0 ? (
+        // Not enrolled, but the path HAS stages: show the roadmap so the
+        // shape of the commitment is visible before making it. This used to
+        // fall straight through to the flat list.
+        <StageRoadmap stages={roadmapStages} />
       ) : (
+        // Paths authored before stages existed have no stage rows at all —
+        // the flat list stays the honest rendering for those.
         <CareerPathCourseList
           courses={data.courses}
           progressByCourseId={progressByCourseId}

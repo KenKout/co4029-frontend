@@ -11,12 +11,11 @@ import {
   useCancelProgramPathChange,
   useMyLearningPrograms,
   useRequestProgramPathChange,
-  useSelectProgramPath,
 } from "@/lib/api/hooks/learning-programs";
 import type { LearningProgramEnrollment } from "@/lib/api/types";
+import { PathCard } from "./_components/PathCard";
 
 function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) {
-  const selectPath = useSelectProgramPath();
   const requestChange = useRequestProgramPathChange();
   const cancelChange = useCancelProgramPathChange();
   const active = enrollment.attempts.find((attempt) => attempt.status === "active");
@@ -26,17 +25,6 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
   const available = enrollment.paths.filter(
     (path) => path.status !== "archived" && path.career_path_id !== active?.career_path_id,
   );
-
-  async function chooseInitialPath() {
-    if (!targetPath) return;
-    try {
-      await selectPath.mutateAsync({ enrollmentId: enrollment.id, pathId: targetPath });
-      toast.success("Learning path selected");
-      setTargetPath("");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not select the path");
-    }
-  }
 
   async function submitChange() {
     if (!targetPath || !reason.trim()) return;
@@ -112,22 +100,27 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
 
       {enrollment.status === "awaiting_path" && (
         <div className="space-y-3">
-          <p className="text-sm font-semibold text-m3-on-surface">Choose one career path</p>
-          <select
-            value={targetPath}
-            onChange={(event) => setTargetPath(event.target.value)}
-            className="w-full rounded-lg border border-m3-outline-variant bg-card px-3 py-2 text-sm"
-          >
-            <option value="">Select a path…</option>
-            {available.map((path) => (
-              <option key={path.career_path_id} value={path.career_path_id}>
-                {path.name}
-              </option>
-            ))}
-          </select>
-          <Button onClick={() => void chooseInitialPath()} disabled={!targetPath || selectPath.isPending}>
-            Confirm path
-          </Button>
+          <div>
+            <p className="text-sm font-semibold text-m3-on-surface">Choose one career path</p>
+            <p className="mt-0.5 text-xs text-m3-on-surface-variant">
+              Open a path to see its full roadmap before you commit — changing
+              later needs approval from your Faculty Dean.
+            </p>
+          </div>
+          {/* Cards rather than a <select>: this is a comparison, and a
+              dropdown shows one option at a time with no attributes at all.
+              The commit lives on the path detail, behind the roadmap. */}
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {enrollment.paths
+              .filter((path) => path.status !== "archived")
+              .map((path) => (
+                <PathCard
+                  key={path.career_path_id}
+                  path={path}
+                  isCurrent={false}
+                />
+              ))}
+          </div>
         </div>
       )}
 

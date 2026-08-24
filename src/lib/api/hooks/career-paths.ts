@@ -44,6 +44,55 @@ interface CareerPathListPage {
  * (`hasNextPage` / `fetchNextPage` / `isFetchingNextPage`) so the
  * learner catalogue auto-loads as the user scrolls.
  */
+export interface CareerPathStagePublic {
+  stage_id: string;
+  position: number;
+  /** NULL = unnamed; render `Stage {position}` in the user's locale. */
+  title: string | null;
+  description: string | null;
+  unlock_policy: string;
+  min_optional_to_complete: number;
+  required_count: number;
+  optional_count: number;
+  courses: {
+    course_id: string;
+    slug: string;
+    title: string;
+    position: number;
+    is_required: boolean;
+    stage_id: string | null;
+  }[];
+}
+
+export interface CareerPathDetailPublic {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  status: string;
+  courses: CareerPathStagePublic["courses"];
+  stages: CareerPathStagePublic[];
+  course_count: number;
+  required_course_count: number;
+  stage_count: number;
+}
+
+/**
+ * Published path WITH its stage roadmap.
+ *
+ * Separate from the plain detail read: the catalog and the flat detail keep
+ * their slim payload, while the screen where a student commits to a path
+ * gets the stages. Works WITHOUT an enrollment — that is the whole point,
+ * since a student choosing a path inside a program has not enrolled yet.
+ */
+export function useCareerPathDetail(slug: string | undefined) {
+  return useQuery({
+    queryKey: ["career-paths", "detail", slug ?? ""],
+    queryFn: () => apiFetch<CareerPathDetailPublic>(`/career-paths/${slug}/detail`),
+    enabled: Boolean(slug),
+  });
+}
+
 export function useCareerPaths(limit = 20) {
   return useInfinitePage<CareerPathPublic>({
     queryKey: queryKeys.careerPaths.list(),
