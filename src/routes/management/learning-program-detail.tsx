@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
-import { Archive, ArrowLeft, Check, GitBranch, Plus, Route, Trash2, Users, X } from "lucide-react";
+import { Archive, ArrowLeft, GitBranch, Plus, Route, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EntityMultiSelectDialog, type SelectableEntity } from "@/components/ui/entity-multi-select-dialog";
@@ -25,6 +25,7 @@ import {
 import { useFormatDate } from "@/lib/format/date";
 import { Tabs, type TabDef } from "@/components/ui/tabs";
 import { RosterTab } from "./_components/learning-program-detail/RosterTab";
+import { PathChangeRequestsSection } from "./_components/learning-program-detail/PathChangeRequests";
 import { ImportStudentsDialog } from "./_components/learning-program-detail/ImportStudentsDialog";
 
 type TabKey = "general" | "roster" | "requests";
@@ -195,8 +196,21 @@ export default function ManagementLearningProgramDetailPage() {
           {tab === "requests" && (
             <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
               <h2 className="font-headline text-lg font-bold">Path change requests</h2>
-              {pendingRequests.length === 0 && <p className="py-6 text-center text-sm text-m3-on-surface-variant">No pending requests.</p>}
-              {pendingRequests.map((request) => <div key={request.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-m3-surface-container p-4"><div><p className="font-mono text-xs">{request.program_enrollment_id}</p><p className="mt-1 text-sm">{request.reason}</p></div><div className="flex gap-2"><Button size="sm" className="gap-1" onClick={() => void confirmedAction("Approve path change?", "The current path is snapshotted and the student moves to the target path.", "Approve", () => decide.mutateAsync({ requestId: request.id, approve: true }), "Path change approved")}><Check className="h-4 w-4" /> Approve</Button><Button size="sm" variant="outline" className="gap-1" onClick={() => void confirmedAction("Reject path change?", "The student remains on the current path.", "Reject", () => decide.mutateAsync({ requestId: request.id, approve: false }), "Path change rejected")}><X className="h-4 w-4" /> Reject</Button></div></div>)}
+              <PathChangeRequestsSection
+                requests={pendingRequests}
+                roster={roster.data ?? []}
+                onDecide={(request, approve) =>
+                  void confirmedAction(
+                    approve ? "Approve path change?" : "Reject path change?",
+                    approve
+                      ? "The current path is snapshotted and the student moves to the target path."
+                      : "The student remains on the current path.",
+                    approve ? "Approve" : "Reject",
+                    () => decide.mutateAsync({ requestId: request.id, approve }),
+                    approve ? "Path change approved" : "Path change rejected",
+                  )
+                }
+              />
             </section>
           )}
         </main>
