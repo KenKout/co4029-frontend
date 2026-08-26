@@ -9270,6 +9270,11 @@ export interface components {
             /** Title */
             title: string;
             /**
+             * Slug
+             * @description URL slug (immutable once published) for breadcrumb-style student links.
+             */
+            slug?: string | null;
+            /**
              * Status
              * @constant
              */
@@ -10388,6 +10393,11 @@ export interface components {
             id: string;
             /** Title */
             title: string;
+            /**
+             * Slug
+             * @description URL slug (immutable once published) for breadcrumb-style student links.
+             */
+            slug?: string | null;
         };
         /**
          * InterviewTranscriptRead
@@ -10855,6 +10865,11 @@ export interface components {
             id: string;
             /** Title */
             title: string;
+            /**
+             * Slug
+             * @description URL slug for breadcrumb-style student links.
+             */
+            slug?: string | null;
             /** Lesson Type */
             lesson_type: string;
             /** Summary */
@@ -13705,6 +13720,11 @@ export interface components {
             id: string;
             /** Title */
             title: string;
+            /**
+             * Slug
+             * @description URL slug (immutable once published) for breadcrumb-style student links.
+             */
+            slug?: string | null;
             /** Description */
             description?: string | null;
             /**
@@ -14156,6 +14176,11 @@ export interface components {
             id: string;
             /** Title */
             title: string;
+            /**
+             * Slug
+             * @description URL slug (immutable once published) for breadcrumb-style student links.
+             */
+            slug?: string | null;
         };
         /**
          * ReadinessWarningRead

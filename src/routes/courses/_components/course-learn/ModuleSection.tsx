@@ -184,6 +184,20 @@ function badgeForRow(
 }
 
 /**
+ * URL ref for a quiz row: prefer the item slug (breadcrumb shape) and fall
+ * back to the id for targets predating slugs. The learner quiz route resolves
+ * either form.
+ */
+function quizHrefRef(fi: FlatItem): string {
+  return fi.item.target?.slug || fi.item.target?.id || "";
+}
+
+/** Same slug-preferred policy for interview rows (`$moduleId` param). */
+function interviewHrefRef(fi: FlatItem): string {
+  return fi.item.target?.slug || fi.item.target?.id || "";
+}
+
+/**
  * A single curriculum row. Lessons are buttons that swap the player, quizzes
  * and interviews are links into their own sub-routes, and an interview with a
  * live session is disabled in favour of a "continue" card.
@@ -263,7 +277,7 @@ function CurriculumItemRow({
     return (
       <Link
         to="/courses/$slug/quiz/$quizId"
-        params={{ slug, quizId }}
+        params={{ slug, quizId: quizHrefRef(fi) }}
         search={{ start: false }}
         className={className}
       >
@@ -283,7 +297,7 @@ function CurriculumItemRow({
       return (
         <InterviewInProgressCard
           slug={slug}
-          configId={configId}
+          configId={interviewHrefRef(fi)}
           className={className}
           inner={inner}
           t={t}
@@ -294,7 +308,7 @@ function CurriculumItemRow({
     return (
       <Link
         to="/courses/$slug/interview/$moduleId"
-        params={{ slug, moduleId: configId }}
+        params={{ slug, moduleId: interviewHrefRef(fi) }}
         className={className}
       >
         {inner}

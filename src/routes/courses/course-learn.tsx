@@ -481,20 +481,22 @@ function useLearnNavigation({
 }) {
   function openLesson(idx: number) {
     setActiveIdx(idx);
-    // Persist the opened lesson id in the URL (?item=<lessonId>) so that
+    // Persist the opened lesson in the URL (?item=<lesson-slug|id>) so that
     // returning from a quiz/interview sub-route — or refreshing — restores
     // this content view at the right lesson instead of bouncing back to the
-    // course-home summary (Moodle-authentic resume behavior). Falls back to
-    // the lesson index when the target id is missing.
+    // course-home summary (Moodle-authentic resume behavior). Prefers the
+    // breadcrumb slug; falls back to id, then index, when a target predates
+    // slugs or was slimmed out of the tree.
     //
     // PUSHES a history entry (no `replace`). With replace:true the plain
     // /learn entry was overwritten, so Back from a lesson skipped the Learn
     // page entirely and landed on the course page.
-    const openedId = lessonItems[idx]?.item.target?.id;
+    const opened = lessonItems[idx]?.item.target;
+    const openedRef = opened?.slug || opened?.id || String(idx);
     void navigate({
       to: "/courses/$slug/learn",
       params: { slug },
-      search: (prev) => ({ ...prev, item: openedId ?? String(idx) }),
+      search: (prev) => ({ ...prev, item: openedRef }),
     });
   }
 
@@ -513,11 +515,17 @@ function useLearnNavigation({
 
   // Restore / follow the ?item= param: when it changes (initial mount, browser
   // back from a quiz, or a deep-link) move activeIdx to the matching lesson and
-  // leave the home view. Matches by lesson id first, then by numeric index
-  // fallback. No-op when the param is absent so the home landing is preserved.
+  // leave the home view. Matches by slug first (breadcrumb URLs), then by
+  // lesson id, then by numeric index fallback. No-op when the param is absent
+  // so the home landing is preserved.
   useEffect(() => {
     if (!search.item || lessonItems.length === 0) return;
-    let idx = lessonItems.findIndex((li) => li.item.target?.id === search.item);
+    let idx = lessonItems.findIndex(
+      (li) => li.item.target?.slug === search.item,
+    );
+    if (idx < 0) {
+      idx = lessonItems.findIndex((li) => li.item.target?.id === search.item);
+    }
     if (idx < 0) {
       const asNum = Number(search.item);
       if (Number.isInteger(asNum) && asNum >= 0 && asNum < lessonItems.length) {
