@@ -23,6 +23,27 @@ import { cn } from "@/lib/utils";
  * tracking — nothing records which version a user agreed to. Claiming these are
  * binding terms while neither is true would be worse than showing nothing.
  */
+/**
+ * Typographic convention for policy documents. Every /policy/$slug page
+ * (privacy, cookies, terms, learning-program, career-path) renders through
+ * this same component, so the convention is defined here once:
+ *
+ * - section headings (## ) are LARGE, bold, with generous space above and a
+ *   snug gap to the paragraph they introduce — reads as a formal document,
+ *   not a chat thread;
+ * - paragraphs get comfortable vertical rhythm + relaxed leading;
+ * - list items separate; emphasized terms stay on-color.
+ *
+ * Overrides ride on Tailwind typography's prose-* modifiers, which beat the
+ * plugin's :where() defaults.
+ */
+const POLICY_BODY_PROSE =
+  "prose-h2:first:mt-0 prose-h2:mt-8 prose-h2:mb-3 prose-h2:text-xl " +
+  "prose-h2:font-bold prose-h2:tracking-tight " +
+  "prose-p:my-4 prose-p:leading-relaxed prose-li:my-1.5 " +
+  "prose-strong:font-semibold prose-strong:text-m3-on-surface " +
+  "prose-a:underline-offset-2";
+
 export default function PolicyPage() {
   const { slug } = useParams({ strict: false }) as { slug?: string };
 
@@ -72,14 +93,14 @@ export default function PolicyPage() {
           Help &amp; FAQ
         </Link>
 
-        <header className="mb-6">
-          <span className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-m3-primary-fixed">
+        <header className="mb-8">
+          <span className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-m3-primary-fixed">
             <FileText className="h-5 w-5 text-m3-primary" />
           </span>
-          <h1 className="font-headline text-3xl font-bold text-m3-on-surface">
+          <h1 className="font-headline text-3xl font-bold leading-tight text-m3-on-surface">
             {doc.title}
           </h1>
-          <p className="mt-2 text-sm text-m3-on-surface-variant">
+          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-m3-on-surface-variant">
             Last updated {doc.lastUpdated}
           </p>
         </header>
@@ -97,7 +118,7 @@ export default function PolicyPage() {
           </p>
         </div>
 
-        <RichContent value={doc.body} format="markdown" />
+        <RichContent value={doc.body} format="markdown" className={POLICY_BODY_PROSE} />
 
         {/* Sibling policies, so a reader can move between them directly. */}
         <nav className="mt-12 border-t border-m3-outline-variant/20 pt-6">
