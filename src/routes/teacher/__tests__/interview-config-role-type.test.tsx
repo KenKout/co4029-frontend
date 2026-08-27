@@ -41,12 +41,15 @@ const BASE_DRAFT = {
   security_incident_summary_enabled: true,
 };
 
-function question(type: InterviewQuestionType): InterviewQuestionAuthoring {
+function question(
+  type: InterviewQuestionType,
+  reviewStatus: "approved" | "draft" = "approved",
+): InterviewQuestionAuthoring {
   return {
-    id: `q-${type}`,
+    id: `q-${type}-${reviewStatus}`,
     prompt_text: `Question ${type}`,
     question_type: type,
-    review_status: "approved",
+    review_status: reviewStatus,
     position: 1,
   } as InterviewQuestionAuthoring;
 }
@@ -106,6 +109,13 @@ describe("interviewer role option / coverage warning", () => {
   it("does not warn when the bank contains the role's type", () => {
     renderCard("backend_tech_lead", [question("technical"), question("behavioral")]);
     expect(warningText()).toBeNull();
+  });
+
+  it("warns when the bank only has DRAFT questions of the role's type", () => {
+    // Only approved questions can be asked — a draft of the right type does
+    // not cover the role yet.
+    renderCard("backend_tech_lead", [question("technical", "draft")]);
+    expect(warningText()).toContain("Kho câu hỏi không có câu hỏi Kỹ thuật");
   });
 
   it("never warns for the generic assistant (no preferred type)", () => {

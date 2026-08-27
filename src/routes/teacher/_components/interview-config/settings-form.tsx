@@ -54,7 +54,7 @@ export function SettingsForm({
       conducted or graded are frozen (the backend PATCH returns 409 for them),
       so the form dims them rather than inviting an edit that cannot save. */
   status: string | null | undefined;
-  /** Non-deleted questions in the config's bank (role-coverage warning). */
+  /** Questions in the config's bank (role-coverage warning counts approved). */
   questions?: InterviewQuestionAuthoring[];
   /** Learning-outcomes panel, injected between Guidance and Security so the
       outcomes sit above the (now bottom-most) Security & Integrity block. */

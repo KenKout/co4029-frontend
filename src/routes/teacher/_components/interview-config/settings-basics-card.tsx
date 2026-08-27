@@ -35,7 +35,7 @@ export function SettingsBasicsCard({
   status,
   questions = [],
 }: Omit<SettingsFieldsetProps, "frozenReason"> & {
-  /** Non-deleted questions in the config's bank, for the role-coverage warning. */
+  /** Questions in the config's bank — coverage warning counts approved ones. */
   questions?: InterviewQuestionAuthoring[];
 }) {
   const { t } = useTranslation();
@@ -106,8 +106,15 @@ export function SettingsBasicsCard({
             const role =
               draft.persona_profile.interviewer_role ?? "generic_assistant";
             const type = preferredQuestionTypeForRole(role);
+            // Only APPROVED questions can actually be asked (a draft question
+            // is invisible to the run), so coverage counts approved alone.
             const missing =
-              type != null && !questions.some((q) => q.question_type === type);
+              type != null &&
+              !questions.some(
+                (q) =>
+                  q.question_type === type &&
+                  q.review_status === "approved",
+              );
             if (!missing) return null;
             const typeLabel = t(
               `teacher_interview_config.question_type.${type}`,
