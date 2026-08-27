@@ -1,7 +1,3 @@
-import { useTranslation } from "react-i18next";
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import type { QuizAttemptRead, QuizPublic } from "@/lib/api/types";
 import { deriveIntroState } from "@/routes/courses/_components/quiz-intro-panel/helpers";
@@ -43,24 +39,10 @@ export function QuizIntroPanel({
   slug: string;
   courseTitle?: string | null;
 }) {
-  const { t } = useTranslation();
   const intro = deriveIntroState(quiz, attempts);
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex items-center gap-3 flex-wrap -ml-3">
-        <Link to="/courses/$slug/learn" params={{ slug }}>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="rounded-xl text-m3-on-surface-variant hover:text-m3-primary gap-1.5 text-xs font-bold px-3"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {t("course_quiz.actions.back_to_course")}
-          </Button>
-        </Link>
-      </div>
-
       <div className="w-full space-y-6">
         <GlassCard className="p-8 sm:p-10 text-center">
           <IntroOverviewHeader

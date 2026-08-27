@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Link, useParams, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 
@@ -11,15 +11,20 @@ import { useCourseBySlug, useCourseContent } from "@/lib/api/hooks/courses";
 import { useStreamUrl } from "@/lib/api/hooks/materials";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
 import { LessonKnowledgeMap } from "@/routes/courses/_components/LessonKnowledgeMap";
+import { CurriculumSidebar } from "@/routes/courses/_components/course-learn/CurriculumSidebar";
 import { ReadingLessonBody } from "@/routes/courses/_components/course-learn/ReadingLessonBody";
 import { LessonPlayerFrame, VideoEngagementTracker } from "@/routes/courses/_components/course-learn/LessonPlayerFrame";
 import {
   useCurriculumItems,
+  useInProgressInterviewSessions,
   useModuleItemsMap,
+  useMyInterviewProgress,
+  useMyQuizProgress,
 } from "@/routes/courses/_components/course-learn/use-curriculum";
-import { useActiveLessonContent } from "@/routes/courses/_components/course-learn/use-lesson-content";
-import type { FlatItem } from "@/routes/courses/_components/course-learn/types";
-import type { CoursePublic, LessonPublic } from "@/lib/api/types";
+import { useActiveLessonContent, useLessonStatusMap } from "@/routes/courses/_components/course-learn/use-lesson-content";
+import { earliestPendingItemId, itemStateFor } from "@/routes/courses/_components/course-learn/helpers";
+import type { CurriculumProps, FlatItem } from "@/routes/courses/_components/course-learn/types";
+import type { CoursePublic, LessonPublic, ModulePublic } from "@/lib/api/types";
 import { useQuizAttemptSession } from "@/lib/quiz/use-quiz-attempt-session";
 import { QuizIntroStage } from "@/routes/courses/_components/course-quiz/QuizIntroStage";
 import { QuizTakingStage } from "@/routes/courses/_components/course-quiz/QuizTakingStage";
@@ -62,7 +67,7 @@ export default function CourseLearnItemPage() {
   }, [contentQuery.data]);
 
   const itemsByModule = useModuleItemsMap(sortedModules);
-  const { flatItems } = useCurriculumItems(sortedModules, itemsByModule, t);
+  const { flatItems, lessonItems } = useCurriculumItems(sortedModules, itemsByModule, t);
 
   const matched = useMemo<FlatItem | null>(() => {
     if (!itemSlug || !flatItems.length) return null;
@@ -134,6 +139,9 @@ export default function CourseLearnItemPage() {
       itemTitle={itemTitle}
       itemSlug={itemSlug}
       start={search.start}
+      sortedModules={sortedModules}
+      flatItems={flatItems}
+      lessonItems={lessonItems}
     />
   );
 }
@@ -150,6 +158,9 @@ function MatchedItemView({
   itemTitle,
   itemSlug,
   start,
+  sortedModules,
+  flatItems,
+  lessonItems,
 }: {
   slug: string;
   course: CoursePublic;
@@ -157,6 +168,9 @@ function MatchedItemView({
   itemTitle: string;
   itemSlug: string;
   start: unknown;
+  sortedModules: ModulePublic[];
+  flatItems: FlatItem[];
+  lessonItems: FlatItem[];
 }) {
   const { t } = useTranslation();
   const breadcrumb = (
@@ -176,7 +190,14 @@ function MatchedItemView({
     return (
       <>
         {breadcrumb}
-        <LessonItemView slug={slug} courseId={course.id} matched={matched} />
+        <LessonItemView
+          slug={slug}
+          courseId={course.id}
+          matched={matched}
+          sortedModules={sortedModules}
+          flatItems={flatItems}
+          lessonItems={lessonItems}
+        />
       </>
     );
   }
@@ -212,10 +233,75 @@ function MatchedItemView({
   return null;
 }
 
-function LessonItemView({ courseId, matched }: { slug: string; courseId: string; matched: FlatItem }) {
+function LessonItemView({
+  slug,
+  courseId,
+  matched,
+  sortedModules,
+  flatItems,
+  lessonItems,
+}: {
+  slug: string;
+  courseId: string;
+  matched: FlatItem;
+  sortedModules: ModulePublic[];
+  flatItems: FlatItem[];
+  lessonItems: FlatItem[];
+}) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { activeLessonId, activeLesson, lessonUnavailable } = useActiveLessonContent(matched as FlatItem, "Lesson Notes" as never);
   const playerRef = useRef<HTMLDivElement | null>(null);
+
+  // Curriculum rail state — same hook order as course-learn.tsx (quiz
+  // progress before interview progress, see use-curriculum.ts).
+  const lessonStatusMap = useLessonStatusMap(courseId);
+  const quizProgressMap = useMyQuizProgress(courseId);
+  const interviewProgressMap = useMyInterviewProgress(courseId);
+  const inProgressByConfigId = useInProgressInterviewSessions(courseId);
+
+  const itemState = (fi: FlatItem) =>
+    itemStateFor(
+      fi,
+      activeLessonId,
+      lessonStatusMap,
+      quizProgressMap,
+      interviewProgressMap,
+    );
+  // Earliest item still to do — highlighted in the rail so the eye lands on
+  // the next step after finishing this lesson.
+  const nextItemId = useMemo(
+    () => earliestPendingItemId(flatItems, itemState),
+    [flatItems, itemState],
+  );
+  // Selecting another curriculum item navigates to the same unified item
+  // route (slug preferred, id fallback for UUID-era bookmarks). Same
+  // index-into-lessonItems contract as course-learn.tsx openLesson().
+  const onSelect = (idx: number) => {
+    const fi = lessonItems[idx];
+    if (!fi) return;
+    void navigate({
+      to: "/courses/$slug/learn/$itemSlug",
+      params: {
+        slug,
+        itemSlug: fi.item.target?.slug || fi.item.target?.id || fi.item.id,
+      },
+      search: { start: false },
+    });
+  };
+
+  const curriculum: CurriculumProps = {
+    sortedModules,
+    flatItems,
+    lessonItems,
+    itemState,
+    onSelect,
+    slug,
+    activeModuleId: matched.item.module_id,
+    inProgressByConfigId,
+    interviewProgressMap,
+    nextItemId,
+  };
 
   if (lessonUnavailable) {
     return (
@@ -242,9 +328,14 @@ function LessonItemView({ courseId, matched }: { slug: string; courseId: string;
   return (
     <div className="min-h-screen pb-24">
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pt-2">
-        <div className="flex flex-col gap-6">
-          <LessonContentPane activeLesson={activeLesson} courseId={courseId} playerRef={playerRef} activeLessonId={activeLessonId} />
-          <LessonKnowledgeMap lessonId={activeLesson.id} />
+        {/* 70/30: player + knowledge map in the main column, curriculum rail
+            on the right (desktop) / below the content on mobile. */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          <div className="flex-1 min-w-0 flex flex-col gap-6">
+            <LessonContentPane activeLesson={activeLesson} courseId={courseId} playerRef={playerRef} activeLessonId={activeLessonId} />
+            <LessonKnowledgeMap lessonId={activeLesson.id} />
+          </div>
+          <CurriculumSidebar {...curriculum} />
         </div>
       </div>
     </div>
