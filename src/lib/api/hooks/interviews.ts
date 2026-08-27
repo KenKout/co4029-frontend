@@ -237,6 +237,25 @@ export function useUpdateInterviewConfig(configId: string | null | undefined) {
         payload,
       ),
     onSuccess: (config) => {
+      // The authoring page caches a compound response
+      // ({ config, questions, outcomes }), while PATCH returns only the updated
+      // config. Put that response into the compound cache immediately so the
+      // settings draft is compared with the value that was actually persisted.
+      // Invalidating alone leaves the old config visible until the background
+      // GET finishes (or indefinitely if that refetch fails), so the footer
+      // keeps saying "Unsaved changes" after a successful save.
+      qc.setQueryData<InterviewForAuthoringPublic | InterviewConfigAuthoring>(
+        queryKeys.interviews.configAuthoring(config.id),
+        (current) => {
+          if (!current) return current;
+          if ("config" in current) {
+            return { ...current, config };
+          }
+          // Keep the deprecated bare-config reader coherent too; it currently
+          // shares this query key with the compound authoring reader.
+          return config;
+        },
+      );
       void qc.invalidateQueries({
         queryKey: queryKeys.interviews.configAuthoring(config.id),
       });

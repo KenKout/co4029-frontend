@@ -153,6 +153,7 @@ export default function InterviewConfigPage() {
     approvedCount: page.approvedCount,
     publishDisabled,
     setJustSaved,
+    setDraft,
     setActiveRunId,
     setConfirmDelete,
     onDeleted: () =>

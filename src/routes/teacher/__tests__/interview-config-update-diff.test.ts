@@ -25,7 +25,9 @@ import type { useConfigMutations } from "@/routes/teacher/_components/interview-
  * or the teacher gets the 409 they are trying to avoid.
  */
 
-function savedConfig(overrides: Partial<InterviewConfigAuthoring> = {}): InterviewConfigAuthoring {
+function savedConfig(
+  overrides: Partial<InterviewConfigAuthoring> = {},
+): InterviewConfigAuthoring {
   return {
     id: "00000000-0000-0000-0001-000000000001",
     course_id: "00000000-0000-0000-0000-000000000002",
@@ -128,7 +130,12 @@ describe("isDraftDirty", () => {
 
 describe("saveSettings guards against a no-op save", () => {
   function makeActions(draft: SettingsDraft) {
-    const updateMutateAsync = vi.fn().mockResolvedValue({ id: "c" });
+    const setDraft = vi.fn();
+    const updateMutateAsync = vi
+      .fn()
+      .mockImplementation((patch: Partial<InterviewConfigAuthoring>) =>
+        Promise.resolve(savedConfig(patch)),
+      );
     const t = ((key: string) => key) as TFunction;
     const actions = createConfigActions({
       t,
@@ -142,11 +149,31 @@ describe("saveSettings guards against a no-op save", () => {
           isPending: false,
           reset: vi.fn(),
         },
-        publishConfig: { mutateAsync: vi.fn(), isPending: false, reset: vi.fn() },
-        archiveConfig: { mutateAsync: vi.fn(), isPending: false, reset: vi.fn() },
-        unarchiveConfig: { mutateAsync: vi.fn(), isPending: false, reset: vi.fn() },
-        unpublishConfig: { mutateAsync: vi.fn(), isPending: false, reset: vi.fn() },
-        deleteConfig: { mutateAsync: vi.fn(), isPending: false, reset: vi.fn() },
+        publishConfig: {
+          mutateAsync: vi.fn(),
+          isPending: false,
+          reset: vi.fn(),
+        },
+        archiveConfig: {
+          mutateAsync: vi.fn(),
+          isPending: false,
+          reset: vi.fn(),
+        },
+        unarchiveConfig: {
+          mutateAsync: vi.fn(),
+          isPending: false,
+          reset: vi.fn(),
+        },
+        unpublishConfig: {
+          mutateAsync: vi.fn(),
+          isPending: false,
+          reset: vi.fn(),
+        },
+        deleteConfig: {
+          mutateAsync: vi.fn(),
+          isPending: false,
+          reset: vi.fn(),
+        },
       } as unknown as ReturnType<typeof useConfigMutations>,
       generate: {
         mutateAsync: vi.fn(),
@@ -157,11 +184,12 @@ describe("saveSettings guards against a no-op save", () => {
       approvedCount: 0,
       publishDisabled: false,
       setJustSaved: vi.fn(),
+      setDraft,
       setActiveRunId: vi.fn(),
       setConfirmDelete: vi.fn(),
       onDeleted: vi.fn(),
     });
-    return { actions, updateMutateAsync };
+    return { actions, setDraft, updateMutateAsync };
   }
 
   it("does NOT call the API and returns false for an empty PATCH", async () => {
@@ -183,7 +211,7 @@ describe("saveSettings guards against a no-op save", () => {
   });
 
   it("PATCHes a real change and reports success", async () => {
-    const { actions, updateMutateAsync } = makeActions({
+    const { actions, setDraft, updateMutateAsync } = makeActions({
       ...draftFromConfig(savedConfig()),
       title: "Voice demo (renamed)",
     });
@@ -191,6 +219,11 @@ describe("saveSettings guards against a no-op save", () => {
     const ok = await actions.saveSettings();
 
     expect(ok).toBe(true);
-    expect(updateMutateAsync).toHaveBeenCalledWith({ title: "Voice demo (renamed)" });
+    expect(updateMutateAsync).toHaveBeenCalledWith({
+      title: "Voice demo (renamed)",
+    });
+    expect(setDraft).toHaveBeenCalledWith(
+      draftFromConfig(savedConfig({ title: "Voice demo (renamed)" })),
+    );
   });
 });

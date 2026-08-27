@@ -26,7 +26,10 @@ import {
   runConfigAction,
   splitTopics,
 } from "@/routes/teacher/_components/interview-config/config-actions";
-import { buildConfigUpdatePayload, draftFromConfig } from "@/routes/teacher/_components/interview-config/draft-mapping";
+import {
+  buildConfigUpdatePayload,
+  draftFromConfig,
+} from "@/routes/teacher/_components/interview-config/draft-mapping";
 import type { useConfigMutations } from "@/routes/teacher/_components/interview-config/use-config-mutations";
 
 export interface ConfigActionsDeps {
@@ -41,6 +44,7 @@ export interface ConfigActionsDeps {
   approvedCount: number;
   publishDisabled: boolean;
   setJustSaved: (value: boolean) => void;
+  setDraft: (value: SettingsDraft) => void;
   setActiveRunId: (value: string | null) => void;
   setConfirmDelete: (value: boolean) => void;
   /** Navigate back to the owning course once the config is gone. */
@@ -92,7 +96,12 @@ export function createConfigActions(deps: ConfigActionsDeps): ConfigActions {
         toast.error(t("teacher_interview_config.errors.nothing_to_save"));
         return false;
       }
-      await mutations.updateConfig.mutateAsync(payload);
+      const savedConfig = await mutations.updateConfig.mutateAsync(payload);
+      // Rebase the controlled form from the server response in the same save
+      // operation. Waiting for the invalidated authoring query to refetch can
+      // leave the footer comparing against stale state and showing "Unsaved
+      // changes" beside a successful toast.
+      deps.setDraft(draftFromConfig(savedConfig));
       deps.setJustSaved(true);
       window.setTimeout(() => deps.setJustSaved(false), 2500);
       toast.success(t("teacher_interview_config.toasts.config_saved"));
