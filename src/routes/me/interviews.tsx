@@ -52,7 +52,13 @@ const BADGE_CLASS: Record<VerdictState, string> = {
   not_graded: "bg-slate-100 text-slate-600",
 };
 
-function SessionRow({ item }: { item: InterviewSessionPublic }) {
+function SessionRow({
+  item,
+  showTitle,
+}: {
+  item: InterviewSessionPublic;
+  showTitle?: boolean;
+}) {
   const { t } = useTranslation();
   const formatDate = useFormatDate();
   const state = verdictState(item);
@@ -71,7 +77,11 @@ function SessionRow({ item }: { item: InterviewSessionPublic }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-start gap-2">
           <h3 className="font-headline font-semibold text-sm text-m3-on-surface line-clamp-1 leading-snug flex-1 transition-colors group-hover:text-m3-primary">
-            {title}
+            {/* Config-filtered: the interview title is already the page header,
+                so the row leads with the attempt number instead of repeating it. */}
+            {showTitle
+              ? title
+              : t("me_interviews.attempt", { n: item.attempt_number })}
           </h3>
           <span
             className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${BADGE_CLASS[state]}`}
@@ -86,7 +96,9 @@ function SessionRow({ item }: { item: InterviewSessionPublic }) {
           </span>
         </div>
         <div className="mt-1 flex items-center gap-3 text-[11px] text-m3-on-surface-variant">
-          <span>{t("me_interviews.attempt", { n: item.attempt_number })}</span>
+          {showTitle && (
+            <span>{t("me_interviews.attempt", { n: item.attempt_number })}</span>
+          )}
           <span>{formatDate(item.started_at)}</span>
         </div>
       </div>
@@ -115,11 +127,17 @@ export default function MyInterviewsPage() {
     onPageSizeChange: undefined,
   });
 
+  // Config-filtered: every row belongs to one interview, so the page header
+  // carries that interview's title (the state badge + attempt number carry the
+  // rest) instead of the generic "My interviews".
+  const filteredTitle =
+    search.config != null ? (items[0]?.interview_title ?? null) : null;
+
   return (
     <div className="max-w-4xl mx-auto pb-16 space-y-8">
       <header className="pt-2">
         <h1 className="font-headline font-black text-3xl sm:text-4xl text-m3-on-surface tracking-tight">
-          {t("me_interviews.title")}
+          {filteredTitle ?? t("me_interviews.title")}
         </h1>
         <p className="mt-2 text-m3-on-surface-variant text-sm sm:text-base max-w-xl">
           {t("me_interviews.subtitle")}
@@ -177,7 +195,11 @@ export default function MyInterviewsPage() {
           <>
             <div className="space-y-2">
               {pagination.pageRows.map((s) => (
-                <SessionRow key={s.session_id} item={s} />
+                <SessionRow
+                  key={s.session_id}
+                  item={s}
+                  showTitle={search.config == null}
+                />
               ))}
             </div>
             {items.length > PAGE_SIZE && (
