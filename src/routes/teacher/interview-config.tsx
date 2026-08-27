@@ -24,7 +24,10 @@ import type {
   OutcomeFilterSignal,
 } from "@/routes/teacher/_components/interview-config/config-panels";
 import { ConfigWorkspace } from "@/routes/teacher/_components/interview-config/config-workspace";
-import { draftFromConfig } from "@/routes/teacher/_components/interview-config/draft-mapping";
+import {
+  draftFromConfig,
+  isDraftDirty,
+} from "@/routes/teacher/_components/interview-config/draft-mapping";
 import { createTabGuard } from "@/routes/teacher/_components/interview-config/tab-guard";
 import { useConfigMutations } from "@/routes/teacher/_components/interview-config/use-config-mutations";
 import { useConfigPageData } from "@/routes/teacher/_components/interview-config/use-config-page-data";
@@ -100,15 +103,16 @@ export default function InterviewConfigPage() {
     if (config) setDraft(draftFromConfig(config));
   }, [config]);
 
-  // Whether the settings form has edits not yet persisted. Compares the live
-  // draft against the saved config (serialized the same way) so the header can
-  // show Saving… / Unsaved changes / Saved and the user never wonders whether
-  // they still need to press "Save settings".
-  const settingsDirty = useMemo(() => {
-    if (!draft || !config) return false;
-    const saved = draftFromConfig(config);
-    return JSON.stringify(draft) !== JSON.stringify(saved);
-  }, [draft, config]);
+  // Whether the settings form has edits not yet persisted. Compares the PATCH
+  // payloads (not the raw draft strings) so an edit that normalizes to the
+  // stored value — a blank numeric knob cleared to its shipped default, a
+  // trailing space on the title — reads as clean: the header never shows
+  // Saving…/Unsaved for a change that cannot be persisted, and the tab switch
+  // does not raise a dialog whose "Save now" would silently no-op.
+  const settingsDirty = useMemo(
+    () => Boolean(draft && config && isDraftDirty(draft, config)),
+    [draft, config],
+  );
 
   // Remembered target of a tab switch the unsaved-changes guard intercepted.
   const [pendingTab, setPendingTab] = useState<TabId | null>(null);

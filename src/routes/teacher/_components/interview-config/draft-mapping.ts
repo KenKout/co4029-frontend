@@ -175,6 +175,29 @@ export function buildConfigUpdatePayload(
   return changed as unknown as InterviewConfigUpdate;
 }
 
+/**
+ * True when saving the draft would actually change the stored config.
+ *
+ * Compares the PATCH payloads instead of the raw draft strings: several draft
+ * shapes normalize to the same wire value (the title is trimmed, a blank
+ * numeric knob falls back to its shipped default, persona traits equal to the
+ * preset are dropped from the override). A raw string diff over-reports dirty
+ * for those — an edit that maps to the stored value would open the
+ * unsaved-changes dialog and then "save" as a silent no-op PATCH (feedback:
+ * config 8d34193b, clear fields at default → PATCH {} → 200 with no write).
+ * Basing dirty on the payload keeps the dialog, the footer label and any
+ * "saved" claim honest.
+ */
+export function isDraftDirty(
+  draft: SettingsDraft,
+  config: InterviewConfigAuthoring,
+): boolean {
+  return (
+    Object.keys(buildConfigUpdatePayload(draft, draftFromConfig(config)))
+      .length > 0
+  );
+}
+
 function buildFullConfigUpdatePayload(
   draft: SettingsDraft,
 ): InterviewConfigUpdate {

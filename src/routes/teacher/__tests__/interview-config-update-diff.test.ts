@@ -1,11 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+import type { TFunction } from "i18next";
+import { toast } from "sonner";
 
 import type { InterviewConfigAuthoring } from "@/lib/api/types";
 import {
   buildConfigUpdatePayload,
   draftFromConfig,
+  isDraftDirty,
 } from "@/routes/teacher/_components/interview-config/draft-mapping";
+import { createConfigActions } from "@/routes/teacher/_components/interview-config/config-page-actions";
 import type { SettingsDraft } from "@/lib/interview/config-draft";
+import { useGenerateInterviewQuestions } from "@/lib/api/hooks/interviews";
+import type { useConfigMutations } from "@/routes/teacher/_components/interview-config/use-config-mutations";
 
 /**
  * The published-freeze PATCH contract.
@@ -70,9 +77,120 @@ describe("buildConfigUpdatePayload diffing", () => {
   });
 
   it("sends the full payload when no baseline is supplied (legacy callers)", () => {
-    const draft = draftFromConfig(savedConfig()) as SettingsDraft;
+    const draft = draftFromConfig(savedConfig());
     const payload = buildConfigUpdatePayload(draft);
     expect(Object.keys(payload).length).toBeGreaterThan(10);
     expect(payload.title).toBe("Voice demo");
+  });
+});
+
+describe("isDraftDirty", () => {
+  const config = savedConfig();
+
+  it("is clean when the draft matches the saved config", () => {
+    const draft = draftFromConfig(config);
+    expect(isDraftDirty(draft, config)).toBe(false);
+  });
+
+  it("is clean for an edit that normalizes to the stored value (title whitespace)", () => {
+    const draft: SettingsDraft = {
+      ...draftFromConfig(config),
+      title: "Voice demo ",
+    };
+    expect(isDraftDirty(draft, config)).toBe(false);
+  });
+
+  it("is clean for a numeric knob cleared while it already holds its default", () => {
+    // "" and "3" both serialize to the shipped default 3 → nothing to PATCH.
+    const draft: SettingsDraft = {
+      ...draftFromConfig(config),
+      max_hints_per_question: "",
+    };
+    expect(isDraftDirty(draft, config)).toBe(false);
+  });
+
+  it("is dirty when a real value is cleared (nullable field)", () => {
+    const draft: SettingsDraft = {
+      ...draftFromConfig(config),
+      time_limit_minutes: "",
+    };
+    expect(isDraftDirty(draft, config)).toBe(true);
+  });
+
+  it("is dirty for any payload-visible change", () => {
+    const rename: SettingsDraft = {
+      ...draftFromConfig(config),
+      title: "Voice demo (renamed)",
+    };
+    expect(isDraftDirty(rename, config)).toBe(true);
+  });
+});
+
+describe("saveSettings guards against a no-op save", () => {
+  function makeActions(draft: SettingsDraft) {
+    const updateMutateAsync = vi.fn().mockResolvedValue({ id: "c" });
+    const t = ((key: string) => key) as TFunction;
+    const actions = createConfigActions({
+      t,
+      draft,
+      config: savedConfig(),
+      courseId: "00000000-0000-0000-0000-000000000002",
+      generationForm: {} as never,
+      mutations: {
+        updateConfig: {
+          mutateAsync: updateMutateAsync,
+          isPending: false,
+          reset: vi.fn(),
+        },
+        publishConfig: { mutateAsync: vi.fn(), isPending: false, reset: vi.fn() },
+        archiveConfig: { mutateAsync: vi.fn(), isPending: false, reset: vi.fn() },
+        unarchiveConfig: { mutateAsync: vi.fn(), isPending: false, reset: vi.fn() },
+        unpublishConfig: { mutateAsync: vi.fn(), isPending: false, reset: vi.fn() },
+        deleteConfig: { mutateAsync: vi.fn(), isPending: false, reset: vi.fn() },
+      } as unknown as ReturnType<typeof useConfigMutations>,
+      generate: {
+        mutateAsync: vi.fn(),
+        isPending: false,
+        reset: vi.fn(),
+      } as unknown as ReturnType<typeof useGenerateInterviewQuestions>,
+      isArchived: false,
+      approvedCount: 0,
+      publishDisabled: false,
+      setJustSaved: vi.fn(),
+      setActiveRunId: vi.fn(),
+      setConfirmDelete: vi.fn(),
+      onDeleted: vi.fn(),
+    });
+    return { actions, updateMutateAsync };
+  }
+
+  it("does NOT call the API and returns false for an empty PATCH", async () => {
+    const toastError = vi.spyOn(toast, "error").mockImplementation(() => "");
+    const draft: SettingsDraft = {
+      ...draftFromConfig(savedConfig()),
+      title: "Voice demo ",
+    };
+    const { actions, updateMutateAsync } = makeActions(draft);
+
+    const ok = await actions.saveSettings();
+
+    expect(ok).toBe(false);
+    expect(updateMutateAsync).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledWith(
+      "teacher_interview_config.errors.nothing_to_save",
+    );
+    toastError.mockRestore();
+  });
+
+  it("PATCHes a real change and reports success", async () => {
+    const { actions, updateMutateAsync } = makeActions({
+      ...draftFromConfig(savedConfig()),
+      title: "Voice demo (renamed)",
+    });
+
+    const ok = await actions.saveSettings();
+
+    expect(ok).toBe(true);
+    expect(updateMutateAsync).toHaveBeenCalledWith({ title: "Voice demo (renamed)" });
   });
 });

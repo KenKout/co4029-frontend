@@ -81,9 +81,18 @@ export function createConfigActions(deps: ConfigActionsDeps): ConfigActions {
       // "changed", so echoing the whole form back would 409 on the frozen
       // settings even though none of them moved.
       const baseline = draftFromConfig(deps.config);
-      await mutations.updateConfig.mutateAsync(
-        buildConfigUpdatePayload(draft, baseline),
-      );
+      const payload = buildConfigUpdatePayload(draft, baseline);
+      // A dirty draft can normalize to an EMPTY PATCH: the title trimmed to
+      // its stored value, or a numeric knob cleared while it already holds
+      // its shipped default ("", "" and "3" all map to 3 on the wire). A
+      // PATCH {} returns 200 and persists nothing, so reporting success here
+      // would fake a save (the dialog closes, the field snaps back). Surface
+      // it instead and keep the caller from claiming victory.
+      if (Object.keys(payload).length === 0) {
+        toast.error(t("teacher_interview_config.errors.nothing_to_save"));
+        return false;
+      }
+      await mutations.updateConfig.mutateAsync(payload);
       deps.setJustSaved(true);
       window.setTimeout(() => deps.setJustSaved(false), 2500);
       toast.success(t("teacher_interview_config.toasts.config_saved"));

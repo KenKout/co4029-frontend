@@ -3888,7 +3888,8 @@
       "questions_required": "Tạo câu hỏi trước khi xuất bản",
       "outcomes_required": "Thêm ít nhất một chuẩn đầu ra trước khi xuất bản",
       "publish_blocked_archived": "Bỏ lưu trữ phỏng vấn này trước khi xuất bản",
-      "question_count_min": "Số câu hỏi phải lớn hơn 0"
+      "question_count_min": "Số câu hỏi phải lớn hơn 0",
+      "nothing_to_save": "Không có gì để lưu — thay đổi trùng với giá trị đang lưu (để trống = dùng mặc định)"
     },
     "toasts": {
       "config_saved": "Đã lưu cấu hình",

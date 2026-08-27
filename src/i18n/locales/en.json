@@ -4015,7 +4015,8 @@
       "questions_required": "Generate questions before publishing",
       "outcomes_required": "Add at least one learning outcome before publishing",
       "publish_blocked_archived": "Unarchive this interview before publishing",
-      "question_count_min": "Number of questions must be greater than 0"
+      "question_count_min": "Number of questions must be greater than 0",
+      "nothing_to_save": "Nothing to save — the edit matches the stored value (blank fields use their default)"
     },
     "toasts": {
       "config_saved": "Configuration saved",
