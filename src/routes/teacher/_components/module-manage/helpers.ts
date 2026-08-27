@@ -105,11 +105,3 @@ export function computeModuleStats(module: CourseContentModule): ModuleStats {
   const draftCount = items.length - publishedCount;
   return { total: items.length, publishedCount, draftCount };
 }
-
-/** Slug seed for a freshly added lesson. */
-export function slugify(title: string) {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}

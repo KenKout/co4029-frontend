@@ -39,8 +39,8 @@ export function QuizReviewNotFound({
           {t("course_quiz_review.not_found_body")}
         </p>
         <Link
-          to="/courses/$slug/quiz/$quizId"
-          params={{ slug, quizId }}
+          to="/courses/$slug/learn/$itemSlug"
+          params={{ slug, itemSlug: quizId }}
           search={{ start: false }}
         >
           <Button className="rounded-xl gap-2">
@@ -103,8 +103,8 @@ export function ReviewScoreSummary({
       {/* Header: back · quiz name · attempt # */}
       <div className="flex items-center gap-2">
         <Link
-          to="/courses/$slug/quiz/$quizId"
-          params={{ slug, quizId }}
+          to="/courses/$slug/learn/$itemSlug"
+          params={{ slug, itemSlug: quizId }}
           search={{ start: false }}
         >
           <Button

@@ -19,9 +19,11 @@ import type {
 /**
  * Pure derivations lifted out of `ModuleItemRow` (a 254-line /
  * complexity-56 function whose icon / label / title / status chains accounted
- * for most of that score), `ModuleAccordion` (its item tallies + `itemStatus`)
- * and `AddLessonPills` (`slugify`). Every expression is carried over
+ * for most of that score) and `ModuleAccordion` (its item tallies +
+ * `itemStatus`). Every expression is carried over
  * character-for-character; only the surrounding function boundaries are new.
+ * (`AddLessonPills`' FE `slugify` lived here too; it was removed when the
+ * backend started auto-generating lesson slugs from titles — migration 0087.)
  */
 
 /** Lesson type shown on the row, falling back to `"video"`. */
@@ -148,14 +150,6 @@ export function computeModuleItemStats(
     draftItems,
     allPublished,
   };
-}
-
-/** Slug seed for a freshly added lesson. */
-export function slugify(title: string) {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
 }
 
 /**

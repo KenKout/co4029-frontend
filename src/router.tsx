@@ -124,6 +124,15 @@ const courseLearnRoute = createRoute({
   component: CourseLearnPage,
 });
 
+const courseLearnItemRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/courses/$slug/learn/$itemSlug",
+  validateSearch: (search: Record<string, unknown>) => ({
+    start: search.start === "1" || search.start === 1 || search.start === true,
+  }),
+  component: lazyRouteComponent(() => import("@/routes/courses/course-learn-item")),
+});
+
 const courseQuizRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/courses/$slug/quiz/$quizId",
@@ -685,6 +694,7 @@ const routeTree = rootRoute.addChildren([
     coursesRoute,
     courseDetailRoute,
     courseLearnRoute,
+    courseLearnItemRoute,
     courseQuizRoute,
     courseQuizReviewRoute,
     courseInterviewRoute,

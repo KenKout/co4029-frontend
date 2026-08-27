@@ -457,7 +457,11 @@
     "km_zoom_in": "Phóng to",
     "km_zoom_out": "Thu nhỏ",
     "km_fit": "Vừa khung nhìn",
-    "reading_preview_unavailable": "Xem trước nội tuyến không hỗ trợ trên thiết bị này — hãy mở tài liệu trong tab mới."
+    "reading_preview_unavailable": "Xem trước nội tuyến không hỗ trợ trên thiết bị này — hãy mở tài liệu trong tab mới.",
+    "breadcrumb_learn": "Học",
+    "item_not_found_title": "Không tìm thấy nội dung",
+    "item_not_found_body": "Không tồn tại nội dung “{{item}}” trong khóa học này. Nội dung có thể đã bị gỡ hoặc slug đã thay đổi.",
+    "back_to_learn": "Quay lại Học"
   },
   "placeholder": {
     "body": "Trang này sắp có. Quay lại sau khi quá trình chuyển API hoàn tất.",

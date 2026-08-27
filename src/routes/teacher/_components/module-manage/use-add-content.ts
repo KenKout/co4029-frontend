@@ -5,7 +5,6 @@ import { useCreateLesson } from "@/lib/api/hooks/teacher-courses";
 import { useCreateQuiz } from "@/lib/api/hooks/quizzes";
 import { useCreateInterviewConfig } from "@/lib/api/hooks/interviews";
 import { LESSON_TYPE_CONFIG } from "./constants";
-import { slugify } from "./helpers";
 import type { TranslateFn } from "./types";
 
 /**
@@ -41,7 +40,10 @@ export function useAddContent(options: {
     try {
       await createLesson.mutateAsync({
         title,
-        slug: `${slugify(title)}-${Date.now().toString(36)}`,
+        // No slug: the backend auto-generates it from the title (unique per
+        // module, -1/-2 collision suffixes) — the FE seed used to append a
+        // timestamp, which left breadcrumb URLs permanently stale after
+        // teachers renamed the placeholder title.
         lesson_type: lessonType as "video" | "reading",
       });
       toast.success(`${label} added`);

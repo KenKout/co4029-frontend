@@ -184,23 +184,19 @@ function badgeForRow(
 }
 
 /**
- * URL ref for a quiz row: prefer the item slug (breadcrumb shape) and fall
- * back to the id for targets predating slugs. The learner quiz route resolves
- * either form.
+ * URL ref for a curriculum row: prefer slug (breadcrumb shape), fall back to
+ * id for targets predating slugs. Used for the unified
+ * /courses/$slug/learn/$itemSlug route.
  */
-function quizHrefRef(fi: FlatItem): string {
-  return fi.item.target?.slug || fi.item.target?.id || "";
-}
-
-/** Same slug-preferred policy for interview rows (`$moduleId` param). */
-function interviewHrefRef(fi: FlatItem): string {
+function itemHrefRef(fi: FlatItem): string {
   return fi.item.target?.slug || fi.item.target?.id || "";
 }
 
 /**
- * A single curriculum row. Lessons are buttons that swap the player, quizzes
- * and interviews are links into their own sub-routes, and an interview with a
- * live session is disabled in favour of a "continue" card.
+ * A single curriculum row. Every item links into the unified breadcrumb
+ * route (/courses/$slug/learn/$itemSlug); an interview with a live session
+ * is disabled in favour of a "continue" card, and unwired rows degrade to
+ * the plain select button.
  */
 function CurriculumItemRow({
   fi,
@@ -227,38 +223,10 @@ function CurriculumItemRow({
 }) {
   const isQuiz = fi.item.item_type === "quiz";
   const isInterview = fi.item.item_type === "interview";
-  const quizId = isQuiz ? fi.item.target?.id : null;
   // Distinguishes "attempted but not passed" and "awaiting marking" from
   // "never opened", all three of which are otherwise the same pending row.
   const badge = badgeForRow(fi, interviewProgressMap);
-
-  // Visual hierarchy on the home surface: NEXT > ACTIVE(IN PROGRESS) >
-  // FUTURE > COMPLETED. Completed rows are deliberately muted; only the
-  // next-up item gets the boxed "Continue learning" treatment.
-  const className =
-    variant === "home"
-      ? cn(
-          "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
-          state === "completed" &&
-            "text-m3-outline font-normal hover:text-m3-on-surface-variant",
-          state === "active" &&
-            "bg-m3-secondary/10 text-m3-on-surface font-bold",
-          state === "pending" &&
-            !isNextUp &&
-            "text-m3-on-surface-variant font-medium hover:bg-m3-primary/5",
-          isNextUp &&
-            "border border-m3-primary/40 bg-m3-primary/5 shadow-sm font-bold text-m3-on-surface hover:bg-m3-primary/10",
-        )
-      : cn(
-          "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
-          state === "active" && "bg-m3-primary text-white shadow-md font-bold",
-          state === "completed" &&
-            "bg-m3-surface-container-lowest text-m3-primary shadow-sm font-medium hover:bg-m3-surface-container",
-          state === "pending" &&
-            "text-m3-on-surface-variant hover:bg-white/50 font-medium",
-          isNextUp &&
-            "bg-m3-secondary/10 font-bold text-m3-on-surface shadow-[inset_0_0_14px_2px_rgba(59,130,246,0.16)] hover:bg-m3-secondary/15",
-        );
+  const className = rowClassName(variant, state, isNextUp);
 
   const inner = (
     <CurriculumItemInner
@@ -273,42 +241,30 @@ function CurriculumItemRow({
     />
   );
 
-  if (isQuiz && quizId) {
+  // Every curriculum item resolves to the same breadcrumb route
+  // (/courses/$slug/learn/$itemSlug); lessons predating slugs fall back to
+  // their id, and unwired rows degrade to the plain select button.
+  const targetRef = itemHrefRef(fi);
+  const targetId = fi.item.target?.id;
+
+  if (isInterview && targetId && inProgressByConfigId.has(targetId)) {
     return (
-      <Link
-        to="/courses/$slug/quiz/$quizId"
-        params={{ slug, quizId: quizHrefRef(fi) }}
-        search={{ start: false }}
+      <InterviewInProgressCard
+        slug={slug}
+        configId={targetRef || targetId}
         className={className}
-      >
-        {inner}
-      </Link>
+        inner={inner}
+        t={t}
+      />
     );
   }
 
-  if (isInterview && fi.item.target?.id) {
-    const configId = fi.item.target.id;
-    const activeSession = inProgressByConfigId.get(configId);
-
-    // An interview session is still occurring for this config: disable
-    // the item (block starting a second session) and surface a compact
-    // "in progress" card with a Continue action below it.
-    if (activeSession) {
-      return (
-        <InterviewInProgressCard
-          slug={slug}
-          configId={interviewHrefRef(fi)}
-          className={className}
-          inner={inner}
-          t={t}
-        />
-      );
-    }
-
+  if (targetRef) {
     return (
       <Link
-        to="/courses/$slug/interview/$moduleId"
-        params={{ slug, moduleId: interviewHrefRef(fi) }}
+        to="/courses/$slug/learn/$itemSlug"
+        params={{ slug, itemSlug: targetRef }}
+        search={{ start: false }}
         className={className}
       >
         {inner}
@@ -325,6 +281,29 @@ function CurriculumItemRow({
       {inner}
     </Button>
   );
+}
+
+/** Row chrome shared by every item-type variant (home vs sidebar). */
+function rowClassName(
+  variant: "sidebar" | "home",
+  state: LessonState,
+  isNextUp: boolean,
+): string {
+  return variant === "home"
+    ? cn(
+        "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
+        state === "completed" && "text-m3-outline font-normal hover:text-m3-on-surface-variant",
+        state === "active" && "bg-m3-secondary/10 text-m3-on-surface font-bold",
+        state === "pending" && !isNextUp && "text-m3-on-surface-variant font-medium hover:bg-m3-primary/5",
+        isNextUp && "border border-m3-primary/40 bg-m3-primary/5 shadow-sm font-bold text-m3-on-surface hover:bg-m3-primary/10",
+      )
+    : cn(
+        "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
+        state === "active" && "bg-m3-primary text-white shadow-md font-bold",
+        state === "completed" && "bg-m3-surface-container-lowest text-m3-primary shadow-sm font-medium hover:bg-m3-surface-container",
+        state === "pending" && "text-m3-on-surface-variant hover:bg-white/50 font-medium",
+        isNextUp && "bg-m3-secondary/10 font-bold text-m3-on-surface shadow-[inset_0_0_14px_2px_rgba(59,130,246,0.16)] hover:bg-m3-secondary/15",
+      );
 }
 
 /**
@@ -370,6 +349,54 @@ function InterviewStateBadge({
   );
 }
 
+/** The leading state icon for a curriculum row (home vs sidebar variants). */
+function RowLeadingIcon({
+  state,
+  isQuiz,
+  isInterview,
+  isNextUp,
+  variant,
+}: {
+  state: LessonState;
+  isQuiz: boolean;
+  isInterview: boolean;
+  isNextUp: boolean;
+  variant: "sidebar" | "home";
+}) {
+  const LessonIcon = PlayCircle;
+  if (state === "completed") {
+    return (
+      <CheckCircle2
+        className={
+          variant === "home"
+            ? "h-4 w-4 flex-shrink-0 text-m3-outline"
+            : "h-4 w-4 flex-shrink-0 text-emerald-500 fill-emerald-100"
+        }
+      />
+    );
+  }
+  if (state === "active") {
+    return variant === "home" ? (
+      <PlayCircle className="h-4 w-4 flex-shrink-0 text-m3-secondary" />
+    ) : (
+      <LessonIcon className="h-4 w-4 flex-shrink-0" />
+    );
+  }
+  if (isNextUp && variant === "home") {
+    return <ArrowRight className="h-4 w-4 flex-shrink-0 text-m3-primary" />;
+  }
+  if (isInterview) {
+    return <Mic className="h-4 w-4 flex-shrink-0" />;
+  }
+  if (state === "pending" && isQuiz) {
+    return <HelpCircle className="h-4 w-4 flex-shrink-0 opacity-60" />;
+  }
+  if (state === "pending") {
+    return <LessonIcon className="h-4 w-4 flex-shrink-0 opacity-40" />;
+  }
+  return null;
+}
+
 /** The icon + label content shared by every curriculum row variant. */
 function CurriculumItemInner({
   state,
@@ -390,34 +417,15 @@ function CurriculumItemInner({
   variant: "sidebar" | "home";
   t: Translate;
 }) {
-  const LessonIcon = PlayCircle;
-
   return (
     <>
-      {state === "completed" && variant === "home" && (
-        <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-m3-outline" />
-      )}
-      {state === "completed" && variant !== "home" && (
-        <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500 fill-emerald-100" />
-      )}
-      {/* {state === "locked" && <Lock className="h-4 w-4 flex-shrink-0" />} */}
-      {/* DEV: comment out to disable lock */}
-      {state === "active" &&
-        (variant === "home" ? (
-          <PlayCircle className="h-4 w-4 flex-shrink-0 text-m3-secondary" />
-        ) : (
-          <LessonIcon className="h-4 w-4 flex-shrink-0" />
-        ))}
-      {isNextUp && variant === "home" && (
-        <ArrowRight className="h-4 w-4 flex-shrink-0 text-m3-primary" />
-      )}
-      {state === "pending" && !isQuiz && !isInterview && (
-        <LessonIcon className="h-4 w-4 flex-shrink-0 opacity-40" />
-      )}
-      {state === "pending" && isQuiz && (
-        <HelpCircle className="h-4 w-4 flex-shrink-0 opacity-60" />
-      )}
-      {isInterview && <Mic className="h-4 w-4 flex-shrink-0" />}
+      <RowLeadingIcon
+        state={state}
+        isQuiz={isQuiz}
+        isInterview={isInterview}
+        isNextUp={isNextUp}
+        variant={variant}
+      />
       {isQuiz && state !== "active" && (
         <Sparkles className="h-3 w-3 ml-auto text-m3-secondary" />
       )}
@@ -480,8 +488,9 @@ function InterviewInProgressCard({
           {t("course_learn.interview_in_progress.body")}
         </p>
         <Link
-          to="/courses/$slug/interview/$moduleId"
-          params={{ slug, moduleId: configId }}
+          to="/courses/$slug/learn/$itemSlug"
+          params={{ slug, itemSlug: configId }}
+          search={{ start: false }}
           className="mt-2.5 inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-m3-primary px-3 text-xs font-bold text-white transition-colors hover:bg-m3-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
         >
           <Play className="h-3.5 w-3.5" />

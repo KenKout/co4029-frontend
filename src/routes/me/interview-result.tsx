@@ -73,11 +73,12 @@ export default function MyInterviewResultPage() {
     <div className="mx-auto max-w-3xl space-y-6 p-4 pb-16 sm:p-6">
       {backToInterview ? (
         <Link
-          to="/courses/$slug/interview/$moduleId"
+          to="/courses/$slug/learn/$itemSlug"
           params={{
             slug: backToInterview.slug,
-            moduleId: backToInterview.module,
+            itemSlug: backToInterview.module,
           }}
+          search={{ start: false }}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-m3-on-surface-variant transition-colors hover:text-m3-primary"
         >
           <ArrowLeft className="h-4 w-4" />

@@ -547,11 +547,16 @@ export function useSetModulePrerequisites(moduleId: string, courseId: string) {
 type CreateLessonInput = Omit<
   LessonCreate,
   | "module_id"
+  | "slug"
   | "lesson_type"
   | "ef_min_unlock"
   | "tau_unlock"
   | "requires_interview_pass"
 > & {
+  // slug is auto-generated server-side from the title (unique per module,
+  // -1/-2 collision suffixes) since migration 0087; explicit clients may
+  // still pin one via the raw API.
+  slug?: LessonCreate["slug"];
   lesson_type?: LessonCreate["lesson_type"];
   ef_min_unlock?: number;
   tau_unlock?: number;
@@ -583,15 +588,20 @@ export function useAuthoringModuleLessons(moduleId: string | undefined) {
 export function useCreateLesson(moduleId: string, courseId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: CreateLessonInput) =>
-      apiPost<LessonAuthoring>(`/teacher/modules/${moduleId}/lessons`, {
-        module_id: moduleId,
-        lesson_type: "video",
-        ef_min_unlock: 2,
-        tau_unlock: 0.8,
-        requires_interview_pass: false,
-        ...payload,
-      } satisfies LessonCreate),
+    mutationFn: (payload: CreateLessonInput) => {
+    const { slug, ...lessonFields } = payload;
+    return apiPost<LessonAuthoring>(`/teacher/modules/${moduleId}/lessons`, {
+      module_id: moduleId,
+      // Empty string tells the backend to auto-generate the slug from the
+      // title (unique per module, -1/-2 collision suffixes).
+      slug: slug ?? "",
+      lesson_type: "video",
+      ef_min_unlock: 2,
+      tau_unlock: 0.8,
+      requires_interview_pass: false,
+      ...lessonFields,
+    } satisfies LessonCreate);
+  },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.courses.content(courseId) });
       qc.invalidateQueries({

@@ -508,7 +508,11 @@
     "km_zoom_in": "Zoom in",
     "km_zoom_out": "Zoom out",
     "km_fit": "Fit to view",
-    "reading_preview_unavailable": "Inline preview isn't supported on this device — open the document in a new tab."
+    "reading_preview_unavailable": "Inline preview isn't supported on this device — open the document in a new tab.",
+    "breadcrumb_learn": "Learn",
+    "item_not_found_title": "Item not found",
+    "item_not_found_body": "The item “{{item}}” does not exist in this course. It may have been removed or its slug changed.",
+    "back_to_learn": "Back to Learn"
   },
   "placeholder": {
     "body": "This page is coming soon. Check back after the API migration is complete.",

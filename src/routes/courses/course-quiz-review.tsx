@@ -143,8 +143,8 @@ export default function CourseQuizReviewPage() {
         onConfirm={() => {
           setRetryOpen(false);
           void navigate({
-            to: "/courses/$slug/quiz/$quizId",
-            params: { slug, quizId },
+            to: "/courses/$slug/learn/$itemSlug",
+            params: { slug, itemSlug: quizId },
             search: { start: true },
           });
         }}
