@@ -4042,6 +4042,9 @@
       "approve_all_failed": "Could not approve questions",
       "question_reorder_failed": "Could not reorder question"
     },
+    "warnings": {
+      "no_role_type_questions": "No {{type}} questions in the question bank — this interviewer will fall back to other question types."
+    },
     "actions": {
       "back_tooltip": "Back to course",
       "publish_label": "Publish interview",
@@ -4148,8 +4151,7 @@
       "rubric_add": "Add criterion",
       "rubric_remove": "Remove criterion",
       "rubric_at_cap": "Maximum {{max}} criteria",
-      "interviewer_role": "Interviewer",
-      "interviewer_role_hint": "Who the interviewer presents as. Affects wording only — never difficulty, question choice, or scoring."
+      "interviewer_role": "Interviewer"
     },
     "units": {
       "minutes": "min",

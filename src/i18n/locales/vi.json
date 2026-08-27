@@ -3915,6 +3915,9 @@
       "approve_all_failed": "Không thể duyệt câu hỏi",
       "question_reorder_failed": "Không thể sắp xếp lại câu hỏi"
     },
+    "warnings": {
+      "no_role_type_questions": "Kho câu hỏi không có câu hỏi {{type}} — interviewer sẽ hỏi các câu loại khác."
+    },
     "actions": {
       "back_tooltip": "Quay lại khoá học",
       "publish_label": "Xuất bản phỏng vấn",
@@ -4021,8 +4024,7 @@
       "rubric_add": "Thêm tiêu chí",
       "rubric_remove": "Xóa tiêu chí",
       "rubric_at_cap": "Tối đa {{max}} tiêu chí",
-      "interviewer_role": "Người phỏng vấn",
-      "interviewer_role_hint": "Người phỏng vấn xuất hiện với vai nào. Chỉ đổi cách diễn đạt — không đổi độ khó, câu hỏi hay điểm."
+      "interviewer_role": "Người phỏng vấn"
     },
     "units": {
       "minutes": "phút",

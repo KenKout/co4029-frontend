@@ -13,6 +13,7 @@
 import { useTranslation } from "react-i18next";
 import { Lock } from "lucide-react";
 
+import type { InterviewQuestionAuthoring } from "@/lib/api/types";
 import type { SettingsDraft } from "@/lib/interview/config-draft";
 import {
   hasFrozenFields,
@@ -39,6 +40,7 @@ export function SettingsForm({
   justSaved,
   updatedAt,
   status,
+  questions = [],
   outcomesSlot,
 }: {
   draft: SettingsDraft;
@@ -52,6 +54,8 @@ export function SettingsForm({
       conducted or graded are frozen (the backend PATCH returns 409 for them),
       so the form dims them rather than inviting an edit that cannot save. */
   status: string | null | undefined;
+  /** Non-deleted questions in the config's bank (role-coverage warning). */
+  questions?: InterviewQuestionAuthoring[];
   /** Learning-outcomes panel, injected between Guidance and Security so the
       outcomes sit above the (now bottom-most) Security & Integrity block. */
   outcomesSlot?: React.ReactNode;
@@ -90,6 +94,7 @@ export function SettingsForm({
         update={update}
         lock={lock}
         status={status}
+        questions={questions}
       />
 
       <SettingsRulesCard

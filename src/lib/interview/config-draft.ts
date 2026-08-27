@@ -14,6 +14,7 @@
 import type {
   InterviewConfigUpdate,
   InterviewGenerationRequest,
+  InterviewQuestionType,
 } from "@/lib/api/types";
 import type { RubricCriterion } from "@/lib/interview/supplementary-instructions";
 import {
@@ -48,6 +49,32 @@ export const INTERVIEWER_ROLE_KEYS: InterviewerRole[] = [
   "eng_manager",
   "hr_screener",
 ];
+
+/**
+ * Which question_type a role prefers asking. MUST stay in sync with the
+ * backend 1:1 map in ``orchestrator/role_question_filter.py``:
+ *   tech_lead → technical, staff → system_design, manager → situational,
+ *   hr → behavioral, generic → None (no preference → mixed/legacy pool).
+ * The FE uses it for option labels and for the "no questions of this type"
+ * coverage warning; the backend is the one that actually filters.
+ */
+export const INTERVIEWER_ROLE_PREFERRED_TYPE: Record<
+  InterviewerRole,
+  InterviewQuestionType | null
+> = {
+  generic_assistant: null,
+  backend_tech_lead: "technical",
+  staff_engineer: "system_design",
+  eng_manager: "situational",
+  hr_screener: "behavioral",
+};
+
+/** The question type this role prefers asking (``null`` = no preference). */
+export function preferredQuestionTypeForRole(
+  role: InterviewerRole,
+): InterviewQuestionType | null {
+  return INTERVIEWER_ROLE_PREFERRED_TYPE[role] ?? null;
+}
 
 export const PERSONA_TRAIT_KEYS = [
   "warmth",
