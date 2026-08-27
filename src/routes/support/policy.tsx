@@ -32,17 +32,22 @@ import { cn } from "@/lib/utils";
  *   snug gap to the paragraph they introduce — reads as a formal document,
  *   not a chat thread;
  * - paragraphs get comfortable vertical rhythm + relaxed leading;
- * - list items separate; emphasized terms stay on-color.
+ * - list items separate; emphasized terms and links stay on-color.
  *
- * Overrides ride on Tailwind typography's prose-* modifiers, which beat the
- * plugin's :where() defaults.
+ * Scoped with arbitrary variants ([&_h2] etc.) because this app is Tailwind
+ * v4 WITHOUT the typography plugin registered (app.css never imports
+ * @tailwindcss/typography), so prose-* modifiers compile to nothing. These
+ * element-scoped utilities hit exactly the markdown nodes inside RichContent
+ * and nothing else.
  */
 const POLICY_BODY_PROSE =
-  "prose-h2:first:mt-0 prose-h2:mt-8 prose-h2:mb-3 prose-h2:text-xl " +
-  "prose-h2:font-bold prose-h2:tracking-tight " +
-  "prose-p:my-4 prose-p:leading-relaxed prose-li:my-1.5 " +
-  "prose-strong:font-semibold prose-strong:text-m3-on-surface " +
-  "prose-a:underline-offset-2";
+  "[&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-xl [&_h2]:font-bold " +
+  "[&_h2]:font-headline [&_h2]:tracking-tight [&_h2]:leading-snug " +
+  "[&_h2:first-child]:mt-0 " +
+  "[&_p]:my-4 [&_p]:leading-relaxed " +
+  "[&_li]:my-1.5 " +
+  "[&_strong]:font-semibold " +
+  "[&_a]:font-medium [&_a]:text-m3-primary [&_a]:underline-offset-2";
 
 export default function PolicyPage() {
   const { slug } = useParams({ strict: false }) as { slug?: string };
