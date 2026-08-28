@@ -1,8 +1,11 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Layers, Library } from "lucide-react";
 
 import type { InterviewQuestionAuthoring } from "@/lib/api/types";
+import { QuestionAngleGroup } from "./QuestionAngleGroup";
 import { createQuestionCardRenderer } from "./question-card-renderer";
+import type { TranslateFn } from "./types";
 import type {
   EditDraftController,
   ExpandedRowsController,
@@ -37,9 +40,54 @@ export interface QuestionListSectionProps {
   selection: QuestionSelectionController;
 }
 
+interface LogicalQuestionGroup {
+  key: string;
+  questions: InterviewQuestionAuthoring[];
+}
+
+function groupLogicalQuestions(
+  questions: InterviewQuestionAuthoring[],
+): LogicalQuestionGroup[] {
+  const groups = new Map<string, InterviewQuestionAuthoring[]>();
+  for (const question of questions) {
+    const key = question.variant_group_id
+      ? `variant:${question.variant_group_id}`
+      : `question:${question.id}`;
+    const group = groups.get(key);
+    if (group) group.push(question);
+    else groups.set(key, [question]);
+  }
+  return [...groups.entries()].map(([key, items]) => ({
+    key,
+    questions: items,
+  }));
+}
+
+function renderLogicalQuestions(
+  questions: InterviewQuestionAuthoring[],
+  renderCard: (question: InterviewQuestionAuthoring) => ReactNode,
+  t: TranslateFn,
+) {
+  return groupLogicalQuestions(questions).map((group) =>
+    group.questions[0]?.variant_group_id ? (
+      <QuestionAngleGroup
+        key={group.key}
+        questions={group.questions}
+        renderCard={renderCard}
+        t={t}
+      />
+    ) : (
+      renderCard(group.questions[0])
+    ),
+  );
+}
+
 export function QuestionListSection(props: QuestionListSectionProps) {
   const { t } = useTranslation();
   const { filtered, groupedByModule, showModuleGroups, selection } = props;
+  const hasVisibleVariantGroup = filtered.some(
+    (question) => question.variant_group_id,
+  );
   // Drag-to-reorder only makes sense on the flat, unfiltered list:
   // once filtered or grouped by module, the visible order no longer
   // maps 1:1 to persisted positions, so dropping would be ambiguous.
@@ -52,7 +100,8 @@ export function QuestionListSection(props: QuestionListSectionProps) {
   // move-to-bottom menu, which operates in true position space, so
   // the note below points there rather than pretending the
   // capability is gone.
-  const dndEnabled = !showModuleGroups && !props.anyFilterActive;
+  const dndEnabled =
+    !showModuleGroups && !props.anyFilterActive && !hasVisibleVariantGroup;
   const renderCard = createQuestionCardRenderer({
     sorted: props.sorted,
     compact: props.compact,
@@ -76,7 +125,9 @@ export function QuestionListSection(props: QuestionListSectionProps) {
       {t(
         props.anyFilterActive
           ? "teacher_interview_config.qbank.reorder_off_filtered"
-          : "teacher_interview_config.qbank.reorder_off_grouped",
+          : hasVisibleVariantGroup
+            ? "teacher_interview_config.qbank.reorder_off_variant_group"
+            : "teacher_interview_config.qbank.reorder_off_grouped",
       )}
     </p>
   );
@@ -109,7 +160,7 @@ export function QuestionListSection(props: QuestionListSectionProps) {
         <>
           {reorderNote}
           <ul className="space-y-2" role="list">
-            {filtered.map(renderCard)}
+            {renderLogicalQuestions(filtered, renderCard, t)}
           </ul>
         </>
       ) : (
@@ -131,7 +182,7 @@ export function QuestionListSection(props: QuestionListSectionProps) {
                 </span>
               </div>
               <ul className="space-y-2" role="list">
-                {g.items.map(renderCard)}
+                {renderLogicalQuestions(g.items, renderCard, t)}
               </ul>
             </div>
           ))}

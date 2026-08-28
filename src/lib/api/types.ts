@@ -32,7 +32,8 @@ export interface InstructorReadFields {
   course_role?: CourseTeacherRole | null;
 }
 
-export type InstructorReadLocal = Schemas["InstructorRead"] & InstructorReadFields;
+export type InstructorReadLocal = Schemas["InstructorRead"] &
+  InstructorReadFields;
 
 /** Hand-authored `instructors` list on the learner course payload. */
 export interface CoursePublicFields {
@@ -385,7 +386,8 @@ export type InterviewSessionPublic = Schemas["InterviewSessionPublic"] & {
   retake_available_at?: string | null;
   can_retake?: boolean;
 };
-export type InterviewSessionStartRequest = Schemas["InterviewSessionStartRequest"];
+export type InterviewSessionStartRequest =
+  Schemas["InterviewSessionStartRequest"];
 export type InterviewLanguage = NonNullable<
   Schemas["InterviewOnboardingRespondRequest"]["language"]
 >;
@@ -448,11 +450,12 @@ export type InterviewSubmitAnswerResponse =
     interaction_state?: string | null;
   };
 export type InterviewQuestionPublic = Schemas["InterviewQuestionPublic"];
-// Widen with source_module_ids (module attribution for question-bank grouping)
-// until the OpenAPI snapshot is regenerated.
+// Widen with source_module_ids (module attribution) and variant_group_id
+// (all-angle logical-question grouping) until the OpenAPI snapshot is regenerated.
 export type InterviewQuestionAuthoring =
   Schemas["InterviewQuestionAuthoring"] & {
     source_module_ids?: string[];
+    variant_group_id?: string | null;
   };
 export type InterviewQuestionCreate = Schemas["InterviewQuestionCreate"];
 
@@ -824,7 +827,10 @@ export type CareerPathStageUpdate = Partial<{
  *  manager rather than swallowing them. */
 export interface CareerPathStageReorderWarning {
   stage_id: string;
-  code: "stage_becomes_implicitly_unlocked" | "stage_may_become_locked" | string;
+  code:
+    | "stage_becomes_implicitly_unlocked"
+    | "stage_may_become_locked"
+    | string;
   message: string;
 }
 
@@ -833,11 +839,10 @@ export interface CareerPathStageReorderResult {
   warnings: CareerPathStageReorderWarning[];
 }
 
-export type CareerPathCourseAuthoring =
-  Schemas["CareerPathCourseAuthoring"] & {
-    stage_id: string;
-    satisfied_by: CareerPathSatisfiedBy;
-  };
+export type CareerPathCourseAuthoring = Schemas["CareerPathCourseAuthoring"] & {
+  stage_id: string;
+  satisfied_by: CareerPathSatisfiedBy;
+};
 
 export type CareerPathCourseAdd = Schemas["CareerPathCourseAdd"] & {
   stage_id: string;
@@ -849,25 +854,26 @@ export interface CareerPathCourseMove {
   position?: number | null;
 }
 
-export type CourseProgressSummaryWithStage = Schemas["CourseProgressSummary"] & {
-  stage_id?: string | null;
-  is_required?: boolean;
-  /** `course_enrollments.status === 'completed'` — NOT completion_percent>=100. */
-  satisfied?: boolean;
-  is_enrolled?: boolean;
-  /**
-   * Gradeable units in the course: lessons + quizzes + interviews. 0 means the
-   * course can never be completed (the publish gate rejects such a course).
-   *
-   * `completion_percent` on the generated shape is a percentage of these units,
-   * not a lesson average — the same measure `satisfied` is decided by. These
-   * counts expose the numerator/denominator so the UI can show "4/6 done"
-   * instead of only a bar. Keep in sync with
-   * abridgeai/features/career_paths/schemas/public.py.
-   */
-  unit_total?: number;
-  unit_done?: number;
-};
+export type CourseProgressSummaryWithStage =
+  Schemas["CourseProgressSummary"] & {
+    stage_id?: string | null;
+    is_required?: boolean;
+    /** `course_enrollments.status === 'completed'` — NOT completion_percent>=100. */
+    satisfied?: boolean;
+    is_enrolled?: boolean;
+    /**
+     * Gradeable units in the course: lessons + quizzes + interviews. 0 means the
+     * course can never be completed (the publish gate rejects such a course).
+     *
+     * `completion_percent` on the generated shape is a percentage of these units,
+     * not a lesson average — the same measure `satisfied` is decided by. These
+     * counts expose the numerator/denominator so the UI can show "4/6 done"
+     * instead of only a bar. Keep in sync with
+     * abridgeai/features/career_paths/schemas/public.py.
+     */
+    unit_total?: number;
+    unit_done?: number;
+  };
 
 export interface StageProgressRead {
   stage_id: string;

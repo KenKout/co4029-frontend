@@ -4297,6 +4297,10 @@
       "remove_filter": "Bỏ bộ lọc {{label}}",
       "reorder_off_filtered": "Kéo để sắp xếp đang tắt vì có bộ lọc. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối, hoặc xoá bộ lọc.",
       "reorder_off_grouped": "Kéo để sắp xếp đang tắt vì câu hỏi đang nhóm theo module. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối.",
+      "reorder_off_variant_group": "Kéo để sắp xếp đang tắt khi có nhóm câu hỏi đa góc. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối.",
+      "logical_question": "Câu hỏi logic",
+      "angle_count": "{{count}}/4 góc hỏi",
+      "angle_tabs_label": "Các góc hỏi",
       "source_count_other": "{{count}} nguồn",
       "source_count_one": "{{count}} nguồn"
     },
@@ -4344,12 +4348,12 @@
       "outcomes_clear": "Bỏ chọn",
       "outcomes_badge": "CĐR {{n}}",
       "variant_label": "Chế độ câu hỏi theo vai trò",
-      "variant_hint": "Sinh bộ câu hỏi xoay quanh từng phần theo góc hỏi của interviewer. Để mặc định để dùng tỷ lệ loại câu hỏi truyền thống.",
+      "variant_hint": "Sinh các câu hỏi theo góc khai thác khác nhau của cùng một vấn đề. Để mặc định để dùng tỷ lệ loại câu hỏi truyền thống.",
       "variant_mixed": "Truyền thống (trộn nhiều loại)",
-      "variant_all_angles": "Đa góc theo vai trò (mỗi câu có biến thể cho từng role)",
+      "variant_all_angles": "Đa góc cho mỗi câu hỏi logic",
       "variant_role_only": "Theo đúng vai trò interviewer đã chọn",
-      "count_label_per_role": "Số câu hỏi mỗi role",
-      "variant_expansion_note": "Sẽ sinh {{count}} × 4 góc hỏi = <strong>{{effective}}</strong> câu thực tế (mỗi role một bộ)."
+      "count_label_per_role": "Số câu hỏi logic",
+      "variant_expansion_note": "Sẽ sinh {{count}} câu hỏi logic × 4 góc hỏi khác nhau = <strong>{{effective}}</strong> câu thực tế."
     },
     "interviewer_role": {
       "generic_assistant": "Trợ lý ảo (mặc định)",
