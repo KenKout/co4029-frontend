@@ -216,8 +216,7 @@
     }
   },
   "teacher_dashboard": {
-    "title": "Bảng điều khiển Giảng viên",
-    "subtitle": "Quản lý khóa học, tài liệu và tạo AI.",
+    "title": "Không gian giảng dạy",
     "your_courses": {
       "title": "Khóa học của bạn",
       "subtitle": "Nhấn để quản lý học phần, bài học và tài liệu",
@@ -236,15 +235,45 @@
       "intermediate": "Trung cấp",
       "advanced": "Nâng cao"
     },
+    "priority": {
+      "title": "Ưu tiên hôm nay",
+      "subtitle": "Xếp hạng trên tất cả: việc đang chặn trước, rồi đến học viên, sau đó là tồn đọng.",
+      "blocking": "Đang chặn",
+      "empty_title": "Không có việc gấp",
+      "empty_hint": "Không có gì bị chặn và không học viên nào bị đánh dấu. Xem Tình trạng khóa học bên dưới."
+    },
     "signals": {
       "cards_awaiting_review": "Nội dung chờ duyệt",
       "cards_awaiting_review_sub": "Câu hỏi quiz + phỏng vấn",
-      "students_below_ef": "Học viên gặp khó khi ôn tập",
-      "students_below_ef_sub": "Độ dễ trung bình dưới 2.0",
+      "students_needing_attention": "Học viên cần chú ý",
+      "students_needing_attention_sub": "Có ít nhất một tín hiệu rủi ro",
       "avg_retention": "Hệ số dễ nhớ trung bình",
       "avg_retention_sub": "Càng thấp càng khó — ôn lại thường xuyên hơn (2.5 = chuẩn)",
       "cards_overdue": "Thẻ ôn tập quá hạn",
       "cards_overdue_sub": "Thẻ ôn tập của học viên đã quá hạn"
+    },
+    "attention": {
+      "title": "Học viên cần chú ý",
+      "subtitle": "Được đánh dấu do không hoạt động, chưa tương tác hoặc tiến độ thấp. Ưu tiên nặng nhất trước.",
+      "more_signals": "+{{count}} tín hiệu khác",
+      "progress": "hoàn thành",
+      "empty_title": "Hiện không có học viên nào bị đánh dấu",
+      "empty_hint": "Học viên mới ghi danh được cho thời gian bắt đầu trước khi bị đánh dấu."
+    },
+    "health": {
+      "title": "Tình trạng khóa học",
+      "subtitle": "Các khóa học xếp theo mức cần chú ý. Nhấp vào dòng để mở.",
+      "course": "Khóa học",
+      "students": "Học viên",
+      "progress": "Tiến độ TB",
+      "at_risk": "Rủi ro",
+      "pass_rate": "Tỷ lệ đạt",
+      "pending": "Chờ duyệt",
+      "last_activity": "Hoạt động cuối",
+      "today": "Hôm nay",
+      "days_ago": "{{count}} ngày trước",
+      "no_data": "Chưa đủ dữ liệu",
+      "pass_sample": "Dựa trên {{count}} lượt làm bài"
     },
     "review": {
       "title": "Cần bạn xem xét",

@@ -2,57 +2,84 @@ import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/ui/page-header";
 import {
-  useTeacherCourses,
+  useCourseHealth,
+  usePriorityTasks,
+  useStudentsNeedingAttention,
   useTeacherDashboardStats,
 } from "@/lib/api/hooks/teacher-courses";
 
-import { CourseListSection } from "./_components/teacher-index/CourseListSection";
+import { CourseHealthSection } from "./_components/teacher-index/CourseHealthSection";
 import { DashboardSignals } from "./_components/teacher-index/DashboardSignals";
 import {
   buildReviewCandidates,
   countCardsAwaitingReview,
 } from "./_components/teacher-index/helpers";
+import { PriorityTodaySection } from "./_components/teacher-index/PriorityTodaySection";
 import { ReviewQueueSection } from "./_components/teacher-index/ReviewQueueSection";
+import { StudentsNeedingAttentionSection } from "./_components/teacher-index/StudentsNeedingAttentionSection";
 
 /**
- * Teacher landing page: retention/review signal tiles, the Human-in-the-Loop
- * review queue and the first six courses.
+ * Teacher landing page.
  *
- * Signal derivation and each section live in `./_components/teacher-index/`;
- * this file is the composition shell.
+ * Ordered by what a teacher can act on, not by what is easiest to
+ * aggregate. The page used to open with four static tiles and a gallery of
+ * course thumbnails, which meant the most urgent thing on the page — a
+ * student who had gone quiet — was reliably below the fold.
+ *
+ * Now: what to do next, who needs help, what content is waiting, how the
+ * courses compare, and only then the trend numbers. The signal tiles moved
+ * to the bottom deliberately; they are context for a decision, not the
+ * decision itself.
+ *
+ * Each section owns its own query, so a slow or failing one degrades to
+ * its own skeleton or empty state instead of blocking the shell.
  */
 export default function TeacherDashboard() {
   const { t } = useTranslation();
-  const { data: courses = [], isLoading } = useTeacherCourses();
   const { data: stats } = useTeacherDashboardStats();
+  const { data: priority = [], isLoading: priorityLoading } = usePriorityTasks();
+  const { data: atRisk = [], isLoading: atRiskLoading } =
+    useStudentsNeedingAttention();
+  const { data: courseHealth = [], isLoading: healthLoading } = useCourseHealth();
 
   const cardsAwaitingReview = countCardsAwaitingReview(stats);
-  const reviewItems = buildReviewCandidates(stats, t).filter(
-    (i) => i.count > 0,
-  );
+  const reviewItems = buildReviewCandidates(stats, t).filter((i) => i.count > 0);
 
   return (
     <div className="space-y-8 pb-12">
-      {/* Header */}
-      <PageHeader
-        title={t("teacher_dashboard.title")}
-        subtitle={t("teacher_dashboard.subtitle")}
-      />
+      {/* No subtitle: "Manage your courses, materials, and AI generation"
+          restated the navigation and pushed the signals below the fold. */}
+      <PageHeader title={t("teacher_dashboard.title")} />
 
-      <DashboardSignals
-        stats={stats}
-        cardsAwaitingReview={cardsAwaitingReview}
+      <PriorityTodaySection
+        tasks={priority}
+        isLoading={priorityLoading}
         t={t}
       />
 
-      {/* ---- Needs your review ------------------------------------------- */}
+      {/* People before content: a student falling behind decays while a
+          review backlog merely waits. */}
+      <StudentsNeedingAttentionSection
+        students={atRisk}
+        isLoading={atRiskLoading}
+        t={t}
+      />
+
+      {/* The full review queue. Priority Today surfaces at most one row per
+          category with its age and blocking count; this is where a teacher
+          goes to work through them. */}
       <ReviewQueueSection reviewItems={reviewItems} t={t} />
 
-      {/* Course list */}
-      <CourseListSection
-        courses={courses}
-        isLoading={isLoading}
+      {/* Course Health replaces the course gallery: the gallery gave every
+          course equal visual weight and shrank the signals into badges, so
+          it could not answer "which of my courses needs me today". */}
+      <CourseHealthSection rows={courseHealth} isLoading={healthLoading} t={t} />
+
+      {/* Trend context, last. These four numbers explain the sections
+          above; none of them is an action on its own. */}
+      <DashboardSignals
         stats={stats}
+        cardsAwaitingReview={cardsAwaitingReview}
         t={t}
       />
     </div>

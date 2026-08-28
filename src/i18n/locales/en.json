@@ -215,8 +215,7 @@
     }
   },
   "teacher_dashboard": {
-    "title": "Teacher Dashboard",
-    "subtitle": "Manage your courses, materials, and AI generation.",
+    "title": "Teacher Workspace",
     "your_courses": {
       "title": "Your Courses",
       "subtitle": "Click to manage modules, lessons, and materials",
@@ -235,15 +234,48 @@
       "intermediate": "Intermediate",
       "advanced": "Advanced"
     },
+    "priority": {
+      "title": "Priority today",
+      "subtitle": "Ranked across everything: blocking work first, then students, then backlog.",
+      "blocking": "Blocking",
+      "empty_title": "No urgent actions",
+      "empty_hint": "Nothing is blocked and no student is flagged. Course health below has the fuller picture."
+    },
     "signals": {
       "cards_awaiting_review": "Content awaiting review",
       "cards_awaiting_review_sub": "Quiz + interview questions",
-      "students_below_ef": "Students struggling in review",
-      "students_below_ef_sub": "Average easiness below 2.0",
+      "students_needing_attention": "Students needing attention",
+      "students_needing_attention_sub": "At least one active risk signal",
       "avg_retention": "Average easiness factor",
       "avg_retention_sub": "Lower means harder — reviewed more often (2.5 = baseline)",
       "cards_overdue": "Reviews past due",
       "cards_overdue_sub": "Student review cards past their due date"
+    },
+    "attention": {
+      "title": "Students needing attention",
+      "subtitle": "Flagged by inactivity, no engagement, or low completion. Worst first.",
+      "more_signals": "+{{count}} more signal",
+      "more_signals_plural": "+{{count}} more signals",
+      "progress": "complete",
+      "empty_title": "No students flagged right now",
+      "empty_hint": "New enrolments are given time to start before they can be flagged."
+    },
+    "health": {
+      "title": "Course health",
+      "subtitle": "Your courses ranked by what needs attention. Click a row to open it.",
+      "course": "Course",
+      "students": "Students",
+      "progress": "Avg progress",
+      "at_risk": "At risk",
+      "pass_rate": "Pass rate",
+      "pending": "Pending review",
+      "last_activity": "Last activity",
+      "today": "Today",
+      "days_ago": "{{count}} day ago",
+      "days_ago_plural": "{{count}} days ago",
+      "no_data": "Not enough data yet",
+      "pass_sample": "Based on {{count}} completed attempt",
+      "pass_sample_plural": "Based on {{count}} completed attempts"
     },
     "review": {
       "title": "Needs your review",

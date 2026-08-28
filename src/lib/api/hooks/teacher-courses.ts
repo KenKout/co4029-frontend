@@ -54,6 +54,13 @@ export interface TeacherDashboardStats {
   materials_ready_for_quiz_gen: number;
   // Student performance (spaced repetition).
   students_below_ef_threshold: number;
+  /**
+   * DISTINCT students with at least one active risk signal across the
+   * teacher's courses, from the progress feature's risk engine. NOT the
+   * same population as `students_below_ef_threshold`, which only knows
+   * about spaced-repetition easiness.
+   */
+  students_needing_attention: number;
   /** Mean SM-2 easiness factor across in-scope cards. 2.5 is the default/ideal. */
   avg_retention_ef: number;
   cards_overdue: number;
@@ -65,6 +72,117 @@ export function useTeacherDashboardStats() {
   return useQuery({
     queryKey: ["teacher", "dashboard", "stats"],
     queryFn: () => apiFetch<TeacherDashboardStats>("/teacher/dashboard/stats"),
+    staleTime: 1000 * 60,
+  });
+}
+
+/**
+ * One (student, course) risk row for the dashboard's attention section.
+ *
+ * One row PER COURSE, so a student struggling in two of the teacher's
+ * courses appears twice — the follow-up happens inside a course. This is
+ * why the row count can exceed the `students_needing_attention` tile,
+ * which counts distinct people. Neither number is derivable from the other.
+ */
+export interface StudentNeedingAttention {
+  user_id: string;
+  display_name: string | null;
+  email: string;
+  course_id: string;
+  course_title: string;
+  /** Average lesson completion, 0-100. */
+  completion_percent: number;
+  last_engagement_at: string | null;
+  days_since_last_engagement: number | null;
+  /**
+   * Highest-severity reason, already phrased for a teacher and naming the
+   * threshold that fired — render it as-is rather than reconstructing it
+   * from the numbers, which is how the thresholds drifted before.
+   */
+  primary_reason: string;
+  /** Total reasons that fired; the UI shows "+N" beyond the primary. */
+  signal_count: number;
+  severity: "high" | "medium";
+}
+
+export function useStudentsNeedingAttention(limit = 7) {
+  return useQuery({
+    queryKey: ["teacher", "dashboard", "students-needing-attention", limit],
+    queryFn: () =>
+      apiFetch<StudentNeedingAttention[]>(
+        `/teacher/dashboard/students-needing-attention?limit=${limit}`,
+      ),
+    staleTime: 1000 * 60,
+  });
+}
+
+/**
+ * One course in the dashboard's Course Health table.
+ *
+ * Nullable numbers mean "no data", never zero. `avg_progress_percent` is
+ * null when nobody is enrolled and `pass_rate_percent` when nobody has
+ * completed a published quiz — rendering either as 0% would accuse an
+ * unassessed course of total failure.
+ */
+export interface CourseHealthRow {
+  course_id: string;
+  title: string;
+  slug: string;
+  status: string;
+  students: number;
+  avg_progress_percent: number | null;
+  at_risk_students: number;
+  pass_rate_percent: number | null;
+  /** Student-quiz pairs behind the pass rate; too few and we withhold it. */
+  pass_sample: number;
+  pending_review: number;
+  last_activity_at: string | null;
+  severity: "high" | "medium" | "none";
+  /** Why this course got its band — colour alone is not an explanation. */
+  severity_reason: string | null;
+}
+
+export function useCourseHealth() {
+  return useQuery({
+    queryKey: ["teacher", "dashboard", "course-health"],
+    queryFn: () => apiFetch<CourseHealthRow[]>("/teacher/dashboard/course-health"),
+    staleTime: 1000 * 60,
+  });
+}
+
+/**
+ * One item in the Priority Today feed.
+ *
+ * No URL comes from the server — `kind` plus the id fields let the client
+ * build a typed route. A server-built path would hard-code the SPA's
+ * routing table into the API and break silently on a rename.
+ */
+export interface PriorityTask {
+  id: string;
+  kind:
+    | "student_risk"
+    | "quiz_questions_pending"
+    | "interview_questions_pending"
+    | "quiz_calibration"
+    | "materials_ready"
+    | "reviews_overdue";
+  severity: "high" | "medium" | "low";
+  title: string;
+  reason: string;
+  course_id: string | null;
+  course_title: string | null;
+  student_id: string | null;
+  /** Null when the underlying rows carry no timestamp to age from. */
+  age_hours: number | null;
+  blocking: boolean;
+  count: number;
+}
+
+export function usePriorityTasks(limit = 7) {
+  return useQuery({
+    queryKey: ["teacher", "dashboard", "priority", limit],
+    queryFn: () =>
+      apiFetch<PriorityTask[]>(`/teacher/dashboard/priority?limit=${limit}`),
     staleTime: 1000 * 60,
   });
 }
