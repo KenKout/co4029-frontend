@@ -105,6 +105,7 @@ export function ConfigPanels({
                 updatedAt={config.updated_at ?? null}
                 status={config.status}
                 questions={questions ?? []}
+                outcomes={outcomes ?? []}
                 outcomesSlot={
                   <LearningOutcomes
                     configId={configId}

@@ -19,8 +19,15 @@ export function SettingsRulesCard({
   draft,
   update,
   lock,
+  activeOutcomeCount = 0,
 }: SettingsFieldsetProps) {
   const { t } = useTranslation();
+  const noActiveOutcomes = activeOutcomeCount === 0;
+  const criteriaHint = noActiveOutcomes
+    ? t("teacher_interview_config.fields.criteria_no_outcomes")
+    : t("teacher_interview_config.fields.criteria_hint", {
+        count: activeOutcomeCount,
+      });
   return (
     <SettingsCard
       stagger={1}
@@ -66,18 +73,26 @@ export function SettingsRulesCard({
         </Field>
         <Field
           label={t("teacher_interview_config.fields.criteria_label")}
-          hint={t("teacher_interview_config.fields.criteria_hint")}
+          hint={criteriaHint}
           {...lock("min_outcomes_to_pass")}
         >
           <Input
             type="number"
             min={1}
+            max={activeOutcomeCount || undefined}
+            disabled={noActiveOutcomes}
             value={draft.min_outcomes_to_pass}
             onChange={(e) => update("min_outcomes_to_pass", e.target.value)}
             placeholder={t(
               "teacher_interview_config.fields.criteria_placeholder",
             )}
-            endAdornment={t("teacher_interview_config.units.outcomes")}
+            endAdornment={
+              noActiveOutcomes
+                ? undefined
+                : t("teacher_interview_config.fields.criteria_count", {
+                    count: activeOutcomeCount,
+                  })
+            }
           />
         </Field>
       </div>

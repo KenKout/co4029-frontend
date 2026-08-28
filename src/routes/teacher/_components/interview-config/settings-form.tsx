@@ -13,7 +13,10 @@
 import { useTranslation } from "react-i18next";
 import { Lock } from "lucide-react";
 
-import type { InterviewQuestionAuthoring } from "@/lib/api/types";
+import type {
+  InterviewOutcomeAuthoring,
+  InterviewQuestionAuthoring,
+} from "@/lib/api/types";
 import type { SettingsDraft } from "@/lib/interview/config-draft";
 import {
   hasFrozenFields,
@@ -41,6 +44,7 @@ export function SettingsForm({
   updatedAt,
   status,
   questions = [],
+  outcomes = [],
   outcomesSlot,
 }: {
   draft: SettingsDraft;
@@ -56,6 +60,8 @@ export function SettingsForm({
   status: string | null | undefined;
   /** Questions in the config's bank (role-coverage warning counts approved). */
   questions?: InterviewQuestionAuthoring[];
+  /** Active outcomes constrain the configured pass threshold. */
+  outcomes?: InterviewOutcomeAuthoring[];
   /** Learning-outcomes panel, injected between Guidance and Security so the
       outcomes sit above the (now bottom-most) Security & Integrity block. */
   outcomesSlot?: React.ReactNode;
@@ -103,6 +109,7 @@ export function SettingsForm({
         lock={lock}
         status={status}
         frozenReason={frozenReason}
+        activeOutcomeCount={outcomes.length}
       />
 
       <SettingsGuidanceCard

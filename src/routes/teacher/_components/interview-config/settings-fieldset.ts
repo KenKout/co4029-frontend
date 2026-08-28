@@ -32,4 +32,6 @@ export interface SettingsFieldsetProps {
   status: string | null | undefined;
   /** Tooltip explaining the freeze, shown on every dimmed control. */
   frozenReason: string;
+  /** Active learning outcomes bound the minimum-outcomes pass threshold. */
+  activeOutcomeCount?: number;
 }
