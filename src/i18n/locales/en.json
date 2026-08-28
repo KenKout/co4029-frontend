@@ -253,6 +253,23 @@
       "empty_title": "No students flagged right now",
       "empty_hint": "New enrolments are given time to start before they can be flagged."
     },
+    "health": {
+      "title": "Course health",
+      "subtitle": "Your courses ranked by what needs attention. Click a row to open it.",
+      "course": "Course",
+      "students": "Students",
+      "progress": "Avg progress",
+      "at_risk": "At risk",
+      "pass_rate": "Pass rate",
+      "pending": "Pending review",
+      "last_activity": "Last activity",
+      "today": "Today",
+      "days_ago": "{{count}} day ago",
+      "days_ago_plural": "{{count}} days ago",
+      "no_data": "Not enough data yet",
+      "pass_sample": "Based on {{count}} completed attempt",
+      "pass_sample_plural": "Based on {{count}} completed attempts"
+    },
     "review": {
       "title": "Needs your review",
       "subtitle": "AI-generated content waiting on a human decision.",

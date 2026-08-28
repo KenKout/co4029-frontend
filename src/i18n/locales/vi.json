@@ -253,6 +253,21 @@
       "empty_title": "Hiện không có học viên nào bị đánh dấu",
       "empty_hint": "Học viên mới ghi danh được cho thời gian bắt đầu trước khi bị đánh dấu."
     },
+    "health": {
+      "title": "Tình trạng khóa học",
+      "subtitle": "Các khóa học xếp theo mức cần chú ý. Nhấp vào dòng để mở.",
+      "course": "Khóa học",
+      "students": "Học viên",
+      "progress": "Tiến độ TB",
+      "at_risk": "Rủi ro",
+      "pass_rate": "Tỷ lệ đạt",
+      "pending": "Chờ duyệt",
+      "last_activity": "Hoạt động cuối",
+      "today": "Hôm nay",
+      "days_ago": "{{count}} ngày trước",
+      "no_data": "Chưa đủ dữ liệu",
+      "pass_sample": "Dựa trên {{count}} lượt làm bài"
+    },
     "review": {
       "title": "Cần bạn xem xét",
       "subtitle": "Nội dung do AI tạo đang chờ quyết định của người dùng.",

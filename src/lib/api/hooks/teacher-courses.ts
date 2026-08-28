@@ -116,6 +116,40 @@ export function useStudentsNeedingAttention(limit = 7) {
   });
 }
 
+/**
+ * One course in the dashboard's Course Health table.
+ *
+ * Nullable numbers mean "no data", never zero. `avg_progress_percent` is
+ * null when nobody is enrolled and `pass_rate_percent` when nobody has
+ * completed a published quiz — rendering either as 0% would accuse an
+ * unassessed course of total failure.
+ */
+export interface CourseHealthRow {
+  course_id: string;
+  title: string;
+  slug: string;
+  status: string;
+  students: number;
+  avg_progress_percent: number | null;
+  at_risk_students: number;
+  pass_rate_percent: number | null;
+  /** Student-quiz pairs behind the pass rate; too few and we withhold it. */
+  pass_sample: number;
+  pending_review: number;
+  last_activity_at: string | null;
+  severity: "high" | "medium" | "none";
+  /** Why this course got its band — colour alone is not an explanation. */
+  severity_reason: string | null;
+}
+
+export function useCourseHealth() {
+  return useQuery({
+    queryKey: ["teacher", "dashboard", "course-health"],
+    queryFn: () => apiFetch<CourseHealthRow[]>("/teacher/dashboard/course-health"),
+    staleTime: 1000 * 60,
+  });
+}
+
 /** Which "Needs your review" category to drill into. */
 export type ReviewQueueKind =
   | "quiz-cards"
