@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { setScrollToTopBump } from "@/components/ui/scroll-to-top";
@@ -32,10 +32,14 @@ export default function QuizManagePage() {
     courseId: string;
     quizId: string;
   };
+  // Deep-link intent from the dashboard review queue: which tab to open.
+  const { tab: requestedTab } = useSearch({ strict: false }) as {
+    tab?: string;
+  };
 
   const data = useQuizManageData(courseId, quizId);
   const { quiz, questions, courseModule, pendingDeletes } = data;
-  const state = useQuizManageState({ quizId, quiz, questions });
+  const state = useQuizManageState({ quizId, quiz, questions, requestedTab });
   const sticky = useStickyActions();
 
   // The shell-level ScrollToTop and the combo-undo banner both sit at

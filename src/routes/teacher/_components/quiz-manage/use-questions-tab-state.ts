@@ -13,6 +13,11 @@ export function useQuestionsTabState(
   // the navigator can render a Saved/Unsaved layer; each card reports its own
   // dirty state up via onDirtyChange.
   const [dirtyIds, setDirtyIds] = useState<Set<string>>(() => new Set());
+  // Cards the teacher actually edited. Separate from `dirtyIds`, which also
+  // counts pre-filled defaults the row does not have yet: those need a Save
+  // (the banner says so) but must NOT make a tab switch claim there is work
+  // to lose.
+  const [userEditIds, setUserEditIds] = useState<Set<string>>(() => new Set());
   // Bulk delete is gated behind a confirm dialog (see handler below). The
   // count is frozen when the dialog opens: the confirm handler clears the
   // selection, and reading live `selectedIds.size` would make the dialog copy
@@ -25,8 +30,8 @@ export function useQuestionsTabState(
   // unmount so a confirmed "Quit" doesn't leave the parent armed with a stale
   // count after this subtree is gone.
   useEffect(() => {
-    onDirtyCountChange?.(dirtyIds.size);
-  }, [dirtyIds.size, onDirtyCountChange]);
+    onDirtyCountChange?.(userEditIds.size);
+  }, [userEditIds.size, onDirtyCountChange]);
   useEffect(() => {
     return () => onDirtyCountChange?.(0);
   }, [onDirtyCountChange]);
@@ -41,10 +46,22 @@ export function useQuestionsTabState(
     });
   }, []);
 
+  const handleUserEditChange = useCallback((id: string, edited: boolean) => {
+    setUserEditIds((prev) => {
+      if (edited === prev.has(id)) return prev;
+      const next = new Set(prev);
+      if (edited) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+
   return {
     dirtyIds,
+    userEditIds,
     confirmBulkDelete,
     setConfirmBulkDelete,
     handleDirtyChange,
+    handleUserEditChange,
   };
 }

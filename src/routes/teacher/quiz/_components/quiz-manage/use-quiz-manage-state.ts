@@ -25,7 +25,14 @@ function tabStorageKey(quizId: string): string {
   return `abridgeai.quizmanage.tab.${quizId}`;
 }
 
-function loadInitialTab(quizId: string): TabKey {
+function loadInitialTab(quizId: string, requestedTab?: string): TabKey {
+  // An explicit ?tab= wins over the remembered one. The caller asked for a
+  // specific tab (the dashboard review queue deep-links to Questions), and a
+  // stale sessionStorage entry from an earlier visit must not silently
+  // redirect them somewhere else.
+  if (requestedTab && (TAB_KEYS as readonly string[]).includes(requestedTab)) {
+    return requestedTab as TabKey;
+  }
   try {
     const raw = window.sessionStorage.getItem(tabStorageKey(quizId));
     if (raw && (TAB_KEYS as readonly string[]).includes(raw)) {
@@ -49,12 +56,17 @@ export function useQuizManageState({
   quizId,
   quiz,
   questions,
+  requestedTab,
 }: {
   quizId: string;
   quiz: QuizManageDataController["quiz"];
   questions: QuizManageDataController["questions"];
+  /** `?tab=` from the route — a deep-link's explicit intent. */
+  requestedTab?: string;
 }) {
-  const [tab, setTab] = useState<TabKey>(() => loadInitialTab(quizId));
+  const [tab, setTab] = useState<TabKey>(() =>
+    loadInitialTab(quizId, requestedTab),
+  );
 
   // Persist the active tab so returning from the AI generator (a separate
   // route that unmounts this page) lands back on the same tab.
