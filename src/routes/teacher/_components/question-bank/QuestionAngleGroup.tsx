@@ -76,6 +76,7 @@ export function QuestionAngleGroup({
               key={question.id}
               id={tabId}
               type="button"
+              variant="ghost"
               role="tab"
               aria-selected={selected}
               aria-controls={panelId}
