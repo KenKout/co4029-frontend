@@ -236,14 +236,14 @@
       "advanced": "Advanced"
     },
     "signals": {
-      "cards_awaiting_review": "Awaiting your review",
+      "cards_awaiting_review": "Content awaiting review",
       "cards_awaiting_review_sub": "Quiz + interview questions",
-      "students_below_ef": "Students falling behind",
-      "students_below_ef_sub": "Avg easiness below 2.0",
-      "avg_retention": "Avg retention (EF)",
-      "avg_retention_sub": "2.5 is the ideal baseline",
-      "cards_overdue": "Cards overdue",
-      "cards_overdue_sub": "Past their review date"
+      "students_below_ef": "Students struggling in review",
+      "students_below_ef_sub": "Average easiness below 2.0",
+      "avg_retention": "Average easiness factor",
+      "avg_retention_sub": "Lower means harder — reviewed more often (2.5 = baseline)",
+      "cards_overdue": "Reviews past due",
+      "cards_overdue_sub": "Student review cards past their due date"
     },
     "review": {
       "title": "Needs your review",

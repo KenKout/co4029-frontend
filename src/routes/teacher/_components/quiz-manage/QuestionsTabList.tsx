@@ -21,6 +21,7 @@ export function QuestionsTabList({
   onQueueDelete,
   published,
   onDirtyChange,
+  onUserEditChange,
 }: {
   quizId: string;
   questions: QuizQuestionAuthoring[];
@@ -30,6 +31,7 @@ export function QuestionsTabList({
   onQueueDelete: (item: PendingQuestionDelete) => void;
   published: boolean;
   onDirtyChange: (questionId: string, dirty: boolean) => void;
+  onUserEditChange: (questionId: string, edited: boolean) => void;
 }) {
   const { t } = useTranslation();
 
@@ -62,6 +64,7 @@ export function QuestionsTabList({
           onQueueDelete={onQueueDelete}
           published={published}
           onDirtyChange={onDirtyChange}
+          onUserEditChange={onUserEditChange}
         />
       ))}
     </>

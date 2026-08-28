@@ -60,6 +60,7 @@ function ReviewItemLink({
         <Link
           to="/teacher/courses/$courseId/quizzes/$quizId"
           params={{ courseId: item.course_id, quizId: item.target_id }}
+          search={{ tab: "questions" }}
           className={ITEM_LINK_CLASS}
         >
           {children}
@@ -92,6 +93,7 @@ function ReviewItemLink({
         <Link
           to="/teacher/courses/$courseId/quizzes/$quizId"
           params={{ courseId: item.course_id, quizId: item.target_id }}
+          search={{ tab: "questions" }}
           className={ITEM_LINK_CLASS}
         >
           {children}

@@ -30,6 +30,8 @@ export interface QuestionDraftState {
 export function useQuestionDraft(
   question: QuizQuestionAuthoring,
   onDirtyChange?: (questionId: string, dirty: boolean) => void,
+  /** Reports EXPLICIT teacher edits only — the leave-guard's input. */
+  onUserEditChange?: (questionId: string, edited: boolean) => void,
 ): QuestionDraftState {
   const [draft, setDraft] = useState(() => buildQuestionDraft(question));
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -38,15 +40,16 @@ export function useQuestionDraft(
     setDraft(buildQuestionDraft(question));
   }, [question]);
 
-  // Local edits not yet PATCHed.
+  // TWO distinct notions of "not saved", deliberately kept apart. Collapsing
+  // them into one flag is what produced "31 unsaved" on a quiz nobody had
+  // touched.
   //
-  // The baseline deliberately uses the RAW saved expected time, not
-  // buildQuestionDraft's defaulted one. buildQuestionDraft pre-fills
-  // DEFAULT_EXPECTED_SECONDS when the saved value is null, so comparing against
-  // it would cancel the default out on both sides — the field would look
-  // populated while the row stayed null, and the question wouldn't register as
-  // unsaved. Baselining on the raw value makes that pre-filled default show up
-  // as exactly what it is: an unsaved local edit.
+  // `isUnsaved` — the editor's state differs from the stored ROW. Baselined on
+  // the RAW saved expected time, so buildQuestionDraft's pre-filled
+  // DEFAULT_EXPECTED_SECONDS shows up as exactly what it is: a value on screen
+  // that the database does not have. This drives the amber "unsaved default
+  // time" banner, its one-click bulk Save, and the navigator's rule that such
+  // a question is not an *error*.
   const isUnsaved = useMemo(() => {
     const savedSeconds =
       question.expected_response_time_ms == null
@@ -59,6 +62,15 @@ export function useQuestionDraft(
     return JSON.stringify(draft) !== JSON.stringify(savedBaseline);
   }, [draft, question]);
 
+  // `hasUserEdits` — the TEACHER actually changed something. Baselined on the
+  // DEFAULTED draft, so a pre-fill cancels out on both sides. Only this may
+  // arm the leave-guard: merely opening the Questions tab must not claim there
+  // is work to lose (PRD FR-033).
+  const hasUserEdits = useMemo(
+    () => JSON.stringify(draft) !== JSON.stringify(buildQuestionDraft(question)),
+    [draft, question],
+  );
+
   // Report dirtiness up so the navigator can show a Saved/Unsaved badge. The
   // draft itself stays local to the card (lifting it would re-render every
   // sibling card on each keystroke).
@@ -66,13 +78,18 @@ export function useQuestionDraft(
     onDirtyChange?.(question.id, isUnsaved);
   }, [question.id, isUnsaved, onDirtyChange]);
 
+  useEffect(() => {
+    onUserEditChange?.(question.id, hasUserEdits);
+  }, [question.id, hasUserEdits, onUserEditChange]);
+
   // Unmount cleanup: a card that scrolls out of the list (or is deleted) must
   // not leave a stale "unsaved" flag behind in the parent.
   useEffect(
     () => () => {
       onDirtyChange?.(question.id, false);
+      onUserEditChange?.(question.id, false);
     },
-    [question.id, onDirtyChange],
+    [question.id, onDirtyChange, onUserEditChange],
   );
 
   const hasOptions =

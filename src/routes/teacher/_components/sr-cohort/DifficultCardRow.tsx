@@ -78,7 +78,7 @@ export function DifficultCardRow({
         <Link
           to="/teacher/courses/$courseId/quizzes/$quizId"
           params={{ courseId, quizId: card.quiz_id }}
-          search={{ question: card.question_id }}
+          search={{ tab: "questions", question: card.question_id }}
           onClick={(e) => e.stopPropagation()}
           className="inline-flex items-center justify-end gap-1.5 text-xs font-semibold text-m3-primary hover:underline cursor-pointer"
         >

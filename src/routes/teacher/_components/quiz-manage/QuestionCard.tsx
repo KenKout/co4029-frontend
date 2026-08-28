@@ -37,6 +37,7 @@ export function QuestionCard({
   onQueueDelete,
   published = false,
   onDirtyChange,
+  onUserEditChange,
 }: {
   quizId: string;
   question: QuizQuestionAuthoring;
@@ -50,6 +51,8 @@ export function QuestionCard({
   published?: boolean;
   /** Reports unsaved-edit state up to the navigator. */
   onDirtyChange?: (questionId: string, dirty: boolean) => void;
+  /** Explicit teacher edits only — feeds the leave-guard. */
+  onUserEditChange?: (questionId: string, edited: boolean) => void;
 }) {
   const { t } = useTranslation();
   const {
@@ -69,7 +72,7 @@ export function QuestionCard({
     blankCount,
     expectedSeconds,
     draftTimeInvalid,
-  } = useQuestionDraft(question, onDirtyChange);
+  } = useQuestionDraft(question, onDirtyChange, onUserEditChange);
 
   const handleSave = createQuestionSaver({
     draft,

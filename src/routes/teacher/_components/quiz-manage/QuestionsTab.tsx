@@ -86,6 +86,7 @@ export function QuestionsTab({
     confirmBulkDelete,
     setConfirmBulkDelete,
     handleDirtyChange,
+    handleUserEditChange,
   } = useQuestionsTabState(onDirtyCountChange);
 
   const {
@@ -173,6 +174,7 @@ export function QuestionsTab({
           onQueueDelete={onQueueDelete}
           published={published}
           onDirtyChange={handleDirtyChange}
+          onUserEditChange={handleUserEditChange}
         />
 
         {/* Add-question controls are authoring only — hidden on a published

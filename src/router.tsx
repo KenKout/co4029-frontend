@@ -289,6 +289,19 @@ const teacherModuleManageRoute = createRoute({
 const teacherQuizManageRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/quizzes/$quizId",
+  // Optional ?tab= so the dashboard review queue opens this page ON the work
+  // it points at. Without it every drill-down landed on Settings — the
+  // stored/default tab — and the teacher had to find Questions themselves.
+  // `question` predates this schema (the SR cohort "regenerate" link sends it)
+  // and is currently READ BY NOTHING — declared here so that caller keeps
+  // typechecking and the intent is not silently dropped, but focusing the
+  // question on arrival is still unimplemented.
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: string; question?: string } => ({
+    tab: typeof search.tab === "string" ? search.tab : undefined,
+    question: typeof search.question === "string" ? search.question : undefined,
+  }),
   component: lazyRouteComponent(
     () => import("@/routes/teacher/quiz/quiz-manage"),
   ),
@@ -449,8 +462,15 @@ const deptCourseDetailRoute = createRoute({
   // Optional ?tab= — the worklist's "Teachers" action deep-links here with
   // tab=teachers so it lands on the teachers tab instead of duplicating the
   // row click (which relies on the default tab).
-  validateSearch: (search: Record<string, unknown>): { tab?: string } => ({
+  // `question` predates this schema (the SR cohort "regenerate" link sends it)
+  // and is currently READ BY NOTHING — declared here so that caller keeps
+  // typechecking and the intent is not silently dropped, but focusing the
+  // question on arrival is still unimplemented.
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: string; question?: string } => ({
     tab: typeof search.tab === "string" ? search.tab : undefined,
+    question: typeof search.question === "string" ? search.question : undefined,
   }),
   component: lazyRouteComponent(() => import("@/routes/dept/course-detail")),
 });
