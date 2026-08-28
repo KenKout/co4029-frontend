@@ -76,6 +76,46 @@ export function useTeacherDashboardStats() {
   });
 }
 
+/**
+ * One (student, course) risk row for the dashboard's attention section.
+ *
+ * One row PER COURSE, so a student struggling in two of the teacher's
+ * courses appears twice — the follow-up happens inside a course. This is
+ * why the row count can exceed the `students_needing_attention` tile,
+ * which counts distinct people. Neither number is derivable from the other.
+ */
+export interface StudentNeedingAttention {
+  user_id: string;
+  display_name: string | null;
+  email: string;
+  course_id: string;
+  course_title: string;
+  /** Average lesson completion, 0-100. */
+  completion_percent: number;
+  last_engagement_at: string | null;
+  days_since_last_engagement: number | null;
+  /**
+   * Highest-severity reason, already phrased for a teacher and naming the
+   * threshold that fired — render it as-is rather than reconstructing it
+   * from the numbers, which is how the thresholds drifted before.
+   */
+  primary_reason: string;
+  /** Total reasons that fired; the UI shows "+N" beyond the primary. */
+  signal_count: number;
+  severity: "high" | "medium";
+}
+
+export function useStudentsNeedingAttention(limit = 7) {
+  return useQuery({
+    queryKey: ["teacher", "dashboard", "students-needing-attention", limit],
+    queryFn: () =>
+      apiFetch<StudentNeedingAttention[]>(
+        `/teacher/dashboard/students-needing-attention?limit=${limit}`,
+      ),
+    staleTime: 1000 * 60,
+  });
+}
+
 /** Which "Needs your review" category to drill into. */
 export type ReviewQueueKind =
   | "quiz-cards"

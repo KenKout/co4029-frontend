@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/ui/page-header";
 import {
+  useStudentsNeedingAttention,
   useTeacherCourses,
   useTeacherDashboardStats,
 } from "@/lib/api/hooks/teacher-courses";
@@ -13,10 +14,11 @@ import {
   countCardsAwaitingReview,
 } from "./_components/teacher-index/helpers";
 import { ReviewQueueSection } from "./_components/teacher-index/ReviewQueueSection";
+import { StudentsNeedingAttentionSection } from "./_components/teacher-index/StudentsNeedingAttentionSection";
 
 /**
- * Teacher landing page: retention/review signal tiles, the Human-in-the-Loop
- * review queue and the first six courses.
+ * Teacher landing page: signal tiles, the students the risk engine
+ * flagged, the Human-in-the-Loop review queue and the first six courses.
  *
  * Signal derivation and each section live in `./_components/teacher-index/`;
  * this file is the composition shell.
@@ -25,6 +27,8 @@ export default function TeacherDashboard() {
   const { t } = useTranslation();
   const { data: courses = [], isLoading } = useTeacherCourses();
   const { data: stats } = useTeacherDashboardStats();
+  const { data: atRisk = [], isLoading: atRiskLoading } =
+    useStudentsNeedingAttention();
 
   const cardsAwaitingReview = countCardsAwaitingReview(stats);
   const reviewItems = buildReviewCandidates(stats, t).filter(
@@ -41,6 +45,14 @@ export default function TeacherDashboard() {
       <DashboardSignals
         stats={stats}
         cardsAwaitingReview={cardsAwaitingReview}
+        t={t}
+      />
+
+      {/* People before content: a student falling behind decays while a
+          review backlog merely waits, so the human queue sits first. */}
+      <StudentsNeedingAttentionSection
+        students={atRisk}
+        isLoading={atRiskLoading}
         t={t}
       />
 

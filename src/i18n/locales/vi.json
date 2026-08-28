@@ -245,6 +245,14 @@
       "cards_overdue": "Thẻ ôn tập quá hạn",
       "cards_overdue_sub": "Thẻ ôn tập của học viên đã quá hạn"
     },
+    "attention": {
+      "title": "Học viên cần chú ý",
+      "subtitle": "Được đánh dấu do không hoạt động, chưa tương tác hoặc tiến độ thấp. Ưu tiên nặng nhất trước.",
+      "more_signals": "+{{count}} tín hiệu khác",
+      "progress": "hoàn thành",
+      "empty_title": "Hiện không có học viên nào bị đánh dấu",
+      "empty_hint": "Học viên mới ghi danh được cho thời gian bắt đầu trước khi bị đánh dấu."
+    },
     "review": {
       "title": "Cần bạn xem xét",
       "subtitle": "Nội dung do AI tạo đang chờ quyết định của người dùng.",
