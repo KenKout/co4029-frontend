@@ -235,6 +235,13 @@
       "intermediate": "Trung cấp",
       "advanced": "Nâng cao"
     },
+    "priority": {
+      "title": "Ưu tiên hôm nay",
+      "subtitle": "Xếp hạng trên tất cả: việc đang chặn trước, rồi đến học viên, sau đó là tồn đọng.",
+      "blocking": "Đang chặn",
+      "empty_title": "Không có việc gấp",
+      "empty_hint": "Không có gì bị chặn và không học viên nào bị đánh dấu. Xem Tình trạng khóa học bên dưới."
+    },
     "signals": {
       "cards_awaiting_review": "Nội dung chờ duyệt",
       "cards_awaiting_review_sub": "Câu hỏi quiz + phỏng vấn",

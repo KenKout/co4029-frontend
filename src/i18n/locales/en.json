@@ -234,6 +234,13 @@
       "intermediate": "Intermediate",
       "advanced": "Advanced"
     },
+    "priority": {
+      "title": "Priority today",
+      "subtitle": "Ranked across everything: blocking work first, then students, then backlog.",
+      "blocking": "Blocking",
+      "empty_title": "No urgent actions",
+      "empty_hint": "Nothing is blocked and no student is flagged. Course health below has the fuller picture."
+    },
     "signals": {
       "cards_awaiting_review": "Content awaiting review",
       "cards_awaiting_review_sub": "Quiz + interview questions",

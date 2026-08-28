@@ -150,6 +150,43 @@ export function useCourseHealth() {
   });
 }
 
+/**
+ * One item in the Priority Today feed.
+ *
+ * No URL comes from the server — `kind` plus the id fields let the client
+ * build a typed route. A server-built path would hard-code the SPA's
+ * routing table into the API and break silently on a rename.
+ */
+export interface PriorityTask {
+  id: string;
+  kind:
+    | "student_risk"
+    | "quiz_questions_pending"
+    | "interview_questions_pending"
+    | "quiz_calibration"
+    | "materials_ready"
+    | "reviews_overdue";
+  severity: "high" | "medium" | "low";
+  title: string;
+  reason: string;
+  course_id: string | null;
+  course_title: string | null;
+  student_id: string | null;
+  /** Null when the underlying rows carry no timestamp to age from. */
+  age_hours: number | null;
+  blocking: boolean;
+  count: number;
+}
+
+export function usePriorityTasks(limit = 7) {
+  return useQuery({
+    queryKey: ["teacher", "dashboard", "priority", limit],
+    queryFn: () =>
+      apiFetch<PriorityTask[]>(`/teacher/dashboard/priority?limit=${limit}`),
+    staleTime: 1000 * 60,
+  });
+}
+
 /** Which "Needs your review" category to drill into. */
 export type ReviewQueueKind =
   | "quiz-cards"
