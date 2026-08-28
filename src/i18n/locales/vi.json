@@ -237,14 +237,14 @@
       "advanced": "Nâng cao"
     },
     "signals": {
-      "cards_awaiting_review": "Chờ bạn xem xét",
-      "cards_awaiting_review_sub": "Câu hỏi kiểm tra + phỏng vấn",
-      "students_below_ef": "Học viên đang tụt lại",
+      "cards_awaiting_review": "Nội dung chờ duyệt",
+      "cards_awaiting_review_sub": "Câu hỏi quiz + phỏng vấn",
+      "students_below_ef": "Học viên gặp khó khi ôn tập",
       "students_below_ef_sub": "Độ dễ trung bình dưới 2.0",
-      "avg_retention": "Ghi nhớ trung bình (EF)",
-      "avg_retention_sub": "2.5 là mức chuẩn lý tưởng",
-      "cards_overdue": "Thẻ quá hạn",
-      "cards_overdue_sub": "Đã qua ngày ôn tập"
+      "avg_retention": "Hệ số dễ nhớ trung bình",
+      "avg_retention_sub": "Càng thấp càng khó — ôn lại thường xuyên hơn (2.5 = chuẩn)",
+      "cards_overdue": "Thẻ ôn tập quá hạn",
+      "cards_overdue_sub": "Thẻ ôn tập của học viên đã quá hạn"
     },
     "review": {
       "title": "Cần bạn xem xét",
