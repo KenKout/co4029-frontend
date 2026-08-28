@@ -21,6 +21,7 @@ type Stats = {
   pending_interviews: number;
   pending_review_by_course: Record<string, number>;
   students_below_ef_threshold: number;
+  students_needing_attention: number;
   avg_retention_ef: number;
   cards_overdue: number;
 };
@@ -40,6 +41,10 @@ const DEV_DB: Stats = {
     "course-dw": 46,
   },
   students_below_ef_threshold: 2,
+  // From the progress risk engine, not from EF. Higher than the EF count
+  // because inactivity and low completion catch students who have no
+  // review history to be "below threshold" on in the first place.
+  students_needing_attention: 5,
   avg_retention_ef: 1.94,
   cards_overdue: 68,
 };
@@ -143,8 +148,15 @@ describe("retention signals", () => {
     expect(DEV_DB.avg_retention_ef.toFixed(2)).toBe("1.94");
   });
 
-  it("flags students below the EF threshold", () => {
-    expect(DEV_DB.students_below_ef_threshold).toBe(2);
+  it("headlines the risk-engine count, not the EF proxy", () => {
+    // The tile renders `students_needing_attention`. Asserting the two
+    // differ is the point: while the tile read the EF field it silently
+    // under-reported, and it shared a name with the course page's at-risk
+    // rule while counting a different population.
+    expect(DEV_DB.students_needing_attention).toBe(5);
+    expect(DEV_DB.students_needing_attention).not.toBe(
+      DEV_DB.students_below_ef_threshold,
+    );
   });
 
   it("counts overdue cards", () => {

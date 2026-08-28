@@ -216,8 +216,7 @@
     }
   },
   "teacher_dashboard": {
-    "title": "Bảng điều khiển Giảng viên",
-    "subtitle": "Quản lý khóa học, tài liệu và tạo AI.",
+    "title": "Không gian giảng dạy",
     "your_courses": {
       "title": "Khóa học của bạn",
       "subtitle": "Nhấn để quản lý học phần, bài học và tài liệu",
@@ -239,8 +238,8 @@
     "signals": {
       "cards_awaiting_review": "Nội dung chờ duyệt",
       "cards_awaiting_review_sub": "Câu hỏi quiz + phỏng vấn",
-      "students_below_ef": "Học viên gặp khó khi ôn tập",
-      "students_below_ef_sub": "Độ dễ trung bình dưới 2.0",
+      "students_needing_attention": "Học viên cần chú ý",
+      "students_needing_attention_sub": "Có ít nhất một tín hiệu rủi ro",
       "avg_retention": "Hệ số dễ nhớ trung bình",
       "avg_retention_sub": "Càng thấp càng khó — ôn lại thường xuyên hơn (2.5 = chuẩn)",
       "cards_overdue": "Thẻ ôn tập quá hạn",

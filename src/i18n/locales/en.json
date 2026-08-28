@@ -215,8 +215,7 @@
     }
   },
   "teacher_dashboard": {
-    "title": "Teacher Dashboard",
-    "subtitle": "Manage your courses, materials, and AI generation.",
+    "title": "Teacher Workspace",
     "your_courses": {
       "title": "Your Courses",
       "subtitle": "Click to manage modules, lessons, and materials",
@@ -238,8 +237,8 @@
     "signals": {
       "cards_awaiting_review": "Content awaiting review",
       "cards_awaiting_review_sub": "Quiz + interview questions",
-      "students_below_ef": "Students struggling in review",
-      "students_below_ef_sub": "Average easiness below 2.0",
+      "students_needing_attention": "Students needing attention",
+      "students_needing_attention_sub": "At least one active risk signal",
       "avg_retention": "Average easiness factor",
       "avg_retention_sub": "Lower means harder — reviewed more often (2.5 = baseline)",
       "cards_overdue": "Reviews past due",

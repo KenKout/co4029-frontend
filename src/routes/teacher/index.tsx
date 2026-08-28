@@ -34,10 +34,9 @@ export default function TeacherDashboard() {
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
-      <PageHeader
-        title={t("teacher_dashboard.title")}
-        subtitle={t("teacher_dashboard.subtitle")}
-      />
+      {/* No subtitle: "Manage your courses, materials, and AI generation"
+          restated the navigation and pushed the signals below the fold. */}
+      <PageHeader title={t("teacher_dashboard.title")} />
 
       <DashboardSignals
         stats={stats}

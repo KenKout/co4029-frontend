@@ -54,6 +54,13 @@ export interface TeacherDashboardStats {
   materials_ready_for_quiz_gen: number;
   // Student performance (spaced repetition).
   students_below_ef_threshold: number;
+  /**
+   * DISTINCT students with at least one active risk signal across the
+   * teacher's courses, from the progress feature's risk engine. NOT the
+   * same population as `students_below_ef_threshold`, which only knows
+   * about spaced-repetition easiness.
+   */
+  students_needing_attention: number;
   /** Mean SM-2 easiness factor across in-scope cards. 2.5 is the default/ideal. */
   avg_retention_ef: number;
   cards_overdue: number;
