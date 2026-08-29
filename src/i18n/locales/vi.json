@@ -2105,7 +2105,8 @@
         "needs_action": "Cần xử lý",
         "reliability": "Độ tin cậy & thông lượng",
         "cost_capacity": "Chi phí & dung lượng",
-        "tenants": "Bất thường theo tổ chức"
+        "tenants": "Bất thường theo tổ chức",
+        "security": "Bảo mật & truy cập"
       },
       "overall": {
         "ok": "Mọi hệ thống hoạt động bình thường",
@@ -2187,7 +2188,16 @@
         "orgs_inactive_detail": "Không hoạt động trong 30 ngày, trên {{total}}",
         "orgs_total": "Tổ chức",
         "orgs_total_detail": "Tổ chức trên nền tảng",
-        "no_baseline": "Chưa có kỳ trước"
+        "no_baseline": "Chưa có kỳ trước",
+        "failed_logins": "Đăng nhập thất bại",
+        "failed_logins_detail": "Từ {{sources}} nguồn, {{window}}",
+        "failed_logins_none": "Không có trong {{window}}",
+        "denied_requests": "Yêu cầu bị từ chối",
+        "denied_requests_detail": "Lỗi 403 ngoài đăng nhập, {{window}}",
+        "role_changes": "Thay đổi vai trò",
+        "role_changes_detail": "{{revoked}} bị thu hồi, {{window}}",
+        "privileged_accounts": "Tài khoản đặc quyền",
+        "privileged_accounts_detail": "Admin, quản lý hoặc trưởng bộ môn · {{sessions}} phiên đang hoạt động"
       },
       "facts": {
         "tokens": "Token đã dùng",
@@ -2197,9 +2207,13 @@
       "scope": {
         "api": "Số liệu API tính trên toàn nền tảng — nhật ký request không gắn tổ chức.",
         "cost": "Số liệu chi phí tính trên toàn nền tảng — lượt gọi AI không gắn tổ chức.",
-        "job": "Số liệu job tính trên toàn nền tảng — job xử lý không gắn tổ chức."
+        "job": "Số liệu job tính trên toàn nền tảng — job xử lý không gắn tổ chức.",
+        "security": "Số liệu request bảo mật tính trên toàn nền tảng — nhật ký request không gắn tổ chức."
       },
-      "unchecked": "Chưa kiểm tra: {{services}}"
+      "unchecked": "Chưa kiểm tra: {{services}}",
+      "security": {
+        "load_failed": "Không tải được tổng quan bảo mật."
+      }
     },
     "operations": {
       "title": "Vận hành & độ tin cậy",

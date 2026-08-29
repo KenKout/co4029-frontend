@@ -500,6 +500,14 @@ const adminAiCostsRoute = createRoute({
 const adminAuditLogsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/audit-logs",
+  // Alerts link straight to the tab and filter that explain them, rather than
+  // dropping an operator on a generic log to re-derive the query (ADM-021).
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: string; path?: string } => ({
+    tab: typeof search.tab === "string" ? search.tab : undefined,
+    path: typeof search.path === "string" ? search.path : undefined,
+  }),
   component: lazyRouteComponent(() => import("@/routes/admin/audit-logs")),
 });
 

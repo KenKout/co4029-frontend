@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { useAdminDashboard } from "@/lib/api/hooks/admin";
 import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
+import { useSecuritySummary } from "@/lib/api/hooks/admin-security";
 import { useDeepHealth } from "@/lib/api/hooks/infra";
 import {
   SUPERUSER_PERMISSION,
@@ -50,6 +51,7 @@ export function useAdminStatsPage(): AdminStatsController {
     organizationId,
   });
   const health = useDeepHealth();
+  const security = useSecuritySummary(windowDays, organizationId);
 
   const currentStatus = useMemo(
     () =>
@@ -90,6 +92,11 @@ export function useAdminStatsPage(): AdminStatsController {
       })),
     },
     currentStatus,
+    security: {
+      data: security.data,
+      isLoading: security.isLoading,
+      isError: security.isError,
+    },
     alerts,
     reliability,
     cost,

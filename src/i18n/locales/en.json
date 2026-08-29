@@ -2197,7 +2197,8 @@
         "needs_action": "Needs action",
         "reliability": "Reliability & throughput",
         "cost_capacity": "Cost & capacity",
-        "tenants": "Tenant anomalies"
+        "tenants": "Tenant anomalies",
+        "security": "Security & access"
       },
       "overall": {
         "ok": "All systems operational",
@@ -2279,7 +2280,16 @@
         "orgs_inactive_detail": "No activity in 30 days, of {{total}}",
         "orgs_total": "Organizations",
         "orgs_total_detail": "Tenants on the platform",
-        "no_baseline": "No prior window"
+        "no_baseline": "No prior window",
+        "failed_logins": "Failed logins",
+        "failed_logins_detail": "From {{sources}} sources, {{window}}",
+        "failed_logins_none": "None in the {{window}}",
+        "denied_requests": "Denied requests",
+        "denied_requests_detail": "403s outside sign-in, {{window}}",
+        "role_changes": "Role changes",
+        "role_changes_detail": "{{revoked}} revoked, {{window}}",
+        "privileged_accounts": "Privileged accounts",
+        "privileged_accounts_detail": "Admin, manager or head · {{sessions}} active sessions"
       },
       "facts": {
         "tokens": "Tokens used",
@@ -2289,9 +2299,13 @@
       "scope": {
         "api": "API metrics are platform-wide — request logs carry no organization.",
         "cost": "Cost metrics are platform-wide — AI calls carry no organization.",
-        "job": "Job metrics are platform-wide — processing jobs carry no organization."
+        "job": "Job metrics are platform-wide — processing jobs carry no organization.",
+        "security": "Security request counts are platform-wide — the request log carries no organization."
       },
-      "unchecked": "Not checked: {{services}}"
+      "unchecked": "Not checked: {{services}}",
+      "security": {
+        "load_failed": "Could not load the security summary."
+      }
     },
     "operations": {
       "title": "Operations & reliability",

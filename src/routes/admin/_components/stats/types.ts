@@ -1,5 +1,6 @@
 import type { ActionSeverity } from "@/components/ui/action-tile";
 import type { AdminDashboardOut } from "@/lib/api/hooks/admin";
+import type { SecuritySummary } from "@/lib/api/hooks/admin-security";
 import type { DeepHealthResponse } from "@/lib/api/hooks/infra";
 
 /**
@@ -166,6 +167,13 @@ export interface AdminStatsController {
   /** Server evaluation timestamp for every number on the page (ADM-004). */
   asOf: string | undefined;
   currentStatus: CurrentStatus;
+  /** Security & access rollup. Loads independently of the metric rollup, so a
+   *  failure here costs this row and nothing else (ADM-015). */
+  security: {
+    data: SecuritySummary | undefined;
+    isLoading: boolean;
+    isError: boolean;
+  };
   alerts: OperatorAlert[];
   reliability: ReliabilitySummary;
   cost: CostSummary;
