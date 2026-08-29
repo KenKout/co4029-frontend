@@ -1845,7 +1845,9 @@
         "trend_desc": "Daily p50 and p95 response time across all API requests.",
         "trend_period_aria": "Latency lookback window",
         "trend_tooltip": "p95 {{p95}} · p50 {{p50}} · {{requests}} requests",
-        "trend_empty": "No API traffic in this period."
+        "trend_empty": "No API traffic in this period.",
+        "legend_p95": "p95 — 95th percentile",
+        "legend_p50": "p50 — median"
       }
     },
     "ai_costs": {
