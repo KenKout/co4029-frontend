@@ -22,7 +22,6 @@ import type {
   EnableUserOut,
   GrantCreate,
   GrantRead,
-  HealthOut,
   MembershipCreate,
   MembershipRead,
   OverviewOut,
@@ -257,18 +256,6 @@ export function useContentStats() {
     queryKey: queryKeys.admin.content(),
     queryFn: () => apiFetch<ContentOut>("/admin/stats/content"),
     staleTime: 1000 * 60,
-  });
-}
-
-export function useStatsHealth(since: string) {
-  return useQuery({
-    queryKey: queryKeys.admin.statsHealth(since),
-    queryFn: () =>
-      apiFetch<HealthOut>(
-        `/admin/stats/health?since=${encodeURIComponent(since)}`,
-      ),
-    staleTime: 1000 * 30,
-    enabled: Boolean(since),
   });
 }
 

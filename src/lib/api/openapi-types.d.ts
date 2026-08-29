@@ -5651,23 +5651,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/stats/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Health */
-        get: operations["get_health_api_v1_admin_stats_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/admin/stats/dashboard": {
         parameters: {
             query?: never;
@@ -8978,15 +8961,6 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
-        };
-        /** HealthOut */
-        HealthOut: {
-            /** Failed Jobs Count */
-            failed_jobs_count: number;
-            /** In Flight Jobs Count */
-            in_flight_jobs_count: number;
-            /** Failed Ai Calls Count */
-            failed_ai_calls_count: number;
         };
         /** HistogramBucket */
         HistogramBucket: {
@@ -16063,7 +16037,6 @@ export type SchemaGoogleLoginResponse = components['schemas']['GoogleLoginRespon
 export type SchemaGrantCreate = components['schemas']['GrantCreate'];
 export type SchemaGrantRead = components['schemas']['GrantRead'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
-export type SchemaHealthOut = components['schemas']['HealthOut'];
 export type SchemaHistogramBucket = components['schemas']['HistogramBucket'];
 export type SchemaHttpAuditRow = components['schemas']['HttpAuditRow'];
 export type SchemaInstructorAuthoring = components['schemas']['InstructorAuthoring'];
@@ -26078,38 +26051,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContentOut"];
-                };
-            };
-        };
-    };
-    get_health_api_v1_admin_stats_health_get: {
-        parameters: {
-            query: {
-                /** @description Lower bound on event time (required to bound scan). */
-                since: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

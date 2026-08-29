@@ -705,7 +705,6 @@ export interface ActiveUsersTrendOut {
   points: ActiveUsersTrendPoint[];
 }
 export type ContentOut = Schemas["ContentOut"];
-export type HealthOut = Schemas["HealthOut"];
 
 export type AdminCoursePage = Schemas["AdminCoursePage"];
 export type CourseProcessingAudit = Schemas["CourseProcessingAudit"];

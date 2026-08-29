@@ -48,8 +48,8 @@ export function ReliabilityRow({ c }: { c: AdminStatsController }) {
           })}
           severity={r.jobSeverity}
           icon={XCircle}
-          to="/admin/processing"
-          search={{ status: "failed" }}
+          to="/admin/operations"
+          search={{ tab: "failures" }}
           trend={{
             deltaPct: r.jobFailureTrendPct,
             higherIsWorse: true,
@@ -67,7 +67,8 @@ export function ReliabilityRow({ c }: { c: AdminStatsController }) {
           })}
           severity={r.queueSeverity}
           icon={Layers}
-          to="/admin/processing"
+          to="/admin/operations"
+          search={{ tab: "jobs" }}
         />
 
         <ActionTile

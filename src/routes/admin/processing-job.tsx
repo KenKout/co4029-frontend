@@ -25,7 +25,7 @@ export default function AdminProcessingJobPage() {
     <div className="space-y-6 pb-12">
       <Breadcrumbs
         items={[
-          { label: t("admin.processing.title"), to: "/admin/processing" },
+          { label: t("admin.operations.title"), to: "/admin/operations" },
           { label: data?.job_type ?? t("admin.processing_job.title") },
         ]}
       />

@@ -301,6 +301,8 @@ describe("needs-action list", () => {
     );
     expect(alerts[0].key).toBe("dependency_down");
     expect(alerts[0].value).toBe("Postgres");
+    // Straight to the Services tab, which names the failing dependency.
+    expect(alerts[0].search).toEqual({ tab: "services" });
   });
 
   it("sorts critical above warning", () => {
@@ -338,8 +340,10 @@ describe("needs-action list", () => {
       expect(alert.to).toMatch(/^\/admin\//);
       expect(alert.detail).toBeTruthy();
     }
-    // The failed-jobs alert lands on the filtered list, not a generic page.
-    expect(alerts[0].search).toEqual({ status: "failed" });
+    // The failed-jobs alert lands on the Operations Failures tab, already
+    // filtered — not on a generic page the operator has to narrow by hand.
+    expect(alerts[0].to).toBe("/admin/operations");
+    expect(alerts[0].search).toEqual({ tab: "failures" });
   });
 
   it("gives a stalled queue an age, since that is the actual evidence", () => {
@@ -358,6 +362,7 @@ describe("needs-action list", () => {
     );
     expect(alerts[0].key).toBe("queue_stalled");
     expect(alerts[0].age).toBe(`${QUEUE_AGE_CRITICAL_SECONDS}s`);
+    expect(alerts[0].search).toEqual({ tab: "jobs", status: "running" });
   });
 
   it("does not raise inactive tenants when there are none", () => {

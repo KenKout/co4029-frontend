@@ -5,7 +5,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
  * The processing page's status tabs.
  *
  * The load-bearing case is the deep link: the admin dashboard's "Job failure
- * rate" tile navigates to /admin/processing?status=failed, so the Failed tab
+ * rate" tile navigates to the Operations Failures tab, so the Failed tab
  * must come up pre-selected and the jobs query must be issued with that status.
  * Simplifying the page must not quietly break that.
  *

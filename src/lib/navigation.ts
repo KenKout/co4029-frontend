@@ -1,6 +1,5 @@
 import {
   Activity,
-  AlertTriangle,
   BarChart3,
   BookOpen,
   Briefcase,
@@ -281,9 +280,13 @@ export const adminNavItems: NavItem[] = [
     icon: BookOpen,
   },
   {
-    label: "Processing",
-    i18nKey: "nav.processing",
-    href: "/admin/processing",
+    // Services + Jobs & Queues + Failures in one module (PRD ADM-010). It
+    // replaces the former Processing / Health / Job Health trio, which split
+    // one question — "is the platform working" — across three routes that
+    // counted jobs three different ways.
+    label: "Operations",
+    i18nKey: "nav.operations",
+    href: "/admin/operations",
     icon: Cpu,
   },
   {
@@ -297,21 +300,6 @@ export const adminNavItems: NavItem[] = [
     i18nKey: "nav.audit_logs",
     href: "/admin/audit-logs",
     icon: ScrollText,
-  },
-  {
-    label: "Health",
-    i18nKey: "nav.health",
-    href: "/admin/health",
-    icon: Shield,
-  },
-  {
-    // Windowed pipeline failure metrics (failed jobs / failed AI calls over
-    // 24h/7d/30d). Distinct from `nav.health`, which is the infra readiness
-    // probe (postgres/redis/migrations).
-    label: "Job Health",
-    i18nKey: "nav.job_health",
-    href: "/admin/stats/health",
-    icon: AlertTriangle,
   },
   {
     // Deployment/tenant runtime configuration (chunking, preprocessing, KG,
@@ -379,9 +367,9 @@ export const adminNavGroups: NavGroup[] = [
     i18nKey: "nav_groups.system",
     items: [
       {
-        label: "Processing",
-        i18nKey: "nav.processing",
-        href: "/admin/processing",
+        label: "Operations",
+        i18nKey: "nav.operations",
+        href: "/admin/operations",
         icon: Cpu,
       },
       {
@@ -395,18 +383,6 @@ export const adminNavGroups: NavGroup[] = [
         i18nKey: "nav.audit_logs",
         href: "/admin/audit-logs",
         icon: ScrollText,
-      },
-      {
-        label: "Health",
-        i18nKey: "nav.health",
-        href: "/admin/health",
-        icon: Shield,
-      },
-      {
-        label: "Job Health",
-        i18nKey: "nav.job_health",
-        href: "/admin/stats/health",
-        icon: AlertTriangle,
       },
       {
         label: "System Config",
