@@ -636,9 +636,14 @@ export function useInterviewGenerationRun(
         `/teacher/interview-configs/${configId}/generation-runs/${runId}`,
       ),
     enabled: !!configId && !!runId,
+    // Keep polling while a run id is active even when a status request
+    // transiently fails. Otherwise an exhausted React Query retry leaves the
+    // page with no data, stops polling, and strands the generation UI.
+    retry: 3,
+    retryDelay: 2500,
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      if (status === "pending" || status === "running") return 2500;
+      if (!status || status === "pending" || status === "running") return 2500;
       return false;
     },
   });

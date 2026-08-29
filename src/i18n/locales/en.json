@@ -4721,6 +4721,8 @@
       "supplementary_placeholder": "Specific instructions for this run…",
       "in_progress": "Generating questions…",
       "failed": "Generation failed",
+      "cancelled": "Generation cancelled",
+      "save_settings_first": "Save Settings before generating questions.",
       "completed": "Completed",
       "phase_generating": "Generating & grounding questions…",
       "phase_saving": "Saving questions…",

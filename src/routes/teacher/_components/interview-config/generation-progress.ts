@@ -121,6 +121,7 @@ function useGenerationElapsed(
 export interface GenerationRunState {
   inProgress: boolean;
   failed: boolean;
+  cancelled: boolean;
   completed: boolean;
   progress: GenerationProgress | null;
   elapsed: number;
@@ -143,6 +144,7 @@ export function useGenerationRunState({
         (!run || run.status === "pending" || run.status === "running"),
     );
   const failed = run?.status === "failed";
+  const cancelled = run?.status === "cancelled";
   const completed = run?.status === "completed";
 
   // Live progress the pipeline writes into config_json.progress each round
@@ -151,11 +153,11 @@ export function useGenerationRunState({
   const progress = readGenerationProgress(run);
 
   // Live elapsed timer (quiz-style): ticks while running, freezes on finish.
-  const isTerminal = failed || completed || run?.status === "cancelled";
+  const isTerminal = failed || cancelled || completed;
   const elapsed = useGenerationElapsed(
     run?.started_at,
     isTerminal ? (run?.finished_at ?? null) : null,
   );
 
-  return { inProgress, failed, completed, progress, elapsed };
+  return { inProgress, failed, cancelled, completed, progress, elapsed };
 }

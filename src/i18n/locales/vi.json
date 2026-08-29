@@ -4586,6 +4586,8 @@
       "supplementary_placeholder": "Hướng dẫn riêng cho lần sinh này…",
       "in_progress": "Đang sinh câu hỏi…",
       "failed": "Sinh câu hỏi thất bại",
+      "cancelled": "Đã hủy sinh câu hỏi",
+      "save_settings_first": "Hãy lưu Cài đặt trước khi sinh câu hỏi.",
       "completed": "Hoàn thành",
       "phase_generating": "Đang sinh & kiểm chứng câu hỏi…",
       "phase_saving": "Đang lưu câu hỏi…",

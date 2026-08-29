@@ -25,14 +25,16 @@ export function GenerationRunStatus({
   state: GenerationRunState;
 }) {
   const { t } = useTranslation();
-  const { inProgress, failed, completed, progress, elapsed } = state;
+  const { inProgress, failed, cancelled, completed, progress, elapsed } = state;
   return (
     <div
       className={cn(
         "rounded-xl px-4 py-3 text-sm border",
         failed
           ? "border-red-200 bg-red-50 text-red-800"
-          : completed
+          : cancelled
+            ? "border-amber-200 bg-amber-50 text-amber-800"
+            : completed
             ? "border-emerald-200 bg-emerald-50 text-emerald-800"
             : "border-blue-200 bg-blue-50 text-blue-800",
       )}
@@ -43,11 +45,12 @@ export function GenerationRunStatus({
       <GenerationRunHeader
         inProgress={inProgress}
         failed={failed}
+        cancelled={cancelled}
         progress={progress}
         elapsed={elapsed}
       />
 
-      {!failed && (
+      {!failed && !cancelled && (
         <GenerationProgressBar
           completed={completed}
           inProgress={inProgress}
@@ -57,6 +60,11 @@ export function GenerationRunStatus({
 
       {failed && run?.failure_message && (
         <p className="mt-1 text-xs">{run.failure_message}</p>
+      )}
+      {cancelled && (
+        <p className="mt-1 text-xs">
+          {t("teacher_interview_config.generate.cancelled")}
+        </p>
       )}
       {completed && (
         <p className="mt-1 text-xs">
@@ -70,11 +78,13 @@ export function GenerationRunStatus({
 function GenerationRunHeader({
   inProgress,
   failed,
+  cancelled,
   progress,
   elapsed,
 }: {
   inProgress: boolean;
   failed: boolean;
+  cancelled: boolean;
   progress: GenerationProgress | null;
   elapsed: number;
 }) {
@@ -86,6 +96,8 @@ function GenerationRunHeader({
           <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
         ) : failed ? (
           <X className="h-4 w-4 shrink-0" />
+        ) : cancelled ? (
+          <X className="h-4 w-4 shrink-0" />
         ) : (
           <CheckCircle2 className="h-4 w-4 shrink-0" />
         )}
@@ -94,7 +106,9 @@ function GenerationRunHeader({
             ? t("teacher_interview_config.generate.in_progress")
             : failed
               ? t("teacher_interview_config.generate.failed")
-              : t("teacher_interview_config.generate.completed")}
+              : cancelled
+                ? t("teacher_interview_config.generate.cancelled")
+                : t("teacher_interview_config.generate.completed")}
         </span>
       </div>
       <div className="flex shrink-0 items-center gap-3 text-xs tabular-nums">

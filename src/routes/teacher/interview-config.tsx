@@ -33,6 +33,21 @@ import { useConfigMutations } from "@/routes/teacher/_components/interview-confi
 import { useConfigPageData } from "@/routes/teacher/_components/interview-config/use-config-page-data";
 import { useNavItems } from "@/routes/teacher/_components/interview-config/use-nav-items";
 
+// Reattach the run poll after reload from the server-owned last-run reference.
+// Resetting on configId also prevents a reused route instance polling another
+// interview config with the previous config's run id.
+function useGenerationRunReattach(
+  config: { id: string; generation_run_id?: string | null } | undefined,
+  configId: string,
+  setActiveRunId: (value: string | null) => void,
+) {
+  useEffect(() => {
+    setActiveRunId(
+      config?.id === configId ? (config.generation_run_id ?? null) : null,
+    );
+  }, [config?.id, config?.generation_run_id, configId, setActiveRunId]);
+}
+
 export default function InterviewConfigPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -103,8 +118,13 @@ export default function InterviewConfigPage() {
   // the questions cache permanently stale ("No questions yet" even though
   // the backend had already persisted them).
   const { data: activeRun } = useInterviewGenerationRun(configId, activeRunId);
+  useGenerationRunReattach(config, configId, setActiveRunId);
   useEffect(() => {
-    if (activeRun?.status === "completed" || activeRun?.status === "failed") {
+    if (
+      activeRun?.status === "completed" ||
+      activeRun?.status === "failed" ||
+      activeRun?.status === "cancelled"
+    ) {
       void qc.invalidateQueries({
         queryKey: queryKeys.interviews.configAuthoring(configId),
       });
@@ -159,6 +179,7 @@ export default function InterviewConfigPage() {
     config,
     courseId,
     generationForm,
+    settingsDirty,
     mutations,
     generate,
     isArchived,

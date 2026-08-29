@@ -14,7 +14,7 @@ import type { FormEvent } from "react";
 import type { TFunction } from "i18next";
 import { toast } from "sonner";
 
-import type { InterviewConfigAuthoring } from "@/lib/api/types";
+import type { InterviewConfigAuthoring, InterviewGenerationRequest } from "@/lib/api/types";
 import type {
   GenerationFormState,
   SettingsDraft,
@@ -38,6 +38,7 @@ export interface ConfigActionsDeps {
   config: InterviewConfigAuthoring;
   courseId: string;
   generationForm: GenerationFormState;
+  settingsDirty?: boolean;
   mutations: ReturnType<typeof useConfigMutations>;
   generate: ReturnType<typeof useGenerateInterviewQuestions>;
   isArchived: boolean;
@@ -60,6 +61,38 @@ export interface ConfigActions {
   handleUnpublish: () => Promise<void>;
   handleGenerate: () => Promise<void>;
   handleDelete: () => Promise<void>;
+}
+
+function buildGenerateRequest(
+  deps: ConfigActionsDeps,
+): InterviewGenerationRequest {
+  const { config, draft, generationForm } = deps;
+  return {
+    mode: generationForm.mode,
+    course_id: deps.courseId,
+    module_id: config.module_id,
+    question_count: generationForm.question_count,
+    // "" = the teacher did not pick a variant mode → null keeps the
+    // backend on the legacy mixed type-mix.
+    variant_strategy:
+      generationForm.variant_strategy === ""
+        ? null
+        : generationForm.variant_strategy,
+    focus_topics: splitTopics(generationForm.focus_topics),
+    avoid_topics: splitTopics(generationForm.avoid_topics),
+    source_module_ids: generationForm.source_module_ids,
+    source_lesson_ids: [],
+    target_outcome_ids: generationForm.target_outcome_ids,
+    persona: draft?.persona,
+    // Send the same serialized blob the config stores; the backend strips
+    // the structured keys and feeds only the prose to the generation prompt.
+    supplementary_instructions: draft
+      ? serializeSupplementaryInstructions({
+          notes: draft.notes,
+          criteria: draft.rubric_criteria,
+        })
+      : null,
+  };
 }
 
 export function createConfigActions(deps: ConfigActionsDeps): ConfigActions {
@@ -173,7 +206,11 @@ export function createConfigActions(deps: ConfigActionsDeps): ConfigActions {
   }
 
   async function handleGenerate() {
-    const { config, draft, generationForm } = deps;
+    if (deps.settingsDirty) {
+      toast.error(t("teacher_interview_config.generate.save_settings_first"));
+      return;
+    }
+    const { config, generationForm } = deps;
     if (config.status === "published") {
       toast.error(t("teacher_interview_config.generate.published_locked"));
       return;
@@ -186,32 +223,7 @@ export function createConfigActions(deps: ConfigActionsDeps): ConfigActions {
       return;
     }
     try {
-      const result = await deps.generate.mutateAsync({
-        mode: generationForm.mode,
-        course_id: deps.courseId,
-        module_id: config.module_id,
-        question_count: generationForm.question_count,
-        // "" = the teacher did not pick a variant mode → null keeps the
-        // backend on the legacy mixed type-mix.
-        variant_strategy:
-          generationForm.variant_strategy === ""
-            ? null
-            : generationForm.variant_strategy,
-        focus_topics: splitTopics(generationForm.focus_topics),
-        avoid_topics: splitTopics(generationForm.avoid_topics),
-        source_module_ids: generationForm.source_module_ids,
-        source_lesson_ids: [],
-        target_outcome_ids: generationForm.target_outcome_ids,
-        persona: draft?.persona,
-        // Send the same serialized blob the config stores; the backend strips
-        // the structured keys and feeds only the prose to the generation prompt.
-        supplementary_instructions: draft
-          ? serializeSupplementaryInstructions({
-              notes: draft.notes,
-              criteria: draft.rubric_criteria,
-            })
-          : null,
-      });
+      const result = await deps.generate.mutateAsync(buildGenerateRequest(deps));
       deps.setActiveRunId(result.run_id);
       toast.success(t("teacher_interview_config.toasts.generation_started"));
     } catch (err: unknown) {
