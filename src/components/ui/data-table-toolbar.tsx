@@ -19,7 +19,11 @@ import {
   type FilterValues,
 } from "@/components/ui/filter-bar";
 
-export type { FilterDef, FilterOption, FilterValues } from "@/components/ui/filter-bar";
+export type {
+  FilterDef,
+  FilterOption,
+  FilterValues,
+} from "@/components/ui/filter-bar";
 
 // ── Time-range presets ──────────────────────────────────────────────────────
 
@@ -336,7 +340,10 @@ export function CustomRangeDialog({
   labels: TimeRangeLabels;
 }) {
   const { t } = useTranslation();
-  const [draft, setDraft] = React.useState<DateRangeDraft>({ from: null, to: null });
+  const [draft, setDraft] = React.useState<DateRangeDraft>({
+    from: null,
+    to: null,
+  });
 
   // Re-seed the draft every time the dialog opens so stale edits from a
   // previous session never leak in.
@@ -362,7 +369,7 @@ export function CustomRangeDialog({
         />
         <DialogPrimitive.Popup
           className={cn(
-            "fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2",
+            "fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2",
             "max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-m3-outline-variant/30 bg-white p-5 shadow-2xl",
             "outline-none transition-all duration-200",
             "data-[starting-style]:opacity-0 data-[starting-style]:scale-95",

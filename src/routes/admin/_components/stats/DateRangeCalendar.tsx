@@ -142,17 +142,22 @@ export function DateRangeCalendar({
        so a container narrower than 10rem + 15rem + 15rem + gap + padding does
        not compress the calendars — it overflows them into each other, and the
        popover's overflow-hidden then clips the result into an unreadable
-       overlap. 43rem is that sum with a little slack; max-w keeps the panel
-       inside a narrow viewport rather than pushing the page sideways. */
-    <div className="grid min-w-[21rem] max-w-[calc(100vw-2rem)] grid-cols-1 gap-0 sm:min-w-[43rem] sm:grid-cols-[10rem_1fr]">
+       overlap. 43rem is that sum with a little slack, and it only applies
+       from lg, where the calendar actually shows two months; below that it
+       stacks to one and 27rem is enough. max-w keeps the panel inside a
+       narrow viewport rather than pushing the page sideways. */
+    <div className="grid min-w-[21rem] max-w-[calc(100vw-2rem)] grid-cols-1 gap-0 sm:min-w-[27rem] sm:grid-cols-[10rem_1fr] lg:min-w-[43rem]">
       <PresetList activePreset={activePreset} onPick={pickPreset} />
 
       {/* min-w-0 so this track can never silently force the grid wider than
           its container the way the calendars just did. */}
       <div className="min-w-0 p-3">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* Two months only from lg. min-width beats max-width in CSS, so a
+            forced two-column grid cannot shrink to fit a narrower host — it
+            overflows it. Stacking below lg means the panel always fits its
+            container instead of growing a horizontal scrollbar. */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <MonthColumn
-            side="from"
             label={t("admin.stats.range.from")}
             view={leftView}
             onViewChange={setLeftView}
@@ -162,7 +167,6 @@ export function DateRangeCalendar({
             maxIso={draft.to ?? todayIso}
           />
           <MonthColumn
-            side="to"
             label={t("admin.stats.range.to")}
             view={rightView}
             onViewChange={setRightView}
@@ -222,17 +226,25 @@ function PresetList({
   );
 }
 
-/** Half-pill cap for a day cell: FROM rounds its leading edge, TO its
- * trailing edge; a single-day range is a full pill. */
-function halfPillCap(
-  side: "from" | "to",
-  iso: string,
-  draft: DateRangeDraft,
-): string {
-  if (side === "from") {
-    return iso !== draft.to ? "rounded-l-full rounded-r-none" : "rounded-full";
-  }
-  return iso !== draft.from ? "rounded-r-full rounded-l-none" : "rounded-full";
+/**
+ * Half-pill cap for a selected day: the START rounds its leading edge, the END
+ * its trailing edge, so the band between them reads as one continuous pill.
+ *
+ * Derived from WHICH END the date is, not from which column is drawing it.
+ * Keying it on the column was wrong once both columns started rendering both
+ * ends: the left column drew the range end as a full pill, which broke the
+ * band it was supposed to close.
+ *
+ * A lone end (only `from` picked so far) and a single-day range are both
+ * complete pills -- there is no band for them to join.
+ */
+function halfPillCap(iso: string, draft: DateRangeDraft): string {
+  const isFrom = iso === draft.from;
+  const isTo = iso === draft.to;
+  if (isFrom && isTo) return "rounded-full";
+  if (isFrom)
+    return draft.to ? "rounded-l-full rounded-r-none" : "rounded-full";
+  return draft.from ? "rounded-r-full rounded-l-none" : "rounded-full";
 }
 
 /** Base chip: solid for the picked end, soft band between, quiet otherwise. */
@@ -248,9 +260,15 @@ function chipClass(
   return "text-m3-on-surface hover:bg-m3-primary/10";
 }
 
-/** One calendar column with its OWN month+year navigation. */
+/**
+ * One calendar column with its OWN month+year navigation.
+ *
+ * There is deliberately no `side` prop. Which end a column edits is expressed
+ * by what the parent passes -- `onPick`, plus the `minIso`/`maxIso` bounds --
+ * not by a flag the column branches on. Both columns render the whole range
+ * identically; only what they WRITE differs.
+ */
 function MonthColumn({
-  side,
   label,
   view,
   onViewChange,
@@ -260,7 +278,6 @@ function MonthColumn({
   maxIso,
   minIso,
 }: {
-  side: "from" | "to";
   label: string;
   view: Date;
   onViewChange: (d: Date) => void;
@@ -278,9 +295,17 @@ function MonthColumn({
     [view],
   );
 
-  const selected = side === "from" ? draft.from : draft.to;
-
-  const isSelected = (iso: string) => selected === iso;
+  /**
+   * BOTH ends render as a filled pill in BOTH columns.
+   *
+   * Only marking this column's own end made a range look broken whenever the
+   * two columns showed the same month: picking 13–29 in August drew 13 solid
+   * on the left and 29 solid on the right, so each calendar showed a band that
+   * ran off the edge with no visible endpoint. What a column *picks* is still
+   * its own end -- that is `onPick`, and it is unchanged -- but what it
+   * *displays* is the whole range.
+   */
+  const isSelected = (iso: string) => iso === draft.from || iso === draft.to;
   const isToday = (iso: string) => iso === todayIso;
   const disabled = (iso: string) => {
     if (maxIso && iso > maxIso) return true;
@@ -331,20 +356,20 @@ function MonthColumn({
             {t(`admin.stats.range.${key}`)}
           </div>
         ))}
-        {cells.map((iso) => {
+        {cells.map((iso, index) => {
           if (!iso) {
-            return (
-              <div
-                key={`blank-${cells.indexOf(iso)}`}
-                className="aspect-square"
-              />
-            );
+            // Keyed on the grid position, NOT `cells.indexOf(iso)`: indexOf on
+            // a null returns the FIRST null's index, so every blank cell in the
+            // month shared one key. React cannot tell duplicate-keyed siblings
+            // apart, so paging the month reconciled them wrongly and the grid
+            // crept further down the page with each chevron click.
+            return <div key={`blank-${index}`} className="aspect-square" />;
           }
           const off = outOfMonth(iso);
           const isSel = isSelected(iso);
           const isMid = between(iso);
           const isD = disabled(iso);
-          const cap = isSel ? halfPillCap(side, iso, draft) : undefined;
+          const cap = isSel ? halfPillCap(iso, draft) : undefined;
           return (
             <Button
               key={iso}
