@@ -147,7 +147,12 @@ export function useGapReport(sessionId: string | null | undefined) {
     retry: (failureCount, error) =>
       error instanceof ApiError && error.status === 404 && failureCount < 60,
     retryDelay: 3000,
-    refetchInterval: (query) => (query.state.data === undefined ? 3000 : false),
+    refetchInterval: (query) => {
+      if (query.state.data !== undefined) return false;
+      return query.state.error instanceof ApiError && query.state.error.status === 404
+        ? 3000
+        : false;
+    },
   });
 }
 
