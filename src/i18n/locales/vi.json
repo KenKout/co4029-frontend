@@ -1731,7 +1731,8 @@
         "stat_failed": "Công việc thất bại",
         "delta_week": "+{{n}} trong tuần này",
         "delta_today": "+{{n}} hôm nay",
-        "failed_rate": "{{pct}}% thất bại"
+        "failed_rate": "{{pct}}% thất bại",
+        "jobs_moved": "Job xử lý đã chuyển sang mục Vận hành"
       }
     },
     "ai_costs": {
@@ -2102,62 +2103,118 @@
       }
     },
     "dashboard": {
-      "subtitle": "Vận hành nền tảng — chi phí, thông lượng, lỗi và bảo mật.",
+      "subtitle": "Vận hành hệ thống — tình trạng, sự cố, chi phí và dung lượng.",
+      "no_data": "Không có dữ liệu",
+      "no_active_incidents": "Không có sự cố nào.",
+      "as_of": "Tính đến {{at}}",
+      "version": "Phiên bản {{version}}",
+      "status_probe_unavailable": "Không kiểm tra được phụ thuộc — trạng thái không xác định.",
+      "window": {
+        "aria": "Khoảng thời gian",
+        "option": "{{days}} ngày",
+        "label": "{{days}} ngày qua"
+      },
+      "org_filter": {
+        "aria": "Phạm vi tổ chức",
+        "all": "Tất cả tổ chức"
+      },
       "rows": {
+        "current_status": "Tình trạng hiện tại",
         "needs_action": "Cần xử lý",
-        "cost": "Ảnh chụp chi phí (7 ngày)",
-        "activity": "Hoạt động nền tảng",
-        "attention": "Cần chú ý"
+        "reliability": "Độ tin cậy & thông lượng",
+        "cost_capacity": "Chi phí & dung lượng",
+        "tenants": "Bất thường theo tổ chức"
       },
-      "tiles": {
-        "job_failure_rate": "Tỉ lệ job lỗi",
-        "job_failure_detail": "{{failed}}/{{total}} job, 7 ngày",
-        "queue_depth": "Độ sâu hàng đợi",
-        "queue_depth_detail": "Đang chờ + đang chạy",
-        "failed_ai_calls": "Lệnh gọi AI lỗi",
-        "window_30d": "30 ngày qua",
-        "window_7d": "7 ngày qua",
-        "system_health": "Sức khoẻ hệ thống",
-        "system_health_detail": "API · Postgres · Redis · migration",
-        "no_baseline": "Chưa có tuần trước",
-        "interview_pass_rate": "Tỉ lệ đạt phỏng vấn",
-        "pass_rate_detail": "{{evaluated}} lượt đã đánh giá, 7 ngày",
-        "pass_rate_low_sample": "Chỉ {{evaluated}} lượt từ {{students}} học viên — mẫu quá nhỏ",
-        "low_sample_chip": "Mẫu nhỏ"
+      "overall": {
+        "ok": "Mọi hệ thống hoạt động bình thường",
+        "degraded": "Suy giảm",
+        "down": "Gián đoạn",
+        "unknown": "Không xác định"
       },
-      "health": {
+      "status": {
         "ok": "Bình thường",
         "degraded": "Suy giảm",
-        "unknown": "Không rõ"
+        "down": "Ngừng hoạt động",
+        "disabled": "Đã tắt",
+        "unknown": "Không xác định"
       },
-      "cost": {
-        "spend_7d": "Chi phí 7 ngày",
-        "no_prior": "Chưa có chi phí kỳ trước",
-        "projected_month": "Dự báo cuối tháng",
-        "projected_detail": "Ngoại suy từ chi phí hiện tại",
-        "top_driver": "Nguồn chi phí lớn nhất",
-        "top_driver_detail": "{{usd}} trong 7 ngày qua",
-        "slowest_model": "Model chậm nhất",
-        "slowest_detail": "p95 {{p95}}, 7 ngày",
-        "prev_window": "7 ngày trước: {{usd}}"
+      "services": {
+        "postgres": "Postgres",
+        "redis": "Redis",
+        "neo4j": "Đồ thị tri thức",
+        "garage_s3": "Lưu trữ tệp",
+        "llm_provider": "Nhà cung cấp AI"
       },
-      "activity": {
-        "active_users": "Người dùng hoạt động 7 ngày",
-        "active_users_value": "{{wau}}/{{total}}",
-        "active_users_detail": "{{today}} hoạt động hôm nay",
-        "quiz_sessions": "Lượt kiểm tra hoàn thành",
-        "interview_sessions": "Lượt phỏng vấn",
-        "materials_ingested": "Tài liệu đã nạp",
-        "sessions_by_students": "Từ {{students}} học viên, 7 ngày"
+      "severity": {
+        "warn": "Cảnh báo",
+        "critical": "Nghiêm trọng"
       },
-      "attention": {
-        "materials_stuck": "Tài liệu bị treo xử lý quá 1 giờ",
-        "quizzes_missing_texp": "Bài kiểm tra đã xuất bản thiếu thời gian dự kiến",
-        "configs_unreviewed": "Cấu hình phỏng vấn chưa có câu hỏi được duyệt",
-        "orgs_inactive": "Tổ chức không hoạt động trong 30 ngày",
-        "audit_review": "Xem lại thay đổi quyền và đăng nhập thất bại",
-        "all_clear": "Không có mục nào tồn đọng — tất cả đều ổn.",
-        "also_clear": "{{count}} mục kiểm tra khác đều ổn."
+      "targets": {
+        "platform": "Nền tảng",
+        "processing": "Xử lý",
+        "queue": "Hàng đợi",
+        "api": "API",
+        "ai": "Nhà cung cấp AI",
+        "cost": "Chi phí",
+        "tenants": "Tổ chức"
+      },
+      "cta": {
+        "open_health": "Xem tình trạng",
+        "open_failed_jobs": "Job lỗi",
+        "open_queue": "Xem hàng đợi",
+        "open_audit": "Xem nhật ký",
+        "open_ai_costs": "Chi phí AI",
+        "open_organizations": "Tổ chức"
+      },
+      "alerts": {
+        "age": "trong {{age}}",
+        "dependency_down": "Không kết nối được phụ thuộc:",
+        "dependency_down_detail": "{{count}} phụ thuộc đang lỗi — các số liệu khác có thể không chính xác.",
+        "job_failure_rate": "Tỷ lệ job lỗi ở mức",
+        "job_failure_detail": "{{failed}} trên {{total}} job đã kết thúc, {{window}}",
+        "queue_stalled": "Hàng đợi không giải phóng —",
+        "queue_stalled_detail": "job đang chờ hoặc đang chạy, job cũ nhất vẫn chưa xong",
+        "api_errors": "Lỗi máy chủ API ở mức",
+        "api_errors_detail": "{{failed}} trên {{total}} request trả về 5xx, {{window}}",
+        "ai_failures": "Tỷ lệ lỗi gọi AI ở mức",
+        "ai_failures_detail": "{{failed}} trên {{total}} lượt gọi lỗi, {{window}}",
+        "spend_spike": "Chi phí tăng lên",
+        "spend_spike_detail": "so với {{previous}} ở kỳ trước, {{window}}",
+        "orgs_inactive": "Tổ chức không hoạt động:",
+        "orgs_inactive_detail": "không có hoạt động trong 30 ngày, trên tổng {{total}}"
+      },
+      "tiles": {
+        "job_failure_rate": "Tỷ lệ job lỗi",
+        "job_failure_detail": "{{failed}} trên {{total}} job đã kết thúc, {{window}}",
+        "queue_depth": "Độ sâu hàng đợi",
+        "queue_depth_detail": "Đang chờ + đang chạy, cũ nhất {{age}}",
+        "api_error_rate": "Tỷ lệ lỗi API",
+        "api_error_detail": "{{failed}} trên {{total}} request lỗi 5xx, {{window}}",
+        "api_p95": "Độ trễ API p95",
+        "api_p95_detail": "Trên toàn bộ request, {{window}}",
+        "spend": "Chi phí",
+        "spend_detail": "Kỳ trước {{previous}}, {{window}}",
+        "projected_month_end": "Dự báo cuối tháng",
+        "projected_detail": "Ngoại suy từ chi phí đến hiện tại",
+        "ai_failure_rate": "Tỷ lệ lỗi gọi AI",
+        "ai_failure_detail": "{{failed}} trên {{total}} lượt gọi, {{window}}",
+        "active_users": "Người dùng hoạt động",
+        "active_users_detail": "{{today}} hôm nay, {{total}} tài khoản",
+        "orgs_inactive": "Tổ chức không hoạt động",
+        "orgs_inactive_detail": "Không hoạt động trong 30 ngày, trên {{total}}",
+        "orgs_total": "Tổ chức",
+        "orgs_total_detail": "Tổ chức trên nền tảng",
+        "no_baseline": "Chưa có kỳ trước"
+      },
+      "facts": {
+        "tokens": "Token đã dùng",
+        "materials_ingested": "Học liệu đã nạp",
+        "top_driver": "Nguồn chi phí lớn nhất"
+      },
+      "scope": {
+        "api": "Số liệu API tính trên toàn nền tảng — nhật ký request không gắn tổ chức.",
+        "cost": "Số liệu chi phí tính trên toàn nền tảng — lượt gọi AI không gắn tổ chức.",
+        "job": "Số liệu job tính trên toàn nền tảng — job xử lý không gắn tổ chức."
       }
     }
   },

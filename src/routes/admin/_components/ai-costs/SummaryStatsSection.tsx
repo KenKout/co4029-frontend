@@ -9,7 +9,7 @@ import {
 import type { AiCostsPeriod } from "@/lib/api/hooks/admin";
 import { StatCard } from "@/components/ui/stat-card";
 import type { AiCostsSummary } from "@/lib/api/types";
-import { SectionErrorBox } from "./SectionErrorBox";
+import { SectionErrorBox } from "@/components/ui/section-error-box";
 import { formatOrDash } from "./helpers";
 import { useFormatters } from "./use-formatters";
 import type { SectionQuery } from "./types";

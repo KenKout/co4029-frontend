@@ -1823,7 +1823,8 @@
         "stat_failed": "Failed jobs",
         "delta_week": "+{{n}} this week",
         "delta_today": "+{{n}} today",
-        "failed_rate": "{{pct}}% failed"
+        "failed_rate": "{{pct}}% failed",
+        "jobs_moved": "Processing jobs moved to Operations"
       }
     },
     "ai_costs": {
@@ -2194,62 +2195,118 @@
       }
     },
     "dashboard": {
-      "subtitle": "Platform operations — cost, throughput, failures and security.",
+      "subtitle": "System operations — health, incidents, cost and capacity.",
+      "no_data": "No data",
+      "no_active_incidents": "No active incidents.",
+      "as_of": "As of {{at}}",
+      "version": "Version {{version}}",
+      "status_probe_unavailable": "Dependency probe unavailable — status unknown.",
+      "window": {
+        "aria": "Metric window",
+        "option": "{{days}}d",
+        "label": "last {{days}}d"
+      },
+      "org_filter": {
+        "aria": "Organization scope",
+        "all": "All organizations"
+      },
       "rows": {
+        "current_status": "Current status",
         "needs_action": "Needs action",
-        "cost": "Cost snapshot (7 days)",
-        "activity": "Platform activity",
-        "attention": "Needs attention"
+        "reliability": "Reliability & throughput",
+        "cost_capacity": "Cost & capacity",
+        "tenants": "Tenant anomalies"
+      },
+      "overall": {
+        "ok": "All systems operational",
+        "degraded": "Degraded",
+        "down": "Outage",
+        "unknown": "Status unknown"
+      },
+      "status": {
+        "ok": "Healthy",
+        "degraded": "Degraded",
+        "down": "Down",
+        "disabled": "Disabled",
+        "unknown": "Unknown"
+      },
+      "services": {
+        "postgres": "Postgres",
+        "redis": "Redis",
+        "neo4j": "Graph",
+        "garage_s3": "Object storage",
+        "llm_provider": "AI provider"
+      },
+      "severity": {
+        "warn": "Warning",
+        "critical": "Critical"
+      },
+      "targets": {
+        "platform": "Platform",
+        "processing": "Processing",
+        "queue": "Queue",
+        "api": "API",
+        "ai": "AI provider",
+        "cost": "Cost",
+        "tenants": "Tenants"
+      },
+      "cta": {
+        "open_health": "Open health",
+        "open_failed_jobs": "Failed jobs",
+        "open_queue": "Open queue",
+        "open_audit": "Open audit",
+        "open_ai_costs": "AI costs",
+        "open_organizations": "Organizations"
+      },
+      "alerts": {
+        "age": "for {{age}}",
+        "dependency_down": "Dependency unreachable:",
+        "dependency_down_detail": "{{count}} dependency check failing — other metrics may be stale.",
+        "job_failure_rate": "Job failure rate at",
+        "job_failure_detail": "{{failed}} of {{total}} terminal jobs, {{window}}",
+        "queue_stalled": "Queue not draining —",
+        "queue_stalled_detail": "jobs pending or running, oldest still in flight",
+        "api_errors": "API server errors at",
+        "api_errors_detail": "{{failed}} of {{total}} requests returned 5xx, {{window}}",
+        "ai_failures": "AI call failure rate at",
+        "ai_failures_detail": "{{failed}} of {{total}} calls failed, {{window}}",
+        "spend_spike": "Spend jumped to",
+        "spend_spike_detail": "up from {{previous}} in the prior window, {{window}}",
+        "orgs_inactive": "Inactive organizations:",
+        "orgs_inactive_detail": "no activity in 30 days, of {{total}} total"
       },
       "tiles": {
         "job_failure_rate": "Job failure rate",
-        "job_failure_detail": "{{failed}} of {{total}} jobs, 7d",
+        "job_failure_detail": "{{failed}} of {{total}} terminal jobs, {{window}}",
         "queue_depth": "Queue depth",
-        "queue_depth_detail": "Pending + running now",
-        "failed_ai_calls": "Failed AI calls",
-        "window_30d": "Last 30 days",
-        "window_7d": "Last 7 days",
-        "system_health": "System health",
-        "system_health_detail": "API · Postgres · Redis · migrations",
-        "no_baseline": "No prior week",
-        "interview_pass_rate": "Interview pass rate",
-        "pass_rate_detail": "{{evaluated}} evaluated sessions, 7d",
-        "pass_rate_low_sample": "Only {{evaluated}} sessions from {{students}} students — too small to act on",
-        "low_sample_chip": "Low sample"
-      },
-      "health": {
-        "ok": "Healthy",
-        "degraded": "Degraded",
-        "unknown": "Unknown"
-      },
-      "cost": {
-        "spend_7d": "Spend 7d",
-        "no_prior": "No prior 7d spend",
-        "projected_month": "Projected month-end",
+        "queue_depth_detail": "Pending + running now, oldest {{age}}",
+        "api_error_rate": "API error rate",
+        "api_error_detail": "{{failed}} of {{total}} requests 5xx, {{window}}",
+        "api_p95": "API p95 latency",
+        "api_p95_detail": "Across all requests, {{window}}",
+        "spend": "Spend",
+        "spend_detail": "Prior window {{previous}}, {{window}}",
+        "projected_month_end": "Projected month-end",
         "projected_detail": "Extrapolated from spend so far",
-        "top_driver": "Top cost driver",
-        "top_driver_detail": "{{usd}} in the last 7d",
-        "slowest_model": "Slowest model",
-        "slowest_detail": "p95 {{p95}}, 7d",
-        "prev_window": "Previous 7d: {{usd}}"
+        "ai_failure_rate": "AI call failure rate",
+        "ai_failure_detail": "{{failed}} of {{total}} calls, {{window}}",
+        "active_users": "Active users",
+        "active_users_detail": "{{today}} today, {{total}} accounts",
+        "orgs_inactive": "Inactive organizations",
+        "orgs_inactive_detail": "No activity in 30 days, of {{total}}",
+        "orgs_total": "Organizations",
+        "orgs_total_detail": "Tenants on the platform",
+        "no_baseline": "No prior window"
       },
-      "activity": {
-        "active_users": "Active users 7d",
-        "active_users_value": "{{wau}} of {{total}}",
-        "active_users_detail": "{{today}} active today",
-        "quiz_sessions": "Quiz sessions completed",
-        "interview_sessions": "Interview sessions",
+      "facts": {
+        "tokens": "Tokens used",
         "materials_ingested": "Materials ingested",
-        "sessions_by_students": "From {{students}} students, 7d"
+        "top_driver": "Top cost driver"
       },
-      "attention": {
-        "materials_stuck": "Materials stuck in processing over 1 hour",
-        "quizzes_missing_texp": "Published quizzes with cards missing expected time",
-        "configs_unreviewed": "Interview configs with no reviewed questions",
-        "orgs_inactive": "Organizations with no activity in 30 days",
-        "audit_review": "Review recent permission changes and failed logins",
-        "all_clear": "No outstanding items — all checks clear.",
-        "also_clear": "{{count}} other checks are clear."
+      "scope": {
+        "api": "API metrics are platform-wide — request logs carry no organization.",
+        "cost": "Cost metrics are platform-wide — AI calls carry no organization.",
+        "job": "Job metrics are platform-wide — processing jobs carry no organization."
       }
     }
   },

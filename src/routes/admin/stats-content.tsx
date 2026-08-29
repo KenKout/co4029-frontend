@@ -1,4 +1,5 @@
-import { AlertTriangle, BookOpen, FileText, Workflow } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { BookOpen, ChevronRight, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useContentStats } from "@/lib/api/hooks/admin";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
@@ -11,6 +12,17 @@ import {
   type BreakdownBucket,
 } from "./_components/stats/breakdown";
 
+/**
+ * Content inventory.
+ *
+ * Processing jobs used to have a third column here, counted all-time and over
+ * `processing_jobs` alone, while the dashboard counted a 7-day window and the
+ * processing page counted a union with `generation_runs`. Three surfaces, three
+ * answers to "how many jobs failed". Jobs now live only in the Operations
+ * surface, which this page links to instead (PRD ADM-004 and the section 2 IA
+ * rule).
+ */
+
 function bucketSum(buckets: BreakdownBucket[] | undefined): number {
   let sum = 0;
   for (const bucket of buckets ?? []) {
@@ -18,17 +30,6 @@ function bucketSum(buckets: BreakdownBucket[] | undefined): number {
     if (typeof count === "number") sum += count;
   }
   return sum;
-}
-
-function bucketCount(
-  buckets: BreakdownBucket[] | undefined,
-  label: string,
-): number {
-  for (const bucket of buckets ?? []) {
-    const { label: l, count } = readBucket(bucket);
-    if (l === label && typeof count === "number") return count;
-  }
-  return 0;
 }
 
 export default function AdminStatsContentPage() {
@@ -50,7 +51,12 @@ export default function AdminStatsContentPage() {
     return (
       <div className="space-y-6 pb-12">
         <Heading />
-        <PageSkeleton rows={4} height="h-24" bg="bg-surface-muted" gap="space-y-4" />
+        <PageSkeleton
+          rows={4}
+          height="h-24"
+          bg="bg-surface-muted"
+          gap="space-y-4"
+        />
       </div>
     );
   }
@@ -73,15 +79,11 @@ function ContentStatsView({
 
   const coursesTotal = bucketSum(data.courses_by_status);
   const materialsTotal = bucketSum(data.materials_by_type);
-  const jobsTotal = bucketSum(data.processing_jobs_by_status);
-  const failedJobs = bucketCount(data.processing_jobs_by_status, "failed");
-  const failedPct =
-    jobsTotal > 0 ? Math.round((failedJobs / jobsTotal) * 100) : 0;
 
   return (
     <div className="space-y-6">
       {/* Summary cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <MiniStat
           label={t("admin.stats.content.stat_courses")}
           value={formatCount(coursesTotal)}
@@ -98,25 +100,10 @@ function ContentStatsView({
           })}
           icon={FileText}
         />
-        <MiniStat
-          label={t("admin.stats.content.stat_jobs")}
-          value={formatCount(jobsTotal)}
-          detail={t("admin.stats.content.delta_today", {
-            n: formatCount(data.processing_jobs_created_today ?? 0),
-          })}
-          icon={Workflow}
-        />
-        <MiniStat
-          label={t("admin.stats.content.stat_failed")}
-          value={formatCount(failedJobs)}
-          detail={t("admin.stats.content.failed_rate", { pct: failedPct })}
-          icon={AlertTriangle}
-          tone="warn"
-        />
       </div>
 
       {/* Breakdowns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
         <BreakdownRingCard
           title={t("admin.stats.content.courses_by_status")}
           icon={BookOpen}
@@ -131,13 +118,15 @@ function ContentStatsView({
           stacked
           palette={MATERIAL_RING_PALETTE}
         />
-        <BreakdownRingCard
-          title={t("admin.stats.content.processing_jobs_by_status")}
-          icon={Workflow}
-          buckets={data.processing_jobs_by_status}
-          stacked
-        />
       </div>
+
+      <Link
+        to="/admin/processing"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-m3-primary hover:underline"
+      >
+        {t("admin.stats.content.jobs_moved")}
+        <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />
+      </Link>
     </div>
   );
 }

@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
 
 /**
- * The dashboard's shared "this panel failed to load" card. Renders the exact
- * markup each section repeated inline before the split.
+ * "This panel failed to load" card, scoped to one section of a page.
+ *
+ * Lives in `ui/` rather than beside one dashboard because both the AI-cost page
+ * and the operator overview render it.
  */
 export function SectionErrorBox({ messageKey }: { messageKey: string }) {
   const { t } = useTranslation();
@@ -12,3 +14,5 @@ export function SectionErrorBox({ messageKey }: { messageKey: string }) {
     </div>
   );
 }
+
+export default SectionErrorBox;

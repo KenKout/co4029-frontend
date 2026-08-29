@@ -81,7 +81,8 @@ export const queryKeys = {
 
   admin: {
     statsOverview: () => ["admin", "stats", "overview"] as const,
-    dashboard: () => ["admin", "stats", "dashboard"] as const,
+    dashboard: (windowDays?: number, organizationId?: string | null) =>
+      ["admin", "stats", "dashboard", windowDays, organizationId ?? ""] as const,
     activeUsers: () => ["admin", "stats", "active-users"] as const,
     activeUsersTrend: (days: number) =>
       ["admin", "stats", "active-users", "trend", days] as const,
@@ -199,6 +200,7 @@ export const queryKeys = {
   infra: {
     healthz: () => ["infra", "healthz"] as const,
     readyz: () => ["infra", "readyz"] as const,
+    deepHealth: () => ["infra", "healthz", "deep"] as const,
   },
 
   // --- Stubs for future domains (Wave 1+) ---

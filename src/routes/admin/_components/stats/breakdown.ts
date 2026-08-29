@@ -3,10 +3,10 @@
  *
  * `readBucket` pulls the label + count out of one breakdown bucket. The
  * admin stats endpoint returns `list[dict[str, Any]]` per breakdown, and the
- * label key differs by query: `courses_by_status` and
- * `processing_jobs_by_status` use `status`, while `materials_by_type` uses
- * `material_type`. The old fixed list (`status`/`type`/`kind`/`name`) missed
- * `material_type` — `"type" !== "material_type"` — so every material row
+ * label key differs by query: `courses_by_status` uses `status`, while
+ * `materials_by_type` uses `material_type`. The old fixed list
+ * (`status`/`type`/`kind`/`name`) missed `material_type` —
+ * `"type" !== "material_type"` — so every material row
  * rendered its label as "—" while the counts came through fine.
  *
  * Rather than extend the guess list and hit this again on the next

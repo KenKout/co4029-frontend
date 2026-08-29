@@ -18,14 +18,9 @@ export function StatsSkeleton() {
   );
 }
 
-/** Shown when the dashboard query fails outright. */
-export function StatsLoadError({ message }: { message: string }) {
-  return (
-    <div className="space-y-6 pb-12">
-      <PageHeading />
-      <div className="rounded-lg border border-border bg-surface-elev p-5">
-        <p className="text-sm text-danger">{message}</p>
-      </div>
-    </div>
-  );
-}
+/*
+ * There is deliberately no whole-page error state any more. A dashboard that
+ * replaces five working panels with one error message because the sixth query
+ * failed hides exactly the context an operator needs mid-incident, so each row
+ * renders its own `SectionErrorBox` instead (PRD ADM-015).
+ */

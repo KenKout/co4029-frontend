@@ -7,7 +7,7 @@ import type { AiCostsByCategory as AiCostsByCategoryRow } from "@/lib/api/types"
 import { CategoryBarChart } from "./CostBarCharts";
 import { CategoryTable } from "./CategoryTable";
 import { DimensionSwitcher } from "./DimensionSwitcher";
-import { SectionErrorBox } from "./SectionErrorBox";
+import { SectionErrorBox } from "@/components/ui/section-error-box";
 import { CATEGORY_CSV_COLUMNS } from "./constants";
 import type { SectionQuery } from "./types";
 

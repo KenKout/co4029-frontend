@@ -7398,10 +7398,6 @@ export interface components {
             materials_by_type: {
                 [key: string]: unknown;
             }[];
-            /** Processing Jobs By Status */
-            processing_jobs_by_status: {
-                [key: string]: unknown;
-            }[];
             /**
              * Courses Created 7D
              * @default 0
@@ -7412,11 +7408,6 @@ export interface components {
              * @default 0
              */
             materials_created_7d: number;
-            /**
-             * Processing Jobs Created Today
-             * @default 0
-             */
-            processing_jobs_created_today: number;
         };
         /** CostTotals */
         CostTotals: {
@@ -8269,26 +8260,73 @@ export interface components {
          *     an org-scoped caller (documented in ``sql/stats/dashboard.sql``).
          */
         DashboardOut: {
+            /**
+             * As Of
+             * Format: date-time
+             */
+            as_of: string;
+            /** Window Days */
+            window_days: number;
+            /** Organization Id */
+            organization_id?: string | null;
+            /** Usage Scope */
+            usage_scope: string;
+            /** Tenant Scope */
+            tenant_scope: string;
+            /** Job Scope */
+            job_scope: string;
+            /** Cost Scope */
+            cost_scope: string;
+            /** Api Scope */
+            api_scope: string;
             /** Job Failure Rate Pct */
-            job_failure_rate_pct: number;
-            /** Jobs Failed 7D */
-            jobs_failed_7d: number;
-            /** Jobs Total 7D */
-            jobs_total_7d: number;
-            /** Jobs Failed Prev 7D */
-            jobs_failed_prev_7d: number;
-            /** Jobs Total Prev 7D */
-            jobs_total_prev_7d: number;
+            job_failure_rate_pct: number | null;
+            /** Job Failure Rate Prev Pct */
+            job_failure_rate_prev_pct: number | null;
+            /** Jobs Terminal Window */
+            jobs_terminal_window: number;
+            /** Jobs Failed Window */
+            jobs_failed_window: number;
+            /** Jobs Terminal Prev Window */
+            jobs_terminal_prev_window: number;
+            /** Jobs Failed Prev Window */
+            jobs_failed_prev_window: number;
             /** Queue Depth */
             queue_depth: number;
-            /** Failed Ai Calls 30D */
-            failed_ai_calls_30d: number;
-            /** Spend 7D Usd */
-            spend_7d_usd: number;
-            /** Spend Prev 7D Usd */
-            spend_prev_7d_usd: number;
+            /** Queue Pending */
+            queue_pending: number;
+            /** Queue Running */
+            queue_running: number;
+            /** Queue Oldest Age Seconds */
+            queue_oldest_age_seconds: number | null;
+            /** Requests Window */
+            requests_window: number;
+            /** Requests 5Xx Window */
+            requests_5xx_window: number;
+            /** Requests 4Xx Window */
+            requests_4xx_window: number;
+            /** Api Error Rate Pct */
+            api_error_rate_pct: number | null;
+            /** Api Client Error Rate Pct */
+            api_client_error_rate_pct: number | null;
+            /** Api P50 Latency Ms */
+            api_p50_latency_ms: number | null;
+            /** Api P95 Latency Ms */
+            api_p95_latency_ms: number | null;
+            /** Spend Window Usd */
+            spend_window_usd: number;
+            /** Spend Prev Window Usd */
+            spend_prev_window_usd: number;
             /** Projected Month End Usd */
             projected_month_end_usd: number;
+            /** Tokens Window */
+            tokens_window: number;
+            /** Ai Calls Window */
+            ai_calls_window: number;
+            /** Failed Ai Calls Window */
+            failed_ai_calls_window: number;
+            /** Ai Failure Rate Pct */
+            ai_failure_rate_pct: number | null;
             /** Top Cost Driver */
             top_cost_driver: string | null;
             /** Top Cost Driver Usd */
@@ -8299,28 +8337,14 @@ export interface components {
             slowest_model_p95_ms: number;
             /** Active Users Today */
             active_users_today: number;
-            /** Active Users 7D */
-            active_users_7d: number;
+            /** Active Users Window */
+            active_users_window: number;
             /** Total Users */
             total_users: number;
-            /** Quiz Sessions Completed 7D */
-            quiz_sessions_completed_7d: number;
-            /** Interview Sessions 7D */
-            interview_sessions_7d: number;
-            /** Interview Pass Rate Pct */
-            interview_pass_rate_pct: number;
-            /** Interview Evaluated 7D */
-            interview_evaluated_7d: number;
-            /** Interview Students 7D */
-            interview_students_7d: number;
-            /** Materials Ingested 7D */
-            materials_ingested_7d: number;
-            /** Materials Stuck Processing */
-            materials_stuck_processing: number;
-            /** Published Quizzes Missing Texp */
-            published_quizzes_missing_texp: number;
-            /** Interview Configs No Reviewed Questions */
-            interview_configs_no_reviewed_questions: number;
+            /** Materials Ingested Window */
+            materials_ingested_window: number;
+            /** Orgs Total */
+            orgs_total: number;
             /** Orgs Inactive 30D */
             orgs_inactive_30d: number;
         };

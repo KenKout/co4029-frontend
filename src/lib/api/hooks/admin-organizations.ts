@@ -116,6 +116,12 @@ export interface OrganizationListParams {
   includeDeleted?: boolean;
   orgStatus?: string;
   limit?: number;
+  /**
+   * Skip the request entirely. The tenant list is admin-only data, so callers
+   * that render an organization picker behind a permission gate pass the gate
+   * result here rather than firing a request that will 403.
+   */
+  enabled?: boolean;
 }
 
 export interface OrganizationListPage {
@@ -131,7 +137,7 @@ export interface OrganizationListPage {
  * `<InfiniteList>` so the table auto-loads as the user scrolls.
  */
 export function useOrganizations(params: OrganizationListParams = {}) {
-  const { includeDeleted, orgStatus, limit = 50 } = params;
+  const { includeDeleted, orgStatus, limit = 50, enabled } = params;
   return useInfinitePage<OrganizationRead>({
     queryKey: queryKeys.admin.organizations(includeDeleted, orgStatus, limit),
     fetch: async (cursor, pageLimit = limit) => {
@@ -147,6 +153,7 @@ export function useOrganizations(params: OrganizationListParams = {}) {
       return { items: page.items, next_cursor: page.next_cursor ?? null };
     },
     limit,
+    enabled,
   });
 }
 

@@ -130,45 +130,97 @@ export function useUpdateEnrollment(enrollmentId: string, courseId: string) {
  * NOTE: `processing_jobs` and `ai_model_calls` carry no organization edge, so the
  * job / cost / latency fields are global even for an org-scoped admin.
  */
+/**
+ * Operator dashboard rollup.
+ *
+ * Two contract rules the types encode (PRD ADM-004, section 5):
+ *
+ * - **Rates are nullable.** `null` means the denominator was empty for the
+ *   window; the UI must render "No data". The matching `*_window` counters are
+ *   always present so the evidence behind a rate is visible.
+ * - **Scopes are declared.** `processing_jobs`, `ai_model_calls` and
+ *   `http_audit_log` carry no organization edge, so those families stay
+ *   `"global"` even when the caller filtered to one tenant. The dashboard
+ *   surfaces that rather than letting a number imply a filter it never had.
+ */
 export interface AdminDashboardOut {
-  // needs action
-  job_failure_rate_pct: number;
-  jobs_failed_7d: number;
-  jobs_total_7d: number;
-  jobs_failed_prev_7d: number;
-  jobs_total_prev_7d: number;
+  // envelope
+  as_of: string;
+  window_days: number;
+  organization_id: string | null;
+  usage_scope: MetricScope;
+  tenant_scope: MetricScope;
+  job_scope: MetricScope;
+  cost_scope: MetricScope;
+  api_scope: MetricScope;
+  // reliability & throughput
+  job_failure_rate_pct: number | null;
+  job_failure_rate_prev_pct: number | null;
+  jobs_terminal_window: number;
+  jobs_failed_window: number;
+  jobs_terminal_prev_window: number;
+  jobs_failed_prev_window: number;
   queue_depth: number;
-  failed_ai_calls_30d: number;
-  // cost snapshot
-  spend_7d_usd: number;
-  spend_prev_7d_usd: number;
+  queue_pending: number;
+  queue_running: number;
+  queue_oldest_age_seconds: number | null;
+  requests_window: number;
+  requests_5xx_window: number;
+  requests_4xx_window: number;
+  api_error_rate_pct: number | null;
+  api_client_error_rate_pct: number | null;
+  api_p50_latency_ms: number | null;
+  api_p95_latency_ms: number | null;
+  // cost & capacity
+  spend_window_usd: number;
+  spend_prev_window_usd: number;
   projected_month_end_usd: number;
+  tokens_window: number;
+  ai_calls_window: number;
+  failed_ai_calls_window: number;
+  ai_failure_rate_pct: number | null;
   top_cost_driver: string | null;
   top_cost_driver_usd: number;
   slowest_model: string | null;
   slowest_model_p95_ms: number;
-  // activity
+  // usage
   active_users_today: number;
-  active_users_7d: number;
+  active_users_window: number;
   total_users: number;
-  quiz_sessions_completed_7d: number;
-  interview_sessions_7d: number;
-  interview_pass_rate_pct: number;
-  /** Sample size behind the pass rate — distinguishes signal from dev noise. */
-  interview_evaluated_7d: number;
-  interview_students_7d: number;
-  materials_ingested_7d: number;
-  // needs attention
-  materials_stuck_processing: number;
-  published_quizzes_missing_texp: number;
-  interview_configs_no_reviewed_questions: number;
+  materials_ingested_window: number;
+  // tenant anomalies
+  orgs_total: number;
   orgs_inactive_30d: number;
 }
 
-export function useAdminDashboard() {
+/** Which filter a metric family actually honoured. */
+export type MetricScope = "global" | "organization";
+
+export interface AdminDashboardParams {
+  /** Window length for every windowed metric. Defaults to the server's 7. */
+  windowDays?: number;
+  /**
+   * Narrow org-traceable metrics to one tenant. Ignored by the server for
+   * callers who are already pinned to their own organization, so passing it
+   * can never widen what a manager sees.
+   */
+  organizationId?: string | null;
+}
+
+export function useAdminDashboard({
+  windowDays,
+  organizationId,
+}: AdminDashboardParams = {}) {
+  const params = new URLSearchParams();
+  if (windowDays !== undefined) params.set("window_days", String(windowDays));
+  if (organizationId) params.set("organization_id", organizationId);
+  const qs = params.toString();
   return useQuery({
-    queryKey: queryKeys.admin.dashboard(),
-    queryFn: () => apiFetch<AdminDashboardOut>("/admin/stats/dashboard"),
+    queryKey: queryKeys.admin.dashboard(windowDays, organizationId),
+    queryFn: () =>
+      apiFetch<AdminDashboardOut>(
+        `/admin/stats/dashboard${qs ? `?${qs}` : ""}`,
+      ),
     staleTime: 1000 * 30,
   });
 }

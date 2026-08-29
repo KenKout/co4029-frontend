@@ -1,55 +1,98 @@
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useAdminDashboard } from "@/lib/api/hooks/admin";
-import { useReadyz } from "@/lib/api/hooks/infra";
+import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
+import { useDeepHealth } from "@/lib/api/hooks/infra";
+import {
+  SUPERUSER_PERMISSION,
+  usePermissions,
+} from "@/lib/auth/use-permissions";
 
 import {
-  buildAttentionCandidates,
-  deriveFailedCallsSeverity,
-  deriveFailureSeverity,
-  deriveFailureTrendPct,
-  derivePassRate,
-  deriveQueueSeverity,
-  deriveSpend,
-  deriveHealth,
-  jobFailureRate,
+  buildAlerts,
+  buildCost,
+  buildCurrentStatus,
+  buildReliability,
+  buildTenant,
 } from "./helpers";
-import type { AdminStatsController, ReadyzSummary } from "./types";
+import type { AdminStatsController } from "./types";
 import { useFormatters } from "./use-formatters";
 
+/** Windows offered in the dashboard filter, in days. */
+export const WINDOW_OPTIONS = [1, 7, 30] as const;
+export const DEFAULT_WINDOW_DAYS = 7;
+
 /**
- * Resolves every derived value the overview dashboard renders.
+ * Resolves everything the operator overview renders.
  *
- * Hook call order is identical to the original page component
- * (`useTranslation` → `useAppLocale` via `useFormatters` → dashboard query →
- * readyz query); only the pure derivations moved out into `helpers.ts`.
+ * The dashboard is assembled from two independent queries — the metric rollup
+ * and the dependency probe — and neither is allowed to take the page down with
+ * it (ADM-015). So this hook never throws or short-circuits on error: it
+ * reports each source's state and lets the sections decide what to draw.
  */
 export function useAdminStatsPage(): AdminStatsController {
   const { t } = useTranslation();
   const f = useFormatters();
-  const { data, isLoading, isError } = useAdminDashboard();
-  const readyz = useReadyz();
 
-  const ready = readyz.data as ReadyzSummary | undefined;
-  const failureRate = jobFailureRate(data);
-  const attentionCandidates = buildAttentionCandidates(t, data);
-  const attentionItems = attentionCandidates.filter((i) => i.count > 0);
+  const permissions = usePermissions();
+  const canFilterOrganization = permissions.has(SUPERUSER_PERMISSION);
+
+  const [windowDays, setWindowDays] = useState<number>(DEFAULT_WINDOW_DAYS);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+
+  // The organization filter is the IT admin's only; a manager is already
+  // pinned server-side, so we do not even fetch the tenant list for them.
+  const orgs = useOrganizations({ limit: 200, enabled: canFilterOrganization });
+
+  const { data, isLoading, isError } = useAdminDashboard({
+    windowDays,
+    organizationId,
+  });
+  const health = useDeepHealth();
+
+  const currentStatus = useMemo(
+    () =>
+      buildCurrentStatus(t, health.data, {
+        isLoading: health.isLoading,
+        isError: health.isError,
+      }),
+    [t, health.data, health.isLoading, health.isError],
+  );
+
+  const reliability = useMemo(() => buildReliability(data), [data]);
+  const cost = useMemo(() => buildCost(data), [data]);
+  const tenant = useMemo(() => buildTenant(data), [data]);
+
+  const alerts = useMemo(
+    () =>
+      buildAlerts(t, f, reliability, cost, tenant, currentStatus, windowDays),
+    [t, f, reliability, cost, tenant, currentStatus, windowDays],
+  );
 
   return {
     t,
     f,
     data,
+    deepHealth: health.data,
     isLoading,
     isError,
-    health: deriveHealth(ready, readyz.isError),
-    failureRate,
-    failureSeverity: deriveFailureSeverity(failureRate),
-    failureTrendPct: deriveFailureTrendPct(data, failureRate),
-    queueSeverity: deriveQueueSeverity(data),
-    failedCallsSeverity: deriveFailedCallsSeverity(data),
-    spend: deriveSpend(data),
-    passRate: derivePassRate(data),
-    attentionItems,
-    clearCount: attentionCandidates.length - attentionItems.length,
+    asOf: data?.as_of,
+    scope: {
+      windowDays,
+      setWindowDays,
+      organizationId,
+      setOrganizationId,
+      canFilterOrganization,
+      organizations: (orgs.items ?? []).map((o) => ({
+        id: o.id,
+        name: o.name,
+      })),
+    },
+    currentStatus,
+    alerts,
+    reliability,
+    cost,
+    tenant,
   };
 }

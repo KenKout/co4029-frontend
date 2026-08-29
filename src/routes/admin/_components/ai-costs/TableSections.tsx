@@ -12,7 +12,7 @@ import type {
 import { ModelEfficiencyTable } from "./ModelEfficiencyTable";
 import { PipelineTable } from "./PipelineTable";
 import { RecentCallsTable } from "./RecentCallsTable";
-import { SectionErrorBox } from "./SectionErrorBox";
+import { SectionErrorBox } from "@/components/ui/section-error-box";
 import { TopUsersTable } from "./TopUsersTable";
 import { MODEL_CSV_COLUMNS } from "./constants";
 import type { SectionQuery } from "./types";
