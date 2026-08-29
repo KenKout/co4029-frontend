@@ -49,9 +49,24 @@ export function useGraphMutations(options: {
   const addNode = useCallback(() => {
     const id = freshNodeId();
     const isFirst = graph.nodes.length === 0;
+    // Default labels carry a running index ("New concept 3") so two clicks
+    // never produce two identically-named nodes. The base string itself
+    // counts as index 0, so graphs that already have an unnumbered "New
+    // concept" won't collide with the next auto-name either.
+    const base = t("teacher_kg_editor.new_node_label");
+    const re = new RegExp(
+      `^${base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*(\\d+)$`,
+    );
+    const maxIndex = graph.nodes.reduce((max, n) => {
+      const match = n.label.match(re);
+      if (match) return Math.max(max, parseInt(match[1], 10));
+      return n.label === base ? Math.max(max, 0) : max;
+    }, -1);
     const node: CuratedKGNode = {
       id,
-      label: t("teacher_kg_editor.new_node_label"),
+      label: t("teacher_kg_editor.new_node_indexed", {
+        n: Math.max(maxIndex + 1, 1),
+      }),
       type: "Concept",
       definition: null,
       weight: 10,

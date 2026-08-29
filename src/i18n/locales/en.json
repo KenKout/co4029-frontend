@@ -4975,7 +4975,8 @@
     "rel_related": "Related to",
     "edge_detail": "Relationship",
     "reverse_arrow": "Reverse direction",
-    "delete_arrow": "Delete arrow"
+    "delete_arrow": "Delete arrow",
+    "new_node_indexed": "New concept {{n}}"
   },
   "admin_settings": {
     "group": {
