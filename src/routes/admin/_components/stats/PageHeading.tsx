@@ -8,13 +8,19 @@ import type { AdminStatsController } from "./types";
 import { WINDOW_OPTIONS } from "./use-admin-stats-page";
 
 /**
- * Dashboard header: title, the window / tenant controls, and the as-of stamp.
+ * Dashboard header: title on the left, the window / tenant controls and the
+ * as-of stamp on the right, one sticky row while the tiles scroll under it.
  *
  * The as-of line is not decoration. Every windowed number on the page was
  * evaluated against one server timestamp, and printing it is half of what
  * makes the metrics auditable — the other half being that the window control
  * moves all of them together, so no two tiles can end up describing different
  * spans of time (ADM-004, ADM-005).
+ *
+ * Sticky layer follows the app convention (AGENTS.md): `top-16` clears the
+ * global ContentTopBar (z-20), `z-10` stays under it, the negative margins
+ * bleed the bar across the padded main column, and the blurred white
+ * background keeps scrolled content from showing through.
  *
  * Rendered with no controller during loading and error states, where the
  * filters would have nothing to filter.
@@ -24,12 +30,12 @@ export function PageHeading({ c }: { c?: AdminStatsController }) {
   const formatDateTime = useFormatDateTime();
 
   return (
-    <div className="space-y-4">
-      <div>
+    <div className="sticky top-16 z-10 -mx-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-b border-m3-outline-variant/15 bg-white/95 px-4 py-4 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="min-w-0">
         <h1 className="text-2xl font-headline font-bold text-text-strong">
           {t("admin.stats.title_overview")}
         </h1>
-        <p className="mt-1 text-sm text-text-muted">
+        <p className="mt-0.5 text-sm text-text-muted">
           {t("admin.dashboard.subtitle")}
         </p>
       </div>
