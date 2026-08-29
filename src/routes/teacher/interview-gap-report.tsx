@@ -62,6 +62,7 @@ export default function InterviewGapReportPage() {
       void navigate({
         to: "/teacher/courses/$courseId/interview-configs/$configId",
         params: { courseId, configId },
+        search: { tab: undefined },
       });
       return;
     }

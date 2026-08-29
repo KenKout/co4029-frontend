@@ -239,17 +239,14 @@
       "subtitle": "Ranked across everything: blocking work first, then students, then backlog.",
       "blocking": "Blocking",
       "empty_title": "No urgent actions",
-      "empty_hint": "Nothing is blocked and no student is flagged. Course health below has the fuller picture."
+      "empty_hint": "Nothing is blocked and no student is flagged. Course health below has the fuller picture.",
+      "oldest": "Oldest: {{age}}"
     },
     "signals": {
-      "cards_awaiting_review": "Content awaiting review",
-      "cards_awaiting_review_sub": "Quiz + interview questions",
-      "students_needing_attention": "Students needing attention",
-      "students_needing_attention_sub": "At least one active risk signal",
-      "avg_retention": "Average easiness factor",
-      "avg_retention_sub": "Lower means harder — reviewed more often (2.5 = baseline)",
-      "cards_overdue": "Reviews past due",
-      "cards_overdue_sub": "Student review cards past their due date"
+      "declining_retention": "Students with declining retention",
+      "declining_retention_sub": "Average easiness below the 2.0 struggling threshold",
+      "draft_courses": "Draft courses",
+      "draft_courses_sub": "Not published yet — students cannot see them"
     },
     "attention": {
       "title": "Students needing attention",
@@ -262,7 +259,7 @@
     },
     "health": {
       "title": "Course health",
-      "subtitle": "Your courses ranked by what needs attention. Click a row to open it.",
+      "subtitle": "Your courses ranked by what needs attention. Click a course name to open it.",
       "course": "Course",
       "students": "Students",
       "progress": "Avg progress",
@@ -275,7 +272,9 @@
       "days_ago_plural": "{{count}} days ago",
       "no_data": "Not enough data yet",
       "pass_sample": "Based on {{count}} completed attempt",
-      "pass_sample_plural": "Based on {{count}} completed attempts"
+      "pass_sample_plural": "Based on {{count}} completed attempts",
+      "action": "Open",
+      "details": "Details"
     },
     "review": {
       "title": "Needs your review",
@@ -284,7 +283,7 @@
       "quiz_cards": "Quiz cards pending review",
       "quiz_cards_hint": "Generated cards can't reach students until approved",
       "interview_questions": "Interview questions pending approval",
-      "interview_questions_hint": "Awaiting your approve / edit / reject",
+      "interview_questions_hint": "Review, edit, or reject",
       "missing_texp": "Published quizzes missing expected time",
       "missing_texp_hint": "Without it, retention scoring falls back to neutral",
       "materials_ready": "Materials ready for quiz generation",
@@ -296,7 +295,8 @@
       "course_pending_one": "{{count}} item awaiting review in this course",
       "loading_items": "Loading…",
       "items_failed": "Couldn't load the details.",
-      "items_empty": "Nothing left here — it may have just been cleared."
+      "items_empty": "Nothing left here — it may have just been cleared.",
+      "load_details": "Show items"
     }
   },
   "teacher_course_new": {
@@ -710,7 +710,8 @@
     "upload_failed": "Upload failed",
     "resource_unavailable": "Resource unavailable",
     "module_count_other": "{{count}} modules",
-    "module_count_one": "{{count}} module"
+    "module_count_one": "{{count}} module",
+    "teacher_common": "Open quiz generator"
   },
   "dept_course_detail": {
     "back": "Back to courses",

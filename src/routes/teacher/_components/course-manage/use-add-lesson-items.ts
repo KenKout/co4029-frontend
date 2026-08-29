@@ -108,6 +108,7 @@ export function useAddLessonItems(options: {
       void navigate({
         to: "/teacher/courses/$courseId/interview-configs/$configId",
         params: { courseId, configId: config.id },
+        search: { tab: undefined },
       });
     } catch (err: unknown) {
       toast.error(

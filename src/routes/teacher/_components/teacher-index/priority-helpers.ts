@@ -53,3 +53,17 @@ export function formatAge(hours: number | null): string | null {
   const days = Math.floor(hours / 24);
   return `${days}d`;
 }
+
+/**
+ * Worded age for labels like "Oldest: 98 days". A bare "98d" is fine next
+ * to a student's name (the row reason states the real span) but reads as
+ * the item's own age on a grouped backlog — spelling the unit out removes
+ * the ambiguity.
+ */
+export function formatAgeFull(hours: number | null): string | null {
+  if (hours === null) return null;
+  if (hours < 1) return "just now";
+  if (hours < 24) return `${Math.floor(hours)}h`;
+  const days = Math.floor(hours / 24);
+  return `${days} ${days === 1 ? "day" : "days"}`;
+}

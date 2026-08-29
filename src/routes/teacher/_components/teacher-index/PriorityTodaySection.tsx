@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
-  ArrowRight,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   ClipboardCheck,
   Clock,
   FileStack,
@@ -10,11 +12,18 @@ import {
   UserRound,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
-import type { PriorityTask } from "@/lib/api/hooks/teacher-courses";
+import {
+  useReviewQueueItems,
+  type PriorityTask,
+  type ReviewQueueItem,
+  type ReviewQueueKind,
+} from "@/lib/api/hooks/teacher-courses";
 import { cn } from "@/lib/utils";
 
-import { formatAge, priorityTaskLink } from "./priority-helpers";
+import { ReviewItemLink } from "./ReviewQueueLinks";
+import { formatAge, formatAgeFull, priorityTaskLink } from "./priority-helpers";
 import type { TranslateFn } from "./types";
 
 const KIND_ICON: Record<PriorityTask["kind"], typeof UserRound> = {
@@ -24,6 +33,24 @@ const KIND_ICON: Record<PriorityTask["kind"], typeof UserRound> = {
   quiz_calibration: AlertTriangle,
   materials_ready: FileStack,
   reviews_overdue: Clock,
+};
+
+/**
+ * Grouped content backlogs drill into the same per-course lists as the
+ * "Needs your review" section, via the review-queue endpoint. Each expanded
+ * row is a real deep link to the place the work is done (quiz page,
+ * interview config, lesson page).
+ *
+ * `reviews_overdue` has no drill-down endpoint (spaced-repetition cards do
+ * not expose a per-course list), so those rows stay informational.
+ */
+const DRILLDOWN_KIND: Partial<
+  Record<PriorityTask["kind"], ReviewQueueKind>
+> = {
+  quiz_questions_pending: "quiz-cards",
+  quiz_calibration: "missing-texp",
+  interview_questions_pending: "interview-questions",
+  materials_ready: "materials",
 };
 
 /**
@@ -73,6 +100,14 @@ export function PriorityTodaySection({
 }
 
 function TaskRow({ task, t }: { task: PriorityTask; t: TranslateFn }) {
+  const drillKind = DRILLDOWN_KIND[task.kind];
+
+  // Grouped backlogs are expandable: the row is the summary, the expanded
+  // list is where the work actually lives (one deep link per item).
+  if (drillKind) {
+    return <ExpandableTaskRow task={task} kind={drillKind} t={t} />;
+  }
+
   const link = priorityTaskLink(task);
   const body = <TaskBody task={task} t={t} hasLink={link !== null} />;
 
@@ -91,21 +126,109 @@ function TaskRow({ task, t }: { task: PriorityTask; t: TranslateFn }) {
   );
 }
 
+function ExpandableTaskRow({
+  task,
+  kind,
+  t,
+}: {
+  task: PriorityTask;
+  kind: ReviewQueueKind;
+  t: TranslateFn;
+}) {
+  const [open, setOpen] = useState(false);
+  const items = useReviewQueueItems(kind, open);
+  const body = <TaskBody task={task} t={t} hasLink={false} expandable />;
+
+  return (
+    <div>
+      <Button
+        variant="ghost"
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="group flex h-auto w-full items-center gap-4 px-4 py-4 text-left cursor-pointer"
+      >
+        {body}
+        {open ? (
+          <ChevronDown
+            aria-hidden="true"
+            className="h-4 w-4 shrink-0 text-m3-outline"
+          />
+        ) : (
+          <ChevronRight
+            aria-hidden="true"
+            className="h-4 w-4 shrink-0 text-m3-outline transition-transform group-hover:translate-x-0.5"
+          />
+        )}
+      </Button>
+
+      {open && (
+        <div className="border-t border-m3-outline-variant/20 bg-m3-surface-container-lowest">
+          {items.isLoading ? (
+            <p className="px-5 py-3 text-xs text-m3-on-surface-variant">
+              {t("teacher_dashboard.review.loading_items")}
+            </p>
+          ) : items.isError ? (
+            <p className="px-5 py-3 text-xs text-danger">
+              {t("teacher_dashboard.review.items_failed")}
+            </p>
+          ) : (items.data ?? []).length === 0 ? (
+            <p className="px-5 py-3 text-xs text-m3-on-surface-variant">
+              {t("teacher_dashboard.review.items_empty")}
+            </p>
+          ) : (
+            <ul>
+              {(items.data ?? []).map((item: ReviewQueueItem) => (
+                <li key={`${item.course_id}:${item.target_id}`}>
+                  <ReviewItemLink kind={kind} item={item}>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm text-m3-on-surface">
+                        {item.target_title}
+                      </span>
+                      <span className="block truncate text-xs text-m3-on-surface-variant">
+                        {item.course_title}
+                        {item.module_title ? ` · ${item.module_title}` : ""}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-xs font-semibold tabular-nums text-m3-on-surface-variant">
+                      {item.count}
+                    </span>
+                  </ReviewItemLink>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TaskBody({
   task,
   t,
   hasLink,
+  expandable = false,
 }: {
   task: PriorityTask;
   t: TranslateFn;
   hasLink: boolean;
+  expandable?: boolean;
 }) {
   const Icon = KIND_ICON[task.kind];
+  // "Oldest: 98 days" — for grouped backlogs the age is the oldest
+  // item's wait time, and a bare "98d" reads as the item's own age.
   const age = formatAge(task.age_hours);
+  const isGrouped = Boolean(DRILLDOWN_KIND[task.kind]);
+  const ageLabel = isGrouped && age
+    ? t("teacher_dashboard.priority.oldest", {
+        age: formatAgeFull(task.age_hours),
+      })
+    : age;
 
   return (
     <>
-      <div
+      <span
         className={cn(
           "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
           task.severity === "high"
@@ -114,10 +237,10 @@ function TaskBody({
         )}
       >
         <Icon className="h-4 w-4" />
-      </div>
+      </span>
 
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <span className="min-w-0 flex-1 text-left">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="truncate font-semibold text-text-strong">
             {task.title}
           </span>
@@ -133,24 +256,39 @@ function TaskBody({
               {task.course_title}
             </span>
           ) : null}
-        </div>
-        <p className="mt-0.5 text-xs text-text-muted">{task.reason}</p>
-      </div>
+        </span>
+        <span className="mt-0.5 block text-xs text-text-muted">
+          {task.reason}
+        </span>
+      </span>
 
       {/* Age is omitted entirely when unknown — "0h" would claim the item
           just arrived, which is the opposite of what null means. */}
-      {age ? (
+      {ageLabel ? (
         <span className="hidden shrink-0 text-xs text-text-muted tabular-nums sm:inline">
-          {age}
+          {ageLabel}
         </span>
       ) : null}
 
-      {hasLink ? (
-        <ArrowRight className="h-4 w-4 shrink-0 text-text-muted opacity-0 transition-opacity group-hover:opacity-100" />
-      ) : (
-        <span className="inline-block h-4 w-4 shrink-0" aria-hidden />
-      )}
+      {!expandable ? (
+        hasLink ? (
+          <ArrowGlyph />
+        ) : (
+          <span className="inline-block h-4 w-4 shrink-0" aria-hidden />
+        )
+      ) : null}
     </>
+  );
+}
+
+function ArrowGlyph() {
+  return (
+    <span
+      aria-hidden="true"
+      className="shrink-0 text-m3-outline opacity-0 transition-opacity group-hover:opacity-100"
+    >
+      <ChevronRight className="h-4 w-4" />
+    </span>
   );
 }
 

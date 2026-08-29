@@ -326,6 +326,9 @@ const teacherQuizResultsRoute = createRoute({
 const teacherInterviewConfigRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses/$courseId/interview-configs/$configId",
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: typeof search.tab === "string" ? search.tab : undefined,
+  }),
   component: lazyRouteComponent(
     () => import("@/routes/teacher/interview-config"),
   ),

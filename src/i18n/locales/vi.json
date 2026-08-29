@@ -240,17 +240,14 @@
       "subtitle": "Xếp hạng trên tất cả: việc đang chặn trước, rồi đến học viên, sau đó là tồn đọng.",
       "blocking": "Đang chặn",
       "empty_title": "Không có việc gấp",
-      "empty_hint": "Không có gì bị chặn và không học viên nào bị đánh dấu. Xem Tình trạng khóa học bên dưới."
+      "empty_hint": "Không có gì bị chặn và không học viên nào bị đánh dấu. Xem Tình trạng khóa học bên dưới.",
+      "oldest": "Cũ nhất: {{age}}"
     },
     "signals": {
-      "cards_awaiting_review": "Nội dung chờ duyệt",
-      "cards_awaiting_review_sub": "Câu hỏi quiz + phỏng vấn",
-      "students_needing_attention": "Học viên cần chú ý",
-      "students_needing_attention_sub": "Có ít nhất một tín hiệu rủi ro",
-      "avg_retention": "Hệ số dễ nhớ trung bình",
-      "avg_retention_sub": "Càng thấp càng khó — ôn lại thường xuyên hơn (2.5 = chuẩn)",
-      "cards_overdue": "Thẻ ôn tập quá hạn",
-      "cards_overdue_sub": "Thẻ ôn tập của học viên đã quá hạn"
+      "declining_retention": "Học viên giảm trí nhớ",
+      "declining_retention_sub": "Hệ số dễ nhớ trung bình dưới ngưỡng 2.0",
+      "draft_courses": "Khóa học nháp",
+      "draft_courses_sub": "Chưa xuất bản — học viên không thấy được"
     },
     "attention": {
       "title": "Học viên cần chú ý",
@@ -262,7 +259,7 @@
     },
     "health": {
       "title": "Tình trạng khóa học",
-      "subtitle": "Các khóa học xếp theo mức cần chú ý. Nhấp vào dòng để mở.",
+      "subtitle": "Khóa học của bạn xếp theo mức cần chú ý. Bấm tên khóa học để mở.",
       "course": "Khóa học",
       "students": "Học viên",
       "progress": "Tiến độ TB",
@@ -273,7 +270,9 @@
       "today": "Hôm nay",
       "days_ago": "{{count}} ngày trước",
       "no_data": "Chưa đủ dữ liệu",
-      "pass_sample": "Dựa trên {{count}} lượt làm bài"
+      "pass_sample": "Dựa trên {{count}} lượt làm bài",
+      "action": "Mở",
+      "details": "Chi tiết"
     },
     "review": {
       "title": "Cần bạn xem xét",
@@ -282,7 +281,7 @@
       "quiz_cards": "Câu hỏi kiểm tra chờ xem xét",
       "quiz_cards_hint": "Câu hỏi chưa duyệt sẽ không đến được học viên",
       "interview_questions": "Câu hỏi phỏng vấn chờ duyệt",
-      "interview_questions_hint": "Đang chờ bạn duyệt / sửa / từ chối",
+      "interview_questions_hint": "Duyệt, sửa hoặc từ chối",
       "missing_texp": "Bài kiểm tra đã xuất bản thiếu thời gian dự kiến",
       "missing_texp_hint": "Thiếu nó, điểm ghi nhớ sẽ về mức trung tính",
       "materials_ready": "Tài liệu đã sẵn sàng tạo bài kiểm tra",
@@ -292,7 +291,8 @@
       "course_pending": "{{count}} mục chờ xem xét trong khoá này",
       "loading_items": "Đang tải…",
       "items_failed": "Không thể tải chi tiết.",
-      "items_empty": "Không còn mục nào — có thể vừa được xử lý xong."
+      "items_empty": "Không còn mục nào — có thể vừa được xử lý xong.",
+      "load_details": "Xem mục"
     }
   },
   "teacher_course_settings": {
@@ -637,7 +637,8 @@
     "video_uploaded": "Đã tải video",
     "storage_unavailable": "Cấu hình lưu trữ chưa sẵn sàng. Vui lòng liên hệ admin.",
     "upload_failed": "Tải lên thất bại",
-    "resource_unavailable": "Tài nguyên không khả dụng"
+    "resource_unavailable": "Tài nguyên không khả dụng",
+    "teacher_common": "Mở trình tạo quiz"
   },
   "dept_course_detail": {
     "back": "Quay lại khóa học",

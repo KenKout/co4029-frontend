@@ -15,20 +15,6 @@ export function formatCount(n: number | undefined | null): string {
 }
 
 /**
- * Quiz cards + interview questions are both AI-generated content awaiting a
- * human decision, so the headline tile combines them; the queue below breaks
- * them out.
- */
-export function countCardsAwaitingReview(
-  stats: TeacherDashboardStats | undefined,
-): number {
-  return (
-    (stats?.quiz_cards_pending_review ?? 0) +
-    (stats?.interview_questions_pending_review ?? 0)
-  );
-}
-
-/**
  * Review queue, built as data so zero-count rows can be filtered out rather
  * than rendered as already-done.
  */

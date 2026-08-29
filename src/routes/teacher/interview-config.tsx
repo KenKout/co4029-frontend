@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 
 import {
   useGenerateInterviewQuestions,
@@ -59,6 +59,18 @@ export default function InterviewConfigPage() {
   // inactive ones are hidden, so in-progress edits, generation polling and
   // Question Bank state survive tab switches (no unmount = no data loss).
   const [activeTab, setActiveTab] = useState<TabId>("settings");
+  // Deep links from the dashboard's review queue land with
+  // `?tab=questions` — the pending work lives on the Questions tab, not the
+  // Settings tab the page opens on by default. The guard is not needed here:
+  // a deep link arrives on a fresh mount, before any settings edits exist.
+  const search = useSearch({ strict: false }) as { tab?: string };
+  const deepLinkTabHandled = useRef(false);
+  useEffect(() => {
+    if (!deepLinkTabHandled.current && search.tab === "questions") {
+      deepLinkTabHandled.current = true;
+      setActiveTab("questions");
+    }
+  }, [search.tab]);
   // "View questions" from a Learning Outcome sets this signal; the Question
   // Bank reacts by filtering to that outcome. `nonce` lets the same outcome be
   // re-requested (each click re-triggers the effect even if the id is unchanged).

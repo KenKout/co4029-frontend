@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronRight, type LucideIcon } from "lucide-react";
 
@@ -7,22 +6,17 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   useReviewQueueItems,
-  type ReviewQueueItem,
   type ReviewQueueKind,
 } from "@/lib/api/hooks/teacher-courses";
+
+import { ReviewItemLink } from "./ReviewQueueLinks";
 
 /**
  * A review-queue row that expands into the individual places the pending work
  * lives, instead of dumping the teacher on `/teacher/courses` to hunt for it.
  *
  * Each child row reads "Course — Module — Target" and deep-links to the page
- * where the work is actually done:
- *
- *   quiz-cards          → the quiz page (approve/edit cards)
- *   interview-questions → the interview config page
- *   materials           → the LESSON page (quiz generation is keyed on the
- *                         lesson, and no quiz exists yet to link to)
- *   missing-texp        → the quiz page (bulk-set expected response times)
+ * where the work is actually done (see `ReviewQueueLinks`).
  *
  * The list is fetched lazily on first expand, so a dashboard load costs
  * nothing for categories nobody opens.
@@ -32,75 +26,6 @@ const TONE = {
   violet: { icon: "text-violet-600", chip: "bg-violet-100 text-violet-800" },
   sky: { icon: "text-sky-600", chip: "bg-sky-100 text-sky-800" },
 } as const;
-
-const ITEM_LINK_CLASS =
-  "flex items-center justify-between gap-3 py-2.5 pl-12 pr-5 transition-colors hover:bg-m3-surface-container-low";
-
-/**
- * Each kind renders its own `<Link>` with a LITERAL route path.
- *
- * Returning `{ to, params }` from a shared helper collapses the three shapes
- * into a union, which defeats TanStack's route typing and forces an `as any`
- * cast. The router IS registered (`declare module … Register` in router.tsx),
- * so written this way a typo or a renamed route is a compile error rather
- * than a dead link discovered by a user.
- */
-function ReviewItemLink({
-  kind,
-  item,
-  children,
-}: {
-  kind: ReviewQueueKind;
-  item: ReviewQueueItem;
-  children: React.ReactNode;
-}) {
-  switch (kind) {
-    case "quiz-cards":
-      return (
-        <Link
-          to="/teacher/courses/$courseId/quizzes/$quizId"
-          params={{ courseId: item.course_id, quizId: item.target_id }}
-          search={{ tab: "questions" }}
-          className={ITEM_LINK_CLASS}
-        >
-          {children}
-        </Link>
-      );
-    case "interview-questions":
-      return (
-        <Link
-          to="/teacher/courses/$courseId/interview-configs/$configId"
-          params={{ courseId: item.course_id, configId: item.target_id }}
-          className={ITEM_LINK_CLASS}
-        >
-          {children}
-        </Link>
-      );
-    case "materials":
-      return (
-        <Link
-          to="/teacher/courses/$courseId/lessons/$lessonId"
-          params={{ courseId: item.course_id, lessonId: item.target_id }}
-          className={ITEM_LINK_CLASS}
-        >
-          {children}
-        </Link>
-      );
-    case "missing-texp":
-      // Same destination as quiz-cards: the quiz page, where the teacher
-      // bulk-sets expected response times on the questions tab.
-      return (
-        <Link
-          to="/teacher/courses/$courseId/quizzes/$quizId"
-          params={{ courseId: item.course_id, quizId: item.target_id }}
-          search={{ tab: "questions" }}
-          className={ITEM_LINK_CLASS}
-        >
-          {children}
-        </Link>
-      );
-  }
-}
 
 export function ExpandableReviewRow({
   label,

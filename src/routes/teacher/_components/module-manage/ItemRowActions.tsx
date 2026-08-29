@@ -75,6 +75,7 @@ export function ItemRowActions({
         <Link
           to="/teacher/courses/$courseId/interview-configs/$configId"
           params={{ courseId, configId: item.interview_config_id }}
+          search={{ tab: undefined }}
           onClick={(e) => e.stopPropagation()}
         >
           <Button

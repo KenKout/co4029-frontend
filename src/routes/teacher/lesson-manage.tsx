@@ -1,6 +1,11 @@
-import { useParams } from "@tanstack/react-router";
+import { useState } from "react";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { useCreateQuiz } from "@/lib/api/hooks/quizzes";
 import { LESSON_TYPE_OPTIONS } from "./_components/lesson-manage/constants";
 import { LessonActionBar } from "./_components/lesson-manage/LessonActionBar";
 import { LessonSettingsSidebar } from "./_components/lesson-manage/LessonSettingsSidebar";
@@ -28,6 +33,9 @@ export default function LessonManagePage() {
     lessonId: string;
   };
   const { courseId, lessonId } = params;
+  const navigate = useNavigate();
+  const createQuiz = useCreateQuiz(courseId);
+  const [generatingQuiz, setGeneratingQuiz] = useState(false);
 
   const data = useLessonManageData(courseId, lessonId);
   const editor = useLessonEditorState({
@@ -51,6 +59,32 @@ export default function LessonManagePage() {
 
   const { moduleId, courseModule, lesson } = data;
   const { leaveGuard } = editor;
+
+  // One-click next step for the "materials ready for quiz generation"
+  // review items: create a draft quiz for THIS lesson and land straight on
+  // the generator screen, where the lesson is picked as the source.
+  const hasIngestedMaterials = (data.aiMaterials ?? []).length > 0;
+  async function handleGenerateQuiz() {
+    if (generatingQuiz || !lesson || !moduleId) return;
+    setGeneratingQuiz(true);
+    try {
+      const quiz = await createQuiz.mutateAsync({
+        module_id: moduleId,
+        title: `Quiz: ${lesson.title}`,
+        description: "Draft quiz generated from this lesson's material.",
+        reminders_enabled: true,
+      });
+      void navigate({
+        to: "/teacher/courses/$courseId/quizzes/$quizId/generate",
+        params: { courseId, quizId: quiz.id },
+      });
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message || t("teacher_quiz_new.errors.create_failed"),
+      );
+      setGeneratingQuiz(false);
+    }
+  }
 
   if (data.lessonLoading) {
     return (
@@ -96,6 +130,16 @@ export default function LessonManagePage() {
         onSave={actions.handleSave}
       />
 
+      {/* Quiz-generation next step: shown when this lesson has ingested
+          material that no quiz has been generated from yet. */}
+      {hasIngestedMaterials && (
+        <GenerateQuizBanner
+          generating={generatingQuiz}
+          onGenerate={() => void handleGenerateQuiz()}
+          t={t}
+        />
+      )}
+
       {/* ── 12-col grid ── */}
       <div className="grid grid-cols-12 gap-8 items-start">
         {/* Main editor — 8 cols */}
@@ -125,6 +169,50 @@ export default function LessonManagePage() {
 
       {/* "Are you sure you want to quit?" for the back link while dirty. */}
       {leaveGuard.dialog}
+    </div>
+  );
+}
+
+/**
+ * One-click next step banner. Shown when this lesson's materials have been
+ * ingested but no quiz has been generated from them: create a draft quiz
+ * for THIS lesson and land straight on the generator screen.
+ */
+function GenerateQuizBanner({
+  generating,
+  onGenerate,
+  t,
+}: {
+  generating: boolean;
+  onGenerate: () => void;
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
+  return (
+    <div className="mt-4 mb-6 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-xl bg-card p-4 shadow-editorial ghost-border">
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-2 text-sm font-semibold text-text-strong">
+          <Sparkles className="h-4 w-4 shrink-0 text-m3-primary" />
+          {t("teacher_common.generate_quiz_from_material")}
+        </p>
+        <p className="mt-0.5 text-xs text-text-muted">
+          {t("teacher_common.generate_quiz_from_material_hint")}
+        </p>
+      </div>
+      <Button
+        type="button"
+        onClick={onGenerate}
+        disabled={generating}
+        className="rounded-xl bg-m3-primary text-m3-on-primary hover:bg-m3-primary/90"
+      >
+        {generating ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Sparkles className="h-4 w-4" />
+        )}
+        {generating
+          ? t("teacher_common.generating_quiz")
+          : t("teacher_common.generate_quiz_from_material")}
+      </Button>
     </div>
   );
 }

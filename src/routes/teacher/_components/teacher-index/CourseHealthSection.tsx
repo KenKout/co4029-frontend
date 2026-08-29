@@ -1,5 +1,5 @@
-import { useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, BookOpen } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { AlertTriangle, BookOpen, ChevronRight } from "lucide-react";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -29,7 +29,23 @@ const DORMANT_DAYS = 14;
  * Rows arrive pre-sorted worst-first from the server; every column is
  * client-sortable from there so a teacher can re-rank by whichever signal
  * they are chasing.
+ *
+ * Five core columns stay on screen (Course, Students, Progress, At risk,
+ * Action) — an 8-column table overflowed the viewport at ~1246px and
+ * pushed Pending review / Last activity off-screen. Those live in an
+ * expandable detail row instead. The course NAME is a real link (keyboard
+ * focusable), not a click-capturing row.
  */
+type HealthRow = CourseHealthRow & { readonly __detail?: true };
+
+function detailRowFor(row: CourseHealthRow): HealthRow {
+  return { ...row, __detail: true };
+}
+
+function isDetailRow(row: CourseHealthRow): row is HealthRow {
+  return Boolean((row as HealthRow).__detail);
+}
+
 export function CourseHealthSection({
   rows,
   isLoading,
@@ -39,30 +55,39 @@ export function CourseHealthSection({
   isLoading: boolean;
   t: TranslateFn;
 }) {
-  const navigate = useNavigate();
-
   const columns: DataTableColumn<CourseHealthRow>[] = [
     {
       id: "title",
       header: t("teacher_dashboard.health.course"),
       sortable: true,
       sortValue: (row) => row.title.toLowerCase(),
-      cell: (row) => (
-        <div className="flex items-center gap-2.5">
-          <SeverityMark row={row} />
-          <div className="min-w-0">
-            <p className="truncate font-medium text-text-strong">{row.title}</p>
-            {/* Published state as a word, not a colour (FR-044). Drafts are
-                called out because a draft course with enrolled students is
-                usually a mistake worth seeing. */}
-            {row.status !== "published" ? (
-              <span className="text-[11px] tracking-wide text-text-muted uppercase">
-                {row.status}
-              </span>
-            ) : null}
+      cell: (row) =>
+        isDetailRow(row) ? (
+          <DetailRow row={row} t={t} />
+        ) : (
+          <div className="flex items-center gap-2.5">
+            <SeverityMark row={row} />
+            <div className="min-w-0">
+              {/* A real link, not an onClick row: keyboard-focusable and
+                  announced as a link by assistive tech. */}
+              <Link
+                to="/teacher/courses/$courseId"
+                params={{ courseId: row.course_id }}
+                className="block truncate font-medium text-text-strong hover:text-m3-primary hover:underline"
+              >
+                {row.title}
+              </Link>
+              {/* Published state as a word, not a colour (FR-044). Drafts
+                  are called out because a draft course with enrolled
+                  students is usually a mistake worth seeing. */}
+              {row.status !== "published" ? (
+                <span className="text-[11px] tracking-wide text-text-muted uppercase">
+                  {row.status}
+                </span>
+              ) : null}
+            </div>
           </div>
-        </div>
-      ),
+        ),
     },
     {
       id: "students",
@@ -70,7 +95,8 @@ export function CourseHealthSection({
       align: "right",
       sortable: true,
       sortValue: (row) => row.students,
-      cell: (row) => <Numeric value={row.students} />,
+      cell: (row) =>
+        isDetailRow(row) ? null : <Numeric value={row.students} />,
     },
     {
       id: "progress",
@@ -79,11 +105,13 @@ export function CourseHealthSection({
       sortable: true,
       sortValue: (row) => nullableSortValue(row.avg_progress_percent),
       cell: (row) =>
-        row.avg_progress_percent === null ? (
-          <NoData t={t} />
-        ) : (
-          <Numeric value={`${Math.round(row.avg_progress_percent)}%`} />
-        ),
+        isDetailRow(row)
+          ? null
+          : row.avg_progress_percent === null ? (
+              <NoData t={t} />
+            ) : (
+              <Numeric value={`${Math.round(row.avg_progress_percent)}%`} />
+            ),
     },
     {
       id: "at_risk",
@@ -94,53 +122,32 @@ export function CourseHealthSection({
       sortable: true,
       sortValue: atRiskShare,
       cell: (row) =>
-        row.at_risk_students > 0 ? (
-          <span className="font-semibold text-destructive">
-            {row.at_risk_students}
-            <span className="font-normal text-text-muted">/{row.students}</span>
-          </span>
-        ) : (
-          <Numeric value={0} />
+        isDetailRow(row) ? null : (
+          row.at_risk_students > 0 ? (
+            <span className="font-semibold text-destructive">
+              {row.at_risk_students}
+              <span className="font-normal text-text-muted">/{row.students}</span>
+            </span>
+          ) : (
+            <Numeric value={0} />
+          )
         ),
     },
     {
-      id: "pass_rate",
-      header: t("teacher_dashboard.health.pass_rate"),
+      id: "action",
+      header: t("teacher_dashboard.health.action"),
       align: "right",
-      sortable: true,
-      sortValue: (row) =>
-        hasUsablePassRate(row) ? nullableSortValue(row.pass_rate_percent) : -1,
       cell: (row) =>
-        hasUsablePassRate(row) ? (
-          <span
-            title={t("teacher_dashboard.health.pass_sample", {
-              count: row.pass_sample,
-            })}
+        isDetailRow(row) ? null : (
+          <Link
+            to="/teacher/courses/$courseId"
+            params={{ courseId: row.course_id }}
+            className="inline-flex items-center gap-1 text-xs font-bold text-m3-primary hover:underline"
           >
-            {Math.round(row.pass_rate_percent as number)}%
-          </span>
-        ) : (
-          // Withheld rather than shown: a rate off a handful of attempts
-          // reads as a verdict on the course when it is one bad afternoon.
-          <NoData t={t} />
+            {t("teacher_dashboard.health.action")}
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
         ),
-    },
-    {
-      id: "pending",
-      header: t("teacher_dashboard.health.pending"),
-      align: "right",
-      sortable: true,
-      sortValue: (row) => row.pending_review,
-      cell: (row) => <Numeric value={row.pending_review} />,
-    },
-    {
-      id: "activity",
-      header: t("teacher_dashboard.health.last_activity"),
-      align: "right",
-      sortable: true,
-      sortValue: (row) =>
-        row.last_activity_at ? new Date(row.last_activity_at).getTime() : 0,
-      cell: (row) => <LastActivity iso={row.last_activity_at} t={t} />,
     },
   ];
 
@@ -155,13 +162,8 @@ export function CourseHealthSection({
           columns={columns}
           data={rows}
           getRowId={(row) => row.course_id}
+          getSubRows={(row) => [detailRowFor(row)]}
           loading={isLoading}
-          onRowClick={(row) =>
-            void navigate({
-              to: "/teacher/courses/$courseId",
-              params: { courseId: row.course_id },
-            })
-          }
           emptyState={
             <EmptyState
               icon={BookOpen}
@@ -171,6 +173,51 @@ export function CourseHealthSection({
           }
         />
       </div>
+    </div>
+  );
+}
+
+/**
+ * The expandable detail row: pass rate, pending review and last activity —
+ * the columns dropped from the main table so the five core ones fit the
+ * viewport. Rendered in the first (Course) cell; the sibling cells are
+ * empty so the row reads as one summary line.
+ */
+function DetailRow({ row, t }: { row: CourseHealthRow; t: TranslateFn }) {
+  const pass = hasUsablePassRate(row)
+    ? `${Math.round(row.pass_rate_percent as number)}%`
+    : null;
+  const passSample =
+    row.pass_sample === 1
+      ? t("teacher_dashboard.health.pass_sample", { count: 1 })
+      : t("teacher_dashboard.health.pass_sample_plural", {
+          count: row.pass_sample,
+        });
+  const lastActivity = <LastActivity iso={row.last_activity_at} t={t} />;
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-1.5 py-0.5 text-xs text-m3-on-surface-variant">
+      <span className="flex items-center gap-1.5">
+        <span className="font-semibold text-m3-on-surface">
+          {t("teacher_dashboard.health.pass_rate")}
+        </span>
+        {pass ?? "—"}
+        {pass !== null && (
+          <span className="text-m3-on-surface-variant/70">({passSample})</span>
+        )}
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="font-semibold text-m3-on-surface">
+          {t("teacher_dashboard.health.pending")}
+        </span>
+        <span className="tabular-nums">{row.pending_review}</span>
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="font-semibold text-m3-on-surface">
+          {t("teacher_dashboard.health.last_activity")}
+        </span>
+        {lastActivity}
+      </span>
     </div>
   );
 }

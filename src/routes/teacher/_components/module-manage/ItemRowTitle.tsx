@@ -39,6 +39,7 @@ export function ItemRowTitle({
     <Link
       to="/teacher/courses/$courseId/interview-configs/$configId"
       params={{ courseId, configId: item.interview_config_id }}
+      search={{ tab: undefined }}
       draggable={false}
       onClick={(e) => e.stopPropagation()}
       className="flex-1 text-sm font-medium text-m3-on-surface truncate hover:text-m3-primary transition-colors cursor-pointer"

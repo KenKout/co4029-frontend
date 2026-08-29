@@ -1,4 +1,4 @@
-import { Brain, ClipboardCheck, Clock, TrendingDown } from "lucide-react";
+import { FileStack, TrendingDown } from "lucide-react";
 
 import { StatCard } from "@/components/ui/stat-card";
 import type { TeacherDashboardStats } from "@/lib/api/hooks/teacher-courses";
@@ -7,58 +7,42 @@ import { formatCount } from "./helpers";
 import type { TranslateFn } from "./types";
 
 /**
- * Headline signals. Replaces the old Total/Published/Drafts/AI-Enabled
- * counts: those were static and answered no question a teacher would act
- * on. These four are the ones that change behaviour — what needs review,
- * who is falling behind, and how retention is trending.
+ * Headline signals — the footer KPI row.
  *
- * "Students needing attention" is backed by the progress feature's risk
- * engine (inactivity, no engagement, low completion, with a grace period
- * for new enrolments), NOT by spaced-repetition easiness. It previously
- * showed `students_below_ef_threshold`, which carried the same name as the
- * course page's at-risk rule while counting a different population — two
- * screens disagreeing about who is struggling.
+ * Deliberately kept to facts that do NOT repeat the sections above: the
+ * priority feed, the at-risk list and the review queue already state what
+ * needs acting on, so restating those counts here would double the page
+ * without adding information. What remains is signal the sections do not
+ * carry:
+ *
+ *   - students with declining retention (spaced-repetition easiness below
+ *     the 2.0 struggling threshold — nowhere else on the page),
+ *   - draft courses (invisible to students until published — no section
+ *     above covers them).
  */
 export function DashboardSignals({
   stats,
-  cardsAwaitingReview,
   t,
 }: {
   stats: TeacherDashboardStats | undefined;
-  cardsAwaitingReview: number;
   t: TranslateFn;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <StatCard
-        label={t("teacher_dashboard.signals.cards_awaiting_review")}
-        value={formatCount(cardsAwaitingReview)}
-        sublabel={t("teacher_dashboard.signals.cards_awaiting_review_sub")}
-        icon={ClipboardCheck}
-        variant={cardsAwaitingReview > 0 ? "glow" : "default"}
-      />
-      <StatCard
-        label={t("teacher_dashboard.signals.students_needing_attention")}
-        value={formatCount(stats?.students_needing_attention)}
-        sublabel={t("teacher_dashboard.signals.students_needing_attention_sub")}
+        label={t("teacher_dashboard.signals.declining_retention")}
+        value={formatCount(stats?.students_below_ef_threshold)}
+        sublabel={t("teacher_dashboard.signals.declining_retention_sub")}
         icon={TrendingDown}
         variant={
-          stats?.students_needing_attention ? "glow" : "default"
+          (stats?.students_below_ef_threshold ?? 0) > 0 ? "glow" : "default"
         }
       />
       <StatCard
-        label={t("teacher_dashboard.signals.avg_retention")}
-        value={
-          stats?.avg_retention_ef ? stats.avg_retention_ef.toFixed(2) : "—"
-        }
-        sublabel={t("teacher_dashboard.signals.avg_retention_sub")}
-        icon={Brain}
-      />
-      <StatCard
-        label={t("teacher_dashboard.signals.cards_overdue")}
-        value={formatCount(stats?.cards_overdue)}
-        sublabel={t("teacher_dashboard.signals.cards_overdue_sub")}
-        icon={Clock}
+        label={t("teacher_dashboard.signals.draft_courses")}
+        value={formatCount(stats?.draft_courses)}
+        sublabel={t("teacher_dashboard.signals.draft_courses_sub")}
+        icon={FileStack}
       />
     </div>
   );

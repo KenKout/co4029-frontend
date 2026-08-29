@@ -10,10 +10,7 @@ import {
 
 import { CourseHealthSection } from "./_components/teacher-index/CourseHealthSection";
 import { DashboardSignals } from "./_components/teacher-index/DashboardSignals";
-import {
-  buildReviewCandidates,
-  countCardsAwaitingReview,
-} from "./_components/teacher-index/helpers";
+import { buildReviewCandidates } from "./_components/teacher-index/helpers";
 import { PriorityTodaySection } from "./_components/teacher-index/PriorityTodaySection";
 import { ReviewQueueSection } from "./_components/teacher-index/ReviewQueueSection";
 import { StudentsNeedingAttentionSection } from "./_components/teacher-index/StudentsNeedingAttentionSection";
@@ -42,7 +39,6 @@ export default function TeacherDashboard() {
     useStudentsNeedingAttention();
   const { data: courseHealth = [], isLoading: healthLoading } = useCourseHealth();
 
-  const cardsAwaitingReview = countCardsAwaitingReview(stats);
   const reviewItems = buildReviewCandidates(stats, t).filter((i) => i.count > 0);
 
   return (
@@ -75,13 +71,10 @@ export default function TeacherDashboard() {
           it could not answer "which of my courses needs me today". */}
       <CourseHealthSection rows={courseHealth} isLoading={healthLoading} t={t} />
 
-      {/* Trend context, last. These four numbers explain the sections
-          above; none of them is an action on its own. */}
-      <DashboardSignals
-        stats={stats}
-        cardsAwaitingReview={cardsAwaitingReview}
-        t={t}
-      />
+      {/* Trend context, last. These numbers explain the sections above
+          without repeating them (see DashboardSignals); none of them is an
+          action on its own. */}
+      <DashboardSignals stats={stats} t={t} />
     </div>
   );
 }
