@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   Copy,
@@ -37,6 +38,12 @@ type TabKey = "role_changes" | "http" | "data_changes";
 /** Tab order for the strip. Same three sources as before, as data. */
 const TAB_KEYS: TabKey[] = ["role_changes", "http", "data_changes"];
 
+function isAuditTab(value: unknown): value is TabKey {
+  return (
+    value === "role_changes" || value === "http" || value === "data_changes"
+  );
+}
+
 type RoleChangeRow = NonNullable<
   ReturnType<typeof useAuditRoleChanges>["data"]
 >[number];
@@ -63,9 +70,25 @@ function daysAgoIso(days: number): string {
 /** FR-6.7 — admin viewer over the immutable audit endpoints. */
 export default function AdminAuditLogsPage() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<TabKey>("role_changes");
+  const navigate = useNavigate();
+  const search = useSearch({ strict: false });
+
+  // The active tab lives in `?tab=`, so tiles on /admin/stats can land on
+  // the tab that explains them (ADM-021) and the back button works.
+  const [tab, setTab] = useState<TabKey>(() =>
+    isAuditTab(search.tab) ? search.tab : "role_changes",
+  );
   const [sinceDays, setSinceDays] = useState(7);
   const sinceIso = useMemo(() => daysAgoIso(sinceDays), [sinceDays]);
+
+  const selectTab = (next: TabKey) => {
+    setTab(next);
+    void navigate({
+      to: "/admin/audit-logs",
+      search: { tab: next },
+      replace: true,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -100,7 +123,7 @@ export default function AdminAuditLogsPage() {
           label: t(`admin.audit.tabs.${key}`),
         }))}
         value={tab}
-        onChange={setTab}
+        onChange={selectTab}
         variant="contained"
         ariaLabel={t("admin.audit.title")}
       />
