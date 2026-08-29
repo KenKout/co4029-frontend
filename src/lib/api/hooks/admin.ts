@@ -838,25 +838,34 @@ export function useAddOrgMember(orgId: string) {
   });
 }
 
-/** FR-6.7 — role-assignment changes since a timestamp (admin audit). */
-export function useAuditRoleChanges(sinceIso: string) {
+/** FR-6.7 — role-assignment changes within `[since, until)`. */
+export function useAuditRoleChanges(sinceIso: string, untilIso?: string) {
   return useQuery({
-    queryKey: queryKeys.admin.auditRoleChanges(sinceIso),
-    queryFn: () =>
-      apiFetch<RoleChangeRow[]>(
-        `/admin/audit/role-changes?since=${encodeURIComponent(sinceIso)}&limit=200`,
-      ),
+    queryKey: queryKeys.admin.auditRoleChanges(sinceIso, untilIso),
+    queryFn: () => {
+      const params = new URLSearchParams({ since: sinceIso, limit: "200" });
+      if (untilIso) params.set("until", untilIso);
+      return apiFetch<RoleChangeRow[]>(
+        `/admin/audit/role-changes?${params.toString()}`,
+      );
+    },
     enabled: Boolean(sinceIso),
     staleTime: 1000 * 30,
   });
 }
 
-/** FR-6.7 — HTTP request audit scan (admin audit). */
-export function useAuditHttp(sinceIso: string, path?: string, userId?: string) {
+/** FR-6.7 — HTTP request audit scan within `[since, until)`. */
+export function useAuditHttp(
+  sinceIso: string,
+  untilIso?: string,
+  path?: string,
+  userId?: string,
+) {
   return useQuery({
-    queryKey: queryKeys.admin.auditHttp(sinceIso, path, userId),
+    queryKey: queryKeys.admin.auditHttp(sinceIso, untilIso, path, userId),
     queryFn: () => {
       const params = new URLSearchParams({ since: sinceIso, limit: "200" });
+      if (untilIso) params.set("until", untilIso);
       if (path) params.set("path_pattern", path);
       if (userId) params.set("user_id", userId);
       return apiFetch<HttpAuditRow[]>(`/admin/audit/http?${params.toString()}`);
@@ -887,16 +896,17 @@ export function useAuditDataChanges(table: string, entityId: string) {
   });
 }
 
-/** FR-6.7 — every row in `table` changed since `since`, newest first. */
-export function useAuditDataChangesList(table: string, sinceIso: string) {
+/** FR-6.7 — every row in `table` changed within `[since, until)`, newest first. */
+export function useAuditDataChangesList(table: string, sinceIso: string, untilIso?: string) {
   return useQuery({
-    queryKey: queryKeys.admin.auditDataChangesList(table, sinceIso),
+    queryKey: queryKeys.admin.auditDataChangesList(table, sinceIso, untilIso),
     queryFn: () => {
       const params = new URLSearchParams({
         table,
         since: sinceIso,
         limit: "200",
       });
+      if (untilIso) params.set("until", untilIso);
       return apiFetch<DataChangeRow[]>(
         `/admin/audit/data-changes/list?${params.toString()}`,
       );

@@ -136,14 +136,14 @@ export const queryKeys = {
       ["admin", "users", userId, "grants"] as const,
     orgMemberships: (orgId: string) =>
       ["admin", "organizations", orgId, "memberships"] as const,
-    auditRoleChanges: (since: string) =>
-      ["admin", "audit", "role-changes", since] as const,
-    auditHttp: (since: string, path?: string, userId?: string) =>
-      ["admin", "audit", "http", since, path, userId] as const,
+    auditRoleChanges: (since: string, until?: string) =>
+          ["admin", "audit", "role-changes", since, until ?? ""] as const,
+        auditHttp: (since: string, until?: string, path?: string, userId?: string) =>
+          ["admin", "audit", "http", since, until ?? "", path ?? "", userId ?? ""] as const,
     auditDataChanges: (table: string, entityId: string) =>
       ["admin", "audit", "data-changes", table, entityId] as const,
-    auditDataChangesList: (table: string, since: string) =>
-      ["admin", "audit", "data-changes-list", table, since] as const,
+    auditDataChangesList: (table: string, since: string, until?: string) =>
+      ["admin", "audit", "data-changes-list", table, since, until ?? ""] as const,
     usersByIds: (ids: string) => ["admin", "users", "by-ids", ids] as const,
     aiCosts: {
       summary: (period: string, filters?: string) =>

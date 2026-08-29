@@ -57,14 +57,14 @@ type AuditUser = NonNullable<ReturnType<typeof useUsersByIds>["data"]>[number];
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function daysAgoIso(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-}
+import { DateRangePicker } from "./_components/stats/DateRangePicker";
+import {
+  fromIso,
+  rangePresets,
+  type RangeSelection,
+} from "./_components/stats/date-range";
 
-/** FR-6.7 — admin viewer over the immutable audit endpoints. */
+/** Fr-6.7 — admin viewer over the immutable audit endpoints. */
 export default function AdminAuditLogsPage() {
   const { t } = useTranslation();
   // ?tab= / ?path= let a dashboard alert land on the rows behind it. Anything
@@ -75,8 +75,22 @@ export default function AdminAuditLogsPage() {
   const [tab, setTab] = useState<TabKey>(() =>
     isAuditTab(search.tab) ? search.tab : "role_changes",
   );
-  const [sinceDays, setSinceDays] = useState(7);
-  const sinceIso = useMemo(() => daysAgoIso(sinceDays), [sinceDays]);
+  // Date range over the audit trail, same picker as the dashboard: from/to are
+  // calendar days (local), `to` is INCLUSIVE — the API upper bound becomes
+  // to+1 day at local midnight, exactly like the dashboard window.
+  const [range, setRange] = useState<RangeSelection>(
+    () => rangePresets(new Date()).last7,
+  );
+  const sinceIso = useMemo(
+    () => new Date(`${range.from}T00:00:00`).toISOString(),
+    [range.from],
+  );
+  const untilIso = useMemo(() => {
+    if (!range.to) return undefined;
+    const end = fromIso(range.to);
+    end.setDate(end.getDate() + 1);
+    return end.toISOString();
+  }, [range.to]);
 
   const selectTab = (next: TabKey) => {
     setTab(next);
@@ -99,19 +113,7 @@ export default function AdminAuditLogsPage() {
             {t("admin.audit.subtitle")}
           </p>
         </div>
-        <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant flex items-center gap-2">
-          {t("admin.audit.since_days")}
-          <Input
-            type="number"
-            min={1}
-            max={90}
-            value={sinceDays}
-            onChange={(e) =>
-              setSinceDays(Math.max(1, Number(e.target.value) || 7))
-            }
-            className="w-20 h-8"
-          />
-        </label>
+        <DateRangePicker range={range} onChange={setRange} />
       </div>
 
       <Tabs
@@ -126,11 +128,11 @@ export default function AdminAuditLogsPage() {
       />
 
       {tab === "role_changes" ? (
-        <RoleChangesTable sinceIso={sinceIso} />
+        <RoleChangesTable sinceIso={sinceIso} untilIso={untilIso} />
       ) : tab === "http" ? (
-        <HttpAuditTable sinceIso={sinceIso} initialPath={search.path} />
+        <HttpAuditTable sinceIso={sinceIso} untilIso={untilIso} initialPath={search.path} />
       ) : (
-        <DataChangesPanel sinceIso={sinceIso} />
+        <DataChangesPanel sinceIso={sinceIso} untilIso={untilIso} />
       )}
     </div>
   );
@@ -212,9 +214,9 @@ function UserIdentityCell({
   );
 }
 
-function RoleChangesTable({ sinceIso }: { sinceIso: string }) {
+function RoleChangesTable({ sinceIso, untilIso }: { sinceIso: string; untilIso?: string }) {
   const { t } = useTranslation();
-  const { data: rows, isLoading, isError } = useAuditRoleChanges(sinceIso);
+  const { data: rows, isLoading, isError } = useAuditRoleChanges(sinceIso, untilIso);
   const userIds = useMemo(
     () =>
       (rows ?? []).flatMap((r) =>
@@ -316,9 +318,11 @@ function RoleChangesTable({ sinceIso }: { sinceIso: string }) {
 
 function HttpAuditTable({
   sinceIso,
+  untilIso,
   initialPath,
 }: {
   sinceIso: string;
+  untilIso?: string;
   /** Seeded from ?path= so a security alert opens on its own requests. */
   initialPath?: string;
 }) {
@@ -337,7 +341,7 @@ function HttpAuditTable({
     data: rows,
     isLoading,
     isError,
-  } = useAuditHttp(sinceIso, debouncedPath ? `${debouncedPath}%` : undefined);
+  } = useAuditHttp(sinceIso, untilIso, debouncedPath ? `${debouncedPath}%` : undefined);
 
   const filtered = useMemo(() => {
     const base = rows ?? [];
@@ -514,7 +518,7 @@ function EntityIdLookup({
   );
 }
 
-function DataChangesPanel({ sinceIso }: { sinceIso: string }) {
+function DataChangesPanel({ sinceIso, untilIso }: { sinceIso: string; untilIso?: string }) {
   const { t } = useTranslation();
   const [table, setTable] = useState<DataChangeTable>("courses");
   const [selectedId, setSelectedId] = useState<string | undefined>();
@@ -523,7 +527,7 @@ function DataChangesPanel({ sinceIso }: { sinceIso: string }) {
     data: rows,
     isLoading,
     isError,
-  } = useAuditDataChangesList(table, sinceIso);
+  } = useAuditDataChangesList(table, sinceIso, untilIso);
 
   const trimmed = entityIdInput.trim();
   const isValidUuid = trimmed.length === 0 || UUID_RE.test(trimmed);

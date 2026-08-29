@@ -13,6 +13,7 @@ import {
   type TimeRange,
   type TimeRangeOption,
 } from "@/components/ui/data-table-toolbar";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import type { ProcessingJobOut } from "@/lib/api/types";
 import { JobStatusBadge } from "@/components/ui/status-badges";
 import { Button } from "@/components/ui/button";
@@ -108,6 +109,8 @@ export function JobsTable({
   onCustomRangeChange,
   search,
   onSearchChange,
+  loading = false,
+  error = false,
 }: {
   jobs: ProcessingJobOut[];
   onRetry: (jobId: string) => void;
@@ -118,6 +121,10 @@ export function JobsTable({
   onCustomRangeChange?: (range: CustomTimeRange | undefined) => void;
   search: string;
   onSearchChange: (value: string) => void;
+  /** While fetching a NEW window the toolbar must stay mounted (it owns the
+   * custom-range dialog state) — only the rows below it become a skeleton. */
+  loading?: boolean;
+  error?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -126,10 +133,29 @@ export function JobsTable({
   const columns = buildColumns(t, locale);
   const timeRangeOptions = buildTimeRangeOptions(t);
 
+  const emptyState = loading ? (
+    <PageSkeleton
+      rows={4}
+      height="h-12"
+      rounded="rounded-lg"
+      bg="bg-surface-muted"
+      gap="space-y-2"
+    />
+  ) : error ? (
+    <div className="bg-surface-elev border border-border rounded-lg p-5">
+      <p className="text-sm text-danger">{t("admin.processing.jobs_load_failed")}</p>
+    </div>
+  ) : (
+    <div className="flex flex-col items-center gap-2">
+      <Activity className="h-8 w-8 text-text-subtle" />
+      <p className="text-sm text-text-muted">{t("admin.processing.no_jobs_match")}</p>
+    </div>
+  );
+
   return (
     <DataTable
       columns={columns}
-      data={jobs}
+      data={loading || error ? [] : jobs}
       getRowId={(job) => job.id}
       onRowClick={(job) =>
         void navigate({
@@ -161,14 +187,7 @@ export function JobsTable({
           }}
         />
       }
-      emptyState={
-        <div className="flex flex-col items-center gap-2">
-          <Activity className="h-8 w-8 text-text-subtle" />
-          <p className="text-sm text-text-muted">
-            {t("admin.processing.no_jobs_match")}
-          </p>
-        </div>
-      }
+      emptyState={emptyState}
       actionsHeader={t("admin.processing.cols.actions")}
       actions={(job) =>
         job.status === "failed" ? (
