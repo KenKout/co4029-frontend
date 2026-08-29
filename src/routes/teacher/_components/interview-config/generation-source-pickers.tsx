@@ -30,50 +30,53 @@ export function GenerationModulePicker({
       label={t("teacher_interview_config.generate.modules_label")}
       hint={t("teacher_interview_config.generate.modules_hint")}
     >
-      <div className="flex flex-wrap gap-1.5">
-        {modules.length === 0 ? (
-          <p className="text-xs text-m3-on-surface-variant">
-            {t("teacher_interview_config.generate.modules_empty")}
-          </p>
-        ) : (
-          modules.map((m) => {
-            const selected = generationForm.source_module_ids.includes(m.id);
-            const isOwn = m.id === ownModuleId;
-            const effectiveSelected =
-              selected ||
-              (generationForm.source_module_ids.length === 0 && isOwn);
-            return (
-              <Button variant="ghost"
-                key={m.id}
-                type="button"
-                aria-pressed={effectiveSelected}
-                onClick={() =>
-                  updateGeneration(
-                    "source_module_ids",
-                    selected
-                      ? generationForm.source_module_ids.filter(
-                          (id) => id !== m.id,
-                        )
-                      : [...generationForm.source_module_ids, m.id],
-                  )
-                }
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors h-auto whitespace-normal",
-                  effectiveSelected
-                    ? "border-m3-secondary bg-m3-secondary/10 text-m3-secondary font-semibold"
-                    : "border-m3-outline-variant/40 bg-m3-surface text-m3-on-surface-variant hover:bg-m3-surface-container-low",
-                )}
-              >
-                {m.title}
-                {isOwn && (
-                  <span className="text-[10px] opacity-70">
-                    {t("teacher_interview_config.generate.modules_own")}
-                  </span>
-                )}
-              </Button>
-            );
-          })
-        )}
+      <div className="min-w-0 space-y-2">
+        <div className="flex min-w-0 flex-wrap gap-1.5">
+          {modules.length === 0 ? (
+            <p className="text-xs text-m3-on-surface-variant">
+              {t("teacher_interview_config.generate.modules_empty")}
+            </p>
+          ) : (
+            modules.map((m) => {
+              const selected = generationForm.source_module_ids.includes(m.id);
+              const isOwn = m.id === ownModuleId;
+              const effectiveSelected =
+                selected ||
+                (generationForm.source_module_ids.length === 0 && isOwn);
+              return (
+                <Button
+                  variant="ghost"
+                  key={m.id}
+                  type="button"
+                  aria-pressed={effectiveSelected}
+                  onClick={() =>
+                    updateGeneration(
+                      "source_module_ids",
+                      selected
+                        ? generationForm.source_module_ids.filter(
+                            (id) => id !== m.id,
+                          )
+                        : [...generationForm.source_module_ids, m.id],
+                    )
+                  }
+                  className={cn(
+                    "inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-1 text-left text-xs leading-4 transition-colors h-auto whitespace-normal break-words",
+                    effectiveSelected
+                      ? "border-m3-secondary bg-m3-secondary/10 text-m3-secondary font-semibold"
+                      : "border-m3-outline-variant/40 bg-m3-surface text-m3-on-surface-variant hover:bg-m3-surface-container-low",
+                  )}
+                >
+                  {m.title}
+                  {isOwn && (
+                    <span className="text-[10px] opacity-70">
+                      {t("teacher_interview_config.generate.modules_own")}
+                    </span>
+                  )}
+                </Button>
+              );
+            })
+          )}
+        </div>
       </div>
     </Field>
   );
@@ -100,8 +103,12 @@ export function GenerationOutcomePicker({
         </p>
       ) : (
         <div className="space-y-2">
-          <div className="flex justify-end">
-            <Button variant="ghost"
+          <div className="flex items-start justify-between gap-3">
+            <p className="min-w-0 text-[11px] leading-4 text-m3-on-surface-variant">
+              {t("teacher_interview_config.generate.outcomes_optional_hint")}
+            </p>
+            <Button
+              variant="ghost"
               type="button"
               onClick={() =>
                 updateGeneration(
@@ -109,7 +116,7 @@ export function GenerationOutcomePicker({
                   allSelected ? [] : outcomes.map((o) => o.id),
                 )
               }
-              className="text-xs font-semibold text-m3-secondary hover:text-m3-primary cursor-pointer"
+              className="shrink-0 text-xs font-semibold text-m3-secondary hover:text-m3-primary cursor-pointer"
             >
               {allSelected
                 ? t("teacher_interview_config.generate.outcomes_clear")
@@ -145,7 +152,7 @@ function GenerationOutcomeRow({
   return (
     <label
       className={cn(
-        "flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer transition-all",
+        "flex items-start gap-2 rounded-xl border px-3 py-2 cursor-pointer transition-all",
         checked
           ? "border-m3-secondary bg-m3-secondary-fixed/30"
           : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
@@ -176,7 +183,7 @@ function GenerationOutcomeRow({
           n: index + 1,
         })}
       </span>
-      <span className="flex-1 text-sm text-m3-on-surface">
+      <span className="min-w-0 flex-1 break-words text-sm leading-5 text-m3-on-surface">
         {outcome.outcome_text}
       </span>
     </label>

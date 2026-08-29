@@ -106,8 +106,8 @@ export function GenerationSection({
           {activeRunId && <GenerationRunStatus run={run} state={runState} />}
         </fieldset>
 
-        <div className="flex items-center justify-between gap-3 pt-3 border-t border-dashed border-m3-secondary/30">
-          <p className="text-[11px] text-m3-on-surface-variant">
+        <div className="flex flex-wrap items-start justify-between gap-3 pt-3 border-t border-dashed border-m3-secondary/30">
+          <p className="min-w-0 text-[11px] leading-4 text-m3-on-surface-variant">
             {t("teacher_interview_config.generate.independent_action_hint")}
           </p>
           <Button
