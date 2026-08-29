@@ -1724,6 +1724,25 @@
         "trend_empty": "Không có request API trong khoảng thời gian này.",
         "legend_p95": "p95 — phân vị 95",
         "legend_p50": "p50 — trung vị"
+      },
+      "range": {
+        "trigger_aria": "Chọn khoảng thời gian",
+        "panel_aria": "Khoảng thời gian tùy chỉnh",
+        "prev_month_aria": "Tháng trước",
+        "next_month_aria": "Tháng sau",
+        "day_hint": "Chọn ngày bắt đầu và kết thúc khoảng thời gian",
+        "days_one": "1 ngày",
+        "days_other": "{{count}} ngày",
+        "apply": "Áp dụng",
+        "cancel": "Hủy",
+        "preset": {
+          "today": "Hôm nay",
+          "yesterday": "Hôm qua",
+          "last7": "7 ngày gần nhất",
+          "last30": "30 ngày gần nhất",
+          "thisMonth": "Tháng này",
+          "lastMonth": "Tháng trước"
+        }
       }
     },
     "ai_costs": {
@@ -2101,8 +2120,6 @@
       "version": "Phiên bản {{version}}",
       "status_probe_unavailable": "Không kiểm tra được phụ thuộc — trạng thái không xác định.",
       "window": {
-        "aria": "Khoảng thời gian",
-        "option": "{{days}} ngày",
         "label": "{{days}} ngày qua"
       },
       "org_filter": {

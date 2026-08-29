@@ -55,8 +55,8 @@ export function MiniStat({
   if (!to) return <div className={shell}>{body}</div>;
   return (
     <Link
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      to={to as any}
+       
+      to={to}
       search={search as never}
       className={cn(shell, "block focus:outline-none focus-visible:ring-2")}
     >

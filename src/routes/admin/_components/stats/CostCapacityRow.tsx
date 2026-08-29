@@ -19,13 +19,15 @@ import type { AdminStatsController } from "./types";
  */
 export function CostCapacityRow({ c }: { c: AdminStatsController }) {
   const { t, f, cost, scope } = c;
-  const window = t("admin.dashboard.window.label", { days: scope.windowDays });
+  const window = t("admin.dashboard.window.label", {
+    days: scope.spanDays,
+  });
   // Every link out to the cost page carries the dashboard's window, so the two
   // surfaces never quietly describe different spans of time (PRD ADM-004). A
   // window the cost page has no equivalent for is omitted rather than coerced
   // to a nearby one — landing on its own default is honest, landing on a
   // silently different span is not.
-  const costPeriod = aiCostsPeriodFor(scope.windowDays);
+  const costPeriod = aiCostsPeriodFor(scope.spanDays);
   const costSearch: Record<string, string> = costPeriod
     ? { period: costPeriod }
     : {};

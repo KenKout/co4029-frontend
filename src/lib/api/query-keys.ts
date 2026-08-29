@@ -81,8 +81,20 @@ export const queryKeys = {
 
   admin: {
     statsOverview: () => ["admin", "stats", "overview"] as const,
-    dashboard: (windowDays?: number, organizationId?: string | null) =>
-      ["admin", "stats", "dashboard", windowDays, organizationId ?? ""] as const,
+    dashboard: (
+      windowDays?: number,
+      from?: string,
+      to?: string,
+      organizationId?: string | null,
+    ) =>
+      [
+        "admin",
+        "stats",
+        "dashboard",
+        from ?? windowDays,
+        to,
+        organizationId ?? "",
+      ] as const,
     activeUsers: () => ["admin", "stats", "active-users"] as const,
     activeUsersTrend: (days: number) =>
       ["admin", "stats", "active-users", "trend", days] as const,

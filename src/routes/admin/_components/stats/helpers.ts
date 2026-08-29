@@ -27,6 +27,8 @@ type Dashboard = AdminDashboardOut | undefined;
 const EMPTY_DASHBOARD: AdminDashboardOut = {
   as_of: "",
   window_days: 0,
+  window_from: null,
+  window_to: null,
   organization_id: null,
   usage_scope: "global",
   tenant_scope: "global",
