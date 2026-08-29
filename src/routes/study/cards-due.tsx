@@ -5,22 +5,23 @@ import { ArrowLeft, Play } from "lucide-react";
 import { useCardsDue } from "@/lib/api/hooks/spaced-repetition";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { CardsDueCourseSection } from "@/routes/study/_components/cards-due/CardsDueCourseSection";
 import { CardsDueEmptyState } from "@/routes/study/_components/cards-due/CardsDueScreens";
 import {
   groupByCourse,
   MAX_AUTODRAIN_PAGES,
   sessionSize,
+  SEVERE_OVERDUE_DAYS,
   summarizeBacklog,
 } from "@/routes/study/_components/cards-due/helpers";
 
 /**
  * The backlog-at-a-glance card: "31 cards due now" + composition. Colours
- * follow the lateness convention — orange overdue, red severely overdue;
- * "due today" is the normal SM-2 state and stays neutral (red is never
- * used for the whole backlog). The session line splits "due now" from
- * "in this review session" when the backlog exceeds the session cap.
+ * follow the lateness convention — orange overdue, red overdue by 7+ days
+ * (the subset is phrased as a SUBSET, never as a second independent
+ * group: "31 overdue · 30 overdue by 7+ days", so the two never sum to
+ * an imaginary 61). "Due today" is the normal SM-2 state and stays
+ * neutral; red is never used for the whole backlog.
  */
 function DueSummaryCard({
   total,
@@ -36,7 +37,6 @@ function DueSummaryCard({
   courses: number;
 }) {
   const { t } = useTranslation();
-  const overdueTone = summary.severe > 0 ? "text-red-600" : "text-orange-600";
   return (
     <div className="rounded-xl ghost-border bg-m3-surface-container-lowest px-5 py-4">
       <p className="text-2xl font-headline font-bold text-m3-on-surface">
@@ -48,7 +48,7 @@ function DueSummaryCard({
       <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-m3-on-surface-variant">
         {summary.overdue > 0 ? (
           <>
-            <span className={cn("font-bold", overdueTone)}>
+            <span className="font-bold text-orange-600">
               {summary.overdue === 1
                 ? t("study_cards_due.overdue_one")
                 : t("study_cards_due.overdue_other", {
@@ -58,9 +58,12 @@ function DueSummaryCard({
             {summary.severe > 0 ? (
               <span className="font-bold text-red-600">
                 {summary.severe === 1
-                  ? t("study_cards_due.severe_one")
+                  ? t("study_cards_due.severe_one", {
+                      days: SEVERE_OVERDUE_DAYS,
+                    })
                   : t("study_cards_due.severe_other", {
                       count: summary.severe,
+                      days: SEVERE_OVERDUE_DAYS,
                     })}
               </span>
             ) : null}
@@ -114,10 +117,7 @@ export default function StudyCardsDuePage() {
   // Deep-link scoping: the SR reminder builds `?lesson={id}` for a single-lesson
   // backlog; a per-course "Review" builds `?course={slug}`. Honour both so the
   // counts a student lands on match what they clicked, not the whole backlog.
-  const { lesson, course } = useSearch({ strict: false }) as {
-    lesson?: string;
-    course?: string;
-  };
+  const { lesson, course } = useSearch({ strict: false });
   const { items, hasNextPage, fetchNextPage, isFetchingNextPage, isLoading } =
     useCardsDue({ limit: 100, lessonId: lesson, courseSlug: course });
 

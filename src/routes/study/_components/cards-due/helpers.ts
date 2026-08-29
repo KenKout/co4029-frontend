@@ -37,8 +37,10 @@ export interface CourseBucket {
 // is bigger — the CTA must say the SESSION size, never the backlog size.
 export const SESSION_CARD_LIMIT = 20;
 
-// Past-due by more than this many days = "severely overdue" (red). Below that
-// but before today = plain overdue (orange); due on/after today = normal.
+// Past-due by at least this many whole days = "overdue by 7+ days" (red).
+// Below that but before today = plain overdue (orange); due on/after today
+// = normal. The label interpolates DAYS_OR_MORE directly so the wording
+// always matches the rule.
 export const SEVERE_OVERDUE_DAYS = 7;
 
 /** Local midnight — the "due today" boundary is the student's own day. */
@@ -50,7 +52,14 @@ export function startOfLocalDay(now: Date = new Date()): number {
 
 export type DueClass = "today" | "overdue" | "severe";
 
-/** Classify one due card against the student's current local day. */
+/**
+ * Classify one due card against the student's current local day.
+ *
+ * "Severe" is a subset of "overdue": a card past the local-midnight
+ * boundary AND at least SEVERE_OVERDUE_DAYS whole days old (inclusive —
+ * the summary labels this subset "overdue by 7+ days", so the boundary
+ * must be >= to match the wording).
+ */
 export function classifyDue(
   dueAtIso: string,
   now: Date = new Date(),
@@ -60,7 +69,7 @@ export function classifyDue(
   const midnight = startOfLocalDay(now);
   if (due >= midnight) return "today";
   const severeLine = midnight - SEVERE_OVERDUE_DAYS * 86_400_000;
-  return due < severeLine ? "severe" : "overdue";
+  return due <= severeLine ? "severe" : "overdue";
 }
 
 export function groupByCourse(cards: CardDue[]): CourseBucket[] {

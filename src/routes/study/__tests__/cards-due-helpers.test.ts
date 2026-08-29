@@ -49,8 +49,17 @@ describe("classifyDue", () => {
     expect(classifyDue(ago(severeAgo))).toBe("severe");
   });
 
-  it("keeps exactly-seven-days-old cards as plain overdue", () => {
-    expect(classifyDue(ago(SEVERE_OVERDUE_DAYS * 24))).toBe("overdue");
+  it("is inclusive at the SEVERE_OVERDUE_DAYS midnight boundary", () => {
+    // A card due exactly at local midnight SEVERE_OVERDUE_DAYS days back is
+    // "severe" (the label reads "overdue by 7+ days"); one second after
+    // that midnight is plain overdue. Wall-clock-relative helpers can't pin
+    // this — an hour thrown in by `ago()` flips the day — so drive the
+    // classifier with explicit instants.
+    const now = new Date("2026-08-29T10:00:00");
+    const boundary = "2026-08-22T00:00:00"; // exactly 7 local midnights back
+    expect(classifyDue(boundary, now)).toBe("severe");
+    expect(classifyDue("2026-08-22T00:00:01", now)).toBe("overdue");
+    expect(classifyDue("2026-08-21T23:59:59", now)).toBe("severe");
   });
 });
 
