@@ -143,6 +143,8 @@ export const queryKeys = {
       until?: string,
       path?: string,
       userId?: string,
+      eventKind?: string,
+      requestId?: string,
     ) =>
       [
         "admin",
@@ -152,6 +154,8 @@ export const queryKeys = {
         until ?? "",
         path ?? "",
         userId ?? "",
+        eventKind ?? "",
+        requestId ?? "",
       ] as const,
     auditDataChanges: (table: string, entityId: string) =>
       ["admin", "audit", "data-changes", table, entityId] as const,

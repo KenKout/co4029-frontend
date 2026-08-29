@@ -12,6 +12,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { ActiveUsersTrendSection } from "./_components/stats/ActiveUsersTrendSection";
 import { addDays, toIso } from "./_components/stats/date-range";
+import type { RangeSelection } from "./_components/stats/date-range";
 
 type MetricRow = {
   key: string;
@@ -28,6 +29,25 @@ const LAST_30_DAYS = {
 };
 
 export default function AdminStatsActivePage() {
+  const { t } = useTranslation();
+
+  return (
+    <div className="space-y-6 pb-12">
+      <div>
+        <h1 className="text-2xl font-headline font-bold text-text-strong">
+          {t("admin.stats.title_active_users")}
+        </h1>
+        <p className="text-sm text-text-muted mt-1">
+          {t("admin.stats.subtitle_active_users")}
+        </p>
+      </div>
+      <ActiveUsersStatsContent range={LAST_30_DAYS} />
+    </div>
+  );
+}
+
+/** Shared body used by the legacy deep link and Dashboard Usage & Capacity. */
+export function ActiveUsersStatsContent({ range }: { range: RangeSelection }) {
   const { t } = useTranslation();
   const formatCount = useFormatCount();
   const { data, isLoading, isError } = useActiveUsersStats();
@@ -90,21 +110,8 @@ export default function AdminStatsActivePage() {
   ];
 
   return (
-    <div className="space-y-6 pb-12">
-      <div>
-        <h1 className="text-2xl font-headline font-bold text-text-strong">
-          {t("admin.stats.title_active_users")}
-        </h1>
-        <p className="text-sm text-text-muted mt-1">
-          {t("admin.stats.subtitle_active_users")}
-        </p>
-      </div>
-
-      {/* This standalone page has no date-range filter of its own, so the
-          chart keeps a fixed 30-day window here. It picks up the page range
-          once this section moves onto the dashboard under Usage & Capacity —
-          which is the point of the merge. */}
-      <ActiveUsersTrendSection range={LAST_30_DAYS} />
+    <div className="space-y-6">
+      <ActiveUsersTrendSection range={range} />
 
       {isError ? (
         <div className="bg-surface-elev border border-border rounded-lg p-5">

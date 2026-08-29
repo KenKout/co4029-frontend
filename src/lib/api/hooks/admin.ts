@@ -419,6 +419,22 @@ export interface AdminUserDetailResponse {
     user_agent: string | null;
     created_at: string;
   }>;
+  role_history: Array<{
+    assignment_id: string;
+    role_code: string;
+    role_name: string;
+    scope_kind: string;
+    organization_name: string | null;
+    org_unit_name: string | null;
+    course_title: string | null;
+    granted_by: string | null;
+    granted_by_email: string | null;
+    revoked_by: string | null;
+    revoked_by_email: string | null;
+    created_at: string;
+    updated_at: string;
+    revoked_at: string | null;
+  }>;
 }
 
 export function useAdminUser(userId: string) {
@@ -452,6 +468,18 @@ export function useEnableUser(userId: string) {
         queryKey: queryKeys.admin.userDetail(userId),
       });
     },
+  });
+}
+
+export function useRevokeUserSession(userId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (sessionId: string) =>
+      apiPost<{ session_id: string; revoked: boolean }>(
+        `/admin/users/${userId}/sessions/${sessionId}/revoke`,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.admin.userDetail(userId) }),
   });
 }
 
@@ -878,14 +906,25 @@ export function useAuditHttp(
   untilIso?: string,
   path?: string,
   userId?: string,
+  eventKind?: "login_failure" | "denied",
+  requestId?: string,
 ) {
   return useQuery({
-    queryKey: queryKeys.admin.auditHttp(sinceIso, untilIso, path, userId),
+    queryKey: queryKeys.admin.auditHttp(
+      sinceIso,
+      untilIso,
+      path,
+      userId,
+      eventKind,
+      requestId,
+    ),
     queryFn: () => {
       const params = new URLSearchParams({ since: sinceIso, limit: "200" });
       if (untilIso) params.set("until", untilIso);
       if (path) params.set("path_pattern", path);
       if (userId) params.set("user_id", userId);
+      if (eventKind) params.set("event_kind", eventKind);
+      if (requestId) params.set("request_id", requestId);
       return apiFetch<HttpAuditRow[]>(`/admin/audit/http?${params.toString()}`);
     },
     enabled: Boolean(sinceIso),

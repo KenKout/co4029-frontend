@@ -1455,6 +1455,7 @@
         "method": "Phương thức",
         "path": "Đường dẫn",
         "code": "Mã",
+        "reason": "Lý do thất bại",
         "latency": "Độ trễ",
         "ip": "IP",
         "field": "Trường",
@@ -1469,6 +1470,14 @@
       "empty": "Không có bản ghi kiểm toán trong khoảng thời gian này.",
       "load_failed": "Không thể tải bản ghi kiểm toán. Bạn có thể không có quyền hoặc dịch vụ không khả dụng.",
       "path_filter_placeholder": "Lọc theo tiền tố đường dẫn, ví dụ /api/v1/admin",
+      "failure_reasons": {
+        "authentication_rejected": "Xác thực bị từ chối",
+        "account_not_provisioned": "Tài khoản chưa được cấp quyền",
+        "login_request_failed": "Yêu cầu đăng nhập thất bại",
+        "authorization_denied": "Quyền truy cập bị từ chối",
+        "server_error": "Lỗi máy chủ",
+        "client_error": "Lỗi phía máy khách"
+      },
       "data_changes": {
         "table_label": "Loại thực thể",
         "entity_id_label": "ID thực thể",
@@ -1671,6 +1680,7 @@
         "queue_wait": "Chờ trong hàng đợi",
         "duration": "Thời gian chạy",
         "not_started": "Chưa bắt đầu",
+        "not_recorded": "Không được ghi nhận",
         "still_running": "Đang chạy",
         "correlation": "Mã tương quan",
         "no_correlation": "Không do request nào khởi tạo (worker hoặc tác vụ định kỳ)",
@@ -2024,8 +2034,15 @@
         "revoke": "Thu hồi",
         "revoke_confirm": "Thu hồi vai trò \"{{role}}\" cho người dùng này?",
         "active_sessions": "Phiên đăng nhập đang hoạt động",
+        "no_active_sessions": "Không có phiên đang hoạt động.",
         "session_expires": "hết hạn",
+        "session_created": "được tạo",
         "session_ip": "IP",
+        "revoke_session": "Thu hồi phiên",
+        "history": "Lịch sử thay đổi vai trò",
+        "history_empty": "Chưa ghi nhận thay đổi vai trò.",
+        "granted_by_actor": "Cấp bởi {{actor}} · {{at}}",
+        "revoked_by_actor": "Thu hồi bởi {{actor}} · {{at}}",
         "errors": {
           "select_role": "Hãy chọn vai trò",
           "need_org_id": "Phạm vi 'organization' cần ID tổ chức",
@@ -2035,13 +2052,15 @@
           "grant_failed": "Không thể gán vai trò",
           "revoke_failed": "Không thể thu hồi",
           "disable_failed": "Không thể vô hiệu hoá",
-          "enable_failed": "Không thể kích hoạt"
+          "enable_failed": "Không thể kích hoạt",
+          "session_revoke_failed": "Không thể thu hồi phiên"
         },
         "success": {
           "granted": "Đã gán vai trò {{role}}",
           "revoked": "Đã thu hồi vai trò",
           "disabled": "Đã vô hiệu hoá. Đã thu hồi {{count}} phiên.",
-          "enabled": "Đã kích hoạt lại người dùng"
+          "enabled": "Đã kích hoạt lại người dùng",
+          "session_revoked": "Đã thu hồi phiên"
         },
         "count_other": "{{count}} vai trò",
         "count_one": "{{count}} vai trò"
@@ -2194,7 +2213,7 @@
         "storage": "Lưu trữ",
         "storage_detail": "Dung lượng các phiên bản học liệu",
         "spend": "Chi phí AI",
-        "spend_detail": "{{window}} · quy được {{coverage}}% chi phí nền tảng",
+        "spend_detail": "Độ phủ phân bổ: {{coverage}}% chi phí toàn nền tảng · {{window}}",
         "spend_no_data": "Không ghi nhận chi phí AI, {{window}}",
         "jobs": "Tác vụ nền",
         "job_failure_rate": "Tỷ lệ job lỗi",
@@ -2225,8 +2244,18 @@
         "needs_action": "Cần xử lý",
         "reliability": "Độ tin cậy & thông lượng",
         "cost_capacity": "Chi phí & dung lượng",
+        "usage_capacity": "Mức sử dụng & dung lượng",
         "tenants": "Bất thường theo tổ chức",
         "security": "Bảo mật & truy cập"
+      },
+      "usage_capacity_subtitle": "Nhu cầu, xu hướng người dùng hoạt động và tồn kho nội dung trong khoảng thời gian đã chọn.",
+      "nav": {
+        "label": "Các phần của bảng điều khiển",
+        "status": "Tình trạng",
+        "actions": "Cần xử lý",
+        "reliability": "Độ tin cậy",
+        "usage": "Sử dụng & dung lượng",
+        "security": "Bảo mật"
       },
       "overall": {
         "ok": "Mọi hệ thống hoạt động bình thường",

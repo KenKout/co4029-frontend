@@ -48,7 +48,7 @@ type RoleChangeRow = NonNullable<
 >[number];
 type HttpAuditRow = NonNullable<
   ReturnType<typeof useAuditHttp>["data"]
->[number];
+>[number] & { failure_reason?: string | null };
 type DataChangeRow = NonNullable<
   ReturnType<typeof useAuditDataChangesList>["data"]
 >[number];
@@ -130,7 +130,21 @@ export default function AdminAuditLogsPage() {
       {tab === "role_changes" ? (
         <RoleChangesTable sinceIso={sinceIso} untilIso={untilIso} />
       ) : tab === "http" ? (
-        <HttpAuditTable sinceIso={sinceIso} untilIso={untilIso} initialPath={search.path} />
+        <HttpAuditTable
+          sinceIso={sinceIso}
+          untilIso={untilIso}
+          initialPath={search.path}
+          initialEvent={
+            search.event === "login_failure" || search.event === "denied"
+              ? search.event
+              : undefined
+          }
+          requestId={
+            typeof search.request_id === "string"
+              ? search.request_id
+              : undefined
+          }
+        />
       ) : (
         <DataChangesPanel sinceIso={sinceIso} untilIso={untilIso} />
       )}
@@ -214,9 +228,19 @@ function UserIdentityCell({
   );
 }
 
-function RoleChangesTable({ sinceIso, untilIso }: { sinceIso: string; untilIso?: string }) {
+function RoleChangesTable({
+  sinceIso,
+  untilIso,
+}: {
+  sinceIso: string;
+  untilIso?: string;
+}) {
   const { t } = useTranslation();
-  const { data: rows, isLoading, isError } = useAuditRoleChanges(sinceIso, untilIso);
+  const {
+    data: rows,
+    isLoading,
+    isError,
+  } = useAuditRoleChanges(sinceIso, untilIso);
   const userIds = useMemo(
     () =>
       (rows ?? []).flatMap((r) =>
@@ -320,11 +344,15 @@ function HttpAuditTable({
   sinceIso,
   untilIso,
   initialPath,
+  initialEvent,
+  requestId,
 }: {
   sinceIso: string;
   untilIso?: string;
   /** Seeded from ?path= so a security alert opens on its own requests. */
   initialPath?: string;
+  initialEvent?: "login_failure" | "denied";
+  requestId?: string;
 }) {
   const { t } = useTranslation();
   const [pathFilter, setPathFilter] = useState(initialPath ?? "");
@@ -341,7 +369,14 @@ function HttpAuditTable({
     data: rows,
     isLoading,
     isError,
-  } = useAuditHttp(sinceIso, untilIso, debouncedPath ? `${debouncedPath}%` : undefined);
+  } = useAuditHttp(
+    sinceIso,
+    untilIso,
+    debouncedPath ? `${debouncedPath}%` : undefined,
+    undefined,
+    initialEvent,
+    requestId,
+  );
 
   const filtered = useMemo(() => {
     const base = rows ?? [];
@@ -423,6 +458,17 @@ function HttpAuditTable({
       cell: (r) => (
         <span className="text-m3-on-surface-variant">
           {r.latency_ms != null ? `${r.latency_ms} ms` : "—"}
+        </span>
+      ),
+    },
+    {
+      id: "reason",
+      header: t("admin.audit.cols.reason"),
+      cell: (r) => (
+        <span className="text-xs text-text-muted">
+          {r.failure_reason
+            ? t(`admin.audit.failure_reasons.${r.failure_reason}`)
+            : "—"}
         </span>
       ),
     },
@@ -518,7 +564,13 @@ function EntityIdLookup({
   );
 }
 
-function DataChangesPanel({ sinceIso, untilIso }: { sinceIso: string; untilIso?: string }) {
+function DataChangesPanel({
+  sinceIso,
+  untilIso,
+}: {
+  sinceIso: string;
+  untilIso?: string;
+}) {
   const { t } = useTranslation();
   const [table, setTable] = useState<DataChangeTable>("courses");
   const [selectedId, setSelectedId] = useState<string | undefined>();

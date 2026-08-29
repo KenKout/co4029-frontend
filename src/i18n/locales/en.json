@@ -1547,6 +1547,7 @@
         "method": "Method",
         "path": "Path",
         "code": "Code",
+        "reason": "Failure reason",
         "latency": "Latency",
         "ip": "IP",
         "field": "Field",
@@ -1561,6 +1562,14 @@
       "empty": "No audit entries in this window.",
       "load_failed": "Could not load audit entries. You may not have access, or the service is unavailable.",
       "path_filter_placeholder": "Filter by path prefix, e.g. /api/v1/admin",
+      "failure_reasons": {
+        "authentication_rejected": "Authentication rejected",
+        "account_not_provisioned": "Account not provisioned",
+        "login_request_failed": "Login request failed",
+        "authorization_denied": "Authorization denied",
+        "server_error": "Server error",
+        "client_error": "Client error"
+      },
       "data_changes": {
         "table_label": "Entity type",
         "entity_id_label": "Entity ID",
@@ -1763,6 +1772,7 @@
         "queue_wait": "Queued for",
         "duration": "Ran for",
         "not_started": "Not started",
+        "not_recorded": "Not recorded",
         "still_running": "Running",
         "correlation": "Correlation ID",
         "no_correlation": "Not started by a request (worker or scheduled task)",
@@ -2116,8 +2126,15 @@
         "revoke": "Revoke",
         "revoke_confirm": "Revoke role \"{{role}}\" from this user?",
         "active_sessions": "Active sessions",
+        "no_active_sessions": "No active sessions.",
         "session_expires": "expires",
+        "session_created": "created",
         "session_ip": "IP",
+        "revoke_session": "Revoke session",
+        "history": "Role change history",
+        "history_empty": "No role changes recorded.",
+        "granted_by_actor": "Granted by {{actor}} · {{at}}",
+        "revoked_by_actor": "Revoked by {{actor}} · {{at}}",
         "errors": {
           "select_role": "Pick a role",
           "need_org_id": "Organization scope needs an organization ID",
@@ -2127,13 +2144,15 @@
           "grant_failed": "Failed to grant role",
           "revoke_failed": "Failed to revoke role",
           "disable_failed": "Failed to disable",
-          "enable_failed": "Failed to activate"
+          "enable_failed": "Failed to activate",
+          "session_revoke_failed": "Failed to revoke session"
         },
         "success": {
           "granted": "Role {{role}} granted",
           "revoked": "Role revoked",
           "disabled": "Disabled. Revoked {{count}} session(s).",
-          "enabled": "User reactivated"
+          "enabled": "User reactivated",
+          "session_revoked": "Session revoked"
         },
         "count_other": "{{count}} roles",
         "count_one": "{{count}} role"
@@ -2286,7 +2305,7 @@
         "storage": "Storage",
         "storage_detail": "Material versions held",
         "spend": "AI spend",
-        "spend_detail": "{{window}} · {{coverage}}% of platform spend attributable",
+        "spend_detail": "Attribution coverage: {{coverage}}% of platform-wide spend · {{window}}",
         "spend_no_data": "No AI spend recorded, {{window}}",
         "jobs": "Background work",
         "job_failure_rate": "Job failure rate",
@@ -2317,8 +2336,18 @@
         "needs_action": "Needs action",
         "reliability": "Reliability & throughput",
         "cost_capacity": "Cost & capacity",
+        "usage_capacity": "Usage & capacity",
         "tenants": "Tenant anomalies",
         "security": "Security & access"
+      },
+      "usage_capacity_subtitle": "Demand, active-user trends and the content inventory in the selected dashboard window.",
+      "nav": {
+        "label": "Dashboard sections",
+        "status": "Status",
+        "actions": "Actions",
+        "reliability": "Reliability",
+        "usage": "Usage & capacity",
+        "security": "Security"
       },
       "overall": {
         "ok": "All systems operational",
