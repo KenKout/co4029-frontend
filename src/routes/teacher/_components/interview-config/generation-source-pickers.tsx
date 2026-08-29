@@ -26,59 +26,63 @@ export function GenerationModulePicker({
 }) {
   const { t } = useTranslation();
   return (
-    <Field
-      label={t("teacher_interview_config.generate.modules_label")}
-      hint={t("teacher_interview_config.generate.modules_hint")}
-    >
-      <div className="min-w-0 space-y-2">
-        <div className="flex min-w-0 flex-wrap gap-1.5">
-          {modules.length === 0 ? (
-            <p className="text-xs text-m3-on-surface-variant">
-              {t("teacher_interview_config.generate.modules_empty")}
-            </p>
-          ) : (
-            modules.map((m) => {
-              const selected = generationForm.source_module_ids.includes(m.id);
-              const isOwn = m.id === ownModuleId;
-              const effectiveSelected =
-                selected ||
-                (generationForm.source_module_ids.length === 0 && isOwn);
-              return (
-                <Button
-                  variant="ghost"
-                  key={m.id}
-                  type="button"
-                  aria-pressed={effectiveSelected}
-                  onClick={() =>
-                    updateGeneration(
-                      "source_module_ids",
-                      selected
-                        ? generationForm.source_module_ids.filter(
-                            (id) => id !== m.id,
-                          )
-                        : [...generationForm.source_module_ids, m.id],
-                    )
-                  }
-                  className={cn(
-                    "inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-1 text-left text-xs leading-4 transition-colors h-auto whitespace-normal break-words",
-                    effectiveSelected
-                      ? "border-m3-secondary bg-m3-secondary/10 text-m3-secondary font-semibold"
-                      : "border-m3-outline-variant/40 bg-m3-surface text-m3-on-surface-variant hover:bg-m3-surface-container-low",
-                  )}
-                >
-                  {m.title}
-                  {isOwn && (
-                    <span className="text-[10px] opacity-70">
-                      {t("teacher_interview_config.generate.modules_own")}
-                    </span>
-                  )}
-                </Button>
-              );
-            })
-          )}
+    <div className="min-w-0 rounded-xl border border-m3-outline-variant/25 bg-m3-surface-container-low/40 p-4">
+      <Field
+        label={t("teacher_interview_config.generate.modules_label")}
+        hint={t("teacher_interview_config.generate.modules_hint")}
+      >
+        <div className="min-w-0 space-y-2">
+          <div className="flex min-w-0 flex-wrap gap-1.5">
+            {modules.length === 0 ? (
+              <p className="text-xs text-m3-on-surface-variant">
+                {t("teacher_interview_config.generate.modules_empty")}
+              </p>
+            ) : (
+              modules.map((m) => {
+                const selected = generationForm.source_module_ids.includes(
+                  m.id,
+                );
+                const isOwn = m.id === ownModuleId;
+                const effectiveSelected =
+                  selected ||
+                  (generationForm.source_module_ids.length === 0 && isOwn);
+                return (
+                  <Button
+                    variant="ghost"
+                    key={m.id}
+                    type="button"
+                    aria-pressed={effectiveSelected}
+                    onClick={() =>
+                      updateGeneration(
+                        "source_module_ids",
+                        selected
+                          ? generationForm.source_module_ids.filter(
+                              (id) => id !== m.id,
+                            )
+                          : [...generationForm.source_module_ids, m.id],
+                      )
+                    }
+                    className={cn(
+                      "inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-1 text-left text-xs leading-4 transition-colors h-auto whitespace-normal break-words",
+                      effectiveSelected
+                        ? "border-m3-secondary bg-m3-secondary/10 text-m3-secondary font-semibold"
+                        : "border-m3-outline-variant/40 bg-m3-surface text-m3-on-surface-variant hover:bg-m3-surface-container-low",
+                    )}
+                  >
+                    {m.title}
+                    {isOwn && (
+                      <span className="text-[10px] opacity-70">
+                        {t("teacher_interview_config.generate.modules_own")}
+                      </span>
+                    )}
+                  </Button>
+                );
+              })
+            )}
+          </div>
         </div>
-      </div>
-    </Field>
+      </Field>
+    </div>
   );
 }
 
