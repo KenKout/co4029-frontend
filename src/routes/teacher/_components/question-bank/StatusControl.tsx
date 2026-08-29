@@ -19,10 +19,12 @@ import type { ReviewStatus } from "./types";
 export function StatusControl({
   status,
   saving,
+  disabled,
   onSetStatus,
 }: {
   status: ReviewStatus;
   saving: boolean;
+  disabled?: boolean;
   onSetStatus: (s: ReviewStatus) => void;
 }) {
   const { t } = useTranslation();
@@ -31,7 +33,7 @@ export function StatusControl({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        disabled={saving}
+        disabled={saving || disabled}
         aria-label={t("teacher_interview_config.qbank.status_control_label", {
           status: t(`teacher_interview_config.qbank.status.${meta.key}`),
         })}

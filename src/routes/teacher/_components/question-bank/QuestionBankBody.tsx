@@ -36,6 +36,7 @@ export interface QuestionBankBodyProps {
   bankIo: QuestionBankIoController;
   reorder: QuestionReorderController;
   selection: QuestionSelectionController;
+  isPublished: boolean;
 }
 
 export function QuestionBankBody(props: QuestionBankBodyProps) {
@@ -79,6 +80,7 @@ export function QuestionBankBody(props: QuestionBankBodyProps) {
           bankIo={props.bankIo}
           reorder={props.reorder}
           selection={props.selection}
+          isPublished={props.isPublished}
         />
       )}
     </div>

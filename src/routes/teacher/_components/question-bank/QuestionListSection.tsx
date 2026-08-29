@@ -38,6 +38,7 @@ export interface QuestionListSectionProps {
   bankIo: QuestionBankIoController;
   reorder: QuestionReorderController;
   selection: QuestionSelectionController;
+  isPublished: boolean;
 }
 
 interface LogicalQuestionGroup {
@@ -101,13 +102,17 @@ export function QuestionListSection(props: QuestionListSectionProps) {
   // the note below points there rather than pretending the
   // capability is gone.
   const dndEnabled =
-    !showModuleGroups && !props.anyFilterActive && !hasVisibleVariantGroup;
+    !props.isPublished &&
+    !showModuleGroups &&
+    !props.anyFilterActive &&
+    !hasVisibleVariantGroup;
   const renderCard = createQuestionCardRenderer({
     sorted: props.sorted,
     compact: props.compact,
     outcomeOptions: props.outcomeOptions,
     moduleTitleById: props.moduleTitleById,
     dndEnabled,
+    isPublished: props.isPublished,
     t,
     rows: props.rows,
     mutations: props.mutations,
@@ -120,7 +125,7 @@ export function QuestionListSection(props: QuestionListSectionProps) {
   // actually unavailable, and worded for the reason it is
   // unavailable, since the two causes have different escape routes:
   // a filter can be cleared, module grouping cannot.
-  const reorderNote = dndEnabled ? null : (
+  const reorderNote = props.isPublished || dndEnabled ? null : (
     <p className="px-1 pb-1 text-[11px] leading-relaxed text-m3-on-surface-variant">
       {t(
         props.anyFilterActive
@@ -134,8 +139,9 @@ export function QuestionListSection(props: QuestionListSectionProps) {
   return (
     <div className="space-y-2">
       {/* Select-all row + contextual bulk-action bar */}
-      <div className="flex items-center justify-between gap-2 flex-wrap px-1">
-        <label className="inline-flex items-center gap-2 text-xs font-medium text-m3-on-surface-variant cursor-pointer select-none">
+      {!props.isPublished && (
+        <div className="flex items-center justify-between gap-2 flex-wrap px-1">
+          <label className="inline-flex items-center gap-2 text-xs font-medium text-m3-on-surface-variant cursor-pointer select-none">
           <input
             type="checkbox"
             checked={selection.allVisibleSelected}
@@ -151,8 +157,9 @@ export function QuestionListSection(props: QuestionListSectionProps) {
                 count: selection.selectedVisibleIds.length,
               })
             : t("teacher_interview_config.qbank.bulk.select_all")}
-        </label>
-      </div>
+          </label>
+        </div>
+      )}
 
       {/* Flat list when there's only one module group (or no module
           data); grouped sections with headers otherwise. */}

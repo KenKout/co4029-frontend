@@ -30,6 +30,7 @@ export interface QuestionCardRendererDeps {
   outcomeOptions: OutcomeOption[];
   moduleTitleById: Map<string, string>;
   dndEnabled: boolean;
+  isPublished: boolean;
   t: TranslateFn;
   rows: ExpandedRowsController;
   mutations: QuestionMutationsController;
@@ -54,6 +55,7 @@ export function createQuestionCardRenderer(
     outcomeOptions,
     moduleTitleById,
     dndEnabled,
+    isPublished,
     t,
     rows,
     mutations,
@@ -78,6 +80,7 @@ export function createQuestionCardRenderer(
         deleting={mutations.deletingIds.has(q.id)}
         saving={mutations.savingId === q.id}
         reordering={reorder.reordering}
+        isPublished={isPublished}
         onToggleExpand={() => rows.toggleExpanded(q.id)}
         onSetStatus={(s) => void mutations.setStatus(q, s)}
         onSetOutcome={(o) => void mutations.setOutcome(q, o)}

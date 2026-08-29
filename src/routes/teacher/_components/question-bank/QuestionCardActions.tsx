@@ -37,6 +37,7 @@ export function QuestionCardActions({
   editing,
   saving,
   reordering,
+  isPublished,
   banking,
   alreadyInBank,
   onSetStatus,
@@ -55,6 +56,7 @@ export function QuestionCardActions({
   | "editing"
   | "saving"
   | "reordering"
+  | "isPublished"
   | "banking"
   | "alreadyInBank"
   | "onSetStatus"
@@ -71,9 +73,10 @@ export function QuestionCardActions({
       <StatusControl
         status={q.review_status}
         saving={saving}
+        disabled={isPublished}
         onSetStatus={onSetStatus}
       />
-      {!editing && (
+      {!editing && !isPublished && (
         <>
           <Button
             type="button"

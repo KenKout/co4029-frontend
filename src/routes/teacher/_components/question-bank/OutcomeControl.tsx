@@ -30,11 +30,13 @@ export function OutcomeControl({
   value,
   options,
   saving,
+  disabled,
   onSetOutcome,
 }: {
   value: string | null;
   options: OutcomeOption[];
   saving: boolean;
+  disabled?: boolean;
   onSetOutcome: (o: string | null) => void;
 }) {
   const { t } = useTranslation();
@@ -43,7 +45,7 @@ export function OutcomeControl({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        disabled={saving || options.length === 0}
+        disabled={saving || disabled || options.length === 0}
         aria-label={t("teacher_interview_config.qbank.outcome_control_label", {
           outcome: current
             ? current.label

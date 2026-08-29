@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { InterviewQuestionAuthoring } from "@/lib/api/types";
 
@@ -11,11 +11,10 @@ import type { InterviewQuestionAuthoring } from "@/lib/api/types";
  * filter keeps prior picks that are still visible and drops the rest.
  */
 export function useQuestionSelection(options: {
-  sorted: InterviewQuestionAuthoring[];
   filtered: InterviewQuestionAuthoring[];
   deletingIds: Set<string>;
 }) {
-  const { sorted, filtered, deletingIds } = options;
+  const { filtered, deletingIds } = options;
   // Bulk selection: ids of questions ticked for a batch action.
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -23,6 +22,15 @@ export function useQuestionSelection(options: {
     () => filtered.filter((q) => !deletingIds.has(q.id)).map((q) => q.id),
     [filtered, deletingIds],
   );
+  const selectableIdsKey = selectableIds.join(",");
+  useEffect(() => {
+    const visibleIds = new Set(selectableIds);
+    setSelectedIds((prev) => {
+      const next = new Set([...prev].filter((id) => visibleIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [selectableIdsKey]);
+
   const selectedVisibleIds = useMemo(
     () => selectableIds.filter((id) => selectedIds.has(id)),
     [selectableIds, selectedIds],
@@ -60,10 +68,10 @@ export function useQuestionSelection(options: {
     setSelectedIds(new Set());
   }
 
-  // Resolve the currently-selected, still-present question objects.
+  // Resolve only selected questions still visible in the current filter.
   const selectedQuestions = useMemo(
-    () => sorted.filter((q) => selectedIds.has(q.id) && !deletingIds.has(q.id)),
-    [sorted, selectedIds, deletingIds],
+    () => filtered.filter((q) => selectedIds.has(q.id) && !deletingIds.has(q.id)),
+    [filtered, selectedIds, deletingIds],
   );
 
   return {

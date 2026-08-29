@@ -94,6 +94,7 @@ export interface QuestionCardProps {
   deleting: boolean;
   saving: boolean;
   reordering: boolean;
+  isPublished: boolean;
   onToggleExpand: () => void;
   onSetStatus: (s: ReviewStatus) => void;
   onSetOutcome: (o: string | null) => void;

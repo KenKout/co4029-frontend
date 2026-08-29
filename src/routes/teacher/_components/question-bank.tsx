@@ -130,7 +130,6 @@ export function QuestionBank({
   const groups = useModuleGroups({ filtered: filters.filtered, modules, t });
 
   const selection = useQuestionSelection({
-    sorted,
     filtered: filters.filtered,
     deletingIds: mutations.deletingIds,
   });
@@ -193,6 +192,7 @@ export function QuestionBank({
         bankIo={bankIo}
         reorder={reorder}
         selection={selection}
+        isPublished={isPublished}
       />
 
       {/* Screen-reader live region for status/reorder announcements */}

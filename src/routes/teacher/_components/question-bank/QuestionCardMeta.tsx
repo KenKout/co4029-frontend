@@ -18,11 +18,17 @@ export function QuestionCardMeta({
   q,
   outcomeOptions,
   saving,
+  isPublished,
   onSetOutcome,
   moduleTitles,
 }: Pick<
   QuestionCardProps,
-  "q" | "outcomeOptions" | "saving" | "onSetOutcome" | "moduleTitles"
+  | "q"
+  | "outcomeOptions"
+  | "saving"
+  | "isPublished"
+  | "onSetOutcome"
+  | "moduleTitles"
 >) {
   const { t } = useTranslation();
   const sourceCount = Array.isArray(q.source_refs_json)
@@ -63,6 +69,7 @@ export function QuestionCardMeta({
         value={q.linked_outcome_id ?? null}
         options={outcomeOptions}
         saving={saving}
+        disabled={isPublished}
         onSetOutcome={onSetOutcome}
       />
       <Sep />

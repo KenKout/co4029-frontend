@@ -25,6 +25,7 @@ export function QuestionCard(props: QuestionCardProps) {
     saving,
     selected,
     onToggleSelect,
+    isPublished,
     compact,
     dndEnabled,
     dragging,
@@ -108,6 +109,7 @@ export function QuestionCard(props: QuestionCardProps) {
           type="checkbox"
           checked={selected}
           onChange={onToggleSelect}
+          disabled={isPublished}
           aria-label={t("teacher_interview_config.qbank.bulk.select_one")}
           className="mt-1 h-4 w-4 shrink-0 rounded border-m3-outline-variant/60 text-m3-primary focus:ring-2 focus:ring-m3-primary/30 cursor-pointer"
         />
@@ -139,6 +141,7 @@ export function QuestionCard(props: QuestionCardProps) {
           expanded={expanded}
           compact={compact}
           saving={saving}
+          isPublished={isPublished}
           outcomeOptions={props.outcomeOptions}
           moduleTitles={props.moduleTitles}
           onToggleExpand={props.onToggleExpand}
@@ -154,6 +157,7 @@ export function QuestionCard(props: QuestionCardProps) {
           editing={editing}
           saving={saving}
           reordering={props.reordering}
+          isPublished={isPublished}
           banking={props.banking}
           alreadyInBank={props.alreadyInBank}
           onSetStatus={props.onSetStatus}
@@ -191,6 +195,7 @@ function QuestionCardPrompt({
   expanded,
   compact,
   saving,
+  isPublished,
   outcomeOptions,
   moduleTitles,
   onToggleExpand,
@@ -201,6 +206,7 @@ function QuestionCardPrompt({
   | "expanded"
   | "compact"
   | "saving"
+  | "isPublished"
   | "outcomeOptions"
   | "moduleTitles"
   | "onToggleExpand"
@@ -252,6 +258,7 @@ function QuestionCardPrompt({
           q={q}
           outcomeOptions={outcomeOptions}
           saving={saving}
+          isPublished={isPublished}
           onSetOutcome={onSetOutcome}
           moduleTitles={moduleTitles}
         />
