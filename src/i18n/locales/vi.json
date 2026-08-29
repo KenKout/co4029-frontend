@@ -68,7 +68,8 @@
     "open_menu": "Mở menu",
     "close_menu": "Đóng menu",
     "org_units": "Tổ chức",
-    "operations": "Vận hành"
+    "operations": "Vận hành",
+    "resource_inventory": "Tài nguyên"
   },
   "auth": {
     "sign_in": "Đăng nhập",
@@ -1577,8 +1578,8 @@
       }
     },
     "courses_list": {
-      "title": "Quản lý khóa học",
-      "subtitle": "Danh sách tất cả khóa học (bao gồm bản nháp + đã xóa).",
+      "title": "Kiểm kê tài nguyên",
+      "subtitle": "Khóa học dưới góc độ tài nguyên của tổ chức, gồm cả bản nháp và đã xóa. Quản lý học vụ nằm ở console Quản lý.",
       "search_placeholder": "Tìm theo tên hoặc slug…",
       "filter_status": "Trạng thái",
       "clear_filters": "Xóa bộ lọc",
@@ -1599,7 +1600,8 @@
         "archived": "Đã lưu trữ",
         "deleted": "Đã xóa"
       },
-      "filter_status_all": "Tất cả trạng thái"
+      "filter_status_all": "Tất cả trạng thái",
+      "lifecycle_note": "Chức năng xóa và khôi phục vẫn còn ở đây, chờ quyết định về việc kiểm kê tài nguyên có nên chỉ đọc hay không (D-05)."
     },
     "course_detail": {
       "title": "Audit AI khoá học",
@@ -1655,6 +1657,36 @@
         "created_at": "Thời điểm tạo",
         "started_at": "Bắt đầu",
         "completed_at": "Hoàn thành",
+        "error": "Lỗi"
+      },
+      "investigation": {
+        "load_failed": "Không tải được chi tiết điều tra.",
+        "source": "Nguồn",
+        "organization": "Tổ chức",
+        "course": "Khóa học",
+        "unknown": "Không xác định",
+        "timing": "Thời gian",
+        "queue_wait": "Chờ trong hàng đợi",
+        "duration": "Thời gian chạy",
+        "not_started": "Chưa bắt đầu",
+        "still_running": "Đang chạy",
+        "correlation": "Mã tương quan",
+        "no_correlation": "Không do request nào khởi tạo (worker hoặc tác vụ định kỳ)",
+        "copy": "Sao chép",
+        "copied": "Đã sao chép mã tương quan",
+        "open_requests": "Mở nhật ký request",
+        "stages": "Các giai đoạn xử lý",
+        "stage": "Giai đoạn",
+        "calls": "Lượt gọi",
+        "tokens": "Token",
+        "spend": "Chi phí",
+        "max_latency": "Lượt gọi chậm nhất",
+        "ai_calls": "Lượt gọi AI",
+        "no_ai_calls": "Job này không ghi nhận lượt gọi AI nào.",
+        "when": "Thời điểm",
+        "model": "Mô hình",
+        "status": "Trạng thái",
+        "latency": "Độ trễ",
         "error": "Lỗi"
       }
     },
@@ -1868,8 +1900,8 @@
       "cols": {
         "user": "Người dùng",
         "cost": "Tổng chi phí",
-        "tokens": "Tổng tokens",
-        "calls": "Số lượt gọi",
+        "tokens": "Token",
+        "calls": "Lượt gọi",
         "pipeline": "Pipeline",
         "type": "Loại",
         "time": "Thời điểm",
@@ -1887,8 +1919,15 @@
         "usd_per_1m": "$ / 1M tok",
         "latency_p50": "p50",
         "latency_p95": "p95",
-        "actions": "Hành động"
-      }
+        "actions": "Hành động",
+        "organization": "Tổ chức",
+        "spend": "Chi phí"
+      },
+      "by_organization": "Chi phí theo tổ chức",
+      "unattributed": "Chưa quy được",
+      "org_load_failed": "Không tải được phân tích theo tổ chức.",
+      "coverage": "{{pct}}% chi phí trong kỳ đã quy về tổ chức (${{attributed}} trên ${{total}}). Phần còn lại đến từ các lượt gọi không xác định được tổ chức.",
+      "coverage_no_spend": "Không ghi nhận chi phí AI nào trong kỳ này."
     },
     "users": {
       "title": "Người dùng",
@@ -2056,7 +2095,8 @@
         "info": "Thông tin",
         "domains": "Tên miền",
         "units": "Đơn vị",
-        "memberships": "Thành viên"
+        "memberships": "Thành viên",
+        "operations": "Vận hành"
       },
       "actions": {
         "save": "Lưu thay đổi",
@@ -2117,6 +2157,28 @@
         "auto_provision": "Khi tài khoản Google có email thuộc domain này đăng nhập lần đầu, hệ thống tự thêm họ vào tổ chức với vai trò student.",
         "membership_status": "active: truy cập đầy đủ. inactive: giữ tài khoản, tạm dừng truy cập tổ chức. suspended: bị thu hồi truy cập, admin có thể khôi phục.",
         "unit_type": "Loại đơn vị của tổ chức — ảnh hưởng cách hiển thị trong màn hình quản lý."
+      },
+      "operations": {
+        "load_failed": "Không tải được dữ liệu vận hành của tổ chức.",
+        "inactive_since": "Không có hoạt động trong {{days}} ngày — lần cuối {{at}}.",
+        "never_active": "Chưa từng ghi nhận hoạt động nào cho tổ chức này.",
+        "members": "Thành viên",
+        "members_detail": "{{active}} đã đăng nhập, {{window}}",
+        "content": "Khóa học",
+        "content_detail": "{{published}} đã xuất bản · {{materials}} học liệu",
+        "storage": "Lưu trữ",
+        "storage_detail": "Dung lượng các phiên bản học liệu",
+        "spend": "Chi phí AI",
+        "spend_detail": "{{window}} · quy được {{coverage}}% chi phí nền tảng",
+        "spend_no_data": "Không ghi nhận chi phí AI, {{window}}",
+        "jobs": "Tác vụ nền",
+        "job_failure_rate": "Tỷ lệ job lỗi",
+        "job_rate_detail": "{{failed}} trên {{total}} job đã kết thúc, {{window}}",
+        "jobs_in_flight": "Đang xử lý",
+        "jobs_in_flight_detail": "Đang chờ hoặc đang chạy",
+        "config_overrides": "Ghi đè cấu hình",
+        "config_detail": "Thiết lập riêng cho tổ chức này",
+        "open_config": "Mở cấu hình hệ thống"
       }
     },
     "dashboard": {
@@ -2138,7 +2200,8 @@
         "needs_action": "Cần xử lý",
         "reliability": "Độ tin cậy & thông lượng",
         "cost_capacity": "Chi phí & dung lượng",
-        "tenants": "Bất thường theo tổ chức"
+        "tenants": "Bất thường theo tổ chức",
+        "security": "Bảo mật & truy cập"
       },
       "overall": {
         "ok": "Mọi hệ thống hoạt động bình thường",
@@ -2220,7 +2283,16 @@
         "orgs_inactive_detail": "Không hoạt động trong 30 ngày, trên {{total}}",
         "orgs_total": "Tổ chức",
         "orgs_total_detail": "Tổ chức trên nền tảng",
-        "no_baseline": "Chưa có kỳ trước"
+        "no_baseline": "Chưa có kỳ trước",
+        "failed_logins": "Đăng nhập thất bại",
+        "failed_logins_detail": "Từ {{sources}} nguồn, {{window}}",
+        "failed_logins_none": "Không có trong {{window}}",
+        "denied_requests": "Yêu cầu bị từ chối",
+        "denied_requests_detail": "Lỗi 403 ngoài đăng nhập, {{window}}",
+        "role_changes": "Thay đổi vai trò",
+        "role_changes_detail": "{{revoked}} bị thu hồi, {{window}}",
+        "privileged_accounts": "Tài khoản đặc quyền",
+        "privileged_accounts_detail": "Admin, quản lý hoặc trưởng bộ môn · {{sessions}} phiên đang hoạt động"
       },
       "facts": {
         "tokens": "Token đã dùng",
@@ -2230,9 +2302,13 @@
       "scope": {
         "api": "Số liệu API tính trên toàn nền tảng — nhật ký request không gắn tổ chức.",
         "cost": "Số liệu chi phí tính trên toàn nền tảng — lượt gọi AI không gắn tổ chức.",
-        "job": "Số liệu job tính trên toàn nền tảng — job xử lý không gắn tổ chức."
+        "job": "Số liệu job tính trên toàn nền tảng — job xử lý không gắn tổ chức.",
+        "security": "Số liệu request bảo mật tính trên toàn nền tảng — nhật ký request không gắn tổ chức."
       },
-      "unchecked": "Chưa kiểm tra: {{services}}"
+      "unchecked": "Chưa kiểm tra: {{services}}",
+      "security": {
+        "load_failed": "Không tải được tổng quan bảo mật."
+      }
     },
     "operations": {
       "title": "Vận hành & độ tin cậy",

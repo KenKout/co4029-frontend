@@ -915,7 +915,8 @@ export function useUsersByIds(userIds: string[]) {
   const idsKey = unique.join(",");
   return useQuery({
     queryKey: queryKeys.admin.usersByIds(idsKey),
-    queryFn: () => apiFetch<User[]>(`/users/by-ids?ids=${encodeURIComponent(idsKey)}`),
+    queryFn: () =>
+      apiFetch<User[]>(`/users/by-ids?ids=${encodeURIComponent(idsKey)}`),
     enabled: unique.length > 0,
     staleTime: 60 * 1000,
   });

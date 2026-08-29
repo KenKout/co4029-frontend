@@ -25,7 +25,8 @@ export function SelectedUserCard({
           {value.primary_email}
         </p>
       </div>
-      <Button variant="ghost"
+      <Button
+        variant="ghost"
         type="button"
         onClick={onClear}
         className="text-text-muted hover:text-text-strong shrink-0"

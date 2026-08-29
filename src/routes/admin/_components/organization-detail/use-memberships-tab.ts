@@ -50,7 +50,10 @@ export function useMembershipsTab(orgId: string) {
   // a display name + presigned avatar URL (admin user search). Memberships
   // carry only user_id, so without this the roster would be a list of UUIDs.
   const usersQuery = useQuery({
-    queryKey: [...queryKeys.admin.organizationMemberships(orgId), "users"] as const,
+    queryKey: [
+      ...queryKeys.admin.organizationMemberships(orgId),
+      "users",
+    ] as const,
     queryFn: () =>
       apiFetch<{ items: User[] }>(
         `/users/search?organization=${orgId}&page_size=200`,

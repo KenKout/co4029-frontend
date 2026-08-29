@@ -32,7 +32,8 @@ export function JobDetailHeader({
           </p>
         </div>
         {isFailed ? (
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             onClick={handleRetry}
             disabled={retry.isPending}

@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import {
-  Copy,
-  Mail,
-  ScrollText,
-  ShieldCheck,
-  UserRound,
-} from "lucide-react";
+import { Copy, Mail, ScrollText, ShieldCheck, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -20,7 +14,10 @@ import {
   avatarInitials,
 } from "@/components/ui/avatar";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
+import {
+  DataTableToolbar,
+  type FilterDef,
+} from "@/components/ui/data-table-toolbar";
 import { Tabs } from "@/components/ui/tabs";
 import { Tooltip } from "@/components/ui/tooltip";
 import {
@@ -53,9 +50,7 @@ type HttpAuditRow = NonNullable<
 type DataChangeRow = NonNullable<
   ReturnType<typeof useAuditDataChangesList>["data"]
 >[number];
-type AuditUser = NonNullable<
-  ReturnType<typeof useUsersByIds>["data"]
->[number];
+type AuditUser = NonNullable<ReturnType<typeof useUsersByIds>["data"]>[number];
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -70,13 +65,17 @@ function daysAgoIso(days: number): string {
 /** FR-6.7 — admin viewer over the immutable audit endpoints. */
 export default function AdminAuditLogsPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const search = useSearch({ strict: false });
-
-  // The active tab lives in `?tab=`, so tiles on /admin/stats can land on
-  // the tab that explains them (ADM-021) and the back button works.
+  // ?tab= / ?path= let a dashboard alert land on the rows behind it. Anything
+  // unrecognised falls back to the default tab rather than showing an empty
+  // one — a bad link should still leave the operator somewhere useful.
+  const search = useSearch({ strict: false }) as {
+    tab?: string;
+    path?: string;
+  };
   const [tab, setTab] = useState<TabKey>(() =>
-    isAuditTab(search.tab) ? search.tab : "role_changes",
+    TAB_KEYS.includes(search.tab as TabKey)
+      ? (search.tab as TabKey)
+      : "role_changes",
   );
   const [sinceDays, setSinceDays] = useState(7);
   const sinceIso = useMemo(() => daysAgoIso(sinceDays), [sinceDays]);
@@ -131,7 +130,7 @@ export default function AdminAuditLogsPage() {
       {tab === "role_changes" ? (
         <RoleChangesTable sinceIso={sinceIso} />
       ) : tab === "http" ? (
-        <HttpAuditTable sinceIso={sinceIso} />
+        <HttpAuditTable sinceIso={sinceIso} initialPath={search.path} />
       ) : (
         <DataChangesPanel sinceIso={sinceIso} />
       )}
@@ -153,7 +152,9 @@ function UserIdentityCell({
   const [copied, setCopied] = useState(false);
 
   if (!userId) {
-    return <span className="text-m3-on-surface-variant italic">{systemLabel}</span>;
+    return (
+      <span className="text-m3-on-surface-variant italic">{systemLabel}</span>
+    );
   }
 
   const user = users?.find((u) => u.id === userId);
@@ -191,7 +192,11 @@ function UserIdentityCell({
         ) : (
           <p className="text-xs font-mono text-text-muted flex items-center gap-1 mt-0.5">
             <span className="truncate">{userId}</span>
-            <Tooltip content={copied ? t("admin.audit.copied") : t("admin.audit.copy_id")}>
+            <Tooltip
+              content={
+                copied ? t("admin.audit.copied") : t("admin.audit.copy_id")
+              }
+            >
               <Button
                 type="button"
                 variant="ghost"
@@ -311,12 +316,20 @@ function RoleChangesTable({ sinceIso }: { sinceIso: string }) {
   );
 }
 
-function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
+function HttpAuditTable({
+  sinceIso,
+  initialPath,
+}: {
+  sinceIso: string;
+  /** Seeded from ?path= so a security alert opens on its own requests. */
+  initialPath?: string;
+}) {
   const { t } = useTranslation();
-  const [pathFilter, setPathFilter] = useState("");
+  const [pathFilter, setPathFilter] = useState(initialPath ?? "");
   // Debounce: each request is itself written to the http audit table, so
-  // per-keystroke fetching would amplify the very log being inspected.
-  const [debouncedPath, setDebouncedPath] = useState("");
+  // per-keystroke fetching would amplify the very log being inspected. The
+  // seeded value skips the debounce — the operator already asked for it.
+  const [debouncedPath, setDebouncedPath] = useState(initialPath ?? "");
   const [methodFilter, setMethodFilter] = useState<string | undefined>();
   useEffect(() => {
     const handle = setTimeout(() => setDebouncedPath(pathFilter), 400);
@@ -335,8 +348,7 @@ function HttpAuditTable({ sinceIso }: { sinceIso: string }) {
   }, [rows, methodFilter]);
 
   const userIds = useMemo(
-    () =>
-      (filtered ?? []).flatMap((r) => (r.user_id ? [r.user_id] : [])),
+    () => (filtered ?? []).flatMap((r) => (r.user_id ? [r.user_id] : [])),
     [filtered],
   );
   const { data: users } = useUsersByIds(userIds);
@@ -480,8 +492,8 @@ function DataChangesPanel({ sinceIso }: { sinceIso: string }) {
   const actorIds = useMemo(
     () =>
       (rows ?? []).flatMap((r) =>
-        [r.created_by, r.updated_by, r.deleted_by].filter(
-          (v): v is string => Boolean(v),
+        [r.created_by, r.updated_by, r.deleted_by].filter((v): v is string =>
+          Boolean(v),
         ),
       ),
     [rows],
@@ -610,12 +622,19 @@ function DataChangesPanel({ sinceIso }: { sinceIso: string }) {
           pageSizeOptions={[15, 30, 50]}
           emptyState={t("admin.audit.empty")}
           onRowClick={(r) =>
-            setSelectedId((prev) => (prev === r.entity_id ? undefined : r.entity_id))
+            setSelectedId((prev) =>
+              prev === r.entity_id ? undefined : r.entity_id,
+            )
           }
         />
       )}
 
-      {detail && <DataChangeDetail row={detail} onClose={() => setSelectedId(undefined)} />}
+      {detail && (
+        <DataChangeDetail
+          row={detail}
+          onClose={() => setSelectedId(undefined)}
+        />
+      )}
     </div>
   );
 }
@@ -663,16 +682,16 @@ function DataChangeDetail({
         </Button>
       </div>
       <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {DETAIL_FIELDS.filter((f) => row[f] !== undefined && row[f] !== null).map(
-          (f) => (
-            <div key={f} className="flex flex-col gap-0.5">
-              <dt className="text-[11px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                {t(`admin.audit.data_changes.fields.${f}`)}
-              </dt>
-              <dd className="text-sm font-mono break-all">{String(row[f])}</dd>
-            </div>
-          ),
-        )}
+        {DETAIL_FIELDS.filter(
+          (f) => row[f] !== undefined && row[f] !== null,
+        ).map((f) => (
+          <div key={f} className="flex flex-col gap-0.5">
+            <dt className="text-[11px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              {t(`admin.audit.data_changes.fields.${f}`)}
+            </dt>
+            <dd className="text-sm font-mono break-all">{String(row[f])}</dd>
+          </div>
+        ))}
       </dl>
     </div>
   );

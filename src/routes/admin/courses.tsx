@@ -32,6 +32,13 @@ export default function AdminCoursesPage() {
           <p className="text-sm text-text-muted mt-1">
             {t("admin.courses_list.subtitle")}
           </p>
+          {/* Delete and restore are still on this page. Renaming it to
+              "Resource inventory" without saying that would be worse than
+              leaving the old name: the label would promise read-only and the
+              buttons would not deliver it. Stated until D-05 is decided. */}
+          <p className="text-xs text-text-subtle mt-1">
+            {t("admin.courses_list.lifecycle_note")}
+          </p>
         </div>
       </div>
 

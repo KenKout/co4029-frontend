@@ -2,11 +2,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { JobDetailHeader } from "./JobDetailHeader";
 import { JobFieldsCard } from "./JobFieldsCard";
+import { JobInvestigationSections } from "./JobInvestigationSections";
 import type { ProcessingJobController } from "./use-admin-processing-job";
 
 /** Error / loading / loaded switch for the job-detail body. */
 export function JobDetailBody({ c }: { c: ProcessingJobController }) {
-  const { t, job, data } = c;
+  const { t, job, data, investigation } = c;
 
   if (job.isError) {
     return (
@@ -34,6 +35,12 @@ export function JobDetailBody({ c }: { c: ProcessingJobController }) {
       <JobDetailHeader c={c} data={data} />
 
       <JobFieldsCard c={c} data={data} />
+
+      <JobInvestigationSections
+        data={investigation.data}
+        isLoading={investigation.isLoading}
+        isError={investigation.isError}
+      />
 
       {data.error_message ? (
         <div className="bg-red-50 border border-red-200 rounded-lg p-5">

@@ -10,6 +10,7 @@ import { usePermissions } from "@/lib/auth/use-permissions";
 import { DomainsTab } from "./_components/organization-detail/DomainsTab";
 import { InfoTab } from "./_components/organization-detail/InfoTab";
 import { MembershipsTab } from "./_components/organization-detail/MembershipsTab";
+import { OperationsTab } from "./_components/organization-detail/OperationsTab";
 import { OrganizationDetailHeader } from "./_components/organization-detail/OrganizationDetailHeader";
 import { UnitsTab } from "./_components/organization-detail/UnitsTab";
 import { TAB_KEYS } from "./_components/organization-detail/constants";
@@ -71,10 +72,10 @@ export default function AdminOrganizationDetailPage() {
       />
 
       {tab === "info" && <InfoTab orgId={orgId} />}
+      {tab === "operations" && <OperationsTab orgId={orgId} />}
       {tab === "domains" && <DomainsTab orgId={orgId} />}
       {tab === "units" && <UnitsTab orgId={orgId} />}
       {tab === "memberships" && <MembershipsTab orgId={orgId} />}
     </div>
   );
 }
-

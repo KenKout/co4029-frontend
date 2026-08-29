@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 import { useProcessingJob, useRetryProcessingJob } from "@/lib/api/hooks/admin";
+import { useJobInvestigation } from "@/lib/api/hooks/admin-jobs";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { ApiError } from "@/lib/api/client";
 import { useFormatDateTimeMedium } from "@/lib/format/date";
@@ -30,6 +31,10 @@ export function useAdminProcessingJob() {
 
   const enabled = !permissions.isLoading && canAdmin && Boolean(jobId);
   const job = useProcessingJob(enabled ? jobId : "");
+  // Loaded alongside, not instead of: the plain detail is what the header and
+  // the retry button need, and a failure of the heavier investigation query
+  // must not take the page down with it (ADM-015).
+  const investigation = useJobInvestigation(jobId, enabled);
   const retry = useRetryProcessingJob();
 
   const handleRetry = () => {
@@ -58,6 +63,7 @@ export function useAdminProcessingJob() {
     job,
     retry,
     data,
+    investigation,
     isFailed,
     handleRetry,
   };

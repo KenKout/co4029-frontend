@@ -435,6 +435,16 @@ const adminUserDetailRoute = createRoute({
 const adminOrganizationsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/organizations",
+  // ?inactive_days= lets the dashboard's inactive-tenant tile open the exact
+  // rows it counted, instead of the full list (ADM-021/ADM-045).
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { inactive_days?: number } => {
+    const raw = Number(search.inactive_days);
+    return {
+      inactive_days: Number.isFinite(raw) && raw > 0 ? raw : undefined,
+    };
+  },
   component: lazyRouteComponent(() => import("@/routes/admin/organizations")),
 });
 
@@ -500,6 +510,14 @@ const adminAiCostsRoute = createRoute({
 const adminAuditLogsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/audit-logs",
+  // Alerts link straight to the tab and filter that explain them, rather than
+  // dropping an operator on a generic log to re-derive the query (ADM-021).
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: string; path?: string } => ({
+    tab: typeof search.tab === "string" ? search.tab : undefined,
+    path: typeof search.path === "string" ? search.path : undefined,
+  }),
   component: lazyRouteComponent(() => import("@/routes/admin/audit-logs")),
 });
 

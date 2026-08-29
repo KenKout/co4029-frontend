@@ -81,21 +81,23 @@ export const queryKeys = {
 
   admin: {
     statsOverview: () => ["admin", "stats", "overview"] as const,
-    dashboard: (
-      windowDays?: number,
-      from?: string,
-      to?: string,
-      organizationId?: string | null,
-    ) =>
+    dashboard: (windowDays?: number, organizationId?: string | null) =>
       [
         "admin",
         "stats",
         "dashboard",
-        from ?? windowDays,
-        to,
+        windowDays,
         organizationId ?? "",
       ] as const,
     activeUsers: () => ["admin", "stats", "active-users"] as const,
+    securitySummary: (windowDays?: number, organizationId?: string | null) =>
+      [
+        "admin",
+        "security",
+        "summary",
+        windowDays,
+        organizationId ?? "",
+      ] as const,
     activeUsersTrend: (days: number) =>
       ["admin", "stats", "active-users", "trend", days] as const,
     latencyTrend: (days: number) =>
@@ -117,6 +119,8 @@ export const queryKeys = {
       ["admin", "processing", "jobs", status, since, until ?? ""] as const,
     processingJob: (jobId: string) =>
       ["admin", "processing", "jobs", "detail", jobId] as const,
+    jobInvestigation: (jobId: string) =>
+      ["admin", "processing", "jobs", "investigation", jobId] as const,
     permissions: () => ["admin", "permissions"] as const,
     roles: () => ["admin", "roles"] as const,
     userAssignments: (userId: string) =>
@@ -133,8 +137,7 @@ export const queryKeys = {
       ["admin", "audit", "data-changes", table, entityId] as const,
     auditDataChangesList: (table: string, since: string) =>
       ["admin", "audit", "data-changes-list", table, since] as const,
-    usersByIds: (ids: string) =>
-      ["admin", "users", "by-ids", ids] as const,
+    usersByIds: (ids: string) => ["admin", "users", "by-ids", ids] as const,
     aiCosts: {
       summary: (period: string, filters?: string) =>
         ["admin", "ai-costs", "summary", period, filters ?? ""] as const,
@@ -155,6 +158,8 @@ export const queryKeys = {
         ["admin", "ai-costs", "by-model", period, filters ?? ""] as const,
       recent: (limit: number) =>
         ["admin", "ai-costs", "recent", limit] as const,
+      byOrganization: (period: string) =>
+        ["admin", "ai-costs", "by-organization", period] as const,
     },
     aiPricing: () => ["admin", "ai-pricing"] as const,
     organizations: (
@@ -171,6 +176,8 @@ export const queryKeys = {
       ] as const,
     organizationDetail: (id: string) =>
       ["admin", "organizations", "detail", id] as const,
+    tenantOperations: (id: string, windowDays?: number) =>
+      ["admin", "organizations", id, "operations", windowDays] as const,
     organizationDomains: (orgId: string) =>
       ["admin", "organizations", orgId, "domains"] as const,
     organizationUnits: (
@@ -343,12 +350,12 @@ export const queryKeys = {
       ["career-paths", "mgmt-list", orgId, includeArchived ?? false] as const,
     managementDetail: (id: string) =>
       ["career-paths", "mgmt-detail", id] as const,
-      managementCourses: (id: string, versionId = "") =>
-        ["career-paths", "mgmt-courses", id, versionId] as const,
+    managementCourses: (id: string, versionId = "") =>
+      ["career-paths", "mgmt-courses", id, versionId] as const,
     courseCandidates: (id: string) =>
       ["career-paths", "mgmt-course-candidates", id] as const,
-      managementStages: (id: string, versionId = "") =>
-        ["career-paths", "mgmt-stages", id, versionId] as const,
+    managementStages: (id: string, versionId = "") =>
+      ["career-paths", "mgmt-stages", id, versionId] as const,
     teacherProgress: (id: string) =>
       ["career-paths", "teacher-progress", id] as const,
     readiness: (id: string) => ["career-paths", "readiness", id] as const,
@@ -356,11 +363,13 @@ export const queryKeys = {
     versions: (id: string) => ["career-paths", "mgmt-versions", id] as const,
   },
   learningPrograms: {
-    managementList: (orgId = "") => ["learning-programs", "management", orgId] as const,
-      detail: (id: string) => ["learning-programs", "detail", id] as const,
-      version: (id: string, versionId: string) => ["learning-programs", "detail", id, versionId] as const,
-      versions: (id: string) => ["learning-programs", "versions", id] as const,
-      options: () => ["learning-programs", "options"] as const,
+    managementList: (orgId = "") =>
+      ["learning-programs", "management", orgId] as const,
+    detail: (id: string) => ["learning-programs", "detail", id] as const,
+    version: (id: string, versionId: string) =>
+      ["learning-programs", "detail", id, versionId] as const,
+    versions: (id: string) => ["learning-programs", "versions", id] as const,
+    options: () => ["learning-programs", "options"] as const,
     roster: (id: string) => ["learning-programs", "roster", id] as const,
     requests: (id: string) => ["learning-programs", "requests", id] as const,
     mine: () => ["learning-programs", "mine"] as const,

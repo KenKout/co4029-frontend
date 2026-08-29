@@ -4,6 +4,7 @@ import { LatencyTrendSection } from "./_components/stats/LatencyTrendSection";
 import { NeedsActionSection } from "./_components/stats/NeedsActionSection";
 import { PageHeading } from "./_components/stats/PageHeading";
 import { ReliabilityRow } from "./_components/stats/ReliabilityRow";
+import { SecurityAccessRow } from "./_components/stats/SecurityAccessRow";
 import { StatsSkeleton } from "./_components/stats/StatsStates";
 import { TenantAnomaliesRow } from "./_components/stats/TenantAnomaliesRow";
 import { useAdminStatsPage } from "./_components/stats/use-admin-stats-page";
@@ -40,6 +41,7 @@ export default function AdminStatsPage() {
       <ReliabilityRow c={c} />
       <LatencyTrendSection />
       <CostCapacityRow c={c} />
+      <SecurityAccessRow c={c} />
       <TenantAnomaliesRow c={c} />
     </div>
   );

@@ -11,7 +11,15 @@ import type { TabKey } from "./types";
  * and the bulk textarea placeholder.
  */
 
-export const TAB_KEYS: TabKey[] = ["info", "domains", "units", "memberships"];
+// Operations sits second, right after Info: an operator opening a tenant is
+// usually asking an operational question, not looking for its domain list.
+export const TAB_KEYS: TabKey[] = [
+  "info",
+  "operations",
+  "domains",
+  "units",
+  "memberships",
+];
 
 export const ORGANIZATION_STATUS_VALUES: OrganizationStatus[] = [
   "active",
