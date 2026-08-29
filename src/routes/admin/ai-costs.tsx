@@ -32,6 +32,7 @@ import {
   TopPipelinesSection,
   TopUsersSection,
 } from "./_components/ai-costs/TableSections";
+import { OrganizationSpendTable } from "./_components/ai-costs/OrganizationSpendTable";
 import { PERIOD_VALUES } from "./_components/ai-costs/constants";
 
 export default function AdminAiCostsPage() {
@@ -113,6 +114,13 @@ export default function AdminAiCostsPage() {
         dimension={dimension}
         onDimensionChange={setDimension}
       />
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-headline font-bold text-text-strong">
+          {t("admin.ai_costs.by_organization")}
+        </h2>
+        <OrganizationSpendTable period={period} />
+      </section>
 
       <TopUsersSection byUser={byUser} />
 

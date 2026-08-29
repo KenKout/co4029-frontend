@@ -93,9 +93,7 @@ export function UnitAddForm({
         </span>
         <Select<string>
           value={parentUnitId ?? ROOT}
-          onValueChange={(next) =>
-            setParentUnitId(next === ROOT ? null : next)
-          }
+          onValueChange={(next) => setParentUnitId(next === ROOT ? null : next)}
           options={parentOptions}
           className="mt-1"
         />

@@ -6,7 +6,12 @@
  */
 
 /** Which pane of the detail page is showing. */
-export type TabKey = "info" | "domains" | "units" | "memberships";
+export type TabKey =
+  | "info"
+  | "operations"
+  | "domains"
+  | "units"
+  | "memberships";
 
 /**
  * Which pane of the memberships tab is showing: the roster, the single-user

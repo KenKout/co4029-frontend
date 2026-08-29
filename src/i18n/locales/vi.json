@@ -68,7 +68,8 @@
     "open_menu": "Mở menu",
     "close_menu": "Đóng menu",
     "org_units": "Tổ chức",
-    "operations": "Vận hành"
+    "operations": "Vận hành",
+    "resource_inventory": "Tài nguyên"
   },
   "auth": {
     "sign_in": "Đăng nhập",
@@ -1577,8 +1578,8 @@
       }
     },
     "courses_list": {
-      "title": "Quản lý khóa học",
-      "subtitle": "Danh sách tất cả khóa học (bao gồm bản nháp + đã xóa).",
+      "title": "Kiểm kê tài nguyên",
+      "subtitle": "Khóa học dưới góc độ tài nguyên của tổ chức, gồm cả bản nháp và đã xóa. Quản lý học vụ nằm ở console Quản lý.",
       "search_placeholder": "Tìm theo tên hoặc slug…",
       "filter_status": "Trạng thái",
       "clear_filters": "Xóa bộ lọc",
@@ -1599,7 +1600,8 @@
         "archived": "Đã lưu trữ",
         "deleted": "Đã xóa"
       },
-      "filter_status_all": "Tất cả trạng thái"
+      "filter_status_all": "Tất cả trạng thái",
+      "lifecycle_note": "Chức năng xóa và khôi phục vẫn còn ở đây, chờ quyết định về việc kiểm kê tài nguyên có nên chỉ đọc hay không (D-05)."
     },
     "course_detail": {
       "title": "Audit AI khoá học",
@@ -1863,8 +1865,8 @@
       "cols": {
         "user": "Người dùng",
         "cost": "Tổng chi phí",
-        "tokens": "Tổng tokens",
-        "calls": "Số lượt gọi",
+        "tokens": "Token",
+        "calls": "Lượt gọi",
         "pipeline": "Pipeline",
         "type": "Loại",
         "time": "Thời điểm",
@@ -1882,8 +1884,15 @@
         "usd_per_1m": "$ / 1M tok",
         "latency_p50": "p50",
         "latency_p95": "p95",
-        "actions": "Hành động"
-      }
+        "actions": "Hành động",
+        "organization": "Tổ chức",
+        "spend": "Chi phí"
+      },
+      "by_organization": "Chi phí theo tổ chức",
+      "unattributed": "Chưa quy được",
+      "org_load_failed": "Không tải được phân tích theo tổ chức.",
+      "coverage": "{{pct}}% chi phí trong kỳ đã quy về tổ chức (${{attributed}} trên ${{total}}). Phần còn lại đến từ các lượt gọi không xác định được tổ chức.",
+      "coverage_no_spend": "Không ghi nhận chi phí AI nào trong kỳ này."
     },
     "users": {
       "title": "Người dùng",
@@ -2051,7 +2060,8 @@
         "info": "Thông tin",
         "domains": "Tên miền",
         "units": "Đơn vị",
-        "memberships": "Thành viên"
+        "memberships": "Thành viên",
+        "operations": "Vận hành"
       },
       "actions": {
         "save": "Lưu thay đổi",
@@ -2112,6 +2122,28 @@
         "auto_provision": "Khi tài khoản Google có email thuộc domain này đăng nhập lần đầu, hệ thống tự thêm họ vào tổ chức với vai trò student.",
         "membership_status": "active: truy cập đầy đủ. inactive: giữ tài khoản, tạm dừng truy cập tổ chức. suspended: bị thu hồi truy cập, admin có thể khôi phục.",
         "unit_type": "Loại đơn vị của tổ chức — ảnh hưởng cách hiển thị trong màn hình quản lý."
+      },
+      "operations": {
+        "load_failed": "Không tải được dữ liệu vận hành của tổ chức.",
+        "inactive_since": "Không có hoạt động trong {{days}} ngày — lần cuối {{at}}.",
+        "never_active": "Chưa từng ghi nhận hoạt động nào cho tổ chức này.",
+        "members": "Thành viên",
+        "members_detail": "{{active}} đã đăng nhập, {{window}}",
+        "content": "Khóa học",
+        "content_detail": "{{published}} đã xuất bản · {{materials}} học liệu",
+        "storage": "Lưu trữ",
+        "storage_detail": "Dung lượng các phiên bản học liệu",
+        "spend": "Chi phí AI",
+        "spend_detail": "{{window}} · quy được {{coverage}}% chi phí nền tảng",
+        "spend_no_data": "Không ghi nhận chi phí AI, {{window}}",
+        "jobs": "Tác vụ nền",
+        "job_failure_rate": "Tỷ lệ job lỗi",
+        "job_rate_detail": "{{failed}} trên {{total}} job đã kết thúc, {{window}}",
+        "jobs_in_flight": "Đang xử lý",
+        "jobs_in_flight_detail": "Đang chờ hoặc đang chạy",
+        "config_overrides": "Ghi đè cấu hình",
+        "config_detail": "Thiết lập riêng cho tổ chức này",
+        "open_config": "Mở cấu hình hệ thống"
       }
     },
     "dashboard": {

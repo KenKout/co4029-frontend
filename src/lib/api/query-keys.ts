@@ -156,6 +156,8 @@ export const queryKeys = {
         ["admin", "ai-costs", "by-model", period, filters ?? ""] as const,
       recent: (limit: number) =>
         ["admin", "ai-costs", "recent", limit] as const,
+      byOrganization: (period: string) =>
+        ["admin", "ai-costs", "by-organization", period] as const,
     },
     aiPricing: () => ["admin", "ai-pricing"] as const,
     organizations: (
@@ -172,6 +174,8 @@ export const queryKeys = {
       ] as const,
     organizationDetail: (id: string) =>
       ["admin", "organizations", "detail", id] as const,
+    tenantOperations: (id: string, windowDays?: number) =>
+      ["admin", "organizations", id, "operations", windowDays] as const,
     organizationDomains: (orgId: string) =>
       ["admin", "organizations", orgId, "domains"] as const,
     organizationUnits: (

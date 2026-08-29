@@ -67,7 +67,8 @@
     "open_menu": "Open menu",
     "close_menu": "Close menu",
     "org_units": "Organization",
-    "operations": "Operations"
+    "operations": "Operations",
+    "resource_inventory": "Resource inventory"
   },
   "auth": {
     "sign_in": "Sign in",
@@ -1669,8 +1670,8 @@
       }
     },
     "courses_list": {
-      "title": "Course management",
-      "subtitle": "All courses including drafts and deleted.",
+      "title": "Resource inventory",
+      "subtitle": "Courses as tenant resources, including drafts and deleted. Academic management lives in the Manager console.",
       "search_placeholder": "Search by title or slug…",
       "filter_status": "Status",
       "clear_filters": "Clear filters",
@@ -1691,7 +1692,8 @@
         "archived": "Archived",
         "deleted": "Deleted"
       },
-      "filter_status_all": "All statuses"
+      "filter_status_all": "All statuses",
+      "lifecycle_note": "Delete and restore are still available here pending a decision on whether resource inventory should be read-only (D-05)."
     },
     "course_detail": {
       "title": "Course AI audit",
@@ -1955,7 +1957,7 @@
       "cols": {
         "user": "User",
         "cost": "Total cost",
-        "tokens": "Total tokens",
+        "tokens": "Tokens",
         "calls": "Calls",
         "pipeline": "Pipeline",
         "type": "Type",
@@ -1974,8 +1976,15 @@
         "usd_per_1m": "$ / 1M tok",
         "latency_p50": "p50",
         "latency_p95": "p95",
-        "actions": "Actions"
-      }
+        "actions": "Actions",
+        "organization": "Organization",
+        "spend": "Spend"
+      },
+      "by_organization": "Spend by organization",
+      "unattributed": "Unattributed",
+      "org_load_failed": "Could not load the per-organization breakdown.",
+      "coverage": "{{pct}}% of window spend attributed to a tenant (${{attributed}} of ${{total}}). The rest came from calls with no derivable organization.",
+      "coverage_no_spend": "No AI spend recorded in this window."
     },
     "users": {
       "title": "Users",
@@ -2143,7 +2152,8 @@
         "info": "Info",
         "domains": "Domains",
         "units": "Units",
-        "memberships": "Memberships"
+        "memberships": "Memberships",
+        "operations": "Operations"
       },
       "actions": {
         "save": "Save changes",
@@ -2204,6 +2214,28 @@
         "auto_provision": "When a Google account with this email domain signs in for the first time, they are automatically added to this organization as a student.",
         "membership_status": "active: full access to the organization. inactive: account kept, org access paused. suspended: access revoked, can be restored by an admin.",
         "unit_type": "What kind of organizational unit this is — affects how the unit is displayed in management screens."
+      },
+      "operations": {
+        "load_failed": "Could not load tenant operations.",
+        "inactive_since": "No activity for {{days}} days — last seen {{at}}.",
+        "never_active": "No activity has ever been recorded for this organization.",
+        "members": "Members",
+        "members_detail": "{{active}} signed in, {{window}}",
+        "content": "Courses",
+        "content_detail": "{{published}} published · {{materials}} materials",
+        "storage": "Storage",
+        "storage_detail": "Material versions held",
+        "spend": "AI spend",
+        "spend_detail": "{{window}} · {{coverage}}% of platform spend attributable",
+        "spend_no_data": "No AI spend recorded, {{window}}",
+        "jobs": "Background work",
+        "job_failure_rate": "Job failure rate",
+        "job_rate_detail": "{{failed}} of {{total}} terminal jobs, {{window}}",
+        "jobs_in_flight": "In flight",
+        "jobs_in_flight_detail": "Pending or running now",
+        "config_overrides": "Config overrides",
+        "config_detail": "Settings pinned for this tenant",
+        "open_config": "Open system configuration"
       }
     },
     "dashboard": {

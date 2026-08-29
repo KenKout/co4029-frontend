@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Building2, Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -55,7 +55,8 @@ function CreateOrgDialog({ onClose }: { onClose: () => void }) {
           <h2 className="font-headline text-xl font-bold text-text-strong">
             {t("admin.organizations.create_dialog_title")}
           </h2>
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             onClick={onClose}
             className="text-text-muted hover:text-text-strong"
@@ -145,11 +146,18 @@ export default function AdminOrganizationsPage() {
 
   const [showCreate, setShowCreate] = useState(false);
 
+  // Arriving from the dashboard's inactive-tenant tile: filter to exactly the
+  // rows that produced the count. The server applies the same definition it
+  // counted with, so the number on the tile and the row count here agree.
+  const search = useSearch({ strict: false }) as { inactive_days?: number };
+  const inactiveDays = search.inactive_days;
+
   // Server-side search + sort + page (whole dataset, not just loaded rows).
   const table = useServerTable<OrganizationRead>({
-    queryKey: ["admin", "organizations", "search"],
+    queryKey: ["admin", "organizations", "search", inactiveDays ?? "all"],
     path: "/admin/organizations/search",
     pageSize: 25,
+    filters: inactiveDays ? { inactive_days: String(inactiveDays) } : undefined,
   });
 
   const columns: DataTableColumn<OrganizationRead>[] = [

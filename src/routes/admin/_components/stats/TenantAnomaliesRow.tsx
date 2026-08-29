@@ -3,6 +3,7 @@ import { Building2, MoonStar } from "lucide-react";
 import { ActionTile } from "@/components/ui/action-tile";
 import { SectionErrorBox } from "@/components/ui/section-error-box";
 
+import { INACTIVE_ORG_DAYS } from "./helpers";
 import { RowHeading } from "./RowHeading";
 import type { AdminStatsController } from "./types";
 
@@ -45,6 +46,7 @@ export function TenantAnomaliesRow({ c }: { c: AdminStatsController }) {
           severity={tenant.severity}
           icon={MoonStar}
           to="/admin/organizations"
+          search={{ inactive_days: String(INACTIVE_ORG_DAYS) }}
         />
         <ActionTile
           label={t("admin.dashboard.tiles.orgs_total")}

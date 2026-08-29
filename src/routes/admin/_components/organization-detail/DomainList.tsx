@@ -31,7 +31,8 @@ export function DomainList({
               </p>
             )}
           </div>
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             onClick={() => onRemove(d.id)}
             className="p-2 text-red-600 hover:bg-red-50 rounded-md shrink-0 h-auto whitespace-normal"

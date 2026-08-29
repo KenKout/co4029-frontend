@@ -37,7 +37,8 @@ export function UserSearchResults({
     <ul className="py-1">
       {matches.map((u) => (
         <li key={u.user_id}>
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             onClick={() => onPick(u)}
             className="w-full text-left px-3 py-2 hover:bg-m3-primary-fixed/40 flex items-center gap-3 h-auto whitespace-normal"

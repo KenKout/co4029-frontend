@@ -274,8 +274,13 @@ export const adminNavItems: NavItem[] = [
     icon: Building2,
   },
   {
-    label: "Courses",
-    i18nKey: "nav.courses",
+    // Named "Resource inventory", not "Courses": from a system administrator's
+    // seat this is tenant resource accounting, not academic management, and
+    // the old label implied admin participates in course work (PRD ADM-043).
+    // Its own i18n key because `nav.courses` is the learner/teacher entry and
+    // must keep saying "Courses" there.
+    label: "Resource inventory",
+    i18nKey: "nav.resource_inventory",
     href: "/admin/courses",
     icon: BookOpen,
   },
@@ -355,8 +360,8 @@ export const adminNavGroups: NavGroup[] = [
         icon: Building2,
       },
       {
-        label: "Courses",
-        i18nKey: "nav.courses",
+        label: "Resource inventory",
+        i18nKey: "nav.resource_inventory",
         href: "/admin/courses",
         icon: BookOpen,
       },

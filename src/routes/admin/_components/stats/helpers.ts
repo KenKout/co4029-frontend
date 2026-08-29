@@ -147,6 +147,14 @@ export function aiCostsPeriodFor(
   return undefined;
 }
 
+/**
+ * Inactivity threshold, mirroring ``INACTIVE_ORG_DAYS`` in the stats service.
+ * Duplicated as a constant rather than read from the payload because the tile
+ * links with it and the copy names it — and if the two ever diverge, a
+ * mismatched link is louder than a silently wrong number.
+ */
+export const INACTIVE_ORG_DAYS = 30;
+
 /** Every organization with no activity is worth a look, none is fine. */
 export function inactiveOrgSeverity(count: number): ActionSeverity {
   return count > 0 ? "warn" : "ok";
@@ -469,6 +477,7 @@ export function buildAlerts(
       }),
       target: t("admin.dashboard.targets.tenants"),
       to: "/admin/organizations",
+      search: { inactive_days: String(INACTIVE_ORG_DAYS) },
       ctaLabel: t("admin.dashboard.cta.open_organizations"),
     });
   }
