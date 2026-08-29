@@ -75,6 +75,7 @@ export function draftFromConfig(
     // simply show the preset values; a teacher only creates a real override by
     // moving one away from its preset (see the diff computed on save).
     persona_profile: personaOverrideFromResolved(
+      config.persona,
       config.persona_profile_resolved,
     ),
   };
@@ -84,19 +85,35 @@ export function draftFromConfig(
 // empty object when nothing is resolvable, so the panel falls back to preset
 // values via `effectivePersonaTraits`.
 function personaOverrideFromResolved(
+  persona: string | null | undefined,
   resolved: PersonaProfileRead | null | undefined,
 ): PersonaProfileOverride {
   if (!resolved) return {};
-  return {
+  const preset =
+    PERSONA_TRAIT_PRESETS[persona as PersonaKey] ?? PERSONA_TRAIT_PRESETS.neutral;
+  const override: PersonaProfileOverride = {};
+  const values: Record<(typeof PERSONA_TRAIT_KEYS)[number], number | undefined> = {
     warmth: resolved.warmth,
     directness: resolved.directness,
     verbosity: resolved.verbosity,
     formality: resolved.formality,
     ack_frequency: resolved.ack_frequency,
-    interviewer_role:
-      (resolved as { interviewer_role?: InterviewerRole }).interviewer_role ??
-      "generic_assistant",
   };
+  const presetValues: Record<(typeof PERSONA_TRAIT_KEYS)[number], number> = {
+    warmth: preset.warmth,
+    directness: preset.directness,
+    verbosity: preset.verbosity,
+    formality: preset.formality,
+    ack_frequency: preset.ackFrequency,
+  };
+  for (const key of PERSONA_TRAIT_KEYS) {
+    if (values[key] !== undefined && values[key] !== presetValues[key]) {
+      override[key] = values[key];
+    }
+  }
+  const role = (resolved as { interviewer_role?: InterviewerRole }).interviewer_role;
+  if (role && role !== "generic_assistant") override.interviewer_role = role;
+  return override;
 }
 
 // The effective trait values shown on the sliders: the teacher's override if

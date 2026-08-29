@@ -121,7 +121,7 @@ export function SettingsSecurityCard({
               </Field>
             </div>
 
-            <div className="grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <Field
                 label={t("teacher_interview_config.security.custom_en")}
                 {...lock("security_custom_refusal_en")}
@@ -137,6 +137,23 @@ export function SettingsSecurityCard({
                 <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
                   {draft.security_custom_refusal_en.trim() ||
                     t("teacher_interview_config.security.preview_en")}
+                </p>
+              </Field>
+              <Field
+                label={t("teacher_interview_config.security.custom_vi")}
+                {...lock("security_custom_refusal_vi")}
+              >
+                <Textarea
+                  rows={3}
+                  maxLength={500}
+                  value={draft.security_custom_refusal_vi}
+                  onChange={(e) =>
+                    update("security_custom_refusal_vi", e.target.value)
+                  }
+                />
+                <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
+                  {draft.security_custom_refusal_vi.trim() ||
+                    t("teacher_interview_config.security.preview_vi")}
                 </p>
               </Field>
             </div>
