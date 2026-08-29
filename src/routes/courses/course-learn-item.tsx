@@ -220,14 +220,7 @@ function MatchedItemView({
 
   if (matched.item.item_type === "interview") {
     const interviewRef = matched.item.target?.id || itemSlug;
-    return (
-      <>
-        {breadcrumb}
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-          <InterviewProxy slug={slug} interviewRef={interviewRef} />
-        </div>
-      </>
-    );
+    return <InterviewProxy slug={slug} interviewRef={interviewRef} />;
   }
 
   return null;

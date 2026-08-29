@@ -37,6 +37,7 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
     /^\/management\/(career-paths|learning-programs)\/(new|[^/]+)$/.test(
       routerLocation.pathname,
     );
+  const hideInterviewChrome = isInterviewWorkspace || immersive;
 
   useEffect(() => {
     if (isAuthoringWorkspace) setCollapsed(true);
@@ -124,14 +125,14 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
           !immersive && !collapsed && "md:ml-64",
         )}
       >
-        {!isInterviewWorkspace && (
+        {!hideInterviewChrome && (
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgb(0_0_0/0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgb(0_0_0/0.03)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
         )}
-        {!isInterviewWorkspace && <ContentTopBar navGroups={navGroups} />}
+        {!hideInterviewChrome && <ContentTopBar navGroups={navGroups} />}
         <div
           className={cn(
             "relative",
-            isInterviewWorkspace
+            hideInterviewChrome
               ? "min-h-screen"
               : "px-4 py-6 sm:px-6 lg:px-10",
           )}
