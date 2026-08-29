@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
@@ -31,40 +32,32 @@ function stateWith(graph: Graph): EditorState {
   } as unknown as EditorState;
 }
 
+/** Renders the mutations hook against live state so addNode sees commits. */
+function useHarness(initial: Graph) {
+  const [graph, setGraph] = useState<Graph>(initial);
+  const mutations = useGraphMutations({
+    state: stateWith(graph),
+    commit: setGraph,
+    t,
+  });
+  return { mutations, graph };
+}
+
 describe("useGraphMutations addNode default names", () => {
   it("indexes every auto-created node", () => {
-    let state = stateWith({ nodes: [], edges: [] });
-    let labels: string[] = [];
-    const { result, rerender } = renderHook(() =>
-      useGraphMutations({
-        state,
-        commit: (next) => {
-          labels = next.nodes.map((n) => n.label);
-        },
-        t,
-      }),
-    );
-
-    act(() => result.current.addNode());
-    rerender();
-    state = stateWith({
-      nodes: labels.map((label, i) => ({
-        id: `n${i}`,
-        label,
-        type: "Concept",
-        definition: null,
-        weight: 10,
-        is_primary: i === 0,
-      })),
-      edges: [],
-    });
-    expect(labels).toEqual(["New concept 1"]);
-
-    act(() => result.current.addNode());
-    expect(labels).toEqual(["New concept 1", "New concept 2"]);
+    const { result } = renderHook(() => useHarness({ nodes: [], edges: [] }));
+    act(() => result.current.mutations.addNode());
+    expect(result.current.graph.nodes.map((n) => n.label)).toEqual([
+      "New concept 1",
+    ]);
+    act(() => result.current.mutations.addNode());
+    expect(result.current.graph.nodes.map((n) => n.label)).toEqual([
+      "New concept 1",
+      "New concept 2",
+    ]);
   });
 
-  it("skips past deleted nodes instead of reusing their index", () => {
+  it("skips past existing names instead of reusing their index", () => {
     const graph: Graph = {
       nodes: [
         {
@@ -78,19 +71,12 @@ describe("useGraphMutations addNode default names", () => {
       ],
       edges: [],
     };
-    let labels: string[] = [];
-    const { result } = renderHook(() =>
-      useGraphMutations({
-        state: stateWith(graph),
-        commit: (next) => {
-          labels = next.nodes.map((n) => n.label);
-        },
-        t,
-      }),
-    );
-    act(() => result.current.addNode());
-    // "New concept 1" exists → next is 2, not another "New concept 1".
-    expect(labels).toEqual(["New concept 1", "New concept 2"]);
+    const { result } = renderHook(() => useHarness(graph));
+    act(() => result.current.mutations.addNode());
+    expect(result.current.graph.nodes.map((n) => n.label)).toEqual([
+      "New concept 1",
+      "New concept 2",
+    ]);
   });
 
   it("does not collide with a legacy unnumbered default node", () => {
@@ -107,17 +93,43 @@ describe("useGraphMutations addNode default names", () => {
       ],
       edges: [],
     };
-    let labels: string[] = [];
-    const { result } = renderHook(() =>
-      useGraphMutations({
-        state: stateWith(graph),
-        commit: (next) => {
-          labels = next.nodes.map((n) => n.label);
+    const { result } = renderHook(() => useHarness(graph));
+    act(() => result.current.mutations.addNode());
+    expect(result.current.graph.nodes.map((n) => n.label)).toEqual([
+      "New concept",
+      "New concept 1",
+    ]);
+  });
+
+  it("continues past a gap after a node was deleted", () => {
+    const graph: Graph = {
+      nodes: [
+        {
+          id: "a",
+          label: "New concept 1",
+          type: "Concept",
+          definition: null,
+          weight: 10,
+          is_primary: true,
         },
-        t,
-      }),
-    );
-    act(() => result.current.addNode());
-    expect(labels).toEqual(["New concept", "New concept 1"]);
+        {
+          id: "b",
+          label: "New concept 3",
+          type: "Concept",
+          definition: null,
+          weight: 10,
+          is_primary: false,
+        },
+      ],
+      edges: [],
+    };
+    const { result } = renderHook(() => useHarness(graph));
+    act(() => result.current.mutations.addNode());
+    // Gap at 2 but 3 already exists — next must be 4, never a duplicate.
+    expect(result.current.graph.nodes.map((n) => n.label)).toEqual([
+      "New concept 1",
+      "New concept 3",
+      "New concept 4",
+    ]);
   });
 });
