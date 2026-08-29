@@ -1,25 +1,21 @@
 import type { ReactNode } from "react";
 import { RotateCcw } from "lucide-react";
-import { toast } from "sonner";
-import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
 import { Button } from "@/components/ui/button";
 import type { SettingRowController } from "./use-setting-row";
 
 /** Control column — fixed 200px so every right edge lines up. */
 export function SettingRowValueColumn({
   controller,
-  setting,
   showComparison,
   globalFallback,
   control,
 }: {
   controller: SettingRowController;
-  setting: RuntimeSetting;
   showComparison: boolean;
   globalFallback: boolean | number;
   control: ReactNode;
 }) {
-  const { clearMutation, label, overrideAtThisScope } = controller;
+  const { overrideAtThisScope, stageClear } = controller;
 
   return (
     <div className="flex items-start gap-1.5">
@@ -34,7 +30,8 @@ export function SettingRowValueColumn({
         )}
         {control}
       </div>
-      <Button variant="ghost"
+      <Button
+        variant="ghost"
         type="button"
         title={
           overrideAtThisScope
@@ -42,12 +39,8 @@ export function SettingRowValueColumn({
             : "Nothing is overridden at this scope"
         }
         className="mt-0.5 shrink-0 rounded-md p-1.5 text-slate-400 enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 h-auto whitespace-normal"
-        disabled={!overrideAtThisScope || clearMutation.isPending}
-        onClick={() =>
-          clearMutation.mutate(setting.key, {
-            onSuccess: () => toast.success(`${label} reset`),
-          })
-        }
+        disabled={!overrideAtThisScope}
+        onClick={stageClear}
       >
         <RotateCcw className="h-4 w-4" />
       </Button>

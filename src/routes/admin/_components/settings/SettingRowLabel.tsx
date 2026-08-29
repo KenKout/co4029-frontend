@@ -34,7 +34,8 @@ export function SettingRowLabel({
         <span className="font-medium text-slate-900">{label}</span>
         <ResolutionPopover setting={setting} />
         {rest && (
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             onClick={() => setExpanded((v) => !v)}
             className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 h-auto whitespace-normal"

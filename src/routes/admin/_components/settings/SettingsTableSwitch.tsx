@@ -3,6 +3,11 @@ import { Switch } from "@/components/ui/switch";
 import { settingLabel } from "./helpers";
 import type { SettingsTableController } from "./use-settings-table";
 
+/**
+ * Toggling stages a pending change; it does not write. The switch reflects the
+ * draft so the operator sees what they are about to apply, and the pending
+ * badge beside it says the deployment has not moved yet.
+ */
 export function SettingsTableSwitch({
   controller,
   setting: s,
@@ -10,12 +15,11 @@ export function SettingsTableSwitch({
   controller: SettingsTableController;
   setting: RuntimeSetting;
 }) {
-  const { t, setMutation } = controller;
+  const { t, draft } = controller;
   return (
     <Switch
-      checked={Boolean(s.effective_value)}
-      disabled={setMutation.isPending}
-      onCheckedChange={(c) => setMutation.mutate({ key: s.key, value: c })}
+      checked={Boolean(draft.displayValue(s))}
+      onCheckedChange={(c) => draft.stage(s, c)}
       aria-label={settingLabel(t, s)}
     />
   );

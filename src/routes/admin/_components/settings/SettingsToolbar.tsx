@@ -67,7 +67,8 @@ export function SettingsToolbar({
           )}
         </label>
 
-        <Button variant="ghost"
+        <Button
+          variant="ghost"
           type="button"
           onClick={() => setShowKeys((v) => !v)}
           title="Show config keys and env vars"
@@ -82,7 +83,8 @@ export function SettingsToolbar({
           Keys
         </Button>
 
-        <Button variant="ghost"
+        <Button
+          variant="ghost"
           type="button"
           onClick={() => setDense((v) => !v)}
           title={dense ? "Card view" : "Table view"}
@@ -102,10 +104,12 @@ export function SettingsToolbar({
         </Button>
       </div>
 
-      {/* Autosave is explicit — runtime config that silently commits is
-          scary, so say so rather than implying a Save button exists. */}
+      {/* Nothing here writes on edit any more. Say so plainly: an operator who
+          still believes this page autosaves will treat a half-finished draft
+          as already applied, which is the more dangerous misreading of the
+          two. */}
       <p className="mt-1.5 text-[11px] text-slate-400">
-        Changes save automatically on edit.
+        Changes are staged until you review and apply them.
         {orgId
           ? " Editing overrides for the selected organization only."
           : " Editing the global default for all organizations."}

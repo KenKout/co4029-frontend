@@ -80,11 +80,15 @@ function ServiceChip({
 
 export function CurrentStatusRow({ c }: { c: AdminStatsController }) {
   const { t, currentStatus } = c;
+  // `partial` borrows the degraded chip on purpose: everything checked is fine,
+  // but the row must not read as a clean bill of health while a dependency
+  // sits unverified.
   const overallStyle =
     STATE_STYLE[
       currentStatus.overall === "ok"
         ? "ok"
-        : currentStatus.overall === "degraded"
+        : currentStatus.overall === "degraded" ||
+            currentStatus.overall === "partial"
           ? "degraded"
           : currentStatus.overall === "down"
             ? "down"
@@ -112,6 +116,16 @@ export function CurrentStatusRow({ c }: { c: AdminStatsController }) {
               <OverallIcon aria-hidden="true" className="h-4 w-4" />
               {t(`admin.dashboard.overall.${currentStatus.overall}`)}
             </span>
+            {currentStatus.overall === "partial" &&
+              currentStatus.uncheckedServices.length > 0 && (
+                /* Name the unverified dependency rather than hiding the
+                   caveat behind a softer headline word. */
+                <span className="text-xs text-text-muted">
+                  {t("admin.dashboard.unchecked", {
+                    services: currentStatus.uncheckedServices.join(", "),
+                  })}
+                </span>
+              )}
             {currentStatus.version && (
               <span className="text-xs text-text-muted">
                 {t("admin.dashboard.version", {

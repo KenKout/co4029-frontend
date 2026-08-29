@@ -3,6 +3,7 @@ import { Coins, Cpu, TrendingUp, Users } from "lucide-react";
 import { ActionTile } from "@/components/ui/action-tile";
 import { SectionErrorBox } from "@/components/ui/section-error-box";
 
+import { aiCostsPeriodFor } from "./helpers";
 import { RowHeading } from "./RowHeading";
 import { ScopeNote } from "./ScopeNote";
 import type { AdminStatsController } from "./types";
@@ -19,6 +20,15 @@ import type { AdminStatsController } from "./types";
 export function CostCapacityRow({ c }: { c: AdminStatsController }) {
   const { t, f, cost, scope } = c;
   const window = t("admin.dashboard.window.label", { days: scope.windowDays });
+  // Every link out to the cost page carries the dashboard's window, so the two
+  // surfaces never quietly describe different spans of time (PRD ADM-004). A
+  // window the cost page has no equivalent for is omitted rather than coerced
+  // to a nearby one — landing on its own default is honest, landing on a
+  // silently different span is not.
+  const costPeriod = aiCostsPeriodFor(scope.windowDays);
+  const costSearch: Record<string, string> = costPeriod
+    ? { period: costPeriod }
+    : {};
 
   if (c.isError) {
     return (
@@ -48,6 +58,7 @@ export function CostCapacityRow({ c }: { c: AdminStatsController }) {
           severity={cost.severity}
           icon={Coins}
           to="/admin/ai-costs"
+          search={costSearch}
           trend={{
             deltaPct: cost.deltaPct,
             higherIsWorse: true,
@@ -61,6 +72,7 @@ export function CostCapacityRow({ c }: { c: AdminStatsController }) {
           detail={t("admin.dashboard.tiles.projected_detail")}
           icon={TrendingUp}
           to="/admin/ai-costs"
+          search={costSearch}
         />
 
         <ActionTile
@@ -74,7 +86,7 @@ export function CostCapacityRow({ c }: { c: AdminStatsController }) {
           severity={cost.aiSeverity}
           icon={Cpu}
           to="/admin/ai-costs"
-          search={{ status: "failed" }}
+          search={{ status: "failed", ...costSearch }}
         />
 
         <ActionTile

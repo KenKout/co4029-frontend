@@ -131,6 +131,22 @@ export function rateTrendPct(
   return ((now - prev) / prev) * 100;
 }
 
+/**
+ * Map the dashboard window onto the AI-cost page's period vocabulary.
+ *
+ * The two surfaces offer the same three spans (1 / 7 / 30 days), so the
+ * translation is exact rather than a nearest-fit guess. A window with no
+ * counterpart returns undefined and leaves the page on its own default.
+ */
+export function aiCostsPeriodFor(
+  windowDays: number,
+): "24h" | "7d" | "30d" | undefined {
+  if (windowDays === 1) return "24h";
+  if (windowDays === 7) return "7d";
+  if (windowDays === 30) return "30d";
+  return undefined;
+}
+
 /** Every organization with no activity is worth a look, none is fine. */
 export function inactiveOrgSeverity(count: number): ActionSeverity {
   return count > 0 ? "warn" : "ok";
@@ -182,6 +198,7 @@ export function buildCurrentStatus(
     return {
       overall: "unknown",
       services: [],
+      uncheckedServices: [],
       isLoading,
       isError,
     };
@@ -201,15 +218,31 @@ export function buildCurrentStatus(
     state: serviceState(checks[key]?.status),
     latencyMs: checks[key]?.latency_ms ?? null,
   }));
-  const overall =
+  // `disabled` is a deliberate configuration choice and does not weaken the
+  // rollup. `unknown` does: the probe was skipped or absent, so nobody knows.
+  const uncheckedServices = services
+    .filter((service) => service.state === "unknown")
+    .map((service) => service.label);
+
+  const backendOverall =
     deep.status === "ok"
       ? "ok"
       : deep.status === "degraded"
         ? "degraded"
         : "down";
+  // The backend rolls a skipped check up as ok, which is correct for a
+  // readiness probe answering "should traffic come here". It is wrong for an
+  // operator dashboard: "all systems operational" over a dependency nobody
+  // checked is a claim the data does not support.
+  const overall: CurrentStatus["overall"] =
+    backendOverall === "ok" && uncheckedServices.length > 0
+      ? "partial"
+      : backendOverall;
+
   return {
     overall,
     services,
+    uncheckedServices,
     version: deep.version,
     isLoading,
     isError,
@@ -310,6 +343,14 @@ export function buildAlerts(
 ): OperatorAlert[] {
   const alerts: OperatorAlert[] = [];
   const window = t("admin.dashboard.window.label", { days: windowDays });
+  // The AI-cost page keeps its own period selector, so links carry the
+  // dashboard's window with them. Otherwise an operator who narrowed the
+  // dashboard to 7d clicked through to a 30d page and compared two different
+  // spans without being told (PRD ADM-004).
+  const costPeriod = aiCostsPeriodFor(windowDays);
+  const costSearch: Record<string, string> = costPeriod
+    ? { period: costPeriod }
+    : {};
 
   // A dependency being down outranks every rate: nothing else on the page is
   // trustworthy while the platform cannot reach its own database.
@@ -395,7 +436,7 @@ export function buildAlerts(
       }),
       target: t("admin.dashboard.targets.ai"),
       to: "/admin/ai-costs",
-      search: { status: "failed" },
+      search: { status: "failed", ...costSearch },
       ctaLabel: t("admin.dashboard.cta.open_ai_costs"),
     });
   }
@@ -412,6 +453,7 @@ export function buildAlerts(
       }),
       target: t("admin.dashboard.targets.cost"),
       to: "/admin/ai-costs",
+      search: costSearch,
       ctaLabel: t("admin.dashboard.cta.open_ai_costs"),
     });
   }

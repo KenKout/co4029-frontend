@@ -58,6 +58,7 @@ const t = (key: string) => key;
 const HEALTHY_STATUS: CurrentStatus = {
   overall: "ok",
   services: [{ key: "postgres", label: "Postgres", state: "ok" }],
+  uncheckedServices: [],
   isLoading: false,
   isError: false,
 };
@@ -208,6 +209,68 @@ describe("current status", () => {
     });
     expect(status.overall).toBe("unknown");
     expect(status.services).toEqual([]);
+  });
+
+  it("does not claim full health while a dependency went unchecked", () => {
+    // The backend rolls a skipped probe up as "ok" — correct for a readiness
+    // check, wrong for an operator headline. Saying "all systems operational"
+    // over an unverified AI provider asserts something nobody measured.
+    const status = buildCurrentStatus(
+      t,
+      {
+        status: "ok",
+        version: "0.7.0",
+        git_sha: null,
+        checks: {
+          postgres: { status: "ok", latency_ms: 3 },
+          llm_provider: { status: "skipped", latency_ms: null },
+        },
+      },
+      { isLoading: false, isError: false },
+    );
+    expect(status.overall).toBe("partial");
+    // Labels, not raw keys — the row names the dependency to the operator.
+    // The stub `t` echoes the key back, hence the prefixed form here.
+    expect(status.uncheckedServices).toEqual([
+      "admin.dashboard.services.llm_provider",
+    ]);
+  });
+
+  it("stays fully ok when every dependency actually reported", () => {
+    const status = buildCurrentStatus(
+      t,
+      {
+        status: "ok",
+        version: "0.7.0",
+        git_sha: null,
+        checks: {
+          postgres: { status: "ok", latency_ms: 3 },
+          redis: { status: "ok", latency_ms: 1 },
+        },
+      },
+      { isLoading: false, isError: false },
+    );
+    expect(status.overall).toBe("ok");
+    expect(status.uncheckedServices).toEqual([]);
+  });
+
+  it("does not let a deliberately disabled feature downgrade the rollup", () => {
+    // A feature switched off is a configuration choice, not an unknown.
+    const status = buildCurrentStatus(
+      t,
+      {
+        status: "ok",
+        version: "0.7.0",
+        git_sha: null,
+        checks: {
+          postgres: { status: "ok", latency_ms: 3 },
+          neo4j: { status: "disabled", latency_ms: null },
+        },
+      },
+      { isLoading: false, isError: false },
+    );
+    expect(status.overall).toBe("ok");
+    expect(status.uncheckedServices).toEqual([]);
   });
 
   it("keeps a disabled dependency distinct from a healthy one", () => {

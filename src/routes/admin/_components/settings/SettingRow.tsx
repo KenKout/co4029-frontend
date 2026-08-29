@@ -4,19 +4,23 @@ import { settingDescription } from "./helpers";
 import { NumberField } from "./NumberField";
 import { SettingRowLabel } from "./SettingRowLabel";
 import { SettingRowValueColumn } from "./SettingRowValueColumn";
+import type { SettingsDraft } from "./use-settings-draft";
 import { useSettingRow } from "./use-setting-row";
 
 export function SettingRow({
   setting,
+  draft,
   orgId,
   showKeys,
 }: {
   setting: RuntimeSetting;
+  /** Shared with the rest of the page so every view stages into one set. */
+  draft: SettingsDraft;
   orgId?: string;
   showKeys: boolean;
 }) {
-  const controller = useSettingRow(setting, orgId);
-  const { t, label, setMutation, save, commitNumber } = controller;
+  const controller = useSettingRow(setting, draft, orgId);
+  const { t, label, value, isPending, stage, commitNumber } = controller;
 
   // Split the description into a lead sentence (always shown) + the rest
   // (revealed on demand). The ingest guidance is worth keeping — just not all
@@ -37,22 +41,31 @@ export function SettingRow({
     setting.type === "bool" ? (
       <div className="flex items-center gap-2">
         <Switch
-          checked={Boolean(setting.effective_value)}
-          disabled={setMutation.isPending}
-          onCheckedChange={(c) => save(c)}
+          checked={Boolean(value)}
+          onCheckedChange={(c) => stage(c)}
           aria-label={label}
         />
-        <span className="text-xs text-slate-500">
-          {setting.effective_value ? "On" : "Off"}
-        </span>
+        <span className="text-xs text-slate-500">{value ? "On" : "Off"}</span>
+        {/* The row says outright that the deployment has not moved yet. */}
+        {isPending && (
+          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
+            {t("admin_settings.pending.badge")}
+          </span>
+        )}
       </div>
     ) : (
-      <NumberField
-        setting={setting}
-        value={String(setting.effective_value)}
-        onCommit={commitNumber}
-        disabled={setMutation.isPending}
-      />
+      <div className="flex items-center gap-2">
+        <NumberField
+          setting={setting}
+          value={String(value)}
+          onCommit={commitNumber}
+        />
+        {isPending && (
+          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
+            {t("admin_settings.pending.badge")}
+          </span>
+        )}
+      </div>
     );
 
   return (
@@ -70,7 +83,6 @@ export function SettingRow({
         {/* Control column — fixed 200px so every right edge lines up. */}
         <SettingRowValueColumn
           controller={controller}
-          setting={setting}
           showComparison={showComparison}
           globalFallback={globalFallback}
           control={control}
