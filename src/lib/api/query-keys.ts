@@ -87,8 +87,6 @@ export const queryKeys = {
     activeUsersTrend: (days: number) =>
       ["admin", "stats", "active-users", "trend", days] as const,
     content: () => ["admin", "stats", "content"] as const,
-    statsHealth: (since: string) =>
-      ["admin", "stats", "health", since] as const,
     users: (cursor?: string) => ["admin", "users", cursor] as const,
     userDetail: (id: string) => ["admin", "users", "detail", id] as const,
     courses: (includeDeleted?: boolean, cursor?: string) =>

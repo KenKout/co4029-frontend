@@ -41,7 +41,7 @@ function buildColumns(
       header: t("admin.processing.cols.job"),
       cell: (job) => (
         <Link
-          to="/admin/processing/$jobId"
+          to="/admin/operations/jobs/$jobId"
           params={{ jobId: job.id }}
           onClick={(e) => e.stopPropagation()}
           className="text-text-strong font-medium hover:underline"
@@ -133,7 +133,7 @@ export function JobsTable({
       getRowId={(job) => job.id}
       onRowClick={(job) =>
         void navigate({
-          to: "/admin/processing/$jobId",
+          to: "/admin/operations/jobs/$jobId",
           params: { jobId: job.id },
         })
       }
@@ -192,7 +192,7 @@ export function JobsTable({
             onClick={(e) => {
               e.stopPropagation();
               void navigate({
-                to: "/admin/processing/$jobId",
+                to: "/admin/operations/jobs/$jobId",
                 params: { jobId: job.id },
               });
             }}

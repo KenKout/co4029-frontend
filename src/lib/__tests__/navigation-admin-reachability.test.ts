@@ -18,16 +18,26 @@ import { adminNavItems, adminNavGroups } from "@/lib/navigation";
 
 const ROUTER_SRC = readFileSync(resolve(__dirname, "../../router.tsx"), "utf8");
 
-/** Admin route paths declared in the router, excluding detail/param routes. */
+/**
+ * Admin route paths declared in the router that represent a real page.
+ *
+ * Excluded:
+ * - param routes (`/admin/users/$userId`) — reached by drilling into a list
+ *   page, not from the sidebar.
+ * - redirect-only routes — compatibility aliases for paths the IA has moved
+ *   (the Operations merge left three behind). They render nothing, so linking
+ *   one from the sidebar would just bounce the operator elsewhere; the
+ *   destination is what belongs in the nav.
+ */
 function declaredAdminRoutes(): string[] {
-  const paths = [...ROUTER_SRC.matchAll(/path:\s*"([^"]+)"/g)].map((m) => m[1]);
-  return paths.filter(
-    (p) =>
-      p.startsWith("/admin/") &&
-      // Param routes (e.g. /admin/users/$userId) are reached by drilling in from
-      // a list page, not from the sidebar.
-      !p.includes("$"),
-  );
+  // Split on the route factory so each path is judged against its own body.
+  const blocks = ROUTER_SRC.split("createRoute({").slice(1);
+  return blocks.flatMap((block) => {
+    const path = /path:\s*"([^"]+)"/.exec(block)?.[1];
+    if (!path?.startsWith("/admin/") || path.includes("$")) return [];
+    // `throw redirect({...})` inside beforeLoad marks an alias, not a page.
+    return /throw redirect\(/.test(block) ? [] : [path];
+  });
 }
 
 const flatHrefs = new Set(adminNavItems.map((i) => i.href));

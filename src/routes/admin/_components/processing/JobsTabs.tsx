@@ -19,7 +19,8 @@ import type { AdminProcessingController } from "./use-admin-processing";
  * placeholder 0, which would read as a real "no jobs" answer.
  *
  * The tab `value` is the API `?status=` string, so the dashboard's
- * `/admin/processing?status=failed` deep link still selects the Failed tab.
+ * `/admin/operations?tab=jobs&status=failed` deep link still selects the
+ * Failed tab.
  */
 export function JobsTabs({ c }: { c: AdminProcessingController }) {
   const { t, statusFilter, setStatusFilter, counts } = c;

@@ -121,7 +121,8 @@ function ContentStatsView({
       </div>
 
       <Link
-        to="/admin/processing"
+        to="/admin/operations"
+        search={{ tab: "jobs" } as never}
         className="inline-flex items-center gap-1.5 text-xs font-semibold text-m3-primary hover:underline"
       >
         {t("admin.stats.content.jobs_moved")}

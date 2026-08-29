@@ -64,11 +64,11 @@
     "logout": "Đăng xuất",
     "admin": "Quản trị",
     "system_config": "Cấu hình hệ thống",
-    "job_health": "Sức khoẻ tác vụ",
     "help": "Trợ giúp",
     "open_menu": "Mở menu",
     "close_menu": "Đóng menu",
-    "org_units": "Tổ chức"
+    "org_units": "Tổ chức",
+    "operations": "Vận hành"
   },
   "auth": {
     "sign_in": "Đăng nhập",
@@ -1665,7 +1665,6 @@
       "subtitle_active_users": "Phân tích DAU/WAU/MAU theo phạm vi quyền của bạn.",
       "title_content": "Phân tích nội dung",
       "subtitle_content": "Số lượng nội dung theo trạng thái và loại.",
-      "title_health": "Tình trạng hệ thống",
       "subtitle_health": "Theo dõi tình trạng hạ tầng theo thời gian.",
       "load_failed": "Không thể tải dữ liệu. Vui lòng thử lại sau.",
       "empty_in_scope": "Chưa có dữ liệu cho phạm vi này",
@@ -1700,23 +1699,6 @@
           "7": "7 ngày",
           "30": "30 ngày",
           "90": "90 ngày"
-        }
-      },
-      "health": {
-        "subtitle": "Snapshot job nền và lệnh gọi AI thất bại trong khoảng thời gian được chọn.",
-        "window_label": "Khoảng thời gian",
-        "windows": {
-          "24h": "24 giờ qua",
-          "7d": "7 ngày qua",
-          "30d": "30 ngày qua"
-        },
-        "rows": {
-          "failed_jobs_label": "Tác vụ thất bại",
-          "failed_jobs_desc": "Số job xử lý có trạng thái failed",
-          "in_flight_jobs_label": "Tác vụ đang chạy",
-          "in_flight_jobs_desc": "Số job đang ở trạng thái in-flight",
-          "failed_ai_calls_label": "Lệnh gọi AI thất bại",
-          "failed_ai_calls_desc": "Số AI call có trạng thái thất bại"
         }
       },
       "content": {
@@ -2215,6 +2197,34 @@
         "api": "Số liệu API tính trên toàn nền tảng — nhật ký request không gắn tổ chức.",
         "cost": "Số liệu chi phí tính trên toàn nền tảng — lượt gọi AI không gắn tổ chức.",
         "job": "Số liệu job tính trên toàn nền tảng — job xử lý không gắn tổ chức."
+      }
+    },
+    "operations": {
+      "title": "Vận hành & độ tin cậy",
+      "subtitle": "Tình trạng phụ thuộc, hàng đợi job và mọi thứ đã thất bại.",
+      "tabs": {
+        "services": "Dịch vụ",
+        "jobs": "Job & hàng đợi",
+        "failures": "Lỗi"
+      },
+      "services": {
+        "title": "Phụ thuộc",
+        "columns": {
+          "dependency": "Phụ thuộc",
+          "status": "Trạng thái",
+          "latency": "Độ trễ kiểm tra"
+        },
+        "status": {
+          "ok": "Bình thường",
+          "unhealthy": "Ngừng hoạt động",
+          "disabled": "Đã tắt",
+          "skipped": "Chưa kiểm tra",
+          "unknown": "Không xác định"
+        }
+      },
+      "failures": {
+        "subtitle": "Các job đã thất bại trong khoảng thời gian đã chọn.",
+        "ai_calls_link": "Lượt gọi AI thất bại nằm ở trang chi phí"
       }
     }
   },

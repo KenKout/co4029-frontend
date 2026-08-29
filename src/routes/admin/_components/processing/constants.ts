@@ -13,7 +13,7 @@ import type { ProcessingQueueDepth } from "@/lib/api/types";
  * The job-status tabs.
  *
  * `value` is the API's `?status=` param and doubles as the deep-link value the
- * admin dashboard sends (`/admin/processing?status=failed` from the "Job failure
+ * admin dashboard sends (`/admin/operations?tab=failures` from the "Job failure
  * rate" tile), so these strings must stay exactly as the backend spells them.
  * `""` is the unfiltered "All" tab.
  *

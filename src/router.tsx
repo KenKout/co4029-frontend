@@ -130,7 +130,9 @@ const courseLearnItemRoute = createRoute({
   validateSearch: (search: Record<string, unknown>) => ({
     start: search.start === "1" || search.start === 1 || search.start === true,
   }),
-  component: lazyRouteComponent(() => import("@/routes/courses/course-learn-item")),
+  component: lazyRouteComponent(
+    () => import("@/routes/courses/course-learn-item"),
+  ),
 });
 
 const courseQuizRoute = createRoute({
@@ -147,13 +149,17 @@ const courseQuizRoute = createRoute({
 const courseQuizReviewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/courses/$slug/quiz/$quizId/attempts/$attemptId",
-  component: lazyRouteComponent(() => import("@/routes/courses/course-quiz-review")),
+  component: lazyRouteComponent(
+    () => import("@/routes/courses/course-quiz-review"),
+  ),
 });
 
 const courseInterviewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/courses/$slug/interview/$moduleId",
-  component: lazyRouteComponent(() => import("@/routes/courses/course-interview")),
+  component: lazyRouteComponent(
+    () => import("@/routes/courses/course-interview"),
+  ),
 });
 
 const progressRoute = createRoute({
@@ -350,10 +356,44 @@ const teacherCourseStudentDetailRoute = createRoute({
   ),
 });
 
-const adminHealthRoute = createRoute({
+/**
+ * Operations & Reliability (PRD ADM-010) — Services / Jobs & Queues /
+ * Failures in one module. `?tab=` makes each tab deep-linkable so an alert can
+ * land on the view that explains it; `?status=` still seeds the job filter for
+ * links that predate the merge.
+ */
+const adminOperationsRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/admin/operations",
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: string; status?: string } => ({
+    tab: typeof search.tab === "string" ? search.tab : undefined,
+    status: typeof search.status === "string" ? search.status : undefined,
+  }),
+  component: lazyRouteComponent(() => import("@/routes/admin/operations")),
+});
+
+/**
+ * Redirects for the three routes the Operations module replaced. Kept rather
+ * than deleted: these paths are in browser history, bookmarks and older alert
+ * links, and a 404 for an operator mid-incident is the worst possible time to
+ * discover an IA change.
+ */
+const adminHealthRedirectRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/health",
-  component: lazyRouteComponent(() => import("@/routes/admin/health")),
+  beforeLoad: () => {
+    throw redirect({ to: "/admin/operations", search: { tab: "services" } });
+  },
+});
+
+const adminStatsHealthRedirectRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/admin/stats/health",
+  beforeLoad: () => {
+    throw redirect({ to: "/admin/operations", search: { tab: "services" } });
+  },
 });
 
 const adminSettingsRoute = createRoute({
@@ -378,12 +418,6 @@ const adminStatsContentRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/stats/content",
   component: lazyRouteComponent(() => import("@/routes/admin/stats-content")),
-});
-
-const adminStatsHealthRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
-  path: "/admin/stats/health",
-  component: lazyRouteComponent(() => import("@/routes/admin/stats-health")),
 });
 
 const adminUsersRoute = createRoute({
@@ -424,15 +458,28 @@ const adminCourseDetailRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/admin/course-detail")),
 });
 
-const adminProcessingRoute = createRoute({
+const adminProcessingRedirectRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/processing",
-  component: lazyRouteComponent(() => import("@/routes/admin/processing")),
+  // `?status=failed` rides along so the pre-merge dashboard deep link still
+  // lands on the failed jobs rather than the unfiltered queue.
+  validateSearch: (search: Record<string, unknown>): { status?: string } => ({
+    status: typeof search.status === "string" ? search.status : undefined,
+  }),
+  beforeLoad: ({ search }) => {
+    throw redirect({
+      to: "/admin/operations",
+      search: {
+        tab: search.status === "failed" ? "failures" : "jobs",
+        status: search.status,
+      },
+    });
+  },
 });
 
 const adminProcessingJobRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: "/admin/processing/$jobId",
+  path: "/admin/operations/jobs/$jobId",
   component: lazyRouteComponent(() => import("@/routes/admin/processing-job")),
 });
 
@@ -534,7 +581,9 @@ const myCareerPathsRoute = createRoute({
 const learningProgramsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/learning-programs",
-  component: lazyRouteComponent(() => import("@/routes/learning-programs/learning-programs")),
+  component: lazyRouteComponent(
+    () => import("@/routes/learning-programs/learning-programs"),
+  ),
 });
 
 const myInterviewsRoute = createRoute({
@@ -746,19 +795,20 @@ const routeTree = rootRoute.addChildren([
     teacherInterviewConfigRoute,
     teacherInterviewGapReportRoute,
     teacherCourseStudentDetailRoute,
-    adminHealthRoute,
+    adminOperationsRoute,
+    adminHealthRedirectRoute,
+    adminStatsHealthRedirectRoute,
     adminSettingsRoute,
     adminStatsRoute,
     adminStatsActiveRoute,
     adminStatsContentRoute,
-    adminStatsHealthRoute,
     adminUsersRoute,
     adminUserDetailRoute,
     adminOrganizationsRoute,
     adminOrganizationDetailRoute,
     adminCoursesRoute,
     adminCourseDetailRoute,
-    adminProcessingRoute,
+    adminProcessingRedirectRoute,
     adminProcessingJobRoute,
     adminAiCostsRoute,
     adminAuditLogsRoute,

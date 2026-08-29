@@ -326,7 +326,8 @@ export function buildAlerts(
         count: brokenServices.length,
       }),
       target: t("admin.dashboard.targets.platform"),
-      to: "/admin/health",
+      to: "/admin/operations",
+      search: { tab: "services" },
       ctaLabel: t("admin.dashboard.cta.open_health"),
     });
   }
@@ -343,8 +344,8 @@ export function buildAlerts(
         window,
       }),
       target: t("admin.dashboard.targets.processing"),
-      to: "/admin/processing",
-      search: { status: "failed" },
+      to: "/admin/operations",
+      search: { tab: "failures" },
       ctaLabel: t("admin.dashboard.cta.open_failed_jobs"),
     });
   }
@@ -358,8 +359,8 @@ export function buildAlerts(
       detail: t("admin.dashboard.alerts.queue_stalled_detail"),
       age: f.duration(reliability.queueOldestAgeSeconds),
       target: t("admin.dashboard.targets.queue"),
-      to: "/admin/processing",
-      search: { status: "running" },
+      to: "/admin/operations",
+      search: { tab: "jobs", status: "running" },
       ctaLabel: t("admin.dashboard.cta.open_queue"),
     });
   }
