@@ -77,8 +77,8 @@ function DueSummaryCard({
         <span aria-hidden="true">·</span>
         <span>
           {courses === 1
-            ? t("study_cards_due.across_one", { courses })
-            : t("study_cards_due.across_other", { courses })}
+            ? t("study_cards_due.across_one", { count: courses })
+            : t("study_cards_due.across_other", { count: courses })}
         </span>
       </p>
       {total > session ? (
