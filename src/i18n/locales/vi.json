@@ -5028,7 +5028,8 @@
     "edge_detail": "Quan hệ",
     "reverse_arrow": "Đảo chiều",
     "delete_arrow": "Xóa mũi tên",
-    "unpublished": "Đã gỡ xuất bản — học viên không còn thấy đồ thị này"
+    "unpublished": "Đã gỡ xuất bản — học viên không còn thấy đồ thị này",
+    "new_node_indexed": "Khái niệm mới {{n}}"
   },
   "admin_settings": {
     "group": {
