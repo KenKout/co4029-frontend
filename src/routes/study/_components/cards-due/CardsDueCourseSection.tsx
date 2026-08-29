@@ -9,12 +9,18 @@ import type { CourseBucket, LessonBucket } from "./helpers";
 /** Local alias for the `t` function (project convention). */
 type TranslateFn = ReturnType<typeof useTranslation>["t"];
 
-/** Right-aligned fixed count column shared by course + lesson rows. */
+/**
+ * Right-aligned fixed count column shared by course + lesson rows. On
+ * hover/focus the count cross-fades OUT while the verb CTA fades IN over
+ * the same spot — the two never render on top of each other.
+ */
 function CountColumn({
   children,
+  cta,
   className,
 }: {
   children: React.ReactNode;
+  cta: React.ReactNode;
   className?: string;
 }) {
   return (
@@ -24,7 +30,10 @@ function CountColumn({
         className,
       )}
     >
-      {children}
+      <span className="min-w-0 transition-opacity group-hover:opacity-0 group-focus-visible:opacity-0">
+        {children}
+      </span>
+      {cta}
     </span>
   );
 }
@@ -79,9 +88,11 @@ function LessonRow({ lesson }: { lesson: LessonBucket }) {
         <span className="min-w-0 flex-1 truncate text-sm text-m3-on-surface">
           {lesson.lessonTitle}
         </span>
-        <CountColumn className="text-xs font-semibold text-m3-on-surface-variant">
+        <CountColumn
+          cta={<RowCta>{reviewLabel(t, lesson.count)}</RowCta>}
+          className="text-xs font-semibold text-m3-on-surface-variant"
+        >
           {dueLabel(t, lesson.count)}
-          <RowCta>{reviewLabel(t, lesson.count)}</RowCta>
         </CountColumn>
       </Link>
     </li>
@@ -113,7 +124,10 @@ export function CardsDueCourseSection({ group }: { group: CourseBucket }) {
         <h2 className="min-w-0 flex-1 truncate text-sm font-headline font-bold text-m3-on-surface">
           {group.courseTitle}
         </h2>
-        <CountColumn className="text-xs font-semibold text-m3-on-surface-variant">
+        <CountColumn
+          cta={<RowCta>{reviewLabel(t, group.count)}</RowCta>}
+          className="text-xs font-semibold text-m3-on-surface-variant"
+        >
           <span>
             {dueLabel(t, group.count)}
             {group.overdue > 0 ? (
@@ -129,7 +143,6 @@ export function CardsDueCourseSection({ group }: { group: CourseBucket }) {
               </>
             ) : null}
           </span>
-          <RowCta>{reviewLabel(t, group.count)}</RowCta>
         </CountColumn>
       </Link>
       <ul className="divide-y divide-m3-outline-variant/10">
