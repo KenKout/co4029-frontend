@@ -78,19 +78,26 @@ export function useDataTableExpansion<T>({
   }, []);
 
   // Flatten the visible (page) rows honoring expansion + depth.
+  // `pathIds` guards against cyclic sub-row graphs (a row that returns
+  // itself, or descendants that loop back): without it a malformed
+  // getSubRows would recurse until the stack blows up.
   const flatRows = React.useMemo(() => {
     const out: FlatRow<T>[] = [];
-    const walk = (rows: T[], depth: number) => {
+    const walk = (rows: T[], depth: number, pathIds: Set<string>) => {
       for (const row of rows) {
         const id = getRowId(row);
         const kids = getSubRows?.(row);
         const hasChildren = Boolean(kids && kids.length);
         const isExpanded = hasChildren && expanded.has(id);
         out.push({ row, id, depth, hasChildren, expanded: isExpanded });
-        if (isExpanded && kids) walk(kids, depth + 1);
+        if (isExpanded && kids && !pathIds.has(id)) {
+          const nextPath = new Set(pathIds);
+          nextPath.add(id);
+          walk(kids, depth + 1, nextPath);
+        }
       }
     };
-    walk(pageRows, 0);
+    walk(pageRows, 0, new Set());
     return out;
   }, [pageRows, expanded, getRowId, getSubRows]);
 

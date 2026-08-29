@@ -161,8 +161,10 @@ export function CourseHealthSection({
         <DataTable
           columns={columns}
           data={rows}
-          getRowId={(row) => row.course_id}
-          getSubRows={(row) => [detailRowFor(row)]}
+          getRowId={(row) =>
+            isDetailRow(row) ? `${row.course_id}:detail` : row.course_id
+          }
+          getSubRows={(row) => (isDetailRow(row) ? undefined : [detailRowFor(row)])}
           loading={isLoading}
           emptyState={
             <EmptyState

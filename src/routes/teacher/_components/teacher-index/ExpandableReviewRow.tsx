@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronRight, type LucideIcon } from "lucide-react";
 
@@ -34,6 +34,7 @@ export function ExpandableReviewRow({
   icon: Icon,
   kind,
   tone = "amber",
+  autoOpenKey,
 }: {
   label: string;
   count: number;
@@ -41,9 +42,22 @@ export function ExpandableReviewRow({
   icon?: LucideIcon;
   kind: ReviewQueueKind;
   tone?: "amber" | "violet" | "sky";
+  /**
+   * When this changes to a value carrying this row's kind, the row expands.
+   * Driven by Priority Today: clicking a grouped row there scrolls here and
+   * opens the matching category, so the teacher lands on the item list.
+   */
+  autoOpenKey?: string;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const seenAutoOpen = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (autoOpenKey && autoOpenKey !== seenAutoOpen.current) {
+      seenAutoOpen.current = autoOpenKey;
+      setOpen(true);
+    }
+  }, [autoOpenKey]);
   const items = useReviewQueueItems(kind, open);
   const toneCls = TONE[tone];
 

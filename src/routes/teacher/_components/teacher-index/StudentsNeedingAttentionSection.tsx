@@ -94,9 +94,13 @@ function StudentRow({
               them all would bury the row that matters most. */}
           {extraSignals > 0 ? (
             <span className="ml-1 font-medium text-m3-on-surface-variant">
-              {t("teacher_dashboard.attention.more_signals", {
-                count: extraSignals,
-              })}
+              {extraSignals === 1
+                ? t("teacher_dashboard.attention.more_signals", {
+                    count: 1,
+                  })
+                : t("teacher_dashboard.attention.more_signals_plural", {
+                    count: extraSignals,
+                  })}
             </span>
           ) : null}
         </p>

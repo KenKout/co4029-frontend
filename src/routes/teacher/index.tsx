@@ -1,6 +1,8 @@
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/ui/page-header";
+import type { ReviewQueueKind } from "@/lib/api/hooks/teacher-courses";
 import {
   useCourseHealth,
   usePriorityTasks,
@@ -41,6 +43,16 @@ export default function TeacherDashboard() {
 
   const reviewItems = buildReviewCandidates(stats, t).filter((i) => i.count > 0);
 
+  // Priority Today's grouped rows point INTO the review queue: each click
+  // scrolls the section into view and expands the matching category.
+  const [reviewFocus, setReviewFocus] = useState<{
+    kind: ReviewQueueKind;
+    nonce: number;
+  } | null>(null);
+  const focusReview = useCallback((kind: ReviewQueueKind) => {
+    setReviewFocus((prev) => ({ kind, nonce: (prev?.nonce ?? 0) + 1 }));
+  }, []);
+
   return (
     <div className="space-y-8 pb-12">
       {/* No subtitle: "Manage your courses, materials, and AI generation"
@@ -50,6 +62,7 @@ export default function TeacherDashboard() {
       <PriorityTodaySection
         tasks={priority}
         isLoading={priorityLoading}
+        onFocusReview={focusReview}
         t={t}
       />
 
@@ -64,7 +77,7 @@ export default function TeacherDashboard() {
       {/* The full review queue. Priority Today surfaces at most one row per
           category with its age and blocking count; this is where a teacher
           goes to work through them. */}
-      <ReviewQueueSection reviewItems={reviewItems} t={t} />
+      <ReviewQueueSection reviewItems={reviewItems} focus={reviewFocus} t={t} />
 
       {/* Course Health replaces the course gallery: the gallery gave every
           course equal visual weight and shrank the signals into badges, so

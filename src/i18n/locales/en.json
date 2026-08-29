@@ -250,7 +250,7 @@
     },
     "attention": {
       "title": "Students needing attention",
-      "subtitle": "Flagged by inactivity, no engagement, or low completion. Worst first.",
+      "subtitle": "Flagged by failed assessments, inactivity, or low progress. Worst first.",
       "more_signals": "+{{count}} more signal",
       "more_signals_plural": "+{{count}} more signals",
       "progress": "complete",
@@ -711,7 +711,10 @@
     "resource_unavailable": "Resource unavailable",
     "module_count_other": "{{count}} modules",
     "module_count_one": "{{count}} module",
-    "teacher_common": "Open quiz generator"
+    "generate_quiz_from_material": "Generate quiz from this material",
+    "generate_quiz_from_material_hint": "Create a draft quiz using the processed material",
+    "generating_quiz": "Creating quiz…",
+    "open_quiz_generator": "Open quiz generator"
   },
   "dept_course_detail": {
     "back": "Back to courses",

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -14,15 +13,9 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
-import {
-  useReviewQueueItems,
-  type PriorityTask,
-  type ReviewQueueItem,
-  type ReviewQueueKind,
-} from "@/lib/api/hooks/teacher-courses";
+import type { PriorityTask, ReviewQueueKind } from "@/lib/api/hooks/teacher-courses";
 import { cn } from "@/lib/utils";
 
-import { ReviewItemLink } from "./ReviewQueueLinks";
 import { formatAge, formatAgeFull, priorityTaskLink } from "./priority-helpers";
 import type { TranslateFn } from "./types";
 
@@ -36,13 +29,11 @@ const KIND_ICON: Record<PriorityTask["kind"], typeof UserRound> = {
 };
 
 /**
- * Grouped content backlogs drill into the same per-course lists as the
- * "Needs your review" section, via the review-queue endpoint. Each expanded
- * row is a real deep link to the place the work is done (quiz page,
- * interview config, lesson page).
- *
- * `reviews_overdue` has no drill-down endpoint (spaced-repetition cards do
- * not expose a per-course list), so those rows stay informational.
+ * Grouped content backlogs act as a shortcut INTO the "Needs your review"
+ * section: clicking one scrolls down and expands the matching category,
+ * where the per-item deep links live. `reviews_overdue` has no drill-down
+ * endpoint (spaced-repetition cards do not expose a per-course list), so
+ * those rows stay informational.
  */
 const DRILLDOWN_KIND: Partial<
   Record<PriorityTask["kind"], ReviewQueueKind>
@@ -69,10 +60,13 @@ const DRILLDOWN_KIND: Partial<
 export function PriorityTodaySection({
   tasks,
   isLoading,
+  onFocusReview,
   t,
 }: {
   tasks: PriorityTask[];
   isLoading: boolean;
+  /** Scrolls to + expands one "Needs your review" category. */
+  onFocusReview: (kind: ReviewQueueKind) => void;
   t: TranslateFn;
 }) {
   return (
@@ -88,7 +82,7 @@ export function PriorityTodaySection({
         <ol className="mt-4 divide-y divide-m3-outline-variant/20 overflow-hidden rounded-xl bg-card shadow-editorial ghost-border">
           {tasks.map((task) => (
             <li key={task.id}>
-              <TaskRow task={task} t={t} />
+              <TaskRow task={task} onFocusReview={onFocusReview} t={t} />
             </li>
           ))}
         </ol>
@@ -99,13 +93,34 @@ export function PriorityTodaySection({
   );
 }
 
-function TaskRow({ task, t }: { task: PriorityTask; t: TranslateFn }) {
+function TaskRow({
+  task,
+  onFocusReview,
+  t,
+}: {
+  task: PriorityTask;
+  onFocusReview: (kind: ReviewQueueKind) => void;
+  t: TranslateFn;
+}) {
   const drillKind = DRILLDOWN_KIND[task.kind];
 
-  // Grouped backlogs are expandable: the row is the summary, the expanded
-  // list is where the work actually lives (one deep link per item).
+  // Grouped backlogs act as a shortcut into the matching "Needs your
+  // review" category: the click scrolls down and expands it there.
   if (drillKind) {
-    return <ExpandableTaskRow task={task} kind={drillKind} t={t} />;
+    return (
+      <Button
+        variant="ghost"
+        type="button"
+        onClick={() => onFocusReview(drillKind)}
+        className="group flex h-auto w-full items-center gap-4 px-4 py-4 text-left cursor-pointer"
+      >
+        <TaskBody task={task} t={t} hasLink={false} expandable />
+        <ChevronDown
+          aria-hidden="true"
+          className="h-4 w-4 shrink-0 text-m3-outline"
+        />
+      </Button>
+    );
   }
 
   const link = priorityTaskLink(task);
@@ -123,84 +138,6 @@ function TaskRow({ task, t }: { task: PriorityTask; t: TranslateFn }) {
     >
       {body}
     </Link>
-  );
-}
-
-function ExpandableTaskRow({
-  task,
-  kind,
-  t,
-}: {
-  task: PriorityTask;
-  kind: ReviewQueueKind;
-  t: TranslateFn;
-}) {
-  const [open, setOpen] = useState(false);
-  const items = useReviewQueueItems(kind, open);
-  const body = <TaskBody task={task} t={t} hasLink={false} expandable />;
-
-  return (
-    <div>
-      <Button
-        variant="ghost"
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="group flex h-auto w-full items-center gap-4 px-4 py-4 text-left cursor-pointer"
-      >
-        {body}
-        {open ? (
-          <ChevronDown
-            aria-hidden="true"
-            className="h-4 w-4 shrink-0 text-m3-outline"
-          />
-        ) : (
-          <ChevronRight
-            aria-hidden="true"
-            className="h-4 w-4 shrink-0 text-m3-outline transition-transform group-hover:translate-x-0.5"
-          />
-        )}
-      </Button>
-
-      {open && (
-        <div className="border-t border-m3-outline-variant/20 bg-m3-surface-container-lowest">
-          {items.isLoading ? (
-            <p className="px-5 py-3 text-xs text-m3-on-surface-variant">
-              {t("teacher_dashboard.review.loading_items")}
-            </p>
-          ) : items.isError ? (
-            <p className="px-5 py-3 text-xs text-danger">
-              {t("teacher_dashboard.review.items_failed")}
-            </p>
-          ) : (items.data ?? []).length === 0 ? (
-            <p className="px-5 py-3 text-xs text-m3-on-surface-variant">
-              {t("teacher_dashboard.review.items_empty")}
-            </p>
-          ) : (
-            <ul>
-              {(items.data ?? []).map((item: ReviewQueueItem) => (
-                <li key={`${item.course_id}:${item.target_id}`}>
-                  <ReviewItemLink kind={kind} item={item}>
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm text-m3-on-surface">
-                        {item.target_title}
-                      </span>
-                      <span className="block truncate text-xs text-m3-on-surface-variant">
-                        {item.course_title}
-                        {item.module_title ? ` · ${item.module_title}` : ""}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-xs font-semibold tabular-nums text-m3-on-surface-variant">
-                      {item.count}
-                    </span>
-                  </ReviewItemLink>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-    </div>
   );
 }
 

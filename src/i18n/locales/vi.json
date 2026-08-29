@@ -251,11 +251,12 @@
     },
     "attention": {
       "title": "Học viên cần chú ý",
-      "subtitle": "Được đánh dấu do không hoạt động, chưa tương tác hoặc tiến độ thấp. Ưu tiên nặng nhất trước.",
+      "subtitle": "Đánh dấu do bài đánh giá trượt, không tương tác hoặc tiến độ thấp. Nặng nhất trước.",
       "more_signals": "+{{count}} tín hiệu khác",
       "progress": "hoàn thành",
       "empty_title": "Hiện không có học viên nào bị đánh dấu",
-      "empty_hint": "Học viên mới ghi danh được cho thời gian bắt đầu trước khi bị đánh dấu."
+      "empty_hint": "Học viên mới ghi danh được cho thời gian bắt đầu trước khi bị đánh dấu.",
+      "more_signals_plural": "+{{count}} tín hiệu khác"
     },
     "health": {
       "title": "Tình trạng khóa học",
@@ -638,7 +639,10 @@
     "storage_unavailable": "Cấu hình lưu trữ chưa sẵn sàng. Vui lòng liên hệ admin.",
     "upload_failed": "Tải lên thất bại",
     "resource_unavailable": "Tài nguyên không khả dụng",
-    "teacher_common": "Mở trình tạo quiz"
+    "generate_quiz_from_material": "Tạo quiz từ tài liệu này",
+    "generate_quiz_from_material_hint": "Tạo quiz nháp từ tài liệu đã xử lý",
+    "generating_quiz": "Đang tạo quiz…",
+    "open_quiz_generator": "Mở trình tạo quiz"
   },
   "dept_course_detail": {
     "back": "Quay lại khóa học",
