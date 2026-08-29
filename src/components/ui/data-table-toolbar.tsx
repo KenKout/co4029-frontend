@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,6 +7,11 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
+import {
+  DateRangeCalendar,
+  type DateRangeDraft,
+} from "@/routes/admin/_components/stats/DateRangeCalendar";
+import { toIso } from "@/routes/admin/_components/stats/date-range";
 import {
   FILTER_ALL_VALUE,
   FilterBar,
@@ -235,9 +241,12 @@ export function DataTableToolbar({
 // ── Time-range selector + custom-range dialog ───────────────────────────────
 //
 // The toolbar's time filter used to be a contained-pill tab strip; a single
-// selector (with a "custom range…" entry that opens a from/to date dialog)
-// keeps the toolbar compact once there is a custom option. The dialog is
-// plain base-ui Dialog — same family the filter dialog uses.
+// selector (with a "custom range…" entry that opens a from/to dialog) keeps
+// the toolbar compact once there is a custom option. The dialog body is the
+// SAME selection UI the admin dashboard picker uses (administrative
+// DateRangeCalendar: presets, two-month calendar, start/end picking), so the
+// two surfaces behave identically. The dialog shell is plain base-ui
+// Dialog — same family the filter dialog uses.
 
 export function TimeRangeSelect({
   value,
@@ -326,17 +335,20 @@ export function CustomRangeDialog({
   onReset: () => void;
   labels: TimeRangeLabels;
 }) {
-  const [from, setFrom] = React.useState(range?.from ?? "");
-  const [to, setTo] = React.useState(range?.to ?? "");
+  const { t } = useTranslation();
+  const [draft, setDraft] = React.useState<DateRangeDraft>({ from: null, to: null });
 
-  // Re-seed the draft fields every time the dialog opens so stale edits from
-  // a previous session never leak in.
+  // Re-seed the draft every time the dialog opens so stale edits from a
+  // previous session never leak in.
   React.useEffect(() => {
     if (open) {
-      setFrom(range?.from ?? "");
-      setTo(range?.to ?? "");
+      setDraft({ from: range?.from ?? null, to: range?.to ?? null });
     }
   }, [open, range]);
+
+  // Anchor months on the range end when set, the range start otherwise,
+  // today when "all time" — the calendar needs SOME month to stand on.
+  const anchorTo = range?.to ?? range?.from ?? toIso(new Date());
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -350,8 +362,8 @@ export function CustomRangeDialog({
         />
         <DialogPrimitive.Popup
           className={cn(
-            "fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2",
-            "rounded-xl border border-m3-outline-variant/30 bg-white p-5 shadow-2xl",
+            "fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2",
+            "max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-m3-outline-variant/30 bg-white p-5 shadow-2xl",
             "outline-none transition-all duration-200",
             "data-[starting-style]:opacity-0 data-[starting-style]:scale-95",
             "data-[ending-style]:opacity-0 data-[ending-style]:scale-95",
@@ -361,56 +373,35 @@ export function CustomRangeDialog({
             {labels.dialogTitle}
           </DialogPrimitive.Title>
 
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <label className="space-y-1">
-              <span className="block text-xs font-medium text-m3-on-surface-variant">
-                {labels.from}
-              </span>
-              <input
-                type="date"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                className="h-10 w-full rounded-xl border border-m3-outline-variant bg-white px-3 text-sm text-text-strong outline-none focus:border-m3-primary"
-              />
-            </label>
-            <label className="space-y-1">
-              <span className="block text-xs font-medium text-m3-on-surface-variant">
-                {labels.to}
-              </span>
-              <input
-                type="date"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                className="h-10 w-full rounded-xl border border-m3-outline-variant bg-white px-3 text-sm text-text-strong outline-none focus:border-m3-primary"
-              />
-            </label>
-          </div>
-
-          <div className="mt-5 flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                onChange(undefined);
-                onReset();
-                onOpenChange(false);
-              }}
-              className="text-destructive hover:text-destructive"
-            >
-              {labels.clear}
-            </Button>
-            <DialogPrimitive.Close
-              render={
+          <div className="mt-4">
+            <DateRangeCalendar
+              draft={draft}
+              onDraftChange={setDraft}
+              anchorTo={anchorTo}
+              applyLabel={labels.apply}
+              cancelLabel={t("common.cancel")}
+              applyDisabled={!draft.from}
+              footerLeading={
                 <Button
+                  type="button"
+                  variant="ghost"
                   size="sm"
-                  disabled={!from}
-                  onClick={() =>
-                    onChange({ from, to: to || undefined })
-                  }
+                  onClick={() => {
+                    onChange(undefined);
+                    onReset();
+                    onOpenChange(false);
+                  }}
+                  className="text-destructive hover:text-destructive"
                 >
-                  {labels.apply}
+                  {labels.clear}
                 </Button>
               }
+              onCancel={() => onOpenChange(false)}
+              onApply={() => {
+                if (!draft.from) return;
+                onChange({ from: draft.from, to: draft.to ?? undefined });
+                onOpenChange(false);
+              }}
             />
           </div>
         </DialogPrimitive.Popup>

@@ -1834,7 +1834,14 @@
           "last30": "Last 30 days",
           "thisMonth": "This month",
           "lastMonth": "Last month"
-        }
+        },
+        "wd_0": "S",
+        "wd_1": "M",
+        "wd_2": "T",
+        "wd_3": "W",
+        "wd_4": "Th",
+        "wd_5": "F",
+        "wd_6": "Sa"
       }
     },
     "ai_costs": {

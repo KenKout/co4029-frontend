@@ -1742,7 +1742,14 @@
           "last30": "30 ngày gần nhất",
           "thisMonth": "Tháng này",
           "lastMonth": "Tháng trước"
-        }
+        },
+        "wd_0": "CN",
+        "wd_1": "T2",
+        "wd_2": "T3",
+        "wd_3": "T4",
+        "wd_4": "T5",
+        "wd_5": "T6",
+        "wd_6": "T7"
       }
     },
     "ai_costs": {
