@@ -117,6 +117,8 @@ export const queryKeys = {
       ["admin", "processing", "jobs", status, since, until ?? ""] as const,
     processingJob: (jobId: string) =>
       ["admin", "processing", "jobs", "detail", jobId] as const,
+    jobInvestigation: (jobId: string) =>
+      ["admin", "processing", "jobs", "investigation", jobId] as const,
     permissions: () => ["admin", "permissions"] as const,
     roles: () => ["admin", "roles"] as const,
     userAssignments: (userId: string) =>
