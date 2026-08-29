@@ -11,6 +11,7 @@ import { useFormatCount } from "@/lib/format/number";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { ActiveUsersTrendSection } from "./_components/stats/ActiveUsersTrendSection";
+import { addDays, toIso } from "./_components/stats/date-range";
 
 type MetricRow = {
   key: string;
@@ -18,6 +19,12 @@ type MetricRow = {
   desc: string;
   value: number | undefined;
   icon: LucideIcon;
+};
+
+/** Fixed fallback window for the standalone page (see the note below). */
+const LAST_30_DAYS = {
+  from: toIso(addDays(new Date(), -29)),
+  to: toIso(new Date()),
 };
 
 export default function AdminStatsActivePage() {
@@ -93,7 +100,11 @@ export default function AdminStatsActivePage() {
         </p>
       </div>
 
-      <ActiveUsersTrendSection />
+      {/* This standalone page has no date-range filter of its own, so the
+          chart keeps a fixed 30-day window here. It picks up the page range
+          once this section moves onto the dashboard under Usage & Capacity —
+          which is the point of the merge. */}
+      <ActiveUsersTrendSection range={LAST_30_DAYS} />
 
       {isError ? (
         <div className="bg-surface-elev border border-border rounded-lg p-5">

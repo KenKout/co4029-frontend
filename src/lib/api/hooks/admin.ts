@@ -223,7 +223,8 @@ export function useAdminDashboard({
   organizationId,
 }: AdminDashboardParams = {}) {
   const params = new URLSearchParams();
-  if (windowDays !== undefined && !from) params.set("window_days", String(windowDays));
+  if (windowDays !== undefined && !from)
+    params.set("window_days", String(windowDays));
   if (from) params.set("from", from);
   if (to) params.set("to", to);
   if (organizationId) params.set("organization_id", organizationId);
@@ -254,23 +255,40 @@ export function useActiveUsersStats() {
   });
 }
 
-export function useActiveUsersTrend(days: number) {
+/**
+ * Inclusive calendar range, the same shape the dashboard filter holds.
+ *
+ * The trends take a range rather than a day count because a day count cannot
+ * express a window that ENDS in the past: "Aug 1 - Aug 8" would have been sent
+ * as `days=8` and plotted the last 8 days up to today, so the chart quietly
+ * described a different span than the KPIs above it.
+ */
+export interface TrendRange {
+  from: string;
+  to: string;
+}
+
+function trendQuery(range: TrendRange): string {
+  return `from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`;
+}
+
+export function useActiveUsersTrend(range: TrendRange) {
   return useQuery({
-    queryKey: queryKeys.admin.activeUsersTrend(days),
+    queryKey: queryKeys.admin.activeUsersTrend(range.from, range.to),
     queryFn: () =>
       apiFetch<ActiveUsersTrendOut>(
-        `/admin/stats/active-users/trend?days=${days}`,
+        `/admin/stats/active-users/trend?${trendQuery(range)}`,
       ),
     staleTime: 1000 * 60,
   });
 }
 
-export function useApiLatencyTrend(days: number) {
+export function useApiLatencyTrend(range: TrendRange) {
   return useQuery({
-    queryKey: queryKeys.admin.latencyTrend(days),
+    queryKey: queryKeys.admin.latencyTrend(range.from, range.to),
     queryFn: () =>
       apiFetch<LatencyTrendOut>(
-        `/admin/stats/latency/trend?days=${days}`,
+        `/admin/stats/latency/trend?${trendQuery(range)}`,
       ),
     staleTime: 1000 * 60,
   });
@@ -897,7 +915,11 @@ export function useAuditDataChanges(table: string, entityId: string) {
 }
 
 /** FR-6.7 — every row in `table` changed within `[since, until)`, newest first. */
-export function useAuditDataChangesList(table: string, sinceIso: string, untilIso?: string) {
+export function useAuditDataChangesList(
+  table: string,
+  sinceIso: string,
+  untilIso?: string,
+) {
   return useQuery({
     queryKey: queryKeys.admin.auditDataChangesList(table, sinceIso, untilIso),
     queryFn: () => {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Area,
@@ -10,14 +10,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useApiLatencyTrend } from "@/lib/api/hooks/admin";
+import { useApiLatencyTrend, type TrendRange } from "@/lib/api/hooks/admin";
 import { useFormatCount } from "@/lib/format/number";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
-import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-
-const DAYS_OPTIONS = [7, 30, 90] as const;
-type TrendDays = (typeof DAYS_OPTIONS)[number];
 
 /** Milliseconds → "820ms" / "1.24s" — compact for ticks and tooltips. */
 function formatMs(ms: number | null | undefined): string {
@@ -44,9 +40,7 @@ function LatencyTrendTooltip({
   const { t } = useTranslation();
   const formatCount = useFormatCount();
   if (!active || !payload?.length) return null;
-  const byKey = Object.fromEntries(
-    payload.map((p) => [p.dataKey, p.value]),
-  );
+  const byKey = Object.fromEntries(payload.map((p) => [p.dataKey, p.value]));
   const p95 = byKey.p95 as number | null | undefined;
   const p50 = byKey.p50 as number | null | undefined;
   // `requests` is not a series (only p95/p50 are dataKeys), so it never
@@ -66,57 +60,27 @@ function LatencyTrendTooltip({
   );
 }
 
-/** 7/30/90 lookback tabs, one implementation shared with the active-users chart. */
-function TrendPeriodTabs({
-  days,
-  onChange,
-}: {
-  days: TrendDays;
-  onChange: (d: TrendDays) => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div
-      role="radiogroup"
-      aria-label={t("admin.stats.latency.trend_period_aria")}
-      className="inline-flex flex-wrap gap-2 bg-surface-elev border border-border rounded-lg p-1"
-    >
-      {DAYS_OPTIONS.map((d) => {
-        const active = d === days;
-        return (
-          <Button
-            key={d}
-            type="button"
-            variant="ghost"
-            onClick={() => onChange(d)}
-            className={
-              active
-                ? "px-3 py-1.5 text-xs font-semibold rounded-md bg-m3-primary text-white h-auto"
-                : "px-3 py-1.5 text-xs font-semibold rounded-md text-text-strong hover:bg-surface-muted transition-colors duration-200 h-auto"
-            }
-          >
-            {t(`admin.stats.active.period.${d}`)}
-          </Button>
-        );
-      })}
-    </div>
-  );
-}
-
 /**
  * Daily API latency over a lookback window — the same trend treatment as the
  * active-users chart, fed by the wire-level http_audit_log. p95 is the area
  * (the headline number from the Reliability row), p50 the subdued line; a
  * zero-traffic day holds the percentile open (no fabricated 0ms floor).
  */
-export function LatencyTrendSection() {
+/**
+ * The window comes from the page's date-range filter, not a control of its
+ * own. A chart with a private window sat under a KPI computed over the page
+ * range and quietly described a different span of time — the exact mismatch
+ * ADM-004 is about. The range label lives once, at the top of the page.
+ */
+export function LatencyTrendSection({ range }: { range: TrendRange }) {
   const { t, i18n } = useTranslation();
-  const [days, setDays] = useState<TrendDays>(30);
-  const trend = useApiLatencyTrend(days);
+  const trend = useApiLatencyTrend(range);
   const reducedMotion = useReducedMotion();
 
   const locale =
-    i18n.resolvedLanguage === "vi" ? "vi-VN" : i18n.resolvedLanguage ?? "en-US";
+    i18n.resolvedLanguage === "vi"
+      ? "vi-VN"
+      : (i18n.resolvedLanguage ?? "en-US");
   const labelFmt = useMemo(
     () =>
       new Intl.DateTimeFormat(locale, {
@@ -153,8 +117,6 @@ export function LatencyTrendSection() {
             {t("admin.stats.latency.trend_desc")}
           </p>
         </div>
-
-        <TrendPeriodTabs days={days} onChange={setDays} />
       </div>
 
       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
@@ -193,13 +155,7 @@ export function LatencyTrendSection() {
             margin={{ top: 8, right: 16, left: 0, bottom: 8 }}
           >
             <defs>
-              <linearGradient
-                id="latencyTrendFill"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              >
+              <linearGradient id="latencyTrendFill" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="0%"
                   stopColor="var(--color-primary)"

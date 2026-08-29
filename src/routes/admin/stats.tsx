@@ -39,7 +39,7 @@ export default function AdminStatsPage() {
       <CurrentStatusRow c={c} />
       <NeedsActionSection c={c} />
       <ReliabilityRow c={c} />
-      <LatencyTrendSection />
+      <LatencyTrendSection range={c.scope.range} />
       <CostCapacityRow c={c} />
       <SecurityAccessRow c={c} />
       <TenantAnomaliesRow c={c} />
