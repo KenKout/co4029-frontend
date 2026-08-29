@@ -9,6 +9,8 @@
     "error": "Something went wrong",
     "save": "Save",
     "cancel": "Cancel",
+    "dismiss": "Dismiss",
+    "apply": "Apply",
     "undo": "Undo",
     "delete": "Delete",
     "edit": "Edit",

@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Calendar as CalendarIcon,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -38,14 +43,18 @@ function columnAnchor(
       ? fromIso(draft.from)
       : draft.to
         ? addMonths(fromIso(draft.to), -1)
-        : (anchorTo ? fromIso(anchorTo) : new Date());
+        : anchorTo
+          ? fromIso(anchorTo)
+          : new Date();
     return d;
   }
   const d = draft.to
     ? fromIso(draft.to)
     : draft.from
       ? addMonths(fromIso(draft.from), 1)
-      : (anchorTo ? fromIso(anchorTo) : new Date());
+      : anchorTo
+        ? fromIso(anchorTo)
+        : new Date();
   return d;
 }
 
@@ -128,10 +137,19 @@ export function DateRangeCalendar({
   };
 
   return (
-    <div className="grid min-w-[21rem] grid-cols-1 gap-0 sm:min-w-[36rem] sm:grid-cols-[10rem_1fr]">
+    /* Width is load-bearing, not cosmetic. Two MonthColumns are min-w-[15rem]
+       each and grid items do not shrink below their content (min-width:auto),
+       so a container narrower than 10rem + 15rem + 15rem + gap + padding does
+       not compress the calendars — it overflows them into each other, and the
+       popover's overflow-hidden then clips the result into an unreadable
+       overlap. 43rem is that sum with a little slack; max-w keeps the panel
+       inside a narrow viewport rather than pushing the page sideways. */
+    <div className="grid min-w-[21rem] max-w-[calc(100vw-2rem)] grid-cols-1 gap-0 sm:min-w-[43rem] sm:grid-cols-[10rem_1fr]">
       <PresetList activePreset={activePreset} onPick={pickPreset} />
 
-      <div className="p-3">
+      {/* min-w-0 so this track can never silently force the grid wider than
+          its container the way the calendars just did. */}
+      <div className="min-w-0 p-3">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <MonthColumn
             side="from"
@@ -315,7 +333,12 @@ function MonthColumn({
         ))}
         {cells.map((iso) => {
           if (!iso) {
-            return <div key={`blank-${cells.indexOf(iso)}`} className="aspect-square" />;
+            return (
+              <div
+                key={`blank-${cells.indexOf(iso)}`}
+                className="aspect-square"
+              />
+            );
           }
           const off = outOfMonth(iso);
           const isSel = isSelected(iso);
@@ -336,7 +359,9 @@ function MonthColumn({
                 isD,
                 off,
               )} ${
-                isToday(iso) && !isSel && !isMid ? "ring-1 ring-inset ring-m3-primary" : ""
+                isToday(iso) && !isSel && !isMid
+                  ? "ring-1 ring-inset ring-m3-primary"
+                  : ""
               }`}
             >
               {Number(iso.slice(8, 10))}
@@ -409,7 +434,9 @@ function MonthYearSelect({
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-sm font-semibold tabular-nums">{pickYear}</span>
+            <span className="text-sm font-semibold tabular-nums">
+              {pickYear}
+            </span>
             <Button
               type="button"
               variant="ghost"
@@ -422,7 +449,8 @@ function MonthYearSelect({
           </div>
           <div className="grid grid-cols-3 gap-1">
             {Array.from({ length: 12 }, (_, m) => {
-              const isCurrent = view.getFullYear() === pickYear && view.getMonth() === m;
+              const isCurrent =
+                view.getFullYear() === pickYear && view.getMonth() === m;
               return (
                 <Button
                   key={m}
@@ -433,7 +461,9 @@ function MonthYearSelect({
                   onClick={() => pickMonth(m)}
                 >
                   <span
-                    className={isCurrent ? "font-semibold text-m3-primary" : undefined}
+                    className={
+                      isCurrent ? "font-semibold text-m3-primary" : undefined
+                    }
                   >
                     {t(`admin.stats.range.month_${m}`)}
                   </span>
