@@ -247,15 +247,28 @@ function halfPillCap(iso: string, draft: DateRangeDraft): string {
   return draft.from ? "rounded-r-full rounded-l-none" : "rounded-full";
 }
 
-/** Base chip: solid for the picked end, soft band between, quiet otherwise. */
+/**
+ * Base chip: solid for the picked end, soft band between, quiet otherwise.
+ *
+ * The selected and band states carry their OWN hover colours. The cell is a
+ * `variant="ghost"` Button, which contributes `hover:bg-muted
+ * hover:text-foreground` — so a branch that sets only a base colour loses it
+ * on hover and the blue pill turns grey under the cursor. Restating the hue at
+ * a slightly different opacity keeps the colour while still giving feedback
+ * that the cell is clickable.
+ */
 function chipClass(
   isSel: boolean,
   isMid: boolean,
   isD: boolean,
   off: boolean,
 ): string {
-  if (isSel) return "bg-m3-primary font-semibold text-white";
-  if (isMid) return "bg-m3-primary/15 text-m3-primary";
+  if (isSel) {
+    return "bg-m3-primary font-semibold text-white hover:bg-m3-primary/90 hover:text-white";
+  }
+  if (isMid) {
+    return "bg-m3-primary/15 text-m3-primary hover:bg-m3-primary/25 hover:text-m3-primary";
+  }
   if (isD || off) return "text-m3-on-surface-variant/60";
   return "text-m3-on-surface hover:bg-m3-primary/10";
 }
@@ -358,11 +371,6 @@ function MonthColumn({
         ))}
         {cells.map((iso, index) => {
           if (!iso) {
-            // Keyed on the grid position, NOT `cells.indexOf(iso)`: indexOf on
-            // a null returns the FIRST null's index, so every blank cell in the
-            // month shared one key. React cannot tell duplicate-keyed siblings
-            // apart, so paging the month reconciled them wrongly and the grid
-            // crept further down the page with each chevron click.
             return <div key={`blank-${index}`} className="aspect-square" />;
           }
           const off = outOfMonth(iso);
