@@ -3,6 +3,7 @@ import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
 import { buildSettingsTableColumns } from "./settings-table-columns";
 import { SettingsTableResetButton } from "./SettingsTableResetButton";
 import type { TableNode } from "./types";
+import type { SettingsDraft } from "./use-settings-draft";
 import { useSettingsTable } from "./use-settings-table";
 
 /**
@@ -18,14 +19,17 @@ export function SettingsTable({
   overrideCounts,
   orgId,
   showKeys,
+  draft,
 }: {
   groups: readonly string[];
   grouped: Map<string, RuntimeSetting[]>;
   overrideCounts: Record<string, number>;
   orgId?: string;
   showKeys: boolean;
+  /** Page-level draft, so table and card view stage into one set. */
+  draft: SettingsDraft;
 }) {
-  const controller = useSettingsTable(orgId);
+  const controller = useSettingsTable(orgId, draft);
 
   const nodes: TableNode[] = groups.map((group) => {
     const rows = grouped.get(group) ?? [];

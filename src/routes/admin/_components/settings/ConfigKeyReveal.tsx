@@ -25,7 +25,8 @@ export function ConfigKeyReveal({
 
   if (forceShow) {
     return (
-      <Button variant="ghost"
+      <Button
+        variant="ghost"
         type="button"
         onClick={copy}
         title="Copy config key"
@@ -44,7 +45,8 @@ export function ConfigKeyReveal({
   }
 
   return (
-    <Button variant="ghost"
+    <Button
+      variant="ghost"
       type="button"
       onClick={copy}
       title={`${setting.key}${setting.env_var ? ` · ${setting.env_var}` : ""} — click to copy`}

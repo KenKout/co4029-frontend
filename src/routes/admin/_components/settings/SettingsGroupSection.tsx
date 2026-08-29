@@ -13,7 +13,7 @@ export function SettingsGroupSection({
   group: string;
   rows: RuntimeSetting[];
 }) {
-  const { t, orgId, showKeys } = controller;
+  const { t, orgId, showKeys, draft } = controller;
   const anyReprocess = rows.some((r) => r.requires_reprocess);
 
   return (
@@ -46,6 +46,7 @@ export function SettingsGroupSection({
           <SettingRow
             key={setting.key}
             setting={setting}
+            draft={draft}
             orgId={orgId || undefined}
             showKeys={showKeys}
           />

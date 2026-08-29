@@ -49,8 +49,17 @@ export interface ServiceStatus {
 
 /** Rolled-up platform state shown beside the dependency strip. */
 export interface CurrentStatus {
-  overall: "ok" | "degraded" | "down" | "unknown";
+  /**
+   * `partial` means "healthy as far as we actually checked" — every probe that
+   * ran came back ok, but at least one dependency was never checked. It is a
+   * distinct state from `ok` on purpose: claiming "all systems operational"
+   * while the AI provider is unverified is the dashboard asserting something
+   * it does not know.
+   */
+  overall: "ok" | "partial" | "degraded" | "down" | "unknown";
   services: ServiceStatus[];
+  /** Dependencies that reported no result — the reason for `partial`. */
+  uncheckedServices: string[];
   version?: string;
   isLoading: boolean;
   isError: boolean;

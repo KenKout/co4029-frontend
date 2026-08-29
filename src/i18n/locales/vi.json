@@ -2120,7 +2120,8 @@
         "ok": "Mọi hệ thống hoạt động bình thường",
         "degraded": "Suy giảm",
         "down": "Gián đoạn",
-        "unknown": "Không xác định"
+        "unknown": "Không xác định",
+        "partial": "Hoạt động, chưa kiểm tra đầy đủ"
       },
       "status": {
         "ok": "Bình thường",
@@ -2206,7 +2207,8 @@
         "api": "Số liệu API tính trên toàn nền tảng — nhật ký request không gắn tổ chức.",
         "cost": "Số liệu chi phí tính trên toàn nền tảng — lượt gọi AI không gắn tổ chức.",
         "job": "Số liệu job tính trên toàn nền tảng — job xử lý không gắn tổ chức."
-      }
+      },
+      "unchecked": "Chưa kiểm tra: {{services}}"
     },
     "operations": {
       "title": "Vận hành & độ tin cậy",
@@ -5065,6 +5067,51 @@
       "spaced_repetition__daily_review_cap": {
         "label": "Giới hạn ôn tập mỗi ngày (thẻ/ngày)",
         "description": "Số thẻ ôn tập lặp lại ngắt quãng tối đa mà một học viên được đưa ra để ôn trong một ngày, để lượng thẻ tồn đọng lớn vẫn là một mục tiêu hằng ngày có thể hoàn thành thay vì một bức tường vô tận. Các thẻ đã ôn trong ngày được tính vào giới hạn. Điều này chỉ giới hạn HÀNG ĐỢI ÔN TẬP — không bao giờ thay đổi điều kiện mở khóa bài học hay điểm ghi nhớ, nên tiến độ không bị ảnh hưởng. Đặt 0 để không giới hạn (đưa ra toàn bộ thẻ tồn đọng)."
+      }
+    },
+    "pending": {
+      "badge": "Chờ áp dụng",
+      "count_other": "{{count}} thay đổi chờ áp dụng",
+      "not_applied": "Chưa được áp dụng",
+      "discard": "Hủy bỏ",
+      "review": "Xem lại & áp dụng"
+    },
+    "apply": {
+      "title_other": "Áp dụng {{count}} thay đổi",
+      "subtitle_global": "Đây là cấu hình mặc định toàn hệ thống. Hãy xem kỹ phạm vi ảnh hưởng trước khi áp dụng.",
+      "subtitle_org": "Các ghi đè này chỉ áp dụng cho tổ chức đã chọn.",
+      "previewing": "Đang kiểm tra ảnh hưởng của thay đổi…",
+      "preview_failed": "Không kiểm tra được các thay đổi này.",
+      "no_change": "Không thay đổi ở phạm vi này",
+      "inherited": "kế thừa ({{value}})",
+      "next_ingest_only": "Chỉ áp dụng cho lần nạp dữ liệu tiếp theo. Học liệu đã xử lý không được xử lý lại và không thay đổi.",
+      "global_warning_other": "Thay đổi này ảnh hưởng {{count}} trên {{total}} tổ chức — mọi tổ chức chưa có ghi đè riêng.",
+      "global_ack": "Tôi hiểu điều này thay đổi hành vi của các tổ chức đó.",
+      "reason_label": "Lý do",
+      "reason_placeholder": "Vì sao bạn thực hiện thay đổi này?",
+      "reason_hint": "Được ghi vào nhật ký kiểm toán. Bắt buộc.",
+      "confirm": "Áp dụng thay đổi",
+      "applied_other": "Đã áp dụng {{count}} thay đổi",
+      "failed": "Không áp dụng được thay đổi."
+    },
+    "history": {
+      "title": "Lịch sử thay đổi",
+      "empty": "Chưa có thay đổi cấu hình nào ở phạm vi này.",
+      "load_failed": "Không tải được lịch sử thay đổi.",
+      "inherited": "kế thừa",
+      "by": "{{actor}} · {{at}}",
+      "unknown_actor": "Không rõ",
+      "rollback": "Hoàn tác",
+      "rollback_title": "Hoàn tác thay đổi này",
+      "rollback_description": "Khôi phục giá trị của {{key}} trước thay đổi này. Thao tác hoàn tác được ghi lại như một thay đổi riêng.",
+      "rollback_confirm": "Hoàn tác",
+      "rollback_placeholder": "Vì sao bạn hoàn tác thay đổi này?",
+      "rolled_back": "Đã hoàn tác thay đổi",
+      "rollback_failed": "Không hoàn tác được thay đổi này.",
+      "action": {
+        "set": "Đặt",
+        "clear": "Xóa ghi đè",
+        "rollback": "Hoàn tác"
       }
     }
   },

@@ -486,6 +486,14 @@ const adminProcessingJobRoute = createRoute({
 const adminAiCostsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/ai-costs",
+  // `?status=` filters to failed calls; `?period=` carries the dashboard's
+  // window across so the two surfaces describe the same span of time.
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { status?: string; period?: string } => ({
+    status: typeof search.status === "string" ? search.status : undefined,
+    period: typeof search.period === "string" ? search.period : undefined,
+  }),
   component: lazyRouteComponent(() => import("@/routes/admin/ai-costs")),
 });
 

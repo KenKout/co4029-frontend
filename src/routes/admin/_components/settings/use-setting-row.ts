@@ -1,28 +1,26 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import {
-  useClearRuntimeSetting,
-  useSetRuntimeSetting,
-  type RuntimeSetting,
-} from "@/lib/api/hooks/admin-settings";
+
+import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
+
 import { settingLabel } from "./helpers";
+import { CLEAR, type SettingsDraft } from "./use-settings-draft";
 
 /**
- * Stateful half of a card-view setting row: the details toggle plus the set /
- * clear mutations for the active scope.
+ * Stateful half of a card-view setting row: the details toggle plus the draft
+ * staging helpers for the active scope.
  *
- * Hook order matches the original inline `SettingRow` exactly —
- * useTranslation, the `expanded` state, useSetRuntimeSetting,
- * useClearRuntimeSetting — and `t` is returned from here rather than resolved
- * again in the component so the row still makes a single `useTranslation`
- * call in the same position.
+ * It used to hold set / clear mutations and fire them from the control's
+ * onChange. Nothing here writes any more (PRD ADM-030) — edits are staged and
+ * applied together, with a reason, from the apply dialog.
  */
-export function useSettingRow(setting: RuntimeSetting, orgId?: string) {
+export function useSettingRow(
+  setting: RuntimeSetting,
+  draft: SettingsDraft,
+  orgId?: string,
+) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
-  const setMutation = useSetRuntimeSetting(orgId);
-  const clearMutation = useClearRuntimeSetting(orgId);
   const label = settingLabel(t, setting);
 
   const overrideAtThisScope =
@@ -30,35 +28,27 @@ export function useSettingRow(setting: RuntimeSetting, orgId?: string) {
       ? setting.org_value !== null
       : setting.global_value !== null;
 
-  const save = (value: boolean | number) => {
-    setMutation.mutate(
-      { key: setting.key, value },
-      {
-        onSuccess: () => toast.success(`${label} saved`),
-        onError: (err: unknown) =>
-          toast.error(err instanceof Error ? err.message : "Could not save"),
-      },
-    );
-  };
+  const stage = (value: boolean | number) => draft.stage(setting, value);
+  const stageClear = () => draft.stage(setting, CLEAR);
 
   const commitNumber = (raw: string) => {
     const parsed = Number(raw);
-    if (raw.trim() === "" || Number.isNaN(parsed)) {
-      toast.error(`${label} must be a number`);
-      return;
-    }
-    save(parsed);
+    // Refuse rather than coerce: an empty field is not a request to set zero.
+    if (raw.trim() === "" || Number.isNaN(parsed)) return;
+    draft.stage(setting, parsed);
   };
 
   return {
     t,
     expanded,
     setExpanded,
-    setMutation,
-    clearMutation,
+    draft,
     label,
     overrideAtThisScope,
-    save,
+    isPending: draft.isPending(setting.key),
+    value: draft.displayValue(setting),
+    stage,
+    stageClear,
     commitNumber,
   };
 }

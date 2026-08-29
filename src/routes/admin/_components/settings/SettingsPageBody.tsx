@@ -1,3 +1,8 @@
+import { useState } from "react";
+
+import { ApplyChangesDialog } from "./ApplyChangesDialog";
+import { ChangeHistorySection } from "./ChangeHistorySection";
+import { PendingChangesBar } from "./PendingChangesBar";
 import { SettingsCardList } from "./SettingsCardList";
 import { SettingsTable } from "./SettingsTable";
 import type { AdminSettingsPageController } from "./use-admin-settings-page";
@@ -19,6 +24,7 @@ export function SettingsPageBody({
     overrideCounts,
     orgId,
     showKeys,
+    draft,
   } = controller;
 
   return (
@@ -46,6 +52,7 @@ export function SettingsPageBody({
             overrideCounts={overrideCounts}
             orgId={orgId || undefined}
             showKeys={showKeys}
+            draft={draft}
           />
         </div>
       )}
@@ -53,6 +60,41 @@ export function SettingsPageBody({
       {settings.data && !dense && visibleGroups.length > 0 && (
         <SettingsCardList controller={controller} />
       )}
+
+      {settings.data && (
+        <div className="mt-10">
+          <ChangeHistorySection orgId={orgId || undefined} />
+        </div>
+      )}
+
+      <ApplyFlow controller={controller} />
+    </>
+  );
+}
+
+/**
+ * The staging affordances: the sticky pending bar and the apply dialog it
+ * opens. Split out so the body above stays a straightforward render of query
+ * states and layouts.
+ */
+function ApplyFlow({
+  controller,
+}: {
+  controller: AdminSettingsPageController;
+}) {
+  const { draft, settings, orgId } = controller;
+  const [reviewing, setReviewing] = useState(false);
+
+  return (
+    <>
+      <PendingChangesBar draft={draft} onReview={() => setReviewing(true)} />
+      <ApplyChangesDialog
+        open={reviewing}
+        onClose={() => setReviewing(false)}
+        draft={draft}
+        settings={settings.data ?? []}
+        orgId={orgId || undefined}
+      />
     </>
   );
 }

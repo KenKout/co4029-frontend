@@ -12,7 +12,7 @@ export function NumberField({
   setting: RuntimeSetting;
   value: string;
   onCommit: (v: string) => void;
-  disabled: boolean;
+  disabled?: boolean;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const unit = unitFor(setting);

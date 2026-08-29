@@ -109,12 +109,21 @@ export function apiPut<T>(path: string, body?: unknown): Promise<T> {
   });
 }
 
-export async function apiDelete(path: string): Promise<void> {
+/**
+ * DELETE. Defaults to discarding the response, which is what most callers
+ * want; pass a type argument when the endpoint answers with a body worth
+ * keeping (the settings clear returns the audit row it just wrote, so the UI
+ * can offer to undo it). A 204 still resolves to `undefined` either way.
+ */
+export async function apiDelete<T = void>(path: string): Promise<T> {
   const res = await authenticatedFetch(path, { method: "DELETE" });
 
   if (!res.ok && res.status !== 204) {
     throw await readError(res);
   }
+  if (res.status === 204) return undefined as T;
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 /**

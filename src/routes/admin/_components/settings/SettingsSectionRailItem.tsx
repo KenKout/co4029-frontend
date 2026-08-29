@@ -17,7 +17,8 @@ export function SettingsSectionRailItem({
   onSelect: () => void;
 }) {
   return (
-    <Button variant="ghost"
+    <Button
+      variant="ghost"
       type="button"
       onClick={onSelect}
       className={cn(

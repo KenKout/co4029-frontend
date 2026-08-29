@@ -8,6 +8,7 @@ import {
 import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 import { GROUP_ORDER, HEADER_OFFSET, SPY_TOLERANCE } from "./constants";
 import { matchesSearchQuery } from "./helpers";
+import { useSettingsDraft } from "./use-settings-draft";
 
 // View-mode toggles survive reload/navigation — same pattern as the course
 // catalogue's `courses:viewMode`.
@@ -50,6 +51,20 @@ export function useAdminSettingsPage() {
 
   const orgs = useOrganizations({ limit: 200 });
   const settings = useRuntimeSettings(orgId || undefined);
+
+  // One draft for the whole page, so the table view and the card view stage
+  // into the same set of pending changes and the apply dialog sees all of them.
+  const draft = useSettingsDraft(orgId || undefined);
+
+  // Switching scope abandons the draft. Pending edits are scope-bound — a
+  // value staged against the global default is not the same change when
+  // re-pointed at one tenant — and silently carrying them across would apply
+  // them somewhere the operator never chose.
+  useEffect(() => {
+    // `draft.discardAll` is stable (useCallback with no deps), so listing it
+    // keeps the dependency array honest without re-running on every render.
+    draft.discardAll();
+  }, [orgId, draft.discardAll]);
 
   const isOverriddenAtScope = (s: RuntimeSetting) =>
     orgId ? s.org_value !== null : s.global_value !== null;
@@ -136,6 +151,7 @@ export function useAdminSettingsPage() {
     activeSection,
     orgs,
     settings,
+    draft,
     grouped,
     visibleGroups,
     overrideCounts,

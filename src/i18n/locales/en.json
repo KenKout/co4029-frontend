@@ -2212,7 +2212,8 @@
         "ok": "All systems operational",
         "degraded": "Degraded",
         "down": "Outage",
-        "unknown": "Status unknown"
+        "unknown": "Status unknown",
+        "partial": "Operational, partially verified"
       },
       "status": {
         "ok": "Healthy",
@@ -2298,7 +2299,8 @@
         "api": "API metrics are platform-wide — request logs carry no organization.",
         "cost": "Cost metrics are platform-wide — AI calls carry no organization.",
         "job": "Job metrics are platform-wide — processing jobs carry no organization."
-      }
+      },
+      "unchecked": "Not checked: {{services}}"
     },
     "operations": {
       "title": "Operations & reliability",
@@ -5090,6 +5092,55 @@
       "spaced_repetition__daily_review_cap": {
         "label": "Daily review cap (cards/day)",
         "description": "Maximum spaced-repetition cards a student is served for review in one day, so a large backlog stays a finishable daily goal instead of an unbounded wall. Cards already reviewed today count toward the cap. This bounds the REVIEW QUEUE only — it never changes lesson unlock eligibility or retention scoring, so progression is unaffected. Set to 0 for no cap (serve the whole backlog)."
+      }
+    },
+    "pending": {
+      "badge": "Pending",
+      "count_one": "{{count}} pending change",
+      "count_other": "{{count}} pending changes",
+      "not_applied": "Not applied yet",
+      "discard": "Discard",
+      "review": "Review & apply"
+    },
+    "apply": {
+      "title_one": "Apply {{count}} change",
+      "title_other": "Apply {{count}} changes",
+      "subtitle_global": "These are the deployment-wide defaults. Review what each change affects before applying.",
+      "subtitle_org": "These overrides apply to the selected organization only.",
+      "previewing": "Checking what these changes would do…",
+      "preview_failed": "Could not validate these changes.",
+      "no_change": "No change at this scope",
+      "inherited": "inherited ({{value}})",
+      "next_ingest_only": "Applies to the next ingest only. Material already processed is not reprocessed and does not change.",
+      "global_warning_one": "This reaches {{count}} of {{total}} organizations — every tenant without its own override.",
+      "global_warning_other": "This reaches {{count}} of {{total}} organizations — every tenant without its own override.",
+      "global_ack": "I understand this changes behaviour for those organizations.",
+      "reason_label": "Reason",
+      "reason_placeholder": "Why are you making this change?",
+      "reason_hint": "Recorded in the audit trail. Required.",
+      "confirm": "Apply changes",
+      "applied_one": "{{count}} change applied",
+      "applied_other": "{{count}} changes applied",
+      "failed": "Could not apply the change."
+    },
+    "history": {
+      "title": "Change history",
+      "empty": "No configuration changes recorded at this scope yet.",
+      "load_failed": "Could not load the change history.",
+      "inherited": "inherited",
+      "by": "{{actor}} · {{at}}",
+      "unknown_actor": "Unknown",
+      "rollback": "Roll back",
+      "rollback_title": "Roll back this change",
+      "rollback_description": "Restores the value {{key}} had before this change. The rollback is recorded as its own entry.",
+      "rollback_confirm": "Roll back",
+      "rollback_placeholder": "Why are you rolling this back?",
+      "rolled_back": "Change rolled back",
+      "rollback_failed": "Could not roll back this change.",
+      "action": {
+        "set": "Set",
+        "clear": "Cleared",
+        "rollback": "Rolled back"
       }
     }
   },

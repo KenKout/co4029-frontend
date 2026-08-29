@@ -32,18 +32,30 @@ import {
   TopPipelinesSection,
   TopUsersSection,
 } from "./_components/ai-costs/TableSections";
+import { PERIOD_VALUES } from "./_components/ai-costs/constants";
 
 export default function AdminAiCostsPage() {
   const { t } = useTranslation();
   const permissions = usePermissions();
   const canAdmin = permissions.has("system.administer");
 
-  const [period, setPeriod] = useState<AiCostsPeriod>("30d");
-  const [dimension, setDimension] = useState<AiCostsDimension>("operation");
   // Seed the status filter from ?status= so the admin dashboard's "Failed AI
   // calls" tile deep-links straight to the failures instead of dropping the
-  // operator on the unfiltered view.
-  const search = useSearch({ strict: false }) as { status?: string };
+  // operator on the unfiltered view, and the period from ?period= so arriving
+  // from the dashboard keeps its window. Without that, an operator who set the
+  // dashboard to 7d landed here on 30d and compared two different spans of
+  // time without being told (PRD ADM-004). The selector stays visible: this is
+  // a seeded page-local control, not a mirror of the global filter.
+  const search = useSearch({ strict: false }) as {
+    status?: string;
+    period?: string;
+  };
+  const [period, setPeriod] = useState<AiCostsPeriod>(() =>
+    PERIOD_VALUES.includes(search.period as AiCostsPeriod)
+      ? (search.period as AiCostsPeriod)
+      : "30d",
+  );
+  const [dimension, setDimension] = useState<AiCostsDimension>("operation");
   const [filters, setFilters] = useState<AiCostsFilters>({
     model: null,
     role: null,
