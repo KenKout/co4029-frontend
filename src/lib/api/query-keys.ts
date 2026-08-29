@@ -100,6 +100,8 @@ export const queryKeys = {
       ] as const,
     activeUsersTrend: (days: number) =>
       ["admin", "stats", "active-users", "trend", days] as const,
+    latencyTrend: (days: number) =>
+      ["admin", "stats", "latency", "trend", days] as const,
     content: () => ["admin", "stats", "content"] as const,
     users: (cursor?: string) => ["admin", "users", cursor] as const,
     userDetail: (id: string) => ["admin", "users", "detail", id] as const,

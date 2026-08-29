@@ -1839,6 +1839,13 @@
         "delta_today": "+{{n}} today",
         "failed_rate": "{{pct}}% failed",
         "jobs_moved": "Processing jobs moved to Operations"
+      },
+      "latency": {
+        "trend_title": "API latency",
+        "trend_desc": "Daily p50 and p95 response time across all API requests.",
+        "trend_period_aria": "Latency lookback window",
+        "trend_tooltip": "p95 {{p95}} · p50 {{p50}} · {{requests}} requests",
+        "trend_empty": "No API traffic in this period."
       }
     },
     "ai_costs": {

@@ -1747,6 +1747,13 @@
         "delta_today": "+{{n}} hôm nay",
         "failed_rate": "{{pct}}% thất bại",
         "jobs_moved": "Job xử lý đã chuyển sang mục Vận hành"
+      },
+      "latency": {
+        "trend_title": "Độ trễ API",
+        "trend_desc": "P50 và P95 thời gian phản hồi của toàn bộ request API theo ngày.",
+        "trend_period_aria": "Khoảng thời gian biểu đồ độ trễ",
+        "trend_tooltip": "p95 {{p95}} · p50 {{p50}} · {{requests}} request",
+        "trend_empty": "Không có request API trong khoảng thời gian này."
       }
     },
     "ai_costs": {

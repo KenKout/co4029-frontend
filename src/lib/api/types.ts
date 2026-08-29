@@ -704,6 +704,17 @@ export interface ActiveUsersTrendPoint {
 export interface ActiveUsersTrendOut {
   points: ActiveUsersTrendPoint[];
 }
+
+export interface LatencyTrendPoint {
+  day: string;
+  requests_total: number;
+  p50_latency_ms: number | null;
+  p95_latency_ms: number | null;
+}
+
+export interface LatencyTrendOut {
+  points: LatencyTrendPoint[];
+}
 export type ContentOut = Schemas["ContentOut"];
 
 export type AdminCoursePage = Schemas["AdminCoursePage"];

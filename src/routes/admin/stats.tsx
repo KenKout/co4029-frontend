@@ -1,5 +1,6 @@
 import { CostCapacityRow } from "./_components/stats/CostCapacityRow";
 import { CurrentStatusRow } from "./_components/stats/CurrentStatusRow";
+import { LatencyTrendSection } from "./_components/stats/LatencyTrendSection";
 import { NeedsActionSection } from "./_components/stats/NeedsActionSection";
 import { PageHeading } from "./_components/stats/PageHeading";
 import { ReliabilityRow } from "./_components/stats/ReliabilityRow";
@@ -38,6 +39,7 @@ export default function AdminStatsPage() {
       <CurrentStatusRow c={c} />
       <NeedsActionSection c={c} />
       <ReliabilityRow c={c} />
+      <LatencyTrendSection />
       <CostCapacityRow c={c} />
       <SecurityAccessRow c={c} />
       <TenantAnomaliesRow c={c} />

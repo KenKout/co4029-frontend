@@ -6,6 +6,7 @@ import { useInfinitePage } from "../use-infinite-page";
 import type {
   ActiveUsersOut,
   ActiveUsersTrendOut,
+  LatencyTrendOut,
   AdminCoursePage,
   AiCostsByPipeline,
   AiCostsByCategory,
@@ -246,6 +247,17 @@ export function useActiveUsersTrend(days: number) {
     queryFn: () =>
       apiFetch<ActiveUsersTrendOut>(
         `/admin/stats/active-users/trend?days=${days}`,
+      ),
+    staleTime: 1000 * 60,
+  });
+}
+
+export function useApiLatencyTrend(days: number) {
+  return useQuery({
+    queryKey: queryKeys.admin.latencyTrend(days),
+    queryFn: () =>
+      apiFetch<LatencyTrendOut>(
+        `/admin/stats/latency/trend?days=${days}`,
       ),
     staleTime: 1000 * 60,
   });
