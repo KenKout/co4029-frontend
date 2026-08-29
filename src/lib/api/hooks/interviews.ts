@@ -99,7 +99,10 @@ export function useInterviewOnboarding(sessionId: string | null | undefined) {
   });
 }
 
-export function useFinishInterview(sessionId: string | null | undefined) {
+export function useFinishInterview(
+  sessionId: string | null | undefined,
+  courseId?: string | null,
+) {
   const { i18n } = useTranslation();
   const qc = useQueryClient();
   return useMutation({
@@ -123,6 +126,11 @@ export function useFinishInterview(sessionId: string | null | undefined) {
       void qc.invalidateQueries({
         queryKey: queryKeys.interviews.mySessionsAnyScope(),
       });
+      if (courseId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.interviews.progress(courseId),
+        });
+      }
     },
   });
 }
@@ -661,6 +669,18 @@ export function useTeacherGapReport(sessionId: string | null | undefined) {
         `/teacher/interview-sessions/${sessionId}/gap-report`,
       ),
     enabled: !!sessionId,
+    // Evaluation runs asynchronously after submission. A 404 means the
+    // report is not ready yet, not that it does not exist.
+    retry: (failureCount, error) =>
+      error instanceof ApiError && error.status === 404 && failureCount < 60,
+    retryDelay: 3000,
+    // Keep waiting only while the server still says "not ready" (404) and no
+    // data arrived — a hard error (5xx, network) must not poll forever.
+    refetchInterval: (query) => {
+      if (query.state.data !== undefined) return false;
+      const error = query.state.error;
+      return error instanceof ApiError && error.status === 404 ? 3000 : false;
+    },
   });
 }
 

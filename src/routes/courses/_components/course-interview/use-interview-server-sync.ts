@@ -22,14 +22,14 @@ export function useInterviewServerSync(
   turn: ReturnType<typeof useInterviewTurnState>,
   phaseState: ReturnType<typeof useInterviewPhaseState>,
 ) {
-  const { configId, resumableSession, previousSessionsLoading } = route;
+  const { configId, course, resumableSession, previousSessionsLoading } = route;
   const { sessionId } = turn;
   const { phase, finishResult, setFinishResult } = phaseState;
 
   // Typed turns go over `lk.chat` — there is no `/respond` hook any more.
   // Onboarding is the only REST turn surface left, and it has its own endpoint.
   const onboarding = useInterviewOnboarding(sessionId);
-  const finish = useFinishInterview(sessionId);
+  const finish = useFinishInterview(sessionId, course?.id);
   // Poll-gating rationale for both queries below lives in interview-verdict.ts.
   const flags = resolveFinishFlags(finishResult);
   const { evaluationUnavailable } = flags;
