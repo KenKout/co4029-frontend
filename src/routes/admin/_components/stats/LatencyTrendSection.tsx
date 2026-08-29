@@ -157,6 +157,23 @@ export function LatencyTrendSection() {
         <TrendPeriodTabs days={days} onChange={setDays} />
       </div>
 
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="inline-block h-0.5 w-4 rounded-full bg-[var(--color-primary)]"
+          />
+          {t("admin.stats.latency.legend_p95")}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="inline-block w-4 border-t-2 border-dashed border-[var(--color-text-muted)]"
+          />
+          {t("admin.stats.latency.legend_p50")}
+        </span>
+      </div>
+
       {trend.isError ? (
         <div className="rounded-lg border border-border bg-surface-elev p-6 text-center">
           <p className="text-sm text-danger">{t("admin.stats.load_failed")}</p>

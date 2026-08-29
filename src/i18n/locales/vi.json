@@ -1721,7 +1721,9 @@
         "trend_desc": "P50 và P95 thời gian phản hồi của toàn bộ request API theo ngày.",
         "trend_period_aria": "Khoảng thời gian biểu đồ độ trễ",
         "trend_tooltip": "p95 {{p95}} · p50 {{p50}} · {{requests}} request",
-        "trend_empty": "Không có request API trong khoảng thời gian này."
+        "trend_empty": "Không có request API trong khoảng thời gian này.",
+        "legend_p95": "p95 — phân vị 95",
+        "legend_p50": "p50 — trung vị"
       }
     },
     "ai_costs": {
