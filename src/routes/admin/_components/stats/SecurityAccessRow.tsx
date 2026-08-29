@@ -59,7 +59,9 @@ function presenceSeverity(count: number | undefined): "ok" | "warn" {
  */
 export function SecurityAccessRow({ c }: { c: AdminStatsController }) {
   const { t, f, security, scope } = c;
-  const window = t("admin.dashboard.window.label", { days: scope.windowDays });
+  const window = t("admin.dashboard.window.label", {
+    days: scope.spanDays,
+  });
 
   if (security.isError) {
     return (

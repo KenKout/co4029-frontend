@@ -55,6 +55,7 @@ export function useAdminStatsPage(): AdminStatsController {
 
   const [range, setRange] = useState<RangeSelection>(() => defaultRange());
   const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const spanDays = daysBetweenInclusive(range.from, range.to);
 
   // The organization filter is the IT admin's only; a manager is already
   // pinned server-side, so we do not even fetch the tenant list for them.
@@ -66,7 +67,7 @@ export function useAdminStatsPage(): AdminStatsController {
     organizationId,
   });
   const health = useDeepHealth();
-  const security = useSecuritySummary(windowDays, organizationId);
+  const security = useSecuritySummary(spanDays, organizationId);
 
   const currentStatus = useMemo(
     () =>
