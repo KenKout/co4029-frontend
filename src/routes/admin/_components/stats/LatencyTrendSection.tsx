@@ -34,7 +34,11 @@ function LatencyTrendTooltip({
   label,
 }: {
   active?: boolean;
-  payload?: Array<{ dataKey?: string; value?: number | null }>;
+  payload?: Array<{
+    dataKey?: string;
+    value?: number | null;
+    payload?: { requests?: number };
+  }>;
   label?: string;
 }) {
   const { t } = useTranslation();
@@ -45,7 +49,9 @@ function LatencyTrendTooltip({
   );
   const p95 = byKey.p95 as number | null | undefined;
   const p50 = byKey.p50 as number | null | undefined;
-  const requests = byKey.requests as number | undefined;
+  // `requests` is not a series (only p95/p50 are dataKeys), so it never
+  // appears in the payload array — read it from the hovered datum itself.
+  const requests = payload[0]?.payload?.requests ?? 0;
   return (
     <div className="rounded-lg border border-border bg-popover px-3 py-2 text-xs shadow-lg">
       <p className="font-semibold text-text-strong">{label}</p>
