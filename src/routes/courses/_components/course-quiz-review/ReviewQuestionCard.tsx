@@ -378,7 +378,7 @@ function FillBlankSlotReview({
         </>
       ) : (
         <>
-          <span className="text-red-700 line-through">{student ?? "—"}</span>
+          <span className="text-red-700">{student ?? "—"}</span>
           <X className="h-3.5 w-3.5 text-red-700 shrink-0" />
           <ArrowRight className="h-3.5 w-3.5 text-m3-outline shrink-0" />
           <span className="text-emerald-700">{correct}</span>
