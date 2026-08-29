@@ -35,6 +35,14 @@ type TabKey = "role_changes" | "http" | "data_changes";
 /** Tab order for the strip. Same three sources as before, as data. */
 const TAB_KEYS: TabKey[] = ["role_changes", "http", "data_changes"];
 
+/** Narrow an untrusted `?tab=` value. A bad link falls back to the default
+ *  tab rather than rendering an empty one. */
+function isAuditTab(value: unknown): value is TabKey {
+  return (
+    value === "role_changes" || value === "http" || value === "data_changes"
+  );
+}
+
 type RoleChangeRow = NonNullable<
   ReturnType<typeof useAuditRoleChanges>["data"]
 >[number];
@@ -65,9 +73,7 @@ export default function AdminAuditLogsPage() {
   const search = useSearch({ strict: false });
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabKey>(() =>
-    TAB_KEYS.includes(search.tab as TabKey)
-      ? (search.tab as TabKey)
-      : "role_changes",
+    isAuditTab(search.tab) ? search.tab : "role_changes",
   );
   const [sinceDays, setSinceDays] = useState(7);
   const sinceIso = useMemo(() => daysAgoIso(sinceDays), [sinceDays]);
