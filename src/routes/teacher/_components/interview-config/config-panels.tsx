@@ -127,6 +127,7 @@ export function ConfigPanels({
                 generating={generating}
                 activeRunId={activeRunId}
                 run={activeRun}
+                isPublished={config.status === "published"}
                 modules={modules ?? []}
                 ownModuleId={config.module_id}
                 outcomes={outcomes ?? []}
@@ -140,6 +141,7 @@ export function ConfigPanels({
                 modules={modules ?? []}
                 questions={questions ?? []}
                 outcomes={outcomes ?? []}
+                isPublished={config.status === "published"}
                 outcomeFilterSignal={outcomeFilterSignal}
               />
             </TabPanel>

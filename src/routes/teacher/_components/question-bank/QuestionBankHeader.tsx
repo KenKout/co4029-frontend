@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
  * Extracted verbatim from the former 2.4k-line question-bank.tsx.
  */
 export interface QuestionBankHeaderProps {
+  isPublished: boolean;
   moduleTitle?: string | null;
   anyFilterActive: boolean;
   filteredCount: number;
@@ -51,6 +52,7 @@ export function QuestionBankHeader(props: QuestionBankHeaderProps) {
         approvedCount={props.approvedCount}
       />
       <HeaderActions
+        isPublished={props.isPublished}
         hasQuestions={props.hasQuestions}
         compact={props.compact}
         onToggleCompact={props.onToggleCompact}
@@ -117,6 +119,7 @@ function HeaderTitle({
 }
 
 function HeaderActions({
+  isPublished,
   hasQuestions,
   compact,
   onToggleCompact,
@@ -185,7 +188,7 @@ function HeaderActions({
           type="button"
           variant="outline"
           size="sm"
-          disabled={approvingAll || updatePending}
+          disabled={isPublished || approvingAll || updatePending}
           onClick={onApproveAll}
           className="gap-1.5 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
         >
@@ -199,7 +202,7 @@ function HeaderActions({
           })}
         </Button>
       )}
-      {!adding && !importing && bankItemCount > 0 && (
+      {!isPublished && !adding && !importing && bankItemCount > 0 && (
         <Button
           type="button"
           variant="outline"
@@ -211,7 +214,7 @@ function HeaderActions({
           {t("teacher_interview_config.qbank.import_from_bank")}
         </Button>
       )}
-      {!adding && (
+      {!isPublished && !adding && (
         <Button
           type="button"
           variant="outline"

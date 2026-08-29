@@ -1,32 +1,88 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { BookOpen, Layers } from "lucide-react";
+import { BookOpen, ChevronRight, Layers } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
 import type { CourseBucket, LessonBucket } from "./helpers";
 
-/** One lesson row inside a course section. */
+/** Local alias for the `t` function (project convention). */
+type TranslateFn = ReturnType<typeof useTranslation>["t"];
+
+/** Right-aligned fixed count column shared by course + lesson rows. */
+function CountColumn({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "relative flex w-52 shrink-0 items-center justify-end text-right tabular-nums whitespace-nowrap",
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** Hover/focus CTA that overlays the count column (zero layout shift). */
+function RowCta({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      className={cn(
+        "absolute inset-0 flex items-center justify-end gap-1 text-xs font-semibold text-m3-primary",
+        "pointer-events-none opacity-0 transition-opacity",
+        "group-hover:opacity-100 group-focus-visible:opacity-100",
+      )}
+    >
+      {children}
+      <ChevronRight className="h-3.5 w-3.5" />
+    </span>
+  );
+}
+
+/**
+ * "N card(s) due" — the content-model form `[count] + card(s) + state`.
+ * Explicit singular/plural branches (i18next count plurals do not resolve
+ * in this app's config).
+ */
+function dueLabel(t: TranslateFn, n: number): string {
+  return n === 1
+    ? t("study_cards_due.due_one", { count: n })
+    : t("study_cards_due.due_other", { count: n });
+}
+
+/** Verb + count CTA ("Review 7 cards"), same plural discipline. */
+function reviewLabel(t: TranslateFn, n: number): string {
+  return n === 1
+    ? t("study_cards_due.review_cta_one", { count: n })
+    : t("study_cards_due.review_cta_other", { count: n });
+}
+
+/** One lesson row — the whole row is the review link, count pinned right. */
 function LessonRow({ lesson }: { lesson: LessonBucket }) {
   const { t } = useTranslation();
-  const l = lesson;
   return (
-    <li className="flex items-center gap-3 px-4 py-2.5">
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-m3-primary-fixed">
-        <BookOpen className="h-4 w-4 text-m3-primary" />
-      </div>
-      <span className="flex-1 min-w-0 truncate text-sm text-m3-on-surface">
-        {l.lessonTitle}
-      </span>
-      <span className="text-xs font-semibold text-m3-on-surface-variant tabular-nums whitespace-nowrap">
-        {t("study_cards_due.lesson_count", {
-          count: l.count,
-          defaultValue: "{{count}} due",
-        })}
-      </span>
+    <li>
       <Link
         to="/study/review"
-        search={{ lesson: l.lessonId, course: undefined }}
-        className="text-xs font-semibold text-m3-primary hover:underline shrink-0"
+        search={{ lesson: lesson.lessonId, course: undefined }}
+        className="group flex items-center gap-3 rounded-lg px-4 py-2.5 transition-colors hover:bg-m3-surface-container-low focus-visible:bg-m3-surface-container-low"
       >
-        {t("study_cards_due.review_course", "Review")}
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed">
+          <BookOpen className="h-4 w-4 text-m3-primary" />
+        </div>
+        <span className="min-w-0 flex-1 truncate text-sm text-m3-on-surface">
+          {lesson.lessonTitle}
+        </span>
+        <CountColumn className="text-xs font-semibold text-m3-on-surface-variant">
+          {dueLabel(t, lesson.count)}
+          <RowCta>{reviewLabel(t, lesson.count)}</RowCta>
+        </CountColumn>
       </Link>
     </li>
   );
@@ -34,32 +90,48 @@ function LessonRow({ lesson }: { lesson: LessonBucket }) {
 
 /**
  * Course → lesson COUNTS. A lesson with 4 due cards shows once as
- * "4 due", not four indistinguishable rows.
+ * "4 cards due", not four indistinguishable rows.
+ *
+ * The course header is itself the review link for the whole course: the
+ * count column pins the backlog size (plus the overdue subset, orange — or
+ * red when any card is severely overdue), and a verb CTA takes over that
+ * column on hover/focus instead of a permanently-repeated "Review" text.
  */
 export function CardsDueCourseSection({ group }: { group: CourseBucket }) {
   const { t } = useTranslation();
+  const tone =
+    group.severe > 0 ? "text-red-600" : group.overdue > 0 ? "text-orange-600" : "text-m3-on-surface-variant";
 
   return (
-    <section className="rounded-xl ghost-border bg-m3-surface-container-lowest overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-m3-outline-variant/20">
-        <Layers className="h-4 w-4 text-m3-primary shrink-0" />
-        <h2 className="text-sm font-headline font-bold text-m3-on-surface min-w-0 truncate">
+    <section className="overflow-hidden rounded-xl bg-m3-surface-container-lowest ghost-border">
+      <Link
+        to="/study/review"
+        search={{ lesson: undefined, course: group.courseSlug }}
+        className="group flex items-center gap-2 border-b border-m3-outline-variant/20 px-4 py-3 transition-colors hover:bg-m3-surface-container-low focus-visible:bg-m3-surface-container-low"
+      >
+        <Layers className="h-4 w-4 shrink-0 text-m3-primary" />
+        <h2 className="min-w-0 flex-1 truncate text-sm font-headline font-bold text-m3-on-surface">
           {group.courseTitle}
         </h2>
-        <span className="text-xs font-semibold text-m3-on-surface-variant whitespace-nowrap">
-          {t("study_cards_due.group_count", {
-            count: group.count,
-            defaultValue: "{{count}} due",
-          })}
-        </span>
-        <Link
-          to="/study/review"
-          search={{ lesson: undefined, course: group.courseSlug }}
-          className="ml-auto shrink-0 text-xs font-semibold text-m3-primary hover:underline"
-        >
-          {t("study_cards_due.review_course", "Review")}
-        </Link>
-      </div>
+        <CountColumn className="text-xs font-semibold text-m3-on-surface-variant">
+          <span>
+            {dueLabel(t, group.count)}
+            {group.overdue > 0 ? (
+              <>
+                {" · "}
+                <span className={cn("font-bold", tone)}>
+                  {group.overdue === 1
+                    ? t("study_cards_due.overdue_one")
+                    : t("study_cards_due.overdue_other", {
+                        count: group.overdue,
+                      })}
+                </span>
+              </>
+            ) : null}
+          </span>
+          <RowCta>{reviewLabel(t, group.count)}</RowCta>
+        </CountColumn>
+      </Link>
       <ul className="divide-y divide-m3-outline-variant/10">
         {group.lessons.map((l) => (
           <LessonRow key={l.lessonId} lesson={l} />

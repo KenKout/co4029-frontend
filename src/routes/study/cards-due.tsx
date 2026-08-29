@@ -5,17 +5,109 @@ import { ArrowLeft, Play } from "lucide-react";
 import { useCardsDue } from "@/lib/api/hooks/spaced-repetition";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { CardsDueCourseSection } from "@/routes/study/_components/cards-due/CardsDueCourseSection";
 import { CardsDueEmptyState } from "@/routes/study/_components/cards-due/CardsDueScreens";
 import {
   groupByCourse,
   MAX_AUTODRAIN_PAGES,
+  sessionSize,
+  summarizeBacklog,
 } from "@/routes/study/_components/cards-due/helpers";
 
 /**
- * The due-cards overview: course → lesson counts plus a single "Start review"
+ * The backlog-at-a-glance card: "31 cards due now" + composition. Colours
+ * follow the lateness convention — orange overdue, red severely overdue;
+ * "due today" is the normal SM-2 state and stays neutral (red is never
+ * used for the whole backlog). The session line splits "due now" from
+ * "in this review session" when the backlog exceeds the session cap.
+ */
+function DueSummaryCard({
+  total,
+  approx,
+  summary,
+  session,
+  courses,
+}: {
+  total: number;
+  approx: boolean;
+  summary: ReturnType<typeof summarizeBacklog>;
+  session: number;
+  courses: number;
+}) {
+  const { t } = useTranslation();
+  const overdueTone = summary.severe > 0 ? "text-red-600" : "text-orange-600";
+  return (
+    <div className="rounded-xl ghost-border bg-m3-surface-container-lowest px-5 py-4">
+      <p className="text-2xl font-headline font-bold text-m3-on-surface">
+        {total === 1
+          ? t("study_cards_due.now_one", { count: 1 })
+          : t("study_cards_due.now_other", { count: total })}
+        {approx ? "+" : ""}
+      </p>
+      <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-m3-on-surface-variant">
+        {summary.overdue > 0 ? (
+          <>
+            <span className={cn("font-bold", overdueTone)}>
+              {summary.overdue === 1
+                ? t("study_cards_due.overdue_one")
+                : t("study_cards_due.overdue_other", {
+                    count: summary.overdue,
+                  })}
+            </span>
+            {summary.severe > 0 ? (
+              <span className="font-bold text-red-600">
+                {summary.severe === 1
+                  ? t("study_cards_due.severe_one")
+                  : t("study_cards_due.severe_other", {
+                      count: summary.severe,
+                    })}
+              </span>
+            ) : null}
+          </>
+        ) : (
+          <span>
+            {summary.dueToday === 1
+              ? t("study_cards_due.today_one")
+              : t("study_cards_due.today_other", {
+                  count: summary.dueToday,
+                })}
+          </span>
+        )}
+        <span aria-hidden="true">·</span>
+        <span>
+          {courses === 1
+            ? t("study_cards_due.across_one", { courses })
+            : t("study_cards_due.across_other", { courses })}
+        </span>
+      </p>
+      {total > session ? (
+        <p className="mt-1 text-xs font-medium text-m3-on-surface-variant">
+          {session === 1
+            ? t("study_cards_due.session_one", { count: session })
+            : t("study_cards_due.session_other", { count: session })}
+          {" · "}
+          {total - session === 1
+            ? t("study_cards_due.remain_one", { count: total - session })
+            : t("study_cards_due.remain_other", {
+                count: total - session,
+              })}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * The due-cards overview: course → lesson counts plus a "Start review"
  * action. The grouping helper and the per-course section live in
  * `_components/study-cards-due/`.
+ *
+ * Content model, one form for every number on the page:
+ * `[count] + card(s) + state` — "1 card due", "12 cards overdue", and
+ * verbs on CTAs ("Review 7 cards", "Start 20-card review"). The review
+ * session caps at SESSION_CARD_LIMIT cards, so the summary always splits
+ * "due now" from "in this session" and the CTA carries the SESSION count.
  */
 export default function StudyCardsDuePage() {
   const { t } = useTranslation();
@@ -45,8 +137,10 @@ export default function StudyCardsDuePage() {
   }, [hasNextPage, isFetchingNextPage, pagesDrained, fetchNextPage]);
 
   const groups = useMemo(() => groupByCourse(items), [items]);
+  const summary = useMemo(() => summarizeBacklog(items), [items]);
   const total = items.length;
   const approx = hasNextPage; // hit the drain cap — counts are a floor
+  const session = sessionSize(total);
 
   // Carry the active scope onto the top-level review link so "Start review"
   // resolves the same cards the student is looking at. Both keys are always
@@ -68,18 +162,13 @@ export default function StudyCardsDuePage() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <SectionHeader
-            title={t("study_cards_due.title", "Cards due")}
+            title={t("study_cards_due.title", "Cards due for review")}
             subtitle={
               isLoading
                 ? t("study_cards_due.loading", "Loading…")
                 : total === 0
                   ? t("study_cards_due.empty_subtitle", "You're all caught up")
-                  : t("study_cards_due.summary", {
-                      count: total,
-                      courses: groups.length,
-                      defaultValue:
-                        "{{count}} card(s) to review across {{courses}} course(s)",
-                    })
+                  : undefined
             }
           />
         </div>
@@ -88,8 +177,23 @@ export default function StudyCardsDuePage() {
           <CardsDueEmptyState />
         ) : (
           <>
-            {/* Primary action: resolve the queue in order (most-overdue first).
-                No per-card list to pick from — you review what's next. */}
+            {/* Summary: the backlog at a glance. One number per line, the
+                composition coloured by lateness — orange overdue, red
+                severely overdue. "Due today" is the normal SM-2 state and
+                stays neutral; red is NOT used for the whole backlog. */}
+            {!isLoading && total > 0 && (
+              <DueSummaryCard
+                total={total}
+                approx={approx}
+                summary={summary}
+                session={session}
+                courses={groups.length}
+              />
+            )}
+
+            {/* Primary action: the session serves at most SESSION_CARD_LIMIT
+                cards, so the label says the session size — never "Start
+                review (31)" on a 20-card session. */}
             {total > 0 && (
               <Link to="/study/review" search={reviewSearch} className="block">
                 <Button
@@ -97,11 +201,9 @@ export default function StudyCardsDuePage() {
                   className="w-full sm:w-auto gap-2 cursor-pointer bg-m3-primary text-white"
                 >
                   <Play className="h-4 w-4" />
-                  {t("study_cards_due.start_review", {
-                    count: total,
-                    defaultValue: "Start review ({{count}})",
-                  })}
-                  {approx ? "+" : ""}
+                  {session === 1
+                    ? t("study_cards_due.start_one", { count: 1 })
+                    : t("study_cards_due.start_other", { count: session })}
                 </Button>
               </Link>
             )}

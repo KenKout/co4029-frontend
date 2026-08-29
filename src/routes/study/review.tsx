@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { useReviewQueue } from "@/lib/api/hooks/spaced-repetition";
+import { SESSION_CARD_LIMIT } from "@/routes/study/_components/cards-due/helpers";
 import { queryKeys } from "@/lib/api/query-keys";
 import { deriveQueueStats } from "@/routes/study/_components/review/helpers";
 import { ReviewCardView } from "@/routes/study/_components/review/ReviewCardView";
@@ -32,7 +33,7 @@ export default function StudyReviewPage() {
   };
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useReviewQueue({
-    limit: 20,
+    limit: SESSION_CARD_LIMIT,
     lessonId: lesson,
     courseSlug: course,
   });

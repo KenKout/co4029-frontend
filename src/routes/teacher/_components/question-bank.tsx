@@ -53,6 +53,8 @@ interface QuestionBankProps {
   modules?: { id: string; title: string }[];
   questions: InterviewQuestionAuthoring[];
   outcomes: InterviewOutcomeAuthoring[];
+  /** True only while the parent interview is published and assessment content is frozen. */
+  isPublished?: boolean;
   /**
    * External request to filter by a specific outcome (from the Learning
    * Outcomes "View questions" action). The `nonce` lets the same outcome be
@@ -68,6 +70,7 @@ export function QuestionBank({
   modules = [],
   questions,
   outcomes,
+  isPublished = false,
   outcomeFilterSignal,
 }: QuestionBankProps) {
   const { t } = useTranslation();
@@ -154,7 +157,13 @@ export function QuestionBank({
 
   return (
     <div className="bg-m3-surface-container-lowest border border-m3-outline-variant/60 rounded-xl shadow-glass">
+      {isPublished && (
+        <p className="mx-4 mt-4 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-900 lg:mx-6">
+          {t("teacher_interview_config.qbank.published_locked")}
+        </p>
+      )}
       <QuestionBankToolbar
+        isPublished={isPublished}
         moduleTitle={moduleTitle}
         outcomes={outcomes}
         derived={derived}

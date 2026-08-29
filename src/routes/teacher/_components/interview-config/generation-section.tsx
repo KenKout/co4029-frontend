@@ -40,6 +40,7 @@ export function GenerationSection({
   modules,
   ownModuleId,
   outcomes,
+  isPublished,
 }: {
   generationForm: GenerationFormState;
   setGenerationForm: React.Dispatch<React.SetStateAction<GenerationFormState>>;
@@ -50,6 +51,7 @@ export function GenerationSection({
   modules: { id: string; title: string }[];
   ownModuleId: string;
   outcomes: InterviewOutcomeAuthoring[];
+  isPublished: boolean;
 }) {
   const { t } = useTranslation();
   function updateGeneration<K extends keyof GenerationFormState>(
@@ -68,34 +70,41 @@ export function GenerationSection({
         title={t("teacher_interview_config.generate.section_title")}
         description={t("teacher_interview_config.generate.section_description")}
       >
-        <GenerationModeFields
-          generationForm={generationForm}
-          updateGeneration={updateGeneration}
-        />
+        {isPublished && (
+          <p className="rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            {t("teacher_interview_config.generate.published_locked")}
+          </p>
+        )}
+        <fieldset disabled={isPublished} className="contents">
+          <GenerationModeFields
+            generationForm={generationForm}
+            updateGeneration={updateGeneration}
+          />
 
-        <GenerationModulePicker
-          generationForm={generationForm}
-          updateGeneration={updateGeneration}
-          modules={modules}
-          ownModuleId={ownModuleId}
-        />
+          <GenerationModulePicker
+            generationForm={generationForm}
+            updateGeneration={updateGeneration}
+            modules={modules}
+            ownModuleId={ownModuleId}
+          />
 
-        <GenerationOutcomePicker
-          generationForm={generationForm}
-          updateGeneration={updateGeneration}
-          outcomes={outcomes}
-        />
+          <GenerationOutcomePicker
+            generationForm={generationForm}
+            updateGeneration={updateGeneration}
+            outcomes={outcomes}
+          />
 
-        <GenerationTopicFields
-          generationForm={generationForm}
-          updateGeneration={updateGeneration}
-        />
+          <GenerationTopicFields
+            generationForm={generationForm}
+            updateGeneration={updateGeneration}
+          />
 
-        <p className="text-[11px] text-m3-on-surface-variant">
-          {t("teacher_interview_config.generate.reuses_settings_hint")}
-        </p>
+          <p className="text-[11px] text-m3-on-surface-variant">
+            {t("teacher_interview_config.generate.reuses_settings_hint")}
+          </p>
 
-        {activeRunId && <GenerationRunStatus run={run} state={runState} />}
+          {activeRunId && <GenerationRunStatus run={run} state={runState} />}
+        </fieldset>
 
         <div className="flex items-center justify-between gap-3 pt-3 border-t border-dashed border-m3-secondary/30">
           <p className="text-[11px] text-m3-on-surface-variant">
@@ -104,7 +113,7 @@ export function GenerationSection({
           <Button
             type="button"
             onClick={onGenerate}
-            disabled={inProgress}
+            disabled={inProgress || isPublished}
             className="gap-2 gradient-primary text-white border-0 hover:shadow-ai-glow shrink-0"
           >
             {inProgress ? (

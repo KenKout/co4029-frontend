@@ -174,6 +174,10 @@ export function createConfigActions(deps: ConfigActionsDeps): ConfigActions {
 
   async function handleGenerate() {
     const { config, draft, generationForm } = deps;
+    if (config.status === "published") {
+      toast.error(t("teacher_interview_config.generate.published_locked"));
+      return;
+    }
     if (
       !Number.isInteger(generationForm.question_count) ||
       generationForm.question_count < 1

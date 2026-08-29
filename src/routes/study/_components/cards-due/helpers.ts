@@ -19,12 +19,48 @@ export interface LessonBucket {
   lessonId: string;
   lessonTitle: string;
   count: number;
+  /** Cards whose due_at is before today (any age). */
+  overdue: number;
+  /** Subset of `overdue` past the severe threshold (red). */
+  severe: number;
 }
 export interface CourseBucket {
   courseSlug: string;
   courseTitle: string;
   count: number;
+  overdue: number;
+  severe: number;
   lessons: LessonBucket[];
+}
+
+// The review session serves at most this many cards, even when the backlog
+// is bigger — the CTA must say the SESSION size, never the backlog size.
+export const SESSION_CARD_LIMIT = 20;
+
+// Past-due by more than this many days = "severely overdue" (red). Below that
+// but before today = plain overdue (orange); due on/after today = normal.
+export const SEVERE_OVERDUE_DAYS = 7;
+
+/** Local midnight — the "due today" boundary is the student's own day. */
+export function startOfLocalDay(now: Date = new Date()): number {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+export type DueClass = "today" | "overdue" | "severe";
+
+/** Classify one due card against the student's current local day. */
+export function classifyDue(
+  dueAtIso: string,
+  now: Date = new Date(),
+): DueClass {
+  const due = Date.parse(dueAtIso);
+  if (Number.isNaN(due)) return "today"; // unparseable → treat as due now
+  const midnight = startOfLocalDay(now);
+  if (due >= midnight) return "today";
+  const severeLine = midnight - SEVERE_OVERDUE_DAYS * 86_400_000;
+  return due < severeLine ? "severe" : "overdue";
 }
 
 export function groupByCourse(cards: CardDue[]): CourseBucket[] {
@@ -33,6 +69,7 @@ export function groupByCourse(cards: CardDue[]): CourseBucket[] {
     { title: string; lessons: Map<string, LessonBucket> }
   >();
   for (const card of cards) {
+    const cls = classifyDue(card.due_at);
     let course = courses.get(card.course_slug);
     if (!course) {
       course = { title: card.course_title, lessons: new Map() };
@@ -41,25 +78,54 @@ export function groupByCourse(cards: CardDue[]): CourseBucket[] {
     const lesson = course.lessons.get(card.lesson_id);
     if (lesson) {
       lesson.count += 1;
+      lesson.overdue += cls === "overdue" || cls === "severe" ? 1 : 0;
+      lesson.severe += cls === "severe" ? 1 : 0;
     } else {
       course.lessons.set(card.lesson_id, {
         lessonId: card.lesson_id,
         lessonTitle: card.lesson_title,
         count: 1,
+        overdue: cls === "overdue" || cls === "severe" ? 1 : 0,
+        severe: cls === "severe" ? 1 : 0,
       });
     }
   }
-  return [...courses.entries()]
-    .map(([slug, c]) => {
-      const lessons = [...c.lessons.values()].sort((a, b) => b.count - a.count);
-      return {
-        courseSlug: slug,
-        courseTitle: c.title,
-        count: lessons.reduce((n, l) => n + l.count, 0),
-        lessons,
-      };
-    })
-    .sort((a, b) => b.count - a.count);
+  const buckets: CourseBucket[] = [...courses.entries()].map(([slug, c]) => {
+    const lessons = [...c.lessons.values()].sort((a, b) => b.count - a.count);
+    const overdue = lessons.reduce((n, l) => n + l.overdue, 0);
+    const severe = lessons.reduce((n, l) => n + l.severe, 0);
+    return {
+      courseSlug: slug,
+      courseTitle: c.title,
+      count: lessons.reduce((n, l) => n + l.count, 0),
+      overdue,
+      severe,
+      lessons,
+    };
+  });
+  return buckets.sort((a, b) => b.count - a.count);
+}
+
+/** Aggregated composition of the whole backlog (summary line inputs). */
+export function summarizeBacklog(
+  cards: CardDue[],
+): { total: number; overdue: number; severe: number; dueToday: number } {
+  let overdue = 0;
+  let severe = 0;
+  for (const card of cards) {
+    const cls = classifyDue(card.due_at);
+    if (cls === "overdue" || cls === "severe") overdue += 1;
+    if (cls === "severe") severe += 1;
+  }
+  return { total: cards.length, overdue, severe, dueToday: cards.length - overdue };
+}
+
+/**
+ * How many cards the NEXT review session actually takes. The session caps at
+ * SESSION_CARD_LIMIT; everything past that stays queued for a later session.
+ */
+export function sessionSize(total: number): number {
+  return Math.min(total, SESSION_CARD_LIMIT);
 }
 
 // Cap on how many extra pages we auto-drain to make the counts accurate. At
