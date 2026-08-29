@@ -35,12 +35,6 @@ type TabKey = "role_changes" | "http" | "data_changes";
 /** Tab order for the strip. Same three sources as before, as data. */
 const TAB_KEYS: TabKey[] = ["role_changes", "http", "data_changes"];
 
-function isAuditTab(value: unknown): value is TabKey {
-  return (
-    value === "role_changes" || value === "http" || value === "data_changes"
-  );
-}
-
 type RoleChangeRow = NonNullable<
   ReturnType<typeof useAuditRoleChanges>["data"]
 >[number];
@@ -65,11 +59,11 @@ function daysAgoIso(days: number): string {
 /** FR-6.7 — admin viewer over the immutable audit endpoints. */
 export default function AdminAuditLogsPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  // ?tab= / ?path= let a dashboard alert land on the rows behind it. Anything
+  // unrecognised falls back to the default tab rather than showing an empty
+  // one — a bad link should still leave the operator somewhere useful.
   const search = useSearch({ strict: false });
-
-  // The active tab lives in `?tab=`, so tiles on /admin/stats can land on
-  // the tab that explains them (ADM-021) and the back button works.
+  const navigate = useNavigate();
   const [tab, setTab] = useState<TabKey>(() =>
     isAuditTab(search.tab) ? search.tab : "role_changes",
   );
@@ -471,6 +465,47 @@ function HttpAuditTable({
 }
 
 /** FR-6.7 — recent data changes per entity kind, with drill-down detail. */
+/** Entity-ID lookup input + button (DataChangesPanel toolbar). */
+function EntityIdLookup({
+  value,
+  onChange,
+  isValidUuid,
+  onLookup,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  isValidUuid: boolean;
+  onLookup: (id: string) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && isValidUuid && value.trim()) {
+            onLookup(value.trim());
+          }
+        }}
+        placeholder={t("admin.audit.data_changes.entity_id_placeholder")}
+        className="h-9 w-64 font-mono text-xs normal-case"
+      />
+      <Button
+        type="button"
+        onClick={() => {
+          if (isValidUuid && value.trim()) onLookup(value.trim());
+        }}
+        disabled={!value.trim() || !isValidUuid}
+        className="h-9 gap-2"
+      >
+        <UserRound className="h-4 w-4" />
+        {t("admin.audit.data_changes.lookup")}
+      </Button>
+    </div>
+  );
+}
+
 function DataChangesPanel({ sinceIso }: { sinceIso: string }) {
   const { t } = useTranslation();
   const [table, setTable] = useState<DataChangeTable>("courses");
@@ -572,30 +607,12 @@ function DataChangesPanel({ sinceIso }: { sinceIso: string }) {
           }
         }}
         trailing={
-          <div className="flex items-center gap-2">
-            <Input
-              value={entityIdInput}
-              onChange={(e) => setEntityIdInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && UUID_RE.test(trimmed)) {
-                  setSelectedId(trimmed);
-                }
-              }}
-              placeholder={t("admin.audit.data_changes.entity_id_placeholder")}
-              className="h-9 w-64 font-mono text-xs normal-case"
-            />
-            <Button
-              type="button"
-              onClick={() => {
-                if (UUID_RE.test(trimmed)) setSelectedId(trimmed);
-              }}
-              disabled={!trimmed || !isValidUuid}
-              className="h-9 gap-2"
-            >
-              <UserRound className="h-4 w-4" />
-              {t("admin.audit.data_changes.lookup")}
-            </Button>
-          </div>
+          <EntityIdLookup
+            value={entityIdInput}
+            onChange={setEntityIdInput}
+            isValidUuid={isValidUuid}
+            onLookup={setSelectedId}
+          />
         }
       />
 

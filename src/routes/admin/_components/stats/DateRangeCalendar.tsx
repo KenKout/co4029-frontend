@@ -128,13 +128,13 @@ export function DateRangeCalendar({
   const end = draft.from && draft.to ? draft.to : null;
 
   return (
-    <div className="grid grid-cols-1 gap-0 sm:grid-cols-[10rem_1fr]">
+    <div className="grid min-w-[21rem] grid-cols-1 gap-0 sm:min-w-[36rem] sm:grid-cols-[10rem_1fr]">
       <PresetList
         activePreset={activePreset}
         onPick={pickPreset}
       />
 
-      <div className="min-w-[21rem] p-3">
+      <div className="p-3">
         <div className="mb-2 flex items-center justify-between">
           <Button
             type="button"
@@ -164,7 +164,7 @@ export function DateRangeCalendar({
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {[leftMonth, rightMonth].map((month) => (
             <MonthGrid
               key={`${month.getFullYear()}-${month.getMonth()}`}
@@ -263,7 +263,7 @@ function MonthGrid({
           </span>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-0 text-center">
+      <div className="grid grid-cols-7 gap-0.5 text-center">
         {grid.map((iso, i) => {
           if (!iso) return <span key={`pad-${i}`} />;
           const isStart = iso === start;
@@ -296,7 +296,7 @@ function MonthGrid({
               aria-label={iso}
               aria-pressed={filled}
               onClick={() => onSelect(iso)}
-              className={`relative size-8 rounded-none p-0 text-xs transition-colors duration-100 ${cap} ${chip} ${
+              className={`relative h-auto w-full aspect-square rounded-none p-0 text-xs transition-colors duration-100 ${cap} ${chip} ${
                 inFuture ? "cursor-not-allowed text-text-muted/40" : ""
               } ${
                 isToday && !filled ? "ring-1 ring-m3-primary" : ""
