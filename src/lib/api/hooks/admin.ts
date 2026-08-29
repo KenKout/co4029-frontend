@@ -147,6 +147,8 @@ export interface AdminDashboardOut {
   // envelope
   as_of: string;
   window_days: number;
+  window_from: string | null;
+  window_to: string | null;
   organization_id: string | null;
   usage_scope: MetricScope;
   tenant_scope: MetricScope;
@@ -200,6 +202,13 @@ export interface AdminDashboardParams {
   /** Window length for every windowed metric. Defaults to the server's 7. */
   windowDays?: number;
   /**
+   * Exact inclusive date range (ISO ``YYYY-MM-DD``), e.g. from a custom
+   * range picker. Overrides ``windowDays`` — the server counts exactly the
+   * rows in the span and echoes the dates back in the envelope.
+   */
+  from?: string;
+  to?: string;
+  /**
    * Narrow org-traceable metrics to one tenant. Ignored by the server for
    * callers who are already pinned to their own organization, so passing it
    * can never widen what a manager sees.
@@ -209,14 +218,18 @@ export interface AdminDashboardParams {
 
 export function useAdminDashboard({
   windowDays,
+  from,
+  to,
   organizationId,
 }: AdminDashboardParams = {}) {
   const params = new URLSearchParams();
-  if (windowDays !== undefined) params.set("window_days", String(windowDays));
+  if (windowDays !== undefined && !from) params.set("window_days", String(windowDays));
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
   if (organizationId) params.set("organization_id", organizationId);
   const qs = params.toString();
   return useQuery({
-    queryKey: queryKeys.admin.dashboard(windowDays, organizationId),
+    queryKey: queryKeys.admin.dashboard(windowDays, from, to, organizationId),
     queryFn: () =>
       apiFetch<AdminDashboardOut>(
         `/admin/stats/dashboard${qs ? `?${qs}` : ""}`,

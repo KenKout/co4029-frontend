@@ -11,6 +11,12 @@ import {
 } from "@/lib/auth/use-permissions";
 
 import {
+  addDays,
+  daysBetweenInclusive,
+  toIso,
+  type RangeSelection,
+} from "./date-range";
+import {
   buildAlerts,
   buildCost,
   buildCurrentStatus,
@@ -20,9 +26,13 @@ import {
 import type { AdminStatsController } from "./types";
 import { useFormatters } from "./use-formatters";
 
-/** Windows offered in the dashboard filter, in days. */
-export const WINDOW_OPTIONS = [1, 7, 30] as const;
-export const DEFAULT_WINDOW_DAYS = 7;
+/** Default applied range: the last 7 calendar days, matching the old default. */
+export function defaultRange(reference = new Date()): RangeSelection {
+  return {
+    from: toIso(addDays(reference, -6)),
+    to: toIso(reference),
+  };
+}
 
 /**
  * Resolves everything the operator overview renders.
@@ -31,6 +41,10 @@ export const DEFAULT_WINDOW_DAYS = 7;
  * and the dependency probe — and neither is allowed to take the page down with
  * it (ADM-015). So this hook never throws or short-circuits on error: it
  * reports each source's state and lets the sections decide what to draw.
+ *
+ * The window is an inclusive calendar range (see ``date-range.ts``); the
+ * server counts exactly the rows in it and echoes the dates back, so the
+ * picker's label is always the calculation.
  */
 export function useAdminStatsPage(): AdminStatsController {
   const { t } = useTranslation();
@@ -39,7 +53,7 @@ export function useAdminStatsPage(): AdminStatsController {
   const permissions = usePermissions();
   const canFilterOrganization = permissions.has(SUPERUSER_PERMISSION);
 
-  const [windowDays, setWindowDays] = useState<number>(DEFAULT_WINDOW_DAYS);
+  const [range, setRange] = useState<RangeSelection>(() => defaultRange());
   const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   // The organization filter is the IT admin's only; a manager is already
@@ -47,7 +61,8 @@ export function useAdminStatsPage(): AdminStatsController {
   const orgs = useOrganizations({ limit: 200, enabled: canFilterOrganization });
 
   const { data, isLoading, isError } = useAdminDashboard({
-    windowDays,
+    from: range.from,
+    to: range.to,
     organizationId,
   });
   const health = useDeepHealth();
@@ -68,8 +83,16 @@ export function useAdminStatsPage(): AdminStatsController {
 
   const alerts = useMemo(
     () =>
-      buildAlerts(t, f, reliability, cost, tenant, currentStatus, windowDays),
-    [t, f, reliability, cost, tenant, currentStatus, windowDays],
+      buildAlerts(
+        t,
+        f,
+        reliability,
+        cost,
+        tenant,
+        currentStatus,
+        daysBetweenInclusive(range.from, range.to),
+      ),
+    [t, f, reliability, cost, tenant, currentStatus, range],
   );
 
   return {
@@ -81,8 +104,9 @@ export function useAdminStatsPage(): AdminStatsController {
     isError,
     asOf: data?.as_of,
     scope: {
-      windowDays,
-      setWindowDays,
+      range,
+      setRange,
+      spanDays: daysBetweenInclusive(range.from, range.to),
       organizationId,
       setOrganizationId,
       canFilterOrganization,

@@ -1848,6 +1848,25 @@
         "trend_empty": "No API traffic in this period.",
         "legend_p95": "p95 — 95th percentile",
         "legend_p50": "p50 — median"
+      },
+      "range": {
+        "trigger_aria": "Choose date range",
+        "panel_aria": "Custom date range",
+        "prev_month_aria": "Previous months",
+        "next_month_aria": "Next months",
+        "day_hint": "Select the start and end of the range",
+        "days_one": "1 day",
+        "days_other": "{{count}} days",
+        "apply": "Apply",
+        "cancel": "Cancel",
+        "preset": {
+          "today": "Today",
+          "yesterday": "Yesterday",
+          "last7": "Last 7 days",
+          "last30": "Last 30 days",
+          "thisMonth": "This month",
+          "lastMonth": "Last month"
+        }
       }
     },
     "ai_costs": {
@@ -2255,8 +2274,6 @@
       "version": "Version {{version}}",
       "status_probe_unavailable": "Dependency probe unavailable — status unknown.",
       "window": {
-        "aria": "Metric window",
-        "option": "{{days}}d",
         "label": "last {{days}}d"
       },
       "org_filter": {

@@ -18,7 +18,9 @@ import type { AdminStatsController } from "./types";
  */
 export function ReliabilityRow({ c }: { c: AdminStatsController }) {
   const { t, f, reliability: r, scope } = c;
-  const window = t("admin.dashboard.window.label", { days: scope.windowDays });
+  const window = t("admin.dashboard.window.label", {
+    days: scope.spanDays,
+  });
 
   if (c.isError) {
     return (

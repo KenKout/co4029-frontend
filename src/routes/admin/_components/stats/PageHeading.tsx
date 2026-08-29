@@ -1,11 +1,10 @@
 import { useTranslation } from "react-i18next";
 
-import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { Select } from "@/components/ui/select";
 import { useFormatDateTime } from "@/lib/format/date";
 
+import { DateRangePicker } from "./DateRangePicker";
 import type { AdminStatsController } from "./types";
-import { WINDOW_OPTIONS } from "./use-admin-stats-page";
 
 /**
  * Dashboard header: title on the left, the window / tenant controls and the
@@ -42,14 +41,9 @@ export function PageHeading({ c }: { c?: AdminStatsController }) {
 
       {c && (
         <div className="flex flex-wrap items-center gap-3">
-          <SegmentedFilter
-            ariaLabel={t("admin.dashboard.window.aria")}
-            value={String(c.scope.windowDays)}
-            onChange={(value) => c.scope.setWindowDays(Number(value))}
-            options={WINDOW_OPTIONS.map((days) => ({
-              key: String(days),
-              label: t("admin.dashboard.window.option", { days }),
-            }))}
+          <DateRangePicker
+            range={c.scope.range}
+            onChange={c.scope.setRange}
           />
 
           {c.scope.canFilterOrganization && (

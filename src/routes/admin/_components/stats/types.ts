@@ -140,10 +140,19 @@ export interface TenantSummary {
   severity: ActionSeverity;
 }
 
+import type { RangeSelection } from "./date-range";
+
 /** Dashboard window + tenant filter state (ADM-005). */
 export interface DashboardScope {
-  windowDays: number;
-  setWindowDays: (days: number) => void;
+  /**
+   * Inclusive calendar range in ``YYYY-MM-DD``, always set — the picker
+   * replaces the old 1/7/30 segmented control with real date ranges, and
+   * the server counts exactly the rows in it.
+   */
+  range: RangeSelection;
+  setRange: (range: RangeSelection) => void;
+  /** Inclusive day count of the current range (1 for Today). */
+  spanDays: number;
   organizationId: string | null;
   setOrganizationId: (id: string | null) => void;
   /** Only a `system.administer` caller may narrow to another tenant. */
