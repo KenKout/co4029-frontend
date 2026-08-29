@@ -215,6 +215,28 @@ export function isDraftDirty(
   );
 }
 
+/** Preserve locally edited fields while accepting unrelated server updates. */
+export function reconcileDraftWithConfig(
+  current: SettingsDraft,
+  previousSaved: InterviewConfigAuthoring,
+  incoming: InterviewConfigAuthoring,
+): SettingsDraft {
+  const incomingDraft = draftFromConfig(incoming);
+  const previousDraft = draftFromConfig(previousSaved);
+  const changed = buildConfigUpdatePayload(current, previousDraft);
+  const next = { ...incomingDraft };
+  for (const key of Object.keys(changed)) {
+    if (key === "supplementary_instructions") {
+      next.notes = current.notes;
+      next.rubric_criteria = current.rubric_criteria;
+    } else if (key in next) {
+      (next as Record<string, unknown>)[key] =
+        (current as unknown as Record<string, unknown>)[key];
+    }
+  }
+  return next;
+}
+
 function buildFullConfigUpdatePayload(
   draft: SettingsDraft,
 ): InterviewConfigUpdate {

@@ -27,6 +27,7 @@ import { ConfigWorkspace } from "@/routes/teacher/_components/interview-config/c
 import {
   draftFromConfig,
   isDraftDirty,
+  reconcileDraftWithConfig,
 } from "@/routes/teacher/_components/interview-config/draft-mapping";
 import { createTabGuard } from "@/routes/teacher/_components/interview-config/tab-guard";
 import { useConfigMutations } from "@/routes/teacher/_components/interview-config/use-config-mutations";
@@ -63,6 +64,7 @@ export default function InterviewConfigPage() {
   const mutations = useConfigMutations(configId, courseId);
 
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
+  const savedConfigRef = useRef<typeof config>(undefined);
   // Briefly true right after a successful settings save so the header can show
   // a transient "Saved" confirmation (cleared once edits resume or the timer
   // elapses).
@@ -132,7 +134,18 @@ export default function InterviewConfigPage() {
   }, [activeRun?.status, configId, qc]);
 
   useEffect(() => {
-    if (config) setDraft(draftFromConfig(config));
+    if (!config) return;
+    const previousSaved = savedConfigRef.current;
+    if (!previousSaved || previousSaved.id !== config.id) {
+      setDraft(draftFromConfig(config));
+    } else {
+      setDraft((current) =>
+        current
+          ? reconcileDraftWithConfig(current, previousSaved, config)
+          : draftFromConfig(config),
+      );
+    }
+    savedConfigRef.current = config;
   }, [config]);
 
   // Whether the settings form has edits not yet persisted. Compares the PATCH

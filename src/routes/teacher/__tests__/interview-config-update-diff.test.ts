@@ -8,6 +8,7 @@ import {
   buildConfigUpdatePayload,
   draftFromConfig,
   isDraftDirty,
+  reconcileDraftWithConfig,
 } from "@/routes/teacher/_components/interview-config/draft-mapping";
 import { createConfigActions } from "@/routes/teacher/_components/interview-config/config-page-actions";
 import type { SettingsDraft } from "@/lib/interview/config-draft";
@@ -225,5 +226,65 @@ describe("saveSettings guards against a no-op save", () => {
     expect(setDraft).toHaveBeenCalledWith(
       draftFromConfig(savedConfig({ title: "Voice demo (renamed)" })),
     );
+  });
+});
+
+describe("reconcileDraftWithConfig", () => {
+  it("keeps a locally edited field and accepts server changes elsewhere", () => {
+    const previous = savedConfig();
+    const incoming = savedConfig({ title: "Voice demo (server rename)" });
+    const current: SettingsDraft = {
+      ...draftFromConfig(previous),
+      title: "My local edit",
+    };
+
+    const next = reconcileDraftWithConfig(current, previous, incoming);
+
+    expect(next.title).toBe("My local edit");
+    expect(next.persona).toBe(incoming.persona ?? "neutral");
+    expect(next.max_attempts).toBe(String(incoming.max_attempts));
+  });
+
+  it("applies server values to untouched fields", () => {
+    const previous = savedConfig();
+    const incoming = savedConfig({ title: "Server title", time_limit_minutes: 30 });
+    const current = draftFromConfig(previous);
+
+    const next = reconcileDraftWithConfig(current, previous, incoming);
+
+    expect(next.title).toBe("Server title");
+    expect(next.time_limit_minutes).toBe("30");
+  });
+
+  it("keeps notes and rubric_criteria together when either is edited", () => {
+    const previous = savedConfig();
+    const incoming = savedConfig({
+      supplementary_instructions: JSON.stringify({
+        notes: "server notes",
+        criteria: [{ key: "depth", weight: 4 }],
+      }),
+    });
+    const current: SettingsDraft = {
+      ...draftFromConfig(previous),
+      notes: "local notes",
+    };
+
+    const next = reconcileDraftWithConfig(current, previous, incoming);
+
+    // Both halves of the pair come from the local draft — never a mix.
+    expect(next.notes).toBe("local notes");
+    expect(next.rubric_criteria).toBe(current.rubric_criteria);
+  });
+
+  it("syncs the whole supplementary pair when neither half is edited", () => {
+    const previous = savedConfig({ supplementary_instructions: null });
+    const incoming = savedConfig({
+      supplementary_instructions: JSON.stringify({ notes: "fresh", criteria: [] }),
+    });
+    const current = draftFromConfig(previous);
+
+    const next = reconcileDraftWithConfig(current, previous, incoming);
+
+    expect(next.notes).toBe("fresh");
   });
 });
