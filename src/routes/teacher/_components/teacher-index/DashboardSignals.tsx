@@ -1,4 +1,4 @@
-import { FileStack, TrendingDown } from "lucide-react";
+import { Clock, FileStack, TrendingDown } from "lucide-react";
 
 import { StatCard } from "@/components/ui/stat-card";
 import type { TeacherDashboardStats } from "@/lib/api/hooks/teacher-courses";
@@ -15,10 +15,13 @@ import type { TranslateFn } from "./types";
  * without adding information. What remains is signal the sections do not
  * carry:
  *
- *   - students with declining retention (spaced-repetition easiness below
- *     the 2.0 struggling threshold — nowhere else on the page),
+ *   - students below the retention threshold (spaced-repetition easiness
+ *     below the 2.0 struggling threshold — nowhere else on the page),
  *   - draft courses (invisible to students until published — no section
- *     above covers them).
+ *     above covers them),
+ *   - reviews past due (student review cards behind schedule — a context
+ *     insight, not an action: the teacher cannot clear them, so they do
+ *     not belong in the priority feed).
  */
 export function DashboardSignals({
   stats,
@@ -28,15 +31,24 @@ export function DashboardSignals({
   t: TranslateFn;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <StatCard
-        label={t("teacher_dashboard.signals.declining_retention")}
+        label={t("teacher_dashboard.signals.below_retention_threshold")}
         value={formatCount(stats?.students_below_ef_threshold)}
-        sublabel={t("teacher_dashboard.signals.declining_retention_sub")}
+        sublabel={t(
+          "teacher_dashboard.signals.below_retention_threshold_sub",
+        )}
         icon={TrendingDown}
         variant={
           (stats?.students_below_ef_threshold ?? 0) > 0 ? "glow" : "default"
         }
+      />
+      <StatCard
+        label={t("teacher_dashboard.signals.reviews_overdue")}
+        value={formatCount(stats?.cards_overdue)}
+        sublabel={t("teacher_dashboard.signals.reviews_overdue_sub")}
+        icon={Clock}
+        variant={(stats?.cards_overdue ?? 0) > 0 ? "glow" : "default"}
       />
       <StatCard
         label={t("teacher_dashboard.signals.draft_courses")}

@@ -241,13 +241,16 @@
       "blocking": "Đang chặn",
       "empty_title": "Không có việc gấp",
       "empty_hint": "Không có gì bị chặn và không học viên nào bị đánh dấu. Xem Tình trạng khóa học bên dưới.",
-      "oldest": "Cũ nhất: {{age}}"
+      "oldest": "Cũ nhất: {{age}}",
+      "last_active": "Hoạt động gần nhất: {{age}}{{suffix}}"
     },
     "signals": {
-      "declining_retention": "Học viên giảm trí nhớ",
-      "declining_retention_sub": "Hệ số dễ nhớ trung bình dưới ngưỡng 2.0",
       "draft_courses": "Khóa học nháp",
-      "draft_courses_sub": "Chưa xuất bản — học viên không thấy được"
+      "draft_courses_sub": "Chưa xuất bản — học viên không thấy được",
+      "below_retention_threshold": "Học viên dưới ngưỡng duy trì",
+      "below_retention_threshold_sub": "Độ dễ trung bình của thẻ ôn tập dưới ngưỡng 2.0",
+      "reviews_overdue": "Thẻ ôn tập quá hạn",
+      "reviews_overdue_sub": "Thẻ ôn tập của học viên quá ngày lịch trình"
     },
     "attention": {
       "title": "Học viên cần chú ý",

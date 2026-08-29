@@ -31,9 +31,9 @@ const KIND_ICON: Record<PriorityTask["kind"], typeof UserRound> = {
 /**
  * Grouped content backlogs act as a shortcut INTO the "Needs your review"
  * section: clicking one scrolls down and expands the matching category,
- * where the per-item deep links live. `reviews_overdue` has no drill-down
- * endpoint (spaced-repetition cards do not expose a per-course list), so
- * those rows stay informational.
+ * where the per-item deep links live. (`reviews_overdue` stopped shipping
+ * in the feed — teachers cannot clear student review cards, so it moved to
+ * the footer insights; the type value stays for defensive rendering.)
  */
 const DRILLDOWN_KIND: Partial<
   Record<PriorityTask["kind"], ReviewQueueKind>
@@ -161,7 +161,16 @@ function TaskBody({
     ? t("teacher_dashboard.priority.oldest", {
         age: formatAgeFull(task.age_hours),
       })
-    : age;
+    // Student rows: the age is the last-activity window, which no longer
+    // matches the headline reason now that assessment failures lead — say
+    // what the number measures instead of letting it hang ("Last active:
+    // 36d ago", not a bare "36d" next to a failure reason).
+    : task.kind === "student_risk" && age
+      ? t("teacher_dashboard.priority.last_active", {
+          age,
+          suffix: age === "just now" ? "" : " ago",
+        })
+      : age;
 
   return (
     <>

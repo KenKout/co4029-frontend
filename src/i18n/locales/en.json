@@ -240,13 +240,16 @@
       "blocking": "Blocking",
       "empty_title": "No urgent actions",
       "empty_hint": "Nothing is blocked and no student is flagged. Course health below has the fuller picture.",
-      "oldest": "Oldest: {{age}}"
+      "oldest": "Oldest: {{age}}",
+      "last_active": "Last active: {{age}}{{suffix}}"
     },
     "signals": {
-      "declining_retention": "Students with declining retention",
-      "declining_retention_sub": "Average easiness below the 2.0 struggling threshold",
       "draft_courses": "Draft courses",
-      "draft_courses_sub": "Not published yet — students cannot see them"
+      "draft_courses_sub": "Not published yet — students cannot see them",
+      "below_retention_threshold": "Students below retention threshold",
+      "below_retention_threshold_sub": "Average review easiness below the 2.0 threshold",
+      "reviews_overdue": "Reviews past due",
+      "reviews_overdue_sub": "Student review cards past their scheduled date"
     },
     "attention": {
       "title": "Students needing attention",
