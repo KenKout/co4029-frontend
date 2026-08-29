@@ -82,6 +82,7 @@ export function ReliabilityRow({ c }: { c: AdminStatsController }) {
           severity={r.apiSeverity}
           icon={Activity}
           to="/admin/audit-logs"
+          search={{ tab: "http" }}
         />
 
         <ActionTile
@@ -90,6 +91,7 @@ export function ReliabilityRow({ c }: { c: AdminStatsController }) {
           detail={t("admin.dashboard.tiles.api_p95_detail", { window })}
           icon={Timer}
           to="/admin/audit-logs"
+          search={{ tab: "http" }}
         />
       </div>
 

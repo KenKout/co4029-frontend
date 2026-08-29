@@ -427,6 +427,7 @@ export function buildAlerts(
       }),
       target: t("admin.dashboard.targets.api"),
       to: "/admin/audit-logs",
+      search: { tab: "http" },
       ctaLabel: t("admin.dashboard.cta.open_audit"),
     });
   }
