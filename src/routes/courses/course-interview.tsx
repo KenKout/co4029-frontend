@@ -39,14 +39,19 @@ export default function CourseInterviewPage() {
   //     client narrates the server-authored transition line the agent never
   //     receives; the token is prefetched during that beat so the hold costs
   //     no dead air.
-  //   - End/timer moves the phase to `closing` synchronously, before the
-  //     finish API resolves, and that terminal state kills every capability:
-  //     the room disconnects and RoomAudioRenderer unmounts, so in-flight
-  //     agent audio cannot continue into the closing/result screen.
+  //   - End/timer moves the phase to `closing` synchronously (with
+  //     `closingReason` set), before the finish API resolves, and that
+  //     terminal state kills every capability: the room disconnects and
+  //     RoomAudioRenderer unmounts, so in-flight agent audio cannot continue
+  //     into the closing/result screen. The ONE exception is a `natural`
+  //     closing — the agent is already speaking the goodbye over LiveKit, so
+  //     the room stays live until the farewell presents and the phase
+  //     advances to results.
   const roomProps = interviewRoomProps({
     sessionId,
     phase: iv.phase,
     finishResult,
+    closingReason: iv.closingReason,
     onboardingStage: iv.onboardingStage,
     pendingFirstQuestion: iv.pendingFirstQuestion,
     micOn: iv.micOn,

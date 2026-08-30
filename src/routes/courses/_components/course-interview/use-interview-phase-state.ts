@@ -9,11 +9,13 @@ import type {
 } from "@/lib/api/types";
 import { getAuthDisplayName } from "@/lib/auth";
 import type {
-  ConversationTurn,
   InterviewQuestionView,
   InterviewSessionProgress,
 } from "@/lib/interview/types";
-import type { InterviewPhase } from "@/lib/interview/turn-factory";
+import type {
+  FinishReason,
+  InterviewPhase,
+} from "@/lib/interview/turn-factory";
 import type { useInterviewRouteData } from "./use-interview-route-data";
 import type { useInterviewTurnState } from "./use-interview-turn-state";
 
@@ -62,6 +64,9 @@ export function useInterviewPhaseState(
   );
   const [startDialogOpen, setStartDialogOpen] = useState(false);
   const [phase, setPhase] = useState<InterviewPhase>("prestart");
+  // Set synchronously when closing begins so the room can keep the LiveKit
+  // agent connected for its natural goodbye before the finish request returns.
+  const [closingReason, setClosingReason] = useState<FinishReason | null>(null);
 
   const [onboardingStage, setOnboardingStage] =
     useState<InterviewOnboardingStage>("identity_check");
@@ -145,6 +150,8 @@ export function useInterviewPhaseState(
     setStartDialogOpen,
     phase,
     setPhase,
+    closingReason,
+    setClosingReason,
     onboardingStage,
     setOnboardingStage,
     interviewLanguage,

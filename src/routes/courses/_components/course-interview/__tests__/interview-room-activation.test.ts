@@ -78,7 +78,10 @@ function prefetch(args: {
  * mirrored, so the regression passes only when the real rule is right.
  * `roomRequested` is the terminal gate: End/timer flips the phase to `closing`
  * synchronously, so every capability — token mint, warm connection, agent
- * dispatch, mic publish — dies at that transition.
+ * dispatch, mic publish — dies at that transition. The exception is a
+ * `natural` closing: the agent is reading the goodbye over LiveKit, so the
+ * room stays fully live until the farewell presents and the phase advances
+ * to results (which nulls `closingReason` in the same tick).
  */
 const ROOM_PROPS_BASE = {
   sessionId: "s-1",
@@ -87,6 +90,7 @@ const ROOM_PROPS_BASE = {
   pendingFirstQuestion: null as unknown,
   micOn: true,
   finishResult: undefined as unknown,
+  closingReason: null as "natural" | "ended_early" | "timed_out" | null,
 };
 
 const BASE = {
@@ -98,11 +102,14 @@ const BASE = {
 };
 
 const TERMINAL_STATES: (
-  | { phase: "closing" }
+  | { phase: "closing"; closingReason?: "ended_early" | "timed_out" }
   | { phase: "results" }
   | { finishResult: { status: string } }
 )[] = [
-  { phase: "closing" },
+  // End button / timer expiry: closingReason is "ended_early"/"timed_out",
+  // never "natural" — the room must die at once.
+  { phase: "closing", closingReason: "ended_early" },
+  { phase: "closing", closingReason: "timed_out" },
   { phase: "results" },
   { finishResult: { status: "completed" } },
 ];
@@ -183,5 +190,49 @@ describe("terminal states kill every room capability", () => {
     expect(props.warm).toBe(false);
     expect(props.agentWanted).toBe(true);
     expect(props.audio).toBe(true);
+  });
+});
+
+describe("a natural closing keeps the room for the agent's goodbye", () => {
+  it("holds every capability up while the farewell is presenting", () => {
+    // The agent is speaking the closing over LiveKit right now; the room must
+    // not drop it, and the client must not take over the voice.
+    const props = interviewRoomProps({
+      ...ROOM_PROPS_BASE,
+      phase: "closing",
+      closingReason: "natural",
+    });
+    expect(props.active).toBe(true);
+    expect(props.prefetch).toBe(true);
+    // No warming in closing — `active` alone holds the connection.
+    expect(props.warm).toBe(false);
+    expect(props.agentWanted).toBe(true);
+    expect(props.audio).toBe(true);
+  });
+
+  it("cuts the room the moment the farewell has presented (→results)", () => {
+    // handleTurnPresented advances closing → results and nulls closingReason
+    // in the same tick; terminal then, and only then.
+    const props = interviewRoomProps({
+      ...ROOM_PROPS_BASE,
+      phase: "results",
+      closingReason: null,
+    });
+    expect(props.active).toBe(false);
+    expect(props.prefetch).toBe(false);
+    expect(props.warm).toBe(false);
+    expect(props.agentWanted).toBe(false);
+    expect(props.audio).toBe(false);
+  });
+
+  it("does not hold a stale natural closing when the finish already landed", () => {
+    const props = interviewRoomProps({
+      ...ROOM_PROPS_BASE,
+      phase: "closing",
+      closingReason: "natural",
+      finishResult: { status: "completed" },
+    });
+    expect(props.active).toBe(false);
+    expect(props.audio).toBe(false);
   });
 });

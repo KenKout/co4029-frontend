@@ -26,7 +26,10 @@
  * Both waits are capped for the same reason.
  */
 import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration";
-import type { InterviewPhase } from "@/lib/interview/turn-factory";
+import type {
+  FinishReason,
+  InterviewPhase,
+} from "@/lib/interview/turn-factory";
 
 /**
  * What the agent's voice is doing, as far as this client can tell.
@@ -248,6 +251,17 @@ export function shouldWarmRoom(args: {
  * (it is gated on `active && room` in the provider) the instant the interview
  * turns terminal.
  *
+ * ONE exception keeps the room up: the NATURAL farewell. When the turn
+ * pipeline ends in a live room, the agent itself is already speaking the
+ * goodbye over LiveKit (`orchestration_bridge` returns the closing as
+ * `speak_text`), and the client must not re-read it in a second voice. So a
+ * closing whose `closingReason` is `"natural"` stays fully live: the room
+ * carries the agent's voice while the closing turn presents against the
+ * agent's own `lk.agent.state`, and only the closing→results advance
+ * (handleTurnPresented, which nulls `closingReason` at the same time) makes
+ * the state terminal. `"ended_early"` / `"timed_out"` closings never touch
+ * the agent and keep the immediate cut.
+ *
  * `finishResult` is included as a third terminal signal so the rule also holds
  * on the direct `ended_early`/`timed_out` path, where `beginClosing` jumps
  * straight to `results` without a goodbye turn.
@@ -256,6 +270,7 @@ export function interviewRoomProps(args: {
   sessionId: string | null;
   phase: InterviewPhase;
   finishResult: unknown;
+  closingReason?: FinishReason | null;
   onboardingStage: string | null | undefined;
   pendingFirstQuestion: unknown;
   micOn: boolean;
@@ -267,7 +282,9 @@ export function interviewRoomProps(args: {
   audio: boolean;
 } {
   const terminal =
-    args.phase === "closing" || args.phase === "results" || Boolean(args.finishResult);
+    (args.phase === "closing" && args.closingReason !== "natural") ||
+    args.phase === "results" ||
+    Boolean(args.finishResult);
   const roomRequested = !terminal && Boolean(args.sessionId);
   const roomActive =
     roomRequested &&

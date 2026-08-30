@@ -54,6 +54,7 @@ export function useInterviewActions(base: InterviewBase) {
     setAiSpeaking,
     setAiPresenting,
     setPhase,
+    setClosingReason,
     setCurrentQuestion,
     setPendingFirstQuestion,
     setPendingFinishResult,
@@ -90,6 +91,7 @@ export function useInterviewActions(base: InterviewBase) {
       setEndDialogOpen(false);
       setAiSpeaking(false);
       setAiPresenting(false);
+      setClosingReason(reason);
       setPhase("closing");
 
       try {
@@ -119,9 +121,11 @@ export function useInterviewActions(base: InterviewBase) {
           // server that returned no closing_text at all.
           setPendingFinishResult(null);
           setPhase("results");
+          setClosingReason(null);
           setFinishResult(result);
         }
       } catch (error) {
+        setClosingReason(null);
         setPhase("questioning");
         toast.error(
           (error as Error).message ||

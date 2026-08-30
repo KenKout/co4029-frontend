@@ -33,6 +33,7 @@ export function useTurnPresentedHandler(
     setFinishResult,
     setTranscript,
     setPhase,
+    setClosingReason,
   } = base;
   const { currentElapsedSeconds, beginClosing } = helpers;
 
@@ -86,6 +87,7 @@ export function useTurnPresentedHandler(
         pendingFinishResult
       ) {
         setPhase("results");
+        setClosingReason(null);
         setFinishResult(pendingFinishResult);
         setPendingFinishResult(null);
       }
