@@ -1,3 +1,5 @@
+import { useLayoutEffect, useRef, useState } from "react";
+
 import { CostCapacityRow } from "./_components/stats/CostCapacityRow";
 import { CurrentStatusRow } from "./_components/stats/CurrentStatusRow";
 import { LatencyTrendSection } from "./_components/stats/LatencyTrendSection";
@@ -27,6 +29,22 @@ import { SectionNav, type SectionNavItem } from "@/components/ui/section-nav";
 export default function AdminStatsPage() {
   const c = useAdminStatsPage();
 
+  // The section nav sticks directly BELOW the sticky header row. Offset is
+  // derived from the header's live height (it wraps on narrow screens, and
+  // the tenant filter can appear/disappear), so the nav never overlaps the
+  // title or the date-range filter while scrolling.
+  const headingRef = useRef<HTMLDivElement | null>(null);
+  const [headingHeight, setHeadingHeight] = useState(0);
+  useLayoutEffect(() => {
+    const el = headingRef.current;
+    if (!el) return;
+    const measure = () => setHeadingHeight(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Only the very first load shows a skeleton. Once data exists, changing the
   // window or tenant refetches underneath the current numbers rather than
   // dropping the operator back to a blank page.
@@ -44,12 +62,14 @@ export default function AdminStatsPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      <PageHeading c={c} />
+      <div ref={headingRef}>
+        <PageHeading c={c} />
+      </div>
 
       <SectionNav
         items={sections}
         ariaLabel={c.t("admin.dashboard.nav.label")}
-        topOffset={72}
+        topOffset={64 + headingHeight + 8}
       />
 
       <CurrentStatusRow c={c} />
