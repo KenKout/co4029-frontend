@@ -64,7 +64,7 @@ export function QuestionBankToolbar(props: QuestionBankToolbarProps) {
 
       {!props.isPublished && bankIo.importing && (
         <ImportFromBankPanel
-          items={bankIo.importableBankItems}
+          units={bankIo.importPickerUnits}
           selected={bankIo.selectedBank}
           onToggle={bankIo.toggleBankSelection}
           busy={bankIo.importBusy}

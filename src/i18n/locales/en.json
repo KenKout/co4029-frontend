@@ -4655,6 +4655,7 @@
       "import_title": "Import from course question bank",
       "import_help": "Select questions from the course bank to copy into this interview. Imported questions become editable copies — later edits here don't change the bank.",
       "import_selected": "Import {{count}} selected",
+      "import_logical_group": "Select all 4 questions",
       "imported": "Imported {{count}} question(s)",
       "import_all_added": "All bank questions are already in this interview. Add more to the bank from other interviews to reuse them here.",
       "type": {

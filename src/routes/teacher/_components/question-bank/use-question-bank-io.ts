@@ -3,19 +3,87 @@ import { toast } from "sonner";
 
 import type {
   InterviewQuestionAuthoring,
-  InterviewQuestionBankItemCreate,
   InterviewQuestionBankItemRead,
   InterviewQuestionBankLogicalGroupCreate,
 } from "@/lib/api/types";
-import type {
-  AddToBankMutation,
-  TranslateFn,
-} from "./types";
+import type { AddToBankMutation, TranslateFn } from "./types";
+
+export const LOGICAL_ANGLE_ORDER = [
+  "technical",
+  "system_design",
+  "situational",
+  "behavioral",
+] as const;
+
+type LogicalAngle = (typeof LOGICAL_ANGLE_ORDER)[number];
+
+export type ImportPickerUnit =
+  | { kind: "item"; key: string; items: [InterviewQuestionBankItemRead] }
+  | { kind: "logical"; key: string; items: InterviewQuestionBankItemRead[] };
+
+function angleRank(item: InterviewQuestionBankItemRead) {
+  const rank = LOGICAL_ANGLE_ORDER.indexOf(item.question_type as LogicalAngle);
+  return rank === -1 ? LOGICAL_ANGLE_ORDER.length : rank;
+}
+
+function isCompleteLogicalGroup(items: InterviewQuestionBankItemRead[]) {
+  return (
+    items.length === LOGICAL_ANGLE_ORDER.length &&
+    new Set(items.map((item) => item.question_type)).size ===
+      LOGICAL_ANGLE_ORDER.length &&
+    LOGICAL_ANGLE_ORDER.every((angle) =>
+      items.some((item) => item.question_type === angle),
+    )
+  );
+}
 
 /**
- * Question bank: add-to-bank + import-from-bank (copy semantics). Extracted
- * from the former 2.4k-line question-bank.tsx.
+ * Import-picker units over the course bank. Logical groups stay atomic: a
+ * complete 4-angle group is ONE unit; anything partial renders as plain
+ * items. A unit whose ANY member prompt already exists in the destination
+ * config is dropped entirely — the server import is all-or-nothing, so a
+ * visible half-collision would fail the whole request.
+ *
+ * Exported and pure so the regression tests exercise the shipped rule.
  */
+export function buildImportPickerUnits(
+  bankItems: InterviewQuestionBankItemRead[] | undefined,
+  existingPrompts: Set<string>,
+): ImportPickerUnit[] {
+  const groups = new Map<string, InterviewQuestionBankItemRead[]>();
+  for (const item of bankItems ?? []) {
+    const key = item.variant_group_id
+      ? `group:${item.variant_group_id}`
+      : `item:${item.id}`;
+    const members = groups.get(key);
+    if (members) members.push(item);
+    else groups.set(key, [item]);
+  }
+
+  const units: ImportPickerUnit[] = [];
+  for (const [key, members] of groups) {
+    if (
+      members.some((item) =>
+        existingPrompts.has(item.prompt_text.trim().toLowerCase()),
+      )
+    ) {
+      continue;
+    }
+    const ordered = [...members].sort(
+      (a, b) => angleRank(a) - angleRank(b) || a.id.localeCompare(b.id),
+    );
+    if (members[0]?.variant_group_id && isCompleteLogicalGroup(ordered)) {
+      units.push({ kind: "logical", key, items: ordered });
+    } else {
+      for (const item of ordered) {
+        units.push({ kind: "item", key: `item:${item.id}`, items: [item] });
+      }
+    }
+  }
+  return units;
+}
+
+/** Question bank add/import controller. Logical bank groups stay atomic. */
 export interface QuestionBankIoOptions {
   configId: string;
   sorted: InterviewQuestionAuthoring[];
@@ -24,41 +92,11 @@ export interface QuestionBankIoOptions {
   addLogicalGroupToBank: {
     mutateAsync: (payload: InterviewQuestionBankLogicalGroupCreate) => Promise<unknown>;
   };
-  importFromBank: { mutateAsync: (itemIds: string[]) => Promise<{ created: unknown[] }> };
+  importFromBank: {
+    mutateAsync: (itemIds: string[]) => Promise<{ created: unknown[] }>;
+  };
   announce: (msg: string) => void;
   t: TranslateFn;
-}
-
-/** The 4-item logical-group payload, one item per angle in canonical order. */
-function buildLogicalGroupItems(
-  questions: InterviewQuestionAuthoring[],
-  configId: string,
-): [
-  InterviewQuestionBankItemCreate,
-  InterviewQuestionBankItemCreate,
-  InterviewQuestionBankItemCreate,
-  InterviewQuestionBankItemCreate,
-] {
-  const byAngle = new Map(
-    questions.map((question) => [question.question_type, question]),
-  );
-  const toBankItem = (question: InterviewQuestionAuthoring) => ({
-    prompt_text: question.prompt_text,
-    question_type: question.question_type as
-      | "technical"
-      | "system_design"
-      | "situational"
-      | "behavioral",
-    difficulty: question.difficulty ?? null,
-    model_answer: question.model_answer ?? null,
-    source_config_id: configId,
-  });
-  return [
-    toBankItem(byAngle.get("technical")!),
-    toBankItem(byAngle.get("system_design")!),
-    toBankItem(byAngle.get("situational")!),
-    toBankItem(byAngle.get("behavioral")!),
-  ];
 }
 
 export function useQuestionBankIo(options: QuestionBankIoOptions) {
@@ -76,6 +114,7 @@ export function useQuestionBankIo(options: QuestionBankIoOptions) {
   const [bankingId, setBankingId] = useState<string | null>(null);
   const [bankingGroupId, setBankingGroupId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  // Stores physical bank-item ids. A logical picker unit toggles all its child ids.
   const [selectedBank, setSelectedBank] = useState<Set<string>>(new Set());
   const [importBusy, setImportBusy] = useState(false);
 
@@ -103,19 +142,11 @@ export function useQuestionBankIo(options: QuestionBankIoOptions) {
   ) {
     const groupId = questions[0]?.variant_group_id;
     const angles = new Set(questions.map((question) => question.question_type));
-    const required = new Set([
-      "technical",
-      "system_design",
-      "situational",
-      "behavioral",
-    ]);
     if (
       !groupId ||
       questions.length !== 4 ||
       angles.size !== 4 ||
-      [...required].some((angle) =>
-        !angles.has(angle as InterviewQuestionAuthoring["question_type"]),
-      )
+      LOGICAL_ANGLE_ORDER.some((angle) => !angles.has(angle))
     ) {
       toast.error(t("teacher_interview_config.qbank.logical_group_incomplete"));
       return;
@@ -131,8 +162,18 @@ export function useQuestionBankIo(options: QuestionBankIoOptions) {
 
     setBankingGroupId(groupId);
     try {
+      const byAngle = new Map(questions.map((question) => [question.question_type, question]));
+      const toBankItem = (question: InterviewQuestionAuthoring) => ({
+        prompt_text: question.prompt_text,
+        question_type: question.question_type as LogicalAngle,
+        difficulty: question.difficulty ?? null,
+        model_answer: question.model_answer ?? null,
+        source_config_id: configId,
+      });
       await addLogicalGroupToBank.mutateAsync({
-        items: buildLogicalGroupItems(questions, configId),
+        items: LOGICAL_ANGLE_ORDER.map((angle) =>
+          toBankItem(byAngle.get(angle)!),
+        ) as InterviewQuestionBankLogicalGroupCreate["items"],
       });
       announce(t("teacher_interview_config.qbank.logical_group_added"));
       toast.success(t("teacher_interview_config.qbank.logical_group_added"));
@@ -143,46 +184,50 @@ export function useQuestionBankIo(options: QuestionBankIoOptions) {
     }
   }
 
-  // Items already present in THIS config (by normalized prompt) are hidden
-  // from the import picker so a teacher can't obviously double-add.
   const existingPrompts = useMemo(
-    () => new Set(sorted.map((q) => q.prompt_text.trim().toLowerCase())),
+    () => new Set(sorted.map((question) => question.prompt_text.trim().toLowerCase())),
     [sorted],
   );
-  const importableBankItems = useMemo(
-    () =>
-      (bankItems ?? []).filter(
-        (b) => !existingPrompts.has(b.prompt_text.trim().toLowerCase()),
-      ),
+
+  // Any group member already in the config blocks the entire atomic group.
+  const importPickerUnits = useMemo(
+    () => buildImportPickerUnits(bankItems, existingPrompts),
     [bankItems, existingPrompts],
   );
 
-  // Prompts already present in the course bank (normalized). Drives the
-  // per-question "Add to bank" disabled state + "Already in bank" label.
+  const importableBankItems = useMemo(
+    () => importPickerUnits.flatMap((unit) => unit.items),
+    [importPickerUnits],
+  );
+
   const bankedPrompts = useMemo(
     () =>
-      new Set((bankItems ?? []).map((b) => b.prompt_text.trim().toLowerCase())),
+      new Set((bankItems ?? []).map((item) => item.prompt_text.trim().toLowerCase())),
     [bankItems],
   );
 
-  function toggleBankSelection(id: string) {
-    setSelectedBank((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+  function toggleBankSelection(itemIds: string[]) {
+    setSelectedBank((previous) => {
+      const next = new Set(previous);
+      const allSelected = itemIds.every((id) => next.has(id));
+      for (const id of itemIds) {
+        if (allSelected) next.delete(id);
+        else next.add(id);
+      }
       return next;
     });
   }
 
   async function handleImportFromBank() {
-    const itemIds = importableBankItems
-      .filter((b) => selectedBank.has(b.id))
-      .map((b) => b.id);
+    // Keep unit order as displayed. Each logical unit sends canonical child IDs.
+    const itemIds = importPickerUnits.flatMap((unit) =>
+      unit.items
+        .filter((item) => selectedBank.has(item.id))
+        .map((item) => item.id),
+    );
     if (itemIds.length === 0) return;
     setImportBusy(true);
     try {
-      // The server expands every selected logical child to its active siblings,
-      // assigns collision-safe positions and commits the whole import atomically.
       const result = await importFromBank.mutateAsync(itemIds);
       const created = result.created.length;
       announce(t("teacher_interview_config.qbank.imported", { count: created }));
@@ -208,6 +253,7 @@ export function useQuestionBankIo(options: QuestionBankIoOptions) {
     setImporting,
     selectedBank,
     importBusy,
+    importPickerUnits,
     importableBankItems,
     bankedPrompts,
     handleAddToBank,

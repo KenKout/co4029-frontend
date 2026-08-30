@@ -4526,6 +4526,7 @@
       "import_title": "Nhập từ ngân hàng câu hỏi của khóa học",
       "import_help": "Chọn câu hỏi từ ngân hàng của khóa học để sao chép vào buổi phỏng vấn này. Câu hỏi được nhập trở thành bản sao có thể chỉnh sửa — chỉnh sửa ở đây sau này không ảnh hưởng đến ngân hàng.",
       "import_selected": "Nhập {{count}} đã chọn",
+      "import_logical_group": "Chọn cả 4 câu",
       "imported": "Đã nhập {{count}} câu hỏi",
       "import_all_added": "Tất cả câu hỏi trong ngân hàng đã có trong buổi phỏng vấn này. Thêm câu hỏi vào ngân hàng từ các buổi phỏng vấn khác để tái sử dụng ở đây.",
       "type": {
