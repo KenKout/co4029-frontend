@@ -28,6 +28,7 @@ export function EditorClassificationFields({
         </label>
         <Select<InterviewQuestionType>
           value={draft.question_type}
+          disabled={draft.isLogicalGroupMember}
           onValueChange={(next) =>
             setDraft({
               ...draft,

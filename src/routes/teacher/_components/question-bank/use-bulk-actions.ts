@@ -34,6 +34,9 @@ type AddLogicalGroupToBankFn = {
   mutateAsync: (payload: InterviewQuestionBankLogicalGroupCreate) => Promise<unknown>;
 };
 
+const promptKey = (question: InterviewQuestionAuthoring) =>
+  question.prompt_text.trim().toLowerCase();
+
 /** Split a selection into logical groups (first-seen order) and standalone rows. */
 function splitTargets(targets: InterviewQuestionAuthoring[]) {
   const byGroup = new Map<string, InterviewQuestionAuthoring[]>();
@@ -53,14 +56,15 @@ function splitTargets(targets: InterviewQuestionAuthoring[]) {
 /**
  * Add one complete four-angle group as a single atomic request, keeping the
  * shared logical group, in canonical angle order. A partial selection or an
- * already-banked member returns 0 — the group is never downgraded into loose
- * bank entries.
+ * already-seen prompt returns 0 — the group is never downgraded into loose
+ * bank entries. `seenPrompts` is only extended on success, so a failed group
+ * does not reserve its prompts against later standalone rows.
  */
 async function bankLogicalGroup(
   questions: InterviewQuestionAuthoring[],
   configId: string,
   addLogicalGroupToBank: AddLogicalGroupToBankFn,
-  bankedPrompts: Set<string>,
+  seenPrompts: Set<string>,
 ): Promise<number> {
   const byAngle = new Map(
     questions.map((question) => [question.question_type, question]),
@@ -69,13 +73,7 @@ async function bankLogicalGroup(
     questions.length === LOGICAL_ANGLES.length &&
     LOGICAL_ANGLES.every((angle) => byAngle.has(angle));
   if (!complete) return 0;
-  if (
-    questions.some((question) =>
-      bankedPrompts.has(question.prompt_text.trim().toLowerCase()),
-    )
-  ) {
-    return 0;
-  }
+  if (questions.some((question) => seenPrompts.has(promptKey(question)))) return 0;
   const toBankItem = (question: InterviewQuestionAuthoring) => ({
     prompt_text: question.prompt_text,
     question_type: question.question_type as LogicalAngle,
@@ -89,10 +87,12 @@ async function bankLogicalGroup(
         toBankItem(byAngle.get(angle)!),
       ) as InterviewQuestionBankLogicalGroupCreate["items"],
     });
-    return questions.length;
   } catch {
     return 0;
   }
+  // Only a landed group reserves its prompts — see the doc comment above.
+  for (const question of questions) seenPrompts.add(promptKey(question));
+  return questions.length;
 }
 
 /** Add one standalone question. Returns true on success, false on failure. */
@@ -203,19 +203,22 @@ export function useBulkActions(options: BulkActionsOptions) {
       const { byGroup, standalone } = splitTargets(targets);
       let ok = 0;
       let failed = 0;
+      // Every prompt already in the bank, plus every prompt this batch lands.
+      // A logical group that succeeds reserves all four of its prompts so a
+      // later standalone row with the same prompt is skipped, not duplicated.
+      const seenPrompts = new Set(bankedPrompts);
       for (const questions of byGroup.values()) {
         const added = await bankLogicalGroup(
           questions,
           configId,
           addLogicalGroupToBank,
-          bankedPrompts,
+          seenPrompts,
         );
         ok += added;
         failed += questions.length - added;
       }
-      const seenPrompts = new Set(bankedPrompts);
       for (const question of standalone) {
-        const prompt = question.prompt_text.trim().toLowerCase();
+        const prompt = promptKey(question);
         if (seenPrompts.has(prompt)) continue;
         seenPrompts.add(prompt);
         if (await bankStandaloneQuestion(question, configId, addToBank)) {

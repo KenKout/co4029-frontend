@@ -40,6 +40,7 @@ export function useQuestionBankEditor(options: {
       difficulty: item.difficulty ?? "none",
       model_answer: item.model_answer ?? "",
       tags: item.tags ?? [],
+      isLogicalGroupMember: Boolean(item.variant_group_id),
     });
   }
   function cancelEdit() {

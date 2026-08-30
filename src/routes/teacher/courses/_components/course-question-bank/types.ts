@@ -36,6 +36,7 @@ export interface EditorState {
   difficulty: InterviewDifficulty | "none";
   model_answer: string;
   tags: string[];
+  isLogicalGroupMember: boolean;
 }
 
 /** The four filter dimensions the bank filters on, as one snapshot. */
