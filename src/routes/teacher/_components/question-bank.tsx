@@ -6,6 +6,7 @@ import {
   useApproveInterviewQuestionVariants,
   useCheckInterviewQuestionDuplicate,
   useCreateInterviewQuestion,
+  useCreateInterviewQuestionBankLogicalGroup,
   useDeleteInterviewQuestion,
   useImportInterviewQuestionBankItems,
   useInterviewQuestionBank,
@@ -81,6 +82,7 @@ export function QuestionBank({
   const createQuestion = useCreateInterviewQuestion(configId);
   const checkDuplicate = useCheckInterviewQuestionDuplicate(configId);
   const addToBank = useAddToInterviewQuestionBank(courseId);
+  const addLogicalGroupToBank = useCreateInterviewQuestionBankLogicalGroup(courseId);
   const importFromBank = useImportInterviewQuestionBankItems(configId, courseId);
   const approveQuestionVariants = useApproveInterviewQuestionVariants(configId);
   const { data: bankItems } = useInterviewQuestionBank(courseId);
@@ -123,6 +125,7 @@ export function QuestionBank({
     sorted,
     bankItems,
     addToBank,
+    addLogicalGroupToBank,
     importFromBank,
     announce,
     t,

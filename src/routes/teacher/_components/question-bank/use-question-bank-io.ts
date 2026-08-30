@@ -3,7 +3,9 @@ import { toast } from "sonner";
 
 import type {
   InterviewQuestionAuthoring,
+  InterviewQuestionBankItemCreate,
   InterviewQuestionBankItemRead,
+  InterviewQuestionBankLogicalGroupCreate,
 } from "@/lib/api/types";
 import type {
   AddToBankMutation,
@@ -19,9 +21,44 @@ export interface QuestionBankIoOptions {
   sorted: InterviewQuestionAuthoring[];
   bankItems: InterviewQuestionBankItemRead[] | undefined;
   addToBank: AddToBankMutation;
+  addLogicalGroupToBank: {
+    mutateAsync: (payload: InterviewQuestionBankLogicalGroupCreate) => Promise<unknown>;
+  };
   importFromBank: { mutateAsync: (itemIds: string[]) => Promise<{ created: unknown[] }> };
   announce: (msg: string) => void;
   t: TranslateFn;
+}
+
+/** The 4-item logical-group payload, one item per angle in canonical order. */
+function buildLogicalGroupItems(
+  questions: InterviewQuestionAuthoring[],
+  configId: string,
+): [
+  InterviewQuestionBankItemCreate,
+  InterviewQuestionBankItemCreate,
+  InterviewQuestionBankItemCreate,
+  InterviewQuestionBankItemCreate,
+] {
+  const byAngle = new Map(
+    questions.map((question) => [question.question_type, question]),
+  );
+  const toBankItem = (question: InterviewQuestionAuthoring) => ({
+    prompt_text: question.prompt_text,
+    question_type: question.question_type as
+      | "technical"
+      | "system_design"
+      | "situational"
+      | "behavioral",
+    difficulty: question.difficulty ?? null,
+    model_answer: question.model_answer ?? null,
+    source_config_id: configId,
+  });
+  return [
+    toBankItem(byAngle.get("technical")!),
+    toBankItem(byAngle.get("system_design")!),
+    toBankItem(byAngle.get("situational")!),
+    toBankItem(byAngle.get("behavioral")!),
+  ];
 }
 
 export function useQuestionBankIo(options: QuestionBankIoOptions) {
@@ -30,12 +67,14 @@ export function useQuestionBankIo(options: QuestionBankIoOptions) {
     sorted,
     bankItems,
     addToBank,
+    addLogicalGroupToBank,
     importFromBank,
     announce,
     t,
   } = options;
 
   const [bankingId, setBankingId] = useState<string | null>(null);
+  const [bankingGroupId, setBankingGroupId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [selectedBank, setSelectedBank] = useState<Set<string>>(new Set());
   const [importBusy, setImportBusy] = useState(false);
@@ -56,6 +95,51 @@ export function useQuestionBankIo(options: QuestionBankIoOptions) {
       toast.error((err as Error).message);
     } finally {
       setBankingId(null);
+    }
+  }
+
+  async function handleAddLogicalGroupToBank(
+    questions: InterviewQuestionAuthoring[],
+  ) {
+    const groupId = questions[0]?.variant_group_id;
+    const angles = new Set(questions.map((question) => question.question_type));
+    const required = new Set([
+      "technical",
+      "system_design",
+      "situational",
+      "behavioral",
+    ]);
+    if (
+      !groupId ||
+      questions.length !== 4 ||
+      angles.size !== 4 ||
+      [...required].some((angle) =>
+        !angles.has(angle as InterviewQuestionAuthoring["question_type"]),
+      )
+    ) {
+      toast.error(t("teacher_interview_config.qbank.logical_group_incomplete"));
+      return;
+    }
+    if (
+      questions.some((question) =>
+        bankedPrompts.has(question.prompt_text.trim().toLowerCase()),
+      )
+    ) {
+      toast.error(t("teacher_interview_config.qbank.logical_group_already_banked"));
+      return;
+    }
+
+    setBankingGroupId(groupId);
+    try {
+      await addLogicalGroupToBank.mutateAsync({
+        items: buildLogicalGroupItems(questions, configId),
+      });
+      announce(t("teacher_interview_config.qbank.logical_group_added"));
+      toast.success(t("teacher_interview_config.qbank.logical_group_added"));
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    } finally {
+      setBankingGroupId(null);
     }
   }
 
@@ -119,6 +203,7 @@ export function useQuestionBankIo(options: QuestionBankIoOptions) {
 
   return {
     bankingId,
+    bankingGroupId,
     importing,
     setImporting,
     selectedBank,
@@ -126,6 +211,8 @@ export function useQuestionBankIo(options: QuestionBankIoOptions) {
     importableBankItems,
     bankedPrompts,
     handleAddToBank,
+    handleAddLogicalGroupToBank: (questions: InterviewQuestionAuthoring[]) =>
+      void handleAddLogicalGroupToBank(questions),
     toggleBankSelection,
     handleImportFromBank,
     startImport,

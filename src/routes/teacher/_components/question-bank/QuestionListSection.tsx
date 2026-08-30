@@ -70,6 +70,7 @@ function renderLogicalQuestions(
   t: TranslateFn,
   onApproveLogicalQuestion: (questions: InterviewQuestionAuthoring[]) => void,
   approvingGroupId: string | null,
+  bankIo: QuestionBankIoController,
   isPublished: boolean,
 ) {
   return groupLogicalQuestions(questions).map((group) =>
@@ -81,6 +82,11 @@ function renderLogicalQuestions(
         t={t}
         onApproveAll={onApproveLogicalQuestion}
         approvingGroupId={approvingGroupId}
+        onAddAllToBank={bankIo.handleAddLogicalGroupToBank}
+        bankingGroupId={bankIo.bankingGroupId}
+        groupAlreadyBanked={group.questions.some((question) =>
+          bankIo.bankedPrompts.has(question.prompt_text.trim().toLowerCase()),
+        )}
         isPublished={isPublished}
       />
     ) : (
@@ -179,6 +185,7 @@ export function QuestionListSection(props: QuestionListSectionProps) {
               t,
               props.mutations.handleApproveLogicalQuestion,
               props.mutations.approvingGroupId,
+              props.bankIo,
               props.isPublished,
             )}
           </ul>
@@ -208,6 +215,7 @@ export function QuestionListSection(props: QuestionListSectionProps) {
                   t,
                   props.mutations.handleApproveLogicalQuestion,
                   props.mutations.approvingGroupId,
+                  props.bankIo,
                   props.isPublished,
                 )}
               </ul>

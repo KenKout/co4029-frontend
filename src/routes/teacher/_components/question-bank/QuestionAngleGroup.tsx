@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Library, Loader2 } from "lucide-react";
 import type { InterviewQuestionAuthoring } from "@/lib/api/types";
 import type { TranslateFn } from "./types";
 
@@ -25,6 +25,9 @@ interface QuestionAngleGroupProps {
   t: TranslateFn;
   onApproveAll: (questions: InterviewQuestionAuthoring[]) => void;
   approvingGroupId: string | null;
+  onAddAllToBank: (questions: InterviewQuestionAuthoring[]) => void;
+  bankingGroupId: string | null;
+  groupAlreadyBanked: boolean;
   isPublished: boolean;
 }
 
@@ -35,6 +38,9 @@ export function QuestionAngleGroup({
   t,
   onApproveAll,
   approvingGroupId,
+  onAddAllToBank,
+  bankingGroupId,
+  groupAlreadyBanked,
   isPublished,
 }: QuestionAngleGroupProps) {
   const ordered = useMemo(
@@ -84,6 +90,25 @@ export function QuestionAngleGroup({
                 <CheckCircle2 className="h-3 w-3" />
               )}
               {t("teacher_interview_config.qbank.approve_logical_question")}
+            </Button>
+          )}
+          {ordered.length === 4 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isPublished || groupAlreadyBanked || !!bankingGroupId}
+              onClick={() => onAddAllToBank(ordered)}
+              className="h-7 gap-1 px-2 text-[11px]"
+            >
+              {bankingGroupId === ordered[0].variant_group_id ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Library className="h-3 w-3" />
+              )}
+              {groupAlreadyBanked
+                ? t("teacher_interview_config.qbank.logical_group_already_banked")
+                : t("teacher_interview_config.qbank.add_logical_group_to_bank")}
             </Button>
           )}
         </div>
