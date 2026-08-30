@@ -166,7 +166,7 @@ function CorrelationId({ value }: { value: string | null }) {
       </Button>
       <Link
         to="/admin/audit-logs"
-        search={{ tab: "http" }}
+        search={{ tab: "http", request_id: value }}
         className="text-xs font-semibold text-m3-primary hover:underline"
       >
         {t("admin.processing_job.investigation.open_requests")}
@@ -347,13 +347,13 @@ function Unknown({ label }: { label: string }) {
   return <span className="text-text-muted italic">{label}</span>;
 }
 
-/** Null renders as "not started", never as 0s. */
+/** Null is missing telemetry, not evidence that a terminal job never ran. */
 function Duration({ seconds }: { seconds: number | null }) {
   const { t } = useTranslation();
   if (seconds === null) {
     return (
       <span className="text-text-muted">
-        {t("admin.processing_job.investigation.not_started")}
+        {t("admin.processing_job.investigation.not_recorded")}
       </span>
     );
   }

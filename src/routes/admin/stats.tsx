@@ -8,6 +8,8 @@ import { SecurityAccessRow } from "./_components/stats/SecurityAccessRow";
 import { StatsSkeleton } from "./_components/stats/StatsStates";
 import { TenantAnomaliesRow } from "./_components/stats/TenantAnomaliesRow";
 import { useAdminStatsPage } from "./_components/stats/use-admin-stats-page";
+import { UsageCapacitySection } from "./_components/stats/UsageCapacitySection";
+import { SectionNav, type SectionNavItem } from "@/components/ui/section-nav";
 
 /**
  * Admin Operations overview.
@@ -32,15 +34,30 @@ export default function AdminStatsPage() {
     return <StatsSkeleton />;
   }
 
+  const sections: SectionNavItem[] = [
+    { id: "admin-current-status", label: c.t("admin.dashboard.nav.status") },
+    { id: "admin-needs-action", label: c.t("admin.dashboard.nav.actions") },
+    { id: "admin-reliability", label: c.t("admin.dashboard.nav.reliability") },
+    { id: "admin-usage-capacity", label: c.t("admin.dashboard.nav.usage") },
+    { id: "admin-security", label: c.t("admin.dashboard.nav.security") },
+  ];
+
   return (
     <div className="space-y-8 pb-12">
       <PageHeading c={c} />
+
+      <SectionNav
+        items={sections}
+        ariaLabel={c.t("admin.dashboard.nav.label")}
+        topOffset={72}
+      />
 
       <CurrentStatusRow c={c} />
       <NeedsActionSection c={c} />
       <ReliabilityRow c={c} />
       <LatencyTrendSection range={c.scope.range} />
       <CostCapacityRow c={c} />
+      <UsageCapacitySection c={c} />
       <SecurityAccessRow c={c} />
       <TenantAnomaliesRow c={c} />
     </div>

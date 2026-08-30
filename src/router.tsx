@@ -411,13 +411,23 @@ const adminStatsRoute = createRoute({
 const adminStatsActiveRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/stats/active",
-  component: lazyRouteComponent(() => import("@/routes/admin/stats-active")),
+  beforeLoad: () => {
+    throw redirect({
+      to: "/admin/stats",
+      hash: "admin-usage-capacity",
+    });
+  },
 });
 
 const adminStatsContentRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/stats/content",
-  component: lazyRouteComponent(() => import("@/routes/admin/stats-content")),
+  beforeLoad: () => {
+    throw redirect({
+      to: "/admin/stats",
+      hash: "admin-usage-capacity",
+    });
+  },
 });
 
 const adminUsersRoute = createRoute({
@@ -514,9 +524,12 @@ const adminAuditLogsRoute = createRoute({
   // dropping an operator on a generic log to re-derive the query (ADM-021).
   validateSearch: (
     search: Record<string, unknown>,
-  ): { tab?: string; path?: string } => ({
+  ): { tab?: string; path?: string; event?: string; request_id?: string } => ({
     tab: typeof search.tab === "string" ? search.tab : undefined,
     path: typeof search.path === "string" ? search.path : undefined,
+    event: typeof search.event === "string" ? search.event : undefined,
+    request_id:
+      typeof search.request_id === "string" ? search.request_id : undefined,
   }),
   component: lazyRouteComponent(() => import("@/routes/admin/audit-logs")),
 });

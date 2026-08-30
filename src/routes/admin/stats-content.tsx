@@ -34,42 +34,40 @@ function bucketSum(buckets: BreakdownBucket[] | undefined): number {
 
 export default function AdminStatsContentPage() {
   const { t } = useTranslation();
-  const { data, isLoading, isError } = useContentStats();
-
-  if (isError) {
-    return (
-      <div className="space-y-6 pb-12">
-        <Heading />
-        <div className="bg-surface-elev border border-border rounded-lg p-5">
-          <p className="text-sm text-danger">{t("admin.stats.load_failed")}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6 pb-12">
-        <Heading />
-        <PageSkeleton
-          rows={4}
-          height="h-24"
-          bg="bg-surface-muted"
-          gap="space-y-4"
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6 pb-12">
       <Heading />
-      {data && <ContentStatsView data={data} />}
+      <ContentStatsContent />
     </div>
   );
 }
 
-function ContentStatsView({
+/** Shared body used by the legacy deep link and Dashboard Usage & Capacity. */
+export function ContentStatsContent() {
+  const { t } = useTranslation();
+  const { data, isLoading, isError } = useContentStats();
+  if (isError) {
+    return (
+      <div className="bg-surface-elev border border-border rounded-lg p-5">
+        <p className="text-sm text-danger">{t("admin.stats.load_failed")}</p>
+      </div>
+    );
+  }
+  if (isLoading) {
+    return (
+      <PageSkeleton
+        rows={4}
+        height="h-24"
+        bg="bg-surface-muted"
+        gap="space-y-4"
+      />
+    );
+  }
+  return data ? <ContentStatsView data={data} /> : null;
+}
+
+export function ContentStatsView({
   data,
 }: {
   data: NonNullable<ReturnType<typeof useContentStats>["data"]>;

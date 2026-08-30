@@ -7,6 +7,7 @@ import {
   useAdminUser,
   useDisableUser,
   useEnableUser,
+  useRevokeUserSession,
 } from "@/lib/api/hooks/admin";
 import { usePermissions } from "@/lib/auth/use-permissions";
 
@@ -36,6 +37,7 @@ export function useAdminUserDetail() {
   const detail = useAdminUser(enabled ? userId : "");
   const disable = useDisableUser(userId);
   const enable = useEnableUser(userId);
+  const revokeSession = useRevokeUserSession(userId);
 
   const handleDisable = () => {
     setConfirmOpen(false);
@@ -64,6 +66,18 @@ export function useAdminUserDetail() {
     });
   };
 
+  const handleRevokeSession = (sessionId: string) => {
+    revokeSession.mutate(sessionId, {
+      onSuccess: () =>
+        toast.success(t("admin.users.roles.success.session_revoked")),
+      onError: (err) =>
+        toast.error(
+          (err as Error).message ||
+            t("admin.users.roles.errors.session_revoke_failed"),
+        ),
+    });
+  };
+
   const data = detail.data;
   const user = data?.user;
   const displayName = userDisplayName(user);
@@ -85,6 +99,8 @@ export function useAdminUserDetail() {
     enableIsPending: enable.isPending,
     handleDisable,
     handleEnable,
+    handleRevokeSession,
+    revokeSessionIsPending: revokeSession.isPending,
   };
 }
 

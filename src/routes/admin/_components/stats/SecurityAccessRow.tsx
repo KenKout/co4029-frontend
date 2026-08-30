@@ -91,7 +91,11 @@ export function SecurityAccessRow({ c }: { c: AdminStatsController }) {
           severity={presenceSeverity(s?.failed_logins)}
           icon={KeyRound}
           to="/admin/audit-logs"
-          search={{ tab: "http", path: "/api/v1/auth/" }}
+          search={{
+            tab: "http",
+            path: "/api/v1/auth/google/callback",
+            event: "login_failure",
+          }}
         />
 
         <ActionTile
@@ -101,7 +105,7 @@ export function SecurityAccessRow({ c }: { c: AdminStatsController }) {
           severity={presenceSeverity(s?.denied_requests)}
           icon={ShieldAlert}
           to="/admin/audit-logs"
-          search={{ tab: "http" }}
+          search={{ tab: "http", event: "denied" }}
         />
 
         <ActionTile

@@ -1,5 +1,4 @@
 import {
-  Activity,
   BarChart3,
   BookOpen,
   Briefcase,
@@ -254,18 +253,6 @@ export const adminNavItems: NavItem[] = [
     icon: LayoutDashboard,
     exact: true,
   },
-  {
-    label: "Active Users",
-    i18nKey: "nav.active_users",
-    href: "/admin/stats/active",
-    icon: Activity,
-  },
-  {
-    label: "Content",
-    i18nKey: "nav.content",
-    href: "/admin/stats/content",
-    icon: BarChart3,
-  },
   { label: "Users", i18nKey: "nav.users", href: "/admin/users", icon: Users },
   {
     label: "Organizations",
@@ -328,18 +315,6 @@ export const adminNavGroups: NavGroup[] = [
         href: "/admin/stats",
         icon: LayoutDashboard,
         exact: true,
-      },
-      {
-        label: "Active Users",
-        i18nKey: "nav.active_users",
-        href: "/admin/stats/active",
-        icon: Activity,
-      },
-      {
-        label: "Content Stats",
-        i18nKey: "nav.content",
-        href: "/admin/stats/content",
-        icon: BarChart3,
       },
     ],
   },

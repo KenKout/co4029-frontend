@@ -5,6 +5,7 @@ import { RoleAssignmentsSection } from "./RoleAssignmentsSection";
 import { UserDetailHeader } from "./UserDetailHeader";
 import { UserProfileCard } from "./UserProfileCard";
 import { UserTimestampsGrid } from "./UserTimestampsGrid";
+import { RoleHistoryCard } from "./RoleHistoryCard";
 import type { UserDetailController } from "./use-admin-user-detail";
 
 /** Error / loading / loaded switch for the user-detail body. */
@@ -45,13 +46,19 @@ export function UserDetailBody({ c }: { c: UserDetailController }) {
         assignments={data.role_assignments}
       />
 
-      {data.active_sessions.length > 0 ? (
-        <ActiveSessionsCard
-          t={t}
-          locale={locale}
-          sessions={data.active_sessions}
-        />
-      ) : null}
+      <ActiveSessionsCard
+        t={t}
+        locale={locale}
+        sessions={data.active_sessions}
+        onRevoke={c.handleRevokeSession}
+        isRevoking={c.revokeSessionIsPending}
+      />
+
+      <RoleHistoryCard
+        t={t}
+        locale={locale}
+        history={data.role_history ?? []}
+      />
     </>
   );
 }
