@@ -94,10 +94,12 @@ export function GenerationSection({
             outcomes={outcomes}
           />
 
-          <GenerationTopicFields
-            generationForm={generationForm}
-            updateGeneration={updateGeneration}
-          />
+          <div className="mt-3">
+            <GenerationTopicFields
+              generationForm={generationForm}
+              updateGeneration={updateGeneration}
+            />
+          </div>
 
           <p className="text-[11px] text-m3-on-surface-variant">
             {t("teacher_interview_config.generate.reuses_settings_hint")}
