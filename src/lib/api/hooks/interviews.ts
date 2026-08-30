@@ -19,9 +19,11 @@ import type {
   InterviewOutcomeAuthoring,
   InterviewOutcomeCreate,
   InterviewQuestionAuthoring,
+  InterviewQuestionBankImportResult,
   InterviewQuestionBankItemCreate,
   InterviewQuestionBankItemRead,
   InterviewQuestionBankItemUpdate,
+  InterviewQuestionBankLogicalGroupCreate,
   InterviewQuestionCreate,
   InterviewQuestionDuplicateCheck,
   InterviewQuestionDuplicateCheckRequest,
@@ -801,6 +803,43 @@ export function useAddToInterviewQuestionBank(
       void queryClient.invalidateQueries({
         queryKey: queryKeys.interviews.questionBank(courseId ?? ""),
       });
+    },
+  });
+}
+
+/** Create a complete four-angle logical question in the course bank. */
+export function useCreateInterviewQuestionBankLogicalGroup(courseId: string | null | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: InterviewQuestionBankLogicalGroupCreate) =>
+      apiPost<InterviewQuestionBankItemRead[]>(`/teacher/courses/${courseId}/interview-question-bank/logical-groups`, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.interviews.questionBank(courseId ?? "") });
+    },
+  });
+}
+
+/** Add a missing logical angle to a bank singleton or partial group. */
+export function useAddInterviewQuestionBankSibling(courseId: string | null | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, payload }: { itemId: string; payload: InterviewQuestionBankItemCreate }) =>
+      apiPost<InterviewQuestionBankItemRead[]>(`/teacher/courses/${courseId}/interview-question-bank/${itemId}/siblings`, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.interviews.questionBank(courseId ?? "") });
+    },
+  });
+}
+
+/** Atomically import standalone questions and full/partial logical groups. */
+export function useImportInterviewQuestionBankItems(configId: string | null | undefined, courseId: string | null | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemIds: string[]) =>
+      apiPost<InterviewQuestionBankImportResult>(`/teacher/interview-configs/${configId}/questions/import-bank`, { item_ids: itemIds }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.interviews.configAuthoring(configId ?? "") });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.interviews.questionBank(courseId ?? "") });
     },
   });
 }

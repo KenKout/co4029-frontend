@@ -7,7 +7,6 @@ import type {
 } from "@/lib/api/types";
 import type {
   AddToBankMutation,
-  CreateQuestionMutation,
   TranslateFn,
 } from "./types";
 
@@ -20,7 +19,7 @@ export interface QuestionBankIoOptions {
   sorted: InterviewQuestionAuthoring[];
   bankItems: InterviewQuestionBankItemRead[] | undefined;
   addToBank: AddToBankMutation;
-  createQuestion: CreateQuestionMutation;
+  importFromBank: { mutateAsync: (itemIds: string[]) => Promise<{ created: unknown[] }> };
   announce: (msg: string) => void;
   t: TranslateFn;
 }
@@ -31,7 +30,7 @@ export function useQuestionBankIo(options: QuestionBankIoOptions) {
     sorted,
     bankItems,
     addToBank,
-    createQuestion,
+    importFromBank,
     announce,
     t,
   } = options;
@@ -92,32 +91,18 @@ export function useQuestionBankIo(options: QuestionBankIoOptions) {
   }
 
   async function handleImportFromBank() {
-    const chosen = importableBankItems.filter((b) => selectedBank.has(b.id));
-    if (chosen.length === 0) return;
+    const itemIds = importableBankItems
+      .filter((b) => selectedBank.has(b.id))
+      .map((b) => b.id);
+    if (itemIds.length === 0) return;
     setImportBusy(true);
-    let created = 0;
     try {
-      // Sequential creates: the (config_id, position) unique constraint means
-      // parallel POSTs at the same position collide. Copy semantics — each
-      // becomes a fresh interview question the teacher can edit independently.
-      let position = sorted.length;
-      for (const b of chosen) {
-        position += 1;
-        await createQuestion.mutateAsync({
-          prompt_text: b.prompt_text,
-          question_type: b.question_type,
-          difficulty: b.difficulty ?? null,
-          model_answer: b.model_answer ?? null,
-          position,
-        });
-        created += 1;
-      }
-      announce(
-        t("teacher_interview_config.qbank.imported", { count: created }),
-      );
-      toast.success(
-        t("teacher_interview_config.qbank.imported", { count: created }),
-      );
+      // The server expands every selected logical child to its active siblings,
+      // assigns collision-safe positions and commits the whole import atomically.
+      const result = await importFromBank.mutateAsync(itemIds);
+      const created = result.created.length;
+      announce(t("teacher_interview_config.qbank.imported", { count: created }));
+      toast.success(t("teacher_interview_config.qbank.imported", { count: created }));
       setImporting(false);
       setSelectedBank(new Set());
     } catch (err: unknown) {

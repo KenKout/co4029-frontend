@@ -7,6 +7,7 @@ import {
   useCheckInterviewQuestionDuplicate,
   useCreateInterviewQuestion,
   useDeleteInterviewQuestion,
+  useImportInterviewQuestionBankItems,
   useInterviewQuestionBank,
   useUpdateInterviewQuestion,
 } from "@/lib/api/hooks/interviews";
@@ -80,6 +81,7 @@ export function QuestionBank({
   const createQuestion = useCreateInterviewQuestion(configId);
   const checkDuplicate = useCheckInterviewQuestionDuplicate(configId);
   const addToBank = useAddToInterviewQuestionBank(courseId);
+  const importFromBank = useImportInterviewQuestionBankItems(configId, courseId);
   const approveQuestionVariants = useApproveInterviewQuestionVariants(configId);
   const { data: bankItems } = useInterviewQuestionBank(courseId);
   const { confirm: confirmAction, dialog: confirmActionDialog } = useConfirm({
@@ -121,7 +123,7 @@ export function QuestionBank({
     sorted,
     bankItems,
     addToBank,
-    createQuestion,
+    importFromBank,
     announce,
     t,
   });

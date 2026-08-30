@@ -73,7 +73,7 @@ function renderLogicalQuestions(
   isPublished: boolean,
 ) {
   return groupLogicalQuestions(questions).map((group) =>
-    group.questions[0]?.variant_group_id ? (
+    group.questions[0]?.variant_group_id && group.questions.length >= 2 ? (
       <QuestionAngleGroup
         key={group.key}
         questions={group.questions}

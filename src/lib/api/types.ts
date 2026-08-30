@@ -516,6 +516,7 @@ export interface InterviewQuestionBankItemRead {
   difficulty?: InterviewDifficulty | null;
   model_answer?: string | null;
   tags: string[];
+  variant_group_id?: string | null;
   source_config_id?: string | null;
   created_at: string;
   updated_at: string;
@@ -527,6 +528,18 @@ export interface InterviewQuestionBankItemCreate {
   model_answer?: string | null;
   tags?: string[];
   source_config_id?: string | null;
+}
+export interface InterviewQuestionBankLogicalGroupCreate {
+  items: [
+    InterviewQuestionBankItemCreate,
+    InterviewQuestionBankItemCreate,
+    InterviewQuestionBankItemCreate,
+    InterviewQuestionBankItemCreate,
+  ];
+}
+export interface InterviewQuestionBankImportResult {
+  created: InterviewQuestionAuthoring[];
+  imported_group_count: number;
 }
 export interface InterviewQuestionBankItemUpdate {
   prompt_text?: string;
