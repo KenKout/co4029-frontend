@@ -148,6 +148,7 @@ export function QuestionBank({
     updateQuestion,
     deleteQuestion,
     addToBank,
+    addLogicalGroupToBank,
     bankedPrompts: bankIo.bankedPrompts,
     setDeletingIds: mutations.setDeletingIds,
     confirmAction,

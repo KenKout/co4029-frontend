@@ -26,23 +26,14 @@ function angleRank(item: InterviewQuestionBankItemRead) {
   return rank === -1 ? LOGICAL_ANGLE_ORDER.length : rank;
 }
 
-function isCompleteLogicalGroup(items: InterviewQuestionBankItemRead[]) {
-  return (
-    items.length === LOGICAL_ANGLE_ORDER.length &&
-    new Set(items.map((item) => item.question_type)).size ===
-      LOGICAL_ANGLE_ORDER.length &&
-    LOGICAL_ANGLE_ORDER.every((angle) =>
-      items.some((item) => item.question_type === angle),
-    )
-  );
-}
-
 /**
- * Import-picker units over the course bank. Logical groups stay atomic: a
- * complete 4-angle group is ONE unit; anything partial renders as plain
- * items. A unit whose ANY member prompt already exists in the destination
- * config is dropped entirely — the server import is all-or-nothing, so a
- * visible half-collision would fail the whole request.
+ * Import-picker units over the course bank. Logical groups stay atomic: ANY
+ * non-null variant group — complete 4-angle OR partial (2/4, 3/4) — is ONE
+ * atomic unit, so a partial cluster is never shown as loose items that would
+ * silently expand to siblings on import. A unit whose ANY member prompt
+ * already exists in the destination config is dropped entirely — the server
+ * import is all-or-nothing, so a visible half-collision would fail the whole
+ * request.
  *
  * Exported and pure so the regression tests exercise the shipped rule.
  */
@@ -72,7 +63,9 @@ export function buildImportPickerUnits(
     const ordered = [...members].sort(
       (a, b) => angleRank(a) - angleRank(b) || a.id.localeCompare(b.id),
     );
-    if (members[0]?.variant_group_id && isCompleteLogicalGroup(ordered)) {
+    if (members[0]?.variant_group_id) {
+      // The API expands every grouped child to active siblings. Keep picker
+      // selection identical for complete and partial logical questions.
       units.push({ kind: "logical", key, items: ordered });
     } else {
       for (const item of ordered) {

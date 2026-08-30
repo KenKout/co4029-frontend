@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import type { InterviewQuestionAuthoring } from "@/lib/api/types";
+import type {
+  InterviewQuestionAuthoring,
+  InterviewQuestionBankLogicalGroupCreate,
+} from "@/lib/api/types";
 import type {
   AddToBankMutation,
   ConfirmFn,
@@ -17,6 +20,101 @@ import type {
  * single-question controls, so behaviour stays consistent. `bulkBusy` guards
  * the contextual action bar while a batch mutation runs.
  */
+
+const LOGICAL_ANGLES = [
+  "technical",
+  "system_design",
+  "situational",
+  "behavioral",
+] as const;
+
+type LogicalAngle = (typeof LOGICAL_ANGLES)[number];
+
+type AddLogicalGroupToBankFn = {
+  mutateAsync: (payload: InterviewQuestionBankLogicalGroupCreate) => Promise<unknown>;
+};
+
+/** Split a selection into logical groups (first-seen order) and standalone rows. */
+function splitTargets(targets: InterviewQuestionAuthoring[]) {
+  const byGroup = new Map<string, InterviewQuestionAuthoring[]>();
+  const standalone: InterviewQuestionAuthoring[] = [];
+  for (const question of targets) {
+    if (!question.variant_group_id) {
+      standalone.push(question);
+      continue;
+    }
+    const group = byGroup.get(question.variant_group_id);
+    if (group) group.push(question);
+    else byGroup.set(question.variant_group_id, [question]);
+  }
+  return { byGroup, standalone };
+}
+
+/**
+ * Add one complete four-angle group as a single atomic request, keeping the
+ * shared logical group, in canonical angle order. A partial selection or an
+ * already-banked member returns 0 — the group is never downgraded into loose
+ * bank entries.
+ */
+async function bankLogicalGroup(
+  questions: InterviewQuestionAuthoring[],
+  configId: string,
+  addLogicalGroupToBank: AddLogicalGroupToBankFn,
+  bankedPrompts: Set<string>,
+): Promise<number> {
+  const byAngle = new Map(
+    questions.map((question) => [question.question_type, question]),
+  );
+  const complete =
+    questions.length === LOGICAL_ANGLES.length &&
+    LOGICAL_ANGLES.every((angle) => byAngle.has(angle));
+  if (!complete) return 0;
+  if (
+    questions.some((question) =>
+      bankedPrompts.has(question.prompt_text.trim().toLowerCase()),
+    )
+  ) {
+    return 0;
+  }
+  const toBankItem = (question: InterviewQuestionAuthoring) => ({
+    prompt_text: question.prompt_text,
+    question_type: question.question_type as LogicalAngle,
+    difficulty: question.difficulty ?? null,
+    model_answer: question.model_answer ?? null,
+    source_config_id: configId,
+  });
+  try {
+    await addLogicalGroupToBank.mutateAsync({
+      items: LOGICAL_ANGLES.map((angle) =>
+        toBankItem(byAngle.get(angle)!),
+      ) as InterviewQuestionBankLogicalGroupCreate["items"],
+    });
+    return questions.length;
+  } catch {
+    return 0;
+  }
+}
+
+/** Add one standalone question. Returns true on success, false on failure. */
+async function bankStandaloneQuestion(
+  question: InterviewQuestionAuthoring,
+  configId: string,
+  addToBank: AddToBankMutation,
+): Promise<boolean> {
+  try {
+    await addToBank.mutateAsync({
+      prompt_text: question.prompt_text,
+      question_type: question.question_type,
+      difficulty: question.difficulty ?? null,
+      model_answer: question.model_answer ?? null,
+      source_config_id: configId,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export interface BulkActionsOptions {
   configId: string;
   selectedQuestions: InterviewQuestionAuthoring[];
@@ -24,6 +122,7 @@ export interface BulkActionsOptions {
   updateQuestion: UpdateQuestionMutation;
   deleteQuestion: DeleteQuestionMutation;
   addToBank: AddToBankMutation;
+  addLogicalGroupToBank: AddLogicalGroupToBankFn;
   bankedPrompts: Set<string>;
   setDeletingIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   confirmAction: ConfirmFn;
@@ -38,6 +137,7 @@ export function useBulkActions(options: BulkActionsOptions) {
     updateQuestion,
     deleteQuestion,
     addToBank,
+    addLogicalGroupToBank,
     bankedPrompts,
     setDeletingIds,
     confirmAction,
@@ -100,33 +200,36 @@ export function useBulkActions(options: BulkActionsOptions) {
     if (targets.length === 0 || bulkBusy) return;
     setBulkBusy(true);
     try {
+      const { byGroup, standalone } = splitTargets(targets);
       let ok = 0;
       let failed = 0;
-      // Sequential: keeps load gentle and matches import semantics.
-      for (const q of targets) {
-        // Skip anything already banked (by normalized prompt).
-        if (bankedPrompts.has(q.prompt_text.trim().toLowerCase())) continue;
-        try {
-          await addToBank.mutateAsync({
-            prompt_text: q.prompt_text,
-            question_type: q.question_type,
-            difficulty: q.difficulty ?? null,
-            model_answer: q.model_answer ?? null,
-            source_config_id: configId,
-          });
+      for (const questions of byGroup.values()) {
+        const added = await bankLogicalGroup(
+          questions,
+          configId,
+          addLogicalGroupToBank,
+          bankedPrompts,
+        );
+        ok += added;
+        failed += questions.length - added;
+      }
+      const seenPrompts = new Set(bankedPrompts);
+      for (const question of standalone) {
+        const prompt = question.prompt_text.trim().toLowerCase();
+        if (seenPrompts.has(prompt)) continue;
+        seenPrompts.add(prompt);
+        if (await bankStandaloneQuestion(question, configId, addToBank)) {
           ok += 1;
-        } catch {
+        } else {
           failed += 1;
         }
       }
       if (failed === 0) {
-        toast.success(
-          t("teacher_interview_config.qbank.bulk.bank_done", { count: ok }),
-        );
+        toast.success(t("teacher_interview_config.qbank.bulk.bank_done", { count: ok }));
+      } else if (ok > 0) {
+        toast.error(t("teacher_interview_config.qbank.bulk.partial", { ok, failed }));
       } else {
-        toast.error(
-          t("teacher_interview_config.qbank.bulk.partial", { ok, failed }),
-        );
+        toast.error(t("teacher_interview_config.qbank.bulk.failed"));
       }
       clearSelection();
     } finally {

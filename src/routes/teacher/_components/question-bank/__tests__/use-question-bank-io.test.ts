@@ -1,16 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import type { InterviewQuestionBankItemRead } from "@/lib/api/types";
-import { buildImportPickerUnits } from "../use-question-bank-io";
+import { LOGICAL_ANGLE_ORDER, buildImportPickerUnits } from "../use-question-bank-io";
 
 /**
  * Import-picker unit building (question-bank/use-question-bank-io.ts).
  *
- * The picker never shows raw bank rows: a complete 4-angle logical group is
- * ONE selectable unit (frame + 4 tabs, "Select all 4"), anything partial
- * degrades to plain items, and a unit whose ANY member already exists in the
- * destination config is hidden wholesale — the server import is atomic, so a
- * half-visible collision would just fail the whole request.
+ * The picker never shows raw bank rows: ANY non-null variant group — complete
+ * 4-angle OR partial (2/4, 3/4) — is ONE selectable unit (frame + angle tabs),
+ * so selecting a partial cluster imports the whole group via the server-side
+ * sibling expansion instead of silently pulling in extra questions. A unit
+ * whose ANY member already exists in the destination config is hidden
+ * wholesale — the server import is atomic, so a half-visible collision would
+ * just fail the whole request.
  */
 
 const GROUP_ID = "11111111-1111-1111-1111-111111111111";
@@ -63,19 +65,39 @@ describe("buildImportPickerUnits", () => {
     expect(buildImportPickerUnits(group, existing)).toHaveLength(0);
   });
 
-  it("renders a partial group angle-by-angle as plain items", () => {
-    const partial = [
-      bankItem("t", "Technical?", "technical", GROUP_ID),
-      bankItem("s", "System design?", "system_design", GROUP_ID),
-    ];
-    const units = buildImportPickerUnits(partial, NONE);
-    expect(units).toHaveLength(2);
-    expect(units.every((unit) => unit.kind === "item")).toBe(true);
-    expect(units.map((unit) => unit.items[0].question_type)).toEqual([
-      "technical",
-      "system_design",
-    ]);
-  });
+  it.each([
+    {
+      name: "2 of 4",
+      partial: [
+        bankItem("t", "Technical?", "technical", GROUP_ID),
+        bankItem("s", "System design?", "system_design", GROUP_ID),
+      ],
+    },
+    {
+      name: "3 of 4",
+      partial: [
+        bankItem("b", "Behavioral?", "behavioral", GROUP_ID),
+        bankItem("t", "Technical?", "technical", GROUP_ID),
+        bankItem("s", "System design?", "system_design", GROUP_ID),
+      ],
+    },
+  ])(
+    "renders a partial group ($name) as ONE logical unit — never split into plain items",
+    ({ partial }) => {
+      const units = buildImportPickerUnits(partial, NONE);
+      expect(units).toHaveLength(1);
+      expect(units[0].kind).toBe("logical");
+      // Canonical angle order wins over content order; the server expands the
+      // cluster to all active siblings on import.
+      const rank = (type: string) =>
+        (LOGICAL_ANGLE_ORDER as readonly string[]).indexOf(type);
+      expect(units[0].items.map((item) => item.question_type)).toEqual(
+        partial
+          .map((item) => item.question_type)
+          .sort((a, b) => rank(a) - rank(b)),
+      );
+    },
+  );
 
   it("keeps NULL-variant_group_id items standalone", () => {
     const singles = [
