@@ -70,7 +70,7 @@ export function useQuestionMutations(options: QuestionMutationsOptions) {
       setOutcome(ctx, q, next),
     handleApproveAll: () => handleApproveAll(ctx),
     handleApproveLogicalQuestion: (questions: InterviewQuestionAuthoring[]) =>
-      handleApproveLogicalQuestion(ctx, questions),
+      void handleApproveLogicalQuestion(ctx, questions),
     handleDelete: (q: InterviewQuestionAuthoring) => handleDelete(ctx, q),
   };
 }
