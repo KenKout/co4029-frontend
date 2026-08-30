@@ -1,4 +1,3 @@
-import { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Select } from "@/components/ui/select";
@@ -25,16 +24,12 @@ import type { AdminStatsController } from "./types";
  * Rendered with no controller during loading and error states, where the
  * filters would have nothing to filter.
  */
-export const PageHeading = forwardRef<HTMLDivElement, { c?: AdminStatsController }>(
-  function PageHeading({ c }, ref) {
+export function PageHeading({ c }: { c?: AdminStatsController }) {
   const { t } = useTranslation();
   const formatDateTime = useFormatDateTime();
 
   return (
-    <div
-      ref={ref}
-      className="sticky top-16 z-10 -mx-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-b border-m3-outline-variant/15 bg-white/95 px-4 py-4 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
-    >
+    <div className="sticky top-16 z-10 -mx-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-b border-m3-outline-variant/15 bg-white/95 px-4 py-4 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
       <div className="min-w-0">
         <h1 className="text-2xl font-headline font-bold text-text-strong">
           {t("admin.stats.title_overview")}
@@ -79,4 +74,4 @@ export const PageHeading = forwardRef<HTMLDivElement, { c?: AdminStatsController
       )}
     </div>
   );
-});
+}

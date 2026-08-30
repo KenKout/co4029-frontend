@@ -23,6 +23,7 @@ export function SectionNav({
   items,
   topOffset = 64,
   ariaLabel,
+  sticky = true,
   className,
 }: SectionNavProps) {
   const { activeId, navRef, scrollToSection } = useSectionNavScroll(
@@ -34,8 +35,11 @@ export function SectionNav({
     <nav
       ref={navRef}
       aria-label={ariaLabel}
-      className={cn("sticky z-10 -mx-1 px-1", className)}
-      style={{ top: topOffset }}
+      className={cn(
+        sticky ? "sticky z-10 -mx-1 px-1" : "-mx-1 px-1",
+        className,
+      )}
+      style={sticky ? { top: topOffset } : undefined}
     >
       <div className="rounded-lg border border-border bg-white/95 backdrop-blur-sm shadow-sm">
         <ul

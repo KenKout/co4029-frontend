@@ -35,5 +35,11 @@ export interface SectionNavProps {
   topOffset?: number;
   /** Accessible label for the `<nav>` landmark. */
   ariaLabel: string;
+  /**
+   * Pin the nav to the top while scrolling. When false the nav scrolls away
+   * with the page and carries no z-index of its own, so the sticky page
+   * header and the global top bar always paint above it. Defaults to true.
+   */
+  sticky?: boolean;
   className?: string;
 }
