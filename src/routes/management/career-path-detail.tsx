@@ -61,7 +61,7 @@ function ExistingCareerPathWorkspace({ id }: { id: string }) {
             <EditForm id={id} initialName={data.name} initialSlug={data.slug} initialDescription={data.description ?? ""} readOnly={!editable} />
           )}
           {tab === "programs" && <ProgramsTab pathId={id} />}
-          {tab === "courses" && <CoursesTab id={id} canManage={editable} versionId={selectedVersionId ?? undefined} />}
+          {tab === "courses" && <CoursesTab id={id} canManage={editable} versionId={selectedVersionId ?? undefined} pathPublished={data.status === "published"} />}
           {tab === "students" && (
             <div className="space-y-6">
               <StudentsTab id={id} canEnroll={false} canUnenroll={false} />

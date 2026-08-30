@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { ApiError } from "@/lib/api/client";
-import { getApiErrorCode, isApiErrorCode } from "@/lib/api/error-codes";
+import {
+  getApiErrorCode,
+  getApiErrorMessage,
+  isApiErrorCode,
+} from "@/lib/api/error-codes";
 
 function makeApiError(body: unknown, status = 429): ApiError {
   return new ApiError(status, JSON.stringify(body), "Too Many Requests");
@@ -44,5 +48,59 @@ describe("error-codes", () => {
     expect(
       getApiErrorCode(makeApiError({ detail: { message: "no error key" } })),
     ).toBeNull();
+  });
+});
+
+describe("getApiErrorMessage", () => {
+  it("prefers detail.message over the raw ApiError message", () => {
+    const err = makeApiError(
+      {
+        detail: {
+          error: "concurrent_program_limit_reached",
+          message: "Anh Nguyen is already in 1 active learning program(s).",
+          student_id: "71acb8a2-b123-4ef9-a4d6-cb0bd1a9a02c",
+          limit: 1,
+        },
+      },
+      409,
+    );
+
+    expect(getApiErrorMessage(err, "Could not enroll students")).toBe(
+      "Anh Nguyen is already in 1 active learning program(s).",
+    );
+    // Never the machine code, and never the raw `API 409: {...}` dump.
+    expect(getApiErrorMessage(err, "fallback")).not.toContain(
+      "concurrent_program_limit_reached",
+    );
+  });
+
+  it("accepts a string detail (FastAPI's default shape)", () => {
+    expect(
+      getApiErrorMessage(makeApiError({ detail: "Not allowed here" }, 403), "f"),
+    ).toBe("Not allowed here");
+  });
+
+  it("falls back when the body carries only a machine code", () => {
+    const err = makeApiError({ detail: { error: "program_is_not_active" } }, 409);
+    expect(getApiErrorMessage(err, "Could not enroll students")).toBe(
+      "Could not enroll students",
+    );
+  });
+
+  it("falls back on an unparseable or empty body", () => {
+    expect(
+      getApiErrorMessage(new ApiError(500, "", "Internal Server Error"), "boom"),
+    ).toBe("boom");
+    expect(
+      getApiErrorMessage(new ApiError(502, "<html>", "Bad Gateway"), "boom"),
+    ).toBe("boom");
+  });
+
+  it("uses a plain Error's message, and the fallback for anything else", () => {
+    expect(getApiErrorMessage(new Error("network down"), "boom")).toBe(
+      "network down",
+    );
+    expect(getApiErrorMessage(null, "boom")).toBe("boom");
+    expect(getApiErrorMessage(undefined, "boom")).toBe("boom");
   });
 });

@@ -22,13 +22,16 @@ export function CoursesTab({
   id,
   canManage,
   versionId,
+  pathPublished = false,
 }: {
   id: string;
   canManage: boolean;
   versionId?: string;
+  /** The path is live: the backend accepts only published courses. */
+  pathPublished?: boolean;
 }) {
   const { t } = useTranslation();
-  const controller = useCoursesTab(id, t, versionId);
+  const controller = useCoursesTab(id, t, versionId, pathPublished);
   const stages = useStagesTab(id, t, versionId);
   const prefix = "management_career_path_detail.stages";
 

@@ -9,6 +9,7 @@ import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { useAdminUsersSearch } from "@/lib/api/hooks/admin-organizations";
+import { getApiErrorMessage } from "@/lib/api/error-codes";
 import {
   useArchiveLearningProgram,
   useDecidePathChange,
@@ -89,7 +90,7 @@ export default function ManagementLearningProgramDetailPage() {
   async function confirmedAction(title: string, description: string, label: string, action: () => Promise<unknown>, success: string) {
     if (!(await confirm({ title, description, confirmLabel: label, cancelLabel: "Cancel", confirmVariant: label === "Archive" ? "destructive" : "default" }))) return;
     try { await action(); toast.success(success); setSelectedVersionId(null); }
-    catch (error) { toast.error(error instanceof Error ? error.message : "Action failed"); }
+    catch (error) { toast.error(getApiErrorMessage(error, "Action failed")); }
   }
 
   const isDraft = data.current_version.status === "draft" && !readOnly;
@@ -116,7 +117,7 @@ export default function ManagementLearningProgramDetailPage() {
       });
       toast.success("Career Path removed from the draft");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not remove the Career Path");
+      toast.error(getApiErrorMessage(error, "Could not remove the Career Path"));
     }
   }
 
@@ -222,9 +223,9 @@ export default function ManagementLearningProgramDetailPage() {
         </aside>
       </div>
 
-      {pathPickerOpen && <EntityMultiSelectDialog title="Add Career Paths" searchPlaceholder="Search by name or slug" items={pathCandidates} alreadySelectedIds={new Set(data.paths.map((path) => path.career_path_id))} isLoading={options.isLoading} query={pathQuery} onQueryChange={setPathQuery} onConfirm={(rows) => { void update.mutateAsync({ career_path_ids: composePathIds(rows.map((row) => row.id)) }).then(() => toast.success("Career Paths added")).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Could not add paths")); setPathPickerOpen(false); }} onClose={() => setPathPickerOpen(false)} emptyText="No published Career Path found" alreadyAddedLabel="Added" />}
+      {pathPickerOpen && <EntityMultiSelectDialog title="Add Career Paths" searchPlaceholder="Search by name or slug" items={pathCandidates} alreadySelectedIds={new Set(data.paths.map((path) => path.career_path_id))} isLoading={options.isLoading} query={pathQuery} onQueryChange={setPathQuery} onConfirm={(rows) => { void update.mutateAsync({ career_path_ids: composePathIds(rows.map((row) => row.id)) }).then(() => toast.success("Career Paths added")).catch((error: unknown) => toast.error(getApiErrorMessage(error, "Could not add paths"))); setPathPickerOpen(false); }} onClose={() => setPathPickerOpen(false)} emptyText="No published Career Path found" alreadyAddedLabel="Added" />}
       {importOpen && <ImportStudentsDialog programId={id} onClose={() => setImportOpen(false)} />}
-      {studentPickerOpen && <EntityMultiSelectDialog title="Enroll students" searchPlaceholder="Search students by name or email" items={studentCandidates} alreadySelectedIds={new Set((roster.data ?? []).map((row) => row.student_id))} isLoading={users.isLoading} query={studentQuery} onQueryChange={setStudentQuery} onConfirm={(rows) => { void enroll.mutateAsync(rows.map((row) => row.id)).then(() => toast.success("Students enrolled")).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Could not enroll students")); setStudentPickerOpen(false); }} onClose={() => setStudentPickerOpen(false)} emptyText="No student found" alreadyAddedLabel="Enrolled" />}
+      {studentPickerOpen && <EntityMultiSelectDialog title="Enroll students" searchPlaceholder="Search students by name or email" items={studentCandidates} alreadySelectedIds={new Set((roster.data ?? []).map((row) => row.student_id))} isLoading={users.isLoading} query={studentQuery} onQueryChange={setStudentQuery} onConfirm={(rows) => { void enroll.mutateAsync(rows.map((row) => row.id)).then(() => toast.success("Students enrolled")).catch((error: unknown) => toast.error(getApiErrorMessage(error, "Could not enroll students"))); setStudentPickerOpen(false); }} onClose={() => setStudentPickerOpen(false)} emptyText="No student found" alreadyAddedLabel="Enrolled" />}
     </div>
   );
 }
@@ -233,5 +234,5 @@ function ProgramGeneral({ data, readOnly, onSave }: { data: NonNullable<ReturnTy
   const [name, setName] = useState(data.name);
   const [slug, setSlug] = useState(data.slug);
   const [description, setDescription] = useState(data.description ?? "");
-  return <section className="space-y-4 rounded-xl bg-card p-5 ghost-border"><h2 className="font-headline text-lg font-bold">General</h2><div className="grid gap-4 sm:grid-cols-2"><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Program name <span className="text-red-600">*</span><Input disabled={readOnly} value={name} onChange={(event) => setName(event.target.value)} /></label><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Slug <span className="text-red-600">*</span><Input disabled={readOnly} className="font-mono" value={slug} onChange={(event) => setSlug(event.target.value)} /></label></div><label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea disabled={readOnly} rows={3} value={description} onChange={(event) => setDescription(event.target.value)} /></label>{!readOnly && <div className="flex justify-end"><Button disabled={!name.trim() || !slug.trim()} onClick={() => void onSave({ name: name.trim(), slug: slug.trim(), description: description.trim() || null }).then(() => toast.success("Program details saved")).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Could not save"))}>Save changes</Button></div>}</section>;
+  return <section className="space-y-4 rounded-xl bg-card p-5 ghost-border"><h2 className="font-headline text-lg font-bold">General</h2><div className="grid gap-4 sm:grid-cols-2"><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Program name <span className="text-red-600">*</span><Input disabled={readOnly} value={name} onChange={(event) => setName(event.target.value)} /></label><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Slug <span className="text-red-600">*</span><Input disabled={readOnly} className="font-mono" value={slug} onChange={(event) => setSlug(event.target.value)} /></label></div><label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea disabled={readOnly} rows={3} value={description} onChange={(event) => setDescription(event.target.value)} /></label>{!readOnly && <div className="flex justify-end"><Button disabled={!name.trim() || !slug.trim()} onClick={() => void onSave({ name: name.trim(), slug: slug.trim(), description: description.trim() || null }).then(() => toast.success("Program details saved")).catch((error: unknown) => toast.error(getApiErrorMessage(error, "Could not save")))}>Save changes</Button></div>}</section>;
 }

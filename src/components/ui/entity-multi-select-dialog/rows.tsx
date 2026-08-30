@@ -93,6 +93,11 @@ export function SelectableEntityRow<T extends SelectableEntity>({
  * than hidden so the manager sees the path AND why it is greyed out — a
  * silent filter would just move the confusion to "where did it go?".
  */
+const NOT_SELECTABLE_LABELS: Record<string, string> = {
+  path_not_published: "Draft — publish first",
+  course_not_published: "Draft — publish first",
+};
+
 export function NotSelectableEntityRow({ item }: { item: SelectableEntity }) {
   const reason = item.notSelectableReason ?? "not_available";
   return (
@@ -104,7 +109,7 @@ export function NotSelectableEntityRow({ item }: { item: SelectableEntity }) {
       <Checkbox disabled checked={false} tabIndex={-1} />
       <EntityRowLabels item={item} />
       <span className="text-[10px] font-bold uppercase tracking-wider text-m3-on-surface-variant shrink-0">
-        {reason === "path_not_published" ? "Draft — publish first" : reason}
+        {NOT_SELECTABLE_LABELS[reason] ?? reason}
       </span>
     </div>
   );

@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { apiDelete, apiPost } from "@/lib/api/client";
+import { getApiErrorMessage } from "@/lib/api/error-codes";
 import {
   useArchiveCareerPath,
   useCareerPathCourses,
@@ -46,13 +47,16 @@ export function usePathActions(id: string, t: TFunction) {
         setConfirming(null);
       },
       onError: (err) => {
-        const e = err as { status?: number; message?: string };
-        const message =
-          e.status && e.status >= 400 && e.status < 500
-            ? t("management_career_path_detail.errors.publish_needs_course")
-            : e.message ||
-              t("management_career_path_detail.errors.publish_failed");
-        toast.error(message);
+        // The publish gate has many distinct 409 reasons (empty stage, an
+        // unpublished course, a course with no gradeable unit). Collapsing
+        // every 4xx into "add a course" told the manager to fix the wrong
+        // thing, so the backend's own sentence wins when it sent one.
+        toast.error(
+          getApiErrorMessage(
+            err,
+            t("management_career_path_detail.errors.publish_failed"),
+          ),
+        );
         setConfirming(null);
       },
     });
@@ -81,7 +85,7 @@ export function usePathActions(id: string, t: TFunction) {
         toast.error(
           t(`${prefix}.publish_course_failed`, {
             course: course.course_title,
-            reason: (err as { message?: string }).message || "",
+            reason: getApiErrorMessage(err, ""),
           }),
         );
         setDialogAction(null);
@@ -108,7 +112,7 @@ export function usePathActions(id: string, t: TFunction) {
         toast.error(
           t(`${prefix}.remove_course_failed`, {
             course: course.course_title,
-            reason: (err as { message?: string }).message || "",
+            reason: getApiErrorMessage(err, ""),
           }),
         );
         setDialogAction(null);
@@ -135,8 +139,10 @@ export function usePathActions(id: string, t: TFunction) {
       },
       onError: (err) => {
         toast.error(
-          (err as Error).message ||
+          getApiErrorMessage(
+            err,
             t("management_career_path_detail.errors.archive_failed"),
+          ),
         );
         setConfirming(null);
       },
