@@ -10,7 +10,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/api/query-keys";
 import {
   type GenerationFormState,
-  type GenerationMode,
   type SettingsDraft,
   type TabId,
 } from "@/lib/interview/config-draft";
@@ -104,7 +103,6 @@ export default function InterviewConfigPage() {
     tabs.requestTabChange("questions");
   }
   const [generationForm, setGenerationForm] = useState<GenerationFormState>({
-    mode: "outcome-based" as GenerationMode,
     question_count: 5,
     variant_strategy: "",
     focus_topics: "",

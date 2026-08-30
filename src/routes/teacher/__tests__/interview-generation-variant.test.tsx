@@ -22,7 +22,6 @@ function form(
   overrides: Partial<GenerationFormState> = {},
 ): GenerationFormState {
   return {
-    mode: "outcome-based",
     question_count: 5,
     variant_strategy: "",
     focus_topics: "",

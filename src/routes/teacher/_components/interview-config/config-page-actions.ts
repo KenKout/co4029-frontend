@@ -68,7 +68,6 @@ function buildGenerateRequest(
 ): InterviewGenerationRequest {
   const { config, draft, generationForm } = deps;
   return {
-    mode: generationForm.mode,
     course_id: deps.courseId,
     module_id: config.module_id,
     question_count: generationForm.question_count,

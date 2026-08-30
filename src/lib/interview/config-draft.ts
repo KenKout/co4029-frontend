@@ -13,7 +13,6 @@
 
 import type {
   InterviewConfigUpdate,
-  InterviewGenerationRequest,
   InterviewQuestionType,
 } from "@/lib/api/types";
 import type { RubricCriterion } from "@/lib/interview/supplementary-instructions";
@@ -24,7 +23,6 @@ import {
 
 export type Persona = NonNullable<InterviewConfigUpdate["persona"]>;
 export type TtsVoice = NonNullable<InterviewConfigUpdate["tts_voice"]>;
-export type GenerationMode = InterviewGenerationRequest["mode"];
 export type SecurityResponsePolicy =
   | "continue_and_log"
   | "warn_and_continue"
@@ -127,7 +125,6 @@ export interface PersonaProfileOverride {
 export type VariantStrategy = "" | "all_angles" | "role_only";
 
 export interface GenerationFormState {
-  mode: GenerationMode;
   question_count: number;
   /** How the question bank is shaped per interviewer role (Slice 21). */
   variant_strategy: VariantStrategy;

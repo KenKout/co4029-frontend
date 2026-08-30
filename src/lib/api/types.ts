@@ -484,19 +484,14 @@ export interface InterviewQuestionDuplicateCheck {
 
 export type InterviewOutcomeAuthoring = Schemas["InterviewOutcomeAuthoring"];
 export type InterviewOutcomeCreate = Schemas["InterviewOutcomeCreate"];
-// Widen with source_module_ids (module-scoped generation) until the OpenAPI
-// snapshot is regenerated. Each selected module expands to its lessons on the
-// backend to scope retrieval.
-export type InterviewGenerationRequest =
-  Schemas["InterviewGenerationRequest"] & {
-    source_module_ids?: string[];
-    // Interview rubric-outcome ids to target (empty = all). Manually typed
-    // until the OpenAPI snapshot is regenerated.
-    target_outcome_ids?: string[];
-    // Role-conditioned variant generation (Slice 21). Manually typed until
-    // the OpenAPI snapshot is regenerated. null / undefined = legacy mix.
-    variant_strategy?: "all_angles" | "role_only" | null;
-  };
+// Widen with source_module_ids until the OpenAPI snapshot is regenerated.
+// `mode` is Omit-ted: the backend dropped it (2026-08-30, no stage read it)
+// and the model is extra="forbid", so sending it would 422.
+export type InterviewGenerationRequest = Omit<Schemas["InterviewGenerationRequest"], "mode"> & {
+  source_module_ids?: string[];
+  target_outcome_ids?: string[];
+  variant_strategy?: "all_angles" | "role_only" | null;
+};
 export type InterviewGenerationRunPublic =
   Schemas["InterviewGenerationRunPublic"];
 export type GapReportRead = Schemas["GapReportRead"];

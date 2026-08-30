@@ -1,9 +1,13 @@
 /**
- * The plain inputs of the Generate tab: generation mode, question count, and the
- * focus / avoid topic lists.
+ * The plain inputs of the Generate tab: role-based question mode, question
+ * count, and the focus / avoid topic lists.
  *
  * Split out of `generation-section.tsx` (step 9 of the interview-config
- * decomposition).
+ * decomposition). A generation-`mode` Select ("topic" / "outcome-based" /
+ * "coverage") lived here until 2026-08-30; no backend stage ever read the
+ * value, so all three choices behaved identically and it was removed rather
+ * than left as a decorative dial. Scoping is expressed by the real controls:
+ * the module picker, the outcome picker, and focus topics.
  */
 
 import { Trans, useTranslation } from "react-i18next";
@@ -12,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type {
   GenerationFormState,
-  GenerationMode,
   VariantStrategy,
 } from "@/lib/interview/config-draft";
 import { Field } from "@/routes/teacher/_components/interview-config/form-primitives";
@@ -47,27 +50,10 @@ export function GenerationModeFields({
         generationForm={generationForm}
         updateGeneration={updateGeneration}
       />
+      {/* Count sits alone in a half-width column: the generation-mode Select
+          that used to share this row is gone, and a full-width number input
+          for a 1-2 digit value reads as a mistake. */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label={t("teacher_interview_config.generate.mode_label")}>
-          <Select<GenerationMode>
-            value={generationForm.mode}
-            onValueChange={(next) => updateGeneration("mode", next)}
-            options={[
-              {
-                value: "outcome-based",
-                label: t("teacher_interview_config.generate.mode_outcome"),
-              },
-              {
-                value: "topic",
-                label: t("teacher_interview_config.generate.mode_topic"),
-              },
-              {
-                value: "coverage",
-                label: t("teacher_interview_config.generate.mode_coverage"),
-              },
-            ]}
-          />
-        </Field>
         <Field
           label={
             isAllAngles
