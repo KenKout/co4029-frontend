@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useConfirm } from "@/components/ui/use-confirm";
 import {
   useAddToInterviewQuestionBank,
+  useApproveInterviewQuestionVariants,
   useCheckInterviewQuestionDuplicate,
   useCreateInterviewQuestion,
   useDeleteInterviewQuestion,
@@ -79,6 +80,7 @@ export function QuestionBank({
   const createQuestion = useCreateInterviewQuestion(configId);
   const checkDuplicate = useCheckInterviewQuestionDuplicate(configId);
   const addToBank = useAddToInterviewQuestionBank(courseId);
+  const approveQuestionVariants = useApproveInterviewQuestionVariants(configId);
   const { data: bankItems } = useInterviewQuestionBank(courseId);
   const { confirm: confirmAction, dialog: confirmActionDialog } = useConfirm({
     title: t("teacher_interview_config.qbank.confirm_title", {
@@ -98,6 +100,7 @@ export function QuestionBank({
 
   const mutations = useQuestionMutations({
     updateQuestion,
+    approveQuestionVariants,
     deleteQuestion,
     pendingQuestions: derived.pendingQuestions,
     outcomeById,

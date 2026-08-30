@@ -62,9 +62,7 @@ export default function AdminStatsPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      <div ref={headingRef}>
-        <PageHeading c={c} />
-      </div>
+      <PageHeading ref={headingRef} c={c} />
 
       <SectionNav
         items={sections}

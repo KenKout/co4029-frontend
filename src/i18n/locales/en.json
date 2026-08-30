@@ -4697,7 +4697,8 @@
       },
       "toasts": {
         "status_changed": "Status changed to {{status}}",
-        "outcome_changed": "Outcome set to {{outcome}}"
+        "outcome_changed": "Outcome set to {{outcome}}",
+        "logical_question_approved": "Approved {{count}} angle(s)"
       },
       "sr": {
         "status_changed": "Status changed to {{status}}",
@@ -4709,6 +4710,7 @@
       "reorder_off_grouped": "Drag-to-reorder is off while questions are grouped by module. Use each question's menu to move it to the top or bottom.",
       "reorder_off_variant_group": "Drag-to-reorder is off while multi-angle logical questions are visible. Use each question's menu to move it to the top or bottom.",
       "logical_question": "Logical question",
+      "approve_logical_question": "Approve all",
       "angle_count": "{{count}}/4 angles",
       "angle_tabs_label": "Question angles",
       "source_count_other": "{{count}} sources",

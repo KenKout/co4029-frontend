@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import type { InterviewQuestionAuthoring } from "@/lib/api/types";
 import type { TranslateFn } from "./types";
 
@@ -22,6 +23,9 @@ interface QuestionAngleGroupProps {
   questions: InterviewQuestionAuthoring[];
   renderCard: (question: InterviewQuestionAuthoring) => ReactNode;
   t: TranslateFn;
+  onApproveAll: (questions: InterviewQuestionAuthoring[]) => void;
+  approvingGroupId: string | null;
+  isPublished: boolean;
 }
 
 /** One logical problem with one selectable child card per available angle. */
@@ -29,6 +33,9 @@ export function QuestionAngleGroup({
   questions,
   renderCard,
   t,
+  onApproveAll,
+  approvingGroupId,
+  isPublished,
 }: QuestionAngleGroupProps) {
   const ordered = useMemo(
     () =>
@@ -56,11 +63,30 @@ export function QuestionAngleGroup({
         <h4 className="text-xs font-bold uppercase tracking-wide text-m3-primary">
           {t("teacher_interview_config.qbank.logical_question")}
         </h4>
-        <span className="text-xs text-m3-on-surface-variant">
-          {t("teacher_interview_config.qbank.angle_count", {
-            count: ordered.length,
-          })}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-m3-on-surface-variant">
+            {t("teacher_interview_config.qbank.angle_count", {
+              count: ordered.length,
+            })}
+          </span>
+          {ordered.some((question) => question.review_status !== "approved") && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isPublished || !!approvingGroupId}
+              onClick={() => onApproveAll(ordered)}
+              className="h-7 gap-1 px-2 text-[11px]"
+            >
+              {approvingGroupId === (ordered[0].variant_group_id ?? ordered[0].id) ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-3 w-3" />
+              )}
+              {t("teacher_interview_config.qbank.approve_logical_question")}
+            </Button>
+          )}
+        </div>
       </div>
       <div
         role="tablist"

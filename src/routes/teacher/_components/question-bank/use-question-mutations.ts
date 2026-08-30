@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import type { InterviewQuestionAuthoring } from "@/lib/api/types";
 import { statusMeta } from "./helpers";
+import type { useApproveInterviewQuestionVariants } from "@/lib/api/hooks/interviews";
 import type {
   DeleteQuestionMutation,
   OutcomeMeta,
@@ -23,6 +24,7 @@ import type {
  */
 export interface QuestionMutationsOptions {
   updateQuestion: UpdateQuestionMutation;
+  approveQuestionVariants: ReturnType<typeof useApproveInterviewQuestionVariants>;
   deleteQuestion: DeleteQuestionMutation;
   pendingQuestions: InterviewQuestionAuthoring[];
   outcomeById: Map<string, OutcomeMeta>;
@@ -32,6 +34,8 @@ export interface QuestionMutationsOptions {
 
 interface MutationCtx extends QuestionMutationsOptions {
   approvingAll: boolean;
+  approvingGroupId: string | null;
+  setApprovingGroupId: React.Dispatch<React.SetStateAction<string | null>>;
   setApprovingAll: React.Dispatch<React.SetStateAction<boolean>>;
   deletingIds: Set<string>;
   setDeletingIds: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -40,11 +44,14 @@ interface MutationCtx extends QuestionMutationsOptions {
 
 export function useQuestionMutations(options: QuestionMutationsOptions) {
   const [approvingAll, setApprovingAll] = useState(false);
+  const [approvingGroupId, setApprovingGroupId] = useState<string | null>(null);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [savingId, setSavingId] = useState<string | null>(null);
   const ctx: MutationCtx = {
     ...options,
     approvingAll,
+    approvingGroupId,
+    setApprovingGroupId,
     setApprovingAll,
     deletingIds,
     setDeletingIds,
@@ -52,6 +59,7 @@ export function useQuestionMutations(options: QuestionMutationsOptions) {
   };
   return {
     approvingAll,
+    approvingGroupId,
     deletingIds,
     setDeletingIds,
     savingId,
@@ -61,6 +69,8 @@ export function useQuestionMutations(options: QuestionMutationsOptions) {
     setOutcome: (q: InterviewQuestionAuthoring, next: string | null) =>
       setOutcome(ctx, q, next),
     handleApproveAll: () => handleApproveAll(ctx),
+    handleApproveLogicalQuestion: (questions: InterviewQuestionAuthoring[]) =>
+      handleApproveLogicalQuestion(ctx, questions),
     handleDelete: (q: InterviewQuestionAuthoring) => handleDelete(ctx, q),
   };
 }
@@ -157,6 +167,28 @@ async function setOutcome(
     toast.error((err as Error).message);
   } finally {
     setSavingId(null);
+  }
+}
+
+async function handleApproveLogicalQuestion(
+  ctx: MutationCtx,
+  questions: InterviewQuestionAuthoring[],
+) {
+  const { approveQuestionVariants, approvingGroupId, setApprovingGroupId, t } = ctx;
+  const anchor = questions[0];
+  if (!anchor || approvingGroupId || questions.every((q) => q.review_status === "approved")) return;
+  setApprovingGroupId(anchor.variant_group_id ?? anchor.id);
+  try {
+    const result = await approveQuestionVariants.mutateAsync(anchor.id);
+    toast.success(
+      t("teacher_interview_config.qbank.toasts.logical_question_approved", {
+        count: result.approved,
+      }),
+    );
+  } catch (err: unknown) {
+    toast.error((err as Error).message);
+  } finally {
+    setApprovingGroupId(null);
   }
 }
 

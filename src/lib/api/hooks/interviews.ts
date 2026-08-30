@@ -434,6 +434,25 @@ export function useCreateInterviewQuestion(
  * partial update (used to flip review_status: 'pending' → 'approved' and to
  * edit prompt_text / question_type / difficulty / position).
  */
+export function useApproveInterviewQuestionVariants(
+  configId: string | null | undefined,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (questionId: string) =>
+      apiPost<{ approved: number }>(
+        `/teacher/interview-configs/${configId}/questions/${questionId}/approve-variants`,
+      ),
+    onSuccess: () => {
+      if (configId) {
+        void qc.invalidateQueries({
+          queryKey: queryKeys.interviews.configAuthoring(configId),
+        });
+      }
+    },
+  });
+}
+
 export function useUpdateInterviewQuestion(
   configId: string | null | undefined,
 ) {

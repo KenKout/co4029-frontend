@@ -68,6 +68,9 @@ function renderLogicalQuestions(
   questions: InterviewQuestionAuthoring[],
   renderCard: (question: InterviewQuestionAuthoring) => ReactNode,
   t: TranslateFn,
+  onApproveLogicalQuestion: (questions: InterviewQuestionAuthoring[]) => void,
+  approvingGroupId: string | null,
+  isPublished: boolean,
 ) {
   return groupLogicalQuestions(questions).map((group) =>
     group.questions[0]?.variant_group_id ? (
@@ -76,6 +79,9 @@ function renderLogicalQuestions(
         questions={group.questions}
         renderCard={renderCard}
         t={t}
+        onApproveAll={onApproveLogicalQuestion}
+        approvingGroupId={approvingGroupId}
+        isPublished={isPublished}
       />
     ) : (
       renderCard(group.questions[0])
@@ -167,7 +173,14 @@ export function QuestionListSection(props: QuestionListSectionProps) {
         <>
           {reorderNote}
           <ul className="space-y-2" role="list">
-            {renderLogicalQuestions(filtered, renderCard, t)}
+            {renderLogicalQuestions(
+              filtered,
+              renderCard,
+              t,
+              props.mutations.handleApproveLogicalQuestion,
+              props.mutations.approvingGroupId,
+              props.isPublished,
+            )}
           </ul>
         </>
       ) : (
@@ -189,7 +202,14 @@ export function QuestionListSection(props: QuestionListSectionProps) {
                 </span>
               </div>
               <ul className="space-y-2" role="list">
-                {renderLogicalQuestions(g.items, renderCard, t)}
+                {renderLogicalQuestions(
+                  g.items,
+                  renderCard,
+                  t,
+                  props.mutations.handleApproveLogicalQuestion,
+                  props.mutations.approvingGroupId,
+                  props.isPublished,
+                )}
               </ul>
             </div>
           ))}

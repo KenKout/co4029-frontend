@@ -4568,7 +4568,8 @@
       },
       "toasts": {
         "status_changed": "Đã đổi trạng thái sang {{status}}",
-        "outcome_changed": "Đã gán chuẩn đầu ra: {{outcome}}"
+        "outcome_changed": "Đã gán chuẩn đầu ra: {{outcome}}",
+        "logical_question_approved": "Đã duyệt {{count}} góc hỏi"
       },
       "sr": {
         "status_changed": "Đã đổi trạng thái sang {{status}}",
@@ -4580,6 +4581,7 @@
       "reorder_off_grouped": "Kéo để sắp xếp đang tắt vì câu hỏi đang nhóm theo module. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối.",
       "reorder_off_variant_group": "Kéo để sắp xếp đang tắt khi có nhóm câu hỏi đa góc. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối.",
       "logical_question": "Câu hỏi logic",
+      "approve_logical_question": "Duyệt tất cả",
       "angle_count": "{{count}}/4 góc hỏi",
       "angle_tabs_label": "Các góc hỏi",
       "source_count_other": "{{count}} nguồn",
