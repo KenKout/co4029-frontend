@@ -26,6 +26,7 @@
  * Both waits are capped for the same reason.
  */
 import type { NarrationPresentation } from "@/lib/hooks/use-interview-narration";
+import type { InterviewPhase } from "@/lib/interview/turn-factory";
 
 /**
  * What the agent's voice is doing, as far as this client can tell.
@@ -224,6 +225,67 @@ export function shouldWarmRoom(args: {
 }): boolean {
   if (!args.sessionId) return false;
   return args.onboardingStage !== "completed" || args.pendingFirstQuestion;
+}
+
+/**
+ * The five `InterviewRoomProvider` props, computed the same way in BOTH routes
+ * (`course-interview.tsx` and the learn-item `InterviewProxyInner`). Exported
+ * and pure so the regression tests exercise the shipped rule instead of a copy.
+ *
+ * The terminal gate is the newest and hardest hold. `beginClosing` moves the
+ * phase to `closing` SYNCHRONOUSLY — End button / timer expiry, before the
+ * `POST /finish` round-trip resolves — so `roomRequested` drops to false at
+ * that exact transition and every capability dies with it:
+ *
+ *   - `active` false → `useLiveKitRoom` disconnects (`connect = active || warm`)
+ *   - `prefetch` false → no further token minting
+ *   - `warm` false → no warm connection either, so `connect` is fully cut
+ *   - `agentWanted` false → no late dispatch into a closing session
+ *   - `audio` false → mic publish drops
+ *
+ * Together that means the agent's in-flight audio cannot continue into the
+ * closing/result screen: the room disconnects and `RoomAudioRenderer` unmounts
+ * (it is gated on `active && room` in the provider) the instant the interview
+ * turns terminal.
+ *
+ * `finishResult` is included as a third terminal signal so the rule also holds
+ * on the direct `ended_early`/`timed_out` path, where `beginClosing` jumps
+ * straight to `results` without a goodbye turn.
+ */
+export function interviewRoomProps(args: {
+  sessionId: string | null;
+  phase: InterviewPhase;
+  finishResult: unknown;
+  onboardingStage: string | null | undefined;
+  pendingFirstQuestion: unknown;
+  micOn: boolean;
+}): {
+  active: boolean;
+  prefetch: boolean;
+  warm: boolean;
+  agentWanted: boolean;
+  audio: boolean;
+} {
+  const terminal =
+    args.phase === "closing" || args.phase === "results" || Boolean(args.finishResult);
+  const roomRequested = !terminal && Boolean(args.sessionId);
+  const roomActive =
+    roomRequested &&
+    args.onboardingStage === "completed" &&
+    !args.pendingFirstQuestion;
+  return {
+    active: roomActive,
+    prefetch: roomRequested && args.onboardingStage === "completed",
+    warm:
+      roomRequested &&
+      shouldWarmRoom({
+        sessionId: args.sessionId,
+        onboardingStage: args.onboardingStage,
+        pendingFirstQuestion: Boolean(args.pendingFirstQuestion),
+      }),
+    agentWanted: roomRequested && args.onboardingStage === "completed",
+    audio: roomActive && args.micOn,
+  };
 }
 
 /**

@@ -35,7 +35,7 @@ import {
   QuizNotFoundPanel,
 } from "@/routes/courses/_components/course-quiz/QuizStatusScreens";
 import { InterviewRoomProvider } from "@/components/interview/interview-room-provider";
-import { shouldWarmRoom } from "@/routes/courses/_components/course-interview/agent-voice-presentation";
+import { interviewRoomProps } from "@/routes/courses/_components/course-interview/agent-voice-presentation";
 import { InterviewLobbyScreen } from "@/routes/courses/_components/course-interview/InterviewLobbyScreen";
 import { InterviewResultsScreen } from "@/routes/courses/_components/course-interview/InterviewResultsScreen";
 import {
@@ -410,7 +410,18 @@ function InterviewProxy({ slug, interviewRef }: { slug: string; interviewRef: st
 function InterviewProxyInner({ slug, interviewRef }: { slug: string; interviewRef: string }) {
   const iv = useCourseInterviewWithRef(slug, interviewRef);
   const { course, config, finishResult, sessionId } = iv;
-  const roomActive = Boolean(sessionId) && iv.onboardingStage === "completed" && !iv.pendingFirstQuestion;
+  // Same five-provider-prop policy as course-interview.tsx: End/timer moves the
+  // phase to `closing` synchronously, and that terminal state disconnects the
+  // room / unmounts RoomAudioRenderer so agent audio cannot bleed into the
+  // closing/result screen (see interviewRoomProps in agent-voice-presentation).
+  const roomProps = interviewRoomProps({
+    sessionId,
+    phase: iv.phase,
+    finishResult,
+    onboardingStage: iv.onboardingStage,
+    pendingFirstQuestion: iv.pendingFirstQuestion,
+    micOn: iv.micOn,
+  });
 
   let screen: React.ReactNode;
   if (iv.courseLoading || iv.configLoading) screen = <InterviewLoadingScreen />;
@@ -422,11 +433,11 @@ function InterviewProxyInner({ slug, interviewRef }: { slug: string; interviewRe
   return (
     <InterviewRoomProvider
       sessionId={sessionId}
-      active={roomActive}
-      prefetch={Boolean(sessionId) && iv.onboardingStage === "completed"}
-      warm={shouldWarmRoom({ sessionId, onboardingStage: iv.onboardingStage, pendingFirstQuestion: Boolean(iv.pendingFirstQuestion) })}
-      agentWanted={Boolean(sessionId) && iv.onboardingStage === "completed"}
-      audio={iv.micOn}
+      active={roomProps.active}
+      prefetch={roomProps.prefetch}
+      warm={roomProps.warm}
+      agentWanted={roomProps.agentWanted}
+      audio={roomProps.audio}
     >
       {screen}
     </InterviewRoomProvider>

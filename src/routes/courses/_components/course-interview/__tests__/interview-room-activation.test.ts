@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { interviewRoomProps } from "../agent-voice-presentation";
+
 /**
  * When the hybrid LiveKit room is allowed to go live.
  *
@@ -17,6 +19,15 @@ import { describe, expect, it } from "vitest";
  * is set — and the token is prefetched during that beat so the hold costs no
  * dead air. This pins both halves of that rule as a pure predicate, mirroring
  * the expression in `routes/course-interview.tsx`.
+ *
+ * End/timer is a second, harder hold: `beginClosing` moves the phase to
+ * `closing` synchronously, before the finish API resolves, and the page gates
+ * every room capability on that transition (`roomRequested`). So the room
+ * disconnects, RoomAudioRenderer unmounts, and the mic drops the instant the
+ * candidate presses End or the timer runs out — in-flight agent audio cannot
+ * continue into the closing/result screen. The five InterviewRoomProvider
+ * props are computed by the SHIPPED `interviewRoomProps` predicate; the
+ * terminal-state cases below exercise it directly.
  */
 
 function roomActive(args: {
@@ -25,8 +36,15 @@ function roomActive(args: {
   inputMode: "voice" | "text" | "hybrid";
   onboardingStage: string;
   pendingFirstQuestion: unknown;
+  phase?: "questioning" | "closing" | "results";
+  finishResult?: unknown;
 }): boolean {
+  const terminal =
+    args.phase === "closing" ||
+    args.phase === "results" ||
+    Boolean(args.finishResult);
   return (
+    !terminal &&
     Boolean(args.sessionId) &&
     (args.voiceActive ||
       (args.inputMode === "hybrid" &&
@@ -39,13 +57,37 @@ function prefetch(args: {
   sessionId: string | null;
   inputMode: "voice" | "text" | "hybrid";
   onboardingStage: string;
+  phase?: "questioning" | "closing" | "results";
+  finishResult?: unknown;
 }): boolean {
+  const terminal =
+    args.phase === "closing" ||
+    args.phase === "results" ||
+    Boolean(args.finishResult);
   return (
+    !terminal &&
     Boolean(args.sessionId) &&
     args.inputMode === "hybrid" &&
     args.onboardingStage === "completed"
   );
 }
+
+/**
+ * The five InterviewRoomProvider props as computed by the SHIPPED policy
+ * (`interviewRoomProps` in agent-voice-presentation.ts) — imported, not
+ * mirrored, so the regression passes only when the real rule is right.
+ * `roomRequested` is the terminal gate: End/timer flips the phase to `closing`
+ * synchronously, so every capability — token mint, warm connection, agent
+ * dispatch, mic publish — dies at that transition.
+ */
+const ROOM_PROPS_BASE = {
+  sessionId: "s-1",
+  phase: "questioning" as const,
+  onboardingStage: "completed",
+  pendingFirstQuestion: null as unknown,
+  micOn: true,
+  finishResult: undefined as unknown,
+};
 
 const BASE = {
   sessionId: "s-1",
@@ -54,6 +96,16 @@ const BASE = {
   onboardingStage: "completed",
   pendingFirstQuestion: null as unknown,
 };
+
+const TERMINAL_STATES: (
+  | { phase: "closing" }
+  | { phase: "results" }
+  | { finishResult: { status: string } }
+)[] = [
+  { phase: "closing" },
+  { phase: "results" },
+  { finishResult: { status: "completed" } },
+];
 
 describe("hybrid room activation vs the transition beat", () => {
   it("holds the room back while the transition line is still presenting", () => {
@@ -92,6 +144,16 @@ describe("hybrid room activation vs the transition beat", () => {
     expect(prefetch(onboarding)).toBe(false);
   });
 
+  it("stops the room immediately in a terminal state", () => {
+    // End button / timer expiry move the phase to `closing` synchronously
+    // (beginClosing), before the finish API resolves — so the room must be
+    // down even while `finishResult` is still null.
+    for (const terminal of TERMINAL_STATES) {
+      expect(roomActive({ ...BASE, ...terminal })).toBe(false);
+      expect(prefetch({ ...BASE, ...terminal })).toBe(false);
+    }
+  });
+
   it("stays down for a pure-text session", () => {
     // A `supported_modes: "text"` config never joins a room, so it has no way to
     // send a typed turn at all now that REST /respond is gone. Pinned here as the
@@ -99,5 +161,27 @@ describe("hybrid room activation vs the transition beat", () => {
     const text = { ...BASE, inputMode: "text" as const };
     expect(roomActive(text)).toBe(false);
     expect(prefetch(text)).toBe(false);
+  });
+});
+
+describe("terminal states kill every room capability", () => {
+  it.each(TERMINAL_STATES)("all five props are off: %j", (terminal) => {
+    // `micOn` irrelevant: audio is AND-gated on roomActive.
+    const props = interviewRoomProps({ ...ROOM_PROPS_BASE, ...terminal });
+    expect(props.active).toBe(false);
+    expect(props.prefetch).toBe(false);
+    expect(props.warm).toBe(false);
+    expect(props.agentWanted).toBe(false);
+    expect(props.audio).toBe(false);
+  });
+
+  it("keeps the full room live mid-questioning (control)", () => {
+    const props = interviewRoomProps(ROOM_PROPS_BASE);
+    expect(props.active).toBe(true);
+    expect(props.prefetch).toBe(true);
+    // Warming stops once the transition has been presented; the room is live.
+    expect(props.warm).toBe(false);
+    expect(props.agentWanted).toBe(true);
+    expect(props.audio).toBe(true);
   });
 });
