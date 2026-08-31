@@ -71,51 +71,63 @@ export function GenerationSection({
   const inProgress = runState.inProgress;
 
   return (
-    <div className="rounded-xl border-2 border-dashed border-m3-secondary/30 bg-m3-secondary/[0.03] p-6 lg:p-8 space-y-5">
-      <Section
-        title={t("teacher_interview_config.generate.section_title")}
-        description={t("teacher_interview_config.generate.section_description")}
-      >
-        {isPublished && (
-          <p className="rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-            {t("teacher_interview_config.generate.published_locked")}
-          </p>
-        )}
-        <fieldset disabled={isPublished} className="contents">
-          <GenerationModeFields
-            generationForm={generationForm}
-            updateGeneration={updateGeneration}
-            interviewerRole={interviewerRole}
-          />
+    <section className="overflow-hidden rounded-2xl border border-m3-outline-variant/35 bg-m3-surface-container-low/45 shadow-sm">
+      <div className="border-b border-m3-outline-variant/25 bg-m3-surface-container-lowest/50 px-5 py-5 sm:px-6">
+        <Section
+          title={t("teacher_interview_config.generate.section_title")}
+          description={t("teacher_interview_config.generate.section_description")}
+        >
+          {isPublished && (
+            <p className="rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              {t("teacher_interview_config.generate.published_locked")}
+            </p>
+          )}
+        </Section>
+      </div>
 
-          <GenerationModulePicker
-            generationForm={generationForm}
-            updateGeneration={updateGeneration}
-            modules={modules}
-            ownModuleId={ownModuleId}
-          />
+      <fieldset disabled={isPublished} className="space-y-5 p-5 sm:p-6">
+        <div className="grid items-start gap-5 xl:grid-cols-12">
+          <div className="rounded-xl border border-m3-outline-variant/25 bg-m3-surface-container-lowest/55 p-4 xl:col-span-5">
+            <GenerationModeFields
+              generationForm={generationForm}
+              updateGeneration={updateGeneration}
+              interviewerRole={interviewerRole}
+            />
+          </div>
 
+          <div className="xl:col-span-7">
+            <GenerationModulePicker
+              generationForm={generationForm}
+              updateGeneration={updateGeneration}
+              modules={modules}
+              ownModuleId={ownModuleId}
+            />
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-m3-outline-variant/25 bg-m3-surface-container-lowest/55 p-4">
           <GenerationOutcomePicker
             generationForm={generationForm}
             updateGeneration={updateGeneration}
             outcomes={outcomes}
           />
+        </div>
 
-          <div className="mt-3">
-            <GenerationTopicFields
-              generationForm={generationForm}
-              updateGeneration={updateGeneration}
-            />
-          </div>
+        <div className="grid gap-4 border-t border-m3-outline-variant/20 pt-5 sm:grid-cols-2">
+          <GenerationTopicFields
+            generationForm={generationForm}
+            updateGeneration={updateGeneration}
+          />
+        </div>
 
-          <p className="text-[11px] text-m3-on-surface-variant">
-            {t("teacher_interview_config.generate.reuses_settings_hint")}
-          </p>
+        <p className="text-[11px] leading-4 text-m3-on-surface-variant">
+          {t("teacher_interview_config.generate.reuses_settings_hint")}
+        </p>
+      </fieldset>
 
-          {activeRunId && <GenerationRunStatus run={run} state={runState} />}
-        </fieldset>
-
-        <div className="flex flex-wrap items-start justify-between gap-3 pt-3 border-t border-dashed border-m3-secondary/30">
+      <div className="space-y-4 border-t border-m3-outline-variant/25 bg-m3-surface-container-low/35 p-5 sm:p-6">
+        {activeRunId && <GenerationRunStatus run={run} state={runState} />}
+        <div className="flex flex-col gap-3 rounded-xl border border-m3-secondary/20 bg-m3-secondary/[0.045] p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="min-w-0 text-[11px] leading-4 text-m3-on-surface-variant">
             {t("teacher_interview_config.generate.independent_action_hint")}
           </p>
@@ -123,7 +135,7 @@ export function GenerationSection({
             type="button"
             onClick={onGenerate}
             disabled={inProgress || isPublished}
-            className="gap-2 gradient-primary text-white border-0 hover:shadow-ai-glow shrink-0"
+            className="w-full shrink-0 gap-2 border-0 text-white gradient-primary hover:shadow-ai-glow sm:w-auto"
           >
             {inProgress ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -135,7 +147,7 @@ export function GenerationSection({
               : t("teacher_interview_config.generate.start_button")}
           </Button>
         </div>
-      </Section>
-    </div>
+      </div>
+    </section>
   );
 }

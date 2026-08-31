@@ -28,20 +28,19 @@ export function GenerationRunStatus({
   const { inProgress, failed, cancelled, completed, progress, elapsed } = state;
   return (
     <div
+      role={failed || cancelled ? "alert" : "status"}
+      aria-live={inProgress ? "polite" : undefined}
       className={cn(
-        "rounded-xl px-4 py-3 text-sm border",
+        "rounded-xl border p-4 text-sm shadow-sm",
         failed
-          ? "border-red-200 bg-red-50 text-red-800"
+          ? "border-red-200 bg-red-50 text-red-900"
           : cancelled
-            ? "border-amber-200 bg-amber-50 text-amber-800"
+            ? "border-amber-200 bg-amber-50 text-amber-900"
             : completed
-            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-            : "border-blue-200 bg-blue-50 text-blue-800",
+              ? "border-emerald-200/80 bg-emerald-50/70 text-emerald-900"
+              : "border-m3-primary/20 bg-m3-primary/[0.055] text-m3-on-surface",
       )}
     >
-      {/* Header: status icon + headline on the left; stepped % (when
-          known) + live elapsed timer on the right — mirrors the quiz
-          GenerationProgress layout. */}
       <GenerationRunHeader
         inProgress={inProgress}
         failed={failed}
@@ -59,15 +58,17 @@ export function GenerationRunStatus({
       )}
 
       {failed && run?.failure_message && (
-        <p className="mt-1 text-xs">{run.failure_message}</p>
+        <p className="mt-3 border-t border-red-200/80 pt-3 text-xs leading-5">
+          {run.failure_message}
+        </p>
       )}
       {cancelled && (
-        <p className="mt-1 text-xs">
+        <p className="mt-3 border-t border-amber-200/80 pt-3 text-xs leading-5">
           {t("teacher_interview_config.generate.cancelled")}
         </p>
       )}
       {completed && (
-        <p className="mt-1 text-xs">
+        <p className="mt-2 text-xs leading-5 text-emerald-800/80">
           {t("teacher_interview_config.generate.success_body")}
         </p>
       )}
@@ -90,7 +91,7 @@ function GenerationRunHeader({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
       <div className="flex min-w-0 items-center gap-2 font-bold">
         {inProgress ? (
           <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
@@ -113,7 +114,7 @@ function GenerationRunHeader({
       </div>
       <div className="flex shrink-0 items-center gap-3 text-xs tabular-nums">
         {progress && !failed && (
-          <span className="font-extrabold">
+          <span className="rounded-md bg-current/10 px-1.5 py-0.5 font-extrabold">
             {progress.accepted}/{progress.target}
           </span>
         )}
@@ -139,8 +140,8 @@ function GenerationProgressBar({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="mt-2 space-y-1">
-      <div className="flex items-center justify-between text-xs font-medium">
+    <div className="mt-4 space-y-1.5">
+      <div className="flex items-center justify-between text-xs font-semibold">
         <span>
           {completed
             ? t("teacher_interview_config.generate.phase_done")
