@@ -1076,6 +1076,11 @@ export interface LearningProgram {
   paths: LearningProgramPath[];
   created_at: string;
   updated_at: string;
+  // Management-list card statistics (user decision 2026-08-31): filled by the
+  // list endpoint only; detail responses leave the defaults.
+  student_count?: number;
+  path_change_request_count?: number;
+  has_draft_version?: boolean;
 }
 
 export interface ProgramPathAttempt {

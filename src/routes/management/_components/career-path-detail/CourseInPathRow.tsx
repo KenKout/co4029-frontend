@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { ArrowDown, ArrowUp } from "lucide-react";
@@ -94,25 +95,31 @@ export function CourseInPathRow({
         {row.position}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-m3-on-surface truncate flex items-center gap-2">
-          <span className="truncate">{row.course_title}</span>
-          {row.course_status && (
-            <StatusBadge
-              status={row.course_status}
-              tokens={COURSE_STATUS_TOKENS}
-              label={t(
-                `management_career_path_detail.status.${row.course_status}`,
-                { defaultValue: row.course_status },
-              )}
-              size="sm"
-              className="shrink-0"
-            />
-          )}
-        </p>
-        <div className="flex flex-wrap items-center gap-2 mt-0.5">
-          <span className="text-[11px] font-mono text-m3-on-surface-variant truncate">
-            {row.course_slug}
-          </span>
+        <Link
+          to="/dept/courses/$courseId"
+          params={{ courseId: row.course_id }}
+          title={`Open ${row.course_title}`}
+          className="block min-w-0 hover:opacity-80 transition-opacity"
+        >
+          <p className="text-sm font-semibold text-m3-on-surface truncate flex items-center gap-2">
+            <span className="truncate">{row.course_title}</span>
+            {row.course_status && (
+              <StatusBadge
+                status={row.course_status}
+                tokens={COURSE_STATUS_TOKENS}
+                label={t(
+                  `management_career_path_detail.status.${row.course_status}`,
+                  { defaultValue: row.course_status },
+                )}
+                size="sm"
+                className="shrink-0"
+              />
+            )}
+          </p>
+          <div className="flex flex-wrap items-center gap-2 mt-0.5">
+            <span className="text-[11px] font-mono text-m3-on-surface-variant truncate">
+              {row.course_slug}
+            </span>
           {/* The editable select below is `sm:block`, so without this the
               required/optional state would be invisible on mobile — the
               read-only marker this replaced was always shown. */}
@@ -133,6 +140,7 @@ export function CourseInPathRow({
             {t(`${prefix}.satisfied_by.${row.satisfied_by}`)}
           </span>
         </div>
+        </Link>
       </div>
       {canManage && (
         <CourseRowControls
