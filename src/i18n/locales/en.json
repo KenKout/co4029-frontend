@@ -165,7 +165,10 @@
     "show_more": "Show more",
     "stage_label": "Stage {{n}} — {{title}}",
     "stage_label_short": "Stage {{n}}",
-    "more_paths": "+ {{count}} more path(s)"
+    "more_paths": "+ {{count}} more path(s)",
+    "download_syllabus": "Download syllabus",
+    "syllabus_downloading": "Opening…",
+    "syllabus_download_failed": "Could not fetch the syllabus. Try again shortly."
   },
   "settings_security": {
     "title": "Account security",
@@ -838,7 +841,8 @@
       "optional": "Optional",
       "stage_line": "Stage {{position}} · {{stage}}",
       "untitled_stage": "Untitled stage"
-    }
+    },
+    "upload_syllabus": "Upload syllabus"
   },
   "dept_courses": {
     "title": "Courses",
@@ -893,7 +897,19 @@
       "hours_value": "{{hours}} h",
       "warnings_title_one": "1 thing to check",
       "warnings_title_other": "{{count}} things to check",
-      "open_course": "Open course"
+      "open_course": "Open course",
+      "mode_label": "What this upload does",
+      "mode_attach": "Upload only",
+      "mode_override": "Override existing",
+      "mode_create": "Create new course",
+      "mode_hint_attach": "Only replaces the syllabus file students download. The course title, description and learning outcomes stay as they are.",
+      "mode_hint_override": "Read the file and overwrite this course's title, description, hours and its entire learning-outcome tree.",
+      "mode_hint_create": "Read the file and create a new draft course. This course is left untouched.",
+      "override_warning": "Override removes every existing learning outcome and replaces it with the ones in the file. Title, description and hours are overwritten too. The URL slug is kept.",
+      "override_blocked": "Only a draft course can be overridden — this one is {{status}}. You can still upload the syllabus document or create a new course from it.",
+      "result_mode_attach": "The course's syllabus document was updated.",
+      "result_mode_override": "The course was overwritten from the syllabus.",
+      "result_mode_create": "A new draft course was created."
     },
     "scope_label": "Scoped to unit:",
     "scope_unknown": "Selected unit",

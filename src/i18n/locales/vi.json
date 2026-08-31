@@ -166,7 +166,10 @@
     "show_more": "Xem thêm",
     "stage_label": "Giai đoạn {{n}} — {{title}}",
     "stage_label_short": "Giai đoạn {{n}}",
-    "more_paths": "+ {{count}} pathway nữa"
+    "more_paths": "+ {{count}} pathway nữa",
+    "download_syllabus": "Tải đề cương",
+    "syllabus_downloading": "Đang mở…",
+    "syllabus_download_failed": "Không tải được đề cương. Thử lại sau."
   },
   "settings_security": {
     "title": "Bảo mật tài khoản",
@@ -763,7 +766,8 @@
       "optional": "Tùy chọn",
       "stage_line": "Giai đoạn {{position}} · {{stage}}",
       "untitled_stage": "Giai đoạn chưa đặt tên"
-    }
+    },
+    "upload_syllabus": "Tải lên đề cương"
   },
   "dept_courses": {
     "title": "Khóa học",
@@ -816,7 +820,19 @@
       "hours_value": "{{hours}} giờ",
       "warnings_title_one": "1 mục cần kiểm tra",
       "warnings_title_other": "{{count}} mục cần kiểm tra",
-      "open_course": "Mở khoá học"
+      "open_course": "Mở khoá học",
+      "mode_label": "Hành động khi tải lên",
+      "mode_attach": "Chỉ tải lên đề cương",
+      "mode_override": "Ghi đè khoá học hiện tại",
+      "mode_create": "Tạo khoá học mới",
+      "mode_hint_attach": "Chỉ thay tệp đề cương để sinh viên tải về. Tên, mô tả và chuẩn đầu ra của khoá học không đổi.",
+      "mode_hint_override": "Đọc tệp và ghi đè tên, mô tả, số giờ và toàn bộ chuẩn đầu ra của khoá học này.",
+      "mode_hint_create": "Đọc tệp và tạo một khoá học nháp mới, không ảnh hưởng khoá học hiện tại.",
+      "override_warning": "Ghi đè sẽ xoá toàn bộ chuẩn đầu ra hiện có và thay bằng chuẩn đầu ra trong tệp. Tên, mô tả và số giờ cũng bị ghi đè. Đường dẫn (slug) giữ nguyên.",
+      "override_blocked": "Chỉ khoá học ở trạng thái nháp mới ghi đè được — khoá học này đang {{status}}. Bạn vẫn có thể chỉ tải lên đề cương hoặc tạo khoá học mới.",
+      "result_mode_attach": "Đã cập nhật tệp đề cương của khoá học.",
+      "result_mode_override": "Đã ghi đè khoá học từ đề cương.",
+      "result_mode_create": "Đã tạo khoá học nháp mới."
     },
     "scope_label": "Phạm vi đơn vị:",
     "scope_unknown": "Đơn vị đã chọn",

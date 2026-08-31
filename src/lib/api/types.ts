@@ -59,6 +59,10 @@ export interface CourseCareerPlacementPublic {
 // them only when the backend fills them in.
 export interface CoursePublicMeta {
   estimated_minutes?: number | null;
+  /** True when the course has an archived syllabus PDF a student may download
+   *  (`GET /courses/{id}/syllabus/download-url`). Hand-layered like the fields
+   *  above; keep in sync with backend public.CoursePublic. */
+  has_syllabus?: boolean | null;
 }
 
 export type Course = Schemas["CoursePublic"] &

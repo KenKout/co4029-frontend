@@ -5,12 +5,14 @@ import {
   ArrowRight,
   BookOpen,
   Clock,
+  Download,
   GraduationCap,
   Lock,
   SignalHigh,
 } from "lucide-react";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { Button } from "@/components/ui/button";
+import { fetchCourseSyllabusDownloadUrl } from "@/lib/api/hooks/courses";
 import type { CourseCareerPlacementPublic, CoursePublic, MyCourseProgressSummary } from "@/lib/api/types";
 import type { TFunction } from "i18next";
 import { cn } from "@/lib/utils";
@@ -141,6 +143,62 @@ function CourseCtaButton({
       {!enrollmentLoading && (
         <p className="text-[11px] text-m3-on-surface-variant leading-snug text-center px-2">
           {t("course_detail.enroll_required_hint")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * "Download syllabus" — the original PDF the course was built from.
+ *
+ * Only rendered when `course.has_syllabus`, which the backend sets from the
+ * same publish-gated query the download endpoint uses, so a visible button
+ * never leads to a 404. NOT enrolment-gated: the syllabus is what a student
+ * reads to decide whether to enrol.
+ *
+ * The URL is minted on click rather than with the page: it is a short-TTL
+ * presigned link, so one fetched at render time could already be dead by the
+ * time anyone clicks. Opened in a new tab instead of navigating, so the
+ * student does not lose the course page.
+ */
+function CourseSyllabusButton({ courseId }: { courseId: string }) {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  async function download() {
+    setBusy(true);
+    setFailed(false);
+    try {
+      const url = await fetchCourseSyllabusDownloadUrl(courseId);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      // A storage blip or an expired session is the realistic cause. Say so
+      // inline rather than opening a blank tab with nothing in it.
+      setFailed(true);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-1">
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full gap-2 rounded-xl"
+        onClick={() => void download()}
+        disabled={busy}
+      >
+        <Download className="h-4 w-4" />
+        {busy
+          ? t("course_detail.syllabus_downloading")
+          : t("course_detail.download_syllabus")}
+      </Button>
+      {failed && (
+        <p className="text-[11px] leading-snug text-danger">
+          {t("course_detail.syllabus_download_failed")}
         </p>
       )}
     </div>
@@ -328,6 +386,10 @@ export function CourseCard({
             enrolled={enrolled}
             enrollmentLoading={enrollmentLoading}
           />
+
+          {course.has_syllabus ? (
+            <CourseSyllabusButton courseId={course.id} />
+          ) : null}
 
           <CourseProgress
             enrolled={enrolled}

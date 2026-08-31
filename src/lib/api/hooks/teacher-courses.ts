@@ -342,6 +342,17 @@ export function useCreateCourse() {
 
 export type SyllabusLanguage = "vi" | "en";
 
+/**
+ * What an upload does to the target course (user request 2026-08-31).
+ *
+ * - `attach`   — store the PDF as the course's downloadable syllabus and
+ *   change nothing else. Allowed on a published/live course.
+ * - `override` — parse it and replace the course's title, description, hours
+ *   and learning outcomes. DRAFT ONLY (the backend answers 409 otherwise).
+ * - `create`   — build a brand-new draft course from it.
+ */
+export type SyllabusImportMode = "attach" | "override" | "create";
+
 /** Successful `POST /teacher/courses/import-syllabus`. */
 export interface SyllabusImportResult {
   import_id: string;
@@ -373,12 +384,15 @@ export interface SyllabusImportRow {
 }
 
 /**
- * Import a course from a syllabus PDF.
+ * Upload a syllabus PDF: attach it to a course, override a draft, or create one.
  *
  * Sends the raw PDF bytes as the POST body (same shape as the thumbnail
  * upload — the backend reads `request.body()` and this repo ships no
- * multipart parser), with `language` and `filename` as query params since
- * a raw body carries neither.
+ * multipart parser), with `language`, `filename`, `mode` and (for
+ * attach/override) `course_id` as query params since a raw body carries none.
+ *
+ * `mode` defaults to `create` so the /dept "Import syllabus" call site is
+ * unchanged.
  */
 export function useImportCourseFromSyllabus() {
   const qc = useQueryClient();
@@ -386,11 +400,19 @@ export function useImportCourseFromSyllabus() {
     mutationFn: async (vars: {
       file: File;
       language: SyllabusLanguage;
+      mode?: SyllabusImportMode;
+      courseId?: string;
     }): Promise<SyllabusImportResult> => {
       const params = new URLSearchParams({
         language: vars.language,
         filename: vars.file.name,
       });
+      if (vars.mode) params.set("mode", vars.mode);
+      // Only attach/override target an existing course; sending course_id on a
+      // create would be ignored, but leaving it off keeps the request honest.
+      if (vars.courseId && vars.mode && vars.mode !== "create") {
+        params.set("course_id", vars.courseId);
+      }
       const response = await authenticatedFetch(
         `/teacher/courses/import-syllabus?${params.toString()}`,
         {
@@ -410,6 +432,24 @@ export function useImportCourseFromSyllabus() {
       qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
       qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
       qc.invalidateQueries({ queryKey: ["teacher", "syllabus-imports"] });
+      // An override rewrites the title/description and the whole L.O. tree, so
+      // the outcome lists, the slug-keyed learner payload and the readiness
+      // checklist (which counts outcomes) are all stale now.
+      qc.invalidateQueries({
+        queryKey: queryKeys.courses.teacherOutcomes(result.course_id),
+      });
+      qc.invalidateQueries({
+        queryKey: queryKeys.courses.outcomes(result.course_id),
+      });
+      qc.invalidateQueries({
+        queryKey: queryKeys.courses.bySlug(result.course_slug),
+      });
+      qc.invalidateQueries({
+        queryKey: queryKeys.dept.readiness(result.course_id),
+      });
+      qc.invalidateQueries({
+        queryKey: queryKeys.courses.syllabusDownload(result.course_id),
+      });
     },
   });
 }

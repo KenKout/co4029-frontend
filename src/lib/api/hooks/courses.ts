@@ -245,6 +245,24 @@ export async function fetchResourceDownloadUrl(
   return data.url;
 }
 
+/**
+ * Presigned URL for a published course's syllabus PDF (student side).
+ *
+ * Fetched on demand rather than with the course: the URL is short-TTL, so
+ * minting it up-front for every visitor would hand out links that expire
+ * before anyone clicks. `CoursePublic.has_syllabus` is what decides whether
+ * the button renders at all — the same gate this endpoint enforces, so a
+ * visible button never 404s.
+ */
+export async function fetchCourseSyllabusDownloadUrl(
+  courseId: string,
+): Promise<string> {
+  const data = await apiFetch<ResourceDownloadUrlResponse>(
+    `/courses/${courseId}/syllabus/download-url`,
+  );
+  return data.url;
+}
+
 /* ── Teacher-side learning-outcome CRUD (§LO-1/2) ──
  * The `L.O.x` code is derived from `position` (1-based, contiguous) at
  * display time; the server renumbers on delete so positions never gap.
