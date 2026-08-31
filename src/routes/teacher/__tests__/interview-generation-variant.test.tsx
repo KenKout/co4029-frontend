@@ -53,6 +53,7 @@ describe("variant_strategy form field", () => {
         <GenerationModeFields
           generationForm={form({ variant_strategy: value })}
           updateGeneration={noopUpdate}
+          interviewerRole="backend_tech_lead"
         />,
       );
       expect(screen.getByText(t(key))).toBeInTheDocument();
@@ -66,6 +67,7 @@ describe("variant_strategy form field", () => {
         <GenerationModeFields
           generationForm={form({ variant_strategy })}
           updateGeneration={noopUpdate}
+          interviewerRole="backend_tech_lead"
         />,
       );
       expect(screen.getByText(t("count_label"))).toBeInTheDocument();
@@ -81,6 +83,7 @@ describe("variant_strategy form field", () => {
       <GenerationModeFields
         generationForm={form({ variant_strategy: "all_angles", question_count: 5 })}
         updateGeneration={noopUpdate}
+        interviewerRole="backend_tech_lead"
       />,
     );
     expect(screen.getByText(t("count_label_per_role"))).toBeInTheDocument();
@@ -98,6 +101,7 @@ describe("variant_strategy form field", () => {
       <GenerationModeFields
         generationForm={form({ variant_strategy: "all_angles", question_count: 12 })}
         updateGeneration={noopUpdate}
+        interviewerRole="backend_tech_lead"
       />,
     );
     expect(screen.getByRole("spinbutton")).toHaveAttribute("max", "12");
@@ -108,6 +112,7 @@ describe("variant_strategy form field", () => {
       <GenerationModeFields
         generationForm={form({ variant_strategy: "all_angles", question_count: 13 })}
         updateGeneration={noopUpdate}
+        interviewerRole="backend_tech_lead"
       />,
     );
     expect(screen.getByRole("alert").textContent).toContain("12");
@@ -123,6 +128,7 @@ describe("variant_strategy form field", () => {
         <GenerationModeFields
           generationForm={form({ variant_strategy, question_count: 50 })}
           updateGeneration={noopUpdate}
+          interviewerRole="backend_tech_lead"
         />,
       );
       expect(screen.getByRole("spinbutton")).toHaveAttribute("max", "50");
@@ -137,5 +143,49 @@ describe("maxLogicalQuestionCount", () => {
     expect(maxLogicalQuestionCount("all_angles")).toBe(12);
     expect(maxLogicalQuestionCount("role_only")).toBe(50);
     expect(maxLogicalQuestionCount("")).toBe(50);
+  });
+});
+
+describe("role_only availability follows the interviewer role", () => {
+  it("warns when role_only is picked but the role has no question type", () => {
+    // generic_assistant is the DEFAULT role and maps to null in
+    // INTERVIEWER_ROLE_PREFERRED_TYPE, so "match the role" has nothing to
+    // match — the backend refuses it instead of quietly producing a mixed bank.
+    render(
+      <GenerationModeFields
+        generationForm={form({ variant_strategy: "role_only" })}
+        updateGeneration={noopUpdate}
+        interviewerRole="generic_assistant"
+      />,
+    );
+    expect(screen.getByRole("alert").textContent).toBe(
+      i18n.t("teacher_interview_config.errors.role_only_needs_a_role"),
+    );
+  });
+
+  it("stays silent for a role that does have a question type", () => {
+    render(
+      <GenerationModeFields
+        generationForm={form({ variant_strategy: "role_only" })}
+        updateGeneration={noopUpdate}
+        interviewerRole="backend_tech_lead"
+      />,
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("does not warn for other strategies on a typeless role", () => {
+    // all_angles covers every angle regardless of role, so generic is fine.
+    for (const variant_strategy of ["", "all_angles"] as const) {
+      const { unmount } = render(
+        <GenerationModeFields
+          generationForm={form({ variant_strategy })}
+          updateGeneration={noopUpdate}
+          interviewerRole="generic_assistant"
+        />,
+      );
+      expect(screen.queryByRole("alert")).toBeNull();
+      unmount();
+    }
   });
 });

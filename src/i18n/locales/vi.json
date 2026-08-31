@@ -4168,6 +4168,7 @@
       "publish_blocked_archived": "Bỏ lưu trữ phỏng vấn này trước khi xuất bản",
       "question_count_min": "Số câu hỏi phải lớn hơn 0",
       "question_count_max": "Chế độ đa góc sinh 4 câu cho mỗi câu hỏi logic, nên chỉ được yêu cầu tối đa {{max}}",
+      "role_only_needs_a_role": "Phỏng vấn này chưa chọn vai trò interviewer nên không có loại câu hỏi để khớp. Hãy chọn vai trò ở tab Cài đặt, hoặc chọn chế độ câu hỏi khác.",
       "nothing_to_save": "Không có gì để lưu — thay đổi trùng với giá trị đang lưu (để trống = dùng mặc định)"
     },
     "toasts": {

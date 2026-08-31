@@ -19,7 +19,10 @@ import type {
   GenerationFormState,
   SettingsDraft,
 } from "@/lib/interview/config-draft";
-import { maxLogicalQuestionCount } from "@/lib/interview/config-draft";
+import {
+  maxLogicalQuestionCount,
+  preferredQuestionTypeForRole,
+} from "@/lib/interview/config-draft";
 import { serializeSupplementaryInstructions } from "@/lib/interview/supplementary-instructions";
 import type { useGenerateInterviewQuestions } from "@/lib/api/hooks/interviews";
 import {
@@ -93,6 +96,48 @@ function buildGenerateRequest(
         })
       : null,
   };
+}
+
+/**
+ * First reason the Generate request would be rejected, or null when it is fine.
+ *
+ * Mirrors the backend guards in `services/authoring.start_generation_run` so the
+ * teacher gets an actionable message instead of a bare 400 after the run has
+ * already been attempted. Lives outside `createConfigActions` to keep that
+ * factory under the max-lines-per-function cap.
+ */
+function generationBlocker(
+  config: InterviewConfigAuthoring,
+  generationForm: GenerationFormState,
+): { key: string; values?: Record<string, unknown> } | null {
+  if (
+    !Number.isInteger(generationForm.question_count) ||
+    generationForm.question_count < 1
+  ) {
+    return { key: "teacher_interview_config.errors.question_count_min" };
+  }
+  // all_angles asks for 4 rows per logical question, so the ceiling drops to 12
+  // (48 rows). The input's `max` attribute alone does not stop a typed or pasted
+  // value, and the backend answers question_count_exceeds_variant_cap.
+  const maxCount = maxLogicalQuestionCount(generationForm.variant_strategy);
+  if (generationForm.question_count > maxCount) {
+    return {
+      key: "teacher_interview_config.errors.question_count_max",
+      values: { max: maxCount },
+    };
+  }
+  // role_only asks for "only the type this interviewer role asks", which the
+  // generic assistant does not have — the backend refuses it rather than
+  // silently producing an ordinary mixed bank.
+  if (
+    generationForm.variant_strategy === "role_only" &&
+    preferredQuestionTypeForRole(
+      config.persona_profile_resolved?.interviewer_role ?? "generic_assistant",
+    ) === null
+  ) {
+    return { key: "teacher_interview_config.errors.role_only_needs_a_role" };
+  }
+  return null;
 }
 
 export function createConfigActions(deps: ConfigActionsDeps): ConfigActions {
@@ -215,24 +260,9 @@ export function createConfigActions(deps: ConfigActionsDeps): ConfigActions {
       toast.error(t("teacher_interview_config.generate.published_locked"));
       return;
     }
-    if (
-      !Number.isInteger(generationForm.question_count) ||
-      generationForm.question_count < 1
-    ) {
-      toast.error(t("teacher_interview_config.errors.question_count_min"));
-      return;
-    }
-    // all_angles asks for 4 rows per logical question, so the ceiling drops to
-    // 12 (48 rows). Without this the request 400s at enqueue with the backend's
-    // question_count_exceeds_variant_cap — the input's `max` attribute alone
-    // does not stop a typed or pasted value.
-    const maxCount = maxLogicalQuestionCount(generationForm.variant_strategy);
-    if (generationForm.question_count > maxCount) {
-      toast.error(
-        t("teacher_interview_config.errors.question_count_max", {
-          max: maxCount,
-        }),
-      );
+    const blocker = generationBlocker(config, generationForm);
+    if (blocker) {
+      toast.error(t(blocker.key, blocker.values));
       return;
     }
     try {

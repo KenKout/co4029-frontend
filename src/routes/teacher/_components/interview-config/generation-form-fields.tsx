@@ -16,10 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type {
   GenerationFormState,
+  InterviewerRole,
   VariantStrategy,
 } from "@/lib/interview/config-draft";
 import {
   maxLogicalQuestionCount,
+  preferredQuestionTypeForRole,
   VARIANT_ANGLES_COUNT,
 } from "@/lib/interview/config-draft";
 import { Field } from "@/routes/teacher/_components/interview-config/form-primitives";
@@ -33,10 +35,16 @@ export interface GenerationFieldsProps {
   ) => void;
 }
 
+/** Mode fields also need the saved role: it decides if role_only is usable. */
+export interface GenerationModeFieldsProps extends GenerationFieldsProps {
+  interviewerRole: InterviewerRole;
+}
+
 export function GenerationModeFields({
   generationForm,
   updateGeneration,
-}: GenerationFieldsProps) {
+  interviewerRole,
+}: GenerationModeFieldsProps) {
   const { t } = useTranslation();
   const isAllAngles = generationForm.variant_strategy === "all_angles";
   // The backend multiplies the logical count by the angle count in
@@ -53,6 +61,7 @@ export function GenerationModeFields({
       <VariantStrategyFields
         generationForm={generationForm}
         updateGeneration={updateGeneration}
+        interviewerRole={interviewerRole}
       />
       {/* Count sits alone in a half-width column: the generation-mode Select
           that used to share this row is gone, and a full-width number input
@@ -116,8 +125,16 @@ export function GenerationModeFields({
 function VariantStrategyFields({
   generationForm,
   updateGeneration,
-}: GenerationFieldsProps) {
+  interviewerRole,
+}: GenerationModeFieldsProps) {
   const { t } = useTranslation();
+  // role_only means "ask only the type this interviewer role asks". The generic
+  // assistant has no preferred type, so the backend refuses that combination
+  // (it would silently produce the ordinary mixed bank). Surface it here rather
+  // than letting the teacher discover it as a 400 after pressing Generate.
+  const roleHasNoType = preferredQuestionTypeForRole(interviewerRole) === null;
+  const roleOnlyUnavailable =
+    generationForm.variant_strategy === "role_only" && roleHasNoType;
   return (
     <div className="space-y-1">
       <Field
@@ -144,6 +161,11 @@ function VariantStrategyFields({
             },
           ]}
         />
+        {roleOnlyUnavailable && (
+          <p role="alert" className="text-[11px] text-red-600">
+            {t("teacher_interview_config.errors.role_only_needs_a_role")}
+          </p>
+        )}
       </Field>
     </div>
   );

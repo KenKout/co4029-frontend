@@ -17,7 +17,10 @@ import type {
   InterviewGenerationRunPublic,
   InterviewOutcomeAuthoring,
 } from "@/lib/api/types";
-import type { GenerationFormState } from "@/lib/interview/config-draft";
+import type {
+  GenerationFormState,
+  InterviewerRole,
+} from "@/lib/interview/config-draft";
 import { Section } from "@/routes/teacher/_components/interview-config/form-primitives";
 import {
   GenerationModeFields,
@@ -41,6 +44,7 @@ export function GenerationSection({
   ownModuleId,
   outcomes,
   isPublished,
+  interviewerRole,
 }: {
   generationForm: GenerationFormState;
   setGenerationForm: React.Dispatch<React.SetStateAction<GenerationFormState>>;
@@ -52,6 +56,8 @@ export function GenerationSection({
   ownModuleId: string;
   outcomes: InterviewOutcomeAuthoring[];
   isPublished: boolean;
+  /** The config's SAVED interviewer role — decides whether role_only is usable. */
+  interviewerRole: InterviewerRole;
 }) {
   const { t } = useTranslation();
   function updateGeneration<K extends keyof GenerationFormState>(
@@ -79,6 +85,7 @@ export function GenerationSection({
           <GenerationModeFields
             generationForm={generationForm}
             updateGeneration={updateGeneration}
+            interviewerRole={interviewerRole}
           />
 
           <GenerationModulePicker

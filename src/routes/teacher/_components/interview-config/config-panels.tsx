@@ -131,6 +131,13 @@ export function ConfigPanels({
                 modules={modules ?? []}
                 ownModuleId={config.module_id}
                 outcomes={outcomes ?? []}
+                // SAVED role, not the settings draft: generation reads the
+                // persisted config, so an unsaved role change must not make
+                // role_only look available.
+                interviewerRole={
+                  config.persona_profile_resolved?.interviewer_role ??
+                  "generic_assistant"
+                }
               />
             </TabPanel>
             <TabPanel id="questions" activeTab={activeTab}>
