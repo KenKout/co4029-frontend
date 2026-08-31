@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
 import {
+  useDeleteInterviewQuestionBankGroup,
   useDeleteInterviewQuestionBankItem,
   useInterviewQuestionBank,
   useUpdateInterviewQuestionBankItem,
@@ -34,10 +35,11 @@ export default function CourseQuestionBankPage() {
   const { data: items, isLoading } = useInterviewQuestionBank(courseId);
   const updateItem = useUpdateInterviewQuestionBankItem(courseId);
   const deleteItem = useDeleteInterviewQuestionBankItem(courseId);
+  const deleteGroup = useDeleteInterviewQuestionBankGroup(courseId);
 
   const filters = useQuestionBankFilters();
   const editor = useQuestionBankEditor({ t, updateItem });
-  const deletion = useQuestionBankDeletion({ t, deleteItem });
+  const deletion = useQuestionBankDeletion({ t, deleteItem, deleteGroup });
   const view = useQuestionBankViewState();
   const derived = useQuestionBankDerived({ items, filters });
 

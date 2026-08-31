@@ -1,6 +1,7 @@
 import type { useTranslation } from "react-i18next";
 
 import type {
+  useDeleteInterviewQuestionBankGroup,
   useDeleteInterviewQuestionBankItem,
   useUpdateInterviewQuestionBankItem,
 } from "@/lib/api/hooks/interviews";
@@ -25,6 +26,9 @@ export type UpdateBankItemMutation = ReturnType<
 >;
 export type DeleteBankItemMutation = ReturnType<
   typeof useDeleteInterviewQuestionBankItem
+>;
+export type DeleteBankGroupMutation = ReturnType<
+  typeof useDeleteInterviewQuestionBankGroup
 >;
 
 /** The course record exactly as the page's `useTeacherCourseById` returns it. */
