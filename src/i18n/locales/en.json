@@ -4727,7 +4727,8 @@
       "toasts": {
         "status_changed": "Status changed to {{status}}",
         "outcome_changed": "Outcome set to {{outcome}}",
-        "logical_question_approved": "Approved {{count}} angle(s)"
+        "logical_question_approved": "Approved {{count}} angle(s)",
+        "logical_question_deleted": "Deleted {{count}} angle(s)"
       },
       "sr": {
         "status_changed": "Status changed to {{status}}",
@@ -4740,6 +4741,9 @@
       "reorder_off_variant_group": "Drag-to-reorder is off while multi-angle logical questions are visible. Use each question's menu to move it to the top or bottom.",
       "logical_question": "Logical question",
       "approve_logical_question": "Approve all",
+      "delete_logical_question": "Delete all angles",
+      "delete_logical_question_title": "Delete logical question?",
+      "delete_logical_question_description": "This permanently removes all {{count}} angles in this logical question from this interview.",
       "add_logical_group_to_bank": "Add all 4 to question bank",
       "logical_group_added": "Added all 4 angles to the question bank",
       "logical_group_incomplete": "A logical question needs all 4 angles before it can be added to the question bank",

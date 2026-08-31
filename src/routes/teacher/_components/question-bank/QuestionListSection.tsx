@@ -69,6 +69,8 @@ function renderLogicalQuestions(
   renderCard: (question: InterviewQuestionAuthoring) => ReactNode,
   t: TranslateFn,
   onApproveLogicalQuestion: (questions: InterviewQuestionAuthoring[]) => void,
+  onDeleteLogicalQuestion: (questions: InterviewQuestionAuthoring[]) => void,
+  deletingIds: Set<string>,
   approvingGroupId: string | null,
   bankIo: QuestionBankIoController,
   isPublished: boolean,
@@ -81,6 +83,12 @@ function renderLogicalQuestions(
         renderCard={renderCard}
         t={t}
         onApproveAll={onApproveLogicalQuestion}
+        onDeleteLogicalQuestion={onDeleteLogicalQuestion}
+        deletingGroupId={
+          group.questions.some((question) => deletingIds.has(question.id))
+            ? (group.questions[0]?.variant_group_id ?? group.questions[0]?.id ?? null)
+            : null
+        }
         approvingGroupId={approvingGroupId}
         onAddAllToBank={bankIo.handleAddLogicalGroupToBank}
         bankingGroupId={bankIo.bankingGroupId}
@@ -184,6 +192,8 @@ export function QuestionListSection(props: QuestionListSectionProps) {
               renderCard,
               t,
               props.mutations.handleApproveLogicalQuestion,
+              props.mutations.handleDeleteLogicalQuestion,
+              props.mutations.deletingIds,
               props.mutations.approvingGroupId,
               props.bankIo,
               props.isPublished,
@@ -214,6 +224,8 @@ export function QuestionListSection(props: QuestionListSectionProps) {
                   renderCard,
                   t,
                   props.mutations.handleApproveLogicalQuestion,
+                  props.mutations.handleDeleteLogicalQuestion,
+                  props.mutations.deletingIds,
                   props.mutations.approvingGroupId,
                   props.bankIo,
                   props.isPublished,

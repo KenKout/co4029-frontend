@@ -529,25 +529,26 @@ export function useCheckInterviewQuestionDuplicate(
   });
 }
 
-/**
- * DELETE /teacher/interview-configs/{config_id}/questions/{question_id} —
- * soft-delete a single question.
- */
-export function useDeleteInterviewQuestion(
-  configId: string | null | undefined,
-) {
+/** DELETE /teacher/interview-configs/{config_id}/questions/{question_id} — soft-delete a single question. */
+export function useDeleteInterviewQuestion(configId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (questionId: string) =>
-      apiDelete(
-        `/teacher/interview-configs/${configId}/questions/${questionId}`,
-      ),
+      apiDelete(`/teacher/interview-configs/${configId}/questions/${questionId}`),
     onSuccess: () => {
-      if (configId) {
-        void qc.invalidateQueries({
-          queryKey: queryKeys.interviews.configAuthoring(configId),
-        });
-      }
+      if (configId) void qc.invalidateQueries({ queryKey: queryKeys.interviews.configAuthoring(configId) });
+    },
+  });
+}
+
+/** DELETE /interviews.../{config_id}/questions/{question_id}/variants — soft-delete every angle in a logical question. */
+export function useDeleteInterviewQuestionVariants(configId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (questionId: string) =>
+      apiDelete<{ deleted: number }>(`/teacher/interview-configs/${configId}/questions/${questionId}/variants`),
+    onSuccess: () => {
+      if (configId) void qc.invalidateQueries({ queryKey: queryKeys.interviews.configAuthoring(configId) });
     },
   });
 }

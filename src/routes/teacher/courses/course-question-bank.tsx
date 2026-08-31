@@ -8,7 +8,6 @@ import {
   useUpdateInterviewQuestionBankItem,
 } from "@/lib/api/hooks/interviews";
 import { DeleteQuestionDialog } from "./_components/course-question-bank/DeleteQuestionDialog";
-import { HelpPanel } from "./_components/course-question-bank/HelpPanel";
 import { QuestionBankBody } from "./_components/course-question-bank/QuestionBankBody";
 import { QuestionBankFilters } from "./_components/course-question-bank/QuestionBankFilters";
 import { QuestionBankHeader } from "./_components/course-question-bank/QuestionBankHeader";
@@ -36,9 +35,6 @@ export default function CourseQuestionBankPage() {
   const updateItem = useUpdateInterviewQuestionBankItem(courseId);
   const deleteItem = useDeleteInterviewQuestionBankItem(courseId);
 
-  // Hook order below matches the pre-split page exactly: the four filter
-  // states, then editing, then deletion, then the disclosure state, then the
-  // four derived memos.
   const filters = useQuestionBankFilters();
   const editor = useQuestionBankEditor({ t, updateItem });
   const deletion = useQuestionBankDeletion({ t, deleteItem });
@@ -49,7 +45,7 @@ export default function CourseQuestionBankPage() {
 
   return (
     <div className="w-full py-6 space-y-5">
-      <QuestionBankHeader course={course} view={view} />
+      <QuestionBankHeader course={course} />
 
       {/* ── 12-col grid: question list main + sticky stats/help sidebar ── */}
       <div className="grid grid-cols-12 gap-6">
@@ -73,8 +69,6 @@ export default function CourseQuestionBankPage() {
           {derived.hasItems && (
             <QuestionBankStats derived={derived} className="lg:grid-cols-1" />
           )}
-
-          <HelpPanel helpOpen={view.helpOpen} />
         </div>
       </div>
 

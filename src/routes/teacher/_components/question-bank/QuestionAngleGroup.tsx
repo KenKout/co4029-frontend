@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Library, Loader2 } from "lucide-react";
+import { CheckCircle2, Library, Loader2, Trash2 } from "lucide-react";
 import type { InterviewQuestionAuthoring } from "@/lib/api/types";
 import type { TranslateFn } from "./types";
 
@@ -24,11 +24,43 @@ interface QuestionAngleGroupProps {
   renderCard: (question: InterviewQuestionAuthoring) => ReactNode;
   t: TranslateFn;
   onApproveAll: (questions: InterviewQuestionAuthoring[]) => void;
+  onDeleteLogicalQuestion: (questions: InterviewQuestionAuthoring[]) => void;
+  deletingGroupId: string | null;
   approvingGroupId: string | null;
   onAddAllToBank: (questions: InterviewQuestionAuthoring[]) => void;
   bankingGroupId: string | null;
   groupAlreadyBanked: boolean;
   isPublished: boolean;
+}
+
+function groupKey(questions: InterviewQuestionAuthoring[]) {
+  return questions[0]?.variant_group_id ?? questions[0]?.id ?? null;
+}
+
+function DeleteAnglesButton({
+  busy,
+  disabled,
+  onDelete,
+  label,
+}: {
+  busy: boolean;
+  disabled: boolean;
+  onDelete: () => void;
+  label: string;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      disabled={disabled}
+      onClick={onDelete}
+      className="h-7 gap-1 px-2 text-[11px] text-red-700 hover:bg-red-50 hover:text-red-800"
+    >
+      {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+      {label}
+    </Button>
+  );
 }
 
 /** One logical problem with one selectable child card per available angle. */
@@ -37,6 +69,8 @@ export function QuestionAngleGroup({
   renderCard,
   t,
   onApproveAll,
+  onDeleteLogicalQuestion,
+  deletingGroupId,
   approvingGroupId,
   onAddAllToBank,
   bankingGroupId,
@@ -92,6 +126,12 @@ export function QuestionAngleGroup({
               {t("teacher_interview_config.qbank.approve_logical_question")}
             </Button>
           )}
+          <DeleteAnglesButton
+            busy={deletingGroupId === groupKey(ordered)}
+            disabled={isPublished || deletingGroupId !== null}
+            onDelete={() => onDeleteLogicalQuestion(ordered)}
+            label={t("teacher_interview_config.qbank.delete_logical_question")}
+          />
           {ordered.length === 4 && (
             <Button
               type="button"

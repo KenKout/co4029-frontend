@@ -4598,7 +4598,8 @@
       "toasts": {
         "status_changed": "Đã đổi trạng thái sang {{status}}",
         "outcome_changed": "Đã gán chuẩn đầu ra: {{outcome}}",
-        "logical_question_approved": "Đã duyệt {{count}} góc hỏi"
+        "logical_question_approved": "Đã duyệt {{count}} góc hỏi",
+        "logical_question_deleted": "Đã xoá {{count}} góc hỏi"
       },
       "sr": {
         "status_changed": "Đã đổi trạng thái sang {{status}}",
@@ -4611,6 +4612,9 @@
       "reorder_off_variant_group": "Kéo để sắp xếp đang tắt khi có nhóm câu hỏi đa góc. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối.",
       "logical_question": "Câu hỏi logic",
       "approve_logical_question": "Duyệt tất cả",
+      "delete_logical_question": "Xoá tất cả góc hỏi",
+      "delete_logical_question_title": "Xoá câu hỏi logic?",
+      "delete_logical_question_description": "Thao tác này sẽ xoá toàn bộ {{count}} góc hỏi của câu hỏi logic khỏi buổi phỏng vấn.",
       "add_logical_group_to_bank": "Thêm cả 4 vào ngân hàng",
       "logical_group_added": "Đã thêm 4 góc hỏi vào ngân hàng câu hỏi",
       "logical_group_incomplete": "Cụm câu hỏi logic phải đủ 4 góc hỏi trước khi thêm vào ngân hàng",
