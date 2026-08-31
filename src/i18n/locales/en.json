@@ -4296,6 +4296,7 @@
       "outcomes_required": "Add at least one learning outcome before publishing",
       "publish_blocked_archived": "Unarchive this interview before publishing",
       "question_count_min": "Number of questions must be greater than 0",
+      "question_count_max": "Multi-angle mode produces 4 questions per logical question, so request at most {{max}}",
       "nothing_to_save": "Nothing to save — the edit matches the stored value (blank fields use their default)"
     },
     "toasts": {

@@ -124,6 +124,28 @@ export interface PersonaProfileOverride {
 /** Role-conditioned variant generation. "" = legacy mixed (backend default). */
 export type VariantStrategy = "" | "all_angles" | "role_only";
 
+/** Angles per interviewer role — MUST match the backend's VARIANT_ANGLES
+ *  (ai/stages/generation/resolve.py). */
+export const VARIANT_ANGLES_COUNT = 4;
+
+/** Hard row budget the backend enforces per generation run. */
+export const MAX_QUESTION_ROWS = 50;
+
+/**
+ * Largest LOGICAL question count a strategy may request.
+ *
+ * `all_angles` fans each logical question into one row per angle, so its
+ * ceiling is the row budget divided by the angle count (12 → 48 rows). Mirrors
+ * `max_logical_question_count` in the backend's generation resolver: exceeding
+ * it is a 400 at enqueue, because the pipeline needs an EXACT hit on the target
+ * and would otherwise burn every backfill round before failing.
+ */
+export function maxLogicalQuestionCount(strategy: VariantStrategy): number {
+  return strategy === "all_angles"
+    ? Math.floor(MAX_QUESTION_ROWS / VARIANT_ANGLES_COUNT)
+    : MAX_QUESTION_ROWS;
+}
+
 export interface GenerationFormState {
   question_count: number;
   /** How the question bank is shaped per interviewer role (Slice 21). */

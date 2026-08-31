@@ -16,6 +16,7 @@ import { render, screen } from "@testing-library/react";
 
 import i18n from "@/i18n";
 import type { GenerationFormState } from "@/lib/interview/config-draft";
+import { maxLogicalQuestionCount } from "@/lib/interview/config-draft";
 import { GenerationModeFields } from "@/routes/teacher/_components/interview-config/generation-form-fields";
 
 function form(
@@ -88,5 +89,53 @@ describe("variant_strategy form field", () => {
     const strong = screen.getByText("20").closest("strong");
     expect(strong).not.toBeNull();
     expect(strong).toHaveTextContent("20");
+  });
+
+  it("caps the count at 12 in all_angles and warns above it", () => {
+    // all_angles produces 4 rows per logical question, so 12 x 4 = 48 fits the
+    // backend's 50-row budget; 13 would be 52 and 400s at enqueue.
+    const { unmount } = render(
+      <GenerationModeFields
+        generationForm={form({ variant_strategy: "all_angles", question_count: 12 })}
+        updateGeneration={noopUpdate}
+      />,
+    );
+    expect(screen.getByRole("spinbutton")).toHaveAttribute("max", "12");
+    expect(screen.queryByRole("alert")).toBeNull();
+    unmount();
+
+    render(
+      <GenerationModeFields
+        generationForm={form({ variant_strategy: "all_angles", question_count: 13 })}
+        updateGeneration={noopUpdate}
+      />,
+    );
+    expect(screen.getByRole("alert").textContent).toContain("12");
+    // The expansion note is replaced by the error, not shown beside it.
+    expect(
+      screen.queryByText(t("variant_expansion_note", { count: 13, effective: 52 })),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the full 50 for non-multiplying strategies", () => {
+    for (const variant_strategy of ["", "role_only"] as const) {
+      const { unmount } = render(
+        <GenerationModeFields
+          generationForm={form({ variant_strategy, question_count: 50 })}
+          updateGeneration={noopUpdate}
+        />,
+      );
+      expect(screen.getByRole("spinbutton")).toHaveAttribute("max", "50");
+      expect(screen.queryByRole("alert")).toBeNull();
+      unmount();
+    }
+  });
+});
+
+describe("maxLogicalQuestionCount", () => {
+  it("mirrors the backend cap per strategy", () => {
+    expect(maxLogicalQuestionCount("all_angles")).toBe(12);
+    expect(maxLogicalQuestionCount("role_only")).toBe(50);
+    expect(maxLogicalQuestionCount("")).toBe(50);
   });
 });

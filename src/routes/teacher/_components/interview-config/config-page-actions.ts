@@ -19,6 +19,7 @@ import type {
   GenerationFormState,
   SettingsDraft,
 } from "@/lib/interview/config-draft";
+import { maxLogicalQuestionCount } from "@/lib/interview/config-draft";
 import { serializeSupplementaryInstructions } from "@/lib/interview/supplementary-instructions";
 import type { useGenerateInterviewQuestions } from "@/lib/api/hooks/interviews";
 import {
@@ -219,6 +220,19 @@ export function createConfigActions(deps: ConfigActionsDeps): ConfigActions {
       generationForm.question_count < 1
     ) {
       toast.error(t("teacher_interview_config.errors.question_count_min"));
+      return;
+    }
+    // all_angles asks for 4 rows per logical question, so the ceiling drops to
+    // 12 (48 rows). Without this the request 400s at enqueue with the backend's
+    // question_count_exceeds_variant_cap — the input's `max` attribute alone
+    // does not stop a typed or pasted value.
+    const maxCount = maxLogicalQuestionCount(generationForm.variant_strategy);
+    if (generationForm.question_count > maxCount) {
+      toast.error(
+        t("teacher_interview_config.errors.question_count_max", {
+          max: maxCount,
+        }),
+      );
       return;
     }
     try {

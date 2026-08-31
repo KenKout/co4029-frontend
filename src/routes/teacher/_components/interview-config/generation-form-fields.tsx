@@ -18,11 +18,11 @@ import type {
   GenerationFormState,
   VariantStrategy,
 } from "@/lib/interview/config-draft";
+import {
+  maxLogicalQuestionCount,
+  VARIANT_ANGLES_COUNT,
+} from "@/lib/interview/config-draft";
 import { Field } from "@/routes/teacher/_components/interview-config/form-primitives";
-
-/** Angles per interviewer role — must match the backend's VARIANT_ANGLES
- *  (ai/stages/generation/resolve.py). */
-const VARIANT_ANGLES_COUNT = 4;
 
 /** Shared shape for every piece of the generation form. */
 export interface GenerationFieldsProps {
@@ -42,6 +42,10 @@ export function GenerationModeFields({
   // The backend multiplies the logical count by the angle count in
   // all_angles mode; mirror that here so the note shows the real total.
   const effectiveCount = generationForm.question_count * VARIANT_ANGLES_COUNT;
+  // Cap follows the strategy: all_angles produces 4 rows per logical question,
+  // so its ceiling is 12 (48 rows) against the backend's 50-row budget.
+  const maxCount = maxLogicalQuestionCount(generationForm.variant_strategy);
+  const overCap = generationForm.question_count > maxCount;
   return (
     <div className="space-y-4">
       {/* Role-based question mode leads: it decides HOW the bank is shaped,
@@ -66,7 +70,7 @@ export function GenerationModeFields({
           <Input
             type="number"
             min={1}
-            max={50}
+            max={maxCount}
             value={generationForm.question_count}
             onChange={(e) =>
               updateGeneration(
@@ -75,7 +79,14 @@ export function GenerationModeFields({
               )
             }
           />
-          {isAllAngles && effectiveCount > 0 && (
+          {overCap && (
+            <p role="alert" className="text-[11px] text-red-600">
+              {t("teacher_interview_config.errors.question_count_max", {
+                max: maxCount,
+              })}
+            </p>
+          )}
+          {isAllAngles && effectiveCount > 0 && !overCap && (
             <p className="text-[11px] text-m3-on-surface-variant">
               {/* i18n string carries <strong>{{effective}}</strong>; Trans
                   renders that markup instead of printing the tag. */}
