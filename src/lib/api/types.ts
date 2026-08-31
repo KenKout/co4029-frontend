@@ -3,7 +3,6 @@
  * Generated source: ./openapi-types.d.ts — regenerate via `npm run codegen:api`.
  */
 import type { components, paths } from "./openapi-types";
-import type { CourseTeacherRole } from "./types-dept";
 
 type Schemas = components["schemas"];
 
@@ -20,16 +19,18 @@ export interface CourseContactFields {
   contact_social_url?: string | null;
 }
 
-// Course-scoped teacher title (user decision 2026-08-18): exactly one Course
-// Instructor, everyone else a Teacher Assistant (defined in types-dept.ts and
-// re-exported at the bottom of this file). The learner-facing `instructors`
-// list carries it so the student page can label CI vs TA. Layered by hand here
-// rather than via the generated openapi types for the same reason as
+// Course-scoped teacher TITLE FLAGS (user decision 2026-08-30): a course may
+// have several Course Instructors and several Teacher Assistants, and one
+// teacher may hold BOTH (defined in types-dept.ts and re-exported at the
+// bottom of this file). The learner-facing `instructors` list carries them so
+// the student page can label CI vs TA vs both. Layered by hand here rather
+// than via the generated openapi types for the same reason as
 // CourseContactFields — the committed openapi snapshot predates
-// `course_role`/`instructors`. Keep in sync with backend public.InstructorRead.
+// `instructors`. Keep in sync with backend public.InstructorRead.
 /** Hand-authored addition to the generated public `InstructorRead`. */
 export interface InstructorReadFields {
-  course_role?: CourseTeacherRole | null;
+  is_instructor?: boolean | null;
+  is_assistant?: boolean | null;
 }
 
 export type InstructorReadLocal = Schemas["InstructorRead"] &
@@ -642,7 +643,7 @@ export type EnrollmentRead = Schemas["EnrollmentRead"];
 export type EnrollmentAuthoring = Schemas["EnrollmentAuthoring"];
 
 // TeacherAssignmentRead / AssignTeacherRequest are hand-augmented in
-// types-dept.ts (the generated snapshot predates course_role) and re-exported
+// types-dept.ts (the generated snapshot predates the teacher-titles flags) and re-exported
 // from here.
 export type TeacherAssignmentCreated = Schemas["TeacherAssignmentCreated"];
 export type RosterEntry = Schemas["RosterEntry"];

@@ -685,6 +685,22 @@ const managementLearningProgramNewRoute = createRoute({
 const managementCareerPathDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/career-paths/$id",
+  validateSearch: (
+      search: Record<string, unknown>,
+    ): {
+      tab?: "general" | "programs" | "courses" | "students";
+      stage?: string;
+    } => ({
+      // Deep-link from a course's Career Paths tab: open the Courses tab and
+      // scroll to the named stage. Unknown params are dropped, not rejected,
+      // so a malformed link still lands on the page.
+      tab:
+        typeof search.tab === "string" &&
+        ["general", "programs", "courses", "students"].includes(search.tab)
+          ? (search.tab as "general" | "programs" | "courses" | "students")
+          : undefined,
+      stage: typeof search.stage === "string" ? search.stage : undefined,
+    }),
   component: lazyRouteComponent(
     () => import("@/routes/management/career-path-detail"),
   ),

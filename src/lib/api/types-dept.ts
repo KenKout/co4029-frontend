@@ -16,11 +16,14 @@
 export type CourseTeacherRole = "course_instructor" | "teacher_assistant";
 
 /**
- * A teacher assigned to a course, with their course-scoped title.
+ * A teacher assigned to a course, with their course-scoped title flags.
  *
  * Hand-authored (same layering as `CourseContactFields` in `types.ts`): the
- * committed openapi snapshot predates `course_role`. Kept in sync with the
- * backend `TeacherAssignmentRead` schema until a coordinated snapshot refresh.
+ * committed openapi snapshot predates the teacher-titles change. Kept in
+ * sync with the backend `TeacherAssignmentRead` schema until a coordinated
+ * snapshot refresh. Both flags true = one teacher holding both titles
+ * (user decision 2026-08-30); the backend guarantees at least one is true
+ * for every course-scoped teacher row.
  */
 export interface TeacherAssignmentRead {
   user_id: string;
@@ -30,17 +33,19 @@ export interface TeacherAssignmentRead {
   active_from?: string | null;
   active_until?: string | null;
   avatar_url?: string | null;
-  course_role?: CourseTeacherRole | null;
+  is_instructor?: boolean | null;
+  is_assistant?: boolean | null;
 }
 
 /**
- * Assign a teacher to a course. `course_role` is optional: the service forces
- * the first teacher on a course to `course_instructor` regardless, and a
- * second `course_instructor` is rejected server-side with 409.
+ * Assign a teacher to a course. Title flags: the service forces the first
+ * teacher on a course to Course Instructor regardless, and turns a request
+ * with neither flag into a Teacher Assistant (the pre-flags default).
  */
 export interface AssignTeacherRequest {
   user_id: string;
-  course_role?: CourseTeacherRole | null;
+  is_instructor?: boolean | null;
+  is_assistant?: boolean | null;
 }
 
 /** Where a course sits on one career path. */

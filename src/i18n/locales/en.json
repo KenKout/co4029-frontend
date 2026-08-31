@@ -730,7 +730,8 @@
     "tabs": {
       "teachers": "Instructors",
       "students": "Students",
-      "settings": "Settings"
+      "settings": "Settings",
+      "career_paths": "Career Paths"
     },
     "no_name": "(no name yet)",
     "remove": "Remove",
@@ -769,8 +770,7 @@
     "success": {
       "assigned": "Instructor assigned",
       "removed": "Assignment removed",
-      "promoted": "Promoted to Course Instructor",
-      "demoted": "Demoted to Teacher Assistant"
+      "title_updated": "Titles updated"
     },
     "delete": {
       "button": "Delete course",
@@ -821,16 +821,24 @@
     },
     "teacher_role_course_instructor": "Course Instructor",
     "teacher_role_teacher_assistant": "Teacher Assistant",
-    "ci_already_exists": "A Course Instructor is already assigned",
     "assign_at_max": "This course is at its maximum of {{max}} teachers — no more can be added.",
     "staffing_minmax": "{{count}} teacher(s) — min {{min}}, max {{max}}",
     "staffing_at_max": "At the teacher maximum — assignments are blocked.",
     "staffing_under_min": "Below the minimum of {{min}} — add more teachers before publishing.",
-    "promote": "Make instructor",
-    "promote_title": "Promote to Course Instructor (exactly one allowed)",
-    "demote": "Make TA",
-    "demote_title": "Demote to Teacher Assistant",
-    "staffing_title": "Staffing"
+    "staffing_title": "Staffing",
+    "last_instructor_title": "This course keeps at least one Course Instructor — promote another teacher first.",
+    "title_required_title": "A teacher must hold at least one title.",
+    "title_instructor_title": "Toggle Course Instructor title",
+    "title_assistant_title": "Toggle Teacher Assistant title",
+    "career_paths": {
+      "summary": "On {{n}} career paths",
+      "empty_title": "Not on any career path",
+      "empty_hint": "Attach this course to a stage from the career path, or leave it — a course off every path is not broken, it is simply not part of a pathway yet.",
+      "required": "Required",
+      "optional": "Optional",
+      "stage_line": "Stage {{position}} · {{stage}}",
+      "untitled_stage": "Untitled stage"
+    }
   },
   "dept_courses": {
     "title": "Courses",

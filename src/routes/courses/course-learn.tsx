@@ -111,7 +111,8 @@ function resolveInstructors(
 ): InstructorRead[] {
   if (course.instructors?.length) return course.instructors;
   if (!course.instructor) return [];
-  return [{ ...course.instructor, course_role: "course_instructor" }];
+  // Older payloads: the single instructor block is the Course Instructor.
+  return [{ ...course.instructor, is_instructor: true, is_assistant: false }];
 }
 
 function CourseLearnView({

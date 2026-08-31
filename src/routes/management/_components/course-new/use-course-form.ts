@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useSlugAvailability } from "@/lib/api/hooks/teacher-courses";
-import type { CourseTeacherRole } from "@/lib/api/types";
 
 /**
  * Every field the wizard collects.
@@ -23,9 +22,16 @@ export interface CourseFormValues {
   estimated_minutes: string;
   /** Chosen in the teacher picker; assigned after the course row exists. */
   teacherIds: string[];
-  /** Course-scoped title per selected teacher id (CI vs TA). Persisted in the
-   *  draft so a resumed submission re-assigns with the same titles. */
-  teacherRoles?: Record<string, CourseTeacherRole>;
+  /** Course-scoped title flags per selected teacher id (both may be true —
+   *  user decision 2026-08-30). Persisted in the draft so a resumed
+   *  submission re-assigns with the same titles. */
+  teacherTitles?: Record<string, TeacherTitles>;
+}
+
+/** Title flags for one teacher (Course Instructor and/or Teacher Assistant). */
+export interface TeacherTitles {
+  is_instructor: boolean;
+  is_assistant: boolean;
 }
 
 export const EMPTY_COURSE_FORM: CourseFormValues = {
@@ -34,7 +40,7 @@ export const EMPTY_COURSE_FORM: CourseFormValues = {
   description: "",
   estimated_minutes: "",
   teacherIds: [],
-  teacherRoles: {},
+  teacherTitles: {},
 };
 
 export function slugify(title: string) {

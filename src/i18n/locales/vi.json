@@ -658,7 +658,8 @@
     "tabs": {
       "teachers": "Giảng viên",
       "students": "Sinh viên",
-      "settings": "Cài đặt"
+      "settings": "Cài đặt",
+      "career_paths": "Lộ trình"
     },
     "no_name": "(Chưa đặt tên)",
     "remove": "Gỡ",
@@ -697,8 +698,7 @@
     "success": {
       "assigned": "Đã phân công giảng viên",
       "removed": "Đã gỡ phân công",
-      "promoted": "Đã thăng chức giảng viên chính",
-      "demoted": "Đã giáng xuống trợ giảng"
+      "title_updated": "Đã cập nhật chức danh"
     },
     "delete": {
       "button": "Xóa khóa học",
@@ -746,16 +746,24 @@
     },
     "teacher_role_course_instructor": "Giảng viên chính",
     "teacher_role_teacher_assistant": "Trợ giảng",
-    "ci_already_exists": "Đã có giảng viên chính được phân công",
     "assign_at_max": "Khóa học đã đạt tối đa {{max}} giảng viên — không thể thêm nữa.",
     "staffing_minmax": "{{count}} giảng viên — tối thiểu {{min}}, tối đa {{max}}",
     "staffing_at_max": "Đạt tối đa giảng viên — không thể thêm nữa.",
     "staffing_under_min": "Dưới mức tối thiểu {{min}} — hãy thêm giảng viên trước khi xuất bản.",
-    "promote": "Làm GV chính",
-    "promote_title": "Thăng chức giảng viên chính (chỉ được một người)",
-    "demote": "Làm trợ giảng",
-    "demote_title": "Giáng xuống trợ giảng",
-    "staffing_title": "Đội ngũ giảng dạy"
+    "staffing_title": "Đội ngũ giảng dạy",
+    "last_instructor_title": "Khóa học phải giữ ít nhất một Giảng viên — hãy nâng chức danh cho giáo viên khác trước.",
+    "title_required_title": "Giáo viên phải giữ ít nhất một chức danh.",
+    "title_instructor_title": "Bật/tắt chức danh Giảng viên",
+    "title_assistant_title": "Bật/tắt chức danh Trợ giảng",
+    "career_paths": {
+      "summary": "Có mặt ở {{n}} lộ trình",
+      "empty_title": "Chưa thuộc lộ trình nào",
+      "empty_hint": "Gắn khóa học vào một giai đoạn của lộ trình, hoặc để nguyên — khóa học chưa thuộc lộ trình nào không phải lỗi.",
+      "required": "Bắt buộc",
+      "optional": "Tùy chọn",
+      "stage_line": "Giai đoạn {{position}} · {{stage}}",
+      "untitled_stage": "Giai đoạn chưa đặt tên"
+    }
   },
   "dept_courses": {
     "title": "Khóa học",

@@ -7,7 +7,6 @@ import type {
   CourseAuthoring,
   CourseCloneDepth,
   CourseReadiness,
-  CourseTeacherRole,
   CourseUpdate,
   RosterEntry,
   TeacherAssignmentCreated,
@@ -125,23 +124,26 @@ export function useAssignTeacher(courseId: string) {
 
 /**
  * Switch an assigned teacher's course-scoped title (CI ⇄ TA) via
- * PUT /dept/courses/{id}/teachers/{userId}/role. Server enforces "exactly one
- * Course Instructor": promoting a second, or demoting the sole instructor
- * when no TA exists, returns 409 — surface that to the manager.
+ * PUT /dept/courses/{id}/teachers/{userId}/role. Server invariants (user
+ * decision 2026-08-30): titles are independent flags — both may be true;
+ * clearing both, or turning off the LAST Course Instructor while the course
+ * still has teachers, returns 409 — surface that to the manager.
  */
-export function useSetTeacherRole(courseId: string) {
+export function useSetTeacherTitles(courseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
       userId,
-      courseRole,
+      isInstructor,
+      isAssistant,
     }: {
       userId: string;
-      courseRole: CourseTeacherRole;
+      isInstructor: boolean;
+      isAssistant: boolean;
     }) =>
       apiPut<TeacherAssignmentRead>(
         `/dept/courses/${courseId}/teachers/${userId}/role`,
-        { course_role: courseRole },
+        { is_instructor: isInstructor, is_assistant: isAssistant },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({

@@ -2,37 +2,37 @@ import { describe, expect, it } from "vitest";
 
 import { toCourseCandidates } from "../helpers";
 
+/**
+ * The candidates endpoint returns only PUBLISHED org courses (user decision
+ * 2026-08-30), so these rows are what the picker actually receives. The mapper
+ * must not re-introduce a status filter of its own or invent a disabled state.
+ */
 const catalogue = [
   { id: "c1", title: "Data Structures", slug: "data-structures", status: "published" },
-  { id: "c2", title: "Data Mining", slug: "data-mining", status: "draft" },
-  { id: "c3", title: "Old Course", slug: "old-course", status: "archived" },
+  { id: "c2", title: "Data Mining", slug: "data-mining", status: "published" },
 ];
 
 describe("toCourseCandidates", () => {
-  it("leaves every row pickable for a DRAFT path", () => {
+  it("maps every published row to a pickable entity", () => {
     const rows = toCourseCandidates(catalogue, "");
-    expect(rows).toHaveLength(3);
-    expect(rows.every((r) => r.selectable)).toBe(true);
-    expect(rows.every((r) => r.notSelectableReason === null)).toBe(true);
+    expect(rows).toHaveLength(2);
+    expect(rows.map((r) => r.id)).toEqual(["c1", "c2"]);
+    // No row is disabled: an unattachable course is never offered at all.
+    expect(rows.every((r) => r.selectable === undefined)).toBe(true);
+    expect(rows.every((r) => r.notSelectableReason === undefined)).toBe(true);
   });
 
-  it("disables non-published rows for a PUBLISHED path, without hiding them", () => {
-    const rows = toCourseCandidates(catalogue, "", true);
-    // Visible, so the manager sees WHY rather than "where did it go?".
-    expect(rows).toHaveLength(3);
-    const byId = new Map(rows.map((r) => [r.id, r]));
-    expect(byId.get("c1")?.selectable).toBe(true);
-    expect(byId.get("c1")?.notSelectableReason).toBeNull();
-    for (const id of ["c2", "c3"]) {
-      expect(byId.get(id)?.selectable).toBe(false);
-      expect(byId.get(id)?.notSelectableReason).toBe("course_not_published");
-    }
+  it("filters by title and by slug, keeping the status badge", () => {
+    expect(toCourseCandidates(catalogue, "mining").map((r) => r.id)).toEqual([
+      "c2",
+    ]);
+    expect(
+      toCourseCandidates(catalogue, "data-structures").map((r) => r.id),
+    ).toEqual(["c1"]);
+    expect(toCourseCandidates(catalogue, "")[0].status).toBe("published");
   });
 
-  it("still filters by title/slug and keeps the status badge", () => {
-    const rows = toCourseCandidates(catalogue, "mining", true);
-    expect(rows.map((r) => r.id)).toEqual(["c2"]);
-    expect(rows[0].status).toBe("draft");
-    expect(rows[0].selectable).toBe(false);
+  it("handles an absent catalogue without throwing", () => {
+    expect(toCourseCandidates(undefined, "")).toEqual([]);
   });
 });

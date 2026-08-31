@@ -26,12 +26,7 @@ import {
  * (list -> add -> reorder -> local state -> catalogue -> derived memos), and
  * `t` is injected so no extra `useTranslation` is introduced.
  */
-export function useCoursesTab(
-  id: string,
-  t: TFunction,
-  versionId?: string,
-  pathPublished = false,
-) {
+export function useCoursesTab(id: string, t: TFunction, versionId?: string) {
   const list = useCareerPathCourses(id, versionId);
   const add = useAddCareerPathCourse(id);
   const reorder = useReorderCareerPathCourses(id);
@@ -71,11 +66,9 @@ export function useCoursesTab(
   }, [rows]);
 
   // Map the org catalogue to the dialog shape and filter client-side by
-  // title/slug. The candidates endpoint returns the full org catalogue
-  // (ANY status — a draft path may hold draft courses), so rows carry a
-  // status badge letting the manager tell draft from published at a glance.
-  // On a PUBLISHED path the backend refuses anything but published courses,
-  // so those rows are disabled with a reason instead of 409-ing on confirm.
+  // title/slug. The candidates endpoint returns only PUBLISHED org courses,
+  // so every row offered here is actually attachable; the status badge stays
+  // as confirmation rather than as a warning.
   // Already-attached courses are dropped from the list entirely — per the
   // "remove, not disable" rule, an attached course has no business in a
   // picker whose job is picking NEW courses.
@@ -85,10 +78,10 @@ export function useCoursesTab(
   );
   const courseCandidates: SelectableEntity[] = useMemo(
     () =>
-      toCourseCandidates(catalogue.data, courseQuery, pathPublished).filter(
+      toCourseCandidates(catalogue.data, courseQuery).filter(
         (c) => !alreadyAddedCourseIds.has(c.id),
       ),
-    [catalogue.data, courseQuery, alreadyAddedCourseIds, pathPublished],
+    [catalogue.data, courseQuery, alreadyAddedCourseIds],
   );
 
   function openPickerForStage(stageId: string) {

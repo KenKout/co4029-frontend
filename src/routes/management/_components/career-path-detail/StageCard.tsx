@@ -46,7 +46,10 @@ export function StageCard({
     : t(`${prefix}.unlock_policy.${stage.unlock_policy}`);
 
   return (
-    <div className="rounded-2xl bg-card ghost-border p-4">
+    <div
+      id={`cp-stage-${stage.id}`}
+      className="rounded-2xl bg-card ghost-border p-4"
+    >
       <div className="flex items-start gap-3">
         {canManage && (
           <div className="flex flex-col gap-0.5 shrink-0">

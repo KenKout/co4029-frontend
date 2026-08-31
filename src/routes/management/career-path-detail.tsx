@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,22 @@ function slugify(value: string) {
   return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+/**
+ * Deep-linked from a course's Career Paths tab (tab=courses&stage=<id>):
+ * once the Courses tab has rendered, scroll the named stage into view.
+ */
+function useStageScroll(tab: TabKey, stageId?: string) {
+  useEffect(() => {
+    if (tab !== "courses" || !stageId) return;
+    const t = window.setTimeout(() => {
+      document
+        .getElementById(`cp-stage-${stageId}`)
+        ?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 350);
+    return () => window.clearTimeout(t);
+  }, [tab, stageId]);
+}
+
 export default function ManagementCareerPathDetailPage() {
   const { id } = useParams({ strict: false }) as { id: string };
   if (id === "new") return <NewCareerPathWorkspace />;
@@ -38,41 +54,131 @@ function ExistingCareerPathWorkspace({ id }: { id: string }) {
   const canManage = permissions.hasAny("course.create", "course.update", "system.administer");
   const path = useManagedCareerPath(!permissions.isLoading && canRead ? id : undefined);
   const versions = usePathVersions(id, canRead);
-  const [tab, setTab] = useState<TabKey>("general");
+  const search = useSearch({ strict: false }) as { tab?: TabKey; stage?: string };
+  const [tab, setTab] = useState<TabKey>(search.tab ?? "general");
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const readOnly = selectedVersionId !== null;
   const hasDraft = (versions.data ?? []).some((version) => version.status === "draft");
   const editable = canManage && hasDraft && !readOnly;
 
+  useStageScroll(tab, search.stage);
+
   if (!permissions.isLoading && !canRead) return <PermissionDenied />;
   if (permissions.isLoading || path.isLoading) return <PageSkeleton rows={3} rounded="rounded-lg" className="pb-12" />;
   if (path.isError || !path.data) return <LoadErrorBox message="Could not load the Career Path." />;
-  const data = path.data;
 
   return (
+    <WorkspaceShell
+      id={id}
+      data={path.data}
+      tab={tab}
+      onSelectTab={setTab}
+      editable={editable}
+      readOnly={readOnly}
+      canManage={canManage}
+      hasDraft={hasDraft}
+      selectedVersionId={selectedVersionId}
+      onSelectVersion={setSelectedVersionId}
+    />
+  );
+}
+
+/** Everything below the permission/loading guards. */
+function WorkspaceShell({
+  id,
+  data,
+  tab,
+  onSelectTab,
+  editable,
+  readOnly,
+  canManage,
+  hasDraft,
+  selectedVersionId,
+  onSelectVersion,
+}: {
+  id: string;
+  data: NonNullable<ReturnType<typeof useManagedCareerPath>["data"]>;
+  tab: TabKey;
+  onSelectTab: (tab: TabKey) => void;
+  editable: boolean;
+  readOnly: boolean;
+  canManage: boolean;
+  hasDraft: boolean;
+  selectedVersionId: string | null;
+  onSelectVersion: (id: string | null) => void;
+}) {
+  return (
     <div className="space-y-6 pb-16">
-      <PathHeaderBar id={id} data={data} canManage={canManage && !readOnly} hasDraft={hasDraft} />
-      {readOnly && <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">Viewing a frozen version. Select the draft/current version to continue editing.</div>}
+      <PathHeaderBar
+        id={id}
+        data={data}
+        canManage={canManage && !readOnly}
+        hasDraft={hasDraft}
+      />
+      {readOnly && (
+        <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Viewing a frozen version. Select the draft/current version to continue editing.
+        </div>
+      )}
       <div className="grid items-start gap-6 lg:grid-cols-10">
         <main className="space-y-5 lg:col-span-7">
-          <TabBar tab={tab} onSelect={setTab} />
+          <TabBar tab={tab} onSelect={onSelectTab} />
           {editable && data.status === "published" && <PathImpactBanner id={id} />}
-          {tab === "general" && (
-            <EditForm id={id} initialName={data.name} initialSlug={data.slug} initialDescription={data.description ?? ""} readOnly={!editable} />
-          )}
-          {tab === "programs" && <ProgramsTab pathId={id} />}
-          {tab === "courses" && <CoursesTab id={id} canManage={editable} versionId={selectedVersionId ?? undefined} pathPublished={data.status === "published"} />}
-          {tab === "students" && (
-            <div className="space-y-6">
-              <StudentsTab id={id} canEnroll={false} canUnenroll={false} />
-              <ProgressTab id={id} />
-            </div>
-          )}
+          <TabContent
+            tab={tab}
+            id={id}
+            editable={editable}
+            versionId={selectedVersionId ?? undefined}
+            path={{ name: data.name, slug: data.slug, description: data.description }}
+          />
         </main>
         <div className="lg:col-span-3 lg:sticky lg:top-24">
-          <VersionPanel id={id} canManage={canManage} pathPublished={data.status === "published"} selectedVersionId={selectedVersionId} onSelect={setSelectedVersionId} />
+          <VersionPanel
+            id={id}
+            canManage={canManage}
+            pathPublished={data.status === "published"}
+            selectedVersionId={selectedVersionId}
+            onSelect={onSelectVersion}
+          />
         </div>
       </div>
+    </div>
+  );
+}
+
+/** The tab body — one branch per tab keeps the workspace shell small. */
+function TabContent({
+  tab,
+  id,
+  editable,
+  versionId,
+  path,
+}: {
+  tab: TabKey;
+  id: string;
+  editable: boolean;
+  versionId?: string;
+  path: { name: string; slug: string; description: string | null | undefined };
+}) {
+  if (tab === "general") {
+    return (
+      <EditForm
+        id={id}
+        initialName={path.name}
+        initialSlug={path.slug}
+        initialDescription={path.description ?? ""}
+        readOnly={!editable}
+      />
+    );
+  }
+  if (tab === "programs") return <ProgramsTab pathId={id} />;
+  if (tab === "courses") {
+    return <CoursesTab id={id} canManage={editable} versionId={versionId} />;
+  }
+  return (
+    <div className="space-y-6">
+      <StudentsTab id={id} canEnroll={false} canUnenroll={false} />
+      <ProgressTab id={id} />
     </div>
   );
 }

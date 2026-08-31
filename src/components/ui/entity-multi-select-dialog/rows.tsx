@@ -95,7 +95,6 @@ export function SelectableEntityRow<T extends SelectableEntity>({
  */
 const NOT_SELECTABLE_LABELS: Record<string, string> = {
   path_not_published: "Draft — publish first",
-  course_not_published: "Draft — publish first",
 };
 
 export function NotSelectableEntityRow({ item }: { item: SelectableEntity }) {

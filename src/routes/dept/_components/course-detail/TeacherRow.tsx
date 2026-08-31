@@ -1,11 +1,6 @@
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import {
-  ArrowDownCircle,
-  ArrowUpCircle,
-  Mail,
-  Trash2,
-} from "lucide-react";
+import { ClipboardCheck, ClipboardEdit, Mail, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Avatar,
@@ -15,33 +10,59 @@ import {
   avatarInitials,
 } from "@/components/ui/avatar";
 import { useConfirm } from "@/components/ui/use-confirm";
-import { useRemoveTeacher, useSetTeacherRole } from "@/lib/api/hooks/dept";
+import { useRemoveTeacher, useSetTeacherTitles } from "@/lib/api/hooks/dept";
 import { ApiError } from "@/lib/api/client";
-import type { CourseTeacherRole, TeacherAssignmentRead } from "@/lib/api/types";
+import type { TeacherAssignmentRead } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
-/** Small pill drawn beside a teacher's name: Course Instructor vs Assistant. */
-export function TeacherRoleBadge({
-  role,
+/**
+ * Title pill(s) beside a teacher's name.
+ *
+ * Titles are now independent flags (user decision 2026-08-30): a teacher may
+ * be Course Instructor, Teacher Assistant, or BOTH — which renders as both
+ * pills side by side instead of one string that could not say it.
+ */
+export function TeacherTitleBadges({
+  assignment,
 }: {
-  role: CourseTeacherRole | null | undefined;
+  assignment: TeacherAssignmentRead;
 }) {
   const { t } = useTranslation();
-  const isInstructor = role === "course_instructor";
+  return (
+    <span className="inline-flex items-center gap-1">
+      {assignment.is_instructor && (
+        <TitlePill
+          label={t("dept_course_detail.teacher_role_course_instructor")}
+          tone="primary"
+        />
+      )}
+      {assignment.is_assistant && (
+        <TitlePill
+          label={t("dept_course_detail.teacher_role_teacher_assistant")}
+          tone="muted"
+        />
+      )}
+    </span>
+  );
+}
+
+function TitlePill({
+  label,
+  tone,
+}: {
+  label: string;
+  tone: "primary" | "muted";
+}) {
   return (
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap",
-        isInstructor
+        tone === "primary"
           ? "bg-m3-primary/10 text-m3-primary"
           : "bg-surface-muted text-text-muted",
       )}
     >
-      {t(
-        isInstructor
-          ? "dept_course_detail.teacher_role_course_instructor"
-          : "dept_course_detail.teacher_role_teacher_assistant",
-      )}
+      {label}
     </span>
   );
 }
@@ -80,7 +101,7 @@ export function TeacherIdentityCell({
           <p className="text-sm font-semibold text-text-strong truncate">
             {name}
           </p>
-          <TeacherRoleBadge role={assignment.course_role} />
+          <TeacherTitleBadges assignment={assignment} />
         </div>
         <p className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
           <Mail className="h-3 w-3 shrink-0" />
@@ -91,52 +112,59 @@ export function TeacherIdentityCell({
   );
 }
 
+/**
+ * Per-row actions: toggle the two title flags + remove.
+ *
+ * User decision 2026-08-30: titles are independent flags, so "promote /
+ * demote" became two toggles. The backend owns the two invariants (both
+ * flags never both false; a staffed course keeps >= 1 instructor), but the
+ * toggles pre-disable the exact transitions that would 409 so the manager
+ * learns the rule from the UI, not from an error toast:
+ * - turning the LAST instructor's flag off is disabled;
+ * - turning a title off when it is the teacher's only title is disabled.
+ */
 export function TeacherRowActions({
   assignment,
   courseId,
   hasAnotherInstructor,
-  isSoleTeacher,
 }: {
   assignment: TeacherAssignmentRead;
   courseId: string;
-  /** True when a DIFFERENT teacher on this course is already Course Instructor. */
+  /** True when a DIFFERENT teacher on this course is Course Instructor. */
   hasAnotherInstructor: boolean;
-  /** True when this teacher is the only one assigned to the course. */
-  isSoleTeacher: boolean;
 }) {
   const { t } = useTranslation();
   const remove = useRemoveTeacher(courseId);
-  const setRole = useSetTeacherRole(courseId);
+  const setTitles = useSetTeacherTitles(courseId);
   const { confirm: confirmRemove, dialog: confirmDialog } = useConfirm({
     title: t("dept_course_detail.remove"),
     confirmLabel: t("dept_course_detail.remove"),
     cancelLabel: t("common.cancel"),
   });
 
-  const isInstructor = assignment.course_role === "course_instructor";
-  // A TA (or pre-backfill null) can be promoted to Course Instructor only
-  // while no Course Instructor exists yet — the backend enforces exactly one.
-  const showPromote = !isInstructor && !hasAnotherInstructor;
-  // A Course Instructor can be demoted to TA only when another teacher would
-  // remain — demoting the sole instructor with no TA is a server 409.
-  const showDemote = isInstructor && !isSoleTeacher;
+  const isInstructor = Boolean(assignment.is_instructor);
+  const isAssistant = Boolean(assignment.is_assistant);
 
-  const handleSetRole = (courseRole: CourseTeacherRole) => {
-    setRole.mutate(
-      { userId: assignment.user_id, courseRole },
+  // Turning the last instructor off would 409 (staffed course keeps >= 1 CI).
+  const instructorOffDisabled = isInstructor && !hasAnotherInstructor;
+  // Turning a title off when it is the teacher's ONLY title would 409
+  // (course-scoped teacher must hold at least one).
+  const instructorOnDisabled = !isInstructor && !isAssistant;
+  const assistantOffDisabled = isAssistant && !isInstructor;
+  const assistantOnDisabled = !isAssistant && !isInstructor;
+
+  const handleToggle = (field: "instructor" | "assistant", next: boolean) => {
+    const isInstructorNext = field === "instructor" ? next : isInstructor;
+    const isAssistantNext = field === "assistant" ? next : isAssistant;
+    setTitles.mutate(
+      { userId: assignment.user_id, isInstructor: isInstructorNext, isAssistant: isAssistantNext },
       {
         onSuccess: () =>
-          toast.success(
-            courseRole === "course_instructor"
-              ? t("dept_course_detail.success.promoted")
-              : t("dept_course_detail.success.demoted"),
-          ),
+          toast.success(t("dept_course_detail.success.title_updated")),
         onError: (err) => {
           const detail =
             err instanceof ApiError ? err.body || err.message : String(err);
-          toast.error(
-            t("dept_course_detail.errors.role_failed", { detail }),
-          );
+          toast.error(t("dept_course_detail.errors.role_failed", { detail }));
         },
       },
     );
@@ -163,40 +191,46 @@ export function TeacherRowActions({
 
   return (
     <div className="flex items-center gap-1.5">
-      {showPromote && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleSetRole("course_instructor");
-          }}
-          disabled={setRole.isPending}
-          className="gap-1.5"
-          title={t("dept_course_detail.promote_title")}
-        >
-          <ArrowUpCircle className="h-3.5 w-3.5" />
-          {t("dept_course_detail.promote")}
-        </Button>
-      )}
-      {showDemote && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleSetRole("teacher_assistant");
-          }}
-          disabled={setRole.isPending}
-          className="gap-1.5"
-          title={t("dept_course_detail.demote_title")}
-        >
-          <ArrowDownCircle className="h-3.5 w-3.5" />
-          {t("dept_course_detail.demote")}
-        </Button>
-      )}
+      <Button
+        type="button"
+        variant={isInstructor ? "default" : "outline"}
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleToggle("instructor", !isInstructor);
+        }}
+        disabled={setTitles.isPending || instructorOnDisabled || instructorOffDisabled}
+        className="gap-1.5"
+        title={
+          instructorOffDisabled
+            ? t("dept_course_detail.last_instructor_title")
+            : instructorOnDisabled
+              ? t("dept_course_detail.title_required_title")
+              : t("dept_course_detail.title_instructor_title")
+        }
+      >
+        <ClipboardEdit className="h-3.5 w-3.5" />
+        {t("dept_course_detail.teacher_role_course_instructor")}
+      </Button>
+      <Button
+        type="button"
+        variant={isAssistant ? "default" : "outline"}
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleToggle("assistant", !isAssistant);
+        }}
+        disabled={setTitles.isPending || assistantOnDisabled || assistantOffDisabled}
+        className="gap-1.5"
+        title={
+          assistantOnDisabled
+            ? t("dept_course_detail.title_required_title")
+            : t("dept_course_detail.title_assistant_title")
+        }
+      >
+        <ClipboardCheck className="h-3.5 w-3.5" />
+        {t("dept_course_detail.teacher_role_teacher_assistant")}
+      </Button>
       <Button
         type="button"
         variant="destructive"

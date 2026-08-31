@@ -3,8 +3,8 @@ import { Check, Loader2, UserPlus, Users } from "lucide-react";
 import { useAssignableTeachersForNewCourse } from "@/lib/api/hooks/dept";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import type { CourseTeacherRole } from "@/lib/api/types";
 import type { CourseFormController } from "./use-course-form";
+import type { TeacherTitles } from "./use-course-form";
 
 /**
  * Runtime staffing bounds for a NEW course. There is no course row yet (so no
@@ -30,13 +30,14 @@ const DEFAULT_MAX_TEACHERS = 10;
  * teacher whose assignment would then be rejected. There is no course yet, so
  * `already_assigned` is uniformly false and is not rendered.
  *
- * Each selected teacher also gets a course-scoped title (Course Instructor vs
- * Teacher Assistant) written into `form.teacherRoles`. The first teacher picked
- * is made the Course Instructor by default, and exactly one CI is allowed — the
- * CI choice is disabled for everyone else once one exists. The assignment
- * itself still happens after the course row exists (`use-course-wizard.ts`
- * forwards `course_role`); if one assignment call fails, the course is NOT
- * re-created on retry.
+ * Each selected teacher also gets course-scoped TITLE FLAGS (Course
+ * Instructor and/or Teacher Assistant — user decision 2026-08-30) written
+ * into `form.teacherTitles`. The first teacher picked is made the Course
+ * Instructor by default (and is forced to it server-side anyway); later
+ * teachers default to Teacher Assistant, and any of them may be ticked as
+ * both. The assignment itself still happens after the course row exists
+ * (`use-course-wizard.ts` forwards the flags); if one assignment call
+ * fails, the course is NOT re-created on retry.
  */
 export function TeacherPickerSection({
   controller,
@@ -48,50 +49,52 @@ export function TeacherPickerSection({
   const { form, setField } = controller;
   const { data: teachers = [], isLoading } = useAssignableTeachersForNewCourse();
 
-  const roles = form.teacherRoles ?? {};
+  const titles = form.teacherTitles ?? {};
   const selectedCount = form.teacherIds.length;
-  // The single Course Instructor, if one has been picked.
-  const ciUserId = Object.keys(roles).find(
-    (id) => roles[id] === "course_instructor",
-  );
 
-  function selectedRole(userId: string): CourseTeacherRole {
-    return roles[userId] ?? "teacher_assistant";
+  function selectedTitles(userId: string): TeacherTitles {
+    return titles[userId] ?? { is_instructor: false, is_assistant: true };
   }
 
   function toggle(userId: string) {
     const isSelected = form.teacherIds.includes(userId);
     if (isSelected) {
-      const nextRoles = { ...roles };
-      delete nextRoles[userId];
-      setField("teacherRoles", nextRoles);
+      const nextTitles = { ...titles };
+      delete nextTitles[userId];
+      setField("teacherTitles", nextTitles);
       setField(
         "teacherIds",
         form.teacherIds.filter((id) => id !== userId),
       );
     } else {
-      // Default the new teacher to Course Instructor when none is picked yet,
-      // otherwise to Teacher Assistant (exactly one CI allowed).
-      const hasCi = Object.values(roles).includes("course_instructor");
-      setField("teacherRoles", {
-        ...roles,
-        [userId]: hasCi ? "teacher_assistant" : "course_instructor",
+      // Default the new teacher to Course Instructor when none is picked
+      // yet, otherwise to Teacher Assistant (both flags may later be ticked).
+      const hasInstructor = form.teacherIds.some(
+        (id) => selectedTitles(id).is_instructor,
+      );
+      setField("teacherTitles", {
+        ...titles,
+        [userId]: hasInstructor
+          ? { is_instructor: false, is_assistant: true }
+          : { is_instructor: true, is_assistant: false },
       });
       setField("teacherIds", [...form.teacherIds, userId]);
     }
   }
 
-  function setRole(userId: string, role: CourseTeacherRole) {
-    const nextRoles = { ...roles, [userId]: role };
-    // Promoting someone to CI demotes whoever held it — exactly one CI.
-    if (role === "course_instructor") {
-      for (const id of Object.keys(nextRoles)) {
-        if (id !== userId && nextRoles[id] === "course_instructor") {
-          nextRoles[id] = "teacher_assistant";
-        }
-      }
-    }
-    setField("teacherRoles", nextRoles);
+  function setTitleFlag(
+    userId: string,
+    flag: "instructor" | "assistant",
+    next: boolean,
+  ) {
+    const current = selectedTitles(userId);
+    setField("teacherTitles", {
+      ...titles,
+      [userId]: {
+        is_instructor: flag === "instructor" ? next : current.is_instructor,
+        is_assistant: flag === "assistant" ? next : current.is_assistant,
+      },
+    });
   }
 
   const overMax = selectedCount >= DEFAULT_MAX_TEACHERS;
@@ -154,18 +157,16 @@ export function TeacherPickerSection({
         <ul className="space-y-1.5">
           {teachers.map((teacher) => {
             const selected = form.teacherIds.includes(teacher.user_id);
-            const role = selectedRole(teacher.user_id);
-            const ciDisabled =
-              !!ciUserId && ciUserId !== teacher.user_id;
             return (
               <TeacherPickerItem
                 key={teacher.user_id}
                 teacher={teacher}
                 selected={selected}
-                role={role}
-                ciDisabled={ciDisabled}
+                titles={selectedTitles(teacher.user_id)}
                 onToggle={() => toggle(teacher.user_id)}
-                onSetRole={(next) => setRole(teacher.user_id, next)}
+                onSetFlag={(flag, next) =>
+                  setTitleFlag(teacher.user_id, flag, next)
+                }
                 t={t}
               />
             );
@@ -176,22 +177,20 @@ export function TeacherPickerSection({
   );
 }
 
-/** A single selectable teacher row with its CI/TA toggle. */
+/** A single selectable teacher row with its two title-flag toggles. */
 function TeacherPickerItem({
   teacher,
   selected,
-  role,
-  ciDisabled,
+  titles,
   onToggle,
-  onSetRole,
+  onSetFlag,
   t,
 }: {
   teacher: { user_id: string; display_name?: string | null; primary_email: string };
   selected: boolean;
-  role: CourseTeacherRole;
-  ciDisabled: boolean;
+  titles: TeacherTitles;
   onToggle: () => void;
-  onSetRole: (role: CourseTeacherRole) => void;
+  onSetFlag: (flag: "instructor" | "assistant", next: boolean) => void;
   t: TFunction;
 }) {
   return (
@@ -229,15 +228,13 @@ function TeacherPickerItem({
         <div className="mt-1.5 flex items-center gap-1.5 pl-2">
           <RoleOption
             label={t("dept_course_detail.teacher_role_course_instructor")}
-            active={role === "course_instructor"}
-            disabled={ciDisabled}
-            title={ciDisabled ? t("dept_course_detail.ci_already_exists") : undefined}
-            onClick={() => onSetRole("course_instructor")}
+            active={titles.is_instructor}
+            onClick={() => onSetFlag("instructor", !titles.is_instructor)}
           />
           <RoleOption
             label={t("dept_course_detail.teacher_role_teacher_assistant")}
-            active={role === "teacher_assistant"}
-            onClick={() => onSetRole("teacher_assistant")}
+            active={titles.is_assistant}
+            onClick={() => onSetFlag("assistant", !titles.is_assistant)}
           />
         </div>
       )}
@@ -245,18 +242,14 @@ function TeacherPickerItem({
   );
 }
 
-/** One half of the CI/TA segmented toggle for a selected teacher. */
+/** One title-flag toggle for a selected teacher (both flags may be on). */
 function RoleOption({
   label,
   active,
-  disabled,
-  title,
   onClick,
 }: {
   label: string;
   active: boolean;
-  disabled?: boolean;
-  title?: string;
   onClick: () => void;
 }) {
   return (
@@ -264,8 +257,6 @@ function RoleOption({
       type="button"
       variant="outline"
       size="sm"
-      disabled={disabled}
-      title={title}
       onClick={onClick}
       className={cn(
         "gap-1.5 rounded-full px-3 text-xs",

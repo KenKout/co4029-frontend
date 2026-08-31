@@ -28,17 +28,15 @@ export function courseOrderChanged(
  * Map the org course catalogue to the dialog shape and filter client-side by
  * title/slug. `status` rides along so the picker rows can show a badge.
  *
- * `requirePublished` mirrors the backend guard in `add_course_to_path`: on a
- * PUBLISHED path only published courses may be attached (a draft path may hold
- * draft courses while the skeleton is built). When it is set, draft/archived
- * courses render disabled with a reason rather than being pickable and then
- * 409-ing — and rather than being hidden, which only moves the confusion to
- * "where did my course go?".
+ * The candidates endpoint returns ONLY published courses (user decision
+ * 2026-08-30), so there is no draft row to disable here: a course that cannot
+ * be attached is never offered in the first place. Draft courses are reached
+ * through "New course" / the course catalogue instead, and attached once they
+ * publish.
  */
 export function toCourseCandidates(
   items: CareerPathCourseCandidate[] | undefined,
   query: string,
-  requirePublished = false,
 ): SelectableEntity[] {
   const q = query.trim().toLowerCase();
   return (items ?? [])
@@ -53,11 +51,6 @@ export function toCourseCandidates(
       primaryLabel: c.title,
       secondaryLabel: c.slug,
       status: c.status,
-      selectable: requirePublished ? c.status === "published" : true,
-      notSelectableReason:
-        requirePublished && c.status !== "published"
-          ? "course_not_published"
-          : null,
     }));
 }
 

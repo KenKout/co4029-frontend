@@ -46,9 +46,7 @@ function useTeacherStaffing(
   return {
     readiness,
     allTeachers,
-    hasInstructor: allTeachers.some(
-      (a) => a.course_role === "course_instructor",
-    ),
+    hasInstructor: allTeachers.some((a) => a.is_instructor),
     currentCount: readiness.data?.teacher_count ?? allTeachers.length,
     minTeachers: readiness.data?.min_teachers_per_course ?? 0,
     maxTeachers: readiness.data?.max_teachers_per_course ?? 0,
@@ -112,7 +110,6 @@ export function DeptTeachersTab({
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const {
-    allTeachers,
     hasInstructor,
     currentCount,
     minTeachers,
@@ -160,7 +157,6 @@ export function DeptTeachersTab({
           courseId={courseId}
           currentCount={currentCount}
           maxCount={hasStaffingData ? maxTeachers : undefined}
-          hasInstructor={hasInstructor}
         />
       )}
 
@@ -188,8 +184,7 @@ export function DeptTeachersTab({
                   <TeacherRowActions
                     assignment={a}
                     courseId={courseId}
-                    hasAnotherInstructor={hasInstructor && a.course_role !== "course_instructor"}
-                    isSoleTeacher={allTeachers.length === 1}
+                    hasAnotherInstructor={hasInstructor && !a.is_instructor}
                   />
                 )
               : undefined

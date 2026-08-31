@@ -7,6 +7,7 @@ import {
   useDeptCourses,
 } from "@/lib/api/hooks/dept";
 import { usePermissions } from "@/lib/auth/use-permissions";
+import { DeptCareerPathsTab } from "./_components/course-detail/CareerPathsTab";
 import { DeptCourseHeader } from "./_components/course-detail/DeptCourseHeader";
 import { DeptSettingsTab } from "./_components/course-detail/SettingsTab";
 import { DeptStudentsTab } from "./_components/course-detail/StudentsTab";
@@ -15,7 +16,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { PermissionDenied } from "@/components/ui/permission-denied";
 import type { TabKey } from "./_components/course-detail/types";
 
-const TAB_KEYS: TabKey[] = ["teachers", "students", "settings"];
+const TAB_KEYS: TabKey[] = ["teachers", "students", "career-paths", "settings"];
 
 export default function DeptCourseDetailPage() {
   const { t } = useTranslation();
@@ -90,6 +91,10 @@ export default function DeptCourseDetailPage() {
             label: t("dept_course_detail.tabs.students"),
             count: roster.data?.length,
           },
+          {
+            key: "career-paths" as TabKey,
+            label: t("dept_course_detail.tabs.career_paths"),
+          },
           // Course settings + learning outcomes live behind course.delete /
           // learning_outcome.manage, so the tab only appears for a manager.
           ...(canDelete
@@ -116,6 +121,8 @@ export default function DeptCourseDetailPage() {
         canManageEnrollments={canManageEnrollments}
         courseId={courseId}
       />
+
+      <DeptCareerPathsTab active={tab === "career-paths"} courseId={courseId} />
 
       {canDelete && (
         <DeptSettingsTab active={tab === "settings"} courseId={courseId} />

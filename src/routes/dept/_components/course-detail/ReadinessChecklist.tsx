@@ -6,11 +6,17 @@ import { cn } from "@/lib/utils";
 /**
  * Is this course actually deliverable?
  *
- * Four things decide it, and every one of them used to be discoverable only by
+ * Three things decide it, and every one of them used to be discoverable only by
  * failing: no teacher (nobody authors the content), no gradeable unit (the
- * publish gate 409s), not on a career path (students cannot reach it at all —
- * and nothing ever errors, it is just silently invisible), and the course's own
- * status.
+ * publish gate 409s), no learning outcome (also a publish gate), plus the
+ * course's own status.
+ *
+ * Career-path placement is NOT here. It was never a publish gate — the backend
+ * gates on gradeable units, learning outcomes and the teacher minimum — so a
+ * red X for "not on a career path" reported a course as broken over something
+ * that blocks nothing, on a screen whose job is to predict the publish
+ * decision. Where the course sits in the curriculum now lives on the course's
+ * own Career Paths tab, which can also link through to the stage.
  *
  * The content row and the publish button read the SAME number the backend gate
  * reads, so this cannot show a green tick next to a publish that then 409s.
@@ -58,17 +64,6 @@ export function ReadinessChecklist({ courseId }: { courseId: string }) {
               count: data.learning_outcome_count,
             })
           : t("dept_course_detail.readiness.outcomes_missing"),
-    },
-    {
-      key: "path",
-      ok: data.career_paths.length > 0,
-      label: t("dept_course_detail.readiness.path"),
-      detail:
-        data.career_paths.length > 0
-          ? data.career_paths
-              .map((p) => `${p.career_path_name} · #${p.stage_position}`)
-              .join(", ")
-          : t("dept_course_detail.readiness.path_missing"),
     },
     {
       key: "published",

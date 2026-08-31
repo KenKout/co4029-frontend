@@ -6,7 +6,8 @@ import { apiPost } from "@/lib/api/client";
 import { authenticatedFetch } from "@/lib/auth";
 import { queryKeys } from "@/lib/api/query-keys";
 import { useCreateCourse } from "@/lib/api/hooks/teacher-courses";
-import type { CourseAuthoring, CourseTeacherRole } from "@/lib/api/types";
+import type { CourseAuthoring } from "@/lib/api/types";
+import type { TeacherTitles } from "./use-course-form";
 import {
   clearCourseDraft,
   saveCourseDraft,
@@ -101,16 +102,17 @@ async function uploadThumbnail(courseId: string, file: File): Promise<void> {
 /**
  * Assign each teacher separately, recording every success on its own.
  *
- * Each assignment carries the manager-chosen course-scoped title (CI vs TA);
- * the first teacher is forced to Course Instructor server-side regardless, so
- * the client just forwards the pick. An attempt that assigns three of five and
- * then dies must not re-assign those three when it resumes, so the marker is
- * per user id rather than one flag for the whole group.
+ * Each assignment carries the manager-chosen title flags (Instructor and/or
+ * Teacher Assistant — user decision 2026-08-30); the first teacher is forced
+ * to Course Instructor server-side regardless, so the client just forwards
+ * the pick. An attempt that assigns three of five and then dies must not
+ * re-assign those three when it resumes, so the marker is per user id rather
+ * than one flag for the whole group.
  */
 async function assignTeachers(
   courseId: string,
   teacherIds: string[],
-  roles: Record<string, CourseTeacherRole | undefined>,
+  titles: Record<string, TeacherTitles>,
   done: Set<DoneStep>,
   persist: (courseId: string) => void,
 ): Promise<boolean> {
@@ -118,10 +120,12 @@ async function assignTeachers(
   for (const userId of teacherIds) {
     const stepKey: TeacherStep = `teacher:${userId}`;
     if (done.has(stepKey)) continue;
+    const titlesFor = titles[userId] ?? { is_instructor: false, is_assistant: true };
     try {
       await apiPost(`/dept/courses/${courseId}/teachers`, {
         user_id: userId,
-        course_role: roles[userId],
+        is_instructor: titlesFor.is_instructor,
+        is_assistant: titlesFor.is_assistant,
       });
       done.add(stepKey);
       persist(courseId);
@@ -236,7 +240,7 @@ export function useCourseWizardRunner(t: TFunction): CourseWizardRunner {
           const allAssigned = await assignTeachers(
             courseId,
             form.teacherIds,
-            form.teacherRoles ?? {},
+            form.teacherTitles ?? {},
             done,
             persist,
           );
