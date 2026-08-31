@@ -251,13 +251,15 @@ export interface QuizProgressRead {
 // not, so the tag reads as "passed" and a student who failed every attempt
 // keeps the item pending.
 //
-// `attempts_graded` < `attempts_used` means evaluation (an ARQ job) has not
-// caught up yet — those attempts are neither passed nor failed.
+// `attempts_awaiting_grade` counts only completed/timed-out attempts awaiting
+// evaluation. It excludes abandoned and system-failed rows, which never receive
+// a verdict.
 export interface InterviewProgressRead {
   interview_config_id: string;
   attempts_used: number;
   attempts_in_flight: number;
   attempts_graded: number;
+  attempts_awaiting_grade: number;
   passed: boolean;
   completed: boolean;
 }

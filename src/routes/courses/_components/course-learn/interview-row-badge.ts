@@ -13,9 +13,10 @@ import type { InterviewProgressRead } from "@/lib/api/types";
  *
  * Three outcomes:
  *
- * - `"grading"` — at least one attempt has finished but the verdict has not
- *   landed. Evaluation is an ARQ job, so `attempts_used > attempts_graded`
- *   means "being marked", which must NOT read as a failure.
+ * - `"grading"` — at least one gradeable terminal attempt has no verdict yet.
+ *   Evaluation is an ARQ job, so `attempts_awaiting_grade > 0` means "being
+ *   marked". Abandoned and system-failed rows are excluded because no verdict
+ *   will arrive for them.
  * - `"not_passed"` — every finished attempt has been graded and none passed.
  *   Only then is it honest to say the student has not met the bar.
  * - `null` — never attempted (nothing to say), currently mid-session (the
@@ -40,12 +41,9 @@ export function interviewRowBadge(
   // competing "state" affordances on one row would just be noise.
   if (progress.attempts_in_flight > 0) return null;
 
-  // Attempts that are finished, i.e. not the one still running.
-  const settled = progress.attempts_used - progress.attempts_in_flight;
-  if (settled <= 0) return null;
-
-  if (progress.attempts_graded < settled) {
-    return { kind: "grading", attemptCount: settled };
+  if (progress.attempts_awaiting_grade > 0) {
+    return { kind: "grading", attemptCount: progress.attempts_awaiting_grade };
   }
+  if (progress.attempts_graded <= 0) return null;
   return { kind: "not_passed", attemptCount: progress.attempts_graded };
 }

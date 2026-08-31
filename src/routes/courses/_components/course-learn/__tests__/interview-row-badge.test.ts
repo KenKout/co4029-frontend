@@ -22,6 +22,7 @@ function progress(
     attempts_used: 0,
     attempts_in_flight: 0,
     attempts_graded: 0,
+    attempts_awaiting_grade: 0,
     passed: false,
     completed: false,
     ...over,
@@ -63,7 +64,7 @@ describe("interviewRowBadge", () => {
     // Evaluation is an ARQ job. An ungraded attempt is NOT a failure, so this
     // must never fall through to not_passed.
     const badge = interviewRowBadge(
-      progress({ attempts_used: 1, attempts_graded: 0 }),
+      progress({ attempts_used: 1, attempts_awaiting_grade: 1 }),
     );
     expect(badge).toEqual({ kind: "grading", attemptCount: 1 });
   });
@@ -72,9 +73,13 @@ describe("interviewRowBadge", () => {
     // Mixed: one marked miss + one still being marked. The pending verdict
     // wins, because it could still be a pass.
     const badge = interviewRowBadge(
-      progress({ attempts_used: 2, attempts_graded: 1 }),
+      progress({ attempts_used: 2, attempts_graded: 1, attempts_awaiting_grade: 1 }),
     );
-    expect(badge).toEqual({ kind: "grading", attemptCount: 2 });
+    expect(badge).toEqual({ kind: "grading", attemptCount: 1 });
+  });
+
+  it("does not wait forever for an abandoned or failed attempt", () => {
+    expect(interviewRowBadge(progress({ attempts_used: 2 }))).toBeNull();
   });
 
   it("shows nothing while a session is live (the continue card owns that)", () => {
