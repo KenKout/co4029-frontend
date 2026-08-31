@@ -3913,7 +3913,7 @@ export interface paths {
          *     interview items at all — they stayed pending forever and a module holding
          *     one could never auto-collapse, even after the student passed.
          *
-         *     Completed ⟺ at least one non-practice attempt has ``pass_verdict = TRUE``.
+         *     Completed ⟺ at least one attempt has ``pass_verdict = TRUE``.
          *     Deliberately stricter than the quiz rule (which also completes on
          *     failed-and-exhausted): the tag reads as *passed*. See
          *     :class:`InterviewProgressRead` for the field semantics.
@@ -9663,12 +9663,10 @@ export interface components {
          *     curriculum, so an interview item stayed pending forever.
          *
          *     Completion rule (user decision, 2026-08-06): completed ⟺ at least one
-         *     **non-practice** attempt has ``pass_verdict = TRUE``. This is intentionally
+         *     attempt has ``pass_verdict = TRUE``. This is intentionally
          *     STRICTER than the quiz rule, which also completes on "failed with every
          *     attempt consumed": here the tag is meant to read as *passed*, so a student
-         *     who failed every attempt keeps the item pending. Practice runs never count,
-         *     matching the attempt gate — rehearsing must not tick off a graded
-         *     milestone.
+         *     who failed every attempt keeps the item pending.
          *
          *     ``attempts_graded`` is exposed separately from ``attempts_used`` because a
          *     finished attempt is not necessarily a graded one: evaluation is an ARQ job,

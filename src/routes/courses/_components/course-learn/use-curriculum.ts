@@ -74,9 +74,9 @@ export function useMyQuizProgress(
  * items, so the map is directly consumable by `itemStateFor`).
  *
  * Completion rule differs from quizzes deliberately (user decision
- * 2026-08-06): an interview is completed only when at least one non-practice
- * attempt PASSED. Failing every attempt keeps it pending — the tag means
- * "passed", not "finished". Practice runs never count.
+ * 2026-08-06): an interview is completed only when at least one attempt
+ * PASSED. Failing every attempt keeps it pending — the tag means
+ * "passed", not "finished".
  *
  * Must be called AFTER `useMyQuizProgress` — this file's hook call order is
  * load-bearing (see the module docstring).

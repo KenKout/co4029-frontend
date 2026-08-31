@@ -246,7 +246,7 @@ export interface QuizProgressRead {
 // committed openapi snapshot yet.
 //
 // Completion rule differs from quizzes ON PURPOSE (user decision 2026-08-06):
-// `completed` is true only when at least one non-practice attempt PASSED. A
+// `completed` is true only when at least one attempt PASSED. A
 // quiz also completes on failed-with-attempts-exhausted; an interview does
 // not, so the tag reads as "passed" and a student who failed every attempt
 // keeps the item pending.

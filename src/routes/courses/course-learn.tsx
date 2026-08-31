@@ -218,7 +218,7 @@ function CourseLearnLoaded({
   // Quiz completion (passed OR failed-with-attempts-exhausted) lets quiz
   // items participate in auto-collapse + next-item highlighting.
   const quizProgressMap = useMyQuizProgress(course.id);
-  // Interview completion (a PASS on any non-practice attempt) lets interview
+  // Interview completion (a PASS on any attempt) lets interview
   // items show the same completed tag as quizzes and stop blocking a module's
   // auto-collapse. Called after the quiz hook — this file's hook order is
   // load-bearing, see use-curriculum.ts.
