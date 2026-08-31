@@ -230,9 +230,49 @@ export default function ManagementLearningProgramDetailPage() {
   );
 }
 
-function ProgramGeneral({ data, readOnly, onSave }: { data: NonNullable<ReturnType<typeof useManagedLearningProgram>["data"]>; readOnly: boolean; onSave: (payload: { name?: string; slug?: string; description?: string | null }) => Promise<unknown> }) {
+/**
+ * Program identity + the path-switch budget for the version being edited.
+ *
+ * `max_path_switches` lives on the VERSION, not the program, so editing it here
+ * only ever affects the draft on screen: students already enrolled stay on the
+ * budget their pinned version carried when they enrolled. That is the point of
+ * versioning it, and the hint says so rather than leaving a manager to guess
+ * whether a change is retroactive (it is not).
+ */
+function ProgramGeneral({ data, readOnly, onSave }: { data: NonNullable<ReturnType<typeof useManagedLearningProgram>["data"]>; readOnly: boolean; onSave: (payload: { name?: string; slug?: string; description?: string | null; max_path_switches?: number }) => Promise<unknown> }) {
   const [name, setName] = useState(data.name);
   const [slug, setSlug] = useState(data.slug);
   const [description, setDescription] = useState(data.description ?? "");
-  return <section className="space-y-4 rounded-xl bg-card p-5 ghost-border"><h2 className="font-headline text-lg font-bold">General</h2><div className="grid gap-4 sm:grid-cols-2"><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Program name <span className="text-red-600">*</span><Input disabled={readOnly} value={name} onChange={(event) => setName(event.target.value)} /></label><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Slug <span className="text-red-600">*</span><Input disabled={readOnly} className="font-mono" value={slug} onChange={(event) => setSlug(event.target.value)} /></label></div><label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea disabled={readOnly} rows={3} value={description} onChange={(event) => setDescription(event.target.value)} /></label>{!readOnly && <div className="flex justify-end"><Button disabled={!name.trim() || !slug.trim()} onClick={() => void onSave({ name: name.trim(), slug: slug.trim(), description: description.trim() || null }).then(() => toast.success("Program details saved")).catch((error: unknown) => toast.error(getApiErrorMessage(error, "Could not save")))}>Save changes</Button></div>}</section>;
+  const [maxPathSwitches, setMaxPathSwitches] = useState(
+    String(data.current_version.max_path_switches),
+  );
+
+  const switches = Number.parseInt(maxPathSwitches, 10);
+  const switchesValid =
+    Number.isInteger(switches) && switches >= 0 && switches <= 100;
+
+  return <section className="space-y-4 rounded-xl bg-card p-5 ghost-border"><h2 className="font-headline text-lg font-bold">General</h2><div className="grid gap-4 sm:grid-cols-2"><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Program name <span className="text-red-600">*</span><Input disabled={readOnly} value={name} onChange={(event) => setName(event.target.value)} /></label><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Slug <span className="text-red-600">*</span><Input disabled={readOnly} className="font-mono" value={slug} onChange={(event) => setSlug(event.target.value)} /></label></div>
+    <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+      Path changes allowed
+      <Input
+        type="number"
+        min={0}
+        max={100}
+        disabled={readOnly}
+        value={maxPathSwitches}
+        onChange={(event) => setMaxPathSwitches(event.target.value)}
+      />
+      <span className="block text-[11px] font-normal normal-case tracking-normal text-m3-on-surface-variant">
+        How many Career Path switches a student may request in this program, each
+        needing Faculty Dean approval (0 locks the choice). Applies to program
+        v{data.current_version.version_no}; students already enrolled keep the
+        budget of the version they enrolled under.
+      </span>
+      {!readOnly && !switchesValid && (
+        <span className="block text-[11px] font-normal normal-case tracking-normal text-red-600">
+          Enter a whole number between 0 and 100.
+        </span>
+      )}
+    </label>
+    <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea disabled={readOnly} rows={3} value={description} onChange={(event) => setDescription(event.target.value)} /></label>{!readOnly && <div className="flex justify-end"><Button disabled={!name.trim() || !slug.trim() || !switchesValid} onClick={() => void onSave({ name: name.trim(), slug: slug.trim(), description: description.trim() || null, max_path_switches: switches }).then(() => toast.success("Program details saved")).catch((error: unknown) => toast.error(getApiErrorMessage(error, "Could not save")))}>Save changes</Button></div>}</section>;
 }
