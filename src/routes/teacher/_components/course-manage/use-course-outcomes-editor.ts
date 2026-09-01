@@ -27,8 +27,10 @@ import type { CourseOutcome, TranslateFn } from "./types";
 export function useCourseOutcomesEditor(options: {
   courseId: string;
   t: TranslateFn;
+  /** Start expanded. True where this panel is the surface's main content. */
+  defaultOpen?: boolean;
 }) {
-  const { courseId, t } = options;
+  const { courseId, t, defaultOpen = false } = options;
   const { data: course } = useTeacherCourseById(courseId);
   const { data: outcomes = [] } = useTeacherCourseOutcomes(courseId);
   const createOutcome = useCreateCourseOutcome(courseId);
@@ -38,7 +40,7 @@ export function useCourseOutcomesEditor(options: {
 
   const editable = (course?.status ?? "draft") === "draft";
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [editingId, setEditingId] = useState<string | null>(null);
   // The unsaved row Enter leaves behind; it renders below the row it follows.
   const [draft, setDraft] = useState<{

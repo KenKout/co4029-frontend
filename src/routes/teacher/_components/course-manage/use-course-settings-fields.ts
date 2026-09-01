@@ -15,8 +15,12 @@ import type {
  * `useMe()`, then the four contact fields — so the panel's hook slots are
  * unchanged.
  */
-export function useCourseSettingsFields() {
-  const [open, setOpen] = useState(false);
+export function useCourseSettingsFields(defaultOpen = false) {
+  // Collapsed by default on the teacher workspace, where this panel is one
+  // of several and the modules are the point. The dept Settings tab passes
+  // true: there the panel IS the page, and starting collapsed left the
+  // screen showing two clickable rows and nothing else.
+  const [open, setOpen] = useState(defaultOpen);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");

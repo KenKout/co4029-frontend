@@ -26,9 +26,12 @@ import { useCourseSettingsDraft } from "./use-course-settings-draft";
 export function CourseSettingsPanel({
   courseId,
   scope = "teacher",
+  defaultOpen = false,
 }: {
   courseId: string;
   scope?: "teacher" | "manager";
+  /** Start expanded. The dept Settings tab does; the workspace does not. */
+  defaultOpen?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const managerScope = scope === "manager";
@@ -47,7 +50,7 @@ export function CourseSettingsPanel({
     justSaved,
     lastSaved,
     handleSave,
-  } = useCourseSettingsDraft({ courseId, t, scope });
+  } = useCourseSettingsDraft({ courseId, t, scope, defaultOpen });
 
   return (
     <div
