@@ -1,8 +1,6 @@
-import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/ui/page-header";
-import type { ReviewQueueKind } from "@/lib/api/hooks/teacher-courses";
 import {
   useCourseHealth,
   usePriorityTasks,
@@ -10,28 +8,32 @@ import {
   useTeacherDashboardStats,
 } from "@/lib/api/hooks/teacher-courses";
 
-import { CourseHealthSection } from "./_components/teacher-index/CourseHealthSection";
-import { DashboardSignals } from "./_components/teacher-index/DashboardSignals";
 import { buildReviewCandidates } from "./_components/teacher-index/helpers";
-import { PriorityTodaySection } from "./_components/teacher-index/PriorityTodaySection";
-import { ReviewQueueSection } from "./_components/teacher-index/ReviewQueueSection";
-import { StudentsNeedingAttentionSection } from "./_components/teacher-index/StudentsNeedingAttentionSection";
+import { AtAGlance } from "./_components/teacher-index/rail/AtAGlance";
+import { CourseHealthRail } from "./_components/teacher-index/rail/CourseHealthRail";
+import { WorkQueueSection } from "./_components/teacher-index/work-queue/WorkQueueSection";
 
 /**
- * Teacher landing page.
+ * Teacher workspace.
  *
- * Ordered by what a teacher can act on, not by what is easiest to
- * aggregate. The page used to open with four static tiles and a gallery of
- * course thumbnails, which meant the most urgent thing on the page — a
- * student who had gone quiet — was reliably below the fold.
+ * Two columns, not a scroll of stacked sections. The previous layout was a
+ * document — four full-width bands read top to bottom — and it had two
+ * problems that were really the same problem.
  *
- * Now: what to do next, who needs help, what content is waiting, how the
- * courses compare, and only then the trend numbers. The signal tiles moved
- * to the bottom deliberately; they are context for a decision, not the
- * decision itself.
+ * It rendered its content twice. Priority Today is derived from the risk
+ * rows and review counts that the two sections beneath it also rendered, so
+ * on a populated dashboard most of the page was a second printing of its
+ * own top. Merging those three into one tabbed queue removed the
+ * duplication and roughly halved the scroll.
  *
- * Each section owns its own query, so a slow or failing one degrades to
- * its own skeleton or empty state instead of blocking the shell.
+ * And with no `max-width`, every section was a 1300px band holding one line
+ * of text at desktop widths — worst on an empty dashboard, where three
+ * consecutive "nothing to do" cards read as broken rather than as good
+ * news. The queue is now bounded, and the rail beside it always carries the
+ * course list and the context numbers, so the page is never blank.
+ *
+ * Each block owns its query, so a slow or failing one degrades to its own
+ * skeleton or empty state instead of blocking the shell.
  */
 export default function TeacherDashboard() {
   const { t } = useTranslation();
@@ -39,55 +41,40 @@ export default function TeacherDashboard() {
   const { data: priority = [], isLoading: priorityLoading } = usePriorityTasks();
   const { data: atRisk = [], isLoading: atRiskLoading } =
     useStudentsNeedingAttention();
-  const { data: courseHealth = [], isLoading: healthLoading } = useCourseHealth();
+  const { data: courseHealth = [], isLoading: healthLoading } =
+    useCourseHealth();
 
   const reviewItems = buildReviewCandidates(stats, t).filter((i) => i.count > 0);
 
-  // Priority Today's grouped rows point INTO the review queue: each click
-  // scrolls the section into view and expands the matching category.
-  const [reviewFocus, setReviewFocus] = useState<{
-    kind: ReviewQueueKind;
-    nonce: number;
-  } | null>(null);
-  const focusReview = useCallback((kind: ReviewQueueKind) => {
-    setReviewFocus((prev) => ({ kind, nonce: (prev?.nonce ?? 0) + 1 }));
-  }, []);
-
   return (
-    <div className="space-y-8 pb-12">
+    <div className="mx-auto max-w-[1400px] space-y-6 pb-12">
       {/* No subtitle: "Manage your courses, materials, and AI generation"
-          restated the navigation and pushed the signals below the fold. */}
+          restated the navigation and pushed the queue below the fold. */}
       <PageHeader title={t("teacher_dashboard.title")} />
 
-      <PriorityTodaySection
-        tasks={priority}
-        isLoading={priorityLoading}
-        onFocusReview={focusReview}
-        t={t}
-      />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <WorkQueueSection
+          tasks={priority}
+          tasksLoading={priorityLoading}
+          students={atRisk}
+          studentsLoading={atRiskLoading}
+          reviewItems={reviewItems}
+          t={t}
+        />
 
-      {/* People before content: a student falling behind decays while a
-          review backlog merely waits. */}
-      <StudentsNeedingAttentionSection
-        students={atRisk}
-        isLoading={atRiskLoading}
-        t={t}
-      />
-
-      {/* The full review queue. Priority Today surfaces at most one row per
-          category with its age and blocking count; this is where a teacher
-          goes to work through them. */}
-      <ReviewQueueSection reviewItems={reviewItems} focus={reviewFocus} t={t} />
-
-      {/* Course Health replaces the course gallery: the gallery gave every
-          course equal visual weight and shrank the signals into badges, so
-          it could not answer "which of my courses needs me today". */}
-      <CourseHealthSection rows={courseHealth} isLoading={healthLoading} t={t} />
-
-      {/* Trend context, last. These numbers explain the sections above
-          without repeating them (see DashboardSignals); none of them is an
-          action on its own. */}
-      <DashboardSignals stats={stats} t={t} />
+        {/* The rail is context, not work: the numbers the queue cannot
+            carry, and the shortest possible answer to "which course needs
+            me". It renders even when the queue is empty, which is what
+            stops an all-clear dashboard looking like a failed load. */}
+        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+          <CourseHealthRail
+            rows={courseHealth}
+            isLoading={healthLoading}
+            t={t}
+          />
+          <AtAGlance stats={stats} t={t} />
+        </aside>
+      </div>
     </div>
   );
 }

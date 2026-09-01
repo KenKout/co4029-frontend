@@ -242,11 +242,7 @@
       "advanced": "Nâng cao"
     },
     "priority": {
-      "title": "Ưu tiên hôm nay",
-      "subtitle": "Xếp hạng trên tất cả: việc đang chặn trước, rồi đến học viên, sau đó là tồn đọng.",
       "blocking": "Đang chặn",
-      "empty_title": "Không có việc gấp",
-      "empty_hint": "Không có gì bị chặn và không học viên nào bị đánh dấu. Xem Tình trạng khóa học bên dưới.",
       "oldest": "Cũ nhất: {{age}}",
       "last_active": "Hoạt động gần nhất: {{age}}{{suffix}}"
     },
@@ -259,12 +255,8 @@
       "reviews_overdue_sub": "Thẻ ôn tập của học viên quá ngày lịch trình"
     },
     "attention": {
-      "title": "Học viên cần chú ý",
-      "subtitle": "Đánh dấu do bài đánh giá trượt, không tương tác hoặc tiến độ thấp. Nặng nhất trước.",
       "more_signals": "+{{count}} tín hiệu khác",
       "progress": "hoàn thành",
-      "empty_title": "Hiện không có học viên nào bị đánh dấu",
-      "empty_hint": "Học viên mới ghi danh được cho thời gian bắt đầu trước khi bị đánh dấu.",
       "more_signals_plural": "+{{count}} tín hiệu khác"
     },
     "health": {
@@ -282,12 +274,11 @@
       "no_data": "Chưa đủ dữ liệu",
       "pass_sample": "Dựa trên {{count}} lượt làm bài",
       "action": "Mở",
-      "details": "Chi tiết"
+      "details": "Chi tiết",
+      "view_all": "Xem tất cả",
+      "back_to_workspace": "Về không gian giảng dạy"
     },
     "review": {
-      "title": "Cần bạn xem xét",
-      "subtitle": "Nội dung do AI tạo đang chờ quyết định của người dùng.",
-      "all_clear": "Không có gì chờ bạn — hàng đợi xem xét đã trống.",
       "quiz_cards": "Câu hỏi kiểm tra chờ xem xét",
       "quiz_cards_hint": "Câu hỏi chưa duyệt sẽ không đến được học viên",
       "interview_questions": "Câu hỏi phỏng vấn chờ duyệt",
@@ -303,6 +294,21 @@
       "items_failed": "Không thể tải chi tiết.",
       "items_empty": "Không còn mục nào — có thể vừa được xử lý xong.",
       "load_details": "Xem mục"
+    },
+    "queue": {
+      "title": "Hàng đợi công việc",
+      "subtitle": "Mọi việc đang chờ bạn, theo thứ tự ưu tiên: việc đang chặn trước, rồi đến học viên, sau đó là tồn đọng.",
+      "tab_all": "Tất cả",
+      "tab_people": "Học viên",
+      "tab_content": "Nội dung",
+      "empty_all": "Hiện không có việc gấp.",
+      "empty_people": "Không có học viên nào bị đánh dấu. Học viên mới ghi danh được cho thời gian bắt đầu trước đó.",
+      "empty_content": "Không có nội dung AI nào chờ quyết định.",
+      "all_clear_title": "Bạn đã xử lý hết",
+      "all_clear_hint": "Không có gì bị chặn, không học viên nào bị đánh dấu, hàng đợi xem xét đã trống."
+    },
+    "rail": {
+      "at_a_glance": "Tổng quan nhanh"
     }
   },
   "teacher_course_settings": {

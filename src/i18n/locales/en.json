@@ -241,11 +241,7 @@
       "advanced": "Advanced"
     },
     "priority": {
-      "title": "Priority today",
-      "subtitle": "Ranked across everything: blocking work first, then students, then backlog.",
       "blocking": "Blocking",
-      "empty_title": "No urgent actions",
-      "empty_hint": "Nothing is blocked and no student is flagged. Course health below has the fuller picture.",
       "oldest": "Oldest: {{age}}",
       "last_active": "Last active: {{age}}{{suffix}}"
     },
@@ -258,13 +254,9 @@
       "reviews_overdue_sub": "Student review cards past their scheduled date"
     },
     "attention": {
-      "title": "Students needing attention",
-      "subtitle": "Flagged by failed assessments, inactivity, or low progress. Worst first.",
       "more_signals": "+{{count}} more signal",
       "more_signals_plural": "+{{count}} more signals",
-      "progress": "complete",
-      "empty_title": "No students flagged right now",
-      "empty_hint": "New enrolments are given time to start before they can be flagged."
+      "progress": "complete"
     },
     "health": {
       "title": "Course health",
@@ -283,12 +275,11 @@
       "pass_sample": "Based on {{count}} completed attempt",
       "pass_sample_plural": "Based on {{count}} completed attempts",
       "action": "Open",
-      "details": "Details"
+      "details": "Details",
+      "view_all": "View all",
+      "back_to_workspace": "Back to workspace"
     },
     "review": {
-      "title": "Needs your review",
-      "subtitle": "AI-generated content waiting on a human decision.",
-      "all_clear": "Nothing waiting on you — the review queue is clear.",
       "quiz_cards": "Quiz cards pending review",
       "quiz_cards_hint": "Generated cards can't reach students until approved",
       "interview_questions": "Interview questions pending approval",
@@ -306,6 +297,21 @@
       "items_failed": "Couldn't load the details.",
       "items_empty": "Nothing left here — it may have just been cleared.",
       "load_details": "Show items"
+    },
+    "queue": {
+      "title": "Work queue",
+      "subtitle": "Everything waiting on you, ranked. Blocking work first, then students, then backlog.",
+      "tab_all": "All",
+      "tab_people": "People",
+      "tab_content": "Content",
+      "empty_all": "Nothing urgent right now.",
+      "empty_people": "No students are flagged. New enrolments are given time to start before they can be.",
+      "empty_content": "No AI-generated content is waiting on a decision.",
+      "all_clear_title": "You're all caught up",
+      "all_clear_hint": "Nothing is blocked, no student is flagged, and the review queue is clear."
+    },
+    "rail": {
+      "at_a_glance": "At a glance"
     }
   },
   "teacher_course_new": {

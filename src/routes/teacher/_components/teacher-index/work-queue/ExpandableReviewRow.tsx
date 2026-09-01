@@ -9,7 +9,7 @@ import {
   type ReviewQueueKind,
 } from "@/lib/api/hooks/teacher-courses";
 
-import { ReviewItemLink } from "./ReviewQueueLinks";
+import { ReviewItemLink } from "../ReviewQueueLinks";
 
 /**
  * A review-queue row that expands into the individual places the pending work

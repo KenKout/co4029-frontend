@@ -210,6 +210,16 @@ const teacherRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/teacher/index")),
 });
 
+// Registered BEFORE /teacher/courses so the literal path is matched ahead of
+// any dynamic sibling — same ordering rule the course routes follow.
+const teacherCourseHealthRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/teacher/course-health",
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/course-health"),
+  ),
+});
+
 const teacherCoursesRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/courses",
@@ -833,6 +843,7 @@ const routeTree = rootRoute.addChildren([
     settingsSecurityRoute,
     notificationsRoute,
     teacherRoute,
+    teacherCourseHealthRoute,
     teacherCoursesRoute,
     teacherCourseManageRoute.addChildren([
       teacherCourseCurriculumRoute,
