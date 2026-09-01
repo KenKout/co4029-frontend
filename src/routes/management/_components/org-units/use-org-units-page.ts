@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMe } from "@/lib/api/hooks/auth";
+import { useListRoles, useUserAssignments } from "@/lib/api/hooks/admin";
 import {
   useCreateOrgUnit,
   useDeleteOrgUnit,
@@ -7,41 +8,26 @@ import {
   usePatchOrgUnit,
   type OrgUnitNode,
 } from "@/lib/api/hooks/admin-organizations";
-import { findNode, subtreeIds } from "@/lib/org-unit-tree-helpers";
+import { findNode } from "@/lib/org-unit-tree-helpers";
 import type {
   OrgUnitCreate,
   OrgUnitPatch,
 } from "@/lib/api/types/admin-organizations";
 
-export type UnitType =
-  | "faculty"
-  | "department"
-  | "office"
-  | "program"
-  | "campus"
-  | "other";
+export type UnitType = "faculty";
 
-export const UNIT_TYPES: UnitType[] = [
-  "faculty",
-  "department",
-  "office",
-  "program",
-  "campus",
-  "other",
-];
+export const UNIT_TYPES: UnitType[] = ["faculty"];
 
 export interface UnitFormState {
   name: string;
   code: string;
   unitType: UnitType;
-  parentUnitId: string | null;
 }
 
 const EMPTY_FORM: UnitFormState = {
   name: "",
   code: "",
-  unitType: "department",
-  parentUnitId: null,
+  unitType: "faculty",
 };
 
 /**
@@ -60,6 +46,19 @@ const EMPTY_FORM: UnitFormState = {
 export function useOrgUnitsPage() {
   const me = useMe();
   const orgId = me.data?.organization_id ?? undefined;
+  const roles = useListRoles();
+  const myAssignments = useUserAssignments(me.data?.id ?? "");
+  const hodRoleId = roles.data?.find((row) => row.role.code === "hod")?.role.id;
+  const isMasterDean = Boolean(
+    hodRoleId &&
+      orgId &&
+      myAssignments.data?.some(
+        (assignment) =>
+          assignment.role_id === hodRoleId &&
+          assignment.scope_kind === "organization" &&
+          assignment.organization_id === orgId,
+      ),
+  );
 
   const tree = useOrgUnitTree(orgId);
   const create = useCreateOrgUnit(orgId ?? "");
@@ -86,19 +85,9 @@ export function useOrgUnitsPage() {
    * and offering a choice that always fails is worse than omitting it. When
    * creating (no `editingId`) every unit is a candidate.
    */
-  const parentCandidates = useMemo(() => {
-    if (!editingId) return nodes;
-    const blocked = subtreeIds(nodes, editingId);
-    const prune = (list: OrgUnitNode[]): OrgUnitNode[] =>
-      list
-        .filter((n) => !blocked.has(n.id))
-        .map((n) => ({ ...n, children: prune(n.children) }));
-    return prune(nodes);
-  }, [nodes, editingId]);
-
-  function openCreate(parentUnitId: string | null) {
+  function openCreate() {
     setEditingId(null);
-    setForm({ ...EMPTY_FORM, parentUnitId });
+    setForm(EMPTY_FORM);
     setError(null);
     setDialog("create");
   }
@@ -108,8 +97,7 @@ export function useOrgUnitsPage() {
     setForm({
       name: node.name,
       code: node.code ?? "",
-      unitType: node.unit_type as UnitType,
-      parentUnitId: node.parent_unit_id,
+      unitType: "faculty",
     });
     setError(null);
     setDialog("edit");
@@ -133,8 +121,6 @@ export function useOrgUnitsPage() {
       const body: OrgUnitPatch = {
         name,
         code,
-        unit_type: form.unitType,
-        parent_unit_id: form.parentUnitId,
       };
       patch.mutate(
         { unitId: editingId, body },
@@ -146,7 +132,6 @@ export function useOrgUnitsPage() {
       name,
       code,
       unit_type: form.unitType,
-      parent_unit_id: form.parentUnitId,
     };
     create.mutate(body, {
       onSuccess: closeDialog,
@@ -160,8 +145,7 @@ export function useOrgUnitsPage() {
     remove.mutate(id, {
       onSuccess: () => {
         setPendingDelete(null);
-        // The selection may have just been deleted along with its subtree.
-        if (selectedId && subtreeIds(nodes, id).has(selectedId)) {
+        if (selectedId === id) {
           setSelectedId(null);
         }
       },
@@ -171,9 +155,11 @@ export function useOrgUnitsPage() {
 
   return {
     orgId,
-    isLoading: me.isLoading || tree.isLoading,
+    isLoading:
+      me.isLoading || tree.isLoading || roles.isLoading || myAssignments.isLoading,
     isError: tree.isError,
     nodes,
+    isMasterDean,
     selected,
     selectedId,
     setSelectedId,
@@ -181,7 +167,6 @@ export function useOrgUnitsPage() {
     form,
     setForm,
     editingId,
-    parentCandidates,
     openCreate,
     openEdit,
     closeDialog,

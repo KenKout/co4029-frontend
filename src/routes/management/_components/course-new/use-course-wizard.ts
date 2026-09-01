@@ -77,6 +77,7 @@ function trimmedOrUndefined(value: string): string | undefined {
 /** Everything `CourseCreate` accepts, so settings ship in the create request. */
 function buildCreatePayload(form: CourseDraftForm) {
   return {
+    faculty_id: form.facultyId || undefined,
     title: form.title.trim(),
     slug: form.slug.trim(),
     description: trimmedOrUndefined(form.description),

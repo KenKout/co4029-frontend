@@ -15,25 +15,13 @@ import { UnitContentsPanel } from "./_components/org-units/UnitContentsPanel";
 import { useUnitCounts } from "./_components/org-units/use-unit-assignment";
 import { flattenOrgUnits } from "@/lib/org-unit-tree-helpers";
 
-/**
- * Manager-facing organization structure: the faculty → department → program
- * tree, with create / rename / move / delete.
- *
- * The hierarchy already existed in the data model and the permission engine
- * (an HOD at a faculty governs every unit beneath it); what was missing was
- * anywhere to see or change it outside `/admin`, which managers cannot open.
- *
- * Selecting a node reveals its scope shortcuts — the courses and people in
- * that unit *and everything below it*, matching how permissions already
- * read the tree.
- */
+/** Top-level Faculty management and multi-Faculty staff affiliation. */
 export default function ManagementOrgUnitsPage() {
   const { t } = useTranslation();
   const permissions = usePermissions();
   const c = useOrgUnitsPage();
-  const { courseCounts, peopleCounts } = useUnitCounts(c.orgId);
-  // Flat id → name map so a picker row can say which unit someone is
-  // currently in, and therefore which one they are being moved out of.
+  const { peopleCounts } = useUnitCounts(c.orgId);
+  // Flat id → name map so a picker can show a person's other faculties.
   const unitsById = useMemo(
     () => new Map(flattenOrgUnits(c.nodes).map((u) => [u.id, u.name])),
     [c.nodes],
@@ -55,10 +43,12 @@ export default function ManagementOrgUnitsPage() {
         title={t(`${prefix}.title`)}
         subtitle={t(`${prefix}.subtitle`)}
         action={
-          <Button size="sm" className="gap-2" onClick={() => c.openCreate(null)}>
-            <Plus className="h-4 w-4" />
-            {t(`${prefix}.new_root_unit`)}
-          </Button>
+          c.isMasterDean ? (
+            <Button size="sm" className="gap-2" onClick={() => c.openCreate()}>
+              <Plus className="h-4 w-4" />
+              {t(`${prefix}.new_root_unit`)}
+            </Button>
+          ) : undefined
         }
       />
 
@@ -73,23 +63,12 @@ export default function ManagementOrgUnitsPage() {
               nodes={c.nodes}
               selectedId={c.selectedId}
               onSelect={(node) => c.setSelectedId(node.id)}
-              courseCounts={courseCounts}
               peopleCounts={peopleCounts}
               emptyState={t(`${prefix}.empty_title`)}
-              actions={(node) => (
-                <div className="flex items-center gap-0.5">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    title={t(`${prefix}.add_child`)}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      c.openCreate(node.id);
-                    }}
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </Button>
+              actions={
+                c.isMasterDean
+                  ? (node) => (
+                      <div className="flex items-center gap-0.5">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -114,8 +93,10 @@ export default function ManagementOrgUnitsPage() {
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
-                </div>
-              )}
+                      </div>
+                    )
+                  : undefined
+              }
             />
           </div>
 
@@ -133,19 +114,14 @@ export default function ManagementOrgUnitsPage() {
                     {c.selected.code ? ` · ${c.selected.code}` : ""}
                   </p>
                 </div>
-                <p className="text-xs text-text-muted">
-                  {t(`${prefix}.subunit_count`, {
-                    count: c.selected.descendant_count,
-                  })}
-                </p>
-                {/* Assignment lives here because this is where someone
-                    looking at an empty unit actually is. The underlying
-                    fields (courses.org_unit_id, memberships.org_unit_id)
-                    were always writable; nothing surfaced them. */}
+                {/* Faculty staff affiliation is many-to-many. Course Faculty
+                    ownership is chosen once during create/import and is not
+                    editable from this screen. */}
                 <UnitContentsPanel
                   orgId={c.orgId}
                   unit={c.selected}
                   unitsById={unitsById}
+                  isMasterDean={c.isMasterDean}
                 />
 
                 {/* Scope shortcuts — unlike the panel above these include the

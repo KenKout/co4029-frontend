@@ -12,6 +12,7 @@ import { apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { queryKeys } from "../query-keys";
 import { useInfinitePage } from "../use-infinite-page";
 import type {
+  FacultyAssignmentRead,
   MembershipCreate,
   MembershipPatch,
   MembershipRead,
@@ -385,7 +386,68 @@ export function useDeleteOrgUnit(orgId: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Memberships
+// Faculty staff assignments
+// ---------------------------------------------------------------------------
+
+export function useFacultyAssignments(
+  orgId: string | undefined,
+  facultyId?: string | null,
+) {
+  return useQuery({
+    queryKey: [
+      "admin",
+      "organizations",
+      orgId ?? "",
+      "faculty-assignments",
+      facultyId ?? "all",
+    ] as const,
+    queryFn: () => {
+      const suffix = facultyId ? `?faculty_id=${encodeURIComponent(facultyId)}` : "";
+      return apiFetch<FacultyAssignmentRead[]>(
+        `/admin/organizations/${orgId}/faculty-assignments${suffix}`,
+      );
+    },
+    enabled: Boolean(orgId),
+  });
+}
+
+export function useAddFacultyMembers(
+  orgId: string | undefined,
+  facultyId: string | null,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userIds: string[]) =>
+      apiPost<FacultyAssignmentRead[]>(
+        `/admin/faculties/${facultyId}/members`,
+        { user_ids: userIds },
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({
+        queryKey: ["admin", "organizations", orgId ?? "", "faculty-assignments"],
+      });
+    },
+  });
+}
+
+export function useRemoveFacultyMember(
+  orgId: string | undefined,
+  facultyId: string | null,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      apiDelete(`/admin/faculties/${facultyId}/members/${userId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({
+        queryKey: ["admin", "organizations", orgId ?? "", "faculty-assignments"],
+      });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Organization memberships
 // ---------------------------------------------------------------------------
 
 export function useOrganizationMemberships(orgId: string | undefined) {

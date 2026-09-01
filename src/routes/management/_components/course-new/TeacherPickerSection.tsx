@@ -47,7 +47,9 @@ export function TeacherPickerSection({
   t: TFunction;
 }) {
   const { form, setField } = controller;
-  const { data: teachers = [], isLoading } = useAssignableTeachersForNewCourse();
+  const { data: teachers = [], isLoading } = useAssignableTeachersForNewCourse(
+    form.facultyId || null,
+  );
 
   const titles = form.teacherTitles ?? {};
   const selectedCount = form.teacherIds.length;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
@@ -13,6 +13,11 @@ import {
   type SyllabusImportResult,
   type SyllabusLanguage,
 } from "@/lib/api/hooks/teacher-courses";
+import { useMe } from "@/lib/api/hooks/auth";
+import {
+  useFacultyAssignments,
+  useOrgUnits,
+} from "@/lib/api/hooks/admin-organizations";
 
 /**
  * Manager flow: upload a course syllabus PDF, get a draft course.
@@ -43,11 +48,36 @@ export function ImportSyllabusDialog({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const importCourse = useImportCourseFromSyllabus();
+  const { data: me } = useMe();
+  const faculties = useOrgUnits(me?.organization_id ?? undefined, { onlyRoots: true });
+  const facultyAssignments = useFacultyAssignments(me?.organization_id ?? undefined);
 
   const [file, setFile] = useState<File | null>(null);
   const [language, setLanguage] = useState<SyllabusLanguage>("vi");
+  const [facultyId, setFacultyId] = useState("");
   const [result, setResult] = useState<SyllabusImportResult | null>(null);
   const prefix = "dept_courses.import_syllabus";
+  const assignedFacultyIds = useMemo(
+    () =>
+      new Set(
+        (facultyAssignments.data ?? [])
+          .filter((row) => row.user_id === me?.id)
+          .map((row) => row.faculty_id),
+      ),
+    [facultyAssignments.data, me?.id],
+  );
+  const facultyOptions = useMemo(() => {
+    const all = faculties.data ?? [];
+    const visible = assignedFacultyIds.size > 0
+      ? all.filter((faculty) => assignedFacultyIds.has(faculty.id))
+      : all;
+    return visible.map((faculty) => ({ value: faculty.id, label: faculty.name }));
+  }, [assignedFacultyIds, faculties.data]);
+  useEffect(() => {
+    if (!facultyId && assignedFacultyIds.size === 1 && facultyOptions[0]) {
+      setFacultyId(facultyOptions[0].value);
+    }
+  }, [assignedFacultyIds, facultyId, facultyOptions]);
 
   function reset() {
     setFile(null);
@@ -65,7 +95,7 @@ export function ImportSyllabusDialog({
   function handleImport() {
     if (!file) return;
     importCourse.mutate(
-      { file, language },
+      { file, language, facultyId: facultyId || undefined },
       { onSuccess: (data) => setResult(data) },
     );
   }
@@ -112,6 +142,10 @@ export function ImportSyllabusDialog({
               onFile={setFile}
               language={language}
               onLanguageChange={setLanguage}
+              facultyId={facultyId}
+              onFacultyChange={setFacultyId}
+              facultyOptions={facultyOptions}
+              facultyRequired={assignedFacultyIds.size > 1}
               busy={importCourse.isPending}
               error={
                 importCourse.isError
@@ -138,7 +172,11 @@ export function ImportSyllabusDialog({
               <Button
                 type="button"
                 onClick={handleImport}
-                disabled={!file || importCourse.isPending}
+                disabled={
+                  !file ||
+                  importCourse.isPending ||
+                  (assignedFacultyIds.size > 1 && !facultyId)
+                }
               >
                 {importCourse.isPending
                   ? t(`${prefix}.importing`)
@@ -157,6 +195,10 @@ function ImportForm({
   onFile,
   language,
   onLanguageChange,
+  facultyId,
+  onFacultyChange,
+  facultyOptions,
+  facultyRequired,
   busy,
   error,
 }: {
@@ -164,6 +206,10 @@ function ImportForm({
   onFile: (file: File) => void;
   language: SyllabusLanguage;
   onLanguageChange: (language: SyllabusLanguage) => void;
+  facultyId: string;
+  onFacultyChange: (facultyId: string) => void;
+  facultyOptions: { value: string; label: string }[];
+  facultyRequired: boolean;
   busy: boolean;
   error: string | null;
 }) {
@@ -200,6 +246,20 @@ function ImportForm({
             { value: "en", label: t(`${prefix}.language_en`) },
           ]}
           aria-label={t(`${prefix}.language_label`)}
+        />
+      </Field>
+
+      <Field
+        label={`Faculty${facultyRequired ? " *" : ""}`}
+        hint="The owning faculty cannot be changed after import."
+      >
+        <Select
+          value={facultyId}
+          onValueChange={onFacultyChange}
+          disabled={busy}
+          placeholder={facultyRequired ? "Select faculty" : "Organization-wide"}
+          options={facultyOptions}
+          aria-label="Faculty"
         />
       </Field>
 

@@ -9,6 +9,7 @@ import {
 } from "@/lib/course-draft";
 
 const emptyForm: CourseDraftForm = {
+  facultyId: "",
   title: "",
   slug: "",
   description: "",

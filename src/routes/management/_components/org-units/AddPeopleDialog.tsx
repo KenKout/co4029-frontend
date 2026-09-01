@@ -20,10 +20,8 @@ import type { useUnitAssignment } from "./use-unit-assignment";
  * screens use, so checkbox multi-select, search, disabled already-added rows
  * and the submitting state all come for free and behave identically.
  *
- * The one thing added on top is the **current unit** on each row. A
- * membership carries a single `org_unit_id`, so adding someone here MOVES
- * them out of wherever they are now — that has to be visible before you
- * confirm, not discovered later when a scope filter comes up short.
+ * Existing Faculty affiliations are shown on each row. Adding a person is
+ * additive: it never moves them out of another Faculty.
  */
 export function AddPeopleDialog({
   unit,
@@ -51,17 +49,18 @@ export function AddPeopleDialog({
           p.email.toLowerCase().includes(needle),
       )
       .map((p) => {
-        const currentUnit =
-          p.currentUnitId && p.currentUnitId !== unit.id
-            ? unitsById.get(p.currentUnitId)
-            : null;
+        const otherFaculties = p.facultyIds
+          .filter((facultyId) => facultyId !== unit.id)
+          .map((facultyId) => unitsById.get(facultyId))
+          .filter(Boolean)
+          .join(", ");
         return {
-          id: p.membershipId,
+          id: p.userId,
           primaryLabel: p.displayName,
           // Email plus, when they already belong somewhere else, where from —
           // the move is the consequence a manager needs to see up front.
-          secondaryLabel: currentUnit
-            ? `${p.email} · ${t(`${prefix}.currently_in`, { unit: currentUnit })}`
+          secondaryLabel: otherFaculties
+            ? `${p.email} · ${t(`${prefix}.currently_in`, { unit: otherFaculties })}`
             : p.email,
         };
       });
@@ -71,7 +70,7 @@ export function AddPeopleDialog({
   // filtered out, so the list does not reshuffle as you add and you can see
   // who is already here without closing the dialog.
   const alreadySelectedIds = useMemo(
-    () => new Set(controller.peopleInUnit.map((p) => p.membershipId)),
+    () => new Set(controller.peopleInUnit.map((p) => p.userId)),
     [controller.peopleInUnit],
   );
 
@@ -86,10 +85,7 @@ export function AddPeopleDialog({
       onQueryChange={setQuery}
       onConfirm={(selected) => {
         void controller
-          .assignPeople(
-            selected.map((s) => s.id),
-            unit.id,
-          )
+          .assignPeople(selected.map((s) => s.id))
           .then(onClose);
       }}
       onClose={onClose}

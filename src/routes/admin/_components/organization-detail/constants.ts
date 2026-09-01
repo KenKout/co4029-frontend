@@ -29,11 +29,6 @@ export const ORGANIZATION_STATUS_VALUES: OrganizationStatus[] = [
 
 export const UNIT_TYPE_VALUES: UnitType[] = [
   "faculty",
-  "department",
-  "office",
-  "program",
-  "campus",
-  "other",
 ];
 
 export const MEMBERSHIP_STATUS_VALUES: MembershipStatus[] = [

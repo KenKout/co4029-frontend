@@ -94,8 +94,9 @@ export function useManagedUsers() {
   // HOD (user.role_assign.hod) or admin may promote/revoke managers inside
   // their org. The backend re-asserts both the HOD gate and the org scope.
   const canAssignManager =
-    permissions.has("user.role_assign.hod") ||
-    permissions.has("system.administer");
+    Boolean(unitId) &&
+    (permissions.has("user.role_assign.hod") ||
+      permissions.has("system.administer"));
 
   const managerRoleId = useMemo(
     () =>
@@ -104,12 +105,17 @@ export function useManagedUsers() {
   );
 
   const grantManager = useMutation({
-    mutationFn: ({ userId, orgId }: { userId: string; orgId: string }) =>
+    mutationFn: ({ userId, orgId }: { userId: string; orgId: string }) => {
+      if (!unitId) throw new Error("Select a Faculty before assigning a manager");
+      return (
       apiPost<RoleAssignmentRead>(`/admin/users/${userId}/assignments`, {
         role_code: "manager",
-        scope_kind: "organization",
+        scope_kind: "org_unit",
         organization_id: orgId,
-      }),
+        org_unit_id: unitId,
+      })
+      );
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["manager", "users"] });
       void qc.invalidateQueries({ queryKey: ["admin", "users"] });
@@ -127,7 +133,10 @@ export function useManagedUsers() {
         `/admin/users/${userId}/assignments`,
       );
       const target = assignments.find(
-        (a) => a.role_id === managerRoleId && a.organization_id === orgId,
+        (a) =>
+          a.role_id === managerRoleId &&
+          a.organization_id === orgId &&
+          a.org_unit_id === unitId,
       );
       if (!target) {
         throw new Error(t("management_users.errors.no_manager_assignment", { defaultValue: "No manager assignment found" }));

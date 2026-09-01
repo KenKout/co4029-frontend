@@ -21,15 +21,15 @@ import type {
  * matching how the permission engine already reads the tree. Without it the
  * backend derives the scope from the caller's own role assignment.
  */
-export function useDeptCourses(orgUnitId?: string | null) {
+export function useDeptCourses(facultyId?: string | null) {
   return useQuery({
-    queryKey: orgUnitId
-      ? ([...queryKeys.dept.courses(), "unit", orgUnitId] as const)
+    queryKey: facultyId
+      ? ([...queryKeys.dept.courses(), "faculty", facultyId] as const)
       : queryKeys.dept.courses(),
     queryFn: () =>
       apiFetch<CourseAuthoring[]>(
-        orgUnitId
-          ? `/dept/org-units/${orgUnitId}/courses`
+        facultyId
+          ? `/dept/faculties/${facultyId}/courses`
           : "/dept/courses",
       ),
     // No staleTime: the dept course DETAIL header reads this list (there is
@@ -56,10 +56,21 @@ export function useCourseTeachers(courseId: string | undefined) {
  * the caller's token — the same org `create_course` stamps on the new row — so
  * the picker cannot offer someone the follow-up assignment would reject.
  */
-export function useAssignableTeachersForNewCourse(enabled = true) {
+export function useAssignableTeachersForNewCourse(
+  facultyId?: string | null,
+  enabled = true,
+) {
   return useQuery({
-    queryKey: queryKeys.dept.assignableTeachersForNew(),
-    queryFn: () => apiFetch<AssignableTeacher[]>("/dept/assignable-teachers"),
+    queryKey: [
+      ...queryKeys.dept.assignableTeachersForNew(),
+      facultyId ?? "organization",
+    ] as const,
+    queryFn: () =>
+      apiFetch<AssignableTeacher[]>(
+        `/dept/assignable-teachers${
+          facultyId ? `?faculty_id=${encodeURIComponent(facultyId)}` : ""
+        }`,
+      ),
     enabled,
     staleTime: 1000 * 60,
   });
@@ -189,12 +200,12 @@ export function useCourseRoster(courseId: string | undefined) {
   });
 }
 
-export function useOrgUnitCourses(orgUnitId: string | undefined) {
+export function useOrgUnitCourses(facultyId: string | undefined) {
   return useQuery({
-    queryKey: queryKeys.dept.orgUnitCourses(orgUnitId ?? ""),
+    queryKey: queryKeys.dept.orgUnitCourses(facultyId ?? ""),
     queryFn: () =>
-      apiFetch<CourseAuthoring[]>(`/dept/org-units/${orgUnitId}/courses`),
-    enabled: Boolean(orgUnitId),
+      apiFetch<CourseAuthoring[]>(`/dept/faculties/${facultyId}/courses`),
+    enabled: Boolean(facultyId),
     staleTime: 1000 * 60 * 2,
   });
 }

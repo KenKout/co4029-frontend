@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
@@ -7,6 +7,10 @@ import { PermissionDenied } from "@/components/ui/permission-denied";
 import { useMe } from "@/lib/api/hooks/auth";
 import { useObjectUrl } from "@/lib/use-object-url";
 import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  useFacultyAssignments,
+  useOrgUnits,
+} from "@/lib/api/hooks/admin-organizations";
 import { CourseBasicsSection } from "./_components/course-new/BasicsSection";
 import { CourseCardPreview } from "./_components/course-new/CardPreview";
 import {
@@ -47,6 +51,36 @@ export default function ManagementCourseNewPage() {
   const gate = useCourseDraftGate();
   const controller = useCourseForm(false, gate.restored?.form);
   const { form, canSubmit } = controller;
+  const faculties = useOrgUnits(me?.organization_id ?? undefined, { onlyRoots: true });
+  const facultyAssignments = useFacultyAssignments(me?.organization_id ?? undefined);
+  const facultyOptions = useMemo(() => {
+    const assignedIds = new Set(
+      (facultyAssignments.data ?? [])
+        .filter((row) => row.user_id === me?.id)
+        .map((row) => row.faculty_id),
+    );
+    const all = faculties.data ?? [];
+    const visible = assignedIds.size > 0
+      ? all.filter((faculty) => assignedIds.has(faculty.id))
+      : all;
+    return visible.map((faculty) => ({ value: faculty.id, label: faculty.name }));
+  }, [faculties.data, facultyAssignments.data, me?.id]);
+  const assignedFacultyCount = useMemo(
+    () =>
+      new Set(
+        (facultyAssignments.data ?? [])
+          .filter((row) => row.user_id === me?.id)
+          .map((row) => row.faculty_id),
+      ).size,
+    [facultyAssignments.data, me?.id],
+  );
+  const canSubmitCourse =
+    canSubmit && (assignedFacultyCount <= 1 || Boolean(form.facultyId));
+  useEffect(() => {
+    if (!form.facultyId && assignedFacultyCount === 1 && facultyOptions[0]) {
+      controller.setField("facultyId", facultyOptions[0].value);
+    }
+  }, [assignedFacultyCount, controller, facultyOptions, form.facultyId]);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   // One blob URL for the picked file, shared by the picker and the card
   // preview so they cannot disagree about what was chosen.
@@ -94,12 +128,17 @@ export default function ManagementCourseNewPage() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!me || !canSubmit || wizard.isRunning) return;
+            if (!me || !canSubmitCourse || wizard.isRunning) return;
             void wizard.submit(form, thumbnail);
           }}
           className="bg-card ghost-border shadow-editorial rounded-xl p-6 space-y-6"
         >
-          <CourseBasicsSection controller={controller} t={t} />
+          <CourseBasicsSection
+            controller={controller}
+            facultyOptions={facultyOptions}
+            facultyRequired={assignedFacultyCount > 1}
+            t={t}
+          />
 
           <CourseDetailsSection controller={controller} t={t} />
 
@@ -118,7 +157,7 @@ export default function ManagementCourseNewPage() {
           )}
 
           <CourseFormActions
-            canSubmit={canSubmit && !wizard.isRunning}
+            canSubmit={canSubmitCourse && !wizard.isRunning}
             isPending={wizard.isRunning}
             t={t}
           />

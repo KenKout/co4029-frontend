@@ -18,13 +18,7 @@ import type { components } from "../openapi-types";
 type Schemas = components["schemas"];
 
 export type OrganizationStatus = "active" | "inactive" | "archived";
-export type UnitType =
-  | "faculty"
-  | "department"
-  | "office"
-  | "program"
-  | "campus"
-  | "other";
+export type UnitType = "faculty";
 export type MembershipStatus =
   | "active"
   | "invited"
@@ -41,9 +35,27 @@ export type OrganizationDomainCreate = Schemas["OrganizationDomainCreate"];
 export type OrganizationDomainPatch = Schemas["OrganizationDomainPatch"];
 
 export type OrgUnitRead = Schemas["OrgUnitRead"];
-export type OrgUnitCreate = Schemas["OrgUnitCreate"];
-export type OrgUnitPatch = Schemas["OrgUnitPatch"];
+export type OrgUnitCreate = Omit<
+  Schemas["OrgUnitCreate"],
+  "parent_unit_id" | "unit_type"
+> & { unit_type?: "faculty" };
+export type OrgUnitPatch = Omit<
+  Schemas["OrgUnitPatch"],
+  "parent_unit_id" | "unit_type"
+>;
 
 export type MembershipRead = Schemas["MembershipRead"];
 export type MembershipCreate = Schemas["MembershipCreate"];
 export type MembershipPatch = Schemas["MembershipPatch"];
+
+export interface FacultyAssignmentRead {
+  id: string;
+  user_id: string;
+  organization_id: string;
+  faculty_id: string;
+  status: "active" | "inactive";
+  active_from: string;
+  active_until?: string | null;
+  created_by?: string | null;
+  role_codes: string[];
+}

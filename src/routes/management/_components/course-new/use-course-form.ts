@@ -16,6 +16,7 @@ import { useSlugAvailability } from "@/lib/api/hooks/teacher-courses";
  * input has to stay distinguishable from a deliberate 0.
  */
 export interface CourseFormValues {
+  facultyId: string;
   title: string;
   slug: string;
   description: string;
@@ -35,6 +36,7 @@ export interface TeacherTitles {
 }
 
 export const EMPTY_COURSE_FORM: CourseFormValues = {
+  facultyId: "",
   title: "",
   slug: "",
   description: "",

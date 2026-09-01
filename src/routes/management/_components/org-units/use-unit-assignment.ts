@@ -1,254 +1,189 @@
 import { useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { apiPatch } from "@/lib/api/client";
-import { queryKeys } from "@/lib/api/query-keys";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  useBulkAssignMembershipsToUnit,
+  useAddFacultyMembers,
+  useFacultyAssignments,
   useOrganizationMemberships,
-  usePatchMembership,
+  useRemoveFacultyMember,
 } from "@/lib/api/hooks/admin-organizations";
 import { useUsersByIds } from "@/lib/api/hooks/admin";
-import { useDeptCourses } from "@/lib/api/hooks/dept";
-import { useUpdateCourse } from "@/lib/api/hooks/teacher-courses";
-
-/**
- * `{unitId: count}` for every unit, from data the page already loads.
- *
- * Counts are DIRECT members, matching the assignment panel rather than the
- * subtree-based scope links — the columns exist to answer "is this unit
- * itself still empty", and rolling descendants up would hide an empty
- * faculty whose departments are full.
- */
-export function useUnitCounts(orgId: string | undefined) {
-  const memberships = useOrganizationMemberships(orgId);
-  const courses = useDeptCourses();
-  const qc = useQueryClient();
-
-  const peopleCounts = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const row of memberships.data ?? []) {
-      if (row.status !== "active" || !row.org_unit_id) continue;
-      m.set(row.org_unit_id, (m.get(row.org_unit_id) ?? 0) + 1);
-    }
-    return m;
-  }, [memberships.data]);
-
-  const courseCounts = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const c of courses.data ?? []) {
-      if (!c.org_unit_id) continue;
-      m.set(c.org_unit_id, (m.get(c.org_unit_id) ?? 0) + 1);
-    }
-    return m;
-  }, [courses.data]);
-
-  return { peopleCounts, courseCounts };
-}
+import { apiPost } from "@/lib/api/client";
+import type { RoleAssignmentRead } from "@/lib/api/types";
 
 export interface UnitPerson {
   membershipId: string;
   userId: string;
   displayName: string;
   email: string;
+  facultyIds: string[];
+  roleCodesByFaculty: Record<string, string[]>;
 }
 
-/**
- * What is *in* a unit, and how to put things there.
- *
- * The org tree was navigable before this but not fillable: nothing in the UI
- * set `courses.org_unit_id` or `organization_memberships.org_unit_id`, so
- * every unit stayed empty and the scope filters had nothing to filter.
- *
- * Both writes use endpoints that already existed — `PATCH /teacher/courses/{id}`
- * (`org_unit_id` is a manager-only field) and
- * `PATCH /admin/organization-memberships/{id}`. Only the surface was missing.
- *
- * Membership shows people whose membership points at **exactly** this unit,
- * not the subtree. Subtree is the right lens for "who does this scope cover"
- * (what the filters answer) but the wrong one for assignment: a person listed
- * under a faculty because they sit in one of its departments has no meaningful
- * "remove from this unit" action.
- */
-export function useUnitAssignment(orgId: string | undefined, unitId: string | null) {
+/** Direct staff affiliations for one Faculty; Course ownership is immutable. */
+export function useUnitAssignment(
+  orgId: string | undefined,
+  facultyId: string | null,
+) {
   const memberships = useOrganizationMemberships(orgId);
-  const patchMembership = usePatchMembership(orgId ?? "");
-  const bulkAssign = useBulkAssignMembershipsToUnit(orgId ?? "");
-  const courses = useDeptCourses();
-  const qc = useQueryClient();
-
+  const assignments = useFacultyAssignments(orgId);
+  const addMembers = useAddFacultyMembers(orgId, facultyId);
+  const removeMember = useRemoveFacultyMember(orgId, facultyId);
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
-  const [isBulkAssigning, setBulkAssigning] = useState(false);
 
-  // `MembershipRead` carries only `user_id`, so names come from a batch
-  // lookup. Without it this panel would list raw UUIDs.
   const activeMemberships = useMemo(
-    () => (memberships.data ?? []).filter((m) => m.status === "active"),
+    () => (memberships.data ?? []).filter((row) => row.status === "active"),
     [memberships.data],
   );
-  const userIds = useMemo(
-    () => activeMemberships.map((m) => m.user_id),
-    [activeMemberships],
-  );
-  const users = useUsersByIds(userIds);
-
+  const users = useUsersByIds(activeMemberships.map((row) => row.user_id));
   const usersById = useMemo(() => {
-    const map = new Map<string, { display_name?: string | null; primary_email?: string }>();
-    for (const u of users.data ?? []) map.set(u.id, u);
+    const map = new Map<
+      string,
+      {
+        profile?: { display_name?: string | null } | null;
+        primary_email?: string;
+        roles?: string[];
+      }
+    >();
+    for (const user of users.data ?? []) map.set(user.id, user);
     return map;
   }, [users.data]);
 
-  function toPerson(m: { id: string; user_id: string }): UnitPerson {
-    const u = usersById.get(m.user_id);
-    return {
-      membershipId: m.id,
-      userId: m.user_id,
-      displayName: u?.display_name ?? u?.primary_email ?? m.user_id,
-      email: u?.primary_email ?? "",
-    };
-  }
+  const facultyIdsByUser = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const row of assignments.data ?? []) {
+      const current = map.get(row.user_id) ?? [];
+      current.push(row.faculty_id);
+      map.set(row.user_id, current);
+    }
+    return map;
+  }, [assignments.data]);
+
+  const facultyRoleCodesByUser = useMemo(() => {
+    const map = new Map<string, Record<string, string[]>>();
+    for (const row of assignments.data ?? []) {
+      const current = map.get(row.user_id) ?? {};
+      current[row.faculty_id] = row.role_codes;
+      map.set(row.user_id, current);
+    }
+    return map;
+  }, [assignments.data]);
+
+  const allPeople = useMemo<UnitPerson[]>(
+    () =>
+      activeMemberships
+        .filter((membership) => {
+          const roles = usersById.get(membership.user_id)?.roles ?? [];
+          return roles.some((role) =>
+            ["hod", "manager", "teacher"].includes(role),
+          );
+        })
+        .map((membership) => {
+          const user = usersById.get(membership.user_id);
+          return {
+            membershipId: membership.id,
+            userId: membership.user_id,
+            displayName:
+              user?.profile?.display_name ??
+              user?.primary_email ??
+              membership.user_id,
+            email: user?.primary_email ?? "",
+            facultyIds: facultyIdsByUser.get(membership.user_id) ?? [],
+            roleCodesByFaculty:
+              facultyRoleCodesByUser.get(membership.user_id) ?? {},
+          };
+        })
+        .sort((a, b) => a.displayName.localeCompare(b.displayName)),
+    [activeMemberships, facultyIdsByUser, facultyRoleCodesByUser, usersById],
+  );
+
+  const appointDean = useMutation({
+    mutationFn: (userId: string) => {
+      if (!orgId || !facultyId) {
+        throw new Error("Select a Faculty before appointing its Dean");
+      }
+      return apiPost<RoleAssignmentRead>(`/admin/users/${userId}/assignments`, {
+        role_code: "hod",
+        scope_kind: "org_unit",
+        organization_id: orgId,
+        org_unit_id: facultyId,
+      });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [
+          "admin",
+          "organizations",
+          orgId ?? "",
+          "faculty-assignments",
+        ],
+      });
+      void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      void queryClient.invalidateQueries({ queryKey: ["manager", "users"] });
+    },
+  });
 
   const peopleInUnit = useMemo(
     () =>
-      unitId
-        ? activeMemberships
-            .filter((m) => m.org_unit_id === unitId)
-            .map(toPerson)
-            .sort((a, b) => a.displayName.localeCompare(b.displayName))
+      facultyId
+        ? allPeople.filter((person) => person.facultyIds.includes(facultyId))
         : [],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeMemberships, unitId, usersById],
+    [allPeople, facultyId],
   );
 
-  /**
-   * Every active member, tagged with the unit they are in right now.
-   *
-   * A membership has ONE `org_unit_id`, so adding someone to a unit MOVES
-   * them out of their current one. The picker has to be able to say so —
-   * silently reassigning a person out of another department is the kind of
-   * thing nobody notices until a scope filter goes wrong.
-   */
-  const allPeople = useMemo(
-    () =>
-      activeMemberships
-        .map((m) => ({ ...toPerson(m), currentUnitId: m.org_unit_id ?? null }))
-        .sort((a, b) => a.displayName.localeCompare(b.displayName)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeMemberships, usersById],
-  );
-
-  const coursesInUnit = useMemo(
-    () =>
-      unitId
-        ? (courses.data ?? []).filter((c) => c.org_unit_id === unitId)
-        : [],
-    [courses.data, unitId],
-  );
-
-  const assignableCourses = useMemo(
-    () =>
-      unitId
-        ? (courses.data ?? []).filter((c) => c.org_unit_id !== unitId)
-        : [],
-    [courses.data, unitId],
-  );
-
-  function assignPerson(membershipId: string, targetUnitId: string | null) {
-    setError(null);
-    patchMembership.mutate(
-      { membershipId, body: { org_unit_id: targetUnitId } },
-      { onError: (e) => setError(messageOf(e)) },
-    );
-  }
-
-  /**
-   * Move a whole selection into the unit in one request.
-   *
-   * Backed by the bulk endpoint rather than a loop of PATCHes: a cohort can
-   * be dozens of people, and issuing dozens of writes from the browser meant
-   * dozens of chances to half-finish with no record of how far it got.
-   *
-   * `skipped` names ids the server could not find — a selection that went
-   * stale between opening the picker and confirming. Surfaced rather than
-   * swallowed, so "I picked 30, it says 28" has an explanation.
-   */
-  async function assignPeople(membershipIds: string[], targetUnitId: string | null) {
+  async function assignPeople(userIds: string[]) {
     setError(null);
     try {
-      const result = await bulkAssign.mutateAsync({
-        membership_ids: membershipIds,
-        org_unit_id: targetUnitId,
-      });
-      if (result.skipped.length > 0) {
-        setError(
-          `${result.assigned} assigned, ${result.skipped.length} no longer available`,
-        );
-      }
-    } catch (e) {
-      setError(messageOf(e));
+      await addMembers.mutateAsync(userIds);
+    } catch (cause) {
+      setError(messageOf(cause));
+      throw cause;
     }
   }
 
-  /**
-   * Move a selection of courses into the unit.
-   *
-   * `useUpdateCourse` is per-course and so cannot be called in a loop, and
-   * the write is a single field — so this issues the PATCH directly and
-   * invalidates the same keys that hook does. Sequential for the same reason
-   * as `assignPeople`.
-   */
-  async function assignCourses(courseIds: string[], targetUnitId: string | null) {
+  async function appointFacultyDean(userId: string) {
     setError(null);
-    setBulkAssigning(true);
     try {
-      for (const courseId of courseIds) {
-        await apiPatch(`/teacher/courses/${courseId}`, {
-          org_unit_id: targetUnitId,
-        });
-      }
-    } catch (e) {
-      setError(messageOf(e));
-    } finally {
-      setBulkAssigning(false);
-      await qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
-      await qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
+      await appointDean.mutateAsync(userId);
+    } catch (cause) {
+      setError(messageOf(cause));
+      throw cause;
     }
+  }
+
+  function removePerson(userId: string) {
+    setError(null);
+    removeMember.mutate(userId, {
+      onError: (cause) => setError(messageOf(cause)),
+    });
   }
 
   return {
-    assignCourses,
-    isLoading: memberships.isLoading || courses.isLoading,
-    membershipsLoading: memberships.isLoading || users.isLoading,
+    membershipsLoading:
+      memberships.isLoading || assignments.isLoading || users.isLoading,
     peopleInUnit,
     allPeople,
-    coursesInUnit,
-    assignableCourses,
-    assignPerson,
     assignPeople,
-    isAssigningPerson: patchMembership.isPending,
-    isBulkAssigning: isBulkAssigning || bulkAssign.isPending,
+    appointFacultyDean,
+    removePerson,
+    isAssigningPerson: removeMember.isPending,
+    isBulkAssigning: addMembers.isPending,
+    isAppointingDean: appointDean.isPending,
     error,
     setError,
   };
 }
 
-/**
- * Assigning a course is a per-course mutation, so the hook has to be created
- * per course id — hence a tiny component-level hook rather than a function on
- * the controller above (React hooks cannot be called in a loop body).
- */
-export function useAssignCourseToUnit(
-  courseId: string,
-  onError: (message: string) => void,
-) {
-  const update = useUpdateCourse(courseId);
-  return {
-    isPending: update.isPending,
-    assign: (orgUnitId: string | null) =>
-      update.mutate(
-        { org_unit_id: orgUnitId },
-        { onError: (e) => onError(messageOf(e)) },
-      ),
-  };
+export function useUnitCounts(orgId: string | undefined) {
+  const assignments = useFacultyAssignments(orgId);
+  const peopleCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const row of assignments.data ?? []) {
+      counts.set(row.faculty_id, (counts.get(row.faculty_id) ?? 0) + 1);
+    }
+    return counts;
+  }, [assignments.data]);
+  return { peopleCounts, courseCounts: new Map<string, number>() };
 }
 
 function messageOf(error: unknown): string {

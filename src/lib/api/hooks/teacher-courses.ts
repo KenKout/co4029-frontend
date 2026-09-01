@@ -386,11 +386,13 @@ export function useImportCourseFromSyllabus() {
     mutationFn: async (vars: {
       file: File;
       language: SyllabusLanguage;
+      facultyId?: string;
     }): Promise<SyllabusImportResult> => {
       const params = new URLSearchParams({
         language: vars.language,
         filename: vars.file.name,
       });
+      if (vars.facultyId) params.set("faculty_id", vars.facultyId);
       const response = await authenticatedFetch(
         `/teacher/courses/import-syllabus?${params.toString()}`,
         {

@@ -6,7 +6,7 @@ import { collectTreeIds, filterTree } from "@/lib/tree-filter";
 import type { OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
 
 /**
- * The organization hierarchy as a searchable, sortable table.
+ * The Faculty collection as a searchable, sortable table.
  *
  * Replaces a bespoke indented-tree component: `DataTable` already supports
  * real hierarchy through `getSubRows` — expand/collapse, depth indentation,
@@ -14,9 +14,8 @@ import type { OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
  * collapsed alone" behaviour — and it brings the search toolbar, the actions
  * column and the empty state that every other list in the app uses.
  *
- * The table form also earns columns a tree could not show: how many
- * sub-units, courses and people sit under each unit, which is what answers
- * "which department is still empty" at a glance.
+ * The table can also show course and people counts when a caller supplies
+ * them. The tree-compatible API remains while legacy descendants are read.
  *
  * Pagination is deliberately OFF. Pagination applies to top-level rows, and
  * an organization has a handful of roots — paging them would hide branches
@@ -102,14 +101,6 @@ export function OrgUnitTable({
           </span>
         ),
       },
-      {
-        id: "subunits",
-        header: t(`${prefix}.col_subunits`),
-        align: "left",
-        sortable: true,
-        sortValue: (n) => n.descendant_count,
-        cell: (n) => <Count value={n.descendant_count} />,
-      },
     ];
     if (courseCounts) {
       cols.push({
@@ -159,11 +150,7 @@ export function OrgUnitTable({
   );
 }
 
-/**
- * Zero is a work item, not a neutral number: a department with no courses or
- * nobody in it is the thing a manager is scanning for. Matches the amber
- * treatment the course worklist gives "0 modules".
- */
+/** Highlight empty Faculties as setup work still to be completed. */
 function Count({ value, warnOnZero }: { value: number; warnOnZero?: boolean }) {
   if (value === 0 && warnOnZero) {
     return (

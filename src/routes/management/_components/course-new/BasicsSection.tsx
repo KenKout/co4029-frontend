@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Select } from "@/components/ui/select";
 import type { CourseFormController } from "./use-course-form";
 
 export const DESCRIPTION_MAX = 500;
@@ -116,9 +117,13 @@ function SlugField({
 
 export function CourseBasicsSection({
   controller,
+  facultyOptions,
+  facultyRequired,
   t,
 }: {
   controller: CourseFormController;
+  facultyOptions: { value: string; label: string }[];
+  facultyRequired: boolean;
   t: TFunction;
 }) {
   const { form, setForm, handleTitleChange } = controller;
@@ -142,6 +147,23 @@ export function CourseBasicsSection({
       </div>
 
       <SlugField controller={controller} t={t} />
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-m3-on-surface">
+          Faculty{facultyRequired ? " *" : ""}
+        </label>
+        <Select
+          value={form.facultyId}
+          onValueChange={(value) => controller.setField("facultyId", value)}
+          placeholder={
+            facultyRequired ? "Select the owning faculty" : "Organization-wide"
+          }
+          options={facultyOptions}
+        />
+        <p className="text-[11px] text-m3-on-surface-variant">
+          Course ownership cannot be moved to another faculty after creation.
+        </p>
+      </div>
 
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-m3-on-surface">
