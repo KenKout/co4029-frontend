@@ -3,7 +3,6 @@ import { AlertTriangle, BookOpen, ChevronRight } from "lucide-react";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { SectionHeader } from "@/components/ui/section-header";
 import type { CourseHealthRow } from "@/lib/api/hooks/teacher-courses";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +28,11 @@ const DORMANT_DAYS = 14;
  * Rows arrive pre-sorted worst-first from the server; every column is
  * client-sortable from there so a teacher can re-rank by whichever signal
  * they are chasing.
+ *
+ * Lives on /teacher/course-health rather than on the dashboard: ranking a
+ * whole teaching load is a deliberate task, and keeping the grid on the
+ * dashboard made that page a data table that happened to have a work queue
+ * above it. The dashboard rail carries the worst few and links here.
  *
  * Five core columns stay on screen (Course, Students, Progress, At risk,
  * Action) — an 8-column table overflowed the viewport at ~1246px and
@@ -153,11 +157,10 @@ export function CourseHealthSection({
 
   return (
     <div>
-      <SectionHeader
-        title={t("teacher_dashboard.health.title")}
-        subtitle={t("teacher_dashboard.health.subtitle")}
-      />
-      <div className="mt-4">
+      {/* No SectionHeader: this is now a page of its own and the route
+          supplies the PageHeader. Rendering both put the same title and
+          subtitle on screen twice. */}
+      <div>
         <DataTable
           columns={columns}
           data={rows}

@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
-  CheckCircle2,
   ChevronDown,
   ChevronRight,
   ClipboardCheck,
@@ -12,12 +11,11 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { SectionHeader } from "@/components/ui/section-header";
 import type { PriorityTask, ReviewQueueKind } from "@/lib/api/hooks/teacher-courses";
 import { cn } from "@/lib/utils";
 
 import { formatAge, formatAgeFull, priorityTaskLink } from "./priority-helpers";
-import type { TranslateFn } from "./types";
+import type { TranslateFn } from "../types";
 
 const KIND_ICON: Record<PriorityTask["kind"], typeof UserRound> = {
   student_risk: UserRound,
@@ -45,8 +43,8 @@ const DRILLDOWN_KIND: Partial<
 };
 
 /**
- * Priority Today: the teacher's next actions, ranked across every kind of
- * work.
+ * The ranked "All" view of the Work Queue: the teacher's next actions
+ * across every kind of work.
  *
  * The feed deliberately mixes named students with grouped content
  * backlogs. What is most urgent on a teacher's plate is not sorted by
@@ -57,7 +55,7 @@ const DRILLDOWN_KIND: Partial<
  * The server ranks and caps the list; this renders it. No sorting happens
  * here, so the order cannot drift from the rule the API documents.
  */
-export function PriorityTodaySection({
+export function PriorityList({
   tasks,
   isLoading,
   onFocusReview,
@@ -65,31 +63,20 @@ export function PriorityTodaySection({
 }: {
   tasks: PriorityTask[];
   isLoading: boolean;
-  /** Scrolls to + expands one "Needs your review" category. */
+  /** Switches the Work Queue to Content and expands one category. */
   onFocusReview: (kind: ReviewQueueKind) => void;
   t: TranslateFn;
 }) {
+  if (isLoading) return <Skeletons />;
+  if (tasks.length === 0) return null;
   return (
-    <div>
-      <SectionHeader
-        title={t("teacher_dashboard.priority.title")}
-        subtitle={t("teacher_dashboard.priority.subtitle")}
-      />
-
-      {isLoading ? (
-        <Skeletons />
-      ) : tasks.length > 0 ? (
-        <ol className="mt-4 divide-y divide-m3-outline-variant/20 overflow-hidden rounded-xl bg-card shadow-editorial ghost-border">
-          {tasks.map((task) => (
-            <li key={task.id}>
-              <TaskRow task={task} onFocusReview={onFocusReview} t={t} />
-            </li>
-          ))}
-        </ol>
-      ) : (
-        <NoUrgentActions t={t} />
-      )}
-    </div>
+    <ol className="divide-y divide-m3-outline-variant/20">
+      {tasks.map((task) => (
+        <li key={task.id}>
+          <TaskRow task={task} onFocusReview={onFocusReview} t={t} />
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -238,29 +225,9 @@ function ArrowGlyph() {
   );
 }
 
-/**
- * FR-015: an empty feed states the good news and offers somewhere to go,
- * rather than leaving a blank block the teacher has to interpret.
- */
-function NoUrgentActions({ t }: { t: TranslateFn }) {
-  return (
-    <div className="mt-4 flex items-center gap-3 rounded-xl bg-card p-5 shadow-editorial ghost-border">
-      <CheckCircle2 className="h-5 w-5 shrink-0 text-m3-primary" />
-      <div>
-        <p className="text-sm font-medium text-text-strong">
-          {t("teacher_dashboard.priority.empty_title")}
-        </p>
-        <p className="text-xs text-text-muted">
-          {t("teacher_dashboard.priority.empty_hint")}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function Skeletons() {
   return (
-    <div className="mt-4 divide-y divide-m3-outline-variant/20 overflow-hidden rounded-xl bg-card shadow-editorial ghost-border">
+    <div className="divide-y divide-m3-outline-variant/20">
       {[1, 2, 3].map((i) => (
         <div key={i} className="flex items-center gap-4 p-4">
           <div className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-m3-surface-container" />

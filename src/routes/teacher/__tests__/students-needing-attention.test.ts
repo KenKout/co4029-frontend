@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { initials } from "@/routes/teacher/_components/teacher-index/StudentsNeedingAttentionSection";
+import { initials } from "@/routes/teacher/_components/teacher-index/work-queue/StudentList";
 import type { StudentNeedingAttention } from "@/lib/api/hooks/teacher-courses";
 
 /**

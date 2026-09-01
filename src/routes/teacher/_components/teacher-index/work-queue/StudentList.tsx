@@ -1,15 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, ArrowRight, UserCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { SectionHeader } from "@/components/ui/section-header";
 import type { StudentNeedingAttention } from "@/lib/api/hooks/teacher-courses";
 import { cn } from "@/lib/utils";
 
-import type { TranslateFn } from "./types";
+import type { TranslateFn } from "../types";
 
 /**
- * Students the risk engine flagged, worst first.
+ * The "People" view of the Work Queue: students the risk engine
+ * flagged, worst first.
  *
  * Rows are per (student, course), not per student: a learner struggling in
  * two of this teacher's courses appears twice, because the intervention
@@ -23,7 +23,7 @@ import type { TranslateFn } from "./types";
  * thresholds are administrator-tunable — restating them here is how the
  * old copy ended up claiming a 7-day rule the query no longer used.
  */
-export function StudentsNeedingAttentionSection({
+export function StudentList({
   students,
   isLoading,
   t,
@@ -32,28 +32,17 @@ export function StudentsNeedingAttentionSection({
   isLoading: boolean;
   t: TranslateFn;
 }) {
+  if (isLoading) return <RowSkeletons />;
+  if (students.length === 0) return null;
   return (
-    <div>
-      <SectionHeader
-        title={t("teacher_dashboard.attention.title")}
-        subtitle={t("teacher_dashboard.attention.subtitle")}
-      />
-
-      {isLoading ? (
-        <RowSkeletons />
-      ) : students.length > 0 ? (
-        <div className="mt-4 divide-y divide-m3-outline-variant/20 overflow-hidden rounded-xl bg-card shadow-editorial ghost-border">
-          {students.map((student) => (
-            <StudentRow
-              key={`${student.user_id}:${student.course_id}`}
-              student={student}
-              t={t}
-            />
-          ))}
-        </div>
-      ) : (
-        <AllClear t={t} />
-      )}
+    <div className="divide-y divide-m3-outline-variant/20">
+      {students.map((student) => (
+        <StudentRow
+          key={`${student.user_id}:${student.course_id}`}
+          student={student}
+          t={t}
+        />
+      ))}
     </div>
   );
 }
@@ -144,29 +133,9 @@ function SeverityDot({ severity }: { severity: StudentNeedingAttention["severity
   );
 }
 
-/**
- * FR-015's rule, applied here: an empty section states the good news
- * rather than leaving a hole the teacher has to interpret.
- */
-function AllClear({ t }: { t: TranslateFn }) {
-  return (
-    <div className="mt-4 flex items-center gap-3 rounded-xl bg-card p-5 shadow-editorial ghost-border">
-      <UserCheck className="h-5 w-5 shrink-0 text-m3-primary" />
-      <div>
-        <p className="text-sm font-medium text-text-strong">
-          {t("teacher_dashboard.attention.empty_title")}
-        </p>
-        <p className="text-xs text-text-muted">
-          {t("teacher_dashboard.attention.empty_hint")}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function RowSkeletons() {
   return (
-    <div className="mt-4 divide-y divide-m3-outline-variant/20 overflow-hidden rounded-xl bg-card shadow-editorial ghost-border">
+    <div className="divide-y divide-m3-outline-variant/20">
       {[1, 2, 3].map((i) => (
         <div key={i} className="flex items-center gap-4 p-4">
           <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-m3-surface-container" />

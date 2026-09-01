@@ -4,7 +4,7 @@ import type { PriorityTask } from "@/lib/api/hooks/teacher-courses";
 import {
   formatAge,
   priorityTaskLink,
-} from "@/routes/teacher/_components/teacher-index/priority-helpers";
+} from "@/routes/teacher/_components/teacher-index/work-queue/priority-helpers";
 
 function task(over: Partial<PriorityTask> = {}): PriorityTask {
   return {
