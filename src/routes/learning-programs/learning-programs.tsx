@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen, CheckCircle2, GraduationCap, History } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
@@ -10,6 +9,10 @@ import {
 } from "@/lib/api/hooks/learning-programs";
 import type { LearningProgramEnrollment } from "@/lib/api/types";
 import { useFormatDate } from "@/lib/format/date";
+import {
+  ChangeRequestHistory,
+  OpenChangeRequestBanner,
+} from "./_components/ChangeRequestHistory";
 import { PathCard } from "./_components/PathCard";
 
 function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) {
@@ -105,22 +108,15 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
 
       {enrollment.status === "active" && available.length > 0 && (
         enrollment.pending_change_request ? (
-          <div className="flex items-center justify-between rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-            <div>
-              <p className="font-semibold">Waiting for Faculty Dean review</p>
-              <p className="mt-1">{enrollment.pending_change_request.reason}</p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={cancelChange.isPending}
-              onClick={() =>
-                void cancelChange.mutateAsync(enrollment.pending_change_request!.id)
-              }
-            >
-              Cancel request
-            </Button>
-          </div>
+          <OpenChangeRequestBanner
+            request={enrollment.pending_change_request}
+            isCancelling={cancelChange.isPending}
+            onCancel={() =>
+              void cancelChange.mutateAsync(
+                enrollment.pending_change_request!.id,
+              )
+            }
+          />
         ) : (
           /* Switching is a considered decision, not an inline form: send the
              student to browse the path cards; the commit lives on each path
@@ -139,6 +135,15 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
           </Link>
         )
       )}
+
+      {/* Decided requests — including rejections with the dean's reason.
+          Rendered regardless of enrolment status: a student whose program has
+          since completed should still be able to read why a past request was
+          refused. */}
+      <ChangeRequestHistory
+        history={enrollment.change_request_history ?? []}
+        formatDate={formatDate}
+      />
 
       {enrollment.attempts.length > 1 && (
         <div className="space-y-2">

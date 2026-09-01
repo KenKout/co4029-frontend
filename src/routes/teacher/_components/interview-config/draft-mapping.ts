@@ -47,8 +47,8 @@ export function draftFromConfig(
         : String(config.time_limit_minutes),
     max_attempts:
       config.max_attempts == null ? "" : String(config.max_attempts),
-    cooldown_hours:
-      config.cooldown_hours == null ? "" : String(config.cooldown_hours),
+    cooldown_minutes:
+      config.cooldown_minutes == null ? "" : String(config.cooldown_minutes),
     min_outcomes_to_pass:
       config.min_outcomes_to_pass == null
         ? ""
@@ -251,7 +251,7 @@ function buildFullConfigUpdatePayload(
     tts_voice: (draft.tts_voice || null) as TtsVoice | null,
     time_limit_minutes: integerOrNull(draft.time_limit_minutes),
     max_attempts: integerOrNull(draft.max_attempts),
-    cooldown_hours: integerOrNull(draft.cooldown_hours),
+    cooldown_minutes: integerOrNull(draft.cooldown_minutes),
     min_outcomes_to_pass: integerOrNull(draft.min_outcomes_to_pass),
     // NOT NULL columns: an empty field falls back to the shipped default
     // rather than null, which the DB would reject.

@@ -13,7 +13,6 @@ export interface QuizManageActionDeps {
   t: TranslateFn;
   navigate: ReturnType<typeof useNavigate>;
   courseId: string;
-  moduleId: string;
   publishDisabled: boolean;
   draft: SettingsDraft | null;
   data: QuizManageDataController;
@@ -25,7 +24,7 @@ export interface QuizManageActionDeps {
  * question, save settings) plus the post-delete navigation.
  *
  * A plain factory rather than a hook: the page builds these AFTER its
- * loading / not-found early returns (they need the resolved `moduleId`), so a
+ * loading / not-found early returns (they need the resolved quiz), so a
  * `use*` function here would be a rules-of-hooks violation. It holds no hooks,
  * and the handlers are recreated per render exactly as they were when they
  * lived inline in quiz-manage.tsx.
@@ -34,7 +33,6 @@ export function createQuizManageActions({
   t,
   navigate,
   courseId,
-  moduleId,
   publishDisabled,
   draft,
   data,
@@ -42,10 +40,10 @@ export function createQuizManageActions({
 }: QuizManageActionDeps) {
   const { deleteQuiz, publishQuiz, patchQuiz, addQuestion } = data;
 
-  function returnToModule() {
+  function returnToCourse() {
     void navigate({
-      to: "/teacher/courses/$courseId/modules/$moduleId",
-      params: { courseId, moduleId },
+      to: "/teacher/courses/$courseId",
+      params: { courseId },
     });
   }
 
@@ -53,7 +51,7 @@ export function createQuizManageActions({
     try {
       await deleteQuiz.mutateAsync();
       toast.success(t("teacher_quiz_manage.toasts.deleted"));
-      returnToModule();
+      returnToCourse();
     } catch (err: unknown) {
       toast.error(
         (err as Error).message || t("teacher_quiz_manage.toasts.delete_failed"),

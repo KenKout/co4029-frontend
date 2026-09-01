@@ -113,6 +113,7 @@ export const CATEGORY_ORDER: NotificationCategory[] = [
   "material_processing",
   "quiz_generation",
   "interview_generation",
+  "path_change_review",
 ];
 
 /** True when a group key is a category (type grouping) rather than a date

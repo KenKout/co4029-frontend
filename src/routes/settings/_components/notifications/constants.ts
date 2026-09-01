@@ -12,6 +12,7 @@ export const CATEGORY_IDS: NotificationCategory[] = [
   "material_processing",
   "quiz_generation",
   "interview_generation",
+  "path_change_review",
 ];
 
 export const CHANNEL_IDS: NotificationChannel[] = ["email", "in_app"];

@@ -7,9 +7,7 @@ import { StatTile } from "./StatTile";
 import type { QuestionBankDerived } from "./use-question-bank-derived";
 
 /**
- * Stat strip — the shape of the pool at a glance. Replaces a bare
- * "{n} question(s)" line that carried no other signal. Extracted verbatim from
- * the former 843-line course-question-bank.tsx.
+ * Stat strip — the shape of the pool at a glance.
  *
  * `className` lets the page restack the strip when it lives in a sidebar
  * (e.g. `lg:grid-cols-1` to stack the tiles); tailwind-merge resolves the
@@ -23,7 +21,7 @@ export function QuestionBankStats({
   className?: string;
 }) {
   const { t } = useTranslation();
-  const { total, allTags, withAnswer } = derived;
+  const { total, logicalGroups, withAnswer } = derived;
   return (
     <div className={cn("grid grid-cols-3 gap-2 sm:gap-3", className)}>
       <StatTile
@@ -32,10 +30,12 @@ export function QuestionBankStats({
         value={total}
         index={0}
       />
+      {/* Was a tag count, which was always 0: nothing ever populated tags.
+          Logical-question groups are the pool's real second dimension. */}
       <StatTile
         icon={Layers}
-        label={t("teacher_question_bank.stat_tags")}
-        value={allTags.length}
+        label={t("teacher_question_bank.stat_logical_groups")}
+        value={logicalGroups}
         index={1}
       />
       <StatTile

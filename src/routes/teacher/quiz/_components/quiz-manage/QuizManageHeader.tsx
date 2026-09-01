@@ -61,15 +61,18 @@ export function QuizManageHeader({
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <Link
-            to="/teacher/courses/$courseId/modules/$moduleId"
-            params={{ courseId, moduleId }}
-          >
+          {/* Back goes to the COURSE, not the owning module. Quizzes are
+              opened from the course page's curriculum accordion (the module
+              page is not on the way), so a module-targeted back arrow dropped
+              the teacher on a page they had never visited — reported as "back
+              lands on the config page instead of the course". The module is
+              still one click away in the breadcrumb above. */}
+          <Link to="/teacher/courses/$courseId" params={{ courseId }}>
             <Button
               variant="ghost"
               size="icon"
               className="h-9 w-9 mt-1 shrink-0"
-              title={t("teacher_quiz_manage.actions.back_to_module")}
+              title={t("teacher_common.back_to_course")}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>

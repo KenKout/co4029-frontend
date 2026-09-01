@@ -6,9 +6,8 @@ import type {
 } from "@/lib/api/types";
 
 /**
- * The four filter dimensions of the course-level Question Bank, extracted from
- * the former 843-line course-question-bank.tsx. Same four `useState` calls in
- * the same order, so the orchestrator's hook sequence is unchanged.
+ * The three filter dimensions of the course-level Question Bank, extracted from
+ * the former 843-line course-question-bank.tsx.
  */
 export interface QuestionBankFiltersController {
   search: string;
@@ -17,8 +16,6 @@ export interface QuestionBankFiltersController {
   setTypeFilter: (value: InterviewQuestionType | "all") => void;
   difficultyFilter: InterviewDifficulty | "all";
   setDifficultyFilter: (value: InterviewDifficulty | "all") => void;
-  tagFilter: string;
-  setTagFilter: (value: string) => void;
   anyFilterActive: boolean;
   clearFilters: () => void;
 }
@@ -31,19 +28,16 @@ export function useQuestionBankFilters(): QuestionBankFiltersController {
   const [difficultyFilter, setDifficultyFilter] = useState<
     InterviewDifficulty | "all"
   >("all");
-  const [tagFilter, setTagFilter] = useState<string>("all");
 
   const anyFilterActive =
     search.trim() !== "" ||
     typeFilter !== "all" ||
-    difficultyFilter !== "all" ||
-    tagFilter !== "all";
+    difficultyFilter !== "all";
 
   function clearFilters() {
     setSearch("");
     setTypeFilter("all");
     setDifficultyFilter("all");
-    setTagFilter("all");
   }
 
   return {
@@ -53,8 +47,6 @@ export function useQuestionBankFilters(): QuestionBankFiltersController {
     setTypeFilter,
     difficultyFilter,
     setDifficultyFilter,
-    tagFilter,
-    setTagFilter,
     anyFilterActive,
     clearFilters,
   };

@@ -594,6 +594,7 @@
     "submitting": "Creating…",
     "errors": {
       "title_required": "Please enter a title",
+      "title_duplicate": "This module already has an interview with that name. Pick a different one.",
       "create_failed": "Couldn't create interview"
     },
     "success": {
@@ -621,10 +622,9 @@
     "title": "Question bank",
     "subtitle": "Reusable interview questions",
     "subtitle_course": "Reusable interview questions · {{course}}",
-    "search_placeholder": "Search questions, answers, tags…",
+    "search_placeholder": "Search questions or answers…",
     "filter_type": "Type",
     "filter_difficulty": "Difficulty",
-    "filter_tag": "Tag",
     "all": "All",
     "no_difficulty": "No difficulty",
     "showing_all": "{{count}} question(s)",
@@ -634,9 +634,6 @@
     "empty_filtered": "No questions match the current filters.",
     "model_answer": "Model answer",
     "prompt_label": "Question prompt",
-    "tags_label": "Tags",
-    "add_tag_placeholder": "Add tag…",
-    "remove_tag": "Remove tag {{tag}}",
     "saved": "Question updated",
     "deleted": "Question removed from bank",
     "delete_title": "Remove from question bank?",
@@ -646,10 +643,8 @@
     "delete_group_body": "This removes all {{count}} angles of this logical question from the course bank. Questions already imported into interviews are not affected.",
     "group_deleted": "Removed {{count}} angles from the bank",
     "clear_filters": "Clear filters",
-    "filter_by_tag": "Filter by tag {{tag}}",
-    "add_tag": "Add tag",
     "stat_total": "Questions",
-    "stat_tags": "Tags",
+    "stat_logical_groups": "Logical questions",
     "stat_with_answer": "With answer",
     "stat_of_total": "of {{total}}"
   },
@@ -1131,7 +1126,8 @@
       "system": "System",
       "material_processing": "Material processing",
       "quiz_generation": "Quiz generation",
-      "interview_generation": "Interview generation"
+      "interview_generation": "Interview generation",
+      "path_change_review": "Path change review"
     },
     "channel": {
       "email": "Email",
@@ -1192,7 +1188,8 @@
       "system": "System",
       "material_processing": "Material processing",
       "quiz_generation": "Quiz generation",
-      "interview_generation": "Interview generation"
+      "interview_generation": "Interview generation",
+      "path_change_review": "Path change review"
     },
     "errors": {
       "mark_read_failed": "Couldn't mark as read",
@@ -1636,6 +1633,7 @@
         }
       },
       "all_methods": "All methods",
+      "all_codes": "All status codes",
       "copy_id": "Copy ID",
       "copied": "Copied",
       "copy_failed": "Could not copy"
@@ -4324,6 +4322,7 @@
       "not_found_body": "Interview question set could not be loaded for this course.",
       "back_to_course": "Back to course",
       "title_required": "Title cannot be empty",
+      "title_duplicate": "This module already has an interview with that name. Pick a different one.",
       "questions_required": "Generate questions before publishing",
       "outcomes_required": "Add at least one learning outcome before publishing",
       "publish_blocked_archived": "Unarchive this interview before publishing",
@@ -4437,9 +4436,9 @@
       "duration_placeholder": "e.g. 30",
       "attempts_label": "Attempts",
       "attempts_placeholder": "e.g. 3",
-      "cooldown_label": "Cooldown (hours)",
-      "cooldown_hint": "Minimum wait between attempts; blank = none",
-      "cooldown_placeholder": "e.g. 24",
+      "cooldown_label": "Cooldown",
+      "cooldown_hint": "Minimum wait between attempts, in minutes; blank = none",
+      "cooldown_placeholder": "e.g. 30",
       "voice_label": "AI voice",
       "voice_hint": "",
       "voice_default": "Default voice",
@@ -4452,9 +4451,6 @@
       "followups_hint": "How many times the interviewer may probe one question before moving on (0-50; blank = default 2)",
       "hints_label": "Hints per question",
       "hints_hint": "Escalating hint rungs offered on one question before it is dropped (0-10; blank = default 3)",
-      "lock_ef_label": "Lock quiz EF growth until pass",
-      "lock_ef_desc": "Students must pass the interview before spaced repetition expands review intervals.",
-      "supplementary_label": "Supplementary instructions",
       "supplementary_placeholder": "e.g. Focus on real scenarios, avoid rote-memorization questions…",
       "notes_label": "Guidance notes (shapes generated questions)",
       "notes_hint": "Free-text guidance fed to the question generator. Not used for scoring.",

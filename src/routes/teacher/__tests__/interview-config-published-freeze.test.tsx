@@ -25,7 +25,7 @@ const DRAFT = {
   supported_modes: "text" as const,
   time_limit_minutes: "30",
   max_attempts: "2",
-  cooldown_hours: "24",
+  cooldown_minutes: "1440",
   min_outcomes_to_pass: "2",
   notes: "",
   rubric_criteria: [],

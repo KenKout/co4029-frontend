@@ -218,7 +218,11 @@ function SwitchRequestSection({
   onSubmit: () => void;
 }) {
   const remaining = switchable.max_path_switches - switchable.approved_switch_count;
-  const blockedByPending = Boolean(switchable.pending_change_request);
+  // Any OPEN request blocks a second one — `pending` and `in_progress` alike.
+  // `pending_change_request` already carries both (the backend field name
+  // predates the acknowledged status), so a truthiness check is still correct.
+  const openRequest = switchable.pending_change_request;
+  const blockedByPending = Boolean(openRequest);
   const canAsk = remaining > 0 && !blockedByPending;
 
   return (
@@ -233,8 +237,9 @@ function SwitchRequestSection({
           </p>
           {blockedByPending ? (
             <p className="mt-0.5 text-xs text-text-muted">
-              You already have a path change request waiting for your Faculty
-              Dean&apos;s approval.
+              {openRequest?.status === "in_progress"
+                ? "Your Faculty Dean is already reviewing a path change request from you."
+                : "You already have a path change request waiting for your Faculty Dean's approval."}
             </p>
           ) : (
             <p className="mt-0.5 text-xs text-text-muted">

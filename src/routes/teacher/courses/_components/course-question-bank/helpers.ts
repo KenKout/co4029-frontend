@@ -28,35 +28,21 @@ export function difficultyChipClass(difficulty: InterviewDifficulty): string {
   }
 }
 
-/** Every distinct tag in the bank, sorted, for the tag filter options. */
-export function collectBankTags(
-  items: InterviewQuestionBankItemRead[] | undefined,
-): string[] {
-  const set = new Set<string>();
-  for (const item of items ?? []) {
-    for (const tag of item.tags ?? []) set.add(tag);
-  }
-  return Array.from(set).sort();
-}
-
-/** Type / difficulty / tag / free-text filtering, in that order. */
+/** Type / difficulty / free-text filtering, in that order. */
 export function filterBankItems(
   items: InterviewQuestionBankItemRead[] | undefined,
   filters: QuestionBankFilterValues,
 ): InterviewQuestionBankItemRead[] {
-  const { search, typeFilter, difficultyFilter, tagFilter } = filters;
+  const { search, typeFilter, difficultyFilter } = filters;
   const q = search.trim().toLowerCase();
   return (items ?? []).filter((item) => {
     if (typeFilter !== "all" && item.question_type !== typeFilter) return false;
     if (difficultyFilter !== "all" && item.difficulty !== difficultyFilter)
       return false;
-    if (tagFilter !== "all" && !(item.tags ?? []).includes(tagFilter))
-      return false;
     if (!q) return true;
     return (
       item.prompt_text.toLowerCase().includes(q) ||
-      (item.model_answer ?? "").toLowerCase().includes(q) ||
-      (item.tags ?? []).some((tag) => tag.toLowerCase().includes(q))
+      (item.model_answer ?? "").toLowerCase().includes(q)
     );
   });
 }
@@ -73,6 +59,17 @@ export function countBankItemsByType(
     counts.set(item.question_type, (counts.get(item.question_type) ?? 0) + 1);
   }
   return counts;
+}
+
+/** How many distinct logical questions (variant groups) the bank holds. */
+export function countBankLogicalGroups(
+  items: InterviewQuestionBankItemRead[] | undefined,
+): number {
+  const groups = new Set<string>();
+  for (const item of items ?? []) {
+    if (item.variant_group_id) groups.add(item.variant_group_id);
+  }
+  return groups.size;
 }
 
 /** How many bank items carry a non-blank model answer. */

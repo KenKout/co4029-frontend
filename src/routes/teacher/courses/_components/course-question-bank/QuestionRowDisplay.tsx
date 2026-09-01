@@ -16,7 +16,7 @@ export function QuestionRowDisplay({
   item: InterviewQuestionBankItemRead;
   controllers: QuestionRowControllers;
 }) {
-  const { filters, editor, deletion, view } = controllers;
+  const { editor, deletion, view } = controllers;
   const answerOpen = view.expandedAnswers.has(item.id);
   const hasAnswer = Boolean((item.model_answer ?? "").trim());
   return (
@@ -29,7 +29,7 @@ export function QuestionRowDisplay({
           <p className="text-sm font-medium leading-relaxed text-m3-on-surface transition-colors group-hover:text-m3-primary">
             {item.prompt_text}
           </p>
-          <QuestionRowMeta item={item} filters={filters} />
+          <QuestionRowMeta item={item} />
         </div>
 
         {/* Actions fade up to full strength on row hover so a long list isn't a

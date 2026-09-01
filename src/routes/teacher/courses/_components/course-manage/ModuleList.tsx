@@ -40,6 +40,7 @@ export function ModuleList({
           key={module.id}
           module={module}
           courseId={courseId}
+          index={idx}
           open={!!openMap[module.id]}
           onToggle={() => toggleModule(module.id)}
           registerRef={registerModuleRef}

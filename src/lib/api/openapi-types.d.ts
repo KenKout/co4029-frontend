@@ -9102,8 +9102,8 @@ export interface components {
             time_limit_minutes?: number | null;
             /** Max Attempts */
             max_attempts?: number | null;
-            /** Cooldown Hours */
-            cooldown_hours?: number | null;
+            /** Cooldown Minutes */
+            cooldown_minutes?: number | null;
             /**
              * Max Follow Ups Per Question
              * @default 2
@@ -9146,8 +9146,6 @@ export interface components {
             generation_run_id?: string | null;
             /** Draft Question Count */
             draft_question_count?: number | null;
-            /** Total Importance Weight */
-            total_importance_weight?: number | null;
             /** Created By */
             created_by?: string | null;
             /** Updated By */
@@ -9193,8 +9191,8 @@ export interface components {
             time_limit_minutes?: number | null;
             /** Max Attempts */
             max_attempts?: number | null;
-            /** Cooldown Hours */
-            cooldown_hours?: number | null;
+            /** Cooldown Minutes */
+            cooldown_minutes?: number | null;
             /**
              * Max Follow Ups Per Question
              * @default 2
@@ -9285,8 +9283,8 @@ export interface components {
             time_limit_minutes?: number | null;
             /** Max Attempts */
             max_attempts?: number | null;
-            /** Cooldown Hours */
-            cooldown_hours?: number | null;
+            /** Cooldown Minutes */
+            cooldown_minutes?: number | null;
             /**
              * Max Follow Ups Per Question
              * @default 2
@@ -9322,8 +9320,8 @@ export interface components {
             time_limit_minutes?: number | null;
             /** Max Attempts */
             max_attempts?: number | null;
-            /** Cooldown Hours */
-            cooldown_hours?: number | null;
+            /** Cooldown Minutes */
+            cooldown_minutes?: number | null;
             /** Min Outcomes To Pass */
             min_outcomes_to_pass?: number | null;
             /** Max Follow Ups Per Question */

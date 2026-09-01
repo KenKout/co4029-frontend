@@ -73,7 +73,6 @@ export default function QuizManagePage() {
     t,
     navigate,
     courseId,
-    moduleId,
     publishDisabled,
     draft: state.draft,
     data,

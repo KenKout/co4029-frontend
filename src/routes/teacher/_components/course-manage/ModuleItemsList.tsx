@@ -42,6 +42,7 @@ export function ModuleItemsList({
           key={item.id}
           item={item}
           courseId={courseId}
+          index={idx}
           isDragOver={dragOverIdx === idx}
           isDragging={dragSourceIdx === idx}
           onDragStart={(e) => {

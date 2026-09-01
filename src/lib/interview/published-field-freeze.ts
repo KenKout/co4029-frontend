@@ -21,7 +21,7 @@
 /**
  * Draft keys that may still be saved on a published config.
  *
- * Note what is NOT here: `max_attempts` / `cooldown_hours`. They are read before
+ * Note what is NOT here: `max_attempts` / `cooldown_minutes`. They are read before
  * a session exists, so editing them cannot corrupt an interview in flight — but
  * they are the terms of assessment. Lowering the cap mid-cohort strands a student
  * who already spent an attempt in good faith; raising it gives later students

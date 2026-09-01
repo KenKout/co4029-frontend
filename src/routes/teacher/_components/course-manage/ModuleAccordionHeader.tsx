@@ -18,6 +18,7 @@ import type { TranslateFn } from "./types";
 export function ModuleAccordionHeader({
   module,
   courseId,
+  index,
   open,
   onToggle,
   ctl,
@@ -25,6 +26,8 @@ export function ModuleAccordionHeader({
 }: {
   module: CourseContentModule;
   courseId: string;
+  /** 0-based order in the course; rendered as the leading number badge. */
+  index: number;
   open: boolean;
   onToggle: () => void;
   ctl: ModuleAccordionController;
@@ -68,6 +71,21 @@ export function ModuleAccordionHeader({
       >
         <GripVertical className="h-4 w-4" />
       </Button>
+
+      {/* Module number. Derived from render order, and the list is served in
+          ``Module.position`` order, so it stays truthful after a drag-reorder
+          (which re-numbers server-side and refetches). Deliberately a small
+          tinted chip, not the student page's 28px gradient tile: this is a
+          dense editing list where the title is the thing being scanned, and
+          the same tint/weight is already the numbering convention here
+          (``learning-outcomes/OutcomeRow`` LO badges). Still one step stronger
+          than the plain grey "N." on item rows, so the hierarchy reads. */}
+      <span
+        className="shrink-0 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-m3-primary-fixed px-1 text-[11px] font-extrabold tabular-nums text-m3-primary"
+        aria-hidden="true"
+      >
+        {index + 1}
+      </span>
 
       {/* Title — editable inline */}
       {editingTitle ? (
@@ -130,12 +148,6 @@ export function ModuleAccordionHeader({
         onPublishAll={handlePublishAll}
         t={t}
       />
-
-      {/* Meta counts */}
-      <span className="text-[11px] text-m3-on-surface-variant hidden md:block shrink-0">
-        {stats.lessonCount}L{stats.quizCount > 0 && ` · ${stats.quizCount}Q`}
-        {stats.interviewCount > 0 && ` · ${stats.interviewCount}I`}
-      </span>
 
       <ModuleHeaderActions
         editingTitle={editingTitle}

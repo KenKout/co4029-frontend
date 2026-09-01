@@ -167,7 +167,7 @@ export interface SettingsDraft {
   tts_voice: string;
   time_limit_minutes: string;
   max_attempts: string;
-  cooldown_hours: string;
+  cooldown_minutes: string;
   min_outcomes_to_pass: string;
   max_follow_ups_per_question: string;
   max_hints_per_question: string;

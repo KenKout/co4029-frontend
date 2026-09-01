@@ -20,6 +20,7 @@ import { useModuleAccordion } from "./use-module-accordion";
 export function ModuleAccordion({
   module,
   courseId,
+  index,
   open,
   onToggle,
   registerRef,
@@ -32,6 +33,8 @@ export function ModuleAccordion({
 }: {
   module: CourseContentModule;
   courseId: string;
+  /** 0-based order in the course, rendered as the module's number badge. */
+  index: number;
   open: boolean;
   onToggle: () => void;
   /** Registers this module's DOM node so the quick-nav rail can scroll to it. */
@@ -70,6 +73,7 @@ export function ModuleAccordion({
       <ModuleAccordionHeader
         module={module}
         courseId={courseId}
+        index={index}
         open={open}
         onToggle={onToggle}
         ctl={ctl}

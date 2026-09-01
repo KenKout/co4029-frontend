@@ -28,7 +28,7 @@ const BASE_DRAFT = {
   tts_voice: "aura-2-hyperion-en",
   time_limit_minutes: "",
   max_attempts: "",
-  cooldown_hours: "",
+  cooldown_minutes: "",
   min_outcomes_to_pass: "2",
   max_follow_ups_per_question: "2",
   max_hints_per_question: "3",
