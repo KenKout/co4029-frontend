@@ -9102,8 +9102,8 @@ export interface components {
             time_limit_minutes?: number | null;
             /** Max Attempts */
             max_attempts?: number | null;
-            /** Cooldown Hours */
-            cooldown_hours?: number | null;
+            /** Cooldown Minutes */
+            cooldown_minutes?: number | null;
             /**
              * Max Follow Ups Per Question
              * @default 2
@@ -9191,8 +9191,8 @@ export interface components {
             time_limit_minutes?: number | null;
             /** Max Attempts */
             max_attempts?: number | null;
-            /** Cooldown Hours */
-            cooldown_hours?: number | null;
+            /** Cooldown Minutes */
+            cooldown_minutes?: number | null;
             /**
              * Max Follow Ups Per Question
              * @default 2
@@ -9283,8 +9283,8 @@ export interface components {
             time_limit_minutes?: number | null;
             /** Max Attempts */
             max_attempts?: number | null;
-            /** Cooldown Hours */
-            cooldown_hours?: number | null;
+            /** Cooldown Minutes */
+            cooldown_minutes?: number | null;
             /**
              * Max Follow Ups Per Question
              * @default 2
@@ -9320,8 +9320,8 @@ export interface components {
             time_limit_minutes?: number | null;
             /** Max Attempts */
             max_attempts?: number | null;
-            /** Cooldown Hours */
-            cooldown_hours?: number | null;
+            /** Cooldown Minutes */
+            cooldown_minutes?: number | null;
             /** Min Outcomes To Pass */
             min_outcomes_to_pass?: number | null;
             /** Max Follow Ups Per Question */

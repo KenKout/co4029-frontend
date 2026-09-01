@@ -4435,8 +4435,8 @@
       "attempts_label": "Attempts",
       "attempts_placeholder": "e.g. 3",
       "cooldown_label": "Cooldown",
-      "cooldown_hint": "Minimum wait between attempts; blank = none",
-      "cooldown_placeholder": "e.g. 24",
+      "cooldown_hint": "Minimum wait between attempts, in minutes; blank = none",
+      "cooldown_placeholder": "e.g. 30",
       "voice_label": "AI voice",
       "voice_hint": "",
       "voice_default": "Default voice",
@@ -4468,8 +4468,7 @@
       "attempts": "times",
       "outcomes": "LO",
       "turns": "turns",
-      "hints": "hints",
-      "hours": "hours"
+      "hints": "hints"
     },
     "security": {
       "title": "Security & Integrity",

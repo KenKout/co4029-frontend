@@ -4306,8 +4306,8 @@
       "attempts_label": "Số lần thử",
       "attempts_placeholder": "vd. 3",
       "cooldown_label": "Thời gian chờ",
-      "cooldown_hint": "Thời gian chờ tối thiểu giữa các lần thi; để trống = không chờ",
-      "cooldown_placeholder": "vd. 24",
+      "cooldown_hint": "Thời gian chờ tối thiểu giữa các lần thi, tính theo phút; để trống = không chờ",
+      "cooldown_placeholder": "vd. 30",
       "voice_label": "Giọng AI",
       "voice_hint": "",
       "voice_default": "Giọng mặc định",
@@ -4339,8 +4339,7 @@
       "attempts": "lần",
       "outcomes": "LO",
       "turns": "lượt",
-      "hints": "gợi ý",
-      "hours": "giờ"
+      "hints": "gợi ý"
     },
     "security": {
       "title": "Bảo mật & Tính toàn vẹn",

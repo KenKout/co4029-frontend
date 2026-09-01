@@ -73,26 +73,27 @@ export function SettingsRulesCard({
             endAdornment={t("teacher_interview_config.units.attempts")}
           />
         </Field>
-        {/* The retake cooldown (FR-5.3). The backend has always enforced it
+        {/* The retake cooldown (FR-5.3), in MINUTES — the column was whole
+            hours until migration 0099, which could not express a short
+            breather between attempts. The backend has always enforced the gate
             (`services/taking._enforce_retake_policy` → 429, and
             `compute_retake_status` feeds the student's "you can try again
-            after …" line), but the input was dropped from this form in
-            July 2026, leaving the column NULL on every config and the whole
-            gate unreachable. Restored here rather than deleting the gate. */}
+            after …" line); only the input was missing for a while. */}
         <Field
           label={t("teacher_interview_config.fields.cooldown_label")}
           hint={t("teacher_interview_config.fields.cooldown_hint")}
-          {...lock("cooldown_hours")}
+          {...lock("cooldown_minutes")}
         >
           <Input
             type="number"
             min={1}
-            value={draft.cooldown_hours}
-            onChange={(e) => update("cooldown_hours", e.target.value)}
+            max={10080}
+            value={draft.cooldown_minutes}
+            onChange={(e) => update("cooldown_minutes", e.target.value)}
             placeholder={t(
               "teacher_interview_config.fields.cooldown_placeholder",
             )}
-            endAdornment={t("teacher_interview_config.units.hours")}
+            endAdornment={t("teacher_interview_config.units.minutes")}
           />
         </Field>
       </div>

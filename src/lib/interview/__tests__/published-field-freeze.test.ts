@@ -11,7 +11,7 @@ const FROZEN = [
   // Read before a session exists, so they cannot corrupt a run in flight — but
   // they are the terms of assessment, so they freeze too.
   "max_attempts",
-  "cooldown_hours",
+  "cooldown_minutes",
   "persona",
   "persona_profile",
   "supported_modes",

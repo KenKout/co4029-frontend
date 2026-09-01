@@ -39,7 +39,7 @@ function savedConfig(
     tts_voice: null,
     time_limit_minutes: 10,
     max_attempts: 2,
-    cooldown_hours: 24,
+    cooldown_minutes: 1440,
     min_outcomes_to_pass: 2,
     supplementary_instructions: null,
     security_response_policy: "warn_and_continue",
