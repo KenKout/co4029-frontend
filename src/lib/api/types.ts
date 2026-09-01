@@ -526,7 +526,6 @@ export interface InterviewQuestionBankItemRead {
   question_type: InterviewQuestionType;
   difficulty?: InterviewDifficulty | null;
   model_answer?: string | null;
-  tags: string[];
   variant_group_id?: string | null;
   source_config_id?: string | null;
   created_at: string;
@@ -537,7 +536,6 @@ export interface InterviewQuestionBankItemCreate {
   question_type: InterviewQuestionType;
   difficulty?: InterviewDifficulty | null;
   model_answer?: string | null;
-  tags?: string[];
   source_config_id?: string | null;
 }
 export interface InterviewQuestionBankLogicalGroupCreate {
@@ -557,7 +555,6 @@ export interface InterviewQuestionBankItemUpdate {
   question_type?: InterviewQuestionType;
   difficulty?: InterviewDifficulty | null;
   model_answer?: string | null;
-  tags?: string[];
 }
 // Widen with the teacher-context fields the backend already returns
 // (student_name, interview_title) until the OpenAPI snapshot is regenerated.
