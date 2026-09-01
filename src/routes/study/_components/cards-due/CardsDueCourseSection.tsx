@@ -73,13 +73,15 @@ function reviewLabel(t: TranslateFn, n: number): string {
 }
 
 /** One lesson row — the whole row is the review link, count pinned right. */
-function LessonRow({ lesson }: { lesson: LessonBucket }) {
+function LessonRow({ lesson, courseSlug }: { lesson: LessonBucket; courseSlug: string }) {
   const { t } = useTranslation();
   return (
     <li>
       <Link
         to="/study/review"
-        search={{ lesson: lesson.lessonId, course: undefined }}
+        // Slug pair, not the lesson UUID: the lesson slug is unique per
+        // MODULE, so it only identifies a lesson when paired with its course.
+        search={{ lesson: lesson.lessonSlug, course: courseSlug }}
         className="group flex items-center gap-3 rounded-lg px-4 py-2.5 transition-colors hover:bg-m3-surface-container-low focus-visible:bg-m3-surface-container-low"
       >
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed">
@@ -147,7 +149,7 @@ export function CardsDueCourseSection({ group }: { group: CourseBucket }) {
       </Link>
       <ul className="divide-y divide-m3-outline-variant/10">
         {group.lessons.map((l) => (
-          <LessonRow key={l.lessonId} lesson={l} />
+          <LessonRow key={l.lessonId} lesson={l} courseSlug={group.courseSlug} />
         ))}
       </ul>
     </section>

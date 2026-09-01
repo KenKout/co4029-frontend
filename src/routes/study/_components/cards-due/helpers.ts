@@ -17,6 +17,8 @@ import type { CardDue } from "@/lib/api/types";
  */
 export interface LessonBucket {
   lessonId: string;
+  /** URL slug — what review links carry, so the URL is readable. */
+  lessonSlug: string;
   lessonTitle: string;
   count: number;
   /** Cards whose due_at is before today (any age). */
@@ -92,6 +94,7 @@ export function groupByCourse(cards: CardDue[]): CourseBucket[] {
     } else {
       course.lessons.set(card.lesson_id, {
         lessonId: card.lesson_id,
+        lessonSlug: card.lesson_slug,
         lessonTitle: card.lesson_title,
         count: 1,
         overdue: cls === "overdue" || cls === "severe" ? 1 : 0,

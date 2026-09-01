@@ -3,7 +3,10 @@ import { Link, useSearch } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
-import { useReviewQueue } from "@/lib/api/hooks/spaced-repetition";
+import {
+  lessonScopeFromParam,
+  useReviewQueue,
+} from "@/lib/api/hooks/spaced-repetition";
 import { SESSION_CARD_LIMIT } from "@/routes/study/_components/cards-due/helpers";
 import { queryKeys } from "@/lib/api/query-keys";
 import { deriveQueueStats } from "@/routes/study/_components/review/helpers";
@@ -34,7 +37,8 @@ export default function StudyReviewPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useReviewQueue({
     limit: SESSION_CARD_LIMIT,
-    lessonId: lesson,
+    // `?lesson=` is a slug now; older links carry a UUID and still resolve.
+    ...lessonScopeFromParam(lesson),
     courseSlug: course,
   });
 

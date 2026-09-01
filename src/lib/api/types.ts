@@ -990,14 +990,11 @@ export type CareerReadinessSnapshotRead =
   Schemas["CareerReadinessSnapshotRead"];
 
 export type CardDueItem = Schemas["CardsDueItem"];
-// The generated OpenAPI snapshot is stale — the backend enriches each due
-// card with the owning course slug + title so the cards-due screen can group
-// by course and deep-link into review. Layer it on until the snapshot is
-// regenerated.
-export type CardDue = CardDueItem & {
-  course_slug: string;
-  course_title: string;
-};
+// Was widened by hand while the snapshot lagged behind the course_slug /
+// course_title enrichment. The snapshot now carries both (plus lesson_slug),
+// so the alias is a straight re-export again — a hand-written widening
+// silently absorbs future drift instead of surfacing it.
+export type CardDue = CardDueItem;
 export type CardsDuePage = Schemas["CardsDuePage"];
 
 // -- SR review loop (post-snapshot; declared locally) --

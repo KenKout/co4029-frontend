@@ -2,7 +2,10 @@ import { useEffect, useMemo } from "react";
 import { Link, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, Play } from "lucide-react";
-import { useCardsDue } from "@/lib/api/hooks/spaced-repetition";
+import {
+  lessonScopeFromParam,
+  useCardsDue,
+} from "@/lib/api/hooks/spaced-repetition";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { CardsDueCourseSection } from "@/routes/study/_components/cards-due/CardsDueCourseSection";
@@ -119,7 +122,7 @@ export default function StudyCardsDuePage() {
   // counts a student lands on match what they clicked, not the whole backlog.
   const { lesson, course } = useSearch({ strict: false });
   const { items, hasNextPage, fetchNextPage, isFetchingNextPage, isLoading } =
-    useCardsDue({ limit: 100, lessonId: lesson, courseSlug: course });
+    useCardsDue({ limit: 100, ...lessonScopeFromParam(lesson), courseSlug: course });
 
   // Drain remaining pages so the grouped counts reflect the TRUE backlog rather
   // than the first 100 due cards — a count that lies undercuts the "finishable

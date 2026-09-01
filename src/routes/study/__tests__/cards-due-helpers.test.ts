@@ -24,6 +24,7 @@ function card(over: Partial<CardDue> = {}): CardDue {
     question_id: "q",
     quiz_id: "qz",
     lesson_id: "l",
+    lesson_slug: "lesson",
     lesson_title: "Lesson",
     course_slug: "c",
     course_title: "Course",

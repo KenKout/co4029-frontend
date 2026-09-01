@@ -6830,6 +6830,8 @@ export interface components {
              * Format: uuid
              */
             lesson_id: string;
+            /** Lesson Slug */
+            lesson_slug: string;
             /** Lesson Title */
             lesson_title: string;
             /** Course Slug */
@@ -14418,6 +14420,8 @@ export interface components {
              * Format: uuid
              */
             lesson_id: string;
+            /** Lesson Slug */
+            lesson_slug: string;
             /** Lesson Title */
             lesson_title: string;
             /** Course Slug */

@@ -38,31 +38,60 @@ export type CardStudentResult = {
   review_count: number;
 };
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Turn a `?lesson=` URL value into the right scope option.
+ *
+ * Review URLs now carry a lesson SLUG, but links minted before that — SR
+ * reminder emails, notifications, a student's bookmark — carry a UUID, and
+ * those must keep resolving. Same shape as the course-learn route, which
+ * matches on slug and falls back to id for exactly this reason.
+ *
+ * Sniffing the value beats adding a second query key: the two are
+ * alternative spellings of one scope, and a UUID is unambiguous enough that
+ * a lesson slug can never be mistaken for one (slugs are title-derived and
+ * hyphen-joined, never 8-4-4-4-12 hex).
+ */
+export function lessonScopeFromParam(
+  lesson: string | undefined,
+): { lessonId?: string; lessonSlug?: string } {
+  if (!lesson) return {};
+  return UUID_RE.test(lesson) ? { lessonId: lesson } : { lessonSlug: lesson };
+}
+
 export type UseCardsDueOptions = {
+  /** Scope by lesson UUID. Kept for links minted before slugs existed. */
   lessonId?: string;
+  /**
+   * Scope by lesson slug, paired with `courseSlug`. Preferred, so review
+   * URLs read as `?course=os&lesson=deadlocks` rather than carrying a raw
+   * UUID. Lesson slugs are unique per module, not per course — a course
+   * with two "Introduction" lessons scopes to both, which is deliberate
+   * (see the SQL comment in the SR learner router).
+   */
+  lessonSlug?: string;
   courseSlug?: string;
   limit?: number;
   enabled?: boolean;
 };
 
 export function useCardsDue(opts: UseCardsDueOptions = {}) {
-  const { lessonId, courseSlug, limit = 20, enabled } = opts;
+  const { lessonId, lessonSlug, courseSlug, limit = 20, enabled } = opts;
   return useInfinitePage<CardDue>({
-    queryKey: queryKeys.sr.cardsDue(lessonId, limit, courseSlug),
+    queryKey: queryKeys.sr.cardsDue(lessonId ?? lessonSlug, limit, courseSlug),
     fetch: async (cursor, lim = limit) => {
       const params = new URLSearchParams();
       if (lessonId) params.set("lesson_id", lessonId);
+      if (lessonSlug) params.set("lesson_slug", lessonSlug);
       if (courseSlug) params.set("course_slug", courseSlug);
       if (cursor) params.set("cursor", cursor);
       if (lim) params.set("limit", String(lim));
       const qs = params.toString();
-      // The committed OpenAPI snapshot for CardsDuePage predates the
-      // course_slug enrichment, so cast the items to the widened CardDue.
-      const page = await apiFetch<
-        Omit<CardsDuePage, "items"> & {
-          items: CardDue[];
-        }
-      >(qs ? `/me/cards-due?${qs}` : "/me/cards-due");
+      const page = await apiFetch<CardsDuePage>(
+        qs ? `/me/cards-due?${qs}` : "/me/cards-due",
+      );
       return {
         items: page.items,
         next_cursor: page.next_cursor ?? null,
@@ -80,12 +109,15 @@ export function useCardsDue(opts: UseCardsDueOptions = {}) {
  * cards are answered (refetched on invalidation).
  */
 export function useReviewQueue(opts: UseCardsDueOptions = {}) {
-  const { lessonId, courseSlug, limit = 20, enabled } = opts;
+  const { lessonId, lessonSlug, courseSlug, limit = 20, enabled } = opts;
   return useQuery({
-    queryKey: queryKeys.sr.reviewQueue(lessonId, limit, courseSlug),
+    // The key folds id and slug into one slot: they are alternative spellings
+    // of the same scope, and only ever one is set.
+    queryKey: queryKeys.sr.reviewQueue(lessonId ?? lessonSlug, limit, courseSlug),
     queryFn: () => {
       const params = new URLSearchParams();
       if (lessonId) params.set("lesson_id", lessonId);
+      if (lessonSlug) params.set("lesson_slug", lessonSlug);
       if (courseSlug) params.set("course_slug", courseSlug);
       if (limit) params.set("limit", String(limit));
       const qs = params.toString();
