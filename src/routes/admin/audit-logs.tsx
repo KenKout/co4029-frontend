@@ -361,6 +361,9 @@ function HttpAuditTable({
   // seeded value skips the debounce — the operator already asked for it.
   const [debouncedPath, setDebouncedPath] = useState(initialPath ?? "");
   const [methodFilter, setMethodFilter] = useState<string | undefined>();
+  // Status-code class filter. Client-side like the method filter: the table
+  // already pulls a bounded window and filters it locally.
+  const [codeFilter, setCodeFilter] = useState<string | undefined>();
   useEffect(() => {
     const handle = setTimeout(() => setDebouncedPath(pathFilter), 400);
     return () => clearTimeout(handle);
@@ -380,9 +383,15 @@ function HttpAuditTable({
 
   const filtered = useMemo(() => {
     const base = rows ?? [];
-    if (!methodFilter) return base;
-    return base.filter((r) => r.method === methodFilter);
-  }, [rows, methodFilter]);
+    let out = base;
+    if (methodFilter) out = out.filter((r) => r.method === methodFilter);
+    // status_code class: "2xx" matches 200-299, "4xx" 400-499, etc.
+    if (codeFilter) {
+      const prefix = codeFilter[0];
+      out = out.filter((r) => String(r.status_code).startsWith(prefix));
+    }
+    return out;
+  }, [rows, methodFilter, codeFilter]);
 
   const userIds = useMemo(
     () => (filtered ?? []).flatMap((r) => (r.user_id ? [r.user_id] : [])),
@@ -397,6 +406,18 @@ function HttpAuditTable({
     options: ["GET", "POST", "PATCH", "PUT", "DELETE"].map((m) => ({
       value: m,
       label: m,
+    })),
+  };
+
+  const codeFilterDef: FilterDef = {
+    id: "code",
+    label: t("admin.audit.cols.code"),
+    allLabel: t("admin.audit.all_codes"),
+    // Class-level options, not every possible 3-digit code — the operator
+    // asks "which 5xx reloads did we have?", not "was it exactly 503?".
+    options: ["2xx", "3xx", "4xx", "5xx"].map((c) => ({
+      value: c,
+      label: c,
     })),
   };
 
@@ -498,10 +519,11 @@ function HttpAuditTable({
         search={pathFilter}
         onSearchChange={setPathFilter}
         searchPlaceholder={t("admin.audit.path_filter_placeholder")}
-        filters={[methodFilterDef]}
-        filterValues={{ method: methodFilter }}
+        filters={[methodFilterDef, codeFilterDef]}
+        filterValues={{ method: methodFilter, code: codeFilter }}
         onFilterChange={(filterId, value) => {
           if (filterId === "method") setMethodFilter(value);
+          if (filterId === "code") setCodeFilter(value);
         }}
       />
       {isError ? (

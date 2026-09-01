@@ -1538,6 +1538,7 @@
         }
       },
       "all_methods": "Tất cả method",
+      "all_codes": "Tất cả mã trạng thái",
       "copy_id": "Sao chép ID",
       "copied": "Đã sao chép",
       "copy_failed": "Không sao chép được"

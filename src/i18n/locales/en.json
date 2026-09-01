@@ -1630,6 +1630,7 @@
         }
       },
       "all_methods": "All methods",
+      "all_codes": "All status codes",
       "copy_id": "Copy ID",
       "copied": "Copied",
       "copy_failed": "Could not copy"
