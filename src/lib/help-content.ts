@@ -382,13 +382,37 @@ An active student may request a change from the current Career Path to another C
 
 The request must include a reason. Submitting a request does not change the active path.
 
+A submitted request stays open until it is decided or withdrawn. The student may withdraw their own open request at any point before a decision, including while it is under review.
+
 ## VII. Review and decision
 
-Only an active Faculty Dean within the Program's faculty scope may approve or reject a pending request. A reviewer cannot approve their own request.
+Only an active Faculty Dean within the Program's faculty scope may act on a pending request. A reviewer cannot approve their own request.
 
-Before approval, the platform rechecks the student's status, current path, change limit, and target path. If the target is archived while the request is pending, the request is invalidated with that reason. Rejection leaves the current path unchanged.
+A request passes through the following states:
+
+- **Awaiting review** — submitted and not yet picked up.
+- **Under review** — a Faculty Dean has acknowledged the request and is verifying the student's record. This is a signal, not a decision: the active Career Path, progress, and change budget are unchanged, and the student is notified that their request has been received. A request may be decided with or without this step.
+- **Approved**, **rejected**, **withdrawn**, or **invalidated** — final.
+
+A request that is awaiting review or under review is an open request. Only one open request may exist for a Program Enrollment at a time.
+
+Before approval, the platform rechecks the student's status, current path, change limit, and target path. If the target is archived while the request is pending, the request is invalidated with that reason.
+
+A rejection must state a reason from a defined set, which the student receives:
+
+- the stated justification is not sufficient;
+- too much progress would be lost by switching at this time;
+- the target Career Path is not a suitable fit for the student's record;
+- the student's remaining change should be kept for a more necessary switch;
+- an advising conversation is required before a switch;
+- supporting information for the request is missing;
+- another reason, which must be explained in writing.
+
+Rejection leaves the current path unchanged and does not consume one of the student's approved changes. The reason, any written note, the reviewer, and the decision time are retained on the request record and remain visible to the student.
 
 On approval, the old path attempt is closed with a progress snapshot and a new path attempt begins. The Program report retains the current path and the full transition history.
+
+The student is notified when their request is acknowledged as under review, approved, or rejected.
 
 ## VIII. Progress preservation and course access
 
@@ -410,7 +434,7 @@ Archiving a Learning Program blocks new enrolments but does not interrupt studen
 
 ## XI. Records, reporting, and transparency
 
-Program reports may include enrolment status, pinned Program version, current Career Path, current progress, approved change count, pending requests, and transition history.
+Program reports may include enrolment status, pinned Program version, current Career Path, current progress, approved change count, open requests and their review state, rejected requests with their recorded reason, and transition history.
 
 Historical path attempts retain the snapshot recorded when the student left that path. Later course completions do not rewrite the historical snapshot, although they may count toward the current path through shared completion awards.
 

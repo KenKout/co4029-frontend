@@ -1047,7 +1047,8 @@
       "system": "Hệ thống",
       "material_processing": "Xử lý tài liệu",
       "quiz_generation": "Tạo câu hỏi",
-      "interview_generation": "Tạo câu hỏi phỏng vấn"
+      "interview_generation": "Tạo câu hỏi phỏng vấn",
+      "path_change_review": "Xét đơn đổi lộ trình"
     },
     "channel": {
       "email": "Email",
@@ -1108,7 +1109,8 @@
       "system": "Hệ thống",
       "material_processing": "Xử lý tài liệu",
       "quiz_generation": "Tạo câu hỏi",
-      "interview_generation": "Tạo câu hỏi phỏng vấn"
+      "interview_generation": "Tạo câu hỏi phỏng vấn",
+      "path_change_review": "Xét đơn đổi lộ trình"
     },
     "errors": {
       "mark_read_failed": "Không thể đánh dấu đã đọc",

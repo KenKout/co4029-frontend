@@ -26,7 +26,7 @@ import {
 import { useFormatDate } from "@/lib/format/date";
 import { Tabs, type TabDef } from "@/components/ui/tabs";
 import { RosterTab } from "./_components/learning-program-detail/RosterTab";
-import { PathChangeRequestsSection } from "./_components/learning-program-detail/PathChangeRequests";
+import { PathChangeRequestsTab } from "./_components/learning-program-detail/PathChangeRequestsTab";
 import { ImportStudentsDialog } from "./_components/learning-program-detail/ImportStudentsDialog";
 
 type TabKey = "general" | "roster" | "requests";
@@ -94,8 +94,12 @@ export default function ManagementLearningProgramDetailPage() {
   }
 
   const isDraft = data.current_version.status === "draft" && !readOnly;
-  const pendingRequests = (requests.data ?? []).filter((request) => request.status === "pending");
-  const pendingCount = pendingRequests.length;
+  // OPEN requests, not just `pending`: an acknowledged (`in_progress`) request
+  // is still the dean's to decide, so it stays in the queue and in the badge.
+  const openRequests = (requests.data ?? []).filter(
+    (request) => request.status === "pending" || request.status === "in_progress",
+  );
+  const pendingCount = openRequests.length;
   const currentPaths = data.paths;
 
   async function removePath(pathId: string, pathName: string) {
@@ -195,24 +199,20 @@ export default function ManagementLearningProgramDetailPage() {
           )}
 
           {tab === "requests" && (
-            <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
-              <h2 className="font-headline text-lg font-bold">Path change requests</h2>
-              <PathChangeRequestsSection
-                requests={pendingRequests}
-                roster={roster.data ?? []}
-                onDecide={(request, approve) =>
-                  void confirmedAction(
-                    approve ? "Approve path change?" : "Reject path change?",
-                    approve
-                      ? "The current path is snapshotted and the student moves to the target path."
-                      : "The student remains on the current path.",
-                    approve ? "Approve" : "Reject",
-                    () => decide.mutateAsync({ requestId: request.id, approve }),
-                    approve ? "Path change approved" : "Path change rejected",
-                  )
-                }
-              />
-            </section>
+            <PathChangeRequestsTab
+              programId={id}
+              requests={openRequests}
+              roster={roster.data ?? []}
+              onApprove={(request) =>
+                void confirmedAction(
+                  "Approve path change?",
+                  "The current path is snapshotted and the student moves to the target path.",
+                  "Approve",
+                  () => decide.mutateAsync({ requestId: request.id, approve: true }),
+                  "Path change approved",
+                )
+              }
+            />
           )}
         </main>
 

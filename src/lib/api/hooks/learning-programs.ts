@@ -7,6 +7,7 @@ import type {
   LearningProgramAuthoringOptions,
   LearningProgramVersion,
   LearningProgramEnrollment,
+  PathChangeRejectionReasonCode,
   PathChangeRequest,
 } from "../types";
 
@@ -146,14 +147,38 @@ export function useProgramChangeRequests(id: string) {
 export function useDecidePathChange(programId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ requestId, approve, reason }: { requestId: string; approve: boolean; reason?: string }) =>
+    mutationFn: ({ requestId, approve, reason, reasonCode }: { requestId: string; approve: boolean; reason?: string; reasonCode?: PathChangeRejectionReasonCode }) =>
       apiPost<PathChangeRequest>(
         `/management/learning-programs/path-change-requests/${requestId}/${approve ? "approve" : "reject"}`,
-        { reason: reason ?? null },
+        // Rejection carries a structured reason CODE (required by the backend)
+        // plus optional detail; approval has nothing to justify, so it keeps the
+        // bare free-text shape.
+        approve
+          ? { reason: reason ?? null }
+          : { reason_code: reasonCode, reason: reason ?? null },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.learningPrograms.requests(programId) });
       void qc.invalidateQueries({ queryKey: queryKeys.learningPrograms.roster(programId) });
+    },
+  });
+}
+
+/**
+ * Mark a request as being actively reviewed — an acknowledgement, not a
+ * decision. Notifies the student that a dean has opened their request and
+ * flips the row to `in_progress` for queue filtering.
+ */
+export function useMarkPathChangeInProgress(programId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (requestId: string) =>
+      apiPost<PathChangeRequest>(
+        `/management/learning-programs/path-change-requests/${requestId}/in-progress`,
+        {},
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.learningPrograms.requests(programId) });
     },
   });
 }

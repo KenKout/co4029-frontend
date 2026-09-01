@@ -1125,7 +1125,8 @@
       "system": "System",
       "material_processing": "Material processing",
       "quiz_generation": "Quiz generation",
-      "interview_generation": "Interview generation"
+      "interview_generation": "Interview generation",
+      "path_change_review": "Path change review"
     },
     "channel": {
       "email": "Email",
@@ -1186,7 +1187,8 @@
       "system": "System",
       "material_processing": "Material processing",
       "quiz_generation": "Quiz generation",
-      "interview_generation": "Interview generation"
+      "interview_generation": "Interview generation",
+      "path_change_review": "Path change review"
     },
     "errors": {
       "mark_read_failed": "Couldn't mark as read",
