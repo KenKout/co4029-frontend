@@ -13,7 +13,6 @@ import { LessonSaveButton } from "./LessonSaveButton";
  */
 export function LessonActionBar({
   courseId,
-  moduleId,
   isDirty,
   onBackWhileDirty,
   archiveConfirm,
@@ -29,7 +28,6 @@ export function LessonActionBar({
   onSave,
 }: {
   courseId: string;
-  moduleId: string;
   isDirty: boolean;
   /** Invoked (instead of navigating) when Back is clicked while dirty. */
   onBackWhileDirty: () => void;
@@ -49,7 +47,6 @@ export function LessonActionBar({
     <div className="sticky top-16 z-10 -mx-1 mb-8 flex items-center justify-between gap-3 border-b border-m3-outline-variant/15 bg-m3-surface/85 px-1 py-3 backdrop-blur-md">
       <LessonBackLink
         courseId={courseId}
-        moduleId={moduleId}
         isDirty={isDirty}
         onBackWhileDirty={onBackWhileDirty}
       />

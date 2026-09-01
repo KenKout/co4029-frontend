@@ -114,7 +114,6 @@ export default function LessonManagePage() {
       {/* Sticky action bar: Back · Archive · Delete · Publish/Unpublish · Save. */}
       <LessonActionBar
         courseId={courseId}
-        moduleId={moduleId}
         isDirty={editor.isDirty}
         onBackWhileDirty={() => leaveGuard.run(actions.goBack)}
         archiveConfirm={editor.archiveConfirm}

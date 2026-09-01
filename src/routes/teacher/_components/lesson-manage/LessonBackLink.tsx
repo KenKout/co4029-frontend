@@ -4,33 +4,29 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
- * Back link in the lesson action bar — targets the parent module when the
- * lesson has one, otherwise the course.
+ * Back link in the lesson action bar — returns to the course page, which is
+ * where the lesson was opened from.
  */
 export function LessonBackLink({
   courseId,
-  moduleId,
   isDirty,
   onBackWhileDirty,
 }: {
   courseId: string;
-  moduleId: string;
   isDirty: boolean;
   /** Invoked (instead of navigating) when Back is clicked while dirty. */
   onBackWhileDirty: () => void;
 }) {
   const { t } = useTranslation();
   return (
-    /* Back to the parent module/course. Intercepted so unsaved lesson
-       edits prompt first — a plain <Link> would navigate straight away and
-       silently drop the draft. */
+    /* Back to the course. The label says "back to course" and that is where
+       teachers came from — lessons are opened from the course page's
+       curriculum accordion, so the owning module page was never on the way.
+       Intercepted so unsaved lesson edits prompt first — a plain <Link> would
+       navigate straight away and silently drop the draft. */
     <Link
-      to={
-        moduleId
-          ? "/teacher/courses/$courseId/modules/$moduleId"
-          : "/teacher/courses/$courseId"
-      }
-      params={moduleId ? { courseId, moduleId } : { courseId }}
+      to="/teacher/courses/$courseId"
+      params={{ courseId }}
       onClick={(e) => {
         if (!isDirty) return; // let the Link do its normal thing
         e.preventDefault();

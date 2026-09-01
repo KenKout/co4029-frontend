@@ -16,7 +16,7 @@ export function useLessonManageActions({
   data: LessonManageData;
   editor: LessonEditorState;
 }) {
-  const { courseId, lessonId, moduleId, moduleItem, navigate } = data;
+  const { courseId, lessonId, moduleItem, navigate } = data;
   const { updateLesson, updateModuleItem, deleteLesson } = data;
 
   function showFeedback(msg: string) {
@@ -24,18 +24,15 @@ export function useLessonManageActions({
     setTimeout(() => editor.setFeedback(null), 2000);
   }
 
+  // Back always returns to the COURSE page, matching LessonBackLink's target
+  // and its "back to course" label. Lessons are opened from the course
+  // curriculum accordion, so the owning module page was never on the way and
+  // sending the teacher there felt like being dropped somewhere new.
   function goBack() {
-    void navigate(
-      moduleId
-        ? {
-            to: "/teacher/courses/$courseId/modules/$moduleId",
-            params: { courseId, moduleId },
-          }
-        : {
-            to: "/teacher/courses/$courseId",
-            params: { courseId },
-          },
-    );
+    void navigate({
+      to: "/teacher/courses/$courseId",
+      params: { courseId },
+    });
   }
 
   async function handleSave() {
