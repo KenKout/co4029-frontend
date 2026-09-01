@@ -149,12 +149,6 @@ export function ModuleAccordionHeader({
         t={t}
       />
 
-      {/* Meta counts */}
-      <span className="text-[11px] text-m3-on-surface-variant hidden md:block shrink-0">
-        {stats.lessonCount}L{stats.quizCount > 0 && ` · ${stats.quizCount}Q`}
-        {stats.interviewCount > 0 && ` · ${stats.interviewCount}I`}
-      </span>
-
       <ModuleHeaderActions
         editingTitle={editingTitle}
         duplicateModule={duplicateModule}

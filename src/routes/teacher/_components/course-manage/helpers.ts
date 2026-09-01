@@ -110,9 +110,9 @@ export function resolveItemDisplay(
 }
 
 /**
- * Sorted item list, per-type counts and the publish tallies that drive the
- * module header's "N/M published" chip and its "Publish all" action. An item's
- * status lives on its target; items with no status are ignored.
+ * Sorted item list and the publish tallies that drive the module header's
+ * "N/M published" chip and its "Publish all" action. An item's status lives on
+ * its target; items with no status are ignored.
  */
 export function computeModuleItemStats(
   module: CourseContentModule,
@@ -120,15 +120,6 @@ export function computeModuleItemStats(
   const allItemsSorted = [...(module.items ?? [])].sort(
     (a, b) => a.position - b.position,
   );
-  const lessonCount = (module.items ?? []).filter(
-    (i) => i.item_type === "lesson",
-  ).length;
-  const quizCount = (module.items ?? []).filter(
-    (i) => i.item_type === "quiz",
-  ).length;
-  const interviewCount = (module.items ?? []).filter(
-    (i) => i.item_type === "interview",
-  ).length;
   const statusedItems = (module.items ?? []).filter(
     (i) => resolveItemStatus(i) !== undefined,
   );
@@ -142,9 +133,6 @@ export function computeModuleItemStats(
     statusedItems.length > 0 && publishedCount === statusedItems.length;
   return {
     allItemsSorted,
-    lessonCount,
-    quizCount,
-    interviewCount,
     statusedItems,
     publishedCount,
     draftItems,

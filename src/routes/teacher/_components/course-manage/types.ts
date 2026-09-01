@@ -41,12 +41,9 @@ export interface ItemDisplay {
   status: string | undefined;
 }
 
-/** Item counts + publish tallies a module header renders from. */
+/** Item publish tallies a module header renders from. */
 export interface ModuleItemStats {
   allItemsSorted: CourseContentItem[];
-  lessonCount: number;
-  quizCount: number;
-  interviewCount: number;
   statusedItems: CourseContentItem[];
   publishedCount: number;
   draftItems: CourseContentItem[];
