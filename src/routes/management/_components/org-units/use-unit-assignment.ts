@@ -17,6 +17,7 @@ export interface UnitPerson {
   email: string;
   facultyIds: string[];
   roleCodesByFaculty: Record<string, string[]>;
+  roles: string[];
 }
 
 /** Direct staff affiliations for one Faculty; Course ownership is immutable. */
@@ -69,15 +70,9 @@ export function useUnitAssignment(
     return map;
   }, [assignments.data]);
 
-  const allPeople = useMemo<UnitPerson[]>(
+  const allOrganizationPeople = useMemo<UnitPerson[]>(
     () =>
       activeMemberships
-        .filter((membership) => {
-          const roles = usersById.get(membership.user_id)?.roles ?? [];
-          return roles.some((role) =>
-            ["hod", "manager", "teacher"].includes(role),
-          );
-        })
         .map((membership) => {
           const user = usersById.get(membership.user_id);
           return {
@@ -91,10 +86,30 @@ export function useUnitAssignment(
             facultyIds: facultyIdsByUser.get(membership.user_id) ?? [],
             roleCodesByFaculty:
               facultyRoleCodesByUser.get(membership.user_id) ?? {},
+            roles: user?.roles ?? [],
           };
         })
         .sort((a, b) => a.displayName.localeCompare(b.displayName)),
     [activeMemberships, facultyIdsByUser, facultyRoleCodesByUser, usersById],
+  );
+
+  const allPeople = useMemo(
+    () =>
+      allOrganizationPeople.filter((person) =>
+        person.roles.some((role) =>
+          ["hod", "manager", "teacher"].includes(role),
+        ),
+      ),
+    [allOrganizationPeople],
+  );
+
+  const deanCandidates = useMemo(
+    () =>
+      allOrganizationPeople.filter(
+        (person) =>
+          !person.roles.includes("student") && !person.roles.includes("admin"),
+      ),
+    [allOrganizationPeople],
   );
 
   const appointDean = useMutation({
@@ -141,10 +156,12 @@ export function useUnitAssignment(
     }
   }
 
-  async function appointFacultyDean(userId: string) {
+  async function appointFacultyDeans(userIds: string[]) {
     setError(null);
     try {
-      await appointDean.mutateAsync(userId);
+      for (const userId of userIds) {
+        await appointDean.mutateAsync(userId);
+      }
     } catch (cause) {
       setError(messageOf(cause));
       throw cause;
@@ -163,8 +180,9 @@ export function useUnitAssignment(
       memberships.isLoading || assignments.isLoading || users.isLoading,
     peopleInUnit,
     allPeople,
+    deanCandidates,
     assignPeople,
-    appointFacultyDean,
+    appointFacultyDeans,
     removePerson,
     isAssigningPerson: removeMember.isPending,
     isBulkAssigning: addMembers.isPending,

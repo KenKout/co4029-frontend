@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, ShieldPlus, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useAuth } from "@/components/auth/AuthProvider";
 import type { OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
 import { useUnitAssignment, type UnitPerson } from "./use-unit-assignment";
 import { AddPeopleDialog } from "./AddPeopleDialog";
+import { AppointDeanDialog } from "./AppointDeanDialog";
 
 /** Staff affiliations for a flat Faculty. Courses are owned at creation time. */
 export function UnitContentsPanel({
@@ -20,9 +21,10 @@ export function UnitContentsPanel({
   isMasterDean: boolean;
 }) {
   const { t } = useTranslation();
+  const { user: currentUser } = useAuth();
   const assignments = useUnitAssignment(orgId, unit.id);
   const [addingPeople, setAddingPeople] = useState(false);
-  const [pendingDean, setPendingDean] = useState<UnitPerson | null>(null);
+  const [appointingDean, setAppointingDean] = useState(false);
   const prefix = "management_org_units";
 
   return (
@@ -41,6 +43,17 @@ export function UnitContentsPanel({
               count: assignments.peopleInUnit.length,
             })}
           </span>
+          {isMasterDean ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1 px-2 text-xs"
+              onClick={() => setAppointingDean(true)}
+            >
+              <ShieldPlus className="h-3.5 w-3.5" />
+              {t(`${prefix}.appoint_dean`)}
+            </Button>
+          ) : null}
           <Button
             size="sm"
             variant="ghost"
@@ -57,11 +70,6 @@ export function UnitContentsPanel({
               key={person.userId}
               person={person}
               onRemove={() => assignments.removePerson(person.userId)}
-              onAppointDean={() => setPendingDean(person)}
-              canAppointDean={
-                isMasterDean &&
-                !(person.roleCodesByFaculty[unit.id] ?? []).includes("hod")
-              }
               disabled={
                 assignments.isAssigningPerson || assignments.isAppointingDean
               }
@@ -84,31 +92,13 @@ export function UnitContentsPanel({
         />
       ) : null}
 
-      {pendingDean ? (
-        <ConfirmDialog
-          open
-          onOpenChange={(open) => {
-            if (!open) setPendingDean(null);
-          }}
-          title={t("management_org_units.appoint_dean_title", {
-            defaultValue: "Appoint Faculty Dean?",
-          })}
-          description={t("management_org_units.appoint_dean_description", {
-            defaultValue:
-              "{{name}} will receive Faculty Dean authority for {{faculty}}. Existing roles and other Faculty affiliations are preserved.",
-            name: pendingDean.displayName,
-            faculty: unit.name,
-          })}
-          confirmLabel={t("management_org_units.appoint_dean", {
-            defaultValue: "Appoint Dean",
-          })}
-          cancelLabel={t("common.cancel")}
-          isPending={assignments.isAppointingDean}
-          onConfirm={() => {
-            void assignments
-              .appointFacultyDean(pendingDean.userId)
-              .then(() => setPendingDean(null));
-          }}
+      {appointingDean ? (
+        <AppointDeanDialog
+          faculty={unit}
+          unitsById={unitsById}
+          currentUserId={currentUser?.id}
+          controller={assignments}
+          onClose={() => setAppointingDean(false)}
         />
       ) : null}
     </div>
@@ -118,14 +108,10 @@ export function UnitContentsPanel({
 function PersonRow({
   person,
   onRemove,
-  onAppointDean,
-  canAppointDean,
   disabled,
 }: {
   person: UnitPerson;
   onRemove: () => void;
-  onAppointDean: () => void;
-  canAppointDean: boolean;
   disabled: boolean;
 }) {
   const { t } = useTranslation();
@@ -137,23 +123,6 @@ function PersonRow({
           <p className="truncate text-[10px] text-text-muted">{person.email}</p>
         ) : null}
       </div>
-      {canAppointDean ? (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-6 gap-1 px-1.5 text-[10px] text-m3-primary"
-          title={t("management_org_units.appoint_dean", {
-            defaultValue: "Appoint Dean",
-          })}
-          disabled={disabled}
-          onClick={onAppointDean}
-        >
-          <ShieldPlus className="h-3 w-3" />
-          {t("management_org_units.appoint_dean", {
-            defaultValue: "Appoint Dean",
-          })}
-        </Button>
-      ) : null}
       <Button
         size="sm"
         variant="ghost"

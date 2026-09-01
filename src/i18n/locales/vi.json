@@ -5402,6 +5402,14 @@
     "appoint_dean": "Bổ nhiệm Dean",
     "appoint_dean_title": "Bổ nhiệm Faculty Dean?",
     "appoint_dean_description": "{{name}} sẽ nhận quyền Faculty Dean tại {{faculty}}. Các vai trò và quan hệ với khoa khác vẫn được giữ nguyên.",
+    "dean_picker": {
+      "title": "Bổ nhiệm Faculty Dean · {{faculty}}",
+      "search_placeholder": "Tìm tài khoản đang hoạt động trong tổ chức…",
+      "empty": "Không có tài khoản phù hợp. Tài khoản Student và Admin đã được loại khỏi danh sách.",
+      "already_dean": "Đã là Dean",
+      "other_faculties": "đồng thời thuộc {{faculties}}",
+      "confirm": "Bổ nhiệm đã chọn"
+    },
     "assign": "Thêm",
     "remove_from_unit": "Gỡ khỏi khoa này",
     "no_courses_in_unit": "Chưa có khoá học nào thuộc đơn vị này.",

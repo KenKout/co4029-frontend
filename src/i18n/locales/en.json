@@ -5431,6 +5431,14 @@
     "appoint_dean": "Appoint Dean",
     "appoint_dean_title": "Appoint Faculty Dean?",
     "appoint_dean_description": "{{name}} will receive Faculty Dean authority for {{faculty}}. Existing roles and other Faculty affiliations are preserved.",
+    "dean_picker": {
+      "title": "Appoint Faculty Dean · {{faculty}}",
+      "search_placeholder": "Search active organization accounts…",
+      "empty": "No eligible account found. Student and Admin accounts are excluded.",
+      "already_dean": "Already a Dean",
+      "other_faculties": "also in {{faculties}}",
+      "confirm": "Appoint selected"
+    },
     "assign": "Add",
     "remove_from_unit": "Remove from this faculty",
     "no_courses_in_unit": "No courses assigned to this unit yet.",

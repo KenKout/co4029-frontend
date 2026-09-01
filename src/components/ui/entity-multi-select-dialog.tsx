@@ -35,6 +35,8 @@ interface EntityMultiSelectDialogProps<T extends SelectableEntity> {
   emptyText: string;
   /** Label suffix shown on already-attached rows, e.g. "Added". */
   alreadyAddedLabel: string;
+  /** Optional transaction-specific confirmation label. */
+  confirmLabel?: string;
 }
 
 /**
@@ -62,6 +64,7 @@ export function EntityMultiSelectDialog<T extends SelectableEntity>({
   footerSlot,
   emptyText,
   alreadyAddedLabel,
+  confirmLabel,
 }: EntityMultiSelectDialogProps<T>) {
   const { t } = useTranslation();
   const [picked, setPicked] = useState<Map<string, T>>(new Map());
@@ -156,7 +159,10 @@ export function EntityMultiSelectDialog<T extends SelectableEntity>({
           onConfirm={handleConfirm}
           countLabel={t("entity_select.selected_count", { count: pickedCount })}
           cancelLabel={t("common.cancel")}
-          addLabel={t("entity_select.add_selected", { count: pickedCount })}
+          addLabel={
+            confirmLabel ??
+            t("entity_select.add_selected", { count: pickedCount })
+          }
         />
       </div>
     </div>
