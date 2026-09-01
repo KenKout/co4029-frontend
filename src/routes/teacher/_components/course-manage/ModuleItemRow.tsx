@@ -24,6 +24,7 @@ import { useModuleItemRow } from "./use-module-item-row";
 export function ModuleItemRow({
   item,
   courseId,
+  index,
   isDragOver,
   isDragging,
   onDragStart,
@@ -33,6 +34,8 @@ export function ModuleItemRow({
 }: {
   item: CourseContentItem;
   courseId: string;
+  /** 0-based position in the module, rendered as the "N." order number. */
+  index: number;
   isDragOver: boolean;
   isDragging: boolean;
   onDragStart: (e: React.DragEvent) => void;
@@ -62,7 +65,9 @@ export function ModuleItemRow({
         onDragEnd();
       }}
       className={cn(
-        "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all group select-none",
+        // `relative` anchors the title link's stretched ::after overlay, which
+        // is what makes the WHOLE row open the item (see ModuleItemRowTitle).
+        "relative flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all group select-none",
         isDragging ? "opacity-40" : "",
         isDragOver
           ? "ring-2 ring-m3-primary/40 bg-m3-primary-fixed shadow-sm"
@@ -72,16 +77,25 @@ export function ModuleItemRow({
       {/* Drag handle: dragging is enabled ONLY while grabbing this grip, so the
           title link + action buttons stay clickable. Previously the whole row
           was draggable but the title <Link draggable={false}> covered most of
-          it and swallowed drag-starts — the "item drag doesn't work" bug. */}
+          it and swallowed drag-starts — the "item drag doesn't work" bug.
+          `relative z-10` keeps it above the title's row-wide overlay. */}
       <Button variant="ghost"
         type="button"
         aria-label={t("teacher_common.drag_to_reorder")}
         onMouseDown={() => setDragEnabled(true)}
         onMouseUp={() => setDragEnabled(false)}
-        className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 text-m3-outline-variant hover:text-m3-on-surface-variant h-auto whitespace-normal"
+        className="relative z-10 shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 text-m3-outline-variant hover:text-m3-on-surface-variant h-auto whitespace-normal"
       >
         <GripVertical className="h-3.5 w-3.5" />
       </Button>
+      {/* Order number within the module. Mirrors the module numbering in the
+          card header; tabular-nums keeps 9. and 10. aligned. */}
+      <span
+        className="shrink-0 w-4 text-right text-[11px] font-bold tabular-nums text-m3-on-surface-variant/70"
+        aria-hidden="true"
+      >
+        {index + 1}.
+      </span>
       <div
         className={cn(
           "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
@@ -100,12 +114,14 @@ export function ModuleItemRow({
         {label}
       </Badge>
       {status && (
-        <ModuleItemStatusBadge
-          status={status}
-          publishing={publishing}
-          onPublish={handlePublish}
-          t={t}
-        />
+        <span className="relative z-10 shrink-0">
+          <ModuleItemStatusBadge
+            status={status}
+            publishing={publishing}
+            onPublish={handlePublish}
+            t={t}
+          />
+        </span>
       )}
       <ModuleItemRowActions
         item={item}

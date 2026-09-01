@@ -24,7 +24,7 @@ export function ModuleItemRowActions({
   t: TranslateFn;
 }) {
   return (
-    <div className="flex items-center gap-1 text-m3-on-surface-variant">
+    <div className="flex items-center gap-1 text-m3-on-surface-variant relative z-10">
       {item.item_type === "lesson" && item.lesson_id && (
         <Link
           to="/teacher/courses/$courseId/lessons/$lessonId"

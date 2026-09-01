@@ -18,6 +18,7 @@ import type { TranslateFn } from "./types";
 export function ModuleAccordionHeader({
   module,
   courseId,
+  index,
   open,
   onToggle,
   ctl,
@@ -25,6 +26,8 @@ export function ModuleAccordionHeader({
 }: {
   module: CourseContentModule;
   courseId: string;
+  /** 0-based order in the course; rendered as the leading number badge. */
+  index: number;
   open: boolean;
   onToggle: () => void;
   ctl: ModuleAccordionController;
@@ -68,6 +71,19 @@ export function ModuleAccordionHeader({
       >
         <GripVertical className="h-4 w-4" />
       </Button>
+
+      {/* Module number. Derived from render order, and the list is served in
+          ``Module.position`` order, so it stays truthful after a drag-reorder
+          (which re-numbers server-side and refetches). Matches the numbered
+          badge students see on the course page. */}
+      <span
+        className="shrink-0 w-7 h-7 rounded-xl gradient-primary flex items-center justify-center"
+        aria-hidden="true"
+      >
+        <span className="text-xs font-black text-white tabular-nums">
+          {index + 1}
+        </span>
+      </span>
 
       {/* Title — editable inline */}
       {editingTitle ? (
