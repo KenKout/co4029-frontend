@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { ApiError } from "@/lib/api/client";
 import { useCreateInterviewConfig } from "@/lib/api/hooks/interviews";
 import { useCreateQuiz } from "@/lib/api/hooks/quizzes";
 import { useCreateLesson } from "@/lib/api/hooks/teacher-courses";
@@ -111,6 +112,17 @@ export function useAddLessonItems(options: {
         search: { tab: undefined },
       });
     } catch (err: unknown) {
+      // Duplicate title in this module (backend 409): keep the dialog OPEN so
+      // the teacher can edit the name in place rather than losing what they
+      // typed and having to reopen the prompt.
+      if (
+        err instanceof ApiError &&
+        err.status === 409 &&
+        err.body.includes("interview_title_duplicate")
+      ) {
+        toast.error(t("teacher_interview_config_new.errors.title_duplicate"));
+        return;
+      }
       toast.error(
         (err as Error).message ||
           t("teacher_interview_config_new.errors.create_failed"),

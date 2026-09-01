@@ -541,6 +541,7 @@
     "submitting": "Đang tạo…",
     "errors": {
       "title_required": "Vui lòng nhập tiêu đề",
+      "title_duplicate": "Module này đã có một buổi phỏng vấn tên như vậy. Hãy dùng tên khác.",
       "create_failed": "Tạo phỏng vấn thất bại"
     },
     "success": {
@@ -4192,6 +4193,7 @@
       "not_found_body": "Bộ câu hỏi phỏng vấn không tải được cho khoá học này.",
       "back_to_course": "Quay lại khoá học",
       "title_required": "Tiêu đề không được để trống",
+      "title_duplicate": "Module này đã có một buổi phỏng vấn tên như vậy. Hãy dùng tên khác.",
       "questions_required": "Tạo câu hỏi trước khi xuất bản",
       "outcomes_required": "Thêm ít nhất một chuẩn đầu ra trước khi xuất bản",
       "publish_blocked_archived": "Bỏ lưu trữ phỏng vấn này trước khi xuất bản",

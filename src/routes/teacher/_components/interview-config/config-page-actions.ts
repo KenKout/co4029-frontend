@@ -14,6 +14,7 @@ import type { FormEvent } from "react";
 import type { TFunction } from "i18next";
 import { toast } from "sonner";
 
+import { ApiError } from "@/lib/api/client";
 import type { InterviewConfigAuthoring, InterviewGenerationRequest } from "@/lib/api/types";
 import type {
   GenerationFormState,
@@ -185,6 +186,17 @@ export function createConfigActions(deps: ConfigActionsDeps): ConfigActions {
       toast.success(t("teacher_interview_config.toasts.config_saved"));
       return true;
     } catch (err: unknown) {
+      // Renaming onto a sibling's title (backend 409). Report it in the
+      // teacher's words instead of leaking the raw backend code, and leave the
+      // draft dirty so the new name is still in the field to edit.
+      if (
+        err instanceof ApiError &&
+        err.status === 409 &&
+        err.body.includes("interview_title_duplicate")
+      ) {
+        toast.error(t("teacher_interview_config.errors.title_duplicate"));
+        return false;
+      }
       toast.error(
         (err as Error).message ||
           t("teacher_interview_config.toasts.save_failed"),

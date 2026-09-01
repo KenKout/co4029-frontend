@@ -594,6 +594,7 @@
     "submitting": "Creating…",
     "errors": {
       "title_required": "Please enter a title",
+      "title_duplicate": "This module already has an interview with that name. Pick a different one.",
       "create_failed": "Couldn't create interview"
     },
     "success": {
@@ -4321,6 +4322,7 @@
       "not_found_body": "Interview question set could not be loaded for this course.",
       "back_to_course": "Back to course",
       "title_required": "Title cannot be empty",
+      "title_duplicate": "This module already has an interview with that name. Pick a different one.",
       "questions_required": "Generate questions before publishing",
       "outcomes_required": "Add at least one learning outcome before publishing",
       "publish_blocked_archived": "Unarchive this interview before publishing",
