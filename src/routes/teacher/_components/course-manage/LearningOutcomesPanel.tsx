@@ -15,9 +15,16 @@ import { childCount } from "./use-outcome-tree-actions";
  * draft — once published the outcomes are frozen (they double as the graded
  * assessment scale, enforced server-side).
  */
-export function LearningOutcomesPanel({ courseId }: { courseId: string }) {
+export function LearningOutcomesPanel({
+  courseId,
+  defaultOpen = false,
+}: {
+  courseId: string;
+  /** Start expanded. The dept Settings tab does; the workspace does not. */
+  defaultOpen?: boolean;
+}) {
   const { t } = useTranslation();
-  const ctl = useCourseOutcomesEditor({ courseId, t });
+  const ctl = useCourseOutcomesEditor({ courseId, t, defaultOpen });
   const { outcomes, editable, open, draft, pendingDeleteId } = ctl;
 
   const pendingOutcome = outcomes.find((o) => o.id === pendingDeleteId) ?? null;

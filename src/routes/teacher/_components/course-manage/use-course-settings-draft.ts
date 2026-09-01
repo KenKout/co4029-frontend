@@ -41,11 +41,13 @@ export function useCourseSettingsDraft(options: {
    * PATCH if a manager-only field appears — even unchanged.
    */
   scope?: "teacher" | "manager";
+  /** Start expanded. True where this panel is the surface's main content. */
+  defaultOpen?: boolean;
 }) {
-  const { courseId, t, scope = "teacher" } = options;
+  const { courseId, t, scope = "teacher", defaultOpen = false } = options;
   const { data: course } = useTeacherCourseById(courseId);
   const updateCourse = useUpdateCourse(courseId);
-  const fields = useCourseSettingsFields();
+  const fields = useCourseSettingsFields(defaultOpen);
   const { values, me } = fields;
   const initialized = useRef(false);
   const uploadThumbnail = useUploadCourseThumbnail(courseId);

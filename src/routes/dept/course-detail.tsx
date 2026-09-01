@@ -72,7 +72,10 @@ export default function DeptCourseDetailPage() {
   }
 
   return (
-    <div className="space-y-6 pb-12">
+    // Bounded width: with none, every tab's content stretched to ~1329px at
+    // a 1680 viewport, which turns form fields and single-line list rows
+    // into thin ribbons of text across an otherwise empty band.
+    <div className="mx-auto max-w-[1400px] space-y-6 pb-12">
       <DeptCourseHeader course={course} courseId={courseId} canDelete={canDelete} />
 
       <Tabs
