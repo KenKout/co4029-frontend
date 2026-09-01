@@ -49,6 +49,7 @@
     "career_paths": "Lộ trình nghề nghiệp",
     "my_interviews": "Phỏng vấn của tôi",
     "overview": "Tổng quan",
+    "workspace": "Không gian giảng dạy",
     "my_courses": "Khoá của tôi",
     "department_courses": "Khoá học theo khoa",
     "manager_courses": "Khoá học",
@@ -341,7 +342,7 @@
     "status_draft": "Bản nháp",
     "status_published": "Đã xuất bản",
     "status_archived": "Lưu trữ",
-    "estimated_duration": "Thời lượng yêu cầu (phút)",
+    "estimated_duration": "Thời lượng yêu cầu",
     "estimated_duration_placeholder": "vd. 480",
     "enrollment_cap": "Giới hạn ghi danh",
     "enrollment_cap_placeholder": "Để trống nếu không giới hạn",
@@ -770,7 +771,13 @@
       "stage_line": "Giai đoạn {{position}} · {{stage}}",
       "untitled_stage": "Giai đoạn chưa đặt tên"
     },
-    "upload_syllabus": "Tải lên đề cương"
+    "upload_syllabus": "Tải lên đề cương",
+    "bulk_selected": "Đã chọn {{count}}",
+    "bulk_remove": "Xoá mục đã chọn",
+    "bulk_clear": "Bỏ chọn",
+    "bulk_remove_confirm": "Xoá {{count}} giảng viên khỏi khóa học? Phân công bị thu hồi nhưng hồ sơ vẫn được giữ. Thao tác này là toàn bộ hoặc không — nếu khóa học sẽ không còn Giảng viên chính, sẽ không xoá gì cả.",
+    "bulk_remove_done": "Đã xoá {{count}} giảng viên",
+    "bulk_remove_failed": "Không thể xoá các giảng viên đã chọn"
   },
   "dept_courses": {
     "title": "Khóa học",

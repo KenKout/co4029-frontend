@@ -1,10 +1,14 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { GraduationCap, Users } from "lucide-react";
+import { GraduationCap, Trash2, Users } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/ui/search-input";
-import { useCourseReadiness } from "@/lib/api/hooks/dept";
+import { useConfirm } from "@/components/ui/use-confirm";
+import { getApiErrorMessage } from "@/lib/api/error-codes";
+import { useBulkRemoveTeachers, useCourseReadiness } from "@/lib/api/hooks/dept";
 import type { TeacherAssignmentRead } from "@/lib/api/types";
 import { AssignTeacherForm } from "./AssignTeacherForm";
 import { TeacherIdentityCell, TeacherRowActions } from "./TeacherRow";
@@ -113,6 +117,13 @@ export function DeptTeachersTab({
 }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const bulkRemove = useBulkRemoveTeachers(courseId);
+  const { confirm, dialog } = useConfirm({
+    title: "Remove selected instructors?",
+    confirmLabel: "Remove",
+    cancelLabel: "Cancel",
+  });
   const {
     hasInstructor,
     currentCount,
@@ -148,6 +159,29 @@ export function DeptTeachersTab({
     [t],
   );
 
+  async function handleBulkRemove() {
+    const ok = await confirm({
+      description: t("dept_course_detail.bulk_remove_confirm", {
+        count: selectedIds.size,
+      }),
+    });
+    if (!ok) return;
+    try {
+      await bulkRemove.mutateAsync([...selectedIds]);
+      toast.success(
+        t("dept_course_detail.bulk_remove_done", { count: selectedIds.size }),
+      );
+      setSelectedIds(new Set());
+    } catch (error: unknown) {
+      // The call is all-or-nothing, so a failure means NOTHING was removed —
+      // keep the selection so the manager can adjust it and retry rather
+      // than having to re-tick everyone.
+      toast.error(
+        getApiErrorMessage(error, t("dept_course_detail.bulk_remove_failed")),
+      );
+    }
+  }
+
   if (!active) return null;
 
   return (
@@ -174,6 +208,9 @@ export function DeptTeachersTab({
           columns={columns}
           data={rows}
           getRowId={(a) => a.user_id}
+          selectable={canAssign}
+          selectedIds={selectedIds}
+          onSelectedIdsChange={setSelectedIds}
           actions={
             canAssign
               ? (a) => (
@@ -215,12 +252,44 @@ export function DeptTeachersTab({
                 ) : null}
               </div>
 
+              {/* Bulk bar replaces the assign row while a selection is live:
+                  the two are different intents, and stacking both would put
+                  an "Add" and a "Remove" side by side over the same list. */}
+              {canAssign && selectedIds.size > 0 ? (
+                <div className="flex flex-wrap items-center gap-3 rounded-lg bg-m3-surface-container px-3 py-2">
+                  <span className="text-sm font-medium text-text-strong">
+                    {t("dept_course_detail.bulk_selected", {
+                      count: selectedIds.size,
+                    })}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-danger hover:bg-red-50"
+                    disabled={bulkRemove.isPending}
+                    onClick={() => void handleBulkRemove()}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {t("dept_course_detail.bulk_remove")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedIds(new Set())}
+                  >
+                    {t("dept_course_detail.bulk_clear")}
+                  </Button>
+                </div>
+              ) : null}
+
               {/* Assign stays ALWAYS rendered, including on an empty course.
                   It used to live above the table and was fine, but the
                   toolbar it moved into was previously suppressed when the
                   list was empty — which is exactly when a manager needs to
                   assign someone. */}
-              {canAssign ? (
+              {canAssign && selectedIds.size === 0 ? (
                 <AssignTeacherForm
                   courseId={courseId}
                   currentCount={currentCount}
@@ -231,6 +300,7 @@ export function DeptTeachersTab({
           }
         />
       )}
+      {dialog}
     </div>
   );
 }

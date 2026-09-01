@@ -191,6 +191,38 @@ export function useRemoveTeacher(courseId: string) {
   });
 }
 
+/**
+ * Remove several teachers in one request.
+ *
+ * All-or-nothing server-side, and the sole-instructor guard is checked
+ * against the state the course is left in — so this either removes every
+ * selected teacher or refuses with a 409 and changes nothing.
+ */
+export function useBulkRemoveTeachers(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userIds: string[]) =>
+      apiPost<{ removed: number }>(
+        `/dept/courses/${courseId}/teachers/bulk-remove`,
+        { user_ids: userIds },
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.teachers(courseId),
+      });
+      // Removed teachers become selectable again, so the picker's
+      // already_assigned flags are stale too.
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.assignableTeachers(courseId),
+      });
+      // The checklist counts teachers, so it moved too.
+      void qc.invalidateQueries({
+        queryKey: queryKeys.dept.readiness(courseId),
+      });
+    },
+  });
+}
+
 export function useCourseRoster(courseId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.dept.roster(courseId ?? ""),

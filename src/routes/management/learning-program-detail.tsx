@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Archive, ArrowLeft, GitBranch, Plus, Route, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ const TABS = (pending: number, enrolled: number): TabDef<TabKey>[] => [
 ];
 
 export default function ManagementLearningProgramDetailPage() {
+  const navigate = useNavigate();
   const { id } = useParams({ strict: false }) as { id: string };
   const current = useManagedLearningProgram(id);
   const versions = useLearningProgramVersions(id);
@@ -148,7 +149,29 @@ export default function ManagementLearningProgramDetailPage() {
             <>
               <ProgramGeneral key={data.current_version.id} data={data} readOnly={readOnly || !isDraft} onSave={(payload) => update.mutateAsync(payload)} />
               <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
-                <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-headline text-lg font-bold">Career Paths</h2><p className="text-sm text-m3-on-surface-variant">Published path versions pinned in program v{data.current_version.version_no}.</p></div>{isDraft && <Button variant="outline" className="gap-2" onClick={() => setPathPickerOpen(true)}><Plus className="h-4 w-4" /> Add Career Path</Button>}</div>
+                <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-headline text-lg font-bold">Career Paths</h2><p className="text-sm text-m3-on-surface-variant">Published path versions pinned in program v{data.current_version.version_no}.</p></div>{isDraft && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Only PUBLISHED paths can be pinned into a program, so a
+                        dean with nothing to add has no way forward from here
+                        — the picker would just be empty. This is the way out:
+                        author the path first, then come back and add it. */}
+                    <Button
+                      variant="ghost"
+                      className="gap-2"
+                      onClick={() =>
+                        void navigate({
+                          to: "/management/career-paths/$id",
+                          params: { id: "new" },
+                        })
+                      }
+                    >
+                      <Plus className="h-4 w-4" /> Create new path
+                    </Button>
+                    <Button variant="outline" className="gap-2" onClick={() => setPathPickerOpen(true)}>
+                      <Plus className="h-4 w-4" /> Add Career Path
+                    </Button>
+                  </div>
+                )}</div>
                 <div className="space-y-2">
                   {data.paths.map((path) => (
                     <div

@@ -105,8 +105,10 @@ export const studentNavGroups: NavGroup[] = [
 
 export const teacherNavItems: NavItem[] = [
   {
-    label: "Overview",
-    i18nKey: "nav.overview",
+    // "Workspace", matching the page's own title. Its own key rather than
+    // reusing nav.overview, which other roles' sidebars still use.
+    label: "Workspace",
+    i18nKey: "nav.workspace",
     href: "/teacher",
     icon: LayoutDashboard,
     exact: true,
@@ -125,8 +127,8 @@ export const teacherNavGroups: NavGroup[] = [
     i18nKey: "nav_groups.overview",
     items: [
       {
-        label: "Overview",
-        i18nKey: "nav.overview",
+        label: "Workspace",
+        i18nKey: "nav.workspace",
         href: "/teacher",
         icon: LayoutDashboard,
         exact: true,

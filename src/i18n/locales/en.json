@@ -49,6 +49,7 @@
     "career_paths": "Career Paths",
     "my_interviews": "My Interviews",
     "overview": "Overview",
+    "workspace": "Workspace",
     "my_courses": "My Courses",
     "department_courses": "Faculty Courses",
     "manager_courses": "Courses",
@@ -394,7 +395,7 @@
     "status_draft": "Draft",
     "status_published": "Published",
     "status_archived": "Archived",
-    "estimated_duration": "Required Duration (min)",
+    "estimated_duration": "Required Duration",
     "estimated_duration_placeholder": "e.g. 480",
     "enrollment_cap": "Enrollment Cap",
     "enrollment_cap_placeholder": "Leave empty for unlimited",
@@ -845,7 +846,13 @@
       "stage_line": "Stage {{position}} · {{stage}}",
       "untitled_stage": "Untitled stage"
     },
-    "upload_syllabus": "Upload syllabus"
+    "upload_syllabus": "Upload syllabus",
+    "bulk_selected": "{{count}} selected",
+    "bulk_remove": "Remove selected",
+    "bulk_clear": "Clear",
+    "bulk_remove_confirm": "Remove {{count}} instructor(s) from this course? Their assignment is revoked but the record is kept. This is all-or-nothing — if the course would be left without a Course Instructor, nothing is removed.",
+    "bulk_remove_done": "{{count}} instructor(s) removed",
+    "bulk_remove_failed": "Could not remove the selected instructors"
   },
   "dept_courses": {
     "title": "Courses",
