@@ -35,6 +35,9 @@ export const queryKeys = {
       ["courses", "lesson-resources", id] as const,
     resourceDownload: (id: string) =>
       ["courses", "resource-download", id] as const,
+    /** Presigned download URL for a course's syllabus PDF (student + teacher). */
+    syllabusDownload: (id: string) =>
+      ["courses", "syllabus-download", id] as const,
   },
 
   materials: {

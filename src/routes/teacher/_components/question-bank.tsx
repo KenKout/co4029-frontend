@@ -8,6 +8,7 @@ import {
   useCreateInterviewQuestion,
   useCreateInterviewQuestionBankLogicalGroup,
   useDeleteInterviewQuestion,
+  useDeleteInterviewQuestionVariants,
   useImportInterviewQuestionBankItems,
   useInterviewQuestionBank,
   useUpdateInterviewQuestion,
@@ -79,6 +80,7 @@ export function QuestionBank({
   const { t } = useTranslation();
   const updateQuestion = useUpdateInterviewQuestion(configId);
   const deleteQuestion = useDeleteInterviewQuestion(configId);
+  const deleteQuestionVariants = useDeleteInterviewQuestionVariants(configId);
   const createQuestion = useCreateInterviewQuestion(configId);
   const checkDuplicate = useCheckInterviewQuestionDuplicate(configId);
   const addToBank = useAddToInterviewQuestionBank(courseId);
@@ -106,9 +108,11 @@ export function QuestionBank({
     updateQuestion,
     approveQuestionVariants,
     deleteQuestion,
+    deleteQuestionVariants,
     pendingQuestions: derived.pendingQuestions,
     outcomeById,
     announce,
+    confirmAction,
     t,
   });
   const editor = useQuestionEditor({

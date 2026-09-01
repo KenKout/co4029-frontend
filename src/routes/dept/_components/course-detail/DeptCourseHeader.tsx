@@ -1,19 +1,30 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { CourseAuthoring } from "@/lib/api/types";
+import { usePermissions } from "@/lib/auth/use-permissions";
+import { ImportSyllabusDialog } from "../courses/ImportSyllabusDialog";
 import { CloneCourseButton } from "./CloneCourseButton";
 import { DeleteCourseButton } from "./DeleteCourseButton";
 import { DeptCourseLifecycleActions } from "./DeptCourseLifecycleActions";
 
 /**
  * Dept course header: back link, course identity (read-only) and the
- * manager-only actions — Publish / Archive / Delete at the top of the page.
+ * manager-only actions — Upload syllabus / Publish / Archive / Delete at the
+ * top of the page.
  *
  * The lifecycle buttons live here (not inside the collapsible Course
  * Settings panel) so a manager sees the publish decision without opening
  * anything; they render under the same `canDelete` (`course.delete`) gate
  * as the Settings tab.
+ *
+ * "Upload syllabus" opens the same dialog as the course list, in its
+ * course-scoped shape: the mode selector (upload only / override / create new)
+ * appears because there is a course to upload ONTO. Its own permission gate is
+ * stricter than `canDelete` — the endpoint needs `course.create` AND
+ * `learning_outcome.manage`, so the button mirrors both rather than 403-ing.
  *
  * The inline title/slug editor that used to live here was removed: the
  * Settings tab's `CourseSettingsPanel scope="manager"` already renders the
@@ -32,6 +43,15 @@ export function DeptCourseHeader({
   canDelete: boolean;
 }) {
   const { t } = useTranslation();
+  const permissions = usePermissions();
+  const [importOpen, setImportOpen] = useState(false);
+  // Same two codes the backend stacks on the import endpoint (course.create +
+  // learning_outcome.manage): the upload writes learning outcomes in override
+  // mode, and gating on course.create alone would be a side door into LO
+  // authoring — mirrored here so the button is absent rather than broken.
+  const canImport =
+    permissions.hasAny("course.create", "system.administer") &&
+    permissions.hasAny("learning_outcome.manage", "system.administer");
 
   return (
     <div>
@@ -59,12 +79,32 @@ export function DeptCourseHeader({
         </div>
         {canDelete && course && (
           <div className="flex items-center gap-2 shrink-0">
+            {canImport && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                onClick={() => setImportOpen(true)}
+              >
+                <Upload className="h-4 w-4" />
+                {t("dept_course_detail.upload_syllabus")}
+              </Button>
+            )}
             <DeptCourseLifecycleActions courseId={courseId} course={course} />
             <CloneCourseButton courseId={courseId} courseTitle={course.title} />
             <DeleteCourseButton courseId={courseId} courseTitle={course.title} />
           </div>
         )}
       </div>
+
+      {canImport && course && (
+        <ImportSyllabusDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          courseId={courseId}
+          courseStatus={course.status}
+        />
+      )}
     </div>
   );
 }

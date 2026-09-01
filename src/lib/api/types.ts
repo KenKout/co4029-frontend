@@ -59,6 +59,10 @@ export interface CourseCareerPlacementPublic {
 // them only when the backend fills them in.
 export interface CoursePublicMeta {
   estimated_minutes?: number | null;
+  /** True when the course has an archived syllabus PDF a student may download
+   *  (`GET /courses/{id}/syllabus/download-url`). Hand-layered like the fields
+   *  above; keep in sync with backend public.CoursePublic. */
+  has_syllabus?: boolean | null;
 }
 
 export type Course = Schemas["CoursePublic"] &
@@ -251,18 +255,20 @@ export interface QuizProgressRead {
 // committed openapi snapshot yet.
 //
 // Completion rule differs from quizzes ON PURPOSE (user decision 2026-08-06):
-// `completed` is true only when at least one non-practice attempt PASSED. A
+// `completed` is true only when at least one attempt PASSED. A
 // quiz also completes on failed-with-attempts-exhausted; an interview does
 // not, so the tag reads as "passed" and a student who failed every attempt
 // keeps the item pending.
 //
-// `attempts_graded` < `attempts_used` means evaluation (an ARQ job) has not
-// caught up yet — those attempts are neither passed nor failed.
+// `attempts_awaiting_grade` counts only completed/timed-out attempts awaiting
+// evaluation. It excludes abandoned and system-failed rows, which never receive
+// a verdict.
 export interface InterviewProgressRead {
   interview_config_id: string;
   attempts_used: number;
   attempts_in_flight: number;
   attempts_graded: number;
+  attempts_awaiting_grade: number;
   passed: boolean;
   completed: boolean;
 }

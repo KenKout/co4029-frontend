@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   useImportCourseFromSyllabus,
+  type SyllabusImportMode,
   type SyllabusImportResult,
   type SyllabusLanguage,
 } from "@/lib/api/hooks/teacher-courses";
@@ -20,19 +21,30 @@ import {
 } from "@/lib/api/hooks/admin-organizations";
 
 /**
- * Manager flow: upload a course syllabus PDF, get a draft course.
+ * Manager flow: upload a course syllabus PDF.
  *
  * Two phases in one dialog rather than a dialog plus a toast:
  *
- * 1. **form** — pick the file and the syllabus language. The language is
- *    NOT auto-detected: these syllabi carry both languages for every field,
- *    so which one the course is authored in is a decision, not something to
- *    guess.
+ * 1. **form** — pick the file, what the upload should DO, and the syllabus
+ *    language. The language is NOT auto-detected: these syllabi carry both
+ *    languages for every field, so which one the course is authored in is a
+ *    decision, not something to guess.
  * 2. **result** — what was created, plus any parser warnings. Warnings are
  *    why this stays on screen: an import can succeed while quietly
  *    renumbering learning outcomes (the source syllabus skipped an L.O.
  *    code) and a toast that vanishes in four seconds is the wrong place to
  *    say so. The manager dismisses it or jumps straight to the new draft.
+ *
+ * `courseId` switches the dialog between its two call sites:
+ *
+ * - absent (/dept course list) — the only thing an upload can mean there is
+ *   "create a course", so no mode selector is shown.
+ * - present (/dept/courses/$courseId) — the manager chooses between
+ *   **Upload only** (replace the downloadable document, leave the course
+ *   alone), **Override existing** (rewrite title/description/hours + the whole
+ *   learning-outcome tree, draft only) and **Create new course**. Override is
+ *   hidden for a non-draft course rather than shown-and-rejected: the backend
+ *   answers 409 there because published outcomes are the graded scale.
  *
  * Failures render inline with the backend's own reason — the parser
  * explains what was missing ("missing_course_title: …"), which is
@@ -41,9 +53,15 @@ import {
 export function ImportSyllabusDialog({
   open,
   onOpenChange,
+  courseId,
+  courseStatus,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Target course. Omit on the course LIST, where only `create` makes sense. */
+  courseId?: string;
+  /** Target course status; `override` is draft-only, so it gates the option. */
+  courseStatus?: string;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -52,7 +70,15 @@ export function ImportSyllabusDialog({
   const faculties = useOrgUnits(me?.organization_id ?? undefined, { onlyRoots: true });
   const facultyAssignments = useFacultyAssignments(me?.organization_id ?? undefined);
 
+  const onCourse = Boolean(courseId);
+  const canOverride = onCourse && courseStatus === "draft";
+  // Default to the least destructive thing that makes sense here: on a draft,
+  // "upload only" leaves authored fields untouched; on the list there is no
+  // course to upload onto, so it can only be a create.
   const [file, setFile] = useState<File | null>(null);
+  const [mode, setMode] = useState<SyllabusImportMode>(
+    onCourse ? "attach" : "create",
+  );
   const [language, setLanguage] = useState<SyllabusLanguage>("vi");
   const [facultyId, setFacultyId] = useState("");
   const [result, setResult] = useState<SyllabusImportResult | null>(null);
@@ -82,6 +108,7 @@ export function ImportSyllabusDialog({
   function reset() {
     setFile(null);
     setResult(null);
+    setMode(onCourse ? "attach" : "create");
     importCourse.reset();
   }
 
@@ -95,17 +122,30 @@ export function ImportSyllabusDialog({
   function handleImport() {
     if (!file) return;
     importCourse.mutate(
-      { file, language, facultyId: facultyId || undefined },
+      {
+        file,
+        language,
+        mode,
+        courseId,
+        facultyId: mode === "create" ? facultyId || undefined : undefined,
+      },
       { onSuccess: (data) => setResult(data) },
     );
   }
 
   function openCourse() {
     if (!result) return;
-    const courseId = result.course_id;
+    const created = result.course_id;
     handleOpenChange(false);
-    void navigate({ to: "/dept/courses/$courseId", params: { courseId } });
+    void navigate({
+      to: "/dept/courses/$courseId",
+      params: { courseId: created },
+    });
   }
+
+  // On the course page an attach/override lands on the course you are already
+  // looking at, so "Open course" would be a no-op — Close is the only action.
+  const resultIsElsewhere = !onCourse || result?.course_id !== courseId;
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={handleOpenChange}>
@@ -135,7 +175,7 @@ export function ImportSyllabusDialog({
           </DialogPrimitive.Description>
 
           {result ? (
-            <ImportResult result={result} />
+            <ImportResult result={result} mode={mode} />
           ) : (
             <ImportForm
               file={file}
@@ -145,13 +185,14 @@ export function ImportSyllabusDialog({
               facultyId={facultyId}
               onFacultyChange={setFacultyId}
               facultyOptions={facultyOptions}
-              facultyRequired={assignedFacultyIds.size > 1}
+              facultyRequired={mode === "create" && assignedFacultyIds.size > 1}
+              mode={mode}
+              onModeChange={setMode}
+              showModes={onCourse}
+              canOverride={canOverride}
+              courseStatus={courseStatus}
               busy={importCourse.isPending}
-              error={
-                importCourse.isError
-                  ? (importCourse.error as Error).message
-                  : null
-              }
+              error={importCourse.isError ? importCourse.error.message : null}
             />
           )}
 
@@ -165,9 +206,11 @@ export function ImportSyllabusDialog({
               {result ? t("common.close") : t("common.cancel")}
             </Button>
             {result ? (
-              <Button type="button" onClick={openCourse}>
-                {t(`${prefix}.open_course`)}
-              </Button>
+              resultIsElsewhere ? (
+                <Button type="button" onClick={openCourse}>
+                  {t(`${prefix}.open_course`)}
+                </Button>
+              ) : null
             ) : (
               <Button
                 type="button"
@@ -175,7 +218,7 @@ export function ImportSyllabusDialog({
                 disabled={
                   !file ||
                   importCourse.isPending ||
-                  (assignedFacultyIds.size > 1 && !facultyId)
+                  (mode === "create" && assignedFacultyIds.size > 1 && !facultyId)
                 }
               >
                 {importCourse.isPending
@@ -199,6 +242,11 @@ function ImportForm({
   onFacultyChange,
   facultyOptions,
   facultyRequired,
+  mode,
+  onModeChange,
+  showModes,
+  canOverride,
+  courseStatus,
   busy,
   error,
 }: {
@@ -210,11 +258,27 @@ function ImportForm({
   onFacultyChange: (facultyId: string) => void;
   facultyOptions: { value: string; label: string }[];
   facultyRequired: boolean;
+  mode: SyllabusImportMode;
+  onModeChange: (mode: SyllabusImportMode) => void;
+  showModes: boolean;
+  canOverride: boolean;
+  courseStatus?: string;
   busy: boolean;
   error: string | null;
 }) {
   const { t } = useTranslation();
   const prefix = "dept_courses.import_syllabus";
+
+  const modeOptions: { value: SyllabusImportMode; label: string }[] = [
+    { value: "attach", label: t(`${prefix}.mode_attach`) },
+    // Override is omitted (not disabled) for a published/archived course: the
+    // backend refuses it with 409 because the learning outcomes are frozen
+    // once students can be graded against them.
+    ...(canOverride
+      ? [{ value: "override", label: t(`${prefix}.mode_override`) } as const]
+      : []),
+    { value: "create", label: t(`${prefix}.mode_create`) },
+  ];
 
   return (
     <div className="mt-4 space-y-4">
@@ -233,35 +297,78 @@ function ImportForm({
         </p>
       ) : null}
 
-      <Field
-        label={t(`${prefix}.language_label`)}
-        hint={t(`${prefix}.language_hint`)}
-      >
-        <Select<SyllabusLanguage>
-          value={language}
-          onValueChange={onLanguageChange}
-          disabled={busy}
-          options={[
-            { value: "vi", label: t(`${prefix}.language_vi`) },
-            { value: "en", label: t(`${prefix}.language_en`) },
-          ]}
-          aria-label={t(`${prefix}.language_label`)}
-        />
-      </Field>
+      {showModes ? (
+        <Field
+          label={t(`${prefix}.mode_label`)}
+          hint={t(`${prefix}.mode_hint_${mode}`)}
+        >
+          <Select<SyllabusImportMode>
+            value={mode}
+            onValueChange={onModeChange}
+            disabled={busy}
+            options={modeOptions}
+            aria-label={t(`${prefix}.mode_label`)}
+          />
+        </Field>
+      ) : null}
 
-      <Field
-        label={`Faculty${facultyRequired ? " *" : ""}`}
-        hint="The owning faculty cannot be changed after import."
-      >
-        <Select
-          value={facultyId}
-          onValueChange={onFacultyChange}
-          disabled={busy}
-          placeholder={facultyRequired ? "Select faculty" : "Organization-wide"}
-          options={facultyOptions}
-          aria-label="Faculty"
-        />
-      </Field>
+      {/* Why "Override existing" is missing, said once, where it is missed.
+          Silently short options read as a bug. */}
+      {showModes && !canOverride ? (
+        <p className="text-xs text-text-muted">
+          {t(`${prefix}.override_blocked`, {
+            status: t(`teacher_course_settings.status_${courseStatus}`, {
+              defaultValue: courseStatus ?? "",
+            }),
+          })}
+        </p>
+      ) : null}
+
+      {/* Language only matters when the document is PARSED. An attach stores
+          the file as-is, so asking which language to read it in would be a
+          question with no consequence. */}
+      {mode === "attach" ? null : (
+        <Field
+          label={t(`${prefix}.language_label`)}
+          hint={t(`${prefix}.language_hint`)}
+        >
+          <Select<SyllabusLanguage>
+            value={language}
+            onValueChange={onLanguageChange}
+            disabled={busy}
+            options={[
+              { value: "vi", label: t(`${prefix}.language_vi`) },
+              { value: "en", label: t(`${prefix}.language_en`) },
+            ]}
+            aria-label={t(`${prefix}.language_label`)}
+          />
+        </Field>
+      )}
+
+      {mode === "override" ? (
+        <div className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+          <p className="text-xs text-amber-900">
+            {t(`${prefix}.override_warning`)}
+          </p>
+        </div>
+      ) : null}
+
+      {mode === "create" ? (
+        <Field
+          label={`Faculty${facultyRequired ? " *" : ""}`}
+          hint="The owning faculty cannot be changed after import."
+        >
+          <Select
+            value={facultyId}
+            onValueChange={onFacultyChange}
+            disabled={busy}
+            placeholder={facultyRequired ? "Select faculty" : "Organization-wide"}
+            options={facultyOptions}
+            aria-label="Faculty"
+          />
+        </Field>
+      ) : null}
 
       {error ? (
         <div className="flex gap-2 rounded-lg border border-danger/30 bg-danger/5 p-3">
@@ -280,7 +387,13 @@ function ImportForm({
   );
 }
 
-function ImportResult({ result }: { result: SyllabusImportResult }) {
+function ImportResult({
+  result,
+  mode,
+}: {
+  result: SyllabusImportResult;
+  mode: SyllabusImportMode;
+}) {
   const { t } = useTranslation();
   const prefix = "dept_courses.import_syllabus";
   const hours =
@@ -298,6 +411,9 @@ function ImportResult({ result }: { result: SyllabusImportResult }) {
           </p>
           <p className="mt-0.5 font-mono text-xs text-text-muted">
             {result.course_slug}
+          </p>
+          <p className="mt-1 text-xs text-text-muted">
+            {t(`${prefix}.result_mode_${mode}`)}
           </p>
         </div>
       </div>

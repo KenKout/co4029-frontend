@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Loader2, Trash2 } from "lucide-react";
 
 import type { InterviewQuestionBankItemRead } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ export function QuestionAngleGroup({
   controllers: QuestionRowControllers;
 }) {
   const { t } = useTranslation();
+  const { deletion } = controllers;
   const ordered = useMemo(
     () => [...items].sort((a, b) => order(a) - order(b) || a.created_at.localeCompare(b.created_at)),
     [items],
@@ -37,15 +39,36 @@ export function QuestionAngleGroup({
   const active = ordered.find((item) => item.id === activeId) ?? ordered[0];
   if (!active) return null;
 
+  // A row's own delete removes one angle, which would silently leave the
+  // logical question incomplete. This is the group-scoped escape hatch.
+  const busy = ordered.some((item) => deletion.deletingIds.has(item.id));
+
   return (
     <li className="rounded-xl border border-m3-primary/25 bg-m3-surface-container-low p-2 sm:p-3">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
         <h4 className="text-xs font-bold uppercase tracking-wide text-m3-primary">
           {t("teacher_interview_config.qbank.logical_question")}
         </h4>
-        <span className="text-xs text-m3-on-surface-variant">
-          {t("teacher_interview_config.qbank.angle_count", { count: ordered.length })}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-m3-on-surface-variant">
+            {t("teacher_interview_config.qbank.angle_count", { count: ordered.length })}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={busy}
+            onClick={() => deletion.setConfirmDeleteGroup(ordered)}
+            className="h-7 gap-1 px-2 text-[11px] text-red-700 hover:bg-red-50 hover:text-red-800"
+          >
+            {busy ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Trash2 className="h-3 w-3" />
+            )}
+            {t("teacher_question_bank.delete_group")}
+          </Button>
+        </div>
       </div>
       <div className="mb-2 flex flex-wrap gap-1 border-b border-m3-outline-variant/30 px-1" role="tablist" aria-label={t("teacher_interview_config.qbank.angle_tabs_label")}>
         {ordered.map((item) => (

@@ -57,6 +57,7 @@ function interviewProgress(
     attempts_used: 0,
     attempts_in_flight: 0,
     attempts_graded: 0,
+    attempts_awaiting_grade: 0,
     passed: false,
     completed: false,
     ...over,

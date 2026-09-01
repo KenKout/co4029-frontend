@@ -166,7 +166,10 @@
     "show_more": "Xem thêm",
     "stage_label": "Giai đoạn {{n}} — {{title}}",
     "stage_label_short": "Giai đoạn {{n}}",
-    "more_paths": "+ {{count}} pathway nữa"
+    "more_paths": "+ {{count}} pathway nữa",
+    "download_syllabus": "Tải đề cương",
+    "syllabus_downloading": "Đang mở…",
+    "syllabus_download_failed": "Không tải được đề cương. Thử lại sau."
   },
   "settings_security": {
     "title": "Bảo mật tài khoản",
@@ -542,7 +545,6 @@
     "title": "Ngân hàng câu hỏi",
     "subtitle": "Câu hỏi phỏng vấn tái sử dụng",
     "subtitle_course": "Câu hỏi phỏng vấn tái sử dụng · {{course}}",
-    "how_to_add": "Đây là kho câu hỏi phỏng vấn dùng chung của khóa học. Để thêm câu hỏi, hãy mở một buổi phỏng vấn rồi dùng \"Thêm vào ngân hàng câu hỏi\" trên một câu hỏi. Nhập chúng vào các buổi phỏng vấn khác từ tab Câu hỏi.",
     "search_placeholder": "Tìm câu hỏi, câu trả lời, thẻ…",
     "filter_type": "Loại",
     "filter_difficulty": "Độ khó",
@@ -563,7 +565,10 @@
     "deleted": "Đã xóa câu hỏi khỏi ngân hàng",
     "delete_title": "Xóa khỏi ngân hàng câu hỏi?",
     "delete_body": "Thao tác này xóa câu hỏi khỏi ngân hàng của khóa học. Các câu hỏi đã nhập vào buổi phỏng vấn không bị ảnh hưởng.",
-    "how_it_works": "Cách hoạt động",
+    "delete_group": "Xoá tất cả góc hỏi",
+    "delete_group_title": "Xoá câu hỏi logic khỏi ngân hàng?",
+    "delete_group_body": "Thao tác này xóa toàn bộ {{count}} góc hỏi của câu hỏi logic khỏi ngân hàng của khóa học. Các câu hỏi đã nhập vào buổi phỏng vấn không bị ảnh hưởng.",
+    "group_deleted": "Đã xóa {{count}} góc hỏi khỏi ngân hàng",
     "clear_filters": "Xóa bộ lọc",
     "filter_by_tag": "Lọc theo thẻ {{tag}}",
     "add_tag": "Thêm thẻ",
@@ -763,7 +768,8 @@
       "optional": "Tùy chọn",
       "stage_line": "Giai đoạn {{position}} · {{stage}}",
       "untitled_stage": "Giai đoạn chưa đặt tên"
-    }
+    },
+    "upload_syllabus": "Tải lên đề cương"
   },
   "dept_courses": {
     "title": "Khóa học",
@@ -816,7 +822,19 @@
       "hours_value": "{{hours}} giờ",
       "warnings_title_one": "1 mục cần kiểm tra",
       "warnings_title_other": "{{count}} mục cần kiểm tra",
-      "open_course": "Mở khoá học"
+      "open_course": "Mở khoá học",
+      "mode_label": "Hành động khi tải lên",
+      "mode_attach": "Chỉ tải lên đề cương",
+      "mode_override": "Ghi đè khoá học hiện tại",
+      "mode_create": "Tạo khoá học mới",
+      "mode_hint_attach": "Chỉ thay tệp đề cương để sinh viên tải về. Tên, mô tả và chuẩn đầu ra của khoá học không đổi.",
+      "mode_hint_override": "Đọc tệp và ghi đè tên, mô tả, số giờ và toàn bộ chuẩn đầu ra của khoá học này.",
+      "mode_hint_create": "Đọc tệp và tạo một khoá học nháp mới, không ảnh hưởng khoá học hiện tại.",
+      "override_warning": "Ghi đè sẽ xoá toàn bộ chuẩn đầu ra hiện có và thay bằng chuẩn đầu ra trong tệp. Tên, mô tả và số giờ cũng bị ghi đè. Đường dẫn (slug) giữ nguyên.",
+      "override_blocked": "Chỉ khoá học ở trạng thái nháp mới ghi đè được — khoá học này đang {{status}}. Bạn vẫn có thể chỉ tải lên đề cương hoặc tạo khoá học mới.",
+      "result_mode_attach": "Đã cập nhật tệp đề cương của khoá học.",
+      "result_mode_override": "Đã ghi đè khoá học từ đề cương.",
+      "result_mode_create": "Đã tạo khoá học nháp mới."
     },
     "scope_label": "Phạm vi đơn vị:",
     "scope_unknown": "Đơn vị đã chọn",
@@ -4582,7 +4600,8 @@
       "toasts": {
         "status_changed": "Đã đổi trạng thái sang {{status}}",
         "outcome_changed": "Đã gán chuẩn đầu ra: {{outcome}}",
-        "logical_question_approved": "Đã duyệt {{count}} góc hỏi"
+        "logical_question_approved": "Đã duyệt {{count}} góc hỏi",
+        "logical_question_deleted": "Đã xoá {{count}} góc hỏi"
       },
       "sr": {
         "status_changed": "Đã đổi trạng thái sang {{status}}",
@@ -4595,6 +4614,9 @@
       "reorder_off_variant_group": "Kéo để sắp xếp đang tắt khi có nhóm câu hỏi đa góc. Dùng menu của từng câu hỏi để đưa lên đầu hoặc xuống cuối.",
       "logical_question": "Câu hỏi logic",
       "approve_logical_question": "Duyệt tất cả",
+      "delete_logical_question": "Xoá tất cả góc hỏi",
+      "delete_logical_question_title": "Xoá câu hỏi logic?",
+      "delete_logical_question_description": "Thao tác này sẽ xoá toàn bộ {{count}} góc hỏi của câu hỏi logic khỏi buổi phỏng vấn.",
       "add_logical_group_to_bank": "Thêm cả 4 vào ngân hàng",
       "logical_group_added": "Đã thêm 4 góc hỏi vào ngân hàng câu hỏi",
       "logical_group_incomplete": "Cụm câu hỏi logic phải đủ 4 góc hỏi trước khi thêm vào ngân hàng",

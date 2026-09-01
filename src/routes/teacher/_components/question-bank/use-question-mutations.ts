@@ -5,7 +5,9 @@ import type { InterviewQuestionAuthoring } from "@/lib/api/types";
 import { statusMeta } from "./helpers";
 import type { useApproveInterviewQuestionVariants } from "@/lib/api/hooks/interviews";
 import type {
+  ConfirmFn,
   DeleteQuestionMutation,
+  DeleteQuestionVariantsMutation,
   OutcomeMeta,
   ReviewStatus,
   TranslateFn,
@@ -26,9 +28,11 @@ export interface QuestionMutationsOptions {
   updateQuestion: UpdateQuestionMutation;
   approveQuestionVariants: ReturnType<typeof useApproveInterviewQuestionVariants>;
   deleteQuestion: DeleteQuestionMutation;
+  deleteQuestionVariants: DeleteQuestionVariantsMutation;
   pendingQuestions: InterviewQuestionAuthoring[];
   outcomeById: Map<string, OutcomeMeta>;
   announce: (msg: string) => void;
+  confirmAction: ConfirmFn;
   t: TranslateFn;
 }
 
@@ -72,6 +76,8 @@ export function useQuestionMutations(options: QuestionMutationsOptions) {
     handleApproveLogicalQuestion: (questions: InterviewQuestionAuthoring[]) =>
       void handleApproveLogicalQuestion(ctx, questions),
     handleDelete: (q: InterviewQuestionAuthoring) => handleDelete(ctx, q),
+    handleDeleteLogicalQuestion: (questions: InterviewQuestionAuthoring[]) =>
+      handleDeleteLogicalQuestion(ctx, questions),
   };
 }
 
@@ -243,6 +249,43 @@ async function handleDelete(ctx: MutationCtx, q: InterviewQuestionAuthoring) {
     setDeletingIds((prev) => {
       const next = new Set(prev);
       next.delete(q.id);
+      return next;
+    });
+  }
+}
+
+async function handleDeleteLogicalQuestion(
+  ctx: MutationCtx,
+  questions: InterviewQuestionAuthoring[],
+) {
+  const { deleteQuestionVariants, deletingIds, setDeletingIds, confirmAction, t } = ctx;
+  const anchor = questions[0];
+  if (!anchor || questions.some((question) => deletingIds.has(question.id))) return;
+  const confirmed = await confirmAction({
+    title: t("teacher_interview_config.qbank.delete_logical_question_title"),
+    description: t("teacher_interview_config.qbank.delete_logical_question_description", {
+      count: questions.length,
+    }),
+    confirmLabel: t("teacher_interview_config.qbank.delete_logical_question"),
+    confirmVariant: "destructive",
+  });
+  if (!confirmed) return;
+
+  const ids = questions.map((question) => question.id);
+  setDeletingIds((prev) => new Set([...prev, ...ids]));
+  await new Promise((resolve) => setTimeout(resolve, 280));
+  try {
+    const result = await deleteQuestionVariants.mutateAsync(anchor.id);
+    toast.success(
+      t("teacher_interview_config.qbank.toasts.logical_question_deleted", {
+        count: result.deleted,
+      }),
+    );
+  } catch (err: unknown) {
+    toast.error((err as Error).message);
+    setDeletingIds((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) next.delete(id);
       return next;
     });
   }

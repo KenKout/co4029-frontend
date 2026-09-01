@@ -26,6 +26,10 @@ export default function ManagementLearningProgramNewPage() {
   const [slugTouched, setSlugTouched] = useState(false);
   const [description, setDescription] = useState("");
   const [facultyId, setFacultyId] = useState("");
+  // Path-switch budget for this program. Defaults to the backend's own default
+  // (3) so the form states the policy instead of leaving it invisible — every
+  // program created before this field existed silently got 3.
+  const [maxPathSwitches, setMaxPathSwitches] = useState("3");
   const [selectedPathIds, setSelectedPathIds] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -49,9 +53,21 @@ export default function ManagementLearningProgramNewPage() {
       toast.error("Program name, slug and faculty are required");
       return;
     }
+    // Validate here rather than relying on the 422: the backend bound is
+    // 0..100, and an empty or non-numeric box must not silently become 0
+    // (a program nobody can ever switch out of).
+    const switches = Number.parseInt(maxPathSwitches, 10);
+    if (!Number.isInteger(switches) || switches < 0 || switches > 100) {
+      toast.error("Path changes allowed must be a whole number between 0 and 100");
+      return;
+    }
     const accepted = await confirm({
       title: "Create Learning Program draft?",
-      description: "The selected Career Paths will be pinned to draft v1.",
+      description:
+        "The selected Career Paths will be pinned to draft v1. " +
+        (switches === 0
+          ? "Students will NOT be able to request a path change."
+          : `Students may request up to ${switches} path change${switches === 1 ? "" : "s"}, each needing Faculty Dean approval.`),
       confirmLabel: "Create draft",
       cancelLabel: "Cancel",
       confirmVariant: "default",
@@ -63,6 +79,7 @@ export default function ManagementLearningProgramNewPage() {
         name: name.trim(),
         slug: slug.trim(),
         description: description.trim() || null,
+        max_path_switches: switches,
         career_path_ids: selectedPathIds,
       });
       toast.success("Learning Program draft created");
@@ -83,6 +100,21 @@ export default function ManagementLearningProgramNewPage() {
             <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Slug <span className="text-red-600">*</span><Input className="font-mono" value={slug} onChange={(event) => { setSlugTouched(true); setSlug(slugify(event.target.value)); }} /></label>
           </div>
           <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Faculty <span className="text-red-600">*</span><Select value={facultyId} onValueChange={setFacultyId} placeholder="Select faculty" options={(options.data?.faculties ?? []).map((faculty) => ({ value: faculty.id, label: faculty.name }))} /></label>
+          <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+            Path changes allowed
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={maxPathSwitches}
+              onChange={(event) => setMaxPathSwitches(event.target.value)}
+            />
+            <span className="block text-[11px] font-normal normal-case tracking-normal text-m3-on-surface-variant">
+              How many times a student may switch Career Path in this program.
+              Each switch still needs Faculty Dean approval. 0 locks the choice
+              permanently.
+            </span>
+          </label>
           <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea rows={4} value={description} onChange={(event) => setDescription(event.target.value)} /></label>
           <section className="space-y-3 border-t border-m3-outline-variant/30 pt-5">
             <div className="flex items-center justify-between gap-3"><div><h2 className="font-headline font-bold">Career Paths</h2><p className="text-xs text-m3-on-surface-variant">Choose by name; exact published versions are pinned on creation.</p></div><Button type="button" variant="outline" className="gap-2" onClick={() => setPickerOpen(true)}><Plus className="h-4 w-4" /> Add paths</Button></div>

@@ -4,6 +4,7 @@ import type {
   useCheckInterviewQuestionDuplicate,
   useCreateInterviewQuestion,
   useDeleteInterviewQuestion,
+  useDeleteInterviewQuestionVariants,
   useUpdateInterviewQuestion,
 } from "@/lib/api/hooks/interviews";
 import type { useConfirm } from "@/components/ui/use-confirm";
@@ -33,6 +34,9 @@ export type UpdateQuestionMutation = ReturnType<
 >;
 export type DeleteQuestionMutation = ReturnType<
   typeof useDeleteInterviewQuestion
+>;
+export type DeleteQuestionVariantsMutation = ReturnType<
+  typeof useDeleteInterviewQuestionVariants
 >;
 export type CreateQuestionMutation = ReturnType<
   typeof useCreateInterviewQuestion

@@ -401,7 +401,7 @@ describe("StartInterviewDialog", () => {
     const dialog = screen.getByRole("alertdialog");
     expect(dialog).toHaveTextContent(/bạn chắc chắn muốn bắt đầu/i);
     expect(
-      screen.getByRole("button", { name: /bắt đầu phỏng vấn/i }),
+      screen.getByRole("button", { name: /^bắt đầu$/i }),
     ).toBeEnabled();
     // Short on purpose: this is a confirmation, not a briefing. The old copy
     // listed identity/audio/language/readiness plus the voice default and ran
@@ -493,7 +493,7 @@ describe("OnboardingActions", () => {
     fireEvent.click(screen.getByRole("button", { name: /chưa sẵn sàng/i }));
     expect(onAction).toHaveBeenLastCalledWith("not_ready");
 
-    fireEvent.click(screen.getByRole("button", { name: /bắt đầu phỏng vấn/i }));
+    fireEvent.click(screen.getByRole("button", { name: /bắt đầu/i }));
     expect(onAction).toHaveBeenLastCalledWith("ready");
   });
 });

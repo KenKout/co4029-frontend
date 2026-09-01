@@ -165,7 +165,10 @@
     "show_more": "Show more",
     "stage_label": "Stage {{n}} — {{title}}",
     "stage_label_short": "Stage {{n}}",
-    "more_paths": "+ {{count}} more path(s)"
+    "more_paths": "+ {{count}} more path(s)",
+    "download_syllabus": "Download syllabus",
+    "syllabus_downloading": "Opening…",
+    "syllabus_download_failed": "Could not fetch the syllabus. Try again shortly."
   },
   "settings_security": {
     "title": "Account security",
@@ -612,7 +615,6 @@
     "title": "Question bank",
     "subtitle": "Reusable interview questions",
     "subtitle_course": "Reusable interview questions · {{course}}",
-    "how_to_add": "This is your course's shared pool of interview questions. To add questions, open any interview, then use \"Add to question bank\" on a question. Import them into other interviews from the interview's Questions tab.",
     "search_placeholder": "Search questions, answers, tags…",
     "filter_type": "Type",
     "filter_difficulty": "Difficulty",
@@ -633,7 +635,10 @@
     "deleted": "Question removed from bank",
     "delete_title": "Remove from question bank?",
     "delete_body": "This removes the question from the course bank. Questions already imported into interviews are not affected.",
-    "how_it_works": "How it works",
+    "delete_group": "Delete all angles",
+    "delete_group_title": "Remove logical question from bank?",
+    "delete_group_body": "This removes all {{count}} angles of this logical question from the course bank. Questions already imported into interviews are not affected.",
+    "group_deleted": "Removed {{count}} angles from the bank",
     "clear_filters": "Clear filters",
     "filter_by_tag": "Filter by tag {{tag}}",
     "add_tag": "Add tag",
@@ -838,7 +843,8 @@
       "optional": "Optional",
       "stage_line": "Stage {{position}} · {{stage}}",
       "untitled_stage": "Untitled stage"
-    }
+    },
+    "upload_syllabus": "Upload syllabus"
   },
   "dept_courses": {
     "title": "Courses",
@@ -893,7 +899,19 @@
       "hours_value": "{{hours}} h",
       "warnings_title_one": "1 thing to check",
       "warnings_title_other": "{{count}} things to check",
-      "open_course": "Open course"
+      "open_course": "Open course",
+      "mode_label": "What this upload does",
+      "mode_attach": "Upload only",
+      "mode_override": "Override existing",
+      "mode_create": "Create new course",
+      "mode_hint_attach": "Only replaces the syllabus file students download. The course title, description and learning outcomes stay as they are.",
+      "mode_hint_override": "Read the file and overwrite this course's title, description, hours and its entire learning-outcome tree.",
+      "mode_hint_create": "Read the file and create a new draft course. This course is left untouched.",
+      "override_warning": "Override removes every existing learning outcome and replaces it with the ones in the file. Title, description and hours are overwritten too. The URL slug is kept.",
+      "override_blocked": "Only a draft course can be overridden — this one is {{status}}. You can still upload the syllabus document or create a new course from it.",
+      "result_mode_attach": "The course's syllabus document was updated.",
+      "result_mode_override": "The course was overwritten from the syllabus.",
+      "result_mode_create": "A new draft course was created."
     },
     "scope_label": "Scoped to unit:",
     "scope_unknown": "Selected unit",
@@ -4711,7 +4729,8 @@
       "toasts": {
         "status_changed": "Status changed to {{status}}",
         "outcome_changed": "Outcome set to {{outcome}}",
-        "logical_question_approved": "Approved {{count}} angle(s)"
+        "logical_question_approved": "Approved {{count}} angle(s)",
+        "logical_question_deleted": "Deleted {{count}} angle(s)"
       },
       "sr": {
         "status_changed": "Status changed to {{status}}",
@@ -4724,6 +4743,9 @@
       "reorder_off_variant_group": "Drag-to-reorder is off while multi-angle logical questions are visible. Use each question's menu to move it to the top or bottom.",
       "logical_question": "Logical question",
       "approve_logical_question": "Approve all",
+      "delete_logical_question": "Delete all angles",
+      "delete_logical_question_title": "Delete logical question?",
+      "delete_logical_question_description": "This permanently removes all {{count}} angles in this logical question from this interview.",
       "add_logical_group_to_bank": "Add all 4 to question bank",
       "logical_group_added": "Added all 4 angles to the question bank",
       "logical_group_incomplete": "A logical question needs all 4 angles before it can be added to the question bank",

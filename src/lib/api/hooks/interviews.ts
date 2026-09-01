@@ -19,11 +19,6 @@ import type {
   InterviewOutcomeAuthoring,
   InterviewOutcomeCreate,
   InterviewQuestionAuthoring,
-  InterviewQuestionBankImportResult,
-  InterviewQuestionBankItemCreate,
-  InterviewQuestionBankItemRead,
-  InterviewQuestionBankItemUpdate,
-  InterviewQuestionBankLogicalGroupCreate,
   InterviewQuestionCreate,
   InterviewQuestionDuplicateCheck,
   InterviewQuestionDuplicateCheckRequest,
@@ -529,25 +524,26 @@ export function useCheckInterviewQuestionDuplicate(
   });
 }
 
-/**
- * DELETE /teacher/interview-configs/{config_id}/questions/{question_id} —
- * soft-delete a single question.
- */
-export function useDeleteInterviewQuestion(
-  configId: string | null | undefined,
-) {
+/** DELETE /teacher/interview-configs/{config_id}/questions/{question_id} — soft-delete a single question. */
+export function useDeleteInterviewQuestion(configId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (questionId: string) =>
-      apiDelete(
-        `/teacher/interview-configs/${configId}/questions/${questionId}`,
-      ),
+      apiDelete(`/teacher/interview-configs/${configId}/questions/${questionId}`),
     onSuccess: () => {
-      if (configId) {
-        void qc.invalidateQueries({
-          queryKey: queryKeys.interviews.configAuthoring(configId),
-        });
-      }
+      if (configId) void qc.invalidateQueries({ queryKey: queryKeys.interviews.configAuthoring(configId) });
+    },
+  });
+}
+
+/** DELETE /interviews.../{config_id}/questions/{question_id}/variants — soft-delete every angle in a logical question. */
+export function useDeleteInterviewQuestionVariants(configId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (questionId: string) =>
+      apiDelete<{ deleted: number }>(`/teacher/interview-configs/${configId}/questions/${questionId}/variants`),
+    onSuccess: () => {
+      if (configId) void qc.invalidateQueries({ queryKey: queryKeys.interviews.configAuthoring(configId) });
     },
   });
 }
@@ -770,127 +766,17 @@ export function useCourseInterviewSessions(
   });
 }
 
-/**
- * Course-scoped interview question bank (§QBank-1).
- * GET /teacher/courses/{course_id}/interview-question-bank
- */
-export function useInterviewQuestionBank(courseId: string | null | undefined) {
-  return useQuery({
-    queryKey: queryKeys.interviews.questionBank(courseId ?? ""),
-    queryFn: () =>
-      apiFetch<InterviewQuestionBankItemRead[]>(
-        `/teacher/courses/${courseId}/interview-question-bank`,
-      ),
-    enabled: !!courseId,
-  });
-}
 
-/**
- * POST /teacher/courses/{course_id}/interview-question-bank — add a reusable
- * question to the course bank (copy semantics).
- */
-export function useAddToInterviewQuestionBank(
-  courseId: string | null | undefined,
-) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: InterviewQuestionBankItemCreate) =>
-      apiPost<InterviewQuestionBankItemRead>(
-        `/teacher/courses/${courseId}/interview-question-bank`,
-        payload,
-      ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.interviews.questionBank(courseId ?? ""),
-      });
-    },
-  });
-}
-
-/** Create a complete four-angle logical question in the course bank. */
-export function useCreateInterviewQuestionBankLogicalGroup(courseId: string | null | undefined) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: InterviewQuestionBankLogicalGroupCreate) =>
-      apiPost<InterviewQuestionBankItemRead[]>(`/teacher/courses/${courseId}/interview-question-bank/logical-groups`, payload),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.interviews.questionBank(courseId ?? "") });
-    },
-  });
-}
-
-/** Add a missing logical angle to a bank singleton or partial group. */
-export function useAddInterviewQuestionBankSibling(courseId: string | null | undefined) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ itemId, payload }: { itemId: string; payload: InterviewQuestionBankItemCreate }) =>
-      apiPost<InterviewQuestionBankItemRead[]>(`/teacher/courses/${courseId}/interview-question-bank/${itemId}/siblings`, payload),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.interviews.questionBank(courseId ?? "") });
-    },
-  });
-}
-
-/** Atomically import standalone questions and full/partial logical groups. */
-export function useImportInterviewQuestionBankItems(configId: string | null | undefined, courseId: string | null | undefined) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (itemIds: string[]) =>
-      apiPost<InterviewQuestionBankImportResult>(`/teacher/interview-configs/${configId}/questions/import-bank`, { item_ids: itemIds }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.interviews.configAuthoring(configId ?? "") });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.interviews.questionBank(courseId ?? "") });
-    },
-  });
-}
-
-/**
- * DELETE /teacher/courses/{course_id}/interview-question-bank/{item_id}
- */
-export function useDeleteInterviewQuestionBankItem(
-  courseId: string | null | undefined,
-) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (itemId: string) =>
-      apiDelete(
-        `/teacher/courses/${courseId}/interview-question-bank/${itemId}`,
-      ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.interviews.questionBank(courseId ?? ""),
-      });
-    },
-  });
-}
-
-/**
- * PATCH /teacher/courses/{course_id}/interview-question-bank/{item_id} —
- * edit a bank item (management page).
- */
-export function useUpdateInterviewQuestionBankItem(
-  courseId: string | null | undefined,
-) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      itemId,
-      patch,
-    }: {
-      itemId: string;
-      patch: InterviewQuestionBankItemUpdate;
-    }) =>
-      apiPatch<InterviewQuestionBankItemRead>(
-        `/teacher/courses/${courseId}/interview-question-bank/${itemId}`,
-        patch,
-      ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.interviews.questionBank(courseId ?? ""),
-      });
-    },
-  });
-}
+export {
+  useAddInterviewQuestionBankSibling,
+  useAddToInterviewQuestionBank,
+  useCreateInterviewQuestionBankLogicalGroup,
+  useDeleteInterviewQuestionBankGroup,
+  useDeleteInterviewQuestionBankItem,
+  useImportInterviewQuestionBankItems,
+  useInterviewQuestionBank,
+  useUpdateInterviewQuestionBankItem,
+} from "./interviews/question-bank";
 
 /**
  * GET /teacher/courses/{course_id}/students/{student_id}/interview-sessions —
