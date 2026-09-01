@@ -9146,8 +9146,6 @@ export interface components {
             generation_run_id?: string | null;
             /** Draft Question Count */
             draft_question_count?: number | null;
-            /** Total Importance Weight */
-            total_importance_weight?: number | null;
             /** Created By */
             created_by?: string | null;
             /** Updated By */

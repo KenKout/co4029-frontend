@@ -4434,7 +4434,7 @@
       "duration_placeholder": "e.g. 30",
       "attempts_label": "Attempts",
       "attempts_placeholder": "e.g. 3",
-      "cooldown_label": "Cooldown (hours)",
+      "cooldown_label": "Cooldown",
       "cooldown_hint": "Minimum wait between attempts; blank = none",
       "cooldown_placeholder": "e.g. 24",
       "voice_label": "AI voice",
@@ -4449,9 +4449,6 @@
       "followups_hint": "How many times the interviewer may probe one question before moving on (0-50; blank = default 2)",
       "hints_label": "Hints per question",
       "hints_hint": "Escalating hint rungs offered on one question before it is dropped (0-10; blank = default 3)",
-      "lock_ef_label": "Lock quiz EF growth until pass",
-      "lock_ef_desc": "Students must pass the interview before spaced repetition expands review intervals.",
-      "supplementary_label": "Supplementary instructions",
       "supplementary_placeholder": "e.g. Focus on real scenarios, avoid rote-memorization questions…",
       "notes_label": "Guidance notes (shapes generated questions)",
       "notes_hint": "Free-text guidance fed to the question generator. Not used for scoring.",
@@ -4471,7 +4468,8 @@
       "attempts": "times",
       "outcomes": "LO",
       "turns": "turns",
-      "hints": "hints"
+      "hints": "hints",
+      "hours": "hours"
     },
     "security": {
       "title": "Security & Integrity",

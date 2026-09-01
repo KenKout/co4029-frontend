@@ -33,11 +33,13 @@ export function SettingsRulesCard({
       stagger={1}
       title={t("teacher_interview_config.sections.rules.title")}
     >
+      {/* Row 1 — the terms of a sitting: how long one attempt may run, how many
+          attempts exist, and how long a student waits between them. All three
+          are unbounded-by-default numeric knobs whose empty state means
+          something ("unlimited" / "no wait"), so each carries its unit inside
+          the field — an anonymous empty box gave no clue whether it wanted
+          minutes, hours or a count. */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* All three are unbounded-by-default numeric knobs whose empty state
-            means something ("unlimited"), so each carries its unit inside the
-            field — an anonymous empty box gave no clue whether it wanted
-            minutes, seconds or a count. */}
         <Field
           label={t("teacher_interview_config.fields.duration_label")}
           hint={t("teacher_interview_config.fields.duration_hint")}
@@ -71,6 +73,32 @@ export function SettingsRulesCard({
             endAdornment={t("teacher_interview_config.units.attempts")}
           />
         </Field>
+        {/* The retake cooldown (FR-5.3). The backend has always enforced it
+            (`services/taking._enforce_retake_policy` → 429, and
+            `compute_retake_status` feeds the student's "you can try again
+            after …" line), but the input was dropped from this form in
+            July 2026, leaving the column NULL on every config and the whole
+            gate unreachable. Restored here rather than deleting the gate. */}
+        <Field
+          label={t("teacher_interview_config.fields.cooldown_label")}
+          hint={t("teacher_interview_config.fields.cooldown_hint")}
+          {...lock("cooldown_hours")}
+        >
+          <Input
+            type="number"
+            min={1}
+            value={draft.cooldown_hours}
+            onChange={(e) => update("cooldown_hours", e.target.value)}
+            placeholder={t(
+              "teacher_interview_config.fields.cooldown_placeholder",
+            )}
+            endAdornment={t("teacher_interview_config.units.hours")}
+          />
+        </Field>
+      </div>
+      {/* Row 2 — grading threshold + the per-question budgets the interviewer
+          operates under. */}
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Field
           label={t("teacher_interview_config.fields.criteria_label")}
           hint={criteriaHint}
@@ -95,8 +123,6 @@ export function SettingsRulesCard({
             }
           />
         </Field>
-      </div>
-      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field
           label={t("teacher_interview_config.fields.followups_label")}
           hint={t("teacher_interview_config.fields.followups_hint")}

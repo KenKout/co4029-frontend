@@ -4305,7 +4305,7 @@
       "duration_placeholder": "vd. 30",
       "attempts_label": "Số lần thử",
       "attempts_placeholder": "vd. 3",
-      "cooldown_label": "Thời gian chờ (giờ)",
+      "cooldown_label": "Thời gian chờ",
       "cooldown_hint": "Thời gian chờ tối thiểu giữa các lần thi; để trống = không chờ",
       "cooldown_placeholder": "vd. 24",
       "voice_label": "Giọng AI",
@@ -4317,12 +4317,9 @@
       "criteria_count": "trên {{count}} chuẩn đầu ra",
       "criteria_placeholder": "vd. 2",
       "followups_label": "Follow-up mỗi câu hỏi",
-      "followups_hint": "Số lần interviewer được hỏi sâu thêm một câu hỏi trước khi chuyển câu (0-10; để trống = mặc định 2)",
+      "followups_hint": "Số lần interviewer được hỏi sâu thêm một câu hỏi trước khi chuyển câu (0-50; để trống = mặc định 2)",
       "hints_label": "Hint mỗi câu hỏi",
       "hints_hint": "Số bậc gợi ý leo thang cho một câu hỏi trước khi bỏ câu (0-10; để trống = mặc định 3)",
-      "lock_ef_label": "Khoá nâng EF của quiz đến khi đạt",
-      "lock_ef_desc": "Học viên phải vượt phỏng vấn trước khi spaced repetition tăng khoảng cách ôn tập.",
-      "supplementary_label": "Hướng dẫn bổ sung",
       "supplementary_placeholder": "VD: Tập trung vào tình huống thực tế, tránh câu hỏi học thuộc lòng…",
       "notes_label": "Ghi chú hướng dẫn (định hình câu hỏi được sinh)",
       "notes_hint": "Hướng dẫn dạng văn bản đưa vào bộ sinh câu hỏi. Không dùng để chấm điểm.",
@@ -4342,7 +4339,8 @@
       "attempts": "lần",
       "outcomes": "LO",
       "turns": "lượt",
-      "hints": "gợi ý"
+      "hints": "gợi ý",
+      "hours": "giờ"
     },
     "security": {
       "title": "Bảo mật & Tính toàn vẹn",
