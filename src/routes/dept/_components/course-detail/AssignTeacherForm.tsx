@@ -97,15 +97,32 @@ export function AssignTeacherForm({
   const noCandidates = !isLoading && available.length === 0;
   const canAssign = !atMax && !noCandidates;
 
+  // The help line only earns its space when it says something a manager must
+  // act on. "Pick someone and press Add" restates the controls beside it.
+  const notice = atMax
+    ? t("dept_course_detail.assign_at_max", { max: maxCount })
+    : noCandidates
+      ? // Distinguish "everyone is already on it" from "this org has no
+        // teachers" — they need different actions from the manager.
+        assignedCount > 0
+        ? t("dept_course_detail.assign_all_assigned")
+        : t("dept_course_detail.assign_none_available")
+      : null;
+
   return (
+    // One row, no card. This was a bordered panel ~164px tall holding a
+    // single combobox, two pills and a line of help — stacked above two more
+    // full-width strips before the manager reached the actual list. It now
+    // sits inside the table's own toolbar, so staffing, search and assignment
+    // share one container instead of four.
     <form
       onSubmit={handleSubmit}
-      className="bg-surface-elev border border-border rounded-lg p-4 mb-4"
+      className="flex flex-wrap items-center gap-2"
+      aria-label={t("dept_course_detail.assign_label")}
     >
-      <label className="block text-xs font-semibold text-text-muted mb-2">
-        {t("dept_course_detail.assign_label")}
-      </label>
-      <div className="flex gap-2">
+      {/* Bounded: a name picker does not need the full page width, and at
+          1400px the unconstrained input dwarfed everything beside it. */}
+      <div className="flex w-full min-w-0 items-center gap-2 sm:w-80">
         <TeacherSearchCombobox
           options={options}
           value={userId}
@@ -114,37 +131,32 @@ export function AssignTeacherForm({
           placeholder={t("dept_course_detail.assign_placeholder")}
           emptyLabel={t("dept_course_detail.assign_no_match")}
         />
-        <Button type="submit" disabled={assign.isPending || !userId || !canAssign}>
-          <UserPlus className="h-3.5 w-3.5" />
-          {t("dept_course_detail.assign_button")}
-        </Button>
       </div>
 
-      {/* Title flags: Instructor and/or TA for the new teacher (manager only). */} 
-      <div className="mt-3 flex items-center gap-1.5">
-        <TitleFlagOption
-          label={t("dept_course_detail.teacher_role_course_instructor")}
-          active={isInstructor}
-          onClick={() => toggleInstructor(!isInstructor)}
-        />
-        <TitleFlagOption
-          label={t("dept_course_detail.teacher_role_teacher_assistant")}
-          active={isAssistant}
-          onClick={() => toggleAssistant(!isAssistant)}
-        />
-      </div>
+      {/* Title flags: Instructor and/or TA for the new teacher (manager only). */}
+      <TitleFlagOption
+        label={t("dept_course_detail.teacher_role_course_instructor")}
+        active={isInstructor}
+        onClick={() => toggleInstructor(!isInstructor)}
+      />
+      <TitleFlagOption
+        label={t("dept_course_detail.teacher_role_teacher_assistant")}
+        active={isAssistant}
+        onClick={() => toggleAssistant(!isAssistant)}
+      />
 
-      <p className="text-[11px] text-text-muted mt-2">
-        {atMax
-          ? t("dept_course_detail.assign_at_max", { max: maxCount })
-          : noCandidates
-            ? // Distinguish "everyone is already on it" from "this org has no
-              // teachers" — they need different actions from the manager.
-              assignedCount > 0
-              ? t("dept_course_detail.assign_all_assigned")
-              : t("dept_course_detail.assign_none_available")
-            : t("dept_course_detail.assign_help")}
-      </p>
+      <Button
+        type="submit"
+        size="sm"
+        disabled={assign.isPending || !userId || !canAssign}
+      >
+        <UserPlus className="h-3.5 w-3.5" />
+        {t("dept_course_detail.assign_button")}
+      </Button>
+
+      {notice ? (
+        <p className="text-[11px] text-text-muted">{notice}</p>
+      ) : null}
     </form>
   );
 }

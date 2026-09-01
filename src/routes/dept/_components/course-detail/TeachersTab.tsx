@@ -58,6 +58,10 @@ function useTeacherStaffing(
  * Staffing summary line: how many teachers are on the course now, against the
  * runtime [min, max] window, with a warning when the course is at/over the
  * ceiling (assigning would exceed it) or under the floor (cannot publish).
+ *
+ * Inline rather than a card. It is one short sentence, and as a full-width
+ * bordered box it was the first of four stacked containers a manager had to
+ * scroll past to reach the list.
  */
 function StaffingSummary({
   current,
@@ -72,9 +76,9 @@ function StaffingSummary({
   const overMax = max > 0 && current >= max;
   const underMin = min > 0 && current < min;
   return (
-    <div className="rounded-lg border border-border bg-surface-elev px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+    <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
       <span className="flex items-center gap-2 text-sm text-text-strong">
-        <Users className="h-4 w-4 text-text-subtle" />
+        <Users aria-hidden="true" className="h-4 w-4 text-text-subtle" />
         {t("dept_course_detail.staffing_minmax", {
           current,
           min,
@@ -92,7 +96,7 @@ function StaffingSummary({
           {t("dept_course_detail.staffing_under_min", { min })}
         </span>
       )}
-    </div>
+    </span>
   );
 }
 
@@ -116,6 +120,8 @@ export function DeptTeachersTab({
     maxTeachers,
     hasStaffingData,
   } = useTeacherStaffing(courseId, teachers.data);
+
+  const hasTeachers = (teachers.data ?? []).length > 0;
 
   const rows = useMemo(() => {
     const all = teachers.data ?? [];
@@ -145,21 +151,11 @@ export function DeptTeachersTab({
   if (!active) return null;
 
   return (
-    <div className="space-y-4">
-      <StaffingSummary
-        current={currentCount}
-        min={minTeachers}
-        max={maxTeachers}
-      />
-
-      {canAssign && (
-        <AssignTeacherForm
-          courseId={courseId}
-          currentCount={currentCount}
-          maxCount={hasStaffingData ? maxTeachers : undefined}
-        />
-      )}
-
+    // A single container. Staffing, assignment and search were three
+    // full-width cards stacked above the table, each holding one line or one
+    // control — roughly 250px of chrome before the manager saw a name. They
+    // are now the table's toolbar.
+    <div>
       {teachers.isLoading ? (
         <PageSkeleton
           rows={3}
@@ -198,23 +194,40 @@ export function DeptTeachersTab({
             )
           }
           toolbar={
-            (teachers.data ?? []).length > 0 ? (
-              <div className="flex flex-wrap items-center gap-3">
-                <SearchInput
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onClear={query ? () => setQuery("") : undefined}
-                  placeholder={t("dept_course_detail.search_teachers")}
-                  wrapperClassName="w-full sm:w-72"
-                  aria-label={t("dept_course_detail.search_teachers")}
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <StaffingSummary
+                  current={currentCount}
+                  min={minTeachers}
+                  max={maxTeachers}
                 />
-                <p className="text-xs text-text-muted">
-                  {t("dept_course_detail.teacher_count", {
-                    count: rows.length,
-                  })}
-                </p>
+                {/* Search earns its place only once there is a list worth
+                    narrowing; two rows do not need a filter. */}
+                {hasTeachers ? (
+                  <SearchInput
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onClear={query ? () => setQuery("") : undefined}
+                    placeholder={t("dept_course_detail.search_teachers")}
+                    wrapperClassName="w-full sm:w-64"
+                    aria-label={t("dept_course_detail.search_teachers")}
+                  />
+                ) : null}
               </div>
-            ) : undefined
+
+              {/* Assign stays ALWAYS rendered, including on an empty course.
+                  It used to live above the table and was fine, but the
+                  toolbar it moved into was previously suppressed when the
+                  list was empty — which is exactly when a manager needs to
+                  assign someone. */}
+              {canAssign ? (
+                <AssignTeacherForm
+                  courseId={courseId}
+                  currentCount={currentCount}
+                  maxCount={hasStaffingData ? maxTeachers : undefined}
+                />
+              ) : null}
+            </div>
           }
         />
       )}
