@@ -15,9 +15,8 @@ import type { QuestionBankDerived } from "./use-question-bank-derived";
 import type { QuestionBankFiltersController } from "./use-question-bank-filters";
 
 /**
- * The bank's filter panel — free-text search, difficulty, tag, and the type
- * segmented control — extracted verbatim from the former 843-line
- * course-question-bank.tsx.
+ * The bank's filter panel — free-text search, difficulty, and the type
+ * segmented control.
  */
 export function QuestionBankFilters({
   filters,
@@ -34,12 +33,10 @@ export function QuestionBankFilters({
     setTypeFilter,
     difficultyFilter,
     setDifficultyFilter,
-    tagFilter,
-    setTagFilter,
     anyFilterActive,
     clearFilters,
   } = filters;
-  const { allTags, filtered, typeCounts, total } = derived;
+  const { filtered, typeCounts, total } = derived;
   return (
     <div className="space-y-2.5 rounded-xl border border-m3-outline-variant/30 bg-m3-surface-container-lowest p-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -68,17 +65,6 @@ export function QuestionBankFilters({
             })),
           ]}
         />
-        {allTags.length > 0 && (
-          <FilterSelect
-            label={t("teacher_question_bank.filter_tag")}
-            value={tagFilter}
-            onChange={setTagFilter}
-            options={[
-              { value: "all", label: t("teacher_question_bank.all") },
-              ...allTags.map((tag) => ({ value: tag, label: tag })),
-            ]}
-          />
-        )}
       </div>
 
       {/* Type moves from a dropdown to a segmented control: 5 fixed values

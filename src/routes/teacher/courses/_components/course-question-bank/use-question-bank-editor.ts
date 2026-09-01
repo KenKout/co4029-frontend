@@ -39,7 +39,6 @@ export function useQuestionBankEditor(options: {
       question_type: item.question_type,
       difficulty: item.difficulty ?? "none",
       model_answer: item.model_answer ?? "",
-      tags: item.tags ?? [],
       isLogicalGroupMember: Boolean(item.variant_group_id),
     });
   }
@@ -58,7 +57,6 @@ export function useQuestionBankEditor(options: {
           question_type: draft.question_type,
           difficulty: draft.difficulty === "none" ? null : draft.difficulty,
           model_answer: draft.model_answer.trim() || null,
-          tags: draft.tags,
         },
       });
       toast.success(t("teacher_question_bank.saved"));

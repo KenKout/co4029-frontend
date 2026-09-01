@@ -39,14 +39,12 @@ export interface EditorState {
   question_type: InterviewQuestionType;
   difficulty: InterviewDifficulty | "none";
   model_answer: string;
-  tags: string[];
   isLogicalGroupMember: boolean;
 }
 
-/** The four filter dimensions the bank filters on, as one snapshot. */
+/** The three filter dimensions the bank filters on, as one snapshot. */
 export interface QuestionBankFilterValues {
   search: string;
   typeFilter: InterviewQuestionType | "all";
   difficultyFilter: InterviewDifficulty | "all";
-  tagFilter: string;
 }
