@@ -25,6 +25,8 @@ export interface QuestionDraftState {
   blankCount: number;
   expectedSeconds: number | null;
   draftTimeInvalid: boolean;
+  /** Draft differs from the stored row — drives the card's "Unsaved" badge. */
+  isUnsaved: boolean;
 }
 
 export function useQuestionDraft(
@@ -32,13 +34,20 @@ export function useQuestionDraft(
   onDirtyChange?: (questionId: string, dirty: boolean) => void,
   /** Reports EXPLICIT teacher edits only — the leave-guard's input. */
   onUserEditChange?: (questionId: string, edited: boolean) => void,
+  /**
+   * Bumped by the quiz-level "Discard" to throw the draft away and re-read the
+   * stored row. It is a token rather than a boolean so repeated discards each
+   * fire: the value only has to CHANGE, and the effect below already knows how
+   * to rebuild from `question`.
+   */
+  resetToken = 0,
 ): QuestionDraftState {
   const [draft, setDraft] = useState(() => buildQuestionDraft(question));
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     setDraft(buildQuestionDraft(question));
-  }, [question]);
+  }, [question, resetToken]);
 
   // TWO distinct notions of "not saved", deliberately kept apart. Collapsing
   // them into one flag is what produced "31 unsaved" on a quiz nobody had
@@ -132,5 +141,6 @@ export function useQuestionDraft(
     blankCount,
     expectedSeconds,
     draftTimeInvalid,
+    isUnsaved,
   };
 }

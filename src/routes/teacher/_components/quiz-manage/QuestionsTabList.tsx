@@ -7,6 +7,7 @@ import type {
   QuizQuestionAuthoring,
 } from "@/lib/api/types";
 import { QuestionCard } from "./QuestionCard";
+import type { QuestionSaver } from "./question-save";
 
 /**
  * The question list itself: the empty state, or one QuestionCard per question.
@@ -23,6 +24,8 @@ export function QuestionsTabList({
   published,
   onDirtyChange,
   onUserEditChange,
+  onRegisterSaver,
+  resetToken,
 }: {
   quizId: string;
   courseId: string;
@@ -34,6 +37,10 @@ export function QuestionsTabList({
   published: boolean;
   onDirtyChange: (questionId: string, dirty: boolean) => void;
   onUserEditChange: (questionId: string, edited: boolean) => void;
+  /** Collects each card's save function for the quiz-level save bar. */
+  onRegisterSaver: (questionId: string, save: QuestionSaver | null) => void;
+  /** Bumped by "Discard" to reset every draft. */
+  resetToken: number;
 }) {
   const { t } = useTranslation();
 
@@ -68,6 +75,8 @@ export function QuestionsTabList({
           published={published}
           onDirtyChange={onDirtyChange}
           onUserEditChange={onUserEditChange}
+          onRegisterSaver={onRegisterSaver}
+          resetToken={resetToken}
         />
       ))}
     </>

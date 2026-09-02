@@ -3940,7 +3940,8 @@
     "questions": {
       "sr_select": "Select question {{position}}",
       "position_label": "Question {{position}}",
-      "no_time_set": "No expected time set"
+      "no_time_set": "No expected time set",
+      "unsaved": "Unsaved"
     },
     "editor": {
       "prompt_label": "Question",
@@ -3963,7 +3964,9 @@
       "fill_blank_distractors_hint": "Extra words in the student's word bank that are never the answer.",
       "fill_blank_no_blanks": "Add ___ markers in the question text to define the blanks.",
       "fill_blank_placeholder": "Blank answer…",
-      "correct_answer_placeholder": "Type the exact answer…"
+      "correct_answer_placeholder": "Type the exact answer…",
+      "more_actions": "More actions for this question",
+      "add_to_bank": "Add to bank"
     },
     "generate_modal": {
       "title": "Generate questions with AI",
@@ -4230,6 +4233,15 @@
       "title": "Delete {{count}} questions?",
       "body": "The selected questions will be removed from this quiz. You'll have a few seconds to undo before it's saved.",
       "confirm": "Delete {{count}} questions"
+    },
+    "save_bar": {
+      "pending_one": "{{count}} question has unsaved changes",
+      "pending_other": "{{count}} questions have unsaved changes",
+      "discard": "Discard",
+      "save_all": "Save all changes",
+      "saved_one": "{{count}} question saved",
+      "saved_other": "{{count}} questions saved",
+      "save_failed": "Stopped after saving {{count}}. Check the flagged question and try again."
     }
   },
   "teacher_interview_config": {

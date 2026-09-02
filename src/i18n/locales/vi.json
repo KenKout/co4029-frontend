@@ -3811,7 +3811,8 @@
     "questions": {
       "sr_select": "Chọn câu hỏi {{position}}",
       "position_label": "Câu {{position}}",
-      "no_time_set": "Chưa đặt thời gian"
+      "no_time_set": "Chưa đặt thời gian",
+      "unsaved": "Chưa lưu"
     },
     "editor": {
       "prompt_label": "Câu hỏi",
@@ -3834,7 +3835,9 @@
       "fill_blank_distractors_hint": "Các từ thêm vào ngân hàng từ của học viên nhưng không bao giờ là đáp án.",
       "fill_blank_no_blanks": "Thêm dấu ___ vào nội dung câu hỏi để tạo chỗ trống.",
       "fill_blank_placeholder": "Đáp án chỗ trống…",
-      "correct_answer_placeholder": "Nhập đáp án chính xác…"
+      "correct_answer_placeholder": "Nhập đáp án chính xác…",
+      "more_actions": "Thao tác khác cho câu hỏi này",
+      "add_to_bank": "Thêm vào ngân hàng"
     },
     "generate_modal": {
       "title": "Tạo câu hỏi bằng AI",
@@ -4101,6 +4104,13 @@
       "title": "Xoá {{count}} câu hỏi?",
       "body": "Các câu hỏi đã chọn sẽ bị xoá khỏi bài kiểm tra này. Bạn có vài giây để hoàn tác trước khi lưu.",
       "confirm": "Xoá {{count}} câu hỏi"
+    },
+    "save_bar": {
+      "pending_other": "{{count}} câu hỏi có thay đổi chưa lưu",
+      "discard": "Hủy thay đổi",
+      "save_all": "Lưu tất cả thay đổi",
+      "saved_other": "Đã lưu {{count}} câu hỏi",
+      "save_failed": "Đã dừng sau khi lưu {{count}} câu. Kiểm tra câu hỏi được đánh dấu rồi thử lại."
     }
   },
   "teacher_interview_config": {

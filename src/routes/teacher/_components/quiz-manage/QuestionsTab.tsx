@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import type { PendingQuestionDelete } from "@/lib/api/hooks/quizzes";
 import { useCopyQuizQuestionsToCuratedBank } from "@/lib/api/hooks/quizzes";
@@ -10,6 +11,8 @@ import type {
 import { AddToCuratedBankDialog } from "./AddToCuratedBankDialog";
 import { BulkSetExpectedTimeBar } from "./BulkSetExpectedTimeBar";
 import { QuestionsBulkDeleteDialog } from "./QuestionsBulkDeleteDialog";
+import { QuestionsSaveBar } from "./QuestionsSaveBar";
+import type { QuestionSaver } from "./question-save";
 import { QuestionsTabAddControls } from "./QuestionsTabAddControls";
 import { QuestionsTabBanners } from "./QuestionsTabBanners";
 import { QuestionsTabList } from "./QuestionsTabList";
@@ -125,6 +128,59 @@ export function QuestionsTab({
     handleUserEditChange,
   } = useQuestionsTabState(onDirtyCountChange);
 
+  // Each card hands its save function up here. The drafts themselves stay in
+  // the cards (lifting them would re-render every sibling on each keystroke),
+  // so "Save all" cannot build the payloads — it calls back into the cards.
+  const saversRef = useRef(new Map<string, QuestionSaver>());
+  const [savingAll, setSavingAll] = useState(false);
+  const [resetToken, setResetToken] = useState(0);
+
+  const handleRegisterSaver = useCallback(
+    (questionId: string, save: QuestionSaver | null) => {
+      if (save) saversRef.current.set(questionId, save);
+      else saversRef.current.delete(questionId);
+    },
+    [],
+  );
+
+  /** Save every card the dirty set names, one at a time.
+   *
+   * Sequential rather than parallel: these are PATCHes against rows of one
+   * quiz, and a burst of twenty concurrent writes is how you get a partially
+   * applied save with no useful error. The count is reported honestly — a
+   * failure part-way through leaves the earlier saves committed, and saying
+   * so is more useful than a single "something went wrong".
+   */
+  async function handleSaveAll() {
+    const ids = Array.from(dirtyIds);
+    if (ids.length === 0) return;
+    setSavingAll(true);
+    let saved = 0;
+    try {
+      for (const id of ids) {
+        const save = saversRef.current.get(id);
+        if (!save) continue; // card unmounted mid-save (deleted, or filtered out)
+        // `silent` so one batch produces one toast, not one per question.
+        // The saver reports failure by resolving false rather than throwing —
+        // awaiting it without checking would count a question the validator
+        // rejected as saved.
+        const ok = await save(undefined, { silent: true });
+        if (!ok) {
+          // It has already said WHY, and which question. Stop rather than
+          // marching on: the rest would bury that message under more toasts.
+          toast.error(
+            t("teacher_quiz_manage.save_bar.save_failed", { count: saved }),
+          );
+          return;
+        }
+        saved += 1;
+      }
+      toast.success(t("teacher_quiz_manage.save_bar.saved", { count: saved }));
+    } finally {
+      setSavingAll(false);
+    }
+  }
+
   const counts = summariseQuestionCounts(questions, dirtyIds);
 
   /** Stage every selected question for deletion in one go.
@@ -205,7 +261,21 @@ export function QuestionsTab({
           published={published}
           onDirtyChange={handleDirtyChange}
           onUserEditChange={handleUserEditChange}
+          onRegisterSaver={handleRegisterSaver}
+          resetToken={resetToken}
         />
+
+        {/* One save for the whole quiz. Authoring only: a published quiz is
+            frozen, so there is nothing to save and the bar would be a
+            permanent dead control. */}
+        {!published && (
+          <QuestionsSaveBar
+            dirtyCount={dirtyIds.size}
+            saving={savingAll}
+            onSaveAll={() => void handleSaveAll()}
+            onDiscard={() => setResetToken((n) => n + 1)}
+          />
+        )}
 
         {/* Add-question controls are authoring only — hidden on a published
             (frozen) quiz so no new questions can be seeded. */}

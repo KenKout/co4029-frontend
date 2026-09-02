@@ -3,6 +3,32 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
+ * Grow a textarea to fit its content.
+ *
+ * `rows` reserves height whether or not the text needs it — a one-line
+ * question in `rows={3}` leaves two empty lines under it, which is where a
+ * measurable slice of the quiz editor's blank space came from (88px of box
+ * for 43px of text, three fields per card).
+ *
+ * `scrollHeight` covers content + padding but NOT the border, so the
+ * difference between `offsetHeight` and `clientHeight` is added back;
+ * without it every field lands 2px short and clips its own descenders.
+ */
+function useAutoGrow(
+  ref: React.RefObject<HTMLTextAreaElement | null>,
+  enabled: boolean,
+  value: unknown,
+) {
+  React.useLayoutEffect(() => {
+    if (!enabled) return;
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight + (el.offsetHeight - el.clientHeight)}px`;
+  }, [ref, enabled, value]);
+}
+
+/**
  * Multi-line counterpart to `ui/input.tsx`, carrying the same border, radius,
  * hover and focus language. Before this existed, every page hand-rolled the
  * class string (`rounded-xl border border-m3-outline-variant/20 bg-m3-surface
@@ -44,6 +70,15 @@ export interface TextareaProps extends React.ComponentProps<"textarea"> {
   mono?: boolean;
   /** Vertical resize opt-in; the base look is `resize-none`. */
   resize?: "none" | "y";
+  /**
+   * Size to the content instead of to `rows`.
+   *
+   * `rows` then acts as the MINIMUM (via `min-height`), so a field can still
+   * reserve a couple of lines while a longer answer keeps growing. Pair it
+   * with `resize="none"` — a hand-dragged height and an auto-set one fight
+   * each other on the next keystroke.
+   */
+  autoGrow?: boolean;
 }
 
 function Textarea({
@@ -52,12 +87,31 @@ function Textarea({
   variant = "default",
   mono = false,
   resize = "none",
+  autoGrow = false,
+  ref,
+  style,
   ...props
 }: TextareaProps) {
+  const innerRef = React.useRef<HTMLTextAreaElement | null>(null);
+  useAutoGrow(innerRef, autoGrow, props.value);
+
   return (
     <textarea
       data-slot="textarea"
+      ref={(node) => {
+        innerRef.current = node;
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      }}
       rows={rows}
+      // The auto-grown height is written to style.height, so `rows` would
+      // otherwise stop mattering entirely; as a min-height it keeps doing the
+      // one job worth keeping — reserving a sensible floor for an empty field.
+      style={
+        autoGrow
+          ? { minHeight: `calc(${rows} * 1.625em + 1.25rem)`, ...style }
+          : style
+      }
       className={cn(
         "w-full min-w-0 rounded-xl px-3 py-2.5 text-sm leading-relaxed text-m3-on-surface",
         TEXTAREA_VARIANT[variant],

@@ -225,6 +225,25 @@ export interface QuestionSaverDeps extends QuestionDraftContext {
 }
 
 /**
+ * One card's save function.
+ *
+ * Resolves TRUE only when the row was actually written. The quiz-level save
+ * bar runs these in a batch and has to know: this function reports both a
+ * failed validation and a failed PATCH by toasting rather than throwing, so a
+ * caller that only awaited it would count a rejected question as saved and
+ * then claim the batch succeeded.
+ *
+ * `silent` suppresses only the SUCCESS toast, for the batch case — twenty
+ * questions saved one after another should produce one "20 questions saved",
+ * not twenty. Failures always toast, because the teacher needs to know which
+ * question stopped the run.
+ */
+export type QuestionSaver = (
+  reviewStatus?: string,
+  options?: { silent?: boolean },
+) => Promise<boolean>;
+
+/**
  * Build the card's save handler: validate the draft, PATCH it, toast the
  * outcome. Recreated on every render exactly like the inline function
  * declaration it replaced, so the closure always sees the current draft.
@@ -236,8 +255,11 @@ export function createQuestionSaver({
   allowMultiCorrect,
   t,
   patchQuestion,
-}: QuestionSaverDeps) {
-  return async function handleSave(reviewStatus = draft.review_status) {
+}: QuestionSaverDeps): QuestionSaver {
+  return async function handleSave(
+    reviewStatus = draft.review_status,
+    options = {},
+  ) {
     const validation = validateQuestionDraft({
       draft,
       hasOptions,
@@ -245,7 +267,7 @@ export function createQuestionSaver({
     });
     if (!validation.ok) {
       toast.error(t(validation.errorKey));
-      return;
+      return false;
     }
     try {
       await patchQuestion(
@@ -258,16 +280,20 @@ export function createQuestionSaver({
           expectedSeconds: validation.expectedSeconds,
         }),
       );
-      toast.success(
-        reviewStatus === "approved"
-          ? t("teacher_quiz_manage.toasts.question_approved")
-          : t("teacher_quiz_manage.toasts.question_saved"),
-      );
+      if (!options.silent) {
+        toast.success(
+          reviewStatus === "approved"
+            ? t("teacher_quiz_manage.toasts.question_approved")
+            : t("teacher_quiz_manage.toasts.question_saved"),
+        );
+      }
+      return true;
     } catch (err: unknown) {
       toast.error(
         (err as Error).message ||
           t("teacher_quiz_manage.toasts.save_question_failed"),
       );
+      return false;
     }
   };
 }

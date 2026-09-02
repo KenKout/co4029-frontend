@@ -4,19 +4,37 @@ import {
   Copy,
   Library,
   Loader2,
+  MoreVertical,
   RefreshCw,
-  Save,
   Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { QuizQuestionAuthoring } from "@/lib/api/types";
+import type { QuestionSaver } from "./question-save";
 
 /**
- * The mutating action row of a QuestionCard (Save / Approve / Regenerate /
- * Duplicate / Delete). Extracted from QuestionCard verbatim; the card still
- * owns the `!published` gate, because a published quiz hides the whole row
- * rather than disabling it.
+ * Per-question actions, as a header control rather than a footer row.
+ *
+ * This was a row of up to six equal-weight buttons (Save, Approve, Regenerate,
+ * Duplicate, Add to bank, Delete) at the bottom of every card. Two things were
+ * wrong with it: Save is no longer per-card — the quiz-level save bar owns
+ * that, so twenty questions no longer mean twenty separate saves — and the
+ * remaining five are all things a teacher does occasionally to ONE question,
+ * which is what a menu is for. As a row they cost 32px on every card and made
+ * five competing calls to action out of what is really "…".
+ *
+ * Approve stays outside the menu when it applies: it is the review gesture the
+ * whole Questions tab exists to collect, and burying the only affirmative
+ * action behind a menu would make approving a generated quiz a 3-click job per
+ * question.
  */
 export function QuestionCardActions({
   question,
@@ -35,30 +53,17 @@ export function QuestionCardActions({
   regeneratePending: boolean;
   duplicatePending: boolean;
   addToBankPending: boolean;
-  onSave: (reviewStatus?: string) => Promise<void>;
+  onSave: QuestionSaver;
   onRegenerate: () => Promise<void>;
   onDuplicate: () => Promise<void>;
   onRequestAddToBank: () => void;
   onRequestDelete: () => void;
 }) {
   const { t } = useTranslation();
+  const busy = regeneratePending || duplicatePending || addToBankPending;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 pt-1">
-      <Button
-        type="button"
-        size="sm"
-        onClick={() => onSave()}
-        disabled={savePending}
-        className="gap-2"
-      >
-        {savePending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <Save className="h-3.5 w-3.5" />
-        )}
-        {t("common.save")}
-      </Button>
+    <div className="flex items-center gap-1.5">
       {question.review_status !== "approved" && (
         <Button
           type="button"
@@ -66,68 +71,68 @@ export function QuestionCardActions({
           variant="outline"
           onClick={() => onSave("approved")}
           disabled={savePending}
-          className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700"
+          className="gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700"
         >
-          <CheckCircle2 className="h-3.5 w-3.5" />
+          {savePending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <CheckCircle2 className="h-3.5 w-3.5" />
+          )}
           {t("teacher_quiz_manage.editor.approve")}
         </Button>
       )}
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        onClick={onRegenerate}
-        disabled={regeneratePending}
-        className="gap-2"
-      >
-        {regeneratePending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <RefreshCw className="h-3.5 w-3.5" />
-        )}
-        {t("teacher_quiz_manage.editor.regenerate")}
-      </Button>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        onClick={onDuplicate}
-        disabled={duplicatePending}
-        className="gap-2"
-        title={t("teacher_quiz_manage.editor.duplicate", "Duplicate")}
-      >
-        {duplicatePending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <Copy className="h-3.5 w-3.5" />
-        )}
-        {t("teacher_quiz_manage.editor.duplicate", "Duplicate")}
-      </Button>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        onClick={onRequestAddToBank}
-        disabled={addToBankPending}
-        className="gap-2"
-      >
-        {addToBankPending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <Library className="h-3.5 w-3.5" />
-        )}
-        Add to bank
-      </Button>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        onClick={onRequestDelete}
-        className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700 ml-auto"
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-        {t("common.delete")}
-      </Button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          type="button"
+          aria-label={t(
+            "teacher_quiz_manage.editor.more_actions",
+            "More actions for this question",
+          )}
+          className="flex h-7 w-7 items-center justify-center rounded-md border border-m3-outline-variant/40 text-m3-on-surface-variant outline-none transition-colors hover:bg-m3-primary/8 hover:text-m3-primary cursor-pointer"
+        >
+          {busy ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <MoreVertical className="h-3.5 w-3.5" />
+          )}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem
+            onClick={() => void onRegenerate()}
+            disabled={regeneratePending}
+            className="cursor-pointer"
+          >
+            <RefreshCw className="h-4 w-4" />
+            {t("teacher_quiz_manage.editor.regenerate")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => void onDuplicate()}
+            disabled={duplicatePending}
+            className="cursor-pointer"
+          >
+            <Copy className="h-4 w-4" />
+            {t("teacher_quiz_manage.editor.duplicate", "Duplicate")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={onRequestAddToBank}
+            disabled={addToBankPending}
+            className="cursor-pointer"
+          >
+            <Library className="h-4 w-4" />
+            {t("teacher_quiz_manage.editor.add_to_bank", "Add to bank")}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={onRequestDelete}
+            className="cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4" />
+            {t("common.delete")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
