@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   CheckCircle2,
   Copy,
+  Library,
   Loader2,
   RefreshCw,
   Save,
@@ -22,18 +23,22 @@ export function QuestionCardActions({
   savePending,
   regeneratePending,
   duplicatePending,
+  addToBankPending,
   onSave,
   onRegenerate,
   onDuplicate,
+  onRequestAddToBank,
   onRequestDelete,
 }: {
   question: QuizQuestionAuthoring;
   savePending: boolean;
   regeneratePending: boolean;
   duplicatePending: boolean;
+  addToBankPending: boolean;
   onSave: (reviewStatus?: string) => Promise<void>;
   onRegenerate: () => Promise<void>;
   onDuplicate: () => Promise<void>;
+  onRequestAddToBank: () => void;
   onRequestDelete: () => void;
 }) {
   const { t } = useTranslation();
@@ -97,6 +102,21 @@ export function QuestionCardActions({
           <Copy className="h-3.5 w-3.5" />
         )}
         {t("teacher_quiz_manage.editor.duplicate", "Duplicate")}
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={onRequestAddToBank}
+        disabled={addToBankPending}
+        className="gap-2"
+      >
+        {addToBankPending ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Library className="h-3.5 w-3.5" />
+        )}
+        Add to bank
       </Button>
       <Button
         type="button"

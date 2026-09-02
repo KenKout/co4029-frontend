@@ -32,6 +32,8 @@ export function BulkSetExpectedTimeBar({
   onApprove,
   approveValid,
   approving,
+  onAddToBank,
+  addingToBank,
   onDeleteSelected,
 }: {
   totalQuestions: number;
@@ -46,6 +48,8 @@ export function BulkSetExpectedTimeBar({
   onApprove: () => void | Promise<void>;
   approveValid: boolean;
   approving: boolean;
+  onAddToBank: () => void;
+  addingToBank: boolean;
   /** Stage every selected question for deletion (combo-undo window). */
   onDeleteSelected: () => void;
 }) {
@@ -82,6 +86,8 @@ export function BulkSetExpectedTimeBar({
           onApprove={onApprove}
           approveValid={approveValid}
           approving={approving}
+          onAddToBank={onAddToBank}
+          addingToBank={addingToBank}
           onDeleteSelected={onDeleteSelected}
         />
       )}

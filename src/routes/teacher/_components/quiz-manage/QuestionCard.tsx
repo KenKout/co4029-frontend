@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { PendingQuestionDelete } from "@/lib/api/hooks/quizzes";
 import type {
   CourseLearningOutcomeAuthoring,
@@ -30,6 +32,7 @@ import { useQuestionDraft } from "./use-question-draft";
  */
 export function QuestionCard({
   quizId,
+  courseId,
   question,
   outcomes,
   selected,
@@ -40,6 +43,7 @@ export function QuestionCard({
   onUserEditChange,
 }: {
   quizId: string;
+  courseId: string;
   question: QuizQuestionAuthoring;
   outcomes: CourseLearningOutcomeAuthoring[];
   selected: boolean;
@@ -59,9 +63,12 @@ export function QuestionCard({
     updateQuestion,
     regenerate,
     duplicate,
+    addToBank,
+    handleAddToBank,
     handleDuplicate,
     handleRegenerate,
-  } = useQuestionCardMutations(quizId, question.id, t);
+  } = useQuestionCardMutations(courseId, quizId, question.id, t);
+  const [confirmAddToBank, setConfirmAddToBank] = useState(false);
   const {
     draft,
     setDraft,
@@ -177,9 +184,11 @@ export function QuestionCard({
           savePending={updateQuestion.isPending}
           regeneratePending={regenerate.isPending}
           duplicatePending={duplicate.isPending}
+          addToBankPending={addToBank.isPending}
           onSave={handleSave}
           onRegenerate={handleRegenerate}
           onDuplicate={handleDuplicate}
+          onRequestAddToBank={() => setConfirmAddToBank(true)}
           onRequestDelete={() => setConfirmDelete(true)}
         />
       )}
@@ -193,6 +202,19 @@ export function QuestionCard({
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={confirmAddToBank}
+        onOpenChange={setConfirmAddToBank}
+        title="Add question to curated bank?"
+        description="A reusable snapshot will be created for this course. Future edits to this Quiz question will not update the bank copy."
+        confirmLabel="Add to bank"
+        confirmVariant="default"
+        isPending={addToBank.isPending}
+        onConfirm={() => {
+          void handleAddToBank().then(() => setConfirmAddToBank(false));
+        }}
+      />
     </div>
   );
 }

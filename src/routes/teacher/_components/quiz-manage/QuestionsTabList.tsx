@@ -14,6 +14,7 @@ import { QuestionCard } from "./QuestionCard";
  */
 export function QuestionsTabList({
   quizId,
+  courseId,
   questions,
   outcomes,
   selectedIds,
@@ -24,6 +25,7 @@ export function QuestionsTabList({
   onUserEditChange,
 }: {
   quizId: string;
+  courseId: string;
   questions: QuizQuestionAuthoring[];
   outcomes: CourseLearningOutcomeAuthoring[];
   selectedIds: Set<string>;
@@ -57,6 +59,7 @@ export function QuestionsTabList({
         <QuestionCard
           key={question.id}
           quizId={quizId}
+          courseId={courseId}
           question={question}
           outcomes={outcomes}
           selected={selectedIds.has(question.id)}

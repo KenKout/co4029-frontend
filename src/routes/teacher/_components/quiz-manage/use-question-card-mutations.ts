@@ -4,6 +4,7 @@ import type { TFunction } from "i18next";
 import { ApiError } from "@/lib/api/client";
 import {
   useDuplicateQuizQuestion,
+  useCopyQuizQuestionsToCuratedBank,
   useRegenerateQuestion,
   useUpdateQuizQuestion,
 } from "@/lib/api/hooks/quizzes";
@@ -16,6 +17,7 @@ import {
  */
 
 export function useQuestionCardMutations(
+  courseId: string,
   quizId: string,
   questionId: string,
   t: TFunction,
@@ -23,6 +25,20 @@ export function useQuestionCardMutations(
   const updateQuestion = useUpdateQuizQuestion(quizId, questionId);
   const regenerate = useRegenerateQuestion(quizId, questionId);
   const duplicate = useDuplicateQuizQuestion(quizId);
+  const addToBank = useCopyQuizQuestionsToCuratedBank(courseId);
+
+  async function handleAddToBank() {
+    try {
+      await addToBank.mutateAsync([questionId]);
+      toast.success("Question added to the curated bank");
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError && err.status === 409
+          ? "An identical question already exists in the curated bank"
+          : (err as Error).message || "Could not add question to bank",
+      );
+    }
+  }
 
   async function handleDuplicate() {
     try {
@@ -64,6 +80,8 @@ export function useQuestionCardMutations(
     updateQuestion,
     regenerate,
     duplicate,
+    addToBank,
+    handleAddToBank,
     handleDuplicate,
     handleRegenerate,
   };

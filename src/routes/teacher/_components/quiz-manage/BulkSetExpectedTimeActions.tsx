@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, Clock, Loader2, Save, Trash2 } from "lucide-react";
+import { CheckCircle2, Clock, Library, Loader2, Save, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ export function BulkSetExpectedTimeActions({
   onApprove,
   approveValid,
   approving,
+  onAddToBank,
+  addingToBank,
   onDeleteSelected,
 }: {
   bulkSeconds: string;
@@ -28,6 +30,8 @@ export function BulkSetExpectedTimeActions({
   onApprove: () => void | Promise<void>;
   approveValid: boolean;
   approving: boolean;
+  onAddToBank: () => void;
+  addingToBank: boolean;
   /** Stage every selected question for deletion (combo-undo window). */
   onDeleteSelected: () => void;
 }) {
@@ -97,6 +101,22 @@ export function BulkSetExpectedTimeActions({
           <CheckCircle2 className="h-3.5 w-3.5" />
         )}
         {t("teacher_quiz_manage.bulk_time.approve_short")}
+      </Button>
+
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={onAddToBank}
+        disabled={addingToBank}
+        className="h-9 gap-1.5"
+      >
+        {addingToBank ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Library className="h-3.5 w-3.5" />
+        )}
+        Add to bank
       </Button>
 
       {/* Group 3: destructive, pushed to the far edge and visually split

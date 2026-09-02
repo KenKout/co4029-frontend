@@ -53,6 +53,7 @@ export function QuizManageTabPanels({
           className="border-0 p-0 m-0 min-w-0 disabled:opacity-70"
         >
           <QuestionsTab
+            courseId={courseId}
             quizId={quizId}
             questions={questions}
             outcomes={outcomes ?? []}

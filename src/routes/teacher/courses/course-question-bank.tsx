@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
+import { Tabs } from "@/components/ui/tabs";
 import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
 import {
   useDeleteInterviewQuestionBankGroup,
@@ -13,6 +15,7 @@ import { QuestionBankBody } from "./_components/course-question-bank/QuestionBan
 import { QuestionBankFilters } from "./_components/course-question-bank/QuestionBankFilters";
 import { QuestionBankHeader } from "./_components/course-question-bank/QuestionBankHeader";
 import { QuestionBankStats } from "./_components/course-question-bank/QuestionBankStats";
+import { QuizQuestionBankPanel } from "./_components/course-question-bank/QuizQuestionBankPanel";
 import { useQuestionBankDeletion } from "./_components/course-question-bank/use-question-bank-deletion";
 import { useQuestionBankDerived } from "./_components/course-question-bank/use-question-bank-derived";
 import { useQuestionBankEditor } from "./_components/course-question-bank/use-question-bank-editor";
@@ -42,6 +45,7 @@ export default function CourseQuestionBankPage() {
   const deletion = useQuestionBankDeletion({ t, deleteItem, deleteGroup });
   const view = useQuestionBankViewState();
   const derived = useQuestionBankDerived({ items, filters });
+  const [bankType, setBankType] = useState<"quiz" | "interview">("quiz");
 
   const controllers = { filters, editor, deletion, view };
 
@@ -49,32 +53,54 @@ export default function CourseQuestionBankPage() {
     <div className="w-full py-6 space-y-5">
       <QuestionBankHeader course={course} />
 
+      <Tabs
+        tabs={[
+          { key: "quiz", label: "Quiz questions" },
+          { key: "interview", label: "Interview questions" },
+        ]}
+        value={bankType}
+        onChange={setBankType}
+        variant="contained"
+        ariaLabel="Question bank type"
+      />
+
+      {bankType === "quiz" ? (
+        <QuizQuestionBankPanel courseId={courseId} />
+      ) : null}
+
       {/* ── 12-col grid: question list main + sticky stats/help sidebar ── */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* ── Main 8 cols ── */}
-        <div className="col-span-12 lg:col-span-8 space-y-5 min-w-0">
-          {/* Filters */}
-          {derived.hasItems && (
-            <QuestionBankFilters filters={filters} derived={derived} />
-          )}
+      {bankType === "interview" ? (
+        <div className="grid grid-cols-12 gap-6">
+          {/* ── Main 8 cols ── */}
+          <div className="col-span-12 lg:col-span-8 space-y-5 min-w-0">
+            {/* Filters */}
+            {derived.hasItems && (
+              <QuestionBankFilters filters={filters} derived={derived} />
+            )}
 
-          {/* Body */}
-          <QuestionBankBody
-            isLoading={isLoading}
-            derived={derived}
-            controllers={controllers}
-          />
+            {/* Body */}
+            <QuestionBankBody
+              isLoading={isLoading}
+              derived={derived}
+              controllers={controllers}
+            />
+          </div>
+
+          {/* ── Sidebar 4 cols ── */}
+          <div className="col-span-12 lg:col-span-4 space-y-5 lg:sticky lg:top-24 self-start">
+            {derived.hasItems && (
+              <QuestionBankStats
+                derived={derived}
+                className="lg:grid-cols-1"
+              />
+            )}
+          </div>
         </div>
+      ) : null}
 
-        {/* ── Sidebar 4 cols ── */}
-        <div className="col-span-12 lg:col-span-4 space-y-5 lg:sticky lg:top-24 self-start">
-          {derived.hasItems && (
-            <QuestionBankStats derived={derived} className="lg:grid-cols-1" />
-          )}
-        </div>
-      </div>
-
-      <DeleteQuestionDialog deletion={deletion} />
+      {bankType === "interview" ? (
+        <DeleteQuestionDialog deletion={deletion} />
+      ) : null}
     </div>
   );
 }

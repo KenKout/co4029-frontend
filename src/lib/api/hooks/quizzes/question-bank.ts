@@ -1,10 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch, apiPost } from "../../client";
+import { apiDelete, apiFetch, apiPatch, apiPost } from "../../client";
 import { queryKeys } from "../../query-keys";
 import { useInfinitePage } from "../../use-infinite-page";
 import type {
   QuestionBankEntry,
   QuestionBankImportRequest,
+  QuizQuestionBankItem,
+  QuizQuestionBankItemCreate,
+  QuizQuestionBankItemUpdate,
+  QuizQuestionBankStatus,
   QuizQuestionAuthoring,
 } from "../../types";
 
@@ -62,6 +66,158 @@ export function useQuestionBank(
     },
     limit,
     enabled,
+  });
+}
+
+export interface CuratedBankFilters {
+  status?: QuizQuestionBankStatus | "";
+  questionType?: string;
+  bloomLevel?: string;
+  difficulty?: string;
+  search?: string;
+}
+
+/** Independent, curated course-level Quiz Question Bank. */
+export function useCuratedQuizQuestionBank(
+  courseId: string | null | undefined,
+  filters: CuratedBankFilters = {},
+  options: { enabled?: boolean; limit?: number } = {},
+) {
+  const enabled = (options.enabled ?? true) && !!courseId;
+  const limit = options.limit ?? 50;
+  return useInfinitePage<QuizQuestionBankItem>({
+    queryKey: queryKeys.quizzes.curatedBank(courseId ?? "", filters),
+    fetch: async (cursor, pageLimit = limit) => {
+      const params = new URLSearchParams();
+      if (filters.status) params.set("bank_status", filters.status);
+      if (filters.questionType)
+        params.set("question_type", filters.questionType);
+      if (filters.bloomLevel) params.set("bloom_level", filters.bloomLevel);
+      if (filters.difficulty) params.set("difficulty", filters.difficulty);
+      if (filters.search) params.set("search", filters.search);
+      params.set("limit", String(pageLimit));
+      if (cursor) params.set("cursor", cursor);
+      const page = await apiFetch<{
+        items: QuizQuestionBankItem[];
+        next_cursor: string | null;
+      }>(`/teacher/courses/${courseId}/quiz-question-bank?${params}`);
+      return { items: page.items, next_cursor: page.next_cursor };
+    },
+    limit,
+    enabled,
+  });
+}
+
+function invalidateCuratedBank(
+  queryClient: ReturnType<typeof useQueryClient>,
+  courseId: string | null | undefined,
+) {
+  return queryClient.invalidateQueries({
+    queryKey: ["quizzes", "curated-bank", courseId ?? ""],
+  });
+}
+
+export function useCreateCuratedQuizQuestion(
+  courseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: QuizQuestionBankItemCreate) =>
+      apiPost<QuizQuestionBankItem>(
+        `/teacher/courses/${courseId}/quiz-question-bank`,
+        payload,
+      ),
+    onSuccess: () => invalidateCuratedBank(queryClient, courseId),
+  });
+}
+
+export function useCopyQuizQuestionsToCuratedBank(
+  courseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (questionIds: string[]) =>
+      apiPost<QuizQuestionBankItem[]>(
+        `/teacher/courses/${courseId}/quiz-question-bank/from-questions`,
+        { question_ids: questionIds },
+      ),
+    onSuccess: () => invalidateCuratedBank(queryClient, courseId),
+  });
+}
+
+export function useUpdateCuratedQuizQuestion(
+  courseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      itemId,
+      patch,
+    }: {
+      itemId: string;
+      patch: QuizQuestionBankItemUpdate;
+    }) =>
+      apiPatch<QuizQuestionBankItem>(
+        `/teacher/courses/${courseId}/quiz-question-bank/${itemId}`,
+        patch,
+      ),
+    onSuccess: () => invalidateCuratedBank(queryClient, courseId),
+  });
+}
+
+export function useSetCuratedQuizQuestionStatus(
+  courseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      itemId,
+      status,
+    }: {
+      itemId: string;
+      status: "approved" | "archived";
+    }) =>
+      apiPost<QuizQuestionBankItem>(
+        `/teacher/courses/${courseId}/quiz-question-bank/${itemId}/status`,
+        { status },
+      ),
+    onSuccess: () => invalidateCuratedBank(queryClient, courseId),
+  });
+}
+
+export function useDeleteCuratedQuizQuestion(
+  courseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: string) =>
+      apiDelete(
+        `/teacher/courses/${courseId}/quiz-question-bank/${itemId}`,
+      ),
+    onSuccess: () => invalidateCuratedBank(queryClient, courseId),
+  });
+}
+
+export function useImportCuratedQuizQuestions(
+  quizId: string | null | undefined,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemIds: string[]) =>
+      apiPost<QuizQuestionAuthoring[]>(
+        `/teacher/quizzes/${quizId}/questions/import-bank`,
+        { item_ids: itemIds },
+      ),
+    onSuccess: () => {
+      if (quizId) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.quizzes.authoring(quizId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.quizzes.questions(quizId),
+        });
+      }
+    },
   });
 }
 

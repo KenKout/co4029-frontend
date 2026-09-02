@@ -284,6 +284,8 @@ export const queryKeys = {
         excludeQuizId?: string;
       },
     ) => ["quizzes", "bank", courseId, filters ?? {}] as const,
+    curatedBank: (courseId: string, filters?: object) =>
+      ["quizzes", "curated-bank", courseId, filters ?? {}] as const,
     courseAttempts: (courseId: string) =>
       ["quizzes", "course-attempts", courseId] as const,
     studentAttempts: (courseId: string, studentId: string) =>

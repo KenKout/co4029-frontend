@@ -66,8 +66,15 @@ export {
 } from "./quizzes/generation";
 
 export {
+  useCopyQuizQuestionsToCuratedBank,
+  useCreateCuratedQuizQuestion,
+  useCuratedQuizQuestionBank,
+  useDeleteCuratedQuizQuestion,
+  useImportCuratedQuizQuestions,
   useImportQuestionsFromBank,
   useQuestionBank,
+  useSetCuratedQuizQuestionStatus,
+  useUpdateCuratedQuizQuestion,
 } from "./quizzes/question-bank";
 
 export type {

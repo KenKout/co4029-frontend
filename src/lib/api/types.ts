@@ -366,6 +366,81 @@ export type QuizQuestionOptionAuthoring =
 export type QuestionBankEntry = Schemas["QuestionBankEntry"];
 export type QuestionBankImportRequest = Schemas["QuestionBankImportRequest"];
 
+export type QuizQuestionBankStatus = "draft" | "approved" | "archived";
+
+export interface QuizQuestionBankOption {
+  id: string;
+  option_key: string;
+  option_text: string;
+  is_correct: boolean;
+  position: number;
+  option_format: string;
+  grade_fraction?: string | number | null;
+  feedback_text?: string | null;
+  feedback_format?: string | null;
+}
+
+export interface QuizQuestionBankItem {
+  id: string;
+  course_id: string;
+  source_question_id?: string | null;
+  status: QuizQuestionBankStatus;
+  content_hash: string;
+  question_type: QuizQuestionAuthoring["question_type"];
+  prompt_text: string;
+  hint_text?: string | null;
+  explanation?: string | null;
+  difficulty?: "easy" | "medium" | "hard" | null;
+  bloom_level?:
+    | "remember"
+    | "understand"
+    | "apply"
+    | "analyze"
+    | "evaluate"
+    | "create"
+    | null;
+  expected_response_time_ms?: number | null;
+  expected_ef_ceiling?: string | number | null;
+  learning_outcome_id?: string | null;
+  source_refs?: unknown[];
+  original_generated_payload?: Record<string, unknown> | null;
+  prompt_format?: string;
+  hint_format?: string;
+  explanation_format?: string;
+  single_answer?: boolean;
+  answer_numbering?: string;
+  numeric_answer?: string | number | null;
+  numeric_tolerance?: string | number | null;
+  match_pairs?: Array<Record<string, unknown>> | null;
+  match_distractors?: string[] | null;
+  ordering_sequence?: unknown[] | null;
+  category_id?: string | null;
+  options: QuizQuestionBankOption[];
+  created_by?: string | null;
+  updated_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type QuizQuestionBankItemCreate = Omit<
+  QuizQuestionBankItem,
+  | "id"
+  | "course_id"
+  | "source_question_id"
+  | "content_hash"
+  | "created_by"
+  | "updated_by"
+  | "created_at"
+  | "updated_at"
+  | "options"
+> & {
+  options?: Array<Omit<QuizQuestionBankOption, "id">>;
+};
+
+export type QuizQuestionBankItemUpdate = Partial<
+  Omit<QuizQuestionBankItemCreate, "status">
+>;
+
 export type GenerationRunRead = Schemas["QuizGenerationRunRead"];
 export type QuizGenerationRunRead = Schemas["QuizGenerationRunRead"];
 export type QuizGenerationRequest = Schemas["QuizGenerationRequest"];

@@ -38,9 +38,11 @@ import {
 import { BankResultList } from "./question-bank-modal/BankResultList";
 import type { QuestionBankModalProps } from "./question-bank-modal/types";
 import { useQuestionBankModal } from "./question-bank-modal/use-question-bank-modal";
+import { CuratedBankImportBody } from "./question-bank-modal/CuratedBankImportBody";
 
 export function QuestionBankModal(props: QuestionBankModalProps) {
   const { onClose } = props;
+  const [source, setSource] = useState<"curated" | "existing">("curated");
   const controller = useQuestionBankModal(props);
 
   return (
@@ -52,11 +54,29 @@ export function QuestionBankModal(props: QuestionBankModalProps) {
     >
       <div className="w-full max-w-4xl rounded-xl bg-m3-surface p-6 shadow-xl space-y-4 my-auto max-h-[90vh] flex flex-col">
         <BankModalHeader onClose={onClose} />
-        <BankSearchBar controller={controller} />
-        <BankFilterCard controller={controller} />
-        <BankResultList controller={controller} />
-        <BankModalFooter controller={controller} onClose={onClose} />
+        <Tabs
+          tabs={[
+            { key: "curated", label: "Curated bank" },
+            { key: "existing", label: "Existing quizzes" },
+          ]}
+          value={source}
+          onChange={setSource}
+          variant="contained"
+          ariaLabel="Question source"
+        />
+        {source === "curated" ? (
+          <CuratedBankImportBody {...props} />
+        ) : (
+          <>
+            <BankSearchBar controller={controller} />
+            <BankFilterCard controller={controller} />
+            <BankResultList controller={controller} />
+            <BankModalFooter controller={controller} onClose={onClose} />
+          </>
+        )}
       </div>
     </div>
   );
 }
+import { useState } from "react";
+import { Tabs } from "@/components/ui/tabs";

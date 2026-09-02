@@ -1,6 +1,12 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
-import type { PendingQuestionDelete } from "@/lib/api/hooks/quizzes";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  useCopyQuizQuestionsToCuratedBank,
+  type PendingQuestionDelete,
+} from "@/lib/api/hooks/quizzes";
 import type {
   CourseLearningOutcomeAuthoring,
   QuizQuestionAuthoring,
@@ -27,6 +33,7 @@ import { useQuestionsTabState } from "./use-questions-tab-state";
  */
 export function QuestionsTab({
   quizId,
+  courseId,
   questions,
   outcomes,
   selectedIds,
@@ -45,6 +52,7 @@ export function QuestionsTab({
   onDirtyCountChange,
 }: {
   quizId: string;
+  courseId: string;
   questions: QuizQuestionAuthoring[];
   outcomes: CourseLearningOutcomeAuthoring[];
   selectedIds: Set<string>;
@@ -67,6 +75,8 @@ export function QuestionsTab({
   onDirtyCountChange?: (count: number) => void;
 }) {
   const { t } = useTranslation();
+  const addToBank = useCopyQuizQuestionsToCuratedBank(courseId);
+  const [confirmBankCount, setConfirmBankCount] = useState<number | null>(null);
   const {
     bulkSet,
     bulkApprove,
@@ -121,6 +131,24 @@ export function QuestionsTab({
     onClearSelection();
   }
 
+  async function handleAddSelectedToBank() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    try {
+      const created = await addToBank.mutateAsync(ids);
+      toast.success(
+        `Added ${created.length} question${created.length === 1 ? "" : "s"} to the curated bank`,
+      );
+      onClearSelection();
+      setConfirmBankCount(null);
+    } catch (error) {
+      toast.error(
+        (error as Error).message ||
+          "Could not add selected questions to bank",
+      );
+    }
+  }
+
   return (
     <div className="grid grid-cols-12 gap-6">
       <QuestionsBulkDeleteDialog
@@ -129,6 +157,18 @@ export function QuestionsTab({
           setConfirmBulkDelete(next ? selectedIds.size : null)
         }
         onConfirm={handleDeleteSelectedConfirmed}
+      />
+      <ConfirmDialog
+        open={confirmBankCount !== null}
+        onOpenChange={(open) => {
+          if (!open && !addToBank.isPending) setConfirmBankCount(null);
+        }}
+        title={`Add ${confirmBankCount ?? 0} questions to curated bank?`}
+        description="Independent snapshots will be created. Later edits in this Quiz will not change the bank copies."
+        confirmLabel="Add to bank"
+        confirmVariant="default"
+        isPending={addToBank.isPending}
+        onConfirm={() => void handleAddSelectedToBank()}
       />
       <div className="col-span-12 lg:col-span-8 space-y-4 min-w-0">
         {/* The combo-undo snackbar now lives at page level (see
@@ -161,12 +201,15 @@ export function QuestionsTab({
             onApprove={handleApproveBulk}
             approveValid={selectedIds.size > 0}
             approving={bulkApprove.isPending}
+            onAddToBank={() => setConfirmBankCount(selectedIds.size)}
+            addingToBank={addToBank.isPending}
             onDeleteSelected={() => setConfirmBulkDelete(selectedIds.size)}
           />
         )}
 
         <QuestionsTabList
           quizId={quizId}
+          courseId={courseId}
           questions={questions}
           outcomes={outcomes}
           selectedIds={selectedIds}
