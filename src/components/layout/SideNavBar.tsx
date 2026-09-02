@@ -36,7 +36,7 @@ export default function SideNavBar({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const labelOf = (item: NavItem) =>
+  const labelOf = (item: { label: string; i18nKey?: string }) =>
     item.i18nKey ? t(item.i18nKey, { defaultValue: item.label }) : item.label;
 
   async function handleConfirmLogout() {

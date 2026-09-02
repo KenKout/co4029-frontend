@@ -22,7 +22,7 @@ export interface SideNavSecondaryProps {
   collapsed: boolean;
   isLoggingOut: boolean;
   onLogoutClick: () => void;
-  labelOf: (item: NavItem) => string;
+  labelOf: (item: { label: string; i18nKey?: string }) => string;
 }
 
 export function SideNavSecondary({

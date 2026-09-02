@@ -40,9 +40,12 @@ function declaredAdminRoutes(): string[] {
   });
 }
 
-const flatHrefs = new Set(adminNavItems.map((i) => i.href));
-const groupedHrefs = new Set(
-  adminNavGroups.flatMap((g) => g.items.map((i) => i.href)),
+// Widened to `string` on purpose. `NavItem.href` is now typed against the
+// router, so these Sets would otherwise carry the literal path union and
+// refuse to be compared with the plain strings parsed out of router.tsx.
+const flatHrefs = new Set<string>(adminNavItems.map((i) => i.href as string));
+const groupedHrefs = new Set<string>(
+  adminNavGroups.flatMap((g) => g.items.map((i) => i.href as string)),
 );
 
 describe("admin sidebar reachability", () => {
