@@ -3,22 +3,30 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 /**
- * Every internal link must point at a route that exists.
+ * Every internal link must point at a route that exists — and at a LIVE one.
  *
- * TanStack Router is supposed to give this for free: `<Link to>` is typed
- * against the registered route tree, so a renamed route is a compile error.
- * In this app it does not. `declare module … Register` IS present in
- * router.tsx, but the inference collapses somewhere in the 90-path tree and
- * both `RegisteredRouter["routesById"]` and the concrete `typeof router`
- * widen to `string` — verified by compiling `<Link to="/definitely-not-a-route">`
- * and a `keyof routesById` probe, neither of which errors. Two components
- * carry comments claiming the opposite; they are wrong.
+ * TanStack Router already types `<Link to>` against the registered tree, so a
+ * renamed route is a compile error. That check is real, but only under
+ * `tsc -b` (the `build` script), which follows the project references;
+ * `tsc --noEmit` against the root tsconfig checks nothing at all, because it
+ * declares `"files": []`. Worth knowing before concluding the types are broken.
  *
- * Until that is fixed (it likely means restructuring the route tree, not a
- * one-line change), this test is the only thing standing between a route
- * rename and a dead link. It caught nothing when written because the
- * `/dept` → `/management/courses` migration had just been swept by hand —
- * which is exactly the point: the sweep is not repeatable, and this is.
+ * This test covers the three things the type system cannot:
+ *
+ * 1. **Paths used as data, not as `to`.** Prefix arrays like
+ *    `MANAGER_PREFIXES = ["/management"]` and `pathname.startsWith(...)` checks
+ *    are plain strings by nature. A rename leaves them silently matching
+ *    nothing, so the sidebar highlights the wrong section and the layout picks
+ *    the wrong breakpoint — with no error anywhere.
+ *
+ * 2. **Links to retired paths.** A compatibility alias IS a registered route,
+ *    so `to="/dept"` type-checks perfectly while quietly costing every user a
+ *    redirect. Aliases exist for bookmarks; code that still points at one is an
+ *    unfinished rename, and without this the alias can never be removed. This
+ *    found two such links left over from the earlier admin IA move.
+ *
+ * 3. **Paths in test files and comments**, which drift from the router without
+ *    anyone noticing until the assertion they support becomes meaningless.
  *
  * Reads router.tsx as text rather than importing it, for the same reason
  * `navigation-admin-reachability.test.ts` does: importing pulls in every lazy

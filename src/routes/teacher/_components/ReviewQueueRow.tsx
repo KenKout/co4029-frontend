@@ -25,14 +25,10 @@ export function ReviewQueueRow({
   hint?: string;
   icon?: LucideIcon;
   /**
-   * Spelled as `LinkProps["to"]` rather than `string` — but be warned that in
-   * THIS app that buys nothing today. `declare module … Register` is present
-   * in router.tsx, yet the route-tree inference collapses somewhere in the ~90
-   * paths and both `RegisteredRouter` and the concrete `typeof router` widen
-   * to `string`; a Link pointing at a route that does not exist compiles
-   * clean. Kept because it documents intent and starts working the moment the
-   * inference is fixed. The thing actually checking these paths meanwhile is
-   * `lib/__tests__/route-links.test.ts`.
+   * A real route from the registered tree — NOT a bare `string`. The router
+   * is registered (`declare module … Register` in router.tsx), so typing this
+   * as `LinkProps["to"]` makes a typo or a renamed route a compile error
+   * instead of a dead link, and removes the `as any` cast this used to need.
    */
   to: LinkProps["to"];
   tone?: "amber" | "violet" | "sky";

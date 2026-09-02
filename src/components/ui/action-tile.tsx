@@ -50,6 +50,7 @@ export function ActionTile({
   icon: Icon,
   to,
   search,
+  hash,
   statusText,
   trend,
 }: {
@@ -61,6 +62,11 @@ export function ActionTile({
   icon?: LucideIcon;
   to: string;
   search?: Record<string, string>;
+  /**
+   * Anchor on the destination page, for a tile that drills into one section of
+   * a longer dashboard rather than a page of its own.
+   */
+  hash?: string;
   /** Short state word rendered as a chip, e.g. "degraded". */
   statusText?: string;
   /**
@@ -76,6 +82,7 @@ export function ActionTile({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       to={to as any}
       search={search as never}
+      hash={hash}
       className={cn(
         "group flex flex-col justify-between rounded-xl border p-5 transition-all duration-200",
         "hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/50",
