@@ -443,7 +443,7 @@ describe("ActionTile", () => {
         <ActionTile
           label="Job failure rate"
           value="33%"
-          to="/admin/processing"
+          to="/admin/operations"
           {...props}
         />
       ),
@@ -465,7 +465,7 @@ describe("ActionTile", () => {
     renderTile();
     expect(await screen.findByText("33%")).toBeInTheDocument();
     const link = document.querySelector("a");
-    expect(link?.getAttribute("href")).toContain("/admin/processing");
+    expect(link?.getAttribute("href")).toContain("/admin/operations");
   });
 
   it("stays visually neutral when healthy", async () => {

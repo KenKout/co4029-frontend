@@ -16,9 +16,9 @@ export function notificationDeepLink(
     // from entity_id alone — those rows rely on action_url. Only routes that
     // are addressable by a single id (or are static) are mapped here.
     case "enrollment":
-      return `/progress`;
+      return `/me/progress`;
     case "career_path":
-      return `/progress`;
+      return `/me/progress`;
     default:
       return null;
   }

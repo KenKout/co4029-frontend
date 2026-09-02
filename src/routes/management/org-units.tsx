@@ -129,7 +129,7 @@ export default function ManagementOrgUnitsPage() {
                     it. */}
                 <div className="space-y-2 border-t border-border pt-4">
                   <Link
-                    to="/dept"
+                    to="/management/courses"
                     search={{ unit: c.selected.id }}
                     className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-strong hover:bg-m3-surface-container-low"
                   >

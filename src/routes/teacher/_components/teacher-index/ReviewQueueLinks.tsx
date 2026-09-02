@@ -8,9 +8,14 @@ import type { ReviewQueueItem, ReviewQueueKind } from "@/lib/api/hooks/teacher-c
  * Each kind renders its own `<Link>` with a LITERAL route path —
  * returning `{ to, params }` from a shared helper collapses the three
  * shapes into a union, which defeats TanStack's route typing and forces
- * an `as any` cast. The router IS registered (`declare module … Register`
- * in router.tsx), so written this way a typo or a renamed route is a
- * compile error rather than a dead link discovered by a user.
+ * an `as any` cast.
+ *
+ * The literal form is still worth keeping, but not for the reason this
+ * comment used to give: route typing does not currently work here at all.
+ * `declare module … Register` is present, yet the inference over ~90 routes
+ * widens to `string`, so a renamed route is NOT a compile error. Literals
+ * matter because `lib/__tests__/route-links.test.ts` can only check paths it
+ * can see written out.
  *
  * Shared by the "Needs your review" section and the Priority Today
  * drill-downs so both land on the exact same destination:

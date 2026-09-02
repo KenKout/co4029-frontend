@@ -261,7 +261,7 @@ function CoursesTable({ courses }: { courses: UserCourseProgressRead[] }) {
         getRowId={(c) => c.course_id}
         onRowClick={(course) =>
           void navigate({
-            to: "/dept/courses/$courseId",
+            to: "/management/courses/$courseId",
             params: { courseId: course.course_id },
           })
         }
@@ -442,7 +442,7 @@ function TeacherSections({ data }: { data: UserOverview }) {
         getRowId={(c) => c.course_id}
         onRowClick={(course) =>
           void navigate({
-            to: "/dept/courses/$courseId",
+            to: "/management/courses/$courseId",
             params: { courseId: course.course_id },
           })
         }

@@ -96,7 +96,7 @@ export function CourseInPathRow({
       </div>
       <div className="flex-1 min-w-0">
         <Link
-          to="/dept/courses/$courseId"
+          to="/management/courses/$courseId"
           params={{ courseId: row.course_id }}
           title={`Open ${row.course_title}`}
           className="block min-w-0 hover:opacity-80 transition-opacity"

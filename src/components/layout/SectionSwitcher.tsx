@@ -42,7 +42,7 @@ const SECTIONS: SectionLink[] = [
     // role does NOT hold, so a plain teacher never sees this section.
     i18nKey: "sections.manager",
     fallback: "Manager",
-    href: "/dept",
+    href: "/management/courses",
     icon: Building2,
     prefix: "/management",
     show: (perms) =>
@@ -60,10 +60,6 @@ const SECTIONS: SectionLink[] = [
   },
 ];
 
-// Routes that belong to a section but use a different URL prefix. ``/dept`` is
-// the manager's course-management landing; ``/management`` is its own prefix.
-const MANAGER_EXTRA_PREFIXES = ["/dept"];
-
 export default function SectionSwitcher() {
   const { t } = useTranslation();
   const location = useLocation();
@@ -73,14 +69,16 @@ export default function SectionSwitcher() {
   const visible = SECTIONS.filter((s) => s.show(perms));
   if (visible.length <= 1) return null;
 
-  const activePrefix = MANAGER_EXTRA_PREFIXES.some((p) =>
-    location.pathname.startsWith(p),
-  )
-    ? "/management"
-    : ([...visible]
-        .sort((a, b) => b.prefix.length - a.prefix.length)
-        .find((s) => location.pathname.startsWith(s.prefix))?.prefix ??
-      "/dashboard");
+  // Longest prefix wins, so a section nested under another still resolves to
+  // itself. This used to need a MANAGER_EXTRA_PREFIXES escape hatch because the
+  // manager's course pages lived at /dept while the rest of the section lived
+  // at /management; with every manager route under one prefix the special case
+  // is gone.
+  const activePrefix =
+    [...visible]
+      .sort((a, b) => b.prefix.length - a.prefix.length)
+      .find((s) => location.pathname.startsWith(s.prefix))?.prefix ??
+    "/dashboard";
 
   return (
     <nav

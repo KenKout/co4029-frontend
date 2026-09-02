@@ -57,7 +57,7 @@ export function CourseFormActions({
           ? t("teacher_course_new.creating")
           : t("teacher_course_new.create")}
       </Button>
-      <Link to="/dept">
+      <Link to="/management/courses">
         <Button type="button" variant="outline">
           {t("common.cancel", "Cancel")}
         </Button>

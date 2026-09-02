@@ -9,7 +9,7 @@ import { ErrorBanner, ConnectionLostBanner } from "../error-banner";
 // TanStack Router's <Link> needs a router context; stub it for isolated tests.
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => (
-    <a href="/profile">{children}</a>
+    <a href="/me/profile">{children}</a>
   ),
 }));
 
