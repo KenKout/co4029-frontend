@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { apiDelete, apiFetch, apiPatch, apiPost } from "../../client";
 import { queryKeys } from "../../query-keys";
 import { useInfinitePage } from "../../use-infinite-page";
@@ -78,7 +79,13 @@ export interface CuratedBankFilters {
   search?: string;
 }
 
-/** Independent, curated course-level Quiz Question Bank. */
+/** Independent, curated course-level Quiz Question Bank.
+ *
+ * The `search` filter is debounced inside the hook: the input's keystrokes
+ * update the caller's state immediately, but a request only fires 350 ms
+ * after typing stops. Status/type/difficulty changes still refetch right
+ * away.
+ */
 export function useCuratedQuizQuestionBank(
   courseId: string | null | undefined,
   filters: CuratedBankFilters = {},
@@ -86,8 +93,12 @@ export function useCuratedQuizQuestionBank(
 ) {
   const enabled = (options.enabled ?? true) && !!courseId;
   const limit = options.limit ?? 50;
+  const debouncedSearch = useDebouncedValue(filters.search ?? "", 350);
   return useInfinitePage<QuizQuestionBankItem>({
-    queryKey: queryKeys.quizzes.curatedBank(courseId ?? "", filters),
+    queryKey: queryKeys.quizzes.curatedBank(courseId ?? "", {
+      ...filters,
+      search: debouncedSearch,
+    }),
     fetch: async (cursor, pageLimit = limit) => {
       const params = new URLSearchParams();
       if (filters.status) params.set("bank_status", filters.status);
@@ -95,7 +106,8 @@ export function useCuratedQuizQuestionBank(
         params.set("question_type", filters.questionType);
       if (filters.bloomLevel) params.set("bloom_level", filters.bloomLevel);
       if (filters.difficulty) params.set("difficulty", filters.difficulty);
-      if (filters.search) params.set("search", filters.search);
+      const search = debouncedSearch.trim();
+      if (search) params.set("search", search);
       params.set("limit", String(pageLimit));
       if (cursor) params.set("cursor", cursor);
       const page = await apiFetch<{
