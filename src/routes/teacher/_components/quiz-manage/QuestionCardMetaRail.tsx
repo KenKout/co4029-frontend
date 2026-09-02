@@ -12,6 +12,15 @@ import { cn } from "@/lib/utils";
 import type { QuestionDraft } from "./types";
 
 /**
+ * Selects and inputs default to `bg-m3-surface`, which is also the card's own
+ * background — so on this card they read as an outline with nothing in it
+ * while the textareas beside them are filled white. That was fine when these
+ * three lived inside a white configuration panel; on the card they need the
+ * fill themselves, or one card shows two kinds of field.
+ */
+const FIELD_FILL = "bg-m3-surface-container-lowest";
+
+/**
  * Everything about a question that is not the question: which outcome it
  * serves, the hint, how hard it is, how long it should take.
  *
@@ -24,6 +33,13 @@ import type { QuestionDraft } from "./types";
  * rail is shorter than the content column, so the space it occupies was free.
  * It also puts the two fields a reviewer checks WHILE reading the question —
  * outcome and hint — beside it rather than above and below it.
+ *
+ * Everything here uses the SAME controls at the SAME scale as the left column:
+ * no panel wrapper, no `size="sm"`, no `text-xs`. The first version shrank all
+ * of it as though the rail were cramped, which made the two halves of one card
+ * look like two different components. It was never cramped — measured, the
+ * rail fills roughly 280px of a ~560px column, so the full-size controls cost
+ * nothing and the card height is unchanged.
  */
 export function QuestionCardMetaRail({
   question,
@@ -41,7 +57,14 @@ export function QuestionCardMetaRail({
   const { t } = useTranslation();
 
   return (
-    <aside className="space-y-3 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-3">
+    // No panel chrome. Wrapping the rail in its own bordered, filled box made
+    // it read as a different kind of component from the left column, which is
+    // just labels and fields on the card — and because the box was
+    // `surface-container-lowest` (white), the hint textarea inside it (also
+    // white, `variant="lowest"`) lost its border entirely and rendered as bare
+    // text while the question opposite had a clearly drawn field. Same
+    // treatment both sides; the column gap does the separating.
+    <aside className="space-y-3">
       <div className="space-y-1.5">
         <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
           {t("teacher_quiz_manage.outcome.label", "Learning outcome")}
@@ -54,7 +77,7 @@ export function QuestionCardMetaRail({
               learning_outcome_id: next || null,
             }))
           }
-          size="sm"
+          className={FIELD_FILL}
           options={[
             {
               value: "",
@@ -62,13 +85,13 @@ export function QuestionCardMetaRail({
             },
             ...outcomes.map((outcome) => ({
               value: outcome.id,
-              // Shorter truncation than the old full-width select: the rail is
-              // roughly 40% of the card, so a 60-character label overflowed.
+              // The select ellipsises on its own; this only stops a very long
+              // outcome from making the dropdown list unreadable.
               label: `${" ".repeat((outcome.depth ?? 0) * 2)}L.O.${
                 outcome.code ?? outcome.position
               } — ${
-                outcome.outcome_text.length > 34
-                  ? `${outcome.outcome_text.slice(0, 34)}…`
+                outcome.outcome_text.length > 48
+                  ? `${outcome.outcome_text.slice(0, 48)}…`
                   : outcome.outcome_text
               }`,
             })),
@@ -88,13 +111,12 @@ export function QuestionCardMetaRail({
           rows={2}
           autoGrow
           variant="lowest"
-          className="text-xs"
           placeholder={t(
             "teacher_quiz_manage.editor.hint_placeholder",
             "e.g. Think about which property distinguishes analytical storage from transactional storage.",
           )}
         />
-        <p className="text-[10px] leading-snug text-m3-on-surface-variant">
+        <p className="text-[11px] leading-snug text-m3-on-surface-variant">
           {t(
             "teacher_quiz_manage.editor.hint_help",
             'Optional. Only shown to learners if "Show hints" is enabled in Quiz Settings. Must not reveal the answer.',
@@ -116,8 +138,7 @@ export function QuestionCardMetaRail({
               value: level,
               label: level,
             }))}
-            size="sm"
-            className="capitalize"
+            className={cn("capitalize", FIELD_FILL)}
           />
         </div>
         <div className="space-y-1">
@@ -154,7 +175,7 @@ export function QuestionCardMetaRail({
               }))
             }
             className={cn(
-              "h-8 bg-m3-surface text-xs",
+              FIELD_FILL,
               draftTimeInvalid && "border-red-500 focus-visible:ring-red-500/30",
             )}
           />
