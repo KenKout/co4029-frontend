@@ -81,7 +81,7 @@ export function TopNavUserMenu({
 
           <DropdownMenuItem
             className={MENU_ITEM_CLASS}
-            render={<Link to="/profile" />}
+            render={<Link to="/me/profile" />}
           >
             <User className="h-4 w-4 text-m3-on-surface-variant" />
             <span className="text-sm font-medium">{t("nav.profile")}</span>

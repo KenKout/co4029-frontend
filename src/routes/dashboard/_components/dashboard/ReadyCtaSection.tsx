@@ -33,7 +33,7 @@ export default function ReadyCtaSection() {
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
-        <Link to="/dashboard/sr">
+        <Link to="/me/study">
           <Button
             variant="outline"
             className="bg-white/10 border-white/25 text-white hover:bg-white/20 rounded-xl font-semibold"

@@ -157,7 +157,7 @@ export function useCourseWizardState(
     if (result.failed.length > 0) {
       handlePartialSuccess(values, result.courseId, result.failed);
       await navigate({
-        to: "/dept/courses/$courseId",
+        to: "/management/courses/$courseId",
         params: { courseId: result.courseId },
       });
       return;
@@ -173,7 +173,7 @@ export function useCourseWizardState(
       return;
     }
     await navigate({
-      to: "/dept/courses/$courseId",
+      to: "/management/courses/$courseId",
       params: { courseId: result.courseId },
     });
   }

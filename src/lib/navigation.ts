@@ -20,11 +20,22 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import type { LinkProps } from "@tanstack/react-router";
 
 export interface NavItem {
   label: string;
   i18nKey?: string;
-  href: string;
+  /**
+   * Typed against the router, not `string`.
+   *
+   * Every entry below is a destination the sidebar renders as a `<Link to>`.
+   * As a bare `string` a renamed or deleted route stayed happily compiling and
+   * turned into a dead nav item discovered only by clicking it — the exact
+   * failure the `/management/courses` → `/management/courses` move would otherwise have
+   * caused in 44 places. `LinkProps["to"]` makes that a compile error instead,
+   * the same reason `ReviewQueueRow` types its own `to`.
+   */
+  href: LinkProps["to"];
   icon: LucideIcon;
   exact?: boolean;
 }
@@ -53,12 +64,12 @@ export const studentNavItems: NavItem[] = [
   {
     label: "Progress",
     i18nKey: "nav.progress",
-    href: "/progress",
+    href: "/me/progress",
     icon: BarChart3,
   },
   {
     label: "Learning Programs",
-    href: "/learning-programs",
+    href: "/me/learning-programs",
     icon: Briefcase,
   },
 ];
@@ -89,12 +100,12 @@ export const studentNavGroups: NavGroup[] = [
       {
         label: "Progress",
         i18nKey: "nav.progress",
-        href: "/progress",
+        href: "/me/progress",
         icon: BarChart3,
       },
       {
         label: "Learning Programs",
-        href: "/learning-programs",
+        href: "/me/learning-programs",
         icon: Briefcase,
       },
     ],
@@ -161,7 +172,7 @@ export const managerNavItems: NavItem[] = [
   {
     label: "Courses",
     i18nKey: "nav.manager_courses",
-    href: "/dept",
+    href: "/management/courses",
     icon: BookOpen,
   },
   {
@@ -202,7 +213,7 @@ export const managerNavGroups: NavGroup[] = [
       {
         label: "Courses",
         i18nKey: "nav.manager_courses",
-        href: "/dept",
+        href: "/management/courses",
         icon: BookOpen,
       },
     ],
@@ -379,7 +390,7 @@ export const adminNavGroups: NavGroup[] = [
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 export const settingsNavItems: NavItem[] = [
-  { label: "Profile", i18nKey: "nav.profile", href: "/profile", icon: User },
+  { label: "Profile", i18nKey: "nav.profile", href: "/me/profile", icon: User },
   {
     label: "Account settings",
     i18nKey: "nav.settings",
@@ -405,9 +416,25 @@ export const settingsNavItems: NavItem[] = [
 export const secondaryNavItems: NavItem[] = [
   // Was href:"#" — now points at the public help page.
   { label: "Help", i18nKey: "nav.help", href: "/help", icon: HelpCircle },
-  { label: "Log Out", i18nKey: "nav.logout", href: "#", icon: LogOut },
 ];
 
-export const topNavLinks = [{ label: "Explore", href: "/courses" }];
+/**
+ * Log Out is not a destination.
+ *
+ * It used to sit in `secondaryNavItems` carrying `href: "#"`, picked out again
+ * at render time by comparing `label === "Log Out"`. That made `href`
+ * un-typeable — one entry in the list was not a route — so the whole nav had
+ * to stay `string` and lost its link to the router. Separating it lets every
+ * remaining `href` be checked, and drops the label-string comparison.
+ */
+export const logoutNavItem = {
+  label: "Log Out",
+  i18nKey: "nav.logout",
+  icon: LogOut,
+} as const;
+
+export const topNavLinks: { label: string; href: LinkProps["to"] }[] = [
+  { label: "Explore", href: "/courses" },
+];
 
 void FileText;

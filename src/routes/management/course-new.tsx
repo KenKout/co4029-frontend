@@ -99,7 +99,7 @@ export default function ManagementCourseNewPage() {
     <div className="space-y-6 pb-12">
       <Breadcrumbs
         items={[
-          { label: t("dept_courses.title"), to: "/dept" },
+          { label: t("dept_courses.title"), to: "/management/courses" },
           { label: t("teacher_course_new.title") },
         ]}
       />

@@ -45,7 +45,7 @@ export function OnboardingActions({
       {stage === "identity_check" && (
         <div className="flex flex-wrap items-center justify-start gap-2">
           <Link
-            to="/profile"
+            to="/me/profile"
             className="text-xs font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           >
             {t("course_interview.onboarding.wrong_name")}

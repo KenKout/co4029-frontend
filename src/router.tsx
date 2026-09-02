@@ -28,13 +28,13 @@ import LoginMfaPage from "@/routes/login/mfa";
 import SettingsProfilePage from "@/routes/settings/profile";
 import SettingsSecurityPage from "@/routes/settings/security";
 import SettingsHubPage from "@/routes/settings/settings";
-import ProfilePage from "@/routes/profile/profile";
-import ProgressPage from "@/routes/progress/progress";
-import CareerPathsPage from "@/routes/career-paths/career-paths";
-import CareerPathDetailPage from "@/routes/career-paths/career-path-detail";
+import ProfilePage from "@/routes/me/profile/profile";
+import ProgressPage from "@/routes/me/progress/progress";
+import CareerPathsPage from "@/routes/catalog/career-paths/career-paths";
+import CareerPathDetailPage from "@/routes/catalog/career-paths/career-path-detail";
 import MyCareerPathsPage from "@/routes/me/career-paths";
-import SrDashboardPage from "@/routes/dashboard/sr-dashboard";
-import StudyCardsDuePage from "@/routes/study/cards-due";
+import SrDashboardPage from "@/routes/me/study/index";
+import StudyCardsDuePage from "@/routes/me/study/cards-due";
 
 /* ── Root layout ── */
 function Root() {
@@ -164,7 +164,7 @@ const courseInterviewRoute = createRoute({
 
 const progressRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: "/progress",
+  path: "/me/progress",
   component: ProgressPage,
 });
 
@@ -176,7 +176,7 @@ const settingsRoute = createRoute({
 
 const profileRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: "/profile",
+  path: "/me/profile",
   component: ProfilePage,
 });
 
@@ -546,18 +546,18 @@ const adminAuditLogsRoute = createRoute({
 
 const deptCoursesRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: "/dept",
+  path: "/management/courses",
   // Optional ?unit= — the org tree links here to scope the list to one
   // org unit and everything below it.
   validateSearch: (search: Record<string, unknown>): { unit?: string } => ({
     unit: typeof search.unit === "string" ? search.unit : undefined,
   }),
-  component: lazyRouteComponent(() => import("@/routes/dept/courses")),
+  component: lazyRouteComponent(() => import("@/routes/management/courses")),
 });
 
 const deptCourseDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: "/dept/courses/$courseId",
+  path: "/management/courses/$courseId",
   // Optional ?tab= — the worklist's "Teachers" action deep-links here with
   // tab=teachers so it lands on the teachers tab instead of duplicating the
   // row click (which relies on the default tab).
@@ -571,7 +571,7 @@ const deptCourseDetailRoute = createRoute({
     tab: typeof search.tab === "string" ? search.tab : undefined,
     question: typeof search.question === "string" ? search.question : undefined,
   }),
-  component: lazyRouteComponent(() => import("@/routes/dept/course-detail")),
+  component: lazyRouteComponent(() => import("@/routes/management/course-detail")),
 });
 
 const managementCourseNewRoute = createRoute({
@@ -603,21 +603,26 @@ const managementCourseEnrollmentsRoute = createRoute({
   ),
 });
 
-const managementEnrolmentRoute = createRoute({
+const managementEnrolmentAliasRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/enrolment",
-  component: lazyRouteComponent(() => import("@/routes/management/enrolment")),
+  // Was a page that rendered <Navigate to="/dept">. Redirecting in beforeLoad
+  // instead means the bounce happens before a component mounts, and every
+  // legacy path in this file now uses one mechanism.
+  beforeLoad: () => {
+    throw redirect({ to: "/management/courses" });
+  },
 });
 
 const careerPathsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: "/career-paths",
+  path: "/catalog/career-paths",
   component: CareerPathsPage,
 });
 
 const careerPathDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: "/career-paths/$slug",
+  path: "/catalog/career-paths/$slug",
   component: CareerPathDetailPage,
 });
 
@@ -629,9 +634,9 @@ const myCareerPathsRoute = createRoute({
 
 const learningProgramsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: "/learning-programs",
+  path: "/me/learning-programs",
   component: lazyRouteComponent(
-    () => import("@/routes/learning-programs/learning-programs"),
+    () => import("@/routes/me/learning-programs/learning-programs"),
   ),
 });
 
@@ -743,13 +748,13 @@ const managementUserDetailRoute = createRoute({
 
 const srDashboardRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: "/dashboard/sr",
+  path: "/me/study",
   component: SrDashboardPage,
 });
 
 const studyCardsDueRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: "/study/cards-due",
+  path: "/me/study/cards-due",
   // `lesson` (UUID) scopes the list to one lesson — used by the SR reminder
   // deep-link (`/study/cards-due?lesson={id}`). `course` (slug) scopes to one
   // course. Both optional; omit for the full backlog.
@@ -762,13 +767,13 @@ const studyCardsDueRoute = createRoute({
 
 const studyReviewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: "/study/review",
+  path: "/me/study/review",
   // Scope the review session to one lesson or course; omit for everything.
   validateSearch: (search: Record<string, unknown>) => ({
     lesson: typeof search.lesson === "string" ? search.lesson : undefined,
     course: typeof search.course === "string" ? search.course : undefined,
   }),
-  component: lazyRouteComponent(() => import("@/routes/study/review")),
+  component: lazyRouteComponent(() => import("@/routes/me/study/review")),
 });
 
 const teacherSrAtRiskRoute = createRoute({
@@ -817,6 +822,121 @@ const policyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/policy/$slug",
   component: lazyRouteComponent(() => import("@/routes/support/policy")),
+});
+
+
+/* ── Legacy path aliases ────────────────────────────────────────────────────
+ *
+ * The URLs below were renamed to bring every route under one audience prefix
+ * (`/me` for a learner's own material, `/catalog` for browsable content,
+ * `/management` for the whole manager section). Each old path stays registered
+ * as a redirect so bookmarks, links already shared, and anything a
+ * notification email pointed at keep working.
+ *
+ * Search params ride along wherever the old route declared them: dropping
+ * `?lesson=` off an SR reminder link would land the learner on the full
+ * backlog instead of the lesson the reminder was about, which is a worse
+ * failure than a 404 because it looks like it worked.
+ *
+ * These are aliases, not pages — `navigation-admin-reachability.test.ts`
+ * already excludes any route whose body throws a redirect.
+ */
+
+const progressAliasRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/progress",
+  beforeLoad: () => {
+    throw redirect({ to: "/me/progress" });
+  },
+});
+
+const srDashboardAliasRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/dashboard/sr",
+  beforeLoad: () => {
+    throw redirect({ to: "/me/study" });
+  },
+});
+
+const studyCardsDueAliasRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/study/cards-due",
+  validateSearch: (search: Record<string, unknown>) => ({
+    lesson: typeof search.lesson === "string" ? search.lesson : undefined,
+    course: typeof search.course === "string" ? search.course : undefined,
+  }),
+  beforeLoad: ({ search }) => {
+    throw redirect({ to: "/me/study/cards-due", search });
+  },
+});
+
+const studyReviewAliasRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/study/review",
+  validateSearch: (search: Record<string, unknown>) => ({
+    lesson: typeof search.lesson === "string" ? search.lesson : undefined,
+    course: typeof search.course === "string" ? search.course : undefined,
+  }),
+  beforeLoad: ({ search }) => {
+    throw redirect({ to: "/me/study/review", search });
+  },
+});
+
+const learningProgramsAliasRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/learning-programs",
+  beforeLoad: () => {
+    throw redirect({ to: "/me/learning-programs" });
+  },
+});
+
+const careerPathsAliasRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/career-paths",
+  beforeLoad: () => {
+    throw redirect({ to: "/catalog/career-paths" });
+  },
+});
+
+const careerPathDetailAliasRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/career-paths/$slug",
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: "/catalog/career-paths/$slug", params });
+  },
+});
+
+const deptCoursesAliasRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/dept",
+  validateSearch: (search: Record<string, unknown>): { unit?: string } => ({
+    unit: typeof search.unit === "string" ? search.unit : undefined,
+  }),
+  beforeLoad: ({ search }) => {
+    throw redirect({ to: "/management/courses", search });
+  },
+});
+
+const deptCourseDetailAliasRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/dept/courses/$courseId",
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: string; question?: string } => ({
+    tab: typeof search.tab === "string" ? search.tab : undefined,
+    question: typeof search.question === "string" ? search.question : undefined,
+  }),
+  beforeLoad: ({ params, search }) => {
+    throw redirect({ to: "/management/courses/$courseId", params, search });
+  },
+});
+
+const profileAliasRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/profile",
+  beforeLoad: () => {
+    throw redirect({ to: "/me/profile" });
+  },
 });
 
 /* ── Route tree ── */
@@ -882,7 +1002,17 @@ const routeTree = rootRoute.addChildren([
     deptCourseDetailRoute,
     managementCourseNewRoute,
     managementCourseEnrollmentsRoute,
-    managementEnrolmentRoute,
+    managementEnrolmentAliasRoute,
+    progressAliasRoute,
+    srDashboardAliasRoute,
+    studyCardsDueAliasRoute,
+    studyReviewAliasRoute,
+    learningProgramsAliasRoute,
+    careerPathsAliasRoute,
+    careerPathDetailAliasRoute,
+    deptCoursesAliasRoute,
+    deptCourseDetailAliasRoute,
+    profileAliasRoute,
     careerPathsRoute,
     careerPathDetailRoute,
     myCareerPathsRoute,

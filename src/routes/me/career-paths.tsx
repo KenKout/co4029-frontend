@@ -25,7 +25,7 @@ function EnrollmentRow({ item }: { item: MyCareerEnrollmentRead }) {
   const prepared = item.is_prepared ?? item.status === "completed";
   return (
     <Link
-      to="/career-paths/$slug"
+      to="/catalog/career-paths/$slug"
       params={{ slug: item.slug }}
       className="block group"
     >
@@ -140,7 +140,7 @@ export default function MyCareerPathsPage() {
             description={t("me_career_paths.empty_body")}
             cta={
               <Link
-                to="/career-paths"
+                to="/catalog/career-paths"
                 className="text-sm font-semibold text-m3-primary hover:underline"
               >
                 {t("me_career_paths.view_paths")}

@@ -11,7 +11,7 @@ import i18n from "@/i18n";
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: ReactNode }) => (
-    <a href="/profile">{children}</a>
+    <a href="/me/profile">{children}</a>
   ),
 }));
 

@@ -72,7 +72,7 @@ function ProfileMenuNavItems() {
         <span className="text-sm font-medium">{t("nav.settings")}</span>
       </DropdownMenuItem>
 
-      <DropdownMenuItem className={itemClass} render={<Link to="/profile" />}>
+      <DropdownMenuItem className={itemClass} render={<Link to="/me/profile" />}>
         <User className="h-4 w-4 text-m3-on-surface-variant" />
         <span className="text-sm font-medium">{t("nav.profile")}</span>
       </DropdownMenuItem>

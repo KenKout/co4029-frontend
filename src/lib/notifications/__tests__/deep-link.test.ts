@@ -109,7 +109,7 @@ describe("notificationDeepLink (Option B)", () => {
     const link = notificationDeepLink(
       makeNotification({ entity_type: "enrollment", entity_id: "enr_1" }),
     );
-    expect(link).toBe("/progress");
+    expect(link).toBe("/me/progress");
   });
 
   it("returns null for slug-less entities without action_url (quiz)", () => {

@@ -99,7 +99,8 @@ export function CostCapacityRow({ c }: { c: AdminStatsController }) {
             total: f.count(cost.totalUsers),
           })}
           icon={Users}
-          to="/admin/stats/active"
+          to="/admin/stats"
+          hash="admin-usage-capacity"
         />
       </div>
 
