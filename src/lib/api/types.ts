@@ -441,6 +441,13 @@ export type QuizQuestionBankItemUpdate = Partial<
   Omit<QuizQuestionBankItemCreate, "status">
 >;
 
+/** Outcome of copying Quiz questions into the curated bank. */
+export interface QuizQuestionBankCopyResult {
+  created: QuizQuestionBankItem[];
+  /** Source question ids already present in the bank — not copied again. */
+  skipped: string[];
+}
+
 export type GenerationRunRead = Schemas["QuizGenerationRunRead"];
 export type QuizGenerationRunRead = Schemas["QuizGenerationRunRead"];
 export type QuizGenerationRequest = Schemas["QuizGenerationRequest"];

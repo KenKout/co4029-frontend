@@ -75,6 +75,7 @@ export {
   useQuestionBank,
   useSetCuratedQuizQuestionStatus,
   useUpdateCuratedQuizQuestion,
+  type CopyToCuratedBankMutation,
 } from "./quizzes/question-bank";
 
 export type {

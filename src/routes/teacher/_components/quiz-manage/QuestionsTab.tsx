@@ -1,16 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  useCopyQuizQuestionsToCuratedBank,
-  type PendingQuestionDelete,
-} from "@/lib/api/hooks/quizzes";
+import type { PendingQuestionDelete } from "@/lib/api/hooks/quizzes";
+import { useCopyQuizQuestionsToCuratedBank } from "@/lib/api/hooks/quizzes";
 import type {
   CourseLearningOutcomeAuthoring,
   QuizQuestionAuthoring,
 } from "@/lib/api/types";
+import { AddToCuratedBankDialog } from "./AddToCuratedBankDialog";
 import { BulkSetExpectedTimeBar } from "./BulkSetExpectedTimeBar";
 import { QuestionsBulkDeleteDialog } from "./QuestionsBulkDeleteDialog";
 import { QuestionsTabAddControls } from "./QuestionsTabAddControls";
@@ -31,6 +28,35 @@ import { useQuestionsTabState } from "./use-questions-tab-state";
  * read; state lives in useQuestionsTabState and the bulk mutations in
  * useQuestionsBulkActions.
  */
+/** Stage every selected question for deletion in one go.
+ *
+ * Reuses the per-question combo-undo path (``onQueueDelete``) rather than
+ * adding a bulk endpoint: each id is staged, the shared 5s countdown covers
+ * the whole batch, and the undo snackbar can cancel all of them at once
+ * because nothing has been sent to the server yet. Selection is cleared so
+ * the bar doesn't keep acting on rows that are already hidden.
+ *
+ * Gated behind a confirm dialog: unlike a single-card delete, this can wipe
+ * the whole quiz in one click, so the 5s undo window alone is too thin a
+ * safety net — the teacher should see the count before it happens.
+ */
+function commitBulkDelete(
+  questions: QuizQuestionAuthoring[],
+  selectedIds: Set<string>,
+  onQueueDelete: (item: PendingQuestionDelete) => void,
+  onClearSelection: () => void,
+) {
+  const targets = questions.filter((q) => selectedIds.has(q.id));
+  if (targets.length === 0) return;
+  for (const question of targets) {
+    onQueueDelete({
+      id: question.id,
+      label: question.prompt_text?.slice(0, 60) || question.id,
+    });
+  }
+  onClearSelection();
+}
+
 export function QuestionsTab({
   quizId,
   courseId,
@@ -99,12 +125,7 @@ export function QuestionsTab({
     handleUserEditChange,
   } = useQuestionsTabState(onDirtyCountChange);
 
-  const {
-    pendingCount,
-    unsavedDefaultTimeIds,
-    unsavedDefaultTimeCount,
-    blankExpectedTimeCount,
-  } = summariseQuestionCounts(questions, dirtyIds);
+  const counts = summariseQuestionCounts(questions, dirtyIds);
 
   /** Stage every selected question for deletion in one go.
    *
@@ -119,34 +140,8 @@ export function QuestionsTab({
    * safety net — the teacher should see the count before it happens.
    */
   function handleDeleteSelectedConfirmed() {
-    const targets = questions.filter((q) => selectedIds.has(q.id));
     setConfirmBulkDelete(null);
-    if (targets.length === 0) return;
-    for (const question of targets) {
-      onQueueDelete({
-        id: question.id,
-        label: question.prompt_text?.slice(0, 60) || question.id,
-      });
-    }
-    onClearSelection();
-  }
-
-  async function handleAddSelectedToBank() {
-    const ids = Array.from(selectedIds);
-    if (ids.length === 0) return;
-    try {
-      const created = await addToBank.mutateAsync(ids);
-      toast.success(
-        `Added ${created.length} question${created.length === 1 ? "" : "s"} to the curated bank`,
-      );
-      onClearSelection();
-      setConfirmBankCount(null);
-    } catch (error) {
-      toast.error(
-        (error as Error).message ||
-          "Could not add selected questions to bank",
-      );
-    }
+    commitBulkDelete(questions, selectedIds, onQueueDelete, onClearSelection);
   }
 
   return (
@@ -158,31 +153,23 @@ export function QuestionsTab({
         }
         onConfirm={handleDeleteSelectedConfirmed}
       />
-      <ConfirmDialog
+      <AddToCuratedBankDialog
+        ids={Array.from(selectedIds)}
+        mutation={addToBank}
         open={confirmBankCount !== null}
-        onOpenChange={(open) => {
-          if (!open && !addToBank.isPending) setConfirmBankCount(null);
-        }}
-        title={`Add ${confirmBankCount ?? 0} questions to curated bank?`}
-        description="Independent snapshots will be created. Later edits in this Quiz will not change the bank copies."
-        confirmLabel="Add to bank"
-        confirmVariant="default"
-        isPending={addToBank.isPending}
-        onConfirm={() => void handleAddSelectedToBank()}
+        onOpenChange={(open) => setConfirmBankCount(open ? selectedIds.size : null)}
+        onCleared={onClearSelection}
       />
       <div className="col-span-12 lg:col-span-8 space-y-4 min-w-0">
-        {/* The combo-undo snackbar now lives at page level (see
-            QuizManagePage) so it stays visible when a delete is queued from
-            the Preview tab too. */}
+        {/* The combo-undo snackbar lives at page level (QuizManagePage) so a
+            queued delete stays visible from the Preview tab too. */}
         <QuestionsTabBanners
           totalQuestions={questions.length}
-          unsavedDefaultTimeCount={unsavedDefaultTimeCount}
-          blankExpectedTimeCount={blankExpectedTimeCount}
-          pendingCount={pendingCount}
+          unsavedDefaultTimeCount={counts.unsavedDefaultTimeCount}
+          blankExpectedTimeCount={counts.blankExpectedTimeCount}
+          pendingCount={counts.pendingCount}
           savingDefaults={bulkSet.isPending}
-          onSaveDefaultTimes={() =>
-            handleSaveDefaultTimes(unsavedDefaultTimeIds)
-          }
+          onSaveDefaultTimes={() => handleSaveDefaultTimes(counts.unsavedDefaultTimeIds)}
         />
 
         {/* Bulk set-time / approve is authoring only — a published quiz is

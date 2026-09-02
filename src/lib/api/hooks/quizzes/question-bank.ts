@@ -5,6 +5,7 @@ import { useInfinitePage } from "../../use-infinite-page";
 import type {
   QuestionBankEntry,
   QuestionBankImportRequest,
+  QuizQuestionBankCopyResult,
   QuizQuestionBankItem,
   QuizQuestionBankItemCreate,
   QuizQuestionBankItemUpdate,
@@ -137,13 +138,17 @@ export function useCopyQuizQuestionsToCuratedBank(
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (questionIds: string[]) =>
-      apiPost<QuizQuestionBankItem[]>(
+      apiPost<QuizQuestionBankCopyResult>(
         `/teacher/courses/${courseId}/quiz-question-bank/from-questions`,
         { question_ids: questionIds },
       ),
     onSuccess: () => invalidateCuratedBank(queryClient, courseId),
   });
 }
+
+export type CopyToCuratedBankMutation = ReturnType<
+  typeof useCopyQuizQuestionsToCuratedBank
+>;
 
 export function useUpdateCuratedQuizQuestion(
   courseId: string | null | undefined,
