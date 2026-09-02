@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import type { TFunction } from "i18next";
 
 import { ApiError } from "@/lib/api/client";
+import { getApiErrorMessage } from "@/lib/api/error-codes";
 import {
   useDuplicateQuizQuestion,
   useCopyQuizQuestionsToCuratedBank,
@@ -29,13 +30,15 @@ export function useQuestionCardMutations(
 
   async function handleAddToBank() {
     try {
-      await addToBank.mutateAsync([questionId]);
-      toast.success("Question added to the curated bank");
+      const { skipped } = await addToBank.mutateAsync([questionId]);
+      if (skipped.includes(questionId)) {
+        toast.info("Question is already in the curated bank");
+      } else {
+        toast.success("Question added to the curated bank");
+      }
     } catch (err) {
       toast.error(
-        err instanceof ApiError && err.status === 409
-          ? "An identical question already exists in the curated bank"
-          : (err as Error).message || "Could not add question to bank",
+        getApiErrorMessage(err, "Could not add question to bank"),
       );
     }
   }
