@@ -30,9 +30,13 @@ export function useQuestionCardMutations(
 
   async function handleAddToBank() {
     try {
-      const { skipped } = await addToBank.mutateAsync([questionId]);
+      const { skipped, created } = await addToBank.mutateAsync([questionId]);
       if (skipped.includes(questionId)) {
         toast.info("Question is already in the curated bank");
+      } else if (created[0]?.status === "draft") {
+        toast.info(
+          "Question added to the curated bank as a draft — approve it before importing",
+        );
       } else {
         toast.success("Question added to the curated bank");
       }

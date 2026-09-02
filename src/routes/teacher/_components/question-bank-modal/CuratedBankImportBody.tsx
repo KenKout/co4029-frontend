@@ -66,7 +66,9 @@ export function CuratedBankImportBody({
           </div>
         ) : bank.items.length === 0 ? (
           <div className="p-8 text-center text-sm text-m3-on-surface-variant">
-            No approved curated questions found. Add and approve questions from the course Question Bank.
+            No approved curated questions found. Questions added from a Quiz
+            start as drafts — approve them in the course Question Bank panel
+            before they can be imported.
           </div>
         ) : (
           <InfiniteList

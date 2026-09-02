@@ -32,14 +32,23 @@ export function AddToCuratedBankDialog({
       if (created.length === 0) {
         toast.info("All selected questions are already in the curated bank");
       } else {
-        const added = `Added ${created.length} question${
-          created.length === 1 ? "" : "s"
-        } to the curated bank`;
-        toast.success(
-          skipped.length > 0
-            ? `${added}. ${skipped.length} already existed and were skipped.`
-            : added,
-        );
+        const drafts = created.filter((item) => item.status === "draft").length;
+        const parts = [
+          `Added ${created.length} question${created.length === 1 ? "" : "s"} to the curated bank`,
+        ];
+        if (skipped.length > 0) {
+          parts.push(
+            `${skipped.length} already existed and were skipped`,
+          );
+        }
+        if (drafts > 0) {
+          parts.push(
+            `${drafts} ${drafts === 1 ? "is" : "are"} draft${drafts === 1 ? "" : "s"} — approve ${
+              drafts === 1 ? "it" : "them"
+            } to import`,
+          );
+        }
+        toast.success(parts.join(". ") + ".");
       }
       onCleared();
     } catch (error) {
