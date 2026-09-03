@@ -2117,6 +2117,7 @@
       "create_display_name": "Tên hiển thị",
       "create_organization": "Tổ chức",
       "create_org_placeholder": "Chọn tổ chức",
+      "create_org_forced": "Tổ chức của bạn",
       "create_role": "Vai trò",
       "create_hint": "Tổ chức: {{org}}",
       "create_submit": "Tạo người dùng",
@@ -5332,7 +5333,7 @@
   },
   "management_users": {
     "title": "Người dùng",
-    "subtitle": "Tài khoản trong tổ chức của bạn. Bạn có thể vô hiệu hóa hoặc kích hoạt lại giáo viên và sinh viên — tài khoản đồng cấp (manager/HOD/admin) được bảo vệ.",
+    "subtitle": "Tài khoản trong tổ chức của bạn. Bạn có thể mời giáo viên và sinh viên mới, vô hiệu hóa hoặc kích hoạt lại tài khoản — tài khoản đồng cấp (manager/HOD/admin) được bảo vệ.",
     "make_manager": "Gán quyền quản lý",
     "remove_manager": "Gỡ quyền quản lý",
     "grant_dialog_title": "Gán quyền quản lý?",

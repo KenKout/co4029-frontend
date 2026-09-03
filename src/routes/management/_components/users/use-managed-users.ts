@@ -44,6 +44,18 @@ export function useManagedUsers() {
     () => (roles.data ?? []).map((r) => r.role),
     [roles.data],
   );
+  // Managers may only invite teachers and students — never peers (hod /
+  // manager, backend 403) nor admin (global-only). Mirrors the disable/
+  // enable peer guard.
+  const inviteRoleOptions = useMemo(
+    () =>
+      (roles.data ?? [])
+        .filter(
+          (r) => r.role.code === "student" || r.role.code === "teacher",
+        )
+        .map((r) => r.role),
+    [roles.data],
+  );
   const labelFor = useMemo(() => {
     const byCode = new Map(roleOptions.map((r) => [r.code, r.name]));
     return (code: string) => byCode.get(code) ?? code;
@@ -89,6 +101,22 @@ export function useManagedUsers() {
         `/admin/users/${userId}/enable`,
       ),
     onSuccess: invalidate,
+  });
+
+  // Managers hold user.bulk_import and may invite teachers/students into
+  // their own org. No organization_id in the payload: the backend forces
+  // the caller's primary org server-side.
+  const canInvite = permissions.has("user.bulk_import");
+  const createUser = useMutation({
+    mutationFn: (payload: {
+      primary_email: string;
+      display_name?: string;
+      organization_id?: string;
+      role_code?: string;
+    }) => apiPost<{ id: string }>("/users", payload),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["manager", "users"] });
+    },
   });
 
   // HOD (user.role_assign.hod) or admin may promote/revoke managers inside
@@ -159,11 +187,15 @@ export function useManagedUsers() {
     permissionsLoading: permissions.isLoading,
     canRead: permissions.has("user.read"),
     canManage,
+    canInvite,
     canAssignManager,
     labelFor,
     roleOptions,
+    inviteRoleOptions,
     table,
     columns,
+    createUser: createUser.mutateAsync,
+    createUserPending: createUser.isPending,
     disable: (userId: string) => disable.mutate(userId),
     enable: (userId: string) => enable.mutate(userId),
     grantManager: (userId: string, orgId: string) =>

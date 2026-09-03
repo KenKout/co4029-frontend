@@ -2209,6 +2209,7 @@
       "create_display_name": "Display name",
       "create_organization": "Organization",
       "create_org_placeholder": "Select an organization",
+      "create_org_forced": "Your organization",
       "create_role": "Role",
       "create_hint": "Organization: {{org}}",
       "create_submit": "Create user",
@@ -5363,7 +5364,7 @@
   },
   "management_users": {
     "title": "Users",
-    "subtitle": "Accounts in your organization. You can disable or re-enable teachers and students — peer manager/HOD/admin accounts are protected.",
+    "subtitle": "Accounts in your organization. You can invite new teachers and students, and disable or re-enable accounts — peer manager/HOD/admin accounts are protected.",
     "make_manager": "Make manager",
     "remove_manager": "Remove manager",
     "grant_dialog_title": "Make manager?",
