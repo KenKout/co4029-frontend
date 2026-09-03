@@ -9,7 +9,7 @@ import {
   Code,
   AlignLeft,
 } from "lucide-react";
-import { ToolbarBtn, makeMarkdownApplier } from "./markdown-editor";
+import { ToolbarBtn, makeMarkdownApplier } from "@/components/ui/markdown-toolbar";
 
 /**
  * Reading-type lesson content: a markdown editor with a formatting toolbar and

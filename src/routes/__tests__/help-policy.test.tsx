@@ -6,8 +6,8 @@ import {
   FAQ_CATEGORY_LABELS,
   FAQ_CATEGORY_ORDER,
   FAQ_ENTRIES,
-  POLICY_DOCUMENTS,
   POLICY_ORDER,
+  POLICY_TITLES,
 } from "@/lib/help-content";
 
 /**
@@ -97,14 +97,20 @@ describe("FAQ content", () => {
 });
 
 describe("policy content", () => {
-  it("provides a document for every slug in the order list", () => {
+  const POLICY_PAGE = readFileSync(
+    resolve(__dirname, "../support/policy.tsx"),
+    "utf8",
+  );
+  const POLICY_LINKS_SRC = readFileSync(
+    resolve(__dirname, "../support/_components/help/PolicyLinks.tsx"),
+    "utf8",
+  );
+
+  it("titles every slug in the footer manifest", () => {
+    // POLICY_TITLES is the fallback label set used before the index lands, so
+    // a slug without one would render a blank link.
     for (const slug of POLICY_ORDER) {
-      const doc = POLICY_DOCUMENTS[slug];
-      expect(doc).toBeDefined();
-      expect(doc.slug).toBe(slug);
-      expect(doc.title.trim().length).toBeGreaterThan(0);
-      expect(doc.body.trim().length).toBeGreaterThan(0);
-      expect(doc.lastUpdated.trim().length).toBeGreaterThan(0);
+      expect(POLICY_TITLES[slug]?.trim().length).toBeGreaterThan(0);
     }
   });
 
@@ -118,12 +124,27 @@ describe("policy content", () => {
     ]);
   });
 
-  it("keeps the draft notice in the page", () => {
-    // These bodies have not had legal review and there is no acceptance
-    // tracking; removing the notice would misrepresent them as binding.
-    const PAGE = readFileSync(resolve(__dirname, "../support/policy.tsx"), "utf8");
-    expect(PAGE).toMatch(/Draft/);
-    expect(PAGE).toMatch(/not a binding agreement/);
+  it("reads document bodies from the API, not a bundled constant", () => {
+    // Policy text is an editable, versioned entity now. A body inlined back
+    // into the frontend would ship terms that no admin can correct and that
+    // carry no version or publication date.
+    expect(POLICY_PAGE).toContain("usePolicy");
+    expect(POLICY_PAGE).not.toContain("POLICY_DOCUMENTS");
+  });
+
+  it("states each document's provenance", () => {
+    // The old page carried a blanket draft banner. Now every document reports
+    // which version it is and when it took effect, so a reader can name the
+    // exact text they agreed to.
+    expect(POLICY_PAGE).toMatch(/Version \{doc\.version_no\}/);
+    expect(POLICY_PAGE).toMatch(/Effective/);
+    expect(POLICY_PAGE).toContain("published_by_name");
+  });
+
+  it("scopes the policy list to the reader's roles", () => {
+    for (const src of [POLICY_PAGE, POLICY_LINKS_SRC]) {
+      expect(src).toContain("useReaderPolicies");
+    }
   });
 });
 

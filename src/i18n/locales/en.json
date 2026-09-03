@@ -71,7 +71,8 @@
     "close_menu": "Close menu",
     "org_units": "Organization",
     "operations": "Operations",
-    "resource_inventory": "Resource inventory"
+    "resource_inventory": "Resource inventory",
+    "policies": "Policies"
   },
   "auth": {
     "sign_in": "Sign in",
@@ -2527,6 +2528,70 @@
       "failures": {
         "subtitle": "Jobs that ended in failure, over the selected window.",
         "ai_calls_link": "Failed AI calls are on the cost dashboard"
+      }
+    },
+    "policies": {
+      "list_title": "Policies",
+      "list_subtitle": "Versioned policy documents shown to readers on /policy.",
+      "create_button": "New policy",
+      "create_dialog_title": "Create policy",
+      "load_failed": "Failed to load policies",
+      "empty_title": "No policies yet",
+      "fields": {
+        "slug": "Slug",
+        "title": "Title",
+        "category": "Category",
+        "language": "Language",
+        "audience": "Audience",
+        "status": "Status",
+        "version": "Version",
+        "changelog": "What changed"
+      },
+      "category_label": {
+        "legal": "Legal",
+        "academic": "Academic"
+      },
+      "status_label": {
+        "draft": "Draft",
+        "published": "Published",
+        "archived": "Archived"
+      },
+      "public_audience": "Everyone",
+      "audience_title": "Audience",
+      "audience_hint": "Roles this policy names as a party. Leave empty to show it to everyone, including signed-out visitors.",
+      "versions_title": "Version history",
+      "no_published_version": "Never published",
+      "editor_title": "Draft",
+      "editor_hint": "Markdown. Headings use ## — the reader page styles them as sections.",
+      "changelog_hint": "Shown to admins in the version history, not to readers.",
+      "write_tab": "Write",
+      "preview_tab": "Preview",
+      "no_draft_title": "No open draft",
+      "no_draft_hint": "Start a draft to revise this policy. It is copied from the published text, and readers keep seeing the published version until you publish the new one.",
+      "slug_hint": "Used in the URL: /policy/<slug>. It cannot be changed later.",
+      "actions": {
+        "cancel": "Cancel",
+        "create": "Create",
+        "creating": "Creating…",
+        "save": "Save draft",
+        "saving": "Saving…",
+        "publish": "Publish",
+        "publishing": "Publishing…",
+        "new_draft": "Start a draft",
+        "back": "Policies",
+        "view": "View public page"
+      },
+      "toasts": {
+        "create_success": "Policy created",
+        "create_failed": "Could not create the policy",
+        "saved": "Draft saved",
+        "save_failed": "Could not save the draft",
+        "published": "Published",
+        "publish_failed": "Could not publish",
+        "audience_saved": "Audience updated",
+        "audience_failed": "Could not update the audience",
+        "draft_opened": "Draft opened",
+        "draft_failed": "Could not open a draft"
       }
     }
   },

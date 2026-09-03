@@ -72,7 +72,8 @@
     "close_menu": "Đóng menu",
     "org_units": "Tổ chức",
     "operations": "Vận hành",
-    "resource_inventory": "Tài nguyên"
+    "resource_inventory": "Tài nguyên",
+    "policies": "Chính sách"
   },
   "auth": {
     "sign_in": "Đăng nhập",
@@ -2435,6 +2436,70 @@
       "failures": {
         "subtitle": "Các job đã thất bại trong khoảng thời gian đã chọn.",
         "ai_calls_link": "Lượt gọi AI thất bại nằm ở trang chi phí"
+      }
+    },
+    "policies": {
+      "list_title": "Chính sách",
+      "list_subtitle": "Tài liệu chính sách có phiên bản, hiển thị cho người đọc tại /policy.",
+      "create_button": "Chính sách mới",
+      "create_dialog_title": "Tạo chính sách",
+      "load_failed": "Không tải được danh sách chính sách",
+      "empty_title": "Chưa có chính sách nào",
+      "fields": {
+        "slug": "Định danh",
+        "title": "Tiêu đề",
+        "category": "Phân loại",
+        "language": "Ngôn ngữ",
+        "audience": "Đối tượng",
+        "status": "Trạng thái",
+        "version": "Phiên bản",
+        "changelog": "Nội dung thay đổi"
+      },
+      "category_label": {
+        "legal": "Pháp lý",
+        "academic": "Học thuật"
+      },
+      "status_label": {
+        "draft": "Bản nháp",
+        "published": "Đã xuất bản",
+        "archived": "Đã lưu trữ"
+      },
+      "public_audience": "Mọi người",
+      "audience_title": "Đối tượng áp dụng",
+      "audience_hint": "Các vai trò được nêu là một bên trong chính sách này. Để trống để hiển thị cho mọi người, kể cả khách chưa đăng nhập.",
+      "versions_title": "Lịch sử phiên bản",
+      "no_published_version": "Chưa từng xuất bản",
+      "editor_title": "Bản nháp",
+      "editor_hint": "Markdown. Tiêu đề mục dùng ## — trang người đọc sẽ định dạng thành từng phần.",
+      "changelog_hint": "Chỉ hiển thị cho quản trị viên trong lịch sử phiên bản, không hiển thị cho người đọc.",
+      "write_tab": "Soạn thảo",
+      "preview_tab": "Xem trước",
+      "no_draft_title": "Không có bản nháp",
+      "no_draft_hint": "Tạo bản nháp để sửa đổi chính sách này. Nội dung được sao chép từ bản đã xuất bản, và người đọc vẫn thấy bản cũ cho đến khi bạn xuất bản bản mới.",
+      "slug_hint": "Dùng trong đường dẫn: /policy/<slug>. Không thể thay đổi sau này.",
+      "actions": {
+        "cancel": "Huỷ",
+        "create": "Tạo",
+        "creating": "Đang tạo…",
+        "save": "Lưu bản nháp",
+        "saving": "Đang lưu…",
+        "publish": "Xuất bản",
+        "publishing": "Đang xuất bản…",
+        "new_draft": "Tạo bản nháp",
+        "back": "Chính sách",
+        "view": "Xem trang công khai"
+      },
+      "toasts": {
+        "create_success": "Đã tạo chính sách",
+        "create_failed": "Không tạo được chính sách",
+        "saved": "Đã lưu bản nháp",
+        "save_failed": "Không lưu được bản nháp",
+        "published": "Đã xuất bản",
+        "publish_failed": "Không xuất bản được",
+        "audience_saved": "Đã cập nhật đối tượng",
+        "audience_failed": "Không cập nhật được đối tượng",
+        "draft_opened": "Đã tạo bản nháp",
+        "draft_failed": "Không tạo được bản nháp"
       }
     }
   },

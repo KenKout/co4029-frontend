@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
 /**
- * Shared markdown-textarea editing helpers used by the video- and reading-type
- * lesson content editors: a small toolbar button and a factory that wires
- * inline (`**bold**`) and block (`- ` / `# `) markdown insertion to a textarea
- * ref + its controlled value.
+ * Shared markdown-textarea editing helpers: a small toolbar button and a
+ * factory that wires inline (`**bold**`) and block (`- ` / `# `) markdown
+ * insertion to a textarea ref + its controlled value.
+ *
+ * Used by the video- and reading-type lesson content editors and by the admin
+ * policy editor. It lives in `components/ui` rather than under one of those
+ * route trees so none of them has to import another's internals.
  */
 
 /** A single icon button in a markdown editor toolbar. */

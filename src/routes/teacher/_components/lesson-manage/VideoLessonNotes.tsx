@@ -6,7 +6,7 @@ import {
   Code,
   Image,
 } from "lucide-react";
-import { ToolbarBtn, makeMarkdownApplier } from "./markdown-editor";
+import { ToolbarBtn, makeMarkdownApplier } from "@/components/ui/markdown-toolbar";
 
 /**
  * Markdown lesson-notes editor for video-type lessons: a formatting toolbar

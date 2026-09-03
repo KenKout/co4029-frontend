@@ -406,6 +406,18 @@ const adminStatsHealthRedirectRoute = createRoute({
   },
 });
 
+const adminPoliciesRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/admin/policies",
+  component: lazyRouteComponent(() => import("@/routes/admin/policies")),
+});
+
+const adminPolicyDetailRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/admin/policies/$policyId",
+  component: lazyRouteComponent(() => import("@/routes/admin/policy-detail")),
+});
+
 const adminSettingsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/admin/settings",
@@ -999,6 +1011,8 @@ const routeTree = rootRoute.addChildren([
     adminOperationsRoute,
     adminHealthRedirectRoute,
     adminStatsHealthRedirectRoute,
+    adminPoliciesRoute,
+    adminPolicyDetailRoute,
     adminSettingsRoute,
     adminStatsRoute,
     adminStatsActiveRoute,

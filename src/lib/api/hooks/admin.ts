@@ -35,11 +35,19 @@ import type {
 } from "../types";
 import type { CourseEnrollmentRead } from "../types/teacher";
 
-export function useMyRoles() {
+/**
+ * The signed-in user's role codes.
+ *
+ * `enabled` exists for the public pages (policy, help) that want role-scoped
+ * content when a session happens to be present but must not fire an
+ * authenticated request — and eat a 401 — when it isn't.
+ */
+export function useMyRoles(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["me", "roles"],
     queryFn: () => apiFetch<string[]>("/me/roles"),
     staleTime: 1000 * 60 * 5,
+    enabled: options?.enabled ?? true,
   });
 }
 

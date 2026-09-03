@@ -307,6 +307,15 @@ export const adminNavItems: NavItem[] = [
     icon: ScrollText,
   },
   {
+    // Reader-facing policy documents (privacy, terms, the academic policies).
+    // System-side rather than Management: these are platform-wide legal and
+    // academic text, not tenant content.
+    label: "Policies",
+    i18nKey: "nav.policies",
+    href: "/admin/policies",
+    icon: FileText,
+  },
+  {
     // Deployment/tenant runtime configuration (chunking, preprocessing, KG,
     // retrieval). Distinct from `nav.settings`, which is the signed-in user's
     // own account settings — hence its own i18n key and icon.
@@ -376,6 +385,12 @@ export const adminNavGroups: NavGroup[] = [
         i18nKey: "nav.audit_logs",
         href: "/admin/audit-logs",
         icon: ScrollText,
+      },
+      {
+        label: "Policies",
+        i18nKey: "nav.policies",
+        href: "/admin/policies",
+        icon: FileText,
       },
       {
         label: "System Config",

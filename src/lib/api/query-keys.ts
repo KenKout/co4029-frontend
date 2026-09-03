@@ -377,6 +377,19 @@ export const queryKeys = {
       ["manager", "users", "overview", userId] as const,
   },
 
+  policies: {
+    /** Reader index. Keyed on the roles so switching role refetches. */
+    list: (roles: string[], language: string) =>
+      ["policies", "list", [...roles].sort().join(","), language] as const,
+    bySlug: (slug: string, language: string) =>
+      ["policies", "by-slug", slug, language] as const,
+    adminList: () => ["policies", "admin", "list"] as const,
+    adminDetail: (policyId: string) =>
+      ["policies", "admin", "detail", policyId] as const,
+    adminVersion: (policyId: string, versionId: string) =>
+      ["policies", "admin", "version", policyId, versionId] as const,
+  },
+
   careerPaths: {
     list: () => ["career-paths", "list"] as const,
     bySlug: (slug: string) => ["career-paths", "by-slug", slug] as const,

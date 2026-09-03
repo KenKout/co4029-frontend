@@ -1,32 +1,31 @@
 import { Link, useParams } from "@tanstack/react-router";
-import { AlertTriangle, ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, FileText } from "lucide-react";
 
 import { RichContent } from "@/components/ui/rich-content";
+import { Skeleton } from "@/components/ui/skeleton";
 import TopNavBar from "@/components/layout/TopNavBar";
 import Footer from "@/components/layout/Footer";
-import {
-  POLICY_DOCUMENTS,
-  POLICY_ORDER,
-  type PolicySlug,
-} from "@/lib/help-content";
+import { usePolicy } from "@/lib/api/hooks/policies";
+import { POLICY_ORDER, POLICY_TITLES, type PolicySlug } from "@/lib/help-content";
 import { cn } from "@/lib/utils";
+import { useReaderPolicies } from "./_components/use-reader-policies";
 
 /**
- * Public policy page — one route serving privacy / terms / cookies via $slug.
+ * Public policy page — one route serving every policy via $slug.
  *
  * Public for the same reason as /help, and more pressingly: a user must be able
  * to read the terms BEFORE creating an account or signing in. Gating these
- * behind auth would defeat their purpose.
+ * behind auth would defeat their purpose, so nothing on this page requires a
+ * session — the reader endpoints are unauthenticated by design.
  *
- * Renders a visible draft notice. The bodies in help-content.ts are structural
- * placeholders that have not had legal review, and there is no acceptance
- * tracking — nothing records which version a user agreed to. Claiming these are
- * binding terms while neither is true would be worse than showing nothing.
+ * The body is whatever version an admin has PUBLISHED, fetched at render time.
+ * It used to be a hardcoded constant with a blanket "draft" banner; now each
+ * document carries its own version number, publication date and publisher, so
+ * the page states that provenance instead of disclaiming all of it at once.
  */
 /**
- * Typographic convention for policy documents. Every /policy/$slug page
- * (privacy, cookies, terms, learning-program, career-path) renders through
- * this same component, so the convention is defined here once:
+ * Typographic convention for policy documents. Every /policy/$slug page renders
+ * through this same component, so the convention is defined here once:
  *
  * - section headings (## ) are LARGE, bold, with generous space above and a
  *   snug gap to the paragraph they introduce — reads as a formal document,
@@ -49,108 +48,144 @@ const POLICY_BODY_PROSE =
   "[&_strong]:font-semibold " +
   "[&_a]:font-medium [&_a]:text-m3-primary [&_a]:underline-offset-2";
 
+/** Long-form date, e.g. "22 August 2026" — matches how policies cite dates. */
+function formatPublished(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+/** Shell shared by every state, so chrome never reflows between them. */
+function PolicyShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-m3-surface flex flex-col">
+      <TopNavBar />
+      <div className="mx-auto w-full max-w-3xl flex-1 px-5 pb-12 pt-28 sm:px-8">
+        {children}
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+/**
+ * Sibling policies, so a reader can move between them directly.
+ *
+ * Sourced from the reader's own index, which is role-scoped — there is no
+ * point offering a link to a document this reader will be told they cannot
+ * see. Falls back to the static slug manifest before the index arrives.
+ */
+function SiblingPolicies({ current }: { current?: string }) {
+  const { data } = useReaderPolicies();
+  const siblings = data?.length
+    ? data.map((p) => ({ slug: p.slug as PolicySlug, title: p.title }))
+    : POLICY_ORDER.map((slug) => ({ slug, title: POLICY_TITLES[slug] }));
+
+  return (
+    <div className="flex flex-wrap gap-x-6 gap-y-2">
+      {siblings.map(({ slug, title }) => (
+        <Link
+          key={slug}
+          to="/policy/$slug"
+          params={{ slug }}
+          className={cn(
+            "text-sm font-medium hover:underline",
+            slug === current ? "text-m3-on-surface-variant" : "text-m3-primary",
+          )}
+          aria-current={slug === current ? "page" : undefined}
+        >
+          {title}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export default function PolicyPage() {
   const { slug } = useParams({ strict: false }) as { slug?: string };
+  const { data: doc, isPending, isError } = usePolicy(slug);
 
-  const known = POLICY_ORDER.includes(slug as PolicySlug);
-  const doc = known ? POLICY_DOCUMENTS[slug as PolicySlug] : null;
-
-  if (!doc) {
+  if (isPending) {
     return (
-      <div className="min-h-screen bg-m3-surface flex flex-col">
-        <TopNavBar />
-        <div className="mx-auto w-full max-w-3xl flex-1 px-5 pb-12 pt-28 sm:px-8">
-          <h1 className="font-headline text-2xl font-bold text-m3-on-surface">
-            Policy not found
-          </h1>
-          <p className="mt-2 text-sm text-m3-on-surface-variant">
-            No policy document matches “{slug}”.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
-            {POLICY_ORDER.map((s) => (
-              <Link
-                key={s}
-                to="/policy/$slug"
-                params={{ slug: s }}
-                className="text-sm font-medium text-m3-primary hover:underline"
-              >
-                {POLICY_DOCUMENTS[s].title}
-              </Link>
-            ))}
-          </div>
+      <PolicyShell>
+        <Skeleton className="h-11 w-11 rounded-xl" />
+        <Skeleton className="mt-4 h-9 w-2/3" />
+        <Skeleton className="mt-3 h-4 w-48" />
+        <div className="mt-10 space-y-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className={i % 4 === 3 ? "h-4 w-2/3" : "h-4 w-full"} />
+          ))}
         </div>
-        <Footer />
-      </div>
+      </PolicyShell>
+    );
+  }
+
+  // A 404 and a network failure land in the same place deliberately: either
+  // way there is no document to show, and the useful next step is identical.
+  if (isError || !doc) {
+    return (
+      <PolicyShell>
+        <h1 className="font-headline text-2xl font-bold text-m3-on-surface">
+          Policy not found
+        </h1>
+        <p className="mt-2 text-sm text-m3-on-surface-variant">
+          No published policy matches “{slug}”. It may not be published yet, or
+          it may not apply to your role.
+        </p>
+        <div className="mt-6">
+          <SiblingPolicies />
+        </div>
+      </PolicyShell>
     );
   }
 
   return (
     // TopNavBar rather than ContentTopBar — see the note in help.tsx: these
     // routes are public and ContentTopBar assumes an authenticated user.
-    <div className="min-h-screen bg-m3-surface flex flex-col">
-      <TopNavBar />
-      <div className="mx-auto w-full max-w-3xl flex-1 px-5 pb-12 pt-28 sm:px-8">
-        <Link
-          to="/help"
-          className="mb-6 inline-flex items-center gap-1.5 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-primary"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Help &amp; FAQ
-        </Link>
+    <PolicyShell>
+      <Link
+        to="/help"
+        className="mb-6 inline-flex items-center gap-1.5 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-primary"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Help &amp; FAQ
+      </Link>
 
-        <header className="mb-8">
-          <span className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-m3-primary-fixed">
-            <FileText className="h-5 w-5 text-m3-primary" />
-          </span>
-          <h1 className="font-headline text-3xl font-bold leading-tight text-m3-on-surface">
-            {doc.title}
-          </h1>
-          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-m3-on-surface-variant">
-            Last updated {doc.lastUpdated}
-          </p>
-        </header>
+      <header className="mb-8">
+        <span className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-m3-primary-fixed">
+          <FileText className="h-5 w-5 text-m3-primary" />
+        </span>
+        <h1 className="font-headline text-3xl font-bold leading-tight text-m3-on-surface">
+          {doc.title}
+        </h1>
+        {/* Provenance, not a disclaimer: which version this is, when it took
+            effect, and who released it. A reader disputing a term needs to be
+            able to name the exact text they agreed to. */}
+        <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold uppercase tracking-wide text-m3-on-surface-variant">
+          <span>Version {doc.version_no}</span>
+          <span aria-hidden="true">·</span>
+          <span>Effective {formatPublished(doc.published_at)}</span>
+          {doc.published_by_name ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>Published by {doc.published_by_name}</span>
+            </>
+          ) : null}
+        </p>
+      </header>
 
-        {/* Draft notice — deliberately prominent, not a footnote. */}
-        <div className="mb-8 flex gap-3 rounded-xl border border-amber-300 bg-amber-50/70 px-4 py-3">
-          <AlertTriangle
-            aria-hidden="true"
-            className="mt-0.5 h-4 w-4 shrink-0 text-amber-600"
-          />
-          <p className="text-xs leading-relaxed text-amber-900">
-            <strong className="font-semibold">Draft.</strong> This document is a
-            working draft pending review and is not a binding agreement. Version
-            history and recorded acceptance are not yet implemented.
-          </p>
-        </div>
+      <RichContent value={doc.body} format="markdown" className={POLICY_BODY_PROSE} />
 
-        <RichContent value={doc.body} format="markdown" className={POLICY_BODY_PROSE} />
-
-        {/* Sibling policies, so a reader can move between them directly. */}
-        <nav className="mt-12 border-t border-m3-outline-variant/20 pt-6">
-          <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            Other policies
-          </h2>
-          <div className="flex flex-wrap gap-x-6 gap-y-2">
-            {POLICY_ORDER.map((s) => (
-              <Link
-                key={s}
-                to="/policy/$slug"
-                params={{ slug: s }}
-                className={cn(
-                  "text-sm font-medium hover:underline",
-                  s === doc.slug
-                    ? "text-m3-on-surface-variant"
-                    : "text-m3-primary",
-                )}
-                aria-current={s === doc.slug ? "page" : undefined}
-              >
-                {POLICY_DOCUMENTS[s].title}
-              </Link>
-            ))}
-          </div>
-        </nav>
-      </div>
-      <Footer />
-    </div>
+      <nav className="mt-12 border-t border-m3-outline-variant/20 pt-6">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+          Other policies
+        </h2>
+        <SiblingPolicies current={doc.slug} />
+      </nav>
+    </PolicyShell>
   );
 }
