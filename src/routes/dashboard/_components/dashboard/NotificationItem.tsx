@@ -1,12 +1,16 @@
 import { Bell, CheckCircle2, FileText, Mic } from "lucide-react";
 import type { Notification } from "@/lib/api/types";
+import { cn } from "@/lib/utils";
 
 export default function NotificationItem({
   notification,
+  onClick,
 }: {
   notification: Notification;
+  onClick?: (notification: Notification) => void;
 }) {
   const isRead = notification.read_at !== null;
+  const clickable = onClick !== undefined;
   const icon =
     notification.category === "quiz_ready"
       ? FileText
@@ -18,9 +22,31 @@ export default function NotificationItem({
 
   const Icon = icon;
 
+  function activate() {
+    onClick?.(notification);
+  }
+
   return (
     <div
-      className={`flex items-start gap-3 p-4 rounded-xl transition-colors ${isRead ? "opacity-60" : "bg-m3-secondary-fixed/20"}`}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={clickable ? activate : undefined}
+      onKeyDown={
+        clickable
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                activate();
+              }
+            }
+          : undefined
+      }
+      aria-label={clickable ? notification.title : undefined}
+      className={cn(
+        "flex items-start gap-3 p-4 rounded-xl transition-colors",
+        isRead ? "opacity-60" : "bg-m3-secondary-fixed/20",
+        clickable && "cursor-pointer hover:bg-m3-surface-container-low",
+      )}
     >
       <div className="w-8 h-8 rounded-xl gradient-secondary flex items-center justify-center shrink-0">
         <Icon className="h-4 w-4 text-white" />
