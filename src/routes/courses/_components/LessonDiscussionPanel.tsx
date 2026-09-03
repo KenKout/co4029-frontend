@@ -26,6 +26,7 @@ import {
   useDeleteDiscussionTopic,
   useLessonDiscussionTopics,
   useTopicComments,
+  useUpdateComment,
   useUpdateDiscussionTopic,
 } from "@/lib/api/hooks/discussions";
 import type { DiscussionComment, DiscussionTopic } from "@/lib/api/types";
@@ -42,13 +43,68 @@ function CommentRow({
   lessonId: string;
 }) {
   const { t } = useTranslation();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(comment.body);
   const del = useDeleteComment(topicId, lessonId);
+  const update = useUpdateComment(topicId);
   const name = comment.author?.display_name ?? t("discussion.unknown_author");
 
   function handleDelete() {
     del.mutate(comment.id, {
       onError: () => toast.error(t("discussion.errors.delete_comment")),
     });
+  }
+
+  function handleSave() {
+    const trimmed = draft.trim();
+    if (!trimmed) return;
+    update.mutate(
+      { commentId: comment.id, body: trimmed },
+      {
+        onSuccess: () => setEditing(false),
+        onError: () => toast.error(t("discussion.errors.update_comment")),
+      },
+    );
+  }
+
+  if (editing) {
+    return (
+      <div className="space-y-2">
+        <Textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          rows={2}
+          maxLength={5000}
+          autoFocus
+        />
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setDraft(comment.body);
+              setEditing(false);
+            }}
+          >
+            {t("discussion.actions.cancel")}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            disabled={update.isPending || !draft.trim()}
+            onClick={handleSave}
+          >
+            {update.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Send className="h-3.5 w-3.5" />
+            )}
+            {t("common.save")}
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -66,13 +122,24 @@ function CommentRow({
           <span className="text-xs text-m3-on-surface-variant">
             {new Date(comment.created_at).toLocaleString()}
           </span>
+          {comment.is_own && (
+            <Button variant="ghost"
+              type="button"
+              onClick={() => setEditing(true)}
+              disabled={update.isPending}
+              aria-label={t("discussion.actions.edit_comment")}
+              className="ml-auto text-m3-on-surface-variant transition-colors hover:text-m3-primary disabled:opacity-50"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+          )}
           {comment.can_delete && (
             <Button variant="ghost"
               type="button"
               onClick={handleDelete}
               disabled={del.isPending}
               aria-label={t("discussion.actions.delete_comment")}
-              className="ml-auto text-m3-on-surface-variant transition-colors hover:text-danger disabled:opacity-50"
+              className="text-m3-on-surface-variant transition-colors hover:text-danger disabled:opacity-50"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
@@ -154,6 +221,82 @@ function CommentComposer({
 
 // ── Topic card (expandable to comments) ──────────────────────────────────
 
+/** Topic title/body editor (teacher only — inline replacement form). */
+function TopicEditForm({
+  topic,
+  lessonId,
+  onSaved,
+  onCancel,
+}: {
+  topic: DiscussionTopic;
+  lessonId: string;
+  onSaved: () => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const [titleDraft, setTitleDraft] = useState(topic.title);
+  const [bodyDraft, setBodyDraft] = useState(topic.body_markdown ?? "");
+  const updateTopic = useUpdateDiscussionTopic(lessonId);
+
+  function saveEdit() {
+    const trimmed = titleDraft.trim();
+    if (!trimmed) return;
+    updateTopic.mutate(
+      {
+        topicId: topic.id,
+        title: trimmed,
+        body_markdown: bodyDraft.trim() || null,
+      },
+      {
+        onSuccess: onSaved,
+        onError: () => toast.error(t("discussion.errors.update_topic")),
+      },
+    );
+  }
+
+  return (
+    <div className="space-y-3 rounded-xl border border-m3-primary/20 bg-m3-primary-fixed/20 p-4">
+      <h5 className="font-headline text-sm font-bold text-m3-on-surface">
+        {t("discussion.actions.edit_topic")}
+      </h5>
+      <input
+        value={titleDraft}
+        onChange={(e) => setTitleDraft(e.target.value)}
+        maxLength={255}
+        placeholder={t("discussion.topic_title_placeholder")}
+        className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+      />
+      <Textarea
+        value={bodyDraft}
+        onChange={(e) => setBodyDraft(e.target.value)}
+        rows={3}
+        maxLength={20000}
+        placeholder={t("discussion.topic_body_placeholder")}
+        resize="y"
+        className="bg-white"
+      />
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+          {t("discussion.actions.cancel")}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          disabled={updateTopic.isPending || !titleDraft.trim()}
+          onClick={saveEdit}
+        >
+          {updateTopic.isPending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Pencil className="h-3.5 w-3.5" />
+          )}
+          {t("common.save")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function TopicCard({
   topic,
   lessonId,
@@ -163,6 +306,7 @@ function TopicCard({
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
   const comments = useTopicComments(open ? topic.id : undefined);
   const updateTopic = useUpdateDiscussionTopic(lessonId);
   const deleteTopic = useDeleteDiscussionTopic(lessonId);
@@ -179,6 +323,17 @@ function TopicCard({
     deleteTopic.mutate(topic.id, {
       onError: () => toast.error(t("discussion.errors.delete_topic")),
     });
+  }
+
+  if (editing) {
+    return (
+      <TopicEditForm
+        topic={topic}
+        lessonId={lessonId}
+        onSaved={() => setEditing(false)}
+        onCancel={() => setEditing(false)}
+      />
+    );
   }
 
   return (
@@ -225,6 +380,17 @@ function TopicCard({
           {/* Teacher controls */}
           {topic.can_manage && (
             <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setEditing(true)}
+                disabled={updateTopic.isPending}
+                className="gap-1.5 text-xs"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                {t("discussion.actions.edit_topic")}
+              </Button>
               <Button
                 type="button"
                 variant="outline"

@@ -1134,7 +1134,8 @@
       "material_processing": "Material processing",
       "quiz_generation": "Quiz generation",
       "interview_generation": "Interview generation",
-      "path_change_review": "Path change review"
+      "path_change_review": "Path change review",
+      "course_discussion": "Course discussion"
     },
     "channel": {
       "email": "Email",
@@ -1196,7 +1197,8 @@
       "material_processing": "Material processing",
       "quiz_generation": "Quiz generation",
       "interview_generation": "Interview generation",
-      "path_change_review": "Path change review"
+      "path_change_review": "Path change review",
+      "course_discussion": "Course discussion"
     },
     "errors": {
       "mark_read_failed": "Couldn't mark as read",
@@ -2747,6 +2749,8 @@
       "new_topic": "New topic",
       "post_topic": "Post topic",
       "post_comment": "Post comment",
+      "edit_comment": "Edit",
+      "edit_topic": "Edit topic",
       "delete_comment": "Delete comment",
       "delete_topic": "Delete",
       "close": "Close",
@@ -2758,6 +2762,7 @@
       "update_topic": "Couldn't update the topic. Please try again.",
       "delete_topic": "Couldn't delete the topic. Please try again.",
       "post_comment": "Couldn't post your comment. Please try again.",
+      "update_comment": "Couldn't edit the comment. Please try again.",
       "delete_comment": "Couldn't delete the comment. Please try again."
     }
   },
