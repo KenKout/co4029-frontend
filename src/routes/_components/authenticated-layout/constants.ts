@@ -10,8 +10,10 @@ const TEACHER_PREFIXES = ["/teacher"];
 // belonged to. Gated on permissions the plain teacher role lacks.
 const MANAGER_PREFIXES = ["/management"];
 
-// Permission codes that grant access. Mirror SectionSwitcher.tsx so the
-// header switcher and the route guard agree on who can reach what.
+// Permission codes that grant access — the single authority for who can
+// reach a section. The header section switcher is admin-only now (it used
+// to mirror these lists); a non-admin hitting another section's URL is
+// denied here and the layout renders the 404 guard instead of the page.
 const ADMIN_PERMS = ["system.administer"];
 const TEACHER_PERMS = ["course.create", "lesson.manage"];
 const MANAGER_PERMS = [

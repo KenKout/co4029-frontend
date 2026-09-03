@@ -6,7 +6,10 @@ import {
   Briefcase,
   Building2,
 } from "lucide-react";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  SUPERUSER_PERMISSION,
+  usePermissions,
+} from "@/lib/auth/use-permissions";
 import { cn } from "@/lib/utils";
 
 interface SectionLink {
@@ -60,11 +63,22 @@ const SECTIONS: SectionLink[] = [
   },
 ];
 
+/**
+ * The role switch bar (Student / Teacher / Manager / Admin pills in the top
+ * bar). Admin-only since 2026-09: every other role gets exactly one section
+ * (its own sidebar) and a URL belonging to another role renders the 404
+ * guard, so there is nothing for them to switch between — the bar hid a
+ * permission model that no longer exists. Admin keeps it because admin may
+ * work across all four sections.
+ */
 export default function SectionSwitcher() {
   const { t } = useTranslation();
   const location = useLocation();
   const permissions = usePermissions();
   const perms = permissions.permissions;
+
+  // Hidden while permissions load (empty list) and for every non-admin.
+  if (!perms.includes(SUPERUSER_PERMISSION)) return null;
 
   const visible = SECTIONS.filter((s) => s.show(perms));
   if (visible.length <= 1) return null;
