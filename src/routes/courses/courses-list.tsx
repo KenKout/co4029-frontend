@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { SectionHeader } from "@/components/ui/section-header";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
@@ -16,6 +17,11 @@ import {
 } from "@/routes/courses/_components/courses-list/CoursesSearchBar";
 
 const VIEW_MODE_KEY = "courses:viewMode";
+const SCOPE_KEY = "courses:scope";
+
+function isScope(value: unknown): value is Exclude<CourseScope, "all"> {
+  return value === "enrolled" || value === "completed";
+}
 
 /**
  * Public course catalogue.
@@ -29,10 +35,15 @@ const VIEW_MODE_KEY = "courses:viewMode";
  *   per-course status so students can instantly see what they're in and can
  *   jump back to finished courses for review/practice (enrolled students —
  *   including completed ones — keep read access per the enrollment gate).
+ *   The scope is mirrored into ``?scope=`` (so the dashboard can deep-link
+ *   "enrolled") and persisted in localStorage, so the next page load holds
+ *   the previous filter.
  * - view mode: card grid or compact list rows (persisted per browser).
  */
 export default function CoursesListPage() {
   const { t } = useTranslation();
+  const search = useSearch({ strict: false });
+  const navigate = useNavigate();
   const {
     items,
     hasNextPage,
@@ -48,7 +59,12 @@ export default function CoursesListPage() {
   const { data: enrollments } = useMyEnrollments();
 
   const [query, setQuery] = useState("");
-  const [scope, setScope] = useState<CourseScope>("all");
+  const [scope, setScopeState] = useState<CourseScope>(() => {
+    const fromUrl = (search as { scope?: unknown }).scope;
+    if (isScope(fromUrl)) return fromUrl;
+    const saved = localStorage.getItem(SCOPE_KEY);
+    return isScope(saved) ? saved : "all";
+  });
   const [viewMode, setViewMode] = useState<CourseViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
     return saved === "list" ? "list" : "card";
@@ -57,6 +73,17 @@ export default function CoursesListPage() {
   useEffect(() => {
     localStorage.setItem(VIEW_MODE_KEY, viewMode);
   }, [viewMode]);
+
+  useEffect(() => {
+    localStorage.setItem(SCOPE_KEY, scope);
+  }, [scope]);
+
+  // Keep ?scope= in step with the filter so dashboard deep-links and reloads
+  // agree with the persisted choice (replace: the trailing flag, not history).
+  function changeScope(next: CourseScope) {
+    setScopeState(next);
+    void navigate({ to: "/courses", search: { scope: next }, replace: true });
+  }
 
   const enrollmentsByCourse = useMemo(() => {
     const map = new Map<string, "active" | "completed">();
@@ -100,7 +127,7 @@ export default function CoursesListPage() {
 
   function clearAll() {
     setQuery("");
-    setScope("all");
+    changeScope("all");
   }
 
   const statusOf = useMemo(
@@ -131,7 +158,7 @@ export default function CoursesListPage() {
           shownCount={filtered.length}
           totalCount={scope === "all" ? items.length : scopeFiltered.length}
           scope={scope}
-          setScope={setScope}
+          setScope={changeScope}
           viewMode={viewMode}
           setViewMode={setViewMode}
         />
@@ -159,7 +186,7 @@ export default function CoursesListPage() {
               statusOf={statusOf}
               scope={scope}
               hasScopeCourses={hasScopeCourses}
-              clearScope={() => setScope("all")}
+              clearScope={() => changeScope("all")}
             />
           )}
         </section>
