@@ -1,5 +1,20 @@
 import type { QuizAttemptRead, QuizPublic } from "@/lib/api/types";
 
+function latestSubmittedAt(attempts: QuizAttemptRead[]) {
+  return attempts.reduce<number | null>((latest, attempt) => {
+    if (!attempt.submitted_at) return latest;
+    const value = new Date(attempt.submitted_at).getTime();
+    if (!Number.isFinite(value)) return latest;
+    return latest == null || value > latest ? value : latest;
+  }, null);
+}
+
+function retryTime(quiz: QuizPublic, attempts: QuizAttemptRead[]): Date | null {
+  const latest = latestSubmittedAt(attempts);
+  if (latest == null || !quiz.cooldown_hours) return null;
+  return new Date(latest + quiz.cooldown_hours * 60 * 60 * 1000);
+}
+
 /**
  * Derived state for the pre-attempt panel, lifted verbatim out of
  * QuizIntroPanel. Pure — the expressions are the ones the component computed
@@ -12,6 +27,7 @@ export function deriveIntroState(
   const completed = attempts.filter(
     (a) => a.status === "submitted" || a.status === "graded",
   ).length;
+  const attemptsUsed = attempts.length;
   const passingScore = Math.round(Number(quiz.passing_score_percent));
 
   // Best score across graded/submitted attempts + whether the student has
@@ -28,8 +44,8 @@ export function deriveIntroState(
   const hasPassed = scoredAttempts.some((a) => a.passed === true);
   const questionCount = quiz.question_count ?? 0;
   const maxAttemptsReached =
-    quiz.max_attempts != null && completed >= quiz.max_attempts;
-  const noRetakesLeft = completed > 0 && !quiz.allow_retakes;
+    quiz.max_attempts != null && attemptsUsed >= quiz.max_attempts;
+  const noRetakesLeft = attemptsUsed > 0 && !quiz.allow_retakes;
 
   // Scheduling window (backend migration 0032). NULL columns = no bound.
   // available_from → not open yet; available_until → closed. `due_at` is a
@@ -41,8 +57,15 @@ export function deriveIntroState(
   const notYetOpen = openAt != null && now < openAt.getTime();
   const windowClosed = closeAt != null && now > closeAt.getTime();
   const pastDue = dueAt != null && now > dueAt.getTime();
+  const retryAvailableAt = retryTime(quiz, attempts);
+  const cooldownActive =
+    retryAvailableAt != null && now < retryAvailableAt.getTime();
   const blocked =
-    maxAttemptsReached || noRetakesLeft || notYetOpen || windowClosed;
+    maxAttemptsReached ||
+    noRetakesLeft ||
+    notYetOpen ||
+    windowClosed ||
+    cooldownActive;
 
   // Most recent attempts first; in_progress filtered out (review only after submit)
   const reviewableAttempts = [...attempts]
@@ -51,6 +74,7 @@ export function deriveIntroState(
 
   return {
     completed,
+    attemptsUsed,
     passingScore,
     bestScore,
     hasPassed,
@@ -63,6 +87,8 @@ export function deriveIntroState(
     notYetOpen,
     windowClosed,
     pastDue,
+    retryAvailableAt,
+    cooldownActive,
     blocked,
     reviewableAttempts,
   };

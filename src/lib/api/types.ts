@@ -274,15 +274,12 @@ export interface InterviewProgressRead {
   completed: boolean;
 }
 export type QuizAttemptRead = Schemas["QuizAttemptRead"];
+export type QuizAttemptProgressRead = Schemas["QuizAttemptProgressRead"];
+export type QuizAttemptProgressAnswer = Schemas["QuizAttemptProgressAnswer"];
 export type QuizAttemptReviewRead = Schemas["QuizAttemptReviewRead"];
 export type QuizAttemptReviewQuestion = Schemas["QuizAttemptReviewQuestion"];
 export type QuizAttemptReviewOption = Schemas["QuizAttemptReviewOption"];
-// The committed OpenAPI snapshot predates the Phase-12 access-password gate,
-// so widen QuizAttemptStart with the optional `password` the backend accepts
-// on POST /quizzes/{id}/attempts until the snapshot is regenerated.
-export type QuizAttemptStart = Schemas["QuizAttemptStart"] & {
-  password?: string | null;
-};
+export type QuizAttemptStart = Schemas["QuizAttemptStart"];
 export type QuizAttemptSubmitAnswer = Schemas["QuizAttemptAnswerInput"];
 export type QuizAttemptAnswerRead = Schemas["QuizAttemptAnswerRead"];
 /**
@@ -586,7 +583,10 @@ export type InterviewOutcomeCreate = Schemas["InterviewOutcomeCreate"];
 // Widen with source_module_ids until the OpenAPI snapshot is regenerated.
 // `mode` is Omit-ted: the backend dropped it (2026-08-30, no stage read it)
 // and the model is extra="forbid", so sending it would 422.
-export type InterviewGenerationRequest = Omit<Schemas["InterviewGenerationRequest"], "mode"> & {
+export type InterviewGenerationRequest = Omit<
+  Schemas["InterviewGenerationRequest"],
+  "mode"
+> & {
   source_module_ids?: string[];
   target_outcome_ids?: string[];
   variant_strategy?: "all_angles" | "role_only" | null;

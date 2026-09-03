@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useQuizAttemptReview, useStudentQuiz } from "@/lib/api/hooks/quizzes";
+import {
+  useMyQuizAttempts,
+  useQuizAttemptReview,
+  useStudentQuiz,
+} from "@/lib/api/hooks/quizzes";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { ReviewNavDialog } from "@/routes/courses/_components/course-quiz-review/ReviewNavDialog";
 import { ReviewQuestionCard } from "@/routes/courses/_components/course-quiz-review/ReviewQuestionCard";
@@ -11,7 +15,9 @@ import {
   ReviewActionsBar,
   ReviewOverallFeedback,
   ReviewScoreSummary,
+  ReviewUnavailableSummary,
 } from "@/routes/courses/_components/course-quiz-review/ReviewSummary";
+import { deriveIntroState } from "@/routes/courses/_components/quiz-intro-panel/helpers";
 
 /**
  * Post-submission attempt review. Compact result card (score bar against the
@@ -23,18 +29,16 @@ import {
 export default function CourseQuizReviewPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { slug, quizId, attemptId } = useParams({ strict: false }) as {
-    slug: string;
-    quizId: string;
-    attemptId: string;
-  };
+  const params = useParams({ strict: false });
+  const slug = params.slug ?? "";
+  const quizId = params.quizId ?? "";
+  const attemptId = params.attemptId ?? "";
 
   const { data: quiz } = useStudentQuiz(quizId);
+  const { data: attempts = [] } = useMyQuizAttempts(quizId);
   const { data: review, isLoading, isError } = useQuizAttemptReview(attemptId);
   const [navOpen, setNavOpen] = useState(false);
   const [retryOpen, setRetryOpen] = useState(false);
-
-
 
   /**
    * Jump to a question from the navigator dialog — retry-until-mounted scroll
@@ -74,6 +78,11 @@ export default function CourseQuizReviewPage() {
   }
 
   const attempt = review.attempt;
+  const intro = deriveIntroState(quiz, attempts);
+  const scoreVisible =
+    review.visibility.show_score &&
+    attempt.score_percent != null &&
+    attempt.passed != null;
   const passingScore = Math.round(Number(quiz.passing_score_percent));
   const scorePercent =
     attempt.score_percent != null ? Number(attempt.score_percent) : 0;
@@ -81,22 +90,35 @@ export default function CourseQuizReviewPage() {
   // Retry is offered only while the quiz allows it (retakes on, and no
   // max-attempts cap exhausted by this attempt).
   const canRetry =
-    quiz.allow_retakes &&
-    (quiz.max_attempts == null || attempt.attempt_number < quiz.max_attempts);
+    !intro.blocked && !attempts.some((item) => item.status === "in_progress");
 
   return (
     <div className="min-h-[70vh] pb-10">
       <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
         <div className="space-y-6 min-w-0">
-          <ReviewScoreSummary
-            attempt={attempt}
-            quizTitle={quiz.title}
-            slug={slug}
-            quizId={quizId}
-            passingScore={passingScore}
-            scorePercent={scorePercent}
-            passed={passed}
-          />
+          {scoreVisible ? (
+            <ReviewScoreSummary
+              attempt={attempt}
+              quizTitle={quiz.title}
+              slug={slug}
+              quizId={quizId}
+              passingScore={passingScore}
+              scorePercent={scorePercent}
+              passed={passed}
+            />
+          ) : (
+            <ReviewUnavailableSummary
+              attempt={attempt}
+              quizTitle={quiz.title}
+              slug={slug}
+              quizId={quizId}
+              message={t(
+                attempt.grading_pending
+                  ? "course_quiz.results.awaiting_grade_summary"
+                  : "course_quiz.results.score_hidden_summary",
+              )}
+            />
+          )}
 
           <ReviewActionsBar
             onOpenNavigation={() => setNavOpen(true)}
@@ -118,6 +140,7 @@ export default function CourseQuizReviewPage() {
                 key={q.question_id}
                 question={q}
                 index={idx}
+                visibility={review.visibility}
               />
             ))}
           </div>
@@ -129,6 +152,7 @@ export default function CourseQuizReviewPage() {
         onOpenChange={setNavOpen}
         questions={review.questions}
         onJump={jumpToQuestion}
+        visibility={review.visibility}
       />
 
       {/* Retry confirmation — starts a fresh attempt straight into the

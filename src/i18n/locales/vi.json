@@ -2702,11 +2702,28 @@
       "time_limit_hours": "{{hours}} giờ",
       "time_limit_hours_mins": "{{hours}} giờ {{minutes}} phút"
     },
+    "question_input": {
+      "type_answer": "Nhập câu trả lời…",
+      "short_answer_label": "Ô nhập câu trả lời ngắn",
+      "word": "Từ",
+      "word_bank": "Ngân hàng từ",
+      "blank_filled": "Ô trống đã điền {{value}}",
+      "blank_choose": "Ô trống: chọn câu trả lời",
+      "blank_empty": "Ô trống: chưa điền",
+      "clear_blank": "Xóa nội dung ô trống",
+      "choose_answer": "Chọn câu trả lời",
+      "add_answer": "+ Trả lời",
+      "numerical_answer_label": "Ô nhập câu trả lời số",
+      "match_for": "Ghép cặp cho {{prompt}}",
+      "move_up": "Di chuyển lên",
+      "move_down": "Di chuyển xuống"
+    },
     "messages": {
       "no_retakes": "Bài quiz này không cho phép làm lại.",
       "max_attempts_reached": "Bạn đã sử dụng hết {{count}} lượt.",
       "not_yet_open": "Bài quiz này mở vào {{when}}.",
-      "window_closed": "Bài quiz này đã đóng vào {{when}}."
+      "window_closed": "Bài quiz này đã đóng vào {{when}}.",
+      "cooldown_active_until": "Bạn có thể bắt đầu lượt mới sau {{when}}."
     },
     "schedule": {
       "opens_at": "Mở lúc {{when}}",
@@ -2767,6 +2784,10 @@
     "results": {
       "passed": "Đạt yêu cầu",
       "submitted": "Bài đã được nộp",
+      "awaiting_grade": "Đang chờ chấm điểm",
+      "awaiting_grade_summary": "Bài làm đã được nộp thành công. Giảng viên cần hoàn tất chấm bài trước khi kết quả được công bố.",
+      "score_hidden": "Đã nộp kết quả",
+      "score_hidden_summary": "Giảng viên đã cấu hình để kết quả này được hiển thị vào thời điểm khác.",
       "passed_summary": "Bạn đã hoàn thành {{title}} với {{score}}%.",
       "failed_summary": "Bạn đạt {{score}}% và cần {{passing}}% để qua."
     },

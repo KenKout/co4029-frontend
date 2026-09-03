@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CheckCircle2, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RichContent } from "@/components/ui/rich-content";
@@ -77,7 +78,8 @@ function OptionInput({
       {sortedOptions.map((option) => {
         const isSelected = selectedOptionId === option.id;
         return (
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             key={option.id}
             type="button"
             onClick={() => {
@@ -133,6 +135,7 @@ function ShortAnswerInput({
   disabled,
   onAnswerTextChange,
 }: QuestionRendererProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-2">
       <Textarea
@@ -140,9 +143,10 @@ function ShortAnswerInput({
         onChange={(e) => onAnswerTextChange(e.target.value || null)}
         disabled={disabled}
         rows={3}
-        placeholder="Type your answer..."
-        variant="lowest" className="border-2 px-4 py-3 text-base"
-        aria-label="Short answer input"
+        placeholder={t("course_quiz.question_input.type_answer")}
+        variant="lowest"
+        className="border-2 px-4 py-3 text-base"
+        aria-label={t("course_quiz.question_input.short_answer_label")}
       />
     </div>
   );
@@ -169,6 +173,7 @@ function FillBlankInput({
   disabled,
   onAnswerTextChange,
 }: QuestionRendererProps) {
+  const { t } = useTranslation();
   const segments = useMemo(
     () => splitStemByBlanks(question.prompt_text ?? ""),
     [question.prompt_text],
@@ -179,8 +184,13 @@ function FillBlankInput({
     [answerText, blankCount],
   );
   const wordBank = useMemo(
-    () => buildFillBlankWordBank(question, blankCount),
-    [question, blankCount],
+    () =>
+      buildFillBlankWordBank(
+        question,
+        blankCount,
+        t("course_quiz.question_input.word"),
+      ),
+    [question, blankCount, t],
   );
   const [focusedBlank, setFocusedBlank] = useState<number | null>(null);
 
@@ -296,6 +306,7 @@ function parseFillBlankSlots(
 function buildFillBlankWordBank(
   question: QuizQuestionPublic,
   blankCount: number,
+  fallbackWord: string,
 ): string[] {
   const fillChoices = (
     question as unknown as { fill_blank_choices?: string[] | null }
@@ -310,7 +321,10 @@ function buildFillBlankWordBank(
     .map((opt) => opt.option_text)
     .filter((text) => typeof text === "string" && text.length > 0);
   if (fromOptions.length > 0) return fromOptions;
-  return Array.from({ length: blankCount }, (_, i) => `Word ${i + 1}`);
+  return Array.from(
+    { length: blankCount },
+    (_, i) => `${fallbackWord} ${i + 1}`,
+  );
 }
 
 function FillBlankWordBank({
@@ -326,6 +340,7 @@ function FillBlankWordBank({
   disabled: boolean;
   onWordTap: (word: string) => void;
 }) {
+  const { t } = useTranslation();
   function isUnavailable(word: string): boolean {
     if (disabled) return true;
     const placed = slots.filter((s) => s === word).length;
@@ -345,13 +360,14 @@ function FillBlankWordBank({
   return (
     <div className="space-y-2">
       <div className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-        Word bank
+        {t("course_quiz.question_input.word_bank")}
       </div>
       <div className="flex flex-wrap gap-2">
         {wordBank.map((word, wordIndex) => {
           const unavailable = isUnavailable(word);
           return (
-            <Button variant="ghost"
+            <Button
+              variant="ghost"
               key={`${word}-${wordIndex}`}
               type="button"
               draggable={!disabled && !unavailable}
@@ -398,13 +414,14 @@ function FillBlankSlot({
   onClear,
   onDrop,
 }: FillBlankSlotProps) {
+  const { t } = useTranslation();
   const [hovered, setHovered] = useState(false);
   const filled = value != null && value.length > 0;
   const label = filled
-    ? `Blank filled with ${value}`
+    ? t("course_quiz.question_input.blank_filled", { value })
     : focused
-      ? "Blank: choose answer"
-      : "Blank: empty";
+      ? t("course_quiz.question_input.blank_choose")
+      : t("course_quiz.question_input.blank_empty");
   return (
     <Button
       variant="ghost"
@@ -454,7 +471,7 @@ function FillBlankSlot({
                   onClear();
                 }
               }}
-              aria-label="Clear blank"
+              aria-label={t("course_quiz.question_input.clear_blank")}
               className="ml-1 text-m3-primary/60 hover:text-m3-primary text-xs leading-none"
             >
               ×
@@ -465,10 +482,14 @@ function FillBlankSlot({
         <span
           className={cn(
             "text-xs italic select-none",
-            focused ? "text-m3-primary font-medium" : "text-m3-on-surface-variant",
+            focused
+              ? "text-m3-primary font-medium"
+              : "text-m3-on-surface-variant",
           )}
         >
-          {focused ? "Choose answer" : "+ Answer"}
+          {focused
+            ? t("course_quiz.question_input.choose_answer")
+            : t("course_quiz.question_input.add_answer")}
         </span>
       )}
     </Button>
@@ -510,7 +531,8 @@ function MultiSelectInput({
       {sortedOptions.map((option) => {
         const isSelected = chosen.includes(option.id);
         return (
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             key={option.id}
             type="button"
             onClick={() => toggle(option.id)}
@@ -563,6 +585,7 @@ function NumericalInput({
   disabled,
   onAnswerTextChange,
 }: QuestionRendererProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-2 max-w-xs">
       <input
@@ -573,7 +596,7 @@ function NumericalInput({
         disabled={disabled}
         placeholder="0"
         className="w-full rounded-xl border-2 border-m3-outline-variant/30 bg-m3-surface-container-lowest px-4 py-3 text-base text-m3-on-surface focus:outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 disabled:opacity-50 disabled:cursor-not-allowed tabular-nums"
-        aria-label="Numerical answer input"
+        aria-label={t("course_quiz.question_input.numerical_answer_label")}
       />
     </div>
   );
@@ -589,6 +612,7 @@ function MatchingInput({
   disabled,
   onAnswerTextChange,
 }: QuestionRendererProps) {
+  const { t } = useTranslation();
   const q = question as unknown as {
     match_prompts?: string[] | null;
     match_choices?: string[] | null;
@@ -621,14 +645,14 @@ function MatchingInput({
   if (prompts.length === 0) {
     return (
       <ShortAnswerInput
-        {...({
+        {...{
           question,
           answerText,
           disabled,
           onAnswerTextChange,
           selectedOptionId: null,
           onSelectOption: () => {},
-        })}
+        }}
       />
     );
   }
@@ -649,7 +673,7 @@ function MatchingInput({
             onChange={(e) => choose(prompt, e.target.value)}
             disabled={disabled}
             className="shrink-0 max-w-[45%] rounded-lg border-2 border-m3-outline-variant/30 bg-m3-surface px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:border-m3-primary disabled:opacity-50"
-            aria-label={`Match for ${prompt}`}
+            aria-label={t("course_quiz.question_input.match_for", { prompt })}
           >
             <option value="">…</option>
             {choices.map((choice, j) => (
@@ -673,6 +697,7 @@ function OrderingInput({
   disabled,
   onAnswerTextChange,
 }: QuestionRendererProps) {
+  const { t } = useTranslation();
   const q = question as unknown as { ordering_items?: string[] | null };
   const initial = useMemo(() => q.ordering_items ?? [], [q.ordering_items]);
 
@@ -732,14 +757,14 @@ function OrderingInput({
   if (initial.length === 0) {
     return (
       <ShortAnswerInput
-        {...({
+        {...{
           question,
           answerText,
           disabled,
           onAnswerTextChange,
           selectedOptionId: null,
           onSelectOption: () => {},
-        })}
+        }}
       />
     );
   }
@@ -763,20 +788,22 @@ function OrderingInput({
             {item}
           </span>
           <div className="flex flex-col gap-0.5 shrink-0">
-            <Button variant="ghost"
+            <Button
+              variant="ghost"
               type="button"
               onClick={() => move(i, -1)}
               disabled={disabled || i === 0}
-              aria-label="Move up"
+              aria-label={t("course_quiz.question_input.move_up")}
               className="px-2 rounded bg-m3-surface-container-high text-m3-on-surface hover:bg-m3-primary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-tight h-auto whitespace-normal"
             >
               ▲
             </Button>
-            <Button variant="ghost"
+            <Button
+              variant="ghost"
               type="button"
               onClick={() => move(i, 1)}
               disabled={disabled || i === order.length - 1}
-              aria-label="Move down"
+              aria-label={t("course_quiz.question_input.move_down")}
               className="px-2 rounded bg-m3-surface-container-high text-m3-on-surface hover:bg-m3-primary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-tight h-auto whitespace-normal"
             >
               ▼
