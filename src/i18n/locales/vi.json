@@ -1056,7 +1056,8 @@
       "material_processing": "Xử lý tài liệu",
       "quiz_generation": "Tạo câu hỏi",
       "interview_generation": "Tạo câu hỏi phỏng vấn",
-      "path_change_review": "Xét đơn đổi lộ trình"
+      "path_change_review": "Xét đơn đổi lộ trình",
+      "course_discussion": "Thảo luận khoá học"
     },
     "channel": {
       "email": "Email",
@@ -1118,7 +1119,8 @@
       "material_processing": "Xử lý tài liệu",
       "quiz_generation": "Tạo câu hỏi",
       "interview_generation": "Tạo câu hỏi phỏng vấn",
-      "path_change_review": "Xét đơn đổi lộ trình"
+      "path_change_review": "Xét đơn đổi lộ trình",
+      "course_discussion": "Thảo luận khoá học"
     },
     "errors": {
       "mark_read_failed": "Không thể đánh dấu đã đọc",
@@ -5101,6 +5103,8 @@
       "new_topic": "Chủ đề mới",
       "post_topic": "Đăng chủ đề",
       "post_comment": "Đăng bình luận",
+      "edit_comment": "Sửa",
+      "edit_topic": "Sửa chủ đề",
       "delete_comment": "Xóa bình luận",
       "delete_topic": "Xóa",
       "close": "Đóng",
@@ -5112,6 +5116,7 @@
       "update_topic": "Không cập nhật được chủ đề. Vui lòng thử lại.",
       "delete_topic": "Không xóa được chủ đề. Vui lòng thử lại.",
       "post_comment": "Không đăng được bình luận. Vui lòng thử lại.",
+      "update_comment": "Không sửa được bình luận. Vui lòng thử lại.",
       "delete_comment": "Không xóa được bình luận. Vui lòng thử lại."
     }
   },
