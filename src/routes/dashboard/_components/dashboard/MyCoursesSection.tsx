@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import CourseProgressCard from "./CourseProgressCard";
+import { CourseCard } from "@/routes/courses/_components/courses-list/CourseCard";
 import EmptyCourses from "./EmptyCourses";
 import type { CoursesSectionController } from "./types";
 
@@ -33,6 +33,7 @@ export default function MyCoursesSection({
           {enrolledCount > 8 && (
             <Link
               to="/courses"
+              search={{ scope: "enrolled" }}
               className="text-xs font-semibold text-m3-secondary hover:underline"
             >
               {t("dashboard.view_all")}
@@ -75,8 +76,13 @@ export default function MyCoursesSection({
         </div>
       ) : enrolledCount <= 3 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {visibleCourses.map((course) => (
-            <CourseProgressCard key={course.id} course={course} />
+          {visibleCourses.map((course, index) => (
+            <CourseCard
+              key={course.id}
+              course={course}
+              index={index}
+              status="active"
+            />
           ))}
         </div>
       ) : (
@@ -84,9 +90,13 @@ export default function MyCoursesSection({
           ref={carouselRef}
           className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory no-scrollbar"
         >
-          {visibleCourses.map((course) => (
+          {visibleCourses.map((course, index) => (
             <div key={course.id} className="flex-none w-80 snap-start">
-              <CourseProgressCard course={course} />
+              <CourseCard
+                course={course}
+                index={index}
+                status="active"
+              />
             </div>
           ))}
         </div>
