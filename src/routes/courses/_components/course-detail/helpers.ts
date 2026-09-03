@@ -4,7 +4,15 @@ import type {
   MyCourseProgressSummary,
 } from "@/lib/api/types";
 
-const CARD_GRADIENTS = [
+/**
+ * Shared placeholder-gradient palette. Every student-facing course surface
+ * (catalogue card/row, dashboard "My courses", course landing hero) derives
+ * the no-thumbnail gradient from the course SLUG via `slugGradient`, so one
+ * course paints the same colour on every screen. Never cycle by list index:
+ * the colour would change whenever a list is sorted/filtered/paginated and
+ * disagree between screens.
+ */
+export const COURSE_GRADIENTS = [
   "from-blue-500 via-blue-700 to-blue-800",
   "from-blue-500 via-cyan-500 to-teal-500",
   "from-pink-500 via-rose-500 to-orange-500",
@@ -15,7 +23,7 @@ const CARD_GRADIENTS = [
 
 export function slugGradient(slug: string) {
   const hash = slug.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  return CARD_GRADIENTS[Math.abs(hash) % CARD_GRADIENTS.length];
+  return COURSE_GRADIENTS[Math.abs(hash) % COURSE_GRADIENTS.length];
 }
 
 /**

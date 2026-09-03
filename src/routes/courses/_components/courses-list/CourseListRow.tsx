@@ -1,17 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, GraduationCap } from "lucide-react";
 import type { Course } from "@/lib/api/types";
+import { slugGradient } from "@/routes/courses/_components/course-detail/helpers";
 import { cn } from "@/lib/utils";
 import { EnrollmentStatusBadge } from "./CourseCard";
-
-const ROW_GRADIENTS = [
-  "from-blue-500 via-blue-700 to-blue-800",
-  "from-blue-500 via-cyan-500 to-teal-500",
-  "from-pink-500 via-rose-500 to-orange-500",
-  "from-emerald-500 via-teal-500 to-cyan-600",
-  "from-amber-500 via-orange-500 to-red-500",
-  "from-blue-500 via-blue-600 to-sky-500",
-];
 
 /**
  * Compact list-mode row for the catalogue: small thumbnail, title +
@@ -20,14 +12,14 @@ const ROW_GRADIENTS = [
  */
 export function CourseListRow({
   course,
-  index,
   status,
 }: {
   course: Course;
-  index: number;
   status?: "active" | "completed";
 }) {
-  const gradientClass = ROW_GRADIENTS[index % ROW_GRADIENTS.length];
+  // Placeholder gradient derived from the course slug, so the same course
+  // paints the same colour on the catalogue, dashboard and landing page.
+  const gradientClass = slugGradient(course.slug);
 
   return (
     <Link

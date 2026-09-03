@@ -199,17 +199,15 @@ export function CoursesGrid({
           clearScope={clearScope}
         />
       }
-      renderItem={(course, i) =>
+      renderItem={(course) =>
         viewMode === "card" ? (
           <CourseCard
             course={course}
-            index={i}
             status={statusOf(course.id)}
           />
         ) : (
           <CourseListRow
             course={course}
-            index={i}
             status={statusOf(course.id)}
           />
         )
