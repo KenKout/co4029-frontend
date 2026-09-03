@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Archive, ArrowLeft, GitBranch, Plus, Route, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,20 @@ const TABS = (pending: number, enrolled: number): TabDef<TabKey>[] => [
 export default function ManagementLearningProgramDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams({ strict: false }) as { id: string };
+  // Tab rides the URL (?tab=requests) so a dean notification can deep-link
+  // straight to the Path changes review queue of THIS program. Unknown or
+  // absent values fall back to "general" (validateSearch drops them).
+  const { tab: tabParam } = useSearch({ strict: false }) as {
+    tab?: "general" | "roster" | "requests";
+  };
+  const tab: TabKey =
+    tabParam === "roster" || tabParam === "requests" ? tabParam : "general";
+  const setTab = (next: TabKey) =>
+    void navigate({
+      to: "/management/learning-programs/$id",
+      params: { id },
+      search: { tab: next },
+    });
   const current = useManagedLearningProgram(id);
   const versions = useLearningProgramVersions(id);
   const options = useLearningProgramOptions();
@@ -68,7 +82,6 @@ export default function ManagementLearningProgramDetailPage() {
   const [pathQuery, setPathQuery] = useState("");
   const [studentPickerOpen, setStudentPickerOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [tab, setTab] = useState<TabKey>("general");
   const [studentQuery, setStudentQuery] = useState("");
   const users = useAdminUsersSearch(studentQuery, studentPickerOpen, "student");
 
