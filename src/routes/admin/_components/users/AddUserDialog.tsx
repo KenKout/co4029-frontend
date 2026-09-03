@@ -41,14 +41,14 @@ export interface AddUserController {
 
 interface AddUserFormProps {
   c: AddUserController;
-  /** When set, the org picker is replaced by a read-only label — the manager
-   * flow, where the backend forces the caller's own org server-side. */
-  orgLabel?: string;
+  /** When set, the org field is omitted entirely — the manager flow, where
+   * the account joins the caller's own org and the caller already knows it. */
+  hideOrg?: boolean;
   onClose: () => void;
 }
 
 /** Inner form (fields + submit), kept small so the dialog stays lint-clean. */
-function AddUserForm({ c, orgLabel, onClose }: AddUserFormProps) {
+function AddUserForm({ c, hideOrg, onClose }: AddUserFormProps) {
   const { t } = useTranslation();
   const [email, setEmail] = React.useState("");
   const [displayName, setDisplayName] = React.useState("");
@@ -58,7 +58,7 @@ function AddUserForm({ c, orgLabel, onClose }: AddUserFormProps) {
 
   const canSubmit =
     email.trim().length > 0 &&
-    Boolean(orgLabel || orgId) &&
+    Boolean(hideOrg || orgId) &&
     !c.createUserPending;
 
   const submit = async (e: React.FormEvent) => {
@@ -72,7 +72,7 @@ function AddUserForm({ c, orgLabel, onClose }: AddUserFormProps) {
         // Manager flow: no org in the payload — the backend forces the
         // caller's own primary organization (identity /users POST). Admin
         // flow: the picked org rides along as before.
-        ...(orgLabel ? {} : { organization_id: orgId }),
+        ...(hideOrg ? {} : { organization_id: orgId }),
         role_code: roleCode,
       });
       toast.success(
@@ -123,22 +123,7 @@ function AddUserForm({ c, orgLabel, onClose }: AddUserFormProps) {
           />
         )}
       />
-      {orgLabel ? (
-        <Field
-          label={t("admin.users.create_organization", {
-            defaultValue: "Organization",
-          })}
-          renderControl={(p) => (
-            <Input
-              type="text"
-              readOnly
-              value={orgLabel}
-              className="bg-surface-elev text-text-muted"
-              {...p}
-            />
-          )}
-        />
-      ) : (
+      {!hideOrg && (
         <Field
           label={t("admin.users.create_organization", {
             defaultValue: "Organization",
@@ -177,14 +162,14 @@ function AddUserForm({ c, orgLabel, onClose }: AddUserFormProps) {
         <p className="text-xs text-danger" role="alert">
           {error}
         </p>
-      ) : (
+      ) : !hideOrg ? (
         <p className="text-[11px] text-text-muted">
           {t("admin.users.create_hint", {
             defaultValue: "Organization: {{org}}",
-            org: orgLabel || (orgId ? (orgById.get(orgId) ?? orgId) : "—"),
+            org: orgId ? (orgById.get(orgId) ?? orgId) : "—",
           })}
         </p>
-      )}
+      ) : null}
 
       <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" onClick={onClose}>
@@ -207,19 +192,19 @@ function AddUserForm({ c, orgLabel, onClose }: AddUserFormProps) {
  * Invite dialog: create a user (email + display name), attach them to an org
  * with a role — one step.
  *
- * Admin flow (no `orgLabel`): org picker, only rendered for
+ * Admin flow (no `hideOrg`): org picker, only rendered for
  * `system.administer` callers; the backend re-asserts the same gate.
- * Manager flow (`orgLabel` set): org is fixed — the backend forces the
- * caller's own org, so the picker is replaced by the read-only label.
+ * Manager flow (`hideOrg`): no org field at all — the account joins the
+ * caller's own org (forced server-side) and the caller already knows it.
  */
 export function AddUserDialog({
   c,
-  orgLabel,
+  hideOrg,
   open,
   onOpenChange,
 }: {
   c: AddUserController;
-  orgLabel?: string;
+  hideOrg?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -250,13 +235,13 @@ export function AddUserDialog({
           </DialogPrimitive.Title>
           <DialogPrimitive.Description className="mt-2 text-sm text-text-muted">
             {t("admin.users.create_subtitle", {
-              defaultValue: orgLabel
+              defaultValue: hideOrg
                 ? "Create the account in one step — it joins your organization automatically. The invited email can sign in with Google immediately."
                 : "Create the account and attach it to an organization in one step. The invited email can sign in with Google immediately.",
             })}
           </DialogPrimitive.Description>
 
-          <AddUserForm c={c} orgLabel={orgLabel} onClose={() => onOpenChange(false)} />
+          <AddUserForm c={c} hideOrg={hideOrg} onClose={() => onOpenChange(false)} />
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

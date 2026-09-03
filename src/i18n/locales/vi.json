@@ -2117,7 +2117,6 @@
       "create_display_name": "Tên hiển thị",
       "create_organization": "Tổ chức",
       "create_org_placeholder": "Chọn tổ chức",
-      "create_org_forced": "Tổ chức của bạn",
       "create_role": "Vai trò",
       "create_hint": "Tổ chức: {{org}}",
       "create_submit": "Tạo người dùng",
