@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 
 // The bar derives its Model/Role options from the existing cost endpoints, so
 // stub those hooks rather than standing up a query client + server.
-vi.mock("@/lib/api/hooks/admin", () => ({
+vi.mock("@/lib/api/hooks/admin-costs", () => ({
   useAiCostsByModel: () => ({
     data: [
       { model_name: "gpt-4.1-mini" },
@@ -25,7 +25,7 @@ describe("ai-costs FilterBar", () => {
   const empty = { model: null, role: null, operation: null, status: null };
 
   it("renders all four filters as labelled comboboxes (uniform control shape)", () => {
-    render(<FilterBar filters={empty} onChange={noop} period="30d" />);
+    render(<FilterBar filters={empty} onChange={noop} range={{ from: "2026-08-01", to: "2026-08-30" }} />);
     // All four are selects now — Model/Role are closed sets, not free text.
     // A stray <input type=text> would mean the old search-box shape is back.
     expect(document.querySelectorAll('input[type="text"]').length).toBe(0);
@@ -42,7 +42,7 @@ describe("ai-costs FilterBar", () => {
 
   it("labels sit in their own flex-col cell so they align across controls", () => {
     const { container } = render(
-      <FilterBar filters={empty} onChange={noop} period="30d" />,
+      <FilterBar filters={empty} onChange={noop} range={{ from: "2026-08-01", to: "2026-08-30" }} />,
     );
     const cells = container.querySelectorAll(".flex.flex-col.gap-1");
     // one cell per filter: the layout bug was labels rendering inline beside
@@ -51,7 +51,7 @@ describe("ai-costs FilterBar", () => {
   });
 
   it("hides the clear button and the partial-coverage note when no filter is set", () => {
-    render(<FilterBar filters={empty} onChange={noop} period="30d" />);
+    render(<FilterBar filters={empty} onChange={noop} range={{ from: "2026-08-01", to: "2026-08-30" }} />);
     expect(screen.queryByText("admin.ai_costs.filters.clear")).toBeNull();
     expect(
       screen.queryByText("admin.ai_costs.filters.partial_note"),
@@ -63,7 +63,7 @@ describe("ai-costs FilterBar", () => {
       <FilterBar
         filters={{ ...empty, model: "gpt-4.1-mini" }}
         onChange={noop}
-        period="30d"
+        range={{ from: "2026-08-01", to: "2026-08-30" }}
       />,
     );
     screen.getByText("admin.ai_costs.filters.clear");

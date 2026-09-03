@@ -4,8 +4,8 @@ import {
   useAiCostsByCategory,
   useAiCostsByModel,
   type AiCostsFilters,
-  type AiCostsPeriod,
-} from "@/lib/api/hooks/admin";
+  type AiCostsRange,
+} from "@/lib/api/hooks/admin-costs";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 
@@ -36,21 +36,21 @@ import { Select } from "@/components/ui/select";
 export function FilterBar({
   filters,
   onChange,
-  period,
+  range,
 }: {
   filters: AiCostsFilters;
   onChange: (next: AiCostsFilters) => void;
   /** Same window as the dashboard, so the option lists match what's charted. */
-  period: AiCostsPeriod;
+  range: AiCostsRange;
 }) {
   const { t } = useTranslation();
 
   // Unfiltered option sources: pass no filters so narrowing one dimension can't
   // empty the other's dropdown and strand the user with no way back.
-  const models = useAiCostsByModel({ period, topN: 200 });
+  const models = useAiCostsByModel({ range, topN: 200 });
   const roles = useAiCostsByCategory({
     dimension: "role",
-    period,
+    range,
     topN: 200,
   });
 

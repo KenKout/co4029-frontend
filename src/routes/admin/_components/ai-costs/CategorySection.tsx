@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Download } from "lucide-react";
-import type { AiCostsDimension } from "@/lib/api/hooks/admin";
+import type { AiCostsDimension } from "@/lib/api/hooks/admin-costs";
 import { Button } from "@/components/ui/button";
 import { downloadCsv } from "@/lib/csv-export";
 import type { AiCostsByCategory as AiCostsByCategoryRow } from "@/lib/api/types";

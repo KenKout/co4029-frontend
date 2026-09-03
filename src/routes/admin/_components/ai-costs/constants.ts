@@ -1,4 +1,7 @@
-import type { AiCostsDimension, AiCostsPeriod } from "@/lib/api/hooks/admin";
+import type {
+  AiCostsDimension,
+  AiCostsPeriod,
+} from "@/lib/api/hooks/admin-costs";
 import type { CsvColumn } from "@/lib/csv-export";
 import type {
   AiCostsByCategory as AiCostsByCategoryRow,

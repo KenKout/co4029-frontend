@@ -6,7 +6,8 @@ import {
   Clock,
   Cpu,
 } from "lucide-react";
-import type { AiCostsPeriod } from "@/lib/api/hooks/admin";
+import type { AiCostsRange } from "@/lib/api/hooks/admin-costs";
+import { daysBetweenInclusive } from "@/routes/admin/_components/stats/date-range";
 import { StatCard } from "@/components/ui/stat-card";
 import type { AiCostsSummary } from "@/lib/api/types";
 import { SectionErrorBox } from "@/components/ui/section-error-box";
@@ -17,10 +18,10 @@ import type { SectionQuery } from "./types";
 /** Headline spend / token / call totals, plus the failed-spend tile. */
 export function SummaryStatsSection({
   summary,
-  period,
+  range,
 }: {
   summary: SectionQuery<AiCostsSummary>;
-  period: AiCostsPeriod;
+  range: AiCostsRange;
 }) {
   const { t } = useTranslation();
   const fmt = useFormatters();
@@ -66,7 +67,9 @@ export function SummaryStatsSection({
       />
       <StatCard
         label={t("admin.ai_costs.stats.period")}
-        value={t(`admin.ai_costs.period_short.${period}`)}
+        value={t("admin.stats.range.days_other", {
+          count: daysBetweenInclusive(range.from, range.to),
+        })}
         icon={Clock}
       />
       {failedCallCount > 0 ? (

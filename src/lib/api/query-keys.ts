@@ -192,8 +192,8 @@ export const queryKeys = {
         ["admin", "ai-costs", "by-model", period, filters ?? ""] as const,
       recent: (limit: number) =>
         ["admin", "ai-costs", "recent", limit] as const,
-      byOrganization: (period: string) =>
-        ["admin", "ai-costs", "by-organization", period] as const,
+      byOrganization: (window: string) =>
+        ["admin", "ai-costs", "by-organization", window] as const,
     },
     aiPricing: () => ["admin", "ai-pricing"] as const,
     organizations: (

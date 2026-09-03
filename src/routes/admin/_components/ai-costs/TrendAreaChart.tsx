@@ -9,20 +9,22 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { AiCostsPeriod } from "@/lib/api/hooks/admin";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { TrendTooltip } from "./ChartTooltips";
 import { resolveLocale } from "./helpers";
 import { useFormatters } from "./use-formatters";
 import type { AiCostsTimeBucket } from "./types";
 
-/** Spend-over-time area chart. Bucket labels gain an hour part for `24h`. */
+/**
+ * Spend-over-time area chart. `intraday` (a single-day window) adds the hour
+ * part to the bucket labels; a multi-day window shows day buckets only.
+ */
 export function TrendAreaChart({
   data,
-  period,
+  intraday,
 }: {
   data: AiCostsTimeBucket[];
-  period: AiCostsPeriod;
+  intraday: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const fmt = useFormatters();
@@ -34,9 +36,9 @@ export function TrendAreaChart({
       new Intl.DateTimeFormat(locale, {
         month: "short",
         day: "numeric",
-        ...(period === "24h" ? { hour: "2-digit" } : {}),
+        ...(intraday ? { hour: "2-digit" } : {}),
       }),
-    [locale, period],
+    [locale, intraday],
   );
 
   const chartData = useMemo(

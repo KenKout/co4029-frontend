@@ -7,7 +7,7 @@ import { SectionErrorBox } from "@/components/ui/section-error-box";
 import type { OrganizationSpendRow } from "@/lib/api/hooks/admin-costs";
 import { useAiCostsByOrganization } from "@/lib/api/hooks/admin-costs";
 
-import type { AiCostsPeriod } from "@/lib/api/hooks/admin";
+import type { AiCostsRange } from "@/lib/api/hooks/admin-costs";
 
 /**
  * Spend per tenant (PRD ADM-040).
@@ -22,9 +22,9 @@ import type { AiCostsPeriod } from "@/lib/api/hooks/admin";
  * bill and does not say so invites chargeback decisions the data cannot
  * support, so the share it can attribute is stated above the table.
  */
-export function OrganizationSpendTable({ period }: { period: AiCostsPeriod }) {
+export function OrganizationSpendTable({ range }: { range: AiCostsRange }) {
   const { t } = useTranslation();
-  const { data, isLoading, isError } = useAiCostsByOrganization(period);
+  const { data, isLoading, isError } = useAiCostsByOrganization(range);
 
   if (isError) {
     return <SectionErrorBox messageKey="admin.ai_costs.org_load_failed" />;

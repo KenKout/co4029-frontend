@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import type { AiCostsPeriod } from "@/lib/api/hooks/admin";
+import type { AiCostsRange } from "@/lib/api/hooks/admin-costs";
+import { daysBetweenInclusive } from "@/routes/admin/_components/stats/date-range";
 import type { AiCostsSummary } from "@/lib/api/types";
 import { RoleBarChart, StageBarChart } from "./CostBarCharts";
 import { TrendAreaChart } from "./TrendAreaChart";
@@ -12,10 +13,10 @@ import type { SectionQuery } from "./types";
 
 export function TrendSection({
   summary,
-  period,
+  range,
 }: {
   summary: SectionQuery<AiCostsSummary>;
-  period: AiCostsPeriod;
+  range: AiCostsRange;
 }) {
   const { t } = useTranslation();
   return (
@@ -26,7 +27,10 @@ export function TrendSection({
       {summary.isLoading ? (
         <div className="h-[280px] bg-surface-muted animate-pulse rounded-lg" />
       ) : (
-        <TrendAreaChart data={summary.data?.buckets ?? []} period={period} />
+        <TrendAreaChart
+          data={summary.data?.buckets ?? []}
+          intraday={daysBetweenInclusive(range.from, range.to) === 1}
+        />
       )}
     </section>
   );

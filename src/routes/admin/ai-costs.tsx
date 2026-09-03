@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import type {
+  AiCostsDimension,
+  AiCostsFilters,
+  AiCostsRange,
+} from "@/lib/api/hooks/admin-costs";
 import {
   useAiCostsByCategory,
   useAiCostsByModel,
@@ -8,10 +13,7 @@ import {
   useAiCostsByUser,
   useAiCostsSummary,
   useRecentAiCalls,
-  type AiCostsDimension,
-  type AiCostsFilters,
-  type AiCostsPeriod,
-} from "@/lib/api/hooks/admin";
+} from "@/lib/api/hooks/admin-costs";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { PermissionDenied } from "@/components/ui/permission-denied";
 import type { AiCostsByPipeline as AiCostsByPipelineRow } from "@/lib/api/types";
@@ -21,8 +23,8 @@ import {
   TrendSection,
 } from "./_components/ai-costs/ChartSections";
 import { CategorySection } from "./_components/ai-costs/CategorySection";
+import { CostDateRange } from "./_components/ai-costs/DateRange";
 import { FilterBar } from "./_components/ai-costs/FilterBar";
-import { PeriodSelector } from "./_components/ai-costs/PeriodSelector";
 import { PipelineDrilldownSheet } from "./_components/ai-costs/PipelineDrilldownSheet";
 import { PricingSection } from "./_components/ai-costs/PricingSection";
 import { SummaryStatsSection } from "./_components/ai-costs/SummaryStatsSection";
@@ -33,7 +35,7 @@ import {
   TopUsersSection,
 } from "./_components/ai-costs/TableSections";
 import { OrganizationSpendTable } from "./_components/ai-costs/OrganizationSpendTable";
-import { PERIOD_VALUES } from "./_components/ai-costs/constants";
+import { rangePresets } from "./_components/stats/date-range";
 
 export default function AdminAiCostsPage() {
   const { t } = useTranslation();
@@ -42,20 +44,27 @@ export default function AdminAiCostsPage() {
 
   // Seed the status filter from ?status= so the admin dashboard's "Failed AI
   // calls" tile deep-links straight to the failures instead of dropping the
-  // operator on the unfiltered view, and the period from ?period= so arriving
-  // from the dashboard keeps its window. Without that, an operator who set the
-  // dashboard to 7d landed here on 30d and compared two different spans of
-  // time without being told (PRD ADM-004). The selector stays visible: this is
-  // a seeded page-local control, not a mirror of the global filter.
+  // operator on the unfiltered view, and the window from the ?period= tile
+  // links so arriving from the dashboard keeps its span. Without that, an
+  // operator who set the dashboard to 7d landed here on 30d and compared two
+  // different spans of time without being told (PRD ADM-004).
   const search = useSearch({ strict: false }) as {
     status?: string;
     period?: string;
   };
-  const [period, setPeriod] = useState<AiCostsPeriod>(() =>
-    PERIOD_VALUES.includes(search.period as AiCostsPeriod)
-      ? (search.period as AiCostsPeriod)
-      : "30d",
-  );
+  const [range, setRange] = useState<AiCostsRange>(() => {
+    const presets = rangePresets(new Date());
+    switch (search.period) {
+      case "24h":
+        return presets.today;
+      case "7d":
+        return presets.last7;
+      case "30d":
+        return presets.last30;
+      default:
+        return presets.last30;
+    }
+  });
   const [dimension, setDimension] = useState<AiCostsDimension>("operation");
   const [filters, setFilters] = useState<AiCostsFilters>({
     model: null,
@@ -65,11 +74,13 @@ export default function AdminAiCostsPage() {
   });
   const [drilldown, setDrilldown] = useState<AiCostsByPipelineRow | null>(null);
 
-  const summary = useAiCostsSummary(period, filters);
-  const byCategory = useAiCostsByCategory({ period, dimension, filters });
-  const byModel = useAiCostsByModel({ period, filters });
-  const byUser = useAiCostsByUser({ period, topN: 20 });
-  const byPipeline = useAiCostsByPipeline({ period });
+  // Whether the window matches a named preset the dashboard tiles can link
+  // with — surfaced on the trend/stat sections for the window label.
+  const summary = useAiCostsSummary(range, filters);
+  const byCategory = useAiCostsByCategory({ range, dimension, filters });
+  const byModel = useAiCostsByModel({ range, filters });
+  const byUser = useAiCostsByUser({ range, topN: 20 });
+  const byPipeline = useAiCostsByPipeline({ range });
   const recent = useRecentAiCalls({ limit: 50 });
 
   if (permissions.isLoading) {
@@ -96,14 +107,14 @@ export default function AdminAiCostsPage() {
             {t("admin.ai_costs.subtitle")}
           </p>
         </div>
-        <PeriodSelector value={period} onChange={setPeriod} />
+        <CostDateRange value={range} onChange={setRange} />
       </div>
 
-      <FilterBar filters={filters} onChange={setFilters} period={period} />
+      <FilterBar filters={filters} onChange={setFilters} range={range} />
 
-      <SummaryStatsSection summary={summary} period={period} />
+      <SummaryStatsSection summary={summary} range={range} />
 
-      <TrendSection summary={summary} period={period} />
+      <TrendSection summary={summary} range={range} />
 
       <RoleSection summary={summary} />
 
@@ -119,7 +130,7 @@ export default function AdminAiCostsPage() {
         <h2 className="text-sm font-headline font-bold text-text-strong">
           {t("admin.ai_costs.by_organization")}
         </h2>
-        <OrganizationSpendTable period={period} />
+        <OrganizationSpendTable range={range} />
       </section>
 
       <TopUsersSection byUser={byUser} />

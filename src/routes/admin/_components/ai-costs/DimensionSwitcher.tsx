@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { AiCostsDimension } from "@/lib/api/hooks/admin";
+import type { AiCostsDimension } from "@/lib/api/hooks/admin-costs";
 import { Button } from "@/components/ui/button";
 import { DIMENSION_VALUES } from "./constants";
 
