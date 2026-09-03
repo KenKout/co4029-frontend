@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -112,6 +112,13 @@ describe("mark-complete invalidation wiring", () => {
       );
     });
     vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    // The stub replaces fetch globally, so MSW stops intercepting anything
+    // that runs after this file's last test in the same environment. Restore
+    // it rather than leaving the last test's mock installed.
+    vi.unstubAllGlobals();
   });
 
   it("refetches the course summary after the complete mutation (map flips to completed)", async () => {
