@@ -76,11 +76,10 @@ export default function MyCoursesSection({
         </div>
       ) : enrolledCount <= 3 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {visibleCourses.map((course, index) => (
+          {visibleCourses.map((course) => (
             <CourseCard
               key={course.id}
               course={course}
-              index={index}
               status="active"
             />
           ))}
@@ -90,11 +89,10 @@ export default function MyCoursesSection({
           ref={carouselRef}
           className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory no-scrollbar"
         >
-          {visibleCourses.map((course, index) => (
+          {visibleCourses.map((course) => (
             <div key={course.id} className="flex-none w-80 snap-start">
               <CourseCard
                 course={course}
-                index={index}
                 status="active"
               />
             </div>

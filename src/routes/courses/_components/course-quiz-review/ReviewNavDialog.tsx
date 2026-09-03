@@ -3,7 +3,10 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { QuizAttemptReviewQuestion } from "@/lib/api/types";
+import type {
+  QuizAttemptReviewQuestion,
+  QuizAttemptReviewRead,
+} from "@/lib/api/types";
 import { QuizReviewNavigator } from "./QuizReviewNavigator";
 
 /**
@@ -17,11 +20,13 @@ export function ReviewNavDialog({
   onOpenChange,
   questions,
   onJump,
+  visibility,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   questions: QuizAttemptReviewQuestion[];
   onJump: (index: number) => void;
+  visibility: QuizAttemptReviewRead["visibility"];
 }) {
   const { t } = useTranslation();
 
@@ -58,7 +63,11 @@ export function ReviewNavDialog({
               <X className="h-4 w-4" />
             </DialogPrimitive.Close>
           </div>
-          <QuizReviewNavigator questions={questions} onJump={onJump} />
+          <QuizReviewNavigator
+            questions={questions}
+            onJump={onJump}
+            visibility={visibility}
+          />
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

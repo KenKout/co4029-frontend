@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,42 @@ import type { QuizAttemptRead, QuizPublic } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { reviewAllowed } from "@/lib/quiz/review-visibility";
 import { QuizStudyModeCard } from "./QuizStudyModeCard";
+
+function resultTitle(
+  t: TFunction,
+  gradingPending: boolean,
+  scoreAvailable: boolean,
+  passed: boolean,
+) {
+  if (gradingPending) return t("course_quiz.results.awaiting_grade");
+  if (!scoreAvailable) return t("course_quiz.results.score_hidden");
+  return passed
+    ? t("course_quiz.results.passed")
+    : t("course_quiz.results.submitted");
+}
+
+function resultSummary(
+  t: TFunction,
+  quiz: QuizPublic,
+  gradingPending: boolean,
+  scoreAvailable: boolean,
+  passed: boolean,
+  score: number,
+  passingScore: number,
+) {
+  if (gradingPending) return t("course_quiz.results.awaiting_grade_summary");
+  if (!scoreAvailable) return t("course_quiz.results.score_hidden_summary");
+  if (passed) {
+    return t("course_quiz.results.passed_summary", {
+      title: quiz.title,
+      score: Math.round(score),
+    });
+  }
+  return t("course_quiz.results.failed_summary", {
+    score: Math.round(score),
+    passing: passingScore,
+  });
+}
 
 /**
  * Post-submission results view: score ring, pass/fail summary, attempt recap,
@@ -24,6 +61,9 @@ export function QuizResultScreen({
   slug: string;
 }) {
   const { t } = useTranslation();
+  const gradingPending = summary.grading_pending === true;
+  const scoreAvailable =
+    summary.score_percent != null && summary.passed != null && !gradingPending;
   const score = Number(summary.score_percent ?? 0);
   const passed = Boolean(summary.passed);
   const passingScore = Math.round(Number(quiz.passing_score_percent));
@@ -35,36 +75,38 @@ export function QuizResultScreen({
           <div
             className={cn(
               "w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl font-black font-headline shadow-lg",
-              passed
+              scoreAvailable && passed
                 ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
-                : "bg-gradient-to-br from-m3-primary to-m3-secondary text-white",
+                : scoreAvailable
+                  ? "bg-gradient-to-br from-m3-primary to-m3-secondary text-white"
+                  : "bg-m3-surface-container-high text-m3-on-surface-variant",
             )}
           >
-            {Math.round(score)}%
+            {scoreAvailable ? `${Math.round(score)}%` : "…"}
           </div>
           <h2 className="font-headline font-extrabold text-2xl text-m3-primary mb-1">
-            {passed
-              ? t("course_quiz.results.passed")
-              : t("course_quiz.results.submitted")}
+            {resultTitle(t, gradingPending, scoreAvailable, passed)}
           </h2>
           <p className="text-m3-on-surface-variant text-sm mb-2">
-            {passed
-              ? t("course_quiz.results.passed_summary", {
-                  title: quiz.title,
-                  score: Math.round(score),
-                })
-              : t("course_quiz.results.failed_summary", {
-                  score: Math.round(score),
-                  passing: passingScore,
-                })}
+            {resultSummary(
+              t,
+              quiz,
+              gradingPending,
+              scoreAvailable,
+              passed,
+              score,
+              passingScore,
+            )}
           </p>
-          <p className="text-xs text-m3-outline mb-6">
-            {t("course_quiz.labels.attempt_summary", {
-              attempt: summary.attempt_number,
-              correct: summary.correct_count ?? 0,
-              total: summary.total_questions ?? totalQuestionsFallback,
-            })}
-          </p>
+          {scoreAvailable && (
+            <p className="text-xs text-m3-outline mb-6">
+              {t("course_quiz.labels.attempt_summary", {
+                attempt: summary.attempt_number,
+                correct: summary.correct_count ?? 0,
+                total: summary.total_questions ?? totalQuestionsFallback,
+              })}
+            </p>
+          )}
 
           <div className="flex gap-3 justify-center flex-wrap">
             {reviewAllowed(quiz, summary.submitted_at) && (

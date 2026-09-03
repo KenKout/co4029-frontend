@@ -4,34 +4,14 @@ import { queryKeys } from "../../query-keys";
 import type {
   QuizAttemptAnswerRead,
   QuizAttemptRead,
+  QuizAttemptProgressRead,
+  QuizAttemptProgressAnswer,
   QuizAttemptReviewRead,
   QuizAttemptStart,
   QuizAttemptSubmitAnswer,
-  QuizForTakingPublic,
 } from "../../types";
 
-/**
- * Resume payload for an in-progress attempt. Declared locally (not in
- * `types.ts`) because this endpoint post-dates the committed OpenAPI
- * snapshot — mirrors backend `QuizAttemptProgressRead` /
- * `QuizAttemptProgressAnswer` (no-leak: no is_correct / points_awarded).
- */
-export interface QuizAttemptProgressAnswer {
-  question_id: string;
-  selected_option_id: string | null;
-  answer_text: string | null;
-  hint_used: boolean;
-  t_actual_ms: number | null;
-}
-
-export interface QuizAttemptProgressRead {
-  attempt_id: string;
-  quiz_id: string;
-  status: "in_progress" | "submitted" | "graded" | "abandoned" | "expired";
-  started_at: string;
-  take: QuizForTakingPublic;
-  answers: QuizAttemptProgressAnswer[];
-}
+export type { QuizAttemptProgressAnswer, QuizAttemptProgressRead };
 
 export function useStartQuizAttempt(quizId: string | null | undefined) {
   const qc = useQueryClient();

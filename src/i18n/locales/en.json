@@ -2841,11 +2841,28 @@
       "time_limit_hours": "{{hours}} h",
       "time_limit_hours_mins": "{{hours}} h {{minutes}} min"
     },
+    "question_input": {
+      "type_answer": "Type your answer…",
+      "short_answer_label": "Short answer input",
+      "word": "Word",
+      "word_bank": "Word bank",
+      "blank_filled": "Blank filled with {{value}}",
+      "blank_choose": "Blank: choose an answer",
+      "blank_empty": "Blank: empty",
+      "clear_blank": "Clear blank",
+      "choose_answer": "Choose answer",
+      "add_answer": "+ Answer",
+      "numerical_answer_label": "Numerical answer input",
+      "match_for": "Match for {{prompt}}",
+      "move_up": "Move up",
+      "move_down": "Move down"
+    },
     "messages": {
       "no_retakes": "This quiz does not allow retakes.",
       "max_attempts_reached": "You have used all {{count}} attempts.",
       "not_yet_open": "This quiz opens on {{when}}.",
-      "window_closed": "This quiz closed on {{when}}."
+      "window_closed": "This quiz closed on {{when}}.",
+      "cooldown_active_until": "You can start another attempt after {{when}}."
     },
     "schedule": {
       "opens_at": "Opens {{when}}",
@@ -2906,6 +2923,10 @@
     "results": {
       "passed": "Passed",
       "submitted": "Submitted",
+      "awaiting_grade": "Awaiting grading",
+      "awaiting_grade_summary": "Your answers were submitted successfully. A teacher must finish grading before your result is available.",
+      "score_hidden": "Result submitted",
+      "score_hidden_summary": "Your teacher has configured this result to become visible later.",
       "passed_summary": "You completed {{title}} with {{score}}%.",
       "failed_summary": "You scored {{score}}% and need {{passing}}% to pass."
     },

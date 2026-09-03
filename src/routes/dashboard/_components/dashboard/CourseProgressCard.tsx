@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { ArrowRight, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Course } from "@/lib/api/types";
+import { slugGradient } from "@/routes/courses/_components/course-detail/helpers";
+import { cn } from "@/lib/utils";
 
 export default function CourseProgressCard({ course }: { course: Course }) {
   const { t } = useTranslation();
@@ -13,7 +15,12 @@ export default function CourseProgressCard({ course }: { course: Course }) {
       aria-label={t("dashboard.open_course_named", { title: course.title })}
       className="group bg-m3-surface-container-lowest rounded-xl shadow-editorial ghost-border p-6 flex flex-col gap-4 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60"
     >
-      <div className="relative h-32 rounded-xl overflow-hidden bg-gradient-to-br from-m3-primary to-m3-secondary flex items-center justify-center">
+      <div
+        className={cn(
+          "relative h-32 rounded-xl overflow-hidden bg-gradient-to-br flex items-center justify-center",
+          slugGradient(course.slug),
+        )}
+      >
         {course.thumbnail_url ? (
           <img
             src={course.thumbnail_url}

@@ -15,6 +15,7 @@ import { RichContent } from "@/components/ui/rich-content";
 import type {
   QuizAttemptReviewOption,
   QuizAttemptReviewQuestion,
+  QuizAttemptReviewRead,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/use-media-query";
@@ -107,18 +108,22 @@ function QuestionHeader({
 /** Points, attention time and hint usage. */
 function QuestionMetaRow({
   question,
+  showPoints,
 }: {
   question: QuizAttemptReviewQuestion;
+  showPoints: boolean;
 }) {
   const { t } = useTranslation();
   return (
     <div className="flex items-center gap-4 text-[10px] text-m3-on-surface-variant pt-2 border-t border-m3-outline-variant/15">
-      <span className="inline-flex items-center gap-1">
-        <Award className="h-3 w-3" />
-        {t("course_quiz_review.points", {
-          n: Number(question.points_awarded ?? 0).toFixed(1),
-        })}
-      </span>
+      {showPoints && (
+        <span className="inline-flex items-center gap-1">
+          <Award className="h-3 w-3" />
+          {t("course_quiz_review.points", {
+            n: Number(question.points_awarded ?? 0).toFixed(1),
+          })}
+        </span>
+      )}
       {question.t_actual_ms != null && (
         <span className="inline-flex items-center gap-1">
           <Target className="h-3 w-3" />
@@ -389,7 +394,11 @@ function FillBlankSlotReview({
 }
 
 /** The fill_blank review block: correct answer shown only beside wrong blanks. */
-function FillBlankReview({ question }: { question: QuizAttemptReviewQuestion }) {
+function FillBlankReview({
+  question,
+}: {
+  question: QuizAttemptReviewQuestion;
+}) {
   if (question.question_type !== "fill_blank") return null;
   const correct = getFillBlankCorrect(question);
   if (correct.length === 0) return null;
@@ -413,7 +422,11 @@ function FillBlankReview({ question }: { question: QuizAttemptReviewQuestion }) 
 }
 
 /** The short_answer review block: green ✓ when right, red ✕ + correct when wrong. */
-function ShortAnswerReview({ question }: { question: QuizAttemptReviewQuestion }) {
+function ShortAnswerReview({
+  question,
+}: {
+  question: QuizAttemptReviewQuestion;
+}) {
   if (question.question_type !== "short_answer") return null;
   const correct = (question as { short_answer_correct?: string | null })
     .short_answer_correct;
@@ -432,7 +445,11 @@ function ShortAnswerReview({ question }: { question: QuizAttemptReviewQuestion }
           <>
             <span className="inline-flex items-center gap-1.5 font-semibold text-red-700">
               <X className="h-4 w-4 shrink-0" />
-              {student || <span className="italic font-normal text-m3-on-surface-variant">—</span>}
+              {student || (
+                <span className="italic font-normal text-m3-on-surface-variant">
+                  —
+                </span>
+              )}
             </span>
             <ArrowRight className="h-4 w-4 text-m3-outline shrink-0" />
             <span className="font-semibold text-emerald-700">{correct}</span>
@@ -477,8 +494,10 @@ function shouldShowAnswerBox(question: QuizAttemptReviewQuestion): boolean {
   }
   if (
     question.question_type === "ordering" &&
-    ((question as { ordering_correct?: string[] | null }).ordering_correct ??
-      []).length > 0
+    (
+      (question as { ordering_correct?: string[] | null }).ordering_correct ??
+      []
+    ).length > 0
   ) {
     return false;
   }
@@ -539,9 +558,11 @@ function computeVisibleOptions(
 export function ReviewQuestionCard({
   question,
   index,
+  visibility,
 }: {
   question: QuizAttemptReviewQuestion;
   index: number;
+  visibility: QuizAttemptReviewRead["visibility"];
 }) {
   const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
@@ -559,11 +580,13 @@ export function ReviewQuestionCard({
       id={`review-question-${question.question_id}`}
       className={cn(
         "p-4 space-y-4 scroll-mt-24",
-        cardTone === "green"
-          ? "ring-2 ring-emerald-400/70"
-          : cardTone === "yellow"
-            ? "ring-2 ring-amber-400/70"
-            : "ring-2 ring-red-400/70",
+        !visibility.show_correctness
+          ? "ring-1 ring-m3-outline-variant/30"
+          : cardTone === "green"
+            ? "ring-2 ring-emerald-400/70"
+            : cardTone === "yellow"
+              ? "ring-2 ring-amber-400/70"
+              : "ring-2 ring-red-400/70",
       )}
     >
       <QuestionHeader
@@ -579,11 +602,13 @@ export function ReviewQuestionCard({
               key={opt.id}
               option={opt}
               mark={
-                opt.id === question.selected_option_id && !opt.is_correct
-                  ? "wrong"
-                  : opt.is_correct
-                    ? "correct"
-                    : null
+                !visibility.show_correctness
+                  ? null
+                  : opt.id === question.selected_option_id && !opt.is_correct
+                    ? "wrong"
+                    : opt.is_correct
+                      ? "correct"
+                      : null
               }
               selected={opt.id === question.selected_option_id}
             />
@@ -596,20 +621,21 @@ export function ReviewQuestionCard({
       <FillBlankReview question={question} />
       <ShortAnswerReview question={question} />
 
-      {!question.is_correct && hiddenCount > 0 && (
-        <Button
-          type="button"
-          variant="link"
-          onClick={() => setShowAll((v) => !v)}
-          className="h-auto p-0 text-xs font-semibold text-m3-primary underline underline-offset-2"
-        >
-          {showAll
-            ? t("course_quiz_review.hide_options")
-            : t("course_quiz_review.show_all_options", {
-                count: hiddenCount,
-              })}
-        </Button>
-      )}
+      {(!visibility.show_correctness || !question.is_correct) &&
+        hiddenCount > 0 && (
+          <Button
+            type="button"
+            variant="link"
+            onClick={() => setShowAll((v) => !v)}
+            className="h-auto p-0 text-xs font-semibold text-m3-primary underline underline-offset-2"
+          >
+            {showAll
+              ? t("course_quiz_review.hide_options")
+              : t("course_quiz_review.show_all_options", {
+                  count: hiddenCount,
+                })}
+          </Button>
+        )}
 
       {showAnswerBox && (
         <div className="rounded-xl bg-m3-surface-container-low p-4 border border-m3-outline-variant/20">
@@ -644,7 +670,10 @@ export function ReviewQuestionCard({
         </div>
       )}
 
-      <QuestionMetaRow question={question} />
+      <QuestionMetaRow
+        question={question}
+        showPoints={visibility.show_points}
+      />
     </GlassCard>
   );
 }

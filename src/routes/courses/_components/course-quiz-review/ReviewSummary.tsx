@@ -1,6 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, CheckCircle2, Clock, HelpCircle, LayoutGrid, RotateCcw, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clock,
+  HelpCircle,
+  LayoutGrid,
+  RotateCcw,
+  XCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import type { QuizAttemptReviewRead } from "@/lib/api/types";
@@ -50,6 +58,51 @@ export function QuizReviewNotFound({
         </Link>
       </GlassCard>
     </div>
+  );
+}
+
+export function ReviewUnavailableSummary({
+  attempt,
+  quizTitle,
+  slug,
+  quizId,
+  message,
+}: {
+  attempt: QuizAttemptReviewRead["attempt"];
+  quizTitle: string;
+  slug: string;
+  quizId: string;
+  message: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <GlassCard className="p-5 sm:p-6 space-y-4">
+      <div className="flex items-center gap-2">
+        <Link
+          to="/courses/$slug/learn/$itemSlug"
+          params={{ slug, itemSlug: quizId }}
+          search={{ start: false }}
+        >
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="rounded-xl text-m3-on-surface-variant hover:text-m3-primary"
+            aria-label={t("course_quiz_review.back_to_quiz")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </Link>
+        <span className="flex-1 min-w-0 truncate font-headline font-bold text-m3-on-surface">
+          {quizTitle}
+        </span>
+        <span className="text-xs font-bold text-m3-on-surface-variant">
+          {t("course_quiz_review.attempt_label", { n: attempt.attempt_number })}
+        </span>
+      </div>
+      <p className="rounded-xl bg-m3-surface-container-low p-4 text-sm text-m3-on-surface-variant">
+        {message}
+      </p>
+    </GlassCard>
   );
 }
 
@@ -203,7 +256,9 @@ export function ReviewActionsBar({
         className="font-bold rounded-xl gap-2 border-m3-primary/40 text-m3-primary hover:bg-m3-primary-fixed/30 min-w-0"
       >
         <LayoutGrid className="h-4 w-4 shrink-0" />
-        <span className="truncate">{t("course_quiz_review.question_breakdown")}</span>
+        <span className="truncate">
+          {t("course_quiz_review.question_breakdown")}
+        </span>
       </Button>
       {canRetry && (
         <Button

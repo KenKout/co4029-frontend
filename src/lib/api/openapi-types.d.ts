@@ -12996,6 +12996,11 @@ export interface components {
             score_percent?: string | null;
             /** Passed */
             passed?: boolean | null;
+            /**
+             * Grading Pending
+             * @default false
+             */
+            grading_pending?: boolean;
             /** Total Questions */
             total_questions?: number | null;
             /** Correct Count */

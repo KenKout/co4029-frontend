@@ -1,8 +1,31 @@
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { ArrowRight, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { QuizAttemptRead, QuizPublic } from "@/lib/api/types";
 import type { IntroState } from "./helpers";
+
+function blockedMessage(t: TFunction, quiz: QuizPublic, intro: IntroState) {
+  if (intro.notYetOpen) {
+    return t("course_quiz.messages.not_yet_open", {
+      when: intro.openAt?.toLocaleString() ?? "",
+    });
+  }
+  if (intro.windowClosed) {
+    return t("course_quiz.messages.window_closed", {
+      when: intro.closeAt?.toLocaleString() ?? "",
+    });
+  }
+  if (intro.noRetakesLeft) return t("course_quiz.messages.no_retakes");
+  if (intro.maxAttemptsReached) {
+    return t("course_quiz.messages.max_attempts_reached", {
+      count: quiz.max_attempts ?? 0,
+    });
+  }
+  return t("course_quiz.messages.cooldown_active_until", {
+    when: intro.retryAvailableAt?.toLocaleString() ?? "",
+  });
+}
 
 /** Why the start button is unavailable — window, retakes or attempt ceiling. */
 function IntroBlockedNotice({
@@ -13,33 +36,10 @@ function IntroBlockedNotice({
   intro: IntroState;
 }) {
   const { t } = useTranslation();
-  const {
-    notYetOpen,
-    windowClosed,
-    noRetakesLeft,
-    maxAttemptsReached,
-    openAt,
-    closeAt,
-  } = intro;
 
   return (
     <div className="rounded-xl bg-m3-surface-container-low px-4 py-3 text-sm text-m3-on-surface-variant">
-      {notYetOpen &&
-        t("course_quiz.messages.not_yet_open", {
-          when: openAt ? openAt.toLocaleString() : "",
-        })}
-      {windowClosed &&
-        t("course_quiz.messages.window_closed", {
-          when: closeAt ? closeAt.toLocaleString() : "",
-        })}
-      {noRetakesLeft &&
-        !notYetOpen &&
-        !windowClosed &&
-        t("course_quiz.messages.no_retakes")}
-      {maxAttemptsReached &&
-        !notYetOpen &&
-        !windowClosed &&
-        ` ${t("course_quiz.messages.max_attempts_reached", { count: quiz.max_attempts ?? 0 })}`}
+      {blockedMessage(t, quiz, intro)}
     </div>
   );
 }

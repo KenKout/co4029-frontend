@@ -3,7 +3,10 @@ import type { TFunction } from "i18next";
 import { toast } from "sonner";
 import type { QuizQuestionPublic } from "@/lib/api/types";
 import { clearSeenAt } from "@/lib/quiz-timing";
-import { hasAnswer, type QuestionStatus } from "@/lib/quiz/quiz-session-helpers";
+import {
+  hasAnswer,
+  type QuestionStatus,
+} from "@/lib/quiz/quiz-session-helpers";
 import {
   markAnswerSaved,
   reportPersistFailure,
@@ -142,6 +145,7 @@ export function useAttemptActions(args: {
   } = args;
   const { activeIdx, activeAttemptId, statuses } = state;
   const { passwordInput } = passwordGate;
+  const startIdempotencyKeyRef = useRef<string | null>(null);
   // Latest statuses for the post-await snapshot check in `persistAnswer`.
   const statusesRef = useRef(statuses);
   statusesRef.current = statuses;
@@ -155,11 +159,14 @@ export function useAttemptActions(args: {
 
   const handleStartAttempt = useCallback(
     async (password?: string) => {
+      startIdempotencyKeyRef.current ??= crypto.randomUUID();
       try {
-        const result = await startAttempt.mutateAsync(
-          password ? { password } : undefined,
-        );
+        const result = await startAttempt.mutateAsync({
+          idempotency_key: startIdempotencyKeyRef.current,
+          ...(password ? { password } : {}),
+        });
         applyStartedAttempt(ctx, result);
+        startIdempotencyKeyRef.current = null;
       } catch (err) {
         reportStartFailure(ctx, err);
       }
