@@ -162,7 +162,7 @@ function CourseCtaButton({
  * time anyone clicks. Opened in a new tab instead of navigating, so the
  * student does not lose the course page.
  */
-function CourseSyllabusButton({ courseId }: { courseId: string }) {
+export function CourseSyllabusButton({ courseId }: { courseId: string }) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);

@@ -10,6 +10,7 @@ import type { MyCourseProgressSummary } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { SkeletonBlock } from "./CourseDetailAtoms";
 import { ModuleAccordion } from "./ModuleAccordion";
+import { CourseSyllabusButton } from "./CourseCard";
 
 type CourseContentData = ReturnType<typeof useCourseContent>["data"];
 type CourseOutcomesData = ReturnType<typeof useCourseOutcomes>["data"];
@@ -27,9 +28,15 @@ const OUTCOMES_PREVIEW_COUNT = 6;
 export function CourseOutcomesSection({
   outcomes,
   isLoading,
+  courseId,
+  hasSyllabus,
 }: {
   outcomes: CourseOutcomesData;
   isLoading: boolean;
+  /** Course id for the syllabus download; omitted on the skeleton/404 path. */
+  courseId?: string;
+  /** Publish-gated flag from CoursePublic — a visible button never 404s. */
+  hasSyllabus?: boolean | null;
 }) {
   const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
@@ -42,11 +49,17 @@ export function CourseOutcomesSection({
 
   return (
     <GlassCard className="p-6">
-      <div className="flex items-center gap-2 mb-5">
-        <GraduationCap className="h-5 w-5 text-m3-secondary" />
-        <h2 className="font-headline font-bold text-xl text-m3-on-surface">
-          {t("course_detail.what_youll_learn")}
-        </h2>
+      {/* Title left, syllabus download right — one header row, justified. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-2">
+          <GraduationCap className="h-5 w-5 text-m3-secondary" />
+          <h2 className="font-headline font-bold text-xl text-m3-on-surface">
+            {t("course_detail.what_youll_learn")}
+          </h2>
+        </div>
+        {courseId && hasSyllabus && (
+          <CourseSyllabusButton courseId={courseId} />
+        )}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {visible.map((outcome) => (
