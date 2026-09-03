@@ -684,6 +684,21 @@ const managementLearningProgramsRoute = createRoute({
 const managementLearningProgramDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/learning-programs/$id",
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: "general" | "roster" | "requests" } => ({
+    // Deep-link from a dean notification: open the Path changes tab
+    // directly (action_url `/management/learning-programs/{id}?tab=requests`).
+    // Unknown params are dropped, not rejected, so a malformed link still
+    // lands on the page.
+    tab:
+      typeof search.tab === "string" &&
+      (search.tab === "general" ||
+        search.tab === "roster" ||
+        search.tab === "requests")
+        ? search.tab
+        : undefined,
+  }),
   component: lazyRouteComponent(
     () => import("@/routes/management/learning-program-detail"),
   ),
