@@ -103,6 +103,7 @@ export function DeptCourseHeader({
           onOpenChange={setImportOpen}
           courseId={courseId}
           courseStatus={course.status}
+          hasSyllabus={course.has_syllabus ?? false}
         />
       )}
     </div>

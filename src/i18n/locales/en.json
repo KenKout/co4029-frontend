@@ -919,7 +919,11 @@
       "override_blocked": "Only a draft course can be overridden — this one is {{status}}. You can still upload the syllabus document or create a new course from it.",
       "result_mode_attach": "The course's syllabus document was updated.",
       "result_mode_override": "The course was overwritten from the syllabus.",
-      "result_mode_create": "A new draft course was created."
+      "result_mode_create": "A new draft course was created.",
+      "replace_warning": "This course already has a syllabus PDF. Uploading will replace the current document.",
+      "replace_confirm_title": "Replace the current syllabus?",
+      "replace_confirm_body": "The course already has a syllabus. The new upload will replace it — the old document will no longer be downloadable.",
+      "replace_confirm_submit": "Replace"
     },
     "scope_label": "Scoped to unit:",
     "scope_unknown": "Selected unit",

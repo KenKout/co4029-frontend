@@ -78,7 +78,8 @@ export interface CourseFacultyFields {
 }
 export type CourseAuthoring = Omit<Schemas["CourseAuthoring"], "org_unit_id"> &
   CourseContactFields &
-  CourseFacultyFields;
+  CourseFacultyFields &
+  CoursePublicMeta;
 export type CourseCreate = Omit<Schemas["CourseCreate"], "org_unit_id"> &
   CourseContactFields &
   CourseFacultyFields;

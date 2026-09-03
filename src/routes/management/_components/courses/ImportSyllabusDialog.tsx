@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { AlertTriangle, CheckCircle2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Field } from "@/components/ui/field";
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { Select } from "@/components/ui/select";
@@ -55,6 +56,7 @@ export function ImportSyllabusDialog({
   onOpenChange,
   courseId,
   courseStatus,
+  hasSyllabus,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -62,6 +64,10 @@ export function ImportSyllabusDialog({
   courseId?: string;
   /** Target course status; `override` is draft-only, so it gates the option. */
   courseStatus?: string;
+  /** Whether the course already has a syllabus document (any successful
+   *  import). When true, attach/override replace it — the dialog says so and
+   *  asks for confirmation before submitting. */
+  hasSyllabus?: boolean;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -82,6 +88,7 @@ export function ImportSyllabusDialog({
   const [language, setLanguage] = useState<SyllabusLanguage>("vi");
   const [facultyId, setFacultyId] = useState("");
   const [result, setResult] = useState<SyllabusImportResult | null>(null);
+  const [confirmReplaceOpen, setConfirmReplaceOpen] = useState(false);
   const prefix = "dept_courses.import_syllabus";
   const assignedFacultyIds = useMemo(
     () =>
@@ -108,6 +115,7 @@ export function ImportSyllabusDialog({
   function reset() {
     setFile(null);
     setResult(null);
+    setConfirmReplaceOpen(false);
     setMode(onCourse ? "attach" : "create");
     importCourse.reset();
   }
@@ -119,7 +127,7 @@ export function ImportSyllabusDialog({
     onOpenChange(next);
   }
 
-  function handleImport() {
+  function runImport() {
     if (!file) return;
     importCourse.mutate(
       {
@@ -131,6 +139,17 @@ export function ImportSyllabusDialog({
       },
       { onSuccess: (data) => setResult(data) },
     );
+  }
+
+  function handleImport() {
+    // Creating a NEW course never touches an existing syllabus; attaching or
+    // overriding REPLACES the uploaded document, so a course that already has
+    // one requires an explicit confirmation first.
+    if (hasSyllabus && mode !== "create") {
+      setConfirmReplaceOpen(true);
+      return;
+    }
+    runImport();
   }
 
   function openCourse() {
@@ -191,6 +210,7 @@ export function ImportSyllabusDialog({
               showModes={onCourse}
               canOverride={canOverride}
               courseStatus={courseStatus}
+              hasSyllabus={hasSyllabus}
               busy={importCourse.isPending}
               error={importCourse.isError ? importCourse.error.message : null}
             />
@@ -229,7 +249,36 @@ export function ImportSyllabusDialog({
           </div>
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>
+
+      {/* Replacing an existing syllabus is destructive-ish: the old document
+          is gone once the new import lands, so ask before firing. */}
+      <ConfirmDialog
+        open={confirmReplaceOpen}
+        onOpenChange={(next) => {
+          if (!next) setConfirmReplaceOpen(false);
+        }}
+        title={t(`${prefix}.replace_confirm_title`)}
+        description={t(`${prefix}.replace_confirm_body`)}
+        confirmLabel={t(`${prefix}.replace_confirm_submit`)}
+        cancelLabel={t("common.cancel")}
+        confirmVariant="destructive"
+        isPending={importCourse.isPending}
+        onConfirm={() => {
+          setConfirmReplaceOpen(false);
+          runImport();
+        }}
+      />
     </DialogPrimitive.Root>
+  );
+}
+
+/** Amber banner: the upload will replace the course's current syllabus. */
+function ReplaceSyllabusWarning({ text }: { text: string }) {
+  return (
+    <div className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+      <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+      <p className="text-xs text-amber-900">{text}</p>
+    </div>
   );
 }
 
@@ -247,6 +296,7 @@ function ImportForm({
   showModes,
   canOverride,
   courseStatus,
+  hasSyllabus,
   busy,
   error,
 }: {
@@ -263,6 +313,7 @@ function ImportForm({
   showModes: boolean;
   canOverride: boolean;
   courseStatus?: string;
+  hasSyllabus?: boolean;
   busy: boolean;
   error: string | null;
 }) {
@@ -295,6 +346,13 @@ function ImportForm({
           <FileText className="h-4 w-4 shrink-0" />
           <span className="truncate">{file.name}</span>
         </p>
+      ) : null}
+
+      {/* The course already has a syllabus document. Attach/override replace
+          it — say so plainly instead of letting the swap look like a first
+          upload. */}
+      {hasSyllabus && mode !== "create" ? (
+        <ReplaceSyllabusWarning text={t(`${prefix}.replace_warning`)} />
       ) : null}
 
       {showModes ? (

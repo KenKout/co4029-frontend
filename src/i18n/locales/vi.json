@@ -842,7 +842,11 @@
       "override_blocked": "Chỉ khoá học ở trạng thái nháp mới ghi đè được — khoá học này đang {{status}}. Bạn vẫn có thể chỉ tải lên đề cương hoặc tạo khoá học mới.",
       "result_mode_attach": "Đã cập nhật tệp đề cương của khoá học.",
       "result_mode_override": "Đã ghi đè khoá học từ đề cương.",
-      "result_mode_create": "Đã tạo khoá học nháp mới."
+      "result_mode_create": "Đã tạo khoá học nháp mới.",
+      "replace_warning": "Khoá học này đã có đề cương PDF. Việc tải lên sẽ thay thế tệp hiện tại.",
+      "replace_confirm_title": "Thay thế đề cương hiện tại?",
+      "replace_confirm_body": "Khoá học đã có đề cương. Bản tải lên mới sẽ thay thế nó — tệp cũ sẽ không còn tải được nữa.",
+      "replace_confirm_submit": "Thay thế"
     },
     "scope_label": "Phạm vi đơn vị:",
     "scope_unknown": "Đơn vị đã chọn",
