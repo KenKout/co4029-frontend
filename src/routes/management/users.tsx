@@ -42,7 +42,7 @@ export default function ManagementUsersPage() {
         title={t("management_users.title", { defaultValue: "Users" })}
         subtitle={t("management_users.subtitle", {
           defaultValue:
-            "Accounts in your organization. You can disable or re-enable teachers and students — peer manager/HOD/admin accounts are protected.",
+            "Accounts in your organization. You can invite new teachers and students, and disable or re-enable accounts — peer manager/HOD/admin accounts are protected.",
         })}
       />
 

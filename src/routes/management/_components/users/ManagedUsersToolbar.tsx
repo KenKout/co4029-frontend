@@ -1,5 +1,10 @@
+import { useState } from "react";
+import { UserPlus } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
 
+import { AddUserDialog } from "@/routes/admin/_components/users/AddUserDialog";
 import type { ManagedUsersController } from "./use-managed-users";
 
 const ROLE_FILTER_ID = "role";
@@ -10,9 +15,15 @@ const ROLE_FILTER_ID = "role";
  * organization filter — the backend forces the caller's org server-side,
  * so there is nothing to pick. Role options come from the same seeded
  * catalog that drives the Role column labels.
+ *
+ * The Add user button (manager-with-`user.bulk_import` only, mirroring the
+ * backend gate) opens the invite dialog in the trailing slot. The dialog
+ * runs in forced-org mode: no org picker — the account joins the caller's
+ * own organization, and only teacher/student roles are offered.
  */
 export function ManagedUsersToolbar({ c }: { c: ManagedUsersController }) {
-  const { t, table, roleOptions } = c;
+  const { t, table, roleOptions, inviteRoleOptions, canInvite } = c;
+  const [addOpen, setAddOpen] = useState(false);
 
   const filterDefs: FilterDef[] = [
     {
@@ -26,21 +37,47 @@ export function ManagedUsersToolbar({ c }: { c: ManagedUsersController }) {
   ];
 
   return (
-    <DataTableToolbar
-      search={table.search}
-      onSearchChange={table.setSearch}
-      searchPlaceholder={t("admin.users.search_placeholder", {
-        defaultValue: "Search by name or email…",
-      })}
-      filters={filterDefs}
-      filterValues={{ role: table.roleFilter }}
-      onFilterChange={(filterId, value) => {
-        if (filterId === ROLE_FILTER_ID) table.setRoleFilter(value);
-      }}
-      onResetAllFilters={() => table.setRoleFilter(undefined)}
-      clearLabel={t("admin.users.clear_filters", {
-        defaultValue: "Clear filters",
-      })}
-    />
+    <>
+      <DataTableToolbar
+        search={table.search}
+        onSearchChange={table.setSearch}
+        searchPlaceholder={t("admin.users.search_placeholder", {
+          defaultValue: "Search by name or email…",
+        })}
+        filters={filterDefs}
+        filterValues={{ role: table.roleFilter }}
+        onFilterChange={(filterId, value) => {
+          if (filterId === ROLE_FILTER_ID) table.setRoleFilter(value);
+        }}
+        onResetAllFilters={() => table.setRoleFilter(undefined)}
+        clearLabel={t("admin.users.clear_filters", {
+          defaultValue: "Clear filters",
+        })}
+        trailing={
+          canInvite ? (
+            <Button
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setAddOpen(true)}
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              {t("admin.users.add_user", { defaultValue: "Add user" })}
+            </Button>
+          ) : undefined
+        }
+      />
+      <AddUserDialog
+        c={{
+          createUser: c.createUser,
+          createUserPending: c.createUserPending,
+          roleOptions: inviteRoleOptions,
+        }}
+        orgLabel={t("admin.users.create_org_forced", {
+          defaultValue: "Your organization",
+        })}
+        open={addOpen}
+        onOpenChange={setAddOpen}
+      />
+    </>
   );
 }

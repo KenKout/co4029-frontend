@@ -18,8 +18,9 @@ const ORG_FILTER_ID = "organization";
  * Values ride the server-table's built-in roleFilter/orgFilter state, which
  * sends `role` / `organization` query params.
  *
- * The Add user button (admin-only, mirroring the backend `system.administer`
- * gate on POST /users) opens the invite dialog in the trailing slot.
+ * The Add user button (backend gate: `user.bulk_import` for managers or
+ * `system.administer` for platform admins — this toolbar renders only in the
+ * admin surface) opens the invite dialog in the trailing slot.
  */
 export function UsersToolbar({ c }: { c: AdminUsersController }) {
   const { t, table, roleOptions, orgOptions } = c;

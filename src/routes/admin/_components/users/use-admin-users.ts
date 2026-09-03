@@ -66,7 +66,7 @@ export function useAdminUsers() {
       display_name?: string;
       given_name?: string;
       family_name?: string;
-      organization_id: string;
+      organization_id?: string;
       role_code?: string;
       student_code?: string;
       employee_code?: string;
