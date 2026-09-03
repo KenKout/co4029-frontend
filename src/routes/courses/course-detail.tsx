@@ -109,8 +109,6 @@ export default function CourseDetailPage() {
             <CourseOutcomesSection
               outcomes={outcomes}
               isLoading={outcomesLoading}
-              courseId={course.id}
-              hasSyllabus={course.has_syllabus}
             />
 
             {/* BR: the item tree is only displayable to enrolled students. */}
