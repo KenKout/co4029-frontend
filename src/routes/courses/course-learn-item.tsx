@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
@@ -13,6 +13,7 @@ import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTrack
 import { LessonKnowledgeMap } from "@/routes/courses/_components/LessonKnowledgeMap";
 import { CurriculumSidebar } from "@/routes/courses/_components/course-learn/CurriculumSidebar";
 import { ReadingLessonBody } from "@/routes/courses/_components/course-learn/ReadingLessonBody";
+import { LessonTabsSection } from "@/routes/courses/_components/course-learn/LessonTabsSection";
 import { LessonPlayerFrame, VideoEngagementTracker } from "@/routes/courses/_components/course-learn/LessonPlayerFrame";
 import {
   useCurriculumItems,
@@ -23,7 +24,7 @@ import {
 } from "@/routes/courses/_components/course-learn/use-curriculum";
 import { useActiveLessonContent, useLessonStatusMap } from "@/routes/courses/_components/course-learn/use-lesson-content";
 import { earliestPendingItemId, itemStateFor } from "@/routes/courses/_components/course-learn/helpers";
-import type { CurriculumProps, FlatItem } from "@/routes/courses/_components/course-learn/types";
+import type { CurriculumProps, FlatItem, Tab } from "@/routes/courses/_components/course-learn/types";
 import type { CoursePublic, LessonPublic, ModulePublic } from "@/lib/api/types";
 import { useQuizAttemptSession } from "@/lib/quiz/use-quiz-attempt-session";
 import { QuizIntroStage } from "@/routes/courses/_components/course-quiz/QuizIntroStage";
@@ -243,7 +244,9 @@ function LessonItemView({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { activeLessonId, activeLesson, lessonUnavailable } = useActiveLessonContent(matched as FlatItem, "Lesson Notes" as never);
+  const [activeTab, setActiveTab] = useState<Tab>("Lesson Notes");
+  const { activeLessonId, activeLesson, lessonUnavailable, resources } =
+    useActiveLessonContent(matched as FlatItem, activeTab);
   const playerRef = useRef<HTMLDivElement | null>(null);
 
   // Curriculum rail state — same hook order as course-learn.tsx (quiz
@@ -327,6 +330,18 @@ function LessonItemView({
           <div className="flex-1 min-w-0 flex flex-col gap-6">
             <LessonContentPane activeLesson={activeLesson} courseId={courseId} playerRef={playerRef} activeLessonId={activeLessonId} />
             <LessonKnowledgeMap lessonId={activeLesson.id} />
+            <LessonTabsSection
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              activeLessonId={activeLessonId}
+              resources={resources}
+              hasPrev={lessonItems.findIndex((fi) => fi.item.id === matched.item.id) > 0}
+              hasNext={lessonItems.findIndex((fi) => fi.item.id === matched.item.id) < lessonItems.length - 1}
+              onPrev={() => onSelect(Math.max(0, lessonItems.findIndex((fi) => fi.item.id === matched.item.id) - 1))}
+              onNext={() => onSelect(Math.min(lessonItems.length - 1, lessonItems.findIndex((fi) => fi.item.id === matched.item.id) + 1))}
+              prevLabel={lessonItems[lessonItems.findIndex((fi) => fi.item.id === matched.item.id) - 1]?.label}
+              nextLabel={lessonItems[lessonItems.findIndex((fi) => fi.item.id === matched.item.id) + 1]?.label}
+            />
           </div>
           <CurriculumSidebar {...curriculum} />
         </div>
