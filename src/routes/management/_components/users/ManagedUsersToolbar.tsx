@@ -18,8 +18,8 @@ const ROLE_FILTER_ID = "role";
  *
  * The Add user button (manager-with-`user.bulk_import` only, mirroring the
  * backend gate) opens the invite dialog in the trailing slot. The dialog
- * runs in forced-org mode: no org picker — the account joins the caller's
- * own organization, and only teacher/student roles are offered.
+ * runs in forced-org mode: no Organization field at all — the account joins
+ * the caller's own org, and only teacher/student roles are offered.
  */
 export function ManagedUsersToolbar({ c }: { c: ManagedUsersController }) {
   const { t, table, roleOptions, inviteRoleOptions, canInvite } = c;
@@ -72,9 +72,7 @@ export function ManagedUsersToolbar({ c }: { c: ManagedUsersController }) {
           createUserPending: c.createUserPending,
           roleOptions: inviteRoleOptions,
         }}
-        orgLabel={t("admin.users.create_org_forced", {
-          defaultValue: "Your organization",
-        })}
+        hideOrg
         open={addOpen}
         onOpenChange={setAddOpen}
       />

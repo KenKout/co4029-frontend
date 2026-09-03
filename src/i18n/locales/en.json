@@ -2209,7 +2209,6 @@
       "create_display_name": "Display name",
       "create_organization": "Organization",
       "create_org_placeholder": "Select an organization",
-      "create_org_forced": "Your organization",
       "create_role": "Role",
       "create_hint": "Organization: {{org}}",
       "create_submit": "Create user",
