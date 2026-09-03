@@ -1446,7 +1446,8 @@
       "next_unlock_sub": "Tiến tới \"{{lesson}}\"",
       "next_unlock_none": "Không có bài bị khóa",
       "all_unlocked": "Đã mở hết",
-      "enrolled_link": "Xem khóa học đã đăng ký"
+      "enrolled_link": "Xem khóa học đã đăng ký",
+      "notifications_link": "Xem thông báo của bạn"
     },
     "your_courses": "Khóa học của bạn",
     "your_courses_sub": "Tiếp tục từ nơi bạn đã dừng",

@@ -43,13 +43,19 @@ export default function DashboardStatsSection({
           variant="primary"
         />
       </Link>
-      <StatCard
-        label={t("dashboard.stats.notifications")}
-        value={notificationsLoading ? "—" : unreadCount}
-        sublabel={t("dashboard.stats.notifications_sub")}
-        icon={Bell}
-        variant="surface"
-      />
+      <Link
+        to="/notifications"
+        aria-label={t("dashboard.stats.notifications_link")}
+        className="block transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/60 rounded-xl"
+      >
+        <StatCard
+          label={t("dashboard.stats.notifications")}
+          value={notificationsLoading ? "—" : unreadCount}
+          sublabel={t("dashboard.stats.notifications_sub")}
+          icon={Bell}
+          variant="surface"
+        />
+      </Link>
       <RetentionStatCard srLoading={srLoading} sr={sr} />
       <NextUnlockStatCard srLoading={srLoading} sr={sr} />
     </section>

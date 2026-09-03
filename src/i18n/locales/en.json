@@ -1538,7 +1538,8 @@
       "next_unlock_sub": "Toward \"{{lesson}}\"",
       "next_unlock_none": "Nothing locked",
       "all_unlocked": "All open",
-      "enrolled_link": "View your enrolled courses"
+      "enrolled_link": "View your enrolled courses",
+      "notifications_link": "View your notifications"
     },
     "your_courses": "Your courses",
     "your_courses_sub": "Pick up where you left off",
