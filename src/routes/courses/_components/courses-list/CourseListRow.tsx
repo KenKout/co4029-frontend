@@ -36,13 +36,16 @@ export function CourseListRow({
               className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
+            /* Full-opacity gradient — a washed-out variant would read as a
+               different colour from the card / landing-hero placeholder for
+               the same course. */
             <div
               className={cn(
-                "absolute inset-0 bg-gradient-to-br flex items-center justify-center opacity-25",
+                "absolute inset-0 bg-gradient-to-br flex items-center justify-center",
                 gradientClass,
               )}
             >
-              <GraduationCap className="h-6 w-6 text-white" />
+              <GraduationCap className="h-6 w-6 text-white/70" />
             </div>
           )}
         </div>

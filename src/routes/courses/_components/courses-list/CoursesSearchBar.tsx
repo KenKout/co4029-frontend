@@ -79,7 +79,10 @@ export function CoursesSearchBar({
                 className={cn(
                   "h-8 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer",
                   scope === s
-                    ? "bg-m3-primary text-white shadow-sm"
+                    ? // Keep the filled state on hover: the ghost variant's
+                      // hover:bg-muted would otherwise paint grey over the
+                      // selected tab.
+                      "bg-m3-primary text-white shadow-sm hover:bg-m3-primary/90 hover:text-white"
                     : "text-m3-on-surface-variant hover:bg-m3-surface-container",
                 )}
               >
@@ -103,7 +106,7 @@ export function CoursesSearchBar({
               className={cn(
                 "h-8 w-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
                 viewMode === "card"
-                  ? "bg-m3-primary text-white shadow-sm"
+                  ? "bg-m3-primary text-white shadow-sm hover:bg-m3-primary/90 hover:text-white"
                   : "text-m3-on-surface-variant hover:bg-m3-surface-container",
               )}
             >
@@ -118,7 +121,7 @@ export function CoursesSearchBar({
               className={cn(
                 "h-8 w-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
                 viewMode === "list"
-                  ? "bg-m3-primary text-white shadow-sm"
+                  ? "bg-m3-primary text-white shadow-sm hover:bg-m3-primary/90 hover:text-white"
                   : "text-m3-on-surface-variant hover:bg-m3-surface-container",
               )}
             >

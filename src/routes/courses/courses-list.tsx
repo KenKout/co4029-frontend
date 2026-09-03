@@ -137,7 +137,7 @@ export default function CoursesListPage() {
 
   return (
     <div className="relative min-h-screen pb-28">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-5">
         <header className="pt-2">
           <div className="flex items-center gap-3 mb-2">
             <AIInsightChip pulse>{t("courses_list.ai_chip")}</AIInsightChip>
