@@ -4,6 +4,7 @@ import { MaterialHistorySection } from "./MaterialHistorySection";
 import { LessonHeaderSection } from "./LessonHeaderSection";
 import { LessonResourcesSection } from "./LessonResourcesSection";
 import { LessonKnowledgeGraphSection } from "./LessonKnowledgeGraphSection";
+import { LessonDiscussionSection } from "./LessonDiscussionSection";
 import type {
   LessonAiTwins,
   LessonEditorState,
@@ -83,6 +84,9 @@ export function LessonEditorMain({
         lessonId={data.lessonId}
         readyCount={data.aiMaterials.filter((m) => m.current_version_id).length}
       />
+
+      {/* ── Discussion topics — same panel students see, manage-gated ── */}
+      <LessonDiscussionSection lessonId={data.lessonId} />
     </div>
   );
 }

@@ -4765,7 +4765,8 @@
       "read_stats": "~{{words}} từ · {{minutes}} phút đọc",
       "downloadable_resources": "Tài nguyên tải xuống",
       "material_history": "Lịch sử tài liệu",
-      "knowledge_graph": "Đồ thị tri thức"
+      "knowledge_graph": "Đồ thị tri thức",
+      "discussion": "Thảo luận"
     },
     "editor": {
       "label": "Trình soạn thảo Markdown",
@@ -5113,6 +5114,7 @@
     "comment_placeholder": "Viết bình luận…",
     "topic_title_placeholder": "Tiêu đề chủ đề (ví dụ: một câu hỏi mở)",
     "topic_body_placeholder": "Thêm bối cảnh hoặc (các) câu hỏi để thảo luận (không bắt buộc, hỗ trợ Markdown)",
+    "inline_hint": "Enter để đăng · phần mô tả không bắt buộc",
     "new_topic_title": "Chủ đề thảo luận mới",
     "topic_posted": "Đã đăng chủ đề",
     "no_comments": "Chưa có bình luận nào — hãy là người trả lời đầu tiên.",

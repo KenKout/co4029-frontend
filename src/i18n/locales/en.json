@@ -2738,6 +2738,7 @@
     "comment_placeholder": "Write a comment…",
     "topic_title_placeholder": "Topic title (e.g. an open question)",
     "topic_body_placeholder": "Add context or the question(s) to discuss (optional, Markdown supported)",
+    "inline_hint": "Enter to post · the detail field is optional",
     "new_topic_title": "New discussion topic",
     "topic_posted": "Topic posted",
     "no_comments": "No comments yet — be the first to reply.",
@@ -4899,7 +4900,8 @@
       "read_stats": "~{{words}} words · {{minutes}} min read",
       "downloadable_resources": "Downloadable Resources",
       "material_history": "Material history",
-      "knowledge_graph": "Knowledge Graph"
+      "knowledge_graph": "Knowledge Graph",
+      "discussion": "Discussion"
     },
     "editor": {
       "label": "Markdown Editor",
