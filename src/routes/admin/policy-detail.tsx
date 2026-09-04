@@ -17,10 +17,7 @@ import {
 import { displayVersion } from "./_components/policies/policy-display";
 import { PolicyAudiencePicker } from "./_components/policies/PolicyAudiencePicker";
 import { PolicyStatusBadge } from "./_components/policies/PolicyStatusBadge";
-import {
-  DraftActionsBar,
-  PolicyVersionEditor,
-} from "./_components/policies/PolicyVersionEditor";
+import { PolicyVersionEditor } from "./_components/policies/PolicyVersionEditor";
 import { PolicyVersionPanel } from "./_components/policies/PolicyVersionPanel";
 
 /**
@@ -287,26 +284,21 @@ function PolicyWorkspace({
           )}
         </main>
 
-        <div className="lg:col-span-3">
-          {/* Shared action bar pinned above the version history; sticky so it
-              stays reachable while either column scrolls. */}
-          <div className="lg:sticky lg:top-16 z-10 space-y-4">
-            <DraftActionsBar
-              dirty={combinedDirty}
-              onSave={() => void handleCombinedSave()}
-              onPublish={() => void handleCombinedPublish()}
-              savePending={savePending}
-              publishPending={publishPending}
-              canPublish={canPublish}
-            />
-            <PolicyVersionPanel
-              versions={policy.versions}
-              currentId={null}
-              selectedVersionId={selectedVersionId}
-              onSelect={onSelectVersion}
-              canManage
-            />
-          </div>
+        <div className="lg:col-span-3 lg:sticky lg:top-16 z-10">
+          {/* One sticky section: actions + version history. */}
+          <PolicyVersionPanel
+            versions={policy.versions}
+            currentId={null}
+            selectedVersionId={selectedVersionId}
+            onSelect={onSelectVersion}
+            canManage
+            actionsDirty={combinedDirty}
+            onSave={() => void handleCombinedSave()}
+            onPublish={() => void handleCombinedPublish()}
+            savePending={savePending}
+            publishPending={publishPending}
+            canPublish={canPublish}
+          />
         </div>
       </div>
   );
