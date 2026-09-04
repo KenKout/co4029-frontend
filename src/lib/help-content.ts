@@ -214,8 +214,12 @@ export type PolicySlug =
   | "privacy"
   | "terms"
   | "cookies"
-  | "learning-program"
-  | "career-path";
+  // The academic documents below are NOT part of the static manifest's link
+  // surfaces (footer / help fallback) — they are seeded drafts an admin must
+  // review and publish, so they only surface through the server-driven
+  // /policies index. Server slugs may still be one of these; the /policy/$slug
+  // route accepts any slug the server serves.
+  | (string & {});
 
 /**
  * Display titles for the policy slugs the footer advertises.
@@ -233,14 +237,7 @@ export const POLICY_TITLES: Record<PolicySlug, string> = {
   privacy: "Privacy Policy",
   terms: "Terms of Service",
   cookies: "Cookie Policy",
-  "learning-program": "Learning Program Policy",
-  "career-path": "Career Path Policy",
 };
 
-export const POLICY_ORDER: PolicySlug[] = [
-  "privacy",
-  "terms",
-  "cookies",
-  "learning-program",
-  "career-path",
-];
+/** Static fallback order — the three always-published legal documents only. */
+export const POLICY_ORDER: PolicySlug[] = ["privacy", "terms", "cookies"];

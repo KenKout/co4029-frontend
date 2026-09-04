@@ -55,20 +55,10 @@ export default function Footer() {
         >
           Cookie Policy
         </Link>
-        <Link
-          className="hover:text-white transition-colors"
-          to="/policy/$slug"
-          params={{ slug: "learning-program" }}
-        >
-          Learning Program Policy
-        </Link>
-        <Link
-          className="hover:text-white transition-colors"
-          to="/policy/$slug"
-          params={{ slug: "career-path" }}
-        >
-          Career Path Policy
-        </Link>
+        {/* Academic policies (learning-program, career-path) are NOT listed
+            here: they are seeded drafts, only meaningful once an admin has
+            reviewed/published them, and the /policies page lists whatever
+            the server actually serves instead of hardcoding slugs. */}
         <Link className="hover:text-white transition-colors" to="/help">
           Help
         </Link>

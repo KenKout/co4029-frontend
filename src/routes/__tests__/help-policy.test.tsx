@@ -114,14 +114,13 @@ describe("policy content", () => {
     }
   });
 
-  it("covers every platform-wide policy advertised by the footer", () => {
-    expect([...POLICY_ORDER].sort()).toEqual([
-      "career-path",
-      "cookies",
-      "learning-program",
-      "privacy",
-      "terms",
-    ]);
+  it("covers exactly the always-published legal documents", () => {
+    // The academic policies (learning-program, career-path) are seeded drafts
+    // an admin must publish; they surface only through the server-driven
+    // index (/policies), never as hardcoded footer/help slugs.
+    expect([...POLICY_ORDER].sort()).toEqual(["cookies", "privacy", "terms"]);
+    expect(POLICY_ORDER).not.toContain("learning-program");
+    expect(POLICY_ORDER).not.toContain("career-path");
   });
 
   it("reads document bodies from the API, not a bundled constant", () => {
@@ -155,6 +154,10 @@ describe("previously-dead links are now wired", () => {
     for (const slug of POLICY_ORDER) {
       expect(FOOTER_SRC).toContain(`slug: "${slug}"`);
     }
+    // No hardcoded academic-policy slugs: the footer must not advertise
+    // documents whose publication state lives server-side.
+    expect(FOOTER_SRC).not.toContain('slug: "learning-program"');
+    expect(FOOTER_SRC).not.toContain('slug: "career-path"');
   });
 
   it("footer links to help", () => {
