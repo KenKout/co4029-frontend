@@ -6541,6 +6541,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/me/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List My Links
+         * @description List the caller's external profile links (FR-2.8).
+         *
+         *     The same links also ride along on ``GET /users/me`` under
+         *     ``profile.links``; this endpoint exists so the profile editor can refetch
+         *     just the list after a write without re-reading the whole user.
+         */
+        get: operations["list_my_links_api_v1_users_me_links_get"];
+        put?: never;
+        /**
+         * Create My Link
+         * @description Add an external link (website / GitHub / LinkedIn / portfolio / other).
+         */
+        post: operations["create_my_link_api_v1_users_me_links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/links/{link_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete My Link
+         * @description Remove one of the caller's own links (soft-delete).
+         */
+        delete: operations["delete_my_link_api_v1_users_me_links__link_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update My Link
+         * @description Update one of the caller's own links.
+         *
+         *     404 (not 403) when the link belongs to somebody else: the service scopes
+         *     the lookup by owner, so a foreign id is never confirmed to exist.
+         */
+        patch: operations["update_my_link_api_v1_users_me_links__link_id__patch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -15654,6 +15709,69 @@ export interface components {
             bio?: string | null;
             /** Locale */
             locale?: string | null;
+            /** Links */
+            links?: components["schemas"]["UserProfileLinkRead"][];
+        };
+        /**
+         * UserProfileLinkIn
+         * @description Create payload for one external profile link (FR-2.8).
+         */
+        UserProfileLinkIn: {
+            /**
+             * Link Type
+             * @enum {string}
+             */
+            link_type: "website" | "github" | "linkedin" | "portfolio" | "other";
+            /** Url */
+            url: string;
+            /** Label */
+            label?: string | null;
+        };
+        /** UserProfileLinkRead */
+        UserProfileLinkRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Link Type */
+            link_type: string;
+            /** Url */
+            url: string;
+            /** Label */
+            label?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * UserProfileLinkUpdate
+         * @description Partial update of an existing link.
+         *
+         *     Every field is optional and ``exclude_unset`` is what the service reads,
+         *     so omitting a field leaves it alone. ``label`` is the one field a caller
+         *     may legitimately want to CLEAR, so an explicit ``null`` is honoured for it
+         *     -- distinguished from "omitted" by the unset check, not by the value.
+         */
+        UserProfileLinkUpdate: {
+            /** Link Type */
+            link_type?: ("website" | "github" | "linkedin" | "portfolio" | "other") | null;
+            /** Url */
+            url?: string | null;
+            /** Label */
+            label?: string | null;
         };
         /** UserProfileUpdate */
         UserProfileUpdate: {
@@ -16279,6 +16397,9 @@ export type SchemaUserListRow = components['schemas']['UserListRow'];
 export type SchemaUserOverviewRead = components['schemas']['UserOverviewRead'];
 export type SchemaUserPermissionsRead = components['schemas']['UserPermissionsRead'];
 export type SchemaUserProfileRead = components['schemas']['UserProfileRead'];
+export type SchemaUserProfileLinkIn = components['schemas']['UserProfileLinkIn'];
+export type SchemaUserProfileLinkRead = components['schemas']['UserProfileLinkRead'];
+export type SchemaUserProfileLinkUpdate = components['schemas']['UserProfileLinkUpdate'];
 export type SchemaUserProfileUpdate = components['schemas']['UserProfileUpdate'];
 export type SchemaUserRead = components['schemas']['UserRead'];
 export type SchemaUserSpendOut = components['schemas']['UserSpendOut'];
@@ -27497,6 +27618,123 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    list_my_links_api_v1_users_me_links_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfileLinkRead"][];
+                };
+            };
+        };
+    };
+    create_my_link_api_v1_users_me_links_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserProfileLinkIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfileLinkRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_my_link_api_v1_users_me_links__link_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserProfileLinkUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfileLinkRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_my_link_api_v1_users_me_links__link_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

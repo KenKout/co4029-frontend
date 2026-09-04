@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiFetch, apiPatch, apiPost } from "../client";
+import { apiDelete, apiFetch, apiPatch, apiPost } from "../client";
 import { authenticatedFetch } from "../../auth";
 import { queryKeys } from "../query-keys";
 import type {
@@ -14,6 +14,9 @@ import type {
   MyPermissions,
   TokenResponse,
   User,
+  UserProfileLink,
+  UserProfileLinkIn,
+  UserProfileLinkUpdate,
   UserProfileUpdate,
 } from "../types";
 
@@ -228,5 +231,54 @@ export function useUploadAvatar() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.auth.me() });
     },
+  });
+}
+
+// --- External profile links (FR-2.8) --------------------------------------
+// Every mutation invalidates BOTH the links list and `auth.me`: the same links
+// are embedded in `me.profile.links`, so refreshing only one of the two leaves
+// the profile page showing a stale set.
+
+export function useMyProfileLinks() {
+  return useQuery({
+    queryKey: queryKeys.auth.profileLinks(),
+    queryFn: () => apiFetch<UserProfileLink[]>("/users/me/links"),
+  });
+}
+
+function useInvalidateProfileLinks() {
+  const qc = useQueryClient();
+  return () => {
+    void qc.invalidateQueries({ queryKey: queryKeys.auth.profileLinks() });
+    void qc.invalidateQueries({ queryKey: queryKeys.auth.me() });
+  };
+}
+
+export function useCreateProfileLink() {
+  const invalidate = useInvalidateProfileLinks();
+
+  return useMutation({
+    mutationFn: (body: UserProfileLinkIn) =>
+      apiPost<UserProfileLink>("/users/me/links", body),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateProfileLink() {
+  const invalidate = useInvalidateProfileLinks();
+
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: UserProfileLinkUpdate }) =>
+      apiPatch<UserProfileLink>(`/users/me/links/${id}`, body),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteProfileLink() {
+  const invalidate = useInvalidateProfileLinks();
+
+  return useMutation({
+    mutationFn: (id: string) => apiDelete(`/users/me/links/${id}`),
+    onSuccess: invalidate,
   });
 }

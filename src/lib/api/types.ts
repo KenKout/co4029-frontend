@@ -785,6 +785,10 @@ export type NotificationChannel = "email" | "in_app";
 export type User = Schemas["UserRead"];
 export type UserProfile = Schemas["UserProfileRead"];
 export type UserProfileUpdate = Schemas["UserProfileUpdate"];
+export type UserProfileLink = Schemas["UserProfileLinkRead"];
+export type UserProfileLinkIn = Schemas["UserProfileLinkIn"];
+export type UserProfileLinkUpdate = Schemas["UserProfileLinkUpdate"];
+export type ProfileLinkType = UserProfileLinkIn["link_type"];
 export type UserListRow = Schemas["UserListRow"];
 export type UserListPage =
   Schemas["abridgeai__features__identity__schemas__profile__UserListPage"];

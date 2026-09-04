@@ -1103,6 +1103,35 @@
       "upload_failed": "Không thể tải ảnh đại diện lên. Vui lòng thử lại.",
       "invalid_type": "Vui lòng chọn ảnh JPEG, PNG, WebP hoặc GIF.",
       "too_large": "Ảnh phải có dung lượng 2 MB trở xuống."
+    },
+    "links": {
+      "title": "Liên kết ngoài",
+      "hint": "Thêm tối đa {{max}} liên kết đến website, GitHub, LinkedIn hoặc portfolio của bạn.",
+      "add": "Thêm liên kết",
+      "adding": "Đang thêm...",
+      "remove": "Xoá liên kết",
+      "empty": "Bạn chưa thêm liên kết nào.",
+      "url_placeholder": "https://example.com",
+      "label_placeholder": "Nhãn (tùy chọn)",
+      "full": "Bạn đã đạt giới hạn {{max}} liên kết.",
+      "types": {
+        "website": "Website",
+        "github": "GitHub",
+        "linkedin": "LinkedIn",
+        "portfolio": "Portfolio",
+        "other": "Khác"
+      },
+      "errors": {
+        "url_required": "Vui lòng nhập địa chỉ liên kết.",
+        "url_scheme": "Liên kết phải bắt đầu bằng http:// hoặc https://.",
+        "label_max": "Nhãn tối đa 100 ký tự."
+      },
+      "toasts": {
+        "added": "Đã thêm liên kết",
+        "add_failed": "Không thể thêm liên kết. Vui lòng thử lại.",
+        "removed": "Đã xoá liên kết",
+        "remove_failed": "Không thể xoá liên kết. Vui lòng thử lại."
+      }
     }
   },
   "notifications": {
@@ -5086,7 +5115,8 @@
     "go_to_settings": "Mở cài đặt",
     "sections": {
       "personal": "Thông tin cá nhân",
-      "account": "Tài khoản"
+      "account": "Tài khoản",
+      "links": "Liên kết ngoài"
     },
     "fields": {
       "full_name": "Họ và tên",
@@ -5097,7 +5127,8 @@
     },
     "empty": {
       "bio": "Chưa có giới thiệu",
-      "last_login": "Chưa có dữ liệu"
+      "last_login": "Chưa có dữ liệu",
+      "links": "Chưa có liên kết nào"
     },
     "status": {
       "active": "Đang hoạt động",

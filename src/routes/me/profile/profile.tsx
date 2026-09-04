@@ -7,6 +7,7 @@ import { useMe } from "@/lib/api/hooks/auth";
 import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
 import { useFormatDate } from "@/lib/format/date";
 import AccountMetaSection from "./_components/profile/AccountMetaSection";
+import ExternalLinksSection from "./_components/profile/ExternalLinksSection";
 import IdentityCard from "./_components/profile/IdentityCard";
 import PersonalInfoSection from "./_components/profile/PersonalInfoSection";
 import ProfileFooterActions from "./_components/profile/ProfileFooterActions";
@@ -78,6 +79,7 @@ export default function ProfilePage() {
 
       <IdentityCard view={view} />
       <PersonalInfoSection view={view} />
+      <ExternalLinksSection view={view} />
       <AccountMetaSection view={view} />
       <ProfileFooterActions />
     </div>

@@ -1181,6 +1181,35 @@
     "toasts": {
       "saved": "Profile saved",
       "save_failed": "Couldn't save your profile. Please try again."
+    },
+    "links": {
+      "title": "External links",
+      "hint": "Add up to {{max}} links to your website, GitHub, LinkedIn or portfolio.",
+      "add": "Add link",
+      "adding": "Adding…",
+      "remove": "Remove link",
+      "empty": "You haven't added any links yet.",
+      "url_placeholder": "https://example.com",
+      "label_placeholder": "Label (optional)",
+      "full": "You've reached the limit of {{max}} links.",
+      "types": {
+        "website": "Website",
+        "github": "GitHub",
+        "linkedin": "LinkedIn",
+        "portfolio": "Portfolio",
+        "other": "Other"
+      },
+      "errors": {
+        "url_required": "Enter a link URL.",
+        "url_scheme": "Link must start with http:// or https://.",
+        "label_max": "Label must be at most 100 characters."
+      },
+      "toasts": {
+        "added": "Link added",
+        "add_failed": "Couldn't add the link. Please try again.",
+        "removed": "Link removed",
+        "remove_failed": "Couldn't remove the link. Please try again."
+      }
     }
   },
   "notifications": {
@@ -5241,7 +5270,8 @@
     "go_to_settings": "Open settings",
     "sections": {
       "personal": "Personal information",
-      "account": "Account"
+      "account": "Account",
+      "links": "External links"
     },
     "fields": {
       "full_name": "Full name",
@@ -5252,7 +5282,8 @@
     },
     "empty": {
       "bio": "No bio yet",
-      "last_login": "No data yet"
+      "last_login": "No data yet",
+      "links": "No links yet"
     },
     "status": {
       "active": "Active",

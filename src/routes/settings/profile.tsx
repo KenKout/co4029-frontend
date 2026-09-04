@@ -3,13 +3,16 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import AvatarUploadRow from "./_components/profile/AvatarUploadRow";
 import ProfileFormFields from "./_components/profile/ProfileFormFields";
+import ProfileLinksSection from "./_components/profile/ProfileLinksSection";
 import ProfileSaveRow from "./_components/profile/ProfileSaveRow";
 import { useSettingsProfile } from "./_components/profile/use-settings-profile";
+import { useProfileLinks } from "./_components/profile/use-profile-links";
 
 export default function SettingsProfilePage() {
   const { t } = useTranslation();
   const { me, errors, isSaving, handleSubmit, goBack, avatar } =
     useSettingsProfile();
+  const links = useProfileLinks();
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6">
@@ -25,6 +28,11 @@ export default function SettingsProfilePage() {
             <ProfileFormFields me={me} errors={errors} />
             <ProfileSaveRow isSaving={isSaving} />
           </form>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="pt-6">
+          <ProfileLinksSection links={links} />
         </CardContent>
       </Card>
     </div>

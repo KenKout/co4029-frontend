@@ -12,6 +12,7 @@ export const queryKeys = {
     me: () => ["auth", "me"] as const,
     permissions: () => ["auth", "permissions"] as const,
     mfaStatus: () => ["auth", "mfa", "status"] as const,
+    profileLinks: () => ["auth", "profile", "links"] as const,
   },
 
   courses: {
