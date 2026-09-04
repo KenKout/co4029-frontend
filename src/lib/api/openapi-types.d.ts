@@ -14900,6 +14900,14 @@ export interface components {
              * @default false
              */
             session_flagged: boolean;
+            /** Policy Version */
+            policy_version?: string | null;
+            /** Rules Version */
+            rules_version?: string | null;
+            /** Prompt Version */
+            prompt_version?: string | null;
+            /** Output Guard Version */
+            output_guard_version?: string | null;
         };
         /** SettingOut */
         SettingOut: {
