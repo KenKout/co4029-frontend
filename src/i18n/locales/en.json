@@ -73,7 +73,7 @@
     "org_units": "Organization",
     "operations": "Operations",
     "resource_inventory": "Resource inventory",
-    "policies": "Policies"
+    "organizations": "Organizations"
   },
   "auth": {
     "sign_in": "Sign in",
@@ -257,8 +257,8 @@
       "reviews_overdue_sub": "Student review cards past their scheduled date"
     },
     "attention": {
-      "more_signals": "+{{count}} more signal",
-      "more_signals_plural": "+{{count}} more signals",
+      "more_signals_one": "+{{count}} more signal",
+      "more_signals_other": "+{{count}} more signals",
       "progress": "complete"
     },
     "health": {
@@ -272,11 +272,11 @@
       "pending": "Pending review",
       "last_activity": "Last activity",
       "today": "Today",
-      "days_ago": "{{count}} day ago",
-      "days_ago_plural": "{{count}} days ago",
+      "days_ago_one": "{{count}} day ago",
+      "days_ago_other": "{{count}} days ago",
       "no_data": "Not enough data yet",
-      "pass_sample": "Based on {{count}} completed attempt",
-      "pass_sample_plural": "Based on {{count}} completed attempts",
+      "pass_sample_one": "Based on {{count}} completed attempt",
+      "pass_sample_other": "Based on {{count}} completed attempts",
       "action": "Open",
       "details": "Details",
       "view_all": "View all",

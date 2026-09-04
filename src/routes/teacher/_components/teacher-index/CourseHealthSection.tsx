@@ -192,12 +192,9 @@ function DetailRow({ row, t }: { row: CourseHealthRow; t: TranslateFn }) {
   const pass = hasUsablePassRate(row)
     ? `${Math.round(row.pass_rate_percent as number)}%`
     : null;
-  const passSample =
-    row.pass_sample === 1
-      ? t("teacher_dashboard.health.pass_sample", { count: 1 })
-      : t("teacher_dashboard.health.pass_sample_plural", {
-          count: row.pass_sample,
-        });
+  const passSample = t("teacher_dashboard.health.pass_sample", {
+    count: row.pass_sample,
+  });
   const lastActivity = <LastActivity iso={row.last_activity_at} t={t} />;
 
   return (

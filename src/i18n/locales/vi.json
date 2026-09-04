@@ -73,8 +73,7 @@
     "close_menu": "Đóng menu",
     "org_units": "Tổ chức",
     "operations": "Vận hành",
-    "resource_inventory": "Tài nguyên",
-    "policies": "Chính sách"
+    "resource_inventory": "Tài nguyên"
   },
   "auth": {
     "sign_in": "Đăng nhập",
@@ -258,9 +257,9 @@
       "reviews_overdue_sub": "Thẻ ôn tập của học viên quá ngày lịch trình"
     },
     "attention": {
-      "more_signals": "+{{count}} tín hiệu khác",
+      "more_signals_one": "+{{count}} tín hiệu khác",
       "progress": "hoàn thành",
-      "more_signals_plural": "+{{count}} tín hiệu khác"
+      "more_signals_other": "+{{count}} tín hiệu khác"
     },
     "health": {
       "title": "Tình trạng khóa học",
@@ -273,9 +272,11 @@
       "pending": "Chờ duyệt",
       "last_activity": "Hoạt động cuối",
       "today": "Hôm nay",
-      "days_ago": "{{count}} ngày trước",
+      "days_ago_one": "{{count}} ngày trước",
+      "days_ago_other": "{{count}} ngày trước",
       "no_data": "Chưa đủ dữ liệu",
-      "pass_sample": "Dựa trên {{count}} lượt làm bài",
+      "pass_sample_one": "Dựa trên {{count}} lượt làm bài",
+      "pass_sample_other": "Dựa trên {{count}} lượt làm bài",
       "action": "Mở",
       "details": "Chi tiết",
       "view_all": "Xem tất cả",
