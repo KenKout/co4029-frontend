@@ -104,6 +104,113 @@ function StaffingSummary({
   );
 }
 
+/**
+ * The table's toolbar: staffing summary + search on the first row, the bulk
+ * bar OR the assign form on the second. `justify-between` spreads each row
+ * across the full toolbar width so the search field and the assign row sit
+ * at opposite edges instead of clustering left.
+ */
+function TeachersToolbar({
+  currentCount,
+  minTeachers,
+  maxTeachers,
+  hasStaffingData,
+  query,
+  onQueryChange,
+  hasTeachers,
+  canAssign,
+  selectedCount,
+  onClearSelection,
+  onBulkRemove,
+  bulkPending,
+  courseId,
+}: {
+  currentCount: number;
+  minTeachers: number;
+  maxTeachers: number;
+  hasStaffingData: boolean;
+  query: string;
+  onQueryChange: (next: string) => void;
+  hasTeachers: boolean;
+  canAssign: boolean;
+  selectedCount: number;
+  onClearSelection: () => void;
+  onBulkRemove: () => void;
+  bulkPending: boolean;
+  courseId: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <StaffingSummary
+          current={currentCount}
+          min={minTeachers}
+          max={maxTeachers}
+        />
+        {/* Search earns its place only once there is a list worth
+            narrowing; two rows do not need a filter. */}
+        {hasTeachers ? (
+          <SearchInput
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
+            onClear={query ? () => onQueryChange("") : undefined}
+            placeholder={t("dept_course_detail.search_teachers")}
+            wrapperClassName="w-full sm:w-64"
+            aria-label={t("dept_course_detail.search_teachers")}
+          />
+        ) : null}
+      </div>
+
+      {/* Bulk bar replaces the assign row while a selection is live:
+          the two are different intents, and stacking both would put
+          an "Add" and a "Remove" side by side over the same list. */}
+      {canAssign && selectedCount > 0 ? (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg bg-m3-surface-container px-3 py-2">
+          <span className="text-sm font-medium text-text-strong">
+            {t("dept_course_detail.bulk_selected", {
+              count: selectedCount,
+            })}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-danger hover:bg-red-50"
+            disabled={bulkPending}
+            onClick={onBulkRemove}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {t("dept_course_detail.bulk_remove")}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onClearSelection}
+          >
+            {t("dept_course_detail.bulk_clear")}
+          </Button>
+        </div>
+      ) : null}
+
+      {/* Assign stays ALWAYS rendered, including on an empty course.
+          It used to live above the table and was fine, but the toolbar it
+          moved into was previously suppressed when the list was empty —
+          which is exactly when a manager needs to assign someone. */}
+      {canAssign && selectedCount === 0 ? (
+        <div className="flex justify-between">
+          <AssignTeacherForm
+            courseId={courseId}
+            currentCount={currentCount}
+            maxCount={hasStaffingData ? maxTeachers : undefined}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function DeptTeachersTab({
   active,
   teachers,
@@ -231,72 +338,21 @@ export function DeptTeachersTab({
             )
           }
           toolbar={
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <StaffingSummary
-                  current={currentCount}
-                  min={minTeachers}
-                  max={maxTeachers}
-                />
-                {/* Search earns its place only once there is a list worth
-                    narrowing; two rows do not need a filter. */}
-                {hasTeachers ? (
-                  <SearchInput
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onClear={query ? () => setQuery("") : undefined}
-                    placeholder={t("dept_course_detail.search_teachers")}
-                    wrapperClassName="w-full sm:w-64"
-                    aria-label={t("dept_course_detail.search_teachers")}
-                  />
-                ) : null}
-              </div>
-
-              {/* Bulk bar replaces the assign row while a selection is live:
-                  the two are different intents, and stacking both would put
-                  an "Add" and a "Remove" side by side over the same list. */}
-              {canAssign && selectedIds.size > 0 ? (
-                <div className="flex flex-wrap items-center gap-3 rounded-lg bg-m3-surface-container px-3 py-2">
-                  <span className="text-sm font-medium text-text-strong">
-                    {t("dept_course_detail.bulk_selected", {
-                      count: selectedIds.size,
-                    })}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-danger hover:bg-red-50"
-                    disabled={bulkRemove.isPending}
-                    onClick={() => void handleBulkRemove()}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    {t("dept_course_detail.bulk_remove")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedIds(new Set())}
-                  >
-                    {t("dept_course_detail.bulk_clear")}
-                  </Button>
-                </div>
-              ) : null}
-
-              {/* Assign stays ALWAYS rendered, including on an empty course.
-                  It used to live above the table and was fine, but the
-                  toolbar it moved into was previously suppressed when the
-                  list was empty — which is exactly when a manager needs to
-                  assign someone. */}
-              {canAssign && selectedIds.size === 0 ? (
-                <AssignTeacherForm
-                  courseId={courseId}
-                  currentCount={currentCount}
-                  maxCount={hasStaffingData ? maxTeachers : undefined}
-                />
-              ) : null}
-            </div>
+            <TeachersToolbar
+              currentCount={currentCount}
+              minTeachers={minTeachers}
+              maxTeachers={maxTeachers}
+              hasStaffingData={hasStaffingData}
+              query={query}
+              onQueryChange={setQuery}
+              hasTeachers={hasTeachers}
+              canAssign={canAssign}
+              selectedCount={selectedIds.size}
+              onClearSelection={() => setSelectedIds(new Set())}
+              onBulkRemove={() => void handleBulkRemove()}
+              bulkPending={bulkRemove.isPending}
+              courseId={courseId}
+            />
           }
         />
       )}
