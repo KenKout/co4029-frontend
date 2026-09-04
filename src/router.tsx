@@ -851,6 +851,15 @@ const policyRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/support/policy")),
 });
 
+// The signed-in catalog — search/filter/cards over every policy this reader is
+// a party to. Public parent (not authenticatedRoute) so the same URL works
+// signed out; the index just returns the anonymous (public + student) set.
+const policiesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/policies",
+  component: lazyRouteComponent(() => import("@/routes/support/policies")),
+});
+
 
 /* ── Legacy path aliases ────────────────────────────────────────────────────
  *
@@ -973,6 +982,7 @@ const routeTree = rootRoute.addChildren([
   loginMfaRoute,
   helpRoute,
   policyRoute,
+  policiesRoute,
   authenticatedRoute.addChildren([
     dashboardRoute,
     coursesRoute,

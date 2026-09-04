@@ -431,6 +431,9 @@ export const settingsNavItems: NavItem[] = [
 export const secondaryNavItems: NavItem[] = [
   // Was href:"#" — now points at the public help page.
   { label: "Help", i18nKey: "nav.help", href: "/help", icon: HelpCircle },
+  // The policy catalog: every document this reader is a party to, with
+  // search/filter/cards. Public route — works signed out too.
+  { label: "Policies", i18nKey: "nav.policies", href: "/policies", icon: ScrollText },
 ];
 
 /**

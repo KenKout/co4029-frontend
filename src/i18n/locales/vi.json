@@ -68,6 +68,7 @@
     "admin": "Quản trị",
     "system_config": "Cấu hình hệ thống",
     "help": "Trợ giúp",
+    "policies": "Chính sách",
     "open_menu": "Mở menu",
     "close_menu": "Đóng menu",
     "org_units": "Tổ chức",
@@ -5176,6 +5177,26 @@
       "attachToStage": "Đang thêm vào lộ trình nghề…"
     }
   },
+
+  "policies_page": {
+    "title": "Chính sách",
+    "intro": "Các văn bản điều chỉnh việc bạn sử dụng aBridgeAI — nghĩa vụ của bạn, dữ liệu của bạn, và quy tắc của các tính năng học thuật.",
+    "search_placeholder": "Tìm chính sách",
+    "filter_aria": "Lọc theo nhóm",
+    "filter": {
+      "all": "Tất cả",
+      "legal": "Pháp lý",
+      "academic": "Học thuật"
+    },
+    "category_legal": "Pháp lý",
+    "category_academic": "Học thuật",
+    "version_n": "Phiên bản {{version}}",
+    "empty_title": "Chưa có chính sách",
+    "empty_body": "Chính sách đã xuất bản sẽ xuất hiện tại đây.",
+    "empty_filtered_title": "Không có chính sách phù hợp",
+    "empty_filtered_body": "Thử từ khoá hoặc nhóm khác."
+  }
+,
   "discussion": {
     "title": "Thảo luận",
     "unknown_author": "Không rõ",

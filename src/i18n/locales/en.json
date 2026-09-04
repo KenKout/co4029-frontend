@@ -67,6 +67,7 @@
     "admin": "Admin",
     "system_config": "System Config",
     "help": "Help",
+    "policies": "Policies",
     "open_menu": "Open menu",
     "close_menu": "Close menu",
     "org_units": "Organization",
@@ -2800,6 +2801,26 @@
     "sort_to_correct": "Sort to correct order",
     "back_to_my_order": "Back to my order"
   },
+
+  "policies_page": {
+    "title": "Policies",
+    "intro": "The documents that govern how you use aBridgeAI — your obligations, your data, and the rules of the academic features you use.",
+    "search_placeholder": "Search policies",
+    "filter_aria": "Filter by category",
+    "filter": {
+      "all": "All",
+      "legal": "Legal",
+      "academic": "Academic"
+    },
+    "category_legal": "Legal",
+    "category_academic": "Academic",
+    "version_n": "Version {{version}}",
+    "empty_title": "No policies yet",
+    "empty_body": "Published policies will appear here.",
+    "empty_filtered_title": "No policies match",
+    "empty_filtered_body": "Try a different search or category."
+  }
+,
   "discussion": {
     "title": "Discussion",
     "unknown_author": "Unknown",
