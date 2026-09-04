@@ -83,13 +83,12 @@ function StudentRow({
               them all would bury the row that matters most. */}
           {extraSignals > 0 ? (
             <span className="ml-1 font-medium text-m3-on-surface-variant">
-              {extraSignals === 1
-                ? t("teacher_dashboard.attention.more_signals", {
-                    count: 1,
-                  })
-                : t("teacher_dashboard.attention.more_signals_plural", {
-                    count: extraSignals,
-                  })}
+              {/* i18next picks the `_one` / `_other` form from `count`. The
+                  keys previously used the v3 `_plural` suffix, which this
+                  resolver never selects, forcing the manual count branch. */}
+              {t("teacher_dashboard.attention.more_signals", {
+                count: extraSignals,
+              })}
             </span>
           ) : null}
         </p>
