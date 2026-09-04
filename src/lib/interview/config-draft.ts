@@ -23,6 +23,11 @@ import {
 
 export type Persona = NonNullable<InterviewConfigUpdate["persona"]>;
 export type TtsVoice = NonNullable<InterviewConfigUpdate["tts_voice"]>;
+/** Every value a config row may HOLD. ``end_and_flag`` is read-only legacy: the
+ *  backend write schema (`SecurityResponsePolicyWriteLiteral`) no longer accepts
+ *  it and the teacher Select no longer offers it, because the platform never
+ *  actually terminates a session for it — see settings-security-card.tsx. Kept
+ *  here so a draft hydrated from an older config still type-checks. */
 export type SecurityResponsePolicy =
   | "continue_and_log"
   | "warn_and_continue"

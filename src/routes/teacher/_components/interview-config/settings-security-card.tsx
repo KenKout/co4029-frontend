@@ -25,6 +25,11 @@ import {
 } from "@/routes/teacher/_components/interview-config/form-primitives";
 import type { SettingsFieldsetProps } from "@/routes/teacher/_components/interview-config/settings-fieldset";
 
+const SELECTABLE_POLICIES: readonly SecurityResponsePolicy[] = [
+  "continue_and_log",
+  "warn_and_continue",
+];
+
 export function SettingsSecurityCard({
   draft,
   update,
@@ -91,13 +96,10 @@ export function SettingsSecurityCard({
                   onValueChange={(next) =>
                     update("security_response_policy", next)
                   }
-                  options={(
-                    [
-                      "continue_and_log",
-                      "warn_and_continue",
-                      "end_and_flag",
-                    ] as SecurityResponsePolicy[]
-                  ).map((policy) => ({
+                  placeholder={t(
+                    "teacher_interview_config.security.policy.end_and_flag",
+                  )}
+                  options={SELECTABLE_POLICIES.map((policy) => ({
                     value: policy,
                     label: t(
                       `teacher_interview_config.security.policy.${policy}`,

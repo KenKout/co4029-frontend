@@ -262,7 +262,16 @@ function buildFullConfigUpdatePayload(
       notes: draft.notes,
       criteria: draft.rubric_criteria,
     }),
-    security_response_policy: draft.security_response_policy,
+    // A draft hydrated from a config saved before ``end_and_flag`` was
+    // withdrawn still carries that value, but the write schema no longer accepts
+    // it (the platform never terminated a session for it — see
+    // settings-security-card.tsx). Sending it back would 422 the whole save, so
+    // it collapses to the policy the runtime was actually applying all along:
+    // warn-and-redirect. Any other value passes through untouched.
+    security_response_policy:
+      draft.security_response_policy === "end_and_flag"
+        ? "warn_and_continue"
+        : draft.security_response_policy,
     security_max_consecutive_attempts:
       integerOrNull(draft.security_max_consecutive_attempts) ?? 3,
     security_custom_refusal_en: draft.security_custom_refusal_en.trim() || null,

@@ -4670,7 +4670,7 @@
       "policy": {
         "continue_and_log": "Continue and log",
         "warn_and_continue": "Warn and continue",
-        "end_and_flag": "End and flag after threshold"
+        "end_and_flag": "End and flag (no longer available)"
       },
       "custom_en": "Custom safe refusal (English)",
       "custom_vi": "Custom safe refusal (Vietnamese)",
