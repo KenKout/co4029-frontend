@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlignLeft,
   Bold,
@@ -40,12 +40,24 @@ export function PolicyVersionEditor({
   policyId,
   draft,
   bodyProse,
+  onDirtyChange,
+  registerActions,
 }: {
   policyId: string;
   /** Always the full version, body included — the parent fetches it. */
   draft: PolicyVersionRead;
   /** Reader typography, passed in so the preview matches the public page. */
   bodyProse: string;
+  /** Reports the draft text's unsaved state to the shared action bar. */
+  onDirtyChange?: (dirty: boolean) => void;
+  /** Registers save/publish so the shared sticky bar can trigger them. */
+  registerActions?: (actions: {
+    save: () => Promise<boolean>;
+    publish: () => Promise<void>;
+    savePending: () => boolean;
+    publishPending: () => boolean;
+    canPublish: () => boolean;
+  } | null) => void;
 }) {
   const { t } = useTranslation();
   const bodyRef = useRef<HTMLTextAreaElement>(null);
@@ -102,39 +114,24 @@ export function PolicyVersionEditor({
     }
   }
 
-  const busy = update.isPending || publish.isPending;
+  useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange]);
+
+  // Register the latest actions; unregister (null) on unmount.
+  const actionsRef = useRef({ save: handleSave, publish: handlePublish });
+  actionsRef.current = { save: handleSave, publish: handlePublish };
+  useEffect(() => {
+    registerActions?.({
+      save: () => actionsRef.current.save(),
+      publish: () => actionsRef.current.publish(),
+      savePending: () => update.isPending,
+      publishPending: () => publish.isPending,
+      canPublish: () => Boolean(body.trim()),
+    });
+    return () => registerActions?.(null);
+  }, [registerActions]);
 
   return (
     <section className="space-y-4">
-      {/* Action bar — sticky at the top so Save/Publish stay reachable over
-          the long body. The dirty dot states which button does something. */}
-      <div className="sticky top-16 z-10 flex items-center justify-end gap-2 -mx-1 rounded-xl border border-m3-outline-variant/20 bg-white/95 px-4 py-2.5 backdrop-blur-md shadow-sm">
-        <span className={cn("mr-auto text-xs font-semibold", dirty ? "text-amber-700" : "text-m3-on-surface-variant/60")}>
-          {dirty ? t("admin.policies.unsaved_dot") : t("admin.policies.saved_dot")}
-        </span>
-        <Button
-          type="button"
-          variant="ghost"
-          disabled={!dirty || busy}
-          onClick={() => void handleSave()}
-        >
-          {update.isPending
-            ? t("admin.policies.actions.saving")
-            : t("admin.policies.actions.save")}
-        </Button>
-        <Button
-          type="button"
-          className="gap-2"
-          disabled={busy || !body.trim()}
-          onClick={() => void handlePublish()}
-        >
-          <Send className="h-4 w-4" />
-          {publish.isPending
-            ? t("admin.policies.actions.publishing")
-            : t("admin.policies.actions.publish")}
-        </Button>
-      </div>
-
       <label className="block">
         <span className="text-sm font-semibold text-text-strong">
           {t("admin.policies.fields.title")}
@@ -238,6 +235,57 @@ function EditorToolbar({
       <span className="ml-auto pr-2 text-xs text-m3-on-surface-variant/50">
         {t("admin.policies.editor_hint")}
       </span>
+    </div>
+  );
+}
+
+/**
+ * The sticky Save / Publish bar for the whole authoring workspace — lives
+ * above the version-history rail so both the editor body and the audience
+ * picker scroll under it. Covers the draft text (editor's own dirty state)
+ * AND the audience selection (the picker reports its dirty flag up).
+ */
+export function DraftActionsBar({
+  dirty,
+  onSave,
+  onPublish,
+  savePending,
+  publishPending,
+  canPublish,
+}: {
+  dirty: boolean;
+  onSave: () => void;
+  onPublish: () => void;
+  savePending: boolean;
+  publishPending: boolean;
+  canPublish: boolean;
+}) {
+  const { t } = useTranslation();
+  const busy = savePending || publishPending;
+  return (
+    <div className="sticky top-16 z-10 flex items-center justify-end gap-2 rounded-xl border border-m3-outline-variant/20 bg-white/95 px-4 py-2.5 backdrop-blur-md shadow-sm">
+      <span className={cn("mr-auto text-xs font-semibold", dirty ? "text-amber-700" : "text-m3-on-surface-variant/60")}>
+        {dirty ? t("admin.policies.unsaved_dot") : t("admin.policies.saved_dot")}
+      </span>
+      <Button
+        type="button"
+        variant="ghost"
+        disabled={!dirty || busy}
+        onClick={onSave}
+      >
+        {savePending ? t("admin.policies.actions.saving") : t("admin.policies.actions.save")}
+      </Button>
+      <Button
+        type="button"
+        className="gap-2"
+        disabled={busy || !canPublish}
+        onClick={onPublish}
+      >
+        <Send className="h-4 w-4" />
+        {publishPending
+          ? t("admin.policies.actions.publishing")
+          : t("admin.policies.actions.publish")}
+      </Button>
     </div>
   );
 }

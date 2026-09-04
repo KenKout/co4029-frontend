@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, ExternalLink, FilePlus2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -17,7 +17,10 @@ import {
 import { displayVersion } from "./_components/policies/policy-display";
 import { PolicyAudiencePicker } from "./_components/policies/PolicyAudiencePicker";
 import { PolicyStatusBadge } from "./_components/policies/PolicyStatusBadge";
-import { PolicyVersionEditor } from "./_components/policies/PolicyVersionEditor";
+import {
+  DraftActionsBar,
+  PolicyVersionEditor,
+} from "./_components/policies/PolicyVersionEditor";
 import { PolicyVersionPanel } from "./_components/policies/PolicyVersionPanel";
 
 /**
@@ -170,34 +173,80 @@ function PolicyWorkspace({
   onDraftRetry?: () => void;
 }) {
   const { t } = useTranslation();
+  // The audience picker registers its save; the shared sticky bar triggers it
+  // alongside the draft-text save.
+  const audienceSaveRef = useRef<(() => Promise<void>) | null>(null);
+  const registerAudienceSave = useCallback(
+    (save: (() => Promise<void>) | null) => {
+      audienceSaveRef.current = save;
+    },
+    [],
+  );
+  const [audienceDirty, setAudienceDirty] = useState(false);
+  const handleAudienceDirty = useCallback((dirty: boolean) => {
+    setAudienceDirty(dirty);
+  }, []);
+  const [editorDirty, setEditorDirty] = useState(false);
+  const handleEditorDirty = useCallback((dirty: boolean) => {
+    setEditorDirty(dirty);
+  }, []);
+
+  // Latest editor actions (save/publish/pending flags) from the mounted editor.
+  const editorActionsRef = useRef<{
+    save: () => Promise<boolean>;
+    publish: () => Promise<void>;
+    savePending: () => boolean;
+    publishPending: () => boolean;
+    canPublish: () => boolean;
+  } | null>(null);
+  const registerEditorActions = useCallback(
+    (
+      actions: {
+        save: () => Promise<boolean>;
+        publish: () => Promise<void>;
+        savePending: () => boolean;
+        publishPending: () => boolean;
+        canPublish: () => boolean;
+      } | null,
+    ) => {
+      editorActionsRef.current = actions;
+    },
+    [],
+  );
+
+  const combinedDirty = editorDirty || audienceDirty;
+
+  // One Save = draft text (if any) + audience selection (if changed).
+  async function handleCombinedSave() {
+    const saved = (await editorActionsRef.current?.save()) ?? true;
+    if (saved) await audienceSaveRef.current?.();
+  }
+
+  // Publish = save draft text + publish that version (the editor's flow),
+  // then persist the audience selection too so the whole page is consistent.
+  async function handleCombinedPublish() {
+    await editorActionsRef.current?.publish();
+    await audienceSaveRef.current?.();
+  }
+
+  const savePending = editorActionsRef.current?.savePending() ?? false;
+  const publishPending = editorActionsRef.current?.publishPending() ?? false;
+  const canPublish =
+    !selectedVersionId &&
+    Boolean(draft) &&
+    (editorActionsRef.current?.canPublish() ?? false);
+
   return (
       <div className="grid items-start gap-6 lg:grid-cols-10">
         <main className="space-y-5 lg:col-span-7 pt-4">
-          <PolicyAudiencePicker policy={policy} />
+          <PolicyAudiencePicker
+            policy={policy}
+            onDirtyChange={handleAudienceDirty}
+            registerSave={registerAudienceSave}
+          />
 
           {selectedVersionId ? (
-            // A published version under inspection is immutable — show the
-            // exact reader rendering, no editor.
-            inspectBody.isPending ? (
-              <Skeleton className="h-96 w-full rounded-xl" />
-            ) : inspectBody.data ? (
-              <section className="space-y-3">
-                <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                  {t("admin.policies.readonly_banner")}
-                </div>
-                <div className="overflow-hidden rounded-xl border border-m3-outline-variant/20 bg-white p-6">
-                  <RichContent
-                    value={inspectBody.data.body}
-                    format={inspectBody.data.format}
-                    className={PREVIEW_PROSE}
-                  />
-                </div>
-              </section>
-            ) : (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                {t("admin.policies.load_failed")}
-              </div>
-            )
+            <InspectingVersionCard inspectBody={inspectBody} />
           ) : draft ? (
             draftBody.isPending ? (
               <Skeleton className="h-96 w-full rounded-xl" />
@@ -209,6 +258,8 @@ function PolicyWorkspace({
                 policyId={policy.id}
                 draft={draftBody.data}
                 bodyProse={PREVIEW_PROSE}
+                onDirtyChange={handleEditorDirty}
+                registerActions={registerEditorActions}
               />
             ) : (
               <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -236,16 +287,61 @@ function PolicyWorkspace({
           )}
         </main>
 
-        <div className="lg:col-span-3 lg:sticky lg:top-40">
-          <PolicyVersionPanel
-            versions={policy.versions}
-            currentId={null}
-            selectedVersionId={selectedVersionId}
-            onSelect={onSelectVersion}
-            canManage
-          />
+        <div className="lg:col-span-3">
+          {/* Shared action bar pinned above the version history; sticky so it
+              stays reachable while either column scrolls. */}
+          <div className="lg:sticky lg:top-16 z-10 space-y-4">
+            <DraftActionsBar
+              dirty={combinedDirty}
+              onSave={() => void handleCombinedSave()}
+              onPublish={() => void handleCombinedPublish()}
+              savePending={savePending}
+              publishPending={publishPending}
+              canPublish={canPublish}
+            />
+            <PolicyVersionPanel
+              versions={policy.versions}
+              currentId={null}
+              selectedVersionId={selectedVersionId}
+              onSelect={onSelectVersion}
+              canManage
+            />
+          </div>
         </div>
       </div>
+  );
+}
+
+/** A published version under inspection: immutable reader rendering. */
+function InspectingVersionCard({
+  inspectBody,
+}: {
+  inspectBody: ReturnType<typeof useAdminPolicyVersion>;
+}) {
+  const { t } = useTranslation();
+  if (inspectBody.isPending) {
+    return <Skeleton className="h-96 w-full rounded-xl" />;
+  }
+  if (!inspectBody.data) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        {t("admin.policies.load_failed")}
+      </div>
+    );
+  }
+  return (
+    <section className="space-y-3">
+      <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        {t("admin.policies.readonly_banner")}
+      </div>
+      <div className="overflow-hidden rounded-xl border border-m3-outline-variant/20 bg-white p-6">
+        <RichContent
+          value={inspectBody.data.body}
+          format={inspectBody.data.format}
+          className={PREVIEW_PROSE}
+        />
+      </div>
+    </section>
   );
 }
 

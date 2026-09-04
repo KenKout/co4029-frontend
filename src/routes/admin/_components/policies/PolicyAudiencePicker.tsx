@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -20,8 +20,22 @@ import { useSetPolicyAudience, type PolicyDetail } from "@/lib/api/hooks/policie
  * The empty set is a real, meaningful choice rather than an unfinished one,
  * so it is stated on screen ("everyone, including signed-out visitors") instead
  * of being left to look like a form the admin forgot to fill in.
+ *
+ * The section has NO save button of its own: it reports its dirty state up and
+ * registers its save function, which the workspace's shared sticky bar
+ * (DraftActionsBar) invokes alongside the draft-text save.
  */
-export function PolicyAudiencePicker({ policy }: { policy: PolicyDetail }) {
+export function PolicyAudiencePicker({
+  policy,
+  onDirtyChange,
+  registerSave,
+}: {
+  policy: PolicyDetail;
+  /** Reports the audience's unsaved state so a shared action bar can react. */
+  onDirtyChange?: (dirty: boolean) => void;
+  /** Registers `() => Promise<void>` — called by the shared action bar's Save. */
+  registerSave?: (save: (() => Promise<void>) | null) => void;
+}) {
   const { t } = useTranslation();
   const roles = useListRoles();
   const save = useSetPolicyAudience(policy.id);
@@ -40,11 +54,7 @@ export function PolicyAudiencePicker({ policy }: { policy: PolicyDetail }) {
     selected.length !== serverCodes.length ||
     [...selected].sort().some((c, i) => c !== serverCodes[i]);
 
-  function toggle(code: string) {
-    setSelected((prev) =>
-      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
-    );
-  }
+  useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange]);
 
   async function handleSave() {
     try {
@@ -57,6 +67,20 @@ export function PolicyAudiencePicker({ policy }: { policy: PolicyDetail }) {
           : t("admin.policies.toasts.audience_failed"),
       );
     }
+  }
+
+  // Register the latest save; unregister (null) on unmount.
+  const saveRef = useRef(handleSave);
+  saveRef.current = handleSave;
+  useEffect(() => {
+    registerSave?.(() => saveRef.current());
+    return () => registerSave?.(null);
+  }, [registerSave]);
+
+  function toggle(code: string) {
+    setSelected((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
+    );
   }
 
   return (
@@ -79,20 +103,21 @@ export function PolicyAudiencePicker({ policy }: { policy: PolicyDetail }) {
           {(roles.data ?? []).map(({ role }) => {
             const on = selected.includes(role.code);
             return (
-              <button
+              <Button
                 key={role.id}
                 type="button"
+                variant="ghost"
                 aria-pressed={on}
                 onClick={() => toggle(role.code)}
                 className={cn(
-                  "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                  "h-auto rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
                   on
-                    ? "border-m3-primary bg-m3-primary text-white"
+                    ? "border-m3-primary bg-m3-primary text-white hover:bg-m3-primary hover:text-white"
                     : "border-m3-outline-variant/40 text-m3-on-surface-variant hover:bg-m3-surface-container-high",
                 )}
               >
                 {role.name}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -105,17 +130,6 @@ export function PolicyAudiencePicker({ policy }: { policy: PolicyDetail }) {
             {t("admin.policies.public_audience")}
           </span>
         ) : null}
-        <Button
-          type="button"
-          size="sm"
-          className="ml-auto"
-          disabled={!dirty || save.isPending}
-          onClick={() => void handleSave()}
-        >
-          {save.isPending
-            ? t("admin.policies.actions.saving")
-            : t("admin.policies.actions.save")}
-        </Button>
       </div>
     </section>
   );
