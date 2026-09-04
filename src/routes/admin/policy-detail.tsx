@@ -188,50 +188,39 @@ function PolicyWorkspace({
     setEditorDirty(dirty);
   }, []);
 
-  // Latest editor actions (save/publish/pending flags) from the mounted editor.
-  const editorActionsRef = useRef<{
+  // Latest editor actions (save/publish/pending flags) from the mounted
+  // editor. Held in STATE, not a ref: registration happens in the editor's
+  // mount effect, and writing a ref would not re-render this component —
+  // leaving canPublish false (ref still null) until some unrelated state
+  // changed. State makes the registration itself trigger the re-render that
+  // enables Publish on arrival.
+  const [editorActions, setEditorActions] = useState<{
     save: () => Promise<boolean>;
     publish: () => Promise<void>;
     savePending: () => boolean;
     publishPending: () => boolean;
     canPublish: () => boolean;
   } | null>(null);
-  const registerEditorActions = useCallback(
-    (
-      actions: {
-        save: () => Promise<boolean>;
-        publish: () => Promise<void>;
-        savePending: () => boolean;
-        publishPending: () => boolean;
-        canPublish: () => boolean;
-      } | null,
-    ) => {
-      editorActionsRef.current = actions;
-    },
-    [],
-  );
 
   const combinedDirty = editorDirty || audienceDirty;
 
   // One Save = draft text (if any) + audience selection (if changed).
   async function handleCombinedSave() {
-    const saved = (await editorActionsRef.current?.save()) ?? true;
+    const saved = (await editorActions?.save()) ?? true;
     if (saved) await audienceSaveRef.current?.();
   }
 
   // Publish = save draft text + publish that version (the editor's flow),
   // then persist the audience selection too so the whole page is consistent.
   async function handleCombinedPublish() {
-    await editorActionsRef.current?.publish();
+    await editorActions?.publish();
     await audienceSaveRef.current?.();
   }
 
-  const savePending = editorActionsRef.current?.savePending() ?? false;
-  const publishPending = editorActionsRef.current?.publishPending() ?? false;
+  const savePending = editorActions?.savePending() ?? false;
+  const publishPending = editorActions?.publishPending() ?? false;
   const canPublish =
-    !selectedVersionId &&
-    Boolean(draft) &&
-    (editorActionsRef.current?.canPublish() ?? false);
+    !selectedVersionId && Boolean(draft) && (editorActions?.canPublish() ?? false);
 
   return (
       <div className="grid items-start gap-6 lg:grid-cols-10">
@@ -256,7 +245,7 @@ function PolicyWorkspace({
                 draft={draftBody.data}
                 bodyProse={PREVIEW_PROSE}
                 onDirtyChange={handleEditorDirty}
-                registerActions={registerEditorActions}
+                registerActions={setEditorActions}
               />
             ) : (
               <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
