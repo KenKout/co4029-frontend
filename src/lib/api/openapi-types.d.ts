@@ -9271,7 +9271,7 @@ export interface components {
              * @default warn_and_continue
              * @enum {string}
              */
-            security_response_policy: "continue_and_log" | "warn_and_continue" | "end_and_flag";
+            security_response_policy: "continue_and_log" | "warn_and_continue";
             /**
              * Security Max Consecutive Attempts
              * @default 3
@@ -9389,7 +9389,7 @@ export interface components {
             /** Supplementary Instructions */
             supplementary_instructions?: string | null;
             /** Security Response Policy */
-            security_response_policy?: ("continue_and_log" | "warn_and_continue" | "end_and_flag") | null;
+            security_response_policy?: ("continue_and_log" | "warn_and_continue") | null;
             /** Security Max Consecutive Attempts */
             security_max_consecutive_attempts?: number | null;
             /** Security Custom Refusal En */

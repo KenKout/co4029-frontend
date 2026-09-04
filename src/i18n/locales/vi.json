@@ -4508,7 +4508,7 @@
       "policy": {
         "continue_and_log": "Tiếp tục và ghi nhật ký",
         "warn_and_continue": "Cảnh báo và tiếp tục",
-        "end_and_flag": "Kết thúc và gắn cờ khi vượt ngưỡng"
+        "end_and_flag": "Kết thúc và gắn cờ (không còn khả dụng)"
       },
       "custom_en": "Lời từ chối an toàn tùy chỉnh (tiếng Anh)",
       "custom_vi": "Lời từ chối an toàn tùy chỉnh (tiếng Việt)",

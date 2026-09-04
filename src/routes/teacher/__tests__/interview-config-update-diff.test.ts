@@ -85,6 +85,31 @@ describe("buildConfigUpdatePayload diffing", () => {
     expect(Object.keys(payload).length).toBeGreaterThan(10);
     expect(payload.title).toBe("Voice demo");
   });
+
+  /**
+   * `end_and_flag` was withdrawn: the platform never terminated a session for it
+   * (the runtime downgrades it, and even enabled it only returns `is_finished`
+   * without stamping `session.status`), so the write schema now refuses it.
+   * Configs saved earlier still hold the value, and sending it back would 422
+   * the entire save — so the payload collapses it to the policy the runtime was
+   * really applying.
+   */
+  it("rewrites a legacy end_and_flag policy to warn_and_continue on save", () => {
+    const legacy = savedConfig({ security_response_policy: "end_and_flag" });
+    const draft = draftFromConfig(legacy);
+    expect(draft.security_response_policy).toBe("end_and_flag");
+
+    const payload = buildConfigUpdatePayload(draft);
+    expect(payload.security_response_policy).toBe("warn_and_continue");
+  });
+
+  it("leaves an enforceable policy untouched", () => {
+    const draft = draftFromConfig(
+      savedConfig({ security_response_policy: "continue_and_log" }),
+    );
+    const payload = buildConfigUpdatePayload(draft);
+    expect(payload.security_response_policy).toBe("continue_and_log");
+  });
 });
 
 describe("isDraftDirty", () => {
