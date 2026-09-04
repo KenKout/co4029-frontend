@@ -1,8 +1,6 @@
-import { GithubIcon, LinkedinIcon, TwitterIcon } from "./social-icons";
-
 export function FooterBrandColumn() {
   return (
-    <div className="lg:col-span-4 space-y-6">
+    <div className="lg:col-span-6 space-y-6">
       <div className="flex items-center gap-2">
         <span className="text-2xl font-bold tracking-tighter text-white font-headline">
           aBridgeAI
@@ -12,17 +10,11 @@ export function FooterBrandColumn() {
         Personalizing education through the synergy of artificial intelligence
         and human curiosity. Next-generation learning infrastructure.
       </p>
-      <div className="flex gap-4 pt-2">
-        {[GithubIcon, TwitterIcon, LinkedinIcon].map((Icon, i) => (
-          <a
-            key={i}
-            href="#"
-            className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-500/20 hover:border-blue-500/50 hover:text-blue-400 transition-all"
-          >
-            <Icon className="w-4 h-4" />
-          </a>
-        ))}
-      </div>
+      {/* The GitHub / X / LinkedIn icon row was removed: all three were
+          `href="#"`, and each rendered an anchor with no text and no
+          aria-label, so a screen reader announced three unlabelled links to
+          nowhere. Restore them here only alongside real profile URLs and
+          accessible names. */}
     </div>
   );
 }
