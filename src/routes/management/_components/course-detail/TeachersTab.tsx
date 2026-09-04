@@ -142,7 +142,10 @@ function TeachersToolbar({
   const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* First row: staffing summary left, the table search pinned right —
+          ml-auto guarantees the gap opens between them regardless of how the
+          staffing line wraps. */}
+      <div className="flex flex-wrap items-center gap-3">
         <StaffingSummary
           current={currentCount}
           min={minTeachers}
@@ -151,14 +154,15 @@ function TeachersToolbar({
         {/* Search earns its place only once there is a list worth
             narrowing; two rows do not need a filter. */}
         {hasTeachers ? (
-          <SearchInput
-            value={query}
-            onChange={(e) => onQueryChange(e.target.value)}
-            onClear={query ? () => onQueryChange("") : undefined}
-            placeholder={t("dept_course_detail.search_teachers")}
-            wrapperClassName="w-full sm:w-64"
-            aria-label={t("dept_course_detail.search_teachers")}
-          />
+          <div className="ml-auto w-full sm:w-64">
+            <SearchInput
+              value={query}
+              onChange={(e) => onQueryChange(e.target.value)}
+              onClear={query ? () => onQueryChange("") : undefined}
+              placeholder={t("dept_course_detail.search_teachers")}
+              aria-label={t("dept_course_detail.search_teachers")}
+            />
+          </div>
         ) : null}
       </div>
 
