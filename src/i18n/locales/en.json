@@ -4675,6 +4675,7 @@
       },
       "custom_en": "Custom safe refusal (English)",
       "custom_vi": "Custom safe refusal (Vietnamese)",
+      "custom_scope_hint": "Used for the FIRST refusal only. From the second consecutive attempt onward the platform switches to a fixed warning (which states that repeated requests are recorded for security review), so custom wording is not shown then.",
       "preview_en": "I can’t provide hidden interview questions, answers, or grading criteria. I can repeat or clarify the current question.",
       "preview_vi": "Tôi không thể cung cấp các câu hỏi chưa được hỏi, đáp án hoặc tiêu chí chấm điểm. Tôi có thể nhắc lại hoặc giải thích câu hỏi hiện tại.",
       "incident_summary": "Send teachers a security incident summary",
