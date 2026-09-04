@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { ChevronRight, FileText, ScrollText, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import TopNavBar from "@/components/layout/TopNavBar";
+import Footer from "@/components/layout/Footer";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { SearchInput } from "@/components/ui/search-input";
 import { usePolicies } from "@/lib/api/hooks/policies";
@@ -42,8 +44,13 @@ export default function PoliciesPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto pb-16">
-      <header className="pt-2">
+    // Same public chrome as /help: TopNavBar (works signed-out; it branches
+    // on auth itself) + Footer, content in a centered column below the
+    // fixed 64px bar.
+    <div className="min-h-screen bg-m3-surface flex flex-col">
+      <TopNavBar />
+      <div className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-28 sm:px-6">
+      <header>
         <div className="flex items-center gap-3 mb-2">
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-m3-primary-fixed">
             <ScrollText className="h-5 w-5 text-m3-primary" />
@@ -57,7 +64,7 @@ export default function PoliciesPage() {
         </p>
       </header>
 
-      {/* Toolbar: search + category filter. Same shape as the /courses bar. */}
+      {/* Toolbar: search + category filter, sticky under the fixed TopNavBar. */}
       <div className="sticky top-16 z-10 -mx-4 px-4 py-3 mt-6 border-b border-m3-outline-variant/20 bg-white/90 backdrop-blur-md sm:-mx-6 sm:px-6">
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
           <div className="relative flex-1 max-w-md">
@@ -146,6 +153,8 @@ export default function PoliciesPage() {
           </div>
         )}
       </section>
+      </div>
+      <Footer />
     </div>
   );
 }
