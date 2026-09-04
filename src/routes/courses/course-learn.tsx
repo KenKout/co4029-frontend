@@ -26,6 +26,7 @@ import {
 import { LessonTabsSection } from "./_components/course-learn/LessonTabsSection";
 import { NoLessonsNotice } from "./_components/course-learn/NoLessonsNotice";
 import { ReadingLessonBody } from "./_components/course-learn/ReadingLessonBody";
+import { useTabDeepLink } from "./_components/course-learn/use-tab-deep-link";
 import {
   activeTitleFor,
   deriveShowHome,
@@ -316,6 +317,9 @@ function CourseLearnLoaded({
   //      lesson left the lesson on screen.
   // Deriving it makes the URL the single source of truth: ?item present = a
   // lesson is open, absent = course-home. Back/Forward then work for free.
+  // `?tab=` deep-link (discussion notifications land on the Discussion panel).
+  useTabDeepLink(search.tab, setActiveTab);
+
   const showHome = deriveShowHome(urlState);
 
   const { openLesson, goHome, goPrev, goNext, hasPrev, hasNext } =

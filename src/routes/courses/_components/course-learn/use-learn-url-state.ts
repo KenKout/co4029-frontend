@@ -17,6 +17,17 @@ export interface LearnSearch {
   t?: string | number;
   p?: string | number;
   item?: string;
+  /**
+   * Which below-the-player tab to open (`discussion` | `resources` | `notes`).
+   *
+   * Exists so a notification deep-link can land the recipient ON the panel the
+   * notification is about: the discussion notification's action URL is
+   * `?item=<lesson-slug>&tab=discussion`, and without this the page opened the
+   * default Lesson Notes tab and the reader had to hunt for the comment.
+   * Unrecognised values are ignored (default tab), so a renamed tab set can
+   * never 404 a link that is already in someone's inbox.
+   */
+  tab?: string;
 }
 
 export interface LearnUrlState {

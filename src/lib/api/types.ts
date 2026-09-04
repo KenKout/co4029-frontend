@@ -1229,6 +1229,8 @@ export interface DiscussionTopic {
   updated_at: string;
   comment_count: number;
   can_manage: boolean;
+  /** Resolved identity behind `created_by` (name + presigned avatar). */
+  author: DiscussionCommentAuthor | null;
 }
 
 /** Envelope returned by `GET /lessons/{id}/discussion/topics`. */

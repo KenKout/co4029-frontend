@@ -2891,6 +2891,14 @@
       "post_comment": "Couldn't post your comment. Please try again.",
       "update_comment": "Couldn't edit the comment. Please try again.",
       "delete_comment": "Couldn't delete the comment. Please try again."
+    },
+    "just_now": "just now",
+    "edited": "(edited)",
+    "confirm": {
+      "delete_comment_title": "Delete this comment?",
+      "delete_comment_body": "This comment will be removed from the discussion. This can't be undone.",
+      "delete_topic_title": "Delete this topic?",
+      "delete_topic_body": "The topic and all of its comments will be removed. This can't be undone."
     }
   },
   "course_quiz": {
