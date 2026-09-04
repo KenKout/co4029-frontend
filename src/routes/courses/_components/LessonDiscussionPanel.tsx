@@ -5,7 +5,6 @@ import ReactMarkdown from "react-markdown";
 import {
   ChevronDown,
   ChevronRight,
-  HelpCircle,
   Loader2,
   Lock,
   MessageSquare,
@@ -639,19 +638,11 @@ export function LessonDiscussionPanel({ lessonId }: { lessonId: string }) {
 
   return (
     <GlassCard className="p-6 sm:p-8">
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <HelpCircle className="h-4 w-4 text-m3-secondary" />
-          <h4 className="font-headline text-sm font-bold text-m3-on-surface">
-            {t("discussion.title")}
-          </h4>
+      {data?.can_manage && (
+        <div className="mb-5 flex items-start justify-end gap-3 min-w-0">
+          <NewTopicComposer lessonId={lessonId} />
         </div>
-        {data?.can_manage && (
-          <div className="flex flex-1 items-start justify-end gap-3 min-w-0">
-            <NewTopicComposer lessonId={lessonId} />
-          </div>
-        )}
-      </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-10">

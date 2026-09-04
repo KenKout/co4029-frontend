@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { MessageSquareText } from "lucide-react";
 import { LessonDiscussionPanel } from "@/routes/courses/_components/LessonDiscussionPanel";
 
 /**
@@ -13,8 +12,7 @@ export function LessonDiscussionSection({ lessonId }: { lessonId: string }) {
   const { t } = useTranslation();
   return (
     <section className="space-y-5">
-      <h2 className="font-headline font-bold text-2xl text-m3-primary flex items-center gap-2">
-        <MessageSquareText className="h-5 w-5" />
+      <h2 className="font-headline font-bold text-2xl text-m3-primary">
         {t("teacher_lesson_manage.sections.discussion")}
       </h2>
       <LessonDiscussionPanel lessonId={lessonId} />
