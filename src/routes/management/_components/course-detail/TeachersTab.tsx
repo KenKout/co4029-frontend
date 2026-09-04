@@ -142,28 +142,13 @@ function TeachersToolbar({
   const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-3">
-      {/* First row: staffing summary left, the table search pinned right —
-          ml-auto guarantees the gap opens between them regardless of how the
-          staffing line wraps. */}
+      {/* First row: the staffing summary alone. */}
       <div className="flex flex-wrap items-center gap-3">
         <StaffingSummary
           current={currentCount}
           min={minTeachers}
           max={maxTeachers}
         />
-        {/* Search earns its place only once there is a list worth
-            narrowing; two rows do not need a filter. */}
-        {hasTeachers ? (
-          <div className="ml-auto w-full sm:w-64">
-            <SearchInput
-              value={query}
-              onChange={(e) => onQueryChange(e.target.value)}
-              onClear={query ? () => onQueryChange("") : undefined}
-              placeholder={t("dept_course_detail.search_teachers")}
-              aria-label={t("dept_course_detail.search_teachers")}
-            />
-          </div>
-        ) : null}
       </div>
 
       {/* Bulk bar replaces the assign row while a selection is live:
@@ -198,18 +183,31 @@ function TeachersToolbar({
         </div>
       ) : null}
 
-      {/* Assign stays ALWAYS rendered, including on an empty course.
-          It used to live above the table and was fine, but the toolbar it
-          moved into was previously suppressed when the list was empty —
-          which is exactly when a manager needs to assign someone. The form
-          justifies its own contents so the picker sits left and the flags +
-          Add button reach the right edge, mirroring the row above. */}
+      {/* Assign row: the assign form left, the table search right (ml-auto
+          opens the gap between them). Assign stays ALWAYS rendered, including
+          on an empty course — that is exactly when a manager needs it. The
+          bulk bar replaces this row while a selection is live. */}
       {canAssign && selectedCount === 0 ? (
-        <AssignTeacherForm
-          courseId={courseId}
-          currentCount={currentCount}
-          maxCount={hasStaffingData ? maxTeachers : undefined}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <AssignTeacherForm
+            courseId={courseId}
+            currentCount={currentCount}
+            maxCount={hasStaffingData ? maxTeachers : undefined}
+          />
+          {/* Search earns its place only once there is a list worth
+              narrowing. */}
+          {hasTeachers ? (
+            <div className="ml-auto w-full sm:w-64">
+              <SearchInput
+                value={query}
+                onChange={(e) => onQueryChange(e.target.value)}
+                onClear={query ? () => onQueryChange("") : undefined}
+                placeholder={t("dept_course_detail.search_teachers")}
+                aria-label={t("dept_course_detail.search_teachers")}
+              />
+            </div>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );
