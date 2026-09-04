@@ -106,6 +106,35 @@ export function PolicyVersionEditor({
 
   return (
     <section className="space-y-4">
+      {/* Action bar — sticky at the top so Save/Publish stay reachable over
+          the long body. The dirty dot states which button does something. */}
+      <div className="sticky top-16 z-10 flex items-center justify-end gap-2 -mx-1 rounded-xl border border-m3-outline-variant/20 bg-white/95 px-4 py-2.5 backdrop-blur-md shadow-sm">
+        <span className={cn("mr-auto text-xs font-semibold", dirty ? "text-amber-700" : "text-m3-on-surface-variant/60")}>
+          {dirty ? t("admin.policies.unsaved_dot") : t("admin.policies.saved_dot")}
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          disabled={!dirty || busy}
+          onClick={() => void handleSave()}
+        >
+          {update.isPending
+            ? t("admin.policies.actions.saving")
+            : t("admin.policies.actions.save")}
+        </Button>
+        <Button
+          type="button"
+          className="gap-2"
+          disabled={busy || !body.trim()}
+          onClick={() => void handlePublish()}
+        >
+          <Send className="h-4 w-4" />
+          {publish.isPending
+            ? t("admin.policies.actions.publishing")
+            : t("admin.policies.actions.publish")}
+        </Button>
+      </div>
+
       <label className="block">
         <span className="text-sm font-semibold text-text-strong">
           {t("admin.policies.fields.title")}
@@ -121,49 +150,27 @@ export function PolicyVersionEditor({
           </span>
           <div className="ml-auto flex items-center gap-1">
             {(["write", "preview"] as const).map((key) => (
-              <button
+              <Button
                 key={key}
+                variant="ghost"
                 type="button"
                 onClick={() => setTab(key)}
                 className={cn(
-                  "rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors",
+                  "rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors h-auto",
                   tab === key
                     ? "bg-white text-m3-primary shadow-sm"
                     : "text-m3-on-surface-variant hover:bg-m3-surface-container-high",
                 )}
               >
                 {t(`admin.policies.${key}_tab`)}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
 
         {tab === "write" ? (
           <>
-            <div className="flex flex-wrap items-center gap-1 border-b border-m3-outline-variant/10 px-2 py-1">
-              <ToolbarBtn icon={Bold} label="Bold" onClick={() => applyMarkdown("**")} />
-              <ToolbarBtn icon={Italic} label="Italic" onClick={() => applyMarkdown("*")} />
-              <ToolbarBtn icon={Hash} label="Section heading" onClick={() => applyBlock("## ")} />
-              <ToolbarBtn icon={List} label="List item" onClick={() => applyBlock("- ")} />
-              <ToolbarBtn
-                icon={LinkIcon}
-                label="Link"
-                onClick={() => applyMarkdown("[", "](url)")}
-              />
-              <ToolbarBtn
-                icon={Image}
-                label="Image"
-                onClick={() => applyMarkdown("![alt](", ")")}
-              />
-              <ToolbarBtn
-                icon={Code}
-                label="Code block"
-                onClick={() => applyMarkdown("```\n", "\n```")}
-              />
-              <span className="ml-auto pr-2 text-xs text-m3-on-surface-variant/50">
-                {t("admin.policies.editor_hint")}
-              </span>
-            </div>
+            <EditorToolbar applyMarkdown={applyMarkdown} applyBlock={applyBlock} />
             <textarea
               ref={bodyRef}
               value={body}
@@ -194,30 +201,43 @@ export function PolicyVersionEditor({
           {t("admin.policies.changelog_hint")}
         </span>
       </label>
-
-      <div className="flex items-center justify-end gap-2">
-        <Button
-          type="button"
-          variant="ghost"
-          disabled={!dirty || busy}
-          onClick={() => void handleSave()}
-        >
-          {update.isPending
-            ? t("admin.policies.actions.saving")
-            : t("admin.policies.actions.save")}
-        </Button>
-        <Button
-          type="button"
-          className="gap-2"
-          disabled={busy || !body.trim()}
-          onClick={() => void handlePublish()}
-        >
-          <Send className="h-4 w-4" />
-          {publish.isPending
-            ? t("admin.policies.actions.publishing")
-            : t("admin.policies.actions.publish")}
-        </Button>
-      </div>
     </section>
+  );
+}
+
+/** The markdown formatting row above the body textarea. */
+function EditorToolbar({
+  applyMarkdown,
+  applyBlock,
+}: {
+  applyMarkdown: (before: string, after?: string) => void;
+  applyBlock: (prefix: string) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-wrap items-center gap-1 border-b border-m3-outline-variant/10 px-2 py-1">
+      <ToolbarBtn icon={Bold} label="Bold" onClick={() => applyMarkdown("**")} />
+      <ToolbarBtn icon={Italic} label="Italic" onClick={() => applyMarkdown("*")} />
+      <ToolbarBtn icon={Hash} label="Section heading" onClick={() => applyBlock("## ")} />
+      <ToolbarBtn icon={List} label="List item" onClick={() => applyBlock("- ")} />
+      <ToolbarBtn
+        icon={LinkIcon}
+        label="Link"
+        onClick={() => applyMarkdown("[", "](url)")}
+      />
+      <ToolbarBtn
+        icon={Image}
+        label="Image"
+        onClick={() => applyMarkdown("![alt](", ")")}
+      />
+      <ToolbarBtn
+        icon={Code}
+        label="Code block"
+        onClick={() => applyMarkdown("```\n", "\n```")}
+      />
+      <span className="ml-auto pr-2 text-xs text-m3-on-surface-variant/50">
+        {t("admin.policies.editor_hint")}
+      </span>
+    </div>
   );
 }

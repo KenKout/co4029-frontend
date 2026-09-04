@@ -172,7 +172,7 @@ function PolicyWorkspace({
   const { t } = useTranslation();
   return (
       <div className="grid items-start gap-6 lg:grid-cols-10">
-        <main className="space-y-5 lg:col-span-7">
+        <main className="space-y-5 lg:col-span-7 pt-4">
           <PolicyAudiencePicker policy={policy} />
 
           {selectedVersionId ? (
@@ -236,7 +236,7 @@ function PolicyWorkspace({
           )}
         </main>
 
-        <div className="lg:col-span-3 lg:sticky lg:top-24">
+        <div className="lg:col-span-3 lg:sticky lg:top-40">
           <PolicyVersionPanel
             versions={policy.versions}
             currentId={null}

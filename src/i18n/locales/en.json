@@ -2570,6 +2570,8 @@
       "editor_title": "Draft",
       "editor_hint": "Markdown. Headings use ## — the reader page styles them as sections.",
       "changelog_hint": "Shown to admins in the version history, not to readers.",
+      "unsaved_dot": "Unsaved changes",
+      "saved_dot": "All changes saved",
       "write_tab": "Write",
       "preview_tab": "Preview",
       "no_draft_title": "No open draft",

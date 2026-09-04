@@ -2478,6 +2478,8 @@
       "editor_title": "Bản nháp",
       "editor_hint": "Markdown. Tiêu đề mục dùng ## — trang người đọc sẽ định dạng thành từng phần.",
       "changelog_hint": "Chỉ hiển thị cho quản trị viên trong lịch sử phiên bản, không hiển thị cho người đọc.",
+      "unsaved_dot": "Có thay đổi chưa lưu",
+      "saved_dot": "Đã lưu tất cả",
       "write_tab": "Soạn thảo",
       "preview_tab": "Xem trước",
       "no_draft_title": "Không có bản nháp",
