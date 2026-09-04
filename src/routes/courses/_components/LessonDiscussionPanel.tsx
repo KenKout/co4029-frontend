@@ -595,6 +595,10 @@ function NewTopicComposer({ lessonId }: { lessonId: string }) {
         className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
       />
       {title.trim() ? (
+        /* No autoFocus: it mounted on the FIRST keystroke of the title and
+           stole focus mid-word, so character two landed in the detail field.
+           Reveal-only — the caret stays in the title line the user is typing
+           in; Tab reaches the detail field normally. */
         <Textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -603,7 +607,6 @@ function NewTopicComposer({ lessonId }: { lessonId: string }) {
           placeholder={t("discussion.topic_body_placeholder")}
           resize="y"
           className="mt-2 bg-white"
-          autoFocus
         />
       ) : null}
       {title.trim() ? (
