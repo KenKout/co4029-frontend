@@ -12,7 +12,6 @@ import { LessonSettingsSidebar } from "./_components/lesson-manage/LessonSetting
 import { LessonBreadcrumbs } from "./_components/lesson-manage/LessonBreadcrumbs";
 import { LessonEditorMain } from "./_components/lesson-manage/LessonEditorMain";
 import { LessonFeedbackToast } from "./_components/lesson-manage/LessonFeedbackToast";
-import { LessonDiscussionPanel } from "@/routes/courses/_components/LessonDiscussionPanel";
 import { useLessonManageData } from "./_components/lesson-manage/use-lesson-manage-data";
 import { useLessonEditorState } from "./_components/lesson-manage/use-lesson-editor-state";
 import { useLessonManageActions } from "./_components/lesson-manage/use-lesson-manage-actions";
@@ -163,16 +162,6 @@ export default function LessonManagePage() {
           onTogglePrerequisite={actions.togglePrerequisite}
         />
       </div>
-
-      {/* Discussion topics for this lesson — same panel the students see.
-          New topic / edit / close / delete show because the teacher holds
-          can_manage; composing topics at the lesson they belong to beats
-          detouring through the student view. */}
-      {lessonId ? (
-        <div className="mt-8">
-          <LessonDiscussionPanel lessonId={lessonId} />
-        </div>
-      ) : null}
 
       {/* ── Feedback toast bar ── */}
       <LessonFeedbackToast feedback={editor.feedback} />
