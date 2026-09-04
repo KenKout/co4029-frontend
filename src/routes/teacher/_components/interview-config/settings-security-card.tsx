@@ -159,6 +159,9 @@ export function SettingsSecurityCard({
                 </p>
               </Field>
             </div>
+            <p className="text-[11px] text-m3-on-surface-variant">
+              {t("teacher_interview_config.security.custom_scope_hint")}
+            </p>
 
             <ToggleRow
               label={t("teacher_interview_config.security.incident_summary")}
