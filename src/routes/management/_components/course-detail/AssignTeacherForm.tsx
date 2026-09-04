@@ -117,7 +117,7 @@ export function AssignTeacherForm({
     // share one container instead of four.
     <form
       onSubmit={handleSubmit}
-      className="flex flex-wrap items-center gap-2"
+      className="flex flex-wrap items-center justify-between gap-2"
       aria-label={t("dept_course_detail.assign_label")}
     >
       {/* Bounded: a name picker does not need the full page width, and at
@@ -133,26 +133,29 @@ export function AssignTeacherForm({
         />
       </div>
 
-      {/* Title flags: Instructor and/or TA for the new teacher (manager only). */}
-      <TitleFlagOption
-        label={t("dept_course_detail.teacher_role_course_instructor")}
-        active={isInstructor}
-        onClick={() => toggleInstructor(!isInstructor)}
-      />
-      <TitleFlagOption
-        label={t("dept_course_detail.teacher_role_teacher_assistant")}
-        active={isAssistant}
-        onClick={() => toggleAssistant(!isAssistant)}
-      />
+      {/* Title flags + Add push to the row's right edge (justify-between),
+          mirroring the staffing/search row above. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <TitleFlagOption
+          label={t("dept_course_detail.teacher_role_course_instructor")}
+          active={isInstructor}
+          onClick={() => toggleInstructor(!isInstructor)}
+        />
+        <TitleFlagOption
+          label={t("dept_course_detail.teacher_role_teacher_assistant")}
+          active={isAssistant}
+          onClick={() => toggleAssistant(!isAssistant)}
+        />
 
-      <Button
-        type="submit"
-        size="sm"
-        disabled={assign.isPending || !userId || !canAssign}
-      >
-        <UserPlus className="h-3.5 w-3.5" />
-        {t("dept_course_detail.assign_button")}
-      </Button>
+        <Button
+          type="submit"
+          size="sm"
+          disabled={assign.isPending || !userId || !canAssign}
+        >
+          <UserPlus className="h-3.5 w-3.5" />
+          {t("dept_course_detail.assign_button")}
+        </Button>
+      </div>
 
       {notice ? (
         <p className="text-[11px] text-text-muted">{notice}</p>

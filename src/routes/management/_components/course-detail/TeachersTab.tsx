@@ -197,15 +197,15 @@ function TeachersToolbar({
       {/* Assign stays ALWAYS rendered, including on an empty course.
           It used to live above the table and was fine, but the toolbar it
           moved into was previously suppressed when the list was empty —
-          which is exactly when a manager needs to assign someone. */}
+          which is exactly when a manager needs to assign someone. The form
+          justifies its own contents so the picker sits left and the flags +
+          Add button reach the right edge, mirroring the row above. */}
       {canAssign && selectedCount === 0 ? (
-        <div className="flex justify-between">
-          <AssignTeacherForm
-            courseId={courseId}
-            currentCount={currentCount}
-            maxCount={hasStaffingData ? maxTeachers : undefined}
-          />
-        </div>
+        <AssignTeacherForm
+          courseId={courseId}
+          currentCount={currentCount}
+          maxCount={hasStaffingData ? maxTeachers : undefined}
+        />
       ) : null}
     </div>
   );
