@@ -14,8 +14,15 @@ import {
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, avatarInitials } from "@/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  avatarInitials,
+} from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
+import { useConfirm } from "@/components/ui/use-confirm";
+import { timeAgo } from "@/lib/format/time-ago";
 import {
   useCreateComment,
   useCreateDiscussionTopic,
@@ -26,8 +33,71 @@ import {
   useUpdateComment,
   useUpdateDiscussionTopic,
 } from "@/lib/api/hooks/discussions";
-import type { DiscussionComment, DiscussionTopic } from "@/lib/api/types";
+import type {
+  DiscussionComment,
+  DiscussionCommentAuthor,
+  DiscussionTopic,
+} from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+
+// ── Shared author byline ───────────────────────────────────────────────────
+
+/**
+ * Avatar + name + relative time, used by both a comment row and a topic
+ * header so the two never drift apart.
+ *
+ * The avatar renders <AvatarImage> when the API resolved a presigned
+ * `avatar_url`; base-ui falls back to <AvatarFallback> initials on a missing
+ * url OR a failed image load (an expired presign), so a broken URL degrades to
+ * initials instead of a broken-image icon.
+ */
+function AuthorByline({
+  author,
+  fallbackName,
+  timestamp,
+  size = "sm",
+  edited,
+  children,
+}: {
+  author: DiscussionCommentAuthor | null | undefined;
+  fallbackName: string;
+  timestamp: string;
+  size?: "sm" | "default";
+  edited?: boolean;
+  children?: React.ReactNode;
+}) {
+  const { t, i18n } = useTranslation();
+  const name = author?.display_name ?? fallbackName;
+  const relative = timeAgo(timestamp, i18n.language, {
+    justNow: t("discussion.just_now"),
+  });
+
+  return (
+    <div className="flex items-center gap-2">
+      <Avatar size={size} className={cn("shrink-0", size === "sm" && "size-8")}>
+        {author?.avatar_url ? (
+          <AvatarImage src={author.avatar_url} alt={name} />
+        ) : null}
+        <AvatarFallback className="text-xs">
+          {avatarInitials(name, { uppercase: true, fallback: "?" })}
+        </AvatarFallback>
+      </Avatar>
+      <span className="text-sm font-semibold text-m3-on-surface">{name}</span>
+      <span
+        className="text-xs text-m3-on-surface-variant"
+        title={new Date(timestamp).toLocaleString()}
+      >
+        {relative ?? new Date(timestamp).toLocaleString()}
+      </span>
+      {edited && (
+        <span className="text-xs italic text-m3-on-surface-variant">
+          {t("discussion.edited")}
+        </span>
+      )}
+      {children}
+    </div>
+  );
+}
 
 // ── Comment row ────────────────────────────────────────────────────────────
 
@@ -45,9 +115,21 @@ function CommentRow({
   const [draft, setDraft] = useState(comment.body);
   const del = useDeleteComment(topicId, lessonId);
   const update = useUpdateComment(topicId);
-  const name = comment.author?.display_name ?? t("discussion.unknown_author");
+  const { confirm, dialog } = useConfirm();
 
-  function handleDelete() {
+  // Deleting a comment is irreversible for the author (soft-delete server-side,
+  // but there is no undo affordance), and the trash icon sits one icon away
+  // from Edit — so it goes through a real confirmation instead of firing on a
+  // single mis-click.
+  async function handleDelete() {
+    const ok = await confirm({
+      title: t("discussion.confirm.delete_comment_title"),
+      description: t("discussion.confirm.delete_comment_body"),
+      confirmLabel: t("discussion.actions.delete_comment"),
+      cancelLabel: t("discussion.actions.cancel"),
+      confirmVariant: "destructive",
+    });
+    if (!ok) return;
     del.mutate(comment.id, {
       onError: () => toast.error(t("discussion.errors.delete_comment")),
     });
@@ -106,49 +188,68 @@ function CommentRow({
   }
 
   return (
-    <div className="flex gap-3">
-      <Avatar size="sm" className="size-8 shrink-0">
-        <AvatarFallback className="text-xs">
-          {avatarInitials(name, { uppercase: true, fallback: "?" })}
-        </AvatarFallback>
-      </Avatar>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-m3-on-surface">
-            {name}
-          </span>
-          <span className="text-xs text-m3-on-surface-variant">
-            {new Date(comment.created_at).toLocaleString()}
-          </span>
-          {comment.is_own && (
-            <Button variant="ghost"
-              type="button"
-              onClick={() => setEditing(true)}
-              disabled={update.isPending}
-              aria-label={t("discussion.actions.edit_comment")}
-              className="ml-auto text-m3-on-surface-variant transition-colors hover:text-m3-primary disabled:opacity-50"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          {comment.can_delete && (
-            <Button variant="ghost"
-              type="button"
-              onClick={handleDelete}
-              disabled={del.isPending}
-              aria-label={t("discussion.actions.delete_comment")}
-              className="text-m3-on-surface-variant transition-colors hover:text-danger disabled:opacity-50"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          )}
-        </div>
-        <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-m3-on-surface-variant">
-          {comment.body}
-        </p>
-      </div>
+    <div className="min-w-0">
+      <AuthorByline
+        author={comment.author}
+        fallbackName={t("discussion.unknown_author")}
+        timestamp={comment.created_at}
+        edited={isEdited(comment.created_at, comment.updated_at)}
+      >
+        {/* Edit + Delete share one tight icon group pinned right. They used to
+            be two separately-spaced Buttons, which left a visible gap between
+            them because each carried the default Button padding. */}
+        {(comment.is_own || comment.can_delete) && (
+          <div className="ml-auto flex items-center gap-0.5">
+            {comment.is_own && (
+              <Button
+                variant="ghost"
+                size="icon"
+                type="button"
+                onClick={() => setEditing(true)}
+                disabled={update.isPending}
+                aria-label={t("discussion.actions.edit_comment")}
+                className="size-7 text-m3-on-surface-variant transition-colors hover:text-m3-primary disabled:opacity-50"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            {comment.can_delete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                type="button"
+                onClick={() => void handleDelete()}
+                disabled={del.isPending}
+                aria-label={t("discussion.actions.delete_comment")}
+                className="size-7 text-m3-on-surface-variant transition-colors hover:text-danger disabled:opacity-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+        )}
+      </AuthorByline>
+      <p className="mt-1 whitespace-pre-wrap break-words pl-10 text-sm text-m3-on-surface-variant">
+        {comment.body}
+      </p>
+      {dialog}
     </div>
   );
+}
+
+/**
+ * True when a row was modified after it was created.
+ *
+ * One second of slack: `created_at` and `updated_at` are stamped by separate
+ * expressions in the same INSERT, so they can differ by microseconds on a row
+ * that was never edited — comparing raw inequality tagged EVERY comment as
+ * edited.
+ */
+function isEdited(createdAt: string, updatedAt: string): boolean {
+  const created = new Date(createdAt).getTime();
+  const updated = new Date(updatedAt).getTime();
+  if (!Number.isFinite(created) || !Number.isFinite(updated)) return false;
+  return updated - created > 1000;
 }
 
 // ── Comment composer ─────────────────────────────────────────────────────
@@ -428,9 +529,20 @@ function TopicHeader({
             </span>
           )}
         </div>
-        <div className="mt-1 flex items-center gap-1.5 text-xs text-m3-on-surface-variant">
-          <MessageSquare className="h-3.5 w-3.5" />
-          {t("discussion.comment_count", { count: topic.comment_count })}
+        {/* Attribution row: who opened the topic, with avatar + relative time,
+            then the reply count. Previously the card showed neither author nor
+            date, so a student could not tell who had asked. */}
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-m3-on-surface-variant">
+          <AuthorByline
+            author={topic.author}
+            fallbackName={t("discussion.unknown_author")}
+            timestamp={topic.created_at}
+            edited={isEdited(topic.created_at, topic.updated_at)}
+          />
+          <span className="inline-flex items-center gap-1.5">
+            <MessageSquare className="h-3.5 w-3.5" />
+            {t("discussion.comment_count", { count: topic.comment_count })}
+          </span>
         </div>
       </div>
     </Button>
@@ -451,6 +563,7 @@ function TopicBody({
   const comments = useTopicComments(topic.id);
   const updateTopic = useUpdateDiscussionTopic(lessonId);
   const deleteTopic = useDeleteDiscussionTopic(lessonId);
+  const { confirm, dialog } = useConfirm();
   const isClosed = topic.status === "closed";
 
   function toggleStatus() {
@@ -460,7 +573,17 @@ function TopicBody({
     );
   }
 
-  function handleDelete() {
+  // Deleting a topic cascades to every comment on it, so it is confirmed for
+  // the same reason a comment delete is — only with higher stakes.
+  async function handleDelete() {
+    const ok = await confirm({
+      title: t("discussion.confirm.delete_topic_title"),
+      description: t("discussion.confirm.delete_topic_body"),
+      confirmLabel: t("discussion.actions.delete_topic"),
+      cancelLabel: t("discussion.actions.cancel"),
+      confirmVariant: "destructive",
+    });
+    if (!ok) return;
     deleteTopic.mutate(topic.id, {
       onError: () => toast.error(t("discussion.errors.delete_topic")),
     });
@@ -504,7 +627,7 @@ function TopicBody({
             type="button"
             variant="outline"
             size="sm"
-            onClick={handleDelete}
+            onClick={() => void handleDelete()}
             disabled={deleteTopic.isPending}
             className="gap-1.5 border-danger/30 text-danger text-xs hover:bg-danger/5"
           >
@@ -541,6 +664,7 @@ function TopicBody({
         lessonId={lessonId}
         disabled={isClosed && !topic.can_manage}
       />
+      {dialog}
     </div>
   );
 }

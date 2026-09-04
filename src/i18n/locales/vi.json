@@ -5238,6 +5238,14 @@
       "post_comment": "Không đăng được bình luận. Vui lòng thử lại.",
       "update_comment": "Không sửa được bình luận. Vui lòng thử lại.",
       "delete_comment": "Không xóa được bình luận. Vui lòng thử lại."
+    },
+    "just_now": "vừa xong",
+    "edited": "(đã sửa)",
+    "confirm": {
+      "delete_comment_title": "Xóa bình luận này?",
+      "delete_comment_body": "Bình luận sẽ bị xóa khỏi thảo luận. Không thể hoàn tác.",
+      "delete_topic_title": "Xóa chủ đề này?",
+      "delete_topic_body": "Chủ đề và toàn bộ bình luận sẽ bị xóa. Không thể hoàn tác."
     }
   },
   "teacher_quiz_new": {
