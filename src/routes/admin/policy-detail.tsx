@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, ExternalLink, FilePlus2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -6,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionDenied } from "@/components/ui/permission-denied";
+import { RichContent } from "@/components/ui/rich-content";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import {
   useAdminPolicy,
@@ -16,6 +18,7 @@ import { displayVersion } from "./_components/policies/policy-display";
 import { PolicyAudiencePicker } from "./_components/policies/PolicyAudiencePicker";
 import { PolicyStatusBadge } from "./_components/policies/PolicyStatusBadge";
 import { PolicyVersionEditor } from "./_components/policies/PolicyVersionEditor";
+import { PolicyVersionPanel } from "./_components/policies/PolicyVersionPanel";
 
 /**
  * Authoring surface for one policy: audience, version history, and the draft.
@@ -35,25 +38,23 @@ const PREVIEW_PROSE =
   "[&_strong]:font-semibold " +
   "[&_a]:font-medium [&_a]:text-m3-primary [&_a]:underline-offset-2";
 
-function formatDate(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? iso
-    : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
 export default function AdminPolicyDetailPage() {
   const { t } = useTranslation();
   const permissions = usePermissions();
   const { policyId } = useParams({ strict: false }) as { policyId?: string };
 
+  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const { data: policy, isPending, isError } = useAdminPolicy(policyId);
   const { published, draft, shown } = policy
     ? displayVersion(policy)
     : { published: null, draft: null, shown: null };
-  // Only a draft is editable, so only a draft's body is ever fetched.
+  // Only a draft is editable, so only a draft's body is ever fetched. A
+  // selected PUBLISHED version gets its own read-only fetch instead.
   const draftBody = useAdminPolicyVersion(policyId, draft?.id);
+  const inspectBody = useAdminPolicyVersion(
+    policyId,
+    selectedVersionId ?? undefined,
+  );
   const openDraft = useOpenPolicyDraft(policyId ?? "");
 
   async function handleOpenDraft() {
@@ -132,71 +133,119 @@ export default function AdminPolicyDetailPage() {
         ) : null}
       </div>
 
-      <PolicyAudiencePicker policy={policy} />
-
-      {draft ? (
-        draftBody.isPending ? (
-          <Skeleton className="h-96 w-full rounded-xl" />
-        ) : draftBody.data ? (
-          <PolicyVersionEditor
-            // Remount on a different draft so the editor's local state starts
-            // from that draft's text rather than the previous one's.
-            key={draftBody.data.id}
-            policyId={policy.id}
-            draft={draftBody.data}
-            bodyProse={PREVIEW_PROSE}
-          />
-        ) : (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {t("admin.policies.load_failed")}
-          </div>
-        )
-      ) : (
-        <section className="rounded-xl border border-dashed border-m3-outline-variant/40 p-8 text-center">
-          <h2 className="font-headline text-base font-bold text-text-strong">
-            {t("admin.policies.no_draft_title")}
-          </h2>
-          <p className="mx-auto mt-1 max-w-prose text-sm text-text-muted">
-            {t("admin.policies.no_draft_hint")}
-          </p>
-          <Button
-            type="button"
-            className="mt-4 gap-2"
-            disabled={openDraft.isPending}
-            onClick={() => void handleOpenDraft()}
-          >
-            <FilePlus2 className="h-4 w-4" />
-            {t("admin.policies.actions.new_draft")}
-          </Button>
-        </section>
-      )}
-
-      <section className="rounded-xl border border-m3-outline-variant/20 bg-white p-4">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          {t("admin.policies.versions_title")}
-        </h2>
-        <ul className="mt-3 divide-y divide-m3-outline-variant/15">
-          {policy.versions.map((v) => (
-            <li key={v.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
-              <PolicyStatusBadge status={v.status} version={v.version_no} />
-              <span className="text-sm text-text-strong">{v.title}</span>
-              <span className="rounded bg-m3-surface-container-high px-1.5 py-0.5 font-mono text-[11px] uppercase text-m3-on-surface-variant">
-                {v.language}
-              </span>
-              {v.changelog ? (
-                <span className="min-w-0 flex-1 truncate text-xs text-text-muted">
-                  {v.changelog}
-                </span>
-              ) : (
-                <span className="flex-1" />
-              )}
-              <span className="text-xs text-text-muted">
-                {v.status === "draft" ? formatDate(v.updated_at) : formatDate(v.published_at)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <PolicyWorkspace
+        policy={policy}
+        draft={draft}
+        draftBody={draftBody}
+        inspectBody={inspectBody}
+        selectedVersionId={selectedVersionId}
+        onSelectVersion={setSelectedVersionId}
+        openDraftPending={openDraft.isPending}
+        onOpenDraft={() => void handleOpenDraft()}
+        onDraftRetry={() => setSelectedVersionId(null)}
+      />
     </div>
   );
 }
+
+/** Main column + version rail, the career-path-detail workspace grid. */
+function PolicyWorkspace({
+  policy,
+  draft,
+  draftBody,
+  inspectBody,
+  selectedVersionId,
+  onSelectVersion,
+  openDraftPending,
+  onOpenDraft,
+}: {
+  policy: NonNullable<ReturnType<typeof useAdminPolicy>["data"]>;
+  draft: ReturnType<typeof displayVersion>["draft"];
+  draftBody: ReturnType<typeof useAdminPolicyVersion>;
+  inspectBody: ReturnType<typeof useAdminPolicyVersion>;
+  selectedVersionId: string | null;
+  onSelectVersion: (id: string | null) => void;
+  openDraftPending: boolean;
+  onOpenDraft: () => void;
+  onDraftRetry?: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+      <div className="grid items-start gap-6 lg:grid-cols-10">
+        <main className="space-y-5 lg:col-span-7">
+          <PolicyAudiencePicker policy={policy} />
+
+          {selectedVersionId ? (
+            // A published version under inspection is immutable — show the
+            // exact reader rendering, no editor.
+            inspectBody.isPending ? (
+              <Skeleton className="h-96 w-full rounded-xl" />
+            ) : inspectBody.data ? (
+              <section className="space-y-3">
+                <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  {t("admin.policies.readonly_banner")}
+                </div>
+                <div className="overflow-hidden rounded-xl border border-m3-outline-variant/20 bg-white p-6">
+                  <RichContent
+                    value={inspectBody.data.body}
+                    format={inspectBody.data.format}
+                    className={PREVIEW_PROSE}
+                  />
+                </div>
+              </section>
+            ) : (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                {t("admin.policies.load_failed")}
+              </div>
+            )
+          ) : draft ? (
+            draftBody.isPending ? (
+              <Skeleton className="h-96 w-full rounded-xl" />
+            ) : draftBody.data ? (
+              <PolicyVersionEditor
+                // Remount on a different draft so the editor's local state starts
+                // from that draft's text rather than the previous one's.
+                key={draftBody.data.id}
+                policyId={policy.id}
+                draft={draftBody.data}
+                bodyProse={PREVIEW_PROSE}
+              />
+            ) : (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                {t("admin.policies.load_failed")}
+              </div>
+            )
+          ) : (
+            <section className="rounded-xl border border-dashed border-m3-outline-variant/40 p-8 text-center">
+              <h2 className="font-headline text-base font-bold text-text-strong">
+                {t("admin.policies.no_draft_title")}
+              </h2>
+              <p className="mx-auto mt-1 max-w-prose text-sm text-text-muted">
+                {t("admin.policies.no_draft_hint")}
+              </p>
+              <Button
+                type="button"
+                className="mt-4 gap-2"
+                disabled={openDraftPending}
+                onClick={onOpenDraft}
+              >
+                <FilePlus2 className="h-4 w-4" />
+                {t("admin.policies.actions.new_draft")}
+              </Button>
+            </section>
+          )}
+        </main>
+
+        <div className="lg:col-span-3 lg:sticky lg:top-24">
+          <PolicyVersionPanel
+            versions={policy.versions}
+            currentId={null}
+            selectedVersionId={selectedVersionId}
+            onSelect={onSelectVersion}
+            canManage
+          />
+        </div>
+      </div>
+  );
+}
+
