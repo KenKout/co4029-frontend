@@ -68,7 +68,8 @@ export const studentNavItems: NavItem[] = [
     icon: BarChart3,
   },
   {
-    label: "Learning Programs",
+    label: "My Learning Programs",
+    i18nKey: "nav.my_learning_programs",
     href: "/me/learning-programs",
     icon: Briefcase,
   },
@@ -104,7 +105,13 @@ export const studentNavGroups: NavGroup[] = [
         icon: BarChart3,
       },
       {
-        label: "Learning Programs",
+        label: "My Learning Programs",
+        // Its own key, NOT the manager's `nav.learning_programs`: this page is
+        // the student's enrolled programs ("Choose and follow one career path
+        // in each enrolled program"), while the manager's entry is the
+        // authoring surface for all programs in the org. Sharing one key would
+        // force one wording to be wrong for one of them.
+        i18nKey: "nav.my_learning_programs",
         href: "/me/learning-programs",
         icon: Briefcase,
       },
