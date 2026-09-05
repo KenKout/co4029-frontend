@@ -65,6 +65,12 @@ export function useCourseSettingsFields(defaultOpen = false) {
   function applyInitial(init: CourseSettingsInitialValues) {
     setTitle(init.title);
     setSlug(init.slug);
+    // Was MISSING, which broke two things at once: the field stayed "" while the
+    // saved course held a UUID, so the dirty check never cleared ("Unsaved
+    // changes" forever), and Save then sent faculty_id: null — actively wiping
+    // the faculty the manager had just chosen. Every field in
+    // CourseSettingsValues must be seeded here or it is permanently dirty.
+    setFacultyId(init.facultyId);
     setDescription(init.description);
     setEstimatedMinutes(init.estimatedMinutes);
     setContactEmail(init.contactEmail);

@@ -499,8 +499,12 @@ export function useUpdateCourse(courseId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.bySlug(course.slug) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
+      // ONE invalidation for the teacher tree, not two: React Query matches
+      // query keys by PREFIX, so ["teacher","courses"] already covers
+      // ["teacher","courses",courseId] — the detail read useTeacherCourseById
+      // owns. Listing both made every mutation refetch
+      // GET /teacher/courses/{id} TWICE.
       qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
-      qc.invalidateQueries({ queryKey: ["teacher", "courses", courseId] });
     },
   });
 }
@@ -542,8 +546,12 @@ export function useUploadCourseThumbnail(courseId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.bySlug(course.slug) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
+      // ONE invalidation for the teacher tree, not two: React Query matches
+      // query keys by PREFIX, so ["teacher","courses"] already covers
+      // ["teacher","courses",courseId] — the detail read useTeacherCourseById
+      // owns. Listing both made every mutation refetch
+      // GET /teacher/courses/{id} TWICE.
       qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
-      qc.invalidateQueries({ queryKey: ["teacher", "courses", courseId] });
     },
   });
 }
@@ -557,8 +565,12 @@ export function usePublishCourse(courseId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.bySlug(course.slug) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
+      // ONE invalidation for the teacher tree, not two: React Query matches
+      // query keys by PREFIX, so ["teacher","courses"] already covers
+      // ["teacher","courses",courseId] — the detail read useTeacherCourseById
+      // owns. Listing both made every mutation refetch
+      // GET /teacher/courses/{id} TWICE.
       qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
-      qc.invalidateQueries({ queryKey: ["teacher", "courses", courseId] });
       // The /dept/courses/{id} page reads its course from the dept list and
       // shows readiness in the header — without these it keeps showing the
       // old status pill and the Publish/Archive buttons after the mutation.
@@ -577,8 +589,12 @@ export function useArchiveCourse(courseId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.bySlug(course.slug) });
       qc.invalidateQueries({ queryKey: queryKeys.courses.list() });
+      // ONE invalidation for the teacher tree, not two: React Query matches
+      // query keys by PREFIX, so ["teacher","courses"] already covers
+      // ["teacher","courses",courseId] — the detail read useTeacherCourseById
+      // owns. Listing both made every mutation refetch
+      // GET /teacher/courses/{id} TWICE.
       qc.invalidateQueries({ queryKey: ["teacher", "courses"] });
-      qc.invalidateQueries({ queryKey: ["teacher", "courses", courseId] });
       // Same dept-surface refresh as publish.
       qc.invalidateQueries({ queryKey: queryKeys.dept.courses() });
       qc.invalidateQueries({ queryKey: queryKeys.dept.readiness(courseId) });
