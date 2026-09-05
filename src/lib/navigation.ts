@@ -165,51 +165,31 @@ export const teacherNavGroups: NavGroup[] = [
 // Managers own student + course management for their organization: course
 // lifecycle (create/publish/delete + assign teachers), enrolment, learning
 // outcomes, and career pathways. Teachers, by contrast, own course *content*
-// only — so the two sidebars are deliberately different. These three groups
-// keep the manager's distinct responsibilities visually separated.
+// only — so the two sidebars are deliberately different.
 
-export const managerNavItems: NavItem[] = [
-  {
-    // `exact` is required: every other manager route is prefixed by
-    // /management, so a prefix match would keep Overview highlighted on all
-    // of them.
-    label: "Overview",
-    i18nKey: "nav.manager_overview",
-    href: "/management",
-    icon: LayoutDashboard,
-    exact: true,
-  },
-  {
-    label: "Courses",
-    i18nKey: "nav.manager_courses",
-    href: "/management/courses",
-    icon: BookOpen,
-  },
-  {
-    label: "Learning Programs",
-    href: "/management/learning-programs",
-    icon: GraduationCap,
-  },
-  {
-    label: "Career Pathways",
-    i18nKey: "nav.career_paths",
-    href: "/management/career-paths",
-    icon: Briefcase,
-  },
-  {
-    label: "Users",
-    i18nKey: "nav.users",
-    href: "/management/users",
-    icon: Users,
-  },
-  {
-    label: "Organization",
-    i18nKey: "nav.org_units",
-    href: "/management/org-units",
-    icon: Network,
-  },
-];
+// NOTE: there is no `managerNavItems` flat list. The sidebar renders GROUPS
+// (`resolveNavGroups` in routes/_components/authenticated-layout/helpers.ts);
+// a flat export existed here, was referenced by nothing, and had already
+// drifted from the grouped list it shadowed. Add manager entries below only.
 
+// Grouped by WHAT THE MANAGER IS DOING, not by which table the page reads.
+//
+// The previous shape had five groups for six items, four of them single-item
+// groups whose header repeated the item verbatim ("Users > Users",
+// "Organization > Organization", "Career Pathways > Career Pathways"). A group
+// label that restates its only child carries no information — it just doubles
+// the vertical space and reads as a mistake. Compare `teacherNavGroups`, where
+// the header names a category ("Overview", "Content") and the item names a
+// destination ("Workspace", "My Courses"), and `adminNavGroups`, which sorts
+// nine items into three real categories.
+//
+// The old split was also wrong about meaning: "Learning Programs" sat under
+// "Courses" while "Career Pathways" got a group of its own, even though those
+// two are the SAME domain seen from both ends — a career path is the route a
+// student picks, a learning program is the versioned thing they are enrolled
+// into. Courses are the unit of teaching underneath both. Grouping the pair
+// together and leaving Courses beside them matches how the pages actually
+// relate.
 export const managerNavGroups: NavGroup[] = [
   {
     label: "Overview",
@@ -225,13 +205,24 @@ export const managerNavGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Courses",
-    i18nKey: "nav_groups.manager_courses",
+    // Curriculum: the things being delivered, from the widest (a program a
+    // student is enrolled into) down to a single course.
+    label: "Curriculum",
+    i18nKey: "nav_groups.curriculum",
     items: [
       {
         label: "Learning Programs",
+        // Was missing an i18nKey entirely, so this one entry stayed English on
+        // a Vietnamese sidebar while every sibling translated.
+        i18nKey: "nav.learning_programs",
         href: "/management/learning-programs",
         icon: GraduationCap,
+      },
+      {
+        label: "Career Paths",
+        i18nKey: "nav.career_paths",
+        href: "/management/career-paths",
+        icon: Briefcase,
       },
       {
         label: "Courses",
@@ -242,20 +233,11 @@ export const managerNavGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Career Pathways",
-    i18nKey: "nav_groups.pathways",
-    items: [
-      {
-        label: "Career Pathways",
-        i18nKey: "nav.career_paths",
-        href: "/management/career-paths",
-        icon: Briefcase,
-      },
-    ],
-  },
-  {
-    label: "Users",
-    i18nKey: "nav_groups.users",
+    // People and the structure they sit in. Both answer "who is in my
+    // organization", so they belong under one header rather than two groups of
+    // one.
+    label: "People & Organization",
+    i18nKey: "nav_groups.people_org",
     items: [
       {
         label: "Users",
@@ -263,12 +245,6 @@ export const managerNavGroups: NavGroup[] = [
         href: "/management/users",
         icon: Users,
       },
-    ],
-  },
-  {
-    label: "Organization",
-    i18nKey: "nav_groups.organization",
-    items: [
       {
         label: "Organization",
         i18nKey: "nav.org_units",
