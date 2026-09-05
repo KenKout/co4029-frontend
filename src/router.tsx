@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router";
 
 import { getStoredAuthSession } from "@/lib/auth";
+import { resolveLandingPath } from "@/lib/auth/resolve-landing";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { MfaGate } from "@/components/auth/MfaGate";
@@ -58,6 +59,44 @@ const rootRoute = createRootRoute({ component: Root });
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
+  /**
+   * A signed-in user opening the app lands on their ROLE's page, not the
+   * marketing site.
+   *
+   * The login flows already resolved landing per role, but "/" did not: it
+   * rendered LandingPage unconditionally with no auth awareness, so every
+   * returning session — the common case, since the browser reopens the last
+   * URL or the bookmark is the bare domain — saw the marketing page and had to
+   * navigate manually.
+   *
+   * The anonymous path stays fully SYNCHRONOUS. `getStoredAuthSession()` reads
+   * localStorage, so a visitor with no session returns before any await and the
+   * landing page paints with no added latency; only an authenticated user pays
+   * for the `/me/roles` round trip. (This is the router's only async
+   * `beforeLoad`, which is why that asymmetry is worth stating.)
+   *
+   * `requiresMfa` is checked FIRST: a half-authenticated session must finish the
+   * challenge, and redirecting it into the app would hand out a landing page
+   * behind a gate the user has not passed.
+   */
+  beforeLoad: async () => {
+    const session = getStoredAuthSession();
+    if (!session) return;
+
+    if (session.requiresMfa) {
+      // `next: undefined` is required, not noise: /login/mfa declares a search
+      // shape, so TanStack types the redirect against it.
+      throw redirect({
+        to: "/login/mfa",
+        search: { next: undefined },
+        replace: true,
+      });
+    }
+
+    // No `?next=` to honour here — "/" carries no intent beyond "open the app".
+    const to = await resolveLandingPath(null);
+    throw redirect({ to, replace: true });
+  },
   component: LandingPage,
 });
 
@@ -67,6 +106,23 @@ const loginRoute = createRoute({
   validateSearch: (search: Record<string, unknown>) => ({
     next: typeof search.next === "string" ? search.next : undefined,
   }),
+  /**
+   * Same redirect as "/" for an already-signed-in visitor, but here it also
+   * removes a FLASH: `LoginPage` navigates away from an effect, which only runs
+   * after the component has painted, so the sign-in form appeared for a frame
+   * before vanishing. Redirecting in `beforeLoad` means it never mounts.
+   *
+   * The effect in LoginPage stays: it covers becoming authenticated while the
+   * page is already open (finishing OAuth in another tab), which `beforeLoad`
+   * cannot see because it does not re-run.
+   */
+  beforeLoad: async ({ search }) => {
+    const session = getStoredAuthSession();
+    if (!session || session.requiresMfa) return;
+
+    const to = await resolveLandingPath(search.next ?? null);
+    throw redirect({ to, replace: true });
+  },
   component: LoginPage,
 });
 

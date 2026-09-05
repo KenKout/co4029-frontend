@@ -73,14 +73,26 @@ const DECLARED = new Set(
   [...NODES.keys()].map((n) => fullPath(n, NODES)).filter((p): p is string => !!p),
 );
 
-/** Route consts whose body throws a redirect — compatibility aliases. */
+/**
+ * Route consts that are pure compatibility aliases: they redirect and render
+ * NOTHING.
+ *
+ * "Throws a redirect" alone is not enough. A route with both a `component` and a
+ * `throw redirect(...)` is a real page that redirects CONDITIONALLY — "/" sends
+ * a signed-in user to their role's landing page but still renders the marketing
+ * site for everyone else, and "/login" does the same to skip the form for an
+ * existing session. Treating those as retired would forbid linking to "/" or
+ * "/login" anywhere in the app, and would flag them as invalid redirect targets.
+ * An alias has no `component`, so that is what distinguishes them.
+ */
 const ALIASES = new Set(
   [...NODES.entries()]
     .filter(([name]) => {
       const block = new RegExp(
         `const\\s+${name}\\s*=\\s*createRoute\\(\\{([\\s\\S]*?)\\n\\}\\);`,
       ).exec(ROUTER_SRC)?.[1];
-      return !!block && /throw redirect\(/.test(block);
+      if (!block || !/throw redirect\(/.test(block)) return false;
+      return !/\bcomponent:/.test(block);
     })
     .map(([name]) => fullPath(name, NODES))
     .filter((p): p is string => !!p),

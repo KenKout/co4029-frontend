@@ -54,4 +54,16 @@ describe("landingPathForRoles", () => {
       expect(path.startsWith("/")).toBe(true);
     }
   });
+
+  it("never lands anyone back on '/'", () => {
+    // The root route redirects authenticated users to their landing path. If a
+    // landing path were "/" that redirect would target itself and the app would
+    // hang in a loop instead of rendering. Nothing else enforces this, so it is
+    // asserted for every role AND the no-role fallback.
+    for (const role of ROLE_PRECEDENCE) {
+      expect(landingPathForRoles([role])).not.toBe("/");
+    }
+    expect(landingPathForRoles([])).not.toBe("/");
+    expect(DEFAULT_LANDING).not.toBe("/");
+  });
 });
