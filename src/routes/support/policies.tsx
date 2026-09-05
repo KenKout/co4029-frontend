@@ -8,7 +8,7 @@ import TopNavBar from "@/components/layout/TopNavBar";
 import Footer from "@/components/layout/Footer";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { SearchInput } from "@/components/ui/search-input";
-import { usePolicies } from "@/lib/api/hooks/policies";
+import { useReaderPolicies } from "./_components/use-reader-policies";
 import { cn } from "@/lib/utils";
 
 /**
@@ -18,12 +18,14 @@ import { cn } from "@/lib/utils";
  * are the same unauthenticated ones the public /policy/$slug pages use;
  * audience scoping is a courtesy filter, so this page adds zero access
  * control and needs no extra endpoint — the index just works for whatever
- * roles the viewer holds (and an anonymous visitor gets the public set plus
- * the universal student policies).
+ * roles the viewer holds (an anonymous visitor gets the public set only;
+ * the audience is literal, so a policy named for students is for students).
  */
 export default function PoliciesPage() {
   const { t } = useTranslation();
-  const { data, isPending } = usePolicies([]);
+  // The reader's own roles, not []: an empty list is the ANONYMOUS request,
+  // and a signed-in student would lose every policy named for them.
+  const { data, isPending } = useReaderPolicies();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"all" | "legal" | "academic">("all");
 
