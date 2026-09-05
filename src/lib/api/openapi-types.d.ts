@@ -10079,6 +10079,12 @@ export interface components {
             rubric_scores: components["schemas"]["InterviewRubricScore"][];
             /** Pass Verdict */
             pass_verdict?: boolean | null;
+            /**
+             * Evaluation State
+             * @default not_required
+             * @enum {string}
+             */
+            evaluation_state: "not_required" | "pending" | "succeeded" | "exhausted";
             /** Ended At */
             ended_at?: string | null;
             /** Remaining Attempts */

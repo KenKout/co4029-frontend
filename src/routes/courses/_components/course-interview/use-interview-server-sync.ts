@@ -99,14 +99,25 @@ export function useInterviewServerSync(
   // freeze it into finishResult so the poll's `enabled` flips to false
   // (finishVerdict/status are otherwise the frozen values from the /finish
   // response and would keep the poll running forever).
+  //
+  // "Terminally fails" is the server's `evaluation_state === "exhausted"`, NOT
+  // `status === "failed"`. Freezing on the status was the bug: ARQ stamps it
+  // whenever one job runs out of retries, the backend recovery sweep re-drives
+  // exactly those rows, and freezing killed the poll before the verdict landed.
+  // The frozen `evaluation_state` is what keeps the poll off afterwards.
   useEffect(() => {
     if (!verdictPoll) return;
     const resolved = verdictPoll.pass_verdict;
-    const failed = verdictPoll.status === "failed";
-    if ((resolved !== null && resolved !== undefined) || failed) {
+    const settled = verdictPoll.evaluation_state === "exhausted";
+    if ((resolved !== null && resolved !== undefined) || settled) {
       setFinishResult((prev) =>
-        prev && prev.pass_verdict === null && prev.status !== "failed"
-          ? { ...prev, pass_verdict: resolved, status: verdictPoll.status }
+        prev && prev.pass_verdict === null && prev.evaluation_state !== "exhausted"
+          ? {
+              ...prev,
+              pass_verdict: resolved,
+              status: verdictPoll.status,
+              evaluation_state: verdictPoll.evaluation_state,
+            }
           : prev,
       );
     }

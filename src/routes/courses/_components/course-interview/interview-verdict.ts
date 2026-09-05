@@ -16,12 +16,36 @@ export interface FinishFlags {
   evaluationUnavailable: boolean;
   /** The verdict frozen into the /finish response (null until the worker runs). */
   finishVerdict: boolean | null;
-  /** The evaluation job exhausted its retries and stamped status = 'failed'. */
+  /** No verdict is coming: the server says the grading budget is spent. */
   evaluationTerminallyFailed: boolean;
   /** Whether the gap-report query should run at all. */
   gapReportEnabled: boolean;
   /** Whether the verdict poll should run at all. */
   verdictPollEnabled: boolean;
+}
+
+/**
+ * Is grading over for good? Reads the server-derived `evaluation_state`.
+ *
+ * `status: "failed"` on its own is NOT terminal and must never be treated as
+ * such here. It means only that ARQ exhausted its retry budget for one job; the
+ * backend recovery sweep re-drives exactly those rows, and the verdict often
+ * lands a minute later. Freezing the screen on it was this module's bug: the
+ * completion screen showed a permanent error, stopped polling, and the student
+ * never saw the result that did arrive.
+ *
+ * Only `exhausted` is terminal — the server's own answer to "the recovery budget
+ * is spent AND the last job has settled". `undefined` = a backend that predates
+ * the field, where the old status-only reading is all there is.
+ */
+function isEvaluationTerminallyFailed(
+  result: { status?: string; evaluation_state?: string } | null | undefined,
+): boolean {
+  if (!result) return false;
+  if (result.evaluation_state !== undefined) {
+    return result.evaluation_state === "exhausted";
+  }
+  return result.status === "failed";
 }
 
 /**
@@ -34,21 +58,20 @@ export interface FinishFlags {
  * /finish returns. At finish time pass_verdict is still null, so we must NOT
  * render it as a fail. Poll the session until the verdict resolves, then stop.
  *
- * The AI judge (LLM call) can fail outright (provider outage, malformed
- * JSON after retries, quota exhausted, ...). The backend retries the job
- * up to 3 times (ARQ max_tries), then stamps InterviewSession.status =
- * 'failed' on the final attempt. Without checking for that terminal
- * status here, this poll would keep asking for a pass_verdict that will
- * never arrive and the student would wait forever.
+ * The AI judge (LLM call) can fail outright (provider outage, malformed JSON
+ * after retries, quota exhausted, ...). What makes that RECOVERABLE is the
+ * backend's recovery sweep, so the stop condition is the server's
+ * `evaluation_state`, never `status` — see isEvaluationTerminallyFailed.
  */
 export function resolveFinishFlags(
   finishResult: InterviewSessionFinishResponse | null,
 ): FinishFlags {
   const evaluationUnavailable = finishResult?.status === "abandoned";
   const finishVerdict = finishResult?.pass_verdict ?? null;
-  const evaluationTerminallyFailed = finishResult?.status === "failed" || false;
+  const evaluationTerminallyFailed =
+    isEvaluationTerminallyFailed(finishResult);
   const gapReportEnabled = Boolean(
-    finishResult && finishResult.status !== "failed" && !evaluationUnavailable,
+    finishResult && !evaluationTerminallyFailed && !evaluationUnavailable,
   );
   const verdictPollEnabled = Boolean(
     finishResult &&
@@ -83,8 +106,12 @@ export function resolveVerdictState(args: {
 
   const liveVerdict: boolean | null =
     verdictPoll?.pass_verdict ?? finishVerdict;
-  const evaluationFailed =
-    evaluationTerminallyFailed || verdictPoll?.status === "failed";
+  // Same rule for the polled row as for the finish response: `status: "failed"`
+  // with a live recovery budget is still in flight. The poll is the fresher of
+  // the two, so it can also CLEAR a stale terminal reading from /finish.
+  const evaluationFailed = verdictPoll
+    ? isEvaluationTerminallyFailed(verdictPoll)
+    : evaluationTerminallyFailed;
   const verdictPending =
     !!finishResult &&
     liveVerdict === null &&
