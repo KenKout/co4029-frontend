@@ -23,7 +23,10 @@ import { ImportSyllabusDialog } from "./_components/courses/ImportSyllabusDialog
 import { useOrgUnitTree, type OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
 import { findNode } from "@/lib/org-unit-tree-helpers";
 import { useMe } from "@/lib/api/hooks/auth";
-import { useFacultyFilter } from "./_components/courses/use-faculty-filter";
+import {
+  useFacultyFilter,
+  UNASSIGNED_FACULTY,
+} from "./_components/courses/use-faculty-filter";
 
 /**
  * Manager/HOD course worklist — the merged view that replaced the old
@@ -334,14 +337,19 @@ export default function DeptCoursesPage() {
 
   // Faculty filter (state + options + the auto-default). Extracted to a hook
   // because this component already breached the line/complexity caps.
-  const facultyFilterState = useFacultyFilter(list.data);
+  const facultyFilterState = useFacultyFilter(
+    list.data,
+    t("dept_courses.faculty_unassigned"),
+  );
   const faculty = facultyFilterState.value;
   const setFaculty = facultyFilterState.setValue;
   const facultyOptions = facultyFilterState.options;
 
   const courses = useMemo(() => {
     let all = list.data ?? [];
-    if (faculty !== "all") {
+    if (faculty === UNASSIGNED_FACULTY) {
+      all = all.filter((c) => !c.faculty_id);
+    } else if (faculty !== "all") {
       all = all.filter((c) => c.faculty_id === faculty);
     }
     const q = query.trim().toLowerCase();
