@@ -34,6 +34,9 @@ function snapshot(over: Partial<StateSnapshot> = {}): StateSnapshot {
 
 function makeCtx(overrides: Record<string, unknown> = {}) {
   const ctx = {
+    // Read by the terminal guard: a snapshot must never move a closing or
+    // finished screen back to `questioning`.
+    phase: "questioning",
     currentQuestion: {
       id: QUESTION_ONE,
       prompt_text: "Q1",
@@ -282,5 +285,75 @@ describe("applyStateSnapshot — progress and finishing", () => {
     // freeze on a stale count while the closing runs.
     expect(ctx.setSessionProgress).toHaveBeenCalledTimes(1);
     expect(ctx.reconcileDeadline).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("applyStateSnapshot — ending is one-way", () => {
+  /**
+   * A snapshot already in flight when the candidate finished (or the timer fired)
+   * still names a live question. Presenting it moved the phase back to
+   * `questioning` behind the closing screen: the composer reopened, the End button
+   * re-enabled, and a second /finish could be sent for a session already being
+   * submitted. `beginClosing` guards its own re-entry but cannot undo a phase
+   * something else moved backwards.
+   */
+  it("does not reopen a closing screen with a late question snapshot", () => {
+    const ctx = makeCtx({ phase: "closing" });
+
+    applyStateSnapshot(ctx, snapshot());
+
+    expect(ctx.setPhase).not.toHaveBeenCalled();
+    expect(ctx.setCurrentQuestion).not.toHaveBeenCalled();
+    expect(ctx.setTranscript).not.toHaveBeenCalled();
+  });
+
+  it("does not reopen the result screen either", () => {
+    const ctx = makeCtx({ phase: "results" });
+
+    applyStateSnapshot(ctx, snapshot());
+
+    expect(ctx.setPhase).not.toHaveBeenCalled();
+    expect(ctx.setCurrentQuestion).not.toHaveBeenCalled();
+  });
+
+  it("still applies progress and the deadline while closing", () => {
+    // Display-only, and a fresher reading of either is never wrong — the header
+    // should not freeze on a stale count just because the ending started.
+    const ctx = makeCtx({ phase: "closing" });
+
+    applyStateSnapshot(ctx, snapshot());
+
+    expect(ctx.setSessionProgress).toHaveBeenCalledTimes(1);
+    expect(ctx.reconcileDeadline).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not drop the parked answer copy while closing", () => {
+    // The clear rides on presenting the next question, which is exactly what a
+    // terminal phase refuses — so the candidate's insurance copy survives an
+    // ending that has not resolved yet.
+    const ctx = makeCtx({ phase: "closing" });
+
+    applyStateSnapshot(ctx, snapshot());
+
+    expect(ctx.clearDraftAutosave).not.toHaveBeenCalled();
+  });
+
+  it("still honours a finished snapshot from a terminal phase", () => {
+    // `beginClosing` is idempotent, and reaching it is how a `results` phase
+    // stays consistent if the server insists the session is over.
+    const ctx = makeCtx({ phase: "closing" });
+
+    applyStateSnapshot(ctx, snapshot({ isFinished: true }));
+
+    expect(ctx.beginClosing).toHaveBeenCalledWith("natural");
+  });
+
+  it("still presents a question during the normal questioning phase", () => {
+    const ctx = makeCtx({ phase: "questioning" });
+
+    applyStateSnapshot(ctx, snapshot());
+
+    expect(ctx.setCurrentQuestion).toHaveBeenCalledTimes(1);
+    expect(ctx.setPhase).toHaveBeenCalledWith("questioning");
   });
 });

@@ -37,6 +37,17 @@ export function applyStateSnapshot(
     return;
   }
 
+  // Ending is one-way on this screen. A snapshot in flight when the candidate
+  // finished (or the timer fired) still names a live question, and presenting it
+  // moved the phase back to `questioning` — reopening the composer behind the
+  // closing screen and re-enabling the End button, so a second /finish could be
+  // sent for a session already being submitted. `beginClosing` guards its own
+  // re-entry but cannot undo a phase someone else moved backwards.
+  //
+  // Progress and the deadline above are still applied: they are display-only and
+  // a fresher reading of them is never wrong.
+  if (ctx.phase === "closing" || ctx.phase === "results") return;
+
   const question = snapshotQuestion(snapshot);
   if (!question) return;
   if (isAlreadyPresenting(ctx, question.id)) return;
