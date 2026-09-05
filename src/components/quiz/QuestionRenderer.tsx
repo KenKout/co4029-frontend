@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { RichContent } from "@/components/ui/rich-content";
 import type { QuizQuestionPublic } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 /**
@@ -162,10 +163,9 @@ function ShortAnswerInput({
  *   3. Tap a filled blank to focus it, then tap another word to replace/swap.
  *   4. × clears a filled blank; dragging a word onto a blank still works.
  *
- * The word bank comes from ``question.fill_blank_choices`` — a no-leak
- * projection the backend derives from the answer words (or the AI-generated
- * option bank with distractors), shuffled so the positional answer key never
- * reaches the learner. Falls back to ``question.options`` then "Word 1..N".
+ * The word bank comes only from the backend's safe
+ * ``question.fill_blank_choices`` projection. If no distractor-backed bank is
+ * available, the blanks render as free-text inputs instead.
  */
 function FillBlankInput({
   question,
@@ -173,7 +173,6 @@ function FillBlankInput({
   disabled,
   onAnswerTextChange,
 }: QuestionRendererProps) {
-  const { t } = useTranslation();
   const segments = useMemo(
     () => splitStemByBlanks(question.prompt_text ?? ""),
     [question.prompt_text],
@@ -183,15 +182,7 @@ function FillBlankInput({
     () => parseFillBlankSlots(answerText, blankCount),
     [answerText, blankCount],
   );
-  const wordBank = useMemo(
-    () =>
-      buildFillBlankWordBank(
-        question,
-        blankCount,
-        t("course_quiz.question_input.word"),
-      ),
-    [question, blankCount, t],
-  );
+  const wordBank = useMemo(() => buildFillBlankWordBank(question), [question]);
   const [focusedBlank, setFocusedBlank] = useState<number | null>(null);
 
   function commitSlots(next: Array<string | null>) {
@@ -233,6 +224,17 @@ function FillBlankInput({
         disabled={disabled}
         onSelectOption={() => {}}
         onAnswerTextChange={onAnswerTextChange}
+      />
+    );
+  }
+
+  if (wordBank.length === 0) {
+    return (
+      <FillBlankTextInputs
+        segments={segments}
+        slots={slots}
+        disabled={disabled}
+        onChange={commitSlots}
       />
     );
   }
@@ -301,13 +303,8 @@ function parseFillBlankSlots(
   return parsed;
 }
 
-/** Build the fill_blank word bank: ``fill_blank_choices`` (backend no-leak
- * projection) when present, else ``options``, else "Word 1..N" placeholders. */
-function buildFillBlankWordBank(
-  question: QuizQuestionPublic,
-  blankCount: number,
-  fallbackWord: string,
-): string[] {
+/** Trust only the backend's safe bank projection. Empty means free-text mode. */
+function buildFillBlankWordBank(question: QuizQuestionPublic): string[] {
   const fillChoices = (
     question as unknown as { fill_blank_choices?: string[] | null }
   ).fill_blank_choices;
@@ -317,13 +314,47 @@ function buildFillBlankWordBank(
     );
     if (cleaned.length > 0) return cleaned;
   }
-  const fromOptions = question.options
-    .map((opt) => opt.option_text)
-    .filter((text) => typeof text === "string" && text.length > 0);
-  if (fromOptions.length > 0) return fromOptions;
-  return Array.from(
-    { length: blankCount },
-    (_, i) => `${fallbackWord} ${i + 1}`,
+  return [];
+}
+
+function FillBlankTextInputs({
+  segments,
+  slots,
+  disabled,
+  onChange,
+}: {
+  segments: string[];
+  slots: Array<string | null>;
+  disabled: boolean;
+  onChange: (next: Array<string | null>) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="text-sm sm:text-base leading-loose text-m3-on-surface bg-m3-surface-container-lowest rounded-xl p-5">
+      {segments.map((segment, index) => (
+        <span key={index}>
+          {segment}
+          {index < slots.length && (
+            <Input
+              value={slots[index] ?? ""}
+              disabled={disabled}
+              aria-label={t("course_quiz.question_input.blank_answer_label", {
+                number: index + 1,
+              })}
+              placeholder={t(
+                "course_quiz.question_input.blank_answer_placeholder",
+              )}
+              className="inline-flex w-40 mx-1 align-middle"
+              onChange={(event) => {
+                const next = [...slots];
+                next[index] = event.target.value || null;
+                onChange(next);
+              }}
+            />
+          )}
+        </span>
+      ))}
+    </div>
   );
 }
 

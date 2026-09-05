@@ -26,11 +26,16 @@ export type QuestionDraftValidation =
   | { ok: true; expectedSeconds: number }
   | { ok: false; errorKey: string };
 
+interface QuestionDraftValidationInput extends QuestionDraftContext {
+  questionType: string;
+}
+
 export function validateQuestionDraft({
   draft,
   hasOptions,
   allowMultiCorrect,
-}: QuestionDraftContext): QuestionDraftValidation {
+  questionType,
+}: QuestionDraftValidationInput): QuestionDraftValidation {
   if (!draft.prompt_text.trim()) {
     return {
       ok: false,
@@ -50,6 +55,15 @@ export function validateQuestionDraft({
     return {
       ok: false,
       errorKey: "teacher_quiz_manage.errors.expected_time_required",
+    };
+  }
+  if (
+    questionType === "fill_blank" &&
+    !draft.fill_blank_distractors.some((value) => value.trim().length > 0)
+  ) {
+    return {
+      ok: false,
+      errorKey: "teacher_quiz_manage.errors.fill_blank_distractor_required",
     };
   }
   if (hasOptions) {
@@ -264,6 +278,7 @@ export function createQuestionSaver({
       draft,
       hasOptions,
       allowMultiCorrect,
+      questionType: question.question_type,
     });
     if (!validation.ok) {
       toast.error(t(validation.errorKey));
