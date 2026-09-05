@@ -8,6 +8,8 @@ import { CourseSettingsMetaFields } from "./CourseSettingsMetaFields";
 import { CourseSettingsSaveBar } from "./CourseSettingsSaveBar";
 import { CourseSettingsThumbnailField } from "./CourseSettingsThumbnailField";
 import { useCourseSettingsDraft } from "./use-course-settings-draft";
+import { useMe } from "@/lib/api/hooks/auth";
+import { useOrgUnits } from "@/lib/api/hooks/admin-organizations";
 
 /**
  * Collapsible "Course Settings" panel, rendered on two surfaces.
@@ -51,6 +53,19 @@ export function CourseSettingsPanel({
     lastSaved,
     handleSave,
   } = useCourseSettingsDraft({ courseId, t, scope, defaultOpen });
+
+  // Assignable faculties for the manager-only Faculty select. Fetched only for
+  // scope="manager" — the teacher surface hides the field, so requesting an
+  // admin-gated endpoint there would 403 for no benefit.
+  const { data: me } = useMe();
+  const faculties = useOrgUnits(
+    managerScope ? (me?.organization_id ?? undefined) : undefined,
+    { onlyRoots: true },
+  );
+  const facultyOptions = (faculties.data ?? []).map((unit) => ({
+    value: unit.id,
+    label: unit.name,
+  }));
 
   return (
     <div
@@ -113,6 +128,7 @@ export function CourseSettingsPanel({
                 setters={setters}
                 t={t}
                 scope={scope}
+                facultyOptions={facultyOptions}
               />
               <CourseSettingsDeliveryFields
                 values={values}

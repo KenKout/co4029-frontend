@@ -23,6 +23,7 @@ import { ImportSyllabusDialog } from "./_components/courses/ImportSyllabusDialog
 import { useOrgUnitTree, type OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
 import { findNode } from "@/lib/org-unit-tree-helpers";
 import { useMe } from "@/lib/api/hooks/auth";
+import { useFacultyFilter } from "./_components/courses/use-faculty-filter";
 
 /**
  * Manager/HOD course worklist — the merged view that replaced the old
@@ -207,6 +208,16 @@ function buildColumns(t: TFn): DataTableColumn<CourseAuthoring>[] {
       cell: (c) => <ContentCell course={c} t={t} />,
     },
     {
+      id: "faculty",
+      header: t("dept_courses.col_faculty"),
+      sortable: true,
+      // Unassigned sorts LAST under ascending order rather than first: the
+      // column exists to find a course's owner, and a block of blanks at the
+      // top buries the rows that answer that.
+      sortValue: (c) => c.faculty_name?.toLowerCase() ?? "\uffff",
+      cell: (c) => <FacultyCell course={c} t={t} />,
+    },
+    {
       id: "status",
       header: t("dept_courses.col_status"),
       sortable: true,
@@ -214,6 +225,56 @@ function buildColumns(t: TFn): DataTableColumn<CourseAuthoring>[] {
       cell: (c) => <CourseStatusBadge status={c.status} />,
     },
   ];
+}
+
+/**
+ * The owning faculty, or an explicit "unassigned" marker.
+ *
+ * Renders `faculty_name` from the server rather than resolving `faculty_id`
+ * client-side: the id alone would need one lookup per row, and the server
+ * already omits the name for a RETIRED faculty so a stale pointer reads as
+ * unassigned instead of naming a faculty that no longer exists.
+ */
+function FacultyCell({
+  course,
+  t,
+}: {
+  course: CourseAuthoring;
+  t: TFn;
+}) {
+  if (!course.faculty_name) {
+    return (
+      <span className="text-xs text-text-subtle">
+        {t("dept_courses.faculty_unassigned")}
+      </span>
+    );
+  }
+  return <span className="text-sm">{course.faculty_name}</span>;
+}
+
+function buildWorklistFilter(t: TFn): FilterDef {
+  return {
+    id: "worklist",
+    label: t("dept_courses.filter_label"),
+    allLabel: t("dept_courses.filter_all"),
+    options: [
+      { value: "needs_teacher", label: t("dept_courses.filter_needs_teacher") },
+      { value: "no_content", label: t("dept_courses.filter_no_content") },
+      { value: "draft", label: t("dept_courses.filter_draft") },
+    ],
+  };
+}
+
+function buildFacultyFilter(
+  t: TFn,
+  options: { value: string; label: string }[],
+): FilterDef {
+  return {
+    id: "faculty",
+    label: t("dept_courses.faculty_filter_label"),
+    allLabel: t("dept_courses.faculty_filter_all"),
+    options,
+  };
 }
 
 export default function DeptCoursesPage() {
@@ -271,8 +332,18 @@ export default function DeptCoursesPage() {
     ? findNode(unitTree.data ?? [], unitId)
     : null;
 
+  // Faculty filter (state + options + the auto-default). Extracted to a hook
+  // because this component already breached the line/complexity caps.
+  const facultyFilterState = useFacultyFilter(list.data);
+  const faculty = facultyFilterState.value;
+  const setFaculty = facultyFilterState.setValue;
+  const facultyOptions = facultyFilterState.options;
+
   const courses = useMemo(() => {
     let all = list.data ?? [];
+    if (faculty !== "all") {
+      all = all.filter((c) => c.faculty_id === faculty);
+    }
     const q = query.trim().toLowerCase();
     if (q) {
       all = all.filter((c) =>
@@ -318,19 +389,22 @@ export default function DeptCoursesPage() {
 
   const columns = buildColumns(t);
 
-  const worklistFilter: FilterDef = {
-    id: "worklist",
-    label: t("dept_courses.filter_label"),
-    allLabel: t("dept_courses.filter_all"),
-    options: [
-      {
-        value: "needs_teacher",
-        label: t("dept_courses.filter_needs_teacher"),
-      },
-      { value: "no_content", label: t("dept_courses.filter_no_content") },
-      { value: "draft", label: t("dept_courses.filter_draft") },
-    ],
+  // Faculty filter is OMITTED, not shown empty, when no course on the page has
+  // a faculty: a lone "All" dropdown is a control that cannot do anything.
+  // Routes on `id` now that there are two filters — the previous handler
+  // ignored it and sent every change to the worklist.
+  const handleFilterChange = (id: string, value: string | undefined) => {
+    if (id === "faculty") {
+      setFaculty(value ?? "all");
+      return;
+    }
+    setWorklist((value as WorklistFilter) ?? "all");
   };
+
+  const filters: FilterDef[] =
+    facultyOptions.length > 0
+      ? [buildWorklistFilter(t), buildFacultyFilter(t, facultyOptions)]
+      : [buildWorklistFilter(t)];
 
   return (
     <div className="space-y-6 pb-12">
@@ -421,12 +495,13 @@ export default function DeptCoursesPage() {
               search={query}
               onSearchChange={setQuery}
               searchPlaceholder={t("dept_courses.search_placeholder")}
-              filters={[worklistFilter]}
-              filterValues={{ worklist }}
-              onFilterChange={(_id, value) =>
-                setWorklist((value as WorklistFilter) ?? "all")
-              }
-              onResetAllFilters={() => setWorklist("all")}
+              filters={filters}
+              filterValues={{ worklist, faculty }}
+              onFilterChange={handleFilterChange}
+              onResetAllFilters={() => {
+                setWorklist("all");
+                setFaculty("all");
+              }}
               clearLabel={t("dept_courses.filter_clear")}
               trailing={
                 <p className="text-xs text-text-muted">

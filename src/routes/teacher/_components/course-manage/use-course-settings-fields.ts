@@ -23,6 +23,9 @@ export function useCourseSettingsFields(defaultOpen = false) {
   const [open, setOpen] = useState(defaultOpen);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
+  // Manager-only; the teacher surface never renders a control for it, so it
+  // stays at its loaded value and the teacher payload omits it entirely.
+  const [facultyId, setFacultyId] = useState("");
   const [description, setDescription] = useState("");
   const [estimatedMinutes, setEstimatedMinutes] = useState("");
   // Teacher contact info shown on the student landing page. contactEmail is
@@ -38,6 +41,7 @@ export function useCourseSettingsFields(defaultOpen = false) {
   const values: CourseSettingsValues = {
     title,
     slug,
+    facultyId,
     description,
     estimatedMinutes,
     contactEmail,
@@ -49,6 +53,7 @@ export function useCourseSettingsFields(defaultOpen = false) {
   const setters: CourseSettingsSetters = {
     setTitle,
     setSlug,
+    setFacultyId,
     setDescription,
     setEstimatedMinutes,
     setContactEmail,

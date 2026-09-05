@@ -22,6 +22,7 @@ import type {
 export const COURSE_SETTINGS_FIELDS: readonly CourseSettingsField[] = [
   "title",
   "slug",
+  "facultyId",
   "description",
   "estimatedMinutes",
   "contactEmail",
@@ -54,6 +55,9 @@ function savedCourseMeta(
   return {
     title: course.title ?? "",
     slug: course.slug ?? "",
+    // "" is the unassigned sentinel: a select cannot hold null, and the save
+    // path converts it back to an explicit null so clearing actually unassigns.
+    facultyId: course.faculty_id ?? "",
     description: course.description ?? "",
     estimatedMinutes: course.estimated_minutes?.toString() ?? "",
   };
@@ -177,6 +181,10 @@ function buildManagerMetaPayload(values: CourseSettingsValues): CourseUpdate {
   return {
     title: values.title.trim() || undefined,
     slug: values.slug.trim() || undefined,
+    // `null`, NOT undefined, when cleared: undefined is dropped from the JSON
+    // body and the backend treats an omitted field as "leave alone", so an
+    // undefined here would make unassigning silently impossible.
+    faculty_id: values.facultyId || null,
   };
 }
 

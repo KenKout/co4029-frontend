@@ -62,6 +62,12 @@ export interface ModuleItemStats {
 export interface CourseSettingsValues {
   title: string;
   slug: string;
+  /**
+   * Owning faculty id, or "" for unassigned. MANAGER-ONLY — it must never enter
+   * the teacher PATCH body, because `faculty_id` is outside the backend's
+   * teacher allow-list and its presence alone would 403 the whole save.
+   */
+  facultyId: string;
   description: string;
   estimatedMinutes: string;
   contactEmail: string;

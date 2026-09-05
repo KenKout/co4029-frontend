@@ -37,6 +37,10 @@ export interface Course {
 
 export interface CourseDetail extends Course {
   instructor: InstructorRead | null;
+  /** Owning faculty; null when organization-wide. Manager-editable. */
+  faculty_id?: string | null;
+  /** Server-side label for `faculty_id`; null when unassigned or retired. */
+  faculty_name?: string | null;
 }
 
 export interface LearningOutcome {
