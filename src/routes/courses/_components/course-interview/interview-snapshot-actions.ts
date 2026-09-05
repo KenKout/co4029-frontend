@@ -94,6 +94,12 @@ function presentNextQuestion(
   ctx: InterviewActionsContext,
   question: InterviewQuestionView,
 ): void {
+  // The server moved on, which it only does after folding the answer to the
+  // question we are leaving — so that answer is durable and the copy held since
+  // the ack can go. Dropping it at ack time instead meant a worker that died
+  // mid-grading took the candidate's only copy with it. Cleared for the OLD
+  // question, before `currentQuestion` changes and re-keys the storage slot.
+  ctx.clearDraftAutosave();
   ctx.setCurrentQuestion(question);
   ctx.setPhase("questioning");
   ctx.setTranscript((previous) => {

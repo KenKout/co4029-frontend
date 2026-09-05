@@ -49,6 +49,10 @@ function makeCtx(overrides: Record<string, unknown> = {}) {
     setPhase: vi.fn(),
     setTranscript: vi.fn(),
     setCurrentQuestion: vi.fn(),
+    // Called when the server advances: that is the first evidence the answer to
+    // the question being left was actually folded and stored, so the copy held
+    // since the ack can finally go.
+    clearDraftAutosave: vi.fn(),
     beginClosing: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
@@ -91,6 +95,37 @@ describe("applyStateSnapshot — the question", () => {
       isFollowUp: false,
       text: "What does a covering index buy you?",
     });
+  });
+
+  it("drops the parked answer copy once the server has moved on", () => {
+    // The submit path PARKS the draft rather than deleting it: an `accepted` ack
+    // means the agent has the text, not that the answer is stored, and a worker
+    // that died mid-grading used to take the candidate's only copy with it.
+    //
+    // A server advance is the first proof the answer was folded — the server only
+    // advances after grading the question it is leaving — so this is where the copy
+    // is finally safe to drop.
+    const ctx = makeCtx();
+
+    applyStateSnapshot(ctx, snapshot());
+
+    expect(ctx.clearDraftAutosave).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the parked copy while the same question is still live", () => {
+    // No advance, no proof of durability. A repeated snapshot for the question we
+    // are already on must not discard the candidate's insurance copy.
+    const ctx = makeCtx({
+      currentQuestion: {
+        id: QUESTION_TWO,
+        prompt_text: "What does a covering index buy you?",
+        question_type: null,
+      },
+    });
+
+    applyStateSnapshot(ctx, snapshot());
+
+    expect(ctx.clearDraftAutosave).not.toHaveBeenCalled();
   });
 
   it("does not commit the same question twice on a repeated snapshot", () => {

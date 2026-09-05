@@ -71,6 +71,7 @@ function makeCtx(overrides: Record<string, unknown> = {}) {
     setAnswerText: vi.fn(),
     setTranscript: vi.fn(),
     submitSucceeded: vi.fn(),
+    markDraftSubmitted: vi.fn(),
     clearDraftAutosave: vi.fn(),
     setRecentSubmission: vi.fn(),
     reopenForFollowUp: vi.fn(),
@@ -123,8 +124,14 @@ describe("handleRespond over lk.chat", () => {
 
   it("commits the turn on `accepted`, without waiting for grading", async () => {
     // The ack is the only acknowledgement a streaming turn gets. The answer lands
-    // in the transcript, the composer clears, and the autosaved draft is dropped —
-    // all on "the agent has your text", never on "your answer has been graded".
+    // in the transcript and the composer clears on "the agent has your text",
+    // never on "your answer has been graded".
+    //
+    // The autosaved draft is PARKED, not deleted. An ack is not durability:
+    // grading and the transcript write both come after it, so a worker that dies
+    // in that window loses the answer — and deleting the draft here took the
+    // candidate's only other copy with it. `clearDraftAutosave` happens later,
+    // when the server's own state shows the interview moved past the question.
     const chat = liveChat();
     const ctx = makeCtx({ chatBridge: { current: chat } });
 
@@ -132,7 +139,8 @@ describe("handleRespond over lk.chat", () => {
 
     expect(ctx.submitSucceeded).toHaveBeenCalledTimes(1);
     expect(ctx.setTranscript).toHaveBeenCalledTimes(1);
-    expect(ctx.clearDraftAutosave).toHaveBeenCalledTimes(1);
+    expect(ctx.markDraftSubmitted).toHaveBeenCalledTimes(1);
+    expect(ctx.clearDraftAutosave).not.toHaveBeenCalled();
     expect(ctx.setAnswerText).toHaveBeenCalledWith("");
     expect(ctx.setRecentSubmission).toHaveBeenCalledWith({
       answer: "my answer",

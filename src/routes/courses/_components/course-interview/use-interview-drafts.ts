@@ -43,8 +43,11 @@ export function useInterviewDrafts(
     currentQuestion?.id ?? null,
     answerText,
   );
-  const { restore: restoreDraftAutosave, clear: clearDraftAutosave } =
-    draftAutosave;
+  const {
+    restore: restoreDraftAutosave,
+    markSubmitted: markDraftSubmitted,
+    clear: clearDraftAutosave,
+  } = draftAutosave;
 
   // On (re)entering a question during active questioning, rehydrate any draft
   // persisted for THIS session+question. Runs only while the composer is live
@@ -121,6 +124,7 @@ export function useInterviewDrafts(
 
   return {
     restoreDraftAutosave,
+    markDraftSubmitted,
     clearDraftAutosave,
     shouldBlockInterviewExit,
     leaveBlocker,

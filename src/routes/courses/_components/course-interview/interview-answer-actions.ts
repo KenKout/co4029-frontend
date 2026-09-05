@@ -19,10 +19,14 @@ import type { InterviewActionsContext } from "./types";
  * The agent has the text — commit the turn.
  *
  * `accepted` is the only acknowledgement a streaming turn gets, and it means
- * "received", not "graded". Committing here is what the candidate needs: their
- * answer is in the transcript, the composer is clear, and the autosaved draft is
- * safe to drop. Deduped by submissionId so a retry reusing the id cannot create a
- * second entry.
+ * "received", not "graded" and not "stored". Committing here is what the
+ * candidate needs — their answer is in the transcript and the composer is clear —
+ * but the autosaved draft is deliberately NOT dropped: it is PARKED. Grading and
+ * the transcript write both happen after this ack, so a worker that dies in that
+ * window loses the answer, and deleting the draft here took the candidate's only
+ * other copy with it. `clearDraftAutosave` runs later, when the answer is seen in
+ * the server's own transcript. Deduped by submissionId so a retry reusing the id
+ * cannot create a second entry.
  *
  * `reopenForFollowUp` is load-bearing, not cosmetic. The answer machine's
  * `submitted` status locks the composer until a NEW question arrives, but the
@@ -51,7 +55,7 @@ function commitAnswerTurn(
         ],
   );
   ctx.submitSucceeded(trimmed);
-  ctx.clearDraftAutosave();
+  ctx.markDraftSubmitted();
   ctx.setAnswerText("");
   ctx.setRecentSubmission({ answer: trimmed, questionId, submissionId });
   ctx.reopenForFollowUp();
