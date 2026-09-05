@@ -10193,6 +10193,16 @@ export interface components {
             time_remaining_seconds?: number | null;
             /** Pass Verdict */
             pass_verdict?: boolean | null;
+            /**
+             * Evaluation State
+             * @description Server-derived "is a verdict still coming?" — hand-patched
+             *     (the committed openapi-snapshot.json lags the live spec). Optional
+             *     here so a response from a backend predating the field still
+             *     type-checks; readers fall back to `status` in that case.
+             * @default not_required
+             * @enum {string}
+             */
+            evaluation_state?: "not_required" | "pending" | "succeeded" | "exhausted";
             /** Remaining Attempts */
             remaining_attempts?: number | null;
             /** Retake Available At */

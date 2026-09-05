@@ -2,11 +2,18 @@ import type { InterviewSessionPublic } from "@/lib/api/types";
 import type { ResultPhase, SessionFacts } from "./types";
 
 export function phaseFor(s: InterviewSessionPublic): ResultPhase {
-  if (s.status === "failed") return "eval_failed";
-  if (s.status === "abandoned") return "abandoned";
   if (s.status === "in_progress") return "evaluating";
   if (s.pass_verdict === true) return "pass";
   if (s.pass_verdict === false) return "retry";
+  if (s.status === "abandoned") return "abandoned";
+  // `status: "failed"` alone is not terminal — the recovery sweep re-drives
+  // those rows. Only a spent recovery budget (`exhausted`) means no verdict is
+  // coming; while it is `pending` the page stays in "evaluating" and keeps
+  // polling. `undefined` = backend predates the field → old status-only rule.
+  if (s.evaluation_state === "exhausted") return "eval_failed";
+  if (s.evaluation_state === undefined && s.status === "failed") {
+    return "eval_failed";
+  }
   return "evaluating";
 }
 

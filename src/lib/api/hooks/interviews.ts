@@ -33,6 +33,7 @@ import type {
   RealtimeAgentDispatchResponse,
   RealtimeTokenResponse,
 } from "../types";
+import type { InterviewEvaluationState } from "../types/interview-evaluation";
 
 export function useInterviewForTaking(configId: string | null | undefined) {
   return useQuery({
@@ -72,9 +73,16 @@ export function useInterviewSession(
     queryFn: () =>
       apiFetch<InterviewSessionPublic>(`/interview-sessions/${sessionId}`),
     enabled: !!sessionId,
-    // Used by the voice-completion flow to poll until the server marks the
-    // session terminal (TanStack Query does NOT poll by default).
-    refetchInterval: options?.refetchInterval,
+    // Two callers, two needs:
+    //  - the voice-completion flow passes an explicit interval and owns when to
+    //    stop (it freezes the verdict into finishResult, flipping `enabled`);
+    //  - every other reader (result page) gets automatic polling while the
+    //    server says a verdict is still coming. Without this the result screen
+    //    opened before grading finished showed "evaluating" until some
+    //    unrelated refetch happened to run.
+    refetchInterval:
+      options?.refetchInterval ??
+      ((query) => (isEvaluationUnresolved(query.state.data) ? 3000 : false)),
   });
 }
 
@@ -165,21 +173,49 @@ export function useMyInterviewSessions(configId?: string) {
   });
 }
 
-type InterviewEvaluationState = {
+/**
+ * Interview evaluation-state contract, re-declared as a local structural type
+ * so both list and detail readers share ONE predicate.
+ */
+type InterviewEvaluationStateLike = {
   status: string;
   pass_verdict?: boolean | null;
+  evaluation_state?: InterviewEvaluationState;
 };
 
-function hasPendingInterviewEvaluation(
-  sessions: readonly InterviewEvaluationState[] | undefined,
+/**
+ * Is this session's evaluation still expected to produce a verdict?
+ *
+ * Reads the server-derived `evaluation_state`. The old local derivation
+ * (`status in (completed, timed_out) && pass_verdict == null`) was wrong twice
+ * over: it treated `status: "failed"` as final even though the recovery sweep
+ * re-drives exactly those rows — so a session that got a verdict seconds later
+ * kept an error badge and stopped polling — while offering no way to tell a
+ * recoverable failure from a permanently dead one.
+ *
+ * Fallback for a backend that predates the field: the old predicate, plus
+ * `failed`, which is the safer default now that recovery exists (bounded by the
+ * server's own attempt ceiling rather than polling forever).
+ */
+function isEvaluationUnresolved(
+  session: InterviewEvaluationStateLike | undefined,
 ): boolean {
-  return Boolean(
-    sessions?.some(
-      (session) =>
-        (session.status === "completed" || session.status === "timed_out") &&
-        session.pass_verdict == null,
-    ),
+  if (!session) return false;
+  if (session.evaluation_state !== undefined) {
+    return session.evaluation_state === "pending";
+  }
+  return (
+    (session.status === "completed" ||
+      session.status === "timed_out" ||
+      session.status === "failed") &&
+    session.pass_verdict == null
   );
+}
+
+function hasPendingInterviewEvaluation(
+  sessions: readonly InterviewEvaluationStateLike[] | undefined,
+): boolean {
+  return Boolean(sessions?.some(isEvaluationUnresolved));
 }
 
 /* ───────────────── Teacher-side (W5.4) ───────────────── */

@@ -17,31 +17,15 @@ import { Button } from "@/components/ui/button";
 import { useMyInterviewSessions } from "@/lib/api/hooks/interviews";
 import { useFormatDate } from "@/lib/format/date";
 import type { InterviewSessionPublic } from "@/lib/api/types";
+import {
+  verdictState,
+  type VerdictState,
+} from "./_components/interview-result/verdict-state";
 import { DataTablePagination } from "@/components/ui/data-table/pagination";
 import { useDataTablePagination } from "@/components/ui/data-table/use-data-table-pagination";
 
 const PAGE_SIZE = 10;
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
-
-type VerdictState =
-  | "passed"
-  | "not_passed"
-  | "evaluating"
-  | "in_progress"
-  | "evaluation_failed"
-  | "not_graded";
-
-// Thesis §4.3: students see the binary verdict ONLY. A completed session whose
-// async evaluation hasn't landed yet (pass_verdict === null) must read as
-// "evaluating", never as a fail.
-function verdictState(s: InterviewSessionPublic): VerdictState {
-  if (s.status === "in_progress") return "in_progress";
-  if (s.status === "failed") return "evaluation_failed";
-  if (s.status === "abandoned") return "not_graded";
-  if (s.pass_verdict === true) return "passed";
-  if (s.pass_verdict === false) return "not_passed";
-  return "evaluating";
-}
 
 const BADGE_CLASS: Record<VerdictState, string> = {
   passed: "bg-emerald-100 text-emerald-700",
