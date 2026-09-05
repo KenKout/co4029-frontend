@@ -424,4 +424,8 @@ export const queryKeys = {
     requests: (id: string) => ["learning-programs", "requests", id] as const,
     mine: () => ["learning-programs", "mine"] as const,
   },
+  management: {
+    /** Manager / dean dashboard. One key: the payload is a single snapshot. */
+    dashboard: () => ["management", "dashboard"] as const,
+  },
 } as const;

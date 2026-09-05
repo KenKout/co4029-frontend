@@ -170,6 +170,16 @@ export const teacherNavGroups: NavGroup[] = [
 
 export const managerNavItems: NavItem[] = [
   {
+    // `exact` is required: every other manager route is prefixed by
+    // /management, so a prefix match would keep Overview highlighted on all
+    // of them.
+    label: "Overview",
+    i18nKey: "nav.manager_overview",
+    href: "/management",
+    icon: LayoutDashboard,
+    exact: true,
+  },
+  {
     label: "Courses",
     i18nKey: "nav.manager_courses",
     href: "/management/courses",
@@ -201,6 +211,19 @@ export const managerNavItems: NavItem[] = [
 ];
 
 export const managerNavGroups: NavGroup[] = [
+  {
+    label: "Overview",
+    i18nKey: "nav_groups.manager_overview",
+    items: [
+      {
+        label: "Overview",
+        i18nKey: "nav.manager_overview",
+        href: "/management",
+        icon: LayoutDashboard,
+        exact: true,
+      },
+    ],
+  },
   {
     label: "Courses",
     i18nKey: "nav_groups.manager_courses",

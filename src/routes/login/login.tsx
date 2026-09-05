@@ -9,6 +9,7 @@ import {
   GOOGLE_OAUTH_STATE_STORAGE_KEY,
   setPostLoginRedirect,
 } from "@/lib/auth";
+import { resolveLandingPath } from "@/lib/auth/resolve-landing";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -21,10 +22,17 @@ export default function LoginPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    void navigate({
-      to: "/dashboard",
-      replace: true,
+    // An already-signed-in user hitting /login goes to their role's landing
+    // page, not the student dashboard. `?next=` still wins so a bounced deep
+    // link survives.
+    let cancelled = false;
+    void resolveLandingPath(search.next).then((path) => {
+      if (cancelled) return;
+      void navigate({ to: path, replace: true });
     });
+    return () => {
+      cancelled = true;
+    };
   }, [isAuthenticated, navigate, search.next]);
 
   async function handleGoogleLogin() {

@@ -52,6 +52,7 @@
     "workspace": "Không gian giảng dạy",
     "my_courses": "Khoá của tôi",
     "department_courses": "Khoá học theo khoa",
+    "manager_overview": "Tổng quan",
     "manager_courses": "Khoá học",
     "enrolment": "Ghi danh",
     "active_users": "Người dùng đang hoạt động",
@@ -222,6 +223,27 @@
       "regen_success": "Đã tạo mã khôi phục mới",
       "regen_failed": "Không thể tạo lại mã khôi phục."
     }
+  },
+  "management_dashboard": {
+    "title": "Tổng quan quản lý",
+    "load_failed": "Không tải được trang. Hãy tải lại để thử lại.",
+    "tile_blocked": "Chưa thể xuất bản",
+    "tile_blocked_detail": "trên {{total}} khóa học trong phạm vi",
+    "tile_draft": "Khóa học nháp",
+    "tile_draft_detail": "{{published}} đã xuất bản",
+    "tile_programs": "Chương trình học",
+    "tile_courses": "Khóa học trong phạm vi",
+    "tile_requests": "Yêu cầu đổi lộ trình",
+    "tile_requests_detail": "Đang chờ và đang xử lý",
+    "blocked_heading": "Khóa học chưa thể xuất bản",
+    "blocked_empty": "Mọi khóa học trong phạm vi đều có thể xuất bản.",
+    "badge_required": "Chặng bắt buộc",
+    "stat_units": "Đơn vị",
+    "stat_outcomes": "Chuẩn đầu ra",
+    "stat_teachers": "Giảng viên",
+    "programs_heading": "Chương trình cần chú ý",
+    "programs_empty": "Không có chương trình nào cần chú ý.",
+    "program_stages": "{{count}} chặng"
   },
   "teacher_dashboard": {
     "title": "Không gian giảng dạy",
@@ -5153,6 +5175,7 @@
     "overview": "Tổng quan",
     "content": "Nội dung",
     "pathways": "Lộ trình nghề nghiệp",
+    "manager_overview": "Tổng quan",
     "manager_courses": "Khoá học",
     "enrolment": "Ghi danh",
     "analytics": "Phân tích",
