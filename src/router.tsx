@@ -556,6 +556,17 @@ const adminAuditLogsRoute = createRoute({
   component: lazyRouteComponent(() => import("@/routes/admin/audit-logs")),
 });
 
+/**
+ * Manager / faculty-dean landing page. Registered BEFORE the deeper
+ * `/management/*` routes purely for readability — TanStack matches on the
+ * literal path, so order carries no meaning here.
+ */
+const managementDashboardRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: "/management",
+  component: lazyRouteComponent(() => import("@/routes/management/index")),
+});
+
 const deptCoursesRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/courses",
@@ -1037,6 +1048,7 @@ const routeTree = rootRoute.addChildren([
     adminProcessingJobRoute,
     adminAiCostsRoute,
     adminAuditLogsRoute,
+    managementDashboardRoute,
     deptCoursesRoute,
     deptCourseDetailRoute,
     managementCourseNewRoute,

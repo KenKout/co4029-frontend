@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+
+import { resolveLandingPath } from "@/lib/auth/resolve-landing";
 import { toast } from "sonner";
 
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -78,8 +80,11 @@ export function useMfaChallenge(): MfaController {
     }
 
     if (!requiresMfa) {
-      const next = search.next ?? "/dashboard";
-      window.location.replace(next);
+      // Already satisfied (e.g. a refresh landed here) — leave for the same
+      // destination a successful verification would have used.
+      void resolveLandingPath(search.next).then((path) => {
+        window.location.replace(path);
+      });
       return;
     }
 
@@ -112,8 +117,9 @@ export function useMfaChallenge(): MfaController {
       onSuccess: () => {
         clearMfaRequired();
         toast.success(t("login_mfa.success"));
-        const next = search.next ?? "/dashboard";
-        window.location.replace(next);
+        void resolveLandingPath(search.next).then((path) => {
+          window.location.replace(path);
+        });
       },
       onError: (err) => {
         if (err instanceof Error && err.message === "Invalid MFA challenge") {

@@ -3,6 +3,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { AlertCircle, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { resolveLandingPath } from "@/lib/auth/resolve-landing";
 import {
   consumePostLoginRedirect,
   GOOGLE_OAUTH_STATE_STORAGE_KEY,
@@ -102,7 +103,10 @@ export default function GoogleCallbackPage() {
         }
 
         setStatus(t("google_callback.success_redirecting"));
-        window.location.replace(consumePostLoginRedirect());
+        // consumePostLoginRedirect() returns "" when nothing was stashed, so
+        // the role-based default applies; a stashed deep link still wins.
+        const stashed = consumePostLoginRedirect("");
+        window.location.replace(await resolveLandingPath(stashed || null));
       } catch (err) {
         fail(
           t("google_callback.exchange_failed_title"),

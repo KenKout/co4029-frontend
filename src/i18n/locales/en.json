@@ -52,6 +52,7 @@
     "workspace": "Workspace",
     "my_courses": "My Courses",
     "department_courses": "Faculty Courses",
+    "manager_overview": "Overview",
     "manager_courses": "Courses",
     "enrolment": "Enrolment",
     "active_users": "Active Users",
@@ -222,6 +223,27 @@
       "regen_success": "New recovery codes generated",
       "regen_failed": "Couldn't regenerate recovery codes."
     }
+  },
+  "management_dashboard": {
+    "title": "Management Overview",
+    "load_failed": "Could not load the dashboard. Refresh to try again.",
+    "tile_blocked": "Cannot publish",
+    "tile_blocked_detail": "of {{total}} courses in scope",
+    "tile_draft": "Draft courses",
+    "tile_draft_detail": "{{published}} published",
+    "tile_programs": "Learning programs",
+    "tile_courses": "Courses in scope",
+    "tile_requests": "Path changes to review",
+    "tile_requests_detail": "Pending and in progress",
+    "blocked_heading": "Courses that cannot be published",
+    "blocked_empty": "Every course in scope can be published.",
+    "badge_required": "Required stage",
+    "stat_units": "Units",
+    "stat_outcomes": "Outcomes",
+    "stat_teachers": "Teachers",
+    "programs_heading": "Programs needing attention",
+    "programs_empty": "No programs need attention.",
+    "program_stages": "{{count}} stages"
   },
   "teacher_dashboard": {
     "title": "Teacher Workspace",
@@ -5315,6 +5337,7 @@
     "overview": "Overview",
     "content": "Content",
     "pathways": "Career Pathways",
+    "manager_overview": "Overview",
     "manager_courses": "Courses",
     "users": "Users",
     "enrolment": "Enrolment",
