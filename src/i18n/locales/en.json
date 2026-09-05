@@ -1597,7 +1597,6 @@
     "ready_title": "Ready for the next challenge?",
     "ready_body": "Finish your enrolled courses, take AI-generated quizzes, and practice realistic interview scenarios — everything is tracked and personalized to your learning path.",
     "view_progress": "View progress",
-    "ask_ai": "Ask the AI assistant",
     "ai_chip": "AI-powered",
     "enrolled_count_other": "You are enrolled in {{count}} courses.",
     "enrolled_count_one": "You are enrolled in {{count}} course."

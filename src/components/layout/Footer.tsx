@@ -5,7 +5,6 @@ import {
   FooterPlatformColumn,
   FooterSupportColumn,
 } from "./footer/link-columns";
-import { FooterNewsletterColumn } from "./footer/newsletter-column";
 
 export default function Footer() {
   return (
@@ -27,8 +26,14 @@ export default function Footer() {
 
           <FooterSupportColumn />
 
-          {/* Newsletter Column */}
-          <FooterNewsletterColumn />
+          {/* The "Stay Updated" newsletter column was removed. It was an email
+              field and a Subscribe button with no form, no handler and no
+              backend endpoint — a visitor typed an address, clicked, and got
+              no success and no error, under copy promising "By subscribing,
+              you agree to our Terms of Service and Privacy Policy". Implying a
+              data-collection relationship that does not exist is worse than
+              omitting the column; rebuild it when there is a real endpoint
+              behind it. */}
         </div>
       </div>
 

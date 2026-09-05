@@ -2,7 +2,6 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Bell,
-  Bot,
   Loader2,
   LayoutDashboard,
   Menu,
@@ -50,9 +49,8 @@ function ShortcutPaletteMenuItem() {
   );
 }
 
-/** The avatar dropdown's navigation group (dashboard/settings/profile +
- *  the AI-assistant entry) — extracted to keep ContentTopBar under the
- *  line cap. */
+/** The avatar dropdown's navigation group (dashboard/settings/profile) —
+ *  extracted to keep ContentTopBar under the line cap. */
 function ProfileMenuNavItems() {
   const { t } = useTranslation();
   const itemClass =
@@ -75,13 +73,6 @@ function ProfileMenuNavItems() {
       <DropdownMenuItem className={itemClass} render={<Link to="/me/profile" />}>
         <User className="h-4 w-4 text-m3-on-surface-variant" />
         <span className="text-sm font-medium">{t("nav.profile")}</span>
-      </DropdownMenuItem>
-
-      {/* The dashboard AI-assistant FAB moved here (product feedback).
-          Placeholder like the FAB it replaces — no destination yet. */}
-      <DropdownMenuItem className={itemClass}>
-        <Bot className="h-4 w-4 text-m3-on-surface-variant" />
-        <span className="text-sm font-medium">{t("dashboard.ask_ai")}</span>
       </DropdownMenuItem>
 
       <ShortcutPaletteMenuItem />
