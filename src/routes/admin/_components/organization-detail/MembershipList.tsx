@@ -41,8 +41,8 @@ function MembershipActionsCell({
 }
 
 /**
- * Membership roster as a DataTable: user (avatar + name + email), codes,
- * joined date, status, actions. The user catalog comes from the tab
+ * Membership roster as a DataTable: user (avatar + name + email), joined
+ * date, status, actions. The user catalog comes from the tab
  * controller (one `/users/search?organization=` round-trip) so each row
  * shows the real avatar and display name instead of a bare user id.
  */
@@ -82,35 +82,6 @@ export function MembershipList({ c }: { c: MembershipsTabController }) {
           </div>
         );
       },
-    },
-    {
-      id: "codes",
-      header: t("admin.organizations.memberships.cols.codes", {
-        defaultValue: "Codes",
-      }),
-      cell: (m) => (
-        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-muted">
-          {m.student_code && (
-            <span>
-              {t("admin.organizations.fields.student_code")}:{" "}
-              <span className="font-mono text-text-strong">
-                {m.student_code}
-              </span>
-            </span>
-          )}
-          {m.employee_code && (
-            <span>
-              {t("admin.organizations.fields.employee_code")}:{" "}
-              <span className="font-mono text-text-strong">
-                {m.employee_code}
-              </span>
-            </span>
-          )}
-          {!m.student_code && !m.employee_code && (
-            <span className="italic">—</span>
-          )}
-        </div>
-      ),
     },
     {
       id: "joined_at",

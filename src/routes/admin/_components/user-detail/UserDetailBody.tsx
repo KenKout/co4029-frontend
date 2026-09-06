@@ -39,7 +39,9 @@ export function UserDetailBody({ c }: { c: UserDetailController }) {
 
       <UserTimestampsGrid t={t} locale={locale} user={user} />
 
-      {user.profile ? <UserProfileCard t={t} profile={user.profile} /> : null}
+      {user.profile ? (
+        <UserProfileCard t={t} user={{ ...user, profile: user.profile }} />
+      ) : null}
 
       <RoleAssignmentsSection
         userId={user.id}

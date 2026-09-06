@@ -54,6 +54,8 @@ function AddUserForm({ c, hideOrg, onClose }: AddUserFormProps) {
   const [displayName, setDisplayName] = React.useState("");
   const [orgId, setOrgId] = React.useState(c.orgOptions?.[0]?.id ?? "");
   const [roleCode, setRoleCode] = React.useState("student");
+  const [studentCode, setStudentCode] = React.useState("");
+  const [employeeCode, setEmployeeCode] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
 
   const canSubmit =
@@ -74,6 +76,12 @@ function AddUserForm({ c, hideOrg, onClose }: AddUserFormProps) {
         // flow: the picked org rides along as before.
         ...(hideOrg ? {} : { organization_id: orgId }),
         role_code: roleCode,
+        ...(roleCode === "student" && studentCode.trim()
+          ? { student_code: studentCode.trim() }
+          : {}),
+        ...(roleCode !== "student" && employeeCode.trim()
+          ? { employee_code: employeeCode.trim() }
+          : {}),
       });
       toast.success(
         t("admin.users.create_success", {
@@ -158,6 +166,37 @@ function AddUserForm({ c, hideOrg, onClose }: AddUserFormProps) {
           />
         )}
       />
+      {roleCode === "student" ? (
+        <Field
+          label={t("admin.users.fields.student_code", {
+            defaultValue: "Student ID",
+          })}
+          renderControl={(p) => (
+            <Input
+              type="text"
+              autoComplete="off"
+              value={studentCode}
+              onChange={(e) => setStudentCode(e.target.value)}
+              {...p}
+            />
+          )}
+        />
+      ) : (
+        <Field
+          label={t("admin.users.fields.employee_code", {
+            defaultValue: "Employee ID",
+          })}
+          renderControl={(p) => (
+            <Input
+              type="text"
+              autoComplete="off"
+              value={employeeCode}
+              onChange={(e) => setEmployeeCode(e.target.value)}
+              {...p}
+            />
+          )}
+        />
+      )}
       {error ? (
         <p className="text-xs text-danger" role="alert">
           {error}

@@ -2113,6 +2113,8 @@
         "updated_at": "Cập nhật gần nhất",
         "display_name": "Tên hiển thị",
         "full_name": "Họ tên",
+        "student_code": "MSSV",
+        "employee_code": "MSNV",
         "bio": "Giới thiệu"
       },
       "roles": {

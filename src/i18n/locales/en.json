@@ -2204,6 +2204,8 @@
         "updated_at": "Last updated",
         "display_name": "Display name",
         "full_name": "Full name",
+        "student_code": "Student ID",
+        "employee_code": "Employee ID",
         "bio": "Bio"
       },
       "roles": {

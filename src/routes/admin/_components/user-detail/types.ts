@@ -13,7 +13,10 @@ export type TFn = (key: string, opts?: Record<string, unknown>) => string;
 
 export type AdminUserDetailData = NonNullable<UserDetailController["data"]>;
 
-export type AdminUserRecord = NonNullable<AdminUserDetailData["user"]>;
+export type AdminUserRecord = NonNullable<AdminUserDetailData["user"]> & {
+  student_code?: string | null;
+  employee_code?: string | null;
+};
 
 // The backend admin user-detail endpoint enriches each assignment with
 // human-readable labels (role/org/unit/course names) after the committed

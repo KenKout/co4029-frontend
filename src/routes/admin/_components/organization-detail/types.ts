@@ -12,16 +12,3 @@ export type TabKey =
   | "domains"
   | "units"
   | "memberships";
-
-/**
- * Which pane of the memberships tab is showing: the roster, the single-user
- * add form, or the paste-many bulk form.
- */
-export type MembershipsMode = "list" | "add" | "bulk";
-
-/** Outcome of a bulk membership add, split into the user ids that landed and
- * the ones whose create call threw. */
-export interface BulkAddResults {
-  ok: string[];
-  failed: string[];
-}

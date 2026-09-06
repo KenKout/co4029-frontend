@@ -4,11 +4,12 @@ type UserProfile = NonNullable<AdminUserRecord["profile"]>;
 
 export function UserProfileCard({
   t,
-  profile,
+  user,
 }: {
   t: TFn;
-  profile: UserProfile;
+  user: AdminUserRecord & { profile: UserProfile };
 }) {
+  const { profile } = user;
   return (
     <div className="bg-surface-elev border border-border rounded-lg p-5">
       <h2 className="text-sm font-headline font-bold text-text-strong mb-3">
@@ -23,6 +24,26 @@ export function UserProfileCard({
             {profile.display_name || "—"}
           </dd>
         </div>
+        {user.student_code ? (
+          <div>
+            <dt className="text-xs font-semibold text-text-muted">
+              {t("admin.users.fields.student_code", {
+                defaultValue: "Student ID",
+              })}
+            </dt>
+            <dd className="text-text-strong mt-0.5">{user.student_code}</dd>
+          </div>
+        ) : null}
+        {user.employee_code ? (
+          <div>
+            <dt className="text-xs font-semibold text-text-muted">
+              {t("admin.users.fields.employee_code", {
+                defaultValue: "Employee ID",
+              })}
+            </dt>
+            <dd className="text-text-strong mt-0.5">{user.employee_code}</dd>
+          </div>
+        ) : null}
         <div>
           <dt className="text-xs font-semibold text-text-muted">
             {t("admin.users.fields.full_name")}
