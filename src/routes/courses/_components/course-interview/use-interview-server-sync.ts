@@ -116,7 +116,14 @@ export function useInterviewServerSync(
               ...prev,
               pass_verdict: resolved,
               status: verdictPoll.status,
-              evaluation_state: verdictPoll.evaluation_state,
+              // The session DTO types evaluation_state as optional (a hand-patch
+              // for backends predating the field), but /finish REQUIRES it — so
+              // an undefined here must not overwrite prev's defined value. The
+              // backend does derive it on both routes; undefined only means the
+              // poll response came from an older server. Keep prev then.
+              ...(verdictPoll.evaluation_state !== undefined && {
+                evaluation_state: verdictPoll.evaluation_state,
+              }),
             }
           : prev,
       );
