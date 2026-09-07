@@ -39,7 +39,7 @@ describe("logout()", () => {
     localStorage.clear();
   });
 
-  it("clears the local session IMMEDIATELY, before the revoke resolves", async () => {
+  it("clears the local session after the revoke settles, with captured tokens", async () => {
     let resolveRevoke: ((value: Response) => void) | undefined;
     const fetchMock = vi.fn(
       () =>
@@ -51,11 +51,11 @@ describe("logout()", () => {
 
     const pending = logout();
 
-    // Local state is gone while the revoke request is still in flight.
-    expect(storedSession()).toEqual({ access: null, refresh: null });
-
     resolveRevoke!(new Response(null, { status: 204 }));
     await pending;
+
+    // Cleared by the time sign-out completes.
+    expect(storedSession()).toEqual({ access: null, refresh: null });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
@@ -68,10 +68,9 @@ describe("logout()", () => {
     });
   });
 
-  it("still signs out locally when the revoke hangs (bounded, then navigates on)", async () => {
-    // Never settles on its own — the old code awaited an unbounded
-    // refresh + revoke here. Reject only when the request's abort signal
-    // fires (that is how AbortSignal.timeout unbinds a dead fetch).
+  it("still signs out locally when the revoke hangs (bounded by the 5s abort)", async () => {
+    // Never settles on its own — the abort signal is the bound. Reject when
+    // the request's signal fires (that is how AbortSignal.timeout unbinds).
     vi.stubGlobal(
       "fetch",
       vi.fn(
@@ -84,11 +83,7 @@ describe("logout()", () => {
       ),
     );
 
-    const pending = logout();
-    // Local sign-out already happened before the request was even sent.
-    expect(storedSession()).toEqual({ access: null, refresh: null });
-
-    await pending; // resolves (via the 5s abort) instead of hanging forever
+    await logout(); // resolves via the abort instead of hanging forever
 
     expect(storedSession()).toEqual({ access: null, refresh: null });
   }, 10_000);
@@ -101,9 +96,10 @@ describe("logout()", () => {
     await logout();
 
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(storedSession()).toEqual({ access: null, refresh: null });
   });
 
-  it("swallows revoke failures (offline / 5xx) — sign-out still succeeds", async () => {
+  it("swallows revoke failures (offline / 5xx) — sign-out still completes", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(() => Promise.reject(new TypeError("network dead"))),
