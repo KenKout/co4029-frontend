@@ -5,6 +5,10 @@ export const GOOGLE_OAUTH_STATE_STORAGE_KEY = "abridgeai.google_oauth_state";
 export const POST_LOGIN_REDIRECT_STORAGE_KEY = "abridgeai.post_login_redirect";
 export const AUTH_CHANGED_EVENT = "abridgeai.auth.changed";
 const ACCESS_TOKEN_REFRESH_BUFFER_MS = 30_000;
+// Bound the best-effort server revoke during sign-out. The UI is already
+// signed out locally when this fires; the bound only stops a dead socket
+// from keeping the (already-cleared) spinner alive indefinitely.
+const LOGOUT_REQUEST_TIMEOUT_MS = 5_000;
 
 export const AUTH_STORAGE_KEYS = {
   accessToken: "abridgeai.access_token",
@@ -456,23 +460,34 @@ export async function getCurrentUser() {
 }
 
 export async function logout() {
+  // Capture the tokens BEFORE clearing: the server revoke needs one of them.
   const session = getStoredAuthSession();
 
-  try {
-    const validSession = session
-      ? await getValidAuthSession().catch(() => session)
-      : null;
+  // Local sign-out is unconditional and happens FIRST — the UI must never
+  // wait on the network to stop being signed in. The server revoke is
+  // best-effort: /auth/logout accepts an expired access token (bearer is
+  // optional server-side) and falls back to the refresh token in the body,
+  // so no refresh round-trip is needed here — the old refresh-then-logout
+  // dance was what hung sign-out on a dead socket with no fetch timeout.
+  clearAuthSession();
+  sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
 
-    if (validSession) {
-      await apiRequest("/auth/logout", {
-        method: "POST",
-        headers: withAuthorization(validSession.accessToken),
-        body: JSON.stringify({ refresh_token: validSession.refreshToken }),
-      });
-    }
-  } finally {
-    clearAuthSession();
-    sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
+  if (!session) {
+    return;
+  }
+
+  try {
+    await apiRequest("/auth/logout", {
+      method: "POST",
+      headers: withAuthorization(session.accessToken),
+      body: JSON.stringify({ refresh_token: session.refreshToken }),
+      keepalive: true,
+      signal: AbortSignal.timeout(LOGOUT_REQUEST_TIMEOUT_MS),
+    });
+  } catch {
+    // Timed out or offline — the session stays alive server-side until the
+    // refresh token expires. Navigating to /login still happens; do not
+    // block or warn the user about cleanup they cannot see.
   }
 }
 

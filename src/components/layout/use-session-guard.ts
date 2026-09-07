@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 
-import { clearAuthSession } from "@/lib/auth";
-
 // If the auth check stalls (backend unreachable, network drop, etc.) we
 // give up after this many ms and force the user back to /login instead of
 // leaving them on the "Checking your session..." spinner forever.
@@ -52,7 +50,11 @@ export function useSessionGuard(
   useEffect(() => {
     if (!stalled) return;
 
-    clearAuthSession();
+    // logout() itself clears the local session first and only then fires
+    // the best-effort server revoke — clearing here BEFORE calling it would
+    // leave logout() with no tokens to revoke (the stalled session stayed
+    // alive server-side). The timeout bound inside logout() keeps this path
+    // from hanging too.
     void logout().catch(() => {});
 
     const search = routerLocation.search as { next?: string | null };
