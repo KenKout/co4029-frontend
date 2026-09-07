@@ -19,11 +19,30 @@ describe("AddUserDialog", () => {
       createUser,
       createUserPending: false,
       roleOptions: [
-        { code: "student", name: "Student" },
-        { code: "teacher", name: "Teacher" },
+        {
+          id: "role-student",
+          code: "student",
+          name: "Student",
+          is_system_role: false,
+        },
+        {
+          id: "role-teacher",
+          code: "teacher",
+          name: "Teacher",
+          is_system_role: false,
+        },
       ],
-      orgOptions: [{ id: "org-1", name: "Org One" }],
-    } as AddUserController;
+      orgOptions: [
+        {
+          id: "org-1",
+          slug: "org-one",
+          name: "Org One",
+          status: "active",
+          created_at: "2024-01-01T00:00:00.000Z",
+          updated_at: "2024-01-01T00:00:00.000Z",
+        },
+      ],
+    } satisfies AddUserController;
 
     render(
       <AddUserDialog
