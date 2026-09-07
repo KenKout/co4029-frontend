@@ -455,24 +455,36 @@ export async function getCurrentUser() {
   return user;
 }
 
+const LOGOUT_REVOKE_TIMEOUT_MS = 5_000;
+
 export async function logout() {
   const session = getStoredAuthSession();
 
-  try {
-    const validSession = session
-      ? await getValidAuthSession().catch(() => session)
-      : null;
+  clearAuthSession();
+  sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
 
-    if (validSession) {
-      await apiRequest("/auth/logout", {
-        method: "POST",
-        headers: withAuthorization(validSession.accessToken),
-        body: JSON.stringify({ refresh_token: validSession.refreshToken }),
-      });
-    }
+  if (!session) {
+    return;
+  }
+
+  const controller = new AbortController();
+  const timer = window.setTimeout(
+    () => controller.abort(),
+    LOGOUT_REVOKE_TIMEOUT_MS,
+  );
+
+  try {
+    await apiRequest("/auth/logout", {
+      method: "POST",
+      headers: withAuthorization(session.accessToken),
+      body: JSON.stringify({ refresh_token: session.refreshToken }),
+      signal: controller.signal,
+    });
+  } catch {
+    // Best effort. The session is already gone locally and the route is
+    // idempotent, so a dead socket must not strand the user in the app.
   } finally {
-    clearAuthSession();
-    sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
+    window.clearTimeout(timer);
   }
 }
 

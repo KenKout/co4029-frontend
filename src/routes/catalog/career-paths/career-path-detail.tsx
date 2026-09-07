@@ -41,11 +41,6 @@ export default function CareerPathDetailPage() {
   // Structure-only stages, available WITHOUT an enrollment. This is what
   // lets a prospective student see the roadmap; the progress endpoint
   // above only answers for someone already enrolled.
-  //
-  // ⚠️ MUST stay above the early returns below — calling a hook after a
-  // conditional return changes the hook count between renders and crashes
-  // with React error #310 (same trap as useNavItems in interview-config).
-  // The enabled flag keeps it idle until the path query settles.
   const detail = useCareerPathDetail(
     !enrolled && path.data ? path.data.slug : undefined,
   );
@@ -90,10 +85,6 @@ export default function CareerPathDetailPage() {
           includes this path — invisible for ordinary catalog browsing. */}
       <ChoosePathBanner careerPathId={data.id} />
 
-      {/* Enrolled students see the stage stepper (locked stages greyed, not
-          hidden, with a Start button per course). Anyone browsing the
-          published path without an enrollment still gets the flat course
-          list — there are no stages to evaluate for them. */}
       {enrolled && stages.length > 0 ? (
         <StageStepper
           careerPathId={data.id}
