@@ -39,6 +39,39 @@ describe("logout()", () => {
     localStorage.clear();
   });
 
+  it("keeps the session in storage until the revoke settles", async () => {
+    // THE ordering regression test. clearAuthSession() fires the auth-changed
+    // listeners synchronously; running it before the request flips
+    // AuthProvider and navigates the app mid-flight, which deadlocks the main
+    // thread (a frozen tab with no console or network trace). Merge c169448
+    // silently reverted that ordering and the suite stayed green, because
+    // every other case here only inspects storage AFTER awaiting logout() —
+    // by which point both orderings look identical. This one looks DURING.
+    let resolveRevoke: ((value: Response) => void) | undefined;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolveRevoke = resolve;
+          }),
+      ),
+    );
+
+    const pending = logout();
+    await Promise.resolve(); // let logout() reach the in-flight request
+
+    expect(
+      storedSession(),
+      "session must survive until the revoke settles — clearing first freezes the tab",
+    ).toEqual({ access: "access-token-1", refresh: "refresh-token-1" });
+
+    resolveRevoke!(new Response(null, { status: 204 }));
+    await pending;
+
+    expect(storedSession()).toEqual({ access: null, refresh: null });
+  });
+
   it("clears the local session after the revoke settles, with captured tokens", async () => {
     let resolveRevoke: ((value: Response) => void) | undefined;
     const fetchMock = vi.fn(

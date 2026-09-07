@@ -459,36 +459,35 @@ export async function getCurrentUser() {
   return user;
 }
 
-const LOGOUT_REVOKE_TIMEOUT_MS = 5_000;
-
 export async function logout() {
   const session = getStoredAuthSession();
 
-  clearAuthSession();
-  sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
-
-  if (!session) {
-    return;
-  }
-
-  const controller = new AbortController();
-  const timer = window.setTimeout(
-    () => controller.abort(),
-    LOGOUT_REVOKE_TIMEOUT_MS,
-  );
-
   try {
-    await apiRequest("/auth/logout", {
-      method: "POST",
-      headers: withAuthorization(session.accessToken),
-      body: JSON.stringify({ refresh_token: session.refreshToken }),
-      signal: controller.signal,
-    });
+    if (session) {
+      await apiRequest("/auth/logout", {
+        method: "POST",
+        headers: withAuthorization(session.accessToken),
+        body: JSON.stringify({ refresh_token: session.refreshToken }),
+        signal: AbortSignal.timeout(LOGOUT_REQUEST_TIMEOUT_MS),
+      });
+    }
   } catch {
-    // Best effort. The session is already gone locally and the route is
-    // idempotent, so a dead socket must not strand the user in the app.
+    // Timed out or offline — the session stays alive server-side until the
+    // refresh token expires. Sign-out still completes below.
   } finally {
-    window.clearTimeout(timer);
+    // ORDER IS LOAD-BEARING — clear + notify only AFTER the revoke settles.
+    // clearAuthSession() fires the auth-changed listeners synchronously, and
+    // doing that first (inside the click's discrete-event stack) flips
+    // AuthProvider to unauthenticated and tears down / navigates the whole app
+    // while the logout POST and the dashboard's react-query teardown are still
+    // in flight. That interleaving deadlocks the main thread: the tab freezes
+    // hard, with no console output and no network entry to explain it.
+    //
+    // Restored from a18f918 after merge c169448 reverted it wholesale. Pinned
+    // by "keeps the session in storage until the revoke settles" in
+    // __tests__/logout.test.ts — do not reorder without that test going red.
+    clearAuthSession();
+    sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
   }
 }
 
