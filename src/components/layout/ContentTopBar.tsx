@@ -24,7 +24,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useUnreadCount } from "@/lib/api/hooks/notifications";
-import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
+import {
+  getAuthDisplayName,
+  getAuthUserInitials,
+  logoutAndRedirect,
+} from "@/lib/auth";
 import { openShortcutPalette } from "@/lib/shortcuts";
 import LanguageSwitcher from "./LanguageSwitcher";
 import SectionSwitcher from "./SectionSwitcher";
@@ -96,14 +100,6 @@ function BrandWordmark() {
   );
 }
 
-async function performLogout(logout: () => Promise<void>) {
-  try {
-    await logout();
-  } finally {
-    window.location.replace("/login");
-  }
-}
-
 interface ContentTopBarProps {
   /** Nav groups for the mobile hamburger dropdown (rail is desktop-only). */
   navGroups?: NavGroup[];
@@ -160,7 +156,7 @@ function MobileNavMenu({ t, navGroups }: { t: TFunction; navGroups: NavGroup[] }
 export default function ContentTopBar({
   navGroups = [],
 }: ContentTopBarProps) {
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
   const { t } = useTranslation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -168,10 +164,12 @@ export default function ContentTopBar({
   const { data: unread } = useUnreadCount();
   const unreadCount = unread?.unread ?? 0;
 
-  async function handleConfirmLogout() {
+  function handleConfirmLogout() {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
-    await performLogout(logout);
+    // Synchronous by design — see logoutAndRedirect(). Awaiting here let React
+    // unmount this dialog mid-flight and froze the tab.
+    logoutAndRedirect();
   }
 
   return (
@@ -279,7 +277,7 @@ export default function ContentTopBar({
         cancelLabel={t("logout_confirm.cancel")}
         confirmVariant="destructive"
         isPending={isLoggingOut}
-        onConfirm={() => void handleConfirmLogout()}
+        onConfirm={handleConfirmLogout}
       />
     </header>
   );

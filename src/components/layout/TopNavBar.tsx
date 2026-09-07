@@ -6,13 +6,13 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useUnreadCount } from "@/lib/api/hooks/notifications";
-import { getAuthDisplayName } from "@/lib/auth";
+import { getAuthDisplayName, logoutAndRedirect } from "@/lib/auth";
 import { TopNavBell } from "./top-nav-bar/notification-bell";
 import { TopNavLinks } from "./top-nav-bar/nav-links";
 import { TopNavUserMenu } from "./top-nav-bar/user-menu";
 
 export default function TopNavBar() {
-  const { isAuthenticated, logout, status, user } = useAuth();
+  const { isAuthenticated, status, user } = useAuth();
   const { t } = useTranslation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -21,14 +21,12 @@ export default function TopNavBar() {
   const { data: unread } = useUnreadCount({ enabled: isAuthenticated });
   const unreadCount = unread?.unread ?? 0;
 
-  async function handleConfirmLogout() {
+  function handleConfirmLogout() {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
-    try {
-      await logout();
-    } finally {
-      window.location.replace("/login");
-    }
+    // Synchronous by design — see logoutAndRedirect(). Awaiting here let React
+    // unmount this dialog mid-flight and froze the tab.
+    logoutAndRedirect();
   }
 
   return (

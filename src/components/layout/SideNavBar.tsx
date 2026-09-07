@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useLocation } from "@tanstack/react-router";
+import { logoutAndRedirect } from "@/lib/auth";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { type NavItem, type NavGroup } from "@/lib/navigation";
-import { useAuth } from "@/components/auth/AuthProvider";
 import { SideNavCollapseToggle } from "./side-nav-bar/collapse-toggle";
 import { SideNavGroups } from "./side-nav-bar/nav-groups";
 import { SideNavLogo } from "./side-nav-bar/logo";
@@ -32,21 +32,18 @@ export default function SideNavBar({
 }: SideNavBarProps) {
   const location = useLocation();
   const { t } = useTranslation();
-  const { logout } = useAuth();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const labelOf = (item: { label: string; i18nKey?: string }) =>
     item.i18nKey ? t(item.i18nKey, { defaultValue: item.label }) : item.label;
 
-  async function handleConfirmLogout() {
+  function handleConfirmLogout() {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
-    try {
-      await logout();
-    } finally {
-      window.location.replace("/login");
-    }
+    // Synchronous by design — see logoutAndRedirect(). Awaiting here let React
+    // unmount this dialog mid-flight and froze the tab.
+    logoutAndRedirect();
   }
 
   function isItemActive(item: NavItem) {

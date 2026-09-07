@@ -459,6 +459,53 @@ export async function getCurrentUser() {
   return user;
 }
 
+/**
+ * Sign out synchronously, then hand the caller a hard redirect to run.
+ *
+ * WHY THIS IS NOT `async`. The button handlers used to `await logout()` and
+ * redirect in a `finally`. That await is a yield, and React uses it: clearing
+ * the session flips AuthProvider to `unauthenticated`, and `AppShell` returns
+ * its "Redirecting…" branch for any non-authenticated status — unmounting
+ * ContentTopBar, the OPEN confirm dialog, and the whole page underneath it,
+ * all while the handler is still suspended mid-await. The tab then locks hard:
+ * no console output, no network entry, no history mutation, and the queued
+ * `window.location.replace` never gets a turn because the main thread never
+ * yields again.
+ *
+ * Doing the whole thing in ONE synchronous block removes the interleaving
+ * rather than trying to survive it — React cannot render partway through a
+ * synchronous function, so the navigation is already underway before any
+ * teardown can be scheduled.
+ *
+ * The revoke goes out with `keepalive`, which is exactly what that flag is
+ * for: the request outlives the page it was fired from, so sign-out no longer
+ * waits on the network to complete and cannot hang on a dead socket either.
+ * It stays best-effort — the route is idempotent, and the session dies with
+ * the refresh token regardless.
+ */
+export function logoutAndRedirect(redirectTo = "/login"): void {
+  const session = getStoredAuthSession();
+
+  if (session) {
+    void fetch(apiUrl("/auth/logout"), {
+      method: "POST",
+      headers: withAuthorization(session.accessToken),
+      body: JSON.stringify({ refresh_token: session.refreshToken }),
+      keepalive: true,
+      cache: "no-store",
+    }).catch(() => {
+      // Best effort, and deliberately unobserved: nothing may defer the
+      // redirect below.
+    });
+  }
+
+  clearAuthSession();
+  sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
+
+  // Same tick as the clear above — no await between them, by design.
+  window.location.replace(redirectTo);
+}
+
 export async function logout() {
   const session = getStoredAuthSession();
 

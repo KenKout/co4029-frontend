@@ -4,6 +4,7 @@ import {
   AUTH_STORAGE_KEYS,
   clearAuthSession,
   logout,
+  logoutAndRedirect,
   storeAuthSession,
   type TokenResponse,
 } from "../auth";
@@ -140,5 +141,64 @@ describe("logout()", () => {
 
     await expect(logout()).resolves.toBeUndefined();
     expect(storedSession()).toEqual({ access: null, refresh: null });
+  });
+});
+
+describe("logoutAndRedirect()", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    storeAuthSession(SESSION);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
+
+  it("clears and redirects synchronously, without awaiting the revoke", () => {
+    // THE invariant. An await here is a yield, and React uses it: AppShell
+    // re-renders into its "Redirecting…" branch and unmounts the open confirm
+    // dialog while the handler is suspended, which locks the main thread —
+    // no console output, no network entry, no history mutation, and the
+    // queued redirect never runs. Everything must happen in ONE tick.
+    const replace = vi.fn();
+    vi.stubGlobal("location", { replace, href: "http://localhost/" });
+    // Never settles: the redirect must not depend on it in any way.
+    vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>(() => {})));
+
+    logoutAndRedirect();
+
+    // No `await` between the call and these assertions, on purpose.
+    expect(replace).toHaveBeenCalledWith("/login");
+    expect(storedSession()).toEqual({ access: null, refresh: null });
+  });
+
+  it("fires the revoke with keepalive so it outlives the page", () => {
+    const fetchMock = vi.fn(() => new Promise<Response>(() => {}));
+    vi.stubGlobal("location", { replace: vi.fn(), href: "http://localhost/" });
+    vi.stubGlobal("fetch", fetchMock);
+
+    logoutAndRedirect();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(init.keepalive).toBe(true);
+    expect(JSON.parse(init.body as string)).toEqual({
+      refresh_token: "refresh-token-1",
+    });
+  });
+
+  it("still redirects when there is no session to revoke", () => {
+    const replace = vi.fn();
+    const fetchMock = vi.fn();
+    vi.stubGlobal("location", { replace, href: "http://localhost/" });
+    vi.stubGlobal("fetch", fetchMock);
+    clearAuthSession();
+
+    logoutAndRedirect();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(replace).toHaveBeenCalledWith("/login");
   });
 });
