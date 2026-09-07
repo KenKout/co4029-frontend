@@ -5,6 +5,10 @@ export const GOOGLE_OAUTH_STATE_STORAGE_KEY = "abridgeai.google_oauth_state";
 export const POST_LOGIN_REDIRECT_STORAGE_KEY = "abridgeai.post_login_redirect";
 export const AUTH_CHANGED_EVENT = "abridgeai.auth.changed";
 const ACCESS_TOKEN_REFRESH_BUFFER_MS = 30_000;
+// Bound the server revoke during sign-out. On a dead socket this is what
+// keeps the spinner bounded (the revoke used to hang forever); locally the
+// request settles in milliseconds. 5s worst case, then sign-out completes.
+const LOGOUT_REQUEST_TIMEOUT_MS = 5_000;
 
 export const AUTH_STORAGE_KEYS = {
   accessToken: "abridgeai.access_token",
