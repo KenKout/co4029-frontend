@@ -1656,7 +1656,19 @@
       "title": "Trạng thái hệ thống",
       "subtitle": "Kiểm tra sức khỏe và sẵn sàng của backend.",
       "healthz_card": "Kiểm tra sức khỏe API",
-      "readyz_card": "Kiểm tra sẵn sàng",
+      "readyz_card": "Sẵn sàng phục vụ truy cập",
+      "readyz": {
+        "subtitle": "Truy cập chỉ tới ứng dụng khi tất cả các kiểm tra dưới đây đạt.",
+        "verdict_ready": "Sẵn sàng phục vụ",
+        "verdict_not_ready": "Chưa sẵn sàng",
+        "postgres": "Cơ sở dữ liệu (PostgreSQL)",
+        "redis": "Bộ đệm & hàng đợi (Redis)",
+        "schema": "Phiên bản schema cơ sở dữ liệu",
+        "reachable": "Kết nối được",
+        "unreachable": "Không kết nối được",
+        "schema_ok": "Đã cập nhật theo mã nguồn đang chạy",
+        "schema_behind": "Chậm hơn mã nguồn — còn migration chưa chạy"
+      },
       "cannot_connect": "Không thể kết nối đến máy chủ.",
       "updated_at": "Cập nhật lúc: {{time}}",
       "status": {

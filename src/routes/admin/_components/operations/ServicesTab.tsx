@@ -144,44 +144,146 @@ export function ServicesTab() {
  * Readiness probe. Kept separate from the dependency table because it answers
  * a different question — "should a load balancer send traffic here" — and
  * carries the migration check nothing else reports.
+ *
+ * Rendered as a proper card (house stats style) whose rows speak operator
+ * language: a named dependency, a state sentence, and an overall verdict —
+ * never the raw `alembic_at_head: true` payload.
  */
+const READY_CHECKS: {
+  key: string;
+  labelKey: string;
+  descKey: string;
+  descKeyDown: string;
+}[] = [
+  {
+    key: "postgres",
+    labelKey: "admin.health.readyz.postgres",
+    descKey: "admin.health.readyz.reachable",
+    descKeyDown: "admin.health.readyz.unreachable",
+  },
+  {
+    key: "redis",
+    labelKey: "admin.health.readyz.redis",
+    descKey: "admin.health.readyz.reachable",
+    descKeyDown: "admin.health.readyz.unreachable",
+  },
+  {
+    key: "alembic_at_head",
+    labelKey: "admin.health.readyz.schema",
+    descKey: "admin.health.readyz.schema_ok",
+    descKeyDown: "admin.health.readyz.schema_behind",
+  },
+];
+
 function ReadinessSection() {
   const { t } = useTranslation();
   const readyz = useReadyz();
 
-  const entries =
-    readyz.data && typeof readyz.data === "object"
-      ? Object.entries(readyz.data as Record<string, unknown>)
-      : [];
+  // The probe returns 200 ONLY when every check passes (503 otherwise), so
+  // "the endpoint answered" itself is a signal — but judge per-check from the
+  // payload, not the HTTP code, to name WHICH check fails.
+  const payload: Record<string, unknown> | undefined = readyz.data;
+  const checkState = (key: string) => {
+    if (!payload) return null;
+    const value = payload[key];
+    if (key === "alembic_at_head") return value === true;
+    return value === "ok" || value === true;
+  };
+  const allReady = READY_CHECKS.every((c) => checkState(c.key) === true);
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-text-strong">
-        {t("admin.health.readyz_card")}
-      </h2>
+    <section className="rounded-xl bg-surface-elev ghost-border p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-headline font-bold text-text-strong">
+            {t("admin.health.readyz_card")}
+          </h2>
+          <p className="mt-0.5 text-xs text-text-muted">
+            {t("admin.health.readyz.subtitle")}
+          </p>
+        </div>
+        {!readyz.isError && !readyz.isLoading && (
+          <span
+            className={cn(
+              "rounded-full px-3 py-1 text-xs font-semibold",
+              allReady
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-red-50 text-red-600",
+            )}
+          >
+            {allReady
+              ? t("admin.health.readyz.verdict_ready")
+              : t("admin.health.readyz.verdict_not_ready")}
+          </span>
+        )}
+      </div>
+
       {readyz.isError ? (
-        <SectionErrorBox messageKey="admin.health.cannot_connect" />
+        <div className="mt-4">
+          <SectionErrorBox messageKey="admin.health.cannot_connect" />
+        </div>
+      ) : readyz.isLoading ? (
+        <div className="mt-4">
+          <PageSkeleton rows={1} height="h-20" bg="bg-surface-muted" />
+        </div>
       ) : (
-        <dl className="grid grid-cols-1 gap-2 rounded-lg border border-border bg-surface-elev p-5 sm:grid-cols-2">
-          {entries.map(([key, value]) => {
-            const ok = value === "ok" || value === true;
+        <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {READY_CHECKS.map((check) => {
+            const ok = checkState(check.key) === true;
+            const known = checkState(check.key) !== null;
             return (
               <div
-                key={key}
-                className="flex items-center justify-between gap-3"
+                key={check.key}
+                className="rounded-lg border border-border bg-surface-elev p-4"
               >
-                <dt className="text-xs text-text-muted">{key}</dt>
+                <dt className="flex items-center gap-2 text-sm font-medium text-text-strong">
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "h-2 w-2 shrink-0 rounded-full",
+                      !known
+                        ? "bg-text-muted"
+                        : ok
+                          ? "bg-emerald-600"
+                          : "bg-red-600",
+                    )}
+                  />
+                  {t(check.labelKey)}
+                </dt>
                 <dd
                   className={cn(
-                    "font-mono text-xs",
-                    ok ? "text-emerald-700" : "text-red-600",
+                    "mt-1 pl-4 text-xs",
+                    !known
+                      ? "text-text-muted"
+                      : ok
+                        ? "text-emerald-700"
+                        : "text-red-600",
                   )}
                 >
-                  {String(value)}
+                  {!known
+                    ? t("admin.dashboard.no_data")
+                    : ok
+                      ? t(check.descKey)
+                      : t(check.descKeyDown)}
                 </dd>
               </div>
             );
           })}
+          {/* A payload key the UI does not know yet (backend added a check):
+              surface it raw rather than silently hiding a failed gate. */}
+          {Object.keys(payload ?? {})
+            .filter((k) => !READY_CHECKS.some((c) => c.key === k))
+            .map((k) => (
+              <div
+                key={k}
+                className="rounded-lg border border-border bg-surface-elev p-4"
+              >
+                <dt className="font-mono text-sm text-text-strong">{k}</dt>
+                <dd className="mt-1 text-xs text-text-muted">
+                  {String(payload?.[k])}
+                </dd>
+              </div>
+            ))}
         </dl>
       )}
     </section>

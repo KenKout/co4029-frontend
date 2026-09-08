@@ -1747,7 +1747,19 @@
       "title": "System status",
       "subtitle": "Check backend health and readiness.",
       "healthz_card": "API health check",
-      "readyz_card": "Readiness check",
+      "readyz_card": "Readiness to serve traffic",
+      "readyz": {
+        "subtitle": "Traffic only reaches this app while every check below passes.",
+        "verdict_ready": "Ready to serve",
+        "verdict_not_ready": "Not ready",
+        "postgres": "Database (PostgreSQL)",
+        "redis": "Cache & queues (Redis)",
+        "schema": "Database schema version",
+        "reachable": "Reachable",
+        "unreachable": "Unreachable",
+        "schema_ok": "Up to date with the deployed code",
+        "schema_behind": "Behind the deployed code — pending migration"
+      },
       "cannot_connect": "Cannot reach the server.",
       "updated_at": "Updated at: {{time}}",
       "status": {
