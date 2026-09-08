@@ -3,39 +3,38 @@ import {
   createRoute,
   createRouter,
   lazyRouteComponent,
-  redirect,
   Outlet,
+  redirect,
 } from "@tanstack/react-router";
 
+import { AuthProvider } from "@/components/auth/AuthProvider";
+import { MfaGate } from "@/components/auth/MfaGate";
+import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { getStoredAuthSession } from "@/lib/auth";
 import { resolveLandingPath } from "@/lib/auth/resolve-landing";
-import { AuthProvider } from "@/components/auth/AuthProvider";
-import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
-import { MfaGate } from "@/components/auth/MfaGate";
 import { Toaster } from "sonner";
-
-import LandingPage from "@/routes/landing/landing";
-import LoginPage from "@/routes/login/login";
-import AuthenticatedLayout from "@/routes/authenticated-layout";
-import DashboardPage from "@/routes/dashboard/dashboard";
 import GoogleCallbackPage from "@/routes/auth/google-callback";
-import CoursesListPage from "@/routes/courses/courses-list";
+import AuthenticatedLayout from "@/routes/authenticated-layout";
+import CareerPathDetailPage from "@/routes/catalog/career-paths/career-path-detail";
+import CareerPathsPage from "@/routes/catalog/career-paths/career-paths";
 import CourseDetailPage from "@/routes/courses/course-detail";
 import CourseLearnPage from "@/routes/courses/course-learn";
 import CourseQuizPage from "@/routes/courses/course-quiz";
+import CoursesListPage from "@/routes/courses/courses-list";
+import DashboardPage from "@/routes/dashboard/dashboard";
+import LandingPage from "@/routes/landing/landing";
+import LoginPage from "@/routes/login/login";
+import LoginMfaPage from "@/routes/login/mfa";
+import MyCareerPathsPage from "@/routes/me/career-paths";
+import ProfilePage from "@/routes/me/profile/profile";
+import ProgressPage from "@/routes/me/progress/progress";
+import StudyCardsDuePage from "@/routes/me/study/cards-due";
+import SrDashboardPage from "@/routes/me/study/index";
 import NotificationsPage from "@/routes/notifications/notifications";
 import SettingsNotificationsPage from "@/routes/settings/notifications";
-import LoginMfaPage from "@/routes/login/mfa";
 import SettingsProfilePage from "@/routes/settings/profile";
 import SettingsSecurityPage from "@/routes/settings/security";
 import SettingsHubPage from "@/routes/settings/settings";
-import ProfilePage from "@/routes/me/profile/profile";
-import ProgressPage from "@/routes/me/progress/progress";
-import CareerPathsPage from "@/routes/catalog/career-paths/career-paths";
-import CareerPathDetailPage from "@/routes/catalog/career-paths/career-path-detail";
-import MyCareerPathsPage from "@/routes/me/career-paths";
-import SrDashboardPage from "@/routes/me/study/index";
-import StudyCardsDuePage from "@/routes/me/study/cards-due";
 
 /* ── Root layout ── */
 function Root() {
@@ -271,9 +270,7 @@ const teacherRoute = createRoute({
 const teacherCourseHealthRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/teacher/course-health",
-  component: lazyRouteComponent(
-    () => import("@/routes/teacher/course-health"),
-  ),
+  component: lazyRouteComponent(() => import("@/routes/teacher/course-health")),
 });
 
 const teacherCoursesRoute = createRoute({
@@ -333,6 +330,14 @@ const teacherCourseQuestionBankRoute = createRoute({
   path: "question-bank",
   component: lazyRouteComponent(
     () => import("@/routes/teacher/courses/course-question-bank"),
+  ),
+});
+
+const teacherCourseDiscussionRoute = createRoute({
+  getParentRoute: () => teacherCourseManageRoute,
+  path: "discussion",
+  component: lazyRouteComponent(
+    () => import("@/routes/teacher/courses/course-discussion"),
   ),
 });
 
@@ -650,7 +655,9 @@ const deptCourseDetailRoute = createRoute({
     tab: typeof search.tab === "string" ? search.tab : undefined,
     question: typeof search.question === "string" ? search.question : undefined,
   }),
-  component: lazyRouteComponent(() => import("@/routes/management/course-detail")),
+  component: lazyRouteComponent(
+    () => import("@/routes/management/course-detail"),
+  ),
 });
 
 const managementCourseNewRoute = createRoute({
@@ -795,21 +802,18 @@ const managementCareerPathDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/management/career-paths/$id",
   validateSearch: (
-      search: Record<string, unknown>,
-    ): {
-      tab?: "general" | "programs" | "courses" | "students";
-      stage?: string;
-    } => ({
-      // Deep-link from a course's Career Paths tab: open the Courses tab and
-      // scroll to the named stage. Unknown params are dropped, not rejected,
-      // so a malformed link still lands on the page.
-      tab:
-        typeof search.tab === "string" &&
-        ["general", "programs", "courses", "students"].includes(search.tab)
-          ? (search.tab as "general" | "programs" | "courses" | "students")
-          : undefined,
-      stage: typeof search.stage === "string" ? search.stage : undefined,
-    }),
+    search: Record<string, unknown>,
+  ): {
+    tab?: "general" | "programs" | "courses" | "students";
+    stage?: string;
+  } => ({
+    tab:
+      typeof search.tab === "string" &&
+      ["general", "programs", "courses", "students"].includes(search.tab)
+        ? (search.tab as "general" | "programs" | "courses" | "students")
+        : undefined,
+    stage: typeof search.stage === "string" ? search.stage : undefined,
+  }),
   component: lazyRouteComponent(
     () => import("@/routes/management/career-path-detail"),
   ),
@@ -926,7 +930,6 @@ const policiesRoute = createRoute({
   path: "/policies",
   component: lazyRouteComponent(() => import("@/routes/support/policies")),
 });
-
 
 /* ── Legacy path aliases ────────────────────────────────────────────────────
  *
@@ -1075,6 +1078,7 @@ const routeTree = rootRoute.addChildren([
       teacherCourseProgressRoute,
       teacherCourseAssessmentsRoute,
       teacherCourseQuestionBankRoute,
+      teacherCourseDiscussionRoute,
       teacherSrCohortRoute,
     ]),
     teacherLessonManageRoute,

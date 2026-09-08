@@ -1,8 +1,4 @@
-import {
-  Outlet,
-  useLocation,
-  useParams,
-} from "@tanstack/react-router";
+import { Outlet, useLocation, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   Activity,
@@ -10,6 +6,7 @@ import {
   ClipboardList,
   GripVertical,
   Library,
+  MessagesSquare,
   Users,
 } from "lucide-react";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -33,6 +30,7 @@ type TabTo =
   | "/teacher/courses/$courseId/progress"
   | "/teacher/courses/$courseId/assessments"
   | "/teacher/courses/$courseId/question-bank"
+  | "/teacher/courses/$courseId/discussion"
   | "/teacher/courses/$courseId/sr-cohort";
 
 type TabDef = {
@@ -81,6 +79,13 @@ const TABS: TabDef[] = [
     segment: "question-bank",
     labelKey: "teacher_common.nav_question_bank",
     icon: Library,
+  },
+  {
+    key: "discussion",
+    to: "/teacher/courses/$courseId/discussion",
+    segment: "discussion",
+    labelKey: "discussion.title",
+    icon: MessagesSquare,
   },
   {
     key: "retention",

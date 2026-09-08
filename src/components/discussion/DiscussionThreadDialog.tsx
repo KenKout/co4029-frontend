@@ -1,7 +1,7 @@
 import { type FormEvent, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { CornerDownRight, Send, X } from "lucide-react";
+import { CornerDownRight, Lock, Pencil, Send, Trash2, X } from "lucide-react";
 
 import {
   Avatar,
@@ -11,10 +11,16 @@ import {
   avatarInitials,
 } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/use-confirm";
+import { Textarea } from "@/components/ui/textarea";
 import {
   type DiscussionScope,
   useCreateComment,
+  useDeleteComment,
+  useDeleteDiscussionTopic,
   useTopicComments,
+  useUpdateComment,
+  useUpdateDiscussionTopic,
 } from "@/lib/api/hooks/discussions";
 import { timeAgo } from "@/lib/format/time-ago";
 import type { DiscussionComment, DiscussionTopic } from "@/lib/api/types";
@@ -75,7 +81,11 @@ export function DiscussionThreadDialog({
         >
           {topic && (
             <>
-              <ThreadHeader topic={topic} />
+              <ThreadHeader
+                topic={topic}
+                scope={scope}
+                onDeleted={() => onOpenChange(false)}
+              />
               <CommentList
                 comments={comments ?? []}
                 isLoading={isLoading}
@@ -91,13 +101,32 @@ export function DiscussionThreadDialog({
   );
 }
 
-function ThreadHeader({ topic }: { topic: DiscussionTopic }) {
+function ThreadHeader({
+  topic,
+  scope,
+  onDeleted,
+}: {
+  topic: DiscussionTopic;
+  scope: DiscussionScope;
+  onDeleted: () => void;
+}) {
   const { t, i18n } = useTranslation();
+  const [editing, setEditing] = useState(false);
   const posterName =
     topic.author?.display_name?.trim() || t("discussion.unknown_author");
   const posted =
     timeAgo(topic.created_at, i18n.language) ??
     new Date(topic.created_at).toLocaleDateString();
+
+  if (editing) {
+    return (
+      <TopicEditForm
+        topic={topic}
+        scope={scope}
+        onDone={() => setEditing(false)}
+      />
+    );
+  }
 
   return (
     <div className="shrink-0 border-b border-m3-outline-variant/40 px-5 py-4">
@@ -113,6 +142,14 @@ function ThreadHeader({ topic }: { topic: DiscussionTopic }) {
             {posterName} · {posted}
           </p>
         </div>
+        {topic.can_manage && (
+          <TopicManageActions
+            topic={topic}
+            scope={scope}
+            onEdit={() => setEditing(true)}
+            onDeleted={onDeleted}
+          />
+        )}
         <DialogPrimitive.Close
           className="rounded-full p-1.5 text-m3-on-surface-variant hover:bg-m3-surface-container"
           aria-label={t("common.dismiss")}
@@ -126,6 +163,132 @@ function ThreadHeader({ topic }: { topic: DiscussionTopic }) {
         </p>
       )}
     </div>
+  );
+}
+
+/** Edit / close / delete, for a viewer who can manage the course. */
+function TopicManageActions({
+  topic,
+  scope,
+  onEdit,
+  onDeleted,
+}: {
+  topic: DiscussionTopic;
+  scope: DiscussionScope;
+  onEdit: () => void;
+  onDeleted: () => void;
+}) {
+  const { t } = useTranslation();
+  const update = useUpdateDiscussionTopic(scope);
+  const remove = useDeleteDiscussionTopic(scope);
+  const { confirm, dialog } = useConfirm();
+
+  // Closing is reversible and silent; deleting takes the whole thread with it,
+  // so only that one asks.
+  async function handleDelete() {
+    const ok = await confirm({
+      title: t("discussion.confirm.delete_topic_title"),
+      description: t("discussion.confirm.delete_topic_body"),
+      confirmLabel: t("discussion.actions.delete_topic"),
+      confirmVariant: "destructive",
+    });
+    if (!ok) return;
+    remove.mutate(topic.id, { onSuccess: onDeleted });
+  }
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="xs"
+        onClick={onEdit}
+        aria-label={t("discussion.actions.edit_topic")}
+      >
+        <Pencil className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="xs"
+        onClick={() =>
+          update.mutate({
+            topicId: topic.id,
+            status: topic.status === "open" ? "closed" : "open",
+          })
+        }
+        aria-label={
+          topic.status === "open"
+            ? t("discussion.actions.close")
+            : t("discussion.actions.reopen")
+        }
+      >
+        <Lock className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="xs"
+        onClick={() => void handleDelete()}
+        aria-label={t("discussion.actions.delete_topic")}
+      >
+        <Trash2 className="h-3.5 w-3.5 text-m3-error" />
+      </Button>
+      {dialog}
+    </>
+  );
+}
+
+function TopicEditForm({
+  topic,
+  scope,
+  onDone,
+}: {
+  topic: DiscussionTopic;
+  scope: DiscussionScope;
+  onDone: () => void;
+}) {
+  const { t } = useTranslation();
+  const [title, setTitle] = useState(topic.title);
+  const [body, setBody] = useState(topic.body_markdown ?? "");
+  const update = useUpdateDiscussionTopic(scope);
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    const trimmed = title.trim();
+    if (!trimmed || update.isPending) return;
+    update.mutate(
+      { topicId: topic.id, title: trimmed, body_markdown: body.trim() || null },
+      { onSuccess: onDone },
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="shrink-0 space-y-2 border-b border-m3-outline-variant/40 px-5 py-4"
+    >
+      <input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="w-full rounded-xl bg-m3-surface-container px-3 py-2 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/50"
+        placeholder={t("discussion.topic_title_placeholder")}
+      />
+      <Textarea
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        rows={3}
+        placeholder={t("discussion.topic_body_placeholder")}
+      />
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="ghost" size="xs" onClick={onDone}>
+          {t("common.cancel")}
+        </Button>
+        <Button type="submit" size="xs" disabled={!title.trim()}>
+          {t("common.save")}
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -178,12 +341,22 @@ function CommentList({
           <ul className="space-y-4">
             {roots.map((comment) => (
               <li key={comment.id}>
-                <CommentRow comment={comment} onReply={setReplyTo} />
+                <CommentRow
+                  comment={comment}
+                  topicId={topicId}
+                  scope={scope}
+                  onReply={setReplyTo}
+                />
                 {(childrenOf.get(comment.id) ?? []).length > 0 && (
                   <ul className="mt-3 space-y-3 border-l-2 border-m3-outline-variant/40 pl-4 sm:pl-6">
                     {(childrenOf.get(comment.id) ?? []).map((reply) => (
                       <li key={reply.id}>
-                        <CommentRow comment={reply} onReply={setReplyTo} />
+                        <CommentRow
+                          comment={reply}
+                          topicId={topicId}
+                          scope={scope}
+                          onReply={setReplyTo}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -225,19 +398,62 @@ function CommentBody({ body }: { body: string }) {
   );
 }
 
+/** The small text buttons under a comment — one style, three uses. */
+function TextAction({
+  onClick,
+  children,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="xs"
+      onClick={onClick}
+      className="h-auto px-0 text-[11px] font-semibold text-m3-on-surface-variant hover:bg-transparent hover:text-m3-primary"
+    >
+      {children}
+    </Button>
+  );
+}
+
 function CommentRow({
   comment,
+  topicId,
+  scope,
   onReply,
 }: {
   comment: DiscussionComment;
+  topicId: string;
+  scope: DiscussionScope;
   onReply: (comment: DiscussionComment) => void;
 }) {
   const { t, i18n } = useTranslation();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(comment.body);
+  const update = useUpdateComment(topicId);
+  const remove = useDeleteComment(topicId, scope);
+  const { confirm, dialog } = useConfirm();
   const name =
     comment.author?.display_name?.trim() || t("discussion.unknown_author");
   const when =
     timeAgo(comment.created_at, i18n.language) ??
     new Date(comment.created_at).toLocaleDateString();
+
+  // Deleting is irreversible for the author (soft delete server-side, but the
+  // comment never comes back in the UI), so it asks; editing does not.
+  async function handleDelete() {
+    const ok = await confirm({
+      title: t("discussion.confirm.delete_comment_title"),
+      description: t("discussion.confirm.delete_comment_body"),
+      confirmLabel: t("discussion.actions.delete_topic"),
+      confirmVariant: "destructive",
+    });
+    if (!ok) return;
+    remove.mutate(comment.id);
+  }
 
   return (
     <div className="flex items-start gap-2.5">
@@ -250,26 +466,68 @@ function CommentRow({
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <div className="rounded-2xl bg-m3-surface-container px-3.5 py-2.5">
-          <p className="text-xs font-semibold text-m3-on-surface">{name}</p>
-          <p className="mt-0.5 text-sm text-m3-on-surface">
-            <CommentBody body={comment.body} />
-          </p>
-        </div>
-        <div className="mt-1 flex items-center gap-3 pl-1">
+        {editing ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const trimmed = draft.trim();
+              if (!trimmed || update.isPending) return;
+              update.mutate(
+                { commentId: comment.id, body: trimmed },
+                { onSuccess: () => setEditing(false) },
+              );
+            }}
+            className="space-y-2"
+          >
+            <Textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              rows={2}
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                onClick={() => {
+                  setDraft(comment.body);
+                  setEditing(false);
+                }}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button type="submit" size="xs" disabled={!draft.trim()}>
+                {t("common.save")}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div className="rounded-2xl bg-m3-surface-container px-3.5 py-2.5">
+            <p className="text-xs font-semibold text-m3-on-surface">{name}</p>
+            <p className="mt-0.5 text-sm text-m3-on-surface">
+              <CommentBody body={comment.body} />
+            </p>
+          </div>
+        )}
+        <div className="mt-1 flex flex-wrap items-center gap-3 pl-1">
           <span className="text-[11px] text-m3-on-surface-variant">{when}</span>
           {/* Self-reply is allowed: adding a thought to your own comment is
               normal, and it simply does not badge you. */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="xs"
-            onClick={() => onReply(comment)}
-            className="h-auto px-0 text-[11px] font-semibold text-m3-on-surface-variant hover:bg-transparent hover:text-m3-primary"
-          >
+          <TextAction onClick={() => onReply(comment)}>
             {t("discussion.reply")}
-          </Button>
+          </TextAction>
+          {comment.is_own && (
+            <TextAction onClick={() => setEditing(true)}>
+              {t("discussion.actions.edit_comment")}
+            </TextAction>
+          )}
+          {comment.can_delete && (
+            <TextAction onClick={() => void handleDelete()}>
+              {t("discussion.actions.delete_comment")}
+            </TextAction>
+          )}
         </div>
+        {dialog}
       </div>
     </div>
   );

@@ -74,7 +74,7 @@ export function useCreateDiscussionTopic(lessonId: string) {
   });
 }
 
-export function useUpdateDiscussionTopic(lessonId: string) {
+export function useUpdateDiscussionTopic(scope: DiscussionScope) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -87,21 +87,17 @@ export function useUpdateDiscussionTopic(lessonId: string) {
       status?: "open" | "closed";
     }) => apiPatch<DiscussionTopic>(`/discussion/topics/${topicId}`, body),
     onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.discussions.topics("lesson", lessonId),
-      });
+      qc.invalidateQueries({ queryKey: topicsKey(scope) });
     },
   });
 }
 
-export function useDeleteDiscussionTopic(lessonId: string) {
+export function useDeleteDiscussionTopic(scope: DiscussionScope) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (topicId: string) => apiDelete(`/discussion/topics/${topicId}`),
     onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.discussions.topics("lesson", lessonId),
-      });
+      qc.invalidateQueries({ queryKey: topicsKey(scope) });
     },
   });
 }
