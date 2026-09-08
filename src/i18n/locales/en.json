@@ -496,6 +496,9 @@
       "event": {
         "tab_switch": "Switched away from the quiz tab",
         "focus_lost": "Quiz window lost focus",
+        "disconnect": "Connection lost",
+        "reconnect": "Connection restored",
+        "warning_issued": "Warning issued",
         "fullscreen_exit": "Exited fullscreen"
       },
       "severity": {
@@ -2960,6 +2963,18 @@
     }
   },
   "course_quiz": {
+    "fullscreen": {
+      "prompt_title": "Switch to fullscreen mode",
+      "prompt_description": "This quiz runs in fullscreen so nothing distracts you. The app menu is hidden until you submit.",
+      "enter": "Enter fullscreen",
+      "continue_windowed": "Continue in a window",
+      "exit_warning_title": "You left fullscreen mode",
+      "exit_warning_description": "Please return to fullscreen and stay there until you submit this quiz.",
+      "exit_warning_recorded_one": "This exit was recorded for your teacher to review ({{count}} time so far).",
+      "exit_warning_recorded_other": "This exit was recorded for your teacher to review ({{count}} times so far).",
+      "reenter": "Back to fullscreen",
+      "stay_windowed": "Stay in a window"
+    },
     "empty": {
       "no_questions_title": "No questions available",
       "no_questions_body": "This quiz doesn't have any approved questions to show right now. Your teacher may still be finalizing it — please check back later."

@@ -9,14 +9,7 @@
  */
 
 import { useTranslation } from "react-i18next";
-import {
-  CircleAlert,
-  CircleHelp,
-  Loader2,
-  Maximize,
-  PhoneOff,
-  Sparkles,
-} from "lucide-react";
+import { CircleHelp, Loader2, PhoneOff, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -164,96 +157,13 @@ export function LeaveInterviewDialog({
   );
 }
 
-/**
- * Fullscreen consent gate. Shown the moment a session becomes active, before
- * the candidate can answer. Browsers only grant `requestFullscreen()` from a
- * user gesture, so entering fullscreen MUST originate from this button — it
- * cannot be done automatically on mount.
- *
- * Not blocking by design: "Continue windowed" is offered because a denied or
- * unsupported fullscreen must never lock a candidate out of their assessment.
- */
-export function FullscreenPromptDialog({
-  open,
-  onConfirm,
-  onDecline,
-}: {
-  open: boolean;
-  onConfirm: () => void;
-  onDecline: () => void;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <ConfirmDialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onDecline();
-      }}
-      title={t("course_interview.fullscreen.prompt_title")}
-      description={t("course_interview.fullscreen.prompt_description")}
-      confirmLabel={
-        <span className="flex items-center gap-2">
-          <Maximize className="h-4 w-4" aria-hidden="true" />
-          {t("course_interview.fullscreen.enter")}
-        </span>
-      }
-      cancelLabel={t("course_interview.fullscreen.continue_windowed")}
-      onConfirm={onConfirm}
-      confirmVariant="default"
-    />
-  );
-}
-
-/**
- * Warning shown when the candidate leaves fullscreen mid-interview (Escape /
- * F11 / OS gesture). The exit is already recorded as an integrity event by
- * `useIntegrityReporter`; this dialog is the visible level-1 deterrent and the
- * one-click path back in (again, a gesture is required to re-enter).
- */
-export function FullscreenExitWarningDialog({
-  open,
-  onReenter,
-  onDismiss,
-  exitCount,
-}: {
-  open: boolean;
-  onReenter: () => void;
-  onDismiss: () => void;
-  exitCount: number;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <ConfirmDialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onDismiss();
-      }}
-      title={t("course_interview.fullscreen.exit_warning_title")}
-      description={t("course_interview.fullscreen.exit_warning_description")}
-      extraContent={
-        <p className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50/70 p-3 text-sm text-amber-900">
-          <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span aria-live="polite">
-            {t("course_interview.fullscreen.exit_warning_recorded", {
-              count: exitCount,
-            })}
-          </span>
-        </p>
-      }
-      confirmLabel={
-        <span className="flex items-center gap-2">
-          <Maximize className="h-4 w-4" aria-hidden="true" />
-          {t("course_interview.fullscreen.reenter")}
-        </span>
-      }
-      cancelLabel={t("course_interview.fullscreen.stay_windowed")}
-      onConfirm={onReenter}
-      confirmVariant="default"
-    />
-  );
-}
+// Fullscreen dialogs are shared with the quiz take — see
+// components/assessment/FullscreenDialogs.tsx. Re-exported so interview
+// call sites keep importing them from here.
+export {
+  FullscreenPromptDialog,
+  FullscreenExitWarningDialog,
+} from "@/components/assessment/FullscreenDialogs";
 
 export function StartInterviewDialog({
   open,

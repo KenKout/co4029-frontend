@@ -10,6 +10,8 @@ import {
   MinusCircle,
   MonitorX,
   ShieldCheck,
+  Wifi,
+  WifiOff,
   XCircle,
 } from "lucide-react";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -305,12 +307,18 @@ function IntegrityPanel({
       <div className="divide-y divide-amber-200/40 max-h-72 overflow-y-auto">
         {events.map((ev) => {
           const meta = SEVERITY_META[ev.severity] ?? SEVERITY_META.info;
+          // A dropped connection is not a timing event, and Clock (the
+          // fallback) read as one.
           const Icon =
             ev.event_type === "tab_switch"
               ? MonitorX
               : ev.event_type === "focus_lost"
                 ? Eye
-                : Clock;
+                : ev.event_type === "disconnect"
+                  ? WifiOff
+                  : ev.event_type === "reconnect"
+                    ? Wifi
+                    : Clock;
           return (
             <div key={ev.id} className="flex items-center gap-3 px-5 py-2.5">
               <Icon className="h-4 w-4 text-amber-700 shrink-0" />

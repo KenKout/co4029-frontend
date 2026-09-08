@@ -444,6 +444,9 @@
       "event": {
         "tab_switch": "Chuyển khỏi tab làm bài",
         "focus_lost": "Cửa sổ làm bài mất tiêu điểm",
+        "disconnect": "Mất kết nối",
+        "reconnect": "Kết nối lại",
+        "warning_issued": "Đã cảnh báo",
         "fullscreen_exit": "Thoát toàn màn hình"
       },
       "severity": {
@@ -2800,6 +2803,18 @@
     "back_to_my_order": "Về thứ tự của tôi"
   },
   "course_quiz": {
+    "fullscreen": {
+      "prompt_title": "Chuyển sang chế độ toàn màn hình",
+      "prompt_description": "Bài kiểm tra này chạy ở chế độ toàn màn hình để bạn không bị phân tâm. Menu ứng dụng sẽ ẩn cho đến khi bạn nộp bài.",
+      "enter": "Bật toàn màn hình",
+      "continue_windowed": "Tiếp tục trong cửa sổ",
+      "exit_warning_title": "Bạn đã thoát chế độ toàn màn hình",
+      "exit_warning_description": "Vui lòng quay lại chế độ toàn màn hình và giữ nguyên cho đến khi nộp bài.",
+      "exit_warning_recorded_one": "Lần thoát này đã được ghi lại để giáo viên xem ({{count}} lần).",
+      "exit_warning_recorded_other": "Lần thoát này đã được ghi lại để giáo viên xem ({{count}} lần).",
+      "reenter": "Quay lại toàn màn hình",
+      "stay_windowed": "Ở lại trong cửa sổ"
+    },
     "empty": {
       "no_questions_title": "Chưa có câu hỏi",
       "no_questions_body": "Bài kiểm tra này hiện chưa có câu hỏi nào được duyệt để hiển thị. Giáo viên có thể vẫn đang hoàn thiện — vui lòng quay lại sau."

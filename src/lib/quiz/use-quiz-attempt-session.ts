@@ -11,6 +11,7 @@ import {
 import type { QuizQuestionPublic } from "@/lib/api/types";
 import { useQuestionFocusTime } from "@/lib/quiz/use-question-focus-time";
 import { useQuizIntegrityReporter } from "@/lib/hooks/useQuizIntegrityReporter";
+import { useFullscreenDeterrent } from "@/lib/hooks/useFullscreenDeterrent";
 import { useAttemptActions } from "@/lib/quiz/quiz-attempt-session/use-attempt-actions";
 import { useAttemptHydration } from "@/lib/quiz/quiz-attempt-session/use-attempt-hydration";
 import { useAttemptPagination } from "@/lib/quiz/quiz-attempt-session/use-attempt-pagination";
@@ -76,10 +77,34 @@ export function useQuizAttemptSession(quizId: string) {
   const submitAnswer = useSubmitQuizAnswer(activeAttemptId);
   const submitAttempt = useSubmitQuizAttempt(activeAttemptId);
 
-  // Proctoring: report tab-switch / focus-loss signals ONLY while a take is
-  // live (an attempt exists and we're in taking mode). Passing null outside
-  // an active take detaches the listeners. Fire-and-forget; never blocks UI.
-  useQuizIntegrityReporter(taking && activeAttemptId ? activeAttemptId : null);
+  // Proctoring: report tab-switch / focus-loss / connection signals ONLY while
+  // a take is live (an attempt exists and we're in taking mode). Passing null
+  // outside an active take detaches the listeners. Fire-and-forget; never
+  // blocks UI.
+  const integrity = useQuizIntegrityReporter(
+    taking && activeAttemptId ? activeAttemptId : null,
+  );
+
+  // Fullscreen is the teacher's call, not ours: `browser_security` has been a
+  // quiz setting since migration 0056 but nothing on the client read it, so
+  // 'securewindow' did nothing. Honouring it here is what makes the toggle
+  // real — and leaves every quiz still set to 'none' behaving exactly as
+  // before rather than surprising students with a fullscreen prompt.
+  const secureWindow = quiz?.browser_security === "securewindow";
+  const fullscreen = useFullscreenDeterrent(
+    Boolean(secureWindow && taking && activeAttemptId),
+    {
+      // Recorded here rather than from a `fullscreenchange` listener inside the
+      // reporter, because only the deterrent knows which exits were ours: it
+      // leaves fullscreen itself when the attempt ends, and logging that would
+      // charge every student one exit for submitting.
+      onUnexpectedExit: () =>
+        integrity.record({
+          event_type: "fullscreen_exit",
+          severity: "warning",
+        }),
+    },
+  );
 
   const autoSubmitStartedRef = useRef(false);
   const questionSeenAtRef = useRef<Record<string, number>>({});
@@ -191,5 +216,8 @@ export function useQuizAttemptSession(quizId: string) {
     requestResume: () => setResumeRequested(true),
     resumeRequested,
     resuming,
+    // fullscreen proctoring (inert unless the quiz asks for 'securewindow')
+    secureWindow,
+    fullscreen,
   };
 }

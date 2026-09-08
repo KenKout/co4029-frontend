@@ -33,6 +33,10 @@ export function useIntegrityReporter(
   // (the effect's listeners don't need to re-attach when the callback changes).
   const onWarningRef = useRef(options.onWarning);
   onWarningRef.current = options.onWarning;
+  // Blurs awaiting their one-macrotask `document.hidden` check. A set, not a
+  // single handle: two blurs in a row are two signals, and only a tab switch
+  // may cancel them. See the listener comments below.
+  const pendingBlursRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   const flush = useCallback(() => {
     if (!sessionId || pendingRef.current.length === 0) return;
@@ -56,15 +60,35 @@ export function useIntegrityReporter(
   useEffect(() => {
     if (!sessionId) return;
 
+    // One tab switch fires BOTH `blur` and `visibilitychange`, so it used to
+    // land in the log twice — an info `focus_lost` next to a warning
+    // `tab_switch` — and a teacher reading the timeline saw two incidents
+    // where the candidate had done one thing.
+    //
+    // The two cases are only distinguishable by `document.hidden`, and that is
+    // not settled while `blur` is dispatching (engines differ on whether blur
+    // or visibilitychange comes first). So the blur decision waits one
+    // macrotask and then reads it: hidden means the blur WAS the tab switch
+    // and is dropped, visible means the window lost focus on its own — an
+    // alt-tab to another app, a devtools click — which is the only thing
+    // `focus_lost` is meant to record.
     function onVisibilityChange() {
-      if (document.hidden) {
-        enqueue({ event_type: "tab_switch", severity: "warning" });
-        onWarningRef.current?.("tab_switch");
-      }
+      if (!document.hidden) return;
+      // Any blur still pending belongs to this same switch. Drop them.
+      for (const handle of pendingBlursRef.current) clearTimeout(handle);
+      pendingBlursRef.current.clear();
+      enqueue({ event_type: "tab_switch", severity: "warning" });
+      onWarningRef.current?.("tab_switch");
     }
 
     function onBlur() {
-      enqueue({ event_type: "focus_lost", severity: "info" });
+      const handle = setTimeout(() => {
+        pendingBlursRef.current.delete(handle);
+        // visibilitychange already recorded this as a tab switch.
+        if (document.hidden) return;
+        enqueue({ event_type: "focus_lost", severity: "info" });
+      }, 0);
+      pendingBlursRef.current.add(handle);
     }
 
     function onFullscreenChange() {
@@ -84,6 +108,8 @@ export function useIntegrityReporter(
       window.removeEventListener("blur", onBlur);
       document.removeEventListener("fullscreenchange", onFullscreenChange);
       // Flush remaining events on unmount
+      for (const handle of pendingBlursRef.current) clearTimeout(handle);
+      pendingBlursRef.current.clear();
       if (timerRef.current) clearTimeout(timerRef.current);
       flush();
     };

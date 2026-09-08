@@ -19,13 +19,25 @@ vi.mock("@/lib/api/hooks/interviews", () => ({
 
 import { useIntegrityReporter } from "../use-integrity-reporter";
 
+/** Drive `document.hidden`, which jsdom exposes as a non-writable property. */
+function setHidden(value: boolean) {
+  Object.defineProperty(document, "hidden", { value, configurable: true });
+}
+
 describe("useIntegrityReporter", () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    // `document.hidden` is a property on the shared jsdom document, and two
+    // tests below set it true without putting it back. That leaked into every
+    // later test in the file — harmless while the blur handler ignored it, but
+    // it now reads it to tell a tab switch from a plain focus loss, so the
+    // leaked `true` silently stopped three tests from recording anything.
+    setHidden(false);
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    setHidden(false);
   });
 
   it("attaches DOM event listeners when session_id is set", () => {
@@ -113,10 +125,7 @@ describe("useIntegrityReporter", () => {
 
     // Trigger a visibility change event
     act(() => {
-      Object.defineProperty(document, "hidden", {
-        value: true,
-        configurable: true,
-      });
+      setHidden(true);
       document.dispatchEvent(new Event("visibilitychange"));
     });
 
@@ -161,10 +170,7 @@ describe("useIntegrityReporter", () => {
 
     // Simulate tab becoming hidden
     act(() => {
-      Object.defineProperty(document, "hidden", {
-        value: true,
-        configurable: true,
-      });
+      setHidden(true);
       document.dispatchEvent(new Event("visibilitychange"));
     });
 

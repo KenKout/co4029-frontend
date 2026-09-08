@@ -6,7 +6,7 @@ import { useFullscreenDeterrent } from "@/components/interview/use-fullscreen-de
 /**
  * The fullscreen deterrent policy, tested through the hook.
  *
- * `useInterviewFullscreen` (the browser-API layer underneath) is mocked, because
+ * `useAssessmentFullscreen` (the browser-API layer underneath) is mocked, because
  * jsdom has no Fullscreen API and what matters here is the policy on top: ask
  * once, count exits, and reset when the session ends.
  *
@@ -21,8 +21,8 @@ const enter = vi.fn(() => Promise.resolve(true));
 let onUnexpectedExit: (() => void) | undefined;
 const fullscreenState = { supported: true, isFullscreen: false };
 
-vi.mock("@/components/interview/use-interview-fullscreen", () => ({
-  useInterviewFullscreen: (
+vi.mock("@/lib/hooks/useAssessmentFullscreen", () => ({
+  useAssessmentFullscreen: (
     _active: boolean,
     opts?: { onUnexpectedExit?: () => void },
   ) => {
