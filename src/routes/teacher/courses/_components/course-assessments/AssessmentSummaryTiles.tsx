@@ -6,8 +6,9 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { StatCard } from "@/components/ui/stat-card";
+import { useTranslation } from "react-i18next";
 
-import { SummaryTile } from "./SummaryTile";
 import type { CourseAssessmentsController } from "./use-course-assessments-controller";
 
 /**
@@ -26,6 +27,7 @@ export function AssessmentSummaryTiles({
   controller: CourseAssessmentsController;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const {
     distinctStudents,
     quizAttempts,
@@ -36,30 +38,35 @@ export function AssessmentSummaryTiles({
   } = controller;
   return (
     <div className={cn("grid grid-cols-2 sm:grid-cols-4 gap-3", className)}>
-      <SummaryTile
+      <StatCard
         icon={Users}
-        label="Students assessed"
-        value={distinctStudents}
-        loading={quizzesLoading || interviewsLoading}
+        label={t("teacher_assessments.metrics.students")}
+        value={quizzesLoading || interviewsLoading ? "—" : distinctStudents}
+        className="p-4"
       />
-      <SummaryTile
+      <StatCard
         icon={ClipboardList}
-        label="Quiz attempts"
-        value={quizAttempts?.length ?? 0}
-        loading={quizzesLoading}
+        label={t("teacher_assessments.metrics.quiz_attempts")}
+        value={quizzesLoading ? "—" : (quizAttempts?.length ?? 0)}
+        className="p-4"
       />
-      <SummaryTile
+      <StatCard
         icon={CheckCircle2}
-        label="Quiz pass rate"
-        value={quizPassRate != null ? `${quizPassRate.toFixed(0)}%` : "—"}
-        loading={quizzesLoading}
-        tone="emerald"
+        label={t("teacher_assessments.metrics.pass_rate")}
+        value={
+          quizzesLoading
+            ? "—"
+            : quizPassRate != null
+              ? `${quizPassRate.toFixed(0)}%`
+              : "—"
+        }
+        className="p-4"
       />
-      <SummaryTile
+      <StatCard
         icon={MessageSquare}
-        label="Interview sessions"
-        value={interviewSessions?.length ?? 0}
-        loading={interviewsLoading}
+        label={t("teacher_assessments.metrics.interviews")}
+        value={interviewsLoading ? "—" : (interviewSessions?.length ?? 0)}
+        className="p-4"
       />
     </div>
   );

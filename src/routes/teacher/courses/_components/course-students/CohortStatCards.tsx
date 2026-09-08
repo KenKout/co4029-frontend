@@ -1,6 +1,7 @@
 import { AlertTriangle, Award, TrendingUp, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-import { cn } from "@/lib/utils";
+import { StatCard } from "@/components/ui/stat-card";
 
 import type { CourseStudentsController } from "./use-course-students-controller";
 
@@ -15,57 +16,48 @@ export function CohortStatCards({
 }: {
   controller: CourseStudentsController;
 }) {
+  const { t } = useTranslation();
   const { students, avgProgress, atRiskCount, completedCount } = controller;
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
       {[
         {
-          label: "Total",
+          label: t("teacher_course_students.stats.total"),
           value: String(students.length),
-          sub: "Enrolled",
+          sub: t("teacher_course_students.stats.enrolled"),
           icon: Users,
           cls: "",
         },
         {
-          label: "Avg Progress",
+          label: t("teacher_course_students.stats.avg_progress"),
           value: `${avgProgress}%`,
-          sub: "Cohort avg",
+          sub: t("teacher_course_students.stats.cohort_avg"),
           icon: TrendingUp,
           cls: "",
         },
         {
-          label: "At Risk",
+          label: t("teacher_course_students.stats.overall_risk"),
           value: String(atRiskCount),
-          sub: "Need attention",
+          sub: t("teacher_course_students.stats.need_attention"),
           icon: AlertTriangle,
           cls: atRiskCount > 0 ? "border-amber-200" : "",
         },
         {
-          label: "Completed",
+          label: t("teacher_course_students.stats.completed"),
           value: String(completedCount),
-          sub: "Finished",
+          sub: t("teacher_course_students.stats.finished"),
           icon: Award,
           cls: "",
         },
       ].map((s) => (
-        <div
+        <StatCard
           key={s.label}
-          className={cn(
-            "bg-m3-surface-container-lowest rounded-xl p-4 ghost-border shadow-editorial space-y-2",
-            s.cls,
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-              {s.label}
-            </span>
-            <s.icon className="h-4 w-4 text-m3-secondary" />
-          </div>
-          <div className="text-2xl font-headline font-black text-m3-primary">
-            {s.value}
-          </div>
-          <div className="text-xs text-m3-on-surface-variant">{s.sub}</div>
-        </div>
+          label={s.label}
+          value={s.value}
+          sublabel={s.sub}
+          icon={s.icon}
+          className={`p-4 ${s.cls}`}
+        />
       ))}
     </div>
   );

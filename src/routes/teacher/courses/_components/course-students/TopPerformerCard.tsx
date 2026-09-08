@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, UserX } from "lucide-react";
+import { ChevronRight, Trophy } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { avatarInitials } from "@/components/ui/avatar";
 
@@ -15,6 +16,7 @@ export function TopPerformerCard({
 }: {
   controller: CourseStudentsController;
 }) {
+  const { t } = useTranslation();
   const { students, courseId } = controller;
   const top = [...students].sort(
     (a, b) => b.progress_percent - a.progress_percent,
@@ -25,10 +27,10 @@ export function TopPerformerCard({
       params={{ courseId, studentId: top.student_id }}
       className="gradient-primary rounded-xl p-6 text-white relative overflow-hidden shadow-lg block hover:opacity-95 transition-opacity cursor-pointer"
     >
-      <UserX className="absolute -bottom-4 -right-4 h-24 w-24 text-white/10 pointer-events-none" />
+      <Trophy className="absolute -bottom-4 -right-4 h-24 w-24 text-white/10 pointer-events-none" />
       <div className="relative z-10 space-y-3">
         <h4 className="font-headline font-bold text-sm text-white/80 uppercase tracking-widest">
-          Top Performer
+          {t("teacher_course_students.highest_progress")}
         </h4>
         <div className="flex items-center gap-3">
           {top.avatar_url ? (
@@ -50,7 +52,8 @@ export function TopPerformerCard({
           </div>
         </div>
         <div className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white transition-colors">
-          View profile <ChevronRight className="h-3.5 w-3.5" />
+          {t("teacher_course_students.view_profile")}{" "}
+          <ChevronRight className="h-3.5 w-3.5" />
         </div>
       </div>
     </Link>

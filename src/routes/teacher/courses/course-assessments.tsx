@@ -1,4 +1,5 @@
 import { SectionHeader } from "@/components/ui/section-header";
+import { useTranslation } from "react-i18next";
 
 import { ActiveFilterChips } from "./_components/course-assessments/ActiveFilterChips";
 import { AssessmentFilterBar } from "./_components/course-assessments/AssessmentFilterBar";
@@ -19,45 +20,43 @@ import { CourseTabPanel } from "./_components/CourseTabPanel";
  * `_components/course-assessments/`.
  */
 export default function CourseAssessmentsPage() {
+  const { t } = useTranslation();
   const controller = useCourseAssessmentsController();
 
   return (
     <CourseTabPanel>
       <div>
         <SectionHeader
-          title="Assessments"
-          subtitle="Every quiz attempt and interview session in this course."
+          title={t("teacher_common.nav_assessments")}
+          subtitle={t("teacher_assessments.subtitle")}
         />
       </div>
 
-      {/* ── 12-col grid: main content + sticky summary sidebar ── */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* ── Main 8 cols ── */}
-        <div className="col-span-12 lg:col-span-8 space-y-6 min-w-0">
-          <AssessmentTabBar controller={controller} />
+      <AssessmentSummaryTiles controller={controller} />
 
-          <AssessmentFilterBar controller={controller} />
+      <div className="space-y-6 min-w-0">
+        <AssessmentTabBar controller={controller} />
 
-          {controller.activeChips.length > 0 && (
-            <ActiveFilterChips controller={controller} />
-          )}
+        <AssessmentFilterBar controller={controller} />
 
-          <p className="text-xs text-m3-on-surface-variant">
-            {controller.tab === "quizzes"
-              ? `Showing ${controller.filteredQuizAttempts.length} of ${controller.quizAttempts?.length ?? 0}`
-              : `Showing ${controller.filteredInterviewSessions.length} of ${controller.interviewSessions?.length ?? 0}`}
-          </p>
+        {controller.activeChips.length > 0 && (
+          <ActiveFilterChips controller={controller} />
+        )}
 
-          <AssessmentResultsPanel controller={controller} />
-        </div>
+        <p className="text-xs text-m3-on-surface-variant">
+          {t("teacher_assessments.showing", {
+            shown:
+              controller.tab === "quizzes"
+                ? controller.filteredQuizAttempts.length
+                : controller.filteredInterviewSessions.length,
+            total:
+              controller.tab === "quizzes"
+                ? (controller.quizAttempts?.length ?? 0)
+                : (controller.interviewSessions?.length ?? 0),
+          })}
+        </p>
 
-        {/* ── Sidebar 4 cols ── */}
-        <div className="col-span-12 lg:col-span-4 space-y-6 lg:sticky lg:top-24 self-start">
-          <AssessmentSummaryTiles
-            controller={controller}
-            className="lg:grid-cols-1"
-          />
-        </div>
+        <AssessmentResultsPanel controller={controller} />
       </div>
     </CourseTabPanel>
   );

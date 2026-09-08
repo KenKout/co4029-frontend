@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Archive,
   CheckCircle2,
@@ -15,6 +16,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteList } from "@/components/ui/InfiniteList";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -66,9 +68,10 @@ const DIFFICULTY_OPTIONS = [
   { value: "hard", label: "Hard" },
 ] as const;
 
-type ConfirmAction =
-  | { kind: "approve" | "archive" | "delete"; item: QuizQuestionBankItem }
-  | null;
+type ConfirmAction = {
+  kind: "approve" | "archive" | "delete";
+  item: QuizQuestionBankItem;
+} | null;
 
 function statusBadge(status: QuizQuestionBankStatus) {
   const classes = {
@@ -163,7 +166,11 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
         <span className="flex items-center gap-2 font-semibold">
           <Plus className="h-4 w-4" /> New Quiz bank question
         </span>
-        {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        {open ? (
+          <ChevronUp className="h-4 w-4" />
+        ) : (
+          <ChevronDown className="h-4 w-4" />
+        )}
       </Button>
       {open ? (
         <div className="space-y-3 border-t border-m3-outline-variant/20 p-4">
@@ -237,8 +244,14 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
             <Button type="button" variant="outline" onClick={reset}>
               Cancel
             </Button>
-            <Button type="button" onClick={() => void submit()} disabled={create.isPending}>
-              {create.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            <Button
+              type="button"
+              onClick={() => void submit()}
+              disabled={create.isPending}
+            >
+              {create.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Create draft
             </Button>
           </div>
@@ -249,6 +262,7 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
 }
 
 export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
+  const { t } = useTranslation();
   const [searchInput, setSearchInput] = useState("");
   const [status, setStatus] = useState("");
   const [questionType, setQuestionType] = useState("");
@@ -301,7 +315,9 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
           status: confirm.kind === "approve" ? "approved" : "archived",
         });
         toast.success(
-          confirm.kind === "approve" ? "Question approved" : "Question archived",
+          confirm.kind === "approve"
+            ? "Question approved"
+            : "Question archived",
         );
       }
       setConfirm(null);
@@ -326,7 +342,11 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
           />
         </div>
         <div className="grid gap-2 sm:grid-cols-3">
-          <Select value={status} onValueChange={setStatus} options={STATUS_OPTIONS} />
+          <Select
+            value={status}
+            onValueChange={setStatus}
+            options={STATUS_OPTIONS}
+          />
           <Select
             value={questionType}
             onValueChange={setQuestionType}
@@ -351,9 +371,12 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
           {(bank.error as Error).message}
         </div>
       ) : bank.items.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-m3-outline-variant/40 p-10 text-center text-sm text-m3-on-surface-variant">
-          No curated Quiz questions match these filters.
-        </div>
+        <EmptyState
+          icon={Search}
+          title={t("teacher_question_bank.quiz_empty_filtered_title")}
+          description={t("teacher_question_bank.quiz_empty_filtered_body")}
+          className="rounded-xl border border-dashed border-m3-outline-variant/40"
+        />
       ) : (
         <InfiniteList
           items={bank.items}
@@ -376,7 +399,9 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
                   </Badge>
                 ) : null}
                 {item.source_question_id ? (
-                  <span className="text-xs text-m3-on-surface-variant">Saved from a quiz</span>
+                  <span className="text-xs text-m3-on-surface-variant">
+                    Saved from a quiz
+                  </span>
                 ) : null}
               </div>
               {editing?.id === item.id ? (
@@ -386,15 +411,27 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
                   rows={3}
                 />
               ) : (
-                <p className="text-sm font-medium text-m3-on-surface">{item.prompt_text}</p>
+                <p className="text-sm font-medium text-m3-on-surface">
+                  {item.prompt_text}
+                </p>
               )}
               <div className="flex flex-wrap items-center gap-2">
                 {editing?.id === item.id ? (
                   <>
-                    <Button type="button" size="sm" variant="outline" onClick={() => setEditing(null)}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditing(null)}
+                    >
                       Cancel
                     </Button>
-                    <Button type="button" size="sm" onClick={() => void saveEdit()} disabled={update.isPending}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => void saveEdit()}
+                      disabled={update.isPending}
+                    >
                       Save
                     </Button>
                   </>

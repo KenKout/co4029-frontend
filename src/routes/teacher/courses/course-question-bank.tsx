@@ -56,8 +56,11 @@ export default function CourseQuestionBankPage() {
 
       <Tabs
         tabs={[
-          { key: "quiz", label: "Quiz questions" },
-          { key: "interview", label: "Interview questions" },
+          { key: "quiz", label: t("teacher_question_bank.quiz_questions") },
+          {
+            key: "interview",
+            label: t("teacher_question_bank.interview_questions"),
+          },
         ]}
         value={bankType}
         onChange={setBankType}

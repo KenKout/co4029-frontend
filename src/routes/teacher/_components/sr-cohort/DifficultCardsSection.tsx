@@ -1,6 +1,7 @@
 import { AlertTriangle, Info, Sparkles } from "lucide-react";
 
 import type { DifficultCardWithPrompt } from "@/lib/api/hooks/spaced-repetition";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import { DifficultCardRow } from "./DifficultCardRow";
 import type { TranslateFn } from "./types";
@@ -50,15 +51,12 @@ function DifficultColumnHeaders({ t }: { t: TranslateFn }) {
 
 function DifficultEmptyState({ t }: { t: TranslateFn }) {
   return (
-    <div className="px-6 py-12 flex flex-col items-center gap-3 text-center">
-      <AlertTriangle className="h-8 w-8 text-m3-on-surface-variant opacity-40" />
-      <p className="text-sm font-semibold text-m3-on-surface">
-        {t("teacher_sr_cohort.difficult_empty_title")}
-      </p>
-      <p className="text-xs text-m3-on-surface-variant">
-        {t("teacher_sr_cohort.difficult_empty_body")}
-      </p>
-    </div>
+    <EmptyState
+      icon={AlertTriangle}
+      title={t("teacher_sr_cohort.difficult_empty_title")}
+      description={t("teacher_sr_cohort.difficult_empty_body")}
+      className="py-12"
+    />
   );
 }
 

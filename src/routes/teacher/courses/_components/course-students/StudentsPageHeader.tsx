@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { AlertTriangle } from "lucide-react";
 
+import { SectionHeader } from "@/components/ui/section-header";
+
 import type { CourseStudentsController } from "./use-course-students-controller";
 
 /**
@@ -17,28 +19,23 @@ export function StudentsPageHeader({
   const { t } = useTranslation();
   const { students, activeCount, completedCount, atRiskCount } = controller;
   return (
-    <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-8 pt-2">
-      <div className="space-y-1">
-        <span className="text-m3-secondary font-headline font-bold text-xs tracking-widest uppercase">
-          Student Management
-        </span>
-        <h1 className="font-headline font-extrabold text-3xl lg:text-4xl text-m3-primary tracking-tight leading-tight">
-          {t("teacher_common.nav_students")}
-        </h1>
-        <p className="text-m3-on-surface-variant text-sm">
-          {students.length} enrolled &bull; {activeCount} active &bull;{" "}
-          {completedCount} completed
-        </p>
-      </div>
-
-      <div className="flex items-center gap-3 shrink-0">
-        {atRiskCount > 0 && (
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl px-4 py-2.5 text-sm font-semibold">
+    <SectionHeader
+      title={t("teacher_common.nav_students")}
+      subtitle={t("teacher_course_students.summary", {
+        enrolled: students.length,
+        active: activeCount,
+        completed: completedCount,
+      })}
+      action={
+        atRiskCount > 0 ? (
+          <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700">
             <AlertTriangle className="h-4 w-4" />
-            {atRiskCount} student{atRiskCount !== 1 ? "s" : ""} need attention
+            {t("teacher_course_students.overall_risk_count", {
+              count: atRiskCount,
+            })}
           </div>
-        )}
-      </div>
-    </div>
+        ) : null
+      }
+    />
   );
 }

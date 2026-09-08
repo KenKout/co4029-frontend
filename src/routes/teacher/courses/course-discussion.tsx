@@ -1,13 +1,15 @@
 import { type FormEvent, useState } from "react";
 import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Loader2, MessagesSquare, Pencil } from "lucide-react";
+import { Loader2, MessagesSquare, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { DiscussionTopicCard } from "@/components/discussion/DiscussionTopicCard";
 import { DiscussionThreadDialog } from "@/components/discussion/DiscussionThreadDialog";
 import { Button } from "@/components/ui/button";
-import { GlassCard } from "@/components/ui/glass-card";
+import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionHeader } from "@/components/ui/section-header";
 import { CourseTabPanel } from "./_components/CourseTabPanel";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,62 +34,89 @@ export default function CourseDiscussionPage() {
   const { courseId } = useParams({ strict: false }) as { courseId: string };
   const { data, isLoading, isError } = useCourseDiscussionTopics(courseId);
   const [openTopic, setOpenTopic] = useState<DiscussionTopic | null>(null);
+  const [composing, setComposing] = useState(false);
 
   const scope: DiscussionScope = { kind: "course", id: courseId };
   const topics = data?.topics ?? [];
 
   return (
     <CourseTabPanel>
-      <GlassCard className="p-6 sm:p-8">
-        {data?.can_manage && <NewCourseTopicForm courseId={courseId} />}
+      <SectionHeader
+        title={t("discussion.title")}
+        subtitle={t("discussion.course_subtitle")}
+        action={
+          data?.can_manage ? (
+            <Button
+              type="button"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setComposing((current) => !current)}
+              aria-expanded={composing}
+            >
+              <Plus className="h-4 w-4" />
+              {t("discussion.actions.new_topic")}
+            </Button>
+          ) : null
+        }
+      />
 
-        {isLoading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="h-5 w-5 animate-spin text-m3-on-surface-variant" />
-          </div>
-        ) : isError ? (
-          <p className="py-10 text-center text-sm text-m3-on-surface-variant">
-            {t("discussion.load_failed")}
-          </p>
-        ) : topics.length > 0 ? (
-          <div className="space-y-3">
-            {topics.map((topic) => (
-              <DiscussionTopicCard
-                key={topic.id}
-                topic={topic}
-                onOpen={setOpenTopic}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <MessagesSquare
-              className="h-8 w-8 text-m3-on-surface-variant"
-              aria-hidden="true"
+      <Card className="gap-0 py-0 shadow-editorial">
+        <CardContent className="p-6 sm:p-8">
+          {data?.can_manage && composing && (
+            <NewCourseTopicForm
+              courseId={courseId}
+              onDone={() => setComposing(false)}
             />
-            <p className="text-sm font-semibold text-m3-on-surface">
-              {t("discussion.empty_title")}
-            </p>
-            <p className="text-sm text-m3-on-surface-variant">
-              {t("discussion.empty_teacher")}
-            </p>
-          </div>
-        )}
+          )}
 
-        <DiscussionThreadDialog
-          topic={openTopic}
-          scope={scope}
-          open={openTopic !== null}
-          onOpenChange={(next) => {
-            if (!next) setOpenTopic(null);
-          }}
-        />
-      </GlassCard>
+          {isLoading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="h-5 w-5 animate-spin text-m3-on-surface-variant" />
+            </div>
+          ) : isError ? (
+            <p className="py-10 text-center text-sm text-m3-on-surface-variant">
+              {t("discussion.load_failed")}
+            </p>
+          ) : topics.length > 0 ? (
+            <div className="space-y-3">
+              {topics.map((topic) => (
+                <DiscussionTopicCard
+                  key={topic.id}
+                  topic={topic}
+                  onOpen={setOpenTopic}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={MessagesSquare}
+              title={t("discussion.empty_title")}
+              description={t("discussion.empty_teacher")}
+              className="py-12"
+            />
+          )}
+
+          <DiscussionThreadDialog
+            topic={openTopic}
+            scope={scope}
+            open={openTopic !== null}
+            onOpenChange={(next) => {
+              if (!next) setOpenTopic(null);
+            }}
+          />
+        </CardContent>
+      </Card>
     </CourseTabPanel>
   );
 }
 
-function NewCourseTopicForm({ courseId }: { courseId: string }) {
+function NewCourseTopicForm({
+  courseId,
+  onDone,
+}: {
+  courseId: string;
+  onDone: () => void;
+}) {
   const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -103,6 +132,7 @@ function NewCourseTopicForm({ courseId }: { courseId: string }) {
         onSuccess: () => {
           setTitle("");
           setBody("");
+          onDone();
           toast.success(t("discussion.topic_posted"));
         },
       },
@@ -110,7 +140,10 @@ function NewCourseTopicForm({ courseId }: { courseId: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 space-y-2">
+    <form
+      onSubmit={handleSubmit}
+      className="mb-6 space-y-2 rounded-xl border border-m3-outline-variant/30 bg-m3-surface-container-low p-4"
+    >
       <Input
         value={title}
         onChange={(e) => setTitle(e.target.value)}

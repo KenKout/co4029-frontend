@@ -2,6 +2,8 @@ import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
 
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 import { STATUS_FILTERS } from "./constants";
 import type { CourseStudentsController } from "./use-course-students-controller";
@@ -28,15 +30,14 @@ export function RosterFilterBar({
     setStatusFilter,
   } = controller;
   return (
-    <div className="bg-m3-surface-container-lowest rounded-xl p-5 ghost-border shadow-editorial space-y-4">
+    <Card className="gap-4 p-5 py-5 shadow-editorial">
       <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-m3-on-surface-variant/60" />
-        <input
-          type="text"
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-m3-on-surface-variant/60" />
+        <Input
           placeholder={t("teacher_common.search_students")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-m3-surface-container-low border border-m3-outline-variant/20 text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-m3-primary/20 transition-all"
+          className="pl-10"
         />
       </div>
 
@@ -56,6 +57,6 @@ export function RosterFilterBar({
                 : students.filter((s) => s.enrollment_status === f.key).length,
         }))}
       />
-    </div>
+    </Card>
   );
 }

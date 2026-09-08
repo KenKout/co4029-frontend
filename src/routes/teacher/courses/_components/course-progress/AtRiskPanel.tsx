@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import { AtRiskRow } from "./AtRiskRow";
 import type { CourseProgressController } from "./use-course-progress-controller";
@@ -56,15 +57,12 @@ export function AtRiskPanel({
           ))}
         </div>
       ) : !atRisk?.students.length ? (
-        <div className="px-6 py-10 text-center">
-          <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-          <p className="text-sm font-semibold text-m3-on-surface">
-            {t("teacher_progress.at_risk_empty_title")}
-          </p>
-          <p className="text-xs text-m3-on-surface-variant mt-1">
-            {t("teacher_progress.at_risk_empty_body")}
-          </p>
-        </div>
+        <EmptyState
+          icon={CheckCircle2}
+          title={t("teacher_progress.at_risk_empty_title")}
+          description={t("teacher_progress.at_risk_empty_body")}
+          className="py-10"
+        />
       ) : (
         <div className="divide-y divide-m3-outline-variant/10">
           {atRisk.students.map((s) => (

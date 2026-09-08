@@ -463,7 +463,43 @@
     }
   },
   "teacher_course_students": {
-    "manage_enrollments": "Quản lý ghi danh"
+    "manage_enrollments": "Quản lý ghi danh",
+    "summary": "{{enrolled}} đã ghi danh · {{active}} đang hoạt động · {{completed}} đã hoàn thành",
+    "overall_risk_count_one": "{{count}} học viên cần chú ý",
+    "overall_risk_count_other": "{{count}} học viên cần chú ý",
+    "highest_progress": "Tiến độ cao nhất",
+    "view_profile": "Xem hồ sơ",
+    "stats": {
+      "total": "Tổng số",
+      "enrolled": "Đã ghi danh",
+      "avg_progress": "Tiến độ TB",
+      "cohort_avg": "Trung bình lớp",
+      "overall_risk": "Rủi ro tổng thể",
+      "need_attention": "Cần chú ý",
+      "completed": "Đã hoàn thành",
+      "finished": "Hoàn tất"
+    }
+  },
+  "teacher_assessments": {
+    "subtitle": "Tất cả lượt làm bài kiểm tra và phiên phỏng vấn trong khóa học.",
+    "type_label": "Loại đánh giá",
+    "search_placeholder": "Lọc theo học viên hoặc tiêu đề…",
+    "showing": "Hiển thị {{shown}} trên {{total}}",
+    "empty": {
+      "quiz": "Chưa có lượt làm bài kiểm tra.",
+      "interview": "Chưa có lượt phỏng vấn.",
+      "filtered": "Không có lượt nào khớp bộ lọc."
+    },
+    "tabs": {
+      "quizzes": "Bài kiểm tra",
+      "interviews": "Phỏng vấn"
+    },
+    "metrics": {
+      "students": "Học viên đã đánh giá",
+      "quiz_attempts": "Lượt làm bài",
+      "pass_rate": "Tỷ lệ đạt",
+      "interviews": "Phiên phỏng vấn"
+    }
   },
   "teacher_courses_list": {
     "title": "Khóa học của tôi",
@@ -584,8 +620,12 @@
   },
   "teacher_question_bank": {
     "title": "Ngân hàng câu hỏi",
-    "subtitle": "Câu hỏi phỏng vấn tái sử dụng",
-    "subtitle_course": "Câu hỏi phỏng vấn tái sử dụng · {{course}}",
+    "subtitle": "Câu hỏi bài kiểm tra và phỏng vấn có thể tái sử dụng",
+    "subtitle_course": "Câu hỏi bài kiểm tra và phỏng vấn có thể tái sử dụng · {{course}}",
+    "quiz_questions": "Câu hỏi bài kiểm tra",
+    "interview_questions": "Câu hỏi phỏng vấn",
+    "quiz_empty_filtered_title": "Không có câu hỏi bài kiểm tra phù hợp",
+    "quiz_empty_filtered_body": "Hãy thử từ khóa khác hoặc mở rộng bộ lọc.",
     "search_placeholder": "Tìm câu hỏi hoặc câu trả lời…",
     "filter_type": "Loại",
     "filter_difficulty": "Độ khó",
@@ -613,6 +653,8 @@
     "stat_of_total": "/ {{total}}"
   },
   "teacher_common": {
+    "course_sections": "Các khu vực của khóa học",
+    "curriculum_workspace_subtitle": "Xây dựng và sắp xếp lộ trình học của khóa học.",
     "drag_to_reorder": "Kéo để sắp xếp",
     "delete_item": "Xóa mục",
     "delete_item_title": "Xóa mục này?",
@@ -1284,7 +1326,7 @@
       "avg_completion": "Hoàn thành TB",
       "total_time": "Tổng thời gian"
     },
-    "at_risk_title": "Sinh viên cần chú ý",
+    "at_risk_title": "Rủi ro tương tác",
     "at_risk_subtitle": "Không tương tác trong 7 ngày qua hoặc tiến độ dưới 30%.",
     "at_risk_count": "{{count}}",
     "at_risk_empty_title": "Tất cả đang theo kịp",
@@ -2573,11 +2615,11 @@
       "audience_title": "Đối tượng áp dụng",
       "audience_hint": "Các vai trò được nêu là một bên trong chính sách này. Để trống để hiển thị cho mọi người, kể cả khách chưa đăng nhập.",
       "versions_title": "Lịch sử phiên bản",
-    "versions_hint": "Chọn một bản đã xuất bản để xem ở chế độ chỉ đọc.",
-    "readonly_banner": "Đang xem một bản đã xuất bản (chỉ đọc). Chọn bản nháp hoặc bản hiện tại để tiếp tục chỉnh sửa.",
-    "fork_confirm_title": "Tạo phiên bản mới?",
-    "fork_confirm_body": "Nội dung bản đã xuất bản mới nhất sẽ được sao chép vào một bản nháp mới.",
-    "versions_current": "hiện tại",
+      "versions_hint": "Chọn một bản đã xuất bản để xem ở chế độ chỉ đọc.",
+      "readonly_banner": "Đang xem một bản đã xuất bản (chỉ đọc). Chọn bản nháp hoặc bản hiện tại để tiếp tục chỉnh sửa.",
+      "fork_confirm_title": "Tạo phiên bản mới?",
+      "fork_confirm_body": "Nội dung bản đã xuất bản mới nhất sẽ được sao chép vào một bản nháp mới.",
+      "versions_current": "hiện tại",
       "no_published_version": "Chưa từng xuất bản",
       "editor_title": "Bản nháp",
       "editor_hint": "Markdown. Tiêu đề mục dùng ## — trang người đọc sẽ định dạng thành từng phần.",
@@ -5322,8 +5364,7 @@
     "empty_body": "Chính sách đã xuất bản sẽ xuất hiện tại đây.",
     "empty_filtered_title": "Không có chính sách phù hợp",
     "empty_filtered_body": "Thử từ khoá hoặc nhóm khác."
-  }
-,
+  },
   "discussion": {
     "course_section_title": "Thảo luận khóa học",
     "open_topic": "Mở thảo luận: {{title}}",
@@ -5337,6 +5378,7 @@
     "reply_placeholder": "Trả lời {{name}}…",
     "send": "Gửi",
     "title": "Thảo luận",
+    "course_subtitle": "Khởi tạo trao đổi và giải đáp câu hỏi cùng học viên.",
     "unknown_author": "Không rõ",
     "comment_count_one": "{{count}} bình luận",
     "comment_count_other": "{{count}} bình luận",

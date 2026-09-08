@@ -140,7 +140,7 @@ export default function CourseShell() {
       <Tabs
         variant="outlined"
         value={activeSegment}
-        ariaLabel={t("teacher_common.section_curriculum")}
+        ariaLabel={t("teacher_common.course_sections")}
         linkTo={(segment) => ({
           to: TABS.find((tab) => tab.segment === segment)!.to,
           params: { courseId },

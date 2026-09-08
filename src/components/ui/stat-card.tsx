@@ -2,23 +2,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { type LucideIcon } from "lucide-react";
 
-const statCardVariants = cva(
-  "rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg",
-  {
-    variants: {
-      variant: {
-        default:
-          "bg-card shadow-editorial ghost-border hover:border-border-strong",
-        primary: "gradient-primary text-white hover:shadow-ai-glow",
-        glow: "bg-card shadow-ai-glow ghost-border",
-        surface: "bg-m3-surface-container-low",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
+const statCardVariants = cva("rounded-xl p-5", {
+  variants: {
+    variant: {
+      default: "bg-card shadow-editorial ghost-border",
+      primary: "gradient-primary text-white",
+      glow: "bg-card shadow-ai-glow ghost-border",
+      surface: "bg-m3-surface-container-low",
     },
   },
-);
+  defaultVariants: {
+    variant: "default",
+  },
+});
 
 interface StatCardProps extends VariantProps<typeof statCardVariants> {
   label: string;
@@ -26,6 +22,8 @@ interface StatCardProps extends VariantProps<typeof statCardVariants> {
   sublabel?: string;
   icon?: LucideIcon;
   trend?: { value: number; positive: boolean };
+  /** Adds lift/hover affordance only when the card is actually interactive. */
+  interactive?: boolean;
   className?: string;
 }
 
@@ -36,12 +34,20 @@ export function StatCard({
   icon: Icon,
   trend,
   variant,
+  interactive = false,
   className,
 }: StatCardProps) {
   const isPrimary = variant === "primary";
 
   return (
-    <div className={cn(statCardVariants({ variant }), className)}>
+    <div
+      className={cn(
+        statCardVariants({ variant }),
+        interactive &&
+          "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-border-strong",
+        className,
+      )}
+    >
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <p

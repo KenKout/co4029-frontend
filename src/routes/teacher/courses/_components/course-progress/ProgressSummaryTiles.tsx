@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, Clock, TrendingUp, Users } from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
 
 import { formatHours } from "./helpers";
-import { SummaryTile } from "./SummaryTile";
 import type { CourseProgressController } from "./use-course-progress-controller";
 
 /**
@@ -18,30 +18,29 @@ export function ProgressSummaryTiles({
   const { summary, cohortLoading } = controller;
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <SummaryTile
+      <StatCard
         icon={Users}
         label={t("teacher_progress.tiles.enrolled")}
-        value={summary.total}
-        loading={cohortLoading}
+        value={cohortLoading ? "—" : summary.total}
+        className="p-4"
       />
-      <SummaryTile
+      <StatCard
         icon={CheckCircle2}
         label={t("teacher_progress.tiles.completed")}
-        value={summary.completed}
-        loading={cohortLoading}
-        tone="emerald"
+        value={cohortLoading ? "—" : summary.completed}
+        className="p-4"
       />
-      <SummaryTile
+      <StatCard
         icon={TrendingUp}
         label={t("teacher_progress.tiles.avg_completion")}
-        value={`${summary.avgCompletion.toFixed(0)}%`}
-        loading={cohortLoading}
+        value={cohortLoading ? "—" : `${summary.avgCompletion.toFixed(0)}%`}
+        className="p-4"
       />
-      <SummaryTile
+      <StatCard
         icon={Clock}
         label={t("teacher_progress.tiles.total_time")}
-        value={formatHours(summary.totalHours)}
-        loading={cohortLoading}
+        value={cohortLoading ? "—" : formatHours(summary.totalHours)}
+        className="p-4"
       />
     </div>
   );

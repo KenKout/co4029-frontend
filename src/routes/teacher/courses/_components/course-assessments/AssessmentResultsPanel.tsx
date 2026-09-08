@@ -2,6 +2,7 @@ import {
   InterviewSessionsTable,
   QuizAttemptsTable,
 } from "@/routes/teacher/_components/assessment-tables";
+import { useTranslation } from "react-i18next";
 
 import type { CourseAssessmentsController } from "./use-course-assessments-controller";
 
@@ -15,6 +16,7 @@ export function AssessmentResultsPanel({
 }: {
   controller: CourseAssessmentsController;
 }) {
+  const { t } = useTranslation();
   const {
     tab,
     navigate,
@@ -35,8 +37,8 @@ export function AssessmentResultsPanel({
           showStudentColumn
           emptyState={
             (quizAttempts?.length ?? 0) === 0
-              ? "No quiz attempts yet."
-              : "No attempts match your filters."
+              ? t("teacher_assessments.empty.quiz")
+              : t("teacher_assessments.empty.filtered")
           }
           onRowClick={(a) =>
             void navigate({
@@ -52,8 +54,8 @@ export function AssessmentResultsPanel({
           showStudentColumn
           emptyState={
             (interviewSessions?.length ?? 0) === 0
-              ? "No interview attempts yet."
-              : "No attempts match your filters."
+              ? t("teacher_assessments.empty.interview")
+              : t("teacher_assessments.empty.filtered")
           }
           onRowClick={(s) =>
             void navigate({

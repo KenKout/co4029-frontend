@@ -1,6 +1,7 @@
 import { Brain, Info, Users } from "lucide-react";
 
 import type { CohortKrResponse } from "@/lib/api/types";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import { CohortHistogram } from "./CohortHistogram";
 import type { LessonOption, TranslateFn } from "./types";
@@ -45,17 +46,12 @@ function CohortSectionHeader({
 
 function NoKrData({ t }: { t: TranslateFn }) {
   return (
-    <div className="rounded-xl border-2 border-dashed border-m3-outline-variant flex flex-col items-center justify-center gap-3 py-12 text-center">
-      <div className="w-12 h-12 rounded-xl bg-m3-primary-fixed flex items-center justify-center">
-        <Brain className="h-6 w-6 text-m3-primary" />
-      </div>
-      <p className="text-sm font-semibold text-m3-on-surface">
-        {t("teacher_sr_cohort.no_kr_data_title")}
-      </p>
-      <p className="text-xs text-m3-on-surface-variant max-w-md">
-        {t("teacher_sr_cohort.no_kr_data_body")}
-      </p>
-    </div>
+    <EmptyState
+      icon={Brain}
+      title={t("teacher_sr_cohort.no_kr_data_title")}
+      description={t("teacher_sr_cohort.no_kr_data_body")}
+      className="rounded-xl border border-dashed border-m3-outline-variant/50 py-12"
+    />
   );
 }
 

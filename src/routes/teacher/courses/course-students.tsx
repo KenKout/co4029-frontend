@@ -36,9 +36,9 @@ export default function CourseStudentsPage() {
         {/* ── Sidebar 4 cols ── */}
         <div className="col-span-12 lg:col-span-4 space-y-6 lg:sticky lg:top-24 self-start">
           <CohortOverviewCard controller={controller} />
-          {controller.students.length > 0 && (
-            <TopPerformerCard controller={controller} />
-          )}
+          {controller.students.some(
+            (student) => student.progress_percent > 0,
+          ) && <TopPerformerCard controller={controller} />}
         </div>
       </div>
     </CourseTabPanel>

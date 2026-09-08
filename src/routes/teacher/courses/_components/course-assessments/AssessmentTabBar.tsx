@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Tabs } from "@/components/ui/tabs";
+import { useTranslation } from "react-i18next";
 
 import type { Tab } from "./types";
 import type { CourseAssessmentsController } from "./use-course-assessments-controller";
@@ -14,34 +15,30 @@ export function AssessmentTabBar({
 }: {
   controller: CourseAssessmentsController;
 }) {
+  const { t } = useTranslation();
   const { tab, setTab, setTitleFilter, search, setSearch } = controller;
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex gap-2">
-        {(["quizzes", "interviews"] as Tab[]).map((key) => (
-          <Button variant="ghost"
-            key={key}
-            type="button"
-            onClick={() => {
-              setTab(key);
-              // Titles differ between tabs, so a title selection from the
-              // other tab would filter everything out — reset on switch.
-              setTitleFilter("all");
-            }}
-            className={
-              tab === key
-                ? "px-4 py-1.5 rounded-full text-sm font-medium bg-m3-primary text-white transition-colors h-auto whitespace-normal"
-                : "px-4 py-1.5 rounded-full text-sm font-medium bg-m3-surface-container text-m3-on-surface-variant hover:bg-m3-surface-container-high transition-colors h-auto whitespace-normal"
-            }
-          >
-            {key === "quizzes" ? "Quizzes" : "Interviews"}
-          </Button>
-        ))}
-      </div>
+      <Tabs<Tab>
+        tabs={[
+          { key: "quizzes", label: t("teacher_assessments.tabs.quizzes") },
+          {
+            key: "interviews",
+            label: t("teacher_assessments.tabs.interviews"),
+          },
+        ]}
+        value={tab}
+        variant="contained"
+        ariaLabel={t("teacher_assessments.type_label")}
+        onChange={(key) => {
+          setTab(key);
+          setTitleFilter("all");
+        }}
+      />
       <Input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Filter by student or title…"
+        placeholder={t("teacher_assessments.search_placeholder")}
         className="max-w-xs h-9"
       />
     </div>

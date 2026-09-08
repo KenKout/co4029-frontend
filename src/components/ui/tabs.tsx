@@ -114,7 +114,7 @@ export function Tabs<T extends string>(props: TabsProps<T>) {
 
   const strip = (
     <div
-      role={isLink ? undefined : "tablist"}
+      role={isLink ? "navigation" : "tablist"}
       aria-label={ariaLabel}
       data-shortcut="tabs"
       className={cn(

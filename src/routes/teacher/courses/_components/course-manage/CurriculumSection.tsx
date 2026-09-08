@@ -17,7 +17,7 @@ export function CurriculumSection({
 }) {
   const { isLoading, modules } = controller;
   return (
-    <section className="space-y-2">
+    <section className="space-y-3">
       <CurriculumHeader controller={controller} />
 
       {isLoading ? (
