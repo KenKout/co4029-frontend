@@ -8,6 +8,7 @@ import { DiscussionTopicCard } from "@/components/discussion/DiscussionTopicCard
 import { DiscussionThreadDialog } from "@/components/discussion/DiscussionThreadDialog";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
+import { CourseTabPanel } from "./_components/CourseTabPanel";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -36,51 +37,53 @@ export default function CourseDiscussionPage() {
   const topics = data?.topics ?? [];
 
   return (
-    <GlassCard className="p-6 sm:p-8">
-      {data?.can_manage && <NewCourseTopicForm courseId={courseId} />}
+    <CourseTabPanel>
+      <GlassCard className="p-6 sm:p-8">
+        {data?.can_manage && <NewCourseTopicForm courseId={courseId} />}
 
-      {isLoading ? (
-        <div className="flex justify-center py-10">
-          <Loader2 className="h-5 w-5 animate-spin text-m3-on-surface-variant" />
-        </div>
-      ) : isError ? (
-        <p className="py-10 text-center text-sm text-m3-on-surface-variant">
-          {t("discussion.load_failed")}
-        </p>
-      ) : topics.length > 0 ? (
-        <div className="space-y-3">
-          {topics.map((topic) => (
-            <DiscussionTopicCard
-              key={topic.id}
-              topic={topic}
-              onOpen={setOpenTopic}
+        {isLoading ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="h-5 w-5 animate-spin text-m3-on-surface-variant" />
+          </div>
+        ) : isError ? (
+          <p className="py-10 text-center text-sm text-m3-on-surface-variant">
+            {t("discussion.load_failed")}
+          </p>
+        ) : topics.length > 0 ? (
+          <div className="space-y-3">
+            {topics.map((topic) => (
+              <DiscussionTopicCard
+                key={topic.id}
+                topic={topic}
+                onOpen={setOpenTopic}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+            <MessagesSquare
+              className="h-8 w-8 text-m3-on-surface-variant"
+              aria-hidden="true"
             />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-          <MessagesSquare
-            className="h-8 w-8 text-m3-on-surface-variant"
-            aria-hidden="true"
-          />
-          <p className="text-sm font-semibold text-m3-on-surface">
-            {t("discussion.empty_title")}
-          </p>
-          <p className="text-sm text-m3-on-surface-variant">
-            {t("discussion.empty_teacher")}
-          </p>
-        </div>
-      )}
+            <p className="text-sm font-semibold text-m3-on-surface">
+              {t("discussion.empty_title")}
+            </p>
+            <p className="text-sm text-m3-on-surface-variant">
+              {t("discussion.empty_teacher")}
+            </p>
+          </div>
+        )}
 
-      <DiscussionThreadDialog
-        topic={openTopic}
-        scope={scope}
-        open={openTopic !== null}
-        onOpenChange={(next) => {
-          if (!next) setOpenTopic(null);
-        }}
-      />
-    </GlassCard>
+        <DiscussionThreadDialog
+          topic={openTopic}
+          scope={scope}
+          open={openTopic !== null}
+          onOpenChange={(next) => {
+            if (!next) setOpenTopic(null);
+          }}
+        />
+      </GlassCard>
+    </CourseTabPanel>
   );
 }
 

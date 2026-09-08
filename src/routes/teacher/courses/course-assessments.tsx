@@ -6,6 +6,7 @@ import { AssessmentResultsPanel } from "./_components/course-assessments/Assessm
 import { AssessmentSummaryTiles } from "./_components/course-assessments/AssessmentSummaryTiles";
 import { AssessmentTabBar } from "./_components/course-assessments/AssessmentTabBar";
 import { useCourseAssessmentsController } from "./_components/course-assessments/use-course-assessments-controller";
+import { CourseTabPanel } from "./_components/CourseTabPanel";
 
 /** Course-wide "Assessments" tab: every quiz attempt + interview session
  * across the whole course, in one place. Sibling to Progress / Students /
@@ -21,8 +22,8 @@ export default function CourseAssessmentsPage() {
   const controller = useCourseAssessmentsController();
 
   return (
-    <div className="min-h-screen pb-12">
-      <div className="pt-2">
+    <CourseTabPanel>
+      <div>
         <SectionHeader
           title="Assessments"
           subtitle="Every quiz attempt and interview session in this course."
@@ -30,7 +31,7 @@ export default function CourseAssessmentsPage() {
       </div>
 
       {/* ── 12-col grid: main content + sticky summary sidebar ── */}
-      <div className="mt-6 grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-12 gap-6">
         {/* ── Main 8 cols ── */}
         <div className="col-span-12 lg:col-span-8 space-y-6 min-w-0">
           <AssessmentTabBar controller={controller} />
@@ -58,6 +59,6 @@ export default function CourseAssessmentsPage() {
           />
         </div>
       </div>
-    </div>
+    </CourseTabPanel>
   );
 }

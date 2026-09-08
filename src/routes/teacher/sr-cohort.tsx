@@ -15,6 +15,7 @@ import {
 } from "./_components/sr-cohort/CohortPageHeader";
 import { DifficultCardsSection } from "./_components/sr-cohort/DifficultCardsSection";
 import { useAllLessonsForCourse } from "./_components/sr-cohort/use-all-lessons";
+import { CourseTabPanel } from "@/routes/teacher/courses/_components/CourseTabPanel";
 
 /**
  * Cohort spaced-repetition view for one lesson: knowledge-retention histogram
@@ -55,7 +56,7 @@ export default function TeacherSrCohortPage() {
     cohort?.histogram?.reduce((acc, b) => acc + b.count, 0) ?? 0;
 
   return (
-    <div className="min-h-screen pb-12">
+    <CourseTabPanel>
       <CohortPageHeader courseId={courseId} t={t} />
 
       {/* ── 12-col grid: histogram + difficult cards main, sticky lesson
@@ -64,7 +65,7 @@ export default function TeacherSrCohortPage() {
           narrow screens it stacks FIRST (order-1) — if it came after the
           content, users would scroll past the histogram just to switch
           lessons. ── */}
-      <div className="mt-6 grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-12 gap-6">
         {/* ── Main 8 cols ── */}
         <div className="col-span-12 lg:col-span-8 order-2 lg:order-1 space-y-6 min-w-0">
           <CohortKrSection
@@ -94,6 +95,6 @@ export default function TeacherSrCohortPage() {
           />
         </div>
       </div>
-    </div>
+    </CourseTabPanel>
   );
 }

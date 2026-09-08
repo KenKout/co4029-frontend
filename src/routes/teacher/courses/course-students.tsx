@@ -5,6 +5,7 @@ import { RosterTable } from "./_components/course-students/RosterTable";
 import { StudentsPageHeader } from "./_components/course-students/StudentsPageHeader";
 import { TopPerformerCard } from "./_components/course-students/TopPerformerCard";
 import { useCourseStudentsController } from "./_components/course-students/use-course-students-controller";
+import { CourseTabPanel } from "./_components/CourseTabPanel";
 
 /**
  * Course Students (roster) tab. Cohort stats, a searchable/sortable roster and
@@ -19,7 +20,7 @@ export default function CourseStudentsPage() {
   const controller = useCourseStudentsController();
 
   return (
-    <div className="w-full pb-16">
+    <CourseTabPanel>
       {/* ── Header ── (course title + tabs live in the shell above) */}
       <StudentsPageHeader controller={controller} />
 
@@ -40,6 +41,6 @@ export default function CourseStudentsPage() {
           )}
         </div>
       </div>
-    </div>
+    </CourseTabPanel>
   );
 }

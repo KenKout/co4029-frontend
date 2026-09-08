@@ -21,6 +21,7 @@ import { useQuestionBankDerived } from "./_components/course-question-bank/use-q
 import { useQuestionBankEditor } from "./_components/course-question-bank/use-question-bank-editor";
 import { useQuestionBankFilters } from "./_components/course-question-bank/use-question-bank-filters";
 import { useQuestionBankViewState } from "./_components/course-question-bank/use-question-bank-view-state";
+import { CourseTabPanel } from "./_components/CourseTabPanel";
 
 /**
  * Course-level Question Bank management page (§QBank-2). Browse / search /
@@ -50,7 +51,7 @@ export default function CourseQuestionBankPage() {
   const controllers = { filters, editor, deletion, view };
 
   return (
-    <div className="w-full py-6 space-y-5">
+    <CourseTabPanel>
       <QuestionBankHeader course={course} />
 
       <Tabs
@@ -89,10 +90,7 @@ export default function CourseQuestionBankPage() {
           {/* ── Sidebar 4 cols ── */}
           <div className="col-span-12 lg:col-span-4 space-y-5 lg:sticky lg:top-24 self-start">
             {derived.hasItems && (
-              <QuestionBankStats
-                derived={derived}
-                className="lg:grid-cols-1"
-              />
+              <QuestionBankStats derived={derived} className="lg:grid-cols-1" />
             )}
           </div>
         </div>
@@ -101,6 +99,6 @@ export default function CourseQuestionBankPage() {
       {bankType === "interview" ? (
         <DeleteQuestionDialog deletion={deletion} />
       ) : null}
-    </div>
+    </CourseTabPanel>
   );
 }

@@ -4,6 +4,7 @@ import { AtRiskPanel } from "./_components/course-progress/AtRiskPanel";
 import { ProgressSummaryTiles } from "./_components/course-progress/ProgressSummaryTiles";
 import { RosterProgressTable } from "./_components/course-progress/RosterProgressTable";
 import { useCourseProgressController } from "./_components/course-progress/use-course-progress-controller";
+import { CourseTabPanel } from "./_components/CourseTabPanel";
 
 /**
  * Course Progress tab: cohort summary tiles, the at-risk panel and the full
@@ -19,8 +20,8 @@ export default function TeacherCourseProgressPage() {
   const { t } = controller;
 
   return (
-    <div className="min-h-screen pb-12">
-      <div className="pt-2">
+    <CourseTabPanel>
+      <div>
         <SectionHeader
           title={t("teacher_progress.title")}
           subtitle={t("teacher_progress.subtitle")}
@@ -28,7 +29,7 @@ export default function TeacherCourseProgressPage() {
       </div>
 
       {/* ── 12-col grid: main content + sticky at-risk sidebar ── */}
-      <div className="mt-6 grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-12 gap-6">
         {/* ── Main 8 cols ── */}
         <div className="col-span-12 lg:col-span-8 space-y-6 min-w-0">
           {/* Summary tiles */}
@@ -43,6 +44,6 @@ export default function TeacherCourseProgressPage() {
           <AtRiskPanel controller={controller} />
         </div>
       </div>
-    </div>
+    </CourseTabPanel>
   );
 }

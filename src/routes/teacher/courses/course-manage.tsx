@@ -2,6 +2,7 @@ import { CourseSettingsPanel } from "@/routes/teacher/_components/course-manage/
 
 import { CurriculumSection } from "./_components/course-manage/CurriculumSection";
 import { useCourseManageController } from "./_components/course-manage/use-course-manage-controller";
+import { CourseTabPanel } from "./_components/CourseTabPanel";
 
 /**
  * Teacher course-management page: the curriculum, plus the slice of course
@@ -21,7 +22,7 @@ export default function CourseManagePage() {
   const { courseId } = controller;
 
   return (
-    <div className="space-y-6 pb-12">
+    <CourseTabPanel>
       {/* Course Settings — the panel carries its own titled, collapsible
           header (icon + "Course Settings" + status summary), so an outer
           <h2> here just duplicated that title. Panel stands alone. */}
@@ -29,7 +30,6 @@ export default function CourseManagePage() {
 
       {/* Curriculum */}
       <CurriculumSection controller={controller} />
-
-    </div>
+    </CourseTabPanel>
   );
 }
