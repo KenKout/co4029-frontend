@@ -5325,6 +5325,17 @@
   }
 ,
   "discussion": {
+    "course_section_title": "Thảo luận khóa học",
+    "open_topic": "Mở thảo luận: {{title}}",
+    "replies_count_one": "{{count}} trả lời",
+    "replies_count_other": "{{count}} trả lời",
+    "mentions_badge_one": "{{count}} trả lời cho bạn",
+    "mentions_badge_other": "{{count}} trả lời cho bạn",
+    "closed_badge": "Đã đóng bình luận",
+    "reply": "Trả lời",
+    "replying_to": "Đang trả lời {{name}}",
+    "reply_placeholder": "Trả lời {{name}}…",
+    "send": "Gửi",
     "title": "Thảo luận",
     "unknown_author": "Không rõ",
     "comment_count_one": "{{count}} bình luận",

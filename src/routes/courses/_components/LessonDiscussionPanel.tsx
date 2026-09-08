@@ -113,7 +113,7 @@ function CommentRow({
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(comment.body);
-  const del = useDeleteComment(topicId, lessonId);
+  const del = useDeleteComment(topicId, { kind: "lesson", id: lessonId });
   const update = useUpdateComment(topicId);
   const { confirm, dialog } = useConfirm();
 
@@ -265,7 +265,7 @@ function CommentComposer({
 }) {
   const { t } = useTranslation();
   const [body, setBody] = useState("");
-  const create = useCreateComment(topicId, lessonId);
+  const create = useCreateComment(topicId, { kind: "lesson", id: lessonId });
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -409,7 +409,11 @@ function TopicCard({
 
   return (
     <div className="rounded-xl border border-m3-outline-variant/40 bg-m3-surface-container-lowest">
-      <TopicHeader topic={topic} open={open} onToggle={() => setOpen((v) => !v)} />
+      <TopicHeader
+        topic={topic}
+        open={open}
+        onToggle={() => setOpen((v) => !v)}
+      />
       {open && (
         <TopicBody
           topic={topic}
@@ -463,9 +467,12 @@ function TopicHeader({
   }
 
   return (
-    <Button variant="ghost"
+    <Button
+      variant="ghost"
       type="button"
-      onClick={() => { if (!titleEditing) onToggle(); }}
+      onClick={() => {
+        if (!titleEditing) onToggle();
+      }}
       className="flex w-full items-start gap-3 p-4 text-left h-auto whitespace-normal"
     >
       <div className="mt-0.5 shrink-0 text-m3-primary">
@@ -512,7 +519,11 @@ function TopicHeader({
                   startEditing();
                 }
               }}
-              title={topic.can_manage ? t("discussion.actions.edit_topic") : undefined}
+              title={
+                topic.can_manage
+                  ? t("discussion.actions.edit_topic")
+                  : undefined
+              }
               className={cn(
                 "font-headline text-sm font-bold text-m3-on-surface",
                 topic.can_manage &&

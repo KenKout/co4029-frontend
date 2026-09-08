@@ -57,7 +57,10 @@ export const queryKeys = {
   },
 
   discussions: {
-    topics: (lessonId: string) => ["discussions", "topics", lessonId] as const,
+    // Keyed by SCOPE as well as id: a lesson and a course can share neither
+    // list nor invalidation, and a bare id would collide across the two.
+    topics: (scope: "lesson" | "course", scopeId: string) =>
+      ["discussions", "topics", scope, scopeId] as const,
     comments: (topicId: string) =>
       ["discussions", "comments", topicId] as const,
   },

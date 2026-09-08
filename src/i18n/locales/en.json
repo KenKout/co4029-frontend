@@ -2927,6 +2927,17 @@
   }
 ,
   "discussion": {
+    "course_section_title": "Course discussion",
+    "open_topic": "Open discussion: {{title}}",
+    "replies_count_one": "{{count}} reply",
+    "replies_count_other": "{{count}} replies",
+    "mentions_badge_one": "{{count}} reply to you",
+    "mentions_badge_other": "{{count}} replies to you",
+    "closed_badge": "Closed for new comments",
+    "reply": "Reply",
+    "replying_to": "Replying to {{name}}",
+    "reply_placeholder": "Reply to {{name}}…",
+    "send": "Send",
     "title": "Discussion",
     "unknown_author": "Unknown",
     "comment_count_one": "{{count}} comment",

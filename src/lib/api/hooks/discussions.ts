@@ -7,15 +7,57 @@ import type {
   DiscussionTopicList,
 } from "../types";
 
+/**
+ * Which board a topic belongs to. Every comment mutation needs it so it can
+ * refresh the right topic list (reply/mention counts live on the card), and
+ * a lesson id and a course id are indistinguishable as bare strings.
+ */
+export interface DiscussionScope {
+  kind: "lesson" | "course";
+  id: string;
+}
+
+/** Topic-list key for a scope — the one place the two boards converge. */
+function topicsKey(scope: DiscussionScope) {
+  return queryKeys.discussions.topics(scope.kind, scope.id);
+}
+
 // ── Topics ──────────────────────────────────────────────────────────────
 
 /** Topics on a lesson + whether the viewer may manage (post/edit/close). */
 export function useLessonDiscussionTopics(lessonId: string | null | undefined) {
   return useQuery({
-    queryKey: queryKeys.discussions.topics(lessonId ?? ""),
+    queryKey: queryKeys.discussions.topics("lesson", lessonId ?? ""),
     queryFn: () =>
       apiFetch<DiscussionTopicList>(`/lessons/${lessonId}/discussion/topics`),
     enabled: !!lessonId,
+  });
+}
+
+/**
+ * Course-wide topics. The server admits enrolled students and course
+ * managers; a caller who is neither gets 404 rather than an empty list, so
+ * the section stays hidden instead of rendering an empty board.
+ */
+export function useCourseDiscussionTopics(courseId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.discussions.topics("course", courseId ?? ""),
+    queryFn: () =>
+      apiFetch<DiscussionTopicList>(`/courses/${courseId}/discussion/topics`),
+    enabled: !!courseId,
+  });
+}
+
+export function useCreateCourseDiscussionTopic(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { title: string; body_markdown?: string | null }) =>
+      apiPost<DiscussionTopic>(`/courses/${courseId}/discussion/topics`, body),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: queryKeys.discussions.topics("course", courseId),
+      });
+    },
   });
 }
 
@@ -26,7 +68,7 @@ export function useCreateDiscussionTopic(lessonId: string) {
       apiPost<DiscussionTopic>(`/lessons/${lessonId}/discussion/topics`, body),
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: queryKeys.discussions.topics(lessonId),
+        queryKey: queryKeys.discussions.topics("lesson", lessonId),
       });
     },
   });
@@ -46,7 +88,7 @@ export function useUpdateDiscussionTopic(lessonId: string) {
     }) => apiPatch<DiscussionTopic>(`/discussion/topics/${topicId}`, body),
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: queryKeys.discussions.topics(lessonId),
+        queryKey: queryKeys.discussions.topics("lesson", lessonId),
       });
     },
   });
@@ -58,7 +100,7 @@ export function useDeleteDiscussionTopic(lessonId: string) {
     mutationFn: (topicId: string) => apiDelete(`/discussion/topics/${topicId}`),
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: queryKeys.discussions.topics(lessonId),
+        queryKey: queryKeys.discussions.topics("lesson", lessonId),
       });
     },
   });
@@ -75,10 +117,12 @@ export function useTopicComments(topicId: string | null | undefined) {
   });
 }
 
-export function useCreateComment(topicId: string, lessonId: string) {
+export function useCreateComment(topicId: string, scope: DiscussionScope) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { body: string }) =>
+    // `parent_comment_id` makes it a reply — and a reply is the only way to
+    // name someone, so it is also what earns the recipient's mention badge.
+    mutationFn: (body: { body: string; parent_comment_id?: string | null }) =>
       apiPost<DiscussionComment>(
         `/discussion/topics/${topicId}/comments`,
         body,
@@ -87,10 +131,8 @@ export function useCreateComment(topicId: string, lessonId: string) {
       qc.invalidateQueries({
         queryKey: queryKeys.discussions.comments(topicId),
       });
-      // Refresh the topic list so the comment_count badge updates.
-      qc.invalidateQueries({
-        queryKey: queryKeys.discussions.topics(lessonId),
-      });
+      // Refresh the topic list so the reply and mention counts update.
+      qc.invalidateQueries({ queryKey: topicsKey(scope) });
     },
   });
 }
@@ -110,7 +152,7 @@ export function useUpdateComment(topicId: string) {
   });
 }
 
-export function useDeleteComment(topicId: string, lessonId: string) {
+export function useDeleteComment(topicId: string, scope: DiscussionScope) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (commentId: string) =>
@@ -119,9 +161,7 @@ export function useDeleteComment(topicId: string, lessonId: string) {
       qc.invalidateQueries({
         queryKey: queryKeys.discussions.comments(topicId),
       });
-      qc.invalidateQueries({
-        queryKey: queryKeys.discussions.topics(lessonId),
-      });
+      qc.invalidateQueries({ queryKey: topicsKey(scope) });
     },
   });
 }

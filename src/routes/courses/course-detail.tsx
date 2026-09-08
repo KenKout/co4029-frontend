@@ -17,6 +17,7 @@ import {
   CourseDetailSkeleton,
   CourseUnavailablePanel,
 } from "@/routes/courses/_components/course-detail/CourseDetailAtoms";
+import { CourseDiscussionSection } from "@/routes/courses/_components/CourseDiscussionSection";
 import { CourseCard } from "@/routes/courses/_components/course-detail/CourseCard";
 import { InstructorCard } from "@/routes/courses/_components/course-detail/InstructorCard";
 import { slugGradient } from "@/routes/courses/_components/course-detail/helpers";
@@ -82,7 +83,6 @@ export default function CourseDetailPage() {
 
   return (
     <div className="min-h-screen pb-28">
-
       {/* Fluid width — no hard max-width (product feedback 2026-08-04):
           the layout breathes with the viewport like the quiz review page. */}
       <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
@@ -119,6 +119,12 @@ export default function CourseDetailPage() {
                 isLoading={contentLoading}
                 progress={progress}
               />
+            )}
+
+            {/* Course-wide discussion, under the curriculum and behind the
+                same enrollment gate — the board is for participants. */}
+            {enrolled && course && (
+              <CourseDiscussionSection courseId={course.id} />
             )}
           </div>
 

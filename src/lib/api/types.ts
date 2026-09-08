@@ -1228,7 +1228,9 @@ export type DataChangeTable = (typeof DATA_CHANGE_TABLES)[number];
  */
 export interface DiscussionTopic {
   id: string;
-  lesson_id: string;
+  /** Exactly one of these is set — the topic's scope (CHECK-enforced). */
+  lesson_id: string | null;
+  course_id: string | null;
   title: string;
   body_markdown: string | null;
   status: "open" | "closed";
@@ -1236,12 +1238,14 @@ export interface DiscussionTopic {
   created_at: string;
   updated_at: string;
   comment_count: number;
+  /** Replies addressed to the VIEWER — what the red badge counts. */
+  mention_count: number;
   can_manage: boolean;
   /** Resolved identity behind `created_by` (name + presigned avatar). */
   author: DiscussionCommentAuthor | null;
 }
 
-/** Envelope returned by `GET /lessons/{id}/discussion/topics`. */
+/** Envelope returned by the lesson- and course-scoped topic lists. */
 export interface DiscussionTopicList {
   can_manage: boolean;
   topics: DiscussionTopic[];
