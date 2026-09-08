@@ -10,7 +10,7 @@ import type { TFunction } from "i18next";
 
 import {
   DataTableToolbar,
-  TimeRangeSelect,
+  MobileTimeRangeChips,
   type FilterDef,
   type TimeRange,
   type TimeRangeOption,
@@ -100,7 +100,9 @@ function FiltersSheet({
             <span className="block text-xs font-medium text-m3-on-surface-variant">
               {t("notifications.time_range_label")}
             </span>
-            <TimeRangeSelect
+            {/* Mobile chips variant: quick options as a 2-col chip grid,
+                single calendar behind a From – To chip, sticky Reset/Apply. */}
+            <MobileTimeRangeChips
               value={c.timeRange}
               onChange={c.setTimeRange}
               options={buildTimeRangeOptions(t)}
@@ -115,7 +117,6 @@ function FiltersSheet({
                 apply: t("notifications.time.apply"),
                 clear: t("notifications.time.clear"),
               }}
-              className="w-full"
             />
           </div>
 

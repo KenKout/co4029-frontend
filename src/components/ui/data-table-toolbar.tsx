@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   DateRangeCalendar,
+  SingleMonthRangeCalendar,
   type DateRangeDraft,
 } from "@/routes/admin/_components/stats/DateRangeCalendar";
 import { toIso } from "@/routes/admin/_components/stats/date-range";
@@ -537,5 +538,130 @@ function FilterDialog({
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
+  );
+}
+
+
+// ── Mobile time-range chips ─────────────────────────────────────────────────
+//
+// The desktop picker (presets sidebar + two month columns) does not fit a
+// phone. The mobile variant — used inside the notifications filters sheet —
+// turns the quick options into a two-column chip grid, hides the calendar
+// until the user explicitly picks "From – To", shows ONE month grid, and
+// pins Reset/Apply to the bottom of the sheet. The desktop toolbar keeps
+// TimeRangeSelect/CustomRangeDialog unchanged.
+
+const MOBILE_FROM_TO = "__from_to__";
+
+export function MobileTimeRangeChips({
+  value,
+  onChange,
+  options,
+  customRange,
+  onCustomRangeChange,
+  labels,
+}: {
+  value: TimeRange;
+  onChange: (range: TimeRange) => void;
+  options: TimeRangeOption[];
+  customRange?: CustomTimeRange;
+  onCustomRangeChange: (range: CustomTimeRange | undefined) => void;
+  labels: TimeRangeLabels;
+}) {
+  const { t } = useTranslation();
+  /** The calendar is OPT-IN: hidden until "From – To" is pressed (#3). */
+  const [pickingCustom, setPickingCustom] = React.useState(
+    value === "custom",
+  );
+  const [draft, setDraft] = React.useState<DateRangeDraft>({
+    from: customRange?.from ?? null,
+    to: customRange?.to ?? null,
+  });
+
+  const activeLabel =
+    value === "custom" && customRange?.from
+      ? `${customRange.from} → ${customRange.to ?? "…"}`
+      : undefined;
+
+  const chips: { value: string; label: string }[] = [
+    ...options,
+    { value: MOBILE_FROM_TO, label: activeLabel ?? t("notifications.time.from_to") },
+  ];
+
+  const pickChip = (next: string) => {
+    if (next === MOBILE_FROM_TO) {
+      setPickingCustom(true);
+      return;
+    }
+    setPickingCustom(false);
+    onChange(next as TimeRange);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        {chips.map((chip) => {
+          const active =
+            pickingCustom && chip.value === MOBILE_FROM_TO
+              ? true
+              : !pickingCustom && value === chip.value;
+          return (
+            <Button
+              key={chip.value}
+              type="button"
+              variant={active ? "default" : "outline"}
+              size="sm"
+              onClick={() => pickChip(chip.value)}
+              className="h-9 w-full cursor-pointer justify-center truncate"
+            >
+              {chip.label}
+            </Button>
+          );
+        })}
+      </div>
+
+      {pickingCustom && (
+        <div className="rounded-lg border border-border p-3">
+          {/* ONE calendar (ask #2), only after pressing From – To (ask #3). */}
+          <SingleMonthRangeCalendar
+            draft={draft}
+            onDraftChange={setDraft}
+            anchorTo={customRange?.to ?? customRange?.from ?? toIso(new Date())}
+          />
+          {/* Reset/Apply sticky at the sheet bottom (ask #4). */}
+          <div className="sticky bottom-0 -mx-3 mt-3 flex items-center justify-between gap-2 border-t border-border bg-popover px-3 pb-1 pt-3">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setDraft({ from: null, to: null });
+                onCustomRangeChange(undefined);
+                onChange("all");
+                setPickingCustom(false);
+              }}
+              className="text-destructive hover:text-destructive cursor-pointer"
+            >
+              {labels.clear}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={!draft.from}
+              onClick={() => {
+                onCustomRangeChange({
+                  from: draft.from!,
+                  to: draft.to ?? undefined,
+                });
+                onChange("custom");
+                setPickingCustom(false);
+              }}
+            >
+              {labels.apply}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

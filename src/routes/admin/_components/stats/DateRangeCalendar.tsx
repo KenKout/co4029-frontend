@@ -509,3 +509,57 @@ function MonthYearSelect({
     </div>
   );
 }
+
+
+/**
+ * Mobile range picker: ONE month grid that picks BOTH ends in sequence.
+ *
+ * The desktop calendar's two-column layout is unreadable on a phone — each
+ * column carries its own month nav and the preset sidebar eats a third of
+ * the sheet. This variant keeps the exact same draft/pill rendering
+ * (MonthColumn) but drives both ends from a single grid: the first tap sets
+ * ``from``, the second sets ``to`` (auto-swapping if the user tapped
+ * backwards), and tapping a picked end clears it — the same semantics as the
+ * desktop columns, collapsed into one flow.
+ */
+export function SingleMonthRangeCalendar({
+  draft,
+  onDraftChange,
+  anchorTo,
+}: {
+  draft: DateRangeDraft;
+  onDraftChange: (next: DateRangeDraft) => void;
+  /** Applied range end — anchor when the draft is empty. */
+  anchorTo?: string;
+}) {
+  const { t } = useTranslation();
+
+  const todayIso = toIso(new Date());
+  const anchor = draft.to ?? draft.from ?? anchorTo ?? todayIso;
+  const [view, setView] = useState(() => startOfMonth(fromIso(anchor)));
+
+  const pick = (iso: string) => {
+    // Tap a picked end -> clear it (desktop parity).
+    if (draft.from === iso) return onDraftChange({ from: null, to: draft.to });
+    if (draft.to === iso) return onDraftChange({ from: draft.from, to: null });
+    if (!draft.from || (draft.from && draft.to)) {
+      // Starting a NEW range: an old ``to`` before the new ``from`` is stale.
+      const to = draft.to && draft.to >= iso ? draft.to : null;
+      return onDraftChange({ from: iso, to });
+    }
+    if (iso < draft.from) return onDraftChange({ from: iso, to: draft.from });
+    return onDraftChange({ from: draft.from, to: iso });
+  };
+
+  return (
+    <MonthColumn
+      label={t("admin.stats.range.selected")}
+      view={view}
+      onViewChange={setView}
+      draft={draft}
+      onPick={pick}
+      todayIso={todayIso}
+      maxIso={todayIso}
+    />
+  );
+}

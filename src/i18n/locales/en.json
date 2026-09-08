@@ -1311,6 +1311,7 @@
       "all": "All time",
       "custom": "Custom range…",
       "custom_title": "Custom time range",
+      "from_to": "From – To",
       "from": "From",
       "to": "To",
       "apply": "Apply",
