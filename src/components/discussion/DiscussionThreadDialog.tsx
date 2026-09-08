@@ -23,6 +23,7 @@ import {
   useUpdateDiscussionTopic,
 } from "@/lib/api/hooks/discussions";
 import { timeAgo } from "@/lib/format/time-ago";
+import { isEnterSubmit } from "@/components/discussion/enter-submit";
 import type { DiscussionComment, DiscussionTopic } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
@@ -277,6 +278,12 @@ function TopicEditForm({
       <Textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
+        onKeyDown={(e) => {
+          if (isEnterSubmit(e)) {
+            e.preventDefault();
+            e.currentTarget.form?.requestSubmit();
+          }
+        }}
         rows={3}
         placeholder={t("discussion.topic_body_placeholder")}
       />
@@ -482,6 +489,12 @@ function CommentRow({
             <Textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (isEnterSubmit(e)) {
+                  e.preventDefault();
+                  e.currentTarget.form?.requestSubmit();
+                }
+              }}
               rows={2}
             />
             <div className="flex justify-end gap-2">
@@ -598,6 +611,12 @@ function Composer({
           ref={inputRef}
           value={body}
           onChange={(e) => setBody(e.target.value)}
+          onKeyDown={(e) => {
+            if (isEnterSubmit(e)) {
+              e.preventDefault();
+              e.currentTarget.form?.requestSubmit();
+            }
+          }}
           rows={1}
           placeholder={
             replyTo

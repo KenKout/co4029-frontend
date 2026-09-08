@@ -7,6 +7,8 @@ import { DiscussionThreadDialog } from "@/components/discussion/DiscussionThread
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+
+import { isEnterSubmit } from "@/components/discussion/enter-submit";
 import {
   type DiscussionScope,
   useCreateDiscussionTopic,
@@ -29,8 +31,9 @@ function NewTopicComposer({ lessonId }: { lessonId: string }) {
   const [body, setBody] = useState("");
   const create = useCreateDiscussionTopic(lessonId);
 
-  // Enter commits the topic; Shift+Enter makes a newline inside the optional
-  // detail field. Empty title disables the commit.
+  // Enter commits the topic; Shift+Enter makes a newline (title input and
+  // the optional detail field both follow the composer convention). Empty
+  // title disables the commit.
   function commit() {
     const trimmedTitle = title.trim();
     if (!trimmedTitle) return;
@@ -78,6 +81,12 @@ function NewTopicComposer({ lessonId }: { lessonId: string }) {
         <Textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
+          onKeyDown={(e) => {
+            if (isEnterSubmit(e)) {
+              e.preventDefault();
+              e.currentTarget.form?.requestSubmit();
+            }
+          }}
           rows={2}
           maxLength={20000}
           placeholder={t("discussion.topic_body_placeholder")}
