@@ -27,6 +27,12 @@ interface StatCardProps extends VariantProps<typeof statCardVariants> {
   className?: string;
 }
 
+function statCardInteractionClass(interactive: boolean) {
+  return interactive
+    ? "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-border-strong"
+    : undefined;
+}
+
 export function StatCard({
   label,
   value,
@@ -43,8 +49,7 @@ export function StatCard({
     <div
       className={cn(
         statCardVariants({ variant }),
-        interactive &&
-          "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-border-strong",
+        statCardInteractionClass(interactive),
         className,
       )}
     >
