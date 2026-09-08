@@ -1547,6 +1547,7 @@
       "subtitle": "Bản ghi bất biến về thay đổi vai trò, thay đổi dữ liệu và yêu cầu HTTP.",
       "since_days": "N ngày gần nhất",
       "tabs": {
+        "auth_events": "Sự kiện xác thực",
         "role_changes": "Thay đổi vai trò",
         "data_changes": "Thay đổi dữ liệu",
         "http": "Yêu cầu HTTP"
@@ -1621,7 +1622,32 @@
       "all_codes": "Tất cả mã trạng thái",
       "copy_id": "Sao chép ID",
       "copied": "Đã sao chép",
-      "copy_failed": "Không sao chép được"
+      "copy_failed": "Không sao chép được",
+      "auth_events": {
+        "event": "Sự kiện",
+        "all_events": "Tất cả sự kiện",
+        "subject": "Tài khoản",
+        "actor": "Người thực hiện",
+        "self": "Tự thực hiện",
+        "detail": "Chi tiết",
+        "more_detail": "+{{count}} mục khác",
+        "user_filter_placeholder": "Lọc theo UUID tài khoản…",
+        "types": {
+          "login_succeeded": "Đăng nhập thành công",
+          "login_failed": "Đăng nhập thất bại",
+          "logout": "Đăng xuất",
+          "mfa_enrolled": "Đăng ký MFA",
+          "mfa_enrollment_verified": "Xác nhận đăng ký MFA",
+          "mfa_challenge_created": "Gửi yêu cầu MFA",
+          "mfa_verified": "Xác thực MFA thành công",
+          "mfa_verification_failed": "Xác thực MFA thất bại",
+          "mfa_disabled": "Tắt MFA",
+          "recovery_codes_regenerated": "Tạo lại mã khôi phục",
+          "account_status_changed": "Thay đổi trạng thái tài khoản",
+          "role_assigned": "Gán vai trò",
+          "role_revoked": "Thu hồi vai trò"
+        }
+      }
     },
     "health": {
       "title": "Trạng thái hệ thống",

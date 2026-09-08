@@ -1178,6 +1178,7 @@ export type MembershipRead = Schemas["MembershipRead"];
 export type MembershipCreate = Schemas["MembershipCreate"];
 export type RoleChangeRow = Schemas["RoleChangeRow"];
 export type HttpAuditRow = Schemas["HttpAuditRow"];
+export type AuthEventRow = Schemas["AuthEventRow"];
 
 /**
  * FR-6.7 — uniform data-change projection returned by

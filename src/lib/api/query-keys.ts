@@ -161,6 +161,21 @@ export const queryKeys = {
         eventKind ?? "",
         requestId ?? "",
       ] as const,
+    auditAuthEvents: (
+      since: string,
+      until?: string,
+      eventType?: string,
+      userId?: string,
+    ) =>
+      [
+        "admin",
+        "audit",
+        "auth-events",
+        since,
+        until ?? "",
+        eventType ?? "",
+        userId ?? "",
+      ] as const,
     auditDataChanges: (table: string, entityId: string) =>
       ["admin", "audit", "data-changes", table, entityId] as const,
     auditDataChangesList: (table: string, since: string, until?: string) =>

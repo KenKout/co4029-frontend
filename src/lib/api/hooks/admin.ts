@@ -25,6 +25,7 @@ import type {
   ProcessingJobRow,
   ProcessingQueueDepth,
   HttpAuditRow,
+  AuthEventRow,
   DataChangeRow,
   RoleAssignmentCreate,
   RoleAssignmentRead,
@@ -744,6 +745,44 @@ export function useAuditHttp(
       if (eventKind) params.set("event_kind", eventKind);
       if (requestId) params.set("request_id", requestId);
       return apiFetch<HttpAuditRow[]>(`/admin/audit/http?${params.toString()}`);
+    },
+    enabled: Boolean(sinceIso),
+    staleTime: 1000 * 30,
+  });
+}
+
+/**
+ * FR-1.6 — typed authentication / access-control events within
+ * `[since, until)`.
+ *
+ * The semantic counterpart of `useAuditHttp`: that hook returns request rows
+ * ("POST /auth/mfa/verify -> 204"), this one returns what actually happened
+ * ("mfa_verified"). `event_type` is filtered server-side because the window
+ * is bounded by `limit` — narrowing in the browser would show the newest 200
+ * events of ALL kinds and then hide most of them, which reads as "no MFA
+ * activity" when there simply was newer noise.
+ */
+export function useAuditAuthEvents(
+  sinceIso: string,
+  untilIso?: string,
+  eventType?: string,
+  userId?: string,
+) {
+  return useQuery({
+    queryKey: queryKeys.admin.auditAuthEvents(
+      sinceIso,
+      untilIso,
+      eventType,
+      userId,
+    ),
+    queryFn: () => {
+      const params = new URLSearchParams({ since: sinceIso, limit: "200" });
+      if (untilIso) params.set("until", untilIso);
+      if (eventType) params.set("event_type", eventType);
+      if (userId) params.set("user_id", userId);
+      return apiFetch<AuthEventRow[]>(
+        `/admin/audit/auth-events?${params.toString()}`,
+      );
     },
     enabled: Boolean(sinceIso),
     staleTime: 1000 * 30,

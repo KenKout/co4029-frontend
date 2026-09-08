@@ -1,25 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Copy, Mail, ScrollText, ShieldCheck, UserRound } from "lucide-react";
-import { toast } from "sonner";
+import { ScrollText, ShieldCheck, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  avatarColor,
-  avatarInitials,
-} from "@/components/ui/avatar";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   DataTableToolbar,
   type FilterDef,
 } from "@/components/ui/data-table-toolbar";
 import { Tabs } from "@/components/ui/tabs";
-import { Tooltip } from "@/components/ui/tooltip";
 import {
   useAuditDataChangesList,
   useAuditHttp,
@@ -29,18 +20,28 @@ import {
 import { DATA_CHANGE_TABLES, type DataChangeTable } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { ROLE_BADGE_COLOR } from "./_components/users/constants";
+import { AuthEventsTable } from "./_components/audit/AuthEventsTable";
+import { ErrorPanel, UserIdentityCell } from "./_components/audit/AuditCells";
 
-type TabKey = "role_changes" | "http" | "data_changes";
+type TabKey = "auth_events" | "role_changes" | "http" | "data_changes";
 
-/** Tab order for the strip. Same three sources as before, as data. */
-const TAB_KEYS: TabKey[] = ["role_changes", "http", "data_changes"];
+/** Tab order for the strip, as data.
+ *
+ * Auth events lead: they are the highest-signal, lowest-volume feed and the
+ * one an operator usually arrives wanting ("did this account actually pass
+ * MFA?"). The request log answers that only by inference, from a path and a
+ * status code. */
+const TAB_KEYS: TabKey[] = [
+  "auth_events",
+  "role_changes",
+  "http",
+  "data_changes",
+];
 
 /** Narrow an untrusted `?tab=` value. A bad link falls back to the default
  *  tab rather than rendering an empty one. */
 function isAuditTab(value: unknown): value is TabKey {
-  return (
-    value === "role_changes" || value === "http" || value === "data_changes"
-  );
+  return (TAB_KEYS as string[]).includes(value as string);
 }
 
 type RoleChangeRow = NonNullable<
@@ -52,7 +53,6 @@ type HttpAuditRow = NonNullable<
 type DataChangeRow = NonNullable<
   ReturnType<typeof useAuditDataChangesList>["data"]
 >[number];
-type AuditUser = NonNullable<ReturnType<typeof useUsersByIds>["data"]>[number];
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -73,7 +73,7 @@ export default function AdminAuditLogsPage() {
   const search = useSearch({ strict: false });
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabKey>(() =>
-    isAuditTab(search.tab) ? search.tab : "role_changes",
+    isAuditTab(search.tab) ? search.tab : "auth_events",
   );
   // Date range over the audit trail, same picker as the dashboard: from/to are
   // calendar days (local), `to` is INCLUSIVE — the API upper bound becomes
@@ -127,7 +127,9 @@ export default function AdminAuditLogsPage() {
         ariaLabel={t("admin.audit.title")}
       />
 
-      {tab === "role_changes" ? (
+      {tab === "auth_events" ? (
+        <AuthEventsTable sinceIso={sinceIso} untilIso={untilIso} />
+      ) : tab === "role_changes" ? (
         <RoleChangesTable sinceIso={sinceIso} untilIso={untilIso} />
       ) : tab === "http" ? (
         <HttpAuditTable
@@ -148,82 +150,6 @@ export default function AdminAuditLogsPage() {
       ) : (
         <DataChangesPanel sinceIso={sinceIso} untilIso={untilIso} />
       )}
-    </div>
-  );
-}
-
-/** Shared user-identity cell: avatar + display name + email + copy UUID. */
-function UserIdentityCell({
-  userId,
-  users,
-  systemLabel,
-}: {
-  userId: string | null | undefined;
-  users: AuditUser[] | undefined;
-  systemLabel: string;
-}) {
-  const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
-
-  if (!userId) {
-    return (
-      <span className="text-m3-on-surface-variant italic">{systemLabel}</span>
-    );
-  }
-
-  const user = users?.find((u) => u.id === userId);
-  const displayName = user?.profile?.display_name?.trim() || userId;
-
-  const copyId = () => {
-    void navigator.clipboard.writeText(userId).then(
-      () => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1200);
-      },
-      () => toast.error(t("admin.audit.copy_failed")),
-    );
-  };
-
-  return (
-    <div className="flex items-center gap-3 min-w-0">
-      <Avatar size="sm" className={avatarColor(userId)}>
-        {user?.profile?.avatar_url && (
-          <AvatarImage src={user.profile.avatar_url} alt={displayName} />
-        )}
-        <AvatarFallback>
-          {avatarInitials(displayName, { uppercase: true })}
-        </AvatarFallback>
-      </Avatar>
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-text-strong truncate">
-          {displayName}
-        </p>
-        {user ? (
-          <p className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
-            <Mail className="h-3 w-3 shrink-0" />
-            <span className="truncate">{user.primary_email}</span>
-          </p>
-        ) : (
-          <p className="text-xs font-mono text-text-muted flex items-center gap-1 mt-0.5">
-            <span className="truncate">{userId}</span>
-            <Tooltip
-              content={
-                copied ? t("admin.audit.copied") : t("admin.audit.copy_id")
-              }
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                aria-label={t("admin.audit.copy_id")}
-                onClick={copyId}
-                className="h-4 w-4 shrink-0 rounded p-0 hover:bg-transparent text-m3-on-surface-variant"
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
-            </Tooltip>
-          </p>
-        )}
-      </div>
     </div>
   );
 }
@@ -792,15 +718,6 @@ function DataChangeDetail({
           </div>
         ))}
       </dl>
-    </div>
-  );
-}
-
-function ErrorPanel({ text }: { text: string }) {
-  return (
-    <div className="rounded-xl bg-m3-surface-container-lowest ghost-border p-10 text-center">
-      <ScrollText className="h-8 w-8 mx-auto mb-3 text-m3-error" />
-      <p className="text-sm text-m3-error">{text}</p>
     </div>
   );
 }

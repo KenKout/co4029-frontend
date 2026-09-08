@@ -5750,6 +5750,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/audit/auth-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Auth Events
+         * @description Typed authentication/access-control event search (FR-1.6).
+         *
+         *     The semantic counterpart of ``/http``: where a request row says
+         *     "POST /auth/mfa/verify -> 204", an ``mfa_verified`` row lives here,
+         *     written by the MFA service in the same transaction as the verification.
+         */
+        get: operations["search_auth_events_api_v1_admin_audit_auth_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/processing/queue": {
         parameters: {
             query?: never;
@@ -6753,6 +6777,37 @@ export interface components {
             reasons: components["schemas"]["AtRiskReason"][];
         };
         /** AtRiskStudentRead */
+        /**
+         * AuthEventRow
+         * @description One semantic auth event (FR-1.6). ``detail`` is redacted by the
+         *     recorder -- codes and tokens never reach the store.
+         */
+        AuthEventRow: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Event Type */
+            event_type: string;
+            /** User Id */
+            user_id?: string | null;
+            /** Actor User Id */
+            actor_user_id?: string | null;
+            /** Organization Id */
+            organization_id?: string | null;
+            /** Session Id */
+            session_id?: string | null;
+            /** Detail */
+            detail: {
+                [key: string]: unknown;
+            };
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+        };
         AtRiskStudentRead: {
             /**
              * Student Id
@@ -26350,6 +26405,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HttpAuditRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_auth_events_api_v1_admin_audit_auth_events_get: {
+        parameters: {
+            query: {
+                /** @description Lower bound on occurred_at (required). */
+                since: string;
+                /** @description Exclusive upper bound on occurred_at (optional). */
+                until?: string | null;
+                /** @description Subject of the event. */
+                user_id?: string | null;
+                /** @description Performer of an access-control change (role/status). */
+                actor_user_id?: string | null;
+                /** @description Exact event name, e.g. mfa_verified, login_failed, role_assigned. See ck_auth_events_event_type. */
+                event_type?: string | null;
+                /** @description Org edge on role/status events; login/MFA rows are NULL. */
+                organization_id?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthEventRow"][];
                 };
             };
             /** @description Validation Error */

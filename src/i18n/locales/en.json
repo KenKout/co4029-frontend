@@ -1638,6 +1638,7 @@
       "subtitle": "Immutable record of role changes, data changes, and HTTP requests.",
       "since_days": "Last N days",
       "tabs": {
+        "auth_events": "Auth events",
         "role_changes": "Role changes",
         "data_changes": "Data changes",
         "http": "HTTP requests"
@@ -1712,7 +1713,32 @@
       "all_codes": "All status codes",
       "copy_id": "Copy ID",
       "copied": "Copied",
-      "copy_failed": "Could not copy"
+      "copy_failed": "Could not copy",
+      "auth_events": {
+        "event": "Event",
+        "all_events": "All events",
+        "subject": "Account",
+        "actor": "Performed by",
+        "self": "Self",
+        "detail": "Detail",
+        "more_detail": "+{{count}} more",
+        "user_filter_placeholder": "Filter by account UUID…",
+        "types": {
+          "login_succeeded": "Signed in",
+          "login_failed": "Sign-in failed",
+          "logout": "Signed out",
+          "mfa_enrolled": "MFA enrolled",
+          "mfa_enrollment_verified": "MFA enrolment verified",
+          "mfa_challenge_created": "MFA challenge issued",
+          "mfa_verified": "MFA verified",
+          "mfa_verification_failed": "MFA failed",
+          "mfa_disabled": "MFA disabled",
+          "recovery_codes_regenerated": "Recovery codes regenerated",
+          "account_status_changed": "Account status changed",
+          "role_assigned": "Role assigned",
+          "role_revoked": "Role revoked"
+        }
+      }
     },
     "health": {
       "title": "System status",
