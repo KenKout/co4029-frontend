@@ -322,6 +322,7 @@ describe("parseControlEvent — snapshots", () => {
       isFinished: false,
       hasTimeLimit: true,
       timeRemainingSeconds: 480,
+      confirmedTurnKey: null,
     });
   });
 

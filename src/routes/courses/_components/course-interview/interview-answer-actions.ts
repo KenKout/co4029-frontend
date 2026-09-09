@@ -55,7 +55,7 @@ function commitAnswerTurn(
         ],
   );
   ctx.submitSucceeded(trimmed);
-  ctx.markDraftSubmitted();
+  ctx.markDraftSubmitted({ text: trimmed, turnKey: submissionId });
   ctx.setAnswerText("");
   ctx.setRecentSubmission({ answer: trimmed, questionId, submissionId });
   ctx.reopenForFollowUp();

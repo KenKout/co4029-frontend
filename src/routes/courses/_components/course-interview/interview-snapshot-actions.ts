@@ -48,6 +48,14 @@ export function applyStateSnapshot(
   // a fresher reading of them is never wrong.
   if (ctx.phase === "closing" || ctx.phase === "results") return;
 
+  // The server's explicit durability confirmation for a typed answer. Ride it
+  // wherever the snapshot lands — the question may have advanced in this very
+  // snapshot, or the model may still be probing the SAME question. Only the
+  // matching key clears the parked copy.
+  if (snapshot.confirmedTurnKey) {
+    ctx.clearDraftIfConfirmed({ turnKey: snapshot.confirmedTurnKey });
+  }
+
   const question = snapshotQuestion(snapshot);
   if (!question) return;
   if (isAlreadyPresenting(ctx, question.id)) return;
@@ -105,12 +113,11 @@ function presentNextQuestion(
   ctx: InterviewActionsContext,
   question: InterviewQuestionView,
 ): void {
-  // The server moved on, which it only does after folding the answer to the
-  // question we are leaving — so that answer is durable and the copy held since
-  // the ack can go. Dropping it at ack time instead meant a worker that died
-  // mid-grading took the candidate's only copy with it. Cleared for the OLD
-  // question, before `currentQuestion` changes and re-keys the storage slot.
-  ctx.clearDraftAutosave();
+  // The parked sent-draft is NOT cleared here. An advance used to be read as
+  // "the answer folded, so the copy can go" — but the advance and the fold are
+  // different events, and a snapshot that advanced WITHOUT confirming the turn
+  // carries no evidence the answer is durable. Only `confirmedTurnKey` (checked
+  // above, before this function runs) authorizes the clear.
   ctx.setCurrentQuestion(question);
   ctx.setPhase("questioning");
   ctx.setTranscript((previous) => {

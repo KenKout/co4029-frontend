@@ -47,6 +47,7 @@ export function useInterviewDrafts(
     restore: restoreDraftAutosave,
     markSubmitted: markDraftSubmitted,
     clear: clearDraftAutosave,
+    clearIfConfirmed: clearDraftIfConfirmed,
   } = draftAutosave;
 
   // On (re)entering a question during active questioning, rehydrate any draft
@@ -126,6 +127,7 @@ export function useInterviewDrafts(
     restoreDraftAutosave,
     markDraftSubmitted,
     clearDraftAutosave,
+    clearDraftIfConfirmed,
     shouldBlockInterviewExit,
     leaveBlocker,
     reconcileDeadline,

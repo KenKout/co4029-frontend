@@ -28,6 +28,7 @@ function snapshot(over: Partial<StateSnapshot> = {}): StateSnapshot {
     isFinished: false,
     hasTimeLimit: true,
     timeRemainingSeconds: 300,
+    confirmedTurnKey: null,
     ...over,
   };
 }
@@ -52,10 +53,8 @@ function makeCtx(overrides: Record<string, unknown> = {}) {
     setPhase: vi.fn(),
     setTranscript: vi.fn(),
     setCurrentQuestion: vi.fn(),
-    // Called when the server advances: that is the first evidence the answer to
-    // the question being left was actually folded and stored, so the copy held
-    // since the ack can finally go.
     clearDraftAutosave: vi.fn(),
+    clearDraftIfConfirmed: vi.fn(),
     beginClosing: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
@@ -100,19 +99,28 @@ describe("applyStateSnapshot — the question", () => {
     });
   });
 
-  it("drops the parked answer copy once the server has moved on", () => {
-    // The submit path PARKS the draft rather than deleting it: an `accepted` ack
-    // means the agent has the text, not that the answer is stored, and a worker
-    // that died mid-grading used to take the candidate's only copy with it.
-    //
-    // A server advance is the first proof the answer was folded — the server only
-    // advances after grading the question it is leaving — so this is where the copy
-    // is finally safe to drop.
+  it("does NOT clear the parked copy on an advance with no confirmation", () => {
+    // The advance and the durability are different events: a snapshot that moved
+    // the question WITHOUT `confirmedTurnKey` carries no evidence the answer's
+    // receipt is durable, and dropping the copy here is the inference the
+    // turn-key protocol exists to stop. Only an explicit confirmation clears.
     const ctx = makeCtx();
 
     applyStateSnapshot(ctx, snapshot());
 
-    expect(ctx.clearDraftAutosave).toHaveBeenCalledTimes(1);
+    expect(ctx.clearDraftIfConfirmed).not.toHaveBeenCalled();
+  });
+
+  it("clears the parked copy when the snapshot CONFIRMS the sent key", () => {
+    // `confirmedTurnKey` is the server's receipt-applied signal: the answer's
+    // transcript row is committed under this exact turn key, so the insurance
+    // copy can finally go.
+    const ctx = makeCtx();
+
+    applyStateSnapshot(ctx, snapshot({ confirmedTurnKey: "tk-confirm-1" }));
+
+    expect(ctx.clearDraftIfConfirmed).toHaveBeenCalledTimes(1);
+    expect(ctx.clearDraftIfConfirmed).toHaveBeenCalledWith({ turnKey: "tk-confirm-1" });
   });
 
   it("keeps the parked copy while the same question is still live", () => {

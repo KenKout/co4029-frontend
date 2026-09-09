@@ -150,6 +150,15 @@ export interface StateSnapshot {
    */
   hasTimeLimit: boolean;
   timeRemainingSeconds: number | null;
+  /**
+   * The typed turn this snapshot CONFIRMS as durable, when it confirms one.
+   *
+   * Optional: every snapshot from an agent predating the turn-key receipt has
+   * no confirmation, and a routine snapshot never does. The client clears its
+   * parked sent-draft ONLY on a matching key — a snapshot without one says
+   * nothing about the draft's durability.
+   */
+  confirmedTurnKey: string | null;
 }
 
 export interface ControlEvent {
@@ -242,6 +251,7 @@ function parseSnapshot(value: unknown): StateSnapshot | null {
         ? raw.has_time_limit
         : timeRemainingSeconds !== null,
     timeRemainingSeconds,
+    confirmedTurnKey: asNullableString(raw.confirmed_turn_key),
   };
 }
 

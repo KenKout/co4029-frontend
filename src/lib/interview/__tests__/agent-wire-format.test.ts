@@ -54,6 +54,7 @@ describe("agent wire format", () => {
       isFinished: false,
       hasTimeLimit: true,
       timeRemainingSeconds: 540,
+      confirmedTurnKey: null,
     });
   });
 
