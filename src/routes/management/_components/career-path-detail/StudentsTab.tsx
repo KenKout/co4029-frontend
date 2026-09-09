@@ -154,8 +154,6 @@ function buildStudentColumns(
             },
           ]
         : []),
-    ],
-    [t, canUnenroll, id
   ];
 }
 
