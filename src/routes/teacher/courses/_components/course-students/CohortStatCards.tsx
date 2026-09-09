@@ -56,6 +56,7 @@ export function CohortStatCards({
           value={s.value}
           sublabel={s.sub}
           icon={s.icon}
+          interactive={false}
           className={`p-4 ${s.cls}`}
         />
       ))}

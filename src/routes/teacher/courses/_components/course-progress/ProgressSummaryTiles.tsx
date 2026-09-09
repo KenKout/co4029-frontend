@@ -22,24 +22,28 @@ export function ProgressSummaryTiles({
         icon={Users}
         label={t("teacher_progress.tiles.enrolled")}
         value={cohortLoading ? "—" : summary.total}
+        interactive={false}
         className="p-4"
       />
       <StatCard
         icon={CheckCircle2}
         label={t("teacher_progress.tiles.completed")}
         value={cohortLoading ? "—" : summary.completed}
+        interactive={false}
         className="p-4"
       />
       <StatCard
         icon={TrendingUp}
         label={t("teacher_progress.tiles.avg_completion")}
         value={cohortLoading ? "—" : `${summary.avgCompletion.toFixed(0)}%`}
+        interactive={false}
         className="p-4"
       />
       <StatCard
         icon={Clock}
         label={t("teacher_progress.tiles.total_time")}
         value={cohortLoading ? "—" : formatHours(summary.totalHours)}
+        interactive={false}
         className="p-4"
       />
     </div>

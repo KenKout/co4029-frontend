@@ -27,10 +27,17 @@ interface StatCardProps extends VariantProps<typeof statCardVariants> {
   className?: string;
 }
 
-function statCardInteractionClass(interactive: boolean) {
-  return interactive
-    ? "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-border-strong"
-    : undefined;
+function statCardInteractionClass(
+  interactive: boolean,
+  variant: StatCardProps["variant"],
+) {
+  if (!interactive) return undefined;
+  return cn(
+    "transition-all duration-200 hover:-translate-y-0.5",
+    variant === "primary"
+      ? "hover:shadow-ai-glow"
+      : "hover:shadow-lg hover:border-border-strong",
+  );
 }
 
 export function StatCard({
@@ -40,7 +47,7 @@ export function StatCard({
   icon: Icon,
   trend,
   variant,
-  interactive = false,
+  interactive = true,
   className,
 }: StatCardProps) {
   const isPrimary = variant === "primary";
@@ -49,7 +56,7 @@ export function StatCard({
     <div
       className={cn(
         statCardVariants({ variant }),
-        statCardInteractionClass(interactive),
+        statCardInteractionClass(interactive, variant),
         className,
       )}
     >

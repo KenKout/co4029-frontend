@@ -56,6 +56,31 @@ describe("course question-bank tab", () => {
     expect(source).not.toMatch(/backLabel=/);
     expect(source).not.toMatch(/back_to_course/);
   });
+
+  it("uses an in-page h2 because the course shell owns the h1", () => {
+    const source = read(
+      "routes/teacher/courses/_components/course-question-bank/QuestionBankHeader.tsx",
+    );
+    expect(source).toMatch(/SectionHeader/);
+    expect(source).not.toMatch(/PageHeader/);
+  });
+});
+
+describe("course workspace heading hierarchy", () => {
+  it("keeps the course title as the only h1", () => {
+    expect(read("routes/teacher/courses/course-shell.tsx")).toMatch(/<h1/);
+    expect(
+      read(
+        "routes/teacher/courses/_components/course-students/StudentsPageHeader.tsx",
+      ),
+    ).not.toMatch(/<h1/);
+  });
+
+  it("gives discussion a visible section heading", () => {
+    expect(read("routes/teacher/courses/course-discussion.tsx")).toMatch(
+      /<SectionHeader/,
+    );
+  });
 });
 
 describe("course shell tab transition", () => {

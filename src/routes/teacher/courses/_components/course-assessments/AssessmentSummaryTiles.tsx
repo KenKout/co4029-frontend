@@ -42,12 +42,14 @@ export function AssessmentSummaryTiles({
         icon={Users}
         label={t("teacher_assessments.metrics.students")}
         value={quizzesLoading || interviewsLoading ? "—" : distinctStudents}
+        interactive={false}
         className="p-4"
       />
       <StatCard
         icon={ClipboardList}
         label={t("teacher_assessments.metrics.quiz_attempts")}
         value={quizzesLoading ? "—" : (quizAttempts?.length ?? 0)}
+        interactive={false}
         className="p-4"
       />
       <StatCard
@@ -60,12 +62,14 @@ export function AssessmentSummaryTiles({
               ? `${quizPassRate.toFixed(0)}%`
               : "—"
         }
+        interactive={false}
         className="p-4"
       />
       <StatCard
         icon={MessageSquare}
         label={t("teacher_assessments.metrics.interviews")}
         value={interviewsLoading ? "—" : (interviewSessions?.length ?? 0)}
+        interactive={false}
         className="p-4"
       />
     </div>
