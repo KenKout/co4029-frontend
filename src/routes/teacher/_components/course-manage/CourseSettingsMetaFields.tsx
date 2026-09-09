@@ -1,3 +1,4 @@
+import { DurationField } from "@/components/ui/duration-field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,8 +32,9 @@ export function CourseSettingsMetaFields({
   /** Assignable faculties; empty on the teacher surface, which hides the field. */
   facultyOptions?: { value: string; label: string }[];
 }) {
-  const { title, slug, description, facultyId } = values;
-  const { setTitle, setSlug, setDescription, setFacultyId } = setters;
+  const { title, slug, description, facultyId, estimatedMinutes } = values;
+  const { setTitle, setSlug, setDescription, setFacultyId, setEstimatedMinutes } =
+    setters;
   const managerScope = scope === "manager";
 
   return (
@@ -101,6 +103,22 @@ export function CourseSettingsMetaFields({
           </p>
         </div>
       )}
+
+      {/* Required duration sits NEXT TO the faculty field — they read as a
+          pair (who owns it, how long it takes). Was its own row via the
+          delivery-fieldset before the two were grouped. */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+          {t("teacher_course_settings.estimated_duration")}
+        </label>
+        <DurationField
+          value={estimatedMinutes}
+          onChange={setEstimatedMinutes}
+          placeholder={t(
+            "teacher_course_settings.estimated_duration_placeholder",
+          )}
+        />
+      </div>
 
       {/* Description */}
       <div className="sm:col-span-2 space-y-1.5">

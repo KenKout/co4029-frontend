@@ -41,8 +41,11 @@ export function OutcomeRow({
   return (
     <li
       className={
-        "group relative flex items-center gap-1.5 rounded-lg border border-transparent " +
-        "px-1.5 py-1 hover:bg-m3-surface-container-lowest " +
+        // Left-aligned row: the badge + statement hug the left edge
+        // (items-start, not center) so every outcome reads from the same
+        // starting column regardless of statement length.
+        "group relative flex items-start gap-1.5 rounded-lg border border-transparent " +
+        "px-1.5 py-1 text-left hover:bg-m3-surface-container-lowest " +
         (isEditing ? "bg-m3-surface-container-lowest border-m3-outline-variant/40" : "") +
         (isDragging ? "opacity-50" : "")
       }
@@ -65,7 +68,7 @@ export function OutcomeRow({
         </Button>
       )}
 
-      <Badge className="shrink-0 bg-violet-100 text-violet-700 border-transparent">
+      <Badge className="mt-0.5 shrink-0 bg-violet-100 text-violet-700 border-transparent">
         {code}
       </Badge>
 

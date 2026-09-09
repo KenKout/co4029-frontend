@@ -3,7 +3,6 @@ import { ChevronDown, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { CourseSettingsContactFields } from "./CourseSettingsContactFields";
-import { CourseSettingsDeliveryFields } from "./CourseSettingsDeliveryFields";
 import { CourseSettingsMetaFields } from "./CourseSettingsMetaFields";
 import { CourseSettingsSaveBar } from "./CourseSettingsSaveBar";
 import { CourseSettingsThumbnailField } from "./CourseSettingsThumbnailField";
@@ -129,11 +128,6 @@ export function CourseSettingsPanel({
                 t={t}
                 scope={scope}
                 facultyOptions={facultyOptions}
-              />
-              <CourseSettingsDeliveryFields
-                values={values}
-                setters={setters}
-                t={t}
               />
               <CourseSettingsContactFields
                 values={values}

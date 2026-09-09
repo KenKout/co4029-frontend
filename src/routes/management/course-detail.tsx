@@ -16,7 +16,20 @@ import { Tabs } from "@/components/ui/tabs";
 import { PermissionDenied } from "@/components/ui/permission-denied";
 import type { TabKey } from "./_components/course-detail/types";
 
-const TAB_KEYS: TabKey[] = ["teachers", "students", "career-paths", "settings"];
+const TAB_KEYS: TabKey[] = ["settings", "teachers", "students", "career-paths"];
+
+/** Default tab, honouring deep-links: settings first, but manager-only. */
+function resolveInitialTab(
+  tabParam: unknown,
+  canDelete: boolean,
+): TabKey {
+  const requested = TAB_KEYS.includes(tabParam as TabKey)
+    ? (tabParam as TabKey)
+    : null;
+  if (requested === "settings") return canDelete ? "settings" : "teachers";
+  if (requested) return requested;
+  return canDelete ? "settings" : "teachers";
+}
 
 export default function DeptCourseDetailPage() {
   const { t } = useTranslation();
@@ -51,11 +64,7 @@ export default function DeptCourseDetailPage() {
   const teachers = useCourseTeachers(enabled ? courseId : undefined);
   const roster = useCourseRoster(enabled ? courseId : undefined);
 
-  const initialTab: TabKey =
-    TAB_KEYS.includes(tabParam as TabKey) &&
-    (tabParam !== "settings" || canDelete)
-      ? (tabParam as TabKey)
-      : "teachers";
+  const initialTab = resolveInitialTab(tabParam, canDelete);
   const [tab, setTab] = useState<TabKey>(initialTab);
 
   if (permissions.isLoading) {
@@ -79,11 +88,22 @@ export default function DeptCourseDetailPage() {
       <DeptCourseHeader course={course} courseId={courseId} canDelete={canDelete} />
 
       <Tabs
-        variant="contained"
+        variant="outlined"
         value={tab}
         onChange={setTab}
         ariaLabel={t("dept_course_detail.title")}
         tabs={[
+          // Course settings + learning outcomes live behind course.delete /
+          // learning_outcome.manage, so the tab only appears for a manager.
+          // Settings comes FIRST: identity/lifecycle/outcomes before people.
+          ...(canDelete
+            ? [
+                {
+                  key: "settings" as TabKey,
+                  label: t("dept_course_detail.tabs.settings"),
+                },
+              ]
+            : []),
           {
             key: "teachers" as TabKey,
             label: t("dept_course_detail.tabs.teachers"),
@@ -98,16 +118,6 @@ export default function DeptCourseDetailPage() {
             key: "career-paths" as TabKey,
             label: t("dept_course_detail.tabs.career_paths"),
           },
-          // Course settings + learning outcomes live behind course.delete /
-          // learning_outcome.manage, so the tab only appears for a manager.
-          ...(canDelete
-            ? [
-                {
-                  key: "settings" as TabKey,
-                  label: t("dept_course_detail.tabs.settings"),
-                },
-              ]
-            : []),
         ]}
       />
 
