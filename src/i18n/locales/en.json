@@ -3608,6 +3608,18 @@
       "students": "Students",
       "progress": "Progress"
     },
+    "students": {
+      "col_student": "Student",
+      "col_completion": "Completion",
+      "col_progress": "Progress",
+      "col_actions": "Actions",
+      "filter_label": "Completion",
+      "filter_all": "All students",
+      "filter_in_progress": "In progress",
+      "filter_completed": "Finished path",
+      "search_placeholder": "Search students…",
+      "empty_filtered": "No students match your search or filter"
+    },
     "status": {
       "draft": "Draft",
       "published": "Published",

@@ -3437,6 +3437,18 @@
       "students": "Sinh viên",
       "progress": "Tiến độ"
     },
+    "students": {
+      "col_student": "Sinh viên",
+      "col_completion": "Hoàn thành",
+      "col_progress": "Tiến độ",
+      "col_actions": "Thao tác",
+      "filter_label": "Hoàn thành",
+      "filter_all": "Tất cả học viên",
+      "filter_in_progress": "Đang học",
+      "filter_completed": "Đã hoàn thành lộ trình",
+      "search_placeholder": "Tìm sinh viên…",
+      "empty_filtered": "Không có sinh viên phù hợp"
+    },
     "status": {
       "draft": "Bản nháp",
       "published": "Đã xuất bản",
