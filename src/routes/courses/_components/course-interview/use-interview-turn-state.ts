@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import type {
   ConversationTurn,
@@ -47,6 +47,80 @@ export function useInterviewTurnState() {
     submissionId: string;
   } | null>(null);
 
+  // Turn keys the server has CONFIRMED durable (snapshot.confirmedTurnKey).
+  // The late-FAILED path refuses to touch any key in this set: a settled turn
+  // cannot retroactively fail. A ref, not state — it is consulted by event
+  // handlers, never rendered.
+  const confirmedTurnKeys = useRef<Set<string>>(new Set());
+  const markTurnConfirmed = useCallback((turnKey: string) => {
+    confirmedTurnKeys.current.add(turnKey);
+  }, []);
+
+  /**
+   * The parked sent-draft text for a turn key, or null.
+   *
+   * Scans this session's `:sent` slots (any question) for the versioned record
+   * whose turnKey matches — the same record a matching confirmation would
+   * clear. A key with no parked copy has no candidate copy to restore, so the
+   * late-FAILED handler ignores it.
+   */
+  const parkedSentDraftText = useCallback(
+    (turnKey: string): string | null => {
+      const sid = sessionId;
+      if (!sid) return null;
+      const prefix = `abridge:iv-draft:${sid}:`;
+      try {
+        for (let i = 0; i < window.localStorage.length; i += 1) {
+          const key = window.localStorage.key(i);
+          if (!key || !key.startsWith(prefix) || !key.endsWith(":sent")) continue;
+          const raw = window.localStorage.getItem(key);
+          if (!raw || !raw.trimStart().startsWith("{")) continue;
+          try {
+            const parsed: unknown = JSON.parse(raw);
+            if (
+              typeof parsed === "object" &&
+              parsed !== null &&
+              "turnKey" in parsed &&
+              (parsed as { turnKey: unknown }).turnKey === turnKey &&
+              "text" in parsed &&
+              typeof (parsed as { text: unknown }).text === "string"
+            ) {
+              return (parsed as { text: string }).text;
+            }
+          } catch {
+            /* unreadable record — skip */
+          }
+        }
+      } catch {
+        /* storage unavailable */
+      }
+      return null;
+    },
+    [sessionId],
+  );
+
+  /**
+   * Surface a post-ACK fold failure as a RETRYABLE failed state.
+   *
+   * Restores the EXACT parked text into the composer, rolls the answer
+   * machine back to `failed` (which re-enables submit), and remembers the
+   * turn key as the next submission's idempotency key — the server-side
+   * receipt reclaim makes that redelivery safe.
+   */
+  const submitFailedForRetry = useCallback(
+    (text: string, turnKey: string) => {
+      setAnswerText(text);
+      restoreDraft(text);
+      submitFailed("fold_failed_retryable");
+      retrySubmissionIdRef.current = turnKey;
+    },
+    [restoreDraft, submitFailed],
+  );
+
+  // The turn key a RETRY must reuse (failed fold / rejected send). Cleared on
+  // a fresh submission. Read by the answer actions to keep the key stable.
+  const retrySubmissionIdRef = useRef<string | null>(null);
+
   return {
     sessionId,
     setSessionId,
@@ -69,5 +143,10 @@ export function useInterviewTurnState() {
     setEndConfirmPrompt,
     recentSubmission,
     setRecentSubmission,
+    confirmedTurnKeys,
+    markTurnConfirmed,
+    parkedSentDraftText,
+    submitFailedForRetry,
+    retrySubmissionIdRef,
   };
 }

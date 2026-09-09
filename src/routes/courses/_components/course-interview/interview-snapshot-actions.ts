@@ -53,6 +53,7 @@ export function applyStateSnapshot(
   // snapshot, or the model may still be probing the SAME question. Only the
   // matching key clears the parked copy.
   if (snapshot.confirmedTurnKey) {
+    ctx.markTurnConfirmed(snapshot.confirmedTurnKey);
     ctx.clearDraftIfConfirmed({ turnKey: snapshot.confirmedTurnKey });
   }
 

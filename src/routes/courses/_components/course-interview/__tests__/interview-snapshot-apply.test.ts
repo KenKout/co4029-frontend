@@ -55,6 +55,7 @@ function makeCtx(overrides: Record<string, unknown> = {}) {
     setCurrentQuestion: vi.fn(),
     clearDraftAutosave: vi.fn(),
     clearDraftIfConfirmed: vi.fn(),
+    markTurnConfirmed: vi.fn(),
     beginClosing: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };

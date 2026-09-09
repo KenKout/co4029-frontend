@@ -100,6 +100,14 @@ export interface UseInterviewChatOptions {
    * registration.
    */
   onSnapshot?: (snapshot: StateSnapshot) => void;
+  /**
+   * A turn-scoped FAILED whose waiter is GONE — the ack resolved the submit
+   * long before the fold failed. The composer is not spinning, so this must
+   * not be dropped: the parked sent-draft for `turnKey` is still there (no
+   * confirmation was ever published) and the candidate needs the retryable
+   * failure surfaced with that exact draft restored.
+   */
+  onLateFailure?: (event: ControlEvent) => void;
 }
 
 /**
@@ -164,6 +172,8 @@ export function useInterviewChat(
 
   const onSnapshotRef = useRef(options?.onSnapshot);
   onSnapshotRef.current = options?.onSnapshot;
+  const onLateFailureRef = useRef(options?.onLateFailure);
+  onLateFailureRef.current = options?.onLateFailure;
 
   // Turns awaiting their ack, keyed by turn_key. A map (not a single slot)
   // because a late event for an abandoned turn must be discardable without
@@ -228,7 +238,18 @@ export function useInterviewChat(
         const key = event.turnKey;
         if (!key) return;
         const resolve = waitingRef.current.get(key);
-        if (!resolve) return;
+        if (!resolve) {
+          // No waiter: the ack already resolved this turn, so this is a LATE
+          // fold failure. Dropping it used to leave the candidate believing
+          // their answer was in — the parked draft was never confirmed and
+          // the failure was invisible. Surface it unless the turn was already
+          // confirmed (a confirmed key cannot retroactively fail) or belongs
+          // to an older question.
+          if (event.status === "failed") {
+            onLateFailureRef.current?.(event);
+          }
+          return;
+        }
         waitingRef.current.delete(key);
         resolve({
           event,

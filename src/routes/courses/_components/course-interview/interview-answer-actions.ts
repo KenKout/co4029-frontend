@@ -74,6 +74,39 @@ function commitAnswerTurn(
  * definitely not graded — the message must say that, or a candidate resends the
  * same answer after a reconnect and double-submits.
  */
+
+
+/**
+ * A fold failure that arrived AFTER the ack settled the submit.
+ *
+ * The candidate saw "sending" resolve and believes the answer is in — but the
+ * fold never landed, so no confirmation (`confirmedTurnKey`) exists and the
+ * parked sent-draft is still the only copy. Restore that EXACT text, put the
+ * answer machine back into a retryable failed state, and tell the candidate.
+ * The retry reuses the SAME turn key, so the durable receipt on the server
+ * makes the redelivery idempotent.
+ *
+ * Guards:
+ * - a key with a live waiter is NOT late (handled by the normal path);
+ * - a key already confirmed by a snapshot cannot retroactively fail — ignore;
+ * - a key matching no parked/known submission is stale noise — ignore.
+ */
+export function handleLateAnswerFailure(
+  ctx: InterviewActionsContext,
+  event: ControlEvent,
+): void {
+  const turnKey = event.turnKey;
+  if (!turnKey) return;
+  // Already confirmed durable: a late FAILED cannot un-submit a settled turn.
+  if (ctx.confirmedTurnKeys.current.has(turnKey)) return;
+  // The parked copy for THIS key must exist — that is the proof this failure
+  // belongs to a turn the candidate actually sent and has not retried since.
+  const parked = ctx.parkedSentDraftText(turnKey);
+  if (parked === null) return;
+  ctx.submitFailedForRetry(parked, turnKey);
+  toast.error(ctx.t("course_interview.errors.fold_failed_retryable"));
+}
+
 function turnFailureMessage(
   ctx: InterviewActionsContext,
   event: ControlEvent,
@@ -208,7 +241,11 @@ export async function handleRespond(
   const questionId = ctx.currentQuestion.id;
   // Stable submission id doubles as the transcript turn id and the control
   // stream's `turn_key`, so a retry reuses it and never double-inserts.
-  const submissionId = options.retrySubmissionId ?? newTurnKey();
+  const submissionId =
+    options.retrySubmissionId ??
+    ctx.retrySubmissionIdRef?.current ??
+    newTurnKey();
+  if (ctx.retrySubmissionIdRef) ctx.retrySubmissionIdRef.current = null;
   ctx.beginSubmit(submissionId, trimmed);
 
   try {

@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import { toast } from "sonner";
 
 import type { UseInterviewChatResult } from "@/components/interview/use-interview-chat";
+import type { ControlEvent as LateFailureEvent } from "@/lib/interview/control-protocol";
 import type {
   InterviewLanguage,
   InterviewOnboardingAction,
@@ -14,7 +15,10 @@ import {
 } from "@/lib/interview/turn-factory";
 import { clearQuestionPacing } from "@/lib/interview/use-question-pacing";
 import { shouldPresentGoodbye } from "./agent-voice-presentation";
-import { handleRespond } from "./interview-answer-actions";
+import {
+  handleLateAnswerFailure,
+  handleRespond,
+} from "./interview-answer-actions";
 import {
   handleAssistance,
   handleEndCancel,
@@ -189,6 +193,13 @@ export function useInterviewActions(base: InterviewBase) {
     applyStateSnapshot(ctxRef.current, snapshot);
   }, []);
 
+  const handleLateAnswerFailureEvent = useCallback(
+    (event: LateFailureEvent) => {
+      handleLateAnswerFailure(ctxRef.current, event);
+    },
+    [],
+  );
+
   useInterviewTimeout(base, beginClosing);
 
   function stayInInterview() {
@@ -210,6 +221,7 @@ export function useInterviewActions(base: InterviewBase) {
     setChatBridge,
     handleTurnPresented,
     handleStateSnapshot,
+    handleLateAnswerFailure: handleLateAnswerFailureEvent,
     handleStart: startInterview,
     handleRetry: () => handleRetry(ctx),
     handleOnboarding: (

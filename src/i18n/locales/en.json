@@ -3573,6 +3573,7 @@
       "answer_required": "Please enter an answer",
       "send_failed": "Failed to send answer",
       "send_failed_livekit": "Your answer could not be sent over the live session. Please try again.",
+      "fold_failed_retryable": "Your answer was received but could not be processed. Your draft has been restored — please send it again.",
       "turn_in_flight": "Your previous answer is still being processed — please wait.",
       "session_closing": "The interview is closing — your answer was not recorded.",
       "finish_failed": "Failed to finish interview",

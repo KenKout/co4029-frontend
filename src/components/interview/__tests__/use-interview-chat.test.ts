@@ -401,6 +401,53 @@ describe("useInterviewChat — outcomes and the draft", () => {
   });
 });
 
+describe("useInterviewChat — late post-ack failures", () => {
+  it("routes a FAILED with no waiter to onLateFailure instead of dropping it", async () => {
+    // The ack resolved the composer long before the fold failed. The event
+    // finds no waiter, and dropping it hid the failure from the candidate —
+    // the parked draft was never confirmed and nothing was graded.
+    const fake = makeFakeRoom();
+    const late: ControlEvent[] = [];
+    const { result } = renderHook(() =>
+      useInterviewChat(fake.room, { onLateFailure: (e) => late.push(e) }),
+    );
+
+    // No startTurn: no waiter is registered for this key.
+    await fake.emitControl(
+      control({
+        status: "failed",
+        error_class: "RuntimeError",
+        state: null,
+        turn_key: "tk-late-0001",
+      }),
+    );
+
+    expect(late).toHaveLength(1);
+    expect(late[0].turnKey).toBe("tk-late-0001");
+    expect(result.current.lastEvent?.turnKey).toBe("tk-late-0001");
+  });
+
+  it("does not route a failed event that HAS a waiter", async () => {
+    // A waiting turn fails through the normal outcome path; the late handler
+    // must not fire for the same event.
+    const fake = makeFakeRoom();
+    const late: ControlEvent[] = [];
+    const { result } = renderHook(() =>
+      useInterviewChat(fake.room, { onLateFailure: (e) => late.push(e) }),
+    );
+
+    const promise = startTurn(result, TURN);
+    await waitFor(() => expect(fake.sendText).toHaveBeenCalled());
+    await fake.emitControl(
+      control({ status: "failed", error_class: "TimeoutError", state: null }),
+    );
+    const outcome = await promise;
+
+    expect(outcome.preserveDraft).toBe(true);
+    expect(late).toHaveLength(0);
+  });
+});
+
 describe("useInterviewChat — ordering and reconnect", () => {
   it("ignores a stale event that arrives after a newer one", async () => {
     // LiveKit gives no cross-stream ordering guarantee, and a reconnect can

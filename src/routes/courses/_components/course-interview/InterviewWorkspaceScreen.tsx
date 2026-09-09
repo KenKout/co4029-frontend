@@ -73,7 +73,10 @@ export function InterviewWorkspaceScreen({
   // identical content and must each be applied in order.
   const { room, connecting, roomWanted, tokenError, retryToken } =
     useInterviewRoomState();
-  const chat = useInterviewChat(room, { onSnapshot: iv.handleStateSnapshot });
+  const chat = useInterviewChat(room, {
+    onSnapshot: iv.handleStateSnapshot,
+    onLateFailure: iv.handleLateAnswerFailure,
+  });
   // The agent's own voice phase (`lk.agent.state`), published as a participant
   // attribute and surfaced here. This is the ONLY thing that knows when the
   // agent actually starts and stops speaking, and the workspace is the only
